@@ -6,7 +6,7 @@ Each item below represents one architecture document to write. Check it off when
 
 ## Backend (Supabase)
 
-- [ ] **Database Schema** — Tables, relationships, indexes, and naming conventions
+- [x] **Database Schema** — Tables, relationships, indexes, and naming conventions
 - [ ] **Row-Level Security (RLS)** — Multi-tenant data isolation policies per table
 - [ ] **Authentication & Session Management** — Supabase Auth setup, JWT handling, session lifecycle, protected routes
 - [ ] **API Key Management** — Key generation, hashing, storage, scopes, rotation, and revocation
