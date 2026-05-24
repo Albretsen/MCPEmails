@@ -42,7 +42,7 @@ function readQuery(searchParams, key) {
   return searchParams?.get(key) || null;
 }
 
-export function DashboardApp({ user, workspace }) {
+export function DashboardApp({ user, workspace, overviewStats }) {
   const searchParams = useSearchParams();
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
@@ -129,7 +129,7 @@ export function DashboardApp({ user, workspace }) {
           <FirstRunBanner onConnect={() => setShowConnect(true)} />
         )}
 
-        {route === "overview" && <OverviewPage inboxes={inboxes} activity={SEED_ACTIVITY} onConnect={() => setShowConnect(true)} />}
+        {route === "overview" && <OverviewPage inboxes={inboxes} activity={SEED_ACTIVITY} stats={overviewStats} onConnect={() => setShowConnect(true)} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} />}
         {route === "keys"     && <KeysPage     keys={keys} onCreate={onCreateKey} onRevoke={onRevokeKey} />}
         {route === "usage"    && <UsagePage />}
