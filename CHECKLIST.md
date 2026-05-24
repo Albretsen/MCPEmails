@@ -6,7 +6,7 @@ Each item represents one meaningful unit of work: enough to make real progress, 
 
 ## 1. Infrastructure & Configuration
 
-- [ ] Set up Supabase project: create all database tables (`users`, `workspaces`, `inboxes`, `api_keys`, `usage_logs`, `audit_log`) with correct columns, types, foreign keys, and indexes
+- [x] Set up Supabase project: create all database tables (`users`, `workspaces`, `inboxes`, `api_keys`, `usage_logs`, `audit_log`) with correct columns, types, foreign keys, and indexes
 - [ ] Write and apply all Row-Level Security (RLS) policies so users can only access their own workspace's data
 - [ ] Configure Supabase Auth: enable email/password provider, set site URL and redirect URLs, configure email templates (confirm, reset, invite)
 - [ ] Add Supabase server client and browser client utility files (`lib/supabase/server.ts`, `lib/supabase/client.ts`, `lib/supabase/middleware.ts`)
