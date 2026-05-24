@@ -83,6 +83,25 @@ export function LoginApp() {
   const [step, setStep] = useState('form'); // 'form' | 'sending' | 'sent' | 'error'
   const [serverError, setServerError] = useState('');
 
+  /**
+   * Builds the Supabase `emailRedirectTo` URL.
+   *
+   * If the current page URL contains a `redirect` param (set by middleware
+   * when an unauthenticated user visits a protected route), it is forwarded
+   * as `next` so /auth/callback can redirect the user to their original
+   * destination. Only relative paths are forwarded to prevent open-redirect
+   * attacks — the callback route applies the same guard.
+   */
+  function buildCallbackUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    const callbackUrl = new URL('/auth/callback', window.location.origin);
+    if (redirect && redirect.startsWith('/')) {
+      callbackUrl.searchParams.set('next', redirect);
+    }
+    return callbackUrl.toString();
+  }
+
   /** Basic email format validation. */
   function validateEmail(value) {
     if (!value || value.trim() === '') return 'Enter your email address.';
@@ -107,9 +126,11 @@ export function LoginApp() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        // After the user clicks the link Supabase redirects them here.
-        // The callback route exchanges the code for a session cookie.
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // After the user clicks the link Supabase redirects to /auth/callback.
+        // Forward the `redirect` param (set by middleware when bouncing the
+        // user away from a protected route) so the callback can send them
+        // back to their intended destination instead of just /dashboard.
+        emailRedirectTo: buildCallbackUrl(),
       },
     });
 
