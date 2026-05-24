@@ -10,7 +10,7 @@ Each item represents one meaningful unit of work: enough to make real progress, 
 - [x] Write and apply all Row-Level Security (RLS) policies so users can only access their own workspace's data
 - [x] Configure Supabase Auth: enable email/password provider, set site URL and redirect URLs, configure email templates (confirm, reset, invite)
 - [x] Add Supabase server client and browser client utility files (`lib/supabase/server.ts`, `lib/supabase/client.ts`, `lib/supabase/middleware.ts`)
-- [ ] Add Next.js middleware to protect dashboard routes and redirect unauthenticated users to `/login`
+- [x] Add Next.js middleware to protect dashboard routes and redirect unauthenticated users to `/login`
 - [ ] Document all required environment variables in `.env.example` and wire them up in `next.config.js`
 
 ---
