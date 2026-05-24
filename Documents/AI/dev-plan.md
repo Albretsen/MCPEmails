@@ -488,7 +488,116 @@ test('complete signup and connect inbox', async ({ page }) => {
 });
 ```
 
-### 9.5 Testing Checklist
+### 9.5 Handling Missing Test Data
+
+You will often need to test features that depend on data that doesn't exist yet — no connected inbox, no real Gmail OAuth tokens, no API keys, no usage logs. **Never let missing data stop you from completing a task.** Always unblock yourself with seed data, then tell the human what real data is needed.
+
+#### The rule
+
+If you cannot test something because real data is missing, do both of the following — in order:
+
+1. **Insert seed/test data yourself** so you can verify the feature works end-to-end
+2. **Create a human-input file** so the human knows what real data needs to be provided
+
+Never skip testing. Never leave a task half-done because you couldn't connect a real Gmail account.
+
+#### Inserting seed data
+
+Use the **Supabase MCP** `execute_sql` tool to insert whatever rows you need. Always make seed data obviously fake so it is never confused with real user data.
+
+Common patterns:
+
+```sql
+-- Fake workspace for testing
+INSERT INTO workspaces (id, name, owner_id)
+VALUES ('00000000-0000-0000-0000-000000000001', 'Test Workspace', '00000000-0000-0000-0000-000000000099')
+ON CONFLICT DO NOTHING;
+
+-- Fake connected inbox (Gmail, no real tokens)
+INSERT INTO inboxes (id, workspace_id, provider, email_address, status, access_token_enc, refresh_token_enc)
+VALUES (
+  '00000000-0000-0000-0000-000000000010',
+  '00000000-0000-0000-0000-000000000001',
+  'gmail',
+  'test@example.com',
+  'connected',
+  'SEED_DATA_NOT_A_REAL_TOKEN',
+  'SEED_DATA_NOT_A_REAL_TOKEN'
+) ON CONFLICT DO NOTHING;
+
+-- Fake API key (hash of the string "mcpe_testkey")
+INSERT INTO api_keys (id, workspace_id, name, key_hash, key_prefix, scopes)
+VALUES (
+  '00000000-0000-0000-0000-000000000020',
+  '00000000-0000-0000-0000-000000000001',
+  'Test Key',
+  'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3',
+  'mcpe_te',
+  ARRAY['email:read', 'email:send', 'email:search']
+) ON CONFLICT DO NOTHING;
+
+-- Fake audit log entries for activity feed testing
+INSERT INTO audit_log (workspace_id, api_key_id, inbox_id, tool_name, success, created_at)
+SELECT
+  '00000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000020',
+  '00000000-0000-0000-0000-000000000010',
+  tool,
+  true,
+  now() - (n || ' minutes')::interval
+FROM unnest(ARRAY['list_inbox','read_email','search_emails','send_email','list_inbox']) WITH ORDINALITY AS t(tool, n)
+ON CONFLICT DO NOTHING;
+```
+
+Use `ON CONFLICT DO NOTHING` so re-running is safe. Use all-zero UUIDs with a numeric suffix for test IDs — they are visually distinct from real UUIDs.
+
+#### After testing, create a human-input file
+
+Once you have verified the feature works with seed data, create `Documents/Human-Input/<NAME>.md` to tell the human what real data is needed:
+
+```markdown
+# Real Gmail Account Needed for Inbox Testing
+
+## What I need from you
+
+A real Gmail account connected through the OAuth flow so inbox features
+can be tested with live email data.
+
+## Why I need it
+
+The inbox list, read_email, and search_emails features were built and
+verified with seed data. They need a real connected account to confirm
+OAuth token handling works end-to-end in production.
+
+## Where to get it
+
+Go to the dashboard → Inboxes → Connect Inbox → Gmail, and complete
+the OAuth flow with any Gmail account (a throwaway account is fine).
+
+## What happens next
+
+Once connected, the next agent run can test live email fetching and
+confirm token refresh works correctly.
+```
+
+Commit the human-input file with:
+```
+git add Documents/Human-Input/...
+git commit -m "docs(human-input): request real Gmail account for inbox testing"
+```
+
+#### Do not block the task on real credentials
+
+The task is still complete if:
+- The feature is fully implemented
+- It works correctly with seed data (UI renders, logic runs, no errors)
+- A human-input file exists explaining what real data is needed
+
+The task is **not** complete if you simply skipped testing because real data was unavailable.
+
+---
+
+### 9.6 Testing Checklist
 
 Before marking a task as complete:
 - [ ] Unit tests written for all functions/hooks
