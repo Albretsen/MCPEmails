@@ -7,7 +7,7 @@ Each item below represents one architecture document to write. Check it off when
 ## Backend (Supabase)
 
 - [x] **Database Schema** — Tables, relationships, indexes, and naming conventions
-- [ ] **Row-Level Security (RLS)** — Multi-tenant data isolation policies per table
+- [x] **Row-Level Security (RLS)** — Multi-tenant data isolation policies per table
 - [ ] **Authentication & Session Management** — Supabase Auth setup, JWT handling, session lifecycle, protected routes
 - [ ] **API Key Management** — Key generation, hashing, storage, scopes, rotation, and revocation
 - [ ] **Edge Functions Architecture** — Which logic lives in Edge Functions, request/response shape, cold start mitigations
