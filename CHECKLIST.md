@@ -11,7 +11,7 @@ Each item represents one meaningful unit of work: enough to make real progress, 
 - [x] Configure Supabase Auth: enable email/password provider, set site URL and redirect URLs, configure email templates (confirm, reset, invite)
 - [x] Add Supabase server client and browser client utility files (`lib/supabase/server.ts`, `lib/supabase/client.ts`, `lib/supabase/middleware.ts`)
 - [x] Add Next.js middleware to protect dashboard routes and redirect unauthenticated users to `/login`
-- [ ] Document all required environment variables in `.env.example` and wire them up in `next.config.js`
+- [x] Document all required environment variables in `.env.example` and wire them up in `next.config.js`
 
 ---
 
