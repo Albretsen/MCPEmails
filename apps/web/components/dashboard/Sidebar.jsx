@@ -1,12 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Icon, Btn, Avatar } from '../Primitives';
+import { createClient } from '@/lib/supabase/client';
 
 /* Sidebar.jsx — left nav. */
 
 
 export function Sidebar({ route, setRoute, counts }) {
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/');
+  }
   const items = [
     { id: "overview", label: "Overview",   icon: "activity" },
     { id: "inboxes",  label: "Inboxes",    icon: "inbox", count: counts.inboxes },
@@ -52,7 +61,26 @@ export function Sidebar({ route, setRoute, counts }) {
           <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)" }}>Jordan Reyes</div>
           <div style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--fg-3)" }}>Pro plan</div>
         </div>
-        <Icon name="chevron" size={14} color="var(--fg-3)" />
+        <button
+          onClick={handleSignOut}
+          title="Sign out"
+          style={{
+            background: "none",
+            border: "none",
+            padding: 4,
+            cursor: "pointer",
+            color: "var(--fg-3)",
+            borderRadius: 6,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "color 120ms var(--ease-out), background 120ms var(--ease-out)",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = "var(--fg-1)"; e.currentTarget.style.background = "var(--ink-100)"; }}
+          onMouseLeave={e => { e.currentTarget.style.color = "var(--fg-3)"; e.currentTarget.style.background = "none"; }}
+        >
+          <Icon name="logout" size={14} color="currentColor" />
+        </button>
       </div>
     </aside>
   );
