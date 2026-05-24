@@ -20,7 +20,7 @@ Each item represents one meaningful unit of work: enough to make real progress, 
 - [x] Build functional `/login` page: email/password form, Supabase Auth sign-in, error handling, redirect to dashboard on success
 - [x] Build functional `/signup` page: email/password form, Supabase Auth sign-up, success state with "check your email" message
 - [x] Build `/forgot-password` page and `/reset-password` page: send reset email, handle token from URL, update password, redirect to login
-- [ ] Implement auth callback route (`/auth/callback`): exchange code for session, handle errors, redirect to intended destination
+- [x] Implement auth callback route (`/auth/callback`): exchange code for session, handle errors, redirect to intended destination
 - [ ] Wire sign out button in dashboard sidebar to Supabase Auth sign-out and redirect to `/`
 
 ---
