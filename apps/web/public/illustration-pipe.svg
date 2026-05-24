@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" fill="none">
+  <defs>
+    <pattern id="dotgrid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#DEE1EB"></circle>
+    </pattern>
+  </defs>
+  <rect width="720" height="280" fill="#F5F6FA"></rect>
+  <rect width="720" height="280" fill="url(#dotgrid)"></rect>
+
+  
+  <g transform="translate(40,90)">
+    <rect width="140" height="100" rx="14" fill="#FFFFFF" stroke="#DEE1EB" stroke-width="1.5"></rect>
+    <text x="70" y="38" text-anchor="middle" font-family="Geist Mono, ui-monospace, monospace" font-size="11" fill="#6B7388" letter-spacing="0.08em">AI AGENT</text>
+    <text x="70" y="66" text-anchor="middle" font-family="Geist, system-ui, sans-serif" font-weight="600" font-size="17" fill="#0B1020">Claude</text>
+    <text x="70" y="84" text-anchor="middle" font-family="Geist Mono, ui-monospace, monospace" font-size="11" fill="#6B7388">list_inbox()</text>
+  </g>
+
+  
+  <g transform="translate(290,80)">
+    <rect width="140" height="120" rx="14" fill="#2547E5"></rect>
+    <rect x="22" y="32" width="96" height="48" rx="4" stroke="#FFFFFF" stroke-width="2"></rect>
+    <path d="M24 36 L70 64 L116 36" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"></path>
+    <circle cx="108" cy="32" r="6" fill="#1FCB8B" stroke="#2547E5" stroke-width="1.5"></circle>
+    <text x="70" y="102" text-anchor="middle" font-family="Geist, system-ui, sans-serif" font-weight="600" font-size="13" fill="#FFFFFF" letter-spacing="-0.01em">mcpemails.com</text>
+  </g>
+
+  
+  <g transform="translate(540,90)">
+    <rect width="140" height="100" rx="14" fill="#FFFFFF" stroke="#DEE1EB" stroke-width="1.5"></rect>
+    <text x="70" y="38" text-anchor="middle" font-family="Geist Mono, ui-monospace, monospace" font-size="11" fill="#6B7388" letter-spacing="0.08em">PROVIDER</text>
+    <text x="70" y="66" text-anchor="middle" font-family="Geist, system-ui, sans-serif" font-weight="600" font-size="17" fill="#0B1020">Gmail</text>
+    <text x="70" y="84" text-anchor="middle" font-family="Geist Mono, ui-monospace, monospace" font-size="11" fill="#6B7388">IMAP / API</text>
+  </g>
+
+  
+  <line x1="180" y1="140" x2="290" y2="140" stroke="#2547E5" stroke-width="2" stroke-dasharray="4 4"></line>
+  <line x1="430" y1="140" x2="540" y2="140" stroke="#2547E5" stroke-width="2" stroke-dasharray="4 4"></line>
+  <circle cx="235" cy="140" r="4" fill="#2547E5"></circle>
+  <circle cx="485" cy="140" r="4" fill="#2547E5"></circle>
+</svg>
