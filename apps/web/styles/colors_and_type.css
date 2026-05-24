@@ -1,0 +1,299 @@
+/* =========================================================
+   MCP Emails — Colors & Type
+   ---------------------------------------------------------
+   Cool, confident, technical-but-accessible.
+   Cobalt primary, near-black ink, mint live-state accent.
+   Geist for UI/mono. Instrument Serif for editorial display.
+   ========================================================= */
+
+/* ---------- Webfont imports (Google Fonts) ----------
+   If you have local copies in /fonts, swap these for @font-face. */
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");
+
+:root {
+  /* ============== COLOR TOKENS — RAW SCALE ============== */
+
+  /* Cobalt — the brand primary. Trustworthy, technical, alive. */
+  --cobalt-50:  #EEF2FF;
+  --cobalt-100: #DDE5FF;
+  --cobalt-200: #B6C5FF;
+  --cobalt-300: #889EFF;
+  --cobalt-400: #5973F5;
+  --cobalt-500: #2547E5;  /* brand */
+  --cobalt-600: #1B36C2;
+  --cobalt-700: #16299A;
+  --cobalt-800: #131F73;
+  --cobalt-900: #0E1750;
+
+  /* Ink / neutral — cool, slight blue cast. */
+  --ink-0:   #FFFFFF;
+  --ink-25:  #FAFBFD;
+  --ink-50:  #F5F6FA;
+  --ink-100: #ECEEF4;
+  --ink-200: #DEE1EB;
+  --ink-300: #C6CBDA;
+  --ink-400: #9AA1B6;
+  --ink-500: #6B7388;
+  --ink-600: #4B5167;
+  --ink-700: #2F3447;
+  --ink-800: #181C2B;
+  --ink-900: #0B1020;
+
+  /* Mint — the "live / connected / success" accent. Use SPARINGLY. */
+  --mint-50:  #E4FBF1;
+  --mint-100: #BFF4DC;
+  --mint-300: #5EE0AE;
+  --mint-500: #1FCB8B;
+  --mint-600: #11A971;
+  --mint-700: #0B7E55;
+
+  /* Semantic — calm system colors, not loud. */
+  --amber-100: #FCEFD2;
+  --amber-500: #F0A53E;
+  --amber-700: #9A6311;
+
+  --red-100: #FCE3E4;
+  --red-500: #E5484D;
+  --red-700: #A11D22;
+
+  /* ============== SEMANTIC SURFACES ============== */
+  --bg-page:      var(--ink-50);     /* default app background */
+  --bg-surface:   var(--ink-0);      /* card / panel */
+  --bg-sunken:    var(--ink-100);    /* code blocks, wells */
+  --bg-inverse:   var(--ink-900);    /* dark sections */
+
+  --fg-1:         var(--ink-900);    /* primary text */
+  --fg-2:         var(--ink-700);    /* body text */
+  --fg-3:         var(--ink-500);    /* muted text */
+  --fg-4:         var(--ink-400);    /* placeholder / disabled */
+  --fg-on-brand:  var(--ink-0);
+  --fg-on-dark:   var(--ink-0);
+
+  --border-1:     var(--ink-200);    /* default hairline */
+  --border-2:     var(--ink-300);    /* stronger divider */
+  --border-focus: var(--cobalt-500);
+
+  --brand:        var(--cobalt-500);
+  --brand-hover:  var(--cobalt-600);
+  --brand-press:  var(--cobalt-700);
+  --brand-soft:   var(--cobalt-50);
+
+  --live:         var(--mint-500);   /* the "connected" dot */
+  --live-soft:    var(--mint-50);
+
+  /* ============== TYPOGRAPHY — FAMILIES ============== */
+  --font-sans:    "Geist", ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+
+  /* ============== TYPE SCALE ==============
+     Tight, modern scale. Display sizes lean BIG. */
+  --fs-12: 0.75rem;     /* 12 — micro / labels  */
+  --fs-13: 0.8125rem;   /* 13 — caption         */
+  --fs-14: 0.875rem;    /* 14 — small body / ui */
+  --fs-15: 0.9375rem;   /* 15 — dense body      */
+  --fs-16: 1rem;        /* 16 — body            */
+  --fs-18: 1.125rem;    /* 18 — lead            */
+  --fs-20: 1.25rem;     /* 20 — h5              */
+  --fs-24: 1.5rem;      /* 24 — h4              */
+  --fs-30: 1.875rem;    /* 30 — h3              */
+  --fs-38: 2.375rem;    /* 38 — h2              */
+  --fs-48: 3rem;        /* 48 — h1              */
+  --fs-64: 4rem;        /* 64 — display sm      */
+  --fs-88: 5.5rem;      /* 88 — display lg      */
+
+  --lh-tight:  1.05;
+  --lh-snug:   1.2;
+  --lh-base:   1.5;
+  --lh-relaxed:1.65;
+
+  --tracking-tight:  -0.02em;
+  --tracking-snug:   -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide:    0.04em;
+  --tracking-mono:   -0.005em;
+
+  /* ============== SPACING (4px grid) ============== */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ============== RADII ============== */
+  --r-2:   2px;
+  --r-4:   4px;
+  --r-6:   6px;
+  --r-8:   8px;     /* default for buttons, inputs */
+  --r-12:  12px;    /* cards */
+  --r-16:  16px;    /* large panels */
+  --r-pill: 999px;
+
+  /* ============== SHADOWS — subtle, layered ============== */
+  --shadow-1: 0 1px 2px rgba(11, 16, 32, 0.04);
+  --shadow-2: 0 1px 2px rgba(11, 16, 32, 0.04), 0 2px 8px rgba(11, 16, 32, 0.04);
+  --shadow-3: 0 2px 4px rgba(11, 16, 32, 0.04), 0 8px 24px rgba(11, 16, 32, 0.08);
+  --shadow-4: 0 8px 24px rgba(11, 16, 32, 0.08), 0 24px 56px rgba(11, 16, 32, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(37, 71, 229, 0.18);
+
+  /* ============== MOTION ============== */
+  --ease-out:    cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.6, 0, 0.2, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+}
+
+/* =========================================================
+   SEMANTIC TYPE CLASSES — apply these directly
+   ========================================================= */
+/* Display = SaaS-style big sans (Geist 600), tight tracking. */
+.t-display-lg {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-88);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  color: var(--fg-1);
+}
+.t-display-sm {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-64);
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--fg-1);
+}
+/* Optional editorial italic accent — use sparingly on one word only. */
+.t-display-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.t-h1 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-48);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-1);
+}
+.t-h2 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-38);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-1);
+}
+.t-h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-30);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-1);
+}
+.t-h4 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-24);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-1);
+}
+.t-h5 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-20);
+  line-height: var(--lh-snug);
+  color: var(--fg-1);
+}
+
+.t-lead {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--fs-20);
+  line-height: var(--lh-relaxed);
+  color: var(--fg-2);
+}
+.t-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--fs-16);
+  line-height: var(--lh-relaxed);
+  color: var(--fg-2);
+}
+.t-body-sm {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--fs-14);
+  line-height: var(--lh-base);
+  color: var(--fg-2);
+}
+.t-caption {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--fs-13);
+  line-height: var(--lh-base);
+  color: var(--fg-3);
+}
+
+.t-label {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--fs-12);
+  line-height: 1.3;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.t-code,
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-14);
+  line-height: var(--lh-base);
+  letter-spacing: var(--tracking-mono);
+  color: var(--fg-1);
+}
+.t-code-inline {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  padding: 0.1em 0.35em;
+  background: var(--bg-sunken);
+  border-radius: var(--r-4);
+  color: var(--fg-1);
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-16);
+  line-height: var(--lh-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+a {
+  color: var(--brand);
+  text-decoration: none;
+  text-underline-offset: 0.18em;
+  transition: color var(--dur-1) var(--ease-out);
+}
+a:hover { color: var(--brand-hover); text-decoration: underline; }
+::selection { background: var(--cobalt-200); color: var(--ink-900); }

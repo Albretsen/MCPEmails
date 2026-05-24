@@ -1,0 +1,24 @@
+{
+  "name": "mcpemails-monorepo",
+  "version": "1.0.0",
+  "description": "Send and receive emails from any agent.",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/web",
+    "build": "npm run build -w apps/web"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Albretsen/MCPEmails.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Albretsen/MCPEmails/issues"
+  },
+  "homepage": "https://github.com/Albretsen/MCPEmails#readme"
+}
