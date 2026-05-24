@@ -18,7 +18,12 @@ function PageHeader({ title, sub, action }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, activity, onConnect }) {
+export function OverviewPage({ inboxes, activity, stats, onConnect }) {
+  const inboxCount = stats?.inboxCount ?? 0;
+  const apiKeysCount = stats?.apiKeysCount ?? 0;
+  const callsToday = stats?.callsToday ?? 0;
+  const callsThisMonth = stats?.callsThisMonth ?? 0;
+
   return (
     <div className="page">
       <PageHeader
@@ -30,23 +35,23 @@ export function OverviewPage({ inboxes, activity, onConnect }) {
       <div className="stat-grid">
         <div className="stat">
           <div className="label">Inboxes connected</div>
-          <div className="value">{inboxes.filter(i => i.status === "live").length}<span style={{fontSize:16, color:"var(--fg-3)", fontWeight:400}}> / 10</span></div>
-          <div className="delta">+1 this week</div>
+          <div className="value">{inboxCount.toLocaleString()}</div>
+          <div className="delta">{inboxCount === 1 ? "1 active inbox" : `${inboxCount} active inboxes`}</div>
         </div>
         <div className="stat">
-          <div className="label">MCP calls (30d)</div>
-          <div className="value">12,484</div>
-          <div className="delta">+18.2% vs. last 30d</div>
+          <div className="label">API keys</div>
+          <div className="value">{apiKeysCount.toLocaleString()}</div>
+          <div className="delta">{apiKeysCount === 1 ? "1 active key" : `${apiKeysCount} active keys`}</div>
         </div>
         <div className="stat">
-          <div className="label">Avg. response time</div>
-          <div className="value">214<span style={{fontSize:16, color:"var(--fg-3)", fontWeight:400}}> ms</span></div>
-          <div className="delta neg">+24ms vs. last 30d</div>
+          <div className="label">Calls today</div>
+          <div className="value">{callsToday.toLocaleString()}</div>
+          <div className="delta">MCP tool calls (UTC day)</div>
         </div>
         <div className="stat">
-          <div className="label">Plan usage</div>
-          <div className="value">62<span style={{fontSize:16, color:"var(--fg-3)", fontWeight:400}}>%</span></div>
-          <div className="delta">12.5k / 20k calls</div>
+          <div className="label">Calls this month</div>
+          <div className="value">{callsThisMonth.toLocaleString()}</div>
+          <div className="delta">MCP tool calls (UTC month)</div>
         </div>
       </div>
 

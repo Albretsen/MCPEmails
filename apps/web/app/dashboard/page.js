@@ -29,6 +29,69 @@ function computeInitials(displayName, email) {
   return '?';
 }
 
+/**
+ * Fetches the four Overview page stat counts for a workspace in parallel.
+ * Returns zeros on any query error so the page always renders.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string} workspaceId
+ * @returns {Promise<{ inboxCount: number, apiKeysCount: number, callsToday: number, callsThisMonth: number }>}
+ */
+async function fetchOverviewStats(supabase, workspaceId) {
+  const now = new Date();
+  // Midnight of the current calendar day (UTC)
+  const todayStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  ).toISOString();
+  // First instant of the current calendar month (UTC)
+  const monthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
+  ).toISOString();
+
+  const [
+    inboxResult,
+    apiKeysResult,
+    callsTodayResult,
+    callsMonthResult,
+  ] = await Promise.all([
+    // Active inboxes — status = 'active', not soft-deleted
+    supabase
+      .from('inboxes')
+      .select('id', { count: 'exact', head: true })
+      .eq('workspace_id', workspaceId)
+      .eq('status', 'active')
+      .is('deleted_at', null),
+
+    // Active API keys — not soft-deleted
+    supabase
+      .from('api_keys')
+      .select('id', { count: 'exact', head: true })
+      .eq('workspace_id', workspaceId)
+      .is('deleted_at', null),
+
+    // MCP tool calls made today (UTC day)
+    supabase
+      .from('activity_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('workspace_id', workspaceId)
+      .gte('created_at', todayStart),
+
+    // MCP tool calls made this calendar month (UTC)
+    supabase
+      .from('activity_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('workspace_id', workspaceId)
+      .gte('created_at', monthStart),
+  ]);
+
+  return {
+    inboxCount: inboxResult.count ?? 0,
+    apiKeysCount: apiKeysResult.count ?? 0,
+    callsToday: callsTodayResult.count ?? 0,
+    callsThisMonth: callsMonthResult.count ?? 0,
+  };
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
@@ -61,10 +124,16 @@ export default async function DashboardPage() {
   const workspaceSlug = workspace?.slug ?? 'workspace';
   const plan = workspace?.plan ?? 'free';
 
+  // Fetch Overview stat counts; skip if no workspace exists yet (new user).
+  const overviewStats = workspace
+    ? await fetchOverviewStats(supabase, workspace.id)
+    : { inboxCount: 0, apiKeysCount: 0, callsToday: 0, callsThisMonth: 0 };
+
   return (
     <DashboardApp
       user={{ displayName, email, initials }}
       workspace={{ slug: workspaceSlug, plan }}
+      overviewStats={overviewStats}
     />
   );
 }
