@@ -42,7 +42,7 @@ function readQuery(searchParams, key) {
   return searchParams?.get(key) || null;
 }
 
-export function DashboardApp() {
+export function DashboardApp({ user, workspace }) {
   const searchParams = useSearchParams();
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
@@ -121,9 +121,9 @@ export function DashboardApp() {
 
   return (
     <div className="shell" data-screen-label={"Dashboard / " + route}>
-      <Sidebar route={route} setRoute={setRoute} counts={counts} />
+      <Sidebar route={route} setRoute={setRoute} counts={counts} user={user} workspace={workspace} />
       <div className="main-col">
-        <Topbar route={route} />
+        <Topbar route={route} workspace={workspace} />
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
           <FirstRunBanner onConnect={() => setShowConnect(true)} />

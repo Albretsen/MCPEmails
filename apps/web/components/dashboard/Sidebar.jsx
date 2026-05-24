@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 /* Sidebar.jsx — left nav. */
 
 
-export function Sidebar({ route, setRoute, counts }) {
+export function Sidebar({ route, setRoute, counts, user, workspace }) {
   const router = useRouter();
 
   async function handleSignOut() {
@@ -56,10 +56,14 @@ export function Sidebar({ route, setRoute, counts }) {
       </nav>
 
       <div className="footer-user">
-        <Avatar initials="JR" />
+        <Avatar initials={user?.initials ?? '?'} />
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)" }}>Jordan Reyes</div>
-          <div style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--fg-3)" }}>Pro plan</div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {user?.displayName || user?.email || 'Account'}
+          </div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--fg-3)", textTransform: "capitalize" }}>
+            {workspace?.plan ?? 'free'} plan
+          </div>
         </div>
         <button
           onClick={handleSignOut}
@@ -86,7 +90,7 @@ export function Sidebar({ route, setRoute, counts }) {
   );
 }
 
-export function Topbar({ route }) {
+export function Topbar({ route, workspace }) {
   const labels = {
     overview: "Overview",
     inboxes: "Inboxes",
@@ -98,7 +102,7 @@ export function Topbar({ route }) {
   return (
     <header className="topbar">
       <div className="crumbs">
-        <span>jordan-personal</span>
+        <span>{workspace?.slug ?? 'workspace'}</span>
         <span className="sep">/</span>
         <span className="here">{labels[route]}</span>
       </div>
