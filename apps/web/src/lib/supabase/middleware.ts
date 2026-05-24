@@ -44,9 +44,19 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   } = await supabase.auth.getUser();
 
   if (!user && isProtectedPath(request.nextUrl.pathname)) {
+    // Unauthenticated user accessing a protected route → send to /login.
+    // Preserve the original path so the callback can redirect back after sign-in.
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (user && isAuthPath(request.nextUrl.pathname)) {
+    // Already-authenticated user visiting an auth page → send to /dashboard.
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/dashboard';
+    redirectUrl.searchParams.delete('redirect');
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -59,4 +69,13 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
 function isProtectedPath(pathname: string): boolean {
   const protectedPrefixes = ['/dashboard', '/settings', '/api/mcp'];
   return protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
+}
+
+/**
+ * Returns true if the given pathname is an auth page that authenticated
+ * users should be bounced away from.
+ */
+function isAuthPath(pathname: string): boolean {
+  const authPaths = ['/login', '/signup'];
+  return authPaths.some((path) => pathname === path || pathname.startsWith(path + '/'));
 }
