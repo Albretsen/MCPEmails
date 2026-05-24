@@ -28,7 +28,7 @@ Each item represents one meaningful unit of work: enough to make real progress, 
 ## 3. Dashboard — Core & Overview
 
 - [x] Replace all mock/static data in the dashboard with real Supabase queries: user name, email, avatar initials in sidebar
-- [ ] Build the Overview page with live data: connected inbox count, API keys count, total MCP calls today, calls this month — all from real DB queries
+- [x] Build the Overview page with live data: connected inbox count, API keys count, total MCP calls today, calls this month — all from real DB queries
 - [ ] Build the Overview page activity feed: list the last 10 MCP tool calls from `audit_log` with tool name, inbox, timestamp
 
 ---
