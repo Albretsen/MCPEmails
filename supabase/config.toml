@@ -1,0 +1,111 @@
+# ============================================================
+# Supabase CLI project configuration — MCPEmails
+# ============================================================
+# This file configures the local Supabase development environment
+# and documents the intended production settings. Production auth
+# settings (site URL, redirect URLs, email templates) must also be
+# applied in the Supabase dashboard — see:
+#   Documents/Human-Input/SUPABASE_AUTH_DASHBOARD_CONFIG_NEEDED.md
+# ============================================================
+
+[project]
+id = "swvaxorwumispmjaaszb"
+
+# ============================================================
+# API
+# ============================================================
+[api]
+# Local dev port for the Supabase API gateway
+port = 54321
+# Schemas exposed via the auto-generated REST and GraphQL APIs
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+# ============================================================
+# Auth
+# ============================================================
+[auth]
+# The URL of the production site. Supabase uses this as the base
+# for magic-link and OTP email links. Change to your production
+# domain before going live.
+site_url = "http://localhost:3000"
+
+# Additional URLs that Supabase Auth will accept as redirect targets
+# after a sign-in or email-confirmation flow. Wildcards are supported.
+additional_redirect_urls = [
+  "http://localhost:3000/auth/callback",
+  "https://mcpemails.com/auth/callback",
+  "https://*.vercel.app/auth/callback",
+]
+
+# JWT expiry in seconds. 3600 = 1 hour (matches architecture doc).
+jwt_expiry = 3600
+
+# Enable the PKCE auth flow (required for server-side Next.js auth)
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+
+[auth.email]
+# Email OTP / magic link is the primary sign-in method.
+# Password-based auth is disabled in the MVP.
+enable_signup          = true
+double_confirm_changes = true
+enable_confirmations   = true
+
+# OTP token length (6 digits for magic link codes)
+otp_length  = 6
+# OTP expiry in seconds (3600 = 1 hour)
+otp_expiry  = 3600
+
+# ============================================================
+# Email templates
+# Custom branded HTML templates live in supabase/templates/.
+# Paste the contents of each file into the Supabase dashboard:
+#   Authentication → Email Templates
+# ============================================================
+[auth.email.template.confirmation]
+subject  = "Confirm your MCPEmails account"
+content_path = "./templates/confirm_signup.html"
+
+[auth.email.template.magic_link]
+subject  = "Your MCPEmails sign-in link"
+content_path = "./templates/magic_link.html"
+
+[auth.email.template.invite]
+subject  = "You've been invited to MCPEmails"
+content_path = "./templates/invite.html"
+
+[auth.email.template.recovery]
+subject  = "Reset your MCPEmails password"
+content_path = "./templates/reset_password.html"
+
+# ============================================================
+# Database
+# ============================================================
+[db]
+port          = 54322
+shadow_port   = 54320
+major_version = 15
+
+[db.pooler]
+enabled           = false
+port              = 54329
+pool_mode         = "transaction"
+default_pool_size = 20
+max_client_conn   = 100
+
+# ============================================================
+# Studio (local dashboard)
+# ============================================================
+[studio]
+enabled = true
+port    = 54323
+api_url = "http://127.0.0.1"
+
+# ============================================================
+# Storage
+# ============================================================
+[storage]
+enabled = true
+file_size_limit = "50MiB"
