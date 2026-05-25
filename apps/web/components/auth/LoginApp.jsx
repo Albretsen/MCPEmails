@@ -95,7 +95,7 @@ export function LoginApp() {
   function buildCallbackUrl() {
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get('redirect');
-    const callbackUrl = new URL('/auth/callback', window.location.origin);
+    const callbackUrl = new URL('/auth/callback', process.env.NEXT_PUBLIC_APP_URL || window.location.origin);
     if (redirect && redirect.startsWith('/')) {
       callbackUrl.searchParams.set('next', redirect);
     }
@@ -222,7 +222,7 @@ export function LoginApp() {
                 variant="primary"
                 className="auth-submit"
                 type="submit"
-                onClick={handleSubmit}
+                disabled={step === 'sending'}
               >
                 Send magic link
               </MBtn>
