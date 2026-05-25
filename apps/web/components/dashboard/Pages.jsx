@@ -1378,8 +1378,8 @@ export function KeysPage({ keys, onCreate, onKeyCreated, onRevoke }) {
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-h">
           <div>
-            <div className="title">Connect from Claude Desktop</div>
-            <div className="sub">Paste this snippet into your <code className="t-code-inline">~/.claude/mcp.json</code></div>
+            <div className="title">Connect from Claude Code or Claude Desktop</div>
+            <div className="sub">Add to <code className="t-code-inline">~/.claude/mcp.json</code> (Claude Code) or <code className="t-code-inline">claude_desktop_config.json</code> (Claude Desktop)</div>
           </div>
         </div>
         <div className="card-body">
@@ -1387,7 +1387,7 @@ export function KeysPage({ keys, onCreate, onKeyCreated, onRevoke }) {
 {`{
   "mcpServers": {
     "mcpemails": {
-      "url": "https://mcp.mcpemails.com/v1",
+      "url": "https://mcpemails.com/api/mcp",
       "auth": { "type": "bearer", "token": "mcpe_••••••••" }
     }
   }
