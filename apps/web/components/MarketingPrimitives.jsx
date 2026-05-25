@@ -36,7 +36,7 @@ export function MIcon({ name, size = 18, color = "currentColor", strokeWidth = 1
               stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">{MI[name]}</svg>;
 }
 
-export function MBtn({ variant = "primary", size = "md", icon, children, href, onClick, type, className = "" }) {
+export function MBtn({ variant = "primary", size = "md", icon, children, href, onClick, type, className = "", disabled = false }) {
   const cls = "btn btn-" + variant + (size === "lg" ? " btn-lg" : size === "sm" ? " btn-sm" : "") + " " + className;
   const node = (
     <>
@@ -47,7 +47,7 @@ export function MBtn({ variant = "primary", size = "md", icon, children, href, o
   if (href !== undefined) {
     return <a className={cls.trim()} href={href} onClick={onClick}>{node}</a>;
   }
-  return <button type={type || "button"} className={cls.trim()} onClick={onClick}>{node}</button>;
+  return <button type={type || "button"} className={cls.trim()} onClick={onClick} disabled={disabled}>{node}</button>;
 }
 
 /* Theme toggle: persists to localStorage and posts to parent (tweak system) */
