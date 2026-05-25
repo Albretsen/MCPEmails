@@ -1,299 +1,319 @@
-import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'node:crypto';
+import { NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { generateApiKey } from '@/lib/api-keys/generate';
+import { sha256hex, computeS256Challenge, generateRefreshToken } from '@/lib/oauth/crypto';
+import { oauthError } from '@/lib/oauth/errors';
+import type { Json } from '@/types/database.types';
 
 /**
  * POST /api/oauth/token
  *
- * Authorization code → API key exchange (OAuth 2.0 with PKCE, RFC 6749 §4.1.3).
+ * Exchanges an authorization code or refresh token for an access token.
+ * Implements RFC 6749 §4.1.3 (authorization_code) and §6 (refresh_token).
+ * PKCE S256 is mandatory for authorization_code (RFC 7636).
  *
- * Called by MCP clients after the user has approved access on /authorize.
- * Validates the authorization code, verifies the PKCE S256 code_verifier,
- * issues a new MCPEmails API key scoped to the approved inboxes and permissions,
- * and returns it as a bearer access token.
+ * Access tokens are short-lived mcpe_ API keys (1 hour).
+ * Refresh tokens are mcpr_ values stored as SHA-256 hashes in oauth_refresh_tokens.
+ * Refresh token rotation is enforced: each refresh issues a new pair and revokes the old one.
  *
- * Request body (application/x-www-form-urlencoded or application/json):
- *   grant_type      "authorization_code" (required)
- *   code            string — plaintext authorization code from the /authorize redirect
- *   code_verifier   string — PKCE plain verifier corresponding to the S256 challenge
- *   client_id       string — must match the client_id used at /authorize
- *   redirect_uri    string — must exactly match the redirect_uri used at /authorize
- *
- * Successful response (200 application/json, Cache-Control: no-store):
- *   { access_token: string, token_type: "bearer", scope: string }
- *
- * Error responses (400 application/json, Cache-Control: no-store):
- *   { error: string, error_description: string }
- *   - "unsupported_grant_type" — grant_type is not "authorization_code"
- *   - "invalid_request"        — missing or malformed required parameter
- *   - "invalid_grant"          — code not found, expired, PKCE failure, or redirect_uri mismatch
- *   - "server_error"           — unexpected failure during key issuance
- *
- * Security properties:
- *   - PKCE S256 is mandatory: code_verifier is validated against the stored
- *     code_challenge (BASE64URL(SHA-256(code_verifier)) must equal code_challenge).
- *   - The authorization code is single-use: it is hard-deleted immediately after
- *     successful validation, before the API key is inserted.
- *   - redirect_uri must exactly match the value submitted at /authorize time.
- *   - Expired codes (TTL = 10 minutes, enforced by DB column default + query filter)
- *     are rejected with the same "invalid_grant" error as missing codes to prevent
- *     oracle attacks.
- *   - All DB operations use the service-role client because oauth_auth_codes has
- *     RLS deny-all for all authenticated users.
- *   - No Supabase Auth session is required — this endpoint is machine-to-machine.
- *
- * References:
- *   RFC 6749 §4.1.3  — Authorization Code Exchange
- *   RFC 7636         — Proof Key for Code Exchange (PKCE)
- *   Documents/Architecture/mcp-authentication-flow.md §7 (OAuth Authorize Flow)
- *   Documents/Architecture/api-key-management.md §1 (Key Format and Generation)
+ * Machine-to-machine: no user session required. Service-role client throughout.
  */
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── CORS ─────────────────────────────────────────────────────────────────────
 
-/** SHA-256 hex digest of a UTF-8 string. */
-function sha256Hex(value: string): string {
-  return crypto.createHash('sha256').update(value, 'utf8').digest('hex');
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
 }
 
-/**
- * Compute the PKCE S256 code_challenge from a plain code_verifier.
- *
- * Per RFC 7636 §4.2 and §4.6:
- *   code_challenge = BASE64URL(SHA-256(ASCII(code_verifier)))
- *
- * BASE64URL uses the URL-safe alphabet (+→-, /→_) with no padding characters.
- */
-function computeS256Challenge(codeVerifier: string): string {
-  const hashBytes = crypto.createHash('sha256').update(codeVerifier, 'ascii').digest();
-  return hashBytes
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+// ── Rate limiting (in-process; best-effort on single instance) ───────────────
+// On Vercel, each function instance has its own memory; this does not protect
+// across concurrent instances. Replace with a distributed store (e.g. Supabase
+// table or Vercel KV) when abuse is observed.
+
+const ipTimestamps = new Map<string, number[]>();
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60_000;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (ipTimestamps.get(ip) ?? []).filter(t => now - t < RATE_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT) return true;
+  recent.push(now);
+  ipTimestamps.set(ip, recent);
+  return false;
 }
 
-/**
- * Return a standard OAuth 2.0 error JSON response with no-cache headers.
- * All error bodies follow RFC 6749 §5.2 format: { error, error_description }.
- */
-function oauthError(
-  error: string,
-  description: string,
-  status: number = 400
-): NextResponse {
-  return NextResponse.json(
-    { error, error_description: description },
-    {
-      status,
-      headers: {
-        'Cache-Control': 'no-store',
-        Pragma: 'no-cache',
-      },
-    }
-  );
-}
+// ── Body parsing ──────────────────────────────────────────────────────────────
 
-/**
- * Parse the request body as either application/x-www-form-urlencoded or
- * application/json. Returns a plain object of string values or null on error.
- */
-async function parseBody(
-  request: NextRequest
-): Promise<Record<string, string> | null> {
-  const contentType = request.headers.get('content-type') ?? '';
-
+async function parseBody(req: NextRequest): Promise<Record<string, string> | null> {
+  const ct = req.headers.get('content-type') ?? '';
   try {
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-      const text = await request.text();
-      const params = new URLSearchParams(text);
-      const result: Record<string, string> = {};
-      for (const [key, value] of params.entries()) {
-        result[key] = value;
-      }
-      return result;
+    if (ct.includes('application/x-www-form-urlencoded')) {
+      const params = new URLSearchParams(await req.text());
+      return Object.fromEntries(params.entries());
     }
-
-    // Fall back to JSON (some MCP clients send JSON bodies)
-    const json = await request.json() as unknown;
+    const json = await req.json() as unknown;
     if (json !== null && typeof json === 'object' && !Array.isArray(json)) {
-      const result: Record<string, string> = {};
-      for (const [key, value] of Object.entries(json as Record<string, unknown>)) {
-        if (typeof value === 'string') {
-          result[key] = value;
-        }
+      const out: Record<string, string> = {};
+      for (const [k, v] of Object.entries(json as Record<string, unknown>)) {
+        if (typeof v === 'string') out[k] = v;
       }
-      return result;
+      return out;
     }
-
     return null;
   } catch {
     return null;
   }
 }
 
-// ── Route Handler ──────────────────────────────────────────────────────────
+// ── Audit logging ─────────────────────────────────────────────────────────────
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
-  // ── 1. Parse request body ──────────────────────────────────────────────
-  const body = await parseBody(request);
+async function logEvent(
+  req: NextRequest,
+  eventType: string,
+  meta: Json
+): Promise<void> {
+  try {
+    const service = createServiceRoleClient();
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? null;
+    await service.from('auth_logs').insert({
+      event_type: eventType,
+      metadata: meta,
+      ip_address: ip,
+      user_agent: req.headers.get('user-agent') ?? null,
+    });
+  } catch {
+    // Non-fatal; never let logging break the token response.
+  }
+}
 
+// ── Route handler ─────────────────────────────────────────────────────────────
+
+export async function POST(req: NextRequest): Promise<Response> {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+  if (isRateLimited(ip)) {
+    return oauthError('access_denied', 'Too many requests.', 429, { 'Retry-After': '60' });
+  }
+
+  const body = await parseBody(req);
   if (!body) {
-    return oauthError(
-      'invalid_request',
-      'Request body must be application/x-www-form-urlencoded or application/json.'
-    );
+    return oauthError('invalid_request', 'Body must be application/x-www-form-urlencoded or JSON.');
   }
 
-  const { grant_type, code, code_verifier, client_id, redirect_uri } = body;
+  const grantType = body['grant_type'];
+  const clientId  = body['client_id']?.trim() ?? '';
 
-  // ── 2. Validate grant_type ─────────────────────────────────────────────
-  if (!grant_type) {
-    return oauthError('invalid_request', 'grant_type is required.');
-  }
-  if (grant_type !== 'authorization_code') {
-    return oauthError(
-      'unsupported_grant_type',
-      'Only grant_type=authorization_code is supported.'
-    );
-  }
+  if (!grantType) return oauthError('invalid_request', 'grant_type is required.');
+  if (!clientId)  return oauthError('invalid_request', 'client_id is required.');
 
-  // ── 3. Validate required parameters ───────────────────────────────────
-  if (!code || typeof code !== 'string' || code.trim() === '') {
-    return oauthError('invalid_request', 'code is required.');
-  }
-  if (!code_verifier || typeof code_verifier !== 'string' || code_verifier.trim() === '') {
-    return oauthError('invalid_request', 'code_verifier is required (PKCE S256).');
-  }
-  if (!client_id || typeof client_id !== 'string' || client_id.trim() === '') {
-    return oauthError('invalid_request', 'client_id is required.');
-  }
-  if (!redirect_uri || typeof redirect_uri !== 'string' || redirect_uri.trim() === '') {
-    return oauthError('invalid_request', 'redirect_uri is required.');
-  }
-
-  // ── 4. Look up the authorization code ─────────────────────────────────
-  // oauth_auth_codes has RLS deny-all; must use service-role client.
-  // The query filters expired codes inline so the same "invalid_grant" error
-  // is returned for both "not found" and "expired" cases — no oracle attack.
   const service = createServiceRoleClient();
 
-  const codeHash = sha256Hex(code.trim());
+  // ── Authorization Code grant ────────────────────────────────────────────────
 
-  const { data: authCode, error: lookupError } = await service
-    .from('oauth_auth_codes')
-    .select(
-      'id, client_id, workspace_id, user_id, client_name, redirect_uri, code_challenge, scopes, inbox_ids'
-    )
-    .eq('code_hash', codeHash)
-    .eq('client_id', client_id.trim())
-    .gt('expires_at', new Date().toISOString())
-    .maybeSingle();
+  if (grantType === 'authorization_code') {
+    const code         = body['code']?.trim() ?? '';
+    const codeVerifier = body['code_verifier']?.trim() ?? '';
+    const redirectUri  = body['redirect_uri']?.trim() ?? '';
 
-  if (lookupError) {
-    console.error('oauth_token_lookup_error', { error: lookupError.message });
-    return oauthError('server_error', 'Failed to validate authorization code.', 500);
-  }
+    if (!code)         return oauthError('invalid_request', 'code is required.');
+    if (!codeVerifier) return oauthError('invalid_request', 'code_verifier is required (PKCE S256).');
+    if (!redirectUri)  return oauthError('invalid_request', 'redirect_uri is required.');
 
-  if (!authCode) {
-    // Intentionally identical error for not-found, expired, and wrong client_id
-    // to prevent oracle attacks distinguishing these states.
-    return oauthError(
-      'invalid_grant',
-      'Authorization code is invalid or has expired.'
-    );
-  }
+    const codeHash = sha256hex(code);
 
-  // ── 5. Validate redirect_uri exact match ───────────────────────────────
-  // RFC 6749 §4.1.3 requires redirect_uri to match the one used at /authorize.
-  if (authCode.redirect_uri !== redirect_uri.trim()) {
-    return oauthError(
-      'invalid_grant',
-      'redirect_uri does not match the value used when the authorization code was issued.'
-    );
-  }
+    const { data: authCode, error: lookupErr } = await service
+      .from('oauth_auth_codes')
+      .select('id, client_id, workspace_id, user_id, client_name, redirect_uri, code_challenge, code_challenge_method, scopes, inbox_ids')
+      .eq('code_hash', codeHash)
+      .eq('client_id', clientId)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
 
-  // ── 6. Validate PKCE code_verifier (S256) ─────────────────────────────
-  // Only S256 is accepted; plain verifiers are rejected (RFC 7636 §4.6).
-  // Compute BASE64URL(SHA-256(code_verifier)) and compare to stored challenge.
-  const computedChallenge = computeS256Challenge(code_verifier.trim());
-
-  // Use a constant-time comparison to avoid timing oracles on the challenge value.
-  const storedChallengeBytes = Buffer.from(authCode.code_challenge, 'utf8');
-  const computedChallengeBytes = Buffer.from(computedChallenge, 'utf8');
-
-  const pkceValid =
-    storedChallengeBytes.length === computedChallengeBytes.length &&
-    crypto.timingSafeEqual(storedChallengeBytes, computedChallengeBytes);
-
-  if (!pkceValid) {
-    return oauthError(
-      'invalid_grant',
-      'PKCE code_verifier does not match the code_challenge.'
-    );
-  }
-
-  // ── 7. Delete the authorization code (single-use enforcement) ─────────
-  // Hard-delete immediately after validation, before issuing the key.
-  // If the delete fails, we do not proceed — a second exchange attempt would
-  // otherwise succeed with the same code.
-  const { error: deleteError } = await service
-    .from('oauth_auth_codes')
-    .delete()
-    .eq('id', authCode.id);
-
-  if (deleteError) {
-    console.error('oauth_token_code_delete_error', { error: deleteError.message });
-    return oauthError(
-      'server_error',
-      'Failed to consume authorization code. Please restart the authorization flow.'
-    );
-  }
-
-  // ── 8. Generate and persist the API key ───────────────────────────────
-  // generateApiKey() uses crypto.randomBytes(32) — 256 bits of CSPRNG entropy.
-  // Only the SHA-256 hash and display prefix are stored; rawKey is returned once.
-  const { rawKey, keyHash, keyPrefix } = generateApiKey();
-
-  const keyName = `OAuth: ${authCode.client_name}`;
-
-  const { error: insertError } = await service.from('api_keys').insert({
-    workspace_id: authCode.workspace_id,
-    created_by:   authCode.user_id,
-    name:         keyName,
-    key_prefix:   keyPrefix,
-    key_hash:     keyHash,
-    scopes:       authCode.scopes,
-    // null means "all active inboxes in the workspace"; a non-empty array
-    // restricts access to the specific inboxes the user approved.
-    inbox_ids:    authCode.inbox_ids ?? null,
-  });
-
-  if (insertError) {
-    console.error('oauth_token_key_insert_error', { error: insertError.message });
-    return oauthError(
-      'server_error',
-      'Failed to issue API key. Please restart the authorization flow.'
-    );
-  }
-
-  // ── 9. Return the access token ─────────────────────────────────────────
-  // rawKey is the ONLY time the plaintext key exists outside memory.
-  // After this response is serialised and sent, it is unrecoverable.
-  // The MCP client must store it immediately.
-  return NextResponse.json(
-    {
-      access_token: rawKey,
-      token_type:   'bearer',
-      scope:        authCode.scopes.join(' '),
-    },
-    {
-      status: 200,
-      headers: {
-        'Cache-Control': 'no-store',
-        Pragma:          'no-cache',
-      },
+    if (lookupErr) {
+      console.error('oauth_token_lookup_error', lookupErr.message);
+      return oauthError('server_error', 'Failed to validate authorization code.', 500);
     }
-  );
+    if (!authCode) {
+      return oauthError('invalid_grant', 'Authorization code is invalid or has expired.');
+    }
+
+    // redirect_uri exact match (RFC 6749 §4.1.3)
+    if (authCode.redirect_uri !== redirectUri) {
+      return oauthError('invalid_grant', 'redirect_uri does not match the code.');
+    }
+
+    // Re-enforce S256 from stored method (never trust the incoming request for this)
+    if (authCode.code_challenge_method !== 'S256') {
+      return oauthError('invalid_grant', 'Only S256 PKCE is supported.');
+    }
+
+    // PKCE verification: BASE64URL(SHA-256(code_verifier)) must equal stored challenge
+    const computedChallenge = computeS256Challenge(codeVerifier);
+    if (computedChallenge !== authCode.code_challenge) {
+      return oauthError('invalid_grant', 'PKCE code_verifier does not match the code_challenge.');
+    }
+
+    // Single-use: hard-delete before issuing token (prevents replay even if insert fails)
+    const { error: deleteErr } = await service
+      .from('oauth_auth_codes')
+      .delete()
+      .eq('id', authCode.id);
+
+    if (deleteErr) {
+      console.error('oauth_token_code_delete_error', deleteErr.message);
+      return oauthError('server_error', 'Failed to consume authorization code. Restart the flow.');
+    }
+
+    // Issue 1-hour access token
+    const { rawKey, keyHash, keyPrefix } = generateApiKey();
+    const accessExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+
+    const { error: keyInsertErr } = await service.from('api_keys').insert({
+      workspace_id: authCode.workspace_id,
+      created_by:   authCode.user_id,
+      name:         `OAuth: ${authCode.client_name}`,
+      key_prefix:   keyPrefix,
+      key_hash:     keyHash,
+      scopes:       authCode.scopes,
+      inbox_ids:    authCode.inbox_ids ?? null,
+      expires_at:   accessExpiresAt,
+    });
+
+    if (keyInsertErr) {
+      console.error('oauth_token_key_insert_error', keyInsertErr.message);
+      return oauthError('server_error', 'Failed to issue access token. Restart the flow.');
+    }
+
+    // Issue 6-month refresh token
+    const refreshToken = generateRefreshToken();
+    const refreshHash  = sha256hex(refreshToken);
+    const refreshExpiresAt = new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString();
+
+    await service.from('oauth_refresh_tokens').insert({
+      refresh_hash: refreshHash,
+      client_id:    clientId,
+      workspace_id: authCode.workspace_id,
+      user_id:      authCode.user_id,
+      client_name:  authCode.client_name,
+      scopes:       authCode.scopes,
+      inbox_ids:    authCode.inbox_ids ?? null,
+      expires_at:   refreshExpiresAt,
+    });
+
+    void logEvent(req, 'oauth_token_issued', {
+      client_id:  clientId,
+      key_prefix: keyPrefix,
+      scopes:     authCode.scopes,
+      workspace_id: authCode.workspace_id,
+    });
+
+    return Response.json(
+      {
+        access_token:  rawKey,
+        token_type:    'bearer',
+        expires_in:    3600,
+        refresh_token: refreshToken,
+        scope:         authCode.scopes.join(' '),
+      },
+      { headers: { ...CORS_HEADERS, 'Cache-Control': 'no-store', Pragma: 'no-cache' } }
+    );
+  }
+
+  // ── Refresh Token grant ─────────────────────────────────────────────────────
+
+  if (grantType === 'refresh_token') {
+    const refreshToken = body['refresh_token']?.trim() ?? '';
+    if (!refreshToken) return oauthError('invalid_request', 'refresh_token is required.');
+
+    const refreshHash = sha256hex(refreshToken);
+
+    const { data: rt, error: rtLookupErr } = await service
+      .from('oauth_refresh_tokens')
+      .select('id, client_id, workspace_id, user_id, client_name, scopes, inbox_ids, expires_at')
+      .eq('refresh_hash', refreshHash)
+      .eq('client_id', clientId)
+      .is('revoked_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+
+    if (rtLookupErr) {
+      console.error('oauth_refresh_lookup_error', rtLookupErr.message);
+      return oauthError('server_error', 'Failed to validate refresh token.', 500);
+    }
+    if (!rt) {
+      return oauthError('invalid_grant', 'Refresh token is invalid, revoked, or expired.');
+    }
+
+    // Rotate: revoke the old token before issuing the new pair
+    const { error: revokeErr } = await service
+      .from('oauth_refresh_tokens')
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('id', rt.id);
+
+    if (revokeErr) {
+      console.error('oauth_refresh_revoke_error', revokeErr.message);
+      return oauthError('server_error', 'Failed to rotate refresh token. Try again.');
+    }
+
+    // Issue new 1-hour access token
+    const { rawKey, keyHash, keyPrefix } = generateApiKey();
+    const accessExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+
+    const { error: keyInsertErr } = await service.from('api_keys').insert({
+      workspace_id: rt.workspace_id,
+      created_by:   rt.user_id,
+      name:         `OAuth: ${rt.client_name}`,
+      key_prefix:   keyPrefix,
+      key_hash:     keyHash,
+      scopes:       rt.scopes,
+      inbox_ids:    rt.inbox_ids ?? null,
+      expires_at:   accessExpiresAt,
+    });
+
+    if (keyInsertErr) {
+      console.error('oauth_refresh_key_insert_error', keyInsertErr.message);
+      return oauthError('server_error', 'Failed to issue access token. Try again.');
+    }
+
+    // Issue new refresh token — preserve the original 6-month expiry window
+    const newRefreshToken = generateRefreshToken();
+    const newRefreshHash  = sha256hex(newRefreshToken);
+
+    await service.from('oauth_refresh_tokens').insert({
+      refresh_hash: newRefreshHash,
+      client_id:    clientId,
+      workspace_id: rt.workspace_id,
+      user_id:      rt.user_id,
+      client_name:  rt.client_name,
+      scopes:       rt.scopes,
+      inbox_ids:    rt.inbox_ids ?? null,
+      expires_at:   rt.expires_at, // preserve original window, not 6 months from now
+    });
+
+    void logEvent(req, 'oauth_token_refreshed', {
+      client_id:  clientId,
+      key_prefix: keyPrefix,
+      scopes:     rt.scopes,
+      workspace_id: rt.workspace_id,
+    });
+
+    return Response.json(
+      {
+        access_token:  rawKey,
+        token_type:    'bearer',
+        expires_in:    3600,
+        refresh_token: newRefreshToken,
+        scope:         rt.scopes.join(' '),
+      },
+      { headers: { ...CORS_HEADERS, 'Cache-Control': 'no-store', Pragma: 'no-cache' } }
+    );
+  }
+
+  return oauthError('unsupported_grant_type', `grant_type "${grantType}" is not supported.`);
 }

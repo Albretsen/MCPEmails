@@ -223,6 +223,7 @@ export function AuthorizeApp({
   oauthState,
   codeChallenge,
   challengeMethod,
+  csrfToken,
 }) {
   const router = useRouter();
 
@@ -266,14 +267,15 @@ export function AuthorizeApp({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          client_id:      client.client_id,
-          redirect_uri:   redirectUri,
-          state:          oauthState,
-          code_challenge: codeChallenge,
+          csrf_token:       csrfToken,
+          client_id:        client.client_id,
+          redirect_uri:     redirectUri,
+          state:            oauthState,
+          code_challenge:   codeChallenge,
           challenge_method: challengeMethod,
-          scopes:         selectedScopes.map((s) => s.scope),
-          inbox_ids:      selectedInboxIds,
-          key_name:       keyLabel,
+          scopes:           selectedScopes.map((s) => s.scope),
+          inbox_ids:        selectedInboxIds,
+          key_name:         keyLabel,
         }),
       });
 
