@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import { LoginApp } from '../../../components/auth/LoginApp';
 
 export const metadata = {
@@ -5,14 +7,18 @@ export const metadata = {
   description: 'Sign in to your mcpemails workspace',
 };
 
-/**
- * /login — magic-link sign-in page.
- *
- * Server Component shell: renders the LoginApp Client Component which
- * handles form state, Supabase OTP sign-in, and the success state.
- * Middleware redirects already-authenticated users to /dashboard before
- * this page is ever rendered.
- */
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const params = await searchParams;
+    const redirectTo =
+      typeof params?.redirect === 'string' && params.redirect.startsWith('/')
+        ? params.redirect
+        : '/dashboard';
+    redirect(redirectTo);
+  }
+
   return <LoginApp />;
 }

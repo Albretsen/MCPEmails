@@ -53,11 +53,14 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   }
 
   if (user && isAuthPath(request.nextUrl.pathname)) {
-    // Already-authenticated user visiting an auth page → send to /dashboard.
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
-    redirectUrl.searchParams.delete('redirect');
-    return NextResponse.redirect(redirectUrl);
+    // Already-authenticated user visiting an auth page → honor ?redirect= if
+    // present (e.g. /login?redirect=/authorize?...), otherwise send to /dashboard.
+    const redirectParam = request.nextUrl.searchParams.get('redirect');
+    const destination =
+      redirectParam && redirectParam.startsWith('/')
+        ? new URL(redirectParam, request.nextUrl.origin).toString()
+        : new URL('/dashboard', request.nextUrl.origin).toString();
+    return NextResponse.redirect(destination);
   }
 
   return supabaseResponse;
