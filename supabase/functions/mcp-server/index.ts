@@ -1274,6 +1274,23 @@ const TOOL_REGISTRY: ToolDefinition[] = [
       additionalProperties: false,
     },
   },
+
+  // ── No scope beyond read:email ───────────────────────────────────────────
+
+  {
+    name: "list_inboxes",
+    title: "List Inboxes",
+    description:
+      "Returns all email inboxes the current API key is permitted to access. " +
+      "Call this first to discover inbox_id values required by the other tools. " +
+      "Each result includes the inbox UUID, email address, display name, and provider.",
+    requiredScope: "read:email",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1413,6 +1430,60 @@ async function encryptForStorage(plaintext: string): Promise<string> {
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=/g, "");
+}
+
+/**
+ * list_inboxes — returns all inboxes the API key may access.
+ *
+ * If the key has a non-null inbox_ids allowlist, only those inboxes are
+ * returned. Otherwise all active inboxes in the workspace are returned.
+ * Credential columns are never included in the output.
+ */
+async function executeListInboxes(apiKey: ApiKeyRow): Promise<{
+  result: { content: { type: string; text: string }[] };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  let query = supabase
+    .from("inboxes")
+    .select("id, email_address, display_name, provider, status")
+    .eq("workspace_id", apiKey.workspace_id)
+    .is("deleted_at", null)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+    query = query.in("id", apiKey.inbox_ids);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("[mcp-server] list_inboxes: db_error", { error: error.message });
+    return {
+      result: { content: [{ type: "text", text: "Failed to retrieve inboxes." }] },
+      logStatus: "error",
+      logErrorCode: String(-32603),
+    };
+  }
+
+  const inboxes = (data ?? []).map((row: { id: string; email_address: string; display_name: string | null; provider: string }) => ({
+    inbox_id: row.id,
+    email_address: row.email_address,
+    display_name: row.display_name ?? row.email_address,
+    provider: row.provider,
+  }));
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({ inboxes }, null, 2),
+      }],
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
 }
 
 /**
@@ -6763,7 +6834,13 @@ async function handleToolsCall(
 
   try {
     // ── Dispatch to the implemented tool handler ───────────────────────────
-    if (toolName === "list_inbox") {
+    if (toolName === "list_inboxes") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeListInboxes(apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "list_inbox") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListInbox(rawArgs, apiKey);
       logStatus = ls;

@@ -20,8 +20,9 @@
  *   idempotent — setting `plan` to the same value is a no-op.
  *
  * Deployment:
- *   Configured in vercel.json with `maxDuration: 30` to allow time for Stripe
- *   API calls and Supabase writes.
+ *   `maxDuration` is exported below (30 s) to allow time for Stripe API calls
+ *   and Supabase writes. This is the App Router equivalent of vercel.json
+ *   function config and takes effect on both Vercel and local dev.
  *
  * References:
  *   Documents/Architecture/deployment-architecture.md §3 (env vars)
@@ -34,6 +35,13 @@ import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe/client';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { getPlanByStripePriceId, type PlanId } from '@/lib/stripe/plans';
+
+// ---------------------------------------------------------------------------
+// Route config
+// ---------------------------------------------------------------------------
+
+/** Give Stripe webhook processing up to 30 seconds before Vercel times out. */
+export const maxDuration = 30;
 
 // ---------------------------------------------------------------------------
 // Constants
