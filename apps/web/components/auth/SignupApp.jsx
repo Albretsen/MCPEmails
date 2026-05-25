@@ -126,7 +126,7 @@ export function SignupApp() {
       options: {
         // After clicking the confirmation link Supabase redirects here.
         // The callback route exchanges the code for a session cookie.
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
       },
     });
 
@@ -243,7 +243,7 @@ export function SignupApp() {
                 variant="primary"
                 className="auth-submit"
                 type="submit"
-                onClick={handleSubmit}
+                disabled={step === 'submitting'}
               >
                 Create workspace
               </MBtn>
