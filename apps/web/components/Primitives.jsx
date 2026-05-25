@@ -52,7 +52,7 @@ export function Btn({ variant = "primary", size = "md", icon, children, onClick,
   const cls = "btn btn-" + variant + (size === "sm" ? " btn-sm" : "") + (disabled ? " btn-disabled" : "") + " " + className;
   return (
     <button type={type || "button"} className={cls.trim()} onClick={onClick} disabled={disabled}>
-      {icon ? <Icon name={icon} size={size === "sm" ? 13 : 14} className="ico" /> : null}
+      {icon ? <Icon name={icon} size={size === "sm" ? 13 : 14} className="btn-ico" /> : null}
       {children}
     </button>
   );
