@@ -27,6 +27,8 @@ import { checkInboxLimit } from '@/lib/plans/check-inbox-limit';
 const GMAIL_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 
 const GMAIL_SCOPES = [
+  'openid',
+  'email',
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/gmail.modify',
