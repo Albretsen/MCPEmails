@@ -91,6 +91,14 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // Prevent the consent page from being embedded in iframes.
+        // frame-ancestors is the CSP modern equivalent of X-Frame-Options.
+        source: '/authorize',
+        headers: [
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+        ],
+      },
     ];
   },
 };

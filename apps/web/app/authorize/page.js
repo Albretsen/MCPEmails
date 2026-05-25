@@ -1,5 +1,10 @@
 import { redirect } from 'next/navigation';
+import crypto from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { issueCsrfToken } from '@/lib/oauth/csrf';
+import { storeStateNonce, consumeStateNonce } from '@/lib/oauth/state';
+import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
 import { AuthorizeApp } from '../../components/auth/AuthorizeApp';
 import '../../styles/marketing.css';
 import '../../styles/dashboard.css';
@@ -12,10 +17,6 @@ export const metadata = {
   description: 'Authorize an agent to access your inboxes',
 };
 
-/**
- * The set of scopes this server recognises. Anything outside this list is
- * silently dropped — unknown scopes are never presented to the user.
- */
 const VALID_SCOPES = new Set([
   'read:email',
   'search:email',
@@ -24,139 +25,102 @@ const VALID_SCOPES = new Set([
   'manage:folders',
 ]);
 
-/**
- * Human-readable metadata for each valid scope, shown in the consent UI.
- */
 const SCOPE_META = {
-  'read:email': {
-    icon: 'inbox',
-    title: 'Read your inbox',
-    desc: 'list_inbox, read_email, get_attachment. Scoped to the inboxes you select.',
-    required: false,
-  },
-  'search:email': {
-    icon: 'search',
-    title: 'Search your emails',
-    desc: 'search_email. Run queries across your messages and return matching snippets.',
-    required: false,
-  },
-  'send:email': {
-    icon: 'mail',
-    title: 'Send email on your behalf',
-    desc: 'send_email, reply_to_email, forward_email. Sent through your own provider — never via our domain.',
-    required: false,
-  },
-  'manage:drafts': {
-    icon: 'edit',
-    title: 'Manage drafts',
-    desc: 'create_draft, update_draft, delete_draft. Create and edit unsent messages.',
-    required: false,
-  },
-  'manage:folders': {
-    icon: 'folder',
-    title: 'Manage folders',
-    desc: 'create_folder, move_email, delete_email. Organise your mailbox structure.',
-    required: false,
-  },
+  'read:email':    { icon: 'inbox',  title: 'Read your inbox',          desc: 'list_inbox, read_email, get_attachment.', required: false },
+  'search:email':  { icon: 'search', title: 'Search your emails',       desc: 'search_email across your messages.', required: false },
+  'send:email':    { icon: 'mail',   title: 'Send email on your behalf', desc: 'send_email, reply_to_email, forward_email.', required: false },
+  'manage:drafts': { icon: 'edit',   title: 'Manage drafts',             desc: 'create_draft, update_draft, delete_draft.', required: false },
+  'manage:folders':{ icon: 'folder', title: 'Manage folders',            desc: 'create_folder, move_email, delete_email.', required: false },
 };
 
-/**
- * /authorize — OAuth 2.0 authorization page for MCP clients.
- *
- * Server Component responsibilities:
- *  1. Validate the required `client_id` query param against the
- *     `oauth_clients` table. Show an error page if not found.
- *  2. Validate `redirect_uri` against the client's registered URIs.
- *  3. Filter the requested `scope` param to only recognised, allowed scopes.
- *  4. Require the user to be authenticated. If not, redirect to /login
- *     with all original params preserved so they return after sign-in.
- *  5. Fetch the user's workspace and all active inboxes from Supabase.
- *  6. Pass fully validated, real data to AuthorizeApp (the interactive
- *     client component that renders the consent UI).
- *
- * The actual approve action (generating an auth code and redirecting to
- * redirect_uri) is implemented in the next task (15.2).
- */
+function generateAuthCode() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function sha256Hex(value) {
+  return crypto.createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
 export default async function AuthorizePage({ searchParams }) {
   const params = await searchParams;
 
-  const clientId      = params.client_id       ?? '';
-  const redirectUri   = params.redirect_uri     ?? '';
-  const rawScope      = params.scope            ?? '';
-  const state         = params.state            ?? '';
-  const codeChallenge = params.code_challenge   ?? '';
-  const challengeMethod = params.code_challenge_method ?? 'S256';
+  const clientId        = params.client_id             ?? '';
+  const redirectUri     = params.redirect_uri           ?? '';
+  const rawScope        = params.scope                  ?? '';
+  const state           = params.state                  ?? '';
+  const codeChallenge   = params.code_challenge         ?? '';
+  const challengeMethod = params.code_challenge_method  ?? '';
 
-  // ── 1. Validate client_id is present ───────────────────────────────────
+  // ── 1. Validate client_id is present ─────────────────────────────────────
   if (!clientId) {
     return <ErrorPage title="Missing client_id" message="The authorization request did not include a client_id parameter." />;
   }
 
-  // ── 2. Look up the client in the database ──────────────────────────────
-  // oauth_clients has a public-read RLS policy so the anon key can read it.
-  const supabase = await createClient();
+  // ── 2. Reject non-S256 PKCE immediately ──────────────────────────────────
+  if (!codeChallenge) {
+    return <ErrorPage title="Missing code_challenge" message="PKCE is required. Include a code_challenge parameter." />;
+  }
+  if (challengeMethod && challengeMethod !== 'S256') {
+    return <ErrorPage title="Unsupported PKCE method" message="Only code_challenge_method=S256 is supported. The plain method is rejected." />;
+  }
 
+  // ── 3. Look up client (including deactivated_at check) ───────────────────
+  const supabase = await createClient();
   const { data: oauthClient, error: clientError } = await supabase
     .from('oauth_clients')
-    .select('client_id, client_name, client_byline, redirect_uris, scopes_allowed, logo_url, is_first_party')
+    .select('client_id, client_name, client_byline, redirect_uris, scopes_allowed, logo_url, is_first_party, deactivated_at')
     .eq('client_id', clientId)
     .single();
 
   if (clientError || !oauthClient) {
-    return (
-      <ErrorPage
-        title="Unknown application"
-        message={`No registered application found for client_id "${clientId}". If you reached this page from an app, contact that app's developer.`}
-      />
-    );
+    return <ErrorPage title="Unknown application" message={`No registered application found for client_id "${clientId}".`} />;
   }
 
-  // ── 3. Validate redirect_uri ───────────────────────────────────────────
-  // Must be an exact string match against one of the registered URIs.
-  // If redirect_uri is omitted and only one is registered, use it.
+  if (oauthClient.deactivated_at) {
+    return <ErrorPage title="Application deactivated" message="This application has been deactivated and can no longer request authorization." />;
+  }
+
+  // ── 4. Validate redirect_uri ──────────────────────────────────────────────
   let resolvedRedirectUri = redirectUri;
   if (!resolvedRedirectUri) {
     if (oauthClient.redirect_uris.length === 1) {
       resolvedRedirectUri = oauthClient.redirect_uris[0];
     } else {
-      return (
-        <ErrorPage
-          title="Missing redirect_uri"
-          message="The authorization request did not include a redirect_uri, and this client has more than one registered URI."
-        />
-      );
+      return <ErrorPage title="Missing redirect_uri" message="redirect_uri is required when the client has multiple registered URIs." />;
     }
   }
 
   if (!oauthClient.redirect_uris.includes(resolvedRedirectUri)) {
-    // Do NOT redirect to the supplied URI — it may be malicious.
-    return (
-      <ErrorPage
-        title="Invalid redirect_uri"
-        message="The redirect_uri in this request does not match any URI registered for this application. This request has been blocked to protect your account."
-      />
-    );
+    return <ErrorPage title="Invalid redirect_uri" message="The redirect_uri does not match any URI registered for this application." />;
   }
 
-  // ── 4. Filter requested scopes ─────────────────────────────────────────
-  // Split on space or comma (clients may use either), drop unrecognised
-  // scopes and scopes the client is not permitted to request.
+  // SSRF guard: only for http/https URIs (custom schemes are safe)
+  const looksLikeHttp = resolvedRedirectUri.startsWith('http://') || resolvedRedirectUri.startsWith('https://');
+  if (looksLikeHttp) {
+    const safe = await isValidRedirectUri(resolvedRedirectUri);
+    if (!safe) {
+      return <ErrorPage title="Invalid redirect_uri" message="The redirect_uri resolves to a disallowed host." />;
+    }
+  }
+
+  // ── 5. Filter requested scopes ────────────────────────────────────────────
   const requestedScopes = rawScope
     .split(/[\s,]+/)
     .filter(Boolean)
     .filter((s) => VALID_SCOPES.has(s) && oauthClient.scopes_allowed.includes(s));
 
-  // ── 5. Require authentication ──────────────────────────────────────────
+  // ── 6. Require authentication ─────────────────────────────────────────────
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    // Preserve all original query params so the user lands back here after login.
-    const loginUrl = new URL('/login', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
-    loginUrl.searchParams.set('redirect', buildAuthorizeUrl(params));
-    redirect(loginUrl.pathname + '?' + loginUrl.searchParams.toString());
+    const qs = new URLSearchParams();
+    ['client_id','redirect_uri','scope','state','code_challenge','code_challenge_method'].forEach(k => {
+      if (params[k]) qs.set(k, params[k]);
+    });
+    redirect(`/login?redirect=/authorize?${qs.toString()}`);
   }
 
-  // ── 6. Fetch workspace and active inboxes ──────────────────────────────
+  // ── 7. Fetch workspace and active inboxes ─────────────────────────────────
   const { data: workspace } = await supabase
     .from('workspaces')
     .select('id, display_name, slug')
@@ -173,28 +137,79 @@ export default async function AuthorizePage({ searchParams }) {
       .eq('workspace_id', workspace.id)
       .is('deleted_at', null)
       .order('created_at', { ascending: true });
-
     inboxes = inboxRows ?? [];
   }
 
-  // Annotate scopes with their display metadata before passing to the client.
+  // ── 8. Store state nonce server-side ──────────────────────────────────────
+  if (state) {
+    await storeStateNonce(user.id, state);
+  }
+
+  // ── 9. Auto-approve: skip consent UI if already consented to all scopes ───
+  if (requestedScopes.length > 0 && workspace) {
+    const { data: consent } = await supabase
+      .from('oauth_consents')
+      .select('scopes')
+      .eq('user_id', user.id)
+      .eq('client_id', clientId)
+      .maybeSingle();
+
+    const allConsented = consent && requestedScopes.every((s) => consent.scopes.includes(s));
+
+    if (allConsented) {
+      // Consume state nonce and redirect immediately (no consent UI needed)
+      if (state) await consumeStateNonce(user.id, state);
+
+      const plainCode = generateAuthCode();
+      const codeHash  = sha256Hex(plainCode);
+      const service   = createServiceRoleClient();
+
+      const { error: insertErr } = await service.from('oauth_auth_codes').insert({
+        code_hash:             codeHash,
+        client_id:             clientId,
+        workspace_id:          workspace.id,
+        user_id:               user.id,
+        client_name:           oauthClient.client_name,
+        redirect_uri:          resolvedRedirectUri,
+        code_challenge:        codeChallenge,
+        code_challenge_method: 'S256',
+        scopes:                requestedScopes,
+        inbox_ids:             consent.inbox_ids ?? null,
+      });
+
+      if (!insertErr) {
+        await service.from('auth_logs').insert({
+          event_type:   'oauth_code_issued_auto',
+          user_id:      user.id,
+          workspace_id: workspace.id,
+          metadata:     { client_id: clientId, scopes: requestedScopes, auto_approve: true },
+        });
+
+        const dest = new URL(resolvedRedirectUri);
+        dest.searchParams.set('code', plainCode);
+        if (state) dest.searchParams.set('state', state);
+        redirect(dest.toString());
+      }
+      // If insert failed, fall through to show the consent UI
+    }
+  }
+
+  // ── 10. Issue CSRF token for the consent form ─────────────────────────────
+  const csrfToken = await issueCsrfToken(user.id);
+
+  // ── 11. Render consent UI ─────────────────────────────────────────────────
   const scopesWithMeta = requestedScopes.map((scope) => ({
     scope,
-    ...(SCOPE_META[scope] ?? {
-      icon: 'key',
-      title: scope,
-      desc: '',
-      required: false,
-    }),
+    ...(SCOPE_META[scope] ?? { icon: 'key', title: scope, desc: '', required: false }),
   }));
 
   return (
     <AuthorizeApp
       client={{
-        client_id:     oauthClient.client_id,
-        client_name:   oauthClient.client_name,
-        client_byline: oauthClient.client_byline,
-        logo_url:      oauthClient.logo_url,
+        client_id:      oauthClient.client_id,
+        client_name:    oauthClient.client_name,
+        client_byline:  oauthClient.client_byline,
+        logo_url:       oauthClient.logo_url,
         is_first_party: oauthClient.is_first_party,
       }}
       workspaceName={workspace?.display_name ?? ''}
@@ -203,31 +218,12 @@ export default async function AuthorizePage({ searchParams }) {
       redirectUri={resolvedRedirectUri}
       oauthState={state}
       codeChallenge={codeChallenge}
-      challengeMethod={challengeMethod}
+      challengeMethod={challengeMethod || 'S256'}
+      csrfToken={csrfToken}
     />
   );
 }
 
-/**
- * Reconstructs the /authorize URL with the original query params so the
- * login page can redirect back to it after a successful sign-in.
- */
-function buildAuthorizeUrl(params) {
-  const qs = new URLSearchParams();
-  const knownKeys = ['client_id', 'redirect_uri', 'scope', 'state', 'code_challenge', 'code_challenge_method'];
-  for (const key of knownKeys) {
-    if (params[key]) qs.set(key, params[key]);
-  }
-  return '/authorize?' + qs.toString();
-}
-
-/**
- * Inline error page rendered when the authorization request is structurally
- * invalid (unknown client, bad redirect_uri, etc.).
- *
- * We do NOT redirect to redirect_uri for these errors because the URI itself
- * may be the source of the attack (redirect URI manipulation).
- */
 function ErrorPage({ title, message }) {
   return (
     <div className="auth-shell">
@@ -247,23 +243,13 @@ function ErrorPage({ title, message }) {
               <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
           </div>
-          <h1 style={{
-            fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700,
-            color: 'var(--fg-1)', marginBottom: 10,
-          }}>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: 'var(--fg-1)', marginBottom: 10 }}>
             {title}
           </h1>
-          <p style={{
-            fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)',
-            lineHeight: 1.6, marginBottom: 28, maxWidth: 380, margin: '0 auto 28px',
-          }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.6, marginBottom: 28, maxWidth: 380, margin: '0 auto 28px' }}>
             {message}
           </p>
-          <a href="/dashboard" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500,
-            color: 'var(--brand)', textDecoration: 'none',
-          }}>
+          <a href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, color: 'var(--brand)', textDecoration: 'none' }}>
             ← Return to dashboard
           </a>
         </div>

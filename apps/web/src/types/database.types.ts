@@ -406,6 +406,7 @@ export type Database = {
           client_id: string
           client_name: string
           code_challenge: string
+          code_challenge_method: string
           code_hash: string
           created_at: string
           expires_at: string
@@ -420,6 +421,7 @@ export type Database = {
           client_id: string
           client_name: string
           code_challenge: string
+          code_challenge_method?: string
           code_hash: string
           created_at?: string
           expires_at?: string
@@ -434,6 +436,7 @@ export type Database = {
           client_id?: string
           client_name?: string
           code_challenge?: string
+          code_challenge_method?: string
           code_hash?: string
           created_at?: string
           expires_at?: string
@@ -460,6 +463,7 @@ export type Database = {
           client_id: string
           client_name: string
           created_at: string
+          deactivated_at: string | null
           id: string
           is_first_party: boolean
           logo_url: string | null
@@ -472,6 +476,7 @@ export type Database = {
           client_id: string
           client_name: string
           created_at?: string
+          deactivated_at?: string | null
           id?: string
           is_first_party?: boolean
           logo_url?: string | null
@@ -484,6 +489,7 @@ export type Database = {
           client_id?: string
           client_name?: string
           created_at?: string
+          deactivated_at?: string | null
           id?: string
           is_first_party?: boolean
           logo_url?: string | null
@@ -519,6 +525,111 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      oauth_csrf_tokens: {
+        Row: {
+          consumed_at: string | null
+          expires_at: string
+          id: string
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          expires_at: string
+          id?: string
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      oauth_state_nonces: {
+        Row: {
+          consumed_at: string | null
+          expires_at: string
+          id: string
+          session_id: string
+          state_hash: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          expires_at: string
+          id?: string
+          session_id: string
+          state_hash: string
+        }
+        Update: {
+          consumed_at?: string | null
+          expires_at?: string
+          id?: string
+          session_id?: string
+          state_hash?: string
+        }
+        Relationships: []
+      }
+      oauth_refresh_tokens: {
+        Row: {
+          client_id: string
+          client_name: string
+          created_at: string
+          expires_at: string
+          id: string
+          inbox_ids: string[] | null
+          refresh_hash: string
+          revoked_at: string | null
+          scopes: string[]
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          client_id: string
+          client_name: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          inbox_ids?: string[] | null
+          refresh_hash: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          client_id?: string
+          client_name?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          inbox_ids?: string[] | null
+          refresh_hash?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_refresh_tokens_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oauth_refresh_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       oauth_states: {
         Row: {
