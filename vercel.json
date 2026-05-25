@@ -1,23 +1,23 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd apps/web && npm run build",
-  "outputDirectory": "apps/web/.next",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs",
   "functions": {
-    "apps/web/app/api/stripe/webhook/route.ts": {
+    "app/api/stripe/webhook/route.ts": {
       "maxDuration": 30
     },
-    "apps/web/app/auth/gmail/callback/route.ts": {
+    "app/auth/gmail/callback/route.ts": {
       "maxDuration": 15
     },
-    "apps/web/app/auth/outlook/callback/route.ts": {
+    "app/auth/outlook/callback/route.ts": {
       "maxDuration": 15
     },
-    "apps/web/app/auth/fastmail/callback/route.ts": {
+    "app/auth/fastmail/callback/route.ts": {
       "maxDuration": 15
     },
-    "apps/web/app/auth/callback/route.ts": {
+    "app/auth/callback/route.ts": {
       "maxDuration": 15
     }
   },
