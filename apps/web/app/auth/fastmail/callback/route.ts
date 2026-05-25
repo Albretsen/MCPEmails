@@ -33,7 +33,7 @@ import { exchangeFastmailCode } from '@/lib/email-providers/fastmail';
  *   Documents/Architecture/email-provider-oauth-flows.md §4
  */
 
-const DASHBOARD_INBOXES = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/inboxes`;
+const DASHBOARD_INBOXES = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
 
 /** Fastmail access tokens are valid for 1 year (365 days in seconds). */
 const FASTMAIL_ACCESS_TOKEN_LIFETIME_SECONDS = 365 * 24 * 60 * 60;
@@ -101,7 +101,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   };
   try {
     tokens = await exchangeFastmailCode(code, expectedRedirectUri);
-  } catch {
+  } catch (err) {
+    console.error('[fastmail/callback] token exchange failed:', err);
     return redirectWithError('token_exchange_failed');
   }
 
