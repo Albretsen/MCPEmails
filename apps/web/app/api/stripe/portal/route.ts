@@ -74,7 +74,7 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
-  const returnUrl = `${appUrl}/dashboard/settings`;
+  const returnUrl = `${appUrl}/dashboard`;
 
   // ── 5. Create the Stripe Billing Portal session ────────────────────────────
   try {
