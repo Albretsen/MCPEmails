@@ -830,39 +830,543 @@ Append-only; no UPDATE or DELETE.
 
 ---
 
-## 9. Build Sequence
+## 9. Phased Development Plan
 
-### Phase 1 — Discovery (unblocks clients from finding the OAuth server)
+Each phase ends with a **gate** — a set of verifiable conditions that must pass
+before work on the next phase begins. Phases are independently deployable: each
+can be merged and deployed to production without breaking existing functionality.
+All tasks within a phase are listed in dependency order.
 
-1. `GET /.well-known/oauth-protected-resource`
-2. `GET /.well-known/oauth-authorization-server`
-3. Update `/api/mcp` to emit `WWW-Authenticate` on 401
+---
 
-Deploy → test with `curl -I https://mcpemails.com/api/mcp` (expect 401 with
-`WWW-Authenticate` header containing `resource_metadata`). Then `curl
-https://mcpemails.com/.well-known/oauth-protected-resource` and
-`/.well-known/oauth-authorization-server`.
+### Pre-conditions
 
-### Phase 2 — Core flow (end-to-end authorization)
+Before writing any code, confirm the following. Work cannot proceed safely without
+these.
 
-4. Migrations: `oauth_refresh_tokens`, `code_challenge_method` column, `deactivated_at` column
-5. `POST /api/oauth/token` (authorization_code + refresh_token grants)
-6. `GET /authorize` page + Server Action (consent UI, state storage, CSRF)
-7. Migration: register `claude-ai-web` with correct redirect URI
+| # | Pre-condition | How to verify |
+|---|---|---|
+| P1 | `NEXT_PUBLIC_APP_URL` is set to `https://mcpemails.com` in Vercel production | `vercel env ls` or Vercel dashboard |
+| P2 | `oauth_clients`, `oauth_consents`, `oauth_auth_codes` migrations are applied to the production DB | Supabase dashboard → Table Editor |
+| P3 | claude.ai's exact OAuth callback redirect URI is known | Trigger a connection attempt from claude.ai; capture `redirect_uri` from the browser address bar when `/authorize` loads |
+| P4 | The Supabase Auth session cookie issued by the app uses `HttpOnly`, `Secure`, and `SameSite=Lax` | Inspect the `sb-...` cookie in browser DevTools on `mcpemails.com` |
 
-At this point the full Authorization Code + PKCE flow can be tested end-to-end.
+---
 
-### Phase 3 — Standards compliance
+### Phase 1 — Discovery Layer
 
-8. `POST /api/oauth/register` (Dynamic Client Registration)
-9. `POST /api/oauth/revoke`
+**Goal:** Make MCP Emails machine-discoverable by any OAuth 2.0 / MCP-compliant
+client. No user-facing UI. No tokens issued. No breaking changes to existing
+behaviour.
 
-### Phase 4 — Polish
+**Why first:** Every subsequent phase depends on clients being able to find the
+authorization server. Phase 1 can be deployed and verified before a single line
+of the consent UI exists.
 
-10. Badge on OAuth-issued API keys in dashboard
-11. Consent screen inbox picker
-12. "Revoke OAuth access" per client in Settings page
-13. Tighten CORS on token endpoint to per-client allowlist
+#### Tasks
+
+**1.1 — Protected Resource Metadata endpoint**
+
+- **Create:** `apps/web/app/.well-known/oauth-protected-resource/route.ts`
+- Returns RFC 8707 JSON linking the MCP endpoint to the authorization server.
+- `scopes_supported` lists only the minimal initial set (`read:email`,
+  `search:email`, `send:email`). Do not include `manage:*` here.
+- Response must include `Cache-Control: max-age=3600`.
+- No authentication required.
+
+**1.2 — Authorization Server Metadata endpoint**
+
+- **Create:** `apps/web/app/.well-known/oauth-authorization-server/route.ts`
+- Returns RFC 8414 JSON (see §3.2 for full shape).
+- Lists `authorization_endpoint`, `token_endpoint`, `registration_endpoint`,
+  `revocation_endpoint`.
+- `code_challenge_methods_supported: ['S256']` — plain must not appear.
+- `grant_types_supported: ['authorization_code', 'refresh_token']`.
+- Response must include `Cache-Control: max-age=3600`.
+- No authentication required.
+
+**1.3 — `WWW-Authenticate` header on `/api/mcp` 401 responses**
+
+- **Modify:** `apps/web/app/api/mcp/route.ts`
+- When the upstream Edge Function returns 401, add the header before forwarding:
+  ```
+  WWW-Authenticate: Bearer realm="MCP Emails",
+    resource_metadata="https://mcpemails.com/.well-known/oauth-protected-resource"
+  ```
+- Also add the header on requests that arrive with no `Authorization` header at all
+  (return 401 immediately at the proxy layer rather than forwarding the empty request).
+- Existing authenticated requests are unaffected.
+
+#### Phase 1 Gate
+
+All of the following must pass before Phase 2 begins:
+
+```bash
+# 1. Unauthenticated hit returns 401 with WWW-Authenticate
+curl -si https://mcpemails.com/api/mcp -X POST \
+  -H 'Content-Type: application/json' -d '{}' \
+  | grep -i 'www-authenticate'
+# Expected: WWW-Authenticate: Bearer realm="MCP Emails", resource_metadata=...
+
+# 2. Protected Resource Metadata is valid JSON with required fields
+curl -s https://mcpemails.com/.well-known/oauth-protected-resource \
+  | jq '{resource,authorization_servers,scopes_supported}'
+
+# 3. Authorization Server Metadata is valid JSON
+curl -s https://mcpemails.com/.well-known/oauth-authorization-server \
+  | jq '{issuer,authorization_endpoint,token_endpoint,code_challenge_methods_supported}'
+
+# 4. Existing authenticated MCP requests still work (no regression)
+curl -s https://mcpemails.com/api/mcp \
+  -H 'Authorization: Bearer mcpe_<valid_key>' \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' \
+  | jq '.result'
+```
+
+---
+
+### Phase 2 — Database Migrations
+
+**Goal:** All schema changes land before any application code references them.
+Running application code against stale schema causes runtime errors; running
+new schema against old application code is safe (new columns are ignored).
+
+**Why second:** Token endpoint and authorize page both need the new tables and
+columns. Migrations are their own atomic deployment step.
+
+#### Tasks
+
+**2.1 — `code_challenge_method` column on `oauth_auth_codes`**
+
+- **Create migration:** `supabase/migrations/YYYYMMDDXXXXXX_oauth_auth_codes_challenge_method.sql`
+  ```sql
+  ALTER TABLE public.oauth_auth_codes
+    ADD COLUMN IF NOT EXISTS code_challenge_method text NOT NULL DEFAULT 'S256';
+  ```
+- Default of `'S256'` ensures existing rows (if any) are valid.
+- Apply to production: `supabase db push` or via Supabase MCP tool.
+
+**2.2 — `oauth_refresh_tokens` table**
+
+- **Create migration:** `supabase/migrations/YYYYMMDDXXXXXX_oauth_refresh_tokens.sql`
+- Full schema defined in §4.1 of this document.
+- RLS: deny all user access; service-role only.
+- Apply to production after 2.1.
+
+**2.3 — `deactivated_at` column on `oauth_clients`**
+
+- **Create migration:** `supabase/migrations/YYYYMMDDXXXXXX_oauth_clients_deactivated.sql`
+  ```sql
+  ALTER TABLE public.oauth_clients
+    ADD COLUMN IF NOT EXISTS deactivated_at timestamptz;
+  ```
+- Existing rows remain active (NULL = active).
+
+**2.4 — Register claude.ai as a first-party client**
+
+- **Depends on:** Pre-condition P3 (redirect URI confirmed).
+- **Create migration:** `supabase/migrations/YYYYMMDDXXXXXX_register_claude_ai_client.sql`
+- Insert row per §4.4, using the confirmed redirect URI.
+- Use `ON CONFLICT (client_id) DO NOTHING` so the migration is idempotent.
+
+#### Phase 2 Gate
+
+```bash
+# Verify all new tables/columns exist
+supabase db diff --schema public
+# Expected: no pending changes (all migrations applied)
+
+# Verify claude-ai-web is registered
+# (via Supabase MCP execute_sql or dashboard)
+SELECT client_id, redirect_uris, is_first_party
+  FROM oauth_clients WHERE client_id = 'claude-ai-web';
+```
+
+---
+
+### Phase 3 — Token Endpoint
+
+**Goal:** Build `POST /api/oauth/token` supporting both `authorization_code` and
+`refresh_token` grants. This is the most security-critical endpoint in the entire
+flow and should be built and reviewed before the authorize UI, so the contract it
+enforces is locked before the UI is written around it.
+
+**Why third:** The authorize page produces auth codes consumed by this endpoint.
+Building the endpoint first means it can be tested independently with synthetic
+codes before the UI exists.
+
+#### Tasks
+
+**3.1 — Shared crypto utilities**
+
+- **Create:** `apps/web/lib/oauth/crypto.ts`
+- Exports: `sha256hex(input: string): Promise<string>`,
+  `sha256raw(input: string): Promise<Uint8Array>`,
+  `base64urlEncode(buf: Uint8Array): string`,
+  `generateApiKey(): { fullKey: string; prefix: string }`,
+  `generateRefreshToken(): string` (returns `mcpr_<base64url(32 bytes)>`).
+- These are used by the token endpoint, the authorize Server Action, and the
+  registration endpoint. Centralising them prevents subtle inconsistencies
+  (e.g., different base64url padding behaviour across callers).
+
+**3.2 — Token endpoint**
+
+- **Create:** `apps/web/app/api/oauth/token/route.ts`
+- Implements `authorization_code` and `refresh_token` grants per §3.4.
+- Handles `OPTIONS` for CORS preflight.
+- `CORS`: set `Access-Control-Allow-Origin` to the requesting client's registered
+  `client_uri` if available; fall back to `*`. Tighten post-Phase 4.
+- Uses service-role Supabase client throughout (auth codes have deny-all RLS).
+- On `authorization_code`: deletes auth code before inserting key (prevents
+  partial success leaving a live code if key insert fails — wrap in a DB transaction
+  or use a Supabase RPC function).
+- On `refresh_token`: marks old refresh token `revoked_at` before inserting new pair.
+- Logs all issuance and refresh events to audit log.
+- Returns `Retry-After: 60` on rate limit (max 10 token requests/min per IP).
+
+**3.3 — `oauthError` helper**
+
+- **Create:** `apps/web/lib/oauth/errors.ts`
+- Returns `Response.json({ error, error_description }, { status })` in RFC 6749
+  error format, with consistent CORS headers.
+- Used by token, revoke, and register endpoints.
+
+#### Phase 3 Gate
+
+Test with `curl` using a synthetically inserted auth code (bypasses the UI):
+
+```sql
+-- Insert a test auth code directly (run in Supabase SQL editor)
+INSERT INTO oauth_auth_codes (
+  code_hash, client_id, workspace_id, user_id, client_name,
+  redirect_uri, code_challenge, code_challenge_method, scopes
+) VALUES (
+  sha256('test_code_plain'),  -- hash of the plaintext we'll send
+  'claude-desktop',
+  '<your_workspace_id>',
+  '<your_user_id>',
+  'Claude Desktop',
+  'claude://oauth/callback',
+  '<SHA-256-base64url of 'test_verifier'>',
+  'S256',
+  ARRAY['read:email']
+);
+```
+
+```bash
+# Exchange the code
+curl -s -X POST https://mcpemails.com/api/oauth/token \
+  -d 'grant_type=authorization_code' \
+  -d 'code=test_code_plain' \
+  -d 'code_verifier=test_verifier' \
+  -d 'client_id=claude-desktop' \
+  -d 'redirect_uri=claude://oauth/callback' \
+  | jq '{access_token: .access_token[0:15], expires_in, refresh_token: .refresh_token[0:15]}'
+# Expected: access_token starts with mcpe_, expires_in: 3600, refresh_token starts with mcpr_
+
+# Replay the same code — must fail
+curl -s -X POST https://mcpemails.com/api/oauth/token \
+  -d 'grant_type=authorization_code' \
+  -d 'code=test_code_plain' \
+  -d 'code_verifier=test_verifier' \
+  -d 'client_id=claude-desktop' \
+  -d 'redirect_uri=claude://oauth/callback' \
+  | jq .error
+# Expected: "invalid_grant"
+
+# Use the access token against the MCP server
+curl -s https://mcpemails.com/api/mcp \
+  -H "Authorization: Bearer <access_token_from_above>" \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' | jq .result
+```
+
+---
+
+### Phase 4 — Authorization Page
+
+**Goal:** Build the `/authorize` page and Server Action that a real user flows
+through. This is the only phase that requires browser testing; all other phases
+are testable with `curl`.
+
+**Why fourth:** The token endpoint (Phase 3) is already solid before the UI is
+built around it. The UI's job is solely to produce a valid auth code; the token
+endpoint's job is to consume it.
+
+#### Tasks
+
+**4.1 — CSRF token utility**
+
+- **Create:** `apps/web/lib/oauth/csrf.ts`
+- `issueCsrfToken(sessionId: string): Promise<string>` — signs a short-lived
+  (10 min) single-use token with HMAC-SHA-256 using `ENCRYPTION_KEY`.
+- `validateCsrfToken(token: string, sessionId: string): Promise<boolean>` —
+  verifies signature, expiry, and that the token has not been used before.
+  Mark used tokens in a short-lived store (e.g., an `oauth_csrf_tokens` table
+  with a 10-min TTL, or the user's Supabase session).
+
+**4.2 — State nonce utility**
+
+- **Create:** `apps/web/lib/oauth/state.ts`
+- `storeStateNonce(sessionId: string, state: string, ttlSeconds: number): Promise<void>`
+- `consumeStateNonce(sessionId: string, state: string): Promise<boolean>` — returns
+  true once only; subsequent calls with the same state return false.
+- Implementation: a lightweight `oauth_state_nonces` table with `(session_id, state_hash,
+  expires_at, consumed_at)`, or equivalent signed-cookie approach.
+
+**4.3 — Redirect URI validator**
+
+- **Create:** `apps/web/lib/oauth/redirect-uri.ts`
+- `isValidRedirectUri(uri: string): Promise<boolean>` per the SSRF rules in §3.5.
+- DNS resolution for private IP blocking: use `dns.promises.lookup()` (Node.js)
+  or an equivalent in the Next.js server environment. Cache results for 60 seconds
+  to avoid repeated DNS calls.
+- Shared by the authorize page, token endpoint, and registration endpoint.
+
+**4.4 — Authorize page**
+
+- **Rewrite:** `apps/web/app/authorize/page.js` (currently a placeholder)
+- Server Component; reads params and Supabase session server-side.
+- Adds `Content-Security-Policy: frame-ancestors 'none'` to the response headers.
+- Issues a CSRF token (4.1) and a state nonce (4.2) at render time.
+- Renders consent UI with hidden CSRF field and all OAuth params as hidden fields.
+- Inbox picker: multi-select list of the user's active inboxes. Empty selection
+  means "all inboxes" (null `inbox_ids`).
+- "Deny" button submits to a separate Server Action that redirects with
+  `error=access_denied`.
+
+**4.5 — Approve Server Action**
+
+- **Create:** `apps/web/app/authorize/actions.ts`
+- `'use server'`
+- Validates CSRF token (consume on first use).
+- Re-validates all OAuth parameters (treat form data as untrusted).
+- Validates and consumes state nonce.
+- Generates auth code, inserts into `oauth_auth_codes` (with `code_challenge_method`).
+- Upserts `oauth_consents`.
+- Writes audit log row.
+- Calls `redirect(destination.toString())` (Next.js redirect from Server Action).
+
+**4.6 — Login → Authorize redirect continuity**
+
+- **Verify and modify if needed:** `apps/web/app/auth/callback/route.ts`
+- The `next` param passed through magic-link sign-in must survive URL-encoding
+  of the entire `/authorize?client_id=...&redirect_uri=...&...` path.
+- Test by triggering the authorize flow as an unauthenticated user and confirming
+  the user lands back on `/authorize` with all original params intact after signing in.
+
+#### Phase 4 Gate
+
+Manual browser walkthrough (cannot be fully automated with `curl`):
+
+```
+1. Open https://mcpemails.com/authorize?
+     client_id=claude-desktop
+     &redirect_uri=claude://oauth/callback
+     &response_type=code
+     &scope=read:email
+     &state=test_state_abc
+     &code_challenge=<SHA-256 of 'test_verifier_x'>
+     &code_challenge_method=S256
+   as an unauthenticated user.
+   → Expected: redirected to /login, then back to /authorize after sign-in.
+
+2. As an authenticated user, load the same URL.
+   → Expected: consent UI renders with client name "Claude Desktop",
+     scope list, inbox picker, Approve + Deny buttons.
+   → Expected: page cannot be iframed (check in DevTools → Console:
+     load the page in an iframe and confirm it is blocked by CSP).
+
+3. Click Approve.
+   → Expected: browser navigates to
+     claude://oauth/callback?code=<32-byte-b64url>&state=test_state_abc
+
+4. Click Deny (fresh flow).
+   → Expected: browser navigates to
+     claude://oauth/callback?error=access_denied&state=test_state_abc
+
+5. Replay the approved code through the token endpoint (Phase 3 curl test).
+   → Expected: valid mcpe_ access token returned, expires_in: 3600.
+
+6. Re-visit /authorize with the same client after consent — confirm consent
+   screen is skipped and code is issued immediately (auto-approve).
+
+7. Submit the consent form with a forged or replayed CSRF token.
+   → Expected: 400 / error page; no auth code issued.
+
+8. Submit the consent form with a replayed state nonce.
+   → Expected: 400 / error page; no auth code issued.
+```
+
+---
+
+### Phase 5 — Standards Compliance
+
+**Goal:** Complete the OAuth 2.0 surface area required by RFC. Neither endpoint
+is needed for the claude.ai end-to-end flow (claude.ai uses the pre-registered
+`claude-ai-web` client_id and does not call revoke on disconnect). Both are
+required for third-party integrators.
+
+#### Tasks
+
+**5.1 — Registration endpoint**
+
+- **Create:** `apps/web/app/api/oauth/register/route.ts`
+- Implements RFC 7591 per §3.5.
+- Calls `isValidRedirectUri` (4.3) for every URI in the request.
+- Rate limit: 10 registrations per IP per hour. Return `429` with
+  `Retry-After: 3600` if exceeded.
+- Writes audit log row on every successful registration.
+- Checks `deactivated_at IS NULL` on lookups — deactivated dynamic clients cannot
+  re-register with the same `client_id` (they get a new one if they re-register).
+
+**5.2 — Revocation endpoint**
+
+- **Create:** `apps/web/app/api/oauth/revoke/route.ts`
+- Implements RFC 7009 per §3.6.
+- Validates `Origin` header against an allowlist of known client origins.
+- Handles both `access_token` and `refresh_token` hints.
+- Always returns `200` per RFC 7009 §2.2.
+- Writes audit log row.
+
+#### Phase 5 Gate
+
+```bash
+# Register a dynamic client
+curl -s -X POST https://mcpemails.com/api/oauth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"client_name":"Test Client","redirect_uris":["https://example.com/cb"]}' \
+  | jq '{client_id,scope}'
+# Expected: client_id starts with "dyn_", scope is minimal set
+
+# Attempt to register with private-IP redirect URI
+curl -s -X POST https://mcpemails.com/api/oauth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"client_name":"Evil","redirect_uris":["http://169.254.169.254/evil"]}' \
+  | jq .error
+# Expected: "invalid_redirect_uri"
+
+# Revoke an access token
+curl -s -X POST https://mcpemails.com/api/oauth/revoke \
+  -d 'token=mcpe_<previously_issued_token>' \
+  -w '%{http_code}'
+# Expected: 200
+
+# Confirm revoked token no longer works
+curl -s https://mcpemails.com/api/mcp \
+  -H 'Authorization: Bearer mcpe_<revoked_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' \
+  | jq .error
+# Expected: unauthorized / invalid_token
+```
+
+---
+
+### Phase 6 — End-to-End Validation with claude.ai
+
+**Goal:** The full flow works from inside claude.ai web. This phase is not about
+writing code — it is about confirming integration and resolving any remaining
+friction.
+
+#### Tasks
+
+**6.1 — Confirm claude.ai redirect URI and update migration if needed**
+
+If the redirect URI captured during Pre-condition P3 differs from what was
+inserted in migration 2.4, write a corrective migration now.
+
+**6.2 — End-to-end connection test**
+
+1. Navigate to claude.ai → Settings → Connectors → Add custom connector.
+2. Enter `https://mcpemails.com/api/mcp`.
+3. Follow the OAuth flow through the MCP Emails consent page.
+4. Confirm the connector appears as connected.
+5. Start a conversation and invoke an email tool (e.g., "list my inbox").
+6. Confirm the activity appears in the MCP Emails dashboard.
+
+**6.3 — Verify token refresh works**
+
+Wait for (or manually expire) the 1-hour access token. Confirm claude.ai
+transparently refreshes it using the refresh token without requiring re-authorization.
+
+**6.4 — Verify disconnect and revocation**
+
+Disconnect the connector in claude.ai. Confirm the access token is revoked
+(via the revoke endpoint or dashboard). Confirm subsequent MCP calls return 401.
+
+#### Phase 6 Gate
+
+The integration is complete when:
+
+- [ ] claude.ai connects without errors
+- [ ] At least one email tool call succeeds via the connector
+- [ ] Activity log shows the call with the OAuth-issued key prefix
+- [ ] Token refresh happens silently after 1 hour
+- [ ] Disconnecting the connector revokes the token; further calls return 401
+
+---
+
+### Phase 7 — Dashboard UX
+
+**Goal:** Surface OAuth in the user-facing dashboard so users understand what
+has been authorized and can manage it.
+
+These tasks are purely UX improvements and have no impact on the OAuth protocol
+or MCP server behaviour. They can be done in any order within the phase.
+
+#### Tasks
+
+**7.1 — Badge on OAuth-issued API keys**
+
+- **Modify:** `apps/web/components/dashboard/Pages.jsx` — `KeysPage`
+- Keys with names starting `"OAuth: "` get a small badge (e.g., "OAuth") next to
+  the key name. Distinguish them from manually created keys.
+- Show `expires_at` inline (e.g., "expires in 47 min") for OAuth keys since they
+  have a 1-hour TTL.
+
+**7.2 — "Connected apps" section in Settings**
+
+- **Create:** new section in `SettingsPage` component.
+- Lists each unique `client_id` that has an active (non-revoked) OAuth key for
+  this workspace.
+- Shows: client name, scopes granted, date first authorized, "Revoke access" button.
+- "Revoke access" calls `DELETE /api/oauth/connections/<client_id>` (new route)
+  which soft-deletes all `api_keys` and `oauth_refresh_tokens` for that client.
+
+**7.3 — New route: `DELETE /api/oauth/connections/[clientId]`**
+
+- **Create:** `apps/web/app/api/oauth/connections/[clientId]/route.ts`
+- Requires authenticated Supabase session.
+- Revokes all active keys and refresh tokens for the given `client_id` within
+  the user's workspace.
+- Deletes the `oauth_consents` row so the user will see the consent screen again
+  if they re-connect.
+- Returns `204`.
+
+#### Phase 7 Gate
+
+- [ ] OAuth-issued keys are visually distinct in the API Keys dashboard view
+- [ ] Keys show a countdown to expiry
+- [ ] Settings page lists all connected apps
+- [ ] Revoking an app via Settings immediately invalidates MCP access
+- [ ] Re-connecting the same app shows the consent screen again
+
+---
+
+### Summary Timeline
+
+| Phase | What it delivers | Can deploy independently? |
+|---|---|---|
+| Pre-conditions | Prerequisites confirmed | N/A |
+| 1 — Discovery | Machine-discoverable OAuth server | ✅ Yes — no breaking changes |
+| 2 — Migrations | Schema ready for Phases 3–5 | ✅ Yes — additive only |
+| 3 — Token endpoint | Token exchange; testable with curl | ✅ Yes — new route |
+| 4 — Authorize page | Full browser-driven consent flow | ✅ Yes — replaces placeholder |
+| 5 — RFC compliance | Dynamic registration + revocation | ✅ Yes — new routes |
+| 6 — E2E validation | claude.ai connected and working | N/A — validation only |
+| 7 — Dashboard UX | Users can manage connected apps | ✅ Yes — UI only |
 
 ---
 
