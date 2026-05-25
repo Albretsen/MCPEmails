@@ -32,7 +32,7 @@ Each agent run should:
 2. Mark task as `in-progress` with agent name and timestamp
 3. Fetch full task context from linked documents
 4. Execute the task following this plan's standards
-5. Create atomic, well-formatted git commits
+5. Write all changes directly to disk
 6. Update task status to `completed` with summary
 7. Document blockers if task cannot complete
 
@@ -50,7 +50,7 @@ Each agent run should:
 ### 2.1 General Principles
 
 - **One responsibility per function/component**: Small, focused, testable units
-- **No commented-out code**: Delete it; git history has it
+- **No commented-out code**: Delete it
 - **No TODO/FIXME comments**: Convert to issues in the checklist
 - **Meaningful variable names**: `user` not `u`, `emailCount` not `ec`
 - **Type safety**: Use TypeScript; avoid `any` type
@@ -206,66 +206,9 @@ Before starting any task, read these documents (located in `Documents/`):
 
 ---
 
-## 6. Git Commit Guidelines
+## 6. Saving Your Work
 
-### 6.1 Commit Message Format
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Type** (required): `feat`, `fix`, `refactor`, `test`, `docs`, `perf`, `chore`
-**Scope** (optional): Area affected (e.g., `dashboard`, `auth`, `api`)
-**Subject**: Imperative, present tense ("add" not "added"), no period, max 50 chars
-
-**Body** (required if complex): Explain the "why", not the "what"
-- Wrap at 72 characters
-- Leave blank line before footer
-- Reference issue if applicable
-
-**Footer** (optional): 
-- Breaking changes: `BREAKING CHANGE: description`
-- Issue close: `Closes #123`
-
-### 6.2 Examples
-
-```
-feat(dashboard): add inbox connection status indicator
-
-Show a green/yellow/red dot next to each inbox to indicate
-connection health. Orange means token expiring soon, red means
-auth failed.
-
-Closes #TASK-042
-```
-
-```
-fix(api): prevent N+1 query in inbox list endpoint
-
-Use PostgreSQL JOIN instead of fetching inboxes then
-looping to fetch provider status. Reduces response time
-from 800ms to 120ms.
-```
-
-```
-test(email-parser): add unit tests for edge cases
-
-Cover: missing headers, malformed MIME, very large attachments,
-non-UTF8 encoding.
-```
-
-### 6.3 Commit Best Practices
-
-- **One logical change per commit**: Easy to revert if needed
-- **Test before committing**: Don't commit broken code
-- **Small commits**: Aim for <200 lines of changes per commit
-- **Atomic commits**: Each commit should be deployable
-- **No merge commits in feature branches**: Rebase onto main
-- **Squash if necessary**: Before merging PR, squash into logical commits
+Write all changed files directly to disk using the file tools (Write/Edit). Do not use git or run any git commands. Changes are saved when the files are written — no commit step is needed.
 
 ---
 
@@ -580,12 +523,6 @@ Once connected, the next agent run can test live email fetching and
 confirm token refresh works correctly.
 ```
 
-Commit the human-input file with:
-```
-git add Documents/Human-Input/...
-git commit -m "docs(human-input): request real Gmail account for inbox testing"
-```
-
 #### Do not block the task on real credentials
 
 The task is still complete if:
@@ -616,10 +553,9 @@ Before marking a task as complete:
 
 1. **Claim task**: Mark task as `in-progress` in CHECKLIST.md
 2. **Read context**: Study linked docs and acceptance criteria
-3. **Create branch**: `git checkout -b task/TASK-XXX-short-name`
-4. **Write test first**: TDD approach for complex logic
-5. **Implement feature**: Follow code quality standards
-6. **Manual testing**: Test in browser; verify against acceptance criteria
+3. **Write test first**: TDD approach for complex logic
+4. **Implement feature**: Follow code quality standards
+5. **Manual testing**: Test in browser; verify against acceptance criteria
 
 ### 10.2 During Development
 
@@ -647,13 +583,8 @@ npm run dev
 
 ### 10.3 Submitting Work
 
-1. **Commit frequently**: Small, logical commits (see git guidelines)
-2. **Rebase on main**: `git rebase origin/main`
-3. **Test one more time**: `npm test && npm run dev`
-4. **Create PR**: Link to task, describe changes
-5. **Code review**: Address feedback
-6. **Merge**: Squash into single commit or keep atomic commits
-7. **Update CHECKLIST**: Mark task as `completed`
+1. **Test one more time**: `npm test && npm run dev`
+2. **Update CHECKLIST**: Mark task as `completed` by changing `- [ ]` to `- [x]`
 
 ### 10.4 Handling Blockers
 
@@ -751,7 +682,6 @@ Use this checklist for every task:
 - [ ] Responsive design verified (mobile, tablet, desktop)
 - [ ] Dark mode tested
 - [ ] Performance verified (Lighthouse ≥ 90)
-- [ ] Git commit messages follow format
 - [ ] Task updated to `completed` in CHECKLIST.md
 - [ ] All acceptance criteria met
 

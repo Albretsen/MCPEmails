@@ -1,69 +1,35 @@
-'use client';
+import HomeClient from '../components/marketing/HomeClient';
 
-import { useState, useEffect } from 'react';
-import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../components/tweaks-panel';
-import {
-  Nav, Hero, Trusted, Features, HowItWorks, Quote, Pricing, Footer
-} from '../components/marketing/Sections';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 
-const TWEAK_DEFAULTS = {
-  heroVariant: 'pipe',
-  dark: false,
+export const metadata = {
+  title: 'mcpemails · Give your AI agent an inbox.',
+  description: 'Connect your email accounts to Claude, Cursor, or any MCP-compatible client. Read, send, search, and reply to email via the Model Context Protocol.',
+  alternates: {
+    canonical: APP_URL,
+  },
+  openGraph: {
+    type: 'website',
+    url: APP_URL,
+    title: 'mcpemails · Give your AI agent an inbox.',
+    description: 'Connect your email accounts to Claude, Cursor, or any MCP-compatible client. Read, send, search, and reply to email via the Model Context Protocol.',
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'mcpemails — Give your AI agent an inbox',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'mcpemails · Give your AI agent an inbox.',
+    description: 'Connect your email accounts to Claude, Cursor, or any MCP-compatible client.',
+    images: ['/og.png'],
+  },
 };
 
-export default function Home() {
-  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
-
-  // Apply dark mode (also persisted so other pages match)
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', t.dark ? 'dark' : 'light');
-    try {
-      localStorage.setItem('mcpe-theme', t.dark ? 'dark' : 'light');
-    } catch (e) {}
-  }, [t.dark]);
-
-  // Read initial dark state from localStorage on first mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('mcpe-theme');
-      if (saved === 'dark' && !t.dark) setTweak('dark', true);
-      if (saved === 'light' && t.dark) setTweak('dark', false);
-    } catch (e) {}
-  }, []);
-
-  const onSignIn = () => {};
-  const onGetStarted = () => {};
-
-  return (
-    <div data-screen-label="Marketing / Home">
-      <Nav onSignIn={onSignIn} onGetStarted={onGetStarted} />
-      <Hero variant={t.heroVariant} onGetStarted={onGetStarted} />
-      <Trusted />
-      <Features />
-      <HowItWorks />
-      <Quote />
-      <Pricing onGetStarted={onGetStarted} />
-      <Footer />
-
-      <TweaksPanel>
-        <TweakSection label="Hero" />
-        <TweakRadio
-          label="Visual"
-          value={t.heroVariant}
-          options={[
-            { value: 'pipe', label: 'Pipe diagram' },
-            { value: 'endpoint', label: 'MCP endpoint' },
-            { value: 'terminal', label: 'Live terminal' },
-          ]}
-          onChange={(v) => setTweak('heroVariant', v)}
-        />
-        <TweakSection label="Theme" />
-        <TweakToggle
-          label="Dark mode"
-          value={t.dark}
-          onChange={(v) => setTweak('dark', v)}
-        />
-      </TweaksPanel>
-    </div>
-  );
+export default function HomePage() {
+  return <HomeClient />;
 }

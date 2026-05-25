@@ -401,6 +401,125 @@ export type Database = {
           },
         ]
       }
+      oauth_auth_codes: {
+        Row: {
+          client_id: string
+          client_name: string
+          code_challenge: string
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          inbox_ids: string[] | null
+          redirect_uri: string
+          scopes: string[]
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          client_id: string
+          client_name: string
+          code_challenge: string
+          code_hash: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          inbox_ids?: string[] | null
+          redirect_uri: string
+          scopes?: string[]
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          client_id?: string
+          client_name?: string
+          code_challenge?: string
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          inbox_ids?: string[] | null
+          redirect_uri?: string
+          scopes?: string[]
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_auth_codes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_clients: {
+        Row: {
+          client_byline: string
+          client_id: string
+          client_name: string
+          created_at: string
+          id: string
+          is_first_party: boolean
+          logo_url: string | null
+          redirect_uris: string[]
+          scopes_allowed: string[]
+          updated_at: string
+        }
+        Insert: {
+          client_byline?: string
+          client_id: string
+          client_name: string
+          created_at?: string
+          id?: string
+          is_first_party?: boolean
+          logo_url?: string | null
+          redirect_uris?: string[]
+          scopes_allowed?: string[]
+          updated_at?: string
+        }
+        Update: {
+          client_byline?: string
+          client_id?: string
+          client_name?: string
+          created_at?: string
+          id?: string
+          is_first_party?: boolean
+          logo_url?: string | null
+          redirect_uris?: string[]
+          scopes_allowed?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      oauth_consents: {
+        Row: {
+          client_id: string
+          granted_at: string
+          id: string
+          inbox_ids: string[] | null
+          scopes: string[]
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          granted_at?: string
+          id?: string
+          inbox_ids?: string[] | null
+          scopes?: string[]
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          granted_at?: string
+          id?: string
+          inbox_ids?: string[] | null
+          scopes?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       oauth_states: {
         Row: {
           created_at: string
@@ -515,29 +634,35 @@ export type Database = {
       workspaces: {
         Row: {
           created_at: string
+          deleted_at: string | null
           display_name: string
           id: string
           owner_id: string
           plan: string
           slug: string
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           display_name: string
           id?: string
           owner_id: string
           plan?: string
           slug: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           display_name?: string
           id?: string
           owner_id?: string
           plan?: string
           slug?: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -555,6 +680,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_user_sessions: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          ip: string
+          not_after: string
+          refreshed_at: string
+          updated_at: string
+          user_agent: string
+        }[]
+      }
       my_workspace_ids: { Args: never; Returns: string[] }
     }
     Enums: {
