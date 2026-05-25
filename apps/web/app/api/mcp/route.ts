@@ -60,8 +60,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     body,
   });
 
-  const responseBody = await upstream.text();
-
   const responseHeaders: Record<string, string> = {
     'Content-Type': upstream.headers.get('content-type') ?? 'application/json',
   };
@@ -71,6 +69,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (upstream.status === 401) {
     responseHeaders['WWW-Authenticate'] = WWW_AUTHENTICATE;
   }
+
+  // 204 No Content: Fetch spec forbids a body on this status. Return before
+  // calling upstream.text() to avoid "Invalid response status code 204".
+  if (upstream.status === 204) {
+    return new NextResponse(null, { status: 204, headers: responseHeaders });
+  }
+
+  const responseBody = await upstream.text();
 
   return new NextResponse(responseBody, {
     status: upstream.status,
