@@ -101,25 +101,42 @@ function DashboardInner({ user, workspace, planLimits, overviewStats, activityFe
     }
   }, [firstrun]);
 
-  // Show an informative toast when an OAuth redirect was blocked by the inbox
-  // cap (the server appends ?error=inbox_limit_reached to the redirect URL).
+  // Handle ?connected=<provider> and ?error=<code> params injected by OAuth callbacks.
   useEffect(() => {
+    const connectedParam = readQuery(searchParams, 'connected');
     const errorParam = readQuery(searchParams, 'error');
-    if (errorParam !== 'inbox_limit_reached') return;
-    const plan = workspace?.plan ?? 'free';
-    const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
-    toast({
-      message: `Your ${planLabel} plan inbox limit has been reached. Upgrade at mcpemails.com/pricing to connect more.`,
-      variant: 'warning',
-    });
-    // Clean up the error param from the URL without a reload.
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('error');
-      window.history.replaceState({}, '', url.toString());
-    } catch { /* ignore */ }
-    // Ensure the inboxes page is visible so the user sees the context.
-    setRouteState('inboxes');
+
+    if (connectedParam) {
+      const label = connectedParam.charAt(0).toUpperCase() + connectedParam.slice(1);
+      toast({ message: `${label} inbox connected successfully.`, variant: 'success' });
+      setRouteState('inboxes');
+    } else if (errorParam === 'inbox_limit_reached') {
+      const plan = workspace?.plan ?? 'free';
+      const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+      toast({
+        message: `Your ${planLabel} plan inbox limit has been reached. Upgrade at mcpemails.com/pricing to connect more.`,
+        variant: 'warning',
+      });
+      setRouteState('inboxes');
+    } else if (errorParam === 'token_exchange_failed') {
+      toast({ message: 'Could not connect inbox — token exchange with the provider failed. Please try again.', variant: 'error' });
+      setRouteState('inboxes');
+    } else if (errorParam === 'cancelled') {
+      toast({ message: 'Inbox connection cancelled.', variant: 'info' });
+      setRouteState('inboxes');
+    } else if (errorParam) {
+      toast({ message: `Inbox connection failed (${errorParam}). Please try again.`, variant: 'error' });
+      setRouteState('inboxes');
+    }
+
+    if (connectedParam || errorParam) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('connected');
+        url.searchParams.delete('error');
+        window.history.replaceState({}, '', url.toString());
+      } catch { /* ignore */ }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

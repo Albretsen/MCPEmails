@@ -28,7 +28,7 @@ import { exchangeGmailCode } from '@/lib/email-providers/gmail';
  *   Documents/Architecture/email-provider-oauth-flows.md §2
  */
 
-const DASHBOARD_INBOXES = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/inboxes`;
+const DASHBOARD_INBOXES = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
 
 function redirectWithError(error: string): NextResponse {
   return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=${error}`);
@@ -87,7 +87,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let tokens: { accessToken: string; refreshToken: string; expiresIn: number; email: string };
   try {
     tokens = await exchangeGmailCode(code, expectedRedirectUri);
-  } catch {
+  } catch (err) {
+    console.error('[gmail/callback] token exchange failed:', err);
     return redirectWithError('token_exchange_failed');
   }
 

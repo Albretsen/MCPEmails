@@ -29,7 +29,7 @@ import { exchangeOutlookCode } from '@/lib/email-providers/outlook';
  *   Documents/Architecture/email-provider-oauth-flows.md §3
  */
 
-const DASHBOARD_INBOXES = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/inboxes`;
+const DASHBOARD_INBOXES = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
 
 function redirectWithError(errorCode: string): NextResponse {
   return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=${errorCode}`);
@@ -88,7 +88,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let tokens: { accessToken: string; refreshToken: string; expiresIn: number; email: string };
   try {
     tokens = await exchangeOutlookCode(code, expectedRedirectUri);
-  } catch {
+  } catch (err) {
+    console.error('[outlook/callback] token exchange failed:', err);
     return redirectWithError('token_exchange_failed');
   }
 
