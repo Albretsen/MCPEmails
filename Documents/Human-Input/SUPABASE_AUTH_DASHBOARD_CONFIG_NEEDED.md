@@ -1,8 +1,17 @@
 # Supabase Auth Dashboard Configuration Needed
 
+## Progress
+- [x] Step 1 — Enable Email provider (confirmed 2026-05-25)
+- [x] Step 2 — Set Site URL (confirmed 2026-05-25)
+- [x] Step 3 — Add Redirect URLs (confirmed 2026-05-25)
+- [x] Step 4 — Email Templates (uploaded via Management API 2026-05-25, brand name fixed to "MCP Emails")
+- [ ] Step 5 — SMTP (optional)
+
+---
+
 ## What I need from you
 
-Apply the following configuration in the Supabase dashboard for the MCPEmails project.
+Apply the following configuration in the Supabase dashboard for the MCP Emails project.
 These settings cannot be applied via migration or the Supabase CLI — they must be set
 through the web UI at https://supabase.com/dashboard/project/swvaxorwumispmjaaszb.
 

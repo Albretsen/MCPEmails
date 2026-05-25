@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+jobs:
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm install
+      - name: Run TypeScript type check
+        run: cd apps/web && npx tsc --noEmit
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm install
+      - name: Run ESLint
+        run: cd apps/web && npm run lint
+
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+      NEXT_PUBLIC_APP_URL: https://mcpemails.com
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm install
+      - name: Build Next.js app
+        run: cd apps/web && npm run build
+
+  migration-check:
+    name: Migration Dry-Run + RLS Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start local Supabase
+        run: supabase start --ignore-health-check
+      - name: Apply all migrations against local DB
+        run: supabase db reset
+      - name: Run pgTAP RLS test suite
+        run: supabase test db
+      - name: Verify all public tables have RLS enabled (catch-all)
+        run: |
+          UNPROTECTED=$(supabase db query \
+            "SELECT c.relname FROM pg_class c \
+             JOIN pg_namespace n ON n.oid = c.relnamespace \
+             WHERE n.nspname = 'public' \
+               AND c.relkind IN ('r','p') \
+               AND c.relrowsecurity = false" \
+            --csv 2>/dev/null | tail -n +2)
+          if [ -n "$UNPROTECTED" ]; then
+            echo "ERROR: The following public tables are missing RLS:"
+            echo "$UNPROTECTED"
+            exit 1
+          fi
+          echo "All public tables have RLS enabled."

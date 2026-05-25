@@ -12,13 +12,12 @@ export function Nav({ onSignIn, onGetStarted }) {
           <a href="#features">Features</a>
           <a href="#how">How it works</a>
           <a href="#pricing">Pricing</a>
-          <a href="#docs">Docs</a>
-          <a href="#security">Security</a>
+          <a href="/docs">Docs</a>
         </nav>
         <div className="nav-grow" />
         <div className="nav-cta">
-          <a className="btn btn-ghost" onClick={onSignIn} href="/signup?mode=signin">Sign in</a>
-          <a className="btn btn-primary" onClick={onGetStarted} href="/signup">Get started</a>
+          <a className="btn btn-ghost" onClick={onSignIn} href="/login">Sign in</a>
+          <a className="btn btn-primary" onClick={onGetStarted} href="/signup">Get started free</a>
         </div>
       </div>
     </header>
@@ -34,16 +33,16 @@ export function HeroTextBlock({ onGetStarted }) {
         Give your AI<br/>agent an <span className="accent">inbox.</span>
       </h1>
       <p className="lead">
-        Connect your email accounts once. Paste a single URL into Claude, Cursor, or any MCP-compatible client. Your agent can now read, search, and send mail. You never share a password.
+        Connect Gmail, Outlook, or any IMAP account once. Paste a single MCP endpoint URL into Claude, Cursor, or any MCP-compatible agent. Your agent can now read, search, and send mail — live, with no email stored on our servers.
       </p>
       <div className="hero-cta">
         <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>Connect your inbox</MBtn>
-        <MBtn variant="secondary" size="lg" href="#how">Read the docs</MBtn>
+        <MBtn variant="secondary" size="lg" href="/docs">Read the docs</MBtn>
       </div>
       <div className="hero-meta">
         <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> 100 free calls / month</span>
         <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> No card required</span>
-        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> EU-hosted</span>
+        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> Email never stored</span>
       </div>
     </div>
   );
@@ -253,14 +252,14 @@ export function Trusted() {
   return (
     <section className="trusted">
       <div className="container trusted-row">
-        <span className="label">Trusted by teams building with</span>
+        <span className="label">Works with every MCP-compatible agent and client</span>
         <div className="trusted-logos">
-          <span>Claude</span>
-          <span>OpenAI</span>
-          <span>Mistral</span>
-          <span>n8n</span>
+          <span>Claude Desktop</span>
           <span>Cursor</span>
+          <span>n8n</span>
           <span>Zed</span>
+          <span>Windsurf</span>
+          <span>Continue</span>
         </div>
       </div>
     </section>
@@ -272,39 +271,39 @@ export function Features() {
   const principles = [
     {
       n: "01",
-      h: "Five tools cover the job.",
-      p: <>The whole API surface fits in one line: <code className="t-code-inline">list_inbox</code>, <code className="t-code-inline">read_email</code>, <code className="t-code-inline">search_emails</code>, <code className="t-code-inline">send_email</code>, <code className="t-code-inline">reply_to_email</code>. Add the MCP URL to any agent. That's the integration.</>,
+      h: "Five tools. The whole surface area.",
+      p: <>Every email task your agent needs fits in five calls: <code className="t-code-inline">list_inbox</code>, <code className="t-code-inline">read_email</code>, <code className="t-code-inline">search_emails</code>, <code className="t-code-inline">send_email</code>, <code className="t-code-inline">reply_to_email</code>. Add the MCP endpoint URL to any compatible agent. That's the entire integration.</>,
       tag: "Scope",
     },
     {
       n: "02",
-      h: "We never store your email.",
-      p: "Every call is a live IMAP or Gmail API fetch. No bodies, no attachments, no metadata cached. The only thing in our database is an encrypted refresh token per inbox.",
+      h: "Email is fetched live. Never stored.",
+      p: "Every tool call hits your provider in real time — Gmail API, Microsoft Graph, or IMAP. Message bodies, subjects, and attachments are returned to the agent and immediately discarded. The only thing we persist is an encrypted OAuth token per inbox, so we can make the next call.",
       tag: "Storage",
     },
     {
       n: "03",
-      h: "Outbound goes through your provider.",
-      p: <>Sending always uses your own SMTP or the Gmail API. Your deliverability stays in your control. We can't be the reason your domain ends up on a blocklist, because <em style={{ fontStyle: "normal", color: "var(--fg-1)", fontWeight: 500 }}>we never send mail from our own domain.</em></>,
+      h: "Sending goes through your provider.",
+      p: <>When your agent calls <code className="t-code-inline">send_email</code> or <code className="t-code-inline">reply_to_email</code>, the message is dispatched via the Gmail API, Microsoft Graph, or your own SMTP server. Your domain reputation and deliverability stay entirely in your hands. We never relay mail from our own domain.</>,
       tag: "Sending",
     },
     {
       n: "04",
-      h: "Gmail, Outlook, or any IMAP.",
-      p: "OAuth2 where the provider supports it. App passwords for everything else. Connect as many inboxes as your plan allows and label them per use case (work-gmail, ops-fastmail, on-call-personal).",
+      h: "Gmail, Outlook, or any IMAP inbox.",
+      p: "OAuth 2.0 for Gmail and Outlook. App passwords for Fastmail and any IMAP/SMTP provider. Connect multiple inboxes — label them by use case (work-gmail, ops-outlook, support-fastmail) and scope each API key to the inboxes you want that agent to reach.",
       tag: "Providers",
     },
     {
       n: "05",
-      h: "OAuth for agents, too.",
-      p: "Agents authorize via standard OAuth2 with scoped permissions. You decide which inboxes each client can touch, and revoke any client in one click from the dashboard.",
+      h: "Standard OAuth for agents and clients.",
+      p: "MCP clients authorize via a standard OAuth 2.0 flow. Scopes are per-inbox and per-permission. You review and approve access in the dashboard, and revoke any client in one click. API keys are prefixed, hashed, and never stored in plaintext.",
       tag: "Access",
     },
     {
       n: "06",
-      h: "EU-hosted by default.",
-      p: "Workspaces created from the EU run in Frankfurt. US workspaces run in N. Virginia. Region is per-workspace and visible in Settings. Encrypted credentials never cross regions.",
-      tag: "Region",
+      h: "Credentials are encrypted at rest.",
+      p: "OAuth tokens and app passwords are AES-256-GCM encrypted before being written to the database. Decryption happens only inside an isolated server function at call time. The encryption key is stored in a separate secrets vault, not alongside the data.",
+      tag: "Security",
     },
   ];
   return (
@@ -344,34 +343,34 @@ export function HowItWorks() {
         <div className="section-head">
           <div className="eye-label">How it works</div>
           <h2>You're the user. We're the pipe.</h2>
-          <p className="sub">Three steps from sign-up to your agent talking to your inbox.</p>
+          <p className="sub">Three steps from sign-up to your agent reading and sending mail.</p>
         </div>
 
         <div className="how-steps">
           <div className="step">
             <span className="num">01</span>
             <h4>Connect your inbox</h4>
-            <p>Click "Connect Gmail" in the dashboard and authorize the scopes you want. Or paste IMAP details for any other provider.</p>
+            <p>Sign in and click <strong>Connect Inbox</strong>. Choose Gmail or Outlook and complete the OAuth flow — no passwords shared. For Fastmail or any IMAP provider, paste an app password instead.</p>
           </div>
           <div className="step">
             <span className="num">02</span>
-            <h4>Add the MCP URL to your agent</h4>
-            <p>Drop the hosted MCP endpoint and a bearer token into Claude Desktop, n8n, Cursor, or your own client.</p>
+            <h4>Create an API key and add the MCP URL</h4>
+            <p>Generate a scoped API key in the dashboard. Paste the MCP endpoint URL and that key into Claude Desktop, Cursor, n8n, or any MCP-compatible client. One config, all five tools.</p>
           </div>
           <div className="step">
             <span className="num">03</span>
             <h4>Your agent works the inbox</h4>
-            <p>The agent calls tools like <code className="t-code-inline">list_inbox()</code> and <code className="t-code-inline">send_email()</code>. We fetch live and disconnect.</p>
+            <p>The agent calls tools like <code className="t-code-inline">search_emails()</code> or <code className="t-code-inline">reply_to_email()</code>. MCPEmails fetches live from your provider and returns the result. Nothing is cached between calls.</p>
           </div>
         </div>
 
         <div className="tools">
           {[
-            { n: "list_inbox",     d: "Most recent N emails, with sender, subject, snippet." },
-            { n: "read_email",     d: "Full body of a specific email by UID." },
-            { n: "search_emails",  d: "Search by keyword, sender, date, label." },
-            { n: "send_email",     d: "Send from the connected account." },
-            { n: "reply_to_email", d: "Reply in a specific email thread." },
+            { n: "list_inbox",     d: "List recent messages with sender, subject, date, and snippet — up to 100 per call." },
+            { n: "read_email",     d: "Fetch a single message by ID. Returns parsed plain-text and sanitized HTML body, plus attachment metadata." },
+            { n: "search_emails",  d: "Provider-native search: Gmail query syntax, IMAP SEARCH, or Microsoft Graph. Returns up to 100 matches." },
+            { n: "send_email",     d: "Send a new message via the connected account. Dispatched through Gmail API, Graph, or SMTP — your domain, your deliverability." },
+            { n: "reply_to_email", d: "Reply in-thread with correct Message-ID and References headers. Works across Gmail, Outlook, and IMAP." },
           ].map(t => (
             <div className="tool" key={t.n}>
               <div className="name">{t.n}()</div>
@@ -390,7 +389,7 @@ export function Quote() {
     <section className="quote">
       <div className="container">
         <div className="text">
-          "It took me longer to log into Gmail than to wire up my agent. The fact that I never had to think about IMAP credentials is the entire point."
+          "It took me longer to log into Gmail than to wire up my agent. The fact that I never had to think about IMAP credentials — or whether my email is being stored somewhere — is the entire point."
         </div>
         <div className="who"><strong>Maya Chen</strong> · staff engineer, building agent workflows at a Series C fintech</div>
       </div>
@@ -401,10 +400,57 @@ export function Quote() {
 /* ============== PRICING ============== */
 export function Pricing({ onGetStarted }) {
   const tiers = [
-    { name: "Free",    price: "$0",  per: "/forever", accent: false, features: ["1 email account", "100 MCP calls / month", "Community support"], cta: "Start free" },
-    { name: "Starter", price: "$9",  per: "/month",   accent: false, features: ["3 email accounts", "2,000 MCP calls / month", "Email support"], cta: "Start free trial" },
-    { name: "Pro",     price: "$29", per: "/month",   accent: true,  features: ["10 email accounts", "20,000 MCP calls / month", "Priority support", "Usage analytics"], cta: "Start free trial" },
-    { name: "Team",    price: "$79", per: "/month",   accent: false, features: ["Unlimited accounts", "100,000 MCP calls / month", "SSO, audit log", "Slack support"], cta: "Talk to sales" },
+    {
+      name: "Free",
+      price: "$0",
+      per: "/forever",
+      accent: false,
+      desc: "For personal projects and tinkering with agents.",
+      features: [
+        "1 connected inbox",
+        "100 MCP calls / month",
+        "Gmail, Outlook, IMAP",
+        "1 API key",
+        "Community support",
+      ],
+      cta: "Start free",
+      ctaHref: "/signup",
+    },
+    {
+      name: "Pro",
+      price: "$29",
+      per: "/month",
+      accent: true,
+      desc: "For teams shipping agents that work the inbox every day.",
+      features: [
+        "10 connected inboxes",
+        "20,000 MCP calls / month",
+        "Gmail, Outlook, IMAP",
+        "10 API keys",
+        "Usage analytics dashboard",
+        "Email support",
+      ],
+      cta: "Start free trial",
+      ctaHref: "/signup",
+    },
+    {
+      name: "Enterprise",
+      price: "Custom",
+      per: "",
+      accent: false,
+      desc: "For organisations that need unlimited scale and compliance guarantees.",
+      features: [
+        "Unlimited inboxes",
+        "Custom MCP call volume",
+        "Gmail, Outlook, IMAP",
+        "Unlimited API keys",
+        "Audit log + SSO",
+        "Dedicated Slack support",
+        "Custom SLA",
+      ],
+      cta: "Talk to sales",
+      ctaHref: "mailto:sales@mcpemails.com",
+    },
   ];
   return (
     <section className="section" id="pricing">
@@ -412,22 +458,37 @@ export function Pricing({ onGetStarted }) {
         <div className="section-head">
           <div className="eye-label">Pricing</div>
           <h2>Pay for the calls your agent makes.</h2>
-          <p className="sub">Simple usage-based pricing. Switch plans any time. EU and US billing in local currency.</p>
+          <p className="sub">Simple, transparent pricing. Switch plans any time. EU and US billing in local currency.</p>
         </div>
-        <div className="price-grid">
+        <div className="price-grid price-grid-3">
           {tiers.map(t => (
             <div className={"price" + (t.accent ? " featured" : "")} key={t.name}>
-              <h4>{t.name}</h4>
-              <div className="num">{t.price}<small> {t.per}</small></div>
+              <div>
+                <h4>{t.name}</h4>
+                <div className="num">
+                  {t.price}
+                  {t.per && <small> {t.per}</small>}
+                </div>
+                <p className="price-desc">{t.desc}</p>
+              </div>
               <ul>
                 {t.features.map(f => (
                   <li key={f}><MIcon name="check" size={14} color="var(--mint-600)"/>{f}</li>
                 ))}
               </ul>
-              <a className={"btn " + (t.accent ? "btn-primary" : "btn-secondary")} href="/signup" onClick={onGetStarted}>{t.cta}</a>
+              <a
+                className={"btn " + (t.accent ? "btn-primary" : "btn-secondary")}
+                href={t.ctaHref}
+                onClick={t.ctaHref === "/signup" ? onGetStarted : undefined}
+              >
+                {t.cta}
+              </a>
             </div>
           ))}
         </div>
+        <p className="pricing-footnote">
+          All plans: email is fetched live and never stored. OAuth tokens encrypted at rest. <a href="/pricing">See full feature comparison →</a>
+        </p>
       </div>
     </section>
   );
@@ -441,35 +502,30 @@ export function Footer() {
         <div className="footer-grid">
           <div className="brand-cell">
             <img src="/logo-mark-dark.svg" alt="mcpemails" />
-            <p>A hosted MCP server that gives AI agents access to your inbox, without ever storing your email.</p>
+            <p>A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing your email.</p>
           </div>
           <div>
             <h5>Product</h5>
             <a href="#features">Features</a>
             <a href="#how">How it works</a>
             <a href="#pricing">Pricing</a>
-            <a href="#docs">Docs</a>
-            <a href="#changelog">Changelog</a>
+            <a href="/docs">Docs</a>
           </div>
           <div>
             <h5>Resources</h5>
-            <a href="#">MCP spec</a>
-            <a href="#">Provider compat</a>
-            <a href="#">Status</a>
-            <a href="#">Community</a>
+            <a href="/docs#tools">Tool reference</a>
+            <a href="/docs#quickstart">Quickstart</a>
+            <a href="/docs#providers">Provider compat</a>
           </div>
           <div>
             <h5>Company</h5>
-            <a href="#">About</a>
-            <a href="#">Security</a>
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Contact</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
           </div>
         </div>
         <div className="legal">
-          <span>© 2026 mcpemails. Made in Berlin & Lisbon.</span>
-          <span>v0.4.2 · status: all systems normal</span>
+          <span>© 2026 mcpemails.</span>
+          <span>Email never stored · Credentials encrypted at rest</span>
         </div>
       </div>
     </footer>

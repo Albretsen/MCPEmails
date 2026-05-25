@@ -8,9 +8,6 @@
 #   Documents/Human-Input/SUPABASE_AUTH_DASHBOARD_CONFIG_NEEDED.md
 # ============================================================
 
-[project]
-id = "swvaxorwumispmjaaszb"
-
 # ============================================================
 # API
 # ============================================================
@@ -66,19 +63,19 @@ otp_expiry  = 3600
 # ============================================================
 [auth.email.template.confirmation]
 subject  = "Confirm your MCPEmails account"
-content_path = "./templates/confirm_signup.html"
+content_path = "./supabase/templates/confirm_signup.html"
 
 [auth.email.template.magic_link]
 subject  = "Your MCPEmails sign-in link"
-content_path = "./templates/magic_link.html"
+content_path = "./supabase/templates/magic_link.html"
 
 [auth.email.template.invite]
 subject  = "You've been invited to MCPEmails"
-content_path = "./templates/invite.html"
+content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.recovery]
 subject  = "Reset your MCPEmails password"
-content_path = "./templates/reset_password.html"
+content_path = "./supabase/templates/reset_password.html"
 
 # ============================================================
 # Database
