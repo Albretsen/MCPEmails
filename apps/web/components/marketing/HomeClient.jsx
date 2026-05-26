@@ -11,7 +11,10 @@ const TWEAK_DEFAULTS = {
   dark: false,
 };
 
-export default function HomeClient() {
+/**
+ * @param {{ stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ */
+export default function HomeClient({ stripePrices }) {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
 
   // Apply dark mode (also persisted so other pages match)
@@ -42,7 +45,7 @@ export default function HomeClient() {
       <Features />
       <HowItWorks />
       <Quote />
-      <Pricing onGetStarted={onGetStarted} />
+      <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} />
       <Footer />
 
       <TweaksPanel>

@@ -21,6 +21,19 @@ const PLANS = [
     ctaPrimary: false,
   },
   {
+    key: 'solo',
+    name: 'Solo',
+    monthly: 9,
+    annual: 7,
+    per: '/month',
+    featured: false,
+    badge: null,
+    desc: 'For solo developers who want their agent working the inbox daily.',
+    cta: 'Start free trial',
+    ctaHref: '/signup',
+    ctaPrimary: false,
+  },
+  {
     key: 'pro',
     name: 'Pro',
     monthly: 29,
@@ -54,56 +67,57 @@ const TABLE_SECTIONS = [
   {
     label: 'Usage',
     rows: [
-      { feature: 'Connected inboxes',    free: '1',           pro: '10',             enterprise: 'Unlimited' },
-      { feature: 'MCP calls / month',    free: '100',         pro: '20,000',         enterprise: 'Custom'    },
-      { feature: 'API keys',             free: '1',           pro: '10',             enterprise: 'Unlimited' },
+      { feature: 'Connected inboxes',    free: '1',     solo: '3',      pro: '10',      enterprise: 'Unlimited' },
+      { feature: 'MCP calls / month',    free: '500',   solo: '3,000',  pro: '20,000',  enterprise: 'Custom'    },
+      { feature: 'Daily burst cap',      free: '100',   solo: '500',    pro: '2,000',   enterprise: 'Custom'    },
+      { feature: 'API keys',             free: '1',     solo: '3',      pro: '10',      enterprise: 'Unlimited' },
     ],
   },
   {
     label: 'Email providers',
     rows: [
-      { feature: 'Gmail (OAuth)',         free: true,  pro: true,  enterprise: true },
-      { feature: 'Outlook / Microsoft 365 (OAuth)', free: true, pro: true, enterprise: true },
-      { feature: 'Fastmail (OAuth + app password)', free: true, pro: true, enterprise: true },
-      { feature: 'Generic IMAP / SMTP',  free: true,  pro: true,  enterprise: true },
+      { feature: 'Gmail (OAuth)',                       free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'Outlook / Microsoft 365 (OAuth)',     free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'Fastmail (OAuth + app password)',     free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'Generic IMAP / SMTP',                 free: true, solo: true, pro: true, enterprise: true },
     ],
   },
   {
     label: 'MCP tools',
     rows: [
-      { feature: 'list_inboxes',          free: true,  pro: true,  enterprise: true },
-      { feature: 'list_inbox',            free: true,  pro: true,  enterprise: true },
-      { feature: 'read_email',            free: true,  pro: true,  enterprise: true },
-      { feature: 'search_emails',         free: true,  pro: true,  enterprise: true },
-      { feature: 'send_email',            free: true,  pro: true,  enterprise: true },
-      { feature: 'reply_to_email',        free: true,  pro: true,  enterprise: true },
+      { feature: 'list_inboxes',    free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'list_inbox',      free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'read_email',      free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'search_emails',   free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'send_email',      free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'reply_to_email',  free: true, solo: true, pro: true, enterprise: true },
     ],
   },
   {
     label: 'Analytics & security',
     rows: [
-      { feature: 'Usage analytics dashboard', free: false, pro: true,  enterprise: true },
-      { feature: 'Audit log',             free: false, pro: false, enterprise: true },
-      { feature: 'SSO (SAML / OIDC)',     free: false, pro: false, enterprise: true },
-      { feature: 'Custom data residency (EU / US)', free: false, pro: false, enterprise: true },
+      { feature: 'Usage analytics dashboard',           free: false, solo: false, pro: true,  enterprise: true },
+      { feature: 'Audit log',                           free: false, solo: false, pro: false, enterprise: true },
+      { feature: 'SSO (SAML / OIDC)',                   free: false, solo: false, pro: false, enterprise: true },
+      { feature: 'Custom data residency (EU / US)',     free: false, solo: false, pro: false, enterprise: true },
     ],
   },
   {
     label: 'Privacy & security',
     rows: [
-      { feature: 'Email never stored',            free: true, pro: true, enterprise: true },
-      { feature: 'Credentials encrypted at rest', free: true, pro: true, enterprise: true },
-      { feature: 'SOC 2 Type II report on request', free: false, pro: false, enterprise: true },
+      { feature: 'Email never stored',              free: true,  solo: true,  pro: true,  enterprise: true  },
+      { feature: 'Credentials encrypted at rest',   free: true,  solo: true,  pro: true,  enterprise: true  },
+      { feature: 'SOC 2 Type II report on request', free: false, solo: false, pro: false, enterprise: true  },
     ],
   },
   {
     label: 'Support',
     rows: [
-      { feature: 'Community forum',      free: true,  pro: true,  enterprise: true      },
-      { feature: 'Email support',        free: false, pro: true,  enterprise: true      },
-      { feature: 'Priority Slack channel', free: false, pro: false, enterprise: true    },
-      { feature: 'Dedicated account manager', free: false, pro: false, enterprise: true },
-      { feature: 'Custom SLA',           free: false, pro: false, enterprise: true      },
+      { feature: 'Community forum',           free: true,  solo: true,  pro: true,  enterprise: true  },
+      { feature: 'Email support',             free: false, solo: true,  pro: true,  enterprise: true  },
+      { feature: 'Priority Slack channel',    free: false, solo: false, pro: false, enterprise: true  },
+      { feature: 'Dedicated account manager', free: false, solo: false, pro: false, enterprise: true  },
+      { feature: 'Custom SLA',                free: false, solo: false, pro: false, enterprise: true  },
     ],
   },
 ];
@@ -130,8 +144,12 @@ const FAQ_ITEMS = [
     a: 'Gmail and Microsoft 365 / Outlook use OAuth 2.0. Fastmail supports both OAuth and app passwords. Any IMAP/SMTP provider (iCloud, Proton Bridge, self-hosted, etc.) can be connected with an app password.',
   },
   {
-    q: 'Do you offer a free trial on Pro?',
-    a: 'Yes — the Pro plan comes with a 14-day free trial. No credit card required to start. If you decide it\'s not for you, simply let the trial expire and you\'ll move to the Free tier.',
+    q: 'What\'s the difference between Solo and Pro?',
+    a: 'Solo is built for individual developers: 3 inboxes, 3,000 calls / month, 500 calls / day burst, and email support — all at $9 / month. Pro adds 10 inboxes, 20,000 calls / month, a 2,000 / day burst cap, and a usage analytics dashboard for teams that depend on email automation daily.',
+  },
+  {
+    q: 'Do you offer a free trial?',
+    a: 'Yes — both the Solo and Pro plans come with a 14-day free trial. No credit card required to start. If you decide it\'s not for you, simply let the trial expire and you\'ll move to the Free tier automatically.',
   },
   {
     q: 'Is there a refund policy?',
@@ -161,21 +179,43 @@ function BillingToggle({ annual, onChange }) {
   );
 }
 
-function PlanCards({ annual }) {
+/**
+ * @param {{ annual: boolean, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ */
+function PlanCards({ annual, stripePrices }) {
   return (
-    <div className="price-grid price-grid-3">
+    <div className="price-grid">
       {PLANS.map(plan => {
+        // Derive live prices from Stripe, falling back to static plan values
+        const liveMonthlyCents = stripePrices?.[plan.key]?.monthlyCents;
+        const liveYearlyCents = stripePrices?.[plan.key]?.yearlyCents;
+
+        const liveMonthly =
+          liveMonthlyCents != null && liveMonthlyCents > 0
+            ? liveMonthlyCents / 100
+            : plan.monthly;
+
+        const liveAnnualMonthly =
+          liveYearlyCents != null
+            ? Math.round(liveYearlyCents / 12)
+            : plan.annual;
+
+        const liveAnnualTotal =
+          liveYearlyCents != null
+            ? liveYearlyCents / 100
+            : plan.annual != null ? plan.annual * 12 : null;
+
         const priceDisplay =
-          plan.monthly === null
+          liveMonthly === null
             ? 'Custom'
-            : plan.monthly === 0
+            : liveMonthly === 0
             ? '$0'
             : annual
-            ? `$${plan.annual}`
-            : `$${plan.monthly}`;
+            ? `$${liveAnnualMonthly}`
+            : `$${liveMonthly}`;
 
         const perDisplay =
-          plan.monthly === null || plan.monthly === 0 ? plan.per : '/month';
+          liveMonthly === null || liveMonthly === 0 ? plan.per : '/month';
 
         return (
           <div className={'price' + (plan.featured ? ' featured' : '')} key={plan.key}>
@@ -185,8 +225,8 @@ function PlanCards({ annual }) {
                 {priceDisplay}
                 {perDisplay && <small> {perDisplay}</small>}
               </div>
-              {annual && plan.monthly !== null && plan.monthly > 0 && (
-                <p className="price-annual-note">Billed ${plan.annual * 12}/year</p>
+              {annual && liveMonthly !== null && liveMonthly > 0 && (
+                <p className="price-annual-note">Billed ${liveAnnualTotal}/year</p>
               )}
               <p className="price-desc">{plan.desc}</p>
             </div>
@@ -194,17 +234,30 @@ function PlanCards({ annual }) {
               {plan.key === 'free' && (
                 <>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />1 connected inbox</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />100 MCP calls / month</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, IMAP</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />500 MCP calls / month</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />100 calls / day burst cap</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail, IMAP</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />1 API key</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Community support</li>
+                </>
+              )}
+              {plan.key === 'solo' && (
+                <>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />3 connected inboxes</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />3,000 MCP calls / month</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />500 calls / day burst cap</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail, IMAP</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />3 API keys</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />14-day free trial</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Email support</li>
                 </>
               )}
               {plan.key === 'pro' && (
                 <>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />10 connected inboxes</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />20,000 MCP calls / month</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, IMAP</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />2,000 calls / day burst cap</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail, IMAP</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />10 API keys</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Usage analytics</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />14-day free trial</li>
@@ -215,7 +268,7 @@ function PlanCards({ annual }) {
                 <>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited inboxes</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Custom MCP call volume</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, IMAP</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail, IMAP</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited API keys</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Audit log + SSO</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Dedicated Slack support</li>
@@ -259,6 +312,7 @@ function ComparisonTable() {
           <tr>
             <th className="feat-col">Feature</th>
             <th>Free</th>
+            <th>Solo</th>
             <th className="featured-col">Pro</th>
             <th>Enterprise</th>
           </tr>
@@ -267,12 +321,13 @@ function ComparisonTable() {
           {TABLE_SECTIONS.map(section => (
             <>
               <tr className="tbl-section-head" key={'section-' + section.label}>
-                <td colSpan={4}>{section.label}</td>
+                <td colSpan={5}>{section.label}</td>
               </tr>
               {section.rows.map(row => (
                 <tr key={row.feature}>
                   <td className="feat-name">{row.feature}</td>
                   <TableCell value={row.free} />
+                  <TableCell value={row.solo} />
                   <TableCell value={row.pro} />
                   <TableCell value={row.enterprise} />
                 </tr>
@@ -302,7 +357,10 @@ function FaqItem({ q, a }) {
 
 /* ─── Page ───────────────────────────────────────────────────── */
 
-export default function PricingClient() {
+/**
+ * @param {{ stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ */
+export default function PricingClient({ stripePrices }) {
   const [annual, setAnnual] = useState(false);
 
   return (
@@ -327,7 +385,7 @@ export default function PricingClient() {
       {/* Plan cards */}
       <section className="pricing-page-cards">
         <div className="container">
-          <PlanCards annual={annual} />
+          <PlanCards annual={annual} stripePrices={stripePrices} />
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             All plans include: email never stored · credentials encrypted at rest · EU &amp; US hosting
           </p>

@@ -510,7 +510,7 @@ The rest of the Stripe machinery (`getPlanByStripePriceId`, `syncWorkspacePlan`,
 
 ---
 
-### Phase 4 — API key limit enforcement `[ ]`
+### Phase 4 — API key limit enforcement `[x]`
 
 **Goal:** Creating more API keys than the plan allows is blocked at the API layer.
 
@@ -526,7 +526,7 @@ Call `checkApiKeyLimit` before creating a key. Return 403 with `error_code: "api
 
 ---
 
-### Phase 5 — Dashboard: usage display `[ ]`
+### Phase 5 — Dashboard: usage display `[x]`
 
 **Goal:** Users can see monthly call usage and plan limits. Prevents the "why did my agent stop working?" problem.
 
@@ -543,7 +543,7 @@ Returns `{ plan, monthly: { used, cap, resets_at }, daily_burst: { used, cap, re
 
 ---
 
-### Phase 6 — Marketing copy `[ ]`
+### Phase 6 — Marketing copy `[x]`
 
 **Goal:** All public pricing pages reflect the four-tier structure with correct numbers.
 

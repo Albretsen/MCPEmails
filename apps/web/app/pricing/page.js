@@ -1,4 +1,5 @@
 import PricingClient from '../../components/marketing/PricingClient';
+import { fetchStripePrices } from '@/lib/stripe/getPrices';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 
@@ -30,6 +31,7 @@ export const metadata = {
   },
 };
 
-export default function PricingPage() {
-  return <PricingClient />;
+export default async function PricingPage() {
+  const stripePrices = await fetchStripePrices();
+  return <PricingClient stripePrices={stripePrices} />;
 }

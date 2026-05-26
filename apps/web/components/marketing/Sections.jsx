@@ -408,17 +408,22 @@ export function Quote() {
 }
 
 /* ============== PRICING ============== */
-export function Pricing({ onGetStarted }) {
+/**
+ * @param {{ onGetStarted?: () => void, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ */
+export function Pricing({ onGetStarted, stripePrices }) {
   const tiers = [
     {
+      key: "free",
       name: "Free",
       price: "$0",
       per: "/forever",
       accent: false,
-      desc: "For personal projects and tinkering with agents.",
+      desc: "For personal projects and experimenting with MCP agents.",
       features: [
         "1 connected inbox",
-        "100 MCP calls / month",
+        "500 MCP calls / month",
+        "100 calls / day burst cap",
         "Gmail, Outlook, Fastmail, IMAP",
         "1 API key",
         "Community support",
@@ -427,6 +432,26 @@ export function Pricing({ onGetStarted }) {
       ctaHref: "/signup",
     },
     {
+      key: "solo",
+      name: "Solo",
+      price: "$9",
+      per: "/month",
+      accent: false,
+      desc: "For solo developers who want their agent working the inbox daily.",
+      features: [
+        "3 connected inboxes",
+        "3,000 MCP calls / month",
+        "500 calls / day burst cap",
+        "Gmail, Outlook, Fastmail, IMAP",
+        "3 API keys",
+        "14-day free trial",
+        "Email support",
+      ],
+      cta: "Start free trial",
+      ctaHref: "/signup",
+    },
+    {
+      key: "pro",
       name: "Pro",
       price: "$29",
       per: "/month",
@@ -435,6 +460,7 @@ export function Pricing({ onGetStarted }) {
       features: [
         "10 connected inboxes",
         "20,000 MCP calls / month",
+        "2,000 calls / day burst cap",
         "Gmail, Outlook, Fastmail, IMAP",
         "10 API keys",
         "Usage analytics dashboard",
@@ -445,6 +471,7 @@ export function Pricing({ onGetStarted }) {
       ctaHref: "/signup",
     },
     {
+      key: "enterprise",
       name: "Enterprise",
       price: "Custom",
       per: "",
@@ -471,31 +498,40 @@ export function Pricing({ onGetStarted }) {
           <h2>Pay for the calls your agent makes.</h2>
           <p className="sub">Simple, transparent pricing. Switch plans any time. EU and US billing in local currency.</p>
         </div>
-        <div className="price-grid price-grid-3">
-          {tiers.map(t => (
-            <div className={"price" + (t.accent ? " featured" : "")} key={t.name}>
-              <div>
-                <h4>{t.name}</h4>
-                <div className="num">
-                  {t.price}
-                  {t.per && <small> {t.per}</small>}
+        <div className="price-grid">
+          {tiers.map(t => {
+            // Derive live monthly price display from Stripe when available
+            const liveMonthlyCents = stripePrices?.[t.key]?.monthlyCents;
+            const livePrice =
+              liveMonthlyCents != null && liveMonthlyCents > 0
+                ? `$${liveMonthlyCents / 100}`
+                : t.price;
+
+            return (
+              <div className={"price" + (t.accent ? " featured" : "")} key={t.name}>
+                <div>
+                  <h4>{t.name}</h4>
+                  <div className="num">
+                    {livePrice}
+                    {t.per && <small> {t.per}</small>}
+                  </div>
+                  <p className="price-desc">{t.desc}</p>
                 </div>
-                <p className="price-desc">{t.desc}</p>
+                <ul>
+                  {t.features.map(f => (
+                    <li key={f}><MIcon name="check" size={14} color="var(--mint-600)"/>{f}</li>
+                  ))}
+                </ul>
+                <a
+                  className={"btn " + (t.accent ? "btn-primary" : "btn-secondary")}
+                  href={t.ctaHref}
+                  onClick={t.ctaHref === "/signup" ? onGetStarted : undefined}
+                >
+                  {t.cta}
+                </a>
               </div>
-              <ul>
-                {t.features.map(f => (
-                  <li key={f}><MIcon name="check" size={14} color="var(--mint-600)"/>{f}</li>
-                ))}
-              </ul>
-              <a
-                className={"btn " + (t.accent ? "btn-primary" : "btn-secondary")}
-                href={t.ctaHref}
-                onClick={t.ctaHref === "/signup" ? onGetStarted : undefined}
-              >
-                {t.cta}
-              </a>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <p className="pricing-footnote">
           All plans: email is fetched live and never stored. OAuth tokens encrypted at rest. <a href="/pricing">See full feature comparison →</a>
