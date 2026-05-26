@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateApiKey } from '@/lib/api-keys/generate';
 import { checkApiKeyLimit } from '@/lib/plans/check-api-key-limit';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 /**
  * POST /api/api-keys
@@ -37,6 +38,9 @@ const VALID_SCOPES = [
   'admin',
 ] as const;
 
+/** Scopes available to workspace viewers (read-only). */
+const VIEWER_SCOPES = new Set(['email:read', 'email:search']);
+
 type Scope = (typeof VALID_SCOPES)[number];
 
 function isValidScope(s: unknown): s is Scope {
@@ -64,7 +68,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
-  const { name, scopes } = body as { name?: unknown; scopes?: unknown };
+  const { name, scopes, workspaceId: bodyWorkspaceId } = body as {
+    name?: unknown;
+    scopes?: unknown;
+    workspaceId?: unknown;
+  };
 
   const trimmedName = typeof name === 'string' ? name.trim() : '';
   if (trimmedName.length === 0 || trimmedName.length > 128) {
@@ -95,20 +103,64 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // 3. Resolve the user's workspace.
-  const { data: member, error: memberError } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .single();
+  // 3. Resolve the workspace and the caller's role in it.
+  //    If workspaceId is supplied in the body, use it (multi-workspace collaborator case).
+  //    Otherwise fall back to the single-member lookup for backwards compatibility.
+  let workspaceId: string;
+  let callerRole: string;
 
-  if (memberError || !member) {
-    return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
+  if (typeof bodyWorkspaceId === 'string' && bodyWorkspaceId) {
+    // Explicit workspace — verify membership and get role in one query.
+    const { data: member, error: memberError } = await supabase
+      .from('workspace_members')
+      .select('workspace_id, role')
+      .eq('workspace_id', bodyWorkspaceId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (memberError || !member) {
+      return NextResponse.json({ error: 'Workspace not found or access denied.' }, { status: 403 });
+    }
+    workspaceId = member.workspace_id;
+    callerRole = member.role;
+  } else {
+    // Legacy single-workspace path.
+    const { data: member, error: memberError } = await supabase
+      .from('workspace_members')
+      .select('workspace_id, role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (memberError || !member) {
+      return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
+    }
+    workspaceId = member.workspace_id;
+    callerRole = member.role;
   }
 
-  const workspaceId = member.workspace_id;
+  // Viewers may only create read-only scoped keys.
+  if (callerRole === 'viewer') {
+    const disallowedScope = sanitizedScopes.find((s) => !VIEWER_SCOPES.has(s));
+    if (disallowedScope) {
+      return NextResponse.json(
+        {
+          error: `Workspace viewers cannot create keys with the '${disallowedScope}' scope. Allowed scopes for viewers: ${[...VIEWER_SCOPES].join(', ')}.`,
+          error_code: 'insufficient_role',
+        },
+        { status: 403 },
+      );
+    }
+  }
 
-  // 3b. Enforce plan API key cap.
+  // 3b. Per-workspace rate limit: max 20 creations per hour.
+  if (await checkRateLimit(`api-keys:create:${workspaceId}`, 20, 3_600_000)) {
+    return NextResponse.json(
+      { error: 'Too many API key creations. Try again in an hour.' },
+      { status: 429 },
+    );
+  }
+
+  // 3c. Enforce plan API key cap.
   const keyLimit = await checkApiKeyLimit(supabase, workspaceId);
   if (keyLimit.atLimit) {
     return NextResponse.json(

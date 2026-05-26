@@ -57,7 +57,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const supabase = await createClient();
 
-  // 3. Look up the state nonce. Filter by provider and check expiry.
+  // 3. Verify the user still has an active session. The OAuth callback must
+  //    come from the same authenticated browser that initiated the flow.
+  //    RLS on oauth_states already enforces user_id = auth.uid(), but this
+  //    explicit check makes the contract readable and returns a clear error
+  //    rather than a generic invalid_state when the session has expired.
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return redirectWithError('session_expired');
+  }
+
+  // 4. Look up the state nonce. Filter by provider and check expiry.
   //    The nonce is single-use: we delete it before doing anything else so
   //    a replayed callback cannot succeed even if it arrives before we finish.
   const { data: oauthState, error: stateError } = await supabase
@@ -72,10 +82,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return redirectWithError('invalid_state');
   }
 
-  // 4. Delete the nonce immediately (single-use).
+  // Verify the state row belongs to the currently authenticated user.
+  // Guards against a stolen state value being replayed from a different session.
+  if (oauthState.user_id !== user.id) {
+    return redirectWithError('session_mismatch');
+  }
+
+  // 5. Delete the nonce immediately (single-use).
   await supabase.from('oauth_states').delete().eq('id', oauthState.id);
 
-  // 5. Validate redirect_uri by exact string equality.
+  // 6. Validate redirect_uri by exact string equality.
   //    This prevents a crafted state from redirecting token exchange to a
   //    different URI.
   const expectedRedirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/auth/gmail/callback`;
@@ -83,7 +99,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return redirectWithError('redirect_uri_mismatch');
   }
 
-  // 6. Exchange the authorization code for tokens.
+  // 7. Exchange the authorization code for tokens.
   let tokens: { accessToken: string; refreshToken: string; expiresIn: number; email: string };
   try {
     tokens = await exchangeGmailCode(code, expectedRedirectUri);
@@ -92,13 +108,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return redirectWithError('token_exchange_failed');
   }
 
-  // 7. Encrypt tokens before they touch the database.
+  // 8. Encrypt tokens before they touch the database.
   //    encryptToken returns a base64url string (AES-256-GCM: IV || ciphertext || tag).
   const encryptedAccessToken = encryptToken(tokens.accessToken);
   const encryptedRefreshToken = encryptToken(tokens.refreshToken);
   const tokenExpiresAt = new Date(Date.now() + tokens.expiresIn * 1000).toISOString();
 
-  // 8. Upsert the inbox row.
+  // 9. Upsert the inbox row.
   //    Using workspace_id + email_address as the conflict target means that:
   //    - A first connection inserts a new row.
   //    - Reconnection (including after an error or revocation) updates the

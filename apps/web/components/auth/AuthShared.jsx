@@ -25,6 +25,7 @@ export function ThemeBtn() {
       className="theme-toggle"
       onClick={() => setDark((d) => !d)}
       title="Toggle theme"
+      aria-label="Toggle theme"
     >
       <MIcon name={dark ? 'sun' : 'moon'} size={16} color="currentColor" />
     </button>

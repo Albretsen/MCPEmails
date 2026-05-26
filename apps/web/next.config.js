@@ -23,6 +23,8 @@ const REQUIRED_ALWAYS = [
   'SUPABASE_SERVICE_ROLE_KEY',
   // AES-256-GCM key for encrypting OAuth tokens at rest — server-side only
   'ENCRYPTION_KEY',
+  // HMAC key for CSRF token signing — must be distinct from ENCRYPTION_KEY
+  'CSRF_SECRET',
 ];
 
 if (!IS_CI) {
@@ -46,6 +48,33 @@ if (!IS_CI) {
         '',
       ].join('\n'),
     );
+  }
+
+  // Reject trivially weak ENCRYPTION_KEY values (all-same byte or sequential bytes).
+  // A length-64 hex string that looks random passes silently; anything degenerate fails fast.
+  const encKey = process.env.ENCRYPTION_KEY ?? '';
+  if (encKey.length === 64) {
+    const bytes = [];
+    for (let i = 0; i < 64; i += 2) bytes.push(parseInt(encKey.slice(i, i + 2), 16));
+    const allSame      = bytes.every((b) => b === bytes[0]);
+    const isAscending  = bytes.every((b, i) => i === 0 || b === (bytes[i - 1] + 1) % 256);
+    const isDescending = bytes.every((b, i) => i === 0 || b === (bytes[i - 1] - 1 + 256) % 256);
+    if (allSame || isAscending || isDescending) {
+      throw new Error(
+        [
+          '',
+          '══════════════════════════════════════════════════════════════',
+          '  MCPEmails — Weak ENCRYPTION_KEY detected',
+          '══════════════════════════════════════════════════════════════',
+          '',
+          '  ENCRYPTION_KEY is trivially weak (all-same or sequential bytes).',
+          '  Generate a secure key with: openssl rand -hex 32',
+          '',
+          '══════════════════════════════════════════════════════════════',
+          '',
+        ].join('\n'),
+      );
+    }
   }
 }
 
@@ -89,14 +118,10 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-        ],
-      },
-      {
-        // Prevent the consent page from being embedded in iframes.
-        // frame-ancestors is the CSP modern equivalent of X-Frame-Options.
-        source: '/authorize',
-        headers: [
-          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://avatars.githubusercontent.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com; font-src 'self'; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self';",
+          },
         ],
       },
     ];

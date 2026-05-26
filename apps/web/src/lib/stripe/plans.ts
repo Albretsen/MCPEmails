@@ -43,6 +43,11 @@ export interface PlanLimits {
   maxMonthlyToolCalls: number;
   /** Maximum API keys per workspace. */
   maxApiKeys: number;
+  /**
+   * Maximum workspace members including the owner.
+   * 1 = owner only (no collaborators). Infinity = unlimited.
+   */
+  maxMembers: number;
   /** Whether the customer portal (billing self-service) is available. */
   billingPortalEnabled: boolean;
   /** Whether the usage analytics page is available. */
@@ -84,6 +89,7 @@ export const PLANS: Record<PlanId, Plan> = {
       maxDailyBurstCalls: 100,
       maxMonthlyToolCalls: 500,
       maxApiKeys: 1,
+      maxMembers: 1,        // owner only — no collaborators on free
       billingPortalEnabled: false,
       analyticsEnabled: false,
     },
@@ -111,6 +117,7 @@ export const PLANS: Record<PlanId, Plan> = {
       maxDailyBurstCalls: 500,
       maxMonthlyToolCalls: 3_000,
       maxApiKeys: 3,
+      maxMembers: 2,        // owner + 1 collaborator
       billingPortalEnabled: true,
       analyticsEnabled: false,
     },
@@ -139,6 +146,7 @@ export const PLANS: Record<PlanId, Plan> = {
       maxDailyBurstCalls: 2_000,
       maxMonthlyToolCalls: 20_000,
       maxApiKeys: 10,
+      maxMembers: 10,
       billingPortalEnabled: true,
       analyticsEnabled: true,
     },
@@ -168,6 +176,7 @@ export const PLANS: Record<PlanId, Plan> = {
       maxDailyBurstCalls: Infinity,
       maxMonthlyToolCalls: Infinity,
       maxApiKeys: Infinity,
+      maxMembers: Infinity,
       billingPortalEnabled: true,
       analyticsEnabled: true,
     },

@@ -5,8 +5,8 @@ import { sha256hex } from './crypto';
 const TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 function getKey(): Buffer {
-  const hex = process.env.ENCRYPTION_KEY;
-  if (!hex || hex.length !== 64) throw new Error('ENCRYPTION_KEY missing or invalid.');
+  const hex = process.env.CSRF_SECRET;
+  if (!hex || hex.length !== 64) throw new Error('CSRF_SECRET missing or invalid.');
   return Buffer.from(hex, 'hex');
 }
 

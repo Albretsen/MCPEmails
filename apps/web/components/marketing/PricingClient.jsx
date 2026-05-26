@@ -79,7 +79,6 @@ const TABLE_SECTIONS = [
       { feature: 'Gmail (OAuth)',                       free: true, solo: true, pro: true, enterprise: true },
       { feature: 'Outlook / Microsoft 365 (OAuth)',     free: true, solo: true, pro: true, enterprise: true },
       { feature: 'Fastmail (OAuth + app password)',     free: true, solo: true, pro: true, enterprise: true },
-      { feature: 'Generic IMAP / SMTP',                 free: true, solo: true, pro: true, enterprise: true },
     ],
   },
   {
@@ -141,7 +140,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What email providers are supported?',
-    a: 'Gmail and Microsoft 365 / Outlook use OAuth 2.0. Fastmail supports both OAuth and app passwords. Any IMAP/SMTP provider (iCloud, Proton Bridge, self-hosted, etc.) can be connected with an app password.',
+    a: 'Gmail and Microsoft 365 / Outlook use OAuth 2.0. Fastmail supports both OAuth and app passwords. More providers are on the roadmap.',
   },
   {
     q: 'What\'s the difference between Solo and Pro?',
@@ -236,7 +235,7 @@ function PlanCards({ annual, stripePrices }) {
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />1 connected inbox</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />500 MCP calls / month</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />100 calls / day burst cap</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail, IMAP</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />1 API key</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Community support</li>
                 </>
@@ -246,7 +245,7 @@ function PlanCards({ annual, stripePrices }) {
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />3 connected inboxes</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />3,000 MCP calls / month</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />500 calls / day burst cap</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail, IMAP</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />3 API keys</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />14-day free trial</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Email support</li>
@@ -257,7 +256,7 @@ function PlanCards({ annual, stripePrices }) {
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />10 connected inboxes</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />20,000 MCP calls / month</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />2,000 calls / day burst cap</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail, IMAP</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />10 API keys</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Usage analytics</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />14-day free trial</li>
@@ -268,7 +267,7 @@ function PlanCards({ annual, stripePrices }) {
                 <>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited inboxes</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Custom MCP call volume</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail, IMAP</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited API keys</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Audit log + SSO</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Dedicated Slack support</li>
