@@ -21,7 +21,7 @@ if (!stripeSecretKey) {
 
 export const stripe = new Stripe(stripeSecretKey, {
   // Pin the API version so upgrades are explicit and never silent.
-  apiVersion: '2025-04-30.basil',
+  apiVersion: '2026-04-22.dahlia',
   // Improve debuggability — the app name appears in Stripe dashboard logs.
   appInfo: {
     name: 'MCPEmails',

@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       activity_log: {
@@ -204,10 +199,724 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_log_2026_08: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2026_09: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2026_10: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2026_11: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2026_12: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_01: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_02: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_03: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_04: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_05: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_06: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_07: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_08: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_09: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_10: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_11: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      activity_log_2027_12: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          inbox_id: string | null
+          ip_address: unknown
+          status: string
+          tool_name: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status: string
+          tool_name: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          inbox_id?: string | null
+          ip_address?: unknown
+          status?: string
+          tool_name?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           created_at: string
-          created_by: string
+          created_by: string | null
           deleted_at: string | null
           expires_at: string | null
           id: string
@@ -222,7 +931,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          created_by: string
+          created_by?: string | null
           deleted_at?: string | null
           expires_at?: string | null
           id?: string
@@ -237,7 +946,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           deleted_at?: string | null
           expires_at?: string | null
           id?: string
@@ -266,6 +975,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      app_errors: {
+        Row: {
+          context: Json
+          created_at: string
+          id: string
+          message: string
+          resolved_at: string | null
+          severity: string
+          stack: string | null
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          id?: string
+          message: string
+          resolved_at?: string | null
+          severity?: string
+          stack?: string | null
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          id?: string
+          message?: string
+          resolved_at?: string | null
+          severity?: string
+          stack?: string | null
+        }
+        Relationships: []
       }
       auth_logs: {
         Row: {
@@ -550,30 +1289,6 @@ export type Database = {
         }
         Relationships: []
       }
-      oauth_state_nonces: {
-        Row: {
-          consumed_at: string | null
-          expires_at: string
-          id: string
-          session_id: string
-          state_hash: string
-        }
-        Insert: {
-          consumed_at?: string | null
-          expires_at: string
-          id?: string
-          session_id: string
-          state_hash: string
-        }
-        Update: {
-          consumed_at?: string | null
-          expires_at?: string
-          id?: string
-          session_id?: string
-          state_hash?: string
-        }
-        Relationships: []
-      }
       oauth_refresh_tokens: {
         Row: {
           client_id: string
@@ -622,14 +1337,31 @@ export type Database = {
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "oauth_refresh_tokens_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
+      }
+      oauth_state_nonces: {
+        Row: {
+          consumed_at: string | null
+          expires_at: string
+          id: string
+          session_id: string
+          state_hash: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          expires_at: string
+          id?: string
+          session_id: string
+          state_hash: string
+        }
+        Update: {
+          consumed_at?: string | null
+          expires_at?: string
+          id?: string
+          session_id?: string
+          state_hash?: string
+        }
+        Relationships: []
       }
       oauth_states: {
         Row: {
@@ -679,6 +1411,24 @@ export type Database = {
           },
         ]
       }
+      rate_limit_buckets: {
+        Row: {
+          count: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -705,6 +1455,57 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      workspace_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: string
+          token_hash: string
+          workspace_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          role?: string
+          token_hash: string
+          workspace_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: string
+          token_hash?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_invites_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workspace_members: {
         Row: {
@@ -791,6 +1592,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_workspace_invite: {
+        Args: { p_token_hash: string; p_user_email: string; p_user_id: string }
+        Returns: {
+          role: string
+          workspace_id: string
+          workspace_slug: string
+        }[]
+      }
+      ensure_activity_log_partitions: {
+        Args: { months_ahead?: number }
+        Returns: undefined
+      }
+      expire_workspace_invites: { Args: never; Returns: undefined }
       get_current_user_sessions: {
         Args: never
         Returns: {
@@ -803,7 +1617,22 @@ export type Database = {
           user_agent: string
         }[]
       }
+      get_workspace_members: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          email: string
+          joined_at: string
+          role: string
+          user_id: string
+        }[]
+      }
       my_workspace_ids: { Args: never; Returns: string[] }
+      rate_limit_check: {
+        Args: { p_key: string; p_max_count: number; p_window_ms: number }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

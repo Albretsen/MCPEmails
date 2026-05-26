@@ -24,7 +24,6 @@ export async function checkRateLimit(
   try {
     const service = createServiceRoleClient();
 
-    // @ts-expect-error -- Database types need regenerating after this migration: `supabase gen types`
     const { data, error } = await service.rpc('rate_limit_check', {
       p_key:        key,
       p_max_count:  maxCount,

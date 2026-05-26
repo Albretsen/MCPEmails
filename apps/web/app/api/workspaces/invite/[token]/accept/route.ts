@@ -45,7 +45,6 @@ export async function POST(
   const service = createServiceRoleClient();
 
   // 2. Call the atomic RPC.
-  // @ts-expect-error — Database types need regenerating after workspace_invites migration
   const { data, error } = await service.rpc('accept_workspace_invite', {
     p_token_hash: tokenHash,
     p_user_id:    user.id,

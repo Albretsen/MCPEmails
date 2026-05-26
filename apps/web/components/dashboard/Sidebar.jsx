@@ -34,8 +34,9 @@ export function Sidebar({ route, setRoute, counts, user, workspace, isOpen, onCl
 
   const items = [
     { id: "overview", label: "Overview",   icon: "activity" },
-    { id: "inboxes",  label: "Inboxes",    icon: "inbox", count: counts.inboxes },
-    { id: "keys",     label: "API keys",   icon: "key",   count: counts.keys },
+    { id: "inboxes",  label: "Inboxes",    icon: "inbox",   count: counts.inboxes },
+    { id: "keys",     label: "API keys",   icon: "key",     count: counts.keys },
+    { id: "members",  label: "Members",    icon: "users",   count: counts.members > 1 ? counts.members : undefined },
     { id: "usage",    label: "Usage",      icon: "zap" },
   ];
   const settings = [
@@ -133,9 +134,10 @@ export function Sidebar({ route, setRoute, counts, user, workspace, isOpen, onCl
 export function Topbar({ route, workspace, onMenuOpen }) {
   const labels = {
     overview: "Overview",
-    inboxes: "Inboxes",
-    keys: "API keys",
-    usage: "Usage",
+    inboxes:  "Inboxes",
+    keys:     "API keys",
+    members:  "Members",
+    usage:    "Usage",
     settings: "Settings",
     security: "Security",
   };
