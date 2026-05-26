@@ -33,7 +33,7 @@ export function HeroTextBlock({ onGetStarted }) {
         Give your AI<br/>agent an <span className="accent">inbox.</span>
       </h1>
       <p className="lead">
-        Connect Gmail, Outlook, or any IMAP account once. Paste a single MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent — OAuth or API key, your choice. Your agent can now read, search, and send mail live, with no email stored on our servers.
+        Connect Gmail, Outlook, or any IMAP account once. Paste a single MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth 2.0 clients connect with one click — no API key setup needed. Your agent can now read, search, and send mail live, with no email stored on our servers.
       </p>
       <div className="hero-cta">
         <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>Connect your inbox</MBtn>
@@ -58,8 +58,8 @@ export function HeroEndpointCard() {
     setCopied(true); setTimeout(() => setCopied(false), 1500);
   };
   const snippets = {
-    oauth: `# claude.ai — paste the URL, click Connect, authorize.
-# No API key required — OAuth handles everything.
+    oauth: `# OAuth-capable clients (claude.ai, Claude Desktop, Cursor…)
+# Paste the URL, click Connect, authorize. No API key needed.
 
 https://www.mcpemails.com/api/mcp`,
     claude: `{
@@ -86,8 +86,8 @@ Auth:   Bearer
 Token:  mcpe_live_••••`,
   };
   const paths = {
-    oauth:  "claude.ai → Customize → Connectors",
-    claude: "~/.claude/mcp.json",
+    oauth:  "claude.ai · Claude Desktop · Cursor — OAuth",
+    claude: "~/.claude/mcp.json (API key fallback)",
     cursor: "~/.cursor/config.json",
     n8n:    "n8n · MCP credentials",
   };
@@ -109,8 +109,8 @@ Token:  mcpe_live_••••`,
       <div className="endpoint-divider"><span>Paste it into any MCP client</span></div>
       <div className="client-tabs">
         {[
-          { k: "oauth",  l: "claude.ai" },
-          { k: "claude", l: "Claude Desktop" },
+          { k: "oauth",  l: "OAuth" },
+          { k: "claude", l: "API key (Desktop)" },
           { k: "cursor", l: "Cursor" },
           { k: "n8n",    l: "n8n" },
         ].map(c => (
@@ -305,7 +305,7 @@ export function Features() {
     {
       n: "05",
       h: "OAuth 2.0 for agents. One click to revoke.",
-      p: "claude.ai and other OAuth clients connect automatically — dynamic registration, authorization code + PKCE, no API key setup. For programmatic access, API keys are scoped, prefixed, and hashed. Either way, you can revoke any connection from the dashboard in one click.",
+      p: "Any MCP client that supports OAuth — claude.ai, Claude Desktop, Cursor, and others — connects automatically via authorization code + PKCE. No API key setup required. API keys exist for clients that don't support OAuth and for scripted or programmatic access. Either way, you revoke any connection from the dashboard in one click.",
       tag: "Access",
     },
     {
@@ -363,8 +363,8 @@ export function HowItWorks() {
           </div>
           <div className="step">
             <span className="num">02</span>
-            <h4>Connect your agent — API key or OAuth</h4>
-            <p>For <strong>claude.ai</strong>: paste <code className="t-code-inline">https://www.mcpemails.com/api/mcp</code> in Connectors and authorize — no key needed. For <strong>Claude Desktop, Cursor, or n8n</strong>: generate a scoped API key in the dashboard and drop it in your config. One URL, all six tools.</p>
+            <h4>Paste the URL — OAuth or API key</h4>
+            <p>Any MCP client that supports OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others) — paste <code className="t-code-inline">https://www.mcpemails.com/api/mcp</code>, click Connect, and authorize. Done, no key needed. For clients without OAuth support (n8n, custom scripts), generate a scoped API key in the dashboard instead.</p>
           </div>
           <div className="step">
             <span className="num">03</span>
