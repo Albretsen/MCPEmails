@@ -28,7 +28,7 @@ mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
     num: '03',
     label: 'Add MCPEmails to your agent',
     heading: 'Paste the MCP endpoint into your client',
-    body: 'Use the tabs below for your client. claude.ai connects via OAuth — no API key needed, just paste the URL and authorize. For Claude Desktop, Cursor, or programmatic access, use your API key from step 02.',
+    body: 'Use the tabs below for your client. Any MCP client with OAuth 2.0 support (claude.ai, Claude Desktop, Cursor, and others) — paste the URL and authorize, no API key needed. For clients without OAuth support or for scripted/programmatic access, use an API key from step 02.',
     code: null,
     tabs: true,
     cta: null,
@@ -47,19 +47,20 @@ Start by calling list_inboxes to discover available inboxes.`,
 ];
 
 const CLIENT_SNIPPETS = {
-  oauth: `# claude.ai — OAuth connection (no API key required)
+  oauth: `# OAuth-capable clients (claude.ai, Claude Desktop, Cursor…)
+# No API key required — paste the URL, click Connect, authorize.
 #
-# 1. Go to claude.ai → Customize → Connectors
-# 2. Click "Add connector" and paste this URL:
+# Example: claude.ai
+#   1. Go to claude.ai → Customize → Connectors
+#   2. Click "Add connector" and paste this URL:
 #
-#      https://www.mcpemails.com/api/mcp
+#        https://www.mcpemails.com/api/mcp
 #
-# 3. Click Connect. MCPEmails will open an authorization screen
-#    where you sign in with your mcpemails account.
-# 4. After authorizing, all your tools are live in Claude.
+#   3. Click Connect and sign in with your mcpemails account.
+#   4. All six tools are live immediately.
 #
-# Under the hood: claude.ai uses OAuth 2.0 + PKCE with dynamic
-# client registration (RFC 7591). No manual key setup needed.`,
+# Claude Desktop and Cursor follow the same OAuth flow when
+# the server URL is configured in their MCP settings.`,
   claude: `// claude_desktop_config.json
 {
   "mcpServers": {
@@ -383,7 +384,7 @@ function CodeBlock({ code, lang = '' }) {
 
 function ClientTabs() {
   const [tab, setTab] = useState('oauth');
-  const labels = { oauth: 'claude.ai (OAuth)', claude: 'Claude Desktop', cursor: 'Cursor', raw: 'Raw cURL' };
+  const labels = { oauth: 'OAuth clients', claude: 'API key (Desktop)', cursor: 'API key (Cursor)', raw: 'Raw cURL' };
   return (
     <div style={{ marginTop: 16 }}>
       <div className="client-tabs">
@@ -535,9 +536,9 @@ export default function DocsClient() {
             Your agent has an inbox<br />in four steps.
           </h1>
           <p className="pricing-page-lead">
-            Connect any email account, paste one URL into claude.ai or generate
-            an API key for Claude Desktop — done in minutes. Full tool reference
-            and OAuth connection guide below.
+            Connect any email account, paste one URL into any OAuth-capable MCP
+            client and authorize — or drop in an API key for clients without OAuth
+            support. Done in minutes. Full tool reference and connection guide below.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <a className="btn btn-primary btn-lg" href="#quickstart">Quick start</a>
@@ -634,11 +635,11 @@ export default function DocsClient() {
         <div className="container">
           <div className="section-head">
             <div className="eye-label">OAuth connection</div>
-            <h2>Zero-config for claude.ai.</h2>
+            <h2>Zero-config for OAuth-capable clients.</h2>
             <p className="sub">
-              claude.ai and other OAuth 2.0 clients connect automatically via the standard
-              authorization code + PKCE flow. No API key setup, no config file — just paste
-              the URL and click Connect.
+              Any MCP client that supports OAuth 2.0 — claude.ai, Claude Desktop, Cursor,
+              and others — connects automatically via authorization code + PKCE.
+              No API key setup, no config file. Just paste the URL and click Connect.
             </p>
           </div>
 
@@ -691,9 +692,9 @@ export default function DocsClient() {
           </div>
 
           <div style={{ padding: '14px 18px', background: 'var(--bg-sunken)', borderRadius: 8, border: '1px solid var(--border-1)', fontSize: 13, color: 'var(--fg-3)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
-            <strong style={{ color: 'var(--fg-2)' }}>Using Claude Desktop, Cursor, or a custom agent?</strong>{' '}
-            Create an API key in Dashboard → API Keys and follow the Quick start above.
-            API key and OAuth connections both use the same MCP endpoint and tools.
+            <strong style={{ color: 'var(--fg-2)' }}>Using a client without OAuth support?</strong>{' '}
+            Create an API key in Dashboard → API Keys and pass it as a bearer token.
+            API key and OAuth connections use the same MCP endpoint and the same six tools.
           </div>
         </div>
       </section>
