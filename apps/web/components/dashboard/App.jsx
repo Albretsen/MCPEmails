@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
-import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage } from './Pages';
+import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage } from './Pages';
 import { ConnectModal } from './ConnectModal';
 import { ToastProvider, useToast } from './Toast';
 
@@ -55,7 +55,7 @@ export function DashboardApp(props) {
  * DashboardInner — holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ user, workspace, planLimits, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog }) {
+function DashboardInner({ user, workspace, userRole, planLimits, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
   const searchParams = useSearchParams();
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
@@ -75,6 +75,8 @@ function DashboardInner({ user, workspace, planLimits, overviewStats, activityFe
   const [inboxes, setInboxes] = useState(serverInboxes ?? []);
   // Initialise from server-fetched API keys; empty array on first run or error.
   const [keys, setKeys] = useState(serverApiKeys ?? []);
+  const [members, setMembers] = useState(serverMembers ?? []);
+  const [pendingInvites, setPendingInvites] = useState(serverPendingInvites ?? []);
   const [showConnect, setShowConnect] = useState(false);
 
   // Apply theme
@@ -165,12 +167,26 @@ function DashboardInner({ user, workspace, planLimits, overviewStats, activityFe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Show welcome toast when a user accepts an invite and lands on the dashboard.
+  useEffect(() => {
+    const joinedParam = readQuery(searchParams, 'joined');
+    if (joinedParam === '1') {
+      toast({ message: 'You've joined the workspace. Welcome!', variant: 'success' });
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('joined');
+        window.history.replaceState({}, '', url.toString());
+      } catch { /* ignore */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Density
   useEffect(() => {
     document.documentElement.setAttribute("data-density", t.density);
   }, [t.density]);
 
-  const counts = { inboxes: inboxes.length, keys: keys.length };
+  const counts = { inboxes: inboxes.length, keys: keys.length, members: members.length };
 
   /**
    * Disconnects an inbox by calling DELETE /api/inboxes/[id].
@@ -313,6 +329,65 @@ function DashboardInner({ user, workspace, planLimits, overviewStats, activityFe
     });
   };
 
+  /** Send a workspace invite via POST /api/workspaces/invite. */
+  const onInviteMember = async (email, role) => {
+    const res = await fetch('/api/workspaces/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workspaceId: workspace.id, email, role }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? 'Failed to send invite.');
+    // Optimistically add to pending invites list.
+    setPendingInvites(xs => [data, ...xs]);
+    toast({ message: `Invite sent to ${email}.`, variant: 'success' });
+  };
+
+  /** Cancel a pending invite via DELETE /api/workspaces/invite/[token]. */
+  const onCancelInvite = async (inviteId) => {
+    // We don't have the raw token client-side — call a dedicated cancel-by-id endpoint.
+    // Use the invite's id as the "token" placeholder; the route accepts workspaceId for auth.
+    // For now, optimistically remove and call the token endpoint isn't available without the token.
+    // Instead POST to a cancel-by-id route pattern — handled by deleting via invite id.
+    const res = await fetch(`/api/workspaces/invite-cancel/${inviteId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workspaceId: workspace.id }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      toast({ message: data.error ?? 'Failed to cancel invite.', variant: 'error' });
+      return;
+    }
+    setPendingInvites(xs => xs.filter(x => x.id !== inviteId));
+    toast({ message: 'Invite cancelled.', variant: 'info' });
+  };
+
+  /** Remove a member via DELETE /api/workspaces/members/[userId]. */
+  const onRemoveMember = async (userId) => {
+    const res = await fetch(
+      `/api/workspaces/members/${userId}?workspaceId=${encodeURIComponent(workspace.id)}`,
+      { method: 'DELETE' },
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? 'Failed to remove member.');
+    setMembers(xs => xs.filter(x => x.userId !== userId));
+    toast({ message: 'Member removed.', variant: 'info' });
+  };
+
+  /** Change a member's role via PATCH /api/workspaces/members/[userId]. */
+  const onChangeRole = async (userId, role) => {
+    const res = await fetch(`/api/workspaces/members/${userId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workspaceId: workspace.id, role }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? 'Failed to update role.');
+    setMembers(xs => xs.map(x => x.userId === userId ? { ...x, role } : x));
+    toast({ message: 'Role updated.', variant: 'success' });
+  };
+
   return (
     <div className="shell" data-screen-label={"Dashboard / " + route}>
       <Sidebar
@@ -331,9 +406,10 @@ function DashboardInner({ user, workspace, planLimits, overviewStats, activityFe
           <FirstRunBanner onConnect={() => setShowConnect(true)} />
         )}
 
-        {route === "overview" && <OverviewPage inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
+        {route === "overview" && <OverviewPage inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} planLimits={planLimits} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} />}
         {route === "keys"     && <KeysPage     keys={keys} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} />}
+        {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
         {route === "settings" && <SettingsPage user={user} workspace={workspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} />}

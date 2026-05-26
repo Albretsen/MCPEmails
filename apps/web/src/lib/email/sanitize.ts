@@ -14,7 +14,7 @@ import { JSDOM } from 'jsdom';
 
 // Singleton window — created once, reused for every sanitise call.
 const { window } = new JSDOM('');
-const DOMPurify = createDOMPurify(window as unknown as Window);
+const DOMPurify = createDOMPurify(window as unknown as typeof globalThis);
 
 /**
  * Narrow allowlist of HTML tags that are safe and useful for email rendering.
@@ -58,7 +58,7 @@ const SANITIZE_CONFIG = {
   FORCE_BODY: true,
   WHOLE_DOCUMENT: false,
   KEEP_CONTENT: true,
-} as const;
+};
 
 // Post-sanitise hook: rewrite or remove unsafe href/src values.
 // This runs after DOMPurify's allowlist pass, so we only see allowed attributes here.

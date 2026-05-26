@@ -40,15 +40,20 @@ Pre-launch fix list derived from the full code audit. Check off each item as it 
 
 - [x] **`manage:drafts` and `manage:folders` scopes are unimplemented** — Removed from `VALID_SCOPES` in `authorize/page.js` and `api/oauth/authorize/route.ts`, removed from `SCOPE_META` in `authorize/page.js`, and narrowed the `requiredScope` union type in the edge function. Clients can no longer request these scopes.
 
-- [ ] **Multi-user workspace schema** — Design and migrate a full collaborator model:
-  - `workspace_invites` table (token, email, role, expires_at, accepted_at)
-  - `POST /api/workspaces/invite` — send invite email, store token
-  - `GET /api/workspaces/invite/[token]` — accept page
-  - `POST /api/workspaces/invite/[token]/accept` — consume token, create `workspace_members` row
-  - `DELETE /api/workspaces/members/[userId]` — remove member
-  - `PATCH /api/workspaces/members/[userId]` — change role
-  - Dashboard UI for managing members and pending invites
-  - RLS policies that grant members access scoped to their role
+- [x] **Multi-user workspace schema** — Full collaborator model implemented:
+  - `workspace_invites` table with SHA-256 hashed tokens, role, expires_at, accepted_at (migration `20260526000003`)
+  - `workspace_members_role_check` constraint: `owner|admin|member|viewer`
+  - `get_workspace_members()` SECURITY DEFINER — exposes member profiles to workspace peers
+  - `accept_workspace_invite()` SECURITY DEFINER — atomic FOR UPDATE accept with typed error codes
+  - `POST /api/workspaces/invite` — creates invite, sends Resend email
+  - `GET/DELETE /api/workspaces/invite/[token]` — metadata lookup / token-based cancel
+  - `POST /api/workspaces/invite/[token]/accept` — consume token, insert workspace_members row
+  - `DELETE/PATCH /api/workspaces/members/[userId]` — remove (soft-revokes API keys) / change role
+  - `DELETE /api/workspaces/invite-cancel/[id]` — dashboard cancel by invite UUID
+  - Viewer scope restriction: viewers limited to `email:read` + `email:search` on API key creation
+  - Seat limits: Free=1, Solo=2, Pro=10, Enterprise=∞ (enforced at invite time)
+  - `app/invite/[token]/page.js` + `InviteAcceptUI.jsx` — invite accept flow
+  - Dashboard Members tab with invite form, member list, pending invites, role management
 
 - [x] **No CHECK constraints on enum columns** — Migration `20260526000004` adds constraints on `workspaces.plan` (`free|solo|pro|enterprise`), `inboxes.provider` (`gmail|outlook|fastmail|imap`), `inboxes.status` (`pending|active|error|revoked`), `activity_log.status` (`success|error|rate_limited` — propagated to all partitions), `oauth_states.provider`, and `oauth_auth_codes.code_challenge_method` (`S256` only). `workspace_members_role_check` was already present from migration 000003.
 

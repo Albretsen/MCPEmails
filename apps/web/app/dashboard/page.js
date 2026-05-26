@@ -413,6 +413,61 @@ async function fetchAuditLog(supabase, workspaceId) {
   };
 }
 
+/**
+ * Fetches all members of a workspace using the get_workspace_members() SECURITY DEFINER RPC.
+ * The RPC bypasses the users_select_own RLS policy so member profiles are visible.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string} workspaceId
+ * @returns {Promise<Array<{ userId, role, joinedAt, email, displayName, avatarUrl }>>}
+ */
+async function fetchMembers(supabase, workspaceId) {
+  const { data, error } = await supabase.rpc('get_workspace_members', {
+    p_workspace_id: workspaceId,
+  });
+  if (error || !data) {
+    console.error('[fetchMembers]', error?.message);
+    return [];
+  }
+  return data.map((row) => ({
+    userId:      row.user_id,
+    role:        row.role,
+    joinedAt:    row.joined_at,
+    email:       row.email,
+    displayName: row.display_name ?? null,
+    avatarUrl:   row.avatar_url  ?? null,
+  }));
+}
+
+/**
+ * Fetches pending (un-accepted, non-expired) workspace invites.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string} workspaceId
+ * @returns {Promise<Array<{ id, email, role, expiresAt, createdAt }>>}
+ */
+async function fetchPendingInvites(supabase, workspaceId) {
+  // @ts-expect-error — Database types need regenerating after workspace_invites migration
+  const { data, error } = await supabase
+    .from('workspace_invites')
+    .select('id, email, role, expires_at, created_at')
+    .eq('workspace_id', workspaceId)
+    .is('accepted_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false });
+  if (error || !data) {
+    console.error('[fetchPendingInvites]', error?.message);
+    return [];
+  }
+  return data.map((row) => ({
+    id:        row.id,
+    email:     row.email,
+    role:      row.role,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
+  }));
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
@@ -425,16 +480,26 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const [{ data: userRecord }, { data: workspace }] = await Promise.all([
+  const [{ data: userRecord }, { data: workspace }, { data: memberRow }] = await Promise.all([
     supabase
       .from('users')
       .select('display_name, email')
       .eq('id', user.id)
       .single(),
+    // Use the RLS-filtered workspace query so collaborators (non-owners) also see their workspace.
     supabase
       .from('workspaces')
       .select('id, slug, display_name, plan')
-      .eq('owner_id', user.id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single(),
+    // Fetch the calling user's role in their workspace (needed for role-gated UI).
+    supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('user_id', user.id)
+      .limit(1)
       .single(),
   ]);
 
@@ -444,9 +509,10 @@ export default async function DashboardPage() {
   const initials = computeInitials(displayName || null, email);
   const workspaceSlug = workspace?.slug ?? 'workspace';
   const plan = workspace?.plan ?? 'free';
+  const userRole = memberRow?.role ?? 'member';
 
   // Fetch all page data in parallel; skip if no workspace row exists yet.
-  const [overviewStats, activityFeed, inboxes, apiKeys, usageData, auditLog] = workspace
+  const [overviewStats, activityFeed, inboxes, apiKeys, usageData, auditLog, members, pendingInvites] = workspace
     ? await Promise.all([
         fetchOverviewStats(supabase, workspace.id),
         fetchActivityFeed(supabase, workspace.id),
@@ -454,6 +520,8 @@ export default async function DashboardPage() {
         fetchApiKeys(supabase, workspace.id),
         fetchUsageData(supabase, workspace.id),
         fetchAuditLog(supabase, workspace.id),
+        fetchMembers(supabase, workspace.id),
+        fetchPendingInvites(supabase, workspace.id),
       ])
     : [
         { inboxCount: 0, apiKeysCount: 0, callsToday: 0, callsThisMonth: 0 },
@@ -462,6 +530,8 @@ export default async function DashboardPage() {
         [],
         { dailyCounts: [], totalCalls: 0, byTool: [], byInbox: [] },
         { entries: [], total: 0, page: 0, pageSize: 25 },
+        [],
+        [],
       ];
 
   // Resolve plan limits so the dashboard can show usage (e.g. "1 of 1 inboxes")
@@ -472,12 +542,14 @@ export default async function DashboardPage() {
     maxDailyBurstCalls: rawLimits.maxDailyBurstCalls === Infinity ? null : rawLimits.maxDailyBurstCalls,
     maxMonthlyToolCalls: rawLimits.maxMonthlyToolCalls === Infinity ? null : rawLimits.maxMonthlyToolCalls,
     maxApiKeys: rawLimits.maxApiKeys === Infinity ? null : rawLimits.maxApiKeys,
+    maxMembers: rawLimits.maxMembers === Infinity ? null : rawLimits.maxMembers,
   };
 
   return (
     <DashboardApp
-      user={{ displayName, email, initials }}
-      workspace={{ slug: workspaceSlug, plan }}
+      user={{ displayName, email, initials, id: user.id }}
+      workspace={{ id: workspace?.id ?? '', slug: workspaceSlug, plan }}
+      userRole={userRole}
       planLimits={planLimits}
       overviewStats={overviewStats}
       activityFeed={activityFeed}
@@ -485,6 +557,8 @@ export default async function DashboardPage() {
       apiKeys={apiKeys}
       usageData={usageData}
       auditLog={auditLog}
+      members={members}
+      pendingInvites={pendingInvites}
     />
   );
 }

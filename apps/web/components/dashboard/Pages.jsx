@@ -162,7 +162,7 @@ function GettingStartedGuide({ inboxCount, apiKeysCount, onConnect, onGoToKeys }
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, activity, stats, planLimits, onConnect, onGoToKeys }) {
+export function OverviewPage({ inboxes, activity, stats, planLimits, memberCount = 0, onConnect, onGoToKeys, onGoToMembers }) {
   const inboxCount = stats?.inboxCount ?? 0;
   const apiKeysCount = stats?.apiKeysCount ?? 0;
   const callsToday = stats?.callsToday ?? 0;
@@ -180,6 +180,13 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, onConnect, 
   const monthlyPct = monthlyCap != null && monthlyCap > 0 ? callsThisMonth / monthlyCap : 0;
   const monthlyAtLimit = monthlyCap != null && callsThisMonth >= monthlyCap;
   const monthlyNearLimit = !monthlyAtLimit && monthlyCap != null && monthlyPct >= 0.8;
+
+  // Seat cap — null means unlimited (Enterprise or unknown).
+  const seatCap = planLimits?.maxMembers ?? null;
+  const seatPct = seatCap != null && seatCap > 0 ? memberCount / seatCap : 0;
+  const seatAtLimit = seatCap != null && memberCount >= seatCap;
+  // Warn when only 1 seat remains (or at ≥80% for larger plans).
+  const seatNearLimit = !seatAtLimit && seatCap != null && (seatCap <= 5 ? memberCount >= seatCap - 1 : seatPct >= 0.8);
 
   // Show the getting-started guide until both an inbox and an API key exist.
   const showGuide = inboxCount === 0 || apiKeysCount === 0;
@@ -300,6 +307,64 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, onConnect, 
         </div>
       )}
 
+      {/* Seat limit exhausted — amber banner (softer than quota banners; invite blocking, not service disruption) */}
+      {seatAtLimit && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '12px 16px',
+          marginBottom: 12,
+          background: 'var(--amber-50, #fffbeb)',
+          border: '1px solid rgba(245,158,11,0.3)',
+          borderRadius: 10,
+          fontFamily: 'var(--font-sans)',
+          fontSize: 13.5,
+          color: 'var(--amber-800, #92400e)',
+        }}>
+          <Icon name="users" size={15} color="var(--amber-600, #d97706)" />
+          <span style={{ flex: 1 }}>
+            Your workspace is at its {seatCap}-seat limit. New invites are paused.{' '}
+            <a
+              href="/pricing"
+              style={{ color: 'var(--amber-800, #92400e)', fontWeight: 600 }}
+            >
+              Upgrade to add more seats →
+            </a>
+          </span>
+        </div>
+      )}
+
+      {/* Seat limit near — amber notice (1 seat remaining or ≥80% for larger plans) */}
+      {seatNearLimit && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '12px 16px',
+          marginBottom: 12,
+          background: 'var(--amber-50, #fffbeb)',
+          border: '1px solid rgba(245,158,11,0.3)',
+          borderRadius: 10,
+          fontFamily: 'var(--font-sans)',
+          fontSize: 13.5,
+          color: 'var(--amber-800, #92400e)',
+        }}>
+          <Icon name="users" size={15} color="var(--amber-600, #d97706)" />
+          <span style={{ flex: 1 }}>
+            {seatCap - memberCount === 1
+              ? `Only 1 seat remaining on your plan. `
+              : `You've used ${memberCount} of ${seatCap} seats (${Math.round(seatPct * 100)}%). `}
+            <a
+              href="/pricing"
+              style={{ color: 'var(--amber-800, #92400e)', fontWeight: 600 }}
+            >
+              Upgrade for more seats →
+            </a>
+          </span>
+        </div>
+      )}
+
       <div className="stat-grid">
         <div className="stat">
           <div className="label">Inboxes connected</div>
@@ -369,6 +434,50 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, onConnect, 
                 background: monthlyAtLimit
                   ? 'var(--red-500, #ef4444)'
                   : monthlyNearLimit
+                    ? 'var(--amber-500, #f59e0b)'
+                    : 'var(--brand)',
+                borderRadius: 2,
+                transition: 'width 0.4s',
+              }} />
+            </div>
+          )}
+        </div>
+        <div
+          className="stat"
+          style={onGoToMembers ? { cursor: 'pointer' } : undefined}
+          onClick={onGoToMembers}
+          role={onGoToMembers ? 'button' : undefined}
+          tabIndex={onGoToMembers ? 0 : undefined}
+          onKeyDown={onGoToMembers ? (e) => { if (e.key === 'Enter') onGoToMembers(); } : undefined}
+          title={onGoToMembers ? 'Go to Members' : undefined}
+        >
+          <div className="label">Team members</div>
+          <div
+            className="value"
+            style={seatAtLimit ? { color: 'var(--amber-600, #d97706)' } : seatNearLimit ? { color: 'var(--amber-600, #d97706)' } : {}}
+          >
+            {memberCount.toLocaleString()}
+          </div>
+          <div className="delta">
+            {seatCap != null
+              ? `of ${seatCap} seat${seatCap !== 1 ? 's' : ''} · ${seatCap - memberCount} remaining`
+              : `${memberCount === 1 ? '1 member' : `${memberCount} members`} · unlimited`}
+          </div>
+          {/* Mini progress bar for seat usage */}
+          {seatCap != null && (
+            <div style={{
+              marginTop: 6,
+              height: 3,
+              borderRadius: 2,
+              background: 'var(--bg-sunken, #f1f5f9)',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${Math.min(100, seatPct * 100)}%`,
+                background: seatAtLimit
+                  ? 'var(--amber-500, #f59e0b)'
+                  : seatNearLimit
                     ? 'var(--amber-500, #f59e0b)'
                     : 'var(--brand)',
                 borderRadius: 2,
@@ -3575,6 +3684,393 @@ export function SecurityPage({ auditLog }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MembersPage
+   Workspace member management: invite form, member list, pending invites.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+const ROLE_COLORS = {
+  owner:  { bg: 'var(--bg-sunken)',   color: 'var(--fg-2)',    label: 'Owner'  },
+  admin:  { bg: 'var(--cobalt-50)',   color: 'var(--cobalt-700, #1d4ed8)', label: 'Admin'  },
+  member: { bg: 'var(--live-soft)',   color: 'var(--mint-600)', label: 'Member' },
+  viewer: { bg: 'rgba(245,158,11,.1)', color: 'var(--amber-600, #d97706)', label: 'Viewer' },
+};
+
+function RoleBadge({ role }) {
+  const c = ROLE_COLORS[role] ?? ROLE_COLORS.member;
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '2px 10px',
+      borderRadius: 20,
+      background: c.bg,
+      color: c.color,
+      fontSize: 12,
+      fontWeight: 600,
+      fontFamily: 'var(--font-sans)',
+    }}>
+      {c.label}
+    </span>
+  );
+}
+
+function MemberInitials({ displayName, email }) {
+  const src = displayName?.trim() || email || '?';
+  const parts = src.split(/[\s@]+/);
+  const initials = parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : src.slice(0, 2).toUpperCase();
+  return <Avatar initials={initials} />;
+}
+
+export function MembersPage({
+  members,
+  pendingInvites,
+  planLimits,
+  userRole,
+  currentUserId,
+  onInvite,
+  onCancelInvite,
+  onRemove,
+  onChangeRole,
+}) {
+  const { toast } = useToast();
+
+  // Invite form state
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole,  setInviteRole]  = useState('member');
+  const [inviting,    setInviting]    = useState(false);
+  const [inviteError, setInviteError] = useState(null);
+
+  // Confirm-remove dialog state
+  const [confirmRemove, setConfirmRemove] = useState(null); // member object or null
+  const [removing,      setRemoving]      = useState(false);
+
+  // Role-change in-flight
+  const [changingRole, setChangingRole] = useState(null); // userId or null
+
+  const canManage = userRole === 'owner' || userRole === 'admin';
+  const canChangeRoles = userRole === 'owner';
+  const atSeatLimit = planLimits?.maxMembers != null &&
+    members.length >= planLimits.maxMembers;
+
+  const handleInviteSubmit = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim() || inviting) return;
+    setInviting(true);
+    setInviteError(null);
+    try {
+      await onInvite(inviteEmail.trim().toLowerCase(), inviteRole);
+      setInviteEmail('');
+    } catch (err) {
+      setInviteError(err.message ?? 'Failed to send invite.');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleRemoveConfirm = async () => {
+    if (!confirmRemove || removing) return;
+    setRemoving(true);
+    try {
+      await onRemove(confirmRemove.userId);
+      setConfirmRemove(null);
+    } catch (err) {
+      toast({ message: err.message ?? 'Failed to remove member.', variant: 'error' });
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  const handleRoleChange = async (userId, newRole) => {
+    setChangingRole(userId);
+    try {
+      await onChangeRole(userId, newRole);
+    } catch (err) {
+      toast({ message: err.message ?? 'Failed to update role.', variant: 'error' });
+    } finally {
+      setChangingRole(null);
+    }
+  };
+
+  const handleCancelInvite = async (inviteId) => {
+    try {
+      await onCancelInvite(inviteId);
+    } catch (err) {
+      toast({ message: err.message ?? 'Failed to cancel invite.', variant: 'error' });
+    }
+  };
+
+  return (
+    <div className="page">
+      <PageHeader
+        title="Members"
+        sub={`${members.length} member${members.length !== 1 ? 's' : ''}${planLimits?.maxMembers ? ` · ${planLimits.maxMembers} seat limit` : ''}`}
+      />
+
+      {/* ── Invite form (owner/admin only) ─────────────────────────────────── */}
+      {canManage && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-h">
+            <div>
+              <div className="title">Invite a collaborator</div>
+              <div className="sub">They'll receive an email with a 7-day accept link.</div>
+            </div>
+          </div>
+          <div style={{ padding: '4px 20px 20px' }}>
+            {atSeatLimit ? (
+              <div style={{
+                padding: '12px 16px',
+                background: 'var(--amber-50, #fffbeb)',
+                border: '1px solid var(--amber-200, #fde68a)',
+                borderRadius: 10,
+                fontSize: 13,
+                color: 'var(--amber-800, #92400e)',
+                display: 'flex', alignItems: 'center', gap: 10,
+              }}>
+                <span>⚠</span>
+                <span>
+                  You've used all {planLimits.maxMembers} seat{planLimits.maxMembers !== 1 ? 's' : ''} on your plan.{' '}
+                  <a href="/pricing" style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none' }}>
+                    Upgrade to add more →
+                  </a>
+                </span>
+              </div>
+            ) : (
+              <form onSubmit={handleInviteSubmit} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                <input
+                  type="email"
+                  placeholder="colleague@example.com"
+                  value={inviteEmail}
+                  onChange={e => setInviteEmail(e.target.value)}
+                  required
+                  disabled={inviting}
+                  style={{
+                    flex: '1 1 220px',
+                    padding: '8px 12px',
+                    border: '1px solid var(--border-1)',
+                    borderRadius: 8,
+                    fontSize: 13.5,
+                    fontFamily: 'var(--font-sans)',
+                    background: 'var(--bg-input, var(--bg-card))',
+                    color: 'var(--fg-1)',
+                    outline: 'none',
+                  }}
+                />
+                <select
+                  value={inviteRole}
+                  onChange={e => setInviteRole(e.target.value)}
+                  disabled={inviting}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid var(--border-1)',
+                    borderRadius: 8,
+                    fontSize: 13.5,
+                    fontFamily: 'var(--font-sans)',
+                    background: 'var(--bg-input, var(--bg-card))',
+                    color: 'var(--fg-1)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {canChangeRoles && <option value="admin">Admin</option>}
+                  <option value="member">Member</option>
+                  <option value="viewer">Viewer</option>
+                </select>
+                <Btn variant="primary" type="submit" disabled={inviting || !inviteEmail.trim()}>
+                  {inviting ? 'Sending…' : 'Send invite'}
+                </Btn>
+              </form>
+            )}
+            {inviteError && (
+              <div style={{ marginTop: 10, fontSize: 13, color: 'var(--red-600, #dc2626)' }}>
+                {inviteError}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Member list ─────────────────────────────────────────────────────── */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="tbl-wrap">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Role</th>
+                <th>Joined</th>
+                {canManage && <th className="right">{''}</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {members.map(m => {
+                const isCurrentUser = m.userId === currentUserId;
+                const isOwner = m.role === 'owner';
+                const showActions = canManage && !isOwner && !isCurrentUser;
+                return (
+                  <tr key={m.userId}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <MemberInitials displayName={m.displayName} email={m.email} />
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--fg-1)' }}>
+                            {m.displayName || m.email}
+                            {isCurrentUser && (
+                              <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--fg-3)', fontWeight: 400 }}>
+                                (you)
+                              </span>
+                            )}
+                          </div>
+                          {m.displayName && (
+                            <div style={{ fontSize: 12, color: 'var(--fg-3)' }}>{m.email}</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {canChangeRoles && showActions ? (
+                        <select
+                          value={m.role}
+                          onChange={e => handleRoleChange(m.userId, e.target.value)}
+                          disabled={changingRole === m.userId}
+                          style={{
+                            padding: '4px 8px',
+                            border: '1px solid var(--border-1)',
+                            borderRadius: 6,
+                            fontSize: 12.5,
+                            fontFamily: 'var(--font-sans)',
+                            background: 'var(--bg-input, var(--bg-card))',
+                            color: 'var(--fg-1)',
+                            cursor: changingRole === m.userId ? 'wait' : 'pointer',
+                          }}
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="member">Member</option>
+                          <option value="viewer">Viewer</option>
+                        </select>
+                      ) : (
+                        <RoleBadge role={m.role} />
+                      )}
+                    </td>
+                    <td style={{ color: 'var(--fg-3)', fontSize: 13 }}>
+                      {new Date(m.joinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </td>
+                    {canManage && (
+                      <td className="right">
+                        {showActions && (
+                          <Btn
+                            variant="ghost"
+                            size="sm"
+                            icon="trash"
+                            onClick={() => setConfirmRemove(m)}
+                            aria-label={`Remove ${m.displayName || m.email}`}
+                            title={`Remove ${m.displayName || m.email}`}
+                          />
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Pending invites ──────────────────────────────────────────────────── */}
+      {canManage && pendingInvites.length > 0 && (
+        <div className="card">
+          <div className="card-h">
+            <div>
+              <div className="title">Pending invites</div>
+              <div className="sub">{pendingInvites.length} invite{pendingInvites.length !== 1 ? 's' : ''} waiting to be accepted</div>
+            </div>
+          </div>
+          <div className="tbl-wrap">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Sent</th>
+                  <th>Expires</th>
+                  <th className="right">{''}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingInvites.map(inv => (
+                  <tr key={inv.id}>
+                    <td style={{ color: 'var(--fg-1)', fontWeight: 500 }}>{inv.email}</td>
+                    <td><RoleBadge role={inv.role} /></td>
+                    <td style={{ color: 'var(--fg-3)', fontSize: 13 }}>
+                      {new Date(inv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </td>
+                    <td style={{ color: 'var(--fg-3)', fontSize: 13 }}>
+                      {new Date(inv.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </td>
+                    <td className="right">
+                      <Btn
+                        variant="ghost"
+                        size="sm"
+                        icon="x"
+                        onClick={() => handleCancelInvite(inv.id)}
+                        aria-label={`Cancel invite to ${inv.email}`}
+                        title="Cancel invite"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm-remove dialog ────────────────────────────────────────────── */}
+      {confirmRemove && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,.45)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000,
+          padding: 16,
+        }}>
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-1)',
+            borderRadius: 16,
+            padding: '28px 32px',
+            maxWidth: 400,
+            width: '100%',
+            boxShadow: '0 8px 32px rgba(0,0,0,.12)',
+          }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--fg-1)', marginBottom: 10 }}>
+              Remove member?
+            </div>
+            <div style={{ fontSize: 13.5, color: 'var(--fg-2)', lineHeight: 1.6, marginBottom: 24 }}>
+              <strong>{confirmRemove.displayName || confirmRemove.email}</strong> will lose access
+              to this workspace and their API keys will be revoked immediately.
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <Btn variant="ghost" onClick={() => { if (!removing) setConfirmRemove(null); }}>
+                Cancel
+              </Btn>
+              <Btn
+                variant="primary"
+                style={{ background: 'var(--red-600, #dc2626)' }}
+                onClick={handleRemoveConfirm}
+                disabled={removing}
+              >
+                {removing ? 'Removing…' : 'Remove member'}
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
