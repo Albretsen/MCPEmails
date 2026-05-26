@@ -15,10 +15,20 @@ export function LoginApp() {
   const [serverError, setServerError] = useState('');
   const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
 
+  function buildOAuthUrl(provider) {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    const url = new URL(`/auth/${provider}`, window.location.origin);
+    if (redirect && redirect.startsWith('/')) {
+      url.searchParams.set('next', redirect);
+    }
+    return url.toString();
+  }
+
   function buildCallbackUrl() {
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get('redirect');
-    const callbackUrl = new URL('/auth/callback', process.env.NEXT_PUBLIC_APP_URL || window.location.origin);
+    const callbackUrl = new URL('/auth/callback', window.location.origin);
     if (redirect && redirect.startsWith('/')) {
       callbackUrl.searchParams.set('next', redirect);
     }
@@ -31,31 +41,14 @@ export function LoginApp() {
     return redirect && redirect.startsWith('/') ? redirect : '/dashboard';
   }
 
-  async function handleGoogleSignIn() {
+  function handleGoogleSignIn() {
     setSocialLoading('google');
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: buildCallbackUrl() },
-    });
-    if (error) {
-      setServerError(error.message ?? 'Something went wrong. Please try again.');
-      setSocialLoading(null);
-    }
-    // On success the browser navigates away — no state reset needed.
+    window.location.href = buildOAuthUrl('google');
   }
 
-  async function handleGitHubSignIn() {
+  function handleGitHubSignIn() {
     setSocialLoading('github');
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: { redirectTo: buildCallbackUrl() },
-    });
-    if (error) {
-      setServerError(error.message ?? 'Something went wrong. Please try again.');
-      setSocialLoading(null);
-    }
+    window.location.href = buildOAuthUrl('github');
   }
 
   function validateEmail(value) {

@@ -478,7 +478,7 @@ No deployment needed — build-time only. Unblocks all other phases.
 
 ---
 
-### Phase 2 — Edge function: monthly cap + Solo `[ ]`
+### Phase 2 — Edge function: monthly cap + Solo `[x]`
 
 **Goal:** The MCP server enforces both a monthly total cap and a daily burst cap.
 
@@ -496,7 +496,7 @@ No deployment needed — build-time only. Unblocks all other phases.
 
 ---
 
-### Phase 3 — Stripe: Solo tier `[ ]`
+### Phase 3 — Stripe: Solo tier `[x]`
 
 **Goal:** Users can subscribe to the Solo plan via Stripe checkout.
 

@@ -47,30 +47,14 @@ export function SignupApp() {
     return `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`;
   }
 
-  async function handleGoogleSignIn() {
+  function handleGoogleSignIn() {
     setSocialLoading('google');
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: buildCallbackUrl() },
-    });
-    if (error) {
-      setServerError(error.message ?? 'Something went wrong. Please try again.');
-      setSocialLoading(null);
-    }
+    window.location.href = '/auth/google';
   }
 
-  async function handleGitHubSignIn() {
+  function handleGitHubSignIn() {
     setSocialLoading('github');
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: { redirectTo: buildCallbackUrl() },
-    });
-    if (error) {
-      setServerError(error.message ?? 'Something went wrong. Please try again.');
-      setSocialLoading(null);
-    }
+    window.location.href = '/auth/github';
   }
 
   function validate() {
