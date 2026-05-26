@@ -11,7 +11,7 @@ const QUICKSTART_STEPS = [
     num: '01',
     label: 'Sign up & connect an inbox',
     heading: 'Create your account and connect Gmail',
-    body: 'Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Choose Gmail, Outlook, or Fastmail and complete the OAuth flow — or paste an app password for any other IMAP provider. Your inbox is ready in under a minute.',
+    body: 'Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Choose Gmail, Outlook, or Fastmail and complete the OAuth flow. Your inbox is ready in under a minute.',
     code: null,
     cta: { label: 'Connect your inbox →', href: '/signup' },
   },
@@ -221,13 +221,13 @@ const TOOLS = [
     name: 'search_emails',
     scope: 'read:email',
     title: 'Search Emails',
-    desc: 'Search an inbox using provider-native query syntax. Gmail supports Gmail search operators; Outlook uses $search; IMAP providers support a subset of IMAP SEARCH criteria.',
+    desc: 'Search an inbox using provider-native query syntax. Gmail supports Gmail search operators; Outlook uses $search; Fastmail uses text search.',
     params: [
       { name: 'inbox_id',       type: 'string (uuid)', required: true,  desc: 'UUID of the inbox to search. Call list_inboxes to get available inbox IDs.' },
       { name: 'query',          type: 'string',        required: true,  desc: 'Search query. For Gmail: "from:alice@example.com after:2026/01/01". For Outlook: natural-language or KQL queries.' },
       { name: 'limit',          type: 'integer',       required: false, desc: 'Max results. Default 20, max 100.' },
       { name: 'offset',         type: 'integer',       required: false, desc: 'Pagination offset. Default 0.' },
-      { name: 'include_folders',type: 'array',         required: false, desc: 'Restrict search to these folders (IMAP only). Default: search all folders.' },
+      { name: 'include_folders',type: 'array',         required: false, desc: 'Restrict search to these folder names. Default: search all folders.' },
     ],
     example: {
       request: `{

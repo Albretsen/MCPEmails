@@ -1,4 +1,5 @@
 import { Nav, Footer } from '../../components/marketing/Sections';
+import { LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 
@@ -32,8 +33,6 @@ export const metadata = {
 
 /* ─── Section data ───────────────────────────────────────────── */
 
-const LAST_UPDATED = 'May 25, 2026';
-const EFFECTIVE_DATE = 'May 25, 2026';
 const CONTACT_EMAIL = 'privacy@mcpemails.com';
 const COMPANY_NAME = 'MCPEmails';
 const COMPANY_ADDRESS = 'Oslo, Norway';

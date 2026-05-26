@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import crypto from 'node:crypto';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
+import { checkRateLimit } from '@/lib/rate-limit';
 import type { Json } from '@/types/database.types';
 
 /**
@@ -26,21 +27,6 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-// In-process rate limit: 10 registrations per IP per hour.
-// Not distributed — replace with a shared store if abuse is observed at scale.
-const ipTimestamps = new Map<string, number[]>();
-const RATE_LIMIT = 10;
-const RATE_WINDOW_MS = 3_600_000;
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (ipTimestamps.get(ip) ?? []).filter(t => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) return true;
-  recent.push(now);
-  ipTimestamps.set(ip, recent);
-  return false;
-}
-
 const DYNAMIC_SCOPES = ['read:email', 'search:email', 'send:email'];
 
 export async function OPTIONS(): Promise<Response> {
@@ -50,7 +36,7 @@ export async function OPTIONS(): Promise<Response> {
 export async function POST(req: NextRequest): Promise<Response> {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
 
-  if (isRateLimited(ip)) {
+  if (await checkRateLimit(`oauth:register:${ip}`, 10, 3_600_000)) {
     return Response.json(
       {
         error: 'rate_limit_exceeded',

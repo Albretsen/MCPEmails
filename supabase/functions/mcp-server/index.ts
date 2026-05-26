@@ -1025,7 +1025,7 @@ interface ToolDefinition {
   /** Detailed description for the AI agent */
   description: string;
   /** Which api_keys.scopes[] value is required to call this tool */
-  requiredScope: "read:email" | "send:email" | "manage:drafts" | "manage:folders";
+  requiredScope: "read:email" | "send:email";
   /** JSON Schema (Draft 7) for argument validation */
   inputSchema: Record<string, unknown>;
 }

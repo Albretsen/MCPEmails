@@ -20,8 +20,6 @@ const VALID_SCOPES = new Set([
   'read:email',
   'search:email',
   'send:email',
-  'manage:drafts',
-  'manage:folders',
 ]);
 
 function generateAuthCode(): string {

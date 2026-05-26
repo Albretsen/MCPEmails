@@ -264,7 +264,7 @@ function DashboardInner({ user, workspace, planLimits, overviewStats, activityFe
 
   const onConnect = ({ label, provider, address }) => {
     // Optimistic update — the real row will appear on next page load via router.refresh().
-    const next = { id: String(Date.now()), label, address: address || (label + "@example.com"), provider, status: "active", calls: 0 };
+    const next = { id: String(Date.now()), label, address: address || label, provider, status: "active", calls: 0 };
     setInboxes(xs => [...xs, next]);
     setShowConnect(false);
     toast({ message: `${label} connected successfully.`, variant: 'success' });

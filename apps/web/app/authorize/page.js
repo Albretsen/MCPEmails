@@ -1,9 +1,7 @@
 import { redirect } from 'next/navigation';
-import crypto from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
-import { createServiceRoleClient } from '@/lib/supabase/service';
 import { issueCsrfToken } from '@/lib/oauth/csrf';
-import { storeStateNonce, consumeStateNonce } from '@/lib/oauth/state';
+import { storeStateNonce } from '@/lib/oauth/state';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
 import { AuthorizeApp } from '../../components/auth/AuthorizeApp';
 import '../../styles/marketing.css';
@@ -21,25 +19,13 @@ const VALID_SCOPES = new Set([
   'read:email',
   'search:email',
   'send:email',
-  'manage:drafts',
-  'manage:folders',
 ]);
 
 const SCOPE_META = {
-  'read:email':    { icon: 'inbox',  title: 'Read your inbox',          desc: 'list_inbox, read_email, get_attachment.', required: false },
-  'search:email':  { icon: 'search', title: 'Search your emails',       desc: 'search_email across your messages.', required: false },
-  'send:email':    { icon: 'mail',   title: 'Send email on your behalf', desc: 'send_email, reply_to_email, forward_email.', required: false },
-  'manage:drafts': { icon: 'edit',   title: 'Manage drafts',             desc: 'create_draft, update_draft, delete_draft.', required: false },
-  'manage:folders':{ icon: 'folder', title: 'Manage folders',            desc: 'create_folder, move_email, delete_email.', required: false },
+  'read:email':   { icon: 'inbox',  title: 'Read your inbox',          desc: 'list_inbox, read_email, get_attachment.', required: false },
+  'search:email': { icon: 'search', title: 'Search your emails',       desc: 'search_email across your messages.', required: false },
+  'send:email':   { icon: 'mail',   title: 'Send email on your behalf', desc: 'send_email, reply_to_email, forward_email.', required: false },
 };
-
-function generateAuthCode() {
-  return crypto.randomBytes(32).toString('hex');
-}
-
-function sha256Hex(value) {
-  return crypto.createHash('sha256').update(value, 'utf8').digest('hex');
-}
 
 export default async function AuthorizePage({ searchParams }) {
   const params = await searchParams;
@@ -145,7 +131,10 @@ export default async function AuthorizePage({ searchParams }) {
     await storeStateNonce(user.id, state);
   }
 
-  // ── 9. Auto-approve: skip consent UI if already consented to all scopes ───
+  // ── 9. Check if all requested scopes are already consented ──────────────
+  // Never auto-redirect from a GET — always render the consent UI so the user
+  // has an explicit chance to review and confirm each authorization.
+  let preApproved = false;
   if (requestedScopes.length > 0 && workspace) {
     const { data: consent } = await supabase
       .from('oauth_consents')
@@ -154,44 +143,7 @@ export default async function AuthorizePage({ searchParams }) {
       .eq('client_id', clientId)
       .maybeSingle();
 
-    const allConsented = consent && requestedScopes.every((s) => consent.scopes.includes(s));
-
-    if (allConsented) {
-      // Consume state nonce and redirect immediately (no consent UI needed)
-      if (state) await consumeStateNonce(user.id, state);
-
-      const plainCode = generateAuthCode();
-      const codeHash  = sha256Hex(plainCode);
-      const service   = createServiceRoleClient();
-
-      const { error: insertErr } = await service.from('oauth_auth_codes').insert({
-        code_hash:             codeHash,
-        client_id:             clientId,
-        workspace_id:          workspace.id,
-        user_id:               user.id,
-        client_name:           oauthClient.client_name,
-        redirect_uri:          resolvedRedirectUri,
-        code_challenge:        codeChallenge,
-        code_challenge_method: 'S256',
-        scopes:                requestedScopes,
-        inbox_ids:             consent.inbox_ids ?? null,
-      });
-
-      if (!insertErr) {
-        await service.from('auth_logs').insert({
-          event_type:   'oauth_code_issued_auto',
-          user_id:      user.id,
-          workspace_id: workspace.id,
-          metadata:     { client_id: clientId, scopes: requestedScopes, auto_approve: true },
-        });
-
-        const dest = new URL(resolvedRedirectUri);
-        dest.searchParams.set('code', plainCode);
-        if (state) dest.searchParams.set('state', state);
-        redirect(dest.toString());
-      }
-      // If insert failed, fall through to show the consent UI
-    }
+    preApproved = !!(consent && requestedScopes.every((s) => consent.scopes.includes(s)));
   }
 
   // ── 10. Issue CSRF token for the consent form ─────────────────────────────
@@ -220,6 +172,7 @@ export default async function AuthorizePage({ searchParams }) {
       codeChallenge={codeChallenge}
       challengeMethod={challengeMethod || 'S256'}
       csrfToken={csrfToken}
+      preApproved={preApproved}
     />
   );
 }

@@ -12,10 +12,16 @@ export async function storeStateNonce(sessionId: string, state: string): Promise
   const expiresAt = new Date(Date.now() + TTL_MS).toISOString();
 
   const service = createServiceRoleClient();
-  await service.from('oauth_state_nonces').upsert(
-    { session_id: sessionId, state_hash: stateHash, expires_at: expiresAt },
-    { onConflict: 'session_id, state_hash' }
-  );
+  const { error } = await service
+    .from('oauth_state_nonces')
+    .insert({ session_id: sessionId, state_hash: stateHash, expires_at: expiresAt });
+
+  if (error) {
+    // A unique-constraint violation means this state value was already stored
+    // for this session. Treat it as an error — OAuth state must be single-use
+    // and must not be refreshable by re-visiting /authorize with the same URL.
+    throw new Error(`Failed to store state nonce: ${error.message}`);
+  }
 }
 
 /**

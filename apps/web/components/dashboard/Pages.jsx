@@ -735,12 +735,13 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                         Reconnect
                       </Btn>
                     ) : (
-                      <Btn variant="ghost" size="sm" icon="refresh">{""}</Btn>
+                      <Btn variant="ghost" size="sm" icon="refresh" aria-label="Refresh inbox">{""}</Btn>
                     )}
                     <Btn
                       variant="ghost"
                       size="sm"
                       icon="trash"
+                      aria-label="Disconnect inbox"
                       onClick={() => handleDisconnectRequest(ib)}
                     >
                       {""}
@@ -1341,6 +1342,8 @@ export function KeysPage({ keys, onCreate, onKeyCreated, onRevoke }) {
   const [revoking, setRevoking] = useState(false);
   // True when the create-key modal is open.
   const [createOpen, setCreateOpen] = useState(false);
+  // True while the API key creation call is in flight.
+  const [creating, setCreating] = useState(false);
   // The newly-created key data (including rawKey) to display in the reveal modal.
   const [revealData, setRevealData] = useState(null);
 
@@ -1372,10 +1375,15 @@ export function KeysPage({ keys, onCreate, onKeyCreated, onRevoke }) {
    * opens the reveal modal with the one-time raw key.
    */
   const handleCreate = async (name, scopes) => {
-    const data = await onCreate(name, scopes);
-    // data includes: id, name, keyPrefix, scopes, createdAt, lastUsedAt, expiresAt, rawKey
-    setCreateOpen(false);
-    setRevealData(data);
+    setCreating(true);
+    try {
+      const data = await onCreate(name, scopes);
+      // data includes: id, name, keyPrefix, scopes, createdAt, lastUsedAt, expiresAt, rawKey
+      setCreateOpen(false);
+      setRevealData(data);
+    } finally {
+      setCreating(false);
+    }
   };
 
   /**
@@ -1394,7 +1402,7 @@ export function KeysPage({ keys, onCreate, onKeyCreated, onRevoke }) {
       <PageHeader
         title="API keys"
         sub="Used by MCP clients to authenticate against mcpemails.com."
-        action={<Btn variant="primary" icon="plus" onClick={() => setCreateOpen(true)}>New key</Btn>}
+        action={<Btn variant="primary" icon={creating ? 'refresh' : 'plus'} onClick={() => setCreateOpen(true)} disabled={creating}>{creating ? 'Creating…' : 'New key'}</Btn>}
       />
 
       <div className="card">
@@ -1457,7 +1465,7 @@ export function KeysPage({ keys, onCreate, onKeyCreated, onRevoke }) {
             <h3>No API keys yet</h3>
             <p>Create a key to connect Claude Desktop or any MCP client to your inboxes.</p>
             <div style={{ marginTop: 8 }}>
-              <Btn variant="primary" icon="plus" onClick={() => setCreateOpen(true)}>New key</Btn>
+              <Btn variant="primary" icon="plus" onClick={() => setCreateOpen(true)} disabled={creating}>New key</Btn>
             </div>
           </div>
         )}

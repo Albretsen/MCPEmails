@@ -24,7 +24,7 @@ function ThemeBtn() {
   }, [dark]);
 
   return (
-    <button className="theme-toggle" onClick={() => setDark((d) => !d)} title="Toggle theme">
+    <button className="theme-toggle" onClick={() => setDark((d) => !d)} title="Toggle theme" aria-label="Toggle theme">
       <MIcon name={dark ? 'sun' : 'moon'} size={16} color="currentColor" />
     </button>
   );
@@ -113,10 +113,13 @@ function InboxToggle({ inbox, checked, onChange }) {
     }}>
       <ProviderLogo kind={inbox.provider} size={18} />
       <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{
-          fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600,
-          color: 'var(--fg-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
+        <div
+          title={inbox.email_address}
+          style={{
+            fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600,
+            color: 'var(--fg-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}
+        >
           {label}
         </div>
         {inbox.display_name && (
@@ -224,6 +227,7 @@ export function AuthorizeApp({
   codeChallenge,
   challengeMethod,
   csrfToken,
+  preApproved = false,
 }) {
   const router = useRouter();
 
@@ -376,6 +380,20 @@ export function AuthorizeApp({
                     {client.client_id}
                   </code>
                 </div>
+
+                {/* Pre-approved notice */}
+                {preApproved && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+                    borderRadius: 8, marginBottom: 12,
+                    background: 'var(--mint-50, #f0fdf4)', border: '1px solid var(--mint-200, #bbf7d0)',
+                  }}>
+                    <Icon name="check" size={14} color="var(--mint-700, #15803d)" strokeWidth={2.2} />
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--mint-700, #15803d)' }}>
+                      You&apos;ve previously authorized this app. Confirm below to issue a new token.
+                    </span>
+                  </div>
+                )}
 
                 {/* Requested permissions */}
                 {requestedScopes.length > 0 ? (

@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { generateApiKey } from '@/lib/api-keys/generate';
 import { sha256hex, computeS256Challenge, generateRefreshToken } from '@/lib/oauth/crypto';
 import { oauthError } from '@/lib/oauth/errors';
+import { checkRateLimit } from '@/lib/rate-limit';
 import type { Json } from '@/types/database.types';
 
 /**
@@ -29,24 +30,6 @@ const CORS_HEADERS = {
 
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: CORS_HEADERS });
-}
-
-// ── Rate limiting (in-process; best-effort on single instance) ───────────────
-// On Vercel, each function instance has its own memory; this does not protect
-// across concurrent instances. Replace with a distributed store (e.g. Supabase
-// table or Vercel KV) when abuse is observed.
-
-const ipTimestamps = new Map<string, number[]>();
-const RATE_LIMIT = 10;
-const RATE_WINDOW_MS = 60_000;
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (ipTimestamps.get(ip) ?? []).filter(t => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) return true;
-  recent.push(now);
-  ipTimestamps.set(ip, recent);
-  return false;
 }
 
 // ── Body parsing ──────────────────────────────────────────────────────────────
@@ -97,7 +80,7 @@ async function logEvent(
 
 export async function POST(req: NextRequest): Promise<Response> {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
-  if (isRateLimited(ip)) {
+  if (await checkRateLimit(`oauth:token:${ip}`, 10, 60_000)) {
     return oauthError('access_denied', 'Too many requests.', 429, { 'Retry-After': '60' });
   }
 
@@ -113,6 +96,18 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!clientId)  return oauthError('invalid_request', 'client_id is required.');
 
   const service = createServiceRoleClient();
+
+  // ── Client status check ────────────────────────────────────────────────────
+  // Re-verify the client hasn't been deactivated between authorization and token exchange.
+  const { data: oauthClient } = await service
+    .from('oauth_clients')
+    .select('deactivated_at')
+    .eq('client_id', clientId)
+    .maybeSingle();
+
+  if (!oauthClient || oauthClient.deactivated_at) {
+    return oauthError('invalid_client', 'Unknown or deactivated application.');
+  }
 
   // ── Authorization Code grant ────────────────────────────────────────────────
 

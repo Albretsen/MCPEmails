@@ -58,7 +58,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const supabase = await createClient();
 
-  // 3. Look up the state nonce. Filter by provider and check expiry.
+  // 3. Verify the user still has an active session. The OAuth callback must
+  //    come from the same authenticated browser that initiated the flow.
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return redirectWithError('session_expired');
+  }
+
+  // 4. Look up the state nonce. Filter by provider and check expiry.
   //    The nonce is single-use: we delete it before doing anything else so
   //    a replayed callback cannot succeed even if it arrives before we finish.
   const { data: oauthState, error: stateError } = await supabase
@@ -71,6 +78,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   if (stateError || !oauthState) {
     return redirectWithError('invalid_state');
+  }
+
+  // Verify the state row belongs to the currently authenticated user.
+  if (oauthState.user_id !== user.id) {
+    return redirectWithError('session_mismatch');
   }
 
   // 4. Delete the nonce immediately (single-use).
