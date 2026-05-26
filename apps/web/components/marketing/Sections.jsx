@@ -52,7 +52,7 @@ export function HeroTextBlock({ onGetStarted }) {
 export function HeroEndpointCard() {
   const [client, setClient] = useState("oauth");
   const [copied, setCopied] = useState(false);
-  const url = "https://www.mcpemails.com/mcp";
+  const url = "https://www.mcpemails.com/api/mcp";
   const copyUrl = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) navigator.clipboard.writeText(url);
     setCopied(true); setTimeout(() => setCopied(false), 1500);
@@ -61,11 +61,11 @@ export function HeroEndpointCard() {
     oauth: `# claude.ai — paste the URL, click Connect, authorize.
 # No API key required — OAuth handles everything.
 
-https://www.mcpemails.com/mcp`,
+https://www.mcpemails.com/api/mcp`,
     claude: `{
   "mcpServers": {
     "mcpemails": {
-      "url": "https://www.mcpemails.com/mcp",
+      "url": "https://www.mcpemails.com/api/mcp",
       "auth": { "type": "bearer", "token": "mcpe_live_••••" }
     }
   }
@@ -74,14 +74,14 @@ https://www.mcpemails.com/mcp`,
   "mcp": {
     "servers": {
       "mcpemails": {
-        "url": "https://www.mcpemails.com/mcp",
+        "url": "https://www.mcpemails.com/api/mcp",
         "bearer": "mcpe_live_••••"
       }
     }
   }
 }`,
     n8n: `# n8n MCP node
-URL:    https://www.mcpemails.com/mcp
+URL:    https://www.mcpemails.com/api/mcp
 Auth:   Bearer
 Token:  mcpe_live_••••`,
   };
@@ -364,7 +364,7 @@ export function HowItWorks() {
           <div className="step">
             <span className="num">02</span>
             <h4>Connect your agent — API key or OAuth</h4>
-            <p>For <strong>claude.ai</strong>: paste <code className="t-code-inline">https://www.mcpemails.com/mcp</code> in Connectors and authorize — no key needed. For <strong>Claude Desktop, Cursor, or n8n</strong>: generate a scoped API key in the dashboard and drop it in your config. One URL, all six tools.</p>
+            <p>For <strong>claude.ai</strong>: paste <code className="t-code-inline">https://www.mcpemails.com/api/mcp</code> in Connectors and authorize — no key needed. For <strong>Claude Desktop, Cursor, or n8n</strong>: generate a scoped API key in the dashboard and drop it in your config. One URL, all six tools.</p>
           </div>
           <div className="step">
             <span className="num">03</span>
