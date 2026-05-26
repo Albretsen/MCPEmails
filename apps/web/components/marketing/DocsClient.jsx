@@ -11,7 +11,7 @@ const QUICKSTART_STEPS = [
     num: '01',
     label: 'Sign up & connect an inbox',
     heading: 'Create your account and connect Gmail',
-    body: 'Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Choose Gmail and follow the OAuth flow. Your inbox is ready in under a minute.',
+    body: 'Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Choose Gmail, Outlook, or Fastmail and complete the OAuth flow — or paste an app password for any other IMAP provider. Your inbox is ready in under a minute.',
     code: null,
     cta: { label: 'Connect your inbox →', href: '/signup' },
   },
@@ -93,7 +93,7 @@ curl -X POST https://www.mcpemails.com/api/mcp \\
     "id": 1,
     "method": "initialize",
     "params": {
-      "protocolVersion": "2024-11-05",
+      "protocolVersion": "2025-06-18",
       "clientInfo": { "name": "my-agent", "version": "1.0" },
       "capabilities": {}
     }
@@ -342,19 +342,11 @@ const TOOLS = [
 /* ─── Error codes ────────────────────────────────────────────── */
 
 const ERROR_CODES = [
-  { code: '-32001', type: 'Protocol', when: 'Invalid or revoked API key', retryable: false },
-  { code: '-32601', type: 'Protocol', when: 'Unknown tool name', retryable: false },
-  { code: '-32602', type: 'Protocol', when: 'Missing or invalid parameter', retryable: false },
-  { code: 'inbox_not_found',    type: 'Execution', when: 'inbox_id not found or not accessible', retryable: false },
-  { code: 'message_not_found',  type: 'Execution', when: 'message_id does not exist (may have been deleted)', retryable: false },
-  { code: 'scope_denied',       type: 'Execution', when: 'API key lacks required scope for this tool', retryable: false },
-  { code: 'invalid_recipient',  type: 'Execution', when: 'A recipient address failed RFC 5322 validation', retryable: false },
-  { code: 'auth_failed',        type: 'Execution', when: 'Provider OAuth token expired/revoked — user must reconnect', retryable: false },
-  { code: 'rate_limit_exceeded',type: 'Execution', when: 'Per-key rate limit hit (100/min, 1,000/hr, 10,000/day)', retryable: true },
-  { code: 'quota_exceeded',     type: 'Execution', when: 'Daily send quota reached (plan limit)', retryable: false },
-  { code: 'attachment_too_large',type: 'Execution', when: 'Total attachment size exceeds 10 MB', retryable: false },
-  { code: 'search_timeout',     type: 'Execution', when: 'Provider search took > 30 seconds — simplify query', retryable: true },
-  { code: 'provider_error',     type: 'Execution', when: 'Provider returned an unexpected 5xx error', retryable: true },
+  { code: '-32001', type: 'JSON-RPC error', when: 'Missing, malformed, revoked, or expired API key — also returned when the API key lacks the required scope for the called tool', retryable: false },
+  { code: '-32601', type: 'JSON-RPC error', when: 'Unknown JSON-RPC method (e.g. calling a method other than initialize, tools/list, tools/call)', retryable: false },
+  { code: '-32602', type: 'JSON-RPC error', when: 'Unknown tool name, or missing / invalid parameter in tools/call', retryable: false },
+  { code: '-32029', type: 'JSON-RPC error', when: 'Per-key rate limit or plan daily quota exceeded. Check data.error_code: "rate_limit_exceeded" vs "quota_exceeded". Check data.retry_after (seconds) before retrying.', retryable: true },
+  { code: 'isError: true', type: 'Tool result', when: 'Tool executed but encountered an error (inbox not found, message not found, provider auth failure, invalid recipient, attachment too large, provider 5xx). The error description is in content[0].text.', retryable: false },
 ];
 
 /* ─── Sub-components ─────────────────────────────────────────── */
@@ -591,7 +583,7 @@ export default function DocsClient() {
             <div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span>Transport: <strong>Streamable HTTP</strong> (MCP 2024-11-05)</span>
+                <span>Transport: <strong>Streamable HTTP</strong> (MCP 2025-06-18)</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
@@ -619,7 +611,7 @@ export default function DocsClient() {
     "id": 1,
     "method": "initialize",
     "params": {
-      "protocolVersion": "2024-11-05",
+      "protocolVersion": "2025-06-18",
       "clientInfo": { "name": "my-agent", "version": "1.0" },
       "capabilities": {}
     }
@@ -738,8 +730,10 @@ export default function DocsClient() {
             <div className="eye-label">Error codes</div>
             <h2>Error codes &amp; retry guidance.</h2>
             <p className="sub">
-              Protocol errors are returned as JSON-RPC error objects. Execution errors are returned as
-              normal results with <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>isError: true</code>.
+              Auth, scope, and rate limit failures return a JSON-RPC <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>error</code> object with a numeric code.
+              Tool execution failures (inbox not found, provider error, etc.) return a normal{' '}
+              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>result</code> with{' '}
+              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>isError: true</code> and a human-readable message in <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>content[0].text</code>.
             </p>
           </div>
 
@@ -785,16 +779,30 @@ export default function DocsClient() {
           <div style={{ marginTop: 32 }}>
             <div className="docs-example-label" style={{ marginBottom: 8 }}>Example execution error response</div>
             <CodeBlock
-              code={`{
+              code={`// Tool execution error — inbox not found
+{
   "jsonrpc": "2.0",
-  "id": 5,
+  "id": 2,
   "result": {
-    "content": [{
-      "type": "text",
-      "text": "Inbox 3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c not found or not accessible."
-    }],
-    "isError": true,
-    "errorCode": "inbox_not_found"
+    "content": [{ "type": "text", "text": "Inbox not found or not accessible." }],
+    "isError": true
+  }
+}
+
+// Rate limit error — JSON-RPC error object with data
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "error": {
+    "code": -32029,
+    "message": "Rate limit exceeded",
+    "data": {
+      "error_code": "rate_limit_exceeded",
+      "window": "per_minute",
+      "limit": 100,
+      "used": 100,
+      "retry_after": 34
+    }
   }
 }`}
               lang="json"
@@ -815,7 +823,7 @@ export default function DocsClient() {
             <div className="step">
               <div className="num">Per key</div>
               <h4>100 requests / minute · 1,000 / hour · 10,000 / day</h4>
-              <p>Limits are enforced per API key in rolling windows. When exceeded, the server returns <code>rate_limit_exceeded</code> with a <code>retryAfter</code> field (seconds to wait).</p>
+              <p>Limits are enforced per API key in rolling windows. When exceeded, the server returns <code>rate_limit_exceeded</code> with a <code>retry_after</code> field (seconds to wait).</p>
             </div>
             <div className="step">
               <div className="num">Send quota</div>
@@ -824,8 +832,8 @@ export default function DocsClient() {
             </div>
             <div className="step">
               <div className="num">Retrying</div>
-              <h4>Use the retryAfter field — never retry sends blindly</h4>
-              <p>For <code>rate_limit_exceeded</code> and <code>provider_error</code>, use exponential backoff starting at <code>retryAfter</code> seconds. Do not auto-retry <code>send_email</code> on <code>provider_error</code> — the message may have been accepted; check <code>delivery_status</code> first.</p>
+              <h4>Use the retry_after field — never retry sends blindly</h4>
+              <p>For <code>rate_limit_exceeded</code> and <code>provider_error</code>, use exponential backoff starting at <code>retry_after</code> seconds. Do not auto-retry <code>send_email</code> on <code>provider_error</code> — the message may have been accepted; check <code>delivery_status</code> first.</p>
             </div>
           </div>
         </div>
