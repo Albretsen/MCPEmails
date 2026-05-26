@@ -9,16 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.6.0",
+    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.49.0",
     "he": "^1.2.0",
     "isomorphic-dompurify": "^2.15.0",
     "jsdom": "^26.0.0",
     "mailparser": "^3.7.0",
     "mime-types": "^2.1.35",
-    "next": "^15.0.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "resend": "^6.12.4",
     "stripe": "^22.1.1"
   },
@@ -29,8 +29,9 @@
     "@types/mime-types": "^2.1.4",
     "@types/node": "20.17.6",
     "@types/react": "19.2.15",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^15.0.0",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.6",
     "typescript": "^5.0.0"
   }
 }

@@ -171,7 +171,7 @@ function DashboardInner({ user, workspace, userRole, planLimits, overviewStats, 
   useEffect(() => {
     const joinedParam = readQuery(searchParams, 'joined');
     if (joinedParam === '1') {
-      toast({ message: 'You've joined the workspace. Welcome!', variant: 'success' });
+      toast({ message: "You've joined the workspace. Welcome!", variant: 'success' });
       try {
         const url = new URL(window.location.href);
         url.searchParams.delete('joined');

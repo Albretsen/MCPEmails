@@ -1,7 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
-import type { CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 
 /**
@@ -14,12 +12,9 @@ import type { Database } from '@/types/database.types';
  * Always call `supabase.auth.getUser()` (not `getSession()`) in server-side
  * code — getUser() validates the token server-side and detects revoked sessions.
  */
-export async function createClient(): Promise<SupabaseClient<Database>> {
+export async function createClient() {
   const cookieStore = await cookies();
 
-  // Cast bridges the @supabase/ssr v0.6.x type signature (3 generic params)
-  // to the @supabase/supabase-js v2.106.x signature (5 params). Runtime is identical.
-  // Remove once @supabase/ssr is upgraded to ≥0.10.x.
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -28,7 +23,7 @@ export async function createClient(): Promise<SupabaseClient<Database>> {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
@@ -40,5 +35,5 @@ export async function createClient(): Promise<SupabaseClient<Database>> {
         },
       },
     }
-  ) as unknown as SupabaseClient<Database>;
+  );
 }
