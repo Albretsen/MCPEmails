@@ -52,7 +52,7 @@ const CLIENT_SNIPPETS = {
 # 1. Go to claude.ai → Customize → Connectors
 # 2. Click "Add connector" and paste this URL:
 #
-#      https://www.mcpemails.com/mcp
+#      https://www.mcpemails.com/api/mcp
 #
 # 3. Click Connect. MCPEmails will open an authorization screen
 #    where you sign in with your mcpemails account.
@@ -64,7 +64,7 @@ const CLIENT_SNIPPETS = {
 {
   "mcpServers": {
     "mcpemails": {
-      "url": "https://www.mcpemails.com/mcp",
+      "url": "https://www.mcpemails.com/api/mcp",
       "auth": {
         "type": "bearer",
         "token": "mcpe_live_YOUR_KEY_HERE"
@@ -77,14 +77,14 @@ const CLIENT_SNIPPETS = {
   "mcp": {
     "servers": {
       "mcpemails": {
-        "url": "https://www.mcpemails.com/mcp",
+        "url": "https://www.mcpemails.com/api/mcp",
         "bearer": "mcpe_live_YOUR_KEY_HERE"
       }
     }
   }
 }`,
   raw: `# Raw JSON-RPC 2.0 — initialize handshake
-curl -X POST https://www.mcpemails.com/mcp \\
+curl -X POST https://www.mcpemails.com/api/mcp \\
   -H "Authorization: Bearer mcpe_live_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -579,7 +579,7 @@ export default function DocsClient() {
             <div className="docs-endpoint-card">
               <div className="docs-endpoint-row">
                 <span className="docs-method">POST</span>
-                <code className="docs-url">https://www.mcpemails.com/mcp</code>
+                <code className="docs-url">https://www.mcpemails.com/api/mcp</code>
               </div>
               <p style={{ margin: '12px 0 0', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.6 }}>
                 Send a JSON-RPC 2.0 request body. Supported methods: <code>initialize</code>,{' '}
@@ -610,7 +610,7 @@ export default function DocsClient() {
           <div style={{ marginTop: 32 }}>
             <div className="docs-example-label" style={{ marginBottom: 8 }}>Initialize handshake</div>
             <CodeBlock
-              code={`curl -X POST https://www.mcpemails.com/mcp \\
+              code={`curl -X POST https://www.mcpemails.com/api/mcp \\
   -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -650,7 +650,7 @@ export default function DocsClient() {
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Step 2 —</strong> Paste <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>https://www.mcpemails.com/mcp</code> as the server URL</span>
+                <span><strong>Step 2 —</strong> Paste <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>https://www.mcpemails.com/api/mcp</code> as the server URL</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
