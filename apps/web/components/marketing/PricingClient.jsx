@@ -71,6 +71,7 @@ const TABLE_SECTIONS = [
   {
     label: 'MCP tools',
     rows: [
+      { feature: 'list_inboxes',          free: true,  pro: true,  enterprise: true },
       { feature: 'list_inbox',            free: true,  pro: true,  enterprise: true },
       { feature: 'read_email',            free: true,  pro: true,  enterprise: true },
       { feature: 'search_emails',         free: true,  pro: true,  enterprise: true },
@@ -110,7 +111,7 @@ const TABLE_SECTIONS = [
 const FAQ_ITEMS = [
   {
     q: 'What counts as an MCP call?',
-    a: 'Each JSON-RPC tool invocation against your /mcp endpoint counts as one call — whether it\'s list_inbox, read_email, search_emails, send_email, or reply_to_email. Calls that return an error still count toward your quota.',
+    a: 'Each JSON-RPC tool invocation against your /mcp endpoint counts as one call — whether it\'s list_inboxes, list_inbox, read_email, search_emails, send_email, or reply_to_email. Calls that return an error still count toward your quota.',
   },
   {
     q: 'Is my email content stored anywhere?',

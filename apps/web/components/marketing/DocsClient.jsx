@@ -579,7 +579,7 @@ export default function DocsClient() {
             <div className="docs-endpoint-card">
               <div className="docs-endpoint-row">
                 <span className="docs-method">POST</span>
-                <code className="docs-url">https://mcpemails.com/mcp</code>
+                <code className="docs-url">https://www.mcpemails.com/mcp</code>
               </div>
               <p style={{ margin: '12px 0 0', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.6 }}>
                 Send a JSON-RPC 2.0 request body. Supported methods: <code>initialize</code>,{' '}
@@ -610,7 +610,7 @@ export default function DocsClient() {
           <div style={{ marginTop: 32 }}>
             <div className="docs-example-label" style={{ marginBottom: 8 }}>Initialize handshake</div>
             <CodeBlock
-              code={`curl -X POST https://mcpemails.com/mcp \\
+              code={`curl -X POST https://www.mcpemails.com/mcp \\
   -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
