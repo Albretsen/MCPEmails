@@ -33,7 +33,7 @@ export function HeroTextBlock({ onGetStarted }) {
         Give your AI<br/>agent an <span className="accent">inbox.</span>
       </h1>
       <p className="lead">
-        Connect Gmail, Outlook, or any IMAP account once. Paste a single MCP endpoint URL into Claude, Cursor, or any MCP-compatible agent. Your agent can now read, search, and send mail — live, with no email stored on our servers.
+        Connect Gmail, Outlook, or any IMAP account once. Paste a single MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent — OAuth or API key, your choice. Your agent can now read, search, and send mail live, with no email stored on our servers.
       </p>
       <div className="hero-cta">
         <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>Connect your inbox</MBtn>
@@ -50,18 +50,22 @@ export function HeroTextBlock({ onGetStarted }) {
 
 /* Variant A: Endpoint + client-tabbed code snippet */
 export function HeroEndpointCard() {
-  const [client, setClient] = useState("claude");
+  const [client, setClient] = useState("oauth");
   const [copied, setCopied] = useState(false);
-  const url = "https://mcpemails.com/mcp";
+  const url = "https://www.mcpemails.com/mcp";
   const copyUrl = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) navigator.clipboard.writeText(url);
     setCopied(true); setTimeout(() => setCopied(false), 1500);
   };
   const snippets = {
+    oauth: `# claude.ai — paste the URL, click Connect, authorize.
+# No API key required — OAuth handles everything.
+
+https://www.mcpemails.com/mcp`,
     claude: `{
   "mcpServers": {
     "mcpemails": {
-      "url": "https://mcpemails.com/mcp",
+      "url": "https://www.mcpemails.com/mcp",
       "auth": { "type": "bearer", "token": "mcpe_live_••••" }
     }
   }
@@ -70,18 +74,19 @@ export function HeroEndpointCard() {
   "mcp": {
     "servers": {
       "mcpemails": {
-        "url": "https://mcpemails.com/mcp",
+        "url": "https://www.mcpemails.com/mcp",
         "bearer": "mcpe_live_••••"
       }
     }
   }
 }`,
     n8n: `# n8n MCP node
-URL:    https://mcpemails.com/mcp
+URL:    https://www.mcpemails.com/mcp
 Auth:   Bearer
 Token:  mcpe_live_••••`,
   };
   const paths = {
+    oauth:  "claude.ai → Customize → Connectors",
     claude: "~/.claude/mcp.json",
     cursor: "~/.cursor/config.json",
     n8n:    "n8n · MCP credentials",
@@ -94,7 +99,7 @@ Token:  mcpe_live_••••`,
         <span className="endpoint-pill"><span className="d"/>3 inboxes connected</span>
       </div>
       <div className="endpoint-url">
-        <span className="scheme">https://</span><span className="host">mcpemails.com</span><span className="path-seg">/mcp</span>
+        <span className="scheme">https://</span><span className="host">www.mcpemails.com</span><span className="path-seg">/mcp</span>
         <button className="copy-btn" onClick={copyUrl} aria-label="Copy URL">
           {copied
             ? <><MIcon name="check" size={13} color="var(--mint-700)"/> Copied</>
@@ -104,6 +109,7 @@ Token:  mcpe_live_••••`,
       <div className="endpoint-divider"><span>Paste it into any MCP client</span></div>
       <div className="client-tabs">
         {[
+          { k: "oauth",  l: "claude.ai" },
           { k: "claude", l: "Claude Desktop" },
           { k: "cursor", l: "Cursor" },
           { k: "n8n",    l: "n8n" },
@@ -139,7 +145,7 @@ export function HeroPipeDiagram() {
         <div className="pipe-node">
           <MIcon name="cpu" size={22} color="var(--fg-2)"/>
           <div className="h">AI agent</div>
-          <div className="s">Claude · Cursor · n8n</div>
+          <div className="s">claude.ai · Desktop · Cursor</div>
         </div>
         <div className="pipe-arrow-wrap">
           <span className="pipe-tag">MCP</span>
@@ -165,10 +171,12 @@ export function HeroPipeDiagram() {
         <div className="code-bar" style={{ paddingTop: 0, paddingBottom: 8, marginBottom: 10, borderBottom: "1px solid var(--border-1)" }}>
           <div className="dots"><span/><span/><span/></div>
           <span className="path">live · t+12ms</span>
-          <span className="pill"><span className="d"/>list_inbox()</span>
+          <span className="pill"><span className="d"/>list_inboxes()</span>
         </div>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.7, color: "var(--fg-2)" }}>
-          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> agent calls <span style={{ color: "var(--mint-700)" }}>list_inbox</span>(account=<span style={{ color: "var(--amber-700)" }}>"work-gmail"</span>)</div>
+          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> agent calls <span style={{ color: "var(--mint-700)" }}>list_inboxes</span>()</div>
+          <div><span style={{ color: "var(--fg-3)" }}>·</span> returns inbox IDs — no dashboard copy-paste</div>
+          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> agent calls <span style={{ color: "var(--mint-700)" }}>list_inbox</span>(inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> mcpemails fetches via Gmail API (token rotated)</div>
           <div><span style={{ color: "var(--mint-700)" }}>←</span> 20 messages returned · <span style={{ color: "var(--fg-3)" }}>nothing stored</span></div>
         </div>
@@ -186,12 +194,12 @@ export function HeroPipeDiagram() {
 /* Variant C: Live MCP terminal showing tool calls firing */
 export function HeroMcpTerminal() {
   const fullLog = React.useMemo(() => [
-    { ts: "14:02:18", arrow: "→", tool: "list_inbox",     args: "work-gmail · limit=20",       ok: "20 msgs",  ms: "182ms" },
-    { ts: "14:02:21", arrow: "→", tool: "read_email",     args: "uid=4821",                    ok: "1.2kb",    ms: "97ms"  },
-    { ts: "14:02:23", arrow: "→", tool: "search_emails",  args: "from:stripe after:2026-05",   ok: "3 hits",   ms: "238ms" },
-    { ts: "14:02:25", arrow: "→", tool: "list_inbox",     args: "personal · unread=true",      ok: "4 msgs",   ms: "164ms" },
-    { ts: "14:02:27", arrow: "→", tool: "reply_to_email", args: "uid=4821",                    ok: "queued",   ms: "311ms" },
-    { ts: "14:02:30", arrow: "→", tool: "send_email",     args: "to=eng@team.io",              ok: "sent",     ms: "428ms" },
+    { ts: "14:02:16", arrow: "→", tool: "list_inboxes",   args: "",                            ok: "2 inboxes", ms: "84ms"  },
+    { ts: "14:02:18", arrow: "→", tool: "list_inbox",     args: "inbox_id=3f7a · limit=20",    ok: "20 msgs",   ms: "182ms" },
+    { ts: "14:02:21", arrow: "→", tool: "read_email",     args: "uid=4821",                    ok: "1.2kb",     ms: "97ms"  },
+    { ts: "14:02:23", arrow: "→", tool: "search_emails",  args: "from:stripe after:2026-05",   ok: "3 hits",    ms: "238ms" },
+    { ts: "14:02:25", arrow: "→", tool: "reply_to_email", args: "uid=4821",                    ok: "queued",    ms: "311ms" },
+    { ts: "14:02:28", arrow: "→", tool: "send_email",     args: "to=eng@team.io",              ok: "sent",      ms: "428ms" },
   ], []);
   const [shown, setShown] = useState(2);
   React.useEffect(() => {
@@ -254,6 +262,7 @@ export function Trusted() {
       <div className="container trusted-row">
         <span className="label">Works with every MCP-compatible agent and client</span>
         <div className="trusted-logos">
+          <span>claude.ai</span>
           <span>Claude Desktop</span>
           <span>Cursor</span>
           <span>n8n</span>
@@ -271,8 +280,8 @@ export function Features() {
   const principles = [
     {
       n: "01",
-      h: "Five tools. The whole surface area.",
-      p: <>Every email task your agent needs fits in five calls: <code className="t-code-inline">list_inbox</code>, <code className="t-code-inline">read_email</code>, <code className="t-code-inline">search_emails</code>, <code className="t-code-inline">send_email</code>, <code className="t-code-inline">reply_to_email</code>. Add the MCP endpoint URL to any compatible agent. That's the entire integration.</>,
+      h: "Six tools. The whole surface area.",
+      p: <>Every email task your agent needs fits in six calls: <code className="t-code-inline">list_inboxes</code>, <code className="t-code-inline">list_inbox</code>, <code className="t-code-inline">read_email</code>, <code className="t-code-inline">search_emails</code>, <code className="t-code-inline">send_email</code>, <code className="t-code-inline">reply_to_email</code>. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. That's the entire integration.</>,
       tag: "Scope",
     },
     {
@@ -295,8 +304,8 @@ export function Features() {
     },
     {
       n: "05",
-      h: "Standard OAuth for agents and clients.",
-      p: "MCP clients authorize via a standard OAuth 2.0 flow. Scopes are per-inbox and per-permission. You review and approve access in the dashboard, and revoke any client in one click. API keys are prefixed, hashed, and never stored in plaintext.",
+      h: "OAuth 2.0 for agents. One click to revoke.",
+      p: "claude.ai and other OAuth clients connect automatically — dynamic registration, authorization code + PKCE, no API key setup. For programmatic access, API keys are scoped, prefixed, and hashed. Either way, you can revoke any connection from the dashboard in one click.",
       tag: "Access",
     },
     {
@@ -354,8 +363,8 @@ export function HowItWorks() {
           </div>
           <div className="step">
             <span className="num">02</span>
-            <h4>Create an API key and add the MCP URL</h4>
-            <p>Generate a scoped API key in the dashboard. Paste the MCP endpoint URL and that key into Claude Desktop, Cursor, n8n, or any MCP-compatible client. One config, all five tools.</p>
+            <h4>Connect your agent — API key or OAuth</h4>
+            <p>For <strong>claude.ai</strong>: paste <code className="t-code-inline">https://www.mcpemails.com/mcp</code> in Connectors and authorize — no key needed. For <strong>Claude Desktop, Cursor, or n8n</strong>: generate a scoped API key in the dashboard and drop it in your config. One URL, all six tools.</p>
           </div>
           <div className="step">
             <span className="num">03</span>
@@ -366,6 +375,7 @@ export function HowItWorks() {
 
         <div className="tools">
           {[
+            { n: "list_inboxes",   d: "Discover all connected inboxes and their IDs. Call this first — no UUID copy-pasting from the dashboard." },
             { n: "list_inbox",     d: "List recent messages with sender, subject, date, and snippet — up to 100 per call." },
             { n: "read_email",     d: "Fetch a single message by ID. Returns parsed plain-text and sanitized HTML body, plus attachment metadata." },
             { n: "search_emails",  d: "Provider-native search: Gmail query syntax, IMAP SEARCH, or Microsoft Graph. Returns up to 100 matches." },
@@ -515,7 +525,7 @@ export function Footer() {
             <h5>Resources</h5>
             <a href="/docs#tools">Tool reference</a>
             <a href="/docs#quickstart">Quickstart</a>
-            <a href="/docs#providers">Provider compat</a>
+            <a href="/docs#oauth">OAuth connection</a>
           </div>
           <div>
             <h5>Company</h5>
