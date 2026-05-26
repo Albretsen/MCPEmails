@@ -28,7 +28,7 @@ mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
     num: '03',
     label: 'Add MCPEmails to your agent',
     heading: 'Paste the MCP endpoint into your client',
-    body: 'Add the MCPEmails server to your MCP client config using the URL below and your bearer token. Use the tabs to see the exact format for Claude Desktop, Cursor, or a raw JSON-RPC client.',
+    body: 'Use the tabs below for your client. claude.ai connects via OAuth — no API key needed, just paste the URL and authorize. For Claude Desktop, Cursor, or programmatic access, use your API key from step 02.',
     code: null,
     tabs: true,
     cta: null,
@@ -37,20 +37,34 @@ mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
     num: '04',
     label: 'Make your first call',
     heading: 'Ask your agent to check your inbox',
-    body: 'Copy your inbox UUID from Dashboard → Inboxes and include it in your agent\'s system prompt. Then ask your agent: "Check my inbox and summarise the last 5 unread messages."',
-    code: `# System prompt snippet — paste your real inbox UUID:
-Your inbox ID is: 3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c
-Use the list_inbox MCP tool to read email.`,
+    body: 'No inbox UUID copy-pasting needed. Your agent can call list_inboxes first to discover all connected inboxes and their UUIDs automatically. Then ask: "Check my inbox and summarise the last 5 unread messages."',
+    code: `# The agent calls list_inboxes first — no hardcoded UUIDs needed.
+# System prompt (optional, for multi-inbox setups):
+You have access to email via MCPEmails.
+Start by calling list_inboxes to discover available inboxes.`,
     cta: null,
   },
 ];
 
 const CLIENT_SNIPPETS = {
+  oauth: `# claude.ai — OAuth connection (no API key required)
+#
+# 1. Go to claude.ai → Customize → Connectors
+# 2. Click "Add connector" and paste this URL:
+#
+#      https://www.mcpemails.com/mcp
+#
+# 3. Click Connect. MCPEmails will open an authorization screen
+#    where you sign in with your mcpemails account.
+# 4. After authorizing, all your tools are live in Claude.
+#
+# Under the hood: claude.ai uses OAuth 2.0 + PKCE with dynamic
+# client registration (RFC 7591). No manual key setup needed.`,
   claude: `// claude_desktop_config.json
 {
   "mcpServers": {
     "mcpemails": {
-      "url": "https://mcpemails.com/mcp",
+      "url": "https://www.mcpemails.com/mcp",
       "auth": {
         "type": "bearer",
         "token": "mcpe_live_YOUR_KEY_HERE"
@@ -63,14 +77,14 @@ const CLIENT_SNIPPETS = {
   "mcp": {
     "servers": {
       "mcpemails": {
-        "url": "https://mcpemails.com/mcp",
+        "url": "https://www.mcpemails.com/mcp",
         "bearer": "mcpe_live_YOUR_KEY_HERE"
       }
     }
   }
 }`,
   raw: `# Raw JSON-RPC 2.0 — initialize handshake
-curl -X POST https://mcpemails.com/mcp \\
+curl -X POST https://www.mcpemails.com/mcp \\
   -H "Authorization: Bearer mcpe_live_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -89,12 +103,44 @@ curl -X POST https://mcpemails.com/mcp \\
 
 const TOOLS = [
   {
+    name: 'list_inboxes',
+    scope: 'read:email',
+    title: 'List Inboxes',
+    desc: 'Returns all inboxes the current API key or OAuth token is permitted to access. Call this first to discover inbox_id values — no copy-pasting UUIDs from the dashboard.',
+    params: [],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+  "params": {
+    "name": "list_inboxes",
+    "arguments": {}
+  }
+}`,
+      response: `{
+  "inboxes": [
+    {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "email_address": "alice@example.com",
+      "display_name": "Alice (Work)",
+      "provider": "gmail"
+    },
+    {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "email_address": "alice@company.com",
+      "display_name": "Company Outlook",
+      "provider": "outlook"
+    }
+  ]
+}`,
+    },
+  },
+  {
     name: 'list_inbox',
     scope: 'read:email',
     title: 'List Inbox',
     desc: 'List email summaries from a connected inbox, newest first. Supports pagination, folder selection, and unread filtering.',
     params: [
-      { name: 'inbox_id', type: 'string (uuid)', required: true,  desc: 'UUID of the inbox to list. Find it in Dashboard → Inboxes.' },
+      { name: 'inbox_id', type: 'string (uuid)', required: true,  desc: 'UUID of the inbox to list. Call list_inboxes first to discover available inbox IDs.' },
       { name: 'limit',    type: 'integer',       required: false, desc: 'Max results to return. Default 20, max 100.' },
       { name: 'offset',   type: 'integer',       required: false, desc: 'Zero-based pagination offset. Default 0.' },
       { name: 'folder',   type: 'string',        required: false, desc: 'Folder to list. Default "INBOX". Other values: "SENT", "DRAFTS", "TRASH".' },
@@ -137,7 +183,7 @@ const TOOLS = [
     title: 'Read Email',
     desc: 'Fetch the full content of a single email by ID, including plain-text body, optional sanitized HTML, and optional attachment data.',
     params: [
-      { name: 'inbox_id',           type: 'string (uuid)', required: true,  desc: 'UUID of the inbox containing the email.' },
+      { name: 'inbox_id',           type: 'string (uuid)', required: true,  desc: 'UUID of the inbox containing the email. Call list_inboxes to get available inbox IDs.' },
       { name: 'message_id',         type: 'string',        required: true,  desc: 'Provider message ID from list_inbox or search_emails.' },
       { name: 'include_html',       type: 'boolean',       required: false, desc: 'Include sanitized HTML body. Default false.' },
       { name: 'include_attachments',type: 'boolean',       required: false, desc: 'Include base64 attachment data. Default false.' },
@@ -176,7 +222,7 @@ const TOOLS = [
     title: 'Search Emails',
     desc: 'Search an inbox using provider-native query syntax. Gmail supports Gmail search operators; Outlook uses $search; IMAP providers support a subset of IMAP SEARCH criteria.',
     params: [
-      { name: 'inbox_id',       type: 'string (uuid)', required: true,  desc: 'UUID of the inbox to search.' },
+      { name: 'inbox_id',       type: 'string (uuid)', required: true,  desc: 'UUID of the inbox to search. Call list_inboxes to get available inbox IDs.' },
       { name: 'query',          type: 'string',        required: true,  desc: 'Search query. For Gmail: "from:alice@example.com after:2026/01/01". For Outlook: natural-language or KQL queries.' },
       { name: 'limit',          type: 'integer',       required: false, desc: 'Max results. Default 20, max 100.' },
       { name: 'offset',         type: 'integer',       required: false, desc: 'Pagination offset. Default 0.' },
@@ -219,7 +265,7 @@ const TOOLS = [
     title: 'Send Email',
     desc: 'Send a new email from a connected inbox. Supports plain text, optional HTML body, CC/BCC, and file attachments (up to 10 MB total).',
     params: [
-      { name: 'inbox_id', type: 'string (uuid)',  required: true,  desc: 'UUID of the inbox to send from.' },
+      { name: 'inbox_id', type: 'string (uuid)',  required: true,  desc: 'UUID of the inbox to send from. Call list_inboxes to get available inbox IDs.' },
       { name: 'to',       type: 'array[string]',  required: true,  desc: 'Recipient email addresses. Max 50.' },
       { name: 'subject',  type: 'string',         required: true,  desc: 'Email subject line. Max 998 characters.' },
       { name: 'body',     type: 'string',         required: true,  desc: 'Plain-text email body.' },
@@ -259,7 +305,7 @@ const TOOLS = [
     title: 'Reply to Email',
     desc: 'Send a reply to an existing email. Threading headers (In-Reply-To, References) are set automatically. Supports reply-all and attachments.',
     params: [
-      { name: 'inbox_id',   type: 'string (uuid)', required: true,  desc: 'UUID of the inbox that contains the original message.' },
+      { name: 'inbox_id',   type: 'string (uuid)', required: true,  desc: 'UUID of the inbox that contains the original message. Call list_inboxes to get available inbox IDs.' },
       { name: 'message_id', type: 'string',        required: true,  desc: 'Provider message ID of the email being replied to.' },
       { name: 'body',       type: 'string',        required: true,  desc: 'Plain-text reply body.' },
       { name: 'html_body',  type: 'string',        required: false, desc: 'Optional HTML version of the reply.' },
@@ -336,8 +382,8 @@ function CodeBlock({ code, lang = '' }) {
 }
 
 function ClientTabs() {
-  const [tab, setTab] = useState('claude');
-  const labels = { claude: 'Claude Desktop', cursor: 'Cursor', raw: 'Raw cURL' };
+  const [tab, setTab] = useState('oauth');
+  const labels = { oauth: 'claude.ai (OAuth)', claude: 'Claude Desktop', cursor: 'Cursor', raw: 'Raw cURL' };
   return (
     <div style={{ marginTop: 16 }}>
       <div className="client-tabs">
@@ -421,28 +467,34 @@ function ToolSection({ tool }) {
         <p className="docs-tool-desc">{tool.desc}</p>
       </div>
 
-      <div className="docs-params-wrap">
-        <table className="docs-params-tbl">
-          <thead>
-            <tr>
-              <th>Parameter</th>
-              <th>Type</th>
-              <th>Required</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tool.params.map(p => (
-              <tr key={p.name}>
-                <td><code className="docs-param-name">{p.name}</code></td>
-                <td><span className="docs-type">{p.type}</span></td>
-                <td><ParamBadge required={p.required} /></td>
-                <td className="docs-param-desc">{p.desc}</td>
+      {tool.params.length === 0 ? (
+        <div className="docs-params-wrap" style={{ padding: '12px 16px', color: 'var(--fg-3)', fontSize: 13, fontFamily: 'var(--font-sans)' }}>
+          No parameters — call with an empty arguments object: <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>{'{}'}</code>
+        </div>
+      ) : (
+        <div className="docs-params-wrap">
+          <table className="docs-params-tbl">
+            <thead>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {tool.params.map(p => (
+                <tr key={p.name}>
+                  <td><code className="docs-param-name">{p.name}</code></td>
+                  <td><span className="docs-type">{p.type}</span></td>
+                  <td><ParamBadge required={p.required} /></td>
+                  <td className="docs-param-desc">{p.desc}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <button
         className="docs-example-toggle"
@@ -483,12 +535,13 @@ export default function DocsClient() {
             Your agent has an inbox<br />in four steps.
           </h1>
           <p className="pricing-page-lead">
-            Connect any email account, generate an API key, paste one URL into your
-            MCP client. Done. The full tool reference and example responses are
-            below.
+            Connect any email account, paste one URL into claude.ai or generate
+            an API key for Claude Desktop — done in minutes. Full tool reference
+            and OAuth connection guide below.
           </p>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <a className="btn btn-primary btn-lg" href="#quickstart">Quick start</a>
+            <a className="btn btn-secondary btn-lg" href="#oauth">OAuth (claude.ai)</a>
             <a className="btn btn-secondary btn-lg" href="#tools">Tool reference</a>
           </div>
         </div>
@@ -576,15 +629,86 @@ export default function DocsClient() {
         </div>
       </section>
 
+      {/* OAuth connection */}
+      <section className="section" id="oauth" style={{ paddingTop: 64, paddingBottom: 64 }}>
+        <div className="container">
+          <div className="section-head">
+            <div className="eye-label">OAuth connection</div>
+            <h2>Zero-config for claude.ai.</h2>
+            <p className="sub">
+              claude.ai and other OAuth 2.0 clients connect automatically via the standard
+              authorization code + PKCE flow. No API key setup, no config file — just paste
+              the URL and click Connect.
+            </p>
+          </div>
+
+          <div className="docs-endpoint-grid" style={{ marginBottom: 32 }}>
+            <div>
+              <div className="docs-info-row">
+                <MIcon name="check" size={14} color="var(--mint-600)" />
+                <span><strong>Step 1 —</strong> Go to claude.ai → Customize → Connectors → Add connector</span>
+              </div>
+              <div className="docs-info-row">
+                <MIcon name="check" size={14} color="var(--mint-600)" />
+                <span><strong>Step 2 —</strong> Paste <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>https://www.mcpemails.com/mcp</code> as the server URL</span>
+              </div>
+              <div className="docs-info-row">
+                <MIcon name="check" size={14} color="var(--mint-600)" />
+                <span><strong>Step 3 —</strong> Click Connect. MCPEmails opens an authorization screen</span>
+              </div>
+              <div className="docs-info-row">
+                <MIcon name="check" size={14} color="var(--mint-600)" />
+                <span><strong>Step 4 —</strong> Sign in with your mcpemails account and approve access</span>
+              </div>
+              <div className="docs-info-row">
+                <MIcon name="check" size={14} color="var(--mint-600)" />
+                <span><strong>Done —</strong> All six tools are live. claude.ai refreshes tokens automatically</span>
+              </div>
+            </div>
+
+            <div>
+              <div className="docs-endpoint-card">
+                <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', lineHeight: 1.7 }}>
+                  <p style={{ margin: '0 0 10px', fontWeight: 600, color: 'var(--fg-1)' }}>How it works under the hood</p>
+                  <p style={{ margin: '0 0 8px' }}>
+                    claude.ai registers itself via{' '}
+                    <strong>RFC 7591 Dynamic Client Registration</strong> — you never need to
+                    pre-register a client ID.
+                  </p>
+                  <p style={{ margin: '0 0 8px' }}>
+                    Authorization uses <strong>OAuth 2.0 Authorization Code + PKCE</strong> (RFC 7636),
+                    so no client secret is ever transmitted.
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    Tokens are scoped to exactly the permissions you approve:{' '}
+                    <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 4px', borderRadius: 3 }}>read:email</code>{' '}
+                    and/or{' '}
+                    <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 4px', borderRadius: 3 }}>send:email</code>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ padding: '14px 18px', background: 'var(--bg-sunken)', borderRadius: 8, border: '1px solid var(--border-1)', fontSize: 13, color: 'var(--fg-3)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
+            <strong style={{ color: 'var(--fg-2)' }}>Using Claude Desktop, Cursor, or a custom agent?</strong>{' '}
+            Create an API key in Dashboard → API Keys and follow the Quick start above.
+            API key and OAuth connections both use the same MCP endpoint and tools.
+          </div>
+        </div>
+      </section>
+
       {/* Tool reference */}
       <section className="section" id="tools" style={{ paddingTop: 80, paddingBottom: 80 }}>
         <div className="container">
           <div className="section-head">
             <div className="eye-label">Tool reference</div>
-            <h2>Five tools. All the email ops your agent needs.</h2>
+            <h2>Six tools. All the email ops your agent needs.</h2>
             <p className="sub">
-              Every tool takes an <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>inbox_id</code>{' '}
-              UUID — find yours in Dashboard → Inboxes. Click "Show example" to see a full request and response.
+              Start with <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>list_inboxes</code>{' '}
+              to discover available inboxes and their UUIDs. The remaining five tools each take an{' '}
+              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>inbox_id</code>{' '}
+              returned by that call. Click "Show example" to see a full request and response.
             </p>
           </div>
 
