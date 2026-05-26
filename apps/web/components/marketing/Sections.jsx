@@ -33,7 +33,7 @@ export function HeroTextBlock({ onGetStarted }) {
         Give your AI<br/>agent an <span className="accent">inbox.</span>
       </h1>
       <p className="lead">
-        Connect Gmail, Outlook, or any IMAP account once. Paste a single MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth 2.0 clients connect with one click — no API key setup needed. Your agent can now read, search, and send mail live, with no email stored on our servers.
+        Connect Gmail, Outlook, Fastmail, or any IMAP account once. Paste a single MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth 2.0 clients connect with one click — no API key setup needed. Your agent can now read, search, and send mail live, with no email stored on our servers.
       </p>
       <div className="hero-cta">
         <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>Connect your inbox</MBtn>
@@ -99,7 +99,7 @@ Token:  mcpe_live_••••`,
         <span className="endpoint-pill"><span className="d"/>3 inboxes connected</span>
       </div>
       <div className="endpoint-url">
-        <span className="scheme">https://</span><span className="host">www.mcpemails.com</span><span className="path-seg">/mcp</span>
+        <span className="scheme">https://</span><span className="host">www.mcpemails.com</span><span className="path-seg">/api/mcp</span>
         <button className="copy-btn" onClick={copyUrl} aria-label="Copy URL">
           {copied
             ? <><MIcon name="check" size={13} color="var(--mint-700)"/> Copied</>
@@ -154,7 +154,7 @@ export function HeroPipeDiagram() {
         <div className="pipe-node brand">
           <MIcon name="server" size={22} color="#fff"/>
           <div className="h">mcpemails</div>
-          <div className="s">/mcp endpoint</div>
+          <div className="s">/api/mcp endpoint</div>
         </div>
         <div className="pipe-arrow-wrap">
           <span className="pipe-tag">IMAP</span>
@@ -298,8 +298,8 @@ export function Features() {
     },
     {
       n: "04",
-      h: "Gmail, Outlook, or any IMAP inbox.",
-      p: "OAuth 2.0 for Gmail and Outlook. App passwords for Fastmail and any IMAP/SMTP provider. Connect multiple inboxes — label them by use case (work-gmail, ops-outlook, support-fastmail) and scope each API key to the inboxes you want that agent to reach.",
+      h: "Gmail, Outlook, Fastmail, or any IMAP inbox.",
+      p: "OAuth 2.0 for Gmail, Outlook, and Fastmail. App passwords for any remaining IMAP/SMTP provider. Connect multiple inboxes — label them by use case (work-gmail, ops-outlook, support-fastmail) and scope each API key to the inboxes you want that agent to reach.",
       tag: "Providers",
     },
     {
@@ -311,7 +311,7 @@ export function Features() {
     {
       n: "06",
       h: "Credentials are encrypted at rest.",
-      p: "OAuth tokens and app passwords are AES-256-GCM encrypted before being written to the database. Decryption happens only inside an isolated server function at call time. The encryption key is stored in a separate secrets vault, not alongside the data.",
+      p: "OAuth tokens and app passwords are AES-256-GCM encrypted before being written to the database. Decryption happens only inside an isolated Edge Function at call time. The encryption key is stored as an environment secret, separate from the database.",
       tag: "Security",
     },
   ];
@@ -359,7 +359,7 @@ export function HowItWorks() {
           <div className="step">
             <span className="num">01</span>
             <h4>Connect your inbox</h4>
-            <p>Sign in and click <strong>Connect Inbox</strong>. Choose Gmail or Outlook and complete the OAuth flow — no passwords shared. For Fastmail or any IMAP provider, paste an app password instead.</p>
+            <p>Sign in and click <strong>Connect Inbox</strong>. Choose Gmail, Outlook, or Fastmail and complete the OAuth flow — no passwords shared. For any other IMAP/SMTP provider, paste an app password instead.</p>
           </div>
           <div className="step">
             <span className="num">02</span>
@@ -379,7 +379,7 @@ export function HowItWorks() {
             { n: "list_inbox",     d: "List recent messages with sender, subject, date, and snippet — up to 100 per call." },
             { n: "read_email",     d: "Fetch a single message by ID. Returns parsed plain-text and sanitized HTML body, plus attachment metadata." },
             { n: "search_emails",  d: "Provider-native search: Gmail query syntax, IMAP SEARCH, or Microsoft Graph. Returns up to 100 matches." },
-            { n: "send_email",     d: "Send a new message via the connected account. Dispatched through Gmail API, Graph, or SMTP — your domain, your deliverability." },
+            { n: "send_email",     d: "Send a new message via the connected account. Dispatched through Gmail API, Microsoft Graph, Fastmail JMAP, or SMTP — your domain, your deliverability." },
             { n: "reply_to_email", d: "Reply in-thread with correct Message-ID and References headers. Works across Gmail, Outlook, and IMAP." },
           ].map(t => (
             <div className="tool" key={t.n}>
@@ -419,7 +419,7 @@ export function Pricing({ onGetStarted }) {
       features: [
         "1 connected inbox",
         "100 MCP calls / month",
-        "Gmail, Outlook, IMAP",
+        "Gmail, Outlook, Fastmail, IMAP",
         "1 API key",
         "Community support",
       ],
@@ -435,9 +435,10 @@ export function Pricing({ onGetStarted }) {
       features: [
         "10 connected inboxes",
         "20,000 MCP calls / month",
-        "Gmail, Outlook, IMAP",
+        "Gmail, Outlook, Fastmail, IMAP",
         "10 API keys",
         "Usage analytics dashboard",
+        "14-day free trial",
         "Email support",
       ],
       cta: "Start free trial",
@@ -452,7 +453,7 @@ export function Pricing({ onGetStarted }) {
       features: [
         "Unlimited inboxes",
         "Custom MCP call volume",
-        "Gmail, Outlook, IMAP",
+        "Gmail, Outlook, Fastmail, IMAP",
         "Unlimited API keys",
         "Audit log + SSO",
         "Dedicated Slack support",
