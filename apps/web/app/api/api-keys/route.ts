@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateApiKey } from '@/lib/api-keys/generate';
+import { checkApiKeyLimit } from '@/lib/plans/check-api-key-limit';
 
 /**
  * POST /api/api-keys
@@ -106,6 +107,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const workspaceId = member.workspace_id;
+
+  // 3b. Enforce plan API key cap.
+  const keyLimit = await checkApiKeyLimit(supabase, workspaceId);
+  if (keyLimit.atLimit) {
+    return NextResponse.json(
+      {
+        error: `Your ${keyLimit.plan} plan allows a maximum of ${keyLimit.maxApiKeys} API key${keyLimit.maxApiKeys === 1 ? '' : 's'}. Revoke an existing key or upgrade your plan.`,
+        error_code: 'api_key_limit_reached',
+        current_count: keyLimit.currentCount,
+        max_api_keys: keyLimit.maxApiKeys,
+        upgrade_url: '/pricing',
+      },
+      { status: 403 },
+    );
+  }
 
   // 4–5. Generate the key and hash it.
   // rawKey is a local variable only — it will be included in the response and

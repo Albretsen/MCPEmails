@@ -175,6 +175,12 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, onConnect, 
   const dailyAtLimit = dailyCap != null && callsToday >= dailyCap;
   const dailyNearLimit = !dailyAtLimit && dailyCap != null && dailyPct >= 0.8;
 
+  // Plan monthly call cap — null means unlimited (Enterprise or unknown).
+  const monthlyCap = planLimits?.maxMonthlyToolCalls ?? null;
+  const monthlyPct = monthlyCap != null && monthlyCap > 0 ? callsThisMonth / monthlyCap : 0;
+  const monthlyAtLimit = monthlyCap != null && callsThisMonth >= monthlyCap;
+  const monthlyNearLimit = !monthlyAtLimit && monthlyCap != null && monthlyPct >= 0.8;
+
   // Show the getting-started guide until both an inbox and an API key exist.
   const showGuide = inboxCount === 0 || apiKeysCount === 0;
 
@@ -240,6 +246,60 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, onConnect, 
         </div>
       )}
 
+      {/* Monthly quota exhausted — red banner */}
+      {monthlyAtLimit && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '12px 16px',
+          marginBottom: 12,
+          background: 'var(--red-100, #fef2f2)',
+          border: '1px solid rgba(229,72,77,0.25)',
+          borderRadius: 10,
+          fontFamily: 'var(--font-sans)',
+          fontSize: 13.5,
+          color: 'var(--red-700, #b91c1c)',
+        }}>
+          <Icon name="zap" size={15} color="var(--red-700, #b91c1c)" />
+          <span style={{ flex: 1 }}>
+            Your monthly quota of {monthlyCap.toLocaleString()} calls has been reached. Tool calls will be
+            rejected until the start of next month.{' '}
+            <a href="/pricing" style={{ color: 'var(--red-700, #b91c1c)', fontWeight: 600 }}>
+              Upgrade
+            </a>{' '}
+            for a higher monthly limit.
+          </span>
+        </div>
+      )}
+
+      {/* Monthly quota near limit — amber warning */}
+      {monthlyNearLimit && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '12px 16px',
+          marginBottom: 12,
+          background: 'var(--amber-50, #fffbeb)',
+          border: '1px solid rgba(245,158,11,0.3)',
+          borderRadius: 10,
+          fontFamily: 'var(--font-sans)',
+          fontSize: 13.5,
+          color: 'var(--amber-800, #92400e)',
+        }}>
+          <Icon name="zap" size={15} color="var(--amber-600, #d97706)" />
+          <span style={{ flex: 1 }}>
+            You&rsquo;ve used {callsThisMonth.toLocaleString()} of {monthlyCap.toLocaleString()} monthly calls ({Math.round(monthlyPct * 100)}%).
+            Quota resets at the start of next month.{' '}
+            <a href="/pricing" style={{ color: 'var(--amber-800, #92400e)', fontWeight: 600 }}>
+              Upgrade
+            </a>{' '}
+            to avoid disruption.
+          </span>
+        </div>
+      )}
+
       <div className="stat-grid">
         <div className="stat">
           <div className="label">Inboxes connected</div>
@@ -286,8 +346,36 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, onConnect, 
         </div>
         <div className="stat">
           <div className="label">Calls this month</div>
-          <div className="value">{callsThisMonth.toLocaleString()}</div>
-          <div className="delta">MCP tool calls (UTC month)</div>
+          <div className="value" style={monthlyAtLimit ? { color: 'var(--red-600, #dc2626)' } : monthlyNearLimit ? { color: 'var(--amber-600, #d97706)' } : {}}>
+            {callsThisMonth.toLocaleString()}
+          </div>
+          <div className="delta">
+            {monthlyCap != null
+              ? `of ${monthlyCap.toLocaleString()} monthly limit · UTC month`
+              : 'MCP tool calls (UTC month)'}
+          </div>
+          {/* Mini progress bar for monthly quota */}
+          {monthlyCap != null && (
+            <div style={{
+              marginTop: 6,
+              height: 3,
+              borderRadius: 2,
+              background: 'var(--bg-sunken, #f1f5f9)',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${Math.min(100, monthlyPct * 100)}%`,
+                background: monthlyAtLimit
+                  ? 'var(--red-500, #ef4444)'
+                  : monthlyNearLimit
+                    ? 'var(--amber-500, #f59e0b)'
+                    : 'var(--brand)',
+                borderRadius: 2,
+                transition: 'width 0.4s',
+              }} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -2379,21 +2467,30 @@ function DeleteAccountSection({ email }) {
  */
 const BILLING_PLANS = [
   {
+    id: 'solo',
+    name: 'Solo',
+    monthlyPrice: 9,
+    yearlyMonthlyPrice: 7,      // effective monthly cost when billed yearly ($84/yr)
+    yearlyAnnualTotal: 84,
+    features: ['3 connected inboxes', '3,000 MCP calls / month', '3 API keys', 'Email support', '14-day free trial'],
+    highlighted: false,
+  },
+  {
     id: 'pro',
     name: 'Pro',
-    monthlyPrice: 19,
-    yearlyMonthlyPrice: 15,     // effective monthly cost when billed yearly
-    yearlyAnnualTotal: 182,     // total billed per year
-    features: ['5 connected inboxes', '20,000 MCP calls / month', '10 API keys', 'Usage analytics', 'Email support'],
+    monthlyPrice: 29,
+    yearlyMonthlyPrice: 23,     // effective monthly cost when billed yearly ($276/yr)
+    yearlyAnnualTotal: 276,
+    features: ['10 connected inboxes', '20,000 MCP calls / month', '10 API keys', 'Usage analytics', 'Email support', '14-day free trial'],
     highlighted: true,
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
-    monthlyPrice: 99,
-    yearlyMonthlyPrice: 79,
-    yearlyAnnualTotal: 950,
-    features: ['Unlimited inboxes', 'Unlimited MCP calls', 'Unlimited API keys', 'Priority support', 'Custom SLA'],
+    monthlyPrice: null,          // custom pricing
+    yearlyMonthlyPrice: null,
+    yearlyAnnualTotal: null,
+    features: ['Unlimited inboxes', 'Unlimited MCP calls', 'Unlimited API keys', 'Audit log + SSO', 'Dedicated Slack support', 'Custom SLA'],
     highlighted: false,
   },
 ];
@@ -2412,7 +2509,16 @@ function BillingSection({ currentPlan }) {
   const [interval, setInterval] = useState('month');
   const [upgrading, setUpgrading] = useState(null); // planId while loading
   const [openingPortal, setOpeningPortal] = useState(false);
+  const [usage, setUsage] = useState(null); // fetched from /api/usage
   const { toast } = useToast();
+
+  // Fetch live usage stats on mount
+  useEffect(() => {
+    fetch('/api/usage')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setUsage(data); })
+      .catch(() => {});
+  }, []);
 
   /** Open the Stripe Customer Portal in the same tab. */
   const handleOpenPortal = async () => {
@@ -2477,7 +2583,20 @@ function BillingSection({ currentPlan }) {
     }
   };
 
-  const isOnPaidPlan = currentPlan === 'pro' || currentPlan === 'enterprise';
+  const isOnPaidPlan = currentPlan === 'solo' || currentPlan === 'pro' || currentPlan === 'enterprise';
+
+  // Derived usage values for the widget
+  const monthlyUsed = usage?.monthly?.used ?? null;
+  const monthlyCap  = usage?.monthly?.cap  ?? null;
+  const monthlyPct  = monthlyCap != null && monthlyCap > 0 ? (monthlyUsed ?? 0) / monthlyCap : 0;
+  const monthlyAtLimit   = monthlyCap != null && (monthlyUsed ?? 0) >= monthlyCap;
+  const monthlyNearLimit = !monthlyAtLimit && monthlyCap != null && monthlyPct >= 0.8;
+
+  const dailyUsed = usage?.daily_burst?.used ?? null;
+  const dailyCap  = usage?.daily_burst?.cap  ?? null;
+  const dailyPct  = dailyCap != null && dailyCap > 0 ? (dailyUsed ?? 0) / dailyCap : 0;
+  const dailyAtLimit   = dailyCap != null && (dailyUsed ?? 0) >= dailyCap;
+  const dailyNearLimit = !dailyAtLimit && dailyCap != null && dailyPct >= 0.8;
 
   return (
     <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
@@ -2495,6 +2614,105 @@ function BillingSection({ currentPlan }) {
       </div>
 
       <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+        {/* ── Live usage widget ─────────────────────────────────────────── */}
+        {usage && (
+          <div style={{
+            padding: '14px 16px',
+            background: 'var(--bg-sunken)',
+            borderRadius: 10,
+            border: '1px solid var(--border-1)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              This month&rsquo;s usage
+            </div>
+
+            {/* Monthly calls */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>
+                  MCP calls this month
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontSize: 12.5,
+                  color: monthlyAtLimit ? 'var(--red-600, #dc2626)' : monthlyNearLimit ? 'var(--amber-600, #d97706)' : 'var(--fg-1)',
+                  fontWeight: 600,
+                }}>
+                  {(monthlyUsed ?? 0).toLocaleString()}
+                  {monthlyCap != null ? ` / ${monthlyCap.toLocaleString()}` : ''}
+                </span>
+              </div>
+              {monthlyCap != null && (
+                <div style={{ height: 4, borderRadius: 3, background: 'var(--bg-page, #f8fafc)', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${Math.min(100, monthlyPct * 100)}%`,
+                    background: monthlyAtLimit ? 'var(--red-500, #ef4444)' : monthlyNearLimit ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
+                    borderRadius: 3,
+                    transition: 'width 0.4s',
+                  }} />
+                </div>
+              )}
+              {monthlyCap != null && (
+                <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-4)', marginTop: 4 }}>
+                  {monthlyCap - (monthlyUsed ?? 0) > 0
+                    ? `${(monthlyCap - (monthlyUsed ?? 0)).toLocaleString()} calls remaining · resets ${new Date(usage.monthly.resets_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                    : 'Monthly quota exhausted · resets ' + new Date(usage.monthly.resets_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </div>
+              )}
+            </div>
+
+            {/* Daily burst calls */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>
+                  Calls today (burst cap)
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontSize: 12.5,
+                  color: dailyAtLimit ? 'var(--red-600, #dc2626)' : dailyNearLimit ? 'var(--amber-600, #d97706)' : 'var(--fg-1)',
+                  fontWeight: 600,
+                }}>
+                  {(dailyUsed ?? 0).toLocaleString()}
+                  {dailyCap != null ? ` / ${dailyCap.toLocaleString()}` : ''}
+                </span>
+              </div>
+              {dailyCap != null && (
+                <div style={{ height: 4, borderRadius: 3, background: 'var(--bg-page, #f8fafc)', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${Math.min(100, dailyPct * 100)}%`,
+                    background: dailyAtLimit ? 'var(--red-500, #ef4444)' : dailyNearLimit ? 'var(--amber-500, #f59e0b)' : 'var(--mint-500, #10b981)',
+                    borderRadius: 3,
+                    transition: 'width 0.4s',
+                  }} />
+                </div>
+              )}
+              {dailyCap != null && (
+                <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-4)', marginTop: 4 }}>
+                  Resets at midnight UTC
+                </div>
+              )}
+            </div>
+
+            {/* Upgrade nudge at ≥80% monthly usage */}
+            {(monthlyNearLimit || monthlyAtLimit) && currentPlan !== 'enterprise' && (
+              <div style={{ paddingTop: 4, borderTop: '1px solid var(--border-1)' }}>
+                <a href="/pricing" style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--brand)', textDecoration: 'none' }}>
+                  Upgrade your plan →
+                </a>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginLeft: 8 }}>
+                  for a higher monthly limit
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {isOnPaidPlan ? (
           /* Paid plan — show active subscription summary + portal button */

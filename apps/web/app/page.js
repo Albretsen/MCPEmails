@@ -1,4 +1,5 @@
 import HomeClient from '../components/marketing/HomeClient';
+import { fetchStripePrices } from '@/lib/stripe/getPrices';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 
@@ -30,6 +31,7 @@ export const metadata = {
   },
 };
 
-export default function HomePage() {
-  return <HomeClient />;
+export default async function HomePage() {
+  const stripePrices = await fetchStripePrices();
+  return <HomeClient stripePrices={stripePrices} />;
 }

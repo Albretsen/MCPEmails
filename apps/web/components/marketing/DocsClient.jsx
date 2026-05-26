@@ -821,19 +821,24 @@ export default function DocsClient() {
 
           <div className="docs-steps" style={{ gap: 14 }}>
             <div className="step">
-              <div className="num">Per key</div>
-              <h4>100 requests / minute · 1,000 / hour · 10,000 / day</h4>
-              <p>Limits are enforced per API key in rolling windows. When exceeded, the server returns <code>rate_limit_exceeded</code> with a <code>retry_after</code> field (seconds to wait).</p>
+              <div className="num">Per-key rolling windows</div>
+              <h4>100 req / min · 1,000 / hr · 10,000 / day</h4>
+              <p>Enforced per API key regardless of plan. When exceeded, the server returns error code <code>-32029</code> with <code>data.error_code: "rate_limit_exceeded"</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying.</p>
             </div>
             <div className="step">
-              <div className="num">Send quota</div>
-              <h4>200 sends / day (Free) · 2,000 / day (Pro) · Custom (Enterprise)</h4>
-              <p>Applies only to <code>send_email</code> and <code>reply_to_email</code>. Counted per workspace per UTC calendar day. Returns <code>quota_exceeded</code> when reached.</p>
+              <div className="num">Plan monthly quota</div>
+              <h4>Free 500 · Solo 3,000 · Pro 20,000 · Enterprise custom</h4>
+              <p>Counts every tool call in the UTC calendar month. When the monthly cap is exhausted, new calls return <code>data.error_code: "quota_exceeded"</code> and <code>data.retry_after</code> (seconds until the start of next month). Upgrade your plan to increase this limit.</p>
             </div>
             <div className="step">
-              <div className="num">Retrying</div>
-              <h4>Use the retry_after field — never retry sends blindly</h4>
-              <p>For <code>rate_limit_exceeded</code> and <code>provider_error</code>, use exponential backoff starting at <code>retry_after</code> seconds. Do not auto-retry <code>send_email</code> on <code>provider_error</code> — the message may have been accepted; check <code>delivery_status</code> first.</p>
+              <div className="num">Daily burst cap</div>
+              <h4>Free 100 · Solo 500 · Pro 2,000 · Enterprise custom</h4>
+              <p>A secondary ceiling on calls within a single UTC calendar day. Prevents a runaway agent from consuming the entire monthly quota in one session. Returns <code>data.error_code: "rate_limit_exceeded"</code> with <code>data.quota_type: "daily_burst"</code> and a <code>data.retry_after</code> countdown to midnight UTC.</p>
+            </div>
+            <div className="step">
+              <div className="num">Retrying safely</div>
+              <h4>Always honour retry_after — never retry sends blindly</h4>
+              <p>For <code>rate_limit_exceeded</code> and <code>quota_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>send_email</code> on <code>provider_error</code> — the message may have already been accepted by the provider.</p>
             </div>
           </div>
         </div>
@@ -844,8 +849,8 @@ export default function DocsClient() {
         <div className="container">
           <h2 className="pricing-cta-h">Ready to connect your inbox?</h2>
           <p className="pricing-cta-sub">
-            Start on the Free plan — 100 MCP calls / month, no card required.
-            Upgrade when your agent needs more.
+            Start on the Free plan — 500 MCP calls / month, no card required.
+            Upgrade to Solo or Pro when your agent needs more.
           </p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href="/signup">Get started free</a>
