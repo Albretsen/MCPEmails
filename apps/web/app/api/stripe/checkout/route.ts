@@ -11,7 +11,7 @@ import { PLANS, type PlanId, type BillingInterval } from '@/lib/stripe/plans';
  * workspace to a paid plan.
  *
  * Request body:
- *   planId   — 'pro' | 'enterprise'
+ *   planId   — 'solo' | 'pro' | 'enterprise'
  *   interval — 'month' | 'year'
  *
  * Response (200):
@@ -58,9 +58,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { planId, interval } = body as Record<string, unknown>;
 
-  if (planId !== 'pro' && planId !== 'enterprise') {
+  if (planId !== 'solo' && planId !== 'pro' && planId !== 'enterprise') {
     return NextResponse.json(
-      { error: 'planId must be "pro" or "enterprise".' },
+      { error: 'planId must be "solo", "pro", or "enterprise".' },
       { status: 400 },
     );
   }

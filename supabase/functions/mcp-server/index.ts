@@ -373,13 +373,26 @@ async function authenticateRequest(
 // ---------------------------------------------------------------------------
 
 /**
- * Daily MCP tool-call caps per plan.
- * Free and Pro use a calendar-day window (UTC midnight reset), matching the
- * architecture spec §5. Enterprise has no cap.
+ * Per-plan daily burst caps (UTC calendar day).
+ * Prevents a single day from exhausting the full monthly allowance.
+ * Enterprise has no cap.
  */
-const PLAN_DAILY_CALL_CAPS: Record<string, number> = {
+const PLAN_DAILY_BURST_CAPS: Record<string, number> = {
   free: 100,
-  pro: 1_000,
+  solo: 500,
+  pro: 2_000,
+  enterprise: Infinity,
+};
+
+/**
+ * Per-plan monthly call caps (UTC calendar month).
+ * This is the hard ceiling for the billing period.
+ * Enterprise has no cap.
+ */
+const PLAN_MONTHLY_CAPS: Record<string, number> = {
+  free: 500,
+  solo: 3_000,
+  pro: 20_000,
   enterprise: Infinity,
 };
 
@@ -391,31 +404,44 @@ interface PlanQuotaResult {
   allowed: boolean;
   /** The workspace's current plan. */
   plan: string;
-  /** The plan's daily call cap. Infinity for Enterprise. */
-  dailyCap: number;
+  /** The plan's daily burst cap. Infinity for Enterprise. */
+  dailyBurstCap: number;
   /** How many calls have been made today (UTC calendar day). */
   usedToday: number;
+  /** The plan's monthly call cap. Infinity for Enterprise. */
+  monthlyCap: number;
+  /** How many calls have been made this UTC calendar month. */
+  usedThisMonth: number;
   /**
-   * Seconds until midnight UTC when the daily quota resets.
+   * Which limit was hit. null when the request is allowed.
+   * 'monthly_total' → hard monthly cap exhausted (error_code: "quota_exceeded").
+   * 'daily_burst'   → burst cap hit but monthly quota still available
+   *                   (error_code: "rate_limit_exceeded").
+   */
+  quotaType: "monthly_total" | "daily_burst" | null;
+  /**
+   * Seconds until the relevant quota window resets.
    * 0 when allowed.
    */
   retryAfterSeconds: number;
 }
 
 /**
- * Check the workspace's plan-based daily call quota.
+ * Check the workspace's plan-based quota.
  *
- * Looks up the workspace plan once per request (fast, cached at the DB edge).
- * Counts activity_log rows for the current UTC calendar day — matching the
- * Free/Pro quota semantics documented in rate-limiting-and-quotas.md §5.
+ * Enforces two independent windows in priority order:
+ *   1. Monthly total cap  — hard billing-period ceiling (error_code: "quota_exceeded")
+ *   2. Daily burst cap    — single-day ceiling to prevent runaway agents
+ *                           (error_code: "rate_limit_exceeded", window: "daily_burst")
  *
- * Fail-open: a DB error causes the check to pass (allowed=true), matching the
- * behaviour of the rolling-window rate limiter.
+ * Both counts are fetched in parallel from activity_log.
+ * Fail-open: any DB error allows the request through, matching the behaviour
+ * of the rolling-window rate limiter.
  */
 async function checkPlanQuota(
   workspaceId: string,
 ): Promise<PlanQuotaResult> {
-  // Look up the workspace plan.
+  // ── 1. Look up workspace plan ─────────────────────────────────────────────
   const { data: workspace, error: wsError } = await supabase
     .from("workspaces")
     .select("plan")
@@ -423,65 +449,115 @@ async function checkPlanQuota(
     .maybeSingle();
 
   if (wsError || !workspace) {
-    // Fail open: if we can't read the workspace, let the request through.
     console.error("[mcp-server] plan_quota_workspace_lookup_failed", {
       workspace_id: workspaceId,
       error: wsError?.message ?? "no row",
     });
+    // Fail open.
     return {
       allowed: true,
       plan: "free",
-      dailyCap: PLAN_DAILY_CALL_CAPS.free,
+      dailyBurstCap: PLAN_DAILY_BURST_CAPS.free,
       usedToday: 0,
+      monthlyCap: PLAN_MONTHLY_CAPS.free,
+      usedThisMonth: 0,
+      quotaType: null,
       retryAfterSeconds: 0,
     };
   }
 
   const plan = (workspace.plan as string) ?? "free";
-  const dailyCap = PLAN_DAILY_CALL_CAPS[plan] ?? PLAN_DAILY_CALL_CAPS.free;
+  const dailyBurstCap =
+    PLAN_DAILY_BURST_CAPS[plan] ?? PLAN_DAILY_BURST_CAPS.free;
+  const monthlyCap = PLAN_MONTHLY_CAPS[plan] ?? PLAN_MONTHLY_CAPS.free;
 
-  // Enterprise plan has no daily cap.
-  if (dailyCap === Infinity) {
+  // ── 2. Enterprise / unlimited — skip DB counts ───────────────────────────
+  if (dailyBurstCap === Infinity && monthlyCap === Infinity) {
     return {
       allowed: true,
       plan,
-      dailyCap: Infinity,
+      dailyBurstCap: Infinity,
       usedToday: 0,
+      monthlyCap: Infinity,
+      usedThisMonth: 0,
+      quotaType: null,
       retryAfterSeconds: 0,
     };
   }
 
-  // Count calls made today in the UTC calendar day.
+  // ── 3. Compute window boundaries ─────────────────────────────────────────
   const now = new Date();
+
   const todayStart = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
   ).toISOString();
 
-  const { count, error: countError } = await supabase
-    .from("activity_log")
-    .select("*", { count: "exact", head: true })
-    .eq("workspace_id", workspaceId)
-    .gte("created_at", todayStart);
+  const monthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+  ).toISOString();
 
-  if (countError) {
+  // ── 4. Count daily and monthly usage in parallel ──────────────────────────
+  const [dailyResult, monthlyResult] = await Promise.all([
+    supabase
+      .from("activity_log")
+      .select("*", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId)
+      .gte("created_at", todayStart),
+    supabase
+      .from("activity_log")
+      .select("*", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId)
+      .gte("created_at", monthStart),
+  ]);
+
+  if (dailyResult.error || monthlyResult.error) {
     // Fail open.
+    const errMsg =
+      dailyResult.error?.message ?? monthlyResult.error?.message ?? "unknown";
     console.error("[mcp-server] plan_quota_count_failed", {
       workspace_id: workspaceId,
-      error: countError.message,
+      error: errMsg,
     });
     return {
       allowed: true,
       plan,
-      dailyCap,
+      dailyBurstCap,
       usedToday: 0,
+      monthlyCap,
+      usedThisMonth: 0,
+      quotaType: null,
       retryAfterSeconds: 0,
     };
   }
 
-  const usedToday = count ?? 0;
+  const usedToday = dailyResult.count ?? 0;
+  const usedThisMonth = monthlyResult.count ?? 0;
 
-  if (usedToday >= dailyCap) {
-    // Quota exhausted — compute seconds until midnight UTC reset.
+  // ── 5. Monthly cap check (highest priority) ───────────────────────────────
+  if (usedThisMonth >= monthlyCap) {
+    // Seconds until start of next UTC calendar month.
+    const nextMonth = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
+    );
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((nextMonth.getTime() - Date.now()) / 1_000),
+    );
+    return {
+      allowed: false,
+      plan,
+      dailyBurstCap,
+      usedToday,
+      monthlyCap,
+      usedThisMonth,
+      quotaType: "monthly_total",
+      retryAfterSeconds,
+    };
+  }
+
+  // ── 6. Daily burst cap check ──────────────────────────────────────────────
+  if (usedToday >= dailyBurstCap) {
+    // Seconds until midnight UTC.
     const tomorrow = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
     );
@@ -489,21 +565,27 @@ async function checkPlanQuota(
       1,
       Math.ceil((tomorrow.getTime() - Date.now()) / 1_000),
     );
-
     return {
       allowed: false,
       plan,
-      dailyCap,
+      dailyBurstCap,
       usedToday,
+      monthlyCap,
+      usedThisMonth,
+      quotaType: "daily_burst",
       retryAfterSeconds,
     };
   }
 
+  // ── 7. Within both limits ─────────────────────────────────────────────────
   return {
     allowed: true,
     plan,
-    dailyCap,
+    dailyBurstCap,
     usedToday,
+    monthlyCap,
+    usedThisMonth,
+    quotaType: null,
     retryAfterSeconds: 0,
   };
 }
@@ -512,11 +594,13 @@ async function checkPlanQuota(
  * Build an HTTP 429 response for a plan quota exhaustion.
  *
  * Uses the same JSON-RPC error code (-32029) and structure as the rolling-
- * window rate limit response, but with error_code === "quota_exceeded" so
- * callers can distinguish the two cases.
+ * window rate limit response. The data.error_code field distinguishes the
+ * two blocking conditions:
  *
- * The human_message references the pricing page so the user knows how to
- * upgrade. retryAfterSeconds reflects the seconds until midnight UTC.
+ *   "quota_exceeded"      — monthly call cap exhausted; resets at month start
+ *   "rate_limit_exceeded" — daily burst cap hit; resets at midnight UTC
+ *
+ * The human_message references the pricing page so users know how to upgrade.
  */
 function buildQuotaExceededResponse(
   requestId: string | number | null,
@@ -524,6 +608,26 @@ function buildQuotaExceededResponse(
 ): Response {
   const planLabel =
     result.plan.charAt(0).toUpperCase() + result.plan.slice(1);
+
+  let errorCode: string;
+  let humanMessage: string;
+
+  if (result.quotaType === "monthly_total") {
+    errorCode = "quota_exceeded";
+    humanMessage =
+      `Your ${planLabel} plan monthly limit of ${result.monthlyCap} calls has been reached. ` +
+      `Quota resets at the start of the next UTC calendar month. ` +
+      `Upgrade for more calls: https://www.mcpemails.com/pricing`;
+  } else {
+    // daily_burst
+    errorCode = "rate_limit_exceeded";
+    humanMessage =
+      `Your ${planLabel} plan daily burst limit of ${result.dailyBurstCap} calls has been reached. ` +
+      `The burst cap resets at midnight UTC. ` +
+      `Your monthly quota (${result.usedThisMonth}/${result.monthlyCap}) is still available tomorrow. ` +
+      `Upgrade for a higher burst cap: https://www.mcpemails.com/pricing`;
+  }
+
   const body: JsonRpcErrorResponse = {
     jsonrpc: "2.0",
     id: requestId,
@@ -531,15 +635,15 @@ function buildQuotaExceededResponse(
       code: RPC_RATE_LIMIT_EXCEEDED,
       message: "Quota exceeded",
       data: {
-        error_code: "quota_exceeded",
+        error_code: errorCode,
+        quota_type: result.quotaType,
         plan: result.plan,
-        daily_cap: result.dailyCap,
+        daily_burst_cap: result.dailyBurstCap === Infinity ? null : result.dailyBurstCap,
         used_today: result.usedToday,
+        monthly_cap: result.monthlyCap === Infinity ? null : result.monthlyCap,
+        used_this_month: result.usedThisMonth,
         retry_after: result.retryAfterSeconds,
-        human_message:
-          `Your ${planLabel} plan daily limit of ${result.dailyCap} calls has been reached. ` +
-          `Quota resets at midnight UTC. ` +
-          `Upgrade for more calls: https://mcpemails.com/pricing`,
+        human_message: humanMessage,
       },
     },
   };
@@ -550,8 +654,10 @@ function buildQuotaExceededResponse(
       "Content-Type": "application/json",
       "Retry-After": String(result.retryAfterSeconds),
       "X-Plan": result.plan,
-      "X-Plan-Daily-Cap": String(result.dailyCap),
+      "X-Plan-Daily-Burst-Cap": result.dailyBurstCap === Infinity ? "unlimited" : String(result.dailyBurstCap),
       "X-Plan-Used-Today": String(result.usedToday),
+      "X-Plan-Monthly-Cap": result.monthlyCap === Infinity ? "unlimited" : String(result.monthlyCap),
+      "X-Plan-Used-This-Month": String(result.usedThisMonth),
       ...CORS_HEADERS,
     },
   });
@@ -7097,16 +7203,20 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   // ── Plan quota check ─────────────────────────────────────────────────────
-  // Enforces the workspace's plan-based daily call cap (free=100, pro=1000,
-  // enterprise=unlimited). Runs after rate limiting so per-key rolling windows
-  // are checked first. Fail-open: DB errors result in allowed=true.
+  // Enforces both the monthly total cap and the daily burst cap for the
+  // workspace plan. Monthly cap is checked first (higher priority).
+  // Runs after rate limiting so per-key rolling windows are checked first.
+  // Fail-open: DB errors result in allowed=true.
   const quotaResult = await checkPlanQuota(apiKey.workspace_id);
   if (!quotaResult.allowed) {
     console.warn("[mcp-server] plan_quota_exceeded", {
       workspace_id: apiKey.workspace_id,
       plan: quotaResult.plan,
-      daily_cap: quotaResult.dailyCap,
+      quota_type: quotaResult.quotaType,
+      daily_burst_cap: quotaResult.dailyBurstCap,
       used_today: quotaResult.usedToday,
+      monthly_cap: quotaResult.monthlyCap,
+      used_this_month: quotaResult.usedThisMonth,
       retry_after_seconds: quotaResult.retryAfterSeconds,
     });
 
