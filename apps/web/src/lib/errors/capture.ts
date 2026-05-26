@@ -21,6 +21,7 @@
  */
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import type { Json } from '@/types/database.types';
 
 type Severity = 'low' | 'medium' | 'high' | 'critical';
 
@@ -46,7 +47,7 @@ export async function captureError(
       severity,
       message,
       stack,
-      context: rest as Record<string, unknown>,
+      context: rest as unknown as Json,
     });
   } catch (insertErr) {
     // Never let error tracking crash the caller. Log to stderr only.

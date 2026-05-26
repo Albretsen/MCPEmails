@@ -78,8 +78,19 @@ if (!IS_CI) {
   }
 }
 
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ---------------------------------------------------------------------------
+  // Turbopack workspace root (Next.js 16)
+  // ---------------------------------------------------------------------------
+  // Prevents Next.js from auto-detecting the wrong workspace root when there
+  // are multiple package-lock.json files on the filesystem above this package.
+  turbopack: {
+    root: path.resolve(__dirname, '../..'),
+  },
+
   // ---------------------------------------------------------------------------
   // Image optimisation
   // ---------------------------------------------------------------------------
@@ -115,8 +126,12 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://avatars.githubusercontent.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com; font-src 'self'; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self';",
+            // 'unsafe-eval' is required by React in development mode for call-stack
+            // reconstruction. It is intentionally absent from the production CSP in vercel.json.
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://avatars.githubusercontent.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com; font-src 'self'; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self';",
           },
+          { key: 'Cross-Origin-Opener-Policy',         value: 'same-origin' },
+          { key: 'X-Permitted-Cross-Domain-Policies',  value: 'none' },
         ],
       },
     ];
