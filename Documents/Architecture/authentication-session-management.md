@@ -437,4 +437,140 @@ The `SUPABASE_SERVICE_ROLE_KEY` must never be exposed to the client bundle. It i
 | Route protection | Next.js middleware + Server Component guard |
 | Data isolation | Supabase RLS enforced at database level |
 | Token validation | Server-side via `getUser()` (not local JWT verify) |
+
+---
+
+## Pricing & Quota Implementation Plan
+
+Tracks the work required to ship the four-tier pricing model (Free / Solo / Pro / Enterprise) with monthly call caps and daily burst limits.
+
+### Agreed tier structure
+
+| | Free | Solo | Pro | Enterprise |
+|---|---|---|---|---|
+| Price | $0 | $9 / mo · $7 annual | $29 / mo · $23 annual | Custom |
+| Monthly call cap | 500 | 3,000 | 20,000 | Unlimited |
+| Daily burst cap | 100 | 500 | 2,000 | Custom |
+| Connected inboxes | 1 | 3 | 10 | Unlimited |
+| API keys | 1 | 3 | 10 | Unlimited |
+| Analytics | — | — | ✓ | ✓ |
+| Support | Community | Community | Email | Dedicated + SLA |
+| Free trial | — | 14 days | 14 days | — |
+
+Monthly cap = total calls allowed in a UTC calendar month. Daily burst cap = ceiling on any single UTC calendar day, regardless of monthly balance. The burst cap prevents a runaway agent from consuming the full monthly allowance in one session.
+
+---
+
+### Phase 1 — Canonical plan definitions `[x]`
+
+**Goal:** Single source of truth for all plan limits, prices, and identifiers. Everything else reads from here.
+
+**File:** `apps/web/src/lib/stripe/plans.ts`
+
+- Add `'solo'` to the `PlanId` type
+- Add `maxDailyBurstCalls: number` to the `PlanLimits` interface (currently missing)
+- Define all four plans with the agreed numbers above
+- Reconcile existing Pro discrepancy: currently $19/month with 5 inboxes — update to $29/month, 10 inboxes
+- Add env var slots: `STRIPE_PRICE_SOLO_MONTHLY`, `STRIPE_PRICE_SOLO_YEARLY`
+- Update each plan's `features` array (consumed by the pricing UI)
+
+No deployment needed — build-time only. Unblocks all other phases.
+
+---
+
+### Phase 2 — Edge function: monthly cap + Solo `[ ]`
+
+**Goal:** The MCP server enforces both a monthly total cap and a daily burst cap.
+
+**File:** `supabase/functions/mcp-server/index.ts`
+
+- Replace the hardcoded `PLAN_DAILY_CALL_CAPS` map with two maps: `PLAN_DAILY_BURST_CAPS` and `PLAN_MONTHLY_CAPS`
+- Add `solo` entries to both maps
+- Extend `PlanQuotaResult` with `monthlyUsed`, `monthlyCap`, `quotaType: 'daily_burst' | 'monthly_total'`
+- Extend `checkPlanQuota` to: (1) count `activity_log` rows for the current UTC calendar month, (2) block on monthly cap first with `error_code: "quota_exceeded"`, (3) block on daily burst with `error_code: "rate_limit_exceeded"` and `window: "daily_burst"`
+- Update `buildQuotaExceededResponse` so `human_message` quotes the correct limit type and numbers
+
+**Deployment:** `npx supabase functions deploy mcp-server --project-ref swvaxorwumispmjaaszb --no-verify-jwt`
+
+**Future (Phase 2b):** When call volume warrants it, replace the `COUNT(activity_log)` monthly query with an upsert on a `monthly_usage (workspace_id, year_month, call_count)` table. The COUNT query is acceptable at current scale.
+
+---
+
+### Phase 3 — Stripe: Solo tier `[ ]`
+
+**Goal:** Users can subscribe to the Solo plan via Stripe checkout.
+
+**Pre-code manual step:** Create Solo product + two prices in the Stripe dashboard ($9/month, $84/year). Copy `price_...` IDs into Vercel env vars as `STRIPE_PRICE_SOLO_MONTHLY` and `STRIPE_PRICE_SOLO_YEARLY`.
+
+**Files:**
+- `apps/web/app/api/stripe/checkout/route.ts` — extend `planId` validation to include `'solo'`
+- `apps/web/app/api/stripe/webhook/route.ts` — extend plan ID validation to include `'solo'`
+
+The rest of the Stripe machinery (`getPlanByStripePriceId`, `syncWorkspacePlan`, subscription updated/deleted events) already handles any plan ID generically via `plans.ts`.
+
+---
+
+### Phase 4 — API key limit enforcement `[ ]`
+
+**Goal:** Creating more API keys than the plan allows is blocked at the API layer.
+
+Inbox limits already work end-to-end via `check-inbox-limit.ts`. API key limits have the definition in `plans.ts` (`maxApiKeys`) but no enforcement at the creation endpoint.
+
+**New file:** `apps/web/src/lib/plans/check-api-key-limit.ts`
+Mirrors `check-inbox-limit.ts`: two parallel queries (workspace plan + count of non-deleted API keys + OAuth connections), returns `{ atLimit, plan, currentCount, maxApiKeys }`.
+
+**Modified file:** `apps/web/app/api/api-keys/route.ts` POST handler
+Call `checkApiKeyLimit` before creating a key. Return 403 with `error_code: "api_key_limit_reached"` and `upgrade_url: "/pricing"` if at cap.
+
+**Also verify:** Gmail and Outlook OAuth inbox-connect routes call `checkInboxLimit` (the Fastmail route already does).
+
+---
+
+### Phase 5 — Dashboard: usage display `[ ]`
+
+**Goal:** Users can see monthly call usage and plan limits. Prevents the "why did my agent stop working?" problem.
+
+**Requires:** Phase 2 live (monthly counter in edge function).
+
+**New API route:** `GET /api/usage`
+Returns `{ plan, monthly: { used, cap, resets_at }, daily_burst: { used, cap, resets_at } }`. Runs two `COUNT` queries against `activity_log` (same queries the edge function runs).
+
+**Dashboard changes:**
+- Usage card on main dashboard: `X / Y calls this month` with a progress bar
+- Secondary daily burst indicator
+- Upgrade CTA when monthly usage crosses 80%
+- Settings → Billing page: same data alongside plan name and billing portal link
+
+---
+
+### Phase 6 — Marketing copy `[ ]`
+
+**Goal:** All public pricing pages reflect the four-tier structure with correct numbers.
+
+No backend dependency — can land any time after Phase 1 numbers are locked.
+
+**Files:**
+- `apps/web/components/marketing/Sections.jsx` — rebuild pricing widget for 4 tiers; fix all numbers
+- `apps/web/components/marketing/PricingClient.jsx` — add Solo column to plan cards and comparison table; update FAQ
+- `apps/web/components/marketing/DocsClient.jsx` — update rate limits section to correctly describe monthly cap + daily burst model; remove stale "100 calls / month" in CTA band
+
+---
+
+### Dependency order
+
+```
+Phase 1 (plans.ts — source of truth)
+        │
+        ├─── Phase 2 (edge function enforcement)
+        │         │
+        │         └─── Phase 5 (dashboard usage display)
+        │
+        ├─── Phase 3 (Stripe Solo tier)
+        │         │
+        │         └─── Phase 4 (API key limits)
+        │
+        └─── Phase 6 (marketing copy)
+```
+
+Minimum viable ship: Phases 1 + 2 + 3 + 6. Enforcement is correct, Solo is purchasable, marketing reflects reality. Phases 4 and 5 are correctness and UX improvements that can follow.
 | MCP auth | Separate API key system — no session cookie usage |

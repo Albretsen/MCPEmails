@@ -469,7 +469,7 @@ export default async function DashboardPage() {
   const rawLimits = getPlanLimits(plan);
   const planLimits = {
     maxInboxes: rawLimits.maxInboxes === Infinity ? null : rawLimits.maxInboxes,
-    maxDailyToolCalls: rawLimits.maxDailyToolCalls === Infinity ? null : rawLimits.maxDailyToolCalls,
+    maxDailyBurstCalls: rawLimits.maxDailyBurstCalls === Infinity ? null : rawLimits.maxDailyBurstCalls,
     maxApiKeys: rawLimits.maxApiKeys === Infinity ? null : rawLimits.maxApiKeys,
   };
 

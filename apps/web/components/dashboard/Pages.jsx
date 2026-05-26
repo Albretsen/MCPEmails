@@ -168,8 +168,8 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, onConnect, 
   const callsToday = stats?.callsToday ?? 0;
   const callsThisMonth = stats?.callsThisMonth ?? 0;
 
-  // Plan daily cap — null means unlimited (Enterprise or unknown).
-  const dailyCap = planLimits?.maxDailyToolCalls ?? null;
+  // Plan daily burst cap — null means unlimited (Enterprise or unknown).
+  const dailyCap = planLimits?.maxDailyBurstCalls ?? null;
   const dailyPct = dailyCap != null && dailyCap > 0 ? callsToday / dailyCap : 0;
   // Warn at ≥80%, block at 100%.
   const dailyAtLimit = dailyCap != null && callsToday >= dailyCap;
@@ -1443,7 +1443,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
   } = usageData ?? {};
 
   // Plan limits — null means unlimited (Enterprise).
-  const dailyCap = planLimits?.maxDailyToolCalls ?? null;
+  const dailyCap = planLimits?.maxDailyBurstCalls ?? null;
 
   // Calls today: the last entry in dailyCounts (index 29) is today.
   const callsToday = dailyCounts.length > 0 ? (dailyCounts[dailyCounts.length - 1]?.count ?? 0) : 0;
