@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 
@@ -290,8 +290,8 @@ function ComparisonTable() {
         </thead>
         <tbody>
           {TABLE_SECTIONS.map(section => (
-            <>
-              <tr className="tbl-section-head" key={'section-' + section.label}>
+            <Fragment key={section.label}>
+              <tr className="tbl-section-head">
                 <td colSpan={4}>{section.label}</td>
               </tr>
               {section.rows.map(row => (
@@ -302,7 +302,7 @@ function ComparisonTable() {
                   <TableCell value={row.pro} />
                 </tr>
               ))}
-            </>
+            </Fragment>
           ))}
         </tbody>
       </table>
