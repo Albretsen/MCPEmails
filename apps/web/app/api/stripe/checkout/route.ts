@@ -158,6 +158,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         metadata: {
           workspace_id: workspace.id,
         },
+        // Solo and Pro advertise a 14-day free trial. A payment method is
+        // collected at checkout (Stripe's default for subscription mode) and
+        // the first charge lands when the trial ends.
+        ...(planId === 'solo' || planId === 'pro'
+          ? { trial_period_days: 14 }
+          : {}),
       },
       metadata: {
         workspace_id: workspace.id,

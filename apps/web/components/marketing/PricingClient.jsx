@@ -149,7 +149,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Do you offer a free trial?',
-    a: 'Yes — both the Solo and Pro plans come with a 14-day free trial. No credit card required to start. If you decide it\'s not for you, simply let the trial expire and you\'ll move to the Free tier automatically.',
+    a: 'Yes — both the Solo and Pro plans come with a 14-day free trial. We collect a card when you start so your plan continues seamlessly, but you won\'t be charged until the trial ends. Cancel any time before then from your billing dashboard and you won\'t be charged a cent.',
   },
   {
     q: 'Is there a refund policy?',

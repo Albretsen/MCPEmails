@@ -3462,7 +3462,7 @@ function BillingSection({ currentPlan, stripePrices }) {
                           ? 'Redirecting…'
                           : isCurrentPlanMatch
                           ? 'Current plan'
-                          : `Upgrade to ${plan.name}`}
+                          : 'Start 14-day free trial'}
                       </Btn>
                     )}
                   </div>
