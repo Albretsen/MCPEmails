@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeGmailCode } from '@/lib/email-providers/gmail';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
@@ -136,7 +137,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   //    - Reconnection (including after an error or revocation) updates the
   //      same row, preserving the inbox UUID and its activity_log references.
   //    - deleted_at is cleared so a previously disconnected inbox comes back.
-  const { error: upsertError } = await supabase.from('inboxes').upsert(
+  //
+  //    This write uses the service-role client: reconnecting a previously
+  //    disconnected inbox means the ON CONFLICT path must UPDATE a soft-deleted
+  //    row (deleted_at IS NOT NULL), but the inboxes SELECT/UPDATE RLS policies
+  //    hide such rows, so the user-scoped client would fail with save_failed.
+  //    Safe here because the user, oauth_state ownership, and workspace have
+  //    already been validated above; the write is scoped to workspace_id + email.
+  const serviceClient = createServiceRoleClient();
+  const { error: upsertError } = await serviceClient.from('inboxes').upsert(
     {
       workspace_id: oauthState.workspace_id,
       provider: 'gmail',
@@ -157,6 +166,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   );
 
   if (upsertError) {
+    console.error('[gmail/callback] inbox upsert failed:', upsertError);
     return redirectWithError('save_failed');
   }
 
