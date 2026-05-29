@@ -24,6 +24,7 @@ const I = {
   eyeoff:   <g><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></g>,
   logout:   <g><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></g>,
   menu:     <g><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></g>,
+  users:    <g><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></g>,
 };
 
 export function Icon({ name, size = 16, color = "currentColor", strokeWidth = 1.75, className = "" }) {
@@ -48,10 +49,10 @@ export function Badge({ tone = "neutral", dot, children }) {
   );
 }
 
-export function Btn({ variant = "primary", size = "md", icon, children, onClick, type, className = "", disabled = false }) {
+export function Btn({ variant = "primary", size = "md", icon, children, onClick, type, className = "", disabled = false, title, "aria-label": ariaLabel }) {
   const cls = "btn btn-" + variant + (size === "sm" ? " btn-sm" : "") + (disabled ? " btn-disabled" : "") + " " + className;
   return (
-    <button type={type || "button"} className={cls.trim()} onClick={onClick} disabled={disabled}>
+    <button type={type || "button"} className={cls.trim()} onClick={onClick} disabled={disabled} title={title} aria-label={ariaLabel}>
       {icon ? <Icon name={icon} size={size === "sm" ? 13 : 14} className="btn-ico" /> : null}
       {children}
     </button>

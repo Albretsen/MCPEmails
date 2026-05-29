@@ -47,7 +47,7 @@ export function FastmailAppPasswordForm() {
       setStatus('success');
       // Small delay so the success state is briefly visible before redirect.
       setTimeout(() => {
-        window.location.href = '/dashboard/inboxes?connected=fastmail';
+        window.location.href = '/dashboard?connected=fastmail';
       }, 800);
     } catch {
       setErrorMessage('A network error occurred. Please check your connection and try again.');

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeOutlookCode } from '@/lib/email-providers/outlook';
+import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 
 /**
  * GET /auth/outlook/callback
@@ -105,7 +106,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return redirectWithError('token_exchange_failed');
   }
 
-  // 7. Encrypt tokens before they touch the database.
+  // 7. Enforce the plan inbox cap — but only for a brand-new address. A
+  //    reconnect (the email already has a non-deleted inbox) reuses the
+  //    existing row via upsert, so it must be allowed even at the cap.
+  const alreadyConnected = await inboxExistsForEmail(
+    supabase,
+    oauthState.workspace_id,
+    tokens.email
+  );
+  if (!alreadyConnected) {
+    const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id);
+    if (inboxLimit.atLimit) {
+      return redirectWithError('inbox_limit_reached');
+    }
+  }
+
+  // 8. Encrypt tokens before they touch the database.
   //    encryptToken returns a base64url string (AES-256-GCM: IV || ciphertext || tag).
   const encryptedAccessToken = encryptToken(tokens.accessToken);
   const encryptedRefreshToken = encryptToken(tokens.refreshToken);

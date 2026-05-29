@@ -252,40 +252,56 @@ async function authenticateRequest(
   req: Request,
   requestId: string | number | null,
 ): Promise<{ apiKey: ApiKeyRow } | Response> {
+  // ── Extract the API key ───────────────────────────────────────────────────
+  // Two equally-valid sources, in priority order:
+  //   1. Authorization: Bearer <key>  — used by OAuth access tokens and curl.
+  //   2. ?key=<key> (or ?api_key=)    — lets users paste a single URL into an
+  //                                      MCP client instead of setting a header.
+  // The header wins when both are present.
   const authHeader = req.headers.get("Authorization");
+  let bearerToken: string;
 
-  // ── Missing Authorization header → HTTP 401 ───────────────────────────────
-  if (!authHeader) {
-    return jsonResponse(
-      jsonRpcErrorBody(
-        requestId,
-        RPC_INVALID_API_KEY,
-        "Authorization header is required. Provide: Authorization: Bearer <api-key>",
-        { hint: "Generate an API key at https://mcpemails.com/dashboard/keys" },
-      ),
-      401,
-    );
+  if (authHeader) {
+    // Malformed scheme → HTTP 401.
+    if (!authHeader.startsWith("Bearer ")) {
+      return jsonResponse(
+        jsonRpcErrorBody(
+          requestId,
+          RPC_INVALID_API_KEY,
+          "Authorization header must use Bearer scheme.",
+          { hint: "Format: Authorization: Bearer mcpe_<64 hex characters>" },
+        ),
+        401,
+      );
+    }
+    bearerToken = authHeader.slice(7).trim();
+  } else {
+    const params = new URL(req.url).searchParams;
+    const queryKey = params.get("key") ?? params.get("api_key");
+
+    // No key from either source → HTTP 401.
+    if (!queryKey) {
+      return jsonResponse(
+        jsonRpcErrorBody(
+          requestId,
+          RPC_INVALID_API_KEY,
+          "API key is required. Provide it as 'Authorization: Bearer <api-key>' or '?key=<api-key>'.",
+          { hint: "Generate an API key at https://mcpemails.com/dashboard/keys" },
+        ),
+        401,
+      );
+    }
+    bearerToken = queryKey.trim();
   }
 
-  // ── Malformed scheme → HTTP 401 ───────────────────────────────────────────
-  if (!authHeader.startsWith("Bearer ")) {
-    return jsonResponse(
-      jsonRpcErrorBody(
-        requestId,
-        RPC_INVALID_API_KEY,
-        "Authorization header must use Bearer scheme.",
-        { hint: "Format: Authorization: Bearer mcpe_<64 hex characters>" },
-      ),
-      401,
-    );
-  }
-
-  const bearerToken = authHeader.slice(7).trim();
-
-  // ── Token format check → HTTP 403 ────────────────────────────────────────
+  // ── Token format check → HTTP 401 ────────────────────────────────────────
   // MCPEmails keys are always exactly 69 characters: "mcpe_" (5) + 64 hex chars.
   // This check runs before hashing or any DB I/O to fail fast on obviously
   // invalid tokens without consuming database resources.
+  //
+  // 401 (not 403) so the /api/mcp proxy attaches WWW-Authenticate. OAuth MCP
+  // clients refresh their access token on 401 but treat 403 as a hard failure,
+  // so an expired token must surface as 401 for the connection to auto-refresh.
   if (!bearerToken.startsWith("mcpe_") || bearerToken.length !== 69) {
     return jsonResponse(
       jsonRpcErrorBody(
@@ -294,7 +310,7 @@ async function authenticateRequest(
         "Invalid or revoked API key.",
         { hint: "Generate a new key at https://mcpemails.com/dashboard/keys" },
       ),
-      403,
+      401,
     );
   }
 
@@ -319,6 +335,9 @@ async function authenticateRequest(
     .maybeSingle();
 
   if (error || !row) {
+    // Not found, expired, or revoked. 401 (not 403) so the proxy attaches
+    // WWW-Authenticate and OAuth clients refresh. Message is identical to the
+    // other failures to avoid an oracle that distinguishes the cases.
     return jsonResponse(
       jsonRpcErrorBody(
         requestId,
@@ -326,7 +345,7 @@ async function authenticateRequest(
         "Invalid or revoked API key.",
         { hint: "Generate a new key at https://mcpemails.com/dashboard/keys" },
       ),
-      403,
+      401,
     );
   }
 
@@ -343,7 +362,7 @@ async function authenticateRequest(
         "Invalid or revoked API key.",
         { hint: "Generate a new key at https://mcpemails.com/dashboard/keys" },
       ),
-      403,
+      401,
     );
   }
 

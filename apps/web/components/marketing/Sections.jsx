@@ -447,7 +447,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
         "14-day free trial",
         "Email support",
       ],
-      cta: "Start free trial",
+      cta: "Start 14-day free trial",
       ctaHref: "/signup",
     },
     {
@@ -467,7 +467,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
         "14-day free trial",
         "Email support",
       ],
-      cta: "Start free trial",
+      cta: "Start 14-day free trial",
       ctaHref: "/signup",
     },
     {
@@ -500,10 +500,13 @@ export function Pricing({ onGetStarted, stripePrices }) {
         </div>
         <div className="price-grid">
           {tiers.map(t => {
+            // Custom-priced tiers (Enterprise) always show their static label
+            // ("Custom") — a configured Stripe price must never override it.
+            const isCustomPlan = t.price === "Custom";
             // Derive live monthly price display from Stripe when available
             const liveMonthlyCents = stripePrices?.[t.key]?.monthlyCents;
             const livePrice =
-              liveMonthlyCents != null && liveMonthlyCents > 0
+              !isCustomPlan && liveMonthlyCents != null && liveMonthlyCents > 0
                 ? `$${liveMonthlyCents / 100}`
                 : t.price;
 

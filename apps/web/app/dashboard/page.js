@@ -1,7 +1,10 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { DashboardApp } from '../../components/dashboard/App';
 import { getPlanLimits } from '../../src/lib/stripe/plans';
+import { fetchStripePrices } from '../../src/lib/stripe/getPrices';
 import '../../styles/dashboard.css';
 import '../../styles/theme.css';
 
@@ -480,28 +483,57 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const [{ data: userRecord }, { data: workspace }, { data: memberRow }] = await Promise.all([
+  const cookieStore = await cookies();
+  const preferredWorkspaceId = cookieStore.get(ACTIVE_WORKSPACE_COOKIE)?.value ?? null;
+
+  const [{ data: userRecord }, { data: workspaceRows }] = await Promise.all([
     supabase
       .from('users')
       .select('display_name, email')
       .eq('id', user.id)
       .single(),
-    // Use the RLS-filtered workspace query so collaborators (non-owners) also see their workspace.
+    // RLS-filtered: returns every workspace the user is a member of
+    // (their own + any they were invited to). owner_id lets us tell which
+    // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan')
+      .select('id, slug, display_name, plan, owner_id')
       .is('deleted_at', null)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .single(),
-    // Fetch the calling user's role in their workspace (needed for role-gated UI).
-    supabase
+      .order('created_at', { ascending: true }),
+  ]);
+
+  const allWorkspaces = workspaceRows ?? [];
+  // Active workspace: the cookie-selected one if the user still belongs to it,
+  // otherwise the earliest-created workspace.
+  const workspace =
+    allWorkspaces.find((w) => w.id === preferredWorkspaceId) ?? allWorkspaces[0] ?? null;
+
+  // The calling user's role in the ACTIVE workspace (drives role-gated UI).
+  let userRole = 'member';
+  if (workspace) {
+    const { data: memberRow } = await supabase
       .from('workspace_members')
       .select('role')
       .eq('user_id', user.id)
-      .limit(1)
-      .single(),
-  ]);
+      .eq('workspace_id', workspace.id)
+      .maybeSingle();
+    userRole = memberRow?.role ?? 'member';
+  }
+
+  // Creating additional workspaces is a Pro feature: the user must OWN at least
+  // one Pro/Enterprise workspace. Being an invited member of one does not count.
+  const canCreateWorkspace = allWorkspaces.some(
+    (w) => w.owner_id === user.id && (w.plan === 'pro' || w.plan === 'enterprise'),
+  );
+
+  // Serialisable workspace list for the sidebar switcher.
+  const workspaces = allWorkspaces.map((w) => ({
+    id: w.id,
+    slug: w.slug,
+    displayName: w.display_name ?? w.slug,
+    plan: w.plan,
+    isOwner: w.owner_id === user.id,
+  }));
 
   // Fall back to Supabase Auth fields if the users table row is missing.
   const displayName = userRecord?.display_name ?? user.user_metadata?.full_name ?? '';
@@ -509,7 +541,6 @@ export default async function DashboardPage() {
   const initials = computeInitials(displayName || null, email);
   const workspaceSlug = workspace?.slug ?? 'workspace';
   const plan = workspace?.plan ?? 'free';
-  const userRole = memberRow?.role ?? 'member';
 
   // Fetch all page data in parallel; skip if no workspace row exists yet.
   const [overviewStats, activityFeed, inboxes, apiKeys, usageData, auditLog, members, pendingInvites] = workspace
@@ -545,12 +576,24 @@ export default async function DashboardPage() {
     maxMembers: rawLimits.maxMembers === Infinity ? null : rawLimits.maxMembers,
   };
 
+  // The single Streamable HTTP MCP endpoint clients connect to.
+  const mcpUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'}/api/mcp`;
+
+  // Live plan prices from Stripe (ISR-cached 1h), so the billing UI never
+  // displays hardcoded amounts. Falls back to static cents in plans.ts.
+  const stripePrices = await fetchStripePrices();
+
   return (
     <DashboardApp
       user={{ displayName, email, initials, id: user.id }}
       workspace={{ id: workspace?.id ?? '', slug: workspaceSlug, plan }}
+      workspaces={workspaces}
+      activeWorkspaceId={workspace?.id ?? ''}
+      canCreateWorkspace={canCreateWorkspace}
+      mcpUrl={mcpUrl}
       userRole={userRole}
       planLimits={planLimits}
+      stripePrices={stripePrices}
       overviewStats={overviewStats}
       activityFeed={activityFeed}
       inboxes={inboxes}

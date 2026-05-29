@@ -1,55 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { decryptToken } from '@/lib/crypto';
 
 /**
  * DELETE /api/inboxes/[id]
  *
- * Disconnects an inbox in four steps:
- *  1. Authenticate the user and resolve their workspace.
- *  2. Fetch the inbox row, confirming it belongs to this workspace.
- *  3. Best-effort revoke the OAuth access token with the email provider.
- *     Revocation failures are logged but never block local cleanup.
- *  4. Clear all credential columns (oauth_*, imap_password), set
- *     status = 'revoked', and soft-delete the row (deleted_at = now()).
- *  5. Write a token_revoked event to auth_logs for the audit trail.
+ * Disconnects an inbox:
+ *  1. Authenticate the user.
+ *  2. Fetch the inbox via the RLS-scoped client. The inboxes SELECT policy
+ *     guarantees the row is in a workspace the user belongs to and is not
+ *     already soft-deleted, so a returned row is proof of authorization.
+ *  3. Best-effort revoke the OAuth grant with the email provider. Failures
+ *     are logged but never block local cleanup.
+ *  4. Clear all credential columns, set status = 'revoked', and soft-delete
+ *     (deleted_at = now()) in a single update.
+ *  5. Write a token_revoked event to auth_logs.
  *
- * The soft-delete approach (deleted_at IS NOT NULL) lets the same email
- * address be reconnected later via a new OAuth flow, which upserts a fresh
- * row and un-sets deleted_at. Activity log rows are preserved because they
- * reference the inbox ID, not the email address.
+ * Steps 4 and 5 use the service-role client. They cannot run under the user's
+ * RLS context: setting deleted_at moves the row out of the inboxes SELECT
+ * policy (deleted_at IS NULL), which Postgres rejects as "new row violates
+ * row-level security policy"; and auth_logs has no INSERT policy for
+ * authenticated users (all writes are service-role). Authorization is already
+ * established in step 2, and every service-role write is scoped to the inbox
+ * id AND its workspace_id.
  *
- * References:
- *   Documents/Architecture/email-provider-oauth-flows.md §9 (Revocation)
+ * Soft-delete (rather than hard delete) lets the same email address be
+ * reconnected later via a fresh OAuth flow, and preserves activity_log rows
+ * that reference the inbox id.
  */
 
 // ─── Provider revocation helpers ─────────────────────────────────────────────
-// Each function is fire-and-forget: we await it but catch all errors at the
-// call site so a provider outage never blocks local cleanup.
+// Each is best-effort: awaited, but all errors are caught at the call site so a
+// provider outage never blocks local cleanup.
 
-async function revokeGmailToken(accessToken: string): Promise<void> {
-  // Google's revocation endpoint accepts the token as a query parameter.
-  await fetch(
-    `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(accessToken)}`,
-    { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-  );
+async function revokeGoogleGrant(token: string): Promise<void> {
+  // Google's revocation endpoint revokes the entire grant when given the
+  // refresh token (preferred) or just the one access token. Either is accepted
+  // as the `token` query parameter.
+  await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(token)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
 }
 
-async function revokeOutlookToken(_accessToken: string): Promise<void> {
-  // Microsoft does not offer a token revocation endpoint; the recommended
-  // approach is to call the logout endpoint. This is best-effort only and
-  // does not actually invalidate existing tokens server-side — Microsoft
-  // relies on token expiry (1 hour). We call it for completeness.
+async function revokeOutlookToken(): Promise<void> {
+  // Microsoft offers no token revocation endpoint; tokens are invalidated by
+  // expiry (1 hour). The logout endpoint is called for completeness only.
   await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/logout', {
     method: 'GET',
   });
 }
 
-async function revokeFastmailToken(accessToken: string): Promise<void> {
+async function revokeFastmailToken(token: string): Promise<void> {
   await fetch('https://www.fastmail.com/oauth/revoke', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ token: accessToken }),
+    body: new URLSearchParams({ token }),
   });
 }
 
@@ -77,28 +84,15 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // 2. Resolve the user's workspace via workspace_members.
-  const { data: member, error: memberError } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .single();
-
-  if (memberError || !member) {
-    return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
-  }
-
-  const workspaceId = member.workspace_id;
-
-  // 3. Fetch the inbox row — only the columns needed for revocation.
-  //    Encrypted credential columns are selected here because we need to
-  //    decrypt the access token to send the revocation request to the provider.
-  //    They are NEVER logged.
+  // 2. Fetch the inbox via the RLS-scoped client. The SELECT policy enforces
+  //    that the row belongs to one of the user's workspaces and is not already
+  //    deleted, so a returned row authorizes the disconnect. Encrypted
+  //    credential columns are read here only to revoke the provider grant; they
+  //    are NEVER logged.
   const { data: inbox, error: fetchError } = await supabase
     .from('inboxes')
-    .select('id, workspace_id, provider, oauth_access_token, imap_host, status')
+    .select('id, workspace_id, provider, oauth_access_token, oauth_refresh_token, imap_host')
     .eq('id', inboxId)
-    .eq('workspace_id', workspaceId)
     .is('deleted_at', null)
     .single();
 
@@ -106,23 +100,26 @@ export async function DELETE(
     return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
   }
 
-  // 4. Best-effort provider revocation.
-  //    Only attempt revocation when there is an OAuth access token.
-  //    App-password inboxes (imap_host set, no oauth token) have no token to revoke.
-  if (inbox.oauth_access_token && !inbox.imap_host) {
+  const workspaceId = inbox.workspace_id;
+
+  // 3. Best-effort provider revocation for OAuth inboxes. App-password inboxes
+  //    (imap_host set, no OAuth token) have nothing to revoke. Prefer the
+  //    refresh token so the whole grant is revoked, not just one access token.
+  if (!inbox.imap_host && (inbox.oauth_refresh_token || inbox.oauth_access_token)) {
     try {
-      const accessToken = decryptToken(inbox.oauth_access_token);
+      const encrypted = inbox.oauth_refresh_token ?? inbox.oauth_access_token;
+      const token = decryptToken(encrypted as string);
 
       if (inbox.provider === 'gmail') {
-        await revokeGmailToken(accessToken);
+        await revokeGoogleGrant(token);
       } else if (inbox.provider === 'outlook') {
-        await revokeOutlookToken(accessToken);
+        await revokeOutlookToken();
       } else if (inbox.provider === 'fastmail') {
-        await revokeFastmailToken(accessToken);
+        await revokeFastmailToken(token);
       }
     } catch (err) {
-      // Log the failure but do not abort — local cleanup proceeds regardless.
-      // The provider-side token will expire naturally if revocation failed.
+      // Local cleanup proceeds regardless; the provider token expires naturally
+      // if revocation failed.
       console.error(
         `[disconnect-inbox] Provider revocation failed for inbox ${inboxId}:`,
         (err as Error).message
@@ -130,47 +127,44 @@ export async function DELETE(
     }
   }
 
+  const service = createServiceRoleClient();
   const now = new Date().toISOString();
 
-  // 5. Clear all credential columns and mark the row as revoked.
-  const { error: updateError } = await supabase
+  // 4. Clear credentials, mark revoked, and soft-delete in one update.
+  //    Scoped to id AND workspace_id as defence-in-depth even though step 2
+  //    already proved authorization.
+  const { error: updateError } = await service
     .from('inboxes')
     .update({
       oauth_access_token: null,
       oauth_refresh_token: null,
       oauth_token_expires_at: null,
+      oauth_scope: null,
       imap_password: null,
       status: 'revoked',
+      deleted_at: now,
       updated_at: now,
     })
     .eq('id', inboxId)
     .eq('workspace_id', workspaceId);
 
   if (updateError) {
-    console.error('[disconnect-inbox] Failed to clear credentials:', updateError.message);
+    console.error('[disconnect-inbox] Failed to disconnect inbox:', updateError.message);
     return NextResponse.json({ error: 'Failed to disconnect inbox.' }, { status: 500 });
   }
 
-  // 6. Soft-delete the row so the same email address can be reconnected later.
-  const { error: softDeleteError } = await supabase
-    .from('inboxes')
-    .update({ deleted_at: now })
-    .eq('id', inboxId)
-    .eq('workspace_id', workspaceId);
-
-  if (softDeleteError) {
-    console.error('[disconnect-inbox] Failed to soft-delete inbox:', softDeleteError.message);
-    return NextResponse.json({ error: 'Failed to disconnect inbox.' }, { status: 500 });
-  }
-
-  // 7. Write an audit log entry — best-effort (failure does not affect the response).
-  await supabase.from('auth_logs').insert({
+  // 5. Audit log — best-effort (a logging failure does not fail the request).
+  const { error: auditError } = await service.from('auth_logs').insert({
     event_type: 'token_revoked',
     provider: inbox.provider,
     user_id: user.id,
     workspace_id: workspaceId,
     metadata: { inbox_id: inboxId },
   });
+
+  if (auditError) {
+    console.error('[disconnect-inbox] Failed to write audit log:', auditError.message);
+  }
 
   return NextResponse.json({ success: true });
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 
 /**
  * PATCH /api/api-keys/[id]/revoke
@@ -57,11 +58,15 @@ export async function PATCH(
 
   const workspaceId = (member as { workspace_id: string }).workspace_id;
 
-  // 3. Soft-delete the key row.
-  //    The .is('deleted_at', null) guard makes this idempotent — revoking an
-  //    already-revoked key is a no-op (0 rows updated, still returns 200).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: updateError } = await (supabase as any)
+  // 3. Soft-delete the key row using the service role.
+  //    Setting deleted_at moves the row out of the api_keys SELECT policy
+  //    (deleted_at IS NULL), which Postgres rejects under the user's RLS context
+  //    as "new row violates row-level security policy". Authorization is already
+  //    established above (workspace membership), and the write is scoped to the
+  //    key id AND workspace_id. The .is('deleted_at', null) guard keeps it
+  //    idempotent — revoking an already-revoked key is a no-op (still 200).
+  const service = createServiceRoleClient();
+  const { error: updateError } = await service
     .from('api_keys')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', keyId)
@@ -71,6 +76,22 @@ export async function PATCH(
   if (updateError) {
     console.error('[revoke-api-key] Failed to revoke key:', updateError.message);
     return NextResponse.json({ error: 'Failed to revoke API key.' }, { status: 500 });
+  }
+
+  // 4. Kill the OAuth refresh-token chain bound to this key, if any. Without
+  //    this, an OAuth client would silently mint a fresh access token within
+  //    the hour and the "revoked" connection would resurrect itself. Scoped to
+  //    both the key and the workspace.
+  const { error: refreshRevokeError } = await service
+    .from('oauth_refresh_tokens')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('api_key_id', keyId)
+    .eq('workspace_id', workspaceId)
+    .is('revoked_at', null);
+
+  if (refreshRevokeError) {
+    console.error('[revoke-api-key] Failed to revoke refresh tokens:', refreshRevokeError.message);
+    return NextResponse.json({ error: 'Failed to fully revoke connection.' }, { status: 500 });
   }
 
   return NextResponse.json({ revoked: true });

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node -e \"try{const{pid}=JSON.parse(require('fs').readFileSync('.next/dev/lock','utf8'));process.kill(pid,'SIGKILL')}catch(e){}\"; next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

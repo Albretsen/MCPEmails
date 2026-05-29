@@ -19,6 +19,7 @@ import type { Tables } from '@/types/database.types';
 
 const OUTLOOK_TOKEN_ENDPOINT =
   'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+const OUTLOOK_PROFILE_ENDPOINT = 'https://graph.microsoft.com/v1.0/me';
 
 /** The 5-minute proactive refresh window in milliseconds. */
 const REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
@@ -381,4 +382,25 @@ export async function withFreshOutlookToken(
   await updateInboxTokens(inbox.id, encryptedAccessToken, newExpiresAt);
 
   return refreshResult.accessToken;
+}
+
+/**
+ * Lightweight live check that the access token still grants Outlook access.
+ *
+ * Returns true when Microsoft Graph accepts the token, false when it rejects
+ * it (401/403 — the user must reconnect). A non-auth failure (network, 5xx) is
+ * thrown so the caller can treat the result as inconclusive rather than
+ * marking an otherwise-healthy inbox as broken.
+ */
+export async function verifyOutlookAccess(accessToken: string): Promise<boolean> {
+  const response = await fetch(OUTLOOK_PROFILE_ENDPOINT, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (response.status === 401 || response.status === 403) return false;
+  if (!response.ok) {
+    throw new Error(
+      `Outlook profile check failed: ${response.status} ${response.statusText}`
+    );
+  }
+  return true;
 }

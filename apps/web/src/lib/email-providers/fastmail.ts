@@ -374,3 +374,24 @@ export async function withFreshFastmailToken(
 
   return refreshResult.accessToken;
 }
+
+/**
+ * Lightweight live check that the access token still grants Fastmail access.
+ *
+ * Returns true when the JMAP session endpoint accepts the token, false when it
+ * rejects it (401/403 — the user must reconnect). A non-auth failure (network,
+ * 5xx) is thrown so the caller can treat the result as inconclusive rather than
+ * marking an otherwise-healthy inbox as broken.
+ */
+export async function verifyFastmailAccess(accessToken: string): Promise<boolean> {
+  const response = await fetch(FASTMAIL_JMAP_SESSION_ENDPOINT, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (response.status === 401 || response.status === 403) return false;
+  if (!response.ok) {
+    throw new Error(
+      `Fastmail session check failed: ${response.status} ${response.statusText}`
+    );
+  }
+  return true;
+}

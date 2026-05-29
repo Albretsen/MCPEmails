@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
+import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 
 /* Pages.jsx — Overview, Inboxes, Keys, Usage, Settings, Security. */
@@ -21,82 +22,430 @@ function PageHeader({ title, sub, action }) {
 /* ── GettingStartedGuide ──────────────────────────────────────────────────── */
 
 /**
- * Single step row inside the getting-started guide.
- * When `done` is true the step number is replaced by a mint check icon and the
- * row is visually de-emphasised so the user's eye is drawn to pending steps.
+ * Copyable value block — shows `value` in a dark mono panel with a copy button
+ * that flips to a check for 2s on success. Used to make the MCP endpoint URL
+ * (and config snippets) trivial to copy. `multiline` allows code blocks to wrap
+ * and preserve whitespace.
  */
-function GettingStartedStep({ num, done, title, desc, action }) {
+function CopyField({ value, label, multiline = false }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard?.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  };
+  return (
+    <div>
+      {label ? (
+        <div style={{
+          fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600,
+          color: 'var(--fg-3)', marginBottom: 6, letterSpacing: '0.01em',
+        }}>
+          {label}
+        </div>
+      ) : null}
+      <div style={{
+        position: 'relative',
+        background: 'var(--bg-inverse)', borderRadius: 10,
+        padding: multiline ? '14px 50px 14px 16px' : '0 50px 0 16px',
+        display: 'flex', alignItems: 'center',
+        minHeight: multiline ? undefined : 46,
+      }}>
+        <code style={{
+          fontFamily: 'var(--font-mono)', fontSize: 13,
+          color: '#E6EAFB', lineHeight: 1.6,
+          wordBreak: 'break-all',
+          whiteSpace: multiline ? 'pre-wrap' : 'nowrap',
+          overflow: multiline ? 'visible' : 'hidden',
+          textOverflow: multiline ? 'clip' : 'ellipsis',
+          display: 'block', flex: 1,
+        }}>
+          {value}
+        </code>
+        <button
+          onClick={copy}
+          title={copied ? 'Copied' : 'Copy'}
+          aria-label={copied ? 'Copied' : 'Copy to clipboard'}
+          style={{
+            position: 'absolute', right: 10, top: multiline ? 12 : '50%',
+            transform: multiline ? 'none' : 'translateY(-50%)',
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            color: copied ? 'var(--mint-500)' : 'rgba(230,234,251,0.55)',
+            padding: 6, display: 'flex', alignItems: 'center',
+          }}
+        >
+          <Icon name={copied ? 'check' : 'copy'} size={15} color={copied ? 'var(--mint-500)' : 'rgba(230,234,251,0.55)'} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Official brand logo for an MCP client. Renders the client's logo glyph in
+ * white on a rounded square tile in the client's brand colour. `logo` is a key
+ * into CLIENT_LOGOS (official path data from Simple Icons / Codicons / Lobe).
+ */
+function ClientLogo({ color, logo, size = 34 }) {
+  const g = CLIENT_LOGOS[logo];
+  const glyph = Math.round(size * 0.56);
   return (
     <div style={{
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: 14,
-      padding: '14px 16px',
-      background: done ? 'var(--bg-page)' : 'var(--bg-sunken)',
-      borderRadius: 10,
-      border: '1px solid var(--border-1)',
-      opacity: done ? 0.6 : 1,
-      transition: 'opacity var(--dur-2) var(--ease-out)',
+      width: size, height: size, borderRadius: 9,
+      background: color,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
     }}>
-      {/* Step indicator */}
-      <div style={{
-        width: 26,
-        height: 26,
-        borderRadius: '50%',
-        background: done ? 'var(--live-soft)' : 'var(--brand-soft)',
-        border: `1px solid ${done ? 'rgba(31,203,139,0.28)' : 'rgba(37,71,229,0.2)'}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        fontFamily: 'var(--font-sans)',
-        fontSize: 12,
-        fontWeight: 700,
-        color: done ? 'var(--mint-600)' : 'var(--brand)',
-        transition: 'all var(--dur-2) var(--ease-out)',
-      }}>
-        {done ? <Icon name="check" size={12} color="var(--mint-600)" /> : num}
-      </div>
-
-      {/* Copy */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontFamily: 'var(--font-sans)',
-          fontSize: 13.5,
-          fontWeight: 600,
-          color: done ? 'var(--fg-3)' : 'var(--fg-1)',
-        }}>
-          {title}
-        </div>
-        <div style={{
-          fontFamily: 'var(--font-sans)',
-          fontSize: 12.5,
-          color: 'var(--fg-3)',
-          marginTop: 2,
-          lineHeight: 1.5,
-        }}>
-          {desc}
-        </div>
-      </div>
-
-      {/* CTA — hidden once this step is done */}
-      {!done && action ? (
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-          {action}
-        </div>
+      {g ? (
+        <svg width={glyph} height={glyph} viewBox={g.viewBox} fill="#fff" aria-hidden="true">
+          <path d={g.d} />
+        </svg>
       ) : null}
     </div>
   );
 }
 
 /**
- * Getting-started guide shown on the Overview page when the workspace has
- * no inboxes or no API keys (i.e. the account is still being set up).
- * Each step can be marked `done` so users see progress as they complete steps.
+ * Supported MCP clients, ordered by real-world usage (Claude first).
+ *
+ * Only clients verified to support connecting to a REMOTE MCP server BY URL
+ * are listed, each with steps read from the client's current official docs.
+ *
+ * `oauth: true`  → the client does the OAuth browser flow; no API key needed.
+ * `oauth: false` → authenticate with a bearer API key (shows the key CTA).
+ * `steps`  → imperative setup steps (the live MCP URL is shown above them).
+ * `config` → copyable config snippet built from the live MCP URL (when the
+ *            client is configured via a file rather than a UI form).
+ * `note`   → optional caveat shown beneath the steps.
+ * `guide`  → official documentation URL for connecting a remote MCP server.
  */
-function GettingStartedGuide({ inboxCount, apiKeysCount, onConnect, onGoToKeys }) {
+const MCP_CLIENTS = [
+  {
+    k: 'claude',
+    name: 'Claude',
+    sub: 'claude.ai · Desktop',
+    color: '#D97757',
+    logo: 'claude',
+    oauth: true,
+    guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
+    steps: () => [
+      'In claude.ai or Claude Desktop, open Settings → Connectors.',
+      'Click "Add custom connector".',
+      'Paste the URL above as the connector URL, then click "Add".',
+      'Click "Connect" and sign in with mcpemails to authorize. No API key needed.',
+    ],
+  },
+  {
+    k: 'chatgpt',
+    name: 'ChatGPT',
+    sub: 'Apps · dev mode',
+    color: '#000000',
+    logo: 'chatgpt',
+    oauth: true,
+    guide: 'https://help.openai.com/en/articles/12584461',
+    steps: () => [
+      'Open Settings → Apps & Connectors → Advanced settings and turn on Developer mode.',
+      'Back in Apps & Connectors, click "Create".',
+      'Enter a name and paste the URL above as the Connector URL.',
+      'Pick OAuth, click "Create", then authorize with mcpemails.',
+    ],
+    note: 'Full MCP is a beta limited to ChatGPT Business and Enterprise/Edu workspaces.',
+  },
+  {
+    k: 'cursor',
+    name: 'Cursor',
+    sub: 'mcp.json',
+    color: '#000000',
+    logo: 'cursor',
+    oauth: true,
+    guide: 'https://cursor.com/docs/mcp',
+    steps: () => [
+      'Edit ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).',
+      'Add the server below under "mcpServers".',
+      'Cursor prompts you to sign in via OAuth — authorize with mcpemails.',
+    ],
+    config: (url) => `// ~/.cursor/mcp.json
+{
+  "mcpServers": {
+    "mcpemails": {
+      "url": "${url}"
+    }
+  }
+}`,
+  },
+  {
+    k: 'vscode',
+    name: 'VS Code',
+    sub: 'Copilot agent',
+    color: '#0078D4',
+    logo: 'vscode',
+    oauth: true,
+    guide: 'https://code.visualstudio.com/docs/copilot/customization/mcp-servers',
+    steps: () => [
+      'Open the Command Palette (⇧⌘P) and run "MCP: Add Server".',
+      'Choose "HTTP", paste the URL above, and give it a name.',
+      'Start the server from the MCP view and authorize when prompted.',
+    ],
+    config: (url) => `// .vscode/mcp.json
+{
+  "servers": {
+    "mcpemails": {
+      "type": "http",
+      "url": "${url}"
+    }
+  }
+}`,
+  },
+  {
+    k: 'cline',
+    name: 'Cline',
+    sub: 'Remote Servers',
+    color: '#18181B',
+    logo: 'cline',
+    oauth: false,
+    needsKey: true,
+    guide: 'https://docs.cline.bot/mcp/configuring-mcp-servers',
+    steps: () => [
+      'In the Cline panel, click the MCP Servers icon, then open the "Remote Servers" tab.',
+      'Enter a name and paste the URL above.',
+      'Set Transport Type to "Streamable HTTP", then click "Add Server".',
+      'Add an "Authorization: Bearer <key>" header using your API key.',
+    ],
+  },
+  {
+    k: 'windsurf',
+    name: 'Windsurf',
+    sub: 'Cascade',
+    color: '#0B100F',
+    logo: 'windsurf',
+    oauth: true,
+    guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
+    steps: () => [
+      'Open Cascade’s MCP settings, or edit ~/.codeium/windsurf/mcp_config.json.',
+      'Add the server below — note the field is "serverUrl", not "url".',
+      'Refresh MCP servers in Cascade and authorize with mcpemails when prompted.',
+    ],
+    config: (url) => `// ~/.codeium/windsurf/mcp_config.json
+{
+  "mcpServers": {
+    "mcpemails": {
+      "serverUrl": "${url}"
+    }
+  }
+}`,
+  },
+  {
+    k: 'gemini',
+    name: 'Gemini CLI',
+    sub: 'settings.json',
+    color: '#8E75B2',
+    logo: 'gemini',
+    oauth: true,
+    guide: 'https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md',
+    steps: () => [
+      'Edit ~/.gemini/settings.json (global) or .gemini/settings.json (project).',
+      'Add the server below under "mcpServers" using the "httpUrl" field.',
+      'On first connect the CLI auto-discovers OAuth and opens the browser flow.',
+    ],
+    config: (url) => `// ~/.gemini/settings.json
+{
+  "mcpServers": {
+    "mcpemails": {
+      "httpUrl": "${url}"
+    }
+  }
+}`,
+  },
+  {
+    k: 'zed',
+    name: 'Zed',
+    sub: 'Agent Panel',
+    color: '#084CCF',
+    logo: 'zed',
+    oauth: true,
+    guide: 'https://zed.dev/docs/ai/mcp',
+    steps: () => [
+      'In the Agent Panel settings click "Add Custom Server", or edit settings.json.',
+      'Add the server below under "context_servers".',
+      'Zed prompts the OAuth flow when no Authorization header is set — sign in with mcpemails.',
+    ],
+    config: (url) => `// settings.json
+{
+  "context_servers": {
+    "mcpemails": {
+      "url": "${url}"
+    }
+  }
+}`,
+  },
+  {
+    k: 'jetbrains',
+    name: 'JetBrains',
+    sub: 'AI Assistant',
+    color: '#000000',
+    logo: 'jetbrains',
+    oauth: false,
+    needsKey: true,
+    guide: 'https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html',
+    steps: () => [
+      'Open Settings → Tools → AI Assistant → Model Context Protocol (MCP).',
+      'Click "Add" and select "Streamable HTTP" as the connection type.',
+      'Paste the URL above, then add an "Authorization: Bearer <key>" header with your API key.',
+    ],
+  },
+  {
+    k: 'raycast',
+    name: 'Raycast',
+    sub: 'AI',
+    color: '#FF6363',
+    logo: 'raycast',
+    oauth: true,
+    guide: 'https://manual.raycast.com/ai/model-context-protocol',
+    steps: () => [
+      'Run the "Install MCP Server" command (or "Manage MCP Servers").',
+      'Enter a name, set Transport to "HTTP", and paste the URL above.',
+      'Press "Install MCP Server", then click "Sign In" to authorize with mcpemails.',
+    ],
+  },
+  {
+    k: 'warp',
+    name: 'Warp',
+    sub: 'Agents',
+    color: '#01A4FF',
+    logo: 'warp',
+    oauth: true,
+    guide: 'https://docs.warp.dev/agent-platform/capabilities/mcp/',
+    steps: () => [
+      'Open Settings → Agents → MCP servers and click "+ Add".',
+      'Select the "Streamable HTTP or SSE Server (URL)" tab.',
+      'Paste the URL above and confirm — complete browser OAuth when prompted.',
+    ],
+  },
+  {
+    k: 'api',
+    name: 'API / curl',
+    sub: 'Bearer token',
+    color: '#073551',
+    logo: 'curl',
+    oauth: false,
+    needsKey: true,
+    guide: null,
+    steps: () => [
+      'Create an API key in Dashboard → API Keys — copy it (shown only once).',
+      'Send requests to the URL above with an Authorization: Bearer header.',
+    ],
+    config: (url) => `curl -X POST ${url} \\
+  -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
+  },
+];
+
+/**
+ * Per-client connection guide modal. Highlights the live MCP URL (copyable),
+ * lists the steps to connect, shows a copyable config snippet when relevant,
+ * and links to the client's official guide. For non-OAuth clients it surfaces
+ * a shortcut to create an API key.
+ */
+function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
+  const steps = client.steps(mcpUrl);
+  const config = client.config ? client.config(mcpUrl) : null;
+
+  return (
+    <div className="scrim" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="client-guide-title">
+        {/* Header */}
+        <div className="modal-h">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <ClientLogo color={client.color} logo={client.logo} size={38} />
+              <div>
+                <h2 id="client-guide-title" style={{ margin: 0 }}>Connect {client.name}</h2>
+                <div className="sub" style={{ marginTop: 2 }}>
+                  {client.oauth ? 'Paste the URL and authorize — no API key needed.' : 'Authenticate with a bearer token.'}
+                </div>
+              </div>
+            </div>
+            <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--fg-3)', padding: 4, flexShrink: 0, lineHeight: 1 }}>
+              <Icon name="x" size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="modal-body">
+          <CopyField value={mcpUrl} label="MCP server URL" />
+
+          <ol style={{ margin: '4px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {steps.map((s, i) => (
+              <li key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                  background: 'var(--brand-soft)', border: '1px solid rgba(37,71,229,0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, color: 'var(--brand)',
+                }}>{i + 1}</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)', lineHeight: 1.5, paddingTop: 1 }}>{s}</span>
+              </li>
+            ))}
+          </ol>
+
+          {client.note ? (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5 }}>
+              <Icon name="zap" size={13} color="var(--fg-4)" style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>{client.note}</span>
+            </div>
+          ) : null}
+
+          {config ? <CopyField value={config} label="Configuration" multiline /> : null}
+
+          {client.needsKey ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--brand-soft)', border: '1px solid rgba(37,71,229,0.15)', borderRadius: 8 }}>
+              <Icon name="key" size={15} color="var(--brand)" />
+              <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.5 }}>
+                Need a token first?
+              </span>
+              <button
+                onClick={() => { onGoToKeys?.(); onClose(); }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--brand)', whiteSpace: 'nowrap' }}
+              >
+                Create an API key →
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Footer */}
+        <div className="modal-foot">
+          {client.guide ? (
+            <a
+              href={client.guide}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 14px', height: 34, marginRight: 'auto', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, color: 'var(--fg-2)', textDecoration: 'none' }}
+            >
+              Official {client.name} guide ↗
+            </a>
+          ) : null}
+          <Btn variant="primary" onClick={onClose}>Done</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Getting-started guide shown on the Overview page until the workspace has
+ * connected an inbox AND a client has made its first MCP call. Two steps:
+ * connect an inbox, then connect an MCP client (the URL is highlighted and a
+ * per-client guide opens on click).
+ */
+function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys }) {
+  const [activeClient, setActiveClient] = useState(null);
+
   const step1Done = inboxCount > 0;
-  const step2Done = apiKeysCount > 0;
+  const step2Done = callsThisMonth > 0;
   const allDone   = step1Done && step2Done;
 
   return (
@@ -107,62 +456,116 @@ function GettingStartedGuide({ inboxCount, apiKeysCount, onConnect, onGoToKeys }
           <div className="sub">
             {allDone
               ? 'All set — your workspace is ready to use.'
-              : 'Three steps to give your AI agents live email access.'}
+              : 'Two steps to give your AI agents live email access.'}
           </div>
         </div>
         {allDone && <Badge tone="live" dot="live">Ready</Badge>}
       </div>
-      <div style={{ padding: '4px 20px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <GettingStartedStep
-          num={1}
-          done={step1Done}
-          title="Connect an inbox"
-          desc="Give your agents access to Gmail, Outlook, or any IMAP mailbox."
-          action={
-            <Btn variant="primary" size="sm" icon="plus" onClick={onConnect}>
-              Connect inbox
-            </Btn>
-          }
-        />
-        <GettingStartedStep
-          num={2}
-          done={step2Done}
-          title="Create an API key"
-          desc="Generate a bearer token so your MCP client can authenticate with the server."
-          action={
-            <Btn variant="secondary" size="sm" icon="key" onClick={onGoToKeys}>
-              Create API key
-            </Btn>
-          }
-        />
-        <GettingStartedStep
-          num={3}
-          done={allDone}
-          title="Connect your MCP client"
-          desc="Point Claude Desktop or any MCP client at the endpoint URL with your API key."
-          action={
-            <a
-              href="/docs"
-              style={{
-                fontFamily: 'var(--font-sans)',
-                fontSize: 12.5,
-                color: 'var(--brand)',
-                textDecoration: 'none',
-                fontWeight: 500,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              View docs →
-            </a>
-          }
-        />
+
+      <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Step 1 — connect an inbox */}
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 16px',
+          background: step1Done ? 'var(--bg-page)' : 'var(--bg-sunken)',
+          borderRadius: 10, border: '1px solid var(--border-1)',
+          opacity: step1Done ? 0.65 : 1, transition: 'opacity var(--dur-2) var(--ease-out)',
+        }}>
+          <StepDot num={1} done={step1Done} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: step1Done ? 'var(--fg-3)' : 'var(--fg-1)' }}>
+              Connect an inbox
+            </div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
+              Give your agents access to Gmail, Outlook, or any IMAP mailbox.
+            </div>
+          </div>
+          {!step1Done ? (
+            <div style={{ flexShrink: 0 }}>
+              <Btn variant="primary" size="sm" icon="plus" onClick={onConnect}>Connect inbox</Btn>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Step 2 — connect an MCP client */}
+        <div style={{
+          display: 'flex', flexDirection: 'column', gap: 14, padding: '16px',
+          background: 'var(--bg-sunken)', borderRadius: 10, border: '1px solid var(--border-1)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+            <StepDot num={2} done={step2Done} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+                Connect your MCP client
+              </div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
+                Paste this endpoint into your client, then pick it below for a step-by-step guide.
+              </div>
+            </div>
+          </div>
+
+          <CopyField value={mcpUrl} label="MCP server URL" />
+
+          <div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', marginBottom: 8 }}>
+              Choose your client
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+              {MCP_CLIENTS.map((c) => (
+                <button
+                  key={c.k}
+                  onClick={() => setActiveClient(c)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+                    background: 'var(--bg-surface)', border: '1px solid var(--border-1)',
+                    borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+                    transition: 'border-color var(--dur-1) var(--ease-out)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-1)'; }}
+                >
+                  <ClientLogo color={c.color} logo={c.logo} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.sub}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
+
+      {activeClient ? (
+        <ClientGuideModal
+          client={activeClient}
+          mcpUrl={mcpUrl}
+          onClose={() => setActiveClient(null)}
+          onGoToKeys={onGoToKeys}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/** Step indicator dot — number, or a mint check when done. */
+function StepDot({ num, done }) {
+  return (
+    <div style={{
+      width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+      background: done ? 'var(--live-soft)' : 'var(--brand-soft)',
+      border: `1px solid ${done ? 'rgba(31,203,139,0.28)' : 'rgba(37,71,229,0.2)'}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 700,
+      color: done ? 'var(--mint-600)' : 'var(--brand)',
+      transition: 'all var(--dur-2) var(--ease-out)',
+    }}>
+      {done ? <Icon name="check" size={12} color="var(--mint-600)" /> : num}
     </div>
   );
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, activity, stats, planLimits, memberCount = 0, onConnect, onGoToKeys, onGoToMembers }) {
+export function OverviewPage({ inboxes, activity, stats, planLimits, plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers }) {
   const inboxCount = stats?.inboxCount ?? 0;
   const apiKeysCount = stats?.apiKeysCount ?? 0;
   const callsToday = stats?.callsToday ?? 0;
@@ -188,8 +591,9 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, memberCount
   // Warn when only 1 seat remains (or at ≥80% for larger plans).
   const seatNearLimit = !seatAtLimit && seatCap != null && (seatCap <= 5 ? memberCount >= seatCap - 1 : seatPct >= 0.8);
 
-  // Show the getting-started guide until both an inbox and an API key exist.
-  const showGuide = inboxCount === 0 || apiKeysCount === 0;
+  // Show the getting-started guide until an inbox is connected AND a client has
+  // made its first MCP call (callsThisMonth > 0 means a client is wired up).
+  const showGuide = inboxCount === 0 || callsThisMonth === 0;
 
   return (
     <div className="page">
@@ -307,8 +711,9 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, memberCount
         </div>
       )}
 
-      {/* Seat limit exhausted — amber banner (softer than quota banners; invite blocking, not service disruption) */}
-      {seatAtLimit && (
+      {/* Seat limit exhausted — only surfaced on the dashboard for subscribed plans.
+          On the free tier this lives in the Members page to avoid being in-your-face. */}
+      {seatAtLimit && plan !== 'free' && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -330,36 +735,6 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, memberCount
               style={{ color: 'var(--amber-800, #92400e)', fontWeight: 600 }}
             >
               Upgrade to add more seats →
-            </a>
-          </span>
-        </div>
-      )}
-
-      {/* Seat limit near — amber notice (1 seat remaining or ≥80% for larger plans) */}
-      {seatNearLimit && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 16px',
-          marginBottom: 12,
-          background: 'var(--amber-50, #fffbeb)',
-          border: '1px solid rgba(245,158,11,0.3)',
-          borderRadius: 10,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 13.5,
-          color: 'var(--amber-800, #92400e)',
-        }}>
-          <Icon name="users" size={15} color="var(--amber-600, #d97706)" />
-          <span style={{ flex: 1 }}>
-            {seatCap - memberCount === 1
-              ? `Only 1 seat remaining on your plan. `
-              : `You've used ${memberCount} of ${seatCap} seats (${Math.round(seatPct * 100)}%). `}
-            <a
-              href="/pricing"
-              style={{ color: 'var(--amber-800, #92400e)', fontWeight: 600 }}
-            >
-              Upgrade for more seats →
             </a>
           </span>
         </div>
@@ -491,7 +866,8 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, memberCount
       {showGuide ? (
         <GettingStartedGuide
           inboxCount={inboxCount}
-          apiKeysCount={apiKeysCount}
+          callsThisMonth={callsThisMonth}
+          mcpUrl={mcpUrl}
           onConnect={onConnect}
           onGoToKeys={onGoToKeys}
         />
@@ -631,7 +1007,7 @@ function UsageChart30({ dailyCounts }) {
 }
 
 /* ---------------- Inboxes ---------------- */
-export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect }) {
+export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck }) {
   // Count errored inboxes to conditionally show a page-level warning banner.
   const erroredCount = inboxes.filter(ib => ib.status === "error").length;
 
@@ -642,6 +1018,18 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
   const [confirmInbox, setConfirmInbox] = useState(null);
   // true while the DELETE API call is in flight
   const [disconnecting, setDisconnecting] = useState(false);
+  // id of the inbox whose connection check is currently in flight, or null
+  const [checkingId, setCheckingId] = useState(null);
+
+  const handleCheck = async (inbox) => {
+    if (checkingId) return;
+    setCheckingId(inbox.id);
+    try {
+      await onCheck(inbox);
+    } finally {
+      setCheckingId(null);
+    }
+  };
 
   const handleDisconnectRequest = (inbox) => {
     setConfirmInbox(inbox);
@@ -844,7 +1232,18 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                         Reconnect
                       </Btn>
                     ) : (
-                      <Btn variant="ghost" size="sm" icon="refresh" aria-label="Refresh inbox">{""}</Btn>
+                      <Btn
+                        variant="ghost"
+                        size="sm"
+                        icon="refresh"
+                        className={checkingId === ib.id ? "is-checking" : ""}
+                        disabled={checkingId === ib.id}
+                        aria-label="Check connection"
+                        title="Check connection"
+                        onClick={() => handleCheck(ib)}
+                      >
+                        {""}
+                      </Btn>
                     )}
                     <Btn
                       variant="ghost"
@@ -1236,7 +1635,7 @@ function CreateKeyModal({ onCreate, onCancel }) {
  *   keyName  — human-readable name for context
  *   onDone   — called when the user clicks "Done" after acknowledging
  */
-function KeyRevealModal({ rawKey, keyName, onDone }) {
+function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
   const [copied, setCopied] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -1329,6 +1728,13 @@ function KeyRevealModal({ rawKey, keyName, onDone }) {
               <Icon name={copied ? 'check' : 'copy'} size={15} color={copied ? 'var(--mint-500)' : 'rgba(230,234,251,0.55)'} />
             </button>
           </div>
+
+          {/* Ready-to-paste connection URL — the simplest way to connect. */}
+          {mcpUrl ? (
+            <div style={{ marginBottom: 16 }}>
+              <CopyField value={`${mcpUrl}?key=${rawKey}`} label="Or paste this URL straight into your MCP client — no OAuth needed" />
+            </div>
+          ) : null}
 
           {/* Warning */}
           <div style={{
@@ -1443,7 +1849,7 @@ function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
 }
 
 /* ---------------- API Keys ---------------- */
-export function KeysPage({ keys, onCreate, onKeyCreated, onRevoke }) {
+export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
   const [copiedId, setCopiedId] = useState(null);
   // The key object pending revoke confirmation, or null.
   const [confirmKey, setConfirmKey] = useState(null);
@@ -1583,21 +1989,21 @@ export function KeysPage({ keys, onCreate, onKeyCreated, onRevoke }) {
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-h">
           <div>
-            <div className="title">Connect from Claude Code or Claude Desktop</div>
-            <div className="sub">Add to <code className="t-code-inline">~/.claude/mcp.json</code> (Claude Code) or <code className="t-code-inline">claude_desktop_config.json</code> (Claude Desktop)</div>
+            <div className="title">Connect with a URL — no OAuth needed</div>
+            <div className="sub">Paste this URL into any MCP client (Claude, Cursor, VS Code…). Replace <code className="t-code-inline">YOUR_API_KEY</code> with a key from above.</div>
           </div>
         </div>
-        <div className="card-body">
-          <pre style={{ margin: 0, background: "var(--bg-inverse)", color: "#E6EAFB", borderRadius: 10, padding: "16px 18px", fontFamily: "var(--font-mono)", fontSize: 13, lineHeight: 1.7, overflow: "auto" }}>
-{`{
-  "mcpServers": {
-    "mcpemails": {
-      "url": "https://mcpemails.com/api/mcp",
-      "auth": { "type": "bearer", "token": "mcpe_••••••••" }
-    }
-  }
-}`}
-          </pre>
+        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <CopyField value={`${mcpUrl}?key=YOUR_API_KEY`} label="MCP server URL" />
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', lineHeight: 1.6 }}>
+            The key travels in the URL, so anyone with the link has full access — treat it like a password. Prefer an
+            {' '}<code className="t-code-inline">Authorization: Bearer</code> header for scripts and shared environments:
+          </div>
+          <CopyField
+            value={`curl -X POST ${mcpUrl} \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`}
+            label="Authorization header (programmatic)"
+            multiline
+          />
         </div>
       </div>
 
@@ -1621,6 +2027,7 @@ export function KeysPage({ keys, onCreate, onKeyCreated, onRevoke }) {
         <KeyRevealModal
           rawKey={revealData.rawKey}
           keyName={revealData.name}
+          mcpUrl={mcpUrl}
           onDone={handleRevealDone}
         />
       )}
@@ -2579,8 +2986,10 @@ function DeleteAccountSection({ email }) {
 /* ── BillingSection ───────────────────────────────────────────────────────── */
 
 /**
- * Static plan data used for display purposes only.
- * Stripe price IDs are resolved server-side by POST /api/stripe/checkout.
+ * Plan feature lists and fallback prices. Displayed prices are overridden at
+ * render time by live Stripe data (passed in via `stripePrices`); these numeric
+ * values are only used when a Stripe price ID isn't configured. Stripe price IDs
+ * are resolved server-side by POST /api/stripe/checkout.
  */
 const BILLING_PLANS = [
   {
@@ -2622,7 +3031,7 @@ const BILLING_PLANS = [
  * Props:
  *   currentPlan — 'free' | 'pro' | 'enterprise' from workspaces.plan
  */
-function BillingSection({ currentPlan }) {
+function BillingSection({ currentPlan, stripePrices }) {
   const [interval, setInterval] = useState('month');
   const [upgrading, setUpgrading] = useState(null); // planId while loading
   const [openingPortal, setOpeningPortal] = useState(false);
@@ -2942,7 +3351,28 @@ function BillingSection({ currentPlan }) {
             {/* Plan upgrade cards */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {BILLING_PLANS.map(plan => {
-                const price = interval === 'year' ? plan.yearlyMonthlyPrice : plan.monthlyPrice;
+                // Custom-priced plans (Enterprise) never show a numeric price.
+                const isCustom = plan.monthlyPrice === null;
+
+                // Derive live prices from Stripe (cents), falling back to the
+                // static plan values when a price ID isn't configured.
+                const liveMonthlyCents = stripePrices?.[plan.id]?.monthlyCents;
+                const liveYearlyCents = stripePrices?.[plan.id]?.yearlyCents;
+
+                const monthlyPrice =
+                  liveMonthlyCents != null && liveMonthlyCents > 0
+                    ? liveMonthlyCents / 100
+                    : plan.monthlyPrice;
+                const yearlyMonthlyPrice =
+                  liveYearlyCents != null && liveYearlyCents > 0
+                    ? Math.round(liveYearlyCents / 12 / 100)
+                    : plan.yearlyMonthlyPrice;
+                const yearlyAnnualTotal =
+                  liveYearlyCents != null && liveYearlyCents > 0
+                    ? liveYearlyCents / 100
+                    : plan.yearlyAnnualTotal;
+
+                const price = interval === 'year' ? yearlyMonthlyPrice : monthlyPrice;
                 const isCurrentPlanMatch = currentPlan === plan.id;
                 const isLoading = upgrading === plan.id;
                 return (
@@ -2984,15 +3414,17 @@ function BillingSection({ currentPlan }) {
                           color: 'var(--fg-1)',
                           lineHeight: 1,
                         }}>
-                          ${price}
+                          {isCustom ? 'Custom' : `$${price}`}
                         </span>
-                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                          /month
-                        </span>
+                        {!isCustom && (
+                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                            /month
+                          </span>
+                        )}
                       </div>
-                      {interval === 'year' && (
+                      {!isCustom && interval === 'year' && (
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-3)', marginTop: 2 }}>
-                          Billed ${plan.yearlyAnnualTotal}/year
+                          Billed ${yearlyAnnualTotal}/year
                         </div>
                       )}
                     </div>
@@ -3010,18 +3442,28 @@ function BillingSection({ currentPlan }) {
                     </ul>
 
                     {/* CTA */}
-                    <Btn
-                      variant={plan.highlighted ? 'primary' : 'secondary'}
-                      onClick={() => handleUpgrade(plan.id)}
-                      disabled={isCurrentPlanMatch || isLoading || upgrading !== null}
-                      style={{ marginTop: 'auto' }}
-                    >
-                      {isLoading
-                        ? 'Redirecting…'
-                        : isCurrentPlanMatch
-                        ? 'Current plan'
-                        : `Upgrade to ${plan.name}`}
-                    </Btn>
+                    {isCustom ? (
+                      <a
+                        className="btn btn-secondary"
+                        href="mailto:sales@mcpemails.com"
+                        style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}
+                      >
+                        Talk to sales
+                      </a>
+                    ) : (
+                      <Btn
+                        variant={plan.highlighted ? 'primary' : 'secondary'}
+                        onClick={() => handleUpgrade(plan.id)}
+                        disabled={isCurrentPlanMatch || isLoading || upgrading !== null}
+                        style={{ marginTop: 'auto' }}
+                      >
+                        {isLoading
+                          ? 'Redirecting…'
+                          : isCurrentPlanMatch
+                          ? 'Current plan'
+                          : `Upgrade to ${plan.name}`}
+                      </Btn>
+                    )}
                   </div>
                 );
               })}
@@ -3044,7 +3486,7 @@ function BillingSection({ currentPlan }) {
   );
 }
 
-export function SettingsPage({ user, workspace }) {
+export function SettingsPage({ user, workspace, stripePrices }) {
 
   return (
     <div className="page">
@@ -3060,7 +3502,7 @@ export function SettingsPage({ user, workspace }) {
       <PasswordSection />
 
       {/* Billing section — current plan + upgrade */}
-      <BillingSection currentPlan={workspace?.plan ?? 'free'} />
+      <BillingSection currentPlan={workspace?.plan ?? 'free'} stripePrices={stripePrices} />
 
       {/* Workspace section */}
       <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
@@ -3821,7 +4263,7 @@ export function MembersPage({
               <div className="sub">They'll receive an email with a 7-day accept link.</div>
             </div>
           </div>
-          <div style={{ padding: '4px 20px 20px' }}>
+          <div className="card-body">
             {atSeatLimit ? (
               <div style={{
                 padding: '12px 16px',

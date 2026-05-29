@@ -7,6 +7,7 @@ import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage } from './Pages';
 import { ConnectModal } from './ConnectModal';
+import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
 
 /* App.jsx — dashboard root. Owns state, route, modals.
@@ -55,7 +56,7 @@ export function DashboardApp(props) {
  * DashboardInner — holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ user, workspace, userRole, planLimits, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
+function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
   const searchParams = useSearchParams();
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
@@ -78,6 +79,19 @@ function DashboardInner({ user, workspace, userRole, planLimits, overviewStats, 
   const [members, setMembers] = useState(serverMembers ?? []);
   const [pendingInvites, setPendingInvites] = useState(serverPendingInvites ?? []);
   const [showConnect, setShowConnect] = useState(false);
+  const [showCommand, setShowCommand] = useState(false);
+
+  // Global ⌘K / Ctrl+K opens the command palette from anywhere in the dashboard.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setShowCommand(v => !v);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   // Apply theme
   useEffect(() => {
@@ -220,6 +234,39 @@ function DashboardInner({ user, workspace, userRole, planLimits, overviewStats, 
   };
 
   /**
+   * Checks whether an inbox's stored credentials still work by calling
+   * POST /api/inboxes/[id]/check. The server refreshes/validates OAuth tokens
+   * (or performs an IMAP login for app-password inboxes) and returns the
+   * resulting status. We update local state to reflect the new status unless
+   * the check was inconclusive (transient network/provider error).
+   */
+  const onCheckInbox = async (inbox) => {
+    let data = {};
+    try {
+      const res = await fetch(`/api/inboxes/${inbox.id}/check`, { method: 'POST' });
+      try { data = await res.json(); } catch { /* ignore JSON parse failure */ }
+      if (!res.ok) {
+        toast({ message: data?.error || data?.message || 'Connection check failed.', variant: 'error' });
+        return;
+      }
+    } catch {
+      toast({ message: 'Connection check failed. Please try again.', variant: 'error' });
+      return;
+    }
+    // Reflect the server-confirmed status locally, unless the check could not
+    // reach the provider (transient) — in which case we leave the row as-is.
+    if (!data.transient && data.status) {
+      setInboxes(xs => xs.map(x => (
+        x.id === inbox.id ? { ...x, status: data.status, lastError: data.lastError ?? null } : x
+      )));
+    }
+    toast({
+      message: data.message || (data.ok ? 'Connection is healthy.' : 'Connection check failed.'),
+      variant: data.ok ? 'success' : 'error',
+    });
+  };
+
+  /**
    * Restarts the OAuth (or app-password) flow for an errored inbox.
    *
    * For OAuth inboxes: navigate to the provider's server-side initiation
@@ -304,7 +351,7 @@ function DashboardInner({ user, workspace, userRole, planLimits, overviewStats, 
     const res = await fetch('/api/api-keys', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, scopes }),
+      body: JSON.stringify({ name, scopes, workspaceId: workspace.id }),
     });
     if (!res.ok) {
       let message = 'Failed to create API key.';
@@ -396,26 +443,39 @@ function DashboardInner({ user, workspace, userRole, planLimits, overviewStats, 
         counts={counts}
         user={user}
         workspace={workspace}
+        workspaces={workspaces}
+        activeWorkspaceId={activeWorkspaceId}
+        canCreateWorkspace={canCreateWorkspace}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
       <div className="main-col">
-        <Topbar route={route} workspace={workspace} onMenuOpen={() => setSidebarOpen(true)} />
+        <Topbar route={route} workspace={workspace} onMenuOpen={() => setSidebarOpen(true)} onOpenSearch={() => setShowCommand(true)} />
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
           <FirstRunBanner onConnect={() => setShowConnect(true)} />
         )}
 
-        {route === "overview" && <OverviewPage inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} planLimits={planLimits} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} />}
-        {route === "keys"     && <KeysPage     keys={keys} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} />}
+        {route === "overview" && <OverviewPage inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} />}
+        {route === "keys"     && <KeysPage     keys={keys} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} stripePrices={stripePrices} />}
         {route === "security" && <SecurityPage auditLog={auditLog} />}
       </div>
 
       {showConnect && <ConnectModal onClose={() => setShowConnect(false)} onConnect={onConnect} atInboxLimit={planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes} plan={workspace?.plan ?? 'free'} />}
+
+      <CommandPalette
+        open={showCommand}
+        onClose={() => setShowCommand(false)}
+        setRoute={setRoute}
+        onConnect={() => setShowConnect(true)}
+        inboxes={inboxes}
+        members={members}
+        keys={keys}
+      />
 
       <TweaksPanel>
         <TweakSection label="Theme"/>
