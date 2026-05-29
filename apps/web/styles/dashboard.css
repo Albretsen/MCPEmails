@@ -25,6 +25,60 @@ body { background: var(--bg-page); }
   padding: 6px 8px 18px;
 }
 .sidebar .brand img { height: 30px; }
+
+/* ── Workspace switcher ─────────────────────────────────────── */
+.ws-switcher { position: relative; margin: 0 0 10px; }
+.ws-switcher-btn {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 7px 10px; border-radius: 8px;
+  background: var(--ink-50); border: 1px solid var(--border-1);
+  cursor: pointer; text-align: left;
+  transition: background 120ms var(--ease-out), border-color 120ms var(--ease-out);
+}
+.ws-switcher-btn:hover { background: var(--ink-100); border-color: var(--border-2); }
+.ws-switcher-btn:disabled { opacity: 0.6; cursor: default; }
+.ws-switcher-btn .icon { margin-left: auto; flex-shrink: 0; }
+.ws-glyph {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--brand); color: var(--fg-on-brand);
+  font-family: var(--font-sans); font-size: 12px; font-weight: 700;
+}
+.ws-glyph.sm { width: 22px; height: 22px; border-radius: 6px; font-size: 11px; }
+.ws-glyph.plus { background: var(--cobalt-50); }
+.ws-meta { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ws-name {
+  font-family: var(--font-sans); font-size: 13px; font-weight: 600; color: var(--fg-1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ws-plan {
+  font-family: var(--font-sans); font-size: 11px; color: var(--fg-3);
+  text-transform: capitalize;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ws-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 40;
+  background: var(--bg-surface); border: 1px solid var(--border-1);
+  border-radius: 10px; padding: 6px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  max-height: 320px; overflow-y: auto;
+}
+.ws-menu-label {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  color: var(--fg-3); letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 6px 8px 4px;
+}
+.ws-menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 7px 8px; border-radius: 7px; border: none; background: none;
+  cursor: pointer; text-align: left; text-decoration: none;
+  transition: background 120ms var(--ease-out);
+}
+.ws-menu-item:hover { background: var(--ink-50); }
+.ws-menu-item.active { background: var(--cobalt-50); }
+.ws-menu-item .icon { margin-left: auto; flex-shrink: 0; }
+.ws-menu-sep { height: 1px; background: var(--border-1); margin: 6px 4px; }
+.ws-menu-upsell .ws-plan { color: var(--cobalt-700); white-space: normal; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
 .nav .section-label {
   font-family: var(--font-sans); font-size: 11px; font-weight: 500;

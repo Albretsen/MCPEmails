@@ -71,6 +71,7 @@ const TABLE_SECTIONS = [
       { feature: 'MCP calls / month',    free: '500',   solo: '3,000',  pro: '20,000',  enterprise: 'Custom'    },
       { feature: 'Daily burst cap',      free: '100',   solo: '500',    pro: '2,000',   enterprise: 'Custom'    },
       { feature: 'API keys',             free: '1',     solo: '3',      pro: '10',      enterprise: 'Unlimited' },
+      { feature: 'Workspaces',           free: '1',     solo: '1',      pro: 'Multiple', enterprise: 'Unlimited' },
     ],
   },
   {

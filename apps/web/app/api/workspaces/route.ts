@@ -40,8 +40,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // @ts-expect-error — create_workspace RPC types pending database.types regen.
-  const { data, error } = await supabase.rpc('create_workspace', { p_name: name.trim() });
+  // create_workspace is not yet in the generated Database types, so call it
+  // through a narrowly-typed view of rpc() rather than a blanket `any`.
+  type CreatedWorkspace = { id: string; slug: string; display_name: string; plan: string };
+  const rpc = supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => Promise<{ data: CreatedWorkspace[] | null; error: { code: string; message: string } | null }>;
+
+  const { data, error } = await rpc('create_workspace', { p_name: name.trim() });
 
   if (error) {
     // P0001 covers both the not-authenticated and Pro-gate cases; the auth

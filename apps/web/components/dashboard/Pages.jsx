@@ -3007,7 +3007,7 @@ const BILLING_PLANS = [
     monthlyPrice: 29,
     yearlyMonthlyPrice: 23,     // effective monthly cost when billed yearly ($276/yr)
     yearlyAnnualTotal: 276,
-    features: ['10 connected inboxes', '20,000 MCP calls / month', '10 API keys', 'Usage analytics', 'Email support', '14-day free trial'],
+    features: ['10 connected inboxes', '20,000 MCP calls / month', '10 API keys', 'Multiple workspaces', 'Usage analytics', 'Email support', '14-day free trial'],
     highlighted: true,
   },
   {
@@ -3016,7 +3016,7 @@ const BILLING_PLANS = [
     monthlyPrice: null,          // custom pricing
     yearlyMonthlyPrice: null,
     yearlyAnnualTotal: null,
-    features: ['Unlimited inboxes', 'Unlimited MCP calls', 'Unlimited API keys', 'Audit log + SSO', 'Dedicated Slack support', 'Custom SLA'],
+    features: ['Unlimited inboxes', 'Unlimited MCP calls', 'Unlimited API keys', 'Unlimited workspaces', 'Audit log + SSO', 'Dedicated Slack support', 'Custom SLA'],
     highlighted: false,
   },
 ];
@@ -4260,7 +4260,7 @@ export function MembersPage({
           <div className="card-h">
             <div>
               <div className="title">Invite a collaborator</div>
-              <div className="sub">They'll receive an email with a 7-day accept link.</div>
+              <div className="sub">They'll receive an email with a 7-day accept link. Invites grant access to this workspace only.</div>
             </div>
           </div>
           <div className="card-body">
