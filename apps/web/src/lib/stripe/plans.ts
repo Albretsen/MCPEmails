@@ -1,27 +1,31 @@
 /**
  * Stripe plan definitions for MCPEmails.
  *
- * Defines the Free, Solo, Pro, and Enterprise tiers with their feature limits
- * and Stripe price IDs. Price IDs are loaded from environment variables so
- * they can differ between test and production environments without code changes.
+ * Pricing strategy: the entire product is free and UNLIMITED for everyone —
+ * unlimited inboxes, MCP tool calls, API keys, and team members on every tier.
+ * We monetize capabilities and support, never raw usage. The only usage lever
+ * that differs between tiers is the per-minute fair-use rate limit
+ * (`maxRequestsPerMinute`), which protects the platform from abuse.
  *
- * After creating products and prices in the Stripe dashboard (or via the
- * setup script), copy the price IDs into your .env.local:
+ * Three tiers: Free, Solo, Team. (The "Team" tier keeps the internal id `pro`
+ * to avoid a workspaces.plan data migration — only its display name is "Team".)
+ *
+ * Price IDs are loaded from environment variables so they can differ between
+ * test and production without code changes:
  *
  *   STRIPE_PRICE_SOLO_MONTHLY=price_...
  *   STRIPE_PRICE_SOLO_YEARLY=price_...
- *   STRIPE_PRICE_PRO_MONTHLY=price_...
- *   STRIPE_PRICE_PRO_YEARLY=price_...
- *   STRIPE_PRICE_ENTERPRISE_MONTHLY=price_...
- *   STRIPE_PRICE_ENTERPRISE_YEARLY=price_...
+ *   STRIPE_PRICE_PRO_MONTHLY=price_...   (Team)
+ *   STRIPE_PRICE_PRO_YEARLY=price_...    (Team)
  *
- * See Documents/Human-Input/STRIPE_SETUP_NEEDED.md for step-by-step instructions.
+ * See Documents/pricing-strategy.md for the full strategy.
  */
 
 // ---------------------------------------------------------------------------
 // Plan identifiers — must match the `plan` column values in `workspaces`.
+// `pro` is the internal id for the "Team" tier (display name only).
 // ---------------------------------------------------------------------------
-export type PlanId = 'free' | 'solo' | 'pro' | 'enterprise';
+export type PlanId = 'free' | 'solo' | 'pro';
 
 // ---------------------------------------------------------------------------
 // Billing interval
@@ -29,29 +33,46 @@ export type PlanId = 'free' | 'solo' | 'pro' | 'enterprise';
 export type BillingInterval = 'month' | 'year';
 
 // ---------------------------------------------------------------------------
+// Support tiers
+// ---------------------------------------------------------------------------
+export type SupportTier = 'community' | 'email' | 'priority';
+
+// ---------------------------------------------------------------------------
 // Feature limits per plan
+//
+// Usage limits (inboxes, calls, keys, members) are Infinity on every tier —
+// they are retained so the existing limit-check helpers report "unlimited".
+// Real differentiation lives in the feature flags below.
 // ---------------------------------------------------------------------------
 export interface PlanLimits {
-  /** Maximum connected inboxes per workspace. */
+  /** Maximum connected inboxes. Infinity = unlimited (all tiers). */
   maxInboxes: number;
-  /**
-   * Maximum MCP tool calls in any single UTC calendar day (burst cap).
-   * Prevents a single day spike from exhausting the monthly quota.
-   */
+  /** Legacy daily burst cap. Infinity = unlimited (all tiers). */
   maxDailyBurstCalls: number;
-  /** Maximum MCP tool calls per UTC calendar month. */
+  /** Legacy monthly tool-call cap. Infinity = unlimited (all tiers). */
   maxMonthlyToolCalls: number;
-  /** Maximum API keys per workspace. */
+  /** Maximum API keys. Infinity = unlimited (all tiers). */
   maxApiKeys: number;
-  /**
-   * Maximum workspace members including the owner.
-   * 1 = owner only (no collaborators). Infinity = unlimited.
-   */
+  /** Maximum workspace members. Infinity = unlimited (all tiers). */
   maxMembers: number;
   /** Whether the customer portal (billing self-service) is available. */
   billingPortalEnabled: boolean;
   /** Whether the usage analytics page is available. */
   analyticsEnabled: boolean;
+
+  // ── Real differentiators ────────────────────────────────────────────────
+  /** Per-minute fair-use rate-limit ceiling enforced in the MCP edge function. */
+  maxRequestsPerMinute: number;
+  /** How many days of usage history the analytics dashboard exposes. */
+  analyticsRetentionDays: number;
+  /** Team roles / multiple workspaces. */
+  teamRolesEnabled: boolean;
+  /** SSO (SAML / OIDC). */
+  ssoEnabled: boolean;
+  /** Audit log. */
+  auditLogEnabled: boolean;
+  /** Support tier. */
+  supportTier: SupportTier;
 }
 
 // ---------------------------------------------------------------------------
@@ -59,6 +80,7 @@ export interface PlanLimits {
 // ---------------------------------------------------------------------------
 export interface Plan {
   id: PlanId;
+  /** Display name (e.g. "Team" for the `pro` id). */
   name: string;
   description: string;
   limits: PlanLimits;
@@ -83,27 +105,33 @@ export const PLANS: Record<PlanId, Plan> = {
   free: {
     id: 'free',
     name: 'Free',
-    description: 'For personal projects and experimenting with MCP agents.',
+    description: 'Everything, unlimited. For everyone building with MCP agents.',
     limits: {
-      maxInboxes: 1,
-      maxDailyBurstCalls: 100,
-      maxMonthlyToolCalls: 500,
-      maxApiKeys: 1,
-      maxMembers: 1,        // owner only — no collaborators on free
+      maxInboxes: Infinity,
+      maxDailyBurstCalls: Infinity,
+      maxMonthlyToolCalls: Infinity,
+      maxApiKeys: Infinity,
+      maxMembers: Infinity,
       billingPortalEnabled: false,
-      analyticsEnabled: false,
+      analyticsEnabled: true,
+      maxRequestsPerMinute: 60,
+      analyticsRetentionDays: 7,
+      teamRolesEnabled: false,
+      ssoEnabled: false,
+      auditLogEnabled: false,
+      supportTier: 'community',
     },
     monthlyPriceCents: 0,
     yearlyPriceCents: 0,
     stripePriceIdMonthly: null,
     stripePriceIdYearly: null,
     features: [
-      '1 connected inbox',
-      '500 MCP tool calls / month',
-      '100 calls / day burst cap',
-      '1 API key',
-      'Single workspace',
+      'Unlimited connected inboxes',
+      'Unlimited MCP tool calls',
+      'Unlimited API keys',
+      'Unlimited team members',
       'Gmail, Outlook, Fastmail & IMAP',
+      'Basic usage analytics (7-day)',
       'Community support',
     ],
     highlighted: false,
@@ -112,68 +140,7 @@ export const PLANS: Record<PlanId, Plan> = {
   solo: {
     id: 'solo',
     name: 'Solo',
-    description: 'For solo developers who want their agent working the inbox daily.',
-    limits: {
-      maxInboxes: 3,
-      maxDailyBurstCalls: 500,
-      maxMonthlyToolCalls: 3_000,
-      maxApiKeys: 3,
-      maxMembers: 2,        // owner + 1 collaborator
-      billingPortalEnabled: true,
-      analyticsEnabled: false,
-    },
-    monthlyPriceCents: 900,   // $9 / month
-    yearlyPriceCents: 8400,   // $84 / year ($7/mo, ~22% off)
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_SOLO_MONTHLY ?? null,
-    stripePriceIdYearly: process.env.STRIPE_PRICE_SOLO_YEARLY ?? null,
-    features: [
-      '3 connected inboxes',
-      '3,000 MCP tool calls / month',
-      '500 calls / day burst cap',
-      '3 API keys',
-      'Single workspace',
-      'Gmail, Outlook, Fastmail & IMAP',
-      '14-day free trial',
-      'Email support',
-    ],
-    highlighted: false,
-  },
-
-  pro: {
-    id: 'pro',
-    name: 'Pro',
-    description: 'For teams shipping agents that work the inbox every day.',
-    limits: {
-      maxInboxes: 10,
-      maxDailyBurstCalls: 2_000,
-      maxMonthlyToolCalls: 20_000,
-      maxApiKeys: 10,
-      maxMembers: 10,
-      billingPortalEnabled: true,
-      analyticsEnabled: true,
-    },
-    monthlyPriceCents: 2900,   // $29 / month
-    yearlyPriceCents: 27600,   // $276 / year ($23/mo, ~21% off)
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY ?? null,
-    stripePriceIdYearly: process.env.STRIPE_PRICE_PRO_YEARLY ?? null,
-    features: [
-      '10 connected inboxes',
-      '20,000 MCP tool calls / month',
-      '2,000 calls / day burst cap',
-      '10 API keys',
-      'Multiple workspaces',
-      'Gmail, Outlook, Fastmail & IMAP',
-      'Usage analytics dashboard',
-      '14-day free trial',
-      'Email support',
-    ],
-    highlighted: true,
-  },
-
-  enterprise: {
-    id: 'enterprise',
-    name: 'Enterprise',
-    description: 'For organisations needing unlimited scale and compliance guarantees.',
+    description: 'For power users running agents around the clock.',
     limits: {
       maxInboxes: Infinity,
       maxDailyBurstCalls: Infinity,
@@ -182,29 +149,67 @@ export const PLANS: Record<PlanId, Plan> = {
       maxMembers: Infinity,
       billingPortalEnabled: true,
       analyticsEnabled: true,
+      maxRequestsPerMinute: 300,
+      analyticsRetentionDays: 90,
+      teamRolesEnabled: false,
+      ssoEnabled: false,
+      auditLogEnabled: false,
+      supportTier: 'email',
     },
-    monthlyPriceCents: 0,   // custom — contact sales
-    yearlyPriceCents: null,
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY ?? null,
-    stripePriceIdYearly: process.env.STRIPE_PRICE_ENTERPRISE_YEARLY ?? null,
+    monthlyPriceCents: 1200,  // $12 / month
+    yearlyPriceCents: 12000,  // $120 / year (~17% off)
+    stripePriceIdMonthly: process.env.STRIPE_PRICE_SOLO_MONTHLY ?? null,
+    stripePriceIdYearly: process.env.STRIPE_PRICE_SOLO_YEARLY ?? null,
     features: [
-      'Unlimited inboxes',
-      'Custom MCP call volume',
-      'Unlimited API keys',
-      'Unlimited workspaces',
-      'Advanced usage analytics',
-      'Audit log + SSO / SAML',
-      'Custom data residency (EU / US)',
-      'Dedicated Slack support',
-      'Custom SLA',
+      'Everything in Free, unlimited',
+      '5× higher burst rate limit',
+      'Full usage analytics (90-day history)',
+      'Gmail, Outlook, Fastmail & IMAP',
+      'Email support',
     ],
     highlighted: false,
+  },
+
+  // "Team" tier — internal id stays `pro`.
+  pro: {
+    id: 'pro',
+    name: 'Team',
+    description: 'For businesses and teams. Practically limitless.',
+    limits: {
+      maxInboxes: Infinity,
+      maxDailyBurstCalls: Infinity,
+      maxMonthlyToolCalls: Infinity,
+      maxApiKeys: Infinity,
+      maxMembers: Infinity,
+      billingPortalEnabled: true,
+      analyticsEnabled: true,
+      maxRequestsPerMinute: 1000,
+      analyticsRetentionDays: 365,
+      teamRolesEnabled: true,
+      ssoEnabled: true,
+      auditLogEnabled: true,
+      supportTier: 'priority',
+    },
+    monthlyPriceCents: 4900,   // $49 / month
+    yearlyPriceCents: 49000,   // $490 / year (~17% off)
+    stripePriceIdMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY ?? null,
+    stripePriceIdYearly: process.env.STRIPE_PRICE_PRO_YEARLY ?? null,
+    features: [
+      'Everything in Solo, unlimited',
+      'Highest burst rate limit',
+      'Team roles & multiple workspaces',
+      'SSO (SAML / OIDC) + audit log',
+      'Full usage analytics (1-year history)',
+      'Priority support',
+    ],
+    highlighted: true,
   },
 } as const;
 
 // ---------------------------------------------------------------------------
 // Helper: look up limits for a plan name stored in DB.
-// Falls back to 'free' limits if an unrecognised value is encountered.
+// Falls back to 'free' limits if an unrecognised value is encountered
+// (this also covers any legacy 'enterprise' rows).
 // ---------------------------------------------------------------------------
 export function getPlanLimits(planId: string): PlanLimits {
   const plan = PLANS[planId as PlanId];

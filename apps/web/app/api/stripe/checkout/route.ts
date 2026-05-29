@@ -11,7 +11,7 @@ import { PLANS, type PlanId, type BillingInterval } from '@/lib/stripe/plans';
  * workspace to a paid plan.
  *
  * Request body:
- *   planId   — 'solo' | 'pro' | 'enterprise'
+ *   planId   — 'solo' | 'pro'
  *   interval — 'month' | 'year'
  *
  * Response (200):
@@ -58,9 +58,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { planId, interval } = body as Record<string, unknown>;
 
-  if (planId !== 'solo' && planId !== 'pro' && planId !== 'enterprise') {
+  if (planId !== 'solo' && planId !== 'pro') {
     return NextResponse.json(
-      { error: 'planId must be "solo", "pro", or "enterprise".' },
+      { error: 'planId must be "solo" or "pro".' },
       { status: 400 },
     );
   }
@@ -158,12 +158,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         metadata: {
           workspace_id: workspace.id,
         },
-        // Solo and Pro advertise a 14-day free trial. A payment method is
-        // collected at checkout (Stripe's default for subscription mode) and
-        // the first charge lands when the trial ends.
-        ...(planId === 'solo' || planId === 'pro'
-          ? { trial_period_days: 14 }
-          : {}),
       },
       metadata: {
         workspace_id: workspace.id,

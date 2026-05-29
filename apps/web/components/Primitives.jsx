@@ -92,5 +92,32 @@ export function ProviderLogo({ kind, size = 22 }) {
       <path d="M6 9h12M6 12h8M6 15h5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   );
+  if (kind === "icloud") return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M7.5 18.5h9.2a3.3 3.3 0 0 0 .3-6.58 4.5 4.5 0 0 0-8.63-1.6A3.75 3.75 0 0 0 7.5 18.5z"
+        fill="#3B9BE3"/>
+    </svg>
+  );
+  if (kind === "yahoo") return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <rect x="2" y="3" width="20" height="18" rx="3" fill="#6001D2"/>
+      <path d="M7 8l3 5v3M13 8l-3 5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="16.5" cy="15.5" r="1.3" fill="#fff"/>
+    </svg>
+  );
+  if (kind === "zoho") return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <rect x="2" y="4" width="20" height="16" rx="2" fill="#0B1020"/>
+      <path d="M6 9h6l-6 6h6" stroke="#E42527" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <rect x="14.5" y="9" width="4" height="6" rx="2" stroke="#F9B21D" strokeWidth="1.8"/>
+    </svg>
+  );
+  if (kind === "yandex") return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="9.5" fill="#FC3F1D"/>
+      <path d="M13 6.5h-1.4c-1.7 0-2.9 1.1-2.9 2.8 0 1.3.6 2 1.8 2.8L8 17.5h1.6l2.2-3.9h.8v3.9H14V6.5z
+        M13 12.2h-.7c-1 0-1.7-.5-1.7-1.7 0-1.2.6-1.8 1.7-1.8h.7v3.5z" fill="#fff"/>
+    </svg>
+  );
   return null;
 }

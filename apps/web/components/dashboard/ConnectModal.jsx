@@ -2,44 +2,46 @@
 
 import { useState } from 'react';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
+import {
+  IMAP_PRESETS,
+  GENERIC_IMAP_DEFAULTS,
+  isBrandedImapService,
+  ZOHO_REGIONS,
+  DEFAULT_ZOHO_REGION,
+} from '@/lib/email-providers/imap-presets';
 
 /**
  * ConnectModal.jsx — inbox connection modal.
  *
- * Step 1: Provider selection (Gmail, Outlook, Fastmail cards).
+ * Step 1: Provider selection.
  *   - Gmail / Outlook → clicking "Connect" navigates to the server-side OAuth
- *     initiation route (`/auth/gmail` or `/auth/outlook`), which redirects the
- *     browser to the provider's consent screen. The flow completes entirely
- *     outside this modal; the page reloads on return.
- *   - Fastmail OAuth → same pattern via `/auth/fastmail`.
- *   - Fastmail App Password → stays in-modal; advances to step 2.
+ *     initiation route, which redirects to the provider's consent screen.
+ *   - Fastmail → OAuth (route) or app password (in-modal step 2).
+ *   - iCloud / Yahoo / Zoho / Yandex → app password (in-modal step 2), using
+ *     the host presets from lib/email-providers/imap-presets.
+ *   - IMAP / SMTP (generic) → in-modal step 2 with host/port fields.
  *
- * Step 2: Fastmail App Password form.
- *   Submits to `POST /api/inboxes/fastmail-app-password`, which validates the
- *   credential against Fastmail's IMAP server before persisting. On success,
- *   calls `onConnect` so the parent can update its optimistic inbox list.
+ * Step 2: Credentials form.
+ *   App-password providers submit { email, appPassword } (plus host/port for the
+ *   generic connector) to the matching connect route, which validates against
+ *   the IMAP server before persisting. On success, onConnect updates the parent's
+ *   optimistic inbox list.
  */
 
 /** Provider cards shown in step 1. */
 const PROVIDERS = [
-  {
-    k: 'gmail',
-    label: 'Gmail',
-    sub: 'OAuth 2.0 · recommended',
-    logoKind: 'gmail',
-  },
-  {
-    k: 'outlook',
-    label: 'Outlook',
-    sub: 'OAuth 2.0 · Microsoft 365',
-    logoKind: 'outlook',
-  },
-  {
-    k: 'fastmail',
-    label: 'Fastmail',
-    sub: 'OAuth 2.0 or app password',
-    logoKind: 'imap',
-  },
+  { k: 'gmail',    label: 'Gmail',    sub: 'OAuth 2.0 · recommended',  logoKind: 'gmail' },
+  { k: 'outlook',  label: 'Outlook',  sub: 'OAuth 2.0 · Microsoft 365', logoKind: 'outlook' },
+  { k: 'fastmail', label: 'Fastmail', sub: 'OAuth 2.0 or app password', logoKind: 'imap' },
+  // Branded IMAP presets (app password).
+  ...Object.values(IMAP_PRESETS).map(p => ({
+    k: p.service,
+    label: p.label,
+    sub: 'App password',
+    logoKind: p.logoKind,
+  })),
+  // Generic catch-all connector.
+  { k: 'generic', label: 'IMAP / SMTP', sub: 'Any provider', logoKind: 'imap' },
 ];
 
 /** The server-side route that initiates the OAuth flow for each provider. */
@@ -64,41 +66,64 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   /** 'oauth' | 'apppassword' — only relevant when provider === 'fastmail' */
   const [fastmailMode, setFastmailMode] = useState('oauth');
   const [step, setStep] = useState(1);
-  const [appPasswordForm, setAppPasswordForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    imapHost: '',
+    imapPort: GENERIC_IMAP_DEFAULTS.imapPort,
+    smtpHost: '',
+    smtpPort: GENERIC_IMAP_DEFAULTS.smtpPort,
+  });
+  const [zohoRegion, setZohoRegion] = useState(DEFAULT_ZOHO_REGION);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+
+  // ── Provider categories ─────────────────────────────────────────────────────
+
+  const isPreset = isBrandedImapService(provider);
+  const isGeneric = provider === 'generic';
+  const preset = isPreset ? IMAP_PRESETS[provider] : null;
+  /** True when "Connect" should open the in-modal credentials step. */
+  const usesAppPassword =
+    isPreset || isGeneric || (provider === 'fastmail' && fastmailMode === 'apppassword');
 
   // ── Step 1: provider selected ──────────────────────────────────────────────
 
   const handleConnect = () => {
-    if (provider === 'fastmail' && fastmailMode === 'apppassword') {
-      // Stay in-modal: advance to the app-password credentials form.
+    if (usesAppPassword) {
       setStep(2);
       return;
     }
-    // For all OAuth paths (Gmail, Outlook, Fastmail OAuth) navigate to the
-    // server-side initiation route. The page will reload after the provider
-    // redirects back to the callback URL.
+    // OAuth paths (Gmail, Outlook, Fastmail OAuth) navigate to the server-side
+    // initiation route. The page reloads after the provider redirects back.
     window.location.href = OAUTH_ROUTES[provider];
   };
 
   const connectLabel = () => {
-    if (provider === 'gmail')    return 'Connect with Google';
-    if (provider === 'outlook')  return 'Connect with Microsoft';
-    if (fastmailMode === 'apppassword') return 'Enter credentials';
-    return 'Connect with Fastmail';
+    if (provider === 'gmail') return 'Connect with Google';
+    if (provider === 'outlook') return 'Connect with Microsoft';
+    if (provider === 'fastmail' && fastmailMode === 'oauth') return 'Connect with Fastmail';
+    return 'Enter credentials';
   };
 
-  // ── Step 2: Fastmail app-password submission ────────────────────────────────
+  /** Human label for the selected provider, used in step-2 copy. */
+  const providerLabel = () => {
+    if (provider === 'fastmail') return 'Fastmail';
+    if (preset) return preset.label;
+    if (isGeneric) return 'IMAP / SMTP';
+    return 'inbox';
+  };
+
+  // ── Step 2: credentials submission ─────────────────────────────────────────
 
   const handleAppPasswordSubmit = async () => {
     setFormError(null);
 
-    const email = appPasswordForm.email.trim().toLowerCase();
-    const appPassword = appPasswordForm.password.trim();
+    const email = form.email.trim().toLowerCase();
+    const appPassword = form.password.trim();
 
     if (!email || !email.includes('@')) {
-      setFormError('A valid Fastmail email address is required.');
+      setFormError('A valid email address is required.');
       return;
     }
     if (!appPassword) {
@@ -106,12 +131,40 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
       return;
     }
 
+    // Resolve the connect endpoint + body for the selected provider.
+    let endpoint;
+    let body;
+    if (provider === 'fastmail') {
+      endpoint = '/api/inboxes/fastmail-app-password';
+      body = { email, appPassword };
+    } else if (isPreset) {
+      endpoint = '/api/inboxes/app-password';
+      body = { service: provider, email, appPassword };
+      if (provider === 'zoho') body.region = zohoRegion;
+    } else {
+      // Generic IMAP/SMTP.
+      const imapHost = form.imapHost.trim().toLowerCase();
+      const smtpHost = form.smtpHost.trim().toLowerCase();
+      const imapPort = Number(form.imapPort);
+      const smtpPort = Number(form.smtpPort);
+      if (!imapHost || !smtpHost) {
+        setFormError('IMAP and SMTP host are required.');
+        return;
+      }
+      if (!imapPort || !smtpPort) {
+        setFormError('IMAP and SMTP ports are required.');
+        return;
+      }
+      endpoint = '/api/inboxes/imap';
+      body = { email, appPassword, imapHost, imapPort, smtpHost, smtpPort };
+    }
+
     setSubmitting(true);
     try {
-      const response = await fetch('/api/inboxes/fastmail-app-password', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, appPassword }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -122,8 +175,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
       }
 
       // Success — notify the parent so it can update its optimistic inbox list.
-      // Pass `label` as the email address so App.jsx's optimistic update works.
-      onConnect({ provider: 'fastmail', address: email, label: email });
+      onConnect({ provider, address: email, label: email });
     } catch {
       setFormError('Network error. Please check your connection and try again.');
     } finally {
@@ -150,7 +202,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 {atInboxLimit
                   ? 'Inbox limit reached'
                   : step === 2
-                    ? 'Fastmail app password'
+                    ? `Connect ${providerLabel()}`
                     : 'Connect an inbox'}
               </h2>
               <div className="sub" style={{ marginTop: 4 }}>
@@ -158,7 +210,11 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   ? `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan only supports a limited number of inboxes.`
                   : step === 1
                     ? 'Choose a provider. Credentials are encrypted before storage and never shared.'
-                    : 'Generate an app password from Fastmail Settings → Security → App Passwords.'}
+                    : isGeneric
+                      ? 'Enter your mail server settings and an app password.'
+                      : preset
+                        ? preset.hint
+                        : 'Generate an app password from Fastmail Settings → Security → App Passwords.'}
               </div>
             </div>
             <button
@@ -309,44 +365,134 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   </p>
                 </div>
               )}
+
+              {/* App-password providers — short guidance + help link */}
+              {(isPreset || isGeneric) && (
+                <p style={{
+                  margin: '12px 0 0',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 12,
+                  color: 'var(--fg-3)',
+                  lineHeight: 1.5,
+                }}>
+                  {isGeneric
+                    ? 'Connect any mailbox that supports IMAP and SMTP using an app password.'
+                    : preset.hint}
+                  {preset && (
+                    <>
+                      {' '}
+                      <a href={preset.appPasswordHelpUrl} target="_blank" rel="noopener noreferrer"
+                        style={{ color: 'var(--brand)' }}>
+                        How to generate one
+                      </a>.
+                    </>
+                  )}
+                </p>
+              )}
             </>
           )}
 
-          {/* ─── Step 2: Fastmail app-password form ─────────────────────────── */}
+          {/* ─── Step 2: Credentials form ───────────────────────────────────── */}
           {!atInboxLimit && step === 2 && (
             <>
+              {provider === 'zoho' && (
+                <div className="field">
+                  <label htmlFor="cm-zoho-region">Data center region</label>
+                  <select
+                    id="cm-zoho-region"
+                    className="input"
+                    value={zohoRegion}
+                    onChange={e => setZohoRegion(e.target.value)}
+                  >
+                    {ZOHO_REGIONS.map(r => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                    Find this in Zoho → Settings → Mail Accounts if you are unsure.
+                  </span>
+                </div>
+              )}
+
               <div className="field">
-                <label htmlFor="fm-email">Fastmail email address</label>
+                <label htmlFor="cm-email">Email address</label>
                 <input
-                  id="fm-email"
+                  id="cm-email"
                   className="input"
                   type="email"
-                  placeholder="you@fastmail.com"
-                  value={appPasswordForm.email}
-                  onChange={e =>
-                    setAppPasswordForm(prev => ({ ...prev, email: e.target.value }))
-                  }
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
                   autoComplete="email"
                   autoFocus
                 />
               </div>
 
+              {isGeneric && (
+                <>
+                  <div className="field" style={{ display: 'flex', gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <label htmlFor="cm-imap-host">IMAP host</label>
+                      <input
+                        id="cm-imap-host"
+                        className="input"
+                        type="text"
+                        placeholder="imap.example.com"
+                        value={form.imapHost}
+                        onChange={e => setForm(prev => ({ ...prev, imapHost: e.target.value }))}
+                      />
+                    </div>
+                    <div style={{ width: 96 }}>
+                      <label htmlFor="cm-imap-port">IMAP port</label>
+                      <input
+                        id="cm-imap-port"
+                        className="input"
+                        type="number"
+                        value={form.imapPort}
+                        onChange={e => setForm(prev => ({ ...prev, imapPort: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="field" style={{ display: 'flex', gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <label htmlFor="cm-smtp-host">SMTP host</label>
+                      <input
+                        id="cm-smtp-host"
+                        className="input"
+                        type="text"
+                        placeholder="smtp.example.com"
+                        value={form.smtpHost}
+                        onChange={e => setForm(prev => ({ ...prev, smtpHost: e.target.value }))}
+                      />
+                    </div>
+                    <div style={{ width: 96 }}>
+                      <label htmlFor="cm-smtp-port">SMTP port</label>
+                      <input
+                        id="cm-smtp-port"
+                        className="input"
+                        type="number"
+                        value={form.smtpPort}
+                        onChange={e => setForm(prev => ({ ...prev, smtpPort: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div className="field">
-                <label htmlFor="fm-password">App password</label>
+                <label htmlFor="cm-password">{isGeneric ? 'Password' : 'App password'}</label>
                 <input
-                  id="fm-password"
+                  id="cm-password"
                   className="input"
                   type="password"
                   placeholder="••••-••••-••••-••••"
-                  value={appPasswordForm.password}
-                  onChange={e =>
-                    setAppPasswordForm(prev => ({ ...prev, password: e.target.value }))
-                  }
+                  value={form.password}
+                  onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
                   onKeyDown={e => { if (e.key === 'Enter' && !submitting) handleAppPasswordSubmit(); }}
                   autoComplete="current-password"
                 />
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                  Never your main Fastmail password. The credential is encrypted before storage.
+                  Use an app-specific password, not your main password. The credential is encrypted before storage.
                 </span>
               </div>
 
@@ -412,7 +558,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
             </>
           )}
 
-          {/* Normal flow: Fastmail app-password */}
+          {/* Normal flow: credentials */}
           {!atInboxLimit && step === 2 && (
             <>
               <Btn variant="ghost" onClick={handleBackToProviders}>Back</Btn>

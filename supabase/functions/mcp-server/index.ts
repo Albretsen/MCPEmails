@@ -1,5 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { ImapAuthError, ImapClient } from "./imap-client.ts";
+import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
+import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
 
 // ---------------------------------------------------------------------------
 // Supabase service-role client
@@ -392,75 +395,61 @@ async function authenticateRequest(
 // ---------------------------------------------------------------------------
 
 /**
- * Per-plan daily burst caps (UTC calendar day).
- * Prevents a single day from exhausting the full monthly allowance.
- * Enterprise has no cap.
+ * Per-plan per-minute request ceiling (fair-use burst limit).
+ *
+ * Usage is otherwise unlimited on every tier — this rolling 60-second ceiling
+ * is the only plan-based usage lever. It is enforced per WORKSPACE (aggregate
+ * across all of the workspace's API keys), so adding keys does not multiply
+ * throughput. The per-key rolling windows further below are a separate abuse
+ * guard that applies regardless of plan.
+ *
+ * `enterprise` is a legacy alias (the tier was removed) mapped to the Team
+ * ceiling so any pre-existing enterprise workspace is not throttled.
  */
-const PLAN_DAILY_BURST_CAPS: Record<string, number> = {
-  free: 100,
-  solo: 500,
-  pro: 2_000,
-  enterprise: Infinity,
+const PLAN_REQUESTS_PER_MINUTE: Record<string, number> = {
+  free: 60,
+  solo: 300,
+  pro: 1_000,
+  enterprise: 1_000,
 };
 
-/**
- * Per-plan monthly call caps (UTC calendar month).
- * This is the hard ceiling for the billing period.
- * Enterprise has no cap.
- */
-const PLAN_MONTHLY_CAPS: Record<string, number> = {
-  free: 500,
-  solo: 3_000,
-  pro: 20_000,
-  enterprise: Infinity,
-};
+/** Ceiling applied to unknown / unrecognised plan values. */
+const DEFAULT_REQUESTS_PER_MINUTE = PLAN_REQUESTS_PER_MINUTE.free;
+
+/** Width of the per-plan ceiling window, in milliseconds. */
+const PLAN_RPM_WINDOW_MS = 60_000;
 
 /**
- * Outcome of a plan quota check.
+ * Outcome of a per-plan per-minute ceiling check.
  */
 interface PlanQuotaResult {
-  /** True when the request is within plan limits. */
+  /** True when the request is within the plan's per-minute ceiling. */
   allowed: boolean;
   /** The workspace's current plan. */
   plan: string;
-  /** The plan's daily burst cap. Infinity for Enterprise. */
-  dailyBurstCap: number;
-  /** How many calls have been made today (UTC calendar day). */
-  usedToday: number;
-  /** The plan's monthly call cap. Infinity for Enterprise. */
-  monthlyCap: number;
-  /** How many calls have been made this UTC calendar month. */
-  usedThisMonth: number;
-  /**
-   * Which limit was hit. null when the request is allowed.
-   * 'monthly_total' → hard monthly cap exhausted (error_code: "quota_exceeded").
-   * 'daily_burst'   → burst cap hit but monthly quota still available
-   *                   (error_code: "rate_limit_exceeded").
-   */
-  quotaType: "monthly_total" | "daily_burst" | null;
-  /**
-   * Seconds until the relevant quota window resets.
-   * 0 when allowed.
-   */
+  /** The plan's per-minute request ceiling. */
+  perMinuteLimit: number;
+  /** How many calls the workspace has made in the trailing 60 seconds. */
+  usedThisMinute: number;
+  /** Seconds until the oldest call in the window drops out, freeing a slot. */
   retryAfterSeconds: number;
 }
 
 /**
- * Check the workspace's plan-based quota.
+ * Check the workspace's per-plan per-minute ceiling.
  *
- * Enforces two independent windows in priority order:
- *   1. Monthly total cap  — hard billing-period ceiling (error_code: "quota_exceeded")
- *   2. Daily burst cap    — single-day ceiling to prevent runaway agents
- *                           (error_code: "rate_limit_exceeded", window: "daily_burst")
+ * Counts the workspace's calls in the trailing 60 seconds (aggregated across
+ * all of its API keys) and compares against the plan ceiling. This replaces
+ * the former daily/monthly quota model — usage is unlimited; only burst rate
+ * is capped.
  *
- * Both counts are fetched in parallel from activity_log.
- * Fail-open: any DB error allows the request through, matching the behaviour
- * of the rolling-window rate limiter.
+ * Fail-open: any DB error allows the request through, matching the per-key
+ * rolling-window limiter.
  */
 async function checkPlanQuota(
   workspaceId: string,
 ): Promise<PlanQuotaResult> {
-  // ── 1. Look up workspace plan ─────────────────────────────────────────────
+  // 1. Look up workspace plan.
   const { data: workspace, error: wsError } = await supabase
     .from("workspaces")
     .select("plan")
@@ -476,150 +465,89 @@ async function checkPlanQuota(
     return {
       allowed: true,
       plan: "free",
-      dailyBurstCap: PLAN_DAILY_BURST_CAPS.free,
-      usedToday: 0,
-      monthlyCap: PLAN_MONTHLY_CAPS.free,
-      usedThisMonth: 0,
-      quotaType: null,
+      perMinuteLimit: DEFAULT_REQUESTS_PER_MINUTE,
+      usedThisMinute: 0,
       retryAfterSeconds: 0,
     };
   }
 
   const plan = (workspace.plan as string) ?? "free";
-  const dailyBurstCap =
-    PLAN_DAILY_BURST_CAPS[plan] ?? PLAN_DAILY_BURST_CAPS.free;
-  const monthlyCap = PLAN_MONTHLY_CAPS[plan] ?? PLAN_MONTHLY_CAPS.free;
+  const perMinuteLimit =
+    PLAN_REQUESTS_PER_MINUTE[plan] ?? DEFAULT_REQUESTS_PER_MINUTE;
 
-  // ── 2. Enterprise / unlimited — skip DB counts ───────────────────────────
-  if (dailyBurstCap === Infinity && monthlyCap === Infinity) {
-    return {
-      allowed: true,
-      plan,
-      dailyBurstCap: Infinity,
-      usedToday: 0,
-      monthlyCap: Infinity,
-      usedThisMonth: 0,
-      quotaType: null,
-      retryAfterSeconds: 0,
-    };
-  }
+  // 2. Count the workspace's calls in the trailing 60s window.
+  const windowStart = new Date(Date.now() - PLAN_RPM_WINDOW_MS).toISOString();
 
-  // ── 3. Compute window boundaries ─────────────────────────────────────────
-  const now = new Date();
+  const { count, error: countError } = await supabase
+    .from("activity_log")
+    .select("*", { count: "exact", head: true })
+    .eq("workspace_id", workspaceId)
+    .gte("created_at", windowStart);
 
-  const todayStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  ).toISOString();
-
-  const monthStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-  ).toISOString();
-
-  // ── 4. Count daily and monthly usage in parallel ──────────────────────────
-  const [dailyResult, monthlyResult] = await Promise.all([
-    supabase
-      .from("activity_log")
-      .select("*", { count: "exact", head: true })
-      .eq("workspace_id", workspaceId)
-      .gte("created_at", todayStart),
-    supabase
-      .from("activity_log")
-      .select("*", { count: "exact", head: true })
-      .eq("workspace_id", workspaceId)
-      .gte("created_at", monthStart),
-  ]);
-
-  if (dailyResult.error || monthlyResult.error) {
+  if (countError) {
     // Fail open.
-    const errMsg =
-      dailyResult.error?.message ?? monthlyResult.error?.message ?? "unknown";
     console.error("[mcp-server] plan_quota_count_failed", {
       workspace_id: workspaceId,
-      error: errMsg,
+      error: countError.message,
     });
     return {
       allowed: true,
       plan,
-      dailyBurstCap,
-      usedToday: 0,
-      monthlyCap,
-      usedThisMonth: 0,
-      quotaType: null,
+      perMinuteLimit,
+      usedThisMinute: 0,
       retryAfterSeconds: 0,
     };
   }
 
-  const usedToday = dailyResult.count ?? 0;
-  const usedThisMonth = monthlyResult.count ?? 0;
+  const usedThisMinute = count ?? 0;
 
-  // ── 5. Monthly cap check (highest priority) ───────────────────────────────
-  if (usedThisMonth >= monthlyCap) {
-    // Seconds until start of next UTC calendar month.
-    const nextMonth = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
-    );
-    const retryAfterSeconds = Math.max(
-      1,
-      Math.ceil((nextMonth.getTime() - Date.now()) / 1_000),
-    );
+  // 3. Within the ceiling.
+  if (usedThisMinute < perMinuteLimit) {
     return {
-      allowed: false,
+      allowed: true,
       plan,
-      dailyBurstCap,
-      usedToday,
-      monthlyCap,
-      usedThisMonth,
-      quotaType: "monthly_total",
-      retryAfterSeconds,
+      perMinuteLimit,
+      usedThisMinute,
+      retryAfterSeconds: 0,
     };
   }
 
-  // ── 6. Daily burst cap check ──────────────────────────────────────────────
-  if (usedToday >= dailyBurstCap) {
-    // Seconds until midnight UTC.
-    const tomorrow = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
-    );
-    const retryAfterSeconds = Math.max(
-      1,
-      Math.ceil((tomorrow.getTime() - Date.now()) / 1_000),
-    );
-    return {
-      allowed: false,
-      plan,
-      dailyBurstCap,
-      usedToday,
-      monthlyCap,
-      usedThisMonth,
-      quotaType: "daily_burst",
-      retryAfterSeconds,
-    };
-  }
+  // 4. Ceiling hit — Retry-After = when the oldest call leaves the window.
+  const { data: oldest } = await supabase
+    .from("activity_log")
+    .select("created_at")
+    .eq("workspace_id", workspaceId)
+    .gte("created_at", windowStart)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
 
-  // ── 7. Within both limits ─────────────────────────────────────────────────
+  const oldestTs = oldest?.created_at
+    ? new Date(oldest.created_at).getTime()
+    : Date.now() - PLAN_RPM_WINDOW_MS;
+
+  const windowExpiresAt = oldestTs + PLAN_RPM_WINDOW_MS;
+  const retryAfterSeconds = Math.max(
+    1,
+    Math.ceil((windowExpiresAt - Date.now()) / 1_000),
+  );
+
   return {
-    allowed: true,
+    allowed: false,
     plan,
-    dailyBurstCap,
-    usedToday,
-    monthlyCap,
-    usedThisMonth,
-    quotaType: null,
-    retryAfterSeconds: 0,
+    perMinuteLimit,
+    usedThisMinute,
+    retryAfterSeconds,
   };
 }
 
 /**
- * Build an HTTP 429 response for a plan quota exhaustion.
+ * Build an HTTP 429 response for a per-plan per-minute ceiling hit.
  *
- * Uses the same JSON-RPC error code (-32029) and structure as the rolling-
- * window rate limit response. The data.error_code field distinguishes the
- * two blocking conditions:
- *
- *   "quota_exceeded"      — monthly call cap exhausted; resets at month start
- *   "rate_limit_exceeded" — daily burst cap hit; resets at midnight UTC
- *
- * The human_message references the pricing page so users know how to upgrade.
+ * Uses the same JSON-RPC error code (-32029) and `error_code:
+ * "rate_limit_exceeded"` as the per-key rolling-window limiter. The
+ * human_message references the pricing page so users know how to upgrade for a
+ * higher ceiling.
  */
 function buildQuotaExceededResponse(
   requestId: string | number | null,
@@ -628,39 +556,23 @@ function buildQuotaExceededResponse(
   const planLabel =
     result.plan.charAt(0).toUpperCase() + result.plan.slice(1);
 
-  let errorCode: string;
-  let humanMessage: string;
-
-  if (result.quotaType === "monthly_total") {
-    errorCode = "quota_exceeded";
-    humanMessage =
-      `Your ${planLabel} plan monthly limit of ${result.monthlyCap} calls has been reached. ` +
-      `Quota resets at the start of the next UTC calendar month. ` +
-      `Upgrade for more calls: https://www.mcpemails.com/pricing`;
-  } else {
-    // daily_burst
-    errorCode = "rate_limit_exceeded";
-    humanMessage =
-      `Your ${planLabel} plan daily burst limit of ${result.dailyBurstCap} calls has been reached. ` +
-      `The burst cap resets at midnight UTC. ` +
-      `Your monthly quota (${result.usedThisMonth}/${result.monthlyCap}) is still available tomorrow. ` +
-      `Upgrade for a higher burst cap: https://www.mcpemails.com/pricing`;
-  }
+  const humanMessage =
+    `Your ${planLabel} plan allows ${result.perMinuteLimit} requests per minute, and that ceiling has been reached. ` +
+    `Please wait ${result.retryAfterSeconds} seconds before retrying. ` +
+    `Usage is unlimited — upgrade for a higher burst ceiling: https://www.mcpemails.com/pricing`;
 
   const body: JsonRpcErrorResponse = {
     jsonrpc: "2.0",
     id: requestId,
     error: {
       code: RPC_RATE_LIMIT_EXCEEDED,
-      message: "Quota exceeded",
+      message: "Rate limit exceeded",
       data: {
-        error_code: errorCode,
-        quota_type: result.quotaType,
+        error_code: "rate_limit_exceeded",
+        window: "per_minute",
         plan: result.plan,
-        daily_burst_cap: result.dailyBurstCap === Infinity ? null : result.dailyBurstCap,
-        used_today: result.usedToday,
-        monthly_cap: result.monthlyCap === Infinity ? null : result.monthlyCap,
-        used_this_month: result.usedThisMonth,
+        limit: result.perMinuteLimit,
+        used: result.usedThisMinute,
         retry_after: result.retryAfterSeconds,
         human_message: humanMessage,
       },
@@ -673,10 +585,9 @@ function buildQuotaExceededResponse(
       "Content-Type": "application/json",
       "Retry-After": String(result.retryAfterSeconds),
       "X-Plan": result.plan,
-      "X-Plan-Daily-Burst-Cap": result.dailyBurstCap === Infinity ? "unlimited" : String(result.dailyBurstCap),
-      "X-Plan-Used-Today": String(result.usedToday),
-      "X-Plan-Monthly-Cap": result.monthlyCap === Infinity ? "unlimited" : String(result.monthlyCap),
-      "X-Plan-Used-This-Month": String(result.usedThisMonth),
+      "X-RateLimit-Limit": String(result.perMinuteLimit),
+      "X-RateLimit-Remaining": "0",
+      "X-RateLimit-Window": "per_minute",
       ...CORS_HEADERS,
     },
   });
@@ -1444,13 +1355,17 @@ interface InboxRow {
   imap_tls: boolean;
   /** AES-256-GCM ciphertext encoded as base64url text. */
   imap_password: string | null;
+  smtp_host: string | null;
+  smtp_port: number | null;
+  smtp_tls: boolean;
   status: string;
 }
 
 const INBOX_SELECT_COLUMNS =
   "id, workspace_id, provider, email_address, display_name, " +
   "oauth_access_token, oauth_refresh_token, oauth_token_expires_at, " +
-  "imap_host, imap_port, imap_tls, imap_password, status";
+  "imap_host, imap_port, imap_tls, imap_password, " +
+  "smtp_host, smtp_port, smtp_tls, status";
 
 /**
  * Decrypts an AES-256-GCM ciphertext produced by
@@ -1646,7 +1561,7 @@ async function resolveInbox(
 
   if (error || !data) return null;
 
-  const inbox = data as InboxRow;
+  const inbox = data as unknown as InboxRow;
   if (inbox.status !== "active") return null;
 
   return inbox;
@@ -1857,6 +1772,120 @@ async function withFreshOutlookToken(inbox: InboxRow): Promise<string> {
   })();
 
   return tokens.access_token;
+}
+
+// ---------------------------------------------------------------------------
+// Fastmail token refresh + JMAP auth header
+// ---------------------------------------------------------------------------
+
+const FASTMAIL_TOKEN_ENDPOINT = "https://www.fastmail.com/oauth/token";
+
+/**
+ * Returns a fresh Fastmail OAuth access token, refreshing via the stored
+ * refresh token when the current one is within REFRESH_THRESHOLD_MS of expiry.
+ * Fastmail access tokens last ~1 year, so the refresh path rarely runs, but it
+ * keeps long-lived OAuth inboxes working after expiry or early revocation.
+ */
+async function withFreshFastmailToken(inbox: InboxRow): Promise<string> {
+  if (!inbox.oauth_access_token || !inbox.oauth_refresh_token) {
+    throw new Error(
+      `Fastmail inbox ${inbox.id} is missing OAuth tokens — user must reconnect.`,
+    );
+  }
+
+  const now = Date.now();
+  const expiresAt = inbox.oauth_token_expires_at
+    ? new Date(inbox.oauth_token_expires_at).getTime()
+    : 0;
+
+  if (expiresAt > now + REFRESH_THRESHOLD_MS) {
+    return await decryptStoredToken(inbox.oauth_access_token);
+  }
+
+  const refreshToken = await decryptStoredToken(inbox.oauth_refresh_token);
+  const clientId = Deno.env.get("FASTMAIL_CLIENT_ID");
+  const clientSecret = Deno.env.get("FASTMAIL_CLIENT_SECRET");
+
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      "FASTMAIL_CLIENT_ID or FASTMAIL_CLIENT_SECRET is not configured in Edge Function secrets.",
+    );
+  }
+
+  const resp = await fetch(FASTMAIL_TOKEN_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    }),
+  });
+
+  if (!resp.ok) {
+    // Fastmail signals refresh-token invalidation with a 4xx — mark the inbox
+    // for reconnection rather than retrying.
+    if (resp.status === 400 || resp.status === 401) {
+      supabase
+        .from("inboxes")
+        .update({
+          status: "error",
+          last_error: "Fastmail refresh token revoked — user must reconnect.",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", inbox.id)
+        .then(() => {});
+      throw new Error("fastmail_auth_failed");
+    }
+    throw new Error(`Fastmail token refresh failed: ${resp.statusText}`);
+  }
+
+  const tokens = (await resp.json()) as {
+    access_token: string;
+    expires_in?: number;
+  };
+
+  (async () => {
+    try {
+      const encrypted = await encryptForStorage(tokens.access_token);
+      const newExpiry = new Date(
+        Date.now() + (tokens.expires_in ?? 365 * 24 * 60 * 60) * 1_000,
+      ).toISOString();
+      await supabase
+        .from("inboxes")
+        .update({
+          oauth_access_token: encrypted,
+          oauth_token_expires_at: newExpiry,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", inbox.id);
+    } catch (e) {
+      console.warn("[mcp-server] fastmail_token_persist_failed", {
+        inbox_id: inbox.id,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  })();
+
+  return tokens.access_token;
+}
+
+/**
+ * Builds the JMAP Authorization header for a Fastmail inbox: a (refreshed)
+ * Bearer token for OAuth inboxes, or HTTP Basic for app-password inboxes.
+ */
+async function buildFastmailAuthHeader(inbox: InboxRow): Promise<string> {
+  if (inbox.oauth_access_token) {
+    return `Bearer ${await withFreshFastmailToken(inbox)}`;
+  }
+  if (inbox.imap_password) {
+    const password = await decryptStoredToken(inbox.imap_password);
+    return `Basic ${btoa(`${inbox.email_address}:${password}`)}`;
+  }
+  throw new Error(
+    `Fastmail inbox ${inbox.id} has no usable credentials — user must reconnect.`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -2224,19 +2253,7 @@ async function listFastmailMessages(
   unreadOnly: boolean,
 ): Promise<ListInboxResult> {
   // Build auth header based on connection type.
-  let authHeader: string;
-  if (inbox.oauth_access_token) {
-    const token = await decryptStoredToken(inbox.oauth_access_token);
-    authHeader = `Bearer ${token}`;
-  } else if (inbox.imap_password) {
-    const password = await decryptStoredToken(inbox.imap_password);
-    const creds = btoa(`${inbox.email_address}:${password}`);
-    authHeader = `Basic ${creds}`;
-  } else {
-    throw new Error(
-      `Fastmail inbox ${inbox.id} has no usable credentials — user must reconnect.`,
-    );
-  }
+  const authHeader = await buildFastmailAuthHeader(inbox);
 
   // Step 1: Discover JMAP session.
   const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
@@ -2410,6 +2427,544 @@ async function listFastmailMessages(
 }
 
 // ---------------------------------------------------------------------------
+// Generic IMAP provider — shared helpers (iCloud, Yahoo, Zoho, Yandex, generic)
+// ---------------------------------------------------------------------------
+
+/**
+ * IMAP UIDs are unique only within a mailbox, so the message id exposed to MCP
+ * clients encodes the folder: "<folder>:<uid>". read_email/reply_to_email decode
+ * it to know which mailbox to SELECT. A bare numeric id is treated as INBOX.
+ */
+function encodeImapId(folder: string, uid: number): string {
+  return `${folder}:${uid}`;
+}
+
+function decodeImapId(id: string): { folder: string; uid: number } {
+  const idx = id.lastIndexOf(":");
+  if (idx === -1) return { folder: "INBOX", uid: Number(id) };
+  return { folder: id.slice(0, idx), uid: Number(id.slice(idx + 1)) };
+}
+
+/** Strip surrounding angle brackets from a Message-ID header value. */
+function stripAngleBrackets(s: string): string {
+  return s.replace(/^<|>$/g, "").trim();
+}
+
+/** Convert an RFC 5322 date header to ISO 8601; fall back to now on parse failure. */
+function imapDateToIso(raw: string | null): string {
+  if (!raw) return new Date().toISOString();
+  const ms = Date.parse(raw);
+  return Number.isNaN(ms) ? new Date().toISOString() : new Date(ms).toISOString();
+}
+
+/** Base64-encode raw bytes (standard, not URL-safe), chunked to avoid call-stack limits. */
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+/** Per-attachment inclusion budget (bytes). Larger attachments return data: null. */
+const ATTACHMENT_DATA_BUDGET = 10 * 1024 * 1024;
+
+// ---------------------------------------------------------------------------
+// Generic IMAP provider — list_inbox
+// ---------------------------------------------------------------------------
+
+/**
+ * Maps MCPEmails canonical folder names to common IMAP folder names.
+ * Unknown values are passed through unchanged. Folder naming varies by provider
+ * (e.g. iCloud uses "Sent Messages"); INBOX is universal.
+ */
+function imapFolderName(folder: string): string {
+  const MAP: Record<string, string> = {
+    INBOX: "INBOX",
+    SENT: "Sent",
+    DRAFTS: "Drafts",
+    DRAFT: "Drafts",
+    TRASH: "Trash",
+    SPAM: "Junk",
+    JUNK: "Junk",
+    ARCHIVE: "Archive",
+  };
+  return MAP[folder.toUpperCase()] ?? folder;
+}
+
+/**
+ * Implements `list_inbox` for IMAP inboxes connected with an app password.
+ *
+ * Opens a TLS IMAP session, selects the folder, UID-searches (ALL or UNSEEN),
+ * takes the newest `limit` UIDs at `offset`, and fetches ENVELOPE + FLAGS +
+ * BODYSTRUCTURE. Body preview is not fetched during listing (deferred to
+ * read_email), so `preview` is empty here.
+ *
+ * Throws "imap_auth_failed" on credential rejection so the dispatcher can emit
+ * a reconnect prompt.
+ */
+async function listImapMessages(
+  inbox: InboxRow,
+  folder: string,
+  limit: number,
+  offset: number,
+  unreadOnly: boolean,
+): Promise<ListInboxResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+
+    await client.selectMailbox(imapFolderName(folder));
+
+    const allUids = await client.uidSearch(unreadOnly ? "UNSEEN" : "ALL");
+    const total = allUids.length;
+
+    // Newest first: highest UID first.
+    const ordered = allUids.slice().sort((a, b) => b - a);
+    const pageUids = ordered.slice(offset, offset + limit);
+
+    const summaries = await client.fetchSummaries(pageUids);
+    // Preserve newest-first ordering (FETCH may return any order).
+    const byUid = new Map(summaries.map((s) => [s.uid, s]));
+
+    const messages: EmailSummary[] = [];
+    for (const uid of pageUids) {
+      const s = byUid.get(uid);
+      if (!s) continue;
+      messages.push({
+        id: encodeImapId(folder, s.uid),
+        from: s.envelope.from[0] ?? { name: "", email: "" },
+        to: s.envelope.to,
+        subject: s.envelope.subject,
+        date: s.envelope.date,
+        preview: s.preview,
+        is_read: s.flags.includes("\\Seen"),
+        has_attachments: s.hasAttachments,
+        folder,
+        thread_id: String(s.uid),
+      });
+    }
+
+    return {
+      messages,
+      total,
+      has_more: offset + limit < total,
+      next_offset: offset + limit,
+    };
+  } catch (err) {
+    if (err instanceof ImapAuthError) {
+      throw new Error("imap_auth_failed");
+    }
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Generic IMAP provider — read_email
+// ---------------------------------------------------------------------------
+
+/**
+ * Implements `read_email` for IMAP inboxes. The message id is "<folder>:<uid>"
+ * (see encodeImapId); the folder is SELECTed and the full RFC 822 message is
+ * fetched and parsed via mime.ts.
+ *
+ * Throws "message_not_found" for a bad id/UID and "imap_auth_failed" on
+ * credential rejection.
+ */
+async function readImapMessage(
+  inbox: InboxRow,
+  messageId: string,
+  includeHtml: boolean,
+  includeAttachments: boolean,
+  markAsRead: boolean,
+): Promise<ReadEmailResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(messageId);
+  if (!Number.isFinite(uid) || uid <= 0) {
+    throw new Error("message_not_found");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+
+    const msg = await client.fetchMessageRaw(uid);
+    if (!msg) throw new Error("message_not_found");
+
+    const parsed = parseEmail(msg.raw);
+    const h = parsed.headers;
+
+    const subject = decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)");
+    const from = parseEmailAddress(decodeEncodedWords(getHeader(h, "from") ?? ""));
+    const to = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
+    const cc = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
+    const bcc = parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? ""));
+    const replyToList = parseAddressList(decodeEncodedWords(getHeader(h, "reply-to") ?? ""));
+    const inReplyToHeader = getHeader(h, "in-reply-to");
+    const referencesHeader = getHeader(h, "references") ?? "";
+
+    if (markAsRead && !msg.flags.includes("\\Seen")) {
+      await client.markSeen(uid);
+    }
+
+    const attachments: ReadEmailAttachmentMeta[] = parsed.attachments.map((a) => ({
+      filename: a.filename,
+      mime_type: a.mimeType,
+      size_bytes: a.size,
+      data: includeAttachments && a.size <= ATTACHMENT_DATA_BUDGET
+        ? bytesToBase64(a.content)
+        : null,
+    }));
+
+    return {
+      id: messageId,
+      thread_id: String(uid),
+      from,
+      to,
+      cc,
+      bcc,
+      reply_to: replyToList[0] ?? null,
+      subject,
+      date: imapDateToIso(getHeader(h, "date")),
+      body_text: parsed.text,
+      body_html: includeHtml && parsed.html ? sanitizeEmailHtml(parsed.html) : null,
+      attachments,
+      is_read: markAsRead ? true : msg.flags.includes("\\Seen"),
+      labels: [],
+      in_reply_to: inReplyToHeader ? stripAngleBrackets(inReplyToHeader) : null,
+      references: referencesHeader
+        .split(/\s+/)
+        .map(stripAngleBrackets)
+        .filter(Boolean),
+    };
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Generic IMAP provider — search_emails
+// ---------------------------------------------------------------------------
+
+/**
+ * Implements `search_emails` for IMAP inboxes using IMAP SEARCH TEXT (matches
+ * headers + body). Searches the first folder in includeFolders (default INBOX);
+ * IMAP SEARCH is single-mailbox. Newest UIDs first; no relevance score.
+ */
+async function searchImapMessages(
+  inbox: InboxRow,
+  query: string,
+  limit: number,
+  offset: number,
+  includeFolders: string[],
+): Promise<SearchEmailsResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const folder = includeFolders[0] ?? "INBOX";
+  const password = await decryptStoredToken(inbox.imap_password);
+
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+
+    const quoted = `"${query.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+    const allUids = await client.uidSearch(`TEXT ${quoted}`);
+    const total = allUids.length;
+
+    const ordered = allUids.slice().sort((a, b) => b - a);
+    const pageUids = ordered.slice(offset, offset + limit);
+
+    const summaries = await client.fetchSummaries(pageUids);
+    const byUid = new Map(summaries.map((s) => [s.uid, s]));
+
+    const messages: SearchEmailSummary[] = [];
+    for (const uid of pageUids) {
+      const s = byUid.get(uid);
+      if (!s) continue;
+      messages.push({
+        id: encodeImapId(folder, s.uid),
+        from: s.envelope.from[0] ?? { name: "", email: "" },
+        to: s.envelope.to,
+        subject: s.envelope.subject,
+        date: s.envelope.date,
+        preview: s.preview,
+        is_read: s.flags.includes("\\Seen"),
+        has_attachments: s.hasAttachments,
+        folder,
+        thread_id: String(s.uid),
+        relevance_score: null,
+      });
+    }
+
+    return {
+      messages,
+      total,
+      has_more: offset + limit < total,
+      next_offset: offset + limit,
+      query_normalized: query,
+    };
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Generic IMAP provider — send_email / reply_to_email (SMTP)
+// ---------------------------------------------------------------------------
+
+/**
+ * Submit a pre-built RFC 822 message via the inbox's SMTP server using the
+ * stored app password. Implicit TLS on 465; STARTTLS is inferred for port 587.
+ * Maps SMTP auth failure to the "imap_auth_failed" sentinel.
+ */
+async function imapSmtpSend(
+  inbox: InboxRow,
+  mimeMessage: string,
+  recipients: string[],
+): Promise<void> {
+  if (!inbox.smtp_host || !inbox.smtp_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+  const security = inbox.smtp_port === 587 ? "starttls" : "tls";
+  try {
+    await sendViaSmtp(
+      {
+        host: inbox.smtp_host,
+        port: inbox.smtp_port,
+        security,
+        email: inbox.email_address,
+        password,
+      },
+      { from: inbox.email_address, recipients, rawMessage: mimeMessage },
+    );
+  } catch (err) {
+    if (err instanceof SmtpAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  }
+}
+
+/** Common names for the Sent mailbox across IMAP providers, tried in order. */
+const SENT_FOLDER_CANDIDATES = ["Sent", "Sent Messages", "Sent Items", "INBOX.Sent"];
+
+/**
+ * Best-effort: file a copy of an outgoing message in the Sent folder via IMAP
+ * APPEND. SMTP submission does not do this automatically (unlike the Gmail /
+ * Graph / JMAP send APIs). Never throws — a failed Sent copy must not fail the
+ * send itself.
+ */
+async function appendToSentFolder(inbox: InboxRow, mimeMessage: string): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) return;
+  let client: ImapClient | null = null;
+  try {
+    const password = await decryptStoredToken(inbox.imap_password);
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    for (const mbox of SENT_FOLDER_CANDIDATES) {
+      try {
+        if (await client.append(mbox, mimeMessage)) break;
+      } catch {
+        // Try the next candidate folder name.
+      }
+    }
+  } catch (err) {
+    console.warn("[mcp-server] imap_sent_append_failed", {
+      inbox_id: inbox.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+/** Implements `send_email` for IMAP inboxes via SMTP submission. */
+async function sendImapMessage(
+  inbox: InboxRow,
+  params: SendEmailParams,
+): Promise<SendEmailResult> {
+  const messageId = crypto.randomUUID();
+  const mime = buildMimeMessage({
+    from: inbox.display_name
+      ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
+      : inbox.email_address,
+    to: params.to,
+    cc: params.cc.length ? params.cc : undefined,
+    subject: params.subject,
+    textBody: params.textBody,
+    htmlBody: params.htmlBody,
+    attachments: params.attachments.map((a) => ({
+      filename: a.filename,
+      mimeType: a.mime_type,
+      data: a.data,
+    })),
+    replyTo: params.replyTo,
+    messageId,
+  });
+
+  const recipients = [...params.to, ...params.cc, ...params.bcc]
+    .map((e) => parseEmailAddress(e).email)
+    .filter(Boolean);
+  await imapSmtpSend(inbox, mime, recipients);
+  await appendToSentFolder(inbox, mime);
+
+  const fullId = `<${messageId}@mcpemails.com>`;
+  return {
+    message_id: fullId,
+    thread_id: fullId,
+    sent_at: new Date().toISOString(),
+    to: params.to.map((e) => parseEmailAddress(e)),
+    cc: params.cc.map((e) => parseEmailAddress(e)),
+    bcc: params.bcc.map((e) => parseEmailAddress(e)),
+    subject: params.subject,
+    status: "sent",
+  };
+}
+
+/** Implements `reply_to_email` for IMAP inboxes: read original, then SMTP send. */
+async function replyImapMessage(
+  inbox: InboxRow,
+  originalMessageId: string,
+  params: ReplyToEmailParams,
+): Promise<ReplyToEmailResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(originalMessageId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+  const password = await decryptStoredToken(inbox.imap_password);
+
+  // Read the original message for threading headers + recipients.
+  let original: ReturnType<typeof parseEmail> | null = null;
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    const msg = await client.fetchMessageRaw(uid);
+    if (!msg) throw new Error("message_not_found");
+    original = parseEmail(msg.raw);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+
+  if (!original) throw new Error("message_not_found");
+  const h = original.headers;
+  const origMessageId = getHeader(h, "message-id") ?? "";
+  const origReferences = getHeader(h, "references") ?? "";
+  const origSubject = decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)");
+  const replySubject = /^re:/i.test(origSubject.trim()) ? origSubject : `Re: ${origSubject}`;
+
+  const fromAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "from") ?? ""));
+  const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
+  const ccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
+
+  const self = inbox.email_address.toLowerCase();
+  let recipients: EmailAddressEntry[];
+  if (params.replyAll) {
+    const seen = new Set<string>();
+    recipients = [];
+    for (const a of [...fromAddrs, ...toAddrs, ...ccAddrs]) {
+      const key = a.email.toLowerCase();
+      if (!a.email || key === self || seen.has(key)) continue;
+      seen.add(key);
+      recipients.push(a);
+    }
+    recipients = recipients.slice(0, 50);
+  } else {
+    recipients = fromAddrs.slice(0, 1);
+  }
+
+  if (recipients.length === 0) {
+    throw new Error(
+      "reply_to_email: could not determine reply recipients from original message.",
+    );
+  }
+
+  const references = [origReferences, origMessageId].filter(Boolean).join(" ").trim();
+  const messageId = crypto.randomUUID();
+  const toStrings = recipients.map((a) =>
+    a.name ? `${encodeMimeHeaderValue(a.name)} <${a.email}>` : a.email
+  );
+
+  const mime = buildMimeMessage({
+    from: inbox.display_name
+      ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
+      : inbox.email_address,
+    to: toStrings,
+    subject: replySubject,
+    textBody: params.body,
+    htmlBody: params.htmlBody,
+    attachments: params.attachments.map((a) => ({
+      filename: a.filename,
+      mimeType: a.mime_type,
+      data: a.data,
+    })),
+    messageId,
+    inReplyTo: origMessageId || undefined,
+    references: references || undefined,
+  });
+
+  await imapSmtpSend(inbox, mime, recipients.map((a) => a.email));
+  await appendToSentFolder(inbox, mime);
+
+  return {
+    message_id: `<${messageId}@mcpemails.com>`,
+    thread_id: String(uid),
+    sent_at: new Date().toISOString(),
+    in_reply_to: origMessageId,
+    to: recipients,
+    subject: replySubject,
+    status: "sent",
+  };
+}
+
+// ---------------------------------------------------------------------------
 // list_inbox — top-level handler
 // ---------------------------------------------------------------------------
 
@@ -2537,6 +3092,15 @@ async function executeListInbox(
           unreadOnly,
         );
         break;
+      case "imap":
+        listResult = await listImapMessages(
+          inbox,
+          folder,
+          limit,
+          offset,
+          unreadOnly,
+        );
+        break;
       default:
         return {
           result: {
@@ -2544,7 +3108,7 @@ async function executeListInbox(
               type: "text",
               text:
                 `Provider '${inbox.provider}' is not yet supported by list_inbox. ` +
-                "Supported providers: gmail, outlook, fastmail.",
+                "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
           },
@@ -2557,7 +3121,8 @@ async function executeListInbox(
     const isAuthFailure =
       message === "gmail_auth_failed" ||
       message === "outlook_auth_failed" ||
-      message === "fastmail_auth_failed";
+      message === "fastmail_auth_failed" ||
+      message === "imap_auth_failed";
 
     if (isAuthFailure) {
       return {
@@ -3251,19 +3816,7 @@ async function readFastmailMessage(
   markAsRead: boolean,
 ): Promise<ReadEmailResult> {
   // Build auth header.
-  let authHeader: string;
-  if (inbox.oauth_access_token) {
-    const token = await decryptStoredToken(inbox.oauth_access_token);
-    authHeader = `Bearer ${token}`;
-  } else if (inbox.imap_password) {
-    const password = await decryptStoredToken(inbox.imap_password);
-    const creds = btoa(`${inbox.email_address}:${password}`);
-    authHeader = `Basic ${creds}`;
-  } else {
-    throw new Error(
-      `Fastmail inbox ${inbox.id} has no usable credentials — user must reconnect.`,
-    );
-  }
+  const authHeader = await buildFastmailAuthHeader(inbox);
 
   // Step 1: Discover session.
   const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
@@ -3636,6 +4189,15 @@ async function executeReadEmail(
           markAsRead,
         );
         break;
+      case "imap":
+        readResult = await readImapMessage(
+          inbox,
+          messageId,
+          includeHtml,
+          includeAttachments,
+          markAsRead,
+        );
+        break;
       default:
         return {
           result: {
@@ -3643,7 +4205,7 @@ async function executeReadEmail(
               type: "text",
               text:
                 `Provider '${inbox.provider}' is not yet supported by read_email. ` +
-                "Supported providers: gmail, outlook, fastmail.",
+                "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
           },
@@ -3673,7 +4235,8 @@ async function executeReadEmail(
     const isAuthFailure =
       message === "gmail_auth_failed" ||
       message === "outlook_auth_failed" ||
-      message === "fastmail_auth_failed";
+      message === "fastmail_auth_failed" ||
+      message === "imap_auth_failed";
 
     if (isAuthFailure) {
       return {
@@ -4178,13 +4741,14 @@ async function sendOutlookMessage(
     throw new Error(`Outlook send error: ${errMsg}`);
   }
 
-  // 202 Accepted — no body. Generate a synthetic local ID.
-  const syntheticId = crypto.randomUUID();
+  // 202 Accepted — Graph's sendMail returns no body, so no provider message id
+  // is available. Return empty ids rather than a fabricated UUID that a caller
+  // could mistake for a fetchable Graph id.
   const sentAt = new Date().toISOString();
 
   return {
-    message_id: syntheticId,
-    thread_id: syntheticId,
+    message_id: "",
+    thread_id: "",
     sent_at: sentAt,
     to: params.to.map((e) => parseEmailAddress(e)),
     cc: params.cc.map((e) => parseEmailAddress(e)),
@@ -4192,6 +4756,50 @@ async function sendOutlookMessage(
     subject: params.subject,
     status: "sent",
   };
+}
+
+// ---------------------------------------------------------------------------
+// Fastmail provider — mailbox role resolution
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolves the Drafts and Sent mailbox ids for a Fastmail account.
+ *
+ * JMAP (RFC 8621) requires every Email to belong to at least one Mailbox, so an
+ * outgoing message must be created inside a real mailbox (Drafts) before it can
+ * be submitted. `mailboxIds` keys cannot be JMAP result back-references, so the
+ * ids have to be resolved in a separate request before the send batch.
+ */
+async function resolveFastmailRoleMailboxes(
+  apiUrl: string,
+  authHeader: string,
+  accountId: string,
+): Promise<{ draftsId?: string; sentId?: string }> {
+  const resp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        ["Mailbox/query", { accountId, filter: { role: "drafts" }, limit: 1 }, "drafts"],
+        ["Mailbox/query", { accountId, filter: { role: "sent" }, limit: 1 }, "sent"],
+      ],
+    }),
+  });
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP Mailbox/query error: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as {
+    methodResponses?: [string, { ids?: string[] }, string][];
+  };
+  const responses = data.methodResponses ?? [];
+  const draftsId = responses.find(([, , callId]) => callId === "drafts")?.[1]?.ids?.[0];
+  const sentId = responses.find(([, , callId]) => callId === "sent")?.[1]?.ids?.[0];
+  return { draftsId, sentId };
 }
 
 // ---------------------------------------------------------------------------
@@ -4216,19 +4824,7 @@ async function sendFastmailMessage(
   params: SendEmailParams,
 ): Promise<SendEmailResult> {
   // Build auth header
-  let authHeader: string;
-  if (inbox.oauth_access_token) {
-    const token = await decryptStoredToken(inbox.oauth_access_token);
-    authHeader = `Bearer ${token}`;
-  } else if (inbox.imap_password) {
-    const password = await decryptStoredToken(inbox.imap_password);
-    const creds = btoa(`${inbox.email_address}:${password}`);
-    authHeader = `Basic ${creds}`;
-  } else {
-    throw new Error(
-      `Fastmail inbox ${inbox.id} has no usable credentials — user must reconnect.`,
-    );
-  }
+  const authHeader = await buildFastmailAuthHeader(inbox);
 
   // Step 1: Discover JMAP session
   const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
@@ -4288,6 +4884,20 @@ async function sendFastmailMessage(
     });
   }
 
+  // Resolve the Drafts/Sent mailboxes — JMAP requires the email to live in a
+  // mailbox before it can be submitted.
+  const { draftsId, sentId } = await resolveFastmailRoleMailboxes(
+    apiUrl,
+    authHeader,
+    accountId,
+  );
+  const placementId = draftsId ?? sentId;
+  if (!placementId) {
+    throw new Error(
+      "Fastmail JMAP: could not resolve a Drafts or Sent mailbox to place the outgoing message.",
+    );
+  }
+
   // Step 3: Build the JMAP email object
   const fromAddress = inbox.display_name
     ? { name: inbox.display_name, email: inbox.email_address }
@@ -4311,6 +4921,7 @@ async function sendFastmailMessage(
   }
 
   const emailCreate: Record<string, unknown> = {
+    mailboxIds: { [placementId]: true },
     from: [fromAddress],
     to: params.to.map(mapAddr),
     ...(params.cc.length ? { cc: params.cc.map(mapAddr) } : {}),
@@ -4332,7 +4943,33 @@ async function sendFastmailMessage(
     email: parseEmailAddress(e).email,
   }));
 
-  // Step 4: JMAP batch — Email/set (create) + EmailSubmission/set (send)
+  // Step 4: JMAP batch — Email/set (create) + EmailSubmission/set (send).
+  // On successful submission, clear the $draft flag and move the message out of
+  // Drafts into Sent so it doesn't linger as an unsent draft.
+  const submissionSet: Record<string, unknown> = {
+    accountId,
+    create: {
+      sub1: {
+        emailId: "#draft",
+        envelope: {
+          mailFrom: { email: inbox.email_address },
+          rcptTo: allRcptTo,
+        },
+      },
+    },
+  };
+  if (sentId) {
+    const patch: Record<string, unknown> = {
+      "keywords/$draft": null,
+      "keywords/$seen": true,
+    };
+    if (placementId !== sentId) {
+      patch[`mailboxIds/${placementId}`] = null;
+      patch[`mailboxIds/${sentId}`] = true;
+    }
+    submissionSet.onSuccessUpdateEmail = { "#sub1": patch };
+  }
+
   const jmapBody = {
     using: [
       "urn:ietf:params:jmap:core",
@@ -4348,22 +4985,7 @@ async function sendFastmailMessage(
         },
         "e1",
       ],
-      [
-        "EmailSubmission/set",
-        {
-          accountId,
-          create: {
-            sub1: {
-              emailId: "#draft",
-              envelope: {
-                mailFrom: { email: inbox.email_address },
-                rcptTo: allRcptTo,
-              },
-            },
-          },
-        },
-        "s1",
-      ],
+      ["EmailSubmission/set", submissionSet, "s1"],
     ],
   };
 
@@ -4782,12 +5404,13 @@ async function replyOutlookMessage(
     throw new Error(`Outlook reply error: ${errMsg}`);
   }
 
-  const syntheticId = crypto.randomUUID();
+  // Graph's sendMail returns no body, so no provider message id is available
+  // for the reply. The conversation id (real) is preserved as the thread id.
   const sentAt = new Date().toISOString();
 
   return {
-    message_id: syntheticId,
-    thread_id: origMsg.conversationId ?? syntheticId,
+    message_id: "",
+    thread_id: origMsg.conversationId ?? "",
     sent_at: sentAt,
     in_reply_to: originalMessageId,
     to: toRecipients.map((r) => ({
@@ -4821,19 +5444,7 @@ async function replyFastmailMessage(
   params: ReplyToEmailParams,
 ): Promise<ReplyToEmailResult> {
   // ── Build auth header ─────────────────────────────────────────────────────
-  let authHeader: string;
-  if (inbox.oauth_access_token) {
-    const token = await decryptStoredToken(inbox.oauth_access_token);
-    authHeader = `Bearer ${token}`;
-  } else if (inbox.imap_password) {
-    const password = await decryptStoredToken(inbox.imap_password);
-    const creds = btoa(`${inbox.email_address}:${password}`);
-    authHeader = `Basic ${creds}`;
-  } else {
-    throw new Error(
-      `Fastmail inbox ${inbox.id} has no usable credentials — user must reconnect.`,
-    );
-  }
+  const authHeader = await buildFastmailAuthHeader(inbox);
 
   // ── Step 1: Discover JMAP session ─────────────────────────────────────────
   const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
@@ -5003,6 +5614,20 @@ async function replyFastmailMessage(
   }
 
   // ── Step 5: Build and submit the reply ───────────────────────────────────
+  // Resolve the Drafts/Sent mailboxes — JMAP requires the email to live in a
+  // mailbox before it can be submitted.
+  const { draftsId, sentId } = await resolveFastmailRoleMailboxes(
+    apiUrl,
+    authHeader,
+    accountId,
+  );
+  const placementId = draftsId ?? sentId;
+  if (!placementId) {
+    throw new Error(
+      "Fastmail JMAP: could not resolve a Drafts or Sent mailbox to place the reply.",
+    );
+  }
+
   const fromAddress = inbox.display_name
     ? { name: inbox.display_name, email: inbox.email_address }
     : { email: inbox.email_address };
@@ -5020,6 +5645,7 @@ async function replyFastmailMessage(
   }
 
   const emailCreate: Record<string, unknown> = {
+    mailboxIds: { [placementId]: true },
     from: [fromAddress],
     to: toAddresses.map((a) =>
       a.name ? { name: a.name, email: a.email } : { email: a.email }
@@ -5039,6 +5665,32 @@ async function replyFastmailMessage(
 
   const allRcptTo = toAddresses.map((a) => ({ email: a.email }));
 
+  // On successful submission, clear the $draft flag and move the reply out of
+  // Drafts into Sent so it doesn't linger as an unsent draft.
+  const submissionSet: Record<string, unknown> = {
+    accountId,
+    create: {
+      sub1: {
+        emailId: "#draft",
+        envelope: {
+          mailFrom: { email: inbox.email_address },
+          rcptTo: allRcptTo,
+        },
+      },
+    },
+  };
+  if (sentId) {
+    const patch: Record<string, unknown> = {
+      "keywords/$draft": null,
+      "keywords/$seen": true,
+    };
+    if (placementId !== sentId) {
+      patch[`mailboxIds/${placementId}`] = null;
+      patch[`mailboxIds/${sentId}`] = true;
+    }
+    submissionSet.onSuccessUpdateEmail = { "#sub1": patch };
+  }
+
   const jmapBody = {
     using: [
       "urn:ietf:params:jmap:core",
@@ -5054,22 +5706,7 @@ async function replyFastmailMessage(
         },
         "e1",
       ],
-      [
-        "EmailSubmission/set",
-        {
-          accountId,
-          create: {
-            sub1: {
-              emailId: "#draft",
-              envelope: {
-                mailFrom: { email: inbox.email_address },
-                rcptTo: allRcptTo,
-              },
-            },
-          },
-        },
-        "s1",
-      ],
+      ["EmailSubmission/set", submissionSet, "s1"],
     ],
   };
 
@@ -5377,6 +6014,9 @@ async function executeReplyToEmail(
       case "fastmail":
         replyResult = await replyFastmailMessage(inbox, messageId, replyParams);
         break;
+      case "imap":
+        replyResult = await replyImapMessage(inbox, messageId, replyParams);
+        break;
       default:
         return {
           result: {
@@ -5384,7 +6024,7 @@ async function executeReplyToEmail(
               type: "text",
               text:
                 `Provider '${inbox.provider}' is not yet supported by reply_to_email. ` +
-                "Supported providers: gmail, outlook, fastmail.",
+                "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
           },
@@ -5415,7 +6055,8 @@ async function executeReplyToEmail(
     const isAuthFailure =
       message === "gmail_auth_failed" ||
       message === "outlook_auth_failed" ||
-      message === "fastmail_auth_failed";
+      message === "fastmail_auth_failed" ||
+      message === "imap_auth_failed";
 
     if (isAuthFailure) {
       return {
@@ -5798,6 +6439,9 @@ async function executeSendEmail(
       case "fastmail":
         sendResult = await sendFastmailMessage(inbox, sendParams);
         break;
+      case "imap":
+        sendResult = await sendImapMessage(inbox, sendParams);
+        break;
       default:
         return {
           result: {
@@ -5805,7 +6449,7 @@ async function executeSendEmail(
               type: "text",
               text:
                 `Provider '${inbox.provider}' is not yet supported by send_email. ` +
-                "Supported providers: gmail, outlook, fastmail.",
+                "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
           },
@@ -5835,7 +6479,8 @@ async function executeSendEmail(
     const isAuthFailure =
       message === "gmail_auth_failed" ||
       message === "outlook_auth_failed" ||
-      message === "fastmail_auth_failed";
+      message === "fastmail_auth_failed" ||
+      message === "imap_auth_failed";
 
     if (isAuthFailure) {
       return {
@@ -6088,11 +6733,14 @@ async function searchOutlookMessages(
     baseUrl = "https://graph.microsoft.com/v1.0/me/messages";
   }
 
+  // Graph rejects $skip when combined with $search, so page client-side: fetch
+  // the first (offset + limit) matches and slice the requested window. Capped
+  // at Graph's max page size for $search.
+  const fetchTop = Math.min(offset + limit, 1000);
   const params = new URLSearchParams({
     $search: `"${query}"`,
     $select: select,
-    $top: String(limit),
-    $skip: String(offset),
+    $top: String(fetchTop),
   });
 
   const resp = await fetch(`${baseUrl}?${params}`, {
@@ -6119,11 +6767,13 @@ async function searchOutlookMessages(
 
   const rawMessages = data.value ?? [];
   const hasMore = !!data["@odata.nextLink"];
-  // Graph does not return a total count for $search; use list length as lower bound.
-  const total = hasMore ? offset + rawMessages.length + 1 : offset + rawMessages.length;
+  const pageMessages = rawMessages.slice(offset, offset + limit);
+  // Graph does not return a total count for $search; use the fetched count as a
+  // lower-bound estimate.
+  const total = hasMore ? rawMessages.length + 1 : rawMessages.length;
 
   const folder = includeFolders.length === 1 ? includeFolders[0] : "INBOX";
-  const messages: SearchEmailSummary[] = rawMessages.map((msg) => ({
+  const messages: SearchEmailSummary[] = pageMessages.map((msg) => ({
     id: msg.id,
     from: {
       name: msg.from?.emailAddress?.name ?? "",
@@ -6178,19 +6828,7 @@ async function searchFastmailMessages(
   includeFolders: string[],
 ): Promise<SearchEmailsResult> {
   // Build auth header.
-  let authHeader: string;
-  if (inbox.oauth_access_token) {
-    const token = await decryptStoredToken(inbox.oauth_access_token);
-    authHeader = `Bearer ${token}`;
-  } else if (inbox.imap_password) {
-    const password = await decryptStoredToken(inbox.imap_password);
-    const creds = btoa(`${inbox.email_address}:${password}`);
-    authHeader = `Basic ${creds}`;
-  } else {
-    throw new Error(
-      `Fastmail inbox ${inbox.id} has no usable credentials — user must reconnect.`,
-    );
-  }
+  const authHeader = await buildFastmailAuthHeader(inbox);
 
   // Step 1: Discover JMAP session.
   const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
@@ -6549,6 +7187,15 @@ async function executeSearchEmails(
           includeFolders,
         );
         break;
+      case "imap":
+        searchPromise = searchImapMessages(
+          inbox,
+          query,
+          limit,
+          offset,
+          includeFolders,
+        );
+        break;
       default:
         return {
           result: {
@@ -6556,7 +7203,7 @@ async function executeSearchEmails(
               type: "text",
               text:
                 `Provider '${inbox.provider}' is not yet supported by search_emails. ` +
-                "Supported providers: gmail, outlook, fastmail.",
+                "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
           },
@@ -6589,7 +7236,8 @@ async function executeSearchEmails(
     const isAuthFailure =
       message === "gmail_auth_failed" ||
       message === "outlook_auth_failed" ||
-      message === "fastmail_auth_failed";
+      message === "fastmail_auth_failed" ||
+      message === "imap_auth_failed";
 
     if (isAuthFailure) {
       return {
@@ -7222,20 +7870,16 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   // ── Plan quota check ─────────────────────────────────────────────────────
-  // Enforces both the monthly total cap and the daily burst cap for the
-  // workspace plan. Monthly cap is checked first (higher priority).
-  // Runs after rate limiting so per-key rolling windows are checked first.
-  // Fail-open: DB errors result in allowed=true.
+  // Usage is unlimited; this enforces the workspace plan's burst ceiling
+  // (requests per minute, aggregated across the workspace's API keys).
+  // Runs after the per-key rolling-window guard. Fail-open on DB errors.
   const quotaResult = await checkPlanQuota(apiKey.workspace_id);
   if (!quotaResult.allowed) {
-    console.warn("[mcp-server] plan_quota_exceeded", {
+    console.warn("[mcp-server] plan_rate_limit_exceeded", {
       workspace_id: apiKey.workspace_id,
       plan: quotaResult.plan,
-      quota_type: quotaResult.quotaType,
-      daily_burst_cap: quotaResult.dailyBurstCap,
-      used_today: quotaResult.usedToday,
-      monthly_cap: quotaResult.monthlyCap,
-      used_this_month: quotaResult.usedThisMonth,
+      per_minute_limit: quotaResult.perMinuteLimit,
+      used_this_minute: quotaResult.usedThisMinute,
       retry_after_seconds: quotaResult.retryAfterSeconds,
     });
 
@@ -7262,7 +7906,7 @@ async function handleRequest(req: Request): Promise<Response> {
         inboxId: quotaInboxId,
         toolName: quotaToolName,
         status: "rate_limited",
-        errorCode: "quota_exceeded",
+        errorCode: "rate_limit_exceeded",
         durationMs: null,
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,

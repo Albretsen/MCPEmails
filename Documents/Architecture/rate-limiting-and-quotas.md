@@ -53,7 +53,7 @@ Inbound request
 1. Parse Authorization header → resolve api_key_id
 2. Validate API key (signature check, revoked flag)          ← fail fast: 401
 3. Rate limit check (rolling window counts)                  ← fail fast: 429
-4. Plan quota check (daily cap from subscription tier)       ← fail fast: 429
+4. Per-plan per-minute ceiling (fair-use burst limit)        ← fail fast: 429
 5. Route to tool handler (list_inbox, send_email, etc.)
 6. Write usage_log row (async, after response sent)
 ```
@@ -154,46 +154,35 @@ The `head: true` flag tells PostgREST to run a `COUNT(*)` query and return only 
 
 ---
 
-## 5. Plan-Based Quota Limits
+## 5. Plan-Based Rate Ceiling
 
-Subscription tier is checked after the rolling window check. The tier adds a *daily cap* on total tool calls and an *inbox count cap* (maximum number of connected email accounts).
+Usage is **unlimited on every tier** — there is no daily or monthly call cap, and no cap on connected inboxes, API keys, or team members. The only plan-based usage lever is a per-plan **per-minute request ceiling**: a fair-use burst limit checked after the per-key rolling-window guard (Section 4).
 
-| Plan | Daily call cap | Inbox cap | Notes |
-|------|---------------|-----------|-------|
-| Free | 500 calls/day | 1 inbox | Counted against the rolling 10,000/day per-key limit; the plan cap is more restrictive |
-| Pro | 10,000 calls/day | 10 inboxes | Matches the per-key rolling limit; effectively unlimited for normal use |
-| Enterprise | Configurable | Configurable | Set per-tenant in `subscription_overrides` table |
+| Plan | Per-minute ceiling | Notes |
+|------|--------------------|-------|
+| Free | 60 req/min | Generous enough that virtually no legitimate user hits it |
+| Solo | 300 req/min | For power users running agents around the clock |
+| Team | 1,000 req/min | Practically limitless for businesses |
 
-### How the tier is resolved
+The ceiling is enforced **per workspace** (aggregated across all of the workspace's API keys), so adding keys does not multiply throughput. A removed legacy `enterprise` plan value is treated as the Team ceiling.
 
-The `api_keys` table has a foreign key to `users`, and `users` has a foreign key to `subscriptions`. The Edge Function resolves the tier in the same DB round-trip that validates the API key:
+### How the ceiling is resolved
+
+The Edge Function reads `workspaces.plan` for the request's workspace and looks up the ceiling in `PLAN_REQUESTS_PER_MINUTE` (keyed by `free` / `solo` / `pro`). Unknown plan values fall back to the Free ceiling.
 
 ```typescript
-// Joined at key validation time — no extra round trip
-const { data: keyRecord } = await supabase
-  .from("api_keys")
-  .select(`
-    id,
-    user_id,
-    scopes,
-    revoked_at,
-    users (
-      subscriptions (
-        plan,
-        daily_call_cap,
-        inbox_cap,
-        custom_overrides
-      )
-    )
-  `)
-  .eq("key_hash", hashApiKey(rawKey))
-  .single();
+const { data: workspace } = await supabase
+  .from("workspaces")
+  .select("plan")
+  .eq("id", workspaceId)
+  .maybeSingle();
 
-const plan = keyRecord?.users?.subscriptions?.plan ?? "free";
-const dailyCap = keyRecord?.users?.subscriptions?.daily_call_cap ?? 500;
+const plan = (workspace?.plan as string) ?? "free";
+const perMinuteLimit =
+  PLAN_REQUESTS_PER_MINUTE[plan] ?? DEFAULT_REQUESTS_PER_MINUTE;
 ```
 
-Free-plan daily cap (500) is checked by counting `usage_logs` for the current calendar day in UTC, not a rolling 24-hour window. This is intentional: Free users have a daily budget that resets at midnight UTC, which is simpler to reason about and communicate in the dashboard. Pro and Enterprise use the rolling window described in Section 4.
+The ceiling uses a rolling 60-second window: the Edge Function counts the workspace's `activity_log` rows in the trailing minute and rejects the request (HTTP 429, `error_code: "rate_limit_exceeded"`, `window: "per_minute"`) once the count reaches the ceiling. `Retry-After` is computed from when the oldest call in the window expires. Fail-open: any DB error allows the request through.
 
 ---
 
@@ -242,7 +231,7 @@ function buildRateLimitResponse(result: RateLimitResult): Response {
 
 The JSON-RPC error code `-32029` is in the application-defined range (`-32099` to `-32000`). Callers should branch on `data.error_code === "rate_limit_exceeded"` rather than the numeric code, which may change.
 
-For plan quota exhaustion the `error_code` is `quota_exceeded` and the `human_message` explains the plan limit and links to the upgrade page:
+When the per-plan per-minute ceiling is hit, the `error_code` is `rate_limit_exceeded` with `window: "per_minute"`, and the `human_message` explains the ceiling and links to the upgrade page:
 
 ```json
 {
@@ -250,14 +239,15 @@ For plan quota exhaustion the `error_code` is `quota_exceeded` and the `human_me
   "id": "call_abc123",
   "error": {
     "code": -32029,
-    "message": "Quota exceeded",
+    "message": "Rate limit exceeded",
     "data": {
-      "error_code": "quota_exceeded",
+      "error_code": "rate_limit_exceeded",
+      "window": "per_minute",
       "plan": "free",
-      "daily_cap": 500,
-      "used_today": 500,
-      "retry_after": 34821,
-      "human_message": "Your Free plan daily limit of 500 calls has been reached. Quota resets at midnight UTC. Upgrade to Pro for 10,000 calls/day: https://mcpemails.com/billing"
+      "limit": 60,
+      "used": 60,
+      "retry_after": 12,
+      "human_message": "Your Free plan allows 60 requests per minute, and that ceiling has been reached. Please wait 12 seconds before retrying. Usage is unlimited — upgrade for a higher burst ceiling: https://www.mcpemails.com/pricing"
     }
   }
 }
@@ -396,9 +386,9 @@ Users see their rate limit and quota status in the Dashboard under **Settings > 
 
 Each API key row expands to show:
 
-- Calls in the last minute (of 100)
+- Calls in the last minute (of the per-key 100/min guard)
 - Calls in the last hour (of 1,000)
-- Calls today (of daily cap)
+- Calls today (no cap — usage is unlimited)
 - Last used timestamp
 - A sparkline of calls per hour for the last 7 days
 
@@ -408,10 +398,10 @@ These figures are computed by querying `usage_logs` grouped by `api_key_id` and 
 
 The usage page shows:
 
-- Total calls today across all keys (vs. plan daily cap)
+- Total calls today across all keys (usage is unlimited — shown for visibility, not as a cap)
 - A bar chart of calls per day for the last 30 days
 - A breakdown by tool name (list_inbox, send_email, search_emails, etc.)
-- The number of connected inboxes vs. the plan inbox cap
+- The workspace's per-plan per-minute ceiling (60 / 300 / 1,000) and recent peak usage against it
 
 ### Rate limit alerts
 
