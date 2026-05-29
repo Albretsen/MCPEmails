@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /**
  * PATCH /api/api-keys/[id]/revoke
@@ -45,18 +46,14 @@ export async function PATCH(
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // 2. Resolve the user's workspace via workspace_members.
-  const { data: member, error: memberError } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .single();
+  // 2. Resolve the active workspace (cookie-aware, multi-workspace safe).
+  //    The key being revoked belongs to the workspace currently in view, and
+  //    the .eq('workspace_id', workspaceId) guard below keeps the write scoped.
+  const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
 
-  if (memberError || !member) {
+  if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
-
-  const workspaceId = (member as { workspace_id: string }).workspace_id;
 
   // 3. Soft-delete the key row using the service role.
   //    Setting deleted_at moves the row out of the api_keys SELECT policy

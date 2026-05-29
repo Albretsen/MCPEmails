@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { issueCsrfToken } from '@/lib/oauth/csrf';
 import { storeStateNonce } from '@/lib/oauth/state';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
+import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { AuthorizeApp } from '../../components/auth/AuthorizeApp';
 import '../../styles/marketing.css';
 import '../../styles/dashboard.css';
@@ -106,14 +107,17 @@ export default async function AuthorizePage({ searchParams }) {
     redirect(`/login?redirect=/authorize?${qs.toString()}`);
   }
 
-  // ── 7. Fetch workspace and active inboxes ─────────────────────────────────
-  const { data: workspace } = await supabase
-    .from('workspaces')
-    .select('id, display_name, slug')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .single();
+  // ── 7. Fetch the active workspace and its inboxes ─────────────────────────
+  //    Match the workspace the consent POST will mint the key for.
+  const activeWorkspaceId = await resolveActiveWorkspaceId(supabase, user.id);
+  const { data: workspace } = activeWorkspaceId
+    ? await supabase
+        .from('workspaces')
+        .select('id, display_name, slug')
+        .eq('id', activeWorkspaceId)
+        .is('deleted_at', null)
+        .maybeSingle()
+    : { data: null };
 
   let inboxes = [];
   if (workspace) {

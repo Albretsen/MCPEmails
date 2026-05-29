@@ -203,6 +203,66 @@ export default function PrivacyPage() {
                 <li>Use your data to serve you advertising.</li>
                 <li>Share your data with third parties for their own marketing purposes.</li>
               </ul>
+
+              <h4>3.7 Google API Services — Limited Use</h4>
+              <p>
+                MCPEmails' use and transfer to any other app of information received from
+                Google APIs (including the Gmail API) will adhere to the{' '}
+                <a
+                  href="https://developers.google.com/terms/api-services-user-data-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Google API Services User Data Policy
+                </a>
+                , including the <strong>Limited Use</strong> requirements.
+              </p>
+              <p>
+                When you connect a Gmail account, you grant MCPEmails the following Gmail
+                scopes. We request each scope solely to provide the features you invoke
+                through your AI agent, and we use them only on your behalf:
+              </p>
+              <ul>
+                <li>
+                  <code>gmail.readonly</code> — list messages and read message contents so
+                  your agent can search, read, and summarise email at your request.
+                </li>
+                <li>
+                  <code>gmail.send</code> — compose and send messages that your agent creates
+                  at your request.
+                </li>
+                <li>
+                  <code>gmail.modify</code> — apply and remove labels and move messages to
+                  trash when your agent organises your mailbox at your request.
+                </li>
+              </ul>
+              <p>Consistent with the Limited Use requirements, MCPEmails:</p>
+              <ul>
+                <li>
+                  uses Google user data only to provide and improve the user-facing features
+                  described above;
+                </li>
+                <li>
+                  does not transfer or sell Google user data to third parties, data brokers,
+                  or advertising networks;
+                </li>
+                <li>does not use Google user data for serving advertisements;</li>
+                <li>
+                  does not use Google user data to develop, improve, or train generalised or
+                  non-personalised AI or machine-learning models;
+                </li>
+                <li>
+                  does not allow humans to read Google user data unless (a) you give explicit
+                  consent for specific messages, (b) it is necessary for security purposes
+                  such as investigating abuse, (c) it is required to comply with applicable
+                  law, or (d) the data has been aggregated and anonymised.
+                </li>
+              </ul>
+              <p>
+                As described in Section 2.5, email content retrieved from the Gmail API is
+                streamed through to your agent in the same request and is never stored,
+                cached, or logged by MCPEmails.
+              </p>
             </LegalSection>
 
             {/* 4 — Data retention */}

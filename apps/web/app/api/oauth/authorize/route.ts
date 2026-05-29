@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { validateCsrfToken } from '@/lib/oauth/csrf';
 import { consumeStateNonce } from '@/lib/oauth/state';
+import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /**
  * POST /api/oauth/authorize
@@ -129,17 +130,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const approvedScopes = requestedScopes.filter((s) => oauthClient.scopes_allowed.includes(s));
 
   // ── Workspace resolution ──────────────────────────────────────────────────
-  const { data: member } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .single();
+  // Use the active workspace (cookie-aware) so the key is minted for the
+  // workspace the user is actually viewing, not an arbitrary first one.
+  const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
 
-  if (!member) {
+  if (!workspaceId) {
     return NextResponse.json({ error: 'No workspace found for this user.' }, { status: 400 });
   }
-  const workspaceId = member.workspace_id;
 
   // ── Inbox ownership validation ────────────────────────────────────────────
   if (requestedInboxIds.length > 0) {
