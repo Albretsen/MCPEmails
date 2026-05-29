@@ -12,6 +12,10 @@ export const routing = defineRouting({
   locales: ['en', 'nb'],
   defaultLocale: 'en',
   localePrefix: 'as-needed',
+  // Don't auto-redirect by cookie/Accept-Language. The default-locale home (/)
+  // must serve a stable English page with a stable canonical for SEO; visitors
+  // reach other languages via an explicit prefix (/nb) or the language switcher.
+  localeDetection: false,
 });
 
 export type Locale = (typeof routing.locales)[number];
