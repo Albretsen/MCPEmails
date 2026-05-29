@@ -5,9 +5,9 @@
  * state to the `workspaces.plan` column in Supabase.
  *
  * Handled events:
- *   checkout.session.completed        — customer completed a checkout; activate plan
- *   customer.subscription.updated     — subscription changed (upgrade/downgrade/renewal)
- *   customer.subscription.deleted     — subscription cancelled; revert to free
+ *   checkout.session.completed        : customer completed a checkout; activate plan
+ *   customer.subscription.updated     : subscription changed (upgrade/downgrade/renewal)
+ *   customer.subscription.deleted     : subscription cancelled; revert to free
  *
  * Security:
  *   Every request is verified against STRIPE_WEBHOOK_SECRET using the raw
@@ -17,7 +17,7 @@
  *
  * Idempotency:
  *   Stripe may deliver the same event more than once. All DB updates are
- *   idempotent — setting `plan` to the same value is a no-op.
+ *   idempotent: setting `plan` to the same value is a no-op.
  *
  * Deployment:
  *   `maxDuration` is exported below (30 s) to allow time for Stripe API calls
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Read raw body — required for signature verification.
+  // Read raw body: required for signature verification.
   // Using arrayBuffer so the bytes are not decoded before Stripe inspects them.
   let rawBody: Buffer;
   try {
@@ -201,7 +201,7 @@ async function handleCheckoutSessionCompleted(
  * first line item's price ID, and sync the plan column.
  *
  * Subscriptions with status other than 'active' or 'trialing' are treated as
- * inactive — the workspace is downgraded to free.
+ * inactive: the workspace is downgraded to free.
  */
 async function handleSubscriptionUpdated(
   subscription: Stripe.Subscription,
@@ -218,7 +218,7 @@ async function handleSubscriptionUpdated(
     subscription.status === 'active' || subscription.status === 'trialing';
 
   if (!isActive) {
-    // Subscription is past_due, unpaid, cancelled, or paused — downgrade.
+    // Subscription is past_due, unpaid, cancelled, or paused: downgrade.
     await syncWorkspacePlan({
       customerId,
       workspaceId: workspaceId ?? undefined,
@@ -286,9 +286,9 @@ async function handleSubscriptionDeleted(
 // ---------------------------------------------------------------------------
 
 interface SyncWorkspacePlanOptions {
-  /** Direct workspace ID — used when available (faster, avoids customer lookup). */
+  /** Direct workspace ID: used when available (faster, avoids customer lookup). */
   workspaceId?: string;
-  /** Stripe customer ID — used to find the workspace when workspaceId is absent. */
+  /** Stripe customer ID: used to find the workspace when workspaceId is absent. */
   customerId?: string;
   /** Deprecated alias kept for internal call sites; treated the same as customerId. */
   stripeCustomerId?: string | null;

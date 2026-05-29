@@ -6,7 +6,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
  * DELETE /api/workspaces/invite-cancel/[id]
  *
  * Cancels a pending invite by its UUID (used by the dashboard where the raw
- * token is not available — only the invite ID is stored client-side).
+ * token is not available, only the invite ID is stored client-side).
  *
  * Distinct from DELETE /api/workspaces/invite/[token] which accepts the raw
  * token for external/email-based cancellation flows.

@@ -1,5 +1,5 @@
 /**
- * loading.js — Next.js Suspense fallback for the /dashboard route.
+ * loading.js: Next.js Suspense fallback for the /dashboard route.
  *
  * Next.js automatically wraps each page segment's data-fetching in a
  * Suspense boundary. This file is the fallback UI shown while the server
@@ -11,7 +11,7 @@
  * with no layout shift when real data arrives.
  *
  * The CSS files are imported here because loading.js renders as a
- * standalone Server Component inside the route segment — layout.js CSS
+ * standalone Server Component inside the route segment; layout.js CSS
  * imports are not automatically applied to the fallback.
  */
 

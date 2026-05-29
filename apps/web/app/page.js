@@ -19,7 +19,7 @@ export const metadata = {
         url: '/og.png',
         width: 1200,
         height: 630,
-        alt: 'mcpemails — Give your AI agent an inbox',
+        alt: 'mcpemails: Give your AI agent an inbox',
       },
     ],
   },

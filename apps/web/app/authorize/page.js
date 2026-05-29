@@ -23,9 +23,9 @@ const VALID_SCOPES = new Set([
 ]);
 
 const SCOPE_META = {
-  'read:email':   { icon: 'inbox',  title: 'Read your inbox',          desc: 'list_inbox, read_email, get_attachment.', required: false },
-  'search:email': { icon: 'search', title: 'Search your emails',       desc: 'search_email across your messages.', required: false },
-  'send:email':   { icon: 'mail',   title: 'Send email on your behalf', desc: 'send_email, reply_to_email, forward_email.', required: false },
+  'read:email':   { icon: 'inbox',  title: 'Read your inbox',          desc: 'list_inboxes, list_inbox, read_email.', required: false },
+  'search:email': { icon: 'search', title: 'Search your emails',       desc: 'search_emails across your messages.', required: false },
+  'send:email':   { icon: 'mail',   title: 'Send email on your behalf', desc: 'send_email, reply_to_email.', required: false },
 };
 
 export default async function AuthorizePage({ searchParams }) {
@@ -136,7 +136,7 @@ export default async function AuthorizePage({ searchParams }) {
   }
 
   // ── 9. Check if all requested scopes are already consented ──────────────
-  // Never auto-redirect from a GET — always render the consent UI so the user
+  // Never auto-redirect from a GET. Always render the consent UI so the user
   // has an explicit chance to review and confirm each authorization.
   let preApproved = false;
   if (requestedScopes.length > 0 && workspace) {

@@ -416,6 +416,18 @@ const PLAN_REQUESTS_PER_MINUTE: Record<string, number> = {
 /** Ceiling applied to unknown / unrecognised plan values. */
 const DEFAULT_REQUESTS_PER_MINUTE = PLAN_REQUESTS_PER_MINUTE.free;
 
+/**
+ * Launch-era ceilings preserved for grandfathered ("legacy") workspaces. Keep
+ * this map frozen at the launch values even if PLAN_REQUESTS_PER_MINUTE is
+ * lowered for new signups later, so legacy users keep their current plan.
+ */
+const LEGACY_REQUESTS_PER_MINUTE: Record<string, number> = {
+  free: 60,
+  solo: 300,
+  pro: 1_000,
+  enterprise: 1_000,
+};
+
 /** Width of the per-plan ceiling window, in milliseconds. */
 const PLAN_RPM_WINDOW_MS = 60_000;
 
@@ -452,7 +464,7 @@ async function checkPlanQuota(
   // 1. Look up workspace plan.
   const { data: workspace, error: wsError } = await supabase
     .from("workspaces")
-    .select("plan")
+    .select("plan, grandfathered")
     .eq("id", workspaceId)
     .maybeSingle();
 
@@ -472,8 +484,15 @@ async function checkPlanQuota(
   }
 
   const plan = (workspace.plan as string) ?? "free";
-  const perMinuteLimit =
-    PLAN_REQUESTS_PER_MINUTE[plan] ?? DEFAULT_REQUESTS_PER_MINUTE;
+  // Grandfathered ("legacy") workspaces keep the launch-era ceiling. When usage
+  // caps (e.g. a monthly total) are reintroduced here later, they must also
+  // exempt grandfathered workspaces — see the workspaces.grandfathered column.
+  const grandfathered =
+    (workspace as { grandfathered?: boolean }).grandfathered ?? false;
+  const rpmMap = grandfathered
+    ? LEGACY_REQUESTS_PER_MINUTE
+    : PLAN_REQUESTS_PER_MINUTE;
+  const perMinuteLimit = rpmMap[plan] ?? DEFAULT_REQUESTS_PER_MINUTE;
 
   // 2. Count the workspace's calls in the trailing 60s window.
   const windowStart = new Date(Date.now() - PLAN_RPM_WINDOW_MS).toISOString();
@@ -955,7 +974,14 @@ interface ToolDefinition {
   /** Detailed description for the AI agent */
   description: string;
   /** Which api_keys.scopes[] value is required to call this tool */
-  requiredScope: "read:email" | "send:email";
+  requiredScope:
+    | "read:email"
+    | "send:email"
+    | "delete:email"
+    | "manage:folders"
+    | "manage:drafts"
+    | "manage:contacts"
+    | "schedule:email";
   /** JSON Schema (Draft 7) for argument validation */
   inputSchema: Record<string, unknown>;
 }

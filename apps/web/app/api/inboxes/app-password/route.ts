@@ -107,7 +107,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: validation.message }, { status: 422 });
   }
 
-  // 6. Encrypt the app password — never store plaintext.
+  // 6. Encrypt the app password: never store plaintext.
   const encryptedPassword = encryptToken(appPassword);
 
   // 7. Upsert. provider = 'imap' (transport), service = brand (UX/serve hint).

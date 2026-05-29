@@ -5,11 +5,11 @@
  *
  * Rendered when an error is thrown inside the root layout itself (which is
  * rare, but catastrophic when it happens). Because it replaces the root
- * layout, it MUST include <html> and <body> tags and import its own styles —
- * the root layout's imports are not available here.
+ * layout, it MUST include <html> and <body> tags and import its own styles.
+ * The root layout's imports are not available here.
  *
  * Props:
- *   reset  — call this to attempt re-rendering the root layout
+ *   reset : call this to attempt re-rendering the root layout
  */
 
 import '../styles/theme.css';
@@ -86,7 +86,7 @@ export default function GlobalError({ reset }) {
                 .
               </p>
 
-              {/* Primary CTA — retry */}
+              {/* Primary CTA: retry */}
               <button
                 type="button"
                 onClick={reset}
@@ -112,7 +112,7 @@ export default function GlobalError({ reset }) {
                 Reload
               </button>
 
-              {/* Secondary CTA — homepage (hard navigation to escape bad state) */}
+              {/* Secondary CTA: homepage (hard navigation to escape bad state) */}
               <a
                 href="/"
                 style={{

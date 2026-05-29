@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mcpemails.git-commit</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/asgeiralbretsen/Repositories/MCPEmails/scripts/mcpemails-git-commit.sh</string>
+    </array>
+
+    <!-- Watch for .pending-commit.txt being created or modified -->
+    <key>WatchPaths</key>
+    <array>
+        <string>/Users/asgeiralbretsen/Repositories/MCPEmails/.pending-commit.txt</string>
+    </array>
+
+    <!-- Also poll every 2 minutes as a safety net -->
+    <key>StartInterval</key>
+    <integer>120</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/asgeiralbretsen/Repositories/MCPEmails/.mcpemails-git-commit.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/asgeiralbretsen/Repositories/MCPEmails/.mcpemails-git-commit.log</string>
+</dict>
+</plist>

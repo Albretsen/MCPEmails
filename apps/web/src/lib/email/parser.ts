@@ -1,16 +1,16 @@
 /**
  * lib/email/parser.ts
  *
- * Email parsing utility — converts raw RFC 5322 email bytes into a clean,
+ * Email parsing utility: converts raw RFC 5322 email bytes into a clean,
  * typed ParsedEmail object suitable for inclusion in MCP tools/call responses.
  *
  * Pipeline:
- *   1. Size gate          — reject emails > 10 MB before full parse
- *   2. MIME structure     — mailparser handles multipart, charset, encoded-words
- *   3. Header extraction  — normalise addresses, strip angle brackets, etc.
- *   4. Body extraction    — text/plain and text/html with fallback chain
- *   5. HTML sanitisation  — isomorphic-dompurify removes XSS vectors
- *   6. Attachment list    — base64 re-encode, sanitise filenames, cap at 10 MB each
+ *   1. Size gate          : reject emails > 10 MB before full parse
+ *   2. MIME structure     : mailparser handles multipart, charset, encoded-words
+ *   3. Header extraction  : normalise addresses, strip angle brackets, etc.
+ *   4. Body extraction    : text/plain and text/html with fallback chain
+ *   5. HTML sanitisation  : isomorphic-dompurify removes XSS vectors
+ *   6. Attachment list    : base64 re-encode, sanitise filenames, cap at 10 MB each
  *
  * Entry point: parseEmail(rawBuffer: Buffer): Promise<ParsedEmail>
  */
@@ -64,12 +64,12 @@ export interface ParsedEmailHeaders {
 
 export interface ParsedEmail {
   headers: ParsedEmailHeaders;
-  /** Plain-text body. Empty string if none available — never null. */
+  /** Plain-text body. Empty string if none available, never null. */
   textBody: string;
   /** Sanitised HTML body, or null if none available. */
   htmlBody: string | null;
   attachments: ParsedAttachment[];
-  /** Diagnostic metadata — logged internally, not exposed in tool output. */
+  /** Diagnostic metadata: logged internally, not exposed in tool output. */
   _meta: {
     rawSizeBytes: number;
     parseWarnings: string[];
@@ -110,7 +110,7 @@ const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 export async function parseEmail(rawBuffer: Buffer): Promise<ParsedEmail> {
   const warnings: string[] = [];
 
-  // Step 1: size gate — reject before full parse to protect memory.
+  // Step 1: size gate, reject before full parse to protect memory.
   if (rawBuffer.byteLength > MAX_RAW_SIZE_BYTES) {
     throw new EmailParseError(
       `Email raw size ${rawBuffer.byteLength} bytes exceeds the 10 MB limit.`
@@ -193,7 +193,7 @@ function extractAddressList(
 
   for (const obj of objects) {
     for (const addr of obj.value ?? []) {
-      // Group syntax: addr.group is the group name, members are in addr.value — not applicable here
+      // Group syntax: addr.group is the group name, members are in addr.value (not applicable here)
       // mailparser flattens groups into the value array for To/Cc already.
       addresses.push(normaliseAddress(addr));
     }
@@ -261,7 +261,7 @@ function extractBody(
   let textBody: string;
 
   if (parsed.text && parsed.text.trim().length > 0) {
-    // 1. mailparser's text/plain part — preferred.
+    // 1. mailparser's text/plain part, preferred.
     textBody = parsed.text;
   } else if (htmlBody) {
     // 2. Strip tags from the sanitised HTML.
@@ -272,7 +272,7 @@ function extractBody(
     textBody = stripTags(parsed.html);
     warnings.push('textBody derived from raw HTML: sanitised HTML was empty.');
   } else {
-    // 4. Empty string — never null.
+    // 4. Empty string, never null.
     textBody = '';
     warnings.push('No text or HTML body parts found.');
   }
@@ -326,7 +326,7 @@ function extractAttachment(
   // Per-attachment 10 MB cap.
   if (size > MAX_ATTACHMENT_SIZE_BYTES) {
     warnings.push(
-      `Attachment "${filename}" (${size} bytes) exceeds the 10 MB cap — data omitted.`
+      `Attachment "${filename}" (${size} bytes) exceeds the 10 MB cap; data omitted.`
     );
     return { filename, mimeType, size, data: null, truncated: true, contentId };
   }

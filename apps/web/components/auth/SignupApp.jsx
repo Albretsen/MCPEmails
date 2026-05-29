@@ -219,7 +219,7 @@ export function SignupApp() {
             <p className="sub">
               We sent a confirmation link to{' '}
               <strong style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{email}</strong>.
-              Click it to activate your account — it expires in 60 minutes.
+              Click it to activate your account. It expires in 60 minutes.
             </p>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', marginTop: 8, lineHeight: 1.6 }}>
               Didn't get it? Check your spam folder, or{' '}

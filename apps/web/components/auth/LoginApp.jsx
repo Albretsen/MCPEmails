@@ -196,7 +196,7 @@ export function LoginApp() {
             <p className="sub">
               We sent a magic link to{' '}
               <strong style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{email}</strong>.
-              Click the link to sign in — it expires in 60 minutes.
+              Click the link to sign in. It expires in 60 minutes.
             </p>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', marginTop: 8, lineHeight: 1.6 }}>
               Didn't get it? Check your spam folder, or{' '}
@@ -264,7 +264,7 @@ export function LoginApp() {
             <h1>Sign in</h1>
             {socialButtons}
             <p className="sub" style={{ margin: '0 0 12px' }}>
-              Enter your email and we'll send you a magic link — no password needed.
+              Enter your email and we'll send you a magic link. No password needed.
             </p>
             {errorBanner}
             <form className="auth-fields" onSubmit={handleMagicLinkSubmit} noValidate>

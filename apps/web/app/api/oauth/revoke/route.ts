@@ -77,7 +77,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         typeof json['token_type_hint'] === 'string' ? json['token_type_hint'] : null;
     }
   } catch {
-    // RFC 7009 §2.2: always 200 — if we can't parse it, the token is already invalid.
+    // RFC 7009 §2.2: always 200. If we can't parse it, the token is already invalid.
     return new Response(null, { status: 200, headers: CORS_HEADERS });
   }
 

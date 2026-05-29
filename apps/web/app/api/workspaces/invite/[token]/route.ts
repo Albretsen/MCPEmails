@@ -11,7 +11,7 @@ function hashToken(raw: string): string {
  * GET /api/workspaces/invite/[token]
  *
  * Resolves an invite token to workspace metadata for display on the accept page.
- * Does NOT require authentication — the token itself is the credential.
+ * Does NOT require authentication: the token itself is the credential.
  * Does NOT consume the token.
  *
  * Returns 200 with { workspaceName, inviterName, role, expiresAt } on success.
@@ -29,7 +29,7 @@ export async function GET(
   const tokenHash = hashToken(rawToken);
   const service = createServiceRoleClient();
 
-  // Look up the invite — must be pending and not expired.
+  // Look up the invite: must be pending and not expired.
   const { data: invite, error } = await service
     .from('workspace_invites')
     .select('workspace_id, invited_by, email, role, expires_at')

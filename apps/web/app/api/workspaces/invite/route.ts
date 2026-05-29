@@ -169,7 +169,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to create invite.' }, { status: 500 });
   }
 
-  // 11. Send invite email. Fail gracefully — the invite row exists; the user
+  // 11. Send invite email. Fail gracefully: the invite row exists; the user
   //     can resend from the dashboard if the email bounces.
   try {
     await sendInviteEmail({
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (emailErr) {
     console.error('[invite] Email send failed:', emailErr);
-    // Don't return 500 — the invite record is stored; admin can resend.
+    // Don't return 500: the invite record is stored; admin can resend.
   }
 
   return NextResponse.json(

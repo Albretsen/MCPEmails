@@ -31,7 +31,7 @@ const ToastContext = createContext(null);
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 /**
- * ToastProvider — must wrap the dashboard root.
+ * ToastProvider: must wrap the dashboard root.
  * Renders the ToastContainer (fixed, bottom-right) alongside its children.
  */
 export function ToastProvider({ children }) {
@@ -106,7 +106,7 @@ export function ToastProvider({ children }) {
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 /**
- * useToast — returns { toast, dismiss, dismissAll }.
+ * useToast: returns { toast, dismiss, dismissAll }.
  * Must be called inside a component rendered within <ToastProvider>.
  */
 export function useToast() {
@@ -148,7 +148,7 @@ function ToastItem({ t, dismiss, timers }) {
 
   /**
    * Resume the dismiss countdown when the user stops hovering.
-   * We restart with the original duration — a full reset is intentional
+   * We restart with the original duration. A full reset is intentional
    * so the user always has the full window after moving away.
    */
   const handleMouseLeave = () => {

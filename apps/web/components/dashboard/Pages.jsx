@@ -5,7 +5,7 @@ import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
 import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 
-/* Pages.jsx — Overview, Inboxes, Keys, Usage, Settings, Security. */
+/* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
 function PageHeader({ title, sub, action }) {
   return (
@@ -22,7 +22,7 @@ function PageHeader({ title, sub, action }) {
 /* ── GettingStartedGuide ──────────────────────────────────────────────────── */
 
 /**
- * Copyable value block — shows `value` in a dark mono panel with a copy button
+ * Copyable value block. Shows `value` in a dark mono panel with a copy button
  * that flips to a check for 2s on success. Used to make the MCP endpoint URL
  * (and config snippets) trivial to copy. `multiline` allows code blocks to wrap
  * and preserve whitespace.
@@ -163,7 +163,7 @@ const MCP_CLIENTS = [
     steps: () => [
       'Edit ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).',
       'Add the server below under "mcpServers".',
-      'Cursor prompts you to sign in via OAuth — authorize with mcpemails.',
+      'Cursor prompts you to sign in via OAuth. Authorize with mcpemails.',
     ],
     config: (url) => `// ~/.cursor/mcp.json
 {
@@ -223,7 +223,7 @@ const MCP_CLIENTS = [
     guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
     steps: () => [
       'Open Cascade’s MCP settings, or edit ~/.codeium/windsurf/mcp_config.json.',
-      'Add the server below — note the field is "serverUrl", not "url".',
+      'Add the server below. Note the field is "serverUrl", not "url".',
       'Refresh MCP servers in Cascade and authorize with mcpemails when prompted.',
     ],
     config: (url) => `// ~/.codeium/windsurf/mcp_config.json
@@ -268,7 +268,7 @@ const MCP_CLIENTS = [
     steps: () => [
       'In the Agent Panel settings click "Add Custom Server", or edit settings.json.',
       'Add the server below under "context_servers".',
-      'Zed prompts the OAuth flow when no Authorization header is set — sign in with mcpemails.',
+      'Zed prompts the OAuth flow when no Authorization header is set. Sign in with mcpemails.',
     ],
     config: (url) => `// settings.json
 {
@@ -319,7 +319,7 @@ const MCP_CLIENTS = [
     steps: () => [
       'Open Settings → Agents → MCP servers and click "+ Add".',
       'Select the "Streamable HTTP or SSE Server (URL)" tab.',
-      'Paste the URL above and confirm — complete browser OAuth when prompted.',
+      'Paste the URL above and confirm, then complete browser OAuth when prompted.',
     ],
   },
   {
@@ -332,7 +332,7 @@ const MCP_CLIENTS = [
     needsKey: true,
     guide: null,
     steps: () => [
-      'Create an API key in Dashboard → API Keys — copy it (shown only once).',
+      'Create an API key in Dashboard → API Keys, then copy it (shown only once).',
       'Send requests to the URL above with an Authorization: Bearer header.',
     ],
     config: (url) => `curl -X POST ${url} \\
@@ -363,7 +363,7 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
               <div>
                 <h2 id="client-guide-title" style={{ margin: 0 }}>Connect {client.name}</h2>
                 <div className="sub" style={{ marginTop: 2 }}>
-                  {client.oauth ? 'Paste the URL and authorize — no API key needed.' : 'Authenticate with a bearer token.'}
+                  {client.oauth ? 'Paste the URL and authorize. No API key needed.' : 'Authenticate with a bearer token.'}
                 </div>
               </div>
             </div>
@@ -455,7 +455,7 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
           <div className="title">Get started</div>
           <div className="sub">
             {allDone
-              ? 'All set — your workspace is ready to use.'
+              ? 'All set. Your workspace is ready to use.'
               : 'Two steps to give your AI agents live email access.'}
           </div>
         </div>
@@ -463,7 +463,7 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
       </div>
 
       <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {/* Step 1 — connect an inbox */}
+        {/* Step 1: connect an inbox */}
         <div style={{
           display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 16px',
           background: step1Done ? 'var(--bg-page)' : 'var(--bg-sunken)',
@@ -486,7 +486,7 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
           ) : null}
         </div>
 
-        {/* Step 2 — connect an MCP client */}
+        {/* Step 2: connect an MCP client */}
         <div style={{
           display: 'flex', flexDirection: 'column', gap: 14, padding: '16px',
           background: 'var(--bg-sunken)', borderRadius: 10, border: '1px solid var(--border-1)',
@@ -547,7 +547,7 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
   );
 }
 
-/** Step indicator dot — number, or a mint check when done. */
+/** Step indicator dot: number, or a mint check when done. */
 function StepDot({ num, done }) {
   return (
     <div style={{
@@ -571,20 +571,20 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, plan = 'fre
   const callsToday = stats?.callsToday ?? 0;
   const callsThisMonth = stats?.callsThisMonth ?? 0;
 
-  // Plan daily burst cap — null means unlimited (Enterprise or unknown).
+  // Plan daily burst cap: null means unlimited (Enterprise or unknown).
   const dailyCap = planLimits?.maxDailyBurstCalls ?? null;
   const dailyPct = dailyCap != null && dailyCap > 0 ? callsToday / dailyCap : 0;
   // Warn at ≥80%, block at 100%.
   const dailyAtLimit = dailyCap != null && callsToday >= dailyCap;
   const dailyNearLimit = !dailyAtLimit && dailyCap != null && dailyPct >= 0.8;
 
-  // Plan monthly call cap — null means unlimited (Enterprise or unknown).
+  // Plan monthly call cap: null means unlimited (Enterprise or unknown).
   const monthlyCap = planLimits?.maxMonthlyToolCalls ?? null;
   const monthlyPct = monthlyCap != null && monthlyCap > 0 ? callsThisMonth / monthlyCap : 0;
   const monthlyAtLimit = monthlyCap != null && callsThisMonth >= monthlyCap;
   const monthlyNearLimit = !monthlyAtLimit && monthlyCap != null && monthlyPct >= 0.8;
 
-  // Seat cap — null means unlimited (Enterprise or unknown).
+  // Seat cap: null means unlimited (Enterprise or unknown).
   const seatCap = planLimits?.maxMembers ?? null;
   const seatPct = seatCap != null && seatCap > 0 ? memberCount / seatCap : 0;
   const seatAtLimit = seatCap != null && memberCount >= seatCap;
@@ -783,7 +783,7 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, plan = 'fre
 }
 
 /**
- * Formats a YYYY-MM-DD date string as "D Mon" — e.g. "24 May", "1 Jun".
+ * Formats a YYYY-MM-DD date string as "D Mon", e.g. "24 May", "1 Jun".
  * Used for bar chart axis labels and stat card sub-labels.
  */
 function formatBarDate(dateStr) {
@@ -821,7 +821,7 @@ function UsageBars() {
  * 30-day bar chart that renders real daily call counts from `activity_log`.
  *
  * Props:
- *   dailyCounts — array of 30 { date: "YYYY-MM-DD", count: number } objects,
+ *   dailyCounts: array of 30 { date: "YYYY-MM-DD", count: number } objects,
  *                 oldest first (index 0 = 29 days ago, index 29 = today).
  */
 function UsageChart30({ dailyCounts }) {
@@ -927,13 +927,13 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
         title="Inboxes"
         sub={
           maxInboxes !== null
-            ? `${inboxes.length} of ${maxInboxes} inbox${maxInboxes !== 1 ? 'es' : ''} connected · ${planLimits ? '' : ''}Email accounts your agents can read and send through.`
+            ? `${inboxes.length} of ${maxInboxes} inbox${maxInboxes !== 1 ? 'es' : ''} connected · Email accounts your agents can read and send through.`
             : 'Email accounts your agents can read and send through.'
         }
         action={connectAction}
       />
 
-      {/* Plan usage indicator — shown when not at limit but limit exists */}
+      {/* Plan usage indicator: shown when not at limit but limit exists */}
       {!atInboxLimit && maxInboxes !== null && (
         <div style={{
           display: 'flex',
@@ -1194,12 +1194,12 @@ function DisconnectDialog({ inbox, disconnecting, onConfirm, onCancel }) {
 
 /**
  * Formats a UTC ISO timestamp as a short absolute date, e.g. "24 May 2026".
- * Returns "—" for null/undefined values (e.g. last_used_at before first use).
+ * Returns "–" for null/undefined values (e.g. last_used_at before first use).
  */
 function formatDate(iso) {
-  if (!iso) return '—';
+  if (!iso) return '–';
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
+  if (isNaN(d.getTime())) return '–';
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
@@ -1226,7 +1226,7 @@ function formatLastUsed(iso) {
  * Builds the masked key string shown in the dashboard.
  *
  * We store only the first 8 hex characters of the key suffix (key_prefix).
- * The full 64-character suffix is never stored after creation — the raw key
+ * The full 64-character suffix is never stored after creation. The raw key
  * is shown once at creation time and then discarded.
  *
  * Display format:  mcpe_<key_prefix>••••••••••••••••••••••••••
@@ -1446,9 +1446,9 @@ function CreateKeyModal({ onCreate, onCancel }) {
  * without copying, the key cannot be retrieved.
  *
  * Props:
- *   rawKey   — the full plaintext key string (mcpe_<64 hex chars>)
- *   keyName  — human-readable name for context
- *   onDone   — called when the user clicks "Done" after acknowledging
+ *   rawKey   the full plaintext key string (mcpe_<64 hex chars>)
+ *   keyName  human-readable name for context
+ *   onDone   called when the user clicks "Done" after acknowledging
  */
 function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
   const [copied, setCopied] = useState(false);
@@ -1544,10 +1544,10 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
             </button>
           </div>
 
-          {/* Ready-to-paste connection URL — the simplest way to connect. */}
+          {/* Ready-to-paste connection URL: the simplest way to connect. */}
           {mcpUrl ? (
             <div style={{ marginBottom: 16 }}>
-              <CopyField value={`${mcpUrl}?key=${rawKey}`} label="Or paste this URL straight into your MCP client — no OAuth needed" />
+              <CopyField value={`${mcpUrl}?key=${rawKey}`} label="Or paste this URL straight into your MCP client (no OAuth needed)" />
             </div>
           ) : null}
 
@@ -1560,7 +1560,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
           }}>
             <Icon name="zap" size={14} color="var(--amber-700)" style={{ flexShrink: 0, marginTop: 1 }} />
             <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--amber-700)', lineHeight: 1.5 }}>
-              Store this key somewhere safe — it cannot be shown again. If you lose it, revoke this key and create a new one.
+              Store this key somewhere safe. It cannot be shown again. If you lose it, revoke this key and create a new one.
             </span>
           </div>
 
@@ -1580,7 +1580,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
             </span>
           </label>
 
-          {/* Done button — only enabled after acknowledge */}
+          {/* Done button: only enabled after acknowledge */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Btn variant="primary" onClick={onDone} disabled={!acknowledged}>
               Done
@@ -1804,14 +1804,14 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-h">
           <div>
-            <div className="title">Connect with a URL — no OAuth needed</div>
+            <div className="title">Connect with a URL (no OAuth needed)</div>
             <div className="sub">Paste this URL into any MCP client (Claude, Cursor, VS Code…). Replace <code className="t-code-inline">YOUR_API_KEY</code> with a key from above.</div>
           </div>
         </div>
         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <CopyField value={`${mcpUrl}?key=YOUR_API_KEY`} label="MCP server URL" />
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', lineHeight: 1.6 }}>
-            The key travels in the URL, so anyone with the link has full access — treat it like a password. Prefer an
+            The key travels in the URL, so anyone with the link has full access. Treat it like a password, and prefer an
             {' '}<code className="t-code-inline">Authorization: Bearer</code> header for scripts and shared environments:
           </div>
           <CopyField
@@ -1853,13 +1853,13 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
 /* ---------------- Usage ---------------- */
 
 /**
- * UsagePage — real data from activity_log, passed as the `usageData` prop.
+ * UsagePage: real data from activity_log, passed as the `usageData` prop.
  *
  * usageData shape:
- *   dailyCounts  — Array<{ date: "YYYY-MM-DD", count: number }>, 30 entries oldest-first
- *   totalCalls   — number  (sum over the 30-day window)
- *   byTool       — Array<{ tool: string, count: number, pct: number }>, sorted desc
- *   byInbox      — Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
+ *   dailyCounts  Array<{ date: "YYYY-MM-DD", count: number }>, 30 entries oldest-first
+ *   totalCalls   number  (sum over the 30-day window)
+ *   byTool       Array<{ tool: string, count: number, pct: number }>, sorted desc
+ *   byInbox      Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
  */
 export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
   const {
@@ -1869,7 +1869,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
     byInbox = [],
   } = usageData ?? {};
 
-  // Plan limits — null means unlimited (Enterprise).
+  // Plan limits: null means unlimited (Enterprise).
   const dailyCap = planLimits?.maxDailyBurstCalls ?? null;
 
   // Calls today: the last entry in dailyCounts (index 29) is today.
@@ -1895,7 +1895,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
         sub="MCP tool calls over the last 30 days across all inboxes."
       />
 
-      {/* Daily quota status card — shown whenever a cap exists */}
+      {/* Daily quota status card: shown whenever a cap exists */}
       {dailyCap != null && (
         <div style={{
           display: 'flex',
@@ -1928,9 +1928,9 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
               marginBottom: 6,
             }}>
               {dailyAtLimit
-                ? 'Daily quota exhausted — MCP calls are being rejected'
+                ? 'Daily quota exhausted. MCP calls are being rejected'
                 : dailyNearLimit
-                  ? `Daily quota at ${Math.round(dailyPct * 100)}% — approaching limit`
+                  ? `Daily quota at ${Math.round(dailyPct * 100)}%, approaching limit`
                   : 'Daily quota'}
             </div>
             <div style={{
@@ -2049,7 +2049,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
               <div className="label">Busiest day</div>
               <div className="value">{busiestDay.count.toLocaleString()}</div>
               <div className="delta">
-                {busiestDay.date ? formatBarDate(busiestDay.date) : '—'}
+                {busiestDay.date ? formatBarDate(busiestDay.date) : '–'}
               </div>
             </div>
           </div>
@@ -2126,7 +2126,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
             )}
           </div>
 
-          {/* Breakdown by inbox — only shown when multiple inboxes have activity */}
+          {/* Breakdown by inbox: only shown when multiple inboxes have activity */}
           {byInbox.length > 0 && (
             <div className="card" style={{ marginTop: 14 }}>
               <div className="card-h">
@@ -2186,15 +2186,15 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
 /* ---------------- Settings ---------------- */
 
 /**
- * ProfileSection — display name update form + read-only email display.
+ * ProfileSection: display name update form + read-only email display.
  *
  * Calls PATCH /api/user/profile on submit and surfaces success / error
  * feedback inline below the form using the same inline feedback pattern
  * used elsewhere in the dashboard.
  *
  * Props:
- *   displayName — current display name from the users table (may be empty string)
- *   email       — read-only email address from Supabase Auth (never editable here)
+ *   displayName  current display name from the users table (may be empty string)
+ *   email        read-only email address from Supabase Auth (never editable here)
  */
 function ProfileSection({ displayName: initialDisplayName, email }) {
   const [name, setName] = useState(initialDisplayName ?? '');
@@ -2239,7 +2239,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
 
       toast({ message: 'Profile updated.', variant: 'success' });
     } catch {
-      toast({ message: 'Network error — please try again.', variant: 'error' });
+      toast({ message: 'Network error. Please try again.', variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -2261,7 +2261,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
       <form onSubmit={handleSubmit}>
         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Display name — editable */}
+          {/* Display name: editable */}
           <div className="field">
             <label
               htmlFor="profile-display-name"
@@ -2290,7 +2290,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
             />
           </div>
 
-          {/* Email — read-only */}
+          {/* Email: read-only */}
           <div className="field">
             <label
               htmlFor="profile-email"
@@ -2359,7 +2359,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
 }
 
 /**
- * PasswordSection — change-password form.
+ * PasswordSection: change-password form.
  *
  * Collects the current password (for re-authentication / verification) plus
  * a new password and a confirmation field. Validation is done client-side
@@ -2387,7 +2387,7 @@ function PasswordSection() {
 
     setInlineError(null);
 
-    // Client-side validation — surface immediately inline so the user can
+    // Client-side validation: surface immediately inline so the user can
     // fix typos without waiting for a round trip.
     if (!currentPassword) {
       setInlineError('Current password is required.');
@@ -2434,7 +2434,7 @@ function PasswordSection() {
       setConfirmPassword('');
       toast({ message: 'Password updated successfully.', variant: 'success' });
     } catch {
-      toast({ message: 'Network error — please try again.', variant: 'error' });
+      toast({ message: 'Network error. Please try again.', variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -2639,7 +2639,7 @@ function DeleteAccountSection({ email }) {
         </div>
       </div>
 
-      {/* Confirmation dialog — rendered as a modal overlay */}
+      {/* Confirmation dialog: rendered as a modal overlay */}
       {open && (
         <div
           style={{
@@ -2828,14 +2828,14 @@ const BILLING_PLANS = [
 ];
 
 /**
- * BillingSection — shows the current plan and upgrade options.
+ * BillingSection: shows the current plan and upgrade options.
  *
  * For free-plan workspaces it renders Solo and Team upgrade cards.
  * For paid-plan workspaces it shows the active plan and a link to the
- * customer portal (task: Implement Stripe Customer Portal link).
+ * Stripe customer portal.
  *
  * Props:
- *   currentPlan — 'free' | 'pro' | 'enterprise' from workspaces.plan
+ *   currentPlan: 'free' | 'pro' | 'enterprise' from workspaces.plan
  */
 function BillingSection({ currentPlan, stripePrices }) {
   const [interval, setInterval] = useState('month');
@@ -2875,7 +2875,7 @@ function BillingSection({ currentPlan, stripePrices }) {
         toast({ message: 'Unexpected response. Please try again.', variant: 'error' });
       }
     } catch {
-      toast({ message: 'Network error — please try again.', variant: 'error' });
+      toast({ message: 'Network error. Please try again.', variant: 'error' });
     } finally {
       setOpeningPortal(false);
     }
@@ -2909,7 +2909,7 @@ function BillingSection({ currentPlan, stripePrices }) {
         toast({ message: 'Unexpected response from checkout. Please try again.', variant: 'error' });
       }
     } catch {
-      toast({ message: 'Network error — please try again.', variant: 'error' });
+      toast({ message: 'Network error. Please try again.', variant: 'error' });
     } finally {
       setUpgrading(null);
     }
@@ -3036,7 +3036,7 @@ function BillingSection({ currentPlan, stripePrices }) {
         )}
 
         {isOnPaidPlan ? (
-          /* Paid plan — show active subscription summary + portal button */
+          /* Paid plan: show active subscription summary + portal button */
           <div style={{
             padding: '16px',
             background: 'var(--bg-sunken)',
@@ -3068,7 +3068,7 @@ function BillingSection({ currentPlan, stripePrices }) {
                   color: 'var(--fg-3)',
                   lineHeight: 1.5,
                 }}>
-                  Manage your subscription, update your payment method, download invoices, or cancel — all from the Stripe billing portal.
+                  Manage your subscription, update your payment method, download invoices, or cancel, all from the Stripe billing portal.
                 </div>
               </div>
 
@@ -3118,7 +3118,7 @@ function BillingSection({ currentPlan, stripePrices }) {
             </div>
           </div>
         ) : (
-          /* Free plan — show upgrade cards */
+          /* Free plan: show upgrade cards */
           <>
             {/* Interval toggle */}
             <div style={{ display: 'flex', gap: 0, alignSelf: 'flex-start', borderRadius: 8, border: '1px solid var(--border-1)', overflow: 'hidden' }}>
@@ -3272,7 +3272,7 @@ function BillingSection({ currentPlan, stripePrices }) {
               lineHeight: 1.5,
             }}>
               You&apos;ll be redirected to Stripe to complete payment securely.
-              Cancel any time — you keep access until the end of your billing period.
+              Cancel any time and keep access until the end of your billing period.
             </p>
             <p style={{ fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5, marginTop: 4 }}>
               Need something custom? <a href="mailto:sales@mcpemails.com" style={{ color: 'var(--brand)', fontWeight: 600 }}>Contact us</a>.
@@ -3290,7 +3290,7 @@ export function SettingsPage({ user, workspace, stripePrices }) {
     <div className="page">
       <PageHeader title="Settings" sub="Profile, workspace, and account." />
 
-      {/* Profile section — display name + read-only email */}
+      {/* Profile section: display name + read-only email */}
       <ProfileSection
         displayName={user?.displayName ?? ''}
         email={user?.email ?? ''}
@@ -3299,7 +3299,7 @@ export function SettingsPage({ user, workspace, stripePrices }) {
       {/* Password change section */}
       <PasswordSection />
 
-      {/* Billing section — current plan + upgrade */}
+      {/* Billing section: current plan + upgrade */}
       <BillingSection currentPlan={workspace?.plan ?? 'free'} stripePrices={stripePrices} />
 
       {/* Workspace section */}
@@ -3334,7 +3334,7 @@ export function SettingsPage({ user, workspace, stripePrices }) {
         </div>
       </div>
 
-      {/* Delete account — danger zone */}
+      {/* Delete account: danger zone */}
       <DeleteAccountSection email={user?.email ?? ''} />
     </div>
   );
@@ -3349,9 +3349,9 @@ export function SettingsPage({ user, workspace, stripePrices }) {
  * Falls back to an absolute date string for timestamps older than 7 days.
  */
 function formatSessionAge(iso) {
-  if (!iso) return '—';
+  if (!iso) return '–';
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
+  if (isNaN(d.getTime())) return '–';
   const diffMs = Date.now() - d.getTime();
   const diffSec = Math.floor(diffMs / 1000);
   if (diffSec < 60) return 'Just now';
@@ -3375,7 +3375,7 @@ function deviceIcon(os) {
 }
 
 /**
- * ActiveSessionsSection — lists all active Supabase Auth sessions for the
+ * ActiveSessionsSection: lists all active Supabase Auth sessions for the
  * current user and provides a "Sign out all other sessions" action.
  *
  * Sessions are fetched client-side from GET /api/security/sessions on mount.
@@ -3403,7 +3403,7 @@ function ActiveSessionsSection() {
       const data = await res.json();
       setSessions(data.sessions ?? []);
     } catch {
-      setFetchErr('Network error — please try again.');
+      setFetchErr('Network error. Please try again.');
     }
   };
 
@@ -3434,7 +3434,7 @@ function ActiveSessionsSection() {
         variant: 'success',
       });
     } catch {
-      toast({ message: 'Network error — please try again.', variant: 'error' });
+      toast({ message: 'Network error. Please try again.', variant: 'error' });
     } finally {
       setSigningOut(false);
     }
@@ -3559,7 +3559,7 @@ function ActiveSessionsSection() {
                     fontFamily: 'var(--font-mono)', fontSize: 12.5,
                     color: 'var(--fg-3)',
                   }}>
-                    {session.ip ?? '—'}
+                    {session.ip ?? '–'}
                   </code>
                 </td>
 
@@ -3608,9 +3608,9 @@ const PAGE_SIZE = 25;
  * e.g. "24 May 2026 · 14:32"
  */
 function formatAuditTimestamp(iso) {
-  if (!iso) return '—';
+  if (!iso) return '–';
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
+  if (isNaN(d.getTime())) return '–';
   const datePart = d.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -3625,7 +3625,7 @@ function formatAuditTimestamp(iso) {
 }
 
 /**
- * AuditTable — renders a page of audit log entries as a table.
+ * AuditTable: renders a page of audit log entries as a table.
  *
  * Columns: Tool, Inbox, API Key, Timestamp, Status
  */
@@ -3677,7 +3677,7 @@ function AuditTable({ entries }) {
                 </span>
               ) : (
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-4)' }}>
-                  —
+                  –
                 </span>
               )}
             </td>
@@ -3703,7 +3703,7 @@ function AuditTable({ entries }) {
                 </div>
               ) : (
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-4)' }}>
-                  —
+                  –
                 </span>
               )}
             </td>
@@ -3736,7 +3736,7 @@ function AuditTable({ entries }) {
             {/* Duration */}
             <td>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-3)' }}>
-                {entry.durationMs != null ? `${entry.durationMs}ms` : '—'}
+                {entry.durationMs != null ? `${entry.durationMs}ms` : '–'}
               </span>
             </td>
           </tr>
@@ -3748,10 +3748,10 @@ function AuditTable({ entries }) {
 }
 
 /**
- * SecurityPage — active sessions list + paginated audit log of MCP tool calls.
+ * SecurityPage: active sessions list + paginated audit log of MCP tool calls.
  *
  * Props:
- *   auditLog — {
+ *   auditLog: {
  *     entries: AuditEntry[];   // first page, pre-fetched server-side
  *     total: number;           // total row count for pagination
  *     page: number;            // current page (always 0 from server)
@@ -3799,7 +3799,7 @@ export function SecurityPage({ auditLog }) {
       setTotal(data.total ?? 0);
       setPage(nextPage);
     } catch {
-      setFetchErr('Network error — please try again.');
+      setFetchErr('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -3818,7 +3818,7 @@ export function SecurityPage({ auditLog }) {
         sub="Active sessions and audit trail of every MCP tool call."
       />
 
-      {/* Active sessions — loaded client-side */}
+      {/* Active sessions: loaded client-side */}
       <ActiveSessionsSection />
 
       <div className="card" style={{ marginTop: 14 }}>
@@ -3831,7 +3831,7 @@ export function SecurityPage({ auditLog }) {
                 : 'MCP tool calls across all API keys and inboxes'}
             </div>
           </div>
-          {/* Pagination controls — only shown when there is more than one page */}
+          {/* Pagination controls: only shown when there is more than one page */}
           {totalPages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
               <span style={{
@@ -3866,7 +3866,7 @@ export function SecurityPage({ auditLog }) {
           )}
         </div>
 
-        {/* Loading overlay — subtle opacity shift while fetching subsequent pages */}
+        {/* Loading overlay: subtle opacity shift while fetching subsequent pages */}
         <div style={{ opacity: loading ? 0.55 : 1, transition: 'opacity 150ms' }}>
           <AuditTable entries={entries} />
         </div>
@@ -3887,7 +3887,7 @@ export function SecurityPage({ auditLog }) {
           </div>
         )}
 
-        {/* Bottom pagination — mirrors the header controls for long tables */}
+        {/* Bottom pagination: mirrors the header controls for long tables */}
         {totalPages > 1 && entries.length > 0 && (
           <div style={{
             display: 'flex',

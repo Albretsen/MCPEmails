@@ -6,11 +6,11 @@ import { Icon, Btn, Avatar } from '../Primitives';
 import { createClient } from '@/lib/supabase/client';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
 
-/* Sidebar.jsx — left nav with mobile-collapsible drawer support. */
+/* Sidebar.jsx: left nav with mobile-collapsible drawer support. */
 
 
 /**
- * Sidebar — vertical navigation column.
+ * Sidebar: vertical navigation column.
  *
  * On desktop it is always visible as part of the two-column `.shell` grid.
  * On mobile (≤767px) it becomes a fixed off-canvas drawer:
@@ -93,7 +93,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
 
   return (
     <>
-      {/* Mobile overlay backdrop — covers main content when drawer is open */}
+      {/* Mobile overlay backdrop: covers main content when drawer is open */}
       <div
         className={'sidebar-overlay' + (isOpen ? ' open' : '')}
         onClick={onClose}
@@ -164,7 +164,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
                   <span className="ws-glyph sm plus" aria-hidden="true"><Icon name="zap" size={13} color="var(--brand)" /></span>
                   <span className="ws-meta">
                     <span className="ws-name">New workspace</span>
-                    <span className="ws-plan">Multiple workspaces is a Pro feature — upgrade</span>
+                    <span className="ws-plan">Workspaces are a Team feature. Upgrade</span>
                   </span>
                 </a>
               )}
@@ -247,7 +247,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
 }
 
 /**
- * Topbar — horizontal bar at the top of the main column.
+ * Topbar: horizontal bar at the top of the main column.
  *
  * `onMenuOpen` is called when the hamburger button is tapped on mobile.
  * The hamburger button is hidden on desktop via CSS (`.menu-btn`).
@@ -264,7 +264,7 @@ export function Topbar({ route, workspace, onMenuOpen, onOpenSearch }) {
   };
   return (
     <header className="topbar">
-      {/* Hamburger — only visible on mobile (display:none on desktop via CSS) */}
+      {/* Hamburger: only visible on mobile (display:none on desktop via CSS) */}
       <button
         className="menu-btn"
         onClick={onMenuOpen}

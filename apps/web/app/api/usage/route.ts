@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPlanLimits } from '@/lib/stripe/plans';
+import { resolvePlanLimits } from '@/lib/stripe/plans';
 
 /**
  * GET /api/usage
@@ -55,7 +55,7 @@ export async function GET(): Promise<NextResponse> {
   // ── Plan ──────────────────────────────────────────────────────────────────
   const { data: workspace, error: workspaceError } = await supabase
     .from('workspaces')
-    .select('plan')
+    .select('plan, grandfathered')
     .eq('id', workspaceId)
     .maybeSingle();
 
@@ -64,7 +64,8 @@ export async function GET(): Promise<NextResponse> {
   }
 
   const plan = (workspace.plan as string) ?? 'free';
-  const limits = getPlanLimits(plan);
+  const grandfathered = workspace.grandfathered ?? false;
+  const limits = resolvePlanLimits(plan, { grandfathered });
 
   // ── Window boundaries (UTC) ───────────────────────────────────────────────
   const now = new Date();

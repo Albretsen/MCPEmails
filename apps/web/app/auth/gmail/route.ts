@@ -11,9 +11,9 @@ import { randomBytes } from 'crypto';
  * and redirects the user to Google's authorization endpoint.
  *
  * Required Google OAuth scopes:
- *   - gmail.readonly  — list and fetch message bodies
- *   - gmail.send      — compose and send new messages
- *   - gmail.modify    — apply/remove labels, move to trash
+ *   - gmail.readonly  : list and fetch message bodies
+ *   - gmail.send      : compose and send new messages
+ *   - gmail.modify    : apply/remove labels, move to trash
  *
  * access_type=offline  → Google issues a refresh token
  * prompt=consent       → Forces the consent screen so a refresh token is
@@ -59,7 +59,7 @@ export async function GET() {
   }
 
   // Note: the plan inbox cap is enforced in the callback, where the email
-  // address is known — that lets reconnecting an existing inbox proceed even
+  // address is known. That lets reconnecting an existing inbox proceed even
   // at the cap while still blocking brand-new connections.
 
   // Generate a 32-byte cryptographically random state nonce.

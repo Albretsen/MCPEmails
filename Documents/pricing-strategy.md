@@ -73,3 +73,28 @@ covers the rare bespoke case.)
    `enterprise` from checkout/webhook routes; remove the trial from the checkout route.
 5. **DB:** confirm `workspaces.plan` accepts the tier set; migrate only if a constraint
    blocks removing `enterprise`.
+
+## Grandfathering (legacy users)
+
+Preparation for a future, more aggressive monetization (usage caps) without
+breaking trust with launch-era users:
+
+- **`workspaces.grandfathered boolean` column** (migration
+  `20260531000000_workspaces_grandfathered.sql`). Backfilled `true` for every
+  workspace that existed at launch; new signups default `false`.
+- **`resolvePlanLimits(planId, { grandfathered })`** in `src/lib/stripe/plans.ts`
+  is now used everywhere plan limits are resolved (dashboard `page.js`,
+  `api/usage`, and the three `check-*-limit` helpers). When `grandfathered` is
+  true it forces the usage caps (`maxInboxes`, `maxApiKeys`, `maxMembers`,
+  monthly/daily call caps) to `Infinity`, regardless of the plan's configured
+  caps. Feature flags still follow the plan.
+- **Edge function** keeps a frozen `LEGACY_REQUESTS_PER_MINUTE` map; grandfathered
+  workspaces resolve their per-minute ceiling from it, so lowering the live
+  ceiling for new users later won't affect legacy users.
+- **Today this is a no-op** (all plans are already unlimited). To monetize
+  aggressively later: set finite usage caps in `PLANS` (and/or reintroduce a
+  monthly cap in the edge function's `checkPlanQuota`, exempting `grandfathered`).
+  Legacy users are then automatically exempt — no further plumbing needed.
+- **ToS:** a fair-use clause (Terms §5.7) reserves the right to introduce usage
+  limits on a going-forward basis with 30 days' notice, applying new limits to
+  new subscriptions immediately. The marketing "unlimited" language is unchanged.

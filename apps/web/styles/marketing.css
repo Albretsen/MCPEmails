@@ -185,13 +185,37 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   padding: 24px 0;
   background: var(--bg-page);
 }
-.trusted-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 40px;
-  font-family: var(--font-sans); font-size: 13px; color: var(--fg-3);
+.trusted-label {
+  display: block; text-align: center;
+  font-family: var(--font-sans); font-weight: 500; font-size: 13px; color: var(--fg-3);
+  margin-bottom: 20px;
 }
-.trusted-row .label { font-weight: 500; }
-.trusted-logos { display: flex; gap: 32px; align-items: center; flex: 1; justify-content: space-around; opacity: 0.7; }
-.trusted-logos span { font-family: var(--font-sans); font-weight: 600; font-size: 16px; color: var(--fg-2); letter-spacing: -0.01em; }
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+.marquee-track {
+  display: flex; width: max-content;
+  animation: marquee-scroll 48s linear infinite;
+}
+.marquee:hover .marquee-track { animation-play-state: paused; }
+.marquee-item {
+  display: inline-flex; align-items: center; gap: 10px; margin-right: 44px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 15px;
+  color: var(--fg-2); letter-spacing: -0.01em; white-space: nowrap;
+}
+.marquee-logo {
+  width: 30px; height: 30px; border-radius: 8px; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+}
 
 /* === Section base === */
 .section { padding: 96px 0; }
@@ -668,7 +692,7 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 }
 
 /* ============================================================
-   === Responsive overrides — 375 px mobile baseline
+   === Responsive overrides: 375 px mobile baseline
    ============================================================ */
 
 /* --- Tablet / small desktop (768–1023 px) --- */
@@ -682,7 +706,7 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   .docs-example-grid { grid-template-columns: 1fr; }
 }
 
-/* --- Mobile (≤ 767 px) — covers the 375 px target --- */
+/* --- Mobile (≤ 767 px): covers the 375 px target --- */
 @media (max-width: 767px) {
 
   /* Container */
@@ -717,17 +741,8 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   .hero-meta { flex-wrap: wrap; gap: var(--space-2); }
 
   /* === Trusted strip === */
-  .trusted-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-4);
-  }
-  .trusted-logos {
-    flex-wrap: wrap;
-    gap: var(--space-3) var(--space-5);
-    justify-content: flex-start;
-    opacity: 1;
-  }
+  .marquee-item { font-size: 14px; margin-right: 36px; }
+  .marquee-logo { width: 28px; height: 28px; }
 
   /* === Section base === */
   .section { padding: 56px 0; }
@@ -816,7 +831,7 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   .docs-endpoint-grid { grid-template-columns: 1fr; }
   .docs-example-grid { grid-template-columns: 1fr; }
 
-  /* === Docs endpoint URL bar — allow copy btn to wrap if needed === */
+  /* === Docs endpoint URL bar: allow copy btn to wrap if needed === */
   .endpoint-url { flex-wrap: wrap; gap: var(--space-2); }
   .copy-btn { margin-left: 0; }
 }

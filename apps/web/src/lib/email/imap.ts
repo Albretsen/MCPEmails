@@ -10,10 +10,10 @@
  *
  * Connection lifecycle per operation:
  *   1. Open TLS socket (implicit TLS, port 993)
- *   2. Read server greeting — verify "* OK" prefix
+ *   2. Read server greeting, verify "* OK" prefix
  *   3. Authenticate via XOAUTH2 (OAuth tokens) or PLAIN (app passwords)
  *   4. Execute IMAP commands (SELECT, FETCH, SEARCH, STORE)
- *   5. LOGOUT and close socket — always, including on error paths
+ *   5. LOGOUT and close socket, always, including on error paths
  *
  * Retry: Fastmail connection-limit errors are retried up to 3 times with
  * exponential back-off (5s → 10s → 20s).
@@ -26,15 +26,15 @@ import * as tls from 'tls';
 // ── Error codes ───────────────────────────────────────────────────────────────
 
 export type EmailErrorCode =
-  | 'CONNECTION_REFUSED'      // Socket connect failed — host unreachable or port blocked
-  | 'TLS_HANDSHAKE_FAILED'    // TLS negotiation failed — cert invalid, SNI mismatch
+  | 'CONNECTION_REFUSED'      // Socket connect failed: host unreachable or port blocked
+  | 'TLS_HANDSHAKE_FAILED'    // TLS negotiation failed: cert invalid, SNI mismatch
   | 'AUTH_FAILED'             // Wrong credentials or revoked token
   | 'AUTH_TOKEN_EXPIRED'      // Access token expired and refresh failed
   | 'AUTH_SCOPE_INSUFFICIENT' // Token lacks required OAuth scope
-  | 'MAILBOX_NOT_FOUND'       // SELECT failed — folder does not exist
+  | 'MAILBOX_NOT_FOUND'       // SELECT failed: folder does not exist
   | 'MESSAGE_NOT_FOUND'       // UID not found in mailbox
   | 'IMAP_NO_RESPONSE'        // Server returned NO to a command
-  | 'IMAP_BAD_RESPONSE'       // Server returned BAD (malformed command — should never happen)
+  | 'IMAP_BAD_RESPONSE'       // Server returned BAD (malformed command, should never happen)
   | 'IMAP_PROTOCOL_ERROR'     // Unexpected server response format
   | 'SMTP_RELAY_REJECTED'     // Server refused MAIL FROM or RCPT TO
   | 'SMTP_QUOTA_EXCEEDED'     // Sending quota exceeded (provider-level)
@@ -98,7 +98,7 @@ export class ImapBadError extends Error {
 export interface ImapConfig {
   /** IMAP server hostname (e.g. "imap.fastmail.com"). */
   host: string;
-  /** IMAP server port — 993 for implicit TLS. */
+  /** IMAP server port (993 for implicit TLS). */
   port: number;
   /** Full email address used as the username. */
   email: string;
@@ -185,7 +185,7 @@ export interface ImapSession {
 
   /**
    * Send LOGOUT and destroy the socket.
-   * Always call this — even on error paths — to allow the server to cleanly
+   * Always call this (even on error paths) to allow the server to cleanly
    * account for the disconnected session.
    */
   logout(): Promise<void>;
@@ -239,7 +239,7 @@ class LineReader {
       reject(err);
     }
     for (const resolve of this.lineResolvers.splice(0)) {
-      // Signal error via a sentinel — callers check socketError
+      // Signal error via a sentinel; callers check socketError
       void resolve; // eslint-disable-line @typescript-eslint/no-unused-vars
     }
   }
@@ -360,7 +360,7 @@ function buildPlainAuthToken(username: string, password: string): string {
  *
  * This parser handles the most common data items used by MCPEmails:
  * FLAGS, UID, ENVELOPE (subject, from, date, message-id), RFC822.SIZE, and
- * the body literal marker (the actual body bytes are not line-buffered here —
+ * the body literal marker (the actual body bytes are not line-buffered here,
  * they are appended to untagged by the caller when present).
  */
 function parseFetchResponse(untaggedLines: string[]): ImapMessage[] {
@@ -401,7 +401,7 @@ function parseFetchResponse(untaggedLines: string[]): ImapMessage[] {
       msg.size = parseInt(sizeMatch[1], 10);
     }
 
-    // Extract ENVELOPE — format: ENVELOPE ("date" "subject" (from) (reply-to) (to) ...)
+    // Extract ENVELOPE. Format: ENVELOPE ("date" "subject" (from) (reply-to) (to) ...)
     // ENVELOPE is complex; extract the fields we care about using positional parsing.
     const envelopeMatch = /\bENVELOPE \(/.exec(payload);
     if (envelopeMatch) {
@@ -704,7 +704,7 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
           const challengeBody = challenge.slice(2).trim();
           try {
             const decoded = Buffer.from(challengeBody, 'base64').toString('utf-8');
-            // Log the decoded error code internally (no secrets — it's an error object)
+            // Log the decoded error code internally (no secrets, it's an error object)
             console.error('[IMAP XOAUTH2 challenge]', decoded);
           } catch {
             // Not base64; ignore
@@ -881,7 +881,7 @@ export async function connectImapWithRetry(
           err.message.includes('too many connections') ||
           err.message.includes('[LIMIT]'));
 
-      // Auth and TLS errors are permanent — do not retry.
+      // Auth and TLS errors are permanent: do not retry.
       const isPermanent =
         err instanceof ImapAuthError ||
         (err instanceof McpEmailsError &&
@@ -912,7 +912,7 @@ export async function connectImapWithRetry(
         throw err;
       }
 
-      // Transient error on a non-final attempt — retry with short delay
+      // Transient error on a non-final attempt: retry with short delay
       await sleep(2_000);
     }
   }

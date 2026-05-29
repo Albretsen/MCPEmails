@@ -7,7 +7,7 @@ export const metadata = {
  * app/not-found.js
  *
  * Rendered whenever Next.js cannot match a route, or when a Server Component
- * calls `notFound()`. This is a Server Component — no interactivity needed.
+ * calls `notFound()`. This is a Server Component, no interactivity needed.
  *
  * Uses the shared `.auth-shell` / `.auth-card` pattern so it looks at home
  * next to other standalone pages (login, auth/error, etc.).
@@ -96,7 +96,7 @@ export default function NotFound() {
             Check the URL, or use one of the links below to get back on track.
           </p>
 
-          {/* Primary CTA — dashboard (likely where the user came from) */}
+          {/* Primary CTA: dashboard (likely where the user came from) */}
           <a
             href="/dashboard"
             style={{
@@ -119,7 +119,7 @@ export default function NotFound() {
             Go to dashboard
           </a>
 
-          {/* Secondary CTA — homepage */}
+          {/* Secondary CTA: homepage */}
           <a
             href="/"
             style={{

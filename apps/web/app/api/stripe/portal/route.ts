@@ -18,10 +18,10 @@ import { stripe } from '@/lib/stripe/client';
  *     https://dashboard.stripe.com/test/settings/billing/portal
  *   - The workspace must have a stripe_customer_id (set after first checkout).
  *
- * Request body: (empty — no params required)
+ * Request body: (empty, no params required)
  *
  * Response (200):
- *   { url: string } — the Stripe Customer Portal URL to redirect to
+ *   { url: string } : the Stripe Customer Portal URL to redirect to
  *
  * Response (4xx / 5xx):
  *   { error: string }

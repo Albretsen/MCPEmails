@@ -67,14 +67,14 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
   }
 
   // 4. Sync to Supabase Auth user metadata so sidebar initials stay consistent
-  //    without requiring a full page reload. Failures here are non-fatal —
+  //    without requiring a full page reload. Failures here are non-fatal:
   //    the primary data is the users table row updated above.
   const { error: metaError } = await supabase.auth.updateUser({
     data: { full_name: trimmed },
   });
 
   if (metaError) {
-    // Log but don't fail the request — DB is the authoritative source.
+    // Log but don't fail the request: DB is the authoritative source.
     console.error('[profile-update] Auth metadata update failed:', metaError.message);
   }
 

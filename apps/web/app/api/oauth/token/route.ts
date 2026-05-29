@@ -257,7 +257,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Crash-safe rotation: we mint the new pair and persist the new refresh
     // token FIRST, then rotate the access token in place, and only revoke the
     // old refresh token last. If any earlier step fails, the old refresh token
-    // is still valid, so the client can simply retry — the connection never
+    // is still valid, so the client can simply retry; the connection never
     // ends up in a state where it holds a token the server doesn't recognise.
     const { rawKey, keyHash, keyPrefix } = generateApiKey();
     const accessExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString();

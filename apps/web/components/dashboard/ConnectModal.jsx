@@ -11,7 +11,7 @@ import {
 } from '@/lib/email-providers/imap-presets';
 
 /**
- * ConnectModal.jsx — inbox connection modal.
+ * ConnectModal.jsx: inbox connection modal.
  *
  * Step 1: Provider selection.
  *   - Gmail / Outlook → clicking "Connect" navigates to the server-side OAuth
@@ -52,18 +52,20 @@ const OAUTH_ROUTES = {
 };
 
 /**
- * ConnectModal — inbox connection modal.
+ * ConnectModal: inbox connection modal.
  *
  * When `atInboxLimit` is true the modal shows an upgrade prompt instead of
  * the provider selection step, because the workspace has reached its plan's
  * inbox cap and connecting a new inbox is not possible without upgrading.
+ * The free plan has no inbox cap, so this branch only applies to plans that
+ * define one.
  *
  * @param {boolean} atInboxLimit  - True when the workspace is at its inbox cap.
  * @param {string}  plan          - The workspace's current plan slug (e.g. "free").
  */
 export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 'free' }) {
   const [provider, setProvider] = useState('gmail');
-  /** 'oauth' | 'apppassword' — only relevant when provider === 'fastmail' */
+  /** 'oauth' | 'apppassword': only relevant when provider === 'fastmail' */
   const [fastmailMode, setFastmailMode] = useState('oauth');
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
@@ -174,7 +176,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
         return;
       }
 
-      // Success — notify the parent so it can update its optimistic inbox list.
+      // Success: notify the parent so it can update its optimistic inbox list.
       onConnect({ provider, address: email, label: email });
     } catch {
       setFormError('Network error. Please check your connection and try again.');
@@ -238,7 +240,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
         {/* Body */}
         <div className="modal-body">
 
-          {/* ─── Plan limit — upgrade prompt ────────────────────────────────── */}
+          {/* ─── Plan limit: upgrade prompt ────────────────────────────────── */}
           {atInboxLimit && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Icon + copy */}
@@ -278,18 +280,18 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     color: 'var(--fg-3)',
                     lineHeight: 1.5,
                   }}>
-                    The Pro plan supports up to 5 inboxes and 20,000 MCP tool calls
-                    per month. Enterprise is unlimited.
+                    Your current plan limits how many inboxes you can connect.
+                    Upgrade for a higher rate limit and longer usage history.
                   </div>
                 </div>
               </div>
 
               {/* Feature highlights */}
               {[
-                '5 connected inboxes',
-                '20,000 MCP tool calls / month',
-                '10 API keys',
-                'Usage analytics dashboard',
+                'Higher requests-per-minute rate limit',
+                'Extended usage analytics history',
+                'Team roles, workspaces, and SSO on Team',
+                'Email and priority support',
               ].map(f => (
                 <div key={f} style={{
                   display: 'flex',
@@ -327,7 +329,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 ))}
               </div>
 
-              {/* Fastmail mode toggle — only shown when Fastmail is selected */}
+              {/* Fastmail mode toggle: only shown when Fastmail is selected */}
               {provider === 'fastmail' && (
                 <div style={{ marginTop: 12 }}>
                   <div
@@ -366,7 +368,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 </div>
               )}
 
-              {/* App-password providers — short guidance + help link */}
+              {/* App-password providers: short guidance + help link */}
               {(isPreset || isGeneric) && (
                 <p style={{
                   margin: '12px 0 0',
@@ -520,7 +522,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
 
         {/* Footer */}
         <div className="modal-foot">
-          {/* Plan limit reached — show upgrade CTA */}
+          {/* Plan limit reached: show upgrade CTA */}
           {atInboxLimit && (
             <>
               <Btn variant="ghost" onClick={onClose}>Cancel</Btn>

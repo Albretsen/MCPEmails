@@ -11,17 +11,17 @@ import { randomBytes } from 'crypto';
  * table (expires in 10 minutes), and redirects the user to Microsoft's
  * authorization endpoint.
  *
- * Tenant: "common" — accepts both personal Microsoft accounts (Outlook.com,
+ * Tenant: "common" accepts both personal Microsoft accounts (Outlook.com,
  * Hotmail.com) and work/school accounts (Microsoft 365). The Azure AD app
  * registration must set "Supported account types" to match.
  *
  * Scopes requested:
- *   - Mail.Read        — list and read message bodies via Microsoft Graph
- *   - Mail.Send        — send messages via Microsoft Graph
- *   - offline_access   — causes Microsoft to issue a refresh token
- *   - openid           — required for OIDC; provides id_token with user info
- *   - profile          — adds display name to id_token
- *   - email            — ensures the email claim is present in id_token
+ *   - Mail.Read        : list and read message bodies via Microsoft Graph
+ *   - Mail.Send        : send messages via Microsoft Graph
+ *   - offline_access   : causes Microsoft to issue a refresh token
+ *   - openid           : required for OIDC; provides id_token with user info
+ *   - profile          : adds display name to id_token
+ *   - email            : ensures the email claim is present in id_token
  *
  * References:
  *   https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow
@@ -65,7 +65,7 @@ export async function GET(): Promise<NextResponse> {
   }
 
   // Note: the plan inbox cap is enforced in the callback, where the email
-  // address is known — that lets reconnecting an existing inbox proceed even
+  // address is known. That lets reconnecting an existing inbox proceed even
   // at the cap while still blocking brand-new connections.
 
   // Generate a 32-byte cryptographically random state nonce.

@@ -53,7 +53,7 @@ export async function POST(
 
   // 2. Fetch the inbox (including credentials, which never leave this handler).
   //    RLS on inboxes restricts SELECT to workspaces the user is a member of
-  //    (and to non-deleted rows), so this both authorizes and scopes the read —
+  //    (and to non-deleted rows), so this both authorizes and scopes the read,
   //    correct even when the user belongs to multiple workspaces.
   const { data: inbox, error: fetchError } = await supabase
     .from('inboxes')
@@ -123,7 +123,7 @@ export async function POST(
         ? `The app password was rejected. ${RECONNECT_HINT}`
         : `The saved sign-in is no longer valid. ${RECONNECT_HINT}`;
     } else {
-      // Network / TLS / provider-outage errors are inconclusive — leave the
+      // Network / TLS / provider-outage errors are inconclusive: leave the
       // inbox status untouched and ask the user to retry.
       console.error(`[check-inbox] Inconclusive check for inbox ${inboxId}:`, (err as Error).message);
       return NextResponse.json({
@@ -131,7 +131,7 @@ export async function POST(
         transient: true,
         status: inbox.status,
         lastError: inbox.last_error ?? null,
-        message: 'Could not reach the mail provider — please try again.',
+        message: 'Could not reach the mail provider. Please try again.',
       });
     }
   }
@@ -153,7 +153,7 @@ export async function POST(
     });
   }
 
-  // Definitive failure — ensure the row reflects the errored state. (OAuth
+  // Definitive failure: ensure the row reflects the errored state. (OAuth
   // refresh-token failures are already persisted by the provider helper; this
   // also covers live-ping rejections and IMAP auth failures.)
   await supabase

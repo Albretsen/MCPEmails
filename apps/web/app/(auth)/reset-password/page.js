@@ -6,7 +6,7 @@ export const metadata = {
 };
 
 /**
- * /reset-password — password reset completion page.
+ * /reset-password: password reset completion page.
  *
  * Server Component shell: renders the ResetPasswordApp Client Component.
  *

@@ -18,14 +18,14 @@ export async function storeStateNonce(sessionId: string, state: string): Promise
 
   if (error) {
     // A unique-constraint violation means this state value was already stored
-    // for this session. Treat it as an error — OAuth state must be single-use
+    // for this session. Treat it as an error: OAuth state must be single-use
     // and must not be refreshable by re-visiting /authorize with the same URL.
     throw new Error(`Failed to store state nonce: ${error.message}`);
   }
 }
 
 /**
- * Validate and consume a state nonce. Returns true only once per nonce —
+ * Validate and consume a state nonce. Returns true only once per nonce;
  * subsequent calls with the same state return false (single-use).
  */
 export async function consumeStateNonce(sessionId: string, state: string): Promise<boolean> {

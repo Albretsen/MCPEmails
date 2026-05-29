@@ -25,12 +25,12 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
  *
  * Security:
  *   - Requires a valid session cookie.
- *   - Requires exact email confirmation — prevents accidental or CSRF-driven deletion.
+ *   - Requires exact email confirmation: prevents accidental or CSRF-driven deletion.
  *   - Only the workspace owner may delete it (verified via the owner_id lookup
  *     on the authenticated client below).
  *   - The soft-delete mutations use the service-role client: setting deleted_at
- *     moves each row out of its SELECT policy (deleted_at IS NULL, or — for
- *     workspaces — my_workspace_ids() no longer returning the id), which
+ *     moves each row out of its SELECT policy (deleted_at IS NULL, or, for
+ *     workspaces, my_workspace_ids() no longer returning the id), which
  *     Postgres rejects under the user's RLS context as "new row violates
  *     row-level security policy". Authorization is fully established before any
  *     mutation, and every write is scoped to the owned workspace_id.
@@ -153,7 +153,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
   }
 
   // 6. Sign the user out to invalidate all session cookies.
-  //    Failures here are non-fatal — the workspace is already deleted and the
+  //    Failures here are non-fatal: the workspace is already deleted and the
   //    user will be locked out on next page load regardless.
   const { error: signOutError } = await supabase.auth.signOut();
   if (signOutError) {

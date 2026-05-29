@@ -118,7 +118,7 @@ export async function DELETE(
  * PATCH /api/workspaces/members/[userId]
  *
  * Changes a member's role. Caller must be the workspace owner.
- * (Only the owner may promote/demote — admins cannot change roles.)
+ * (Only the owner may promote/demote; admins cannot change roles.)
  *
  * Body: { workspaceId: string, role: 'admin' | 'member' | 'viewer' }
  *

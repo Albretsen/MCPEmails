@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
-import { getPlanLimits } from '@/lib/stripe/plans';
+import { resolvePlanLimits } from '@/lib/stripe/plans';
 
 /**
  * Result of an API key cap check.
@@ -49,7 +49,7 @@ export async function checkApiKeyLimit(
   const [workspaceResult, keyCountResult] = await Promise.all([
     supabase
       .from('workspaces')
-      .select('plan')
+      .select('plan, grandfathered')
       .eq('id', workspaceId)
       .maybeSingle(),
     supabase
@@ -60,7 +60,8 @@ export async function checkApiKeyLimit(
   ]);
 
   const plan = (workspaceResult.data?.plan as string | undefined) ?? 'free';
-  const limits = getPlanLimits(plan);
+  const grandfathered = workspaceResult.data?.grandfathered ?? false;
+  const limits = resolvePlanLimits(plan, { grandfathered });
   const currentCount = keyCountResult.count ?? 0;
 
   // Enterprise plan (Infinity) has no key cap.

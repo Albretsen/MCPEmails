@@ -30,7 +30,7 @@ interface DeviceInfo {
 function parseDevice(ua: string | null): DeviceInfo {
   if (!ua) return { browser: 'Unknown browser', os: 'Unknown device' };
 
-  // Browser — order matters: Edge contains "Chrome", OPR contains "Opera"
+  // Browser. Order matters: Edge contains "Chrome", OPR contains "Opera"
   let browser = 'Browser';
   if (/Edg\//i.test(ua)) browser = 'Edge';
   else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) browser = 'Opera';
@@ -42,7 +42,7 @@ function parseDevice(ua: string | null): DeviceInfo {
   else if (/python-requests|python\//i.test(ua)) browser = 'Python';
   else if (/axios/i.test(ua)) browser = 'HTTP client';
 
-  // OS — check mobile first so "iPhone" beats "Macintosh"
+  // OS. Check mobile first so "iPhone" beats "Macintosh"
   let os = 'Unknown OS';
   if (/iPhone/i.test(ua)) os = 'iPhone';
   else if (/iPad/i.test(ua)) os = 'iPad';
@@ -59,7 +59,7 @@ function parseDevice(ua: string | null): DeviceInfo {
  * Attempts to decode the Supabase JWT access token and extract the session_id
  * claim. Supabase Auth v2 includes session_id as a custom claim in the payload.
  *
- * Returns null when the token is malformed or the claim is absent — callers
+ * Returns null when the token is malformed or the claim is absent; callers
  * should handle null gracefully (isCurrent will be false for all sessions).
  */
 function extractSessionId(accessToken: string): string | null {
@@ -100,7 +100,7 @@ function extractSessionId(accessToken: string): string | null {
 export async function GET(_request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
 
-  // 1. Verify auth — getUser() makes a server-side token validation call.
+  // 1. Verify auth: getUser() makes a server-side token validation call.
   const {
     data: { user },
     error: authError,
@@ -159,7 +159,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
  *
  * Security:
  *   - Requires a valid Supabase session cookie.
- *   - Does not affect the current session — the user remains logged in here.
+ *   - Does not affect the current session: the user remains logged in here.
  */
 export async function DELETE(_request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
@@ -175,7 +175,7 @@ export async function DELETE(_request: NextRequest): Promise<NextResponse> {
   }
 
   // 2. Revoke all other refresh tokens for this user. The current session's
-  //    refresh token is preserved — the calling browser stays logged in.
+  //    refresh token is preserved: the calling browser stays logged in.
   const { error: signOutError } = await supabase.auth.signOut({ scope: 'others' });
 
   if (signOutError) {

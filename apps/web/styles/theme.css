@@ -1,4 +1,4 @@
-/* theme.css — dark-mode token overrides + shared helpers.
+/* theme.css: dark-mode token overrides + shared helpers.
    Activated by setting `data-theme="dark"` on <html>. */
 
 html[data-theme="dark"] {

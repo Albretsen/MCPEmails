@@ -1,12 +1,12 @@
 /**
- * Skeletons.jsx — loading placeholder components for all dashboard pages.
+ * Skeletons.jsx: loading placeholder components for all dashboard pages.
  *
  * Each skeleton matches the structural layout of its corresponding page so
  * there is no layout shift when real data replaces the placeholders. All
  * animation is handled by the `.sk` CSS class (shimmer gradient) defined
  * in dashboard.css.
  *
- * These are pure Server Components — no 'use client' directive, no state.
+ * These are pure Server Components: no 'use client' directive, no state.
  * They are rendered by app/dashboard/loading.js (Next.js Suspense fallback)
  * and can also be rendered directly by any page that manages its own loading
  * state via a `loading` prop.
@@ -85,7 +85,7 @@ export function SkeletonOverviewPage() {
     <div className="page" aria-busy="true" aria-label="Loading overview…">
       <SkPageHeader />
 
-      {/* Stat grid — 4 cards */}
+      {/* Stat grid: 4 cards */}
       <div className="stat-grid">
         <SkStat />
         <SkStat />

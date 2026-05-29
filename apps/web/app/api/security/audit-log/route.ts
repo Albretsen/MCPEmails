@@ -20,8 +20,8 @@ interface ActivityLogRow {
  * workspace, joined with the related inbox and api_key display fields.
  *
  * Query parameters:
- *   page     — zero-based page index (default: 0)
- *   pageSize — rows per page, capped at 100 (default: 25)
+ *   page     : zero-based page index (default: 0)
+ *   pageSize : rows per page, capped at 100 (default: 25)
  *
  * Response shape:
  *   {
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to fetch audit log.' }, { status: 500 });
   }
 
-  // 6. Shape the response — no secrets, no raw credentials.
+  // 6. Shape the response: no secrets, no raw credentials.
   const entries = ((rows ?? []) as ActivityLogRow[]).map((row) => {
     const inboxRel = row.inboxes;
     const keyRel = row.api_keys;

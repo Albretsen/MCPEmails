@@ -46,9 +46,9 @@ export class InboxAuthError extends Error {
   ) {
     const messages: Record<typeof code, string> = {
       REFRESH_TOKEN_INVALID:
-        'Gmail refresh token is invalid or revoked — user must reconnect the inbox.',
+        'Gmail refresh token is invalid or revoked. Please reconnect the inbox.',
       MISSING_TOKENS:
-        'Inbox is missing OAuth tokens — user must reconnect the inbox.',
+        'Inbox is missing OAuth tokens. Please reconnect the inbox.',
     };
     super(messages[code]);
     this.name = 'InboxAuthError';
@@ -63,7 +63,7 @@ export class InboxAuthError extends Error {
  * Decodes the payload of a JWT without verifying its signature.
  *
  * Safe to use here because the JWT arrives over a server-to-server
- * HTTPS call immediately after the authorization code exchange — it is
+ * HTTPS call immediately after the authorization code exchange; it is
  * not user-supplied input.
  */
 function decodeJwtPayload(jwt: string): Record<string, unknown> {
@@ -82,7 +82,7 @@ function decodeJwtPayload(jwt: string): Record<string, unknown> {
 /**
  * Marks an inbox as errored, storing a human-readable reason in `last_error`.
  *
- * Uses the service-role client to bypass RLS — this is called from a
+ * Uses the service-role client to bypass RLS; this is called from a
  * background job context where there is no authenticated user session.
  */
 async function markInboxErrored(inboxId: string, reason: string): Promise<void> {
@@ -97,7 +97,7 @@ async function markInboxErrored(inboxId: string, reason: string): Promise<void> 
     .eq('id', inboxId);
 
   if (error) {
-    // Log the failure but don't throw — the caller already has an error to handle.
+    // Log the failure but don't throw; the caller already has an error to handle.
     console.error(`[gmail] Failed to mark inbox ${inboxId} as errored:`, error.message);
   }
 }
@@ -191,7 +191,7 @@ export async function exchangeGmailCode(
     );
   }
   if (!data.id_token) {
-    throw new Error('Gmail token exchange: missing id_token — cannot determine user email');
+    throw new Error('Gmail token exchange: missing id_token, cannot determine user email');
   }
 
   const payload = decodeJwtPayload(data.id_token);
@@ -212,7 +212,7 @@ export async function exchangeGmailCode(
  * Calls Google's token endpoint with a refresh token to obtain a new
  * access token.
  *
- * Does NOT update the database — callers are responsible for persisting
+ * Does NOT update the database; callers are responsible for persisting
  * the result via `updateInboxTokens`.
  *
  * Throws an `InboxAuthError` with code `REFRESH_TOKEN_INVALID` if Google
@@ -280,8 +280,8 @@ export async function refreshGmailAccessToken(
  * Call this function at the start of every Gmail API call. Never cache
  * the returned access token across requests.
  *
- * @throws {InboxAuthError} code='MISSING_TOKENS'  — inbox has no stored tokens.
- * @throws {InboxAuthError} code='REFRESH_TOKEN_INVALID' — refresh token is revoked;
+ * @throws {InboxAuthError} code='MISSING_TOKENS':  inbox has no stored tokens.
+ * @throws {InboxAuthError} code='REFRESH_TOKEN_INVALID': refresh token is revoked;
  *   the user must reconnect the inbox. The inbox is automatically marked as errored.
  * @throws {Error} on unexpected token refresh failures or database write errors.
  */
@@ -300,11 +300,11 @@ export async function withFreshGmailToken(
   const refreshThreshold = new Date(now.getTime() + REFRESH_THRESHOLD_MS);
 
   if (expiresAt > refreshThreshold) {
-    // Token is fresh — decrypt and return without a network call.
+    // Token is fresh; decrypt and return without a network call.
     return decryptToken(inbox.oauth_access_token);
   }
 
-  // Token is expiring within 5 minutes (or already expired) — refresh it.
+  // Token is expiring within 5 minutes (or already expired); refresh it.
   const refreshToken = decryptToken(inbox.oauth_refresh_token);
 
   let refreshResult: { accessToken: string; expiresIn: number };
@@ -316,7 +316,7 @@ export async function withFreshGmailToken(
       const typedErr = new InboxAuthError('REFRESH_TOKEN_INVALID', inbox.id);
       await markInboxErrored(
         inbox.id,
-        'Refresh token expired or revoked — user must reconnect this inbox.'
+        'Refresh token expired or revoked. Please reconnect this inbox.'
       );
       throw typedErr;
     }
@@ -337,7 +337,7 @@ export async function withFreshGmailToken(
  * Lightweight live check that the access token still grants Gmail access.
  *
  * Returns true when the provider accepts the token, false when it rejects it
- * (401/403 — the user must reconnect). A non-auth failure (network, 5xx) is
+ * (401/403, the user must reconnect). A non-auth failure (network, 5xx) is
  * thrown so the caller can treat the result as inconclusive rather than
  * marking an otherwise-healthy inbox as broken.
  */

@@ -25,7 +25,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function PATCH(request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
 
-  // 1. Authenticate — reject unauthenticated callers immediately.
+  // 1. Authenticate: reject unauthenticated callers immediately.
   const {
     data: { user },
     error: authError,
@@ -86,7 +86,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
   // 3. Verify the current password by re-authenticating with email + password.
   //    This proves the caller knows the existing credential before we allow a change.
-  //    On success, signInWithPassword refreshes the user's session cookies —
+  //    On success, signInWithPassword refreshes the user's session cookies,
   //    an acceptable side-effect that keeps the session alive post-change.
   const { error: signInError } = await supabase.auth.signInWithPassword({
     email: user.email,

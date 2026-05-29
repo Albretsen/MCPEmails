@@ -6,7 +6,7 @@ export const metadata = {
 };
 
 /**
- * /forgot-password — password reset request page.
+ * /forgot-password: password reset request page.
  *
  * Server Component shell: renders the ForgotPasswordApp Client Component
  * which handles email input, calls supabase.auth.resetPasswordForEmail(),
