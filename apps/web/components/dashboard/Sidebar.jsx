@@ -122,7 +122,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
               <span className="ws-name">{activeWs.displayName || activeWs.slug}</span>
               <span className="ws-plan">{(activeWs.plan ?? 'free')} plan</span>
             </span>
-            <Icon name="chevron-down" size={14} color="var(--fg-3)" />
+            <Icon name="chevron" size={14} color="var(--fg-3)" />
           </button>
 
           {wsMenuOpen && (
