@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { randomBytes } from 'crypto';
-import { checkInboxLimit } from '@/lib/plans/check-inbox-limit';
 
 /**
  * GET /auth/gmail
@@ -45,32 +45,22 @@ export async function GET() {
 
   if (userError || !user) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/login?next=/dashboard/inboxes`
+      `${process.env.NEXT_PUBLIC_APP_URL}/login?next=/dashboard`
     );
   }
 
-  // Resolve the workspace for this user.
-  const { data: member, error: memberError } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .single();
+  // Resolve the active workspace for this user (cookie-aware, multi-workspace safe).
+  const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
 
-  if (memberError || !member) {
+  if (!workspaceId) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/inboxes?error=no_workspace`
+      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?error=no_workspace`
     );
   }
 
-  // Enforce plan inbox cap before beginning the OAuth flow.
-  // If the workspace is at its limit, redirect back with an informative error
-  // rather than completing a full OAuth round-trip only to fail on insert.
-  const inboxLimit = await checkInboxLimit(supabase, member.workspace_id);
-  if (inboxLimit.atLimit) {
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/inboxes?error=inbox_limit_reached`
-    );
-  }
+  // Note: the plan inbox cap is enforced in the callback, where the email
+  // address is known — that lets reconnecting an existing inbox proceed even
+  // at the cap while still blocking brand-new connections.
 
   // Generate a 32-byte cryptographically random state nonce.
   // This ties the callback to this specific authorization request and
@@ -82,7 +72,7 @@ export async function GET() {
   // Persist the state nonce. The callback handler looks this up and deletes
   // it immediately (single-use) before processing the authorization code.
   const { error: stateError } = await supabase.from('oauth_states').insert({
-    workspace_id: member.workspace_id,
+    workspace_id: workspaceId,
     user_id: user.id,
     provider: 'gmail',
     state,
@@ -92,7 +82,7 @@ export async function GET() {
 
   if (stateError) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/inboxes?error=state_store_failed`
+      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?error=state_store_failed`
     );
   }
 

@@ -15,6 +15,8 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import type { Tables } from '@/types/database.types';
 
 const GMAIL_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
+const GMAIL_PROFILE_ENDPOINT =
+  'https://gmail.googleapis.com/gmail/v1/users/me/profile';
 
 /** The 5-minute proactive refresh window in milliseconds. */
 const REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
@@ -329,4 +331,25 @@ export async function withFreshGmailToken(
   await updateInboxTokens(inbox.id, encryptedAccessToken, newExpiresAt);
 
   return refreshResult.accessToken;
+}
+
+/**
+ * Lightweight live check that the access token still grants Gmail access.
+ *
+ * Returns true when the provider accepts the token, false when it rejects it
+ * (401/403 — the user must reconnect). A non-auth failure (network, 5xx) is
+ * thrown so the caller can treat the result as inconclusive rather than
+ * marking an otherwise-healthy inbox as broken.
+ */
+export async function verifyGmailAccess(accessToken: string): Promise<boolean> {
+  const response = await fetch(GMAIL_PROFILE_ENDPOINT, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (response.status === 401 || response.status === 403) return false;
+  if (!response.ok) {
+    throw new Error(
+      `Gmail profile check failed: ${response.status} ${response.statusText}`
+    );
+  }
+  return true;
 }

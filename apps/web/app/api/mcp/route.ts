@@ -20,6 +20,14 @@ import { NextRequest, NextResponse } from 'next/server';
  *   the response includes WWW-Authenticate with a resource_metadata pointer.
  *   MCP clients use this to auto-discover the authorization server and begin
  *   the OAuth 2.0 Authorization Code + PKCE flow.
+ *
+ * API key via query parameter:
+ *   As a simpler alternative to OAuth, the API key may be supplied in the URL
+ *   as ?key=mcpe_... (mcpemails.com/api/mcp?key=mcpe_...). This lets users paste
+ *   a single URL into any MCP client instead of configuring an auth header. The
+ *   key is converted into a Bearer header before forwarding upstream, so the
+ *   Edge Function's auth contract is unchanged. An Authorization header, when
+ *   present, always takes precedence over the query parameter.
  */
 
 const MCP_FUNCTION_URL =
@@ -31,7 +39,18 @@ const WWW_AUTHENTICATE =
   `Bearer realm="MCP Emails", resource_metadata="${APP_URL}/.well-known/oauth-protected-resource"`;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const authorization = request.headers.get('authorization');
+  // An explicit Authorization header (e.g. an OAuth access token) always wins.
+  // Otherwise, accept the API key from the ?key= (or ?api_key=) query parameter
+  // and turn it into a Bearer header so the upstream auth path is identical.
+  let authorization = request.headers.get('authorization');
+  if (!authorization) {
+    const queryKey =
+      request.nextUrl.searchParams.get('key') ??
+      request.nextUrl.searchParams.get('api_key');
+    if (queryKey) {
+      authorization = `Bearer ${queryKey.trim()}`;
+    }
+  }
 
   // Return 401 immediately for requests with no bearer token so MCP clients
   // can begin OAuth discovery without forwarding an empty request upstream.

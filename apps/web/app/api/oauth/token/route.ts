@@ -165,27 +165,35 @@ export async function POST(req: NextRequest): Promise<Response> {
       return oauthError('server_error', 'Failed to consume authorization code. Restart the flow.');
     }
 
-    // Issue 1-hour access token
+    // Issue 1-hour access token. This single api_keys row is the durable
+    // identity of the connection: every later refresh rotates it in place
+    // (see the refresh_token grant) rather than inserting a new row.
     const { rawKey, keyHash, keyPrefix } = generateApiKey();
     const accessExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
 
-    const { error: keyInsertErr } = await service.from('api_keys').insert({
-      workspace_id: authCode.workspace_id,
-      created_by:   authCode.user_id,
-      name:         `OAuth: ${authCode.client_name}`,
-      key_prefix:   keyPrefix,
-      key_hash:     keyHash,
-      scopes:       authCode.scopes,
-      inbox_ids:    authCode.inbox_ids ?? null,
-      expires_at:   accessExpiresAt,
-    });
+    const { data: keyRow, error: keyInsertErr } = await service
+      .from('api_keys')
+      .insert({
+        workspace_id: authCode.workspace_id,
+        created_by:   authCode.user_id,
+        name:         `OAuth: ${authCode.client_name}`,
+        key_prefix:   keyPrefix,
+        key_hash:     keyHash,
+        scopes:       authCode.scopes,
+        inbox_ids:    authCode.inbox_ids ?? null,
+        expires_at:   accessExpiresAt,
+      })
+      .select('id')
+      .single();
 
-    if (keyInsertErr) {
-      console.error('oauth_token_key_insert_error', keyInsertErr.message);
+    if (keyInsertErr || !keyRow) {
+      console.error('oauth_token_key_insert_error', keyInsertErr?.message);
       return oauthError('server_error', 'Failed to issue access token. Restart the flow.');
     }
 
-    // Issue 6-month refresh token
+    // Issue refresh token, linked to the access-token row above. Sliding
+    // 180-day window: as long as the client keeps refreshing, the connection
+    // never expires; only 6 continuous months of inactivity ends it.
     const refreshToken = generateRefreshToken();
     const refreshHash  = sha256hex(refreshToken);
     const refreshExpiresAt = new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString();
@@ -199,6 +207,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       scopes:       authCode.scopes,
       inbox_ids:    authCode.inbox_ids ?? null,
       expires_at:   refreshExpiresAt,
+      api_key_id:   keyRow.id,
     });
 
     void logEvent(req, 'oauth_token_issued', {
@@ -230,7 +239,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const { data: rt, error: rtLookupErr } = await service
       .from('oauth_refresh_tokens')
-      .select('id, client_id, workspace_id, user_id, client_name, scopes, inbox_ids, expires_at')
+      .select('id, client_id, workspace_id, user_id, client_name, scopes, inbox_ids, expires_at, api_key_id')
       .eq('refresh_hash', refreshHash)
       .eq('client_id', clientId)
       .is('revoked_at', null)
@@ -245,51 +254,103 @@ export async function POST(req: NextRequest): Promise<Response> {
       return oauthError('invalid_grant', 'Refresh token is invalid, revoked, or expired.');
     }
 
-    // Rotate: revoke the old token before issuing the new pair
+    // Crash-safe rotation: we mint the new pair and persist the new refresh
+    // token FIRST, then rotate the access token in place, and only revoke the
+    // old refresh token last. If any earlier step fails, the old refresh token
+    // is still valid, so the client can simply retry — the connection never
+    // ends up in a state where it holds a token the server doesn't recognise.
+    const { rawKey, keyHash, keyPrefix } = generateApiKey();
+    const accessExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+
+    const newRefreshToken = generateRefreshToken();
+    const newRefreshHash  = sha256hex(newRefreshToken);
+    // Sliding window: each refresh pushes the idle deadline 180 days out, so an
+    // actively-used connection stays open indefinitely.
+    const newRefreshExpiresAt = new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString();
+
+    const { data: newRtRow, error: newRtErr } = await service
+      .from('oauth_refresh_tokens')
+      .insert({
+        refresh_hash: newRefreshHash,
+        client_id:    clientId,
+        workspace_id: rt.workspace_id,
+        user_id:      rt.user_id,
+        client_name:  rt.client_name,
+        scopes:       rt.scopes,
+        inbox_ids:    rt.inbox_ids ?? null,
+        expires_at:   newRefreshExpiresAt,
+        api_key_id:   rt.api_key_id,
+      })
+      .select('id')
+      .single();
+
+    if (newRtErr || !newRtRow) {
+      console.error('oauth_refresh_insert_error', newRtErr?.message);
+      return oauthError('server_error', 'Failed to rotate refresh token. Try again.');
+    }
+
+    // Rotate the access token. Normally this updates the connection's existing
+    // api_keys row in place (one row per connection, no dashboard flooding).
+    // The deleted_at guard means a connection revoked from the dashboard can
+    // NOT be silently resurrected here.
+    if (rt.api_key_id) {
+      const { data: rotated, error: rotateErr } = await service
+        .from('api_keys')
+        .update({ key_hash: keyHash, key_prefix: keyPrefix, expires_at: accessExpiresAt })
+        .eq('id', rt.api_key_id)
+        .is('deleted_at', null)
+        .select('id');
+
+      if (rotateErr) {
+        console.error('oauth_refresh_key_rotate_error', rotateErr.message);
+        await service.from('oauth_refresh_tokens').update({ revoked_at: new Date().toISOString() }).eq('id', newRtRow.id);
+        return oauthError('server_error', 'Failed to issue access token. Try again.');
+      }
+      if (!rotated || rotated.length === 0) {
+        // The api_keys row was revoked/deleted: the connection is gone. Roll
+        // back the refresh token we just issued and reject.
+        await service.from('oauth_refresh_tokens').update({ revoked_at: new Date().toISOString() }).eq('id', newRtRow.id);
+        return oauthError('invalid_grant', 'This connection has been revoked.');
+      }
+    } else {
+      // Legacy refresh token (issued before connections were linked to a single
+      // api_keys row): create the row now and point this chain at it so all
+      // future refreshes rotate in place.
+      const { data: keyRow, error: keyInsertErr } = await service
+        .from('api_keys')
+        .insert({
+          workspace_id: rt.workspace_id,
+          created_by:   rt.user_id,
+          name:         `OAuth: ${rt.client_name}`,
+          key_prefix:   keyPrefix,
+          key_hash:     keyHash,
+          scopes:       rt.scopes,
+          inbox_ids:    rt.inbox_ids ?? null,
+          expires_at:   accessExpiresAt,
+        })
+        .select('id')
+        .single();
+
+      if (keyInsertErr || !keyRow) {
+        console.error('oauth_refresh_key_insert_error', keyInsertErr?.message);
+        await service.from('oauth_refresh_tokens').update({ revoked_at: new Date().toISOString() }).eq('id', newRtRow.id);
+        return oauthError('server_error', 'Failed to issue access token. Try again.');
+      }
+
+      await service.from('oauth_refresh_tokens').update({ api_key_id: keyRow.id }).eq('id', newRtRow.id);
+    }
+
+    // Success: revoke the old refresh token (rotation complete).
     const { error: revokeErr } = await service
       .from('oauth_refresh_tokens')
       .update({ revoked_at: new Date().toISOString() })
       .eq('id', rt.id);
 
     if (revokeErr) {
-      console.error('oauth_refresh_revoke_error', revokeErr.message);
-      return oauthError('server_error', 'Failed to rotate refresh token. Try again.');
+      // Non-fatal: the new token is already valid and returned below. A
+      // lingering old token expires on its own; worst case it is usable once.
+      console.warn('oauth_refresh_old_revoke_failed', revokeErr.message);
     }
-
-    // Issue new 1-hour access token
-    const { rawKey, keyHash, keyPrefix } = generateApiKey();
-    const accessExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
-
-    const { error: keyInsertErr } = await service.from('api_keys').insert({
-      workspace_id: rt.workspace_id,
-      created_by:   rt.user_id,
-      name:         `OAuth: ${rt.client_name}`,
-      key_prefix:   keyPrefix,
-      key_hash:     keyHash,
-      scopes:       rt.scopes,
-      inbox_ids:    rt.inbox_ids ?? null,
-      expires_at:   accessExpiresAt,
-    });
-
-    if (keyInsertErr) {
-      console.error('oauth_refresh_key_insert_error', keyInsertErr.message);
-      return oauthError('server_error', 'Failed to issue access token. Try again.');
-    }
-
-    // Issue new refresh token — preserve the original 6-month expiry window
-    const newRefreshToken = generateRefreshToken();
-    const newRefreshHash  = sha256hex(newRefreshToken);
-
-    await service.from('oauth_refresh_tokens').insert({
-      refresh_hash: newRefreshHash,
-      client_id:    clientId,
-      workspace_id: rt.workspace_id,
-      user_id:      rt.user_id,
-      client_name:  rt.client_name,
-      scopes:       rt.scopes,
-      inbox_ids:    rt.inbox_ids ?? null,
-      expires_at:   rt.expires_at, // preserve original window, not 6 months from now
-    });
 
     void logEvent(req, 'oauth_token_refreshed', {
       client_id:  clientId,

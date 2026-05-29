@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 
 /**
  * DELETE /api/user/delete-account
@@ -22,8 +23,14 @@ import { createClient } from '@/lib/supabase/server';
  * Security:
  *   - Requires a valid session cookie.
  *   - Requires exact email confirmation — prevents accidental or CSRF-driven deletion.
- *   - Only the workspace owner may delete it (enforced by workspaces_update_owner RLS).
- *   - All mutations use the authenticated Supabase client so RLS is always active.
+ *   - Only the workspace owner may delete it (verified via the owner_id lookup
+ *     on the authenticated client below).
+ *   - The soft-delete mutations use the service-role client: setting deleted_at
+ *     moves each row out of its SELECT policy (deleted_at IS NULL, or — for
+ *     workspaces — my_workspace_ids() no longer returning the id), which
+ *     Postgres rejects under the user's RLS context as "new row violates
+ *     row-level security policy". Authorization is fully established before any
+ *     mutation, and every write is scoped to the owned workspace_id.
  *   - No credentials, tokens, or secrets are logged.
  *   - Data is soft-deleted, not hard-deleted, to preserve the audit trail.
  */
@@ -92,10 +99,13 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
   const workspaceId = workspace.id;
   const now = new Date().toISOString();
 
+  // Ownership is established (workspace owned by this user + email confirmed).
+  // The soft-delete mutations below run as the service role; see the security
+  // note in the docblock for why RLS cannot perform them.
+  const service = createServiceRoleClient();
+
   // 4. Soft-delete all active API keys in the workspace.
-  //    The api_keys_update_members RLS policy allows this for workspace members
-  //    when deleted_at IS NULL, which matches exactly the keys we want to revoke.
-  const { error: keysError } = await supabase
+  const { error: keysError } = await service
     .from('api_keys')
     .update({ deleted_at: now, updated_at: now })
     .eq('workspace_id', workspaceId)
@@ -110,9 +120,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
   }
 
   // 5. Soft-delete all connected inboxes in the workspace.
-  //    The inboxes_update_members RLS policy allows this for workspace members
-  //    when deleted_at IS NULL.
-  const { error: inboxesError } = await supabase
+  const { error: inboxesError } = await service
     .from('inboxes')
     .update({ deleted_at: now, status: 'revoked', updated_at: now })
     .eq('workspace_id', workspaceId)
@@ -126,11 +134,8 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // 6. Soft-delete the workspace itself.
-  //    The workspaces_update_owner RLS policy allows this since owner_id = auth.uid().
-  //    After this update, my_workspace_ids() returns an empty array for this user,
-  //    making all tenant data invisible to the authenticated role immediately.
-  const { error: workspaceUpdateError } = await supabase
+  // 6. Soft-delete the workspace itself. Scoped to the owned workspace.
+  const { error: workspaceUpdateError } = await service
     .from('workspaces')
     .update({ deleted_at: now, updated_at: now })
     .eq('id', workspaceId)

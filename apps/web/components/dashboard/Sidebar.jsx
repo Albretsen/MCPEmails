@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon, Btn, Avatar } from '../Primitives';
 import { createClient } from '@/lib/supabase/client';
+import { CreateWorkspaceModal } from './CreateWorkspaceModal';
 
 /* Sidebar.jsx — left nav with mobile-collapsible drawer support. */
 
@@ -17,8 +18,54 @@ import { createClient } from '@/lib/supabase/client';
  *   - `onClose` is called when the user taps the overlay backdrop.
  *   - Clicking a nav item also calls `onClose` so the drawer closes.
  */
-export function Sidebar({ route, setRoute, counts, user, workspace, isOpen, onClose }) {
+export function Sidebar({ route, setRoute, counts, user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, isOpen, onClose }) {
   const router = useRouter();
+  const [wsMenuOpen, setWsMenuOpen] = useState(false);
+  const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
+  const [switching, setSwitching] = useState(false);
+  const wsRef = useRef(null);
+
+  // Close the workspace menu on outside click / Escape.
+  useEffect(() => {
+    if (!wsMenuOpen) return;
+    function onDown(e) {
+      if (wsRef.current && !wsRef.current.contains(e.target)) setWsMenuOpen(false);
+    }
+    function onKey(e) { if (e.key === 'Escape') setWsMenuOpen(false); }
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [wsMenuOpen]);
+
+  const activeWs = workspaces.find((w) => w.id === activeWorkspaceId) ?? {
+    id: workspace?.id,
+    displayName: workspace?.slug,
+    slug: workspace?.slug,
+    plan: workspace?.plan ?? 'free',
+  };
+
+  // The plan a newly created workspace would inherit (enterprise outranks pro).
+  const ownsEnterprise = workspaces.some((w) => w.isOwner && w.plan === 'enterprise');
+  const inheritPlanLabel = ownsEnterprise ? 'Enterprise' : 'Pro';
+
+  async function switchWorkspace(id) {
+    setWsMenuOpen(false);
+    if (!id || id === activeWorkspaceId || switching) return;
+    setSwitching(true);
+    try {
+      await fetch('/api/workspaces/active', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspaceId: id }),
+      });
+      window.location.assign('/dashboard');
+    } catch {
+      setSwitching(false);
+    }
+  }
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -56,6 +103,73 @@ export function Sidebar({ route, setRoute, counts, user, workspace, isOpen, onCl
       <aside className={'sidebar' + (isOpen ? ' sidebar-open' : '')}>
         <div className="brand">
           <img src="/logo-wordmark.svg" alt="mcpemails" />
+        </div>
+
+        {/* Workspace switcher */}
+        <div className="ws-switcher" ref={wsRef}>
+          <button
+            type="button"
+            className="ws-switcher-btn"
+            onClick={() => setWsMenuOpen((v) => !v)}
+            aria-haspopup="listbox"
+            aria-expanded={wsMenuOpen}
+            disabled={switching}
+          >
+            <span className="ws-glyph" aria-hidden="true">
+              {(activeWs.displayName || activeWs.slug || 'W').slice(0, 1).toUpperCase()}
+            </span>
+            <span className="ws-meta">
+              <span className="ws-name">{activeWs.displayName || activeWs.slug}</span>
+              <span className="ws-plan">{(activeWs.plan ?? 'free')} plan</span>
+            </span>
+            <Icon name="chevron-down" size={14} color="var(--fg-3)" />
+          </button>
+
+          {wsMenuOpen && (
+            <div className="ws-menu" role="listbox">
+              <div className="ws-menu-label">Workspaces</div>
+              {workspaces.map((w) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  role="option"
+                  aria-selected={w.id === activeWorkspaceId}
+                  className={'ws-menu-item' + (w.id === activeWorkspaceId ? ' active' : '')}
+                  onClick={() => switchWorkspace(w.id)}
+                >
+                  <span className="ws-glyph sm" aria-hidden="true">
+                    {(w.displayName || w.slug || 'W').slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="ws-meta">
+                    <span className="ws-name">{w.displayName || w.slug}</span>
+                    <span className="ws-plan">{w.plan} plan{w.isOwner ? '' : ' · member'}</span>
+                  </span>
+                  {w.id === activeWorkspaceId && <Icon name="check" size={14} color="var(--brand)" />}
+                </button>
+              ))}
+
+              <div className="ws-menu-sep" />
+
+              {canCreateWorkspace ? (
+                <button
+                  type="button"
+                  className="ws-menu-item ws-menu-action"
+                  onClick={() => { setWsMenuOpen(false); setShowCreateWorkspace(true); }}
+                >
+                  <span className="ws-glyph sm plus" aria-hidden="true"><Icon name="plus" size={13} color="var(--brand)" /></span>
+                  <span className="ws-meta"><span className="ws-name">New workspace</span></span>
+                </button>
+              ) : (
+                <a href="/pricing" className="ws-menu-item ws-menu-upsell">
+                  <span className="ws-glyph sm plus" aria-hidden="true"><Icon name="zap" size={13} color="var(--brand)" /></span>
+                  <span className="ws-meta">
+                    <span className="ws-name">New workspace</span>
+                    <span className="ws-plan">Multiple workspaces is a Pro feature — upgrade</span>
+                  </span>
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         <nav className="nav">
@@ -121,6 +235,13 @@ export function Sidebar({ route, setRoute, counts, user, workspace, isOpen, onCl
           </button>
         </div>
       </aside>
+
+      {showCreateWorkspace && (
+        <CreateWorkspaceModal
+          onClose={() => setShowCreateWorkspace(false)}
+          planLabel={inheritPlanLabel}
+        />
+      )}
     </>
   );
 }
@@ -131,7 +252,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, isOpen, onCl
  * `onMenuOpen` is called when the hamburger button is tapped on mobile.
  * The hamburger button is hidden on desktop via CSS (`.menu-btn`).
  */
-export function Topbar({ route, workspace, onMenuOpen }) {
+export function Topbar({ route, workspace, onMenuOpen, onOpenSearch }) {
   const labels = {
     overview: "Overview",
     inboxes:  "Inboxes",
@@ -158,11 +279,16 @@ export function Topbar({ route, workspace, onMenuOpen }) {
         <span className="here">{labels[route]}</span>
       </div>
       <div className="grow"></div>
-      <div className="search">
+      <button
+        type="button"
+        className="search"
+        onClick={onOpenSearch}
+        aria-label="Open search (Command K)"
+      >
         <Icon name="search" size={14} color="var(--fg-3)" />
-        <input placeholder="Search docs, tools, settings…" />
+        <span className="search-placeholder">Search pages, inboxes, members…</span>
         <span className="kbd">⌘K</span>
-      </div>
+      </button>
       <Btn variant="ghost" size="sm" icon="bell">{""}</Btn>
     </header>
   );

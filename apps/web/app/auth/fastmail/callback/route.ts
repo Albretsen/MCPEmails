@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeFastmailCode } from '@/lib/email-providers/fastmail';
+import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 
 /**
  * GET /auth/fastmail/callback
@@ -116,6 +117,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   } catch (err) {
     console.error('[fastmail/callback] token exchange failed:', err);
     return redirectWithError('token_exchange_failed');
+  }
+
+  // 6b. Enforce the plan inbox cap — but only for a brand-new address. A
+  //     reconnect (the email already has a non-deleted inbox) reuses the
+  //     existing row via upsert, so it must be allowed even at the cap.
+  const alreadyConnected = await inboxExistsForEmail(
+    supabase,
+    oauthState.workspace_id,
+    tokens.email
+  );
+  if (!alreadyConnected) {
+    const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id);
+    if (inboxLimit.atLimit) {
+      return redirectWithError('inbox_limit_reached');
+    }
   }
 
   // 7. Encrypt tokens before they touch the database.

@@ -29,7 +29,7 @@ const PLANS = [
     featured: false,
     badge: null,
     desc: 'For solo developers who want their agent working the inbox daily.',
-    cta: 'Start free trial',
+    cta: 'Start 14-day free trial',
     ctaHref: '/signup',
     ctaPrimary: false,
   },
@@ -42,7 +42,7 @@ const PLANS = [
     featured: true,
     badge: 'Most popular',
     desc: 'For teams shipping agents that work the inbox every day.',
-    cta: 'Start free trial',
+    cta: 'Start 14-day free trial',
     ctaHref: '/signup',
     ctaPrimary: true,
   },
@@ -185,22 +185,29 @@ function PlanCards({ annual, stripePrices }) {
   return (
     <div className="price-grid">
       {PLANS.map(plan => {
+        // Custom-priced plans (Enterprise) always show "Custom" — a configured
+        // Stripe price must never turn them into a numeric amount.
+        const isCustomPlan = plan.monthly === null;
+
         // Derive live prices from Stripe, falling back to static plan values
         const liveMonthlyCents = stripePrices?.[plan.key]?.monthlyCents;
         const liveYearlyCents = stripePrices?.[plan.key]?.yearlyCents;
 
-        const liveMonthly =
-          liveMonthlyCents != null && liveMonthlyCents > 0
+        const liveMonthly = isCustomPlan
+          ? null
+          : liveMonthlyCents != null && liveMonthlyCents > 0
             ? liveMonthlyCents / 100
             : plan.monthly;
 
-        const liveAnnualMonthly =
-          liveYearlyCents != null
-            ? Math.round(liveYearlyCents / 12)
+        const liveAnnualMonthly = isCustomPlan
+          ? null
+          : liveYearlyCents != null && liveYearlyCents > 0
+            ? Math.round(liveYearlyCents / 12 / 100)
             : plan.annual;
 
-        const liveAnnualTotal =
-          liveYearlyCents != null
+        const liveAnnualTotal = isCustomPlan
+          ? null
+          : liveYearlyCents != null && liveYearlyCents > 0
             ? liveYearlyCents / 100
             : plan.annual != null ? plan.annual * 12 : null;
 

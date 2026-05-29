@@ -1,0 +1,87 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
+
+/**
+ * POST /api/workspaces
+ *
+ * Creates a new workspace owned by the caller and makes it active.
+ *
+ * Body: { name: string }
+ *
+ * Gated to Pro: the create_workspace() RPC raises P0001 unless the caller
+ * already OWNS a non-deleted Pro/Enterprise workspace. The new workspace
+ * inherits that plan.
+ */
+
+const MAX_NAME_LEN = 60;
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  const supabase = await createClient();
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
+  let body: unknown;
+  try { body = await request.json(); } catch {
+    return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
+  }
+
+  const { name } = body as Record<string, unknown>;
+  if (typeof name !== 'string' || name.trim().length === 0) {
+    return NextResponse.json({ error: 'A workspace name is required.' }, { status: 400 });
+  }
+  if (name.trim().length > MAX_NAME_LEN) {
+    return NextResponse.json(
+      { error: `Workspace name must be ${MAX_NAME_LEN} characters or fewer.` },
+      { status: 400 },
+    );
+  }
+
+  // @ts-expect-error — create_workspace RPC types pending database.types regen.
+  const { data, error } = await supabase.rpc('create_workspace', { p_name: name.trim() });
+
+  if (error) {
+    // P0001 covers both the not-authenticated and Pro-gate cases; the auth
+    // check above rules out the former, so treat P0001 as the upgrade gate.
+    if (error.code === 'P0001') {
+      return NextResponse.json(
+        {
+          error: 'Multiple workspaces is a Pro feature. Upgrade to Pro to create more workspaces.',
+          error_code: 'workspace_create_requires_pro',
+          upgrade_url: '/pricing',
+        },
+        { status: 403 },
+      );
+    }
+    console.error('[workspaces:create]', error.message);
+    return NextResponse.json({ error: 'Failed to create workspace.' }, { status: 500 });
+  }
+
+  // create_workspace RETURNS TABLE → supabase returns an array of one row.
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.id) {
+    return NextResponse.json({ error: 'Failed to create workspace.' }, { status: 500 });
+  }
+
+  // Make the new workspace the active one so the dashboard lands on it.
+  const res = NextResponse.json(
+    {
+      id: row.id,
+      slug: row.slug,
+      displayName: row.display_name,
+      plan: row.plan,
+    },
+    { status: 201 },
+  );
+  res.cookies.set(ACTIVE_WORKSPACE_COOKIE, row.id, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  return res;
+}

@@ -10,7 +10,12 @@
 // validation is skipped when the CI environment variable is set.
 // ---------------------------------------------------------------------------
 
-const IS_CI = Boolean(process.env.CI);
+// Skip validation only for placeholder CI builds (e.g. GitHub Actions), which
+// inject all-zero dummy secrets. Vercel ALSO sets CI=1, so we must NOT skip
+// there — `!process.env.VERCEL` keeps validation ON for real deployments.
+// (A missing/short CSRF_SECRET previously passed the build and only blew up at
+// runtime because Vercel's CI=1 short-circuited this whole block.)
+const SKIP_VALIDATION = Boolean(process.env.CI) && !process.env.VERCEL;
 
 /** Variables required in every environment. */
 const REQUIRED_ALWAYS = [
@@ -27,7 +32,10 @@ const REQUIRED_ALWAYS = [
   'CSRF_SECRET',
 ];
 
-if (!IS_CI) {
+/** Secrets that must be exactly 64 hex characters (output of `openssl rand -hex 32`). */
+const HEX64_SECRETS = ['ENCRYPTION_KEY', 'CSRF_SECRET'];
+
+if (!SKIP_VALIDATION) {
   const missing = REQUIRED_ALWAYS.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
@@ -50,31 +58,54 @@ if (!IS_CI) {
     );
   }
 
+  // Enforce 64-hex format. The runtime helpers (csrf.ts, crypto) require exactly
+  // 64 hex chars and throw otherwise — catch a malformed value at build time so
+  // it can never reach a user as a 500.
+  const HEX64 = /^[0-9a-f]{64}$/i;
+  const malformed = HEX64_SECRETS.filter((key) => !HEX64.test(process.env[key] ?? ''));
+  if (malformed.length > 0) {
+    throw new Error(
+      [
+        '',
+        '══════════════════════════════════════════════════════════════',
+        '  MCPEmails — Malformed secret(s)',
+        '══════════════════════════════════════════════════════════════',
+        '',
+        '  These must be exactly 64 hexadecimal characters:',
+        ...malformed.map((k) => `    • ${k}`),
+        '',
+        '  Generate each with: openssl rand -hex 32',
+        '  Check for stray whitespace, quotes, or trailing newlines.',
+        '',
+        '══════════════════════════════════════════════════════════════',
+        '',
+      ].join('\n'),
+    );
+  }
+
   // Reject trivially weak ENCRYPTION_KEY values (all-same byte or sequential bytes).
-  // A length-64 hex string that looks random passes silently; anything degenerate fails fast.
+  // Length is already guaranteed 64 by the check above.
   const encKey = process.env.ENCRYPTION_KEY ?? '';
-  if (encKey.length === 64) {
-    const bytes = [];
-    for (let i = 0; i < 64; i += 2) bytes.push(parseInt(encKey.slice(i, i + 2), 16));
-    const allSame      = bytes.every((b) => b === bytes[0]);
-    const isAscending  = bytes.every((b, i) => i === 0 || b === (bytes[i - 1] + 1) % 256);
-    const isDescending = bytes.every((b, i) => i === 0 || b === (bytes[i - 1] - 1 + 256) % 256);
-    if (allSame || isAscending || isDescending) {
-      throw new Error(
-        [
-          '',
-          '══════════════════════════════════════════════════════════════',
-          '  MCPEmails — Weak ENCRYPTION_KEY detected',
-          '══════════════════════════════════════════════════════════════',
-          '',
-          '  ENCRYPTION_KEY is trivially weak (all-same or sequential bytes).',
-          '  Generate a secure key with: openssl rand -hex 32',
-          '',
-          '══════════════════════════════════════════════════════════════',
-          '',
-        ].join('\n'),
-      );
-    }
+  const bytes = [];
+  for (let i = 0; i < 64; i += 2) bytes.push(parseInt(encKey.slice(i, i + 2), 16));
+  const allSame      = bytes.every((b) => b === bytes[0]);
+  const isAscending  = bytes.every((b, i) => i === 0 || b === (bytes[i - 1] + 1) % 256);
+  const isDescending = bytes.every((b, i) => i === 0 || b === (bytes[i - 1] - 1 + 256) % 256);
+  if (allSame || isAscending || isDescending) {
+    throw new Error(
+      [
+        '',
+        '══════════════════════════════════════════════════════════════',
+        '  MCPEmails — Weak ENCRYPTION_KEY detected',
+        '══════════════════════════════════════════════════════════════',
+        '',
+        '  ENCRYPTION_KEY is trivially weak (all-same or sequential bytes).',
+        '  Generate a secure key with: openssl rand -hex 32',
+        '',
+        '══════════════════════════════════════════════════════════════',
+        '',
+      ].join('\n'),
+    );
   }
 }
 

@@ -1291,6 +1291,7 @@ export type Database = {
       }
       oauth_refresh_tokens: {
         Row: {
+          api_key_id: string | null
           client_id: string
           client_name: string
           created_at: string
@@ -1304,6 +1305,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          api_key_id?: string | null
           client_id: string
           client_name: string
           created_at?: string
@@ -1317,6 +1319,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          api_key_id?: string | null
           client_id?: string
           client_name?: string
           created_at?: string
@@ -1330,6 +1333,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "oauth_refresh_tokens_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "oauth_refresh_tokens_workspace_id_fkey"
             columns: ["workspace_id"]

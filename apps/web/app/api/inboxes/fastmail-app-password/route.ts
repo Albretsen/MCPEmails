@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as tls from 'tls';
 import { createClient } from '@/lib/supabase/server';
+import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
-import { checkInboxLimit } from '@/lib/plans/check-inbox-limit';
+import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 
 /**
  * POST /api/inboxes/fastmail-app-password
@@ -292,39 +293,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // 2. Resolve the user's workspace.
-  const { data: member, error: memberError } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .single();
+  // 2. Resolve the active workspace (cookie-aware, multi-workspace safe).
+  const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
 
-  if (memberError || !member) {
+  if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
 
-  // 3. Enforce plan inbox cap before doing any IMAP validation or DB writes.
-  //    Return 402 (Payment Required) so the client can distinguish a plan
-  //    limit from a credential error.
-  const inboxLimit = await checkInboxLimit(supabase, member.workspace_id);
-  if (inboxLimit.atLimit) {
-    const capLabel = inboxLimit.maxInboxes === 1
-      ? '1 inbox'
-      : `${inboxLimit.maxInboxes} inboxes`;
-    return NextResponse.json(
-      {
-        error: `Your ${inboxLimit.plan} plan allows ${capLabel}. ` +
-          `Upgrade at mcpemails.com/pricing to connect more.`,
-        error_code: 'inbox_limit_reached',
-        plan: inboxLimit.plan,
-        current_count: inboxLimit.currentCount,
-        max_inboxes: inboxLimit.maxInboxes,
-      },
-      { status: 402 }
-    );
-  }
-
-  // 5. Parse and validate the request body.
+  // 3. Parse and validate the request body.
   let email: string;
   let appPassword: string;
 
@@ -344,6 +320,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'App password is required.' }, { status: 422 });
   }
 
+  // 4. Enforce the plan inbox cap — but only for a brand-new address. A
+  //    reconnect (the email already has a non-deleted inbox) reuses the
+  //    existing row via upsert, so it must be allowed even at the cap.
+  //    Return 402 (Payment Required) so the client can distinguish a plan
+  //    limit from a credential error.
+  const alreadyConnected = await inboxExistsForEmail(supabase, workspaceId, email);
+  if (!alreadyConnected) {
+    const inboxLimit = await checkInboxLimit(supabase, workspaceId);
+    if (inboxLimit.atLimit) {
+      const capLabel = inboxLimit.maxInboxes === 1
+        ? '1 inbox'
+        : `${inboxLimit.maxInboxes} inboxes`;
+      return NextResponse.json(
+        {
+          error: `Your ${inboxLimit.plan} plan allows ${capLabel}. ` +
+            `Upgrade at mcpemails.com/pricing to connect more.`,
+          error_code: 'inbox_limit_reached',
+          plan: inboxLimit.plan,
+          current_count: inboxLimit.currentCount,
+          max_inboxes: inboxLimit.maxInboxes,
+        },
+        { status: 402 }
+      );
+    }
+  }
+
   // 6. Validate via IMAP before persisting anything.
   const validation = await validateImapAppPassword(email, appPassword);
 
@@ -360,7 +362,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //    This ensures reconnection reuses the same UUID, keeping activity_log references intact.
   const { error: upsertError } = await supabase.from('inboxes').upsert(
     {
-      workspace_id: member.workspace_id,
+      workspace_id: workspaceId,
       provider: 'fastmail',
       email_address: email,
       imap_host: FASTMAIL_IMAP_HOST,

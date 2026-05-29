@@ -77,3 +77,26 @@ export async function checkInboxLimit(
     maxInboxes: limits.maxInboxes,
   };
 }
+
+/**
+ * Whether the workspace already has a (non-deleted) inbox for this email.
+ *
+ * Used to distinguish a reconnect (same address — the upsert reuses the
+ * existing row and does not increase the inbox count) from a brand-new
+ * connection. Reconnects must never be blocked by the plan inbox cap.
+ */
+export async function inboxExistsForEmail(
+  supabase: SupabaseClient<Database>,
+  workspaceId: string,
+  email: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from('inboxes')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .eq('email_address', email)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  return !!data;
+}
