@@ -4,14 +4,15 @@ import { routing } from '@/i18n/routing';
 import type { NextRequest } from 'next/server';
 
 /**
- * Next.js middleware entry point. Composes two concerns:
+ * Next.js proxy entry point (formerly middleware.ts; renamed in Next.js 16).
+ * Composes two concerns:
  *
  *  - next-intl handles locale negotiation, prefixing, and hreflang headers for
  *    the localized marketing routes.
  *  - updateSession refreshes the Supabase session cookie and guards protected
  *    routes for everything else (dashboard, auth, api).
  *
- * Only the marketing home is localized for now, so the locale middleware runs
+ * Only the marketing home is localized for now, so the locale handling runs
  * exclusively on '/', '/en', and '/nb'. Every other path keeps its existing
  * Supabase behaviour unchanged, including the OAuth callback and API routes.
  */
@@ -26,7 +27,7 @@ function isLocalizedRoute(pathname: string): boolean {
   );
 }
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   if (isLocalizedRoute(request.nextUrl.pathname)) {
     return intlMiddleware(request);
   }

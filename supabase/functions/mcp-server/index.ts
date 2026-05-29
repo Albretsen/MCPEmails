@@ -1348,6 +1348,145 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     },
   },
 
+  // ── send:email scope — state changes (non-destructive) ─────────────────────
+
+  {
+    name: "mark_read",
+    title: "Mark Email as Read",
+    description:
+      "Mark a single email message as read. Non-destructive. " +
+      "Provider dispatch: IMAP sets \\\\Seen flag; Gmail removes the UNREAD label; " +
+      "Outlook sets isRead=true via Graph; Fastmail sets $seen keyword via JMAP.",
+    requiredScope: "send:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox containing the message.",
+        },
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message identifier as returned by list_inbox or search_emails.",
+        },
+      },
+      required: ["inbox_id", "message_id"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "mark_unread",
+    title: "Mark Email as Unread",
+    description:
+      "Mark a single email message as unread. Non-destructive. " +
+      "Provider dispatch: IMAP removes \\\\Seen flag; Gmail adds the UNREAD label; " +
+      "Outlook sets isRead=false via Graph; Fastmail removes $seen keyword via JMAP.",
+    requiredScope: "send:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox containing the message.",
+        },
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message identifier as returned by list_inbox or search_emails.",
+        },
+      },
+      required: ["inbox_id", "message_id"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "flag_email",
+    title: "Flag Email",
+    description:
+      "Flag (star / mark for follow-up) a single email message. Non-destructive. " +
+      "Provider dispatch: IMAP sets \\\\Flagged; Gmail adds STARRED label; " +
+      "Outlook sets flag.flagStatus=flagged via Graph; Fastmail sets $flagged keyword via JMAP.",
+    requiredScope: "send:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox containing the message.",
+        },
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message identifier as returned by list_inbox or search_emails.",
+        },
+      },
+      required: ["inbox_id", "message_id"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "unflag_email",
+    title: "Unflag Email",
+    description:
+      "Remove the flag (star / follow-up mark) from a single email message. Non-destructive. " +
+      "Provider dispatch: IMAP removes \\\\Flagged; Gmail removes STARRED label; " +
+      "Outlook sets flag.flagStatus=notFlagged via Graph; Fastmail removes $flagged keyword via JMAP.",
+    requiredScope: "send:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox containing the message.",
+        },
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message identifier as returned by list_inbox or search_emails.",
+        },
+      },
+      required: ["inbox_id", "message_id"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "archive_email",
+    title: "Archive Email",
+    description:
+      "Move a message out of the Inbox to the archive location. Non-destructive — message is " +
+      "preserved, not deleted. Provider dispatch: IMAP moves to 'Archive' mailbox via uidMove " +
+      "(falls back to COPY+DELETE if MOVE unsupported); Gmail removes the INBOX label; " +
+      "Outlook moves to the archive mail folder via Graph; Fastmail moves to the archive " +
+      "mailbox via JMAP Email/set.",
+    requiredScope: "send:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox containing the message.",
+        },
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message identifier as returned by list_inbox or search_emails.",
+        },
+      },
+      required: ["inbox_id", "message_id"],
+      additionalProperties: false,
+    },
+  },
+
   // ── No scope beyond read:email ───────────────────────────────────────────
 
   {
@@ -7616,6 +7755,801 @@ async function executeSearchEmails(
 }
 
 // ---------------------------------------------------------------------------
+// Phase 1 — Flags & state tools
+//
+// Tools: mark_read, mark_unread, flag_email, unflag_email, archive_email
+//
+// All tools are scoped under `send:email` (state-change, non-destructive).
+// Each follows the same pattern as executeReadEmail:
+//   input validation → resolveInbox → capability check → provider dispatch →
+//   structured result (activity_log written centrally by handleToolsCall).
+// ---------------------------------------------------------------------------
+
+/** Shared result shape returned by all flag/archive tools. */
+interface FlagUpdateResult {
+  success: boolean;
+  message_id: string;
+  operation: string;
+  inbox_id: string;
+}
+
+// ── IMAP provider helpers ──────────────────────────────────────────────────
+
+/**
+ * Sets or removes IMAP system flags on a single message.
+ * The message_id must be in "<folder>:<uid>" format (from encodeImapId).
+ * Throws "imap_auth_failed" on credential rejection.
+ */
+async function imapUpdateFlags(
+  inbox: InboxRow,
+  messageId: string,
+  imapFlags: string[],
+  mode: "add" | "remove",
+): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(messageId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    await client.uidStore([uid], imapFlags, mode);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+/**
+ * Archives a single IMAP message by moving it to the "Archive" mailbox.
+ * Falls back gracefully via uidMove's internal COPY+DELETE fallback.
+ * Throws "imap_auth_failed" on credential rejection.
+ */
+async function imapArchiveEmail(
+  inbox: InboxRow,
+  messageId: string,
+): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(messageId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    // "Archive" is the conventional name; uidMove falls back internally if MOVE
+    // is unsupported (COPY + \\Deleted + EXPUNGE).
+    await client.uidMove([uid], "Archive");
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+// ── Gmail provider helpers ─────────────────────────────────────────────────
+
+/**
+ * Calls the Gmail messages.modify API to add/remove label IDs.
+ * Throws "gmail_auth_failed" on 401.
+ */
+async function gmailModifyLabels(
+  inbox: InboxRow,
+  messageId: string,
+  addLabelIds: string[],
+  removeLabelIds: string[],
+): Promise<void> {
+  const accessToken = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/modify`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ addLabelIds, removeLabelIds }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    const body = await resp.text();
+    throw new Error(`Gmail modify failed: ${body}`);
+  }
+}
+
+// ── Outlook provider helpers ───────────────────────────────────────────────
+
+/**
+ * PATCHes a single Graph message resource.
+ * Throws "outlook_auth_failed" on 401.
+ */
+async function outlookPatchMessage(
+  inbox: InboxRow,
+  messageId: string,
+  patch: Record<string, unknown>,
+): Promise<void> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(patch),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    const body = await resp.text();
+    throw new Error(`Outlook PATCH failed: ${body}`);
+  }
+}
+
+/**
+ * Moves an Outlook message to its archive folder via Graph.
+ * Uses the well-known name "archive" as the destination.
+ * Throws "outlook_auth_failed" on 401.
+ */
+async function outlookArchiveEmail(
+  inbox: InboxRow,
+  messageId: string,
+): Promise<void> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/move`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      // "archive" is the well-known folder name recognised by Graph.
+      body: JSON.stringify({ destinationId: "archive" }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    const body = await resp.text();
+    throw new Error(`Outlook move to archive failed: ${body}`);
+  }
+}
+
+// ── Fastmail (JMAP) provider helpers ──────────────────────────────────────
+
+/**
+ * Sets or removes JMAP email keywords on a single message.
+ * - `addKeywords`: map of keyword → true (e.g. { "$seen": true })
+ * - `removeKeywords`: map of keyword → null (e.g. { "$seen": null })
+ * Throws "fastmail_auth_failed" on 401.
+ */
+async function fastmailSetKeywords(
+  inbox: InboxRow,
+  messageId: string,
+  addKeywords: Record<string, true>,
+  removeKeywords: Record<string, null>,
+): Promise<void> {
+  const authHeader = await buildFastmailAuthHeader(inbox);
+
+  // Discover session.
+  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
+    headers: { Authorization: authHeader },
+  });
+  if (!sessionResp.ok) {
+    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
+  }
+  const session = (await sessionResp.json()) as {
+    primaryAccounts?: Record<string, string>;
+    apiUrl?: string;
+  };
+  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
+  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
+  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
+
+  const updatePatch: Record<string, unknown> = {};
+  for (const k of Object.keys(addKeywords)) {
+    updatePatch[`keywords/${k}`] = true;
+  }
+  for (const k of Object.keys(removeKeywords)) {
+    updatePatch[`keywords/${k}`] = null;
+  }
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        [
+          "Email/set",
+          {
+            accountId,
+            update: { [messageId]: updatePatch },
+          },
+          "a",
+        ],
+      ],
+    }),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP error: ${apiResp.statusText}`);
+  }
+}
+
+/**
+ * Archives a single Fastmail message via JMAP Email/set.
+ * Looks up the archive mailbox by role then updates mailboxIds.
+ * Throws "fastmail_auth_failed" on 401.
+ */
+async function fastmailArchiveEmail(
+  inbox: InboxRow,
+  messageId: string,
+): Promise<void> {
+  const authHeader = await buildFastmailAuthHeader(inbox);
+
+  // Discover session.
+  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
+    headers: { Authorization: authHeader },
+  });
+  if (!sessionResp.ok) {
+    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
+  }
+  const session = (await sessionResp.json()) as {
+    primaryAccounts?: Record<string, string>;
+    apiUrl?: string;
+  };
+  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
+  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
+  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
+
+  // One round-trip: Mailbox/get + Email/set. The Mailbox/get response is
+  // needed to find the archive mailbox id before we can set mailboxIds.
+  // We first fetch mailboxes, then archive the message.
+  const mailboxResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        ["Mailbox/get", { accountId, ids: null }, "a"],
+      ],
+    }),
+  });
+  if (!mailboxResp.ok) {
+    if (mailboxResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP mailbox error: ${mailboxResp.statusText}`);
+  }
+  const mailboxData = (await mailboxResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const mailboxGetResp = mailboxData.methodResponses?.find(([n]) => n === "Mailbox/get");
+  interface JmapMailbox {
+    id: string;
+    role?: string;
+    name?: string;
+  }
+  const mailboxList = (mailboxGetResp?.[1] as { list?: JmapMailbox[] } | undefined)?.list ?? [];
+  const archiveMailbox = mailboxList.find(
+    (m) => m.role === "archive" || m.name?.toLowerCase() === "archive",
+  );
+  if (!archiveMailbox) {
+    throw new Error("Fastmail archive mailbox not found — cannot archive message.");
+  }
+
+  // Now fetch the current message to know its current mailboxIds (so we can
+  // replace only the inbox entry rather than wiping all mailboxes).
+  const msgFetchResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        [
+          "Email/get",
+          { accountId, ids: [messageId], properties: ["mailboxIds"] },
+          "a",
+        ],
+      ],
+    }),
+  });
+  if (!msgFetchResp.ok) {
+    if (msgFetchResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP fetch error: ${msgFetchResp.statusText}`);
+  }
+  const msgData = (await msgFetchResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const emailGetResp = msgData.methodResponses?.find(([n]) => n === "Email/get");
+  const emailList = (emailGetResp?.[1] as { list?: { mailboxIds?: Record<string, boolean> }[] } | undefined)?.list ?? [];
+  const currentMailboxIds = emailList[0]?.mailboxIds ?? {};
+
+  // Build patch: null all current mailboxes, then add archive.
+  const mailboxPatch: Record<string, boolean | null> = {};
+  for (const mboxId of Object.keys(currentMailboxIds)) {
+    mailboxPatch[`mailboxIds/${mboxId}`] = null;
+  }
+  mailboxPatch[`mailboxIds/${archiveMailbox.id}`] = true;
+
+  const archiveResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        [
+          "Email/set",
+          { accountId, update: { [messageId]: mailboxPatch } },
+          "a",
+        ],
+      ],
+    }),
+  });
+  if (!archiveResp.ok) {
+    if (archiveResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP archive failed: ${archiveResp.statusText}`);
+  }
+}
+
+// ── Shared execute helper ──────────────────────────────────────────────────
+
+/**
+ * Shared input validation and inbox resolution for all flag/archive tools.
+ * Returns { inbox, messageId } on success, or a structured error result.
+ */
+async function resolveFlagArgs(
+  rawArgs: unknown,
+  toolName: string,
+  apiKey: ApiKeyRow,
+): Promise<
+  | { inbox: InboxRow; messageId: string; error?: undefined }
+  | {
+      error: {
+        result: { content: { type: string; text: string }[]; isError: boolean };
+        logStatus: "error";
+        logErrorCode: string;
+      };
+    }
+> {
+  if (
+    typeof rawArgs !== "object" ||
+    rawArgs === null ||
+    Array.isArray(rawArgs)
+  ) {
+    return {
+      error: {
+        result: {
+          content: [{
+            type: "text",
+            text: `${toolName}: arguments must be an object with inbox_id and message_id.`,
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "-32602",
+      },
+    };
+  }
+
+  const args = rawArgs as Record<string, unknown>;
+  const inboxId =
+    typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      error: {
+        result: {
+          content: [{
+            type: "text",
+            text: `${toolName}: inbox_id is required and must be a UUID string.`,
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "-32602",
+      },
+    };
+  }
+
+  const messageId =
+    typeof args["message_id"] === "string" ? args["message_id"].trim() : null;
+  if (!messageId) {
+    return {
+      error: {
+        result: {
+          content: [{
+            type: "text",
+            text: `${toolName}: message_id is required and must be a non-empty string.`,
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "-32602",
+      },
+    };
+  }
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      error: {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              `Inbox ${inboxId} not found or not accessible to this API key. ` +
+              "Verify the inbox UUID in the MCPEmails dashboard.",
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "inbox_not_found",
+      },
+    };
+  }
+
+  return { inbox, messageId };
+}
+
+/**
+ * Common error handler for flag/archive provider calls.
+ * Maps auth failures and message-not-found to structured results.
+ */
+function handleFlagError(
+  err: unknown,
+  toolName: string,
+  inboxId: string,
+  provider: string,
+  messageId: string,
+): {
+  result: { content: { type: string; text: string }[]; isError: boolean };
+  logStatus: "error";
+  logErrorCode: string;
+} {
+  const message = err instanceof Error ? err.message : String(err);
+
+  if (message === "message_not_found") {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `Message ${messageId} not found in inbox ${inboxId}. ` +
+            "The message may have been deleted or the ID is incorrect.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "message_not_found",
+    };
+  }
+
+  const isAuthFailure =
+    message === "gmail_auth_failed" ||
+    message === "outlook_auth_failed" ||
+    message === "fastmail_auth_failed" ||
+    message === "imap_auth_failed";
+
+  if (isAuthFailure) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `Unable to access ${provider} inbox: OAuth token has been ` +
+            "revoked or expired. The user must reconnect their inbox at " +
+            "https://mcpemails.com/dashboard/inboxes.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "auth_failed",
+    };
+  }
+
+  console.error(`[mcp-server] ${toolName}: provider_error`, {
+    inbox_id: inboxId,
+    provider,
+    message_id: messageId,
+    error: message,
+  });
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: `Provider error during ${toolName}: ${message}. Please try again in a moment.`,
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: "provider_error",
+  };
+}
+
+// ── Top-level execute functions ────────────────────────────────────────────
+
+/** Marks a message as read across all providers. */
+async function executeMarkRead(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFlagArgs(rawArgs, "mark_read", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageId } = resolved;
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
+
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        await gmailModifyLabels(inbox, messageId, [], ["UNREAD"]);
+        break;
+      case "outlook":
+        await outlookPatchMessage(inbox, messageId, { isRead: true });
+        break;
+      case "fastmail":
+        await fastmailSetKeywords(inbox, messageId, { "$seen": true }, {});
+        break;
+      default: // "imap" and all IMAP service variants
+        await imapUpdateFlags(inbox, messageId, ["\\Seen"], "add");
+        break;
+    }
+  } catch (err) {
+    return handleFlagError(err, "mark_read", inbox.id, inbox.provider, messageId);
+  }
+
+  const flagResult: FlagUpdateResult = {
+    success: true,
+    message_id: messageId,
+    operation: "mark_read",
+    inbox_id: inbox.id,
+  };
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+/** Marks a message as unread across all providers. */
+async function executeMarkUnread(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFlagArgs(rawArgs, "mark_unread", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageId } = resolved;
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
+
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        await gmailModifyLabels(inbox, messageId, ["UNREAD"], []);
+        break;
+      case "outlook":
+        await outlookPatchMessage(inbox, messageId, { isRead: false });
+        break;
+      case "fastmail":
+        await fastmailSetKeywords(inbox, messageId, {}, { "$seen": null });
+        break;
+      default:
+        await imapUpdateFlags(inbox, messageId, ["\\Seen"], "remove");
+        break;
+    }
+  } catch (err) {
+    return handleFlagError(err, "mark_unread", inbox.id, inbox.provider, messageId);
+  }
+
+  const flagResult: FlagUpdateResult = {
+    success: true,
+    message_id: messageId,
+    operation: "mark_unread",
+    inbox_id: inbox.id,
+  };
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+/** Flags (stars) a message across all providers. */
+async function executeFlagEmail(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFlagArgs(rawArgs, "flag_email", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageId } = resolved;
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
+
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        await gmailModifyLabels(inbox, messageId, ["STARRED"], []);
+        break;
+      case "outlook":
+        await outlookPatchMessage(inbox, messageId, {
+          flag: { flagStatus: "flagged" },
+        });
+        break;
+      case "fastmail":
+        await fastmailSetKeywords(inbox, messageId, { "$flagged": true }, {});
+        break;
+      default:
+        await imapUpdateFlags(inbox, messageId, ["\\Flagged"], "add");
+        break;
+    }
+  } catch (err) {
+    return handleFlagError(err, "flag_email", inbox.id, inbox.provider, messageId);
+  }
+
+  const flagResult: FlagUpdateResult = {
+    success: true,
+    message_id: messageId,
+    operation: "flag_email",
+    inbox_id: inbox.id,
+  };
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+/** Removes the flag (star) from a message across all providers. */
+async function executeUnflagEmail(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFlagArgs(rawArgs, "unflag_email", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageId } = resolved;
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
+
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        await gmailModifyLabels(inbox, messageId, [], ["STARRED"]);
+        break;
+      case "outlook":
+        await outlookPatchMessage(inbox, messageId, {
+          flag: { flagStatus: "notFlagged" },
+        });
+        break;
+      case "fastmail":
+        await fastmailSetKeywords(inbox, messageId, {}, { "$flagged": null });
+        break;
+      default:
+        await imapUpdateFlags(inbox, messageId, ["\\Flagged"], "remove");
+        break;
+    }
+  } catch (err) {
+    return handleFlagError(err, "unflag_email", inbox.id, inbox.provider, messageId);
+  }
+
+  const flagResult: FlagUpdateResult = {
+    success: true,
+    message_id: messageId,
+    operation: "unflag_email",
+    inbox_id: inbox.id,
+  };
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+/** Moves a message to the archive folder across all providers. */
+async function executeArchiveEmail(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFlagArgs(rawArgs, "archive_email", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageId } = resolved;
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
+
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        // Gmail archive = remove INBOX label; message stays accessible via All Mail.
+        await gmailModifyLabels(inbox, messageId, [], ["INBOX"]);
+        break;
+      case "outlook":
+        await outlookArchiveEmail(inbox, messageId);
+        break;
+      case "fastmail":
+        await fastmailArchiveEmail(inbox, messageId);
+        break;
+      default:
+        await imapArchiveEmail(inbox, messageId);
+        break;
+    }
+  } catch (err) {
+    return handleFlagError(err, "archive_email", inbox.id, inbox.provider, messageId);
+  }
+
+  const flagResult: FlagUpdateResult = {
+    success: true,
+    message_id: messageId,
+    operation: "archive_email",
+    inbox_id: inbox.id,
+  };
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Method handlers
 // ---------------------------------------------------------------------------
 
@@ -7950,6 +8884,36 @@ async function handleToolsCall(
     } else if (toolName === "search_emails") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSearchEmails(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "mark_read") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeMarkRead(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "mark_unread") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeMarkUnread(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "flag_email") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeFlagEmail(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "unflag_email") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeUnflagEmail(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "archive_email") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeArchiveEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
