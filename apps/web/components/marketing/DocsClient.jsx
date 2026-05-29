@@ -11,7 +11,7 @@ const QUICKSTART_STEPS = [
     num: '01',
     label: 'Sign up & connect an inbox',
     heading: 'Create your account and connect Gmail',
-    body: 'Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Choose Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox — complete the OAuth flow or paste an app password. Your inbox is ready in under a minute.',
+    body: 'Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Pick Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete the OAuth flow or paste an app password. Your inbox is ready in under a minute.',
     code: null,
     cta: { label: 'Connect your inbox →', href: '/signup' },
   },
@@ -19,7 +19,7 @@ const QUICKSTART_STEPS = [
     num: '02',
     label: 'Create an API key',
     heading: 'Generate a bearer token for your agent',
-    body: 'In Dashboard → API Keys, click "Create key". Give it a name, select the scopes your agent needs (read:email and/or send:email), and copy the key — it is shown only once.',
+    body: 'In Dashboard → API Keys, click "Create key". Name it, select the scopes your agent needs (read:email and/or send:email), and copy the key. It is shown only once.',
     code: `# Your key looks like this:
 mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
     cta: null,
@@ -28,7 +28,7 @@ mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
     num: '03',
     label: 'Add MCPEmails to your agent',
     heading: 'Paste the MCP endpoint into your client',
-    body: 'Use the tabs below for your client. Any MCP client with OAuth 2.0 support (claude.ai, Claude Desktop, Cursor, and others) — paste the URL and authorize, no API key needed. For clients without OAuth support or for scripted/programmatic access, use an API key from step 02.',
+    body: 'Pick the tab for your client below. MCP clients with OAuth 2.0 support (claude.ai, Claude Desktop, Cursor, and others) just paste the URL and authorize, no API key needed. Clients without OAuth, plus scripted access, use the API key from step 02.',
     code: null,
     tabs: true,
     cta: null,
@@ -37,8 +37,8 @@ mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
     num: '04',
     label: 'Make your first call',
     heading: 'Ask your agent to check your inbox',
-    body: 'No inbox UUID copy-pasting needed. Your agent can call list_inboxes first to discover all connected inboxes and their UUIDs automatically. Then ask: "Check my inbox and summarise the last 5 unread messages."',
-    code: `# The agent calls list_inboxes first — no hardcoded UUIDs needed.
+    body: 'No copy-pasting inbox UUIDs. Your agent calls list_inboxes first to discover every connected inbox and its UUID, then you ask: "Check my inbox and summarise the last 5 unread messages."',
+    code: `# The agent calls list_inboxes first, so no hardcoded UUIDs.
 # System prompt (optional, for multi-inbox setups):
 You have access to email via MCPEmails.
 Start by calling list_inboxes to discover available inboxes.`,
@@ -48,7 +48,7 @@ Start by calling list_inboxes to discover available inboxes.`,
 
 const CLIENT_SNIPPETS = {
   oauth: `# OAuth-capable clients (claude.ai, Claude Desktop, Cursor…)
-# No API key required — paste the URL, click Connect, authorize.
+# No API key required. Paste the URL, click Connect, authorize.
 #
 # Example: claude.ai
 #   1. Go to claude.ai → Customize → Connectors
@@ -84,7 +84,7 @@ const CLIENT_SNIPPETS = {
     }
   }
 }`,
-  raw: `# Raw JSON-RPC 2.0 — initialize handshake
+  raw: `# Raw JSON-RPC 2.0: initialize handshake
 curl -X POST https://www.mcpemails.com/api/mcp \\
   -H "Authorization: Bearer mcpe_live_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
@@ -107,7 +107,7 @@ const TOOLS = [
     name: 'list_inboxes',
     scope: 'read:email',
     title: 'List Inboxes',
-    desc: 'Returns all inboxes the current API key or OAuth token is permitted to access. Call this first to discover inbox_id values — no copy-pasting UUIDs from the dashboard.',
+    desc: 'Returns all inboxes the current API key or OAuth token can access. Call this first to discover inbox_id values, so you never copy-paste UUIDs from the dashboard.',
     params: [],
     example: {
       request: `{
@@ -342,7 +342,7 @@ const TOOLS = [
 /* ─── Error codes ────────────────────────────────────────────── */
 
 const ERROR_CODES = [
-  { code: '-32001', type: 'JSON-RPC error', when: 'Missing, malformed, revoked, or expired API key — also returned when the API key lacks the required scope for the called tool', retryable: false },
+  { code: '-32001', type: 'JSON-RPC error', when: 'Missing, malformed, revoked, or expired API key. Also returned when the API key lacks the required scope for the called tool.', retryable: false },
   { code: '-32601', type: 'JSON-RPC error', when: 'Unknown JSON-RPC method (e.g. calling a method other than initialize, tools/list, tools/call)', retryable: false },
   { code: '-32602', type: 'JSON-RPC error', when: 'Unknown tool name, or missing / invalid parameter in tools/call', retryable: false },
   { code: '-32029', type: 'JSON-RPC error', when: 'Per-key rate limit or plan daily quota exceeded. Check data.error_code: "rate_limit_exceeded" vs "quota_exceeded". Check data.retry_after (seconds) before retrying.', retryable: true },
@@ -462,7 +462,7 @@ function ToolSection({ tool }) {
 
       {tool.params.length === 0 ? (
         <div className="docs-params-wrap" style={{ padding: '12px 16px', color: 'var(--fg-3)', fontSize: 13, fontFamily: 'var(--font-sans)' }}>
-          No parameters — call with an empty arguments object: <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>{'{}'}</code>
+          No parameters. Call with an empty arguments object: <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>{'{}'}</code>
         </div>
       ) : (
         <div className="docs-params-wrap">
@@ -528,9 +528,9 @@ export default function DocsClient() {
             Your agent has an inbox<br />in four steps.
           </h1>
           <p className="pricing-page-lead">
-            Connect any email account, paste one URL into any OAuth-capable MCP
-            client and authorize — or drop in an API key for clients without OAuth
-            support. Done in minutes. Full tool reference and connection guide below.
+            Connect any email account, paste one URL into an OAuth-capable MCP
+            client and authorize. Clients without OAuth use an API key instead.
+            Full tool reference and connection guide below.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <a className="btn btn-primary btn-lg" href="#quickstart">Quick start</a>
@@ -546,7 +546,7 @@ export default function DocsClient() {
           <div className="section-head">
             <div className="eye-label">Quick start</div>
             <h2>Up and running in minutes.</h2>
-            <p className="sub">No SDK required. MCPEmails speaks standard MCP over HTTP — drop it into any MCP-compatible agent.</p>
+            <p className="sub">No SDK required. MCPEmails speaks standard MCP over HTTP, so it drops into any MCP-compatible agent.</p>
           </div>
           <div className="docs-steps">
             {QUICKSTART_STEPS.map(step => (
@@ -629,9 +629,9 @@ export default function DocsClient() {
             <div className="eye-label">OAuth connection</div>
             <h2>Zero-config for OAuth-capable clients.</h2>
             <p className="sub">
-              Any MCP client that supports OAuth 2.0 — claude.ai, Claude Desktop, Cursor,
-              and others — connects automatically via authorization code + PKCE.
-              No API key setup, no config file. Just paste the URL and click Connect.
+              MCP clients that support OAuth 2.0 (claude.ai, Claude Desktop, Cursor,
+              and others) connect automatically via authorization code + PKCE.
+              No API key, no config file. Paste the URL and click Connect.
             </p>
           </div>
 
@@ -639,23 +639,23 @@ export default function DocsClient() {
             <div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Step 1 —</strong> Go to claude.ai → Customize → Connectors → Add connector</span>
+                <span><strong>Step 1:</strong> Go to claude.ai → Customize → Connectors → Add connector</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Step 2 —</strong> Paste <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>https://www.mcpemails.com/api/mcp</code> as the server URL</span>
+                <span><strong>Step 2:</strong> Paste <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>https://www.mcpemails.com/api/mcp</code> as the server URL</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Step 3 —</strong> Click Connect. MCPEmails opens an authorization screen</span>
+                <span><strong>Step 3:</strong> Click Connect. MCPEmails opens an authorization screen</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Step 4 —</strong> Sign in with your mcpemails account and approve access</span>
+                <span><strong>Step 4:</strong> Sign in with your mcpemails account and approve access</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Done —</strong> All six tools are live. claude.ai refreshes tokens automatically</span>
+                <span><strong>Done:</strong> All six tools are live. claude.ai refreshes tokens automatically</span>
               </div>
             </div>
 
@@ -665,7 +665,7 @@ export default function DocsClient() {
                   <p style={{ margin: '0 0 10px', fontWeight: 600, color: 'var(--fg-1)' }}>How it works under the hood</p>
                   <p style={{ margin: '0 0 8px' }}>
                     claude.ai registers itself via{' '}
-                    <strong>RFC 7591 Dynamic Client Registration</strong> — you never need to
+                    <strong>RFC 7591 Dynamic Client Registration</strong>, so you never
                     pre-register a client ID.
                   </p>
                   <p style={{ margin: '0 0 8px' }}>
@@ -767,7 +767,7 @@ export default function DocsClient() {
                     <td style={{ textAlign: 'center' }}>
                       {e.retryable
                         ? <MIcon name="check" size={16} color="var(--mint-600)" />
-                        : <span style={{ color: 'var(--fg-4)', fontSize: 16 }}>—</span>
+                        : <span style={{ color: 'var(--fg-4)', fontSize: 16 }}>No</span>
                       }
                     </td>
                   </tr>
@@ -779,7 +779,7 @@ export default function DocsClient() {
           <div style={{ marginTop: 32 }}>
             <div className="docs-example-label" style={{ marginBottom: 8 }}>Example execution error response</div>
             <CodeBlock
-              code={`// Tool execution error — inbox not found
+              code={`// Tool execution error: inbox not found
 {
   "jsonrpc": "2.0",
   "id": 2,
@@ -789,7 +789,7 @@ export default function DocsClient() {
   }
 }
 
-// Rate limit error — JSON-RPC error object with data
+// Rate limit error: JSON-RPC error object with data
 {
   "jsonrpc": "2.0",
   "id": 3,
@@ -828,12 +828,12 @@ export default function DocsClient() {
             <div className="step">
               <div className="num">Plan per-minute ceiling</div>
               <h4>Free 60 / min · Solo 300 / min · Team 1,000 / min</h4>
-              <p>Usage is unlimited — this is a per-workspace fair-use burst limit (aggregated across all your API keys). When exceeded, calls return <code>data.error_code: "rate_limit_exceeded"</code> with <code>data.window: "per_minute"</code> and a <code>data.retry_after</code> countdown (seconds). Upgrade your plan for a higher ceiling.</p>
+              <p>Usage is unlimited; this is a per-workspace fair-use burst limit (aggregated across all your API keys). When exceeded, calls return <code>data.error_code: "rate_limit_exceeded"</code> with <code>data.window: "per_minute"</code> and a <code>data.retry_after</code> countdown (seconds). Upgrade your plan for a higher ceiling.</p>
             </div>
             <div className="step">
               <div className="num">Retrying safely</div>
-              <h4>Always honour retry_after — never retry sends blindly</h4>
-              <p>For <code>rate_limit_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>send_email</code> on <code>provider_error</code> — the message may have already been accepted by the provider.</p>
+              <h4>Always honour retry_after; never retry sends blindly</h4>
+              <p>For <code>rate_limit_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>send_email</code> on <code>provider_error</code>, since the message may have already been accepted by the provider.</p>
             </div>
           </div>
         </div>
@@ -844,7 +844,7 @@ export default function DocsClient() {
         <div className="container">
           <h2 className="pricing-cta-h">Ready to connect your inbox?</h2>
           <p className="pricing-cta-sub">
-            Start on the Free plan — unlimited, no card required.
+            Start on the Free plan: unlimited, no card required.
             Upgrade to Solo or Team for higher burst limits and team features.
           </p>
           <div className="pricing-cta-btns">

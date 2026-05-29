@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — JSX component; TypeScript finds it at runtime via allowJs
+// @ts-ignore: JSX component; TypeScript finds it at runtime via allowJs
 import { FastmailAppPasswordForm } from '../../../../components/auth/FastmailAppPasswordForm';
 
 /**

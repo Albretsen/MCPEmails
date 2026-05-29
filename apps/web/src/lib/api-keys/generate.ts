@@ -4,11 +4,11 @@ const KEY_PREFIX = 'mcpe_';
 const KEY_BYTE_LENGTH = 32; // 256 bits of entropy
 
 export interface GeneratedKey {
-  /** The full raw key — shown once to the user, then discarded. Never persisted. */
+  /** The full raw key, shown once to the user, then discarded. Never persisted. */
   rawKey: string;
-  /** SHA-256 hex digest of rawKey — the only value stored in the database. */
+  /** SHA-256 hex digest of rawKey, the only value stored in the database. */
   keyHash: string;
-  /** First 8 characters of the hex suffix — stored for display, not authentication. */
+  /** First 8 characters of the hex suffix, stored for display, not authentication. */
   keyPrefix: string;
 }
 
@@ -17,14 +17,14 @@ export interface GeneratedKey {
  *
  * The returned `rawKey` MUST be shown to the user immediately and then discarded.
  * Store only `keyHash` and `keyPrefix`. This function must not be called more than
- * once per user-initiated key creation — there is no way to recover a lost raw key.
+ * once per user-initiated key creation; there is no way to recover a lost raw key.
  *
  * Key format: mcpe_<64 lowercase hex characters>
  * Total length: 69 characters (5 prefix + 64 suffix)
  * Entropy: 256 bits from CSPRNG
  */
 export function generateApiKey(): GeneratedKey {
-  // 32 bytes of CSPRNG output — 256 bits of entropy.
+  // 32 bytes of CSPRNG output: 256 bits of entropy.
   const randomBytes = crypto.randomBytes(KEY_BYTE_LENGTH);
 
   // Hex-encode for a fixed-length, unambiguous string.
@@ -44,7 +44,7 @@ export function generateApiKey(): GeneratedKey {
 /**
  * Hash an API key (raw or incoming bearer token) with SHA-256.
  *
- * SHA-256 is appropriate here — not bcrypt — because the pre-image has 256 bits
+ * SHA-256 is appropriate here, not bcrypt, because the pre-image has 256 bits
  * of CSPRNG entropy. No dictionary attack applies. bcrypt's deliberate slowness
  * would add unacceptable latency to every MCP tool call for zero security gain.
  *

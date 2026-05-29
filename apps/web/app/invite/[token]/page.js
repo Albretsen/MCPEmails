@@ -91,7 +91,7 @@ export default async function InvitePage({ params }) {
   const tokenHash = hashToken(rawToken);
   const service = createServiceRoleClient();
 
-  // Look up the invite — service role bypasses RLS so unauthenticated visitors can still resolve it.
+  // Look up the invite. Service role bypasses RLS so unauthenticated visitors can still resolve it.
   const { data: invite } = await service
     .from('workspace_invites')
     .select('workspace_id, invited_by, email, role, expires_at')

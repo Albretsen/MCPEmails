@@ -8,7 +8,7 @@ import '../../styles/dashboard.css';
  *
  * dashboard.css is imported here (in addition to the CSS already loaded by
  * the root layout) because auth forms use .field, .input, and .btn styles
- * defined there. No session check — middleware handles redirecting
+ * defined there. No session check: middleware handles redirecting
  * already-authenticated users.
  */
 export default function AuthLayout({ children }) {

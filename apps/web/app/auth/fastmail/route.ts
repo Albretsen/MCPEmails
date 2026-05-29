@@ -11,8 +11,8 @@ import { randomBytes } from 'crypto';
  * and redirects the user to Fastmail's authorization endpoint.
  *
  * Required Fastmail OAuth scopes:
- *   - https://www.fastmail.com/dev/protocol-email  — JMAP email access (read, send, manage)
- *   - offline_access                               — Refresh token
+ *   - https://www.fastmail.com/dev/protocol-email  : JMAP email access (read, send, manage)
+ *   - offline_access                               : Refresh token
  *
  * References:
  *   https://www.fastmail.com/dev/oauth
@@ -51,7 +51,7 @@ export async function GET() {
   }
 
   // Note: the plan inbox cap is enforced in the callback, where the email
-  // address is known — that lets reconnecting an existing inbox proceed even
+  // address is known. That lets reconnecting an existing inbox proceed even
   // at the cap while still blocking brand-new connections.
 
   // Generate a 32-byte cryptographically random state nonce.

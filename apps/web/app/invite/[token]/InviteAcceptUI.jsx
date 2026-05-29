@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
- * InviteAcceptUI — client component for the /invite/[token] accept page.
+ * InviteAcceptUI: client component for the /invite/[token] accept page.
  *
  * Handles three states:
  *  - Not logged in: show sign-in / sign-up links.

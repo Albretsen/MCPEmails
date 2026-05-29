@@ -16,7 +16,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
  *   3. Resolve the user's workspace via workspace_members.
  *   4. Generate a cryptographically secure key (256 bits of CSPRNG entropy).
  *      Format: mcpe_<64 hex chars> (total 69 chars).
- *   5. Hash the raw key with SHA-256 — only the hash is stored in the database.
+ *   5. Hash the raw key with SHA-256. Only the hash is stored in the database.
  *   6. Insert the api_keys row.
  *   7. Return the row data plus rawKey in the 201 response.
  *      rawKey is included ONCE and cannot be retrieved again.
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   let callerRole: string;
 
   if (typeof bodyWorkspaceId === 'string' && bodyWorkspaceId) {
-    // Explicit workspace — verify membership and get role in one query.
+    // Explicit workspace: verify membership and get role in one query.
     const { data: member, error: memberError } = await supabase
       .from('workspace_members')
       .select('workspace_id, role')
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     workspaceId = member.workspace_id;
     callerRole = member.role;
   } else {
-    // No explicit workspace — fall back to the caller's active workspace
+    // No explicit workspace: fall back to the caller's active workspace
     // (cookie-aware, multi-workspace safe), then look up their role in it.
     const activeWorkspaceId = await resolveActiveWorkspaceId(supabase, user.id);
     if (!activeWorkspaceId) {
@@ -185,11 +185,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // 4–5. Generate the key and hash it.
-  // rawKey is a local variable only — it will be included in the response and
+  // rawKey is a local variable only. It will be included in the response and
   // then fall out of scope. It is never written to disk or any log.
   const { rawKey, keyHash, keyPrefix } = generateApiKey();
 
-  // 6. Insert into database — only keyHash and keyPrefix are persisted, never rawKey.
+  // 6. Insert into database: only keyHash and keyPrefix are persisted, never rawKey.
   const { data: row, error: insertError } = await supabase
     .from('api_keys')
     .insert({
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       createdAt: row.created_at,
       lastUsedAt: row.last_used_at ?? null,
       expiresAt: row.expires_at ?? null,
-      rawKey, // shown once — unrecoverable after this response
+      rawKey, // shown once, unrecoverable after this response
     },
     { status: 201 },
   );

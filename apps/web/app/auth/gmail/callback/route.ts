@@ -42,7 +42,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const state = searchParams.get('state');
   const error = searchParams.get('error');
 
-  // 1. Handle user denial — Google sends error=access_denied.
+  // 1. Handle user denial: Google sends error=access_denied.
   if (error === 'access_denied') {
     return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=cancelled`);
   }
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return redirectWithError('token_exchange_failed');
   }
 
-  // 8. Enforce the plan inbox cap — but only for a brand-new address. A
+  // 8. Enforce the plan inbox cap, but only for a brand-new address. A
   //    reconnect (the email already has a non-deleted inbox) reuses the
   //    existing row via upsert, so it must be allowed even at the cap.
   const alreadyConnected = await inboxExistsForEmail(

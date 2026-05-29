@@ -5,8 +5,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * Name of the cookie that stores the user's currently-selected workspace.
  *
  * A user may belong to several workspaces (their own + any they were invited
- * to). Mutations that need a single target — connecting an inbox, creating an
- * API key — resolve "the active workspace" from this cookie, falling back to
+ * to). Mutations that need a single target (connecting an inbox, creating an
+ * API key) resolve "the active workspace" from this cookie, falling back to
  * the user's first workspace when it is absent or stale.
  */
 export const ACTIVE_WORKSPACE_COOKIE = 'mcpe_active_ws';
@@ -20,7 +20,7 @@ export const ACTIVE_WORKSPACE_COOKIE = 'mcpe_active_ws';
  *
  * Returns null only when the user belongs to no workspace at all.
  *
- * NOTE: never use `.single()` on workspace_members for this — a user in 2+
+ * NOTE: never use `.single()` on workspace_members for this; a user in 2+
  * workspaces would make it throw. Membership is matched explicitly or the
  * earliest row is taken with `.limit(1)`.
  */

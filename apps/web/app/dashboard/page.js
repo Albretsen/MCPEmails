@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { DashboardApp } from '../../components/dashboard/App';
-import { getPlanLimits } from '../../src/lib/stripe/plans';
+import { resolvePlanLimits } from '../../src/lib/stripe/plans';
 import { fetchStripePrices } from '../../src/lib/stripe/getPrices';
 import '../../styles/dashboard.css';
 import '../../styles/theme.css';
@@ -150,7 +150,7 @@ async function fetchInboxes(supabase, workspaceId) {
 
 /**
  * Fetches all active (non-deleted) API keys for a workspace.
- * Returns only the columns safe to display in the dashboard — never key_hash.
+ * Returns only the columns safe to display in the dashboard, never key_hash.
  * Ordered newest-first so recently created keys appear at the top of the list.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
@@ -214,7 +214,7 @@ async function fetchOverviewStats(supabase, workspaceId) {
     callsTodayResult,
     callsMonthResult,
   ] = await Promise.all([
-    // Active inboxes — status = 'active', not soft-deleted
+    // Active inboxes: status = 'active', not soft-deleted
     supabase
       .from('inboxes')
       .select('id', { count: 'exact', head: true })
@@ -222,7 +222,7 @@ async function fetchOverviewStats(supabase, workspaceId) {
       .eq('status', 'active')
       .is('deleted_at', null),
 
-    // Active API keys — not soft-deleted
+    // Active API keys: not soft-deleted
     supabase
       .from('api_keys')
       .select('id', { count: 'exact', head: true })
@@ -310,7 +310,7 @@ async function fetchUsageData(supabase, workspaceId) {
   const countsByInbox = {};
 
   for (const row of rows) {
-    // created_at comes back as "2026-05-24 22:38:29+00" — first 10 chars are YYYY-MM-DD
+    // created_at comes back as "2026-05-24 22:38:29+00"; first 10 chars are YYYY-MM-DD
     const day = (row.created_at ?? '').slice(0, 10);
     if (day) countsByDay[day] = (countsByDay[day] ?? 0) + 1;
     if (row.tool_name) countsByTool[row.tool_name] = (countsByTool[row.tool_name] ?? 0) + 1;
@@ -450,7 +450,7 @@ async function fetchMembers(supabase, workspaceId) {
  * @returns {Promise<Array<{ id, email, role, expiresAt, createdAt }>>}
  */
 async function fetchPendingInvites(supabase, workspaceId) {
-  // @ts-expect-error — Database types need regenerating after workspace_invites migration
+  // @ts-expect-error: Database types need regenerating after workspace_invites migration
   const { data, error } = await supabase
     .from('workspace_invites')
     .select('id, email, role, expires_at, created_at')
@@ -497,7 +497,7 @@ export default async function DashboardPage() {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id')
+      .select('id, slug, display_name, plan, owner_id, grandfathered')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
   ]);
@@ -567,7 +567,8 @@ export default async function DashboardPage() {
 
   // Resolve plan limits so the dashboard can show usage (e.g. "1 of 1 inboxes")
   // and enforce caps client-side before attempting an OAuth redirect.
-  const rawLimits = getPlanLimits(plan);
+  const grandfathered = workspace?.grandfathered ?? false;
+  const rawLimits = resolvePlanLimits(plan, { grandfathered });
   const planLimits = {
     maxInboxes: rawLimits.maxInboxes === Infinity ? null : rawLimits.maxInboxes,
     maxDailyBurstCalls: rawLimits.maxDailyBurstCalls === Infinity ? null : rawLimits.maxDailyBurstCalls,

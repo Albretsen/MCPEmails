@@ -1,5 +1,5 @@
 /* =========================================================
-   MCP Emails — Colors & Type
+   MCP Emails: Colors & Type
    ---------------------------------------------------------
    Cool, confident, technical-but-accessible.
    Cobalt primary, near-black ink, mint live-state accent.
@@ -11,9 +11,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");
 
 :root {
-  /* ============== COLOR TOKENS — RAW SCALE ============== */
+  /* ============== COLOR TOKENS: RAW SCALE ============== */
 
-  /* Cobalt — the brand primary. Trustworthy, technical, alive. */
+  /* Cobalt, the brand primary. Trustworthy, technical, alive. */
   --cobalt-50:  #EEF2FF;
   --cobalt-100: #DDE5FF;
   --cobalt-200: #B6C5FF;
@@ -25,7 +25,7 @@
   --cobalt-800: #131F73;
   --cobalt-900: #0E1750;
 
-  /* Ink / neutral — cool, slight blue cast. */
+  /* Ink / neutral, cool, slight blue cast. */
   --ink-0:   #FFFFFF;
   --ink-25:  #FAFBFD;
   --ink-50:  #F5F6FA;
@@ -39,7 +39,7 @@
   --ink-800: #181C2B;
   --ink-900: #0B1020;
 
-  /* Mint — the "live / connected / success" accent. Use SPARINGLY. */
+  /* Mint, the "live / connected / success" accent. Use SPARINGLY. */
   --mint-50:  #E4FBF1;
   --mint-100: #BFF4DC;
   --mint-300: #5EE0AE;
@@ -47,7 +47,7 @@
   --mint-600: #11A971;
   --mint-700: #0B7E55;
 
-  /* Semantic — calm system colors, not loud. */
+  /* Semantic, calm system colors, not loud. */
   --amber-100: #FCEFD2;
   --amber-500: #F0A53E;
   --amber-700: #9A6311;
@@ -81,26 +81,26 @@
   --live:         var(--mint-500);   /* the "connected" dot */
   --live-soft:    var(--mint-50);
 
-  /* ============== TYPOGRAPHY — FAMILIES ============== */
+  /* ============== TYPOGRAPHY: FAMILIES ============== */
   --font-sans:    "Geist", ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
   --font-mono:    "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
 
   /* ============== TYPE SCALE ==============
      Tight, modern scale. Display sizes lean BIG. */
-  --fs-12: 0.75rem;     /* 12 — micro / labels  */
-  --fs-13: 0.8125rem;   /* 13 — caption         */
-  --fs-14: 0.875rem;    /* 14 — small body / ui */
-  --fs-15: 0.9375rem;   /* 15 — dense body      */
-  --fs-16: 1rem;        /* 16 — body            */
-  --fs-18: 1.125rem;    /* 18 — lead            */
-  --fs-20: 1.25rem;     /* 20 — h5              */
-  --fs-24: 1.5rem;      /* 24 — h4              */
-  --fs-30: 1.875rem;    /* 30 — h3              */
-  --fs-38: 2.375rem;    /* 38 — h2              */
-  --fs-48: 3rem;        /* 48 — h1              */
-  --fs-64: 4rem;        /* 64 — display sm      */
-  --fs-88: 5.5rem;      /* 88 — display lg      */
+  --fs-12: 0.75rem;     /* 12: micro / labels  */
+  --fs-13: 0.8125rem;   /* 13: caption         */
+  --fs-14: 0.875rem;    /* 14: small body / ui */
+  --fs-15: 0.9375rem;   /* 15: dense body      */
+  --fs-16: 1rem;        /* 16: body            */
+  --fs-18: 1.125rem;    /* 18: lead            */
+  --fs-20: 1.25rem;     /* 20: h5              */
+  --fs-24: 1.5rem;      /* 24: h4              */
+  --fs-30: 1.875rem;    /* 30: h3              */
+  --fs-38: 2.375rem;    /* 38: h2              */
+  --fs-48: 3rem;        /* 48: h1              */
+  --fs-64: 4rem;        /* 64: display sm      */
+  --fs-88: 5.5rem;      /* 88: display lg      */
 
   --lh-tight:  1.05;
   --lh-snug:   1.2;
@@ -136,7 +136,7 @@
   --r-16:  16px;    /* large panels */
   --r-pill: 999px;
 
-  /* ============== SHADOWS — subtle, layered ============== */
+  /* ============== SHADOWS: subtle, layered ============== */
   --shadow-1: 0 1px 2px rgba(11, 16, 32, 0.04);
   --shadow-2: 0 1px 2px rgba(11, 16, 32, 0.04), 0 2px 8px rgba(11, 16, 32, 0.04);
   --shadow-3: 0 2px 4px rgba(11, 16, 32, 0.04), 0 8px 24px rgba(11, 16, 32, 0.08);
@@ -152,7 +152,7 @@
 }
 
 /* =========================================================
-   SEMANTIC TYPE CLASSES — apply these directly
+   SEMANTIC TYPE CLASSES: apply these directly
    ========================================================= */
 /* Display = SaaS-style big sans (Geist 600), tight tracking. */
 .t-display-lg {
@@ -171,7 +171,7 @@
   letter-spacing: -0.03em;
   color: var(--fg-1);
 }
-/* Optional editorial italic accent — use sparingly on one word only. */
+/* Optional editorial italic accent; use sparingly on one word only. */
 .t-display-italic {
   font-family: var(--font-display);
   font-style: italic;

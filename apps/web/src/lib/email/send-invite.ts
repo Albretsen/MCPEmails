@@ -4,9 +4,9 @@ import { Resend } from 'resend';
  * Thin wrapper around Resend for sending workspace invite emails.
  *
  * Requires:
- *   RESEND_API_KEY       — API key from resend.com
- *   RESEND_FROM_EMAIL    — Verified sender address (default: invites@mcpemails.com)
- *   NEXT_PUBLIC_APP_URL  — Base URL for building accept links (default: https://www.mcpemails.com)
+ *   RESEND_API_KEY       : API key from resend.com
+ *   RESEND_FROM_EMAIL    : Verified sender address (default: invites@mcpemails.com)
+ *   NEXT_PUBLIC_APP_URL  : Base URL for building accept links (default: https://www.mcpemails.com)
  */
 
 function getResend(): Resend {
@@ -26,7 +26,7 @@ export interface SendInviteEmailParams {
   inviterName: string;
   workspaceName: string;
   role: string;
-  /** Raw 64-char hex token — appended to the accept URL. */
+  /** Raw 64-char hex token, appended to the accept URL. */
   rawToken: string;
 }
 

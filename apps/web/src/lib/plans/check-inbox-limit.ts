@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
-import { getPlanLimits } from '@/lib/stripe/plans';
+import { resolvePlanLimits } from '@/lib/stripe/plans';
 
 /**
  * Result of an inbox cap check.
@@ -46,7 +46,7 @@ export async function checkInboxLimit(
   const [workspaceResult, inboxCountResult] = await Promise.all([
     supabase
       .from('workspaces')
-      .select('plan')
+      .select('plan, grandfathered')
       .eq('id', workspaceId)
       .maybeSingle(),
     supabase
@@ -57,7 +57,8 @@ export async function checkInboxLimit(
   ]);
 
   const plan = (workspaceResult.data?.plan as string | undefined) ?? 'free';
-  const limits = getPlanLimits(plan);
+  const grandfathered = workspaceResult.data?.grandfathered ?? false;
+  const limits = resolvePlanLimits(plan, { grandfathered });
   const currentCount = inboxCountResult.count ?? 0;
 
   // Enterprise plan (Infinity) has no inbox cap.
@@ -81,7 +82,7 @@ export async function checkInboxLimit(
 /**
  * Whether the workspace already has a (non-deleted) inbox for this email.
  *
- * Used to distinguish a reconnect (same address — the upsert reuses the
+ * Used to distinguish a reconnect (same address, where the upsert reuses the
  * existing row and does not increase the inbox count) from a brand-new
  * connection. Reconnects must never be blocked by the plan inbox cap.
  */

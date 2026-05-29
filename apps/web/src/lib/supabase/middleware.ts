@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  * access control.
  *
  * Must be called from `middleware.ts` at the project root. Uses the request
- * and response objects directly — not Next.js's cookies() API — because
+ * and response objects directly (not Next.js's cookies() API) because
  * middleware cannot call cookies() from next/headers.
  *
  * Side effects:

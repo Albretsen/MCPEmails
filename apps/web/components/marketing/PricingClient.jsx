@@ -43,7 +43,7 @@ const PLANS = [
     per: '/month',
     featured: true,
     badge: 'Most popular',
-    desc: 'For businesses and teams. Practically limitless.',
+    desc: 'For businesses and teams that need roles, SSO, and audit logs.',
     cta: 'Get Team',
     ctaHref: '/signup',
     ctaPrimary: true,
@@ -115,11 +115,11 @@ const TABLE_SECTIONS = [
 const FAQ_ITEMS = [
   {
     q: 'Is there really no usage limit?',
-    a: 'Correct — connected inboxes, MCP tool calls, API keys, and team members are unlimited on every plan, including Free. The only usage limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) that protects the platform from abuse. Paid plans exist for higher burst throughput, team features, and support — never to unlock more usage.',
+    a: 'Correct. Connected inboxes, MCP tool calls, API keys, and team members are unlimited on every plan, including Free. The only limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) to protect the platform from abuse. Paid plans add higher burst throughput, team features, and support, never more usage.',
   },
   {
     q: 'What counts as an MCP call?',
-    a: 'Each JSON-RPC tool invocation against your /mcp endpoint counts as one call — whether it\'s list_inboxes, list_inbox, read_email, search_emails, send_email, or reply_to_email. Calls are unlimited; they only count toward your plan\'s per-minute fair-use ceiling.',
+    a: 'Each JSON-RPC tool invocation against your /mcp endpoint counts as one call: list_inboxes, list_inbox, read_email, search_emails, send_email, or reply_to_email. Calls are unlimited; they only count toward your per-minute fair-use ceiling.',
   },
   {
     q: 'Is my email content stored anywhere?',
@@ -127,15 +127,15 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What\'s the difference between Solo and Team?',
-    a: 'Free already gives everyone unlimited usage. Solo ($12/mo) is for power users who run agents hard — it raises the burst rate limit to 300 requests/minute, extends analytics history to 90 days, and adds email support. Team ($49/mo) is for businesses: a 1,000/minute ceiling, team roles and multiple workspaces, SSO (SAML/OIDC), an audit log, 1-year analytics history, and priority support.',
+    a: 'Free already gives everyone unlimited usage. Solo ($12/mo) is for power users who run agents hard: it raises the burst rate limit to 300 requests/minute, extends analytics history to 90 days, and adds email support. Team ($49/mo) is for businesses: a 1,000/minute ceiling, team roles and multiple workspaces, SSO (SAML/OIDC), an audit log, 1-year analytics history, and priority support.',
   },
   {
     q: 'Can I change or cancel my plan?',
-    a: 'Yes — upgrade, downgrade, or cancel any time from the billing section of your dashboard. If you cancel a paid plan, you keep access until the end of your billing period, then drop to the Free tier automatically. Since Free is unlimited, you lose only the higher burst limit, team features, and support.',
+    a: 'Yes. Upgrade, downgrade, or cancel any time from the billing section of your dashboard. If you cancel a paid plan, you keep access until the end of your billing period, then drop to Free automatically. Since Free is unlimited, you lose only the higher burst limit, team features, and support.',
   },
   {
     q: 'How does the annual discount work?',
-    a: 'Paying annually saves you about 17% compared to monthly billing — Solo is $120/year and Team is $490/year. You\'re charged once for 12 months upfront. If you cancel mid-year, we refund the unused whole months.',
+    a: 'Paying annually saves about 17% versus monthly billing: Solo is $120/year and Team is $490/year. You\'re charged once for 12 months upfront. If you cancel mid-year, we refund the unused whole months.',
   },
   {
     q: 'What email providers are supported?',
@@ -143,7 +143,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Is there a refund policy?',
-    a: 'If you\'re unsatisfied within 30 days of your first paid invoice, contact us and we\'ll issue a full refund — no questions asked.',
+    a: 'If you\'re unsatisfied within 30 days of your first paid invoice, contact us for a full refund, no questions asked.',
   },
 ];
 
@@ -271,7 +271,7 @@ function TableCell({ value }) {
     );
   }
   if (value === false) {
-    return <td className="tbl-dash"><span>—</span></td>;
+    return <td className="tbl-dash"><span>–</span></td>;
   }
   return <td className="tbl-val">{value}</td>;
 }
@@ -345,7 +345,7 @@ export default function PricingClient({ stripePrices }) {
             Unlimited, free.<br />Upgrade for more power.
           </h1>
           <p className="pricing-page-lead">
-            Every plan — including Free — has unlimited inboxes, calls, API keys, and
+            Every plan, including Free, has unlimited inboxes, calls, API keys, and
             team members. Paid plans add higher burst limits, team features, and support.
             Email is never stored, on any plan.
           </p>
@@ -397,7 +397,7 @@ export default function PricingClient({ stripePrices }) {
         <div className="container">
           <h2 className="pricing-cta-h">Ready to give your agent an inbox?</h2>
           <p className="pricing-cta-sub">
-            Start on the Free plan — no credit card required, unlimited from day one.
+            Start on Free: no credit card, unlimited from day one.
             Upgrade when you need higher burst limits or team features.
           </p>
           <div className="pricing-cta-btns">

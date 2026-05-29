@@ -1,14 +1,14 @@
 /**
  * Stripe plan definitions for MCPEmails.
  *
- * Pricing strategy: the entire product is free and UNLIMITED for everyone —
- * unlimited inboxes, MCP tool calls, API keys, and team members on every tier.
+ * Pricing strategy: the entire product is free and UNLIMITED for everyone,
+ * with unlimited inboxes, MCP tool calls, API keys, and team members on every tier.
  * We monetize capabilities and support, never raw usage. The only usage lever
  * that differs between tiers is the per-minute fair-use rate limit
  * (`maxRequestsPerMinute`), which protects the platform from abuse.
  *
  * Three tiers: Free, Solo, Team. (The "Team" tier keeps the internal id `pro`
- * to avoid a workspaces.plan data migration — only its display name is "Team".)
+ * to avoid a workspaces.plan data migration; only its display name is "Team".)
  *
  * Price IDs are loaded from environment variables so they can differ between
  * test and production without code changes:
@@ -22,7 +22,7 @@
  */
 
 // ---------------------------------------------------------------------------
-// Plan identifiers — must match the `plan` column values in `workspaces`.
+// Plan identifiers: must match the `plan` column values in `workspaces`.
 // `pro` is the internal id for the "Team" tier (display name only).
 // ---------------------------------------------------------------------------
 export type PlanId = 'free' | 'solo' | 'pro';
@@ -40,7 +40,7 @@ export type SupportTier = 'community' | 'email' | 'priority';
 // ---------------------------------------------------------------------------
 // Feature limits per plan
 //
-// Usage limits (inboxes, calls, keys, members) are Infinity on every tier —
+// Usage limits (inboxes, calls, keys, members) are Infinity on every tier;
 // they are retained so the existing limit-check helpers report "unlimited".
 // Real differentiation lives in the feature flags below.
 // ---------------------------------------------------------------------------
@@ -170,7 +170,7 @@ export const PLANS: Record<PlanId, Plan> = {
     highlighted: false,
   },
 
-  // "Team" tier — internal id stays `pro`.
+  // "Team" tier; internal id stays `pro`.
   pro: {
     id: 'pro',
     name: 'Team',
@@ -217,6 +217,36 @@ export function getPlanLimits(planId: string): PlanLimits {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: resolve the EFFECTIVE limits for a specific workspace.
+//
+// Grandfathered ("legacy") workspaces keep the launch-era unlimited *usage*
+// terms: when paid-plan usage caps are introduced later (by giving the usage
+// fields below finite values in PLANS), these workspaces still resolve to
+// unlimited usage. Feature flags (analytics retention, SSO, audit log, support
+// tier, per-minute ceiling) continue to follow the workspace's current plan.
+//
+// Today every plan is already unlimited, so this is a no-op, but wiring it
+// through every limit check now means turning caps on later is a one-file edit
+// in PLANS, with legacy users automatically exempted. See
+// Documents/pricing-strategy.md and the `grandfathered` column on `workspaces`.
+// ---------------------------------------------------------------------------
+export function resolvePlanLimits(
+  planId: string,
+  opts?: { grandfathered?: boolean },
+): PlanLimits {
+  const base = getPlanLimits(planId);
+  if (!opts?.grandfathered) return base;
+  return {
+    ...base,
+    maxInboxes: Infinity,
+    maxDailyBurstCalls: Infinity,
+    maxMonthlyToolCalls: Infinity,
+    maxApiKeys: Infinity,
+    maxMembers: Infinity,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Helper: resolve a Stripe price ID to its plan and interval.
 // Used in the webhook handler to map incoming subscription events to plans.
 // ---------------------------------------------------------------------------
@@ -236,7 +266,7 @@ export function getPlanByStripePriceId(
 
 // ---------------------------------------------------------------------------
 // Helper: get or create a Stripe Customer for a workspace.
-// Idempotent — returns the existing customer ID if already stored.
+// Idempotent: returns the existing customer ID if already stored.
 // Call only from server-side code (Route Handlers / Server Actions).
 // ---------------------------------------------------------------------------
 export type GetOrCreateCustomerResult =

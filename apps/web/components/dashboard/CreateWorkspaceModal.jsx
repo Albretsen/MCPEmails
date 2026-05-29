@@ -4,16 +4,16 @@ import { useState } from 'react';
 import { Icon, Btn } from '../Primitives';
 
 /**
- * CreateWorkspaceModal — names and creates a new workspace.
+ * CreateWorkspaceModal: names and creates a new workspace.
  *
- * Only rendered for users who own a Pro/Enterprise workspace (the create route
- * enforces this server-side too). On success the API sets the new workspace as
- * active; we do a full reload so the dashboard re-fetches scoped to it.
+ * Only rendered for users who own a Team workspace (the create route enforces
+ * this server-side too). On success the API sets the new workspace as active;
+ * we do a full reload so the dashboard re-fetches scoped to it.
  *
  * @param {() => void} onClose
- * @param {string}     planLabel  - The plan the new workspace inherits (e.g. "Pro").
+ * @param {string}     planLabel  - The plan the new workspace inherits (e.g. "Team").
  */
-export function CreateWorkspaceModal({ onClose, planLabel = 'Pro' }) {
+export function CreateWorkspaceModal({ onClose, planLabel = 'Team' }) {
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);

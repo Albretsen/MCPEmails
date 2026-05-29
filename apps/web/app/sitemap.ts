@@ -6,7 +6,7 @@ const BASE_URL =
 /**
  * Next.js App Router sitemap generator.
  * Renders as /sitemap.xml at build time (static export).
- * Only public marketing pages are included — dashboard, auth, and API routes
+ * Only public marketing pages are included; dashboard, auth, and API routes
  * are private and must not appear in search indexes.
  */
 export default function sitemap(): MetadataRoute.Sitemap {

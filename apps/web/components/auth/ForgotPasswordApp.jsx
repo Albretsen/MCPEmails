@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 
 /**
- * ThemeBtn — floating theme toggle.
+ * ThemeBtn: floating theme toggle.
  * Duplicated per auth page so auth pages don't depend on a shared wrapper.
  */
 function ThemeBtn() {
@@ -23,7 +23,7 @@ function ThemeBtn() {
     try {
       localStorage.setItem('mcpe-theme', dark ? 'dark' : 'light');
     } catch (_) {
-      // localStorage unavailable in some environments — safe to ignore
+      // localStorage unavailable in some environments; safe to ignore
     }
   }, [dark]);
 
@@ -39,7 +39,7 @@ function ThemeBtn() {
 }
 
 /**
- * Spinner — animated SVG used during async operations.
+ * Spinner: animated SVG used during async operations.
  */
 function Spinner() {
   return (
@@ -65,12 +65,12 @@ function Spinner() {
 }
 
 /**
- * ForgotPasswordApp — the /forgot-password page Client Component.
+ * ForgotPasswordApp: the /forgot-password page Client Component.
  *
  * Implements the first step of the password reset flow:
  *  1. User enters their email address.
  *  2. On submit, calls supabase.auth.resetPasswordForEmail() which sends a
- *     reset link to the address on file (if an account exists — Supabase does
+ *     reset link to the address on file (if an account exists; Supabase does
  *     not reveal whether the address is registered, preventing enumeration).
  *  3. The form always transitions to a "check your email" success state
  *     regardless of whether the address was found, to avoid user enumeration.
@@ -121,7 +121,7 @@ export function ForgotPasswordApp() {
       setServerError(error.message ?? 'Something went wrong. Please try again.');
       setStep('error');
     } else {
-      // Always show the success state — even if no account exists for this
+      // Always show the success state, even if no account exists for this
       // address, Supabase silently no-ops and returns no error.
       setStep('sent');
     }
@@ -136,7 +136,7 @@ export function ForgotPasswordApp() {
     }
   }
 
-  /** Retry after an error — go back to the form without clearing the email. */
+  /** Retry after an error: go back to the form without clearing the email. */
   function handleRetry() {
     setServerError('');
     setStep('form');
@@ -271,7 +271,7 @@ export function ForgotPasswordApp() {
             <p className="sub">
               If an account exists for{' '}
               <strong style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{email}</strong>,
-              we've sent a reset link. Click it to choose a new password — it
+              we've sent a reset link. Click it to choose a new password. It
               expires in 60 minutes.
             </p>
 

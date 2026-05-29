@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-/* MarketingPrimitives.jsx — extended for tweaks + auth handoff. */
+/* MarketingPrimitives.jsx: extended for tweaks + auth handoff. */
 
 const MI = {
   shield:   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>,
@@ -28,7 +28,7 @@ const MI = {
 
 export function MIcon({ name, size = 18, color = "currentColor", strokeWidth = 1.75 }) {
   if (!MI[name]) return null;
-  // google icon is multi-color/filled — pass through as-is
+  // google icon is multi-color/filled, pass through as-is
   if (name === "google") {
     return <svg width={size} height={size} viewBox="0 0 24 24">{MI[name]}</svg>;
   }

@@ -5,7 +5,7 @@
  * not called on every request. When a price ID is missing or Stripe throws,
  * we fall back to the static cent values defined in plans.ts.
  *
- * Import only in Server Components or Route Handlers — never in client bundles.
+ * Import only in Server Components or Route Handlers; never in client bundles.
  */
 
 import { unstable_cache } from 'next/cache';
@@ -24,7 +24,7 @@ export interface StripePlanPrices {
 export type StripePricesMap = Record<string, StripePlanPrices>;
 
 // ---------------------------------------------------------------------------
-// Internal fetch (un-cached) — called once per cache lifetime
+// Internal fetch (un-cached); called once per cache lifetime
 // ---------------------------------------------------------------------------
 
 async function _fetchStripePrices(): Promise<StripePricesMap> {
@@ -41,7 +41,7 @@ async function _fetchStripePrices(): Promise<StripePricesMap> {
           const price = await stripe.prices.retrieve(plan.stripePriceIdMonthly);
           monthlyCents = price.unit_amount ?? plan.monthlyPriceCents;
         } catch {
-          // Fall back to static value — Stripe may be unreachable at build time
+          // Fall back to static value; Stripe may be unreachable at build time
           monthlyCents = plan.monthlyPriceCents;
         }
       }
@@ -65,7 +65,7 @@ async function _fetchStripePrices(): Promise<StripePricesMap> {
 }
 
 // ---------------------------------------------------------------------------
-// Cached export — revalidates every hour
+// Cached export; revalidates every hour
 // ---------------------------------------------------------------------------
 
 export const fetchStripePrices: () => Promise<StripePricesMap> = unstable_cache(

@@ -1,6 +1,6 @@
 'use client';
 
-/* Primitives.jsx — Icons, Badge, Button, Avatar. */
+/* Primitives.jsx: Icons, Badge, Button, Avatar. */
 
 const I = {
   mail:     <path d="M2 6l10 7 10-7M2 6h20v12H2z" />,
@@ -64,7 +64,7 @@ export function Avatar({ initials = "JR" }) {
 }
 
 export function ProviderLogo({ kind, size = 22 }) {
-  // Tiny inline brand glyphs — only the recognizable parts, neutral palette.
+  // Tiny inline brand glyphs: only the recognizable parts, neutral palette.
   if (kind === "gmail") return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <rect x="2" y="5" width="20" height="14" rx="2" stroke="#0B1020" strokeWidth="1.6"/>

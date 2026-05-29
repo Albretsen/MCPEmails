@@ -1,4 +1,4 @@
-/* App.jsx — marketing root. Tweaks expose hero variant + dark mode. */
+/* App.jsx: marketing root. Tweaks expose hero variant + dark mode. */
 
 const { useState, useEffect } = React;
 

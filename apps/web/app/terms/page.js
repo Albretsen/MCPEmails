@@ -5,7 +5,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 
 export const metadata = {
   title: 'Terms of Service',
-  description: 'The terms governing your use of MCPEmails — acceptable use, liability, account termination, and governing law.',
+  description: 'The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.',
   alternates: {
     canonical: `${APP_URL}/terms`,
   },
@@ -13,7 +13,7 @@ export const metadata = {
     type: 'website',
     url: `${APP_URL}/terms`,
     title: 'Terms of Service · mcpemails',
-    description: 'The terms governing your use of MCPEmails — acceptable use, liability, account termination, and governing law.',
+    description: 'The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.',
     images: [
       {
         url: '/og.png',
@@ -26,7 +26,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Terms of Service · mcpemails',
-    description: 'The terms governing your use of MCPEmails — acceptable use, liability, and governing law.',
+    description: 'The terms governing your use of MCPEmails: acceptable use, liability, and governing law.',
     images: ['/og.png'],
   },
 };
@@ -66,7 +66,7 @@ export default function TermsPage() {
         <div className="container" style={{ maxWidth: 800 }}>
           <div className="legal-body">
 
-            {/* 1 — Agreement */}
+            {/* 1 - Agreement */}
             <LegalSection id="agreement" title="1. Agreement to These Terms">
               <p>
                 These Terms of Service ("Terms") constitute a legally binding agreement
@@ -96,7 +96,7 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 2 — Description of service */}
+            {/* 2 - Description of service */}
             <LegalSection id="service-description" title="2. Description of Service">
               <p>
                 MCPEmails provides a software-as-a-service platform that allows you to
@@ -135,7 +135,7 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 3 — Account registration */}
+            {/* 3 - Account registration */}
             <LegalSection id="account-registration" title="3. Account Registration and Security">
 
               <h4>3.1 Registration</h4>
@@ -174,7 +174,7 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 4 — Acceptable use */}
+            {/* 4 - Acceptable use */}
             <LegalSection id="acceptable-use" title="4. Acceptable Use">
 
               <h4>4.1 Permitted use</h4>
@@ -274,7 +274,7 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 5 — Plans and payment */}
+            {/* 5 - Plans and payment */}
             <LegalSection id="plans-and-payment" title="5. Plans, Fees, and Payment">
 
               <h4>5.1 Free plan</h4>
@@ -322,9 +322,28 @@ export default function TermsPage() {
                 to your registered email address. Price changes will not apply until your
                 next renewal date.
               </p>
+
+              <h4>5.7 Fair use and service limits</h4>
+              <p>
+                To protect platform stability and ensure fair access for all customers, the
+                Service applies a per-minute request rate limit to every plan (a
+                &ldquo;fair-use limit&rdquo;), as described on our <a href="/pricing">Pricing
+                page</a>. We may also apply reasonable technical measures to prevent abuse,
+                automated scraping, or usage that materially degrades the Service for others.
+              </p>
+              <p>
+                Where a plan is described as &ldquo;unlimited,&rdquo; that refers to the
+                absence of fixed monthly usage quotas; it remains subject to this fair-use
+                limit and to Section 4 (Acceptable Use). We reserve the right to introduce,
+                change, or remove usage limits and fair-use thresholds for any plan,
+                including the Free plan, on a going-forward basis. We will give at least
+                30 days' notice to your registered email address before a change takes
+                effect for your workspace, and may apply new limits to new subscriptions
+                immediately.
+              </p>
             </LegalSection>
 
-            {/* 6 — Intellectual property */}
+            {/* 6 - Intellectual property */}
             <LegalSection id="intellectual-property" title="6. Intellectual Property">
 
               <h4>6.1 MCPEmails IP</h4>
@@ -354,13 +373,13 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 7 — Disclaimer and limitation of liability */}
+            {/* 7 - Disclaimer and limitation of liability */}
             <LegalSection id="liability" title="7. Disclaimers and Limitation of Liability">
 
               <h4>7.1 Service provided "as is"</h4>
               <p>
                 The Service is provided "as is" and "as available" without warranties of
-                any kind, either express or implied, including — but not limited to —
+                any kind, either express or implied, including (but not limited to)
                 implied warranties of merchantability, fitness for a particular purpose,
                 non-infringement, and uninterrupted or error-free operation. We do not
                 warrant that the Service will meet your requirements, that email delivery
@@ -391,8 +410,8 @@ export default function TermsPage() {
                 To the maximum extent permitted by applicable law, in no event will
                 MCPEmails, its directors, employees, agents, or suppliers be liable for
                 any indirect, incidental, special, consequential, punitive, or exemplary
-                damages — including loss of profits, loss of data, loss of goodwill, or
-                business interruption — arising out of or in connection with your use of
+                damages, including loss of profits, loss of data, loss of goodwill, or
+                business interruption, arising out of or in connection with your use of
                 or inability to use the Service, even if MCPEmails has been advised of the
                 possibility of such damages.
               </p>
@@ -423,7 +442,7 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 8 — Account termination */}
+            {/* 8 - Account termination */}
             <LegalSection id="account-termination" title="8. Account Termination">
 
               <h4>8.1 Termination by you</h4>
@@ -515,7 +534,7 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 9 — Governing law */}
+            {/* 9 - Governing law */}
             <LegalSection id="governing-law" title="9. Governing Law and Dispute Resolution">
 
               <h4>9.1 Governing law</h4>
@@ -568,7 +587,7 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 10 — General */}
+            {/* 10 - General */}
             <LegalSection id="general" title="10. General Provisions">
 
               <h4>10.1 Entire agreement</h4>
@@ -638,7 +657,7 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 11 — Contact */}
+            {/* 11 - Contact */}
             <LegalSection id="contact" title="11. Contact Us">
               <p>
                 If you have questions about these Terms or need to reach our legal team:

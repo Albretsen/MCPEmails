@@ -16,9 +16,9 @@ import type { GetOrCreateCustomerResult } from '@/lib/stripe/plans';
 interface GetOrCreateCustomerOptions {
   /** The workspace ID (UUID from `workspaces.id`). */
   workspaceId: string;
-  /** The workspace owner's email address — passed to Stripe for the customer record. */
+  /** The workspace owner's email address, passed to Stripe for the customer record. */
   ownerEmail: string;
-  /** Human-readable workspace name — appears in the Stripe dashboard. */
+  /** Human-readable workspace name, appears in the Stripe dashboard. */
   workspaceName: string;
 }
 
@@ -53,7 +53,7 @@ export async function getOrCreateStripeCustomer(
     );
   }
 
-  // 2. Already has a customer — return immediately.
+  // 2. Already has a customer; return immediately.
   if (workspace.stripe_customer_id) {
     return { customerId: workspace.stripe_customer_id, created: false };
   }

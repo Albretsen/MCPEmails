@@ -3,7 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 /**
  * Distributed rate limiter backed by Supabase (rate_limit_buckets table).
  *
- * Consistent across all Vercel function instances — unlike the previous
+ * Consistent across all Vercel function instances, unlike the previous
  * in-process Map which gave each instance its own independent counter.
  *
  * Returns true  → request is rate limited (caller should reject it).

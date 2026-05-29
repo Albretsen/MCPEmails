@@ -9,8 +9,8 @@ const BASE_URL =
  *
  * Rules:
  * - Public marketing pages: allow all crawlers.
- * - Dashboard, auth, API, and OAuth routes: disallow all crawlers —
- *   these are private and must not be indexed.
+ * - Dashboard, auth, API, and OAuth routes: disallow all crawlers.
+ *   These are private and must not be indexed.
  */
 export default function robots(): MetadataRoute.Robots {
   return {

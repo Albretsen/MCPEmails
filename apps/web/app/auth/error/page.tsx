@@ -13,13 +13,13 @@ const ERROR_MESSAGES: Record<string, string> = {
   missing_code:
     'This sign-in link is invalid or has already been used. Links can only be clicked once.',
   'Email link is invalid or has expired':
-    'This sign-in link has expired. Links are valid for 60 minutes — please request a new one.',
+    'This sign-in link has expired. Links are valid for 60 minutes, so please request a new one.',
   'Auth session missing':
     'Your session could not be established. This can happen if cookies are blocked in your browser.',
 };
 
 const GENERIC_MESSAGE =
-  'Something went wrong while signing you in. Please try again — if the problem persists, contact support.';
+  'Something went wrong while signing you in. Please try again. If the problem persists, contact support.';
 
 interface Props {
   searchParams: Promise<{ reason?: string }>;
@@ -33,7 +33,7 @@ interface Props {
  * ("missing_code") or the raw Supabase error message, both of which are
  * mapped to user-friendly copy.
  *
- * This is a Server Component — no client-side JS needed. Reads `searchParams`
+ * This is a Server Component, no client-side JS needed. Reads `searchParams`
  * as a Promise per the Next.js 15 dynamic API requirement.
  */
 export default async function AuthErrorPage({ searchParams }: Props) {
@@ -49,7 +49,7 @@ export default async function AuthErrorPage({ searchParams }: Props) {
     <div className="auth-shell">
       <div className="auth-wrap">
         <a className="auth-back" href="/">
-          {/* Inline SVG arrow — matches MIcon "arrow" without a client import */}
+          {/* Inline SVG arrow, matches MIcon "arrow" without a client import */}
           <svg
             width="14"
             height="14"

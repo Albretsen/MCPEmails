@@ -10,7 +10,7 @@ import type { Database } from '@/types/database.types';
  * headers on the response via Next.js's cookies() API.
  *
  * Always call `supabase.auth.getUser()` (not `getSession()`) in server-side
- * code — getUser() validates the token server-side and detects revoked sessions.
+ * code. getUser() validates the token server-side and detects revoked sessions.
  */
 export async function createClient() {
   const cookieStore = await cookies();
@@ -29,7 +29,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Called from a Server Component — session refresh writes are
+            // Called from a Server Component, where session refresh writes are
             // silently dropped here. Middleware handles the actual refresh.
           }
         },

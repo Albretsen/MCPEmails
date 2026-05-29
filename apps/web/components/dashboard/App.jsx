@@ -10,8 +10,8 @@ import { ConnectModal } from './ConnectModal';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
 
-/* App.jsx — dashboard root. Owns state, route, modals.
-   New: firstrun param auto-opens connect modal.
+/* App.jsx: dashboard root. Owns state, route, modals.
+   firstrun param auto-opens the connect modal.
    Tweaks: light/dark mode, density. */
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
@@ -19,9 +19,9 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "density": "spacious"
 }/*EDITMODE-END*/;
 
-// SEED_INBOXES removed — inboxes are now fetched server-side and passed as props.
+// SEED_INBOXES removed: inboxes are now fetched server-side and passed as props.
 
-// SEED_KEYS removed — API keys are now fetched server-side and passed as props.
+// SEED_KEYS removed: API keys are now fetched server-side and passed as props.
 
 const SEED_ACTIVITY = [
   { tool: "list_inbox",     account: "work-gmail",   time: "just now", ok: true },
@@ -37,7 +37,7 @@ function readQuery(searchParams, key) {
 }
 
 /**
- * DashboardApp — exported dashboard root.
+ * DashboardApp: exported dashboard root.
  *
  * Wraps everything in <ToastProvider> so that any component in the tree
  * can call useToast() to show success/error/info/warning notifications.
@@ -53,7 +53,7 @@ export function DashboardApp(props) {
 }
 
 /**
- * DashboardInner — holds all dashboard state and routing logic.
+ * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
 function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
@@ -135,7 +135,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
       });
       setRouteState('inboxes');
     } else if (errorParam === 'token_exchange_failed') {
-      toast({ message: 'Could not connect inbox — token exchange with the provider failed. Please try again.', variant: 'error' });
+      toast({ message: 'Could not connect inbox. Token exchange with the provider failed. Please try again.', variant: 'error' });
       setRouteState('inboxes');
     } else if (errorParam === 'cancelled') {
       toast({ message: 'Inbox connection cancelled.', variant: 'info' });
@@ -163,9 +163,9 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
     if (!checkoutParam) return;
     if (checkoutParam === 'success') {
       const planParam = readQuery(searchParams, 'plan');
-      const planLabel = planParam ? planParam.charAt(0).toUpperCase() + planParam.slice(1) : 'Pro';
+      const planLabel = planParam ? planParam.charAt(0).toUpperCase() + planParam.slice(1) : 'your new plan';
       toast({
-        message: `Welcome to ${planLabel}! Your subscription is being activated — this may take a moment.`,
+        message: `Welcome to ${planLabel}. Your subscription is activating now; this may take a moment.`,
         variant: 'success',
       });
     } else if (checkoutParam === 'cancelled') {
@@ -254,7 +254,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
       return;
     }
     // Reflect the server-confirmed status locally, unless the check could not
-    // reach the provider (transient) — in which case we leave the row as-is.
+    // reach the provider (transient), in which case we leave the row as-is.
     if (!data.transient && data.status) {
       setInboxes(xs => xs.map(x => (
         x.id === inbox.id ? { ...x, status: data.status, lastError: data.lastError ?? null } : x
@@ -326,7 +326,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
   };
 
   const onConnect = ({ label, provider, address }) => {
-    // Optimistic update — the real row will appear on next page load via router.refresh().
+    // Optimistic update: the real row will appear on next page load via router.refresh().
     const next = { id: String(Date.now()), label, address: address || label, provider, status: "active", calls: 0 };
     setInboxes(xs => [...xs, next]);
     setShowConnect(false);
@@ -371,7 +371,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
   const onKeyCreated = (keyRow) => {
     setKeys(xs => [keyRow, ...xs]);
     toast({
-      message: 'API key created. Copy it now — it won\'t be shown again.',
+      message: 'API key created. Copy it now; it won\'t be shown again.',
       variant: 'success',
     });
   };
@@ -392,10 +392,10 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
 
   /** Cancel a pending invite via DELETE /api/workspaces/invite/[token]. */
   const onCancelInvite = async (inviteId) => {
-    // We don't have the raw token client-side — call a dedicated cancel-by-id endpoint.
+    // We don't have the raw token client-side, so call a dedicated cancel-by-id endpoint.
     // Use the invite's id as the "token" placeholder; the route accepts workspaceId for auth.
     // For now, optimistically remove and call the token endpoint isn't available without the token.
-    // Instead POST to a cancel-by-id route pattern — handled by deleting via invite id.
+    // Instead POST to a cancel-by-id route pattern, handled by deleting via invite id.
     const res = await fetch(`/api/workspaces/invite-cancel/${inviteId}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },

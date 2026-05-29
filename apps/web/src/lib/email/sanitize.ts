@@ -12,7 +12,7 @@
 import createDOMPurify from 'isomorphic-dompurify';
 import { JSDOM } from 'jsdom';
 
-// Singleton window — created once, reused for every sanitise call.
+// Singleton window: created once, reused for every sanitise call.
 const { window } = new JSDOM('');
 const DOMPurify = createDOMPurify(window as unknown as typeof globalThis);
 
@@ -33,14 +33,14 @@ const ALLOWED_TAGS = [
 
 /**
  * Narrow allowlist of HTML attributes.
- * `style` and `class` are explicitly forbidden — email marketers use them to hide
+ * `style` and `class` are explicitly forbidden: email marketers use them to hide
  * phishing text from humans while exposing it to parsers.
  */
 const ALLOWED_ATTR = [
-  'href',     // <a> — URLs validated by the afterSanitizeAttributes hook below
+  'href',     // <a>: URLs validated by the afterSanitizeAttributes hook below
   'title',
   'alt',
-  'src',      // <img> — non-https sources removed by the hook below
+  'src',      // <img>: non-https sources removed by the hook below
   'width',
   'height',
   'colspan',

@@ -7,13 +7,13 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
  * PATCH /api/api-keys/[id]/revoke
  *
  * Soft-deletes an API key by setting deleted_at = now().
- * The row is never hard-deleted — it is retained for audit log integrity
+ * The row is never hard-deleted; it is retained for audit log integrity
  * (activity_log rows reference api_key_id and would lose their foreign key).
  *
  * Steps:
  *   1. Authenticate the requesting user.
  *   2. Resolve their workspace via workspace_members.
- *   3. Set deleted_at on the key row — only if it belongs to this workspace
+ *   3. Set deleted_at on the key row, only if it belongs to this workspace
  *      and is not already deleted (idempotent guard).
  *   4. Return 200 { revoked: true } on success.
  *
@@ -61,7 +61,7 @@ export async function PATCH(
   //    as "new row violates row-level security policy". Authorization is already
   //    established above (workspace membership), and the write is scoped to the
   //    key id AND workspace_id. The .is('deleted_at', null) guard keeps it
-  //    idempotent — revoking an already-revoked key is a no-op (still 200).
+  //    idempotent: revoking an already-revoked key is a no-op (still 200).
   const service = createServiceRoleClient();
   const { error: updateError } = await service
     .from('api_keys')

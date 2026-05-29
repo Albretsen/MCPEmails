@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 
 /**
- * ThemeBtn — floating theme toggle.
+ * ThemeBtn: floating theme toggle.
  * Duplicated per auth page so auth pages don't depend on a shared wrapper.
  */
 function ThemeBtn() {
@@ -24,7 +24,7 @@ function ThemeBtn() {
     try {
       localStorage.setItem('mcpe-theme', dark ? 'dark' : 'light');
     } catch (_) {
-      // localStorage unavailable in some environments — safe to ignore
+      // localStorage unavailable in some environments; safe to ignore
     }
   }, [dark]);
 
@@ -40,7 +40,7 @@ function ThemeBtn() {
 }
 
 /**
- * Spinner — animated SVG used during async operations.
+ * Spinner: animated SVG used during async operations.
  */
 function Spinner() {
   return (
@@ -66,7 +66,7 @@ function Spinner() {
 }
 
 /**
- * ResetPasswordApp — the /reset-password page Client Component.
+ * ResetPasswordApp: the /reset-password page Client Component.
  *
  * Implements the second step of the password reset flow:
  *  1. The user arrives here after clicking the reset link in their email.
@@ -152,7 +152,7 @@ export function ResetPasswordApp() {
       return;
     }
 
-    // Password updated — sign out so the user starts a clean session with
+    // Password updated. Sign out so the user starts a clean session with
     // their new credentials. This also invalidates the recovery session.
     await supabase.auth.signOut();
 

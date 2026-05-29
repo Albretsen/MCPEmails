@@ -33,7 +33,7 @@ export function computeS256Challenge(codeVerifier: string): string {
 
 /**
  * Generate a refresh token: `mcpr_` prefix + 32 bytes of CSPRNG entropy,
- * base64url-encoded. Never stored as plaintext — caller must hash with sha256hex.
+ * base64url-encoded. Never stored as plaintext; caller must hash with sha256hex.
  */
 export function generateRefreshToken(): string {
   const bytes = crypto.randomBytes(32);

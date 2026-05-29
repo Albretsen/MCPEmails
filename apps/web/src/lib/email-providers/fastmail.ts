@@ -3,7 +3,7 @@
  *
  * Handles authorization code exchange and token refresh with Fastmail's
  * OAuth token endpoint. Unlike Gmail and Outlook, Fastmail does not include
- * an id_token in its token response — the user's email address is resolved by
+ * an id_token in its token response; the user's email address is resolved by
  * calling the JMAP session endpoint immediately after token exchange.
  *
  * Token lifetimes:
@@ -59,9 +59,9 @@ export class FastmailAuthError extends Error {
   ) {
     const messages: Record<typeof code, string> = {
       REFRESH_TOKEN_INVALID:
-        'Fastmail refresh token is invalid or revoked — user must reconnect the inbox.',
+        'Fastmail refresh token is invalid or revoked. Please reconnect the inbox.',
       MISSING_TOKENS:
-        'Inbox is missing OAuth tokens — user must reconnect the inbox.',
+        'Inbox is missing OAuth tokens. Please reconnect the inbox.',
     };
     super(messages[code]);
     this.name = 'FastmailAuthError';
@@ -75,7 +75,7 @@ export class FastmailAuthError extends Error {
 /**
  * Marks an inbox as errored, storing a human-readable reason in `last_error`.
  *
- * Uses the service-role client to bypass RLS — called from a background
+ * Uses the service-role client to bypass RLS; called from a background
  * job context where there is no authenticated user session.
  */
 async function markInboxErrored(inboxId: string, reason: string): Promise<void> {
@@ -90,7 +90,7 @@ async function markInboxErrored(inboxId: string, reason: string): Promise<void> 
     .eq('id', inboxId);
 
   if (error) {
-    // Log the failure but don't throw — caller already has an error to handle.
+    // Log the failure but don't throw; caller already has an error to handle.
     console.error(
       `[fastmail] Failed to mark inbox ${inboxId} as errored:`,
       error.message
@@ -170,7 +170,7 @@ async function resolveEmailFromJmapSession(accessToken: string): Promise<string>
   }
 
   throw new Error(
-    'Fastmail JMAP session: could not determine primary email address — ' +
+    'Fastmail JMAP session: could not determine primary email address; ' +
       'neither primaryAccounts nor username found in session response'
   );
 }
@@ -256,7 +256,7 @@ export async function exchangeFastmailCode(
  * Calls Fastmail's token endpoint with a refresh token to obtain a new
  * access token.
  *
- * Does NOT update the database — callers are responsible for persisting
+ * Does NOT update the database; callers are responsible for persisting
  * the result via `updateInboxTokens`.
  *
  * Fastmail uses HTTP 401 (rather than a JSON error body with `invalid_grant`)
@@ -322,8 +322,8 @@ export async function refreshFastmailAccessToken(
  * Call this function at the start of every Fastmail JMAP API call.
  * Never cache the returned access token across requests.
  *
- * @throws {FastmailAuthError} code='MISSING_TOKENS'        — inbox has no stored tokens.
- * @throws {FastmailAuthError} code='REFRESH_TOKEN_INVALID' — refresh token is revoked;
+ * @throws {FastmailAuthError} code='MISSING_TOKENS':        inbox has no stored tokens.
+ * @throws {FastmailAuthError} code='REFRESH_TOKEN_INVALID': refresh token is revoked;
  *   the user must reconnect the inbox. The inbox is automatically marked as errored.
  * @throws {Error} on unexpected refresh failures or database write errors.
  */
@@ -342,11 +342,11 @@ export async function withFreshFastmailToken(
   const refreshThreshold = new Date(now.getTime() + REFRESH_THRESHOLD_MS);
 
   if (expiresAt > refreshThreshold) {
-    // Token is fresh — decrypt and return without a network call.
+    // Token is fresh; decrypt and return without a network call.
     return decryptToken(inbox.oauth_access_token);
   }
 
-  // Token is expiring within 5 minutes (or already expired) — refresh it.
+  // Token is expiring within 5 minutes (or already expired); refresh it.
   const storedRefreshToken = decryptToken(inbox.oauth_refresh_token);
 
   let refreshResult: { accessToken: string; expiresIn: number };
@@ -358,7 +358,7 @@ export async function withFreshFastmailToken(
       const typedErr = new FastmailAuthError('REFRESH_TOKEN_INVALID', inbox.id);
       await markInboxErrored(
         inbox.id,
-        'Refresh token expired or revoked — user must reconnect this inbox.'
+        'Refresh token expired or revoked. Please reconnect this inbox.'
       );
       throw typedErr;
     }
@@ -379,7 +379,7 @@ export async function withFreshFastmailToken(
  * Lightweight live check that the access token still grants Fastmail access.
  *
  * Returns true when the JMAP session endpoint accepts the token, false when it
- * rejects it (401/403 — the user must reconnect). A non-auth failure (network,
+ * rejects it (401/403, the user must reconnect). A non-auth failure (network,
  * 5xx) is thrown so the caller can treat the result as inconclusive rather than
  * marking an otherwise-healthy inbox as broken.
  */

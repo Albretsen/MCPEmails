@@ -1,4 +1,4 @@
-/* Dashboard kit — local overrides on top of colors_and_type.css */
+/* Dashboard kit: local overrides on top of colors_and_type.css */
 @import url("./colors_and_type.css");
 
 html, body, #app { height: 100%; }
@@ -655,7 +655,7 @@ body { background: var(--bg-page); }
   pointer-events: none;
 }
 
-/* Base toast — all variants share this foundation */
+/* Base toast: all variants share this foundation */
 .toast {
   display: flex;
   align-items: center;
@@ -685,7 +685,7 @@ body { background: var(--bg-page); }
   }
 }
 
-/* Icon chip — coloured square behind the variant icon */
+/* Icon chip: coloured square behind the variant icon */
 .toast-icon {
   flex-shrink: 0;
   display: flex;
@@ -846,7 +846,7 @@ body { background: var(--bg-page); }
 .sk-h120 { height: 120px; }
 .sk-h160 { height: 160px; }
 
-/* Skeleton stat card — matches .stat */
+/* Skeleton stat card: matches .stat */
 .sk-stat {
   background: var(--bg-surface);
   border: 1px solid var(--border-1);
@@ -857,7 +857,7 @@ body { background: var(--bg-page); }
   gap: 8px;
 }
 
-/* Skeleton table row — matches .tbl td pattern */
+/* Skeleton table row: matches .tbl td pattern */
 .sk-row {
   display: flex;
   align-items: center;
@@ -984,12 +984,12 @@ body { background: var(--bg-page); }
 
 /* ── Mobile: ≤767px ───────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Shell — sidebar is now a fixed drawer; main takes full width */
+  /* Shell: sidebar is now a fixed drawer; main takes full width */
   .shell {
     grid-template-columns: 1fr;
   }
 
-  /* Sidebar — off-canvas drawer, slides in from the left */
+  /* Sidebar: off-canvas drawer, slides in from the left */
   .sidebar {
     position: fixed;
     top: 0;
@@ -1007,14 +1007,14 @@ body { background: var(--bg-page); }
     left: 0;
   }
 
-  /* Nav items — taller hit area for touch (minimum 44×44px per guidelines) */
+  /* Nav items: taller hit area for touch (minimum 44×44px per guidelines) */
   .nav-item {
     height: 44px;
     padding: 0 12px;
     font-size: 15px;
   }
 
-  /* Topbar — show hamburger, hide search bar */
+  /* Topbar: show hamburger, hide search bar */
   .topbar {
     padding: 0 16px;
     gap: 12px;
@@ -1026,33 +1026,33 @@ body { background: var(--bg-page); }
     display: none;
   }
 
-  /* Page content — tighter padding on small screens */
+  /* Page content: tighter padding on small screens */
   .page {
     padding: 20px 16px;
   }
 
-  /* Page header — allow action button to wrap below the title */
+  /* Page header: allow action button to wrap below the title */
   .page-header {
     flex-wrap: wrap;
     gap: 12px;
   }
 
-  /* Stat grid — two columns on mobile */
+  /* Stat grid: two columns on mobile */
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* Overview grid — stack vertically */
+  /* Overview grid: stack vertically */
   .overview-grid {
     grid-template-columns: 1fr;
   }
 
-  /* Footer user — ensure adequate touch target for sign-out */
+  /* Footer user: ensure adequate touch target for sign-out */
   .sidebar .footer-user {
     padding: 14px 10px;
   }
 
-  /* Topbar breadcrumbs — truncate long workspace names */
+  /* Topbar breadcrumbs: truncate long workspace names */
   .topbar .crumbs {
     overflow: hidden;
     white-space: nowrap;
@@ -1063,7 +1063,7 @@ body { background: var(--bg-page); }
 
 /* ── Small mobile: ≤479px ─────────────────────────────────────────────── */
 @media (max-width: 479px) {
-  /* Stat grid — single column on very small screens */
+  /* Stat grid: single column on very small screens */
   .stat-grid {
     grid-template-columns: 1fr;
   }

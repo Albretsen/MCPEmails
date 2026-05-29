@@ -8,7 +8,7 @@
  * needs to know the brand.
  *
  * Settings verified against vendor documentation (2026). All four providers
- * require the user to enable 2FA and generate an app-specific password — their
+ * require the user to enable 2FA and generate an app-specific password; their
  * main account password will not authenticate from a third-party client.
  */
 

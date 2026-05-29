@@ -8,8 +8,8 @@
  * Component so it can accept the `reset` callback.
  *
  * Props:
- *   error  — the Error that was thrown (message may be shown in development)
- *   reset  — call this to attempt re-rendering the failed subtree
+ *   error : the Error that was thrown (message may be shown in development)
+ *   reset : call this to attempt re-rendering the failed subtree
  *
  * CSS is inherited from the root layout (theme.css, colors_and_type.css,
  * marketing.css), so the `.auth-shell` / `.auth-card` classes are available.
@@ -95,7 +95,7 @@ export default function ErrorPage({ reset }) {
             look into it. You can try reloading, or head back to the dashboard.
           </p>
 
-          {/* Primary CTA — retry */}
+          {/* Primary CTA: retry */}
           <button
             type="button"
             onClick={reset}
@@ -121,7 +121,7 @@ export default function ErrorPage({ reset }) {
             Try again
           </button>
 
-          {/* Secondary CTA — dashboard */}
+          {/* Secondary CTA: dashboard */}
           <a
             href="/dashboard"
             style={{
@@ -145,7 +145,7 @@ export default function ErrorPage({ reset }) {
             Go to dashboard
           </a>
 
-          {/* Tertiary CTA — homepage */}
+          {/* Tertiary CTA: homepage */}
           <a
             href="/"
             style={{

@@ -11,11 +11,11 @@ import { PLANS, type PlanId, type BillingInterval } from '@/lib/stripe/plans';
  * workspace to a paid plan.
  *
  * Request body:
- *   planId   — 'solo' | 'pro'
- *   interval — 'month' | 'year'
+ *   planId   : 'solo' | 'pro'
+ *   interval : 'month' | 'year'
  *
  * Response (200):
- *   { url: string } — the Stripe Checkout hosted page URL to redirect to
+ *   { url: string } : the Stripe Checkout hosted page URL to redirect to
  *
  * Response (4xx / 5xx):
  *   { error: string }
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       {
         error:
           `Stripe price ID for ${planId}/${interval} is not configured. ` +
-          'See Documents/Human-Input/STRIPE_SETUP_NEEDED.md for setup instructions.',
+          'Please try again later or contact support.',
       },
       { status: 503 },
     );
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       success_url: successUrl,
       cancel_url: cancelUrl,
       allow_promotion_codes: true,
-      // Billing address is collected by Stripe — required for tax calculation.
+      // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
       // Pass workspace context through to the subscription for the webhook handler.
       subscription_data: {

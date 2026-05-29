@@ -56,11 +56,11 @@ export class OutlookAuthError extends Error {
   ) {
     const messages: Record<typeof code, string> = {
       REFRESH_TOKEN_INVALID:
-        'Outlook refresh token is invalid or revoked — user must reconnect the inbox.',
+        'Outlook refresh token is invalid or revoked. Please reconnect the inbox.',
       MISSING_TOKENS:
-        'Inbox is missing OAuth tokens — user must reconnect the inbox.',
+        'Inbox is missing OAuth tokens. Please reconnect the inbox.',
       INTERACTION_REQUIRED:
-        'Your organization requires interactive sign-in (e.g. MFA) — user must reconnect the inbox.',
+        'Your organization requires interactive sign-in (e.g. MFA). Please reconnect the inbox.',
     };
     super(messages[code]);
     this.name = 'OutlookAuthError';
@@ -75,7 +75,7 @@ export class OutlookAuthError extends Error {
  * Decodes the payload of a JWT without verifying its signature.
  *
  * Safe to use here because the JWT arrives over a server-to-server
- * HTTPS call immediately after the authorization code exchange — it is
+ * HTTPS call immediately after the authorization code exchange; it is
  * not user-supplied input.
  */
 function decodeJwtPayload(jwt: string): Record<string, unknown> {
@@ -94,7 +94,7 @@ function decodeJwtPayload(jwt: string): Record<string, unknown> {
 /**
  * Marks an inbox as errored, storing a human-readable reason in `last_error`.
  *
- * Uses the service-role client to bypass RLS — called from background
+ * Uses the service-role client to bypass RLS; called from background
  * job context where there is no authenticated user session.
  */
 async function markInboxErrored(inboxId: string, reason: string): Promise<void> {
@@ -109,7 +109,7 @@ async function markInboxErrored(inboxId: string, reason: string): Promise<void> 
     .eq('id', inboxId);
 
   if (error) {
-    // Log the failure but don't throw — caller already has an error to handle.
+    // Log the failure but don't throw; caller already has an error to handle.
     console.error(
       `[outlook] Failed to mark inbox ${inboxId} as errored:`,
       error.message
@@ -216,7 +216,7 @@ export async function exchangeOutlookCode(
   }
   if (!data.id_token) {
     throw new Error(
-      'Outlook token exchange: missing id_token — cannot determine user email'
+      'Outlook token exchange: missing id_token, cannot determine user email'
     );
   }
 
@@ -249,12 +249,12 @@ export async function exchangeOutlookCode(
  * Calls Microsoft's token endpoint with a refresh token to obtain a new
  * access token.
  *
- * Does NOT update the database — callers are responsible for persisting
+ * Does NOT update the database; callers are responsible for persisting
  * the result via `updateInboxTokens`.
  *
  * Throws an `OutlookAuthError` with the appropriate code when:
- *  - `invalid_grant` — refresh token revoked or expired (user must reconnect)
- *  - `interaction_required` — org policy requires interactive sign-in (MFA etc.)
+ *  - `invalid_grant`: refresh token revoked or expired (user must reconnect)
+ *  - `interaction_required`: org policy requires interactive sign-in (MFA etc.)
  */
 export async function refreshOutlookAccessToken(
   refreshToken: string
@@ -290,7 +290,7 @@ export async function refreshOutlookAccessToken(
     }
 
     // interaction_required: org conditional access requires interactive sign-in.
-    // This cannot be resolved silently — user must reconnect.
+    // This cannot be resolved silently; user must reconnect.
     if (body.error === 'interaction_required') {
       throw new OutlookAuthError('INTERACTION_REQUIRED', '');
     }
@@ -326,10 +326,10 @@ export async function refreshOutlookAccessToken(
  * Call this function at the start of every Microsoft Graph API call.
  * Never cache the returned access token across requests.
  *
- * @throws {OutlookAuthError} code='MISSING_TOKENS'        — inbox has no stored tokens.
- * @throws {OutlookAuthError} code='REFRESH_TOKEN_INVALID' — refresh token is revoked;
+ * @throws {OutlookAuthError} code='MISSING_TOKENS':        inbox has no stored tokens.
+ * @throws {OutlookAuthError} code='REFRESH_TOKEN_INVALID': refresh token is revoked;
  *   the user must reconnect the inbox. The inbox is automatically marked as errored.
- * @throws {OutlookAuthError} code='INTERACTION_REQUIRED'  — org policy blocks silent
+ * @throws {OutlookAuthError} code='INTERACTION_REQUIRED':  org policy blocks silent
  *   refresh; user must reconnect. The inbox is automatically marked as errored.
  * @throws {Error} on unexpected refresh failures or database write errors.
  */
@@ -348,11 +348,11 @@ export async function withFreshOutlookToken(
   const refreshThreshold = new Date(now.getTime() + REFRESH_THRESHOLD_MS);
 
   if (expiresAt > refreshThreshold) {
-    // Token is fresh — decrypt and return without a network call.
+    // Token is fresh; decrypt and return without a network call.
     return decryptToken(inbox.oauth_access_token);
   }
 
-  // Token is expiring within 5 minutes (or already expired) — refresh it.
+  // Token is expiring within 5 minutes (or already expired); refresh it.
   const refreshToken = decryptToken(inbox.oauth_refresh_token);
 
   let refreshResult: { accessToken: string; expiresIn: number };
@@ -363,8 +363,8 @@ export async function withFreshOutlookToken(
       // Stamp the real inbox ID onto the error, then persist the errored state.
       const reason =
         err.code === 'INTERACTION_REQUIRED'
-          ? 'Your organization requires interactive sign-in — please reconnect this inbox.'
-          : 'Refresh token expired or revoked — user must reconnect this inbox.';
+          ? 'Your organization requires interactive sign-in. Please reconnect this inbox.'
+          : 'Refresh token expired or revoked. Please reconnect this inbox.';
 
       await markInboxErrored(inbox.id, reason);
 
@@ -388,7 +388,7 @@ export async function withFreshOutlookToken(
  * Lightweight live check that the access token still grants Outlook access.
  *
  * Returns true when Microsoft Graph accepts the token, false when it rejects
- * it (401/403 — the user must reconnect). A non-auth failure (network, 5xx) is
+ * it (401/403, the user must reconnect). A non-auth failure (network, 5xx) is
  * thrown so the caller can treat the result as inconclusive rather than
  * marking an otherwise-healthy inbox as broken.
  */

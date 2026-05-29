@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           </h1>
           <p className="pricing-page-lead" style={{ maxWidth: 600 }}>
             We built MCPEmails with privacy as a first principle. Your email content
-            is never stored on our servers — it passes through to your agent and
+            is never stored on our servers. It passes through to your agent and
             disappears. This policy explains what we do collect, and why.
           </p>
           <p style={{ fontSize: 13, color: 'var(--fg-4)', marginTop: 8 }}>
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
         <div className="container" style={{ maxWidth: 800 }}>
           <div className="legal-body">
 
-            {/* 1 — Who we are */}
+            {/* 1 - Who we are */}
             <LegalSection id="who-we-are" title="1. Who We Are">
               <p>
                 {COMPANY_NAME} ("MCPEmails", "we", "us", or "our") operates the
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
                 For the purposes of applicable data protection law (including the EU General
                 Data Protection Regulation, "GDPR"), MCPEmails is the data controller for
                 account and usage data. For email content, we act as a data processor on
-                your behalf — we transmit content you authorise us to retrieve, and we do
+                your behalf: we transmit content you authorise us to retrieve, and we do
                 not store it.
               </p>
               <p>
@@ -89,7 +89,7 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 2 — Data we collect */}
+            {/* 2 - Data we collect */}
             <LegalSection id="data-we-collect" title="2. Data We Collect">
 
               <h4>2.1 Account data</h4>
@@ -104,7 +104,7 @@ export default function PrivacyPage() {
                 We store the workspace name you choose, and the configuration of each
                 connected inbox (provider type, email address, OAuth status, and
                 connection timestamp). We do <strong>not</strong> store OAuth access tokens
-                or app passwords in plaintext — they are encrypted with AES-256-GCM before
+                or app passwords in plaintext. They are encrypted with AES-256-GCM before
                 being written to the database, and the encryption key is stored in a
                 separate secrets vault.
               </p>
@@ -126,7 +126,7 @@ export default function PrivacyPage() {
                 other email content in these logs.
               </p>
 
-              <h4>2.5 Email content — not stored</h4>
+              <h4>2.5 Email content: not stored</h4>
               <p>
                 When your agent calls <code>read_email</code>, <code>list_inbox</code>, or
                 any other email tool, we fetch the requested content live from your email
@@ -153,7 +153,7 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 3 — How we use data */}
+            {/* 3 - How we use data */}
             <LegalSection id="how-we-use-data" title="3. How We Use Your Data">
               <p>We use the data described above for the following purposes:</p>
 
@@ -204,7 +204,7 @@ export default function PrivacyPage() {
                 <li>Share your data with third parties for their own marketing purposes.</li>
               </ul>
 
-              <h4>3.7 Google API Services — Limited Use</h4>
+              <h4>3.7 Google API Services: Limited Use</h4>
               <p>
                 MCPEmails' use and transfer to any other app of information received from
                 Google APIs (including the Gmail API) will adhere to the{' '}
@@ -224,16 +224,12 @@ export default function PrivacyPage() {
               </p>
               <ul>
                 <li>
-                  <code>gmail.readonly</code> — list messages and read message contents so
+                  <code>gmail.readonly</code>: list messages and read message contents so
                   your agent can search, read, and summarise email at your request.
                 </li>
                 <li>
-                  <code>gmail.send</code> — compose and send messages that your agent creates
+                  <code>gmail.send</code>: compose and send messages that your agent creates
                   at your request.
-                </li>
-                <li>
-                  <code>gmail.modify</code> — apply and remove labels and move messages to
-                  trash when your agent organises your mailbox at your request.
                 </li>
               </ul>
               <p>Consistent with the Limited Use requirements, MCPEmails:</p>
@@ -265,7 +261,7 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 4 — Data retention */}
+            {/* 4 - Data retention */}
             <LegalSection id="data-retention" title="4. Data Retention">
               <p>We keep each category of data for the following periods:</p>
 
@@ -301,7 +297,7 @@ export default function PrivacyPage() {
                     </tr>
                     <tr>
                       <td>MCP tool call audit logs</td>
-                      <td>90 days (Free &amp; Pro) · 1 year (Enterprise)</td>
+                      <td>90 days (Free &amp; Solo); 1 year (Team)</td>
                       <td>Security audit; plan feature</td>
                     </tr>
                     <tr>
@@ -316,7 +312,7 @@ export default function PrivacyPage() {
                     </tr>
                     <tr>
                       <td>Email content</td>
-                      <td>Not stored — zero retention</td>
+                      <td>Not stored; zero retention</td>
                       <td>Privacy by design</td>
                     </tr>
                   </tbody>
@@ -330,7 +326,7 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 5 — Third parties */}
+            {/* 5 - Third parties */}
             <LegalSection id="third-parties" title="5. Third Parties and Data Sharing">
 
               <h4>5.1 Infrastructure providers (data processors)</h4>
@@ -354,7 +350,7 @@ export default function PrivacyPage() {
                       <td><strong>Supabase</strong></td>
                       <td>Database, auth, edge functions</td>
                       <td>Account data, workspace config, audit logs</td>
-                      <td>EU (Frankfurt) or US (Virginia) — you choose at signup</td>
+                      <td>EU (Frankfurt) or US (Virginia); you choose at signup</td>
                     </tr>
                     <tr>
                       <td><strong>Vercel</strong></td>
@@ -404,7 +400,7 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 6 — International transfers */}
+            {/* 6 - International transfers */}
             <LegalSection id="international-transfers" title="6. International Data Transfers">
               <p>
                 MCPEmails is operated from Norway, which is subject to the European
@@ -425,7 +421,7 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 7 — Your rights */}
+            {/* 7 - Your rights */}
             <LegalSection id="your-rights" title="7. Your Rights">
               <p>
                 Depending on your location, you may have the following rights regarding
@@ -476,7 +472,7 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 8 — Security */}
+            {/* 8 - Security */}
             <LegalSection id="security" title="8. Security">
               <p>
                 We take the security of your data seriously and implement appropriate
@@ -521,7 +517,7 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 9 — Children */}
+            {/* 9 - Children */}
             <LegalSection id="children" title="9. Children's Privacy">
               <p>
                 MCPEmails is not directed at children under the age of 16. We do not
@@ -532,12 +528,12 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 10 — Changes */}
+            {/* 10 - Changes */}
             <LegalSection id="changes" title="10. Changes to This Policy">
               <p>
                 We may update this Privacy Policy from time to time. When we make material
-                changes — such as collecting new categories of data or sharing data with
-                new third parties — we will:
+                changes (such as collecting new categories of data or sharing data with
+                new third parties) we will:
               </p>
               <ul>
                 <li>Update the "Last updated" date at the top of this page.</li>
@@ -557,7 +553,7 @@ export default function PrivacyPage() {
               </p>
             </LegalSection>
 
-            {/* 11 — Contact */}
+            {/* 11 - Contact */}
             <LegalSection id="contact" title="11. Contact Us">
               <p>
                 If you have questions about this Privacy Policy, wish to exercise a data

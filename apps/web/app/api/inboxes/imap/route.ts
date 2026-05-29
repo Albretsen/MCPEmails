@@ -100,7 +100,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: validation.message }, { status: 422 });
   }
 
-  // 6. Encrypt the password — never store plaintext.
+  // 6. Encrypt the password: never store plaintext.
   const encryptedPassword = encryptToken(appPassword);
 
   // 7. Upsert.
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ success: true });
 }
 
-/** Basic hostname sanity check — non-empty, no spaces, has a dot. */
+/** Basic hostname sanity check: non-empty, no spaces, has a dot. */
 function isValidHost(host: string): boolean {
   return host.length > 0 && host.length <= 253 && !/\s/.test(host) && host.includes('.');
 }

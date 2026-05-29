@@ -7,7 +7,7 @@
  *
  * This is the shared validator behind every app-password / generic-IMAP connect
  * route (Fastmail, iCloud, Yahoo, Zoho, Yandex, generic). It validates IMAP
- * only — SMTP is exercised at serve-time by the edge function, not here.
+ * only. SMTP is exercised at serve-time by the edge function, not here.
  *
  * Implicit TLS (port 993) only; no STARTTLS on the IMAP side. All current
  * presets use 993.
@@ -40,7 +40,7 @@ export type ImapValidationResult = ImapValidationOk | ImapValidationError;
 export interface ImapCredential {
   /** IMAP server hostname, e.g. "imap.mail.me.com". */
   host: string;
-  /** IMAP server port — 993 for implicit TLS. */
+  /** IMAP server port (993 for implicit TLS). */
   port: number;
   /** Full email address used as the SASL username. */
   email: string;
@@ -181,7 +181,7 @@ export async function validateImapCredential(
     let socket: tls.TLSSocket | null = null;
 
     try {
-      // 1. Open TLS socket — implicit TLS (no STARTTLS).
+      // 1. Open TLS socket: implicit TLS (no STARTTLS).
       socket = await new Promise<tls.TLSSocket>((resolve, reject) => {
         const s = tls.connect(
           { host: cred.host, port: cred.port, servername: cred.host },
@@ -213,7 +213,7 @@ export async function validateImapCredential(
         };
       }
 
-      // 4. Auth succeeded — issue LOGOUT before closing (no need to await it).
+      // 4. Auth succeeded: issue LOGOUT before closing (no need to await it).
       socket.write('A0002 LOGOUT\r\n');
       return { ok: true };
     } catch (err) {

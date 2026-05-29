@@ -153,7 +153,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to disconnect inbox.' }, { status: 500 });
   }
 
-  // 5. Audit log — best-effort (a logging failure does not fail the request).
+  // 5. Audit log: best-effort (a logging failure does not fail the request).
   const { error: auditError } = await service.from('auth_logs').insert({
     event_type: 'token_revoked',
     provider: inbox.provider,

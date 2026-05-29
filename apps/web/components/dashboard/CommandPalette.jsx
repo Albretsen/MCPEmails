@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Icon } from '../Primitives';
 
-/* CommandPalette.jsx — global ⌘K search/navigation popup.
+/* CommandPalette.jsx: global ⌘K search/navigation popup.
 
    The dashboard uses client-side route state (setRoute), not URL routing, so
    selecting a result invokes a handler instead of navigating a URL. Items are
@@ -27,7 +27,7 @@ function matches(query, ...fields) {
 }
 
 /**
- * CommandPalette — fuzzy search/navigation popup.
+ * CommandPalette: fuzzy search/navigation popup.
  *
  * @param open       whether the palette is visible
  * @param onClose    called to dismiss the palette

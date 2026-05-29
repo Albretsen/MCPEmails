@@ -81,7 +81,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'App password is required.' }, { status: 422 });
   }
 
-  // 4. Enforce the plan inbox cap — but only for a brand-new address. A
+  // 4. Enforce the plan inbox cap, but only for a brand-new address. A
   //    reconnect (the email already has a non-deleted inbox) reuses the
   //    existing row via upsert, so it must be allowed even at the cap.
   //    Return 402 (Payment Required) so the client can distinguish a plan
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: userMessage }, { status: 422 });
   }
 
-  // 6. Encrypt the app password — never store plaintext.
+  // 6. Encrypt the app password: never store plaintext.
   const encryptedPassword = encryptToken(appPassword);
 
   // 7. Upsert the inbox row.

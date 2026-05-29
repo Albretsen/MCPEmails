@@ -2,7 +2,7 @@
  * Stripe server-side client.
  *
  * Import this only in server-side code (Server Components, Route Handlers,
- * Server Actions). Never import in client bundles — it requires STRIPE_SECRET_KEY.
+ * Server Actions). Never import in client bundles; it requires STRIPE_SECRET_KEY.
  *
  * Usage:
  *   import { stripe } from '@/lib/stripe/client';
@@ -22,12 +22,12 @@ if (!stripeSecretKey) {
 export const stripe = new Stripe(stripeSecretKey, {
   // Pin the API version so upgrades are explicit and never silent.
   apiVersion: '2026-04-22.dahlia',
-  // Improve debuggability — the app name appears in Stripe dashboard logs.
+  // Improve debuggability; the app name appears in Stripe dashboard logs.
   appInfo: {
     name: 'MCPEmails',
     version: '1.0.0',
     url: 'https://mcpemails.com',
   },
-  // TypeScript strict mode — do not use `any` for Stripe objects.
+  // TypeScript strict mode: do not use `any` for Stripe objects.
   typescript: true,
 });

@@ -1561,6 +1561,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           display_name: string
+          grandfathered: boolean
           id: string
           owner_id: string
           plan: string
@@ -1572,6 +1573,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           display_name: string
+          grandfathered?: boolean
           id?: string
           owner_id: string
           plan?: string
@@ -1583,6 +1585,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           display_name?: string
+          grandfathered?: boolean
           id?: string
           owner_id?: string
           plan?: string

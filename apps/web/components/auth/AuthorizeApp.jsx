@@ -205,13 +205,13 @@ function DoneScreen({ client, grantCount, totalInboxes }) {
  *
  * Props (all provided by the server component in page.js):
  *  - client         { client_id, client_name, client_byline, logo_url, is_first_party }
- *  - workspaceName  string — the user's workspace display name
+ *  - workspaceName  string: the user's workspace display name
  *  - requestedScopes  Array<{ scope, icon, title, desc, required }>
  *  - inboxes        Array<{ id, email_address, display_name, provider, status }>
- *  - redirectUri    string — validated redirect URI for this client
- *  - oauthState     string — opaque state param to echo back in the redirect
- *  - codeChallenge  string — PKCE code_challenge
- *  - challengeMethod string — must be 'S256'
+ *  - redirectUri    string: validated redirect URI for this client
+ *  - oauthState     string: opaque state param to echo back in the redirect
+ *  - codeChallenge  string: PKCE code_challenge
+ *  - challengeMethod string: must be 'S256'
  *
  * The "Allow access" button posts to /api/oauth/authorize (task 15.2).
  * Until that endpoint exists it shows a granting spinner and transitions
@@ -251,7 +251,7 @@ export function AuthorizeApp({
   });
 
   const [keyLabel, setKeyLabel] = useState(
-    `${client.client_name} — ${new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+    `${client.client_name} · ${new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
   );
 
   const [step, setStep] = useState('review'); // review | granting | done | error
@@ -294,7 +294,7 @@ export function AuthorizeApp({
       if (redirect_to) {
         window.location.href = redirect_to;
       } else {
-        // Endpoint not yet implemented (task 15.2) — show the done screen
+        // Endpoint not yet implemented (task 15.2): show the done screen
         // so the UI flow is visible and testable.
         setStep('done');
       }
@@ -423,7 +423,7 @@ export function AuthorizeApp({
                     fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)',
                     padding: '12px 0', marginBottom: 8,
                   }}>
-                    No specific permissions requested. This connection will have read-only access by default.
+                    No specific permissions requested. This connection gets read-only access (list and search inboxes, read emails) by default.
                   </div>
                 )}
 
@@ -432,7 +432,7 @@ export function AuthorizeApp({
                   fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
                   color: 'var(--fg-2)', marginBottom: 8,
                 }}>
-                  Restrict to specific inboxes:
+                  Inboxes this agent can access:
                 </div>
 
                 {inboxes.length > 0 ? (

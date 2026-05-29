@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { MBtn, MIcon } from '../MarketingPrimitives';
+import { CLIENT_LOGOS, MCP_CLIENT_BRANDS } from '../dashboard/clientLogos';
 
 export function Nav({ onSignIn, onGetStarted }) {
   return (
@@ -33,14 +34,14 @@ export function HeroTextBlock({ onGetStarted }) {
         Give your AI<br/>agent an <span className="accent">inbox.</span>
       </h1>
       <p className="lead">
-        Connect Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox once. Paste a single MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth 2.0 clients connect with one click — no API key setup needed. Your agent can now read, search, and send mail live, with no email stored on our servers.
+        Connect Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and we never store your email.
       </p>
       <div className="hero-cta">
         <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>Connect your inbox</MBtn>
         <MBtn variant="secondary" size="lg" href="/docs">Read the docs</MBtn>
       </div>
       <div className="hero-meta">
-        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> 100 free calls / month</span>
+        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> Unlimited, free forever</span>
         <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> No card required</span>
         <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> Email never stored</span>
       </div>
@@ -86,7 +87,7 @@ Auth:   Bearer
 Token:  mcpe_live_••••`,
   };
   const paths = {
-    oauth:  "claude.ai · Claude Desktop · Cursor — OAuth",
+    oauth:  "claude.ai · Claude Desktop · Cursor · OAuth",
     claude: "~/.claude/mcp.json (API key fallback)",
     cursor: "~/.cursor/config.json",
     n8n:    "n8n · MCP credentials",
@@ -175,7 +176,7 @@ export function HeroPipeDiagram() {
         </div>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.7, color: "var(--fg-2)" }}>
           <div><span style={{ color: "var(--cobalt-700)" }}>→</span> agent calls <span style={{ color: "var(--mint-700)" }}>list_inboxes</span>()</div>
-          <div><span style={{ color: "var(--fg-3)" }}>·</span> returns inbox IDs — no dashboard copy-paste</div>
+          <div><span style={{ color: "var(--fg-3)" }}>·</span> returns inbox IDs, no dashboard copy-paste</div>
           <div><span style={{ color: "var(--cobalt-700)" }}>→</span> agent calls <span style={{ color: "var(--mint-700)" }}>list_inbox</span>(inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> mcpemails fetches via Gmail API (token rotated)</div>
           <div><span style={{ color: "var(--mint-700)" }}>←</span> 20 messages returned · <span style={{ color: "var(--fg-3)" }}>nothing stored</span></div>
@@ -256,19 +257,35 @@ export function Hero({ variant, onGetStarted }) {
 }
 
 /* ============== TRUSTED ============== */
+function MarqueeItem({ name, logo, color }) {
+  const g = CLIENT_LOGOS[logo];
+  return (
+    <span className="marquee-item">
+      <span className="marquee-logo" style={{ background: color }}>
+        {g && (
+          <svg viewBox={g.viewBox} width="17" height="17" fill="#fff" aria-hidden="true">
+            <path d={g.d} />
+          </svg>
+        )}
+      </span>
+      {name}
+    </span>
+  );
+}
+
 export function Trusted() {
+  // Duplicate the list so the track loops seamlessly under translateX(-50%).
+  const loop = [...MCP_CLIENT_BRANDS, ...MCP_CLIENT_BRANDS];
   return (
     <section className="trusted">
-      <div className="container trusted-row">
-        <span className="label">Works with every MCP-compatible agent and client</span>
-        <div className="trusted-logos">
-          <span>claude.ai</span>
-          <span>Claude Desktop</span>
-          <span>Cursor</span>
-          <span>n8n</span>
-          <span>Zed</span>
-          <span>Windsurf</span>
-          <span>Continue</span>
+      <div className="container">
+        <span className="trusted-label">Works with every MCP-compatible agent and client</span>
+      </div>
+      <div className="marquee">
+        <div className="marquee-track">
+          {loop.map((c, i) => (
+            <MarqueeItem key={i} name={c.name} logo={c.logo} color={c.color} />
+          ))}
         </div>
       </div>
     </section>
@@ -287,7 +304,7 @@ export function Features() {
     {
       n: "02",
       h: "Email is fetched live. Never stored.",
-      p: "Every tool call hits your provider in real time — Gmail API, Microsoft Graph, Fastmail JMAP, or IMAP. Message bodies, subjects, and attachments are returned to the agent and immediately discarded. The only thing we persist is an encrypted token or app password per inbox, so we can make the next call.",
+      p: "Every tool call hits your provider in real time: Gmail API, Microsoft Graph, Fastmail JMAP, or IMAP. Message bodies, subjects, and attachments go to the agent and are discarded immediately. We persist one thing per inbox, an encrypted token or app password, so we can make the next call.",
       tag: "Storage",
     },
     {
@@ -299,13 +316,13 @@ export function Features() {
     {
       n: "04",
       h: "Gmail, Outlook, iCloud, Fastmail & any IMAP inbox.",
-      p: "OAuth 2.0 for Gmail, Outlook, and Fastmail; app-specific passwords for iCloud, Yahoo, Zoho, and Yandex; and a generic IMAP / SMTP connector for everything else. Connect multiple inboxes — label them by use case (work-gmail, ops-outlook, support-imap) and scope each API key to the inboxes you want that agent to reach.",
+      p: "OAuth 2.0 for Gmail, Outlook, and Fastmail; app-specific passwords for iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Connect multiple inboxes, label them by use case (work-gmail, ops-outlook, support-imap), and scope each API key to the inboxes you want that agent to reach.",
       tag: "Providers",
     },
     {
       n: "05",
       h: "OAuth 2.0 for agents. One click to revoke.",
-      p: "Any MCP client that supports OAuth — claude.ai, Claude Desktop, Cursor, and others — connects automatically via authorization code + PKCE. No API key setup required. API keys exist for clients that don't support OAuth and for scripted or programmatic access. Either way, you revoke any connection from the dashboard in one click.",
+      p: "Any MCP client that supports OAuth (claude.ai, Claude Desktop, Cursor, and others) connects automatically via authorization code + PKCE. No API key setup. API keys are there for clients without OAuth and for scripted access. Either way, you revoke any connection from the dashboard in one click.",
       tag: "Access",
     },
     {
@@ -359,12 +376,12 @@ export function HowItWorks() {
           <div className="step">
             <span className="num">01</span>
             <h4>Connect your inbox</h4>
-            <p>Sign in and click <strong>Connect Inbox</strong>. Choose Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox — complete OAuth or paste an app password. Credentials are encrypted; email is never stored.</p>
+            <p>Sign in and click <strong>Connect Inbox</strong>. Choose Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete OAuth or paste an app password. Credentials are encrypted; email is never stored.</p>
           </div>
           <div className="step">
             <span className="num">02</span>
-            <h4>Paste the URL — OAuth or API key</h4>
-            <p>Any MCP client that supports OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others) — paste <code className="t-code-inline">https://www.mcpemails.com/api/mcp</code>, click Connect, and authorize. Done, no key needed. For clients without OAuth support (n8n, custom scripts), generate a scoped API key in the dashboard instead.</p>
+            <h4>Paste the URL: OAuth or API key</h4>
+            <p>For an MCP client that supports OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others), paste <code className="t-code-inline">https://www.mcpemails.com/api/mcp</code>, click Connect, and authorize. No key needed. For clients without OAuth (Cline, JetBrains, custom scripts), generate a scoped API key in the dashboard instead.</p>
           </div>
           <div className="step">
             <span className="num">03</span>
@@ -375,11 +392,11 @@ export function HowItWorks() {
 
         <div className="tools">
           {[
-            { n: "list_inboxes",   d: "Discover all connected inboxes and their IDs. Call this first — no UUID copy-pasting from the dashboard." },
-            { n: "list_inbox",     d: "List recent messages with sender, subject, date, and snippet — up to 100 per call." },
+            { n: "list_inboxes",   d: "Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard." },
+            { n: "list_inbox",     d: "List recent messages with sender, subject, date, and snippet, up to 100 per call." },
             { n: "read_email",     d: "Fetch a single message by ID. Returns parsed plain-text and sanitized HTML body, plus attachment metadata." },
             { n: "search_emails",  d: "Provider-native search: Gmail query syntax, Microsoft Graph, JMAP, or IMAP SEARCH. Returns up to 100 matches." },
-            { n: "send_email",     d: "Send a new message via the connected account. Dispatched through Gmail API, Microsoft Graph, Fastmail JMAP, or SMTP — your domain, your deliverability." },
+            { n: "send_email",     d: "Send a new message via the connected account. Dispatched through Gmail API, Microsoft Graph, Fastmail JMAP, or SMTP: your domain, your deliverability." },
             { n: "reply_to_email", d: "Reply in-thread with correct Message-ID and References headers. Works across Gmail, Outlook, Fastmail, and any IMAP inbox." },
           ].map(t => (
             <div className="tool" key={t.n}>
@@ -399,9 +416,9 @@ export function Quote() {
     <section className="quote">
       <div className="container">
         <div className="text">
-          "It took me longer to log into Gmail than to wire up my agent. The fact that I never had to think about credentials or storage — just OAuth and done — is the entire point."
+          "I wanted my agents to work my inbox, but every option meant handing a third party a copy of my email. So I built the pipe I wished existed: connect once, your mail is fetched live and never stored, and you can cut off any agent in a click. That's the product I trust with my own inbox."
         </div>
-        <div className="who"><strong>Maya Chen</strong> · staff engineer, building agent workflows at a Series C fintech</div>
+        <div className="who"><strong>Asgeir Albretsen</strong> · founder, mcpemails</div>
       </div>
     </section>
   );
@@ -478,7 +495,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
         <div className="price-grid">
           {tiers.map(t => {
             // Custom-priced tiers (Enterprise) always show their static label
-            // ("Custom") — a configured Stripe price must never override it.
+            // ("Custom"); a configured Stripe price must never override it.
             const isCustomPlan = t.price === "Custom";
             // Derive live monthly price display from Stripe when available
             const liveMonthlyCents = stripePrices?.[t.key]?.monthlyCents;

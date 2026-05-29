@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 /**
- * /signup — account creation page.
+ * /signup: account creation page.
  *
  * Server Component shell: renders the SignupApp Client Component which
  * handles form state, Supabase email/password sign-up, and the

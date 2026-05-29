@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getPlanLimits } from '@/lib/stripe/plans';
+import { resolvePlanLimits } from '@/lib/stripe/plans';
 
 export interface MemberLimitCheckResult {
   /** True when the workspace has reached the plan's member cap. */
@@ -33,7 +33,7 @@ export async function checkMemberLimit(
   const [workspaceResult, memberCountResult] = await Promise.all([
     supabase
       .from('workspaces')
-      .select('plan')
+      .select('plan, grandfathered')
       .eq('id', workspaceId)
       .maybeSingle(),
     supabase
@@ -43,7 +43,8 @@ export async function checkMemberLimit(
   ]);
 
   const plan = (workspaceResult.data?.plan as string | undefined) ?? 'free';
-  const limits = getPlanLimits(plan);
+  const grandfathered = workspaceResult.data?.grandfathered ?? false;
+  const limits = resolvePlanLimits(plan, { grandfathered });
   const currentCount = memberCountResult.count ?? 0;
 
   if (limits.maxMembers === Infinity) {

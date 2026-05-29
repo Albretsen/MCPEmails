@@ -49,7 +49,7 @@ async function resolveHostname(hostname: string): Promise<string[]> {
  * Validate a redirect URI for SSRF safety.
  *
  * Rules:
- * - Custom protocol schemes (claude://, cursor://, etc.) are always allowed —
+ * - Custom protocol schemes (claude://, cursor://, etc.) are always allowed;
  *   they cannot resolve to private network addresses via HTTP.
  * - http://localhost and http://127.0.0.1 are allowed for development clients.
  * - http:// to any other host is rejected (must use HTTPS).
