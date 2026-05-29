@@ -1075,6 +1075,7 @@ export type Database = {
           oauth_scope: string | null
           oauth_token_expires_at: string | null
           provider: string
+          service: string | null
           smtp_host: string | null
           smtp_port: number | null
           smtp_tls: boolean
@@ -1099,6 +1100,7 @@ export type Database = {
           oauth_scope?: string | null
           oauth_token_expires_at?: string | null
           provider: string
+          service?: string | null
           smtp_host?: string | null
           smtp_port?: number | null
           smtp_tls?: boolean
@@ -1123,6 +1125,7 @@ export type Database = {
           oauth_scope?: string | null
           oauth_token_expires_at?: string | null
           provider?: string
+          service?: string | null
           smtp_host?: string | null
           smtp_port?: number | null
           smtp_tls?: boolean

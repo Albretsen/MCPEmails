@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as tls from 'tls';
 import { createClient } from '@/lib/supabase/server';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { validateImapCredential } from '@/lib/email/validate-imap';
 
 /**
  * POST /api/inboxes/fastmail-app-password
@@ -13,9 +13,9 @@ import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-li
  *
  *  1. Validates the authenticated user and resolves their workspace.
  *  2. Sanitises and validates the submitted email + app password fields.
- *  3. Opens a TLS socket to imap.fastmail.com:993 and attempts AUTH PLAIN.
- *     If authentication fails the request is rejected with a 422 and no data
- *     is persisted.
+ *  3. Opens a TLS socket to imap.fastmail.com:993 and attempts AUTH PLAIN via
+ *     the shared `validateImapCredential` helper. If authentication fails the
+ *     request is rejected with a 422 and no data is persisted.
  *  4. AES-256-GCM encrypts the app password before any database write.
  *  5. Upserts the inbox row (conflict target: workspace_id + email_address)
  *     so reconnection reuses the same UUID, preserving activity_log references.
@@ -34,252 +34,13 @@ import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-li
 const FASTMAIL_IMAP_HOST = 'imap.fastmail.com';
 const FASTMAIL_IMAP_PORT = 993;
 
-/** Hard connection + auth timeout in milliseconds. */
-const IMAP_TIMEOUT_MS = 10_000;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface ValidateResult {
-  ok: true;
-}
-
-interface ValidateError {
-  ok: false;
-  code:
-    | 'AUTH_FAILED'
-    | 'CONNECTION_REFUSED'
-    | 'CONNECTION_TIMEOUT'
-    | 'TLS_HANDSHAKE_FAILED'
-    | 'IMAP_PROTOCOL_ERROR';
-  message: string;
-}
-
-// ─── IMAP PLAIN validation ────────────────────────────────────────────────────
-
 /**
- * Builds the base64-encoded PLAIN SASL token.
- *
- * Structure before encoding: \x00<username>\x00<password>
- * This is safe to transmit because the socket is TLS-encrypted.
+ * Fastmail-specific override for the AUTH_FAILED message; all other codes fall
+ * back to the validator's provider-neutral message.
  */
-function buildPlainAuthToken(username: string, password: string): string {
-  // \x00 is the NUL byte used as a field delimiter in SASL PLAIN.
-  return Buffer.from(`\x00${username}\x00${password}`, 'utf8').toString('base64');
-}
-
-/**
- * Reads lines from a TLS socket until a line beginning with `tag` is seen.
- *
- * Returns the status ('OK', 'NO', or 'BAD') and all collected lines.
- * Rejects if no tagged response is seen within the timeout (controlled by
- * the outer timeout Promise in validateImapAppPassword).
- */
-function readTaggedResponse(
-  socket: tls.TLSSocket,
-  tag: string
-): Promise<{ status: 'OK' | 'NO' | 'BAD'; lines: string[] }> {
-  return new Promise((resolve, reject) => {
-    let buffer = '';
-    const lines: string[] = [];
-
-    function onData(chunk: Buffer) {
-      buffer += chunk.toString('utf8');
-      let newline: number;
-
-      while ((newline = buffer.indexOf('\r\n')) !== -1) {
-        const line = buffer.slice(0, newline);
-        buffer = buffer.slice(newline + 2);
-        lines.push(line);
-
-        if (line.startsWith(`${tag} OK`)) {
-          cleanup();
-          resolve({ status: 'OK', lines });
-          return;
-        }
-        if (line.startsWith(`${tag} NO`)) {
-          cleanup();
-          resolve({ status: 'NO', lines });
-          return;
-        }
-        if (line.startsWith(`${tag} BAD`)) {
-          cleanup();
-          resolve({ status: 'BAD', lines });
-          return;
-        }
-      }
-    }
-
-    function onError(err: Error) {
-      cleanup();
-      reject(err);
-    }
-
-    function cleanup() {
-      socket.removeListener('data', onData);
-      socket.removeListener('error', onError);
-    }
-
-    socket.on('data', onData);
-    socket.on('error', onError);
-  });
-}
-
-/**
- * Reads the initial server greeting line from the IMAP socket.
- *
- * Resolves with the first complete line received. Rejects on socket error.
- */
-function readGreeting(socket: tls.TLSSocket): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let buffer = '';
-
-    function onData(chunk: Buffer) {
-      buffer += chunk.toString('utf8');
-      const newline = buffer.indexOf('\r\n');
-      if (newline !== -1) {
-        cleanup();
-        resolve(buffer.slice(0, newline));
-      }
-    }
-
-    function onError(err: Error) {
-      cleanup();
-      reject(err);
-    }
-
-    function cleanup() {
-      socket.removeListener('data', onData);
-      socket.removeListener('error', onError);
-    }
-
-    socket.on('data', onData);
-    socket.on('error', onError);
-  });
-}
-
-/**
- * Validates a Fastmail app password by opening a real IMAP connection and
- * attempting AUTH PLAIN. Returns immediately on the first definitive answer
- * (auth success or failure) and always closes the socket.
- *
- * The entire operation is bounded by IMAP_TIMEOUT_MS. Any timeout, refused
- * connection, or TLS error is surfaced as a typed ValidateError.
- */
-async function validateImapAppPassword(
-  email: string,
-  appPassword: string
-): Promise<ValidateResult | ValidateError> {
-  const timeout = new Promise<ValidateError>((resolve) =>
-    setTimeout(
-      () =>
-        resolve({
-          ok: false,
-          code: 'CONNECTION_TIMEOUT',
-          message: 'IMAP connection timed out. Fastmail may be temporarily unreachable.',
-        }),
-      IMAP_TIMEOUT_MS
-    )
-  );
-
-  const attempt = (async (): Promise<ValidateResult | ValidateError> => {
-    let socket: tls.TLSSocket | null = null;
-
-    try {
-      // 1. Open TLS socket — implicit TLS on port 993 (no STARTTLS).
-      socket = await new Promise<tls.TLSSocket>((resolve, reject) => {
-        const s = tls.connect(
-          { host: FASTMAIL_IMAP_HOST, port: FASTMAIL_IMAP_PORT, servername: FASTMAIL_IMAP_HOST },
-          () => resolve(s)
-        );
-        s.once('error', reject);
-      });
-
-      // 2. Read and validate the server greeting.
-      const greeting = await readGreeting(socket);
-      if (!greeting.startsWith('* OK')) {
-        return {
-          ok: false,
-          code: 'IMAP_PROTOCOL_ERROR',
-          message: 'IMAP server returned an unexpected greeting.',
-        };
-      }
-
-      // 3. Authenticate using SASL PLAIN.
-      //    Token structure: \x00username\x00password (base64-encoded).
-      const plainToken = buildPlainAuthToken(email, appPassword);
-      socket.write(`A0001 AUTHENTICATE PLAIN ${plainToken}\r\n`);
-
-      const authResult = await readTaggedResponse(socket, 'A0001');
-
-      if (authResult.status !== 'OK') {
-        return {
-          ok: false,
-          code: 'AUTH_FAILED',
-          message:
-            'Authentication failed. Check that the email address and app password are correct, ' +
-            'and that the app password was generated with IMAP access enabled.',
-        };
-      }
-
-      // 4. Auth succeeded — issue LOGOUT before closing.
-      socket.write('A0002 LOGOUT\r\n');
-      // We don't need to wait for the LOGOUT response; just close cleanly.
-      return { ok: true };
-    } catch (err) {
-      const error = err as NodeJS.ErrnoException;
-
-      if (error.code === 'ECONNREFUSED') {
-        return {
-          ok: false,
-          code: 'CONNECTION_REFUSED',
-          message: 'Could not connect to the Fastmail IMAP server.',
-        };
-      }
-
-      if (
-        error.code === 'CERT_HAS_EXPIRED' ||
-        error.code === 'ERR_TLS_CERT_ALTNAME_INVALID' ||
-        (error.message && error.message.toLowerCase().includes('tls'))
-      ) {
-        return {
-          ok: false,
-          code: 'TLS_HANDSHAKE_FAILED',
-          message: 'Could not establish a secure TLS connection to the Fastmail IMAP server.',
-        };
-      }
-
-      return {
-        ok: false,
-        code: 'IMAP_PROTOCOL_ERROR',
-        message: 'An unexpected error occurred while connecting to Fastmail.',
-      };
-    } finally {
-      if (socket && !socket.destroyed) {
-        socket.destroy();
-      }
-    }
-  })();
-
-  return Promise.race([attempt, timeout]);
-}
-
-// ─── User-facing error messages ───────────────────────────────────────────────
-
-const ERROR_MESSAGES: Record<string, string> = {
-  AUTH_FAILED:
-    'Incorrect email or app password. Make sure you are using a Fastmail ' +
-    'app password (not your main Fastmail password).',
-  CONNECTION_REFUSED:
-    'Could not connect to the Fastmail IMAP server. Please try again.',
-  CONNECTION_TIMEOUT:
-    'The connection to Fastmail timed out. Please try again.',
-  TLS_HANDSHAKE_FAILED:
-    'Could not establish a secure connection to Fastmail. Please try again.',
-  IMAP_PROTOCOL_ERROR:
-    'An unexpected IMAP error occurred. Please try again.',
-};
-
-// ─── Route handler ────────────────────────────────────────────────────────────
+const FASTMAIL_AUTH_FAILED_MESSAGE =
+  'Incorrect email or app password. Make sure you are using a Fastmail ' +
+  'app password (not your main Fastmail password).';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // 1. Verify the user is authenticated.
@@ -346,18 +107,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // 6. Validate via IMAP before persisting anything.
-  const validation = await validateImapAppPassword(email, appPassword);
+  // 5. Validate via IMAP before persisting anything.
+  const validation = await validateImapCredential({
+    host: FASTMAIL_IMAP_HOST,
+    port: FASTMAIL_IMAP_PORT,
+    email,
+    password: appPassword,
+  });
 
   if (!validation.ok) {
-    const userMessage = ERROR_MESSAGES[validation.code] ?? 'Connection failed. Please try again.';
+    const userMessage =
+      validation.code === 'AUTH_FAILED' ? FASTMAIL_AUTH_FAILED_MESSAGE : validation.message;
     return NextResponse.json({ error: userMessage }, { status: 422 });
   }
 
-  // 7. Encrypt the app password — never store plaintext.
+  // 6. Encrypt the app password — never store plaintext.
   const encryptedPassword = encryptToken(appPassword);
 
-  // 8. Upsert the inbox row.
+  // 7. Upsert the inbox row.
   //    Conflict target: workspace_id + email_address (partial index WHERE deleted_at IS NULL).
   //    This ensures reconnection reuses the same UUID, keeping activity_log references intact.
   const { error: upsertError } = await supabase.from('inboxes').upsert(

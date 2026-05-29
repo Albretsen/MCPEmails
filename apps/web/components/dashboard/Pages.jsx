@@ -603,143 +603,6 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, plan = 'fre
         action={<Btn variant="primary" icon="plus" onClick={onConnect}>Connect inbox</Btn>}
       />
 
-      {/* Daily quota exhausted — red banner */}
-      {dailyAtLimit && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 16px',
-          marginBottom: 12,
-          background: 'var(--red-100, #fef2f2)',
-          border: '1px solid rgba(229,72,77,0.25)',
-          borderRadius: 10,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 13.5,
-          color: 'var(--red-700, #b91c1c)',
-        }}>
-          <Icon name="zap" size={15} color="var(--red-700, #b91c1c)" />
-          <span style={{ flex: 1 }}>
-            Your daily MCP call quota of {dailyCap.toLocaleString()} calls has been reached. New tool calls will be
-            rejected until midnight UTC.{' '}
-            <a href="/pricing" style={{ color: 'var(--red-700, #b91c1c)', fontWeight: 600 }}>
-              Upgrade
-            </a>{' '}
-            for a higher limit.
-          </span>
-        </div>
-      )}
-
-      {/* Daily quota near limit — amber warning */}
-      {dailyNearLimit && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 16px',
-          marginBottom: 12,
-          background: 'var(--amber-50, #fffbeb)',
-          border: '1px solid rgba(245,158,11,0.3)',
-          borderRadius: 10,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 13.5,
-          color: 'var(--amber-800, #92400e)',
-        }}>
-          <Icon name="zap" size={15} color="var(--amber-600, #d97706)" />
-          <span style={{ flex: 1 }}>
-            You&rsquo;ve used {callsToday.toLocaleString()} of {dailyCap.toLocaleString()} daily calls ({Math.round(dailyPct * 100)}%).
-            Quota resets at midnight UTC.{' '}
-            <a href="/pricing" style={{ color: 'var(--amber-800, #92400e)', fontWeight: 600 }}>
-              Upgrade
-            </a>{' '}
-            to avoid disruption.
-          </span>
-        </div>
-      )}
-
-      {/* Monthly quota exhausted — red banner */}
-      {monthlyAtLimit && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 16px',
-          marginBottom: 12,
-          background: 'var(--red-100, #fef2f2)',
-          border: '1px solid rgba(229,72,77,0.25)',
-          borderRadius: 10,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 13.5,
-          color: 'var(--red-700, #b91c1c)',
-        }}>
-          <Icon name="zap" size={15} color="var(--red-700, #b91c1c)" />
-          <span style={{ flex: 1 }}>
-            Your monthly quota of {monthlyCap.toLocaleString()} calls has been reached. Tool calls will be
-            rejected until the start of next month.{' '}
-            <a href="/pricing" style={{ color: 'var(--red-700, #b91c1c)', fontWeight: 600 }}>
-              Upgrade
-            </a>{' '}
-            for a higher monthly limit.
-          </span>
-        </div>
-      )}
-
-      {/* Monthly quota near limit — amber warning */}
-      {monthlyNearLimit && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 16px',
-          marginBottom: 12,
-          background: 'var(--amber-50, #fffbeb)',
-          border: '1px solid rgba(245,158,11,0.3)',
-          borderRadius: 10,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 13.5,
-          color: 'var(--amber-800, #92400e)',
-        }}>
-          <Icon name="zap" size={15} color="var(--amber-600, #d97706)" />
-          <span style={{ flex: 1 }}>
-            You&rsquo;ve used {callsThisMonth.toLocaleString()} of {monthlyCap.toLocaleString()} monthly calls ({Math.round(monthlyPct * 100)}%).
-            Quota resets at the start of next month.{' '}
-            <a href="/pricing" style={{ color: 'var(--amber-800, #92400e)', fontWeight: 600 }}>
-              Upgrade
-            </a>{' '}
-            to avoid disruption.
-          </span>
-        </div>
-      )}
-
-      {/* Seat limit exhausted — only surfaced on the dashboard for subscribed plans.
-          On the free tier this lives in the Members page to avoid being in-your-face. */}
-      {seatAtLimit && plan !== 'free' && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 16px',
-          marginBottom: 12,
-          background: 'var(--amber-50, #fffbeb)',
-          border: '1px solid rgba(245,158,11,0.3)',
-          borderRadius: 10,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 13.5,
-          color: 'var(--amber-800, #92400e)',
-        }}>
-          <Icon name="users" size={15} color="var(--amber-600, #d97706)" />
-          <span style={{ flex: 1 }}>
-            Your workspace is at its {seatCap}-seat limit. New invites are paused.{' '}
-            <a
-              href="/pricing"
-              style={{ color: 'var(--amber-800, #92400e)', fontWeight: 600 }}
-            >
-              Upgrade to add more seats →
-            </a>
-          </span>
-        </div>
-      )}
-
       <div className="stat-grid">
         <div className="stat">
           <div className="label">Inboxes connected</div>
@@ -1054,30 +917,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
     }
   };
 
-  // Build the connect-inbox action element based on plan limit state.
-  const connectAction = atInboxLimit ? (
-    <a
-      href="/pricing"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '0 14px',
-        height: 34,
-        background: 'var(--brand)',
-        color: '#fff',
-        borderRadius: 8,
-        fontFamily: 'var(--font-sans)',
-        fontSize: 13,
-        fontWeight: 500,
-        textDecoration: 'none',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      <Icon name="zap" size={13} color="#fff" />
-      Upgrade plan
-    </a>
-  ) : (
+  const connectAction = (
     <Btn variant="primary" icon="plus" onClick={onConnect}>Connect inbox</Btn>
   );
 
@@ -1092,32 +932,6 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
         }
         action={connectAction}
       />
-
-      {/* Plan inbox limit banner — shown when at cap */}
-      {atInboxLimit && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 16px',
-          marginBottom: 12,
-          background: 'var(--brand-soft)',
-          border: '1px solid rgba(37,71,229,0.2)',
-          borderRadius: 10,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 13.5,
-          color: 'var(--brand)',
-        }}>
-          <Icon name="zap" size={15} color="var(--brand)" />
-          <span style={{ flex: 1 }}>
-            You&rsquo;ve reached your plan&rsquo;s inbox limit ({maxInboxes} inbox{maxInboxes !== 1 ? 'es' : ''}).{' '}
-            <a href="/pricing" style={{ color: 'var(--brand)', fontWeight: 600 }}>
-              Upgrade
-            </a>{' '}
-            to connect more.
-          </span>
-        </div>
-      )}
 
       {/* Plan usage indicator — shown when not at limit but limit exists */}
       {!atInboxLimit && maxInboxes !== null && (
@@ -2996,29 +2810,20 @@ const BILLING_PLANS = [
   {
     id: 'solo',
     name: 'Solo',
-    monthlyPrice: 9,
-    yearlyMonthlyPrice: 7,      // effective monthly cost when billed yearly ($84/yr)
-    yearlyAnnualTotal: 84,
-    features: ['3 connected inboxes', '3,000 MCP calls / month', '3 API keys', 'Email support', '14-day free trial'],
+    monthlyPrice: 12,
+    yearlyMonthlyPrice: 10,     // effective monthly cost when billed yearly ($120/yr)
+    yearlyAnnualTotal: 120,
+    features: ['Unlimited everything', '300 requests / minute (5× burst)', 'Full analytics (90-day history)', 'Email support'],
     highlighted: false,
   },
   {
     id: 'pro',
-    name: 'Pro',
-    monthlyPrice: 29,
-    yearlyMonthlyPrice: 23,     // effective monthly cost when billed yearly ($276/yr)
-    yearlyAnnualTotal: 276,
-    features: ['10 connected inboxes', '20,000 MCP calls / month', '10 API keys', 'Multiple workspaces', 'Usage analytics', 'Email support', '14-day free trial'],
+    name: 'Team',
+    monthlyPrice: 49,
+    yearlyMonthlyPrice: 41,     // effective monthly cost when billed yearly ($490/yr)
+    yearlyAnnualTotal: 490,
+    features: ['Unlimited everything', '1,000 requests / minute', 'Team roles & multiple workspaces', 'SSO (SAML / OIDC) + audit log', 'Full analytics (1-year history)', 'Priority support'],
     highlighted: true,
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    monthlyPrice: null,          // custom pricing
-    yearlyMonthlyPrice: null,
-    yearlyAnnualTotal: null,
-    features: ['Unlimited inboxes', 'Unlimited MCP calls', 'Unlimited API keys', 'Unlimited workspaces', 'Audit log + SSO', 'Dedicated Slack support', 'Custom SLA'],
-    highlighted: false,
   },
 ];
 
@@ -3227,17 +3032,6 @@ function BillingSection({ currentPlan, stripePrices }) {
               )}
             </div>
 
-            {/* Upgrade nudge at ≥80% monthly usage */}
-            {(monthlyNearLimit || monthlyAtLimit) && currentPlan !== 'enterprise' && (
-              <div style={{ paddingTop: 4, borderTop: '1px solid var(--border-1)' }}>
-                <a href="/pricing" style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--brand)', textDecoration: 'none' }}>
-                  Upgrade your plan →
-                </a>
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginLeft: 8 }}>
-                  for a higher monthly limit
-                </span>
-              </div>
-            )}
           </div>
         )}
 
@@ -3462,7 +3256,7 @@ function BillingSection({ currentPlan, stripePrices }) {
                           ? 'Redirecting…'
                           : isCurrentPlanMatch
                           ? 'Current plan'
-                          : 'Start 14-day free trial'}
+                          : `Get ${plan.name}`}
                       </Btn>
                     )}
                   </div>
@@ -3479,6 +3273,9 @@ function BillingSection({ currentPlan, stripePrices }) {
             }}>
               You&apos;ll be redirected to Stripe to complete payment securely.
               Cancel any time — you keep access until the end of your billing period.
+            </p>
+            <p style={{ fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5, marginTop: 4 }}>
+              Need something custom? <a href="mailto:sales@mcpemails.com" style={{ color: 'var(--brand)', fontWeight: 600 }}>Contact us</a>.
             </p>
           </>
         )}
@@ -4198,8 +3995,6 @@ export function MembersPage({
 
   const canManage = userRole === 'owner' || userRole === 'admin';
   const canChangeRoles = userRole === 'owner';
-  const atSeatLimit = planLimits?.maxMembers != null &&
-    members.length >= planLimits.maxMembers;
 
   const handleInviteSubmit = async (e) => {
     e.preventDefault();
@@ -4265,25 +4060,7 @@ export function MembersPage({
             </div>
           </div>
           <div className="card-body">
-            {atSeatLimit ? (
-              <div style={{
-                padding: '12px 16px',
-                background: 'var(--amber-50, #fffbeb)',
-                border: '1px solid var(--amber-200, #fde68a)',
-                borderRadius: 10,
-                fontSize: 13,
-                color: 'var(--amber-800, #92400e)',
-                display: 'flex', alignItems: 'center', gap: 10,
-              }}>
-                <span>⚠</span>
-                <span>
-                  You've used all {planLimits.maxMembers} seat{planLimits.maxMembers !== 1 ? 's' : ''} on your plan.{' '}
-                  <a href="/pricing" style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none' }}>
-                    Upgrade to add more →
-                  </a>
-                </span>
-              </div>
-            ) : (
+            {(
               <form onSubmit={handleInviteSubmit} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <input
                   type="email"

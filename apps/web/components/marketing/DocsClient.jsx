@@ -11,7 +11,7 @@ const QUICKSTART_STEPS = [
     num: '01',
     label: 'Sign up & connect an inbox',
     heading: 'Create your account and connect Gmail',
-    body: 'Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Choose Gmail, Outlook, or Fastmail and complete the OAuth flow. Your inbox is ready in under a minute.',
+    body: 'Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Choose Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox — complete the OAuth flow or paste an app password. Your inbox is ready in under a minute.',
     code: null,
     cta: { label: 'Connect your inbox →', href: '/signup' },
   },
@@ -221,7 +221,7 @@ const TOOLS = [
     name: 'search_emails',
     scope: 'read:email',
     title: 'Search Emails',
-    desc: 'Search an inbox using provider-native query syntax. Gmail supports Gmail search operators; Outlook uses $search; Fastmail uses text search.',
+    desc: 'Search an inbox using provider-native query syntax. Gmail supports Gmail search operators; Outlook uses $search; Fastmail and IMAP inboxes use text search.',
     params: [
       { name: 'inbox_id',       type: 'string (uuid)', required: true,  desc: 'UUID of the inbox to search. Call list_inboxes to get available inbox IDs.' },
       { name: 'query',          type: 'string',        required: true,  desc: 'Search query. For Gmail: "from:alice@example.com after:2026/01/01". For Outlook: natural-language or KQL queries.' },
@@ -826,19 +826,14 @@ export default function DocsClient() {
               <p>Enforced per API key regardless of plan. When exceeded, the server returns error code <code>-32029</code> with <code>data.error_code: "rate_limit_exceeded"</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying.</p>
             </div>
             <div className="step">
-              <div className="num">Plan monthly quota</div>
-              <h4>Free 500 · Solo 3,000 · Pro 20,000 · Enterprise custom</h4>
-              <p>Counts every tool call in the UTC calendar month. When the monthly cap is exhausted, new calls return <code>data.error_code: "quota_exceeded"</code> and <code>data.retry_after</code> (seconds until the start of next month). Upgrade your plan to increase this limit.</p>
-            </div>
-            <div className="step">
-              <div className="num">Daily burst cap</div>
-              <h4>Free 100 · Solo 500 · Pro 2,000 · Enterprise custom</h4>
-              <p>A secondary ceiling on calls within a single UTC calendar day. Prevents a runaway agent from consuming the entire monthly quota in one session. Returns <code>data.error_code: "rate_limit_exceeded"</code> with <code>data.quota_type: "daily_burst"</code> and a <code>data.retry_after</code> countdown to midnight UTC.</p>
+              <div className="num">Plan per-minute ceiling</div>
+              <h4>Free 60 / min · Solo 300 / min · Team 1,000 / min</h4>
+              <p>Usage is unlimited — this is a per-workspace fair-use burst limit (aggregated across all your API keys). When exceeded, calls return <code>data.error_code: "rate_limit_exceeded"</code> with <code>data.window: "per_minute"</code> and a <code>data.retry_after</code> countdown (seconds). Upgrade your plan for a higher ceiling.</p>
             </div>
             <div className="step">
               <div className="num">Retrying safely</div>
               <h4>Always honour retry_after — never retry sends blindly</h4>
-              <p>For <code>rate_limit_exceeded</code> and <code>quota_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>send_email</code> on <code>provider_error</code> — the message may have already been accepted by the provider.</p>
+              <p>For <code>rate_limit_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>send_email</code> on <code>provider_error</code> — the message may have already been accepted by the provider.</p>
             </div>
           </div>
         </div>

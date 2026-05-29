@@ -33,7 +33,7 @@ export function HeroTextBlock({ onGetStarted }) {
         Give your AI<br/>agent an <span className="accent">inbox.</span>
       </h1>
       <p className="lead">
-        Connect Gmail, Outlook, or Fastmail once. Paste a single MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth 2.0 clients connect with one click — no API key setup needed. Your agent can now read, search, and send mail live, with no email stored on our servers.
+        Connect Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox once. Paste a single MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth 2.0 clients connect with one click — no API key setup needed. Your agent can now read, search, and send mail live, with no email stored on our servers.
       </p>
       <div className="hero-cta">
         <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>Connect your inbox</MBtn>
@@ -163,7 +163,7 @@ export function HeroPipeDiagram() {
         <div className="pipe-node">
           <MIcon name="mail" size={22} color="var(--fg-2)"/>
           <div className="h">Your provider</div>
-          <div className="s">Gmail · Fastmail</div>
+          <div className="s">Gmail · Outlook · IMAP</div>
         </div>
       </div>
 
@@ -287,7 +287,7 @@ export function Features() {
     {
       n: "02",
       h: "Email is fetched live. Never stored.",
-      p: "Every tool call hits your provider in real time — Gmail API, Microsoft Graph, or Fastmail JMAP. Message bodies, subjects, and attachments are returned to the agent and immediately discarded. The only thing we persist is an encrypted OAuth token per inbox, so we can make the next call.",
+      p: "Every tool call hits your provider in real time — Gmail API, Microsoft Graph, Fastmail JMAP, or IMAP. Message bodies, subjects, and attachments are returned to the agent and immediately discarded. The only thing we persist is an encrypted token or app password per inbox, so we can make the next call.",
       tag: "Storage",
     },
     {
@@ -298,8 +298,8 @@ export function Features() {
     },
     {
       n: "04",
-      h: "Gmail, Outlook, and Fastmail.",
-      p: "OAuth 2.0 for Gmail, Outlook, and Fastmail. Connect multiple inboxes — label them by use case (work-gmail, ops-outlook, support-fastmail) and scope each API key to the inboxes you want that agent to reach.",
+      h: "Gmail, Outlook, iCloud, Fastmail & any IMAP inbox.",
+      p: "OAuth 2.0 for Gmail, Outlook, and Fastmail; app-specific passwords for iCloud, Yahoo, Zoho, and Yandex; and a generic IMAP / SMTP connector for everything else. Connect multiple inboxes — label them by use case (work-gmail, ops-outlook, support-imap) and scope each API key to the inboxes you want that agent to reach.",
       tag: "Providers",
     },
     {
@@ -359,7 +359,7 @@ export function HowItWorks() {
           <div className="step">
             <span className="num">01</span>
             <h4>Connect your inbox</h4>
-            <p>Sign in and click <strong>Connect Inbox</strong>. Choose Gmail, Outlook, or Fastmail and complete the OAuth flow — no passwords shared, no credentials stored.</p>
+            <p>Sign in and click <strong>Connect Inbox</strong>. Choose Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox — complete OAuth or paste an app password. Credentials are encrypted; email is never stored.</p>
           </div>
           <div className="step">
             <span className="num">02</span>
@@ -378,9 +378,9 @@ export function HowItWorks() {
             { n: "list_inboxes",   d: "Discover all connected inboxes and their IDs. Call this first — no UUID copy-pasting from the dashboard." },
             { n: "list_inbox",     d: "List recent messages with sender, subject, date, and snippet — up to 100 per call." },
             { n: "read_email",     d: "Fetch a single message by ID. Returns parsed plain-text and sanitized HTML body, plus attachment metadata." },
-            { n: "search_emails",  d: "Provider-native search: Gmail query syntax, Microsoft Graph, or Fastmail text search. Returns up to 100 matches." },
+            { n: "search_emails",  d: "Provider-native search: Gmail query syntax, Microsoft Graph, JMAP, or IMAP SEARCH. Returns up to 100 matches." },
             { n: "send_email",     d: "Send a new message via the connected account. Dispatched through Gmail API, Microsoft Graph, Fastmail JMAP, or SMTP — your domain, your deliverability." },
-            { n: "reply_to_email", d: "Reply in-thread with correct Message-ID and References headers. Works across Gmail, Outlook, and Fastmail." },
+            { n: "reply_to_email", d: "Reply in-thread with correct Message-ID and References headers. Works across Gmail, Outlook, Fastmail, and any IMAP inbox." },
           ].map(t => (
             <div className="tool" key={t.n}>
               <div className="name">{t.n}()</div>
@@ -419,13 +419,13 @@ export function Pricing({ onGetStarted, stripePrices }) {
       price: "$0",
       per: "/forever",
       accent: false,
-      desc: "For personal projects and experimenting with MCP agents.",
+      desc: "Everything, unlimited. For everyone building with MCP agents.",
       features: [
-        "1 connected inbox",
-        "500 MCP calls / month",
-        "100 calls / day burst cap",
-        "Gmail, Outlook, Fastmail",
-        "1 API key",
+        "Unlimited connected inboxes",
+        "Unlimited MCP tool calls",
+        "Unlimited API keys & team members",
+        "Gmail, Outlook, iCloud, Fastmail & any IMAP",
+        "60 requests / minute",
         "Community support",
       ],
       cta: "Start free",
@@ -434,60 +434,37 @@ export function Pricing({ onGetStarted, stripePrices }) {
     {
       key: "solo",
       name: "Solo",
-      price: "$9",
+      price: "$12",
       per: "/month",
       accent: false,
-      desc: "For solo developers who want their agent working the inbox daily.",
+      desc: "For power users running agents around the clock.",
       features: [
-        "3 connected inboxes",
-        "3,000 MCP calls / month",
-        "500 calls / day burst cap",
-        "Gmail, Outlook, Fastmail",
-        "3 API keys",
-        "14-day free trial",
+        "Everything in Free, unlimited",
+        "300 requests / minute (5× burst)",
+        "Full usage analytics (90-day history)",
+        "Gmail, Outlook, iCloud, Fastmail & any IMAP",
         "Email support",
       ],
-      cta: "Start 14-day free trial",
+      cta: "Get Solo",
       ctaHref: "/signup",
     },
     {
       key: "pro",
-      name: "Pro",
-      price: "$29",
+      name: "Team",
+      price: "$49",
       per: "/month",
       accent: true,
-      desc: "For teams shipping agents that work the inbox every day.",
+      desc: "For businesses and teams. Practically limitless.",
       features: [
-        "10 connected inboxes",
-        "20,000 MCP calls / month",
-        "2,000 calls / day burst cap",
-        "Gmail, Outlook, Fastmail",
-        "10 API keys",
-        "Usage analytics dashboard",
-        "14-day free trial",
-        "Email support",
+        "Everything in Solo, unlimited",
+        "1,000 requests / minute",
+        "Team roles & multiple workspaces",
+        "SSO (SAML / OIDC) + audit log",
+        "Full usage analytics (1-year history)",
+        "Priority support",
       ],
-      cta: "Start 14-day free trial",
+      cta: "Get Team",
       ctaHref: "/signup",
-    },
-    {
-      key: "enterprise",
-      name: "Enterprise",
-      price: "Custom",
-      per: "",
-      accent: false,
-      desc: "For organisations that need unlimited scale and compliance guarantees.",
-      features: [
-        "Unlimited inboxes",
-        "Custom MCP call volume",
-        "Gmail, Outlook, Fastmail",
-        "Unlimited API keys",
-        "Audit log + SSO",
-        "Dedicated Slack support",
-        "Custom SLA",
-      ],
-      cta: "Talk to sales",
-      ctaHref: "mailto:sales@mcpemails.com",
     },
   ];
   return (
@@ -495,8 +472,8 @@ export function Pricing({ onGetStarted, stripePrices }) {
       <div className="container">
         <div className="section-head">
           <div className="eye-label">Pricing</div>
-          <h2>Pay for the calls your agent makes.</h2>
-          <p className="sub">Simple, transparent pricing. Switch plans any time. EU and US billing in local currency.</p>
+          <h2>Unlimited on every plan.</h2>
+          <p className="sub">Free is genuinely unlimited. Upgrade for higher burst limits, team features, and support. Switch plans any time.</p>
         </div>
         <div className="price-grid">
           {tiers.map(t => {
@@ -537,7 +514,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
           })}
         </div>
         <p className="pricing-footnote">
-          All plans: email is fetched live and never stored. OAuth tokens encrypted at rest. <a href="/pricing">See full feature comparison →</a>
+          All plans: email is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <a href="mailto:sales@mcpemails.com">Contact us</a>. <a href="/pricing">See full feature comparison →</a>
         </p>
       </div>
     </section>

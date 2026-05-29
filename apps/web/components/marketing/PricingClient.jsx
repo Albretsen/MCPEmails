@@ -5,6 +5,8 @@ import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
+// NOTE: the "Team" tier keeps the internal key `pro` so live Stripe prices
+// (keyed by plan id) resolve correctly. Only its display name is "Team".
 
 const PLANS = [
   {
@@ -15,7 +17,7 @@ const PLANS = [
     per: '/forever',
     featured: false,
     badge: null,
-    desc: 'For personal projects and experimenting with MCP agents.',
+    desc: 'Everything, unlimited. For everyone building with MCP agents.',
     cta: 'Start free',
     ctaHref: '/signup',
     ctaPrimary: false,
@@ -23,41 +25,28 @@ const PLANS = [
   {
     key: 'solo',
     name: 'Solo',
-    monthly: 9,
-    annual: 7,
+    monthly: 12,
+    annual: 10,        // effective monthly when billed yearly ($120/yr)
     per: '/month',
     featured: false,
     badge: null,
-    desc: 'For solo developers who want their agent working the inbox daily.',
-    cta: 'Start 14-day free trial',
+    desc: 'For power users running agents around the clock.',
+    cta: 'Get Solo',
     ctaHref: '/signup',
     ctaPrimary: false,
   },
   {
     key: 'pro',
-    name: 'Pro',
-    monthly: 29,
-    annual: 23,
+    name: 'Team',
+    monthly: 49,
+    annual: 41,        // effective monthly when billed yearly ($490/yr)
     per: '/month',
     featured: true,
     badge: 'Most popular',
-    desc: 'For teams shipping agents that work the inbox every day.',
-    cta: 'Start 14-day free trial',
+    desc: 'For businesses and teams. Practically limitless.',
+    cta: 'Get Team',
     ctaHref: '/signup',
     ctaPrimary: true,
-  },
-  {
-    key: 'enterprise',
-    name: 'Enterprise',
-    monthly: null,
-    annual: null,
-    per: '',
-    featured: false,
-    badge: null,
-    desc: 'For organisations needing unlimited scale and compliance guarantees.',
-    cta: 'Talk to sales',
-    ctaHref: 'mailto:sales@mcpemails.com',
-    ctaPrimary: false,
   },
 ];
 
@@ -67,89 +56,90 @@ const TABLE_SECTIONS = [
   {
     label: 'Usage',
     rows: [
-      { feature: 'Connected inboxes',    free: '1',     solo: '3',      pro: '10',      enterprise: 'Unlimited' },
-      { feature: 'MCP calls / month',    free: '500',   solo: '3,000',  pro: '20,000',  enterprise: 'Custom'    },
-      { feature: 'Daily burst cap',      free: '100',   solo: '500',    pro: '2,000',   enterprise: 'Custom'    },
-      { feature: 'API keys',             free: '1',     solo: '3',      pro: '10',      enterprise: 'Unlimited' },
-      { feature: 'Workspaces',           free: '1',     solo: '1',      pro: 'Multiple', enterprise: 'Unlimited' },
+      { feature: 'Connected inboxes',    free: 'Unlimited', solo: 'Unlimited', pro: 'Unlimited' },
+      { feature: 'MCP tool calls',       free: 'Unlimited', solo: 'Unlimited', pro: 'Unlimited' },
+      { feature: 'API keys',             free: 'Unlimited', solo: 'Unlimited', pro: 'Unlimited' },
+      { feature: 'Team members',         free: 'Unlimited', solo: 'Unlimited', pro: 'Unlimited' },
+      { feature: 'Burst rate limit',     free: '60 / min',  solo: '300 / min', pro: '1,000 / min' },
     ],
   },
   {
     label: 'Email providers',
     rows: [
-      { feature: 'Gmail (OAuth)',                       free: true, solo: true, pro: true, enterprise: true },
-      { feature: 'Outlook / Microsoft 365 (OAuth)',     free: true, solo: true, pro: true, enterprise: true },
-      { feature: 'Fastmail (OAuth + app password)',     free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'Gmail (OAuth)',                       free: true, solo: true, pro: true },
+      { feature: 'Outlook / Microsoft 365 (OAuth)',     free: true, solo: true, pro: true },
+      { feature: 'Fastmail (OAuth + app password)',     free: true, solo: true, pro: true },
+      { feature: 'iCloud, Yahoo, Zoho, Yandex (app password)', free: true, solo: true, pro: true },
+      { feature: 'Any IMAP / SMTP mailbox',             free: true, solo: true, pro: true },
     ],
   },
   {
     label: 'MCP tools',
     rows: [
-      { feature: 'list_inboxes',    free: true, solo: true, pro: true, enterprise: true },
-      { feature: 'list_inbox',      free: true, solo: true, pro: true, enterprise: true },
-      { feature: 'read_email',      free: true, solo: true, pro: true, enterprise: true },
-      { feature: 'search_emails',   free: true, solo: true, pro: true, enterprise: true },
-      { feature: 'send_email',      free: true, solo: true, pro: true, enterprise: true },
-      { feature: 'reply_to_email',  free: true, solo: true, pro: true, enterprise: true },
+      { feature: 'list_inboxes',    free: true, solo: true, pro: true },
+      { feature: 'list_inbox',      free: true, solo: true, pro: true },
+      { feature: 'read_email',      free: true, solo: true, pro: true },
+      { feature: 'search_emails',   free: true, solo: true, pro: true },
+      { feature: 'send_email',      free: true, solo: true, pro: true },
+      { feature: 'reply_to_email',  free: true, solo: true, pro: true },
     ],
   },
   {
     label: 'Analytics & security',
     rows: [
-      { feature: 'Usage analytics dashboard',           free: false, solo: false, pro: true,  enterprise: true },
-      { feature: 'Audit log',                           free: false, solo: false, pro: false, enterprise: true },
-      { feature: 'SSO (SAML / OIDC)',                   free: false, solo: false, pro: false, enterprise: true },
-      { feature: 'Custom data residency (EU / US)',     free: false, solo: false, pro: false, enterprise: true },
+      { feature: 'Usage analytics dashboard',  free: true,      solo: true,       pro: true },
+      { feature: 'Analytics history',          free: '7 days',  solo: '90 days',  pro: '1 year' },
+      { feature: 'Team roles & workspaces',    free: false,     solo: false,      pro: true },
+      { feature: 'SSO (SAML / OIDC)',          free: false,     solo: false,      pro: true },
+      { feature: 'Audit log',                  free: false,     solo: false,      pro: true },
     ],
   },
   {
     label: 'Privacy & security',
     rows: [
-      { feature: 'Email never stored',              free: true,  solo: true,  pro: true,  enterprise: true  },
-      { feature: 'Credentials encrypted at rest',   free: true,  solo: true,  pro: true,  enterprise: true  },
-      { feature: 'SOC 2 Type II report on request', free: false, solo: false, pro: false, enterprise: true  },
+      { feature: 'Email never stored',              free: true,  solo: true,  pro: true },
+      { feature: 'Credentials encrypted at rest',   free: true,  solo: true,  pro: true },
+      { feature: 'SOC 2 Type II report on request', free: false, solo: false, pro: true },
     ],
   },
   {
     label: 'Support',
     rows: [
-      { feature: 'Community forum',           free: true,  solo: true,  pro: true,  enterprise: true  },
-      { feature: 'Email support',             free: false, solo: true,  pro: true,  enterprise: true  },
-      { feature: 'Priority Slack channel',    free: false, solo: false, pro: false, enterprise: true  },
-      { feature: 'Dedicated account manager', free: false, solo: false, pro: false, enterprise: true  },
-      { feature: 'Custom SLA',                free: false, solo: false, pro: false, enterprise: true  },
+      { feature: 'Community forum',  free: true,  solo: true,  pro: true },
+      { feature: 'Email support',    free: false, solo: true,  pro: true },
+      { feature: 'Priority support', free: false, solo: false, pro: true },
     ],
   },
 ];
 
 const FAQ_ITEMS = [
   {
+    q: 'Is there really no usage limit?',
+    a: 'Correct — connected inboxes, MCP tool calls, API keys, and team members are unlimited on every plan, including Free. The only usage limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) that protects the platform from abuse. Paid plans exist for higher burst throughput, team features, and support — never to unlock more usage.',
+  },
+  {
     q: 'What counts as an MCP call?',
-    a: 'Each JSON-RPC tool invocation against your /mcp endpoint counts as one call — whether it\'s list_inboxes, list_inbox, read_email, search_emails, send_email, or reply_to_email. Calls that return an error still count toward your quota.',
+    a: 'Each JSON-RPC tool invocation against your /mcp endpoint counts as one call — whether it\'s list_inboxes, list_inbox, read_email, search_emails, send_email, or reply_to_email. Calls are unlimited; they only count toward your plan\'s per-minute fair-use ceiling.',
   },
   {
     q: 'Is my email content stored anywhere?',
     a: 'No. Email bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent. Nothing is persisted between calls. The only data we store is an encrypted OAuth token or app password so we can authenticate future requests.',
   },
   {
+    q: 'What\'s the difference between Solo and Team?',
+    a: 'Free already gives everyone unlimited usage. Solo ($12/mo) is for power users who run agents hard — it raises the burst rate limit to 300 requests/minute, extends analytics history to 90 days, and adds email support. Team ($49/mo) is for businesses: a 1,000/minute ceiling, team roles and multiple workspaces, SSO (SAML/OIDC), an audit log, 1-year analytics history, and priority support.',
+  },
+  {
     q: 'Can I change or cancel my plan?',
-    a: 'Yes — upgrade, downgrade, or cancel any time from the billing section of your dashboard. If you cancel a paid plan, you keep access until the end of your billing period, then drop to the Free tier automatically.',
+    a: 'Yes — upgrade, downgrade, or cancel any time from the billing section of your dashboard. If you cancel a paid plan, you keep access until the end of your billing period, then drop to the Free tier automatically. Since Free is unlimited, you lose only the higher burst limit, team features, and support.',
   },
   {
     q: 'How does the annual discount work?',
-    a: 'Paying annually saves you 20% compared to monthly billing. You\'re charged once for 12 months upfront. If you cancel mid-year, we refund the unused whole months.',
+    a: 'Paying annually saves you about 17% compared to monthly billing — Solo is $120/year and Team is $490/year. You\'re charged once for 12 months upfront. If you cancel mid-year, we refund the unused whole months.',
   },
   {
     q: 'What email providers are supported?',
-    a: 'Gmail and Microsoft 365 / Outlook use OAuth 2.0. Fastmail supports both OAuth and app passwords. More providers are on the roadmap.',
-  },
-  {
-    q: 'What\'s the difference between Solo and Pro?',
-    a: 'Solo is built for individual developers: 3 inboxes, 3,000 calls / month, 500 calls / day burst, and email support — all at $9 / month. Pro adds 10 inboxes, 20,000 calls / month, a 2,000 / day burst cap, and a usage analytics dashboard for teams that depend on email automation daily.',
-  },
-  {
-    q: 'Do you offer a free trial?',
-    a: 'Yes — both the Solo and Pro plans come with a 14-day free trial. We collect a card when you start so your plan continues seamlessly, but you won\'t be charged until the trial ends. Cancel any time before then from your billing dashboard and you won\'t be charged a cent.',
+    a: 'Gmail and Microsoft 365 / Outlook use OAuth 2.0. Fastmail supports both OAuth and app passwords. iCloud, Yahoo, Zoho, and Yandex connect with an app-specific password, and any other mailbox works through the generic IMAP / SMTP connector.',
   },
   {
     q: 'Is there a refund policy?',
@@ -173,7 +163,7 @@ function BillingToggle({ annual, onChange }) {
         onClick={() => onChange(true)}
       >
         Annual
-        <span className="billing-save">Save 20%</span>
+        <span className="billing-save">Save ~17%</span>
       </button>
     </div>
   );
@@ -186,43 +176,33 @@ function PlanCards({ annual, stripePrices }) {
   return (
     <div className="price-grid">
       {PLANS.map(plan => {
-        // Custom-priced plans (Enterprise) always show "Custom" — a configured
-        // Stripe price must never turn them into a numeric amount.
-        const isCustomPlan = plan.monthly === null;
-
-        // Derive live prices from Stripe, falling back to static plan values
+        // Derive live prices from Stripe, falling back to static plan values.
         const liveMonthlyCents = stripePrices?.[plan.key]?.monthlyCents;
         const liveYearlyCents = stripePrices?.[plan.key]?.yearlyCents;
 
-        const liveMonthly = isCustomPlan
-          ? null
-          : liveMonthlyCents != null && liveMonthlyCents > 0
+        const liveMonthly =
+          liveMonthlyCents != null && liveMonthlyCents > 0
             ? liveMonthlyCents / 100
             : plan.monthly;
 
-        const liveAnnualMonthly = isCustomPlan
-          ? null
-          : liveYearlyCents != null && liveYearlyCents > 0
+        const liveAnnualMonthly =
+          liveYearlyCents != null && liveYearlyCents > 0
             ? Math.round(liveYearlyCents / 12 / 100)
             : plan.annual;
 
-        const liveAnnualTotal = isCustomPlan
-          ? null
-          : liveYearlyCents != null && liveYearlyCents > 0
+        const liveAnnualTotal =
+          liveYearlyCents != null && liveYearlyCents > 0
             ? liveYearlyCents / 100
             : plan.annual != null ? plan.annual * 12 : null;
 
         const priceDisplay =
-          liveMonthly === null
-            ? 'Custom'
-            : liveMonthly === 0
+          liveMonthly === 0
             ? '$0'
             : annual
             ? `$${liveAnnualMonthly}`
             : `$${liveMonthly}`;
 
-        const perDisplay =
-          liveMonthly === null || liveMonthly === 0 ? plan.per : '/month';
+        const perDisplay = liveMonthly === 0 ? plan.per : '/month';
 
         return (
           <div className={'price' + (plan.featured ? ' featured' : '')} key={plan.key}>
@@ -232,7 +212,7 @@ function PlanCards({ annual, stripePrices }) {
                 {priceDisplay}
                 {perDisplay && <small> {perDisplay}</small>}
               </div>
-              {annual && liveMonthly !== null && liveMonthly > 0 && (
+              {annual && liveMonthly > 0 && (
                 <p className="price-annual-note">Billed ${liveAnnualTotal}/year</p>
               )}
               <p className="price-desc">{plan.desc}</p>
@@ -240,46 +220,31 @@ function PlanCards({ annual, stripePrices }) {
             <ul>
               {plan.key === 'free' && (
                 <>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />1 connected inbox</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />500 MCP calls / month</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />100 calls / day burst cap</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />1 API key</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited connected inboxes</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited MCP tool calls</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited API keys &amp; team members</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, iCloud, Fastmail &amp; any IMAP</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />60 requests / minute</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Community support</li>
                 </>
               )}
               {plan.key === 'solo' && (
                 <>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />3 connected inboxes</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />3,000 MCP calls / month</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />500 calls / day burst cap</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />3 API keys</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />14-day free trial</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Everything in Free, unlimited</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />300 requests / minute (5× burst)</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Full usage analytics (90-day history)</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, iCloud, Fastmail &amp; any IMAP</li>
                   <li><MIcon name="check" size={14} color="var(--mint-600)" />Email support</li>
                 </>
               )}
               {plan.key === 'pro' && (
                 <>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />10 connected inboxes</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />20,000 MCP calls / month</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />2,000 calls / day burst cap</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />10 API keys</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Usage analytics</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />14-day free trial</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Email support</li>
-                </>
-              )}
-              {plan.key === 'enterprise' && (
-                <>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited inboxes</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Custom MCP call volume</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, Fastmail</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited API keys</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Audit log + SSO</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Dedicated Slack support</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Custom SLA</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Everything in Solo, unlimited</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />1,000 requests / minute</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Team roles &amp; multiple workspaces</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />SSO (SAML / OIDC) + audit log</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Full usage analytics (1-year history)</li>
+                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Priority support</li>
                 </>
               )}
             </ul>
@@ -320,15 +285,14 @@ function ComparisonTable() {
             <th className="feat-col">Feature</th>
             <th>Free</th>
             <th>Solo</th>
-            <th className="featured-col">Pro</th>
-            <th>Enterprise</th>
+            <th className="featured-col">Team</th>
           </tr>
         </thead>
         <tbody>
           {TABLE_SECTIONS.map(section => (
             <>
               <tr className="tbl-section-head" key={'section-' + section.label}>
-                <td colSpan={5}>{section.label}</td>
+                <td colSpan={4}>{section.label}</td>
               </tr>
               {section.rows.map(row => (
                 <tr key={row.feature}>
@@ -336,7 +300,6 @@ function ComparisonTable() {
                   <TableCell value={row.free} />
                   <TableCell value={row.solo} />
                   <TableCell value={row.pro} />
-                  <TableCell value={row.enterprise} />
                 </tr>
               ))}
             </>
@@ -379,11 +342,12 @@ export default function PricingClient({ stripePrices }) {
         <div className="container">
           <div className="eye-label">Pricing</div>
           <h1 className="pricing-page-h1">
-            Simple pricing.<br />No surprises.
+            Unlimited, free.<br />Upgrade for more power.
           </h1>
           <p className="pricing-page-lead">
-            Pay for the MCP calls your agent makes. Switch plans any time.
-            Email is never stored — on any plan.
+            Every plan — including Free — has unlimited inboxes, calls, API keys, and
+            team members. Paid plans add higher burst limits, team features, and support.
+            Email is never stored, on any plan.
           </p>
           <BillingToggle annual={annual} onChange={setAnnual} />
         </div>
@@ -395,6 +359,9 @@ export default function PricingClient({ stripePrices }) {
           <PlanCards annual={annual} stripePrices={stripePrices} />
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             All plans include: email never stored · credentials encrypted at rest · EU &amp; US hosting
+          </p>
+          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
+            Need something custom? <a href="mailto:sales@mcpemails.com">Contact us</a>.
           </p>
         </div>
       </section>
@@ -430,7 +397,8 @@ export default function PricingClient({ stripePrices }) {
         <div className="container">
           <h2 className="pricing-cta-h">Ready to give your agent an inbox?</h2>
           <p className="pricing-cta-sub">
-            Start on the Free plan — no credit card required. Upgrade when your agent needs more calls.
+            Start on the Free plan — no credit card required, unlimited from day one.
+            Upgrade when you need higher burst limits or team features.
           </p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href="/signup">Get started free</a>

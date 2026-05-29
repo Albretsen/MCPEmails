@@ -170,8 +170,8 @@ async function handleCheckoutSessionCompleted(
     return;
   }
 
-  // Validate that planId is a known value.
-  if (planId !== 'solo' && planId !== 'pro' && planId !== 'enterprise') {
+  // Validate that planId is a known paid plan.
+  if (planId !== 'solo' && planId !== 'pro') {
     console.error(
       `[stripe-webhook] checkout.session.completed unknown planId "${planId}" for session ${session.id}`,
     );
