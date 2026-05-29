@@ -536,6 +536,7 @@ export default function DocsClient() {
             <a className="btn btn-primary btn-lg" href="#quickstart">Quick start</a>
             <a className="btn btn-secondary btn-lg" href="#oauth">OAuth (claude.ai)</a>
             <a className="btn btn-secondary btn-lg" href="#tools">Tool reference</a>
+            <a className="btn btn-secondary btn-lg" href="/docs/providers">Provider support</a>
           </div>
         </div>
       </section>

@@ -686,6 +686,13 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .footer .brand-cell { display: flex; flex-direction: column; gap: 12px; }
 .footer .brand-cell img { height: 28px; align-self: flex-start; }
 .footer .brand-cell p { margin: 0; font-family: var(--font-sans); font-size: 13.5px; color: var(--ink-400); max-width: 320px; line-height: 1.55; }
+.footer .lang-switch { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; }
+.footer .lang-switch .lang-opt {
+  display: inline; padding: 0; font-family: var(--font-sans); font-size: 13px;
+  color: var(--ink-400); text-decoration: none;
+}
+.footer .lang-switch .lang-opt:hover { color: #fff; }
+.footer .lang-switch .lang-opt.active { color: #fff; font-weight: 600; }
 .footer .legal {
   margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--ink-800);
   display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-500);

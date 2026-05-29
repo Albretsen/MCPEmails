@@ -565,8 +565,10 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, activity, stats, planLimits, plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers }) {
+export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers }) {
   const inboxCount = stats?.inboxCount ?? 0;
+  // Last 14 days of real per-day call counts, sliced from the 30-day series.
+  const last14 = (usageData?.dailyCounts ?? []).slice(-14);
   const apiKeysCount = stats?.apiKeysCount ?? 0;
   const callsToday = stats?.callsToday ?? 0;
   const callsThisMonth = stats?.callsThisMonth ?? 0;
@@ -746,7 +748,7 @@ export function OverviewPage({ inboxes, activity, stats, planLimits, plan = 'fre
               <Badge tone="brand">Pro</Badge>
             </div>
             <div className="card-body">
-              <UsageBars />
+              <UsageBars dailyCounts={last14} />
             </div>
           </div>
 
@@ -794,20 +796,47 @@ function formatBarDate(dateStr) {
 }
 
 /**
- * Compact bar chart used on the Overview page (14 hardcoded demo bars).
- * Replaced by UsageChart30 on the Usage page once real data is wired up.
+ * Compact bar chart used on the Overview page, rendering real daily call counts.
+ *
+ * Props:
+ *   dailyCounts: array of { date: "YYYY-MM-DD", count: number } objects,
+ *                oldest first (typically the last 14 days).
  */
-function UsageBars() {
-  const data = [120, 168, 90, 210, 280, 305, 420, 388, 360, 480, 525, 612, 588, 640];
-  const max = Math.max(...data);
-  const labels = ["8 May","","","11","","","14","","","17","","","20","21"];
+function UsageBars({ dailyCounts }) {
+  if (!dailyCounts || dailyCounts.length === 0) {
+    return (
+      <div style={{
+        height: 120,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'var(--font-sans)',
+        fontSize: 12.5,
+        color: 'var(--fg-3)',
+      }}>
+        No call data for this period.
+      </div>
+    );
+  }
+
+  const total = dailyCounts.length;
+  // Guard against a zero max so empty days don't divide by zero.
+  const max = Math.max(...dailyCounts.map((d) => d.count), 1);
+
+  // Show a date label on the first bar, then every 3rd bar, plus the last bar.
+  const labels = dailyCounts.map((d, i) => {
+    if (i === 0 || i % 3 === 2 || i === total - 1) return formatBarDate(d.date);
+    return '';
+  });
+
   return (
     <>
       <div className="bars">
-        {data.map((v, i) => (
-          <div key={i} className={"bar" + (i >= data.length - 4 ? " hot" : "")}
-               style={{ height: (v / max * 100) + "%" }}
-               title={v + " calls"}></div>
+        {dailyCounts.map((d, i) => (
+          <div key={d.date}
+               className={"bar" + (i >= total - 3 ? " hot" : "")}
+               style={{ height: (d.count / max * 100) + "%" }}
+               title={`${formatBarDate(d.date)} · ${d.count.toLocaleString()} call${d.count !== 1 ? 's' : ''}`}></div>
         ))}
       </div>
       <div className="bars-x">
