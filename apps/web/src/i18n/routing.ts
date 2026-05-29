@@ -9,7 +9,7 @@ import { defineRouting } from 'next-intl/routing';
  * This keeps the existing English URLs and their SEO intact.
  */
 export const routing = defineRouting({
-  locales: ['en', 'nb'],
+  locales: ['en', 'nb', 'es', 'fr', 'zh'],
   defaultLocale: 'en',
   localePrefix: 'as-needed',
   // Don't auto-redirect by cookie/Accept-Language. The default-locale home (/)

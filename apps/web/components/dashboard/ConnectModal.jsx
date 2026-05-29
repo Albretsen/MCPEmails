@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import {
   IMAP_PRESETS,
@@ -28,20 +29,20 @@ import {
  *   optimistic inbox list.
  */
 
-/** Provider cards shown in step 1. */
+/** Provider cards shown in step 1. `subKey` resolves a dashboardChrome key. */
 const PROVIDERS = [
-  { k: 'gmail',    label: 'Gmail',    sub: 'OAuth 2.0 · recommended',  logoKind: 'gmail' },
-  { k: 'outlook',  label: 'Outlook',  sub: 'OAuth 2.0 · Microsoft 365', logoKind: 'outlook' },
-  { k: 'fastmail', label: 'Fastmail', sub: 'OAuth 2.0 or app password', logoKind: 'imap' },
+  { k: 'gmail',    label: 'Gmail',    subKey: 'connect.subGmail',       logoKind: 'gmail' },
+  { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook' },
+  { k: 'fastmail', label: 'Fastmail', subKey: 'connect.subFastmail',    logoKind: 'imap' },
   // Branded IMAP presets (app password).
   ...Object.values(IMAP_PRESETS).map(p => ({
     k: p.service,
     label: p.label,
-    sub: 'App password',
+    subKey: 'connect.subAppPassword',
     logoKind: p.logoKind,
   })),
   // Generic catch-all connector.
-  { k: 'generic', label: 'IMAP / SMTP', sub: 'Any provider', logoKind: 'imap' },
+  { k: 'generic', label: 'IMAP / SMTP', subKey: 'connect.subGeneric', logoKind: 'imap' },
 ];
 
 /** The server-side route that initiates the OAuth flow for each provider. */
@@ -64,6 +65,7 @@ const OAUTH_ROUTES = {
  * @param {string}  plan          - The workspace's current plan slug (e.g. "free").
  */
 export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 'free' }) {
+  const tr = useTranslations('dashboardChrome');
   const [provider, setProvider] = useState('gmail');
   /** 'oauth' | 'apppassword': only relevant when provider === 'fastmail' */
   const [fastmailMode, setFastmailMode] = useState('oauth');
@@ -102,18 +104,18 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   };
 
   const connectLabel = () => {
-    if (provider === 'gmail') return 'Connect with Google';
-    if (provider === 'outlook') return 'Connect with Microsoft';
-    if (provider === 'fastmail' && fastmailMode === 'oauth') return 'Connect with Fastmail';
-    return 'Enter credentials';
+    if (provider === 'gmail') return tr('connect.connectWithGoogle');
+    if (provider === 'outlook') return tr('connect.connectWithMicrosoft');
+    if (provider === 'fastmail' && fastmailMode === 'oauth') return tr('connect.connectWithFastmail');
+    return tr('connect.enterCredentials');
   };
 
   /** Human label for the selected provider, used in step-2 copy. */
   const providerLabel = () => {
     if (provider === 'fastmail') return 'Fastmail';
     if (preset) return preset.label;
-    if (isGeneric) return 'IMAP / SMTP';
-    return 'inbox';
+    if (isGeneric) return tr('connect.genericLabel');
+    return tr('connect.providerInboxFallback');
   };
 
   // ── Step 2: credentials submission ─────────────────────────────────────────
@@ -125,11 +127,11 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
     const appPassword = form.password.trim();
 
     if (!email || !email.includes('@')) {
-      setFormError('A valid email address is required.');
+      setFormError(tr('connect.errorEmailRequired'));
       return;
     }
     if (!appPassword) {
-      setFormError('An app password is required.');
+      setFormError(tr('connect.errorPasswordRequired'));
       return;
     }
 
@@ -150,11 +152,11 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
       const imapPort = Number(form.imapPort);
       const smtpPort = Number(form.smtpPort);
       if (!imapHost || !smtpHost) {
-        setFormError('IMAP and SMTP host are required.');
+        setFormError(tr('connect.errorHostRequired'));
         return;
       }
       if (!imapPort || !smtpPort) {
-        setFormError('IMAP and SMTP ports are required.');
+        setFormError(tr('connect.errorPortRequired'));
         return;
       }
       endpoint = '/api/inboxes/imap';
@@ -172,14 +174,14 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
       const data = await response.json();
 
       if (!response.ok) {
-        setFormError(data.error ?? 'Connection failed. Please try again.');
+        setFormError(data.error ?? tr('connect.errorConnectionFailed'));
         return;
       }
 
       // Success: notify the parent so it can update its optimistic inbox list.
       onConnect({ provider, address: email, label: email });
     } catch {
-      setFormError('Network error. Please check your connection and try again.');
+      setFormError(tr('connect.errorNetwork'));
     } finally {
       setSubmitting(false);
     }
@@ -202,26 +204,26 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
             <div>
               <h2 style={{ margin: 0 }}>
                 {atInboxLimit
-                  ? 'Inbox limit reached'
+                  ? tr('connect.titleLimitReached')
                   : step === 2
-                    ? `Connect ${providerLabel()}`
-                    : 'Connect an inbox'}
+                    ? tr('connect.titleConnectProvider', { provider: providerLabel() })
+                    : tr('connect.titleConnectInbox')}
               </h2>
               <div className="sub" style={{ marginTop: 4 }}>
                 {atInboxLimit
-                  ? `Your ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan only supports a limited number of inboxes.`
+                  ? tr('connect.subLimitReached', { plan: plan.charAt(0).toUpperCase() + plan.slice(1) })
                   : step === 1
-                    ? 'Choose a provider. Credentials are encrypted before storage and never shared.'
+                    ? tr('connect.subChooseProvider')
                     : isGeneric
-                      ? 'Enter your mail server settings and an app password.'
+                      ? tr('connect.subGenericForm')
                       : preset
                         ? preset.hint
-                        : 'Generate an app password from Fastmail Settings → Security → App Passwords.'}
+                        : tr('connect.subFastmailAppPassword')}
               </div>
             </div>
             <button
               onClick={onClose}
-              aria-label="Close"
+              aria-label={tr('connect.close')}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -272,7 +274,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     color: 'var(--fg-1)',
                     marginBottom: 4,
                   }}>
-                    Upgrade to connect more inboxes
+                    {tr('connect.upgradeTitle')}
                   </div>
                   <div style={{
                     fontFamily: 'var(--font-sans)',
@@ -280,20 +282,19 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     color: 'var(--fg-3)',
                     lineHeight: 1.5,
                   }}>
-                    Your current plan limits how many inboxes you can connect.
-                    Upgrade for a higher rate limit and longer usage history.
+                    {tr('connect.upgradeBody')}
                   </div>
                 </div>
               </div>
 
               {/* Feature highlights */}
               {[
-                'Higher requests-per-minute rate limit',
-                'Extended usage analytics history',
-                'Team roles, workspaces, and SSO on Team',
-                'Email and priority support',
-              ].map(f => (
-                <div key={f} style={{
+                'connect.featureRateLimit',
+                'connect.featureHistory',
+                'connect.featureTeam',
+                'connect.featureSupport',
+              ].map(fKey => (
+                <div key={fKey} style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
@@ -302,7 +303,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   color: 'var(--fg-2)',
                 }}>
                   <Icon name="check" size={13} color="var(--mint-600)" />
-                  {f}
+                  {tr(fKey)}
                 </div>
               ))}
             </div>
@@ -324,7 +325,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   >
                     <ProviderLogo kind={p.logoKind} size={26} />
                     <div className="pn">{p.label}</div>
-                    <div className="ps">{p.sub}</div>
+                    <div className="ps">{tr(p.subKey)}</div>
                   </div>
                 ))}
               </div>
@@ -345,13 +346,13 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                       active={fastmailMode === 'oauth'}
                       onClick={() => setFastmailMode('oauth')}
                       icon="shield"
-                      label="OAuth 2.0"
+                      label={tr('connect.fastmailTabOauth')}
                     />
                     <FastmailModeTab
                       active={fastmailMode === 'apppassword'}
                       onClick={() => setFastmailMode('apppassword')}
                       icon="key"
-                      label="App Password"
+                      label={tr('connect.fastmailTabAppPassword')}
                     />
                   </div>
                   <p style={{
@@ -362,8 +363,8 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     lineHeight: 1.5,
                   }}>
                     {fastmailMode === 'oauth'
-                      ? 'Recommended. Your browser will redirect to Fastmail to authorize access.'
-                      : 'Generate a Fastmail app password in account settings. Your main password is never used.'}
+                      ? tr('connect.fastmailHintOauth')
+                      : tr('connect.fastmailHintAppPassword')}
                   </p>
                 </div>
               )}
@@ -378,14 +379,14 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   lineHeight: 1.5,
                 }}>
                   {isGeneric
-                    ? 'Connect any mailbox that supports IMAP and SMTP using an app password.'
+                    ? tr('connect.genericHint')
                     : preset.hint}
                   {preset && (
                     <>
                       {' '}
                       <a href={preset.appPasswordHelpUrl} target="_blank" rel="noopener noreferrer"
                         style={{ color: 'var(--brand)' }}>
-                        How to generate one
+                        {tr('connect.howToGenerate')}
                       </a>.
                     </>
                   )}
@@ -399,7 +400,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
             <>
               {provider === 'zoho' && (
                 <div className="field">
-                  <label htmlFor="cm-zoho-region">Data center region</label>
+                  <label htmlFor="cm-zoho-region">{tr('connect.zohoRegionLabel')}</label>
                   <select
                     id="cm-zoho-region"
                     className="input"
@@ -411,13 +412,13 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     ))}
                   </select>
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                    Find this in Zoho → Settings → Mail Accounts if you are unsure.
+                    {tr('connect.zohoRegionHint')}
                   </span>
                 </div>
               )}
 
               <div className="field">
-                <label htmlFor="cm-email">Email address</label>
+                <label htmlFor="cm-email">{tr('connect.emailLabel')}</label>
                 <input
                   id="cm-email"
                   className="input"
@@ -434,7 +435,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 <>
                   <div className="field" style={{ display: 'flex', gap: 10 }}>
                     <div style={{ flex: 1 }}>
-                      <label htmlFor="cm-imap-host">IMAP host</label>
+                      <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>
                       <input
                         id="cm-imap-host"
                         className="input"
@@ -445,7 +446,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                       />
                     </div>
                     <div style={{ width: 96 }}>
-                      <label htmlFor="cm-imap-port">IMAP port</label>
+                      <label htmlFor="cm-imap-port">{tr('connect.imapPortLabel')}</label>
                       <input
                         id="cm-imap-port"
                         className="input"
@@ -457,7 +458,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   </div>
                   <div className="field" style={{ display: 'flex', gap: 10 }}>
                     <div style={{ flex: 1 }}>
-                      <label htmlFor="cm-smtp-host">SMTP host</label>
+                      <label htmlFor="cm-smtp-host">{tr('connect.smtpHostLabel')}</label>
                       <input
                         id="cm-smtp-host"
                         className="input"
@@ -468,7 +469,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                       />
                     </div>
                     <div style={{ width: 96 }}>
-                      <label htmlFor="cm-smtp-port">SMTP port</label>
+                      <label htmlFor="cm-smtp-port">{tr('connect.smtpPortLabel')}</label>
                       <input
                         id="cm-smtp-port"
                         className="input"
@@ -482,7 +483,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
               )}
 
               <div className="field">
-                <label htmlFor="cm-password">{isGeneric ? 'Password' : 'App password'}</label>
+                <label htmlFor="cm-password">{isGeneric ? tr('connect.passwordLabel') : tr('connect.appPasswordLabel')}</label>
                 <input
                   id="cm-password"
                   className="input"
@@ -494,7 +495,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   autoComplete="current-password"
                 />
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                  Use an app-specific password, not your main password. The credential is encrypted before storage.
+                  {tr('connect.passwordHint')}
                 </span>
               </div>
 
@@ -525,7 +526,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
           {/* Plan limit reached: show upgrade CTA */}
           {atInboxLimit && (
             <>
-              <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+              <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
               <a
                 href="/pricing"
                 style={{
@@ -545,7 +546,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 }}
               >
                 <Icon name="zap" size={13} color="#fff" />
-                View upgrade options
+                {tr('connect.viewUpgradeOptions')}
               </a>
             </>
           )}
@@ -553,7 +554,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
           {/* Normal flow: provider selection */}
           {!atInboxLimit && step === 1 && (
             <>
-              <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+              <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
               <Btn variant="primary" icon="shield" onClick={handleConnect}>
                 {connectLabel()}
               </Btn>
@@ -563,14 +564,14 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
           {/* Normal flow: credentials */}
           {!atInboxLimit && step === 2 && (
             <>
-              <Btn variant="ghost" onClick={handleBackToProviders}>Back</Btn>
+              <Btn variant="ghost" onClick={handleBackToProviders}>{tr('connect.back')}</Btn>
               <Btn
                 variant="primary"
                 icon={submitting ? undefined : 'shield'}
                 disabled={submitting}
                 onClick={handleAppPasswordSubmit}
               >
-                {submitting ? 'Verifying…' : 'Connect inbox'}
+                {submitting ? tr('connect.verifying') : tr('connect.connectInbox')}
               </Btn>
             </>
           )}

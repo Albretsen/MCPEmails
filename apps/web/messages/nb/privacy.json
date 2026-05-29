@@ -1,0 +1,231 @@
+{
+  "meta": {
+    "title": "Personvernerklæring",
+    "description": "Hvordan MCPEmails samler inn, bruker og beskytter dataene dine. Vår personvernerklæring for brukere, arbeidsområdeeiere og AI-agenter."
+  },
+  "hero": {
+    "eyebrow": "Juridisk",
+    "title": "Personvernerklæring",
+    "lead": "Vi bygde MCPEmails med personvern som et grunnleggende prinsipp. E-postinnholdet ditt lagres aldri på serverne våre. Det sendes videre til agenten din og forsvinner. Denne erklæringen forklarer hva vi faktisk samler inn, og hvorfor.",
+    "dates": "Sist oppdatert: {lastUpdated}  ·  Gjelder fra: {effectiveDate}"
+  },
+  "whoWeAre": {
+    "title": "1. Hvem vi er",
+    "p1": "{companyName} (\"MCPEmails\", \"vi\", \"oss\" eller \"vår\") driver MCPEmails-tjenesten som er tilgjengelig på <b>mcpemails.com</b>, inkludert alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
+    "p2": "I henhold til gjeldende personvernlovgivning (inkludert EUs personvernforordning, \"GDPR\") er MCPEmails behandlingsansvarlig for konto- og bruksdata. For e-postinnhold opptrer vi som databehandler på dine vegne: vi overfører innhold du gir oss tillatelse til å hente, og vi lagrer det ikke.",
+    "p3": "Vår registrerte adresse er: {companyAddress}. Du kan nå personvernteamet vårt på <email></email>."
+  },
+  "dataWeCollect": {
+    "title": "2. Data vi samler inn",
+    "accountTitle": "2.1 Kontodata",
+    "accountP": "Når du oppretter en konto, samler vi inn e-postadressen din og et hashet passord (vi lagrer aldri passord i klartekst). Du kan eventuelt oppgi et visningsnavn. Disse dataene er nødvendige for å opprette og vedlikeholde kontoen din.",
+    "workspaceTitle": "2.2 Arbeidsområde- og konfigurasjonsdata",
+    "workspaceP": "Vi lagrer arbeidsområdenavnet du velger, og konfigurasjonen til hver tilkoblet innboks (leverandørtype, e-postadresse, OAuth-status og tidspunkt for tilkobling). Vi lagrer <b>ikke</b> OAuth-tilgangstokener eller app-passord i klartekst. De krypteres med AES-256-GCM før de skrives til databasen, og krypteringsnøkkelen lagres i en separat hemmelighetshvelv.",
+    "apiKeysTitle": "2.3 API-nøkler",
+    "apiKeysP": "Vi lagrer en SHA-256-hash av hver API-nøkkel du oppretter, sammen med nøkkelens navn, omfang, opprettelsestidspunkt og tidspunkt for siste bruk. Den rå nøkkelverdien vises til deg nøyaktig én gang ved opprettelse, og lagres aldri i gjenopprettbar form.",
+    "logsTitle": "2.4 Bruks- og revisjonslogger",
+    "logsP": "For hvert MCP-verktøykall agenten din gjør, registrerer vi: verktøyets navn (f.eks. <c>read_email</c>), API-nøkkelen som gjorde kallet, innboksen som ble aksessert, tidsstempelet, og om kallet lyktes. Vi registrerer<b> ikke</b> e-postemner, -innhold, -mottakere eller annet e-postinnhold i disse loggene.",
+    "emailContentTitle": "2.5 E-postinnhold: ikke lagret",
+    "emailContentP": "Når agenten din kaller <c>read_email</c>, <c>list_inbox</c> eller et annet e-postverktøy, henter vi det forespurte innholdet direkte fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning.",
+    "technicalTitle": "2.6 Tekniske og driftsmessige data",
+    "technicalP": "Vi samler inn standard driftsdata på serversiden, inkludert IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Disse dataene oppbevares i aggregert, anonymisert form og knyttes ikke til individuelle kontoer etter 30 dager.",
+    "cookiesTitle": "2.7 Informasjonskapsler og lokal lagring",
+    "cookiesP": "Dashbordet setter én førsteparts øktinformasjonskapsel utstedt av Supabase Auth for å holde deg innlogget. Vi bruker ikke sporingsinformasjonskapsler, reklameinformasjonskapsler eller tredjeparts informasjonskapsler. Vi lagrer én enkelt temapreferanse (<c>mcpe-theme</c>) i nettleserens lokale lagring."
+  },
+  "howWeUseData": {
+    "title": "3. Hvordan vi bruker dataene dine",
+    "intro": "Vi bruker dataene beskrevet ovenfor til følgende formål:",
+    "providingTitle": "3.1 Levering av tjenesten",
+    "providingP": "Vi bruker kontodataene dine til å autentisere deg, arbeidsområdekonfigurasjonen din til å rute MCP-verktøykall til riktig e-postleverandør, og API-nøklene dine til å autorisere agentforespørsler. Uten disse dataene kan ikke tjenesten fungere. Det rettslige grunnlaget under GDPR er <b>oppfyllelse av en kontrakt</b>.",
+    "securityTitle": "3.2 Sikkerhet og forebygging av misbruk",
+    "securityP": "Vi bruker IP-adresser, forespørselsfrekvenser og feilmønstre for å oppdage og blokkere misbruk, håndheve hastighetsgrenser og beskytte tilgjengeligheten til tjenesten for alle brukere. Det rettslige grunnlaget er våre <b>berettigede interesser</b> i å drive en sikker tjeneste.",
+    "analyticsTitle": "3.3 Bruksanalyse og produktforbedring",
+    "analyticsP": "Vi bruker aggregerte, anonymiserte bruksdata (antall verktøykall, feilrater, ventetid) for å forstå hvordan tjenesten brukes og for å prioritere forbedringer. Vi bruker ikke bruksdata på individnivå til dette formålet. Det rettslige grunnlaget er våre <b>berettigede interesser</b> i å forbedre tjenesten.",
+    "billingTitle": "3.4 Fakturering og håndheving av abonnement",
+    "billingP": "Vi bruker brukstellinger for å avgjøre om arbeidsområdet ditt har nådd abonnementsgrensene og for å beregne fakturaen din på betalte abonnementer. Det rettslige grunnlaget er <b>oppfyllelse av en kontrakt</b>.",
+    "legalTitle": "3.5 Etterlevelse av lov",
+    "legalP": "Vi kan behandle og utlevere data der det er påkrevd etter gjeldende lov, rettskjennelse eller tilsynsmyndighet. Det rettslige grunnlaget er <b>etterlevelse av en rettslig forpliktelse</b>.",
+    "neverTitle": "3.6 Hva vi aldri vil gjøre",
+    "neverList": [
+      "Selge personopplysningene eller bruksdataene dine til tredjeparter.",
+      "Bruke e-postinnholdet ditt til å trene AI-modeller.",
+      "Bruke dataene dine til å vise deg reklame.",
+      "Dele dataene dine med tredjeparter for deres egne markedsføringsformål."
+    ],
+    "googleTitle": "3.7 Google API-tjenester: Begrenset bruk",
+    "googleP1": "MCPEmails' bruk og overføring til enhver annen app av informasjon mottatt fra Google APIs (inkludert Gmail API) vil overholde <link>Google API Services User Data Policy</link>, inkludert kravene til <b>Begrenset bruk</b>.",
+    "googleP2": "Når du kobler til en Gmail-konto, gir du MCPEmails følgende Gmail-omfang. Vi ber om hvert omfang utelukkende for å levere funksjonene du aktiverer gjennom AI-agenten din, og vi bruker dem bare på dine vegne:",
+    "googleScopeReadonly": "<c>gmail.readonly</c>: liste opp meldinger og lese meldingsinnhold slik at agenten din kan søke i, lese og oppsummere e-post på din forespørsel.",
+    "googleScopeSend": "<c>gmail.send</c>: skrive og sende meldinger som agenten din oppretter på din forespørsel.",
+    "googleLimitedIntro": "I samsvar med kravene til Begrenset bruk vil MCPEmails:",
+    "googleLimitedList": [
+      "kun bruke Google-brukerdata til å levere og forbedre de brukervendte funksjonene beskrevet ovenfor;",
+      "ikke overføre eller selge Google-brukerdata til tredjeparter, datameglere eller annonsenettverk;",
+      "ikke bruke Google-brukerdata til å vise annonser;",
+      "ikke bruke Google-brukerdata til å utvikle, forbedre eller trene generaliserte eller ikke-personaliserte AI- eller maskinlæringsmodeller;",
+      "ikke tillate at mennesker leser Google-brukerdata med mindre (a) du gir uttrykkelig samtykke for spesifikke meldinger, (b) det er nødvendig av sikkerhetsmessige hensyn, slik som undersøkelse av misbruk, (c) det er påkrevd for å overholde gjeldende lov, eller (d) dataene er aggregert og anonymisert."
+    ],
+    "googleP3": "Som beskrevet i avsnitt 2.5 strømmes e-postinnhold hentet fra Gmail API videre til agenten din i samme forespørsel, og lagres, mellomlagres eller logges aldri av MCPEmails."
+  },
+  "dataRetention": {
+    "title": "4. Datalagring",
+    "intro": "Vi oppbevarer hver datakategori i følgende perioder:",
+    "thCategory": "Datakategori",
+    "thPeriod": "Lagringsperiode",
+    "thReason": "Begrunnelse",
+    "rows": [
+      {
+        "category": "Kontodata (e-post, visningsnavn)",
+        "period": "Inntil kontosletting, pluss 30 dager",
+        "reason": "Tjenestedrift; gjenopprettingsvindu"
+      },
+      {
+        "category": "Arbeidsområde- og innbokskonfigurasjon",
+        "period": "Inntil slettet av deg, pluss 30 dager",
+        "reason": "Tjenestedrift; gjenopprettingsvindu"
+      },
+      {
+        "category": "Krypterte OAuth-tokener / app-passord",
+        "period": "Inntil innboks frakobles eller konto slettes",
+        "reason": "Nødvendig for å autentisere leverandørens API-kall"
+      },
+      {
+        "category": "API-nøkkelhasher",
+        "period": "Inntil tilbakekalt, pluss 30 dager",
+        "reason": "Revisjonsspor; gjenopprettingsvindu"
+      },
+      {
+        "category": "MCP-verktøykall revisjonslogger",
+        "period": "90 dager (Free & Solo); 1 år (Team)",
+        "reason": "Sikkerhetsrevisjon; abonnementsfunksjon"
+      },
+      {
+        "category": "Aggregerte bruksmetrikker",
+        "period": "2 år",
+        "reason": "Faktureringshistorikk; produktanalyse"
+      },
+      {
+        "category": "Driftslogger på serveren (IP, status)",
+        "period": "30 dager rå; anonymisert aggregat beholdes",
+        "reason": "Forebygging av misbruk; tilgjengelighet"
+      },
+      {
+        "category": "E-postinnhold",
+        "period": "Ikke lagret; null lagring",
+        "reason": "Innebygd personvern"
+      }
+    ],
+    "outro": "Når du sletter kontoen din, igangsetter vi sletting av alle personopplysninger innen 30 dager. Aggregert, ikke-personlig bruksstatistikk avledet fra kontoen din kan oppbevares utover denne perioden i anonymisert form."
+  },
+  "thirdParties": {
+    "title": "5. Tredjeparter og datadeling",
+    "infraTitle": "5.1 Infrastrukturleverandører (databehandlere)",
+    "infraP": "Vi bruker følgende underdatabehandlere for å drive tjenesten. Hver er bundet av en databehandleravtale og behandler data kun etter våre instruksjoner:",
+    "thProvider": "Leverandør",
+    "thPurpose": "Formål",
+    "thData": "Data som behandles",
+    "thLocation": "Plassering",
+    "supabasePurpose": "Database, autentisering, edge-funksjoner",
+    "supabaseData": "Kontodata, arbeidsområdekonfigurasjon, revisjonslogger",
+    "supabaseLocation": "EU (Frankfurt) eller USA (Virginia); du velger ved registrering",
+    "vercelPurpose": "Webhotell, CDN",
+    "vercelData": "HTTP-forespørselsmetadata; ingen e-postinnhold",
+    "vercelLocation": "Globalt edge (nærmeste region til brukeren)",
+    "stripeProvider": "(kun betalte abonnementer)",
+    "stripePurpose": "Betalingsbehandling",
+    "stripeData": "Faktureringse-post, betalingskortdata (lagret av Stripe, ikke oss)",
+    "stripeLocation": "USA (Stripe er PCI-DSS-sertifisert)",
+    "emailProvidersTitle": "5.2 E-postleverandører (dine leverandører, ikke våre)",
+    "emailProvidersP": "Når du kobler til Gmail, Outlook eller en Fastmail-/IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
+    "noBrokersTitle": "5.3 Ingen datameglere eller annonsenettverk",
+    "noBrokersP": "Vi deler ingen data med datameglere, annonsenettverk, sosiale medieplattformer eller analyseselskaper som bygger brukerprofiler.",
+    "legalDisclosuresTitle": "5.4 Rettslige utleveringer",
+    "legalDisclosuresP": "Vi kan utlevere personopplysninger dersom det er påkrevd etter lov, gyldig rettslig prosess (slik som en rettskjennelse eller stevning), eller for å beskytte rettighetene, eiendommen eller sikkerheten til MCPEmails, brukerne våre eller offentligheten. Der loven tillater det, vil vi varsle berørte brukere før vi utleverer dataene deres.",
+    "businessTransfersTitle": "5.5 Virksomhetsoverdragelser",
+    "businessTransfersP": "Ved en fusjon, et oppkjøp eller et salg av eiendeler kan personopplysninger bli overført som en del av den transaksjonen. Vi vil varsle brukere via e-postadressen på kontoen deres før en slik overføring finner sted og før dataene deres blir underlagt en annen personvernerklæring."
+  },
+  "internationalTransfers": {
+    "title": "6. Internasjonale dataoverføringer",
+    "p1": "MCPEmails drives fra Norge, som er underlagt det europeiske økonomiske samarbeidsområdets (EØS) personvernrammeverk. Hvis du bruker tjenesten fra utenfor EØS, kan dataene dine bli overført til og behandlet i land innenfor EØS.",
+    "p2": "Våre infrastruktur-underdatabehandlere (Supabase, Vercel) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering.",
+    "p3": "Bedriftskunder kan velge å lagre alle konto- og konfigurasjonsdata utelukkende i EU-basert infrastruktur (Frankfurt-regionen) uten ekstra kostnad."
+  },
+  "yourRights": {
+    "title": "7. Dine rettigheter",
+    "intro": "Avhengig av hvor du befinner deg, kan du ha følgende rettigheter knyttet til personopplysningene dine:",
+    "rights": [
+      {
+        "term": "Innsyn.",
+        "desc": " Be om en kopi av alle personopplysninger vi har om deg."
+      },
+      {
+        "term": "Retting.",
+        "desc": " Be oss om å rette unøyaktige eller ufullstendige data."
+      },
+      {
+        "term": "Sletting (\"retten til å bli glemt\").",
+        "desc": " Be om sletting av personopplysningene dine. Du kan utløse dette selv ved å slette kontoen din i Dashbord → Innstillinger → Slett konto."
+      },
+      {
+        "term": "Begrensning.",
+        "desc": " Be oss om å begrense behandlingen av dataene dine under visse omstendigheter."
+      },
+      {
+        "term": "Dataportabilitet.",
+        "desc": " Be om dataene dine i et maskinlesbart format (JSON)."
+      },
+      {
+        "term": "Innsigelse.",
+        "desc": " Protestere mot behandling basert på berettigede interesser."
+      },
+      {
+        "term": "Trekke tilbake samtykke.",
+        "desc": " Der behandlingen er basert på samtykke, kan du trekke det tilbake når som helst uten at det påvirker lovligheten av tidligere behandling."
+      }
+    ],
+    "exercise": "For å utøve noen av disse rettighetene, send oss en e-post på <email></email>. Vi vil svare innen 30 dager (eller 72 timer for hastesaker knyttet til sikkerhet). Vi kan be deg om å bekrefte identiteten din før vi behandler forespørselen.",
+    "complaint": "Hvis du befinner deg i EØS eller Storbritannia, har du rett til å klage til din lokale tilsynsmyndighet. I Norge er dette <b>Datatilsynet</b> (datatilsynet.no)."
+  },
+  "security": {
+    "title": "8. Sikkerhet",
+    "intro": "Vi tar sikkerheten til dataene dine på alvor og iverksetter egnede tekniske og organisatoriske tiltak, inkludert:",
+    "measures": [
+      "Alle data under overføring krypteres med TLS 1.2 eller høyere. Tilkoblinger som ikke støtter TLS, avvises.",
+      "OAuth-tokener og IMAP-legitimasjon krypteres i hvile med AES-256-GCM. Krypteringsnøkkelen lagres i en separat Supabase Vault-instans og er aldri plassert sammen med de krypterte dataene.",
+      "API-nøkler hashes med SHA-256 før lagring. Den rå nøkkelen kan ikke gjenopprettes fra hashen.",
+      "Databasetilgang er beskyttet av Row-Level Security (RLS)-policyer som hindrer ett arbeidsområde i å få tilgang til et annets data, selv ved en feil i spørringslogikken.",
+      "Administrativ tilgang til produksjonsinfrastruktur krever flerfaktorautentisering og logges."
+    ],
+    "reportP": "Til tross for disse tiltakene er ingen systemer fullstendig sikre. Hvis du oppdager en sikkerhetssårbarhet, vennligst rapporter den ansvarlig til <securityEmail></securityEmail>. Vi tar sikte på å bekrefte rapporter innen 24 timer og løse bekreftede sårbarheter innen 72 timer for kritiske saker.",
+    "breachP": "Ved et brudd på personopplysningssikkerheten som sannsynligvis vil medføre en risiko for dine rettigheter og friheter, vil vi varsle berørte brukere og den relevante tilsynsmyndigheten innen 72 timer etter at vi ble klar over bruddet, slik GDPR artikkel 33 krever."
+  },
+  "children": {
+    "title": "9. Barns personvern",
+    "p": "MCPEmails er ikke rettet mot barn under 16 år. Vi samler ikke bevisst inn personopplysninger fra noen under 16. Hvis du mener vi utilsiktet har samlet inn data fra et barn, vennligst kontakt oss på <email></email>, så sletter vi dem omgående."
+  },
+  "changes": {
+    "title": "10. Endringer i denne erklæringen",
+    "intro": "Vi kan oppdatere denne personvernerklæringen fra tid til annen. Når vi gjør vesentlige endringer (slik som å samle inn nye datakategorier eller dele data med nye tredjeparter), vil vi:",
+    "list": [
+      "Oppdatere \"Sist oppdatert\"-datoen øverst på denne siden.",
+      "Sende et e-postvarsel til adressen registrert på kontoen din minst 14 dager før endringene trer i kraft.",
+      "Vise en tydelig melding i dashbordet i 14 dager etter at endringen trer i kraft."
+    ],
+    "outro": "Din fortsatte bruk av tjenesten etter at en endring trer i kraft, utgjør aksept av den oppdaterte erklæringen. Hvis du er uenig i en vesentlig endring, kan du slette kontoen din før ikrafttredelsesdatoen."
+  },
+  "contact": {
+    "title": "11. Kontakt oss",
+    "intro": "Hvis du har spørsmål om denne personvernerklæringen, ønsker å utøve en rettighet som registrert, eller vil rapportere en personvernbekymring, vennligst kontakt oss:",
+    "emailLabel": "E-post",
+    "securityLabel": "Sikkerhetsproblemer",
+    "postalLabel": "Postadresse",
+    "responseLabel": "Responstid",
+    "responseValue": "Vi svarer på alle personvernforespørsler innen 30 dager"
+  },
+  "cta": {
+    "title": "Spørsmål om dataene dine?",
+    "sub": "Personvernteamet vårt er her for å hjelpe. Send oss en e-post, så svarer vi innen 30 dager.",
+    "contactBtn": "Kontakt personvernteamet",
+    "termsBtn": "Les vilkårene våre"
+  }
+}

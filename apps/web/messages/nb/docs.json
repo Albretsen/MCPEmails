@@ -1,0 +1,265 @@
+{
+  "meta": {
+    "title": "Dokumentasjon",
+    "description": "Kom i gang med MCPEmails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail-, Outlook- og IMAP-agenter."
+  },
+  "hero": {
+    "eyebrow": "Dokumentasjon",
+    "titleLine1": "Agenten din har en innboks",
+    "titleLine2": "på fire steg.",
+    "lead": "Koble til hvilken som helst e-postkonto, lim inn én URL i en OAuth-kompatibel MCP-klient og godkjenn. Klienter uten OAuth bruker en API-nøkkel i stedet. Full verktøyreferanse og tilkoblingsveiledning nedenfor.",
+    "ctaQuickStart": "Hurtigstart",
+    "ctaOAuth": "OAuth (claude.ai)",
+    "ctaTools": "Verktøyreferanse",
+    "ctaProviders": "Leverandørstøtte"
+  },
+  "quickstart": {
+    "eyebrow": "Hurtigstart",
+    "heading": "Oppe og kjører på minutter.",
+    "sub": "Ingen SDK kreves. MCPEmails snakker standard MCP over HTTP, så det passer rett inn i enhver MCP-kompatibel agent.",
+    "steps": {
+      "signup": {
+        "label": "Registrer deg og koble til en innboks",
+        "heading": "Opprett kontoen din og koble til Gmail",
+        "body": "Registrer deg på mcpemails.com, og gå deretter til Dashboard → Inboxes → Connect Inbox. Velg Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth-flyten eller lim inn et app-passord. Innboksen din er klar på under ett minutt.",
+        "cta": "Koble til innboksen din →"
+      },
+      "apikey": {
+        "label": "Opprett en API-nøkkel",
+        "heading": "Generer et bearer-token for agenten din",
+        "body": "I Dashboard → API Keys, klikk \"Create key\". Gi den et navn, velg omfangene agenten din trenger (read:email og/eller send:email), og kopier nøkkelen. Den vises kun én gang."
+      },
+      "addclient": {
+        "label": "Legg MCPEmails til i agenten din",
+        "heading": "Lim MCP-endepunktet inn i klienten din",
+        "body": "Velg fanen for klienten din nedenfor. MCP-klienter med OAuth 2.0-støtte (claude.ai, Claude Desktop, Cursor og andre) limer bare inn URL-en og godkjenner, ingen API-nøkkel nødvendig. Klienter uten OAuth, samt skriptbasert tilgang, bruker API-nøkkelen fra steg 02."
+      },
+      "firstcall": {
+        "label": "Gjør ditt første kall",
+        "heading": "Be agenten din om å sjekke innboksen din",
+        "body": "Ingen kopiering av innboks-UUID-er. Agenten din kaller list_inboxes først for å oppdage hver tilkoblet innboks og dens UUID, og deretter spør du: \"Sjekk innboksen min og oppsummer de 5 siste uleste meldingene.\""
+      }
+    }
+  },
+  "copy": {
+    "copy": "Kopier",
+    "copied": "Kopiert!"
+  },
+  "clientTabs": {
+    "oauth": "OAuth-klienter",
+    "claude": "API-nøkkel (Desktop)",
+    "cursor": "API-nøkkel (Cursor)",
+    "raw": "Rå cURL"
+  },
+  "endpoint": {
+    "eyebrow": "Endepunkt",
+    "heading": "Én URL, standard MCP.",
+    "sub": "All trafikk går til ett enkelt Streamable HTTP-endepunkt. Autentiser med et bearer-token fra dashbordet ditt.",
+    "bodyMethods": "Send en JSON-RPC 2.0-forespørselskropp. Støttede metoder: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.",
+    "infoTransport": "Transport: <b>Streamable HTTP</b> (MCP 2025-06-18)",
+    "infoAuth": "Autentisering: <b>Authorization: Bearer &lt;api-key&gt;</b>",
+    "infoRateLimits": "Hastighetsgrenser: <b>100 req/min · 1 000/t · 10 000/dag</b> per nøkkel",
+    "infoFormat": "Svarformat: <b>JSON-RPC 2.0</b>",
+    "handshakeLabel": "Initialize-håndtrykk"
+  },
+  "oauth": {
+    "eyebrow": "OAuth-tilkobling",
+    "heading": "Null konfigurasjon for OAuth-kompatible klienter.",
+    "sub": "MCP-klienter som støtter OAuth 2.0 (claude.ai, Claude Desktop, Cursor og andre) kobler til automatisk via authorization code + PKCE. Ingen API-nøkkel, ingen konfigurasjonsfil. Lim inn URL-en og klikk Connect.",
+    "step1": "<b>Steg 1:</b> Gå til claude.ai → Customize → Connectors → Add connector",
+    "step2": "<b>Steg 2:</b> Lim inn <code>https://www.mcpemails.com/api/mcp</code> som server-URL",
+    "step3": "<b>Steg 3:</b> Klikk Connect. MCPEmails åpner et godkjenningsskjermbilde",
+    "step4": "<b>Steg 4:</b> Logg inn med mcpemails-kontoen din og godkjenn tilgang",
+    "stepDone": "<b>Ferdig:</b> Alle seks verktøyene er aktive. claude.ai fornyer tokens automatisk",
+    "howTitle": "Hvordan det fungerer under panseret",
+    "howP1": "claude.ai registrerer seg selv via <b>RFC 7591 Dynamic Client Registration</b>, så du forhåndsregistrerer aldri en client-ID.",
+    "howP2": "Godkjenning bruker <b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636), så ingen client secret overføres noensinne.",
+    "howP3": "Tokens er begrenset til nøyaktig de tillatelsene du godkjenner: <code>read:email</code> og/eller <code>send:email</code>.",
+    "noOauthNote": "<b>Bruker du en klient uten OAuth-støtte?</b> Opprett en API-nøkkel i Dashboard → API Keys og send den som et bearer-token. API-nøkkel- og OAuth-tilkoblinger bruker samme MCP-endepunkt og de samme seks verktøyene."
+  },
+  "tools": {
+    "eyebrow": "Verktøyreferanse",
+    "heading": "Seks verktøy. Alle e-postoperasjonene agenten din trenger.",
+    "sub": "Start med <code>list_inboxes</code> for å oppdage tilgjengelige innbokser og deres UUID-er. De resterende fem verktøyene tar hver en <code>inbox_id</code> returnert av det kallet. Klikk \"Show example\" for å se en full forespørsel og svar.",
+    "noParams": "Ingen parametere. Kall med et tomt arguments-objekt:",
+    "showExample": "Vis eksempel på forespørsel og svar",
+    "hideExample": "Skjul eksempel på forespørsel og svar",
+    "labelRequest": "Forespørsel",
+    "labelResponse": "Svar",
+    "thParameter": "Parameter",
+    "thType": "Type",
+    "thRequired": "Påkrevd",
+    "thDescription": "Beskrivelse",
+    "badgeRequired": "påkrevd",
+    "badgeOptional": "valgfri",
+    "list_inboxes": {
+      "title": "List innbokser",
+      "desc": "Returnerer alle innbokser som gjeldende API-nøkkel eller OAuth-token har tilgang til. Kall denne først for å oppdage inbox_id-verdier, slik at du aldri kopierer UUID-er fra dashbordet."
+    },
+    "list_inbox": {
+      "title": "List innboks",
+      "desc": "List opp e-postsammendrag fra en tilkoblet innboks, nyeste først. Støtter paginering, mappevalg og filtrering på uleste.",
+      "params": {
+        "inbox_id": "UUID for innboksen som skal listes. Kall list_inboxes først for å oppdage tilgjengelige inbox-ID-er.",
+        "limit": "Maks antall resultater som returneres. Standard 20, maks 100.",
+        "offset": "Nullbasert pagineringsforskyvning. Standard 0.",
+        "folder": "Mappe som skal listes. Standard \"INBOX\". Andre verdier: \"SENT\", \"DRAFTS\", \"TRASH\".",
+        "unread_only": "Returner kun uleste meldinger. Standard false."
+      }
+    },
+    "read_email": {
+      "title": "Les e-post",
+      "desc": "Hent det fulle innholdet i en enkelt e-post etter ID, inkludert tekstkropp, valgfri renset HTML og valgfrie vedleggsdata.",
+      "params": {
+        "inbox_id": "UUID for innboksen som inneholder e-posten. Kall list_inboxes for å hente tilgjengelige inbox-ID-er.",
+        "message_id": "Leverandørens meldings-ID fra list_inbox eller search_emails.",
+        "include_html": "Inkluder renset HTML-kropp. Standard false.",
+        "include_attachments": "Inkluder base64-vedleggsdata. Standard false.",
+        "mark_as_read": "Merk meldingen som lest etter henting. Standard false."
+      }
+    },
+    "search_emails": {
+      "title": "Søk i e-post",
+      "desc": "Søk i en innboks med leverandørens egen spørresyntaks. Gmail støtter Gmail-søkeoperatorer; Outlook bruker $search; Fastmail- og IMAP-innbokser bruker tekstsøk.",
+      "params": {
+        "inbox_id": "UUID for innboksen det skal søkes i. Kall list_inboxes for å hente tilgjengelige inbox-ID-er.",
+        "query": "Søkespørring. For Gmail: \"from:alice@example.com after:2026/01/01\". For Outlook: naturlig språk eller KQL-spørringer.",
+        "limit": "Maks antall resultater. Standard 20, maks 100.",
+        "offset": "Pagineringsforskyvning. Standard 0.",
+        "include_folders": "Begrens søket til disse mappenavnene. Standard: søk i alle mapper."
+      }
+    },
+    "send_email": {
+      "title": "Send e-post",
+      "desc": "Send en ny e-post fra en tilkoblet innboks. Støtter ren tekst, valgfri HTML-kropp, CC/BCC og filvedlegg (opptil 10 MB totalt).",
+      "params": {
+        "inbox_id": "UUID for innboksen det skal sendes fra. Kall list_inboxes for å hente tilgjengelige inbox-ID-er.",
+        "to": "Mottakernes e-postadresser. Maks 50.",
+        "subject": "E-postens emnefelt. Maks 998 tegn.",
+        "body": "E-postkropp i ren tekst.",
+        "cc": "CC-mottakere. Standard [].",
+        "bcc": "BCC-mottakere. Standard [].",
+        "html_body": "HTML-versjon av kroppen (multipart/alternative). Den som kaller, er ansvarlig for trygg HTML.",
+        "reply_to": "Reply-To-headeradresse.",
+        "attachments": "Filvedlegg. Hvert element: '{' filename, mime_type, data (base64) '}'. Maks 20 elementer, 10 MB totalt."
+      }
+    },
+    "reply_to_email": {
+      "title": "Svar på e-post",
+      "desc": "Send et svar på en eksisterende e-post. Trådheadere (In-Reply-To, References) settes automatisk. Støtter svar-til-alle og vedlegg.",
+      "params": {
+        "inbox_id": "UUID for innboksen som inneholder den opprinnelige meldingen. Kall list_inboxes for å hente tilgjengelige inbox-ID-er.",
+        "message_id": "Leverandørens meldings-ID for e-posten det svares på.",
+        "body": "Svarkropp i ren tekst.",
+        "html_body": "Valgfri HTML-versjon av svaret.",
+        "reply_all": "Svar til alle opprinnelige mottakere (To + Cc). Standard false.",
+        "attachments": "Filvedlegg. Samme skjema som send_email. Maks 20 elementer."
+      }
+    }
+  },
+  "errors": {
+    "eyebrow": "Feilkoder",
+    "heading": "Feilkoder og veiledning for nye forsøk.",
+    "sub": "Feil ved autentisering, omfang og hastighetsgrense returnerer et JSON-RPC <code>error</code>-objekt med en numerisk kode. Feil ved verktøykjøring (innboks ikke funnet, leverandørfeil osv.) returnerer et vanlig <code>result</code> med <code>isError: true</code> og en lesbar melding i <code>content[0].text</code>.",
+    "thCode": "Kode",
+    "thType": "Type",
+    "thWhen": "Når den oppstår",
+    "thRetryable": "Kan prøves på nytt",
+    "retryableNo": "Nei",
+    "exampleLabel": "Eksempel på svar ved kjøringsfeil",
+    "rows": {
+      "auth": "Manglende, feilformatert, tilbakekalt eller utløpt API-nøkkel. Returneres også når API-nøkkelen mangler det nødvendige omfanget for verktøyet som kalles.",
+      "method": "Ukjent JSON-RPC-metode (f.eks. kall av en annen metode enn initialize, tools/list, tools/call)",
+      "param": "Ukjent verktøynavn, eller manglende / ugyldig parameter i tools/call",
+      "rate": "Hastighetsgrense per nøkkel eller daglig kvote for planen overskredet. Sjekk data.error_code: \"rate_limit_exceeded\" vs \"quota_exceeded\". Sjekk data.retry_after (sekunder) før du prøver på nytt.",
+      "tool": "Verktøyet ble kjørt, men støtte på en feil (innboks ikke funnet, melding ikke funnet, autentiseringsfeil hos leverandør, ugyldig mottaker, vedlegg for stort, leverandør 5xx). Feilbeskrivelsen finnes i content[0].text."
+    }
+  },
+  "rateLimits": {
+    "eyebrow": "Hastighetsgrenser",
+    "heading": "Hastighetsgrenser og kvoter.",
+    "perKeyTag": "Rullerende vinduer per nøkkel",
+    "perKeyHeading": "100 req / min · 1 000 / t · 10 000 / dag",
+    "perKeyBody": "Håndheves per API-nøkkel uavhengig av plan. Ved overskridelse returnerer serveren feilkode <code>-32029</code> med <code>data.error_code: \"rate_limit_exceeded\"</code> og et <code>data.retry_after</code>-felt (sekunder). Respekter den verdien før du prøver på nytt.",
+    "planTag": "Plantak per minutt",
+    "planHeading": "Free 60 / min · Solo 300 / min · Team 1 000 / min",
+    "planBody": "Bruken er ubegrenset; dette er en burst-grense for rimelig bruk per arbeidsområde (aggregert på tvers av alle API-nøklene dine). Ved overskridelse returnerer kall <code>data.error_code: \"rate_limit_exceeded\"</code> med <code>data.window: \"per_minute\"</code> og en <code>data.retry_after</code>-nedtelling (sekunder). Oppgrader planen din for et høyere tak.",
+    "retryTag": "Trygge nye forsøk",
+    "retryHeading": "Respekter alltid retry_after; prøv aldri sendinger på nytt i blinde",
+    "retryBody": "For <code>rate_limit_exceeded</code>-feil, vent <code>data.retry_after</code> sekunder før du prøver på nytt. Bruk eksponentiell backoff for <code>provider_error</code>. Ikke prøv <code>send_email</code> automatisk på nytt ved <code>provider_error</code>, siden meldingen kan ha blitt akseptert av leverandøren allerede."
+  },
+  "cta": {
+    "heading": "Klar til å koble til innboksen din?",
+    "sub": "Start på Free-planen: ubegrenset, ingen kort kreves. Oppgrader til Solo eller Team for høyere burst-grenser og teamfunksjoner.",
+    "primary": "Kom i gang gratis",
+    "secondary": "Se priser"
+  },
+  "providers": {
+    "meta": {
+      "title": "Leverandørstøtte",
+      "description": "Se hvilke e-postleverandører MCPEmails støtter og hvilke funksjoner som er tilgjengelige per leverandør: Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP."
+    },
+    "labels": {
+      "generic": "Generic IMAP"
+    },
+    "features": {
+      "read": "Les e-post",
+      "search": "Søk",
+      "send": "Send e-post",
+      "reply": "Svar",
+      "forward": "Videresend",
+      "flags": "Lest/ulest + stjernemerking",
+      "folders": "Mapper",
+      "labels": "Etiketter / tagger",
+      "move": "Flytt",
+      "copy": "Kopier",
+      "delete": "Slett / papirkurv",
+      "permanent_delete": "Permanent sletting (expunge)",
+      "drafts": "Utkast (opprett / rediger / send)",
+      "contacts": "Kontakter-API",
+      "scheduling": "Planlagt sending",
+      "search_syntax": "Søkesyntaks"
+    },
+    "sections": {
+      "Core": "Kjerne",
+      "Flags & state": "Flagg og tilstand",
+      "Folders & labels": "Mapper og etiketter",
+      "Delete": "Sletting",
+      "Drafts": "Utkast",
+      "Contacts": "Kontakter",
+      "Scheduling": "Planlegging",
+      "Search": "Søk"
+    },
+    "hero": {
+      "eyebrow": "Leverandørstøtte",
+      "heading": "Hva som fungerer, per leverandør.",
+      "lead": "MCPEmails kobler til Gmail, Outlook, Fastmail og enhver IMAP-innboks (iCloud, Yahoo, Zoho, Yandex, generisk). Ikke alle leverandører eksponerer de samme API-ene — denne tabellen viser nøyaktig hva hver av dem støtter i dag.",
+      "ctaConnect": "Koble til en innboks",
+      "ctaBack": "Tilbake til dokumentasjonen"
+    },
+    "legend": {
+      "supported": "Støttet",
+      "notSupported": "Ikke støttet",
+      "planned": "Planlagt (ikke lansert ennå)",
+      "imapNote": "<b>iCloud, Yahoo, Zoho, Yandex og Generic IMAP</b> kjører alle gjennom den samme Deno IMAP/SMTP-transporten og deler identiske egenskaper. Kolonnene vises hver for seg for tydelighetens skyld, men funksjonssettet deres er identisk."
+    },
+    "ariaSupported": "Støttet",
+    "ariaNotSupported": "Ikke støttet",
+    "plannedBadge": "planlagt",
+    "table": {
+      "feature": "Funksjon"
+    },
+    "notes": {
+      "gmail": "<b>Gmail — mapper vs. etiketter:</b> Gmail bruker et flatt etikettsystem i stedet for hierarkiske mapper. \"Flytt\" er implementert som legg til / fjern etikett. Native kopiering er ikke tilgjengelig via Gmail REST-API-et.",
+      "permanentDelete": "<b>Permanent sletting:</b> Gmail og Outlook flytter til papirkurven når du sletter — permanent expunge eksponeres ikke av API-ene deres. IMAP-leverandører (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) støtter både papirkurv og hard expunge.",
+      "contacts": "<b>Kontakter-API:</b> Gmail bruker Google People API; Outlook bruker Microsoft Graph <code>/contacts</code>. Fastmail CardDAV og IMAP-baserte kontakter er utsatt til en senere utgivelse.",
+      "scheduling": "<b>Planlegging:</b> Planlagt for alle leverandører via en server-side kø (ikke leverandørenes egen planlegging). Ingen leverandør eksponerer et eget API for planlagt sending som er tilgjengelig uten å lagre legitimasjon på serversiden."
+    },
+    "cta": {
+      "heading": "Klar til å koble til innboksen din?",
+      "sub": "Free-plan: ubegrensede tilkoblinger, ingen kort kreves.",
+      "primary": "Kom i gang gratis",
+      "secondary": "Les dokumentasjonen"
+    }
+  }
+}

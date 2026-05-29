@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { ImapAuthError, ImapClient } from "./imap-client.ts";
+import { ImapAuthError, ImapClient, ImapMessageSummary } from "./imap-client.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
 
@@ -1170,6 +1170,495 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     },
   },
 
+  {
+    name: "list_folders",
+    title: "List Folders",
+    description:
+      "List all folders (or labels, for Gmail) for an inbox. " +
+      "Returns each folder's provider-native ID, display name, type " +
+      "('folder' for hierarchical providers, 'label' for Gmail), and " +
+      "message counts (total and unread). " +
+      "IMAP providers use LIST + STATUS; Gmail uses labels.list + labels.get; " +
+      "Outlook uses Graph mailFolders; Fastmail uses JMAP Mailbox/get. " +
+      "Use the returned folder names/IDs as the 'folder' argument for list_inbox, " +
+      "and as source/destination for move_email and copy_email.",
+    requiredScope: "read:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox whose folders to list.",
+        },
+      },
+      required: ["inbox_id"],
+      additionalProperties: false,
+    },
+  },
+
+  // ── manage:folders scope ─────────────────────────────────────────────────────
+
+  {
+    name: "create_folder",
+    title: "Create Folder",
+    description:
+      "Create a new folder (or label, for Gmail) in an inbox. " +
+      "IMAP providers use the IMAP CREATE command; Gmail uses labels.create; " +
+      "Outlook uses Graph mailFolders create; Fastmail uses JMAP Mailbox/set create. " +
+      "Returns the provider-native folder/label ID and display name of the created item.",
+    requiredScope: "manage:folders",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox to create the folder/label in.",
+        },
+        name: {
+          type: "string",
+          minLength: 1,
+          maxLength: 255,
+          description: "Name of the new folder or label.",
+        },
+      },
+      required: ["inbox_id", "name"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "rename_folder",
+    title: "Rename Folder",
+    description:
+      "Rename an existing folder or label. " +
+      "IMAP providers use the IMAP RENAME command; Gmail uses labels.patch; " +
+      "Outlook uses Graph mailFolders PATCH; Fastmail uses JMAP Mailbox/set update. " +
+      "Use list_folders to obtain the folder_id before calling this tool.",
+    requiredScope: "manage:folders",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that owns the folder/label.",
+        },
+        folder_id: {
+          type: "string",
+          description:
+            "Provider-native folder/label ID as returned by list_folders. " +
+            "For IMAP this is the mailbox name (e.g. 'INBOX/Work'); " +
+            "for Gmail the label ID; for Outlook/Fastmail the opaque folder ID.",
+        },
+        new_name: {
+          type: "string",
+          minLength: 1,
+          maxLength: 255,
+          description: "New display name for the folder or label.",
+        },
+      },
+      required: ["inbox_id", "folder_id", "new_name"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "delete_folder",
+    title: "Delete Folder",
+    description:
+      "Permanently delete a folder (or label, for Gmail). " +
+      "THIS ACTION IS IRREVERSIBLE — all messages inside the folder may be lost " +
+      "depending on the provider. Requires confirm=true. " +
+      "IMAP providers use the IMAP DELETE command; Gmail uses labels.delete; " +
+      "Outlook uses Graph mailFolders delete; Fastmail uses JMAP Mailbox/set destroy. " +
+      "Use list_folders to obtain the folder_id before calling this tool.",
+    requiredScope: "manage:folders",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that owns the folder/label.",
+        },
+        folder_id: {
+          type: "string",
+          description:
+            "Provider-native folder/label ID as returned by list_folders.",
+        },
+        confirm: {
+          type: "boolean",
+          description: "Must be true to confirm the destructive delete operation.",
+        },
+      },
+      required: ["inbox_id", "folder_id", "confirm"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "move_email",
+    title: "Move Email",
+    description:
+      "Move an email message to a different folder (or label, for Gmail). " +
+      "IMAP providers use UID MOVE (with COPY+\\\\Deleted+EXPUNGE fallback); " +
+      "Gmail simulates move by adding the destination label and removing the INBOX label; " +
+      "Outlook uses Graph messages/{id}/move; Fastmail uses JMAP Email/set to update mailboxIds. " +
+      "Use list_folders to obtain the destination_folder_id before calling this tool. " +
+      "Gmail does not support copy_email — use move_email instead.",
+    requiredScope: "manage:folders",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that owns the message.",
+        },
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message ID as returned by list_inbox, read_email, or search_emails.",
+        },
+        destination_folder_id: {
+          type: "string",
+          description:
+            "Provider-native folder/label ID of the destination, as returned by list_folders. " +
+            "For IMAP this is the mailbox name (e.g. 'Archive'); " +
+            "for Gmail the label ID to add (INBOX label is removed automatically); " +
+            "for Outlook/Fastmail the opaque folder ID.",
+        },
+      },
+      required: ["inbox_id", "message_id", "destination_folder_id"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "copy_email",
+    title: "Copy Email",
+    description:
+      "Copy an email message to a different folder, leaving the original in place. " +
+      "IMAP providers use UID COPY; " +
+      "Outlook uses Graph messages/{id}/copy; Fastmail uses JMAP Email/copy. " +
+      "Gmail does not support copy — use move_email for Gmail inboxes. " +
+      "Use list_folders to obtain the destination_folder_id before calling this tool.",
+    requiredScope: "manage:folders",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that owns the message.",
+        },
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message ID as returned by list_inbox, read_email, or search_emails.",
+        },
+        destination_folder_id: {
+          type: "string",
+          description:
+            "Provider-native folder ID of the destination, as returned by list_folders. " +
+            "For IMAP this is the mailbox name; for Outlook/Fastmail the opaque folder ID.",
+        },
+      },
+      required: ["inbox_id", "message_id", "destination_folder_id"],
+      additionalProperties: false,
+    },
+  },
+
+  // ── delete:email scope ─────────────────────────────────────────────────────
+
+  {
+    name: "delete_email",
+    title: "Delete Email",
+    description:
+      "Delete (trash or permanently expunge) a single email message. " +
+      "By default the message is moved to the provider's Trash folder (safer). " +
+      "Set permanent:true to hard-delete: IMAP uses \\\\Deleted + UID EXPUNGE; " +
+      "Gmail calls messages.delete (bypasses Trash); " +
+      "Outlook calls Graph messages/{id}/permanentDelete; " +
+      "Fastmail uses JMAP Email/set destroy. " +
+      "This action requires confirm:true and may be irreversible when permanent:true is set.",
+    requiredScope: "delete:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that owns the message.",
+        },
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message ID as returned by list_inbox, read_email, or search_emails.",
+        },
+        permanent: {
+          type: "boolean",
+          description:
+            "When true, hard-deletes the message (bypasses Trash). " +
+            "When false or omitted, moves the message to Trash. " +
+            "Default: false.",
+        },
+        confirm: {
+          type: "boolean",
+          description: "Must be true to confirm the destructive delete operation.",
+        },
+      },
+      required: ["inbox_id", "message_id", "confirm"],
+      additionalProperties: false,
+    },
+  },
+
+  // ── bulk operations ─────────────────────────────────────────────────────────
+
+  {
+    name: "bulk_move",
+    title: "Bulk Move",
+    description:
+      "Move up to 500 email messages to a destination folder in one call. " +
+      "IMAP: UID MOVE per source-folder group (falls back to COPY+EXPUNGE if MOVE unsupported); " +
+      "Gmail: messages.batchModify (label swap — removes INBOX, adds destination label); " +
+      "Outlook: per-message Graph move; " +
+      "Fastmail: single JMAP Email/set update for all messages. " +
+      "Returns succeeded/failed counts and per-message results. " +
+      "Use list_folders to obtain destination_folder_id.",
+    requiredScope: "manage:folders",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that owns the messages.",
+        },
+        message_ids: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 1,
+          maxItems: 500,
+          description:
+            "Provider-native message IDs to move (from list_inbox, read_email, or search_emails). " +
+            "Maximum 500 IDs per call.",
+        },
+        destination_folder_id: {
+          type: "string",
+          description:
+            "Provider-native folder/label ID of the destination, as returned by list_folders. " +
+            "For IMAP: mailbox name (e.g. 'Archive'); Gmail: label ID to add; " +
+            "Outlook/Fastmail: opaque folder ID.",
+        },
+      },
+      required: ["inbox_id", "message_ids", "destination_folder_id"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "bulk_delete",
+    title: "Bulk Delete",
+    description:
+      "Delete up to 500 email messages in one call. Requires confirm:true. " +
+      "By default moves messages to Trash (safer). Set permanent:true for hard delete. " +
+      "IMAP: UID MOVE to Trash or \\\\Deleted+UID EXPUNGE per source-folder group; " +
+      "Gmail: messages.batchDelete (permanent) or per-message trash (soft); " +
+      "Outlook: per-message Graph calls; " +
+      "Fastmail: JMAP Email/set destroy (permanent) or Trash mailbox update (soft). " +
+      "Returns succeeded/failed counts and per-message results.",
+    requiredScope: "delete:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that owns the messages.",
+        },
+        message_ids: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 1,
+          maxItems: 500,
+          description:
+            "Provider-native message IDs to delete. Maximum 500 IDs per call.",
+        },
+        permanent: {
+          type: "boolean",
+          description:
+            "When true, hard-deletes messages (bypasses Trash). " +
+            "When false or omitted, moves messages to Trash. Default: false.",
+        },
+        confirm: {
+          type: "boolean",
+          description: "Must be true to confirm the destructive bulk delete operation.",
+        },
+      },
+      required: ["inbox_id", "message_ids", "confirm"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "bulk_flag",
+    title: "Bulk Flag",
+    description:
+      "Apply a read/unread/flag/unflag action to up to 500 messages in one call. " +
+      "IMAP: single UID STORE command per source-folder group; " +
+      "Gmail: messages.batchModify; " +
+      "Outlook: per-message Graph PATCH; " +
+      "Fastmail: single JMAP Email/set update for all messages. " +
+      "Returns succeeded/failed counts and per-message results.",
+    requiredScope: "send:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that owns the messages.",
+        },
+        message_ids: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 1,
+          maxItems: 500,
+          description:
+            "Provider-native message IDs to update. Maximum 500 IDs per call.",
+        },
+        action: {
+          type: "string",
+          enum: ["read", "unread", "flag", "unflag"],
+          description:
+            "Action to apply to all messages: " +
+            "'read' marks as read; 'unread' marks as unread; " +
+            "'flag' stars/flags; 'unflag' removes the flag/star.",
+        },
+      },
+      required: ["inbox_id", "message_ids", "action"],
+      additionalProperties: false,
+    },
+  },
+
+  // ── search-and-act (Phase 3 cont.) ───────────────────────────────────────────
+
+  {
+    name: "search_and_move",
+    title: "Search and Move",
+    description:
+      "Run a search and move all matching messages to a destination folder in one " +
+      "server-side operation — avoids stale message IDs. " +
+      "Capped at 500 results per call. " +
+      "IMAP: UID MOVE per source-folder group; " +
+      "Gmail: messages.batchModify (label swap); " +
+      "Outlook: per-message Graph move; " +
+      "Fastmail: JMAP Email/set update for all matches. " +
+      "Returns succeeded/failed counts and per-message results. " +
+      "Use list_folders to obtain destination_folder_id.",
+    requiredScope: "manage:folders",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox to search and operate on.",
+        },
+        query: {
+          type: "string",
+          minLength: 1,
+          description:
+            "Search query string. Gmail: Gmail search syntax (from:, subject:, etc.); " +
+            "Outlook: KQL syntax; Fastmail: JMAP filter string; IMAP: IMAP SEARCH criteria.",
+        },
+        destination_folder_id: {
+          type: "string",
+          description:
+            "Provider-native folder/label ID of the destination, as returned by list_folders. " +
+            "For IMAP: mailbox name (e.g. 'Archive'); Gmail: label ID to add; " +
+            "Outlook/Fastmail: opaque folder ID.",
+        },
+        include_folders: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Optional list of folder/mailbox names to restrict the search scope. " +
+            "When omitted the search covers all folders.",
+        },
+        limit: {
+          type: "number",
+          minimum: 1,
+          maximum: 500,
+          description:
+            "Maximum number of matching messages to move. Default: 500.",
+        },
+      },
+      required: ["inbox_id", "query", "destination_folder_id"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "search_and_delete",
+    title: "Search and Delete",
+    description:
+      "Run a search and delete all matching messages in one server-side operation — " +
+      "avoids stale message IDs. Requires confirm:true. " +
+      "Capped at 500 results per call. " +
+      "Default: move matches to Trash (safer). Set permanent:true for hard delete. " +
+      "IMAP: UID MOVE to Trash or \\\\Deleted+UID EXPUNGE per source-folder group; " +
+      "Gmail: trash or messages.delete; Outlook: Graph delete or permanentDelete; " +
+      "Fastmail: JMAP Email/set destroy or Trash mailbox update. " +
+      "Returns succeeded/failed counts and per-message results.",
+    requiredScope: "delete:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox to search and operate on.",
+        },
+        query: {
+          type: "string",
+          minLength: 1,
+          description:
+            "Search query string. Gmail: Gmail search syntax; " +
+            "Outlook: KQL syntax; Fastmail: JMAP filter string; IMAP: IMAP SEARCH criteria.",
+        },
+        permanent: {
+          type: "boolean",
+          description:
+            "When true, hard-deletes matched messages (bypasses Trash). " +
+            "When false or omitted, moves messages to Trash. Default: false.",
+        },
+        include_folders: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Optional list of folder/mailbox names to restrict the search scope.",
+        },
+        limit: {
+          type: "number",
+          minimum: 1,
+          maximum: 500,
+          description:
+            "Maximum number of matching messages to delete. Default: 500.",
+        },
+        confirm: {
+          type: "boolean",
+          description: "Must be true to confirm the destructive search-and-delete operation.",
+        },
+      },
+      required: ["inbox_id", "query", "confirm"],
+      additionalProperties: false,
+    },
+  },
+
   // ── send:email scope ────────────────────────────────────────────────────────
 
   {
@@ -1348,6 +1837,82 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     },
   },
 
+  {
+    name: "forward_email",
+    title: "Forward Email",
+    description:
+      "Forward an existing email to one or more new recipients. Fetches the original " +
+      "message and prepends an optional introductory note followed by the standard " +
+      "'---------- Forwarded message ----------' header block (From, Date, Subject, To) " +
+      "and the original body. Optionally re-attaches original attachments. " +
+      "IMAP, Gmail, and Fastmail construct a new MIME message via their respective send " +
+      "paths; Outlook fetches the original and uses Graph sendMail. " +
+      "The forward subject is prefixed with 'Fwd:' if not already present. " +
+      "This action is irreversible — use carefully.",
+    requiredScope: "send:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description:
+            "UUID of the inbox that contains the original message and from which " +
+            "the forward will be sent.",
+        },
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message identifier of the email to forward, as returned " +
+            "by list_inbox, read_email, or search_emails.",
+        },
+        to: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          minItems: 1,
+          maxItems: 50,
+          description:
+            "List of forward recipient email addresses. Each must be a valid RFC 5322 address. " +
+            "Maximum 50 recipients.",
+        },
+        cc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Optional CC recipient email addresses.",
+        },
+        bcc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Optional BCC recipient email addresses.",
+        },
+        body: {
+          type: "string",
+          description:
+            "Optional plain-text introductory note to prepend above the forwarded message block. " +
+            "If omitted, the forwarded block begins immediately.",
+        },
+        html_body: {
+          type: "string",
+          description:
+            "Optional HTML version of the introductory note. If provided alongside body, " +
+            "the message is sent as multipart/alternative.",
+        },
+        include_attachments: {
+          type: "boolean",
+          default: false,
+          description:
+            "When true, re-attach the original message's attachments to the forward. " +
+            "Attachments that exceed the 10 MB per-call budget are silently omitted. " +
+            "Defaults to false.",
+        },
+      },
+      required: ["inbox_id", "message_id", "to"],
+      additionalProperties: false,
+    },
+  },
+
   // ── send:email scope — state changes (non-destructive) ─────────────────────
 
   {
@@ -1483,6 +2048,178 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         },
       },
       required: ["inbox_id", "message_id"],
+      additionalProperties: false,
+    },
+  },
+
+  // ── manage:drafts scope ──────────────────────────────────────────────────────
+
+  {
+    name: "list_drafts",
+    title: "List Drafts",
+    description:
+      "Return draft messages saved in the inbox's Drafts folder. " +
+      "Each result includes the draft_id, subject, recipients, and created timestamp. " +
+      "IMAP: UID SEARCH in the Drafts mailbox; Gmail: drafts.list API; " +
+      "Outlook: Graph mailFolders/Drafts/messages; Fastmail: JMAP Email/query with $draft keyword. " +
+      "Use the returned draft_id with update_draft or send_draft.",
+    requiredScope: "manage:drafts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox whose drafts to list.",
+        },
+        limit: {
+          type: "integer",
+          minimum: 1,
+          maximum: 50,
+          default: 20,
+          description: "Maximum number of drafts to return. Defaults to 20.",
+        },
+      },
+      required: ["inbox_id"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "create_draft",
+    title: "Create Draft",
+    description:
+      "Save a new email draft in the inbox's Drafts folder without sending it. " +
+      "Returns a draft_id that can be used with update_draft or send_draft. " +
+      "IMAP: APPEND to Drafts with \\\\Draft flag; Gmail: drafts.create; " +
+      "Outlook: create message in Drafts folder via Graph; Fastmail: JMAP Email/set with $draft keyword. " +
+      "At minimum, subject and body are required; to/cc/bcc are optional (drafts may be incomplete).",
+    requiredScope: "manage:drafts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox to save the draft in.",
+        },
+        to: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Optional recipient addresses. Drafts may be saved without recipients.",
+        },
+        cc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Optional CC recipient addresses.",
+        },
+        bcc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Optional BCC recipient addresses.",
+        },
+        subject: {
+          type: "string",
+          description: "Draft subject line.",
+        },
+        body: {
+          type: "string",
+          description: "Plain-text body of the draft.",
+        },
+        html_body: {
+          type: "string",
+          description: "Optional HTML body of the draft.",
+        },
+      },
+      required: ["inbox_id", "subject", "body"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "update_draft",
+    title: "Update Draft",
+    description:
+      "Replace the content of an existing draft. All supplied fields overwrite the stored draft. " +
+      "IMAP: appends updated message to Drafts then expunges the old UID; " +
+      "Gmail: drafts.update; Outlook: PATCH message via Graph; Fastmail: JMAP Email/set update. " +
+      "Use list_drafts to obtain draft_id values.",
+    requiredScope: "manage:drafts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that owns the draft.",
+        },
+        draft_id: {
+          type: "string",
+          description: "Provider-native draft identifier as returned by create_draft or list_drafts.",
+        },
+        to: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Updated recipient list.",
+        },
+        cc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Updated CC list.",
+        },
+        bcc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Updated BCC list.",
+        },
+        subject: {
+          type: "string",
+          description: "Updated subject line.",
+        },
+        body: {
+          type: "string",
+          description: "Updated plain-text body.",
+        },
+        html_body: {
+          type: "string",
+          description: "Updated HTML body.",
+        },
+      },
+      required: ["inbox_id", "draft_id", "subject", "body"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "send_draft",
+    title: "Send Draft",
+    description:
+      "Send a previously saved draft. The draft is removed from the Drafts folder after sending. " +
+      "IMAP: reads the draft MIME, submits via SMTP, then expunges the draft UID; " +
+      "Gmail: drafts.send; Outlook: POST /messages/{id}/send via Graph; " +
+      "Fastmail: JMAP EmailSubmission/set then removes $draft keyword. " +
+      "This action is irreversible — use carefully.",
+    requiredScope: "manage:drafts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox that contains the draft.",
+        },
+        draft_id: {
+          type: "string",
+          description: "Provider-native draft identifier as returned by create_draft or list_drafts.",
+        },
+      },
+      required: ["inbox_id", "draft_id"],
       additionalProperties: false,
     },
   },
@@ -6228,6 +6965,705 @@ async function replyFastmailMessage(
 }
 
 // ---------------------------------------------------------------------------
+// forward_email — types
+// ---------------------------------------------------------------------------
+
+interface ForwardEmailParams {
+  /** Forward recipients (To field). */
+  to: string[];
+  /** Optional CC recipients. */
+  cc: string[];
+  /** Optional BCC recipients. */
+  bcc: string[];
+  /** Optional introductory plain-text note prepended above the forwarded block. */
+  body?: string;
+  /** Optional HTML version of the introductory note. */
+  htmlBody?: string;
+  /** When true, include original message attachments in the forward. */
+  includeAttachments: boolean;
+}
+
+interface ForwardEmailResult {
+  /** Provider-assigned ID of the forwarded message. */
+  message_id: string;
+  /** Thread ID. */
+  thread_id: string;
+  /** ISO 8601 timestamp when the provider accepted the message. */
+  sent_at: string;
+  /** Provider-native ID of the original message that was forwarded. */
+  forwarded_from: string;
+  /** Resolved To recipients. */
+  to: EmailAddressEntry[];
+  /** Forward subject (prefixed with "Fwd:"). */
+  subject: string;
+  /** Always "sent" on success. */
+  status: "sent";
+}
+
+// ---------------------------------------------------------------------------
+// forward_email — shared helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the plain-text forwarded-message body.
+ *
+ * Format:
+ *   [optional intro text]
+ *
+ *   ---------- Forwarded message ----------
+ *   From: <original sender>
+ *   Date: <original date>
+ *   Subject: <original subject>
+ *   To: <original to>
+ *
+ *   <original body>
+ */
+function buildForwardedTextBody(
+  intro: string | undefined,
+  from: string,
+  date: string,
+  subject: string,
+  to: string,
+  origBody: string,
+): string {
+  const block = [
+    "---------- Forwarded message ----------",
+    `From: ${from}`,
+    `Date: ${date}`,
+    `Subject: ${subject}`,
+    `To: ${to}`,
+    "",
+    origBody,
+  ].join("\n");
+  return intro ? `${intro}\n\n${block}` : block;
+}
+
+/**
+ * Prefix "Fwd: " on the subject if not already present.
+ */
+function makeForwardSubject(origSubject: string): string {
+  return /^fwd:/i.test(origSubject.trim()) ? origSubject : `Fwd: ${origSubject}`;
+}
+
+// ---------------------------------------------------------------------------
+// forward_email — IMAP provider
+// ---------------------------------------------------------------------------
+
+/**
+ * Forwards an email via IMAP inboxes.
+ *
+ * Flow:
+ *   1. Read the original message via `readImapMessage` (with attachments if requested).
+ *   2. Build the forwarded plain-text body with the standard header block.
+ *   3. Send via `sendImapMessage` (SMTP submission) with the composed body.
+ */
+async function forwardImapMessage(
+  inbox: InboxRow,
+  originalMessageId: string,
+  params: ForwardEmailParams,
+): Promise<ForwardEmailResult> {
+  const original = await readImapMessage(
+    inbox,
+    originalMessageId,
+    false,
+    params.includeAttachments,
+    false,
+  );
+
+  const fwdSubject = makeForwardSubject(original.subject);
+  const origFromStr = original.from.name
+    ? `${original.from.name} <${original.from.email}>`
+    : original.from.email;
+  const origToStr = original.to
+    .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
+    .join(", ");
+
+  const textBody = buildForwardedTextBody(
+    params.body,
+    origFromStr,
+    original.date,
+    original.subject,
+    origToStr,
+    original.body_text ?? "",
+  );
+
+  const attachments = params.includeAttachments
+    ? original.attachments
+        .filter((a) => a.data !== null)
+        .map((a) => ({
+          filename: a.filename,
+          mime_type: a.mime_type,
+          data: a.data as string,
+        }))
+    : [];
+
+  const sendResult = await sendImapMessage(inbox, {
+    to: params.to,
+    cc: params.cc,
+    bcc: params.bcc,
+    subject: fwdSubject,
+    textBody,
+    htmlBody: params.htmlBody,
+    attachments,
+  });
+
+  return {
+    message_id: sendResult.message_id,
+    thread_id: sendResult.thread_id,
+    sent_at: sendResult.sent_at,
+    forwarded_from: originalMessageId,
+    to: sendResult.to,
+    subject: fwdSubject,
+    status: "sent",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// forward_email — Gmail provider
+// ---------------------------------------------------------------------------
+
+/**
+ * Forwards an email via the Gmail REST API.
+ *
+ * Flow:
+ *   1. Read the original message via `readGmailMessage` (with attachments if requested).
+ *   2. Build the forwarded plain-text body with the standard header block.
+ *   3. Send via `sendGmailMessage` using the composed body and collected attachments.
+ */
+async function forwardGmailMessage(
+  inbox: InboxRow,
+  originalMessageId: string,
+  params: ForwardEmailParams,
+): Promise<ForwardEmailResult> {
+  const original = await readGmailMessage(
+    inbox,
+    originalMessageId,
+    false,
+    params.includeAttachments,
+    false,
+  );
+
+  const fwdSubject = makeForwardSubject(original.subject);
+  const origFromStr = original.from.name
+    ? `${original.from.name} <${original.from.email}>`
+    : original.from.email;
+  const origToStr = original.to
+    .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
+    .join(", ");
+
+  const textBody = buildForwardedTextBody(
+    params.body,
+    origFromStr,
+    original.date,
+    original.subject,
+    origToStr,
+    original.body_text ?? "",
+  );
+
+  const attachments = params.includeAttachments
+    ? original.attachments
+        .filter((a) => a.data !== null)
+        .map((a) => ({
+          filename: a.filename,
+          mime_type: a.mime_type,
+          data: a.data as string,
+        }))
+    : [];
+
+  const sendResult = await sendGmailMessage(inbox, {
+    to: params.to,
+    cc: params.cc,
+    bcc: params.bcc,
+    subject: fwdSubject,
+    textBody,
+    htmlBody: params.htmlBody,
+    attachments,
+  });
+
+  return {
+    message_id: sendResult.message_id,
+    thread_id: sendResult.thread_id,
+    sent_at: sendResult.sent_at,
+    forwarded_from: originalMessageId,
+    to: sendResult.to,
+    subject: fwdSubject,
+    status: "sent",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// forward_email — Outlook provider
+// ---------------------------------------------------------------------------
+
+/**
+ * Forwards an email via Outlook / Microsoft 365 (Graph API).
+ *
+ * Flow:
+ *   1. Read the original message via `readOutlookMessage` (with attachments if requested).
+ *   2. Build the forwarded plain-text body with the standard header block.
+ *   3. Send via `sendOutlookMessage` using Graph sendMail with the composed body.
+ */
+async function forwardOutlookMessage(
+  inbox: InboxRow,
+  originalMessageId: string,
+  params: ForwardEmailParams,
+): Promise<ForwardEmailResult> {
+  const original = await readOutlookMessage(
+    inbox,
+    originalMessageId,
+    false,
+    params.includeAttachments,
+    false,
+  );
+
+  const fwdSubject = makeForwardSubject(original.subject);
+  const origFromStr = original.from.name
+    ? `${original.from.name} <${original.from.email}>`
+    : original.from.email;
+  const origToStr = original.to
+    .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
+    .join(", ");
+
+  const textBody = buildForwardedTextBody(
+    params.body,
+    origFromStr,
+    original.date,
+    original.subject,
+    origToStr,
+    original.body_text ?? "",
+  );
+
+  const attachments = params.includeAttachments
+    ? original.attachments
+        .filter((a) => a.data !== null)
+        .map((a) => ({
+          filename: a.filename,
+          mime_type: a.mime_type,
+          data: a.data as string,
+        }))
+    : [];
+
+  const sendResult = await sendOutlookMessage(inbox, {
+    to: params.to,
+    cc: params.cc,
+    bcc: params.bcc,
+    subject: fwdSubject,
+    textBody,
+    htmlBody: params.htmlBody,
+    attachments,
+  });
+
+  return {
+    message_id: sendResult.message_id,
+    thread_id: sendResult.thread_id,
+    sent_at: sendResult.sent_at,
+    forwarded_from: originalMessageId,
+    to: sendResult.to,
+    subject: fwdSubject,
+    status: "sent",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// forward_email — Fastmail provider (JMAP)
+// ---------------------------------------------------------------------------
+
+/**
+ * Forwards an email via Fastmail JMAP.
+ *
+ * Flow:
+ *   1. Read the original message via `readFastmailMessage` (with attachments if requested).
+ *   2. Build the forwarded plain-text body with the standard header block.
+ *   3. Send via `sendFastmailMessage` using the composed body and collected attachments.
+ */
+async function forwardFastmailMessage(
+  inbox: InboxRow,
+  originalMessageId: string,
+  params: ForwardEmailParams,
+): Promise<ForwardEmailResult> {
+  const original = await readFastmailMessage(
+    inbox,
+    originalMessageId,
+    false,
+    params.includeAttachments,
+    false,
+  );
+
+  const fwdSubject = makeForwardSubject(original.subject);
+  const origFromStr = original.from.name
+    ? `${original.from.name} <${original.from.email}>`
+    : original.from.email;
+  const origToStr = original.to
+    .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
+    .join(", ");
+
+  const textBody = buildForwardedTextBody(
+    params.body,
+    origFromStr,
+    original.date,
+    original.subject,
+    origToStr,
+    original.body_text ?? "",
+  );
+
+  const attachments = params.includeAttachments
+    ? original.attachments
+        .filter((a) => a.data !== null)
+        .map((a) => ({
+          filename: a.filename,
+          mime_type: a.mime_type,
+          data: a.data as string,
+        }))
+    : [];
+
+  const sendResult = await sendFastmailMessage(inbox, {
+    to: params.to,
+    cc: params.cc,
+    bcc: params.bcc,
+    subject: fwdSubject,
+    textBody,
+    htmlBody: params.htmlBody,
+    attachments,
+  });
+
+  return {
+    message_id: sendResult.message_id,
+    thread_id: sendResult.thread_id,
+    sent_at: sendResult.sent_at,
+    forwarded_from: originalMessageId,
+    to: sendResult.to,
+    subject: fwdSubject,
+    status: "sent",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// forward_email — top-level handler
+// ---------------------------------------------------------------------------
+
+/**
+ * Executes the `forward_email` tool end-to-end.
+ *
+ * Validates and normalises arguments, resolves the inbox, reads the original
+ * message, builds the forwarded body with the standard header block, and
+ * dispatches to the correct provider send path.
+ *
+ * Never throws — all errors are captured as structured ToolErrors.
+ *
+ * Security considerations:
+ *  - Requires `send:email` scope (belt-and-suspenders check in addition to
+ *    middleware enforcement).
+ *  - Total recipient cap of 50 to prevent accidental mass forward.
+ *  - Same provider_error / delivery_status caution as send_email applies.
+ */
+async function executeForwardEmail(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  // ── Input validation ──────────────────────────────────────────────────────
+  if (
+    typeof rawArgs !== "object" ||
+    rawArgs === null ||
+    Array.isArray(rawArgs)
+  ) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "forward_email: arguments must be an object with inbox_id, message_id, and to.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const args = rawArgs as Record<string, unknown>;
+
+  // inbox_id (required)
+  const inboxId =
+    typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "forward_email: inbox_id is required and must be a UUID string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  // message_id (required)
+  const messageId =
+    typeof args["message_id"] === "string" && args["message_id"].length > 0
+      ? args["message_id"]
+      : null;
+  if (!messageId) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "forward_email: message_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  // to (required, non-empty array, max 50)
+  const toRaw = args["to"];
+  if (!Array.isArray(toRaw) || toRaw.length === 0) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "forward_email: to is required and must be a non-empty array of email address strings.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+  if (toRaw.length > 50) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "forward_email: to must not exceed 50 recipients.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+  const to = toRaw as string[];
+
+  // cc (optional, default [])
+  const ccRaw = args["cc"];
+  const cc: string[] = Array.isArray(ccRaw) ? (ccRaw as string[]) : [];
+
+  // bcc (optional, default [])
+  const bccRaw = args["bcc"];
+  const bcc: string[] = Array.isArray(bccRaw) ? (bccRaw as string[]) : [];
+
+  // body (optional intro text)
+  const body =
+    typeof args["body"] === "string" && args["body"].trim().length > 0
+      ? args["body"]
+      : undefined;
+
+  // html_body (optional)
+  const htmlBody =
+    typeof args["html_body"] === "string" ? args["html_body"] : undefined;
+
+  // include_attachments (optional, default false)
+  const includeAttachments = args["include_attachments"] === true;
+
+  // ── RFC 5322 email address validation ─────────────────────────────────────
+  const addrChecks: Array<{ field: string; addr: unknown }> = [
+    ...to.map((addr) => ({ field: "to", addr })),
+    ...cc.map((addr) => ({ field: "cc", addr })),
+    ...bcc.map((addr) => ({ field: "bcc", addr })),
+  ];
+
+  for (const { field, addr } of addrChecks) {
+    if (typeof addr !== "string" || !isValidEmailAddress(addr)) {
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              `forward_email: invalid email address in '${field}': "${String(addr)}". ` +
+              "All addresses must be valid RFC 5322 email addresses (e.g., user@example.com).",
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "invalid_recipient",
+      };
+    }
+  }
+
+  // ── Scope check (belt-and-suspenders) ────────────────────────────────────
+  if (!apiKey.scopes.includes("send:email")) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "forward_email: the 'send:email' scope is required to forward messages.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "scope_denied",
+    };
+  }
+
+  // ── Inbox resolution + access control ────────────────────────────────────
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `Inbox ${inboxId} not found or not accessible to this API key. ` +
+            "Verify the inbox UUID in the MCPEmails dashboard.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "inbox_not_found",
+    };
+  }
+
+  // ── Provider dispatch ─────────────────────────────────────────────────────
+  const fwdParams: ForwardEmailParams = {
+    to,
+    cc,
+    bcc,
+    body,
+    htmlBody,
+    includeAttachments,
+  };
+
+  let fwdResult: ForwardEmailResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        fwdResult = await forwardGmailMessage(inbox, messageId, fwdParams);
+        break;
+      case "outlook":
+        fwdResult = await forwardOutlookMessage(inbox, messageId, fwdParams);
+        break;
+      case "fastmail":
+        fwdResult = await forwardFastmailMessage(inbox, messageId, fwdParams);
+        break;
+      case "imap":
+        fwdResult = await forwardImapMessage(inbox, messageId, fwdParams);
+        break;
+      default:
+        return {
+          result: {
+            content: [{
+              type: "text",
+              text:
+                `Provider '${inbox.provider}' is not yet supported by forward_email. ` +
+                "Supported providers: gmail, outlook, fastmail, imap.",
+            }],
+            isError: true,
+          },
+          logStatus: "error",
+          logErrorCode: "provider_error",
+        };
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+
+    if (message === "message_not_found") {
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              `Message ${messageId} not found in inbox ${inboxId}. ` +
+              "It may have been deleted or moved. Use list_inbox or search_emails " +
+              "to find the current message ID.",
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "message_not_found",
+      };
+    }
+
+    const isAuthFailure =
+      message === "gmail_auth_failed" ||
+      message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" ||
+      message === "imap_auth_failed";
+
+    if (isAuthFailure) {
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              `Unable to forward via ${inbox.provider}: OAuth token has been ` +
+              "revoked or expired. The user must reconnect their inbox at " +
+              "https://mcpemails.com/dashboard/inboxes. " +
+              "Inbox status has been updated to 'error'.",
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "auth_failed",
+      };
+    }
+
+    if (message === "quota_exceeded") {
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              `Forward not sent: the daily send quota for the ${inbox.provider} ` +
+              "account has been reached. Please try again tomorrow.",
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "quota_exceeded",
+      };
+    }
+
+    // Unknown provider error — do not include raw error detail.
+    console.error("[mcp-server] forward_email: provider_error", {
+      inbox_id: inboxId,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `An error occurred while forwarding the message via ${inbox.provider}. ` +
+            "The message may or may not have been delivered. " +
+            "Do not retry automatically to avoid duplicate delivery.",
+        }],
+        isError: true,
+        // @ts-ignore — delivery_status is an extension field per the MCP tool design doc.
+        delivery_status: "unknown",
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  return {
+    result: {
+      content: [{ type: "text", text: JSON.stringify(fwdResult) }],
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // reply_to_email — top-level handler
 // ---------------------------------------------------------------------------
 
@@ -7773,6 +9209,1014 @@ interface FlagUpdateResult {
   inbox_id: string;
 }
 
+// ---------------------------------------------------------------------------
+// list_folders — provider helpers + handler
+// ---------------------------------------------------------------------------
+
+/** Normalized folder/label entry returned by list_folders. */
+interface FolderEntry {
+  /** Provider-native folder/label ID (IMAP: mailbox name; Gmail: label ID; Outlook: folder ID; Fastmail: mailbox JMAP ID). */
+  id: string;
+  /** Human-readable display name. */
+  name: string;
+  /** 'folder' for hierarchical providers (IMAP, Outlook, Fastmail); 'label' for Gmail. */
+  type: "folder" | "label";
+  /** Total number of messages; null when not available. */
+  total_messages: number | null;
+  /** Number of unread messages; null when not available. */
+  unread_messages: number | null;
+}
+
+/**
+ * Lists IMAP mailboxes with per-mailbox STATUS (message counts).
+ * Caps STATUS fetches at 50 to prevent timeouts on large accounts.
+ * Throws "imap_auth_failed" on credential rejection.
+ */
+async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    const mailboxes = await client.listMailboxes();
+    const toStatus = mailboxes.slice(0, 50);
+    const statuses = await Promise.allSettled(
+      toStatus.map((mb) => client!.mailboxStatus(mb.name)),
+    );
+    return toStatus.map((mb, i) => {
+      const st = statuses[i];
+      return {
+        id: mb.name,
+        name: mb.name,
+        type: "folder" as const,
+        total_messages: st.status === "fulfilled" ? st.value.messages : null,
+        unread_messages: st.status === "fulfilled" ? st.value.unseen : null,
+      };
+    });
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+/**
+ * Lists Gmail labels with message counts (labels.list + parallel labels.get).
+ * Caps detail fetches at 30 labels.
+ * Throws "gmail_auth_failed" on 401.
+ */
+async function gmailListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
+  const accessToken = await withFreshGmailToken(inbox);
+
+  const listResp = await fetch(
+    "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!listResp.ok) {
+    if (listResp.status === 401) throw new Error("gmail_auth_failed");
+    throw new Error(`Gmail labels.list failed: ${listResp.statusText}`);
+  }
+  const listData = (await listResp.json()) as {
+    labels?: { id: string; name: string; type?: string }[];
+  };
+  const labels = (listData.labels ?? []).slice(0, 30);
+
+  const detailResults = await Promise.allSettled(
+    labels.map(async (lbl) => {
+      const dr = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/labels/${encodeURIComponent(lbl.id)}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      if (!dr.ok) return null;
+      return dr.json() as Promise<{ messagesTotal?: number; messagesUnread?: number } | null>;
+    }),
+  );
+
+  return labels.map((lbl, i) => {
+    const detail =
+      detailResults[i].status === "fulfilled"
+        ? (detailResults[i] as PromiseFulfilledResult<{ messagesTotal?: number; messagesUnread?: number } | null>).value
+        : null;
+    return {
+      id: lbl.id,
+      name: lbl.name,
+      type: "label" as const,
+      total_messages: detail?.messagesTotal ?? null,
+      unread_messages: detail?.messagesUnread ?? null,
+    };
+  });
+}
+
+/**
+ * Lists Outlook mail folders via Graph mailFolders (includes message counts).
+ * Throws "outlook_auth_failed" on 401.
+ */
+async function outlookListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    "https://graph.microsoft.com/v1.0/me/mailFolders" +
+      "?$top=100&$select=id,displayName,totalItemCount,unreadItemCount",
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    throw new Error(`Graph mailFolders failed: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as {
+    value?: {
+      id: string;
+      displayName: string;
+      totalItemCount?: number;
+      unreadItemCount?: number;
+    }[];
+  };
+  return (data.value ?? []).map((f) => ({
+    id: f.id,
+    name: f.displayName,
+    type: "folder" as const,
+    total_messages: f.totalItemCount ?? null,
+    unread_messages: f.unreadItemCount ?? null,
+  }));
+}
+
+/**
+ * Lists Fastmail mailboxes via JMAP Mailbox/get (includes message counts).
+ * Throws "fastmail_auth_failed" on 401.
+ */
+async function fastmailListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
+  const authHeader = await buildFastmailAuthHeader(inbox);
+
+  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
+    headers: { Authorization: authHeader },
+  });
+  if (!sessionResp.ok) {
+    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
+  }
+  const session = (await sessionResp.json()) as {
+    primaryAccounts?: Record<string, string>;
+    apiUrl?: string;
+  };
+  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
+  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
+  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        ["Mailbox/get", { accountId, ids: null }, "a"],
+      ],
+    }),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP mailbox error: ${apiResp.statusText}`);
+  }
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const mailboxGetResp = data.methodResponses?.find(([n]) => n === "Mailbox/get");
+  interface JmapMailboxDetail {
+    id: string;
+    name: string;
+    totalEmails?: number;
+    unreadEmails?: number;
+  }
+  const list =
+    (mailboxGetResp?.[1] as { list?: JmapMailboxDetail[] } | undefined)?.list ?? [];
+  return list.map((m) => ({
+    id: m.id,
+    name: m.name,
+    type: "folder" as const,
+    total_messages: m.totalEmails ?? null,
+    unread_messages: m.unreadEmails ?? null,
+  }));
+}
+
+/**
+ * `list_folders` handler — dispatches to the appropriate provider helper.
+ *
+ * Scope: read:email
+ * Capability gate: caps.folders || caps.labels (covers all four providers)
+ */
+async function executeListFolders(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  // ── Validate args ──────────────────────────────────────────────────────────
+  if (
+    typeof rawArgs !== "object" ||
+    rawArgs === null ||
+    Array.isArray(rawArgs)
+  ) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "list_folders: arguments must be an object with inbox_id.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "list_folders: inbox_id is required and must be a UUID string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `Inbox ${inboxId} not found or not accessible to this API key. ` +
+            "Verify the inbox UUID in the MCPEmails dashboard.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "inbox_not_found",
+    };
+  }
+
+  // ── Capability gate ────────────────────────────────────────────────────────
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.folders && !caps.labels) {
+    return unsupportedFeatureError("folders", inbox.provider);
+  }
+
+  // ── Per-provider dispatch ──────────────────────────────────────────────────
+  let folders: FolderEntry[];
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        folders = await gmailListFolders(inbox);
+        break;
+      case "outlook":
+        folders = await outlookListFolders(inbox);
+        break;
+      case "fastmail":
+        folders = await fastmailListFolders(inbox);
+        break;
+      default: // "imap" and all IMAP service variants
+        folders = await imapListFolders(inbox);
+        break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const isAuth =
+      message === "gmail_auth_failed" ||
+      message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" ||
+      message === "imap_auth_failed";
+    if (isAuth) {
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              `Unable to access ${inbox.provider} inbox: OAuth token has been ` +
+              "revoked or expired. The user must reconnect their inbox at " +
+              "https://mcpemails.com/dashboard/inboxes.",
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "auth_failed",
+      };
+    }
+    console.error("[mcp-server] list_folders: provider_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: `Failed to list folders for ${inbox.provider} inbox: ${message}`,
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  // ── activity_log written by handleToolsCall ────────────────────────────────
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({ inbox_id: inbox.id, folders }, null, 2),
+      }],
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// create_folder / rename_folder / delete_folder — provider helpers + handlers
+// ---------------------------------------------------------------------------
+
+// ── create_folder helpers ──────────────────────────────────────────────────
+
+async function imapCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.createMailbox(name);
+    return { id: name, name };
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+async function gmailCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
+  const accessToken = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    throw new Error(`Gmail labels.create failed: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as { id: string; name: string };
+  return { id: data.id, name: data.name };
+}
+
+async function outlookCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    "https://graph.microsoft.com/v1.0/me/mailFolders",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ displayName: name }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    throw new Error(`Graph mailFolders create failed: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as { id: string; displayName: string };
+  return { id: data.id, name: data.displayName };
+}
+
+async function fastmailCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
+  const authHeader = await buildFastmailAuthHeader(inbox);
+  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
+    headers: { Authorization: authHeader },
+  });
+  if (!sessionResp.ok) {
+    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
+  }
+  const session = (await sessionResp.json()) as {
+    primaryAccounts?: Record<string, string>;
+    apiUrl?: string;
+  };
+  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
+  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
+  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        ["Mailbox/set", { accountId, create: { new1: { name } } }, "a"],
+      ],
+    }),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP Mailbox/set create failed: ${apiResp.statusText}`);
+  }
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const setResp = data.methodResponses?.find(([n]) => n === "Mailbox/set");
+  const created = (setResp?.[1] as { created?: Record<string, { id: string }> } | undefined)?.created;
+  const newId = created?.["new1"]?.id;
+  if (!newId) throw new Error("Fastmail JMAP: create did not return an ID.");
+  return { id: newId, name };
+}
+
+// ── rename_folder helpers ──────────────────────────────────────────────────
+
+async function imapRenameFolder(inbox: InboxRow, folderId: string, newName: string): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.renameMailbox(folderId, newName);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+async function gmailRenameFolder(inbox: InboxRow, folderId: string, newName: string): Promise<void> {
+  const accessToken = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/labels/${encodeURIComponent(folderId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: newName }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (resp.status === 404) throw new Error("folder_not_found");
+    throw new Error(`Gmail labels.patch failed: ${resp.statusText}`);
+  }
+}
+
+async function outlookRenameFolder(inbox: InboxRow, folderId: string, newName: string): Promise<void> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/mailFolders/${encodeURIComponent(folderId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ displayName: newName }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("folder_not_found");
+    throw new Error(`Graph mailFolders PATCH failed: ${resp.statusText}`);
+  }
+}
+
+async function fastmailRenameFolder(inbox: InboxRow, folderId: string, newName: string): Promise<void> {
+  const authHeader = await buildFastmailAuthHeader(inbox);
+  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
+    headers: { Authorization: authHeader },
+  });
+  if (!sessionResp.ok) {
+    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
+  }
+  const session = (await sessionResp.json()) as {
+    primaryAccounts?: Record<string, string>;
+    apiUrl?: string;
+  };
+  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
+  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
+  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        ["Mailbox/set", { accountId, update: { [folderId]: { name: newName } } }, "a"],
+      ],
+    }),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP Mailbox/set update failed: ${apiResp.statusText}`);
+  }
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const setResp = data.methodResponses?.find(([n]) => n === "Mailbox/set");
+  const notUpdated = (setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated;
+  if (notUpdated?.[folderId]) throw new Error("folder_not_found");
+}
+
+// ── delete_folder helpers ──────────────────────────────────────────────────
+
+async function imapDeleteFolder(inbox: InboxRow, folderId: string): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.deleteMailbox(folderId);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+async function gmailDeleteFolder(inbox: InboxRow, folderId: string): Promise<void> {
+  const accessToken = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/labels/${encodeURIComponent(folderId)}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (resp.status === 404) throw new Error("folder_not_found");
+    throw new Error(`Gmail labels.delete failed: ${resp.statusText}`);
+  }
+}
+
+async function outlookDeleteFolder(inbox: InboxRow, folderId: string): Promise<void> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/mailFolders/${encodeURIComponent(folderId)}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("folder_not_found");
+    throw new Error(`Graph mailFolders delete failed: ${resp.statusText}`);
+  }
+}
+
+async function fastmailDeleteFolder(inbox: InboxRow, folderId: string): Promise<void> {
+  const authHeader = await buildFastmailAuthHeader(inbox);
+  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
+    headers: { Authorization: authHeader },
+  });
+  if (!sessionResp.ok) {
+    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
+  }
+  const session = (await sessionResp.json()) as {
+    primaryAccounts?: Record<string, string>;
+    apiUrl?: string;
+  };
+  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
+  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
+  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        ["Mailbox/set", { accountId, destroy: [folderId] }, "a"],
+      ],
+    }),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP Mailbox/set destroy failed: ${apiResp.statusText}`);
+  }
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const setResp = data.methodResponses?.find(([n]) => n === "Mailbox/set");
+  const notDestroyed = (setResp?.[1] as { notDestroyed?: Record<string, unknown> } | undefined)?.notDestroyed;
+  if (notDestroyed?.[folderId]) throw new Error("folder_not_found");
+}
+
+// ── Shared arg validation helper ───────────────────────────────────────────
+
+/** Resolves inbox + validates shared folder args (inbox_id, folder_id). */
+async function resolveFolderArgs(
+  rawArgs: unknown,
+  toolName: string,
+  apiKey: ApiKeyRow,
+  requireFolderId = true,
+): Promise<
+  | { error: { result: { content: { type: string; text: string }[]; isError?: boolean }; logStatus: "error"; logErrorCode: string }; inbox?: undefined; args?: undefined }
+  | { error?: undefined; inbox: InboxRow; args: Record<string, unknown> }
+> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      error: {
+        result: {
+          content: [{ type: "text", text: `${toolName}: arguments must be an object.` }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "-32602",
+      },
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      error: {
+        result: {
+          content: [{ type: "text", text: `${toolName}: inbox_id is required and must be a UUID string.` }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "-32602",
+      },
+    };
+  }
+  if (requireFolderId) {
+    const folderId = typeof args["folder_id"] === "string" ? args["folder_id"] : null;
+    if (!folderId) {
+      return {
+        error: {
+          result: {
+            content: [{ type: "text", text: `${toolName}: folder_id is required and must be a string.` }],
+            isError: true,
+          },
+          logStatus: "error",
+          logErrorCode: "-32602",
+        },
+      };
+    }
+  }
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      error: {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              `Inbox ${inboxId} not found or not accessible to this API key. ` +
+              "Verify the inbox UUID in the MCPEmails dashboard.",
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "inbox_not_found",
+      },
+    };
+  }
+  return { inbox, args };
+}
+
+/** Shared auth/provider error handler for folder management tools. */
+function folderProviderError(
+  toolName: string,
+  provider: string,
+  err: unknown,
+): { result: { content: { type: string; text: string }[]; isError: boolean }; logStatus: "error"; logErrorCode: string } {
+  const message = err instanceof Error ? err.message : String(err);
+  const isAuth =
+    message === "gmail_auth_failed" ||
+    message === "outlook_auth_failed" ||
+    message === "fastmail_auth_failed" ||
+    message === "imap_auth_failed";
+  if (isAuth) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `Unable to access ${provider} inbox: OAuth token has been ` +
+            "revoked or expired. The user must reconnect their inbox at " +
+            "https://mcpemails.com/dashboard/inboxes.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "auth_failed",
+    };
+  }
+  if (message === "folder_not_found") {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: `Folder not found. Use list_folders to verify the folder_id.`,
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "folder_not_found",
+    };
+  }
+  console.error(`[mcp-server] ${toolName}: provider_error`, { provider, error: message });
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: `Failed to ${toolName} for ${provider} inbox: ${message}`,
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: "provider_error",
+  };
+}
+
+// ── create_folder handler ──────────────────────────────────────────────────
+
+/**
+ * `create_folder` handler — creates a folder/label in an inbox.
+ *
+ * Scope: manage:folders
+ * Capability gate: caps.folders || caps.labels
+ */
+async function executeCreateFolder(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFolderArgs(rawArgs, "create_folder", apiKey, false);
+  if (resolved.error) return resolved.error;
+  const { inbox, args } = resolved;
+
+  const name = typeof args["name"] === "string" ? args["name"].trim() : "";
+  if (!name) {
+    return {
+      result: {
+        content: [{ type: "text", text: "create_folder: name is required and must be a non-empty string." }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  // ── Capability gate ──────────────────────────────────────────────────────
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.folders && !caps.labels) {
+    return unsupportedFeatureError("folders", inbox.provider);
+  }
+
+  // ── Per-provider dispatch ────────────────────────────────────────────────
+  let created: { id: string; name: string };
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        created = await gmailCreateFolder(inbox, name);
+        break;
+      case "outlook":
+        created = await outlookCreateFolder(inbox, name);
+        break;
+      case "fastmail":
+        created = await fastmailCreateFolder(inbox, name);
+        break;
+      default: // imap and all service variants
+        created = await imapCreateFolder(inbox, name);
+        break;
+    }
+  } catch (err) {
+    return folderProviderError("create_folder", inbox.provider, err);
+  }
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({ inbox_id: inbox.id, created }, null, 2),
+      }],
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+// ── rename_folder handler ──────────────────────────────────────────────────
+
+/**
+ * `rename_folder` handler — renames a folder/label in an inbox.
+ *
+ * Scope: manage:folders
+ * Capability gate: caps.folders || caps.labels
+ */
+async function executeRenameFolder(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFolderArgs(rawArgs, "rename_folder", apiKey, true);
+  if (resolved.error) return resolved.error;
+  const { inbox, args } = resolved;
+
+  const folderId = args["folder_id"] as string;
+  const newName = typeof args["new_name"] === "string" ? args["new_name"].trim() : "";
+  if (!newName) {
+    return {
+      result: {
+        content: [{ type: "text", text: "rename_folder: new_name is required and must be a non-empty string." }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  // ── Capability gate ──────────────────────────────────────────────────────
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.folders && !caps.labels) {
+    return unsupportedFeatureError("folders", inbox.provider);
+  }
+
+  // ── Per-provider dispatch ────────────────────────────────────────────────
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        await gmailRenameFolder(inbox, folderId, newName);
+        break;
+      case "outlook":
+        await outlookRenameFolder(inbox, folderId, newName);
+        break;
+      case "fastmail":
+        await fastmailRenameFolder(inbox, folderId, newName);
+        break;
+      default: // imap and all service variants
+        await imapRenameFolder(inbox, folderId, newName);
+        break;
+    }
+  } catch (err) {
+    return folderProviderError("rename_folder", inbox.provider, err);
+  }
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          inbox_id: inbox.id,
+          folder_id: folderId,
+          new_name: newName,
+          status: "renamed",
+        }, null, 2),
+      }],
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+// ── delete_folder handler ──────────────────────────────────────────────────
+
+/**
+ * `delete_folder` handler — permanently deletes a folder/label from an inbox.
+ *
+ * Scope: manage:folders
+ * Capability gate: caps.folders || caps.labels
+ * Confirm gate: requireConfirm (destructive — irreversible)
+ */
+async function executeDeleteFolder(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFolderArgs(rawArgs, "delete_folder", apiKey, true);
+  if (resolved.error) return resolved.error;
+  const { inbox, args } = resolved;
+
+  // ── Confirm gate (destructive) ───────────────────────────────────────────
+  const guard = requireConfirm(args);
+  if (guard) return guard;
+
+  const folderId = args["folder_id"] as string;
+
+  // ── Capability gate ──────────────────────────────────────────────────────
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.folders && !caps.labels) {
+    return unsupportedFeatureError("folders", inbox.provider);
+  }
+
+  // ── Per-provider dispatch ────────────────────────────────────────────────
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        await gmailDeleteFolder(inbox, folderId);
+        break;
+      case "outlook":
+        await outlookDeleteFolder(inbox, folderId);
+        break;
+      case "fastmail":
+        await fastmailDeleteFolder(inbox, folderId);
+        break;
+      default: // imap and all service variants
+        await imapDeleteFolder(inbox, folderId);
+        break;
+    }
+  } catch (err) {
+    return folderProviderError("delete_folder", inbox.provider, err);
+  }
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          inbox_id: inbox.id,
+          folder_id: folderId,
+          status: "deleted",
+        }, null, 2),
+      }],
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
 // ── IMAP provider helpers ──────────────────────────────────────────────────
 
 /**
@@ -8550,6 +10994,3463 @@ async function executeArchiveEmail(
 }
 
 // ---------------------------------------------------------------------------
+// move_email / copy_email — provider helpers + handlers
+// ---------------------------------------------------------------------------
+
+// ── IMAP helpers ────────────────────────────────────────────────────────────
+
+async function imapMoveEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationFolderId: string,
+): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(messageId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    // uidMove falls back to COPY + \\Deleted + EXPUNGE when RFC 6851 MOVE is
+    // unsupported by the server.
+    await client.uidMove([uid], destinationFolderId);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+async function imapCopyEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationFolderId: string,
+): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(messageId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    await client.uidCopy([uid], destinationFolderId);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+// ── Gmail helper ─────────────────────────────────────────────────────────────
+
+/**
+ * Gmail "move": add the destination label and remove INBOX.
+ * Gmail has no native copy operation; copy_email gates on caps.copy=false.
+ */
+async function gmailMoveEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationLabelId: string,
+): Promise<void> {
+  await gmailModifyLabels(inbox, messageId, [destinationLabelId], ["INBOX"]);
+}
+
+// ── Outlook helpers ───────────────────────────────────────────────────────────
+
+async function outlookMoveEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationFolderId: string,
+): Promise<void> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/move`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ destinationId: destinationFolderId }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("message_not_found");
+    const body = await resp.text();
+    throw new Error(`Graph move failed: ${body}`);
+  }
+}
+
+async function outlookCopyEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationFolderId: string,
+): Promise<void> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/copy`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ destinationId: destinationFolderId }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("message_not_found");
+    const body = await resp.text();
+    throw new Error(`Graph copy failed: ${body}`);
+  }
+}
+
+// ── Fastmail helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Resolves the Fastmail JMAP session (accountId + apiUrl).
+ * Throws "fastmail_auth_failed" on 401.
+ */
+async function resolveFastmailSession(inbox: InboxRow): Promise<{
+  authHeader: string;
+  accountId: string;
+  apiUrl: string;
+}> {
+  const authHeader = await buildFastmailAuthHeader(inbox);
+  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
+    headers: { Authorization: authHeader },
+  });
+  if (!sessionResp.ok) {
+    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
+  }
+  const session = (await sessionResp.json()) as {
+    primaryAccounts?: Record<string, string>;
+    apiUrl?: string;
+  };
+  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
+  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
+  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
+  return { authHeader, accountId, apiUrl };
+}
+
+/**
+ * Fastmail "move": Email/set to update mailboxIds.
+ * Replaces existing mailbox membership with the destination folder.
+ */
+async function fastmailMoveEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationFolderId: string,
+): Promise<void> {
+  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        [
+          "Email/set",
+          {
+            accountId,
+            update: {
+              [messageId]: {
+                mailboxIds: { [destinationFolderId]: true },
+              },
+            },
+          },
+          "a",
+        ],
+      ],
+    }),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP Email/set failed: ${apiResp.statusText}`);
+  }
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
+  const notUpdated = (setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated;
+  if (notUpdated?.[messageId]) throw new Error("message_not_found");
+}
+
+/**
+ * Fastmail "copy": Email/copy JMAP method.
+ * Copies the message into the destination mailbox; original is unchanged.
+ */
+async function fastmailCopyEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationFolderId: string,
+): Promise<void> {
+  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        [
+          "Email/copy",
+          {
+            fromAccountId: accountId,
+            accountId,
+            create: {
+              copy1: {
+                id: messageId,
+                mailboxIds: { [destinationFolderId]: true },
+              },
+            },
+          },
+          "a",
+        ],
+      ],
+    }),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP Email/copy failed: ${apiResp.statusText}`);
+  }
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const copyResp = data.methodResponses?.find(([n]) => n === "Email/copy");
+  const notCreated = (copyResp?.[1] as { notCreated?: Record<string, unknown> } | undefined)?.notCreated;
+  if (notCreated?.["copy1"]) throw new Error("message_not_found");
+}
+
+// ── Handlers ─────────────────────────────────────────────────────────────────
+
+/**
+ * `move_email` handler — moves a message to the specified folder/label.
+ *
+ * Scope: manage:folders
+ * Capability gate: caps.move
+ */
+async function executeMoveEmail(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFlagArgs(rawArgs, "move_email", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageId } = resolved;
+
+  // ── Validate destination_folder_id ──────────────────────────────────────
+  const args = rawArgs as Record<string, unknown>;
+  const destinationFolderId =
+    typeof args["destination_folder_id"] === "string"
+      ? args["destination_folder_id"].trim()
+      : "";
+  if (!destinationFolderId) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "move_email: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  // ── Capability gate ──────────────────────────────────────────────────────
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
+
+  // ── Per-provider dispatch ────────────────────────────────────────────────
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        await gmailMoveEmail(inbox, messageId, destinationFolderId);
+        break;
+      case "outlook":
+        await outlookMoveEmail(inbox, messageId, destinationFolderId);
+        break;
+      case "fastmail":
+        await fastmailMoveEmail(inbox, messageId, destinationFolderId);
+        break;
+      default: // imap and all service variants
+        await imapMoveEmail(inbox, messageId, destinationFolderId);
+        break;
+    }
+  } catch (err) {
+    return handleFlagError(err, "move_email", inbox.id, inbox.provider, messageId);
+  }
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          success: true,
+          message_id: messageId,
+          operation: "move_email",
+          inbox_id: inbox.id,
+          destination_folder_id: destinationFolderId,
+        }),
+      }],
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+/**
+ * `copy_email` handler — copies a message to the specified folder.
+ *
+ * Scope: manage:folders
+ * Capability gate: caps.copy
+ */
+async function executeCopyEmail(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFlagArgs(rawArgs, "copy_email", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageId } = resolved;
+
+  // ── Validate destination_folder_id ──────────────────────────────────────
+  const args = rawArgs as Record<string, unknown>;
+  const destinationFolderId =
+    typeof args["destination_folder_id"] === "string"
+      ? args["destination_folder_id"].trim()
+      : "";
+  if (!destinationFolderId) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "copy_email: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  // ── Capability gate ──────────────────────────────────────────────────────
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.copy) return unsupportedFeatureError("copy", inbox.provider);
+
+  // ── Per-provider dispatch ────────────────────────────────────────────────
+  try {
+    switch (inbox.provider) {
+      case "outlook":
+        await outlookCopyEmail(inbox, messageId, destinationFolderId);
+        break;
+      case "fastmail":
+        await fastmailCopyEmail(inbox, messageId, destinationFolderId);
+        break;
+      default: // imap and all service variants (gmail is gated out by caps.copy=false)
+        await imapCopyEmail(inbox, messageId, destinationFolderId);
+        break;
+    }
+  } catch (err) {
+    return handleFlagError(err, "copy_email", inbox.id, inbox.provider, messageId);
+  }
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          success: true,
+          message_id: messageId,
+          operation: "copy_email",
+          inbox_id: inbox.id,
+          destination_folder_id: destinationFolderId,
+        }),
+      }],
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+// ── delete_email provider helpers ──────────────────────────────────────────
+
+/**
+ * IMAP delete: move to "Trash" (soft) or \\Deleted + UID EXPUNGE (permanent).
+ * Throws "imap_auth_failed" on credential rejection.
+ */
+async function imapDeleteEmail(
+  inbox: InboxRow,
+  messageId: string,
+  permanent: boolean,
+): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(messageId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    if (permanent) {
+      // Hard-delete: flag \\Deleted then UID EXPUNGE
+      await client.uidStore([uid], ["\\Deleted"], "add");
+      await client.uidExpunge([uid]);
+    } else {
+      // Soft-delete: move to Trash (uidMove falls back to COPY+EXPUNGE if needed)
+      await client.uidMove([uid], "Trash");
+    }
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+/**
+ * Gmail delete: trash (messages.trash) or permanent (messages.delete).
+ * Throws "gmail_auth_failed" on 401.
+ */
+async function gmailDeleteEmail(
+  inbox: InboxRow,
+  messageId: string,
+  permanent: boolean,
+): Promise<void> {
+  const accessToken = await withFreshGmailToken(inbox);
+  const endpoint = permanent
+    ? `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}`
+    : `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/trash`;
+  const resp = await fetch(endpoint, {
+    method: permanent ? "DELETE" : "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (resp.status === 404) throw new Error("message_not_found");
+    const body = await resp.text();
+    throw new Error(`Gmail delete failed: ${body}`);
+  }
+}
+
+/**
+ * Outlook delete: move to Deleted Items (Graph messages/{id}/move to deleteditems)
+ * or permanent (Graph messages/{id}/permanentDelete).
+ * Throws "outlook_auth_failed" on 401.
+ */
+async function outlookDeleteEmail(
+  inbox: InboxRow,
+  messageId: string,
+  permanent: boolean,
+): Promise<void> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const encodedId = encodeURIComponent(messageId);
+  let resp: Response;
+  if (permanent) {
+    resp = await fetch(
+      `https://graph.microsoft.com/v1.0/me/messages/${encodedId}/permanentDelete`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+  } else {
+    resp = await fetch(
+      `https://graph.microsoft.com/v1.0/me/messages/${encodedId}/move`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ destinationId: "deleteditems" }),
+      },
+    );
+  }
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("message_not_found");
+    const body = await resp.text();
+    throw new Error(`Graph delete failed: ${body}`);
+  }
+}
+
+/**
+ * Fastmail delete: move to Trash mailbox (soft) or Email/set destroy (permanent).
+ * Throws "fastmail_auth_failed" on 401.
+ */
+async function fastmailDeleteEmail(
+  inbox: InboxRow,
+  messageId: string,
+  permanent: boolean,
+): Promise<void> {
+  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
+
+  if (permanent) {
+    // Hard-delete via Email/set destroy
+    const apiResp = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+        methodCalls: [
+          [
+            "Email/set",
+            { accountId, destroy: [messageId] },
+            "a",
+          ],
+        ],
+      }),
+    });
+    if (!apiResp.ok) {
+      if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+      throw new Error(`Fastmail JMAP Email/set destroy failed: ${apiResp.statusText}`);
+    }
+    const data = (await apiResp.json()) as {
+      methodResponses?: [string, Record<string, unknown>, string][];
+    };
+    const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
+    const notDestroyed =
+      (setResp?.[1] as { notDestroyed?: Record<string, unknown> } | undefined)?.notDestroyed;
+    if (notDestroyed?.[messageId]) throw new Error("message_not_found");
+  } else {
+    // Soft-delete: find the Trash mailbox ID then update mailboxIds
+    const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
+      headers: { Authorization: authHeader },
+    });
+    if (!sessionResp.ok) throw new Error("fastmail_auth_failed");
+
+    const trashResp = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+        methodCalls: [
+          [
+            "Mailbox/query",
+            { accountId, filter: { role: "trash" }, limit: 1 },
+            "a",
+          ],
+          [
+            "Mailbox/get",
+            { accountId, "#ids": { resultOf: "a", name: "Mailbox/query", path: "/ids" } },
+            "b",
+          ],
+        ],
+      }),
+    });
+    if (!trashResp.ok) {
+      if (trashResp.status === 401) throw new Error("fastmail_auth_failed");
+      throw new Error(`Fastmail JMAP Mailbox/query failed: ${trashResp.statusText}`);
+    }
+    const trashData = (await trashResp.json()) as {
+      methodResponses?: [string, Record<string, unknown>, string][];
+    };
+    const mbGet = trashData.methodResponses?.find(([n]) => n === "Mailbox/get");
+    const trashMailboxes = (mbGet?.[1] as { list?: { id: string }[] } | undefined)?.list ?? [];
+    const trashId = trashMailboxes[0]?.id;
+    if (!trashId) throw new Error("Fastmail: could not locate Trash mailbox.");
+
+    const moveResp = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+        methodCalls: [
+          [
+            "Email/set",
+            {
+              accountId,
+              update: { [messageId]: { mailboxIds: { [trashId]: true } } },
+            },
+            "a",
+          ],
+        ],
+      }),
+    });
+    if (!moveResp.ok) {
+      if (moveResp.status === 401) throw new Error("fastmail_auth_failed");
+      throw new Error(`Fastmail JMAP Email/set failed: ${moveResp.statusText}`);
+    }
+    const moveData = (await moveResp.json()) as {
+      methodResponses?: [string, Record<string, unknown>, string][];
+    };
+    const setResp = moveData.methodResponses?.find(([n]) => n === "Email/set");
+    const notUpdated =
+      (setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated;
+    if (notUpdated?.[messageId]) throw new Error("message_not_found");
+  }
+}
+
+// ── delete_email top-level handler ────────────────────────────────────────────
+
+/**
+ * `delete_email` handler — trashes or permanently expunges a single message.
+ *
+ * Scope: delete:email
+ * Confirm gate: requireConfirm (destructive)
+ * Capability gate: caps.delete
+ * Default behaviour: move to Trash (soft delete). Set permanent:true for hard delete.
+ */
+async function executeDeleteEmail(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFlagArgs(rawArgs, "delete_email", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageId } = resolved;
+
+  // ── Confirm gate (destructive) ───────────────────────────────────────────
+  // rawArgs was validated as a non-null object by resolveFlagArgs above.
+  const args = rawArgs as Record<string, unknown>;
+  const guard = requireConfirm(args);
+  if (guard) return guard;
+
+  // ── Parse permanent flag ──────────────────────────────────────────────────
+  const permanent = args["permanent"] === true;
+
+  // ── Capability gate ──────────────────────────────────────────────────────
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
+
+  // ── Per-provider dispatch ────────────────────────────────────────────────
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        await gmailDeleteEmail(inbox, messageId, permanent);
+        break;
+      case "outlook":
+        await outlookDeleteEmail(inbox, messageId, permanent);
+        break;
+      case "fastmail":
+        await fastmailDeleteEmail(inbox, messageId, permanent);
+        break;
+      default: // imap and all IMAP service variants
+        await imapDeleteEmail(inbox, messageId, permanent);
+        break;
+    }
+  } catch (err) {
+    return handleFlagError(err, "delete_email", inbox.id, inbox.provider, messageId);
+  }
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          success: true,
+          message_id: messageId,
+          operation: "delete_email",
+          inbox_id: inbox.id,
+          permanent,
+        }),
+      }],
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Bulk operation helpers and execute functions
+// (Task 11: bulk_move, bulk_delete, bulk_flag)
+// ---------------------------------------------------------------------------
+
+/** Shared return type for all per-provider bulk helpers. */
+interface BulkOpResult {
+  succeeded: string[];
+  failed: { id: string; error: string }[];
+}
+
+/**
+ * Resolves and validates arguments for bulk tools.
+ * Validates that rawArgs is an object with a UUID inbox_id and a non-empty
+ * string[] message_ids. Resolves the inbox row. Does NOT enforce MAX_BULK_IDS
+ * (the execute function does that via bulkCapError).
+ */
+async function resolveBulkArgs(
+  rawArgs: unknown,
+  toolName: string,
+  apiKey: ApiKeyRow,
+): Promise<
+  | { inbox: InboxRow; messageIds: string[]; error?: undefined }
+  | {
+      error: {
+        result: { content: { type: string; text: string }[]; isError: boolean };
+        logStatus: "error";
+        logErrorCode: string;
+      };
+    }
+> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      error: {
+        result: {
+          content: [{
+            type: "text",
+            text: `${toolName}: arguments must be an object with inbox_id and message_ids.`,
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "-32602",
+      },
+    };
+  }
+
+  const args = rawArgs as Record<string, unknown>;
+
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      error: {
+        result: {
+          content: [{
+            type: "text",
+            text: `${toolName}: inbox_id is required and must be a UUID string.`,
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "-32602",
+      },
+    };
+  }
+
+  const rawIds = args["message_ids"];
+  if (
+    !Array.isArray(rawIds) ||
+    rawIds.length === 0 ||
+    !rawIds.every((x) => typeof x === "string" && (x as string).trim().length > 0)
+  ) {
+    return {
+      error: {
+        result: {
+          content: [{
+            type: "text",
+            text: `${toolName}: message_ids must be a non-empty array of non-empty strings.`,
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "-32602",
+      },
+    };
+  }
+
+  const messageIds = (rawIds as string[]).map((id) => id.trim());
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      error: {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              `Inbox ${inboxId} not found or not accessible to this API key. ` +
+              "Verify the inbox UUID in the MCPEmails dashboard.",
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "inbox_not_found",
+      },
+    };
+  }
+
+  return { inbox, messageIds };
+}
+
+/**
+ * Builds the standard JSON-RPC result for a bulk operation.
+ * logStatus is "success" when at least one message succeeded (partial success
+ * is still success from the operator's perspective); "error" when all failed.
+ */
+function formatBulkResult(
+  succeeded: string[],
+  failed: { id: string; error: string }[],
+  operation: string,
+  inboxId: string,
+  extra?: Record<string, unknown>,
+): {
+  result: { content: { type: string; text: string }[] };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+} {
+  const results = [
+    ...succeeded.map((id) => ({ message_id: id, success: true })),
+    ...failed.map(({ id, error }) => ({ message_id: id, success: false, error })),
+  ];
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          succeeded: succeeded.length,
+          failed: failed.length,
+          operation,
+          inbox_id: inboxId,
+          ...extra,
+          results,
+        }),
+      }],
+    },
+    logStatus: succeeded.length > 0 || failed.length === 0 ? "success" : "error",
+    logErrorCode: null,
+  };
+}
+
+// ── IMAP bulk helpers ─────────────────────────────────────────────────────────
+
+/** Groups IMAP message IDs by source folder and runs a bulk UID MOVE per group. */
+async function imapBulkMove(
+  inbox: InboxRow,
+  messageIds: string[],
+  destinationFolderId: string,
+): Promise<BulkOpResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
+  }
+
+  const groups = new Map<string, { uid: number; messageId: string }[]>();
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const { folder, uid } = decodeImapId(messageId);
+    if (!Number.isFinite(uid) || uid <= 0) {
+      failed.push({ id: messageId, error: "invalid_message_id" });
+      continue;
+    }
+    const g = groups.get(folder);
+    if (g) g.push({ uid, messageId });
+    else groups.set(folder, [{ uid, messageId }]);
+  }
+
+  const succeeded: string[] = [];
+
+  let password: string;
+  try {
+    password = await decryptStoredToken(inbox.imap_password);
+  } catch {
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
+  }
+
+  for (const [folder, items] of groups) {
+    let client: ImapClient | null = null;
+    try {
+      client = await ImapClient.connect({
+        host: inbox.imap_host,
+        port: inbox.imap_port,
+        email: inbox.email_address,
+        password,
+      });
+      await client.selectMailbox(imapFolderName(folder));
+      await client.uidMove(items.map((i) => i.uid), destinationFolderId);
+      for (const item of items) succeeded.push(item.messageId);
+    } catch (err) {
+      const msg = err instanceof ImapAuthError
+        ? "imap_auth_failed"
+        : err instanceof Error ? err.message : String(err);
+      for (const item of items) failed.push({ id: item.messageId, error: msg });
+    } finally {
+      if (client) await client.logout().catch(() => {});
+    }
+  }
+
+  return { succeeded, failed };
+}
+
+/** Groups IMAP message IDs by source folder and runs bulk delete per group. */
+async function imapBulkDelete(
+  inbox: InboxRow,
+  messageIds: string[],
+  permanent: boolean,
+): Promise<BulkOpResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
+  }
+
+  const groups = new Map<string, { uid: number; messageId: string }[]>();
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const { folder, uid } = decodeImapId(messageId);
+    if (!Number.isFinite(uid) || uid <= 0) {
+      failed.push({ id: messageId, error: "invalid_message_id" });
+      continue;
+    }
+    const g = groups.get(folder);
+    if (g) g.push({ uid, messageId });
+    else groups.set(folder, [{ uid, messageId }]);
+  }
+
+  const succeeded: string[] = [];
+
+  let password: string;
+  try {
+    password = await decryptStoredToken(inbox.imap_password);
+  } catch {
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
+  }
+
+  for (const [folder, items] of groups) {
+    let client: ImapClient | null = null;
+    try {
+      client = await ImapClient.connect({
+        host: inbox.imap_host,
+        port: inbox.imap_port,
+        email: inbox.email_address,
+        password,
+      });
+      await client.selectMailbox(imapFolderName(folder));
+      const uids = items.map((i) => i.uid);
+      if (permanent) {
+        await client.uidStore(uids, ["\\Deleted"], "add");
+        await client.uidExpunge(uids);
+      } else {
+        await client.uidMove(uids, "Trash");
+      }
+      for (const item of items) succeeded.push(item.messageId);
+    } catch (err) {
+      const msg = err instanceof ImapAuthError
+        ? "imap_auth_failed"
+        : err instanceof Error ? err.message : String(err);
+      for (const item of items) failed.push({ id: item.messageId, error: msg });
+    } finally {
+      if (client) await client.logout().catch(() => {});
+    }
+  }
+
+  return { succeeded, failed };
+}
+
+/** Groups IMAP message IDs by source folder and runs a bulk UID STORE per group. */
+async function imapBulkFlag(
+  inbox: InboxRow,
+  messageIds: string[],
+  action: string,
+): Promise<BulkOpResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
+  }
+
+  let imapFlags: string[];
+  let mode: "add" | "remove";
+  switch (action) {
+    case "read":   imapFlags = ["\\Seen"];    mode = "add";    break;
+    case "unread": imapFlags = ["\\Seen"];    mode = "remove"; break;
+    case "flag":   imapFlags = ["\\Flagged"]; mode = "add";    break;
+    case "unflag": imapFlags = ["\\Flagged"]; mode = "remove"; break;
+    default:
+      return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "invalid_action" })) };
+  }
+
+  const groups = new Map<string, { uid: number; messageId: string }[]>();
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const { folder, uid } = decodeImapId(messageId);
+    if (!Number.isFinite(uid) || uid <= 0) {
+      failed.push({ id: messageId, error: "invalid_message_id" });
+      continue;
+    }
+    const g = groups.get(folder);
+    if (g) g.push({ uid, messageId });
+    else groups.set(folder, [{ uid, messageId }]);
+  }
+
+  const succeeded: string[] = [];
+
+  let password: string;
+  try {
+    password = await decryptStoredToken(inbox.imap_password);
+  } catch {
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
+  }
+
+  for (const [folder, items] of groups) {
+    let client: ImapClient | null = null;
+    try {
+      client = await ImapClient.connect({
+        host: inbox.imap_host,
+        port: inbox.imap_port,
+        email: inbox.email_address,
+        password,
+      });
+      await client.selectMailbox(imapFolderName(folder));
+      await client.uidStore(items.map((i) => i.uid), imapFlags, mode);
+      for (const item of items) succeeded.push(item.messageId);
+    } catch (err) {
+      const msg = err instanceof ImapAuthError
+        ? "imap_auth_failed"
+        : err instanceof Error ? err.message : String(err);
+      for (const item of items) failed.push({ id: item.messageId, error: msg });
+    } finally {
+      if (client) await client.logout().catch(() => {});
+    }
+  }
+
+  return { succeeded, failed };
+}
+
+// ── Gmail bulk helpers ────────────────────────────────────────────────────────
+
+/**
+ * Gmail bulk move: messages.batchModify — adds destination label, removes INBOX.
+ * Throws "gmail_auth_failed" on 401.
+ */
+async function gmailBulkMove(
+  inbox: InboxRow,
+  messageIds: string[],
+  destinationLabelId: string,
+): Promise<BulkOpResult> {
+  const accessToken = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchModify",
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ids: messageIds,
+        addLabelIds: [destinationLabelId],
+        removeLabelIds: ["INBOX"],
+      }),
+    },
+  );
+  if (!resp.ok) {
+    const err = resp.status === 401
+      ? "gmail_auth_failed"
+      : `Gmail batchModify failed: ${resp.status}`;
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+  }
+  return { succeeded: [...messageIds], failed: [] };
+}
+
+/**
+ * Gmail bulk delete: messages.batchDelete (permanent) or individual trash (soft).
+ * Throws "gmail_auth_failed" on 401.
+ */
+async function gmailBulkDelete(
+  inbox: InboxRow,
+  messageIds: string[],
+  permanent: boolean,
+): Promise<BulkOpResult> {
+  const accessToken = await withFreshGmailToken(inbox);
+
+  if (permanent) {
+    // Gmail messages.batchDelete permanently removes all listed messages.
+    const resp = await fetch(
+      "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchDelete",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: messageIds }),
+      },
+    );
+    if (!resp.ok) {
+      const err = resp.status === 401
+        ? "gmail_auth_failed"
+        : `Gmail batchDelete failed: ${resp.status}`;
+      return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+    }
+    return { succeeded: [...messageIds], failed: [] };
+  }
+
+  // Soft-delete: Gmail has no batch-trash endpoint; call /trash per message with shared token.
+  const succeeded: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const r = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/trash`,
+      { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (r.ok) {
+      succeeded.push(messageId);
+    } else {
+      failed.push({
+        id: messageId,
+        error: r.status === 401
+          ? "gmail_auth_failed"
+          : r.status === 404 ? "message_not_found" : `Gmail trash failed: ${r.status}`,
+      });
+    }
+  }
+  return { succeeded, failed };
+}
+
+/**
+ * Gmail bulk flag: messages.batchModify with appropriate label add/remove.
+ * Throws "gmail_auth_failed" on 401.
+ */
+async function gmailBulkFlag(
+  inbox: InboxRow,
+  messageIds: string[],
+  action: string,
+): Promise<BulkOpResult> {
+  const accessToken = await withFreshGmailToken(inbox);
+  let addLabelIds: string[];
+  let removeLabelIds: string[];
+  switch (action) {
+    case "read":   addLabelIds = [];           removeLabelIds = ["UNREAD"];  break;
+    case "unread": addLabelIds = ["UNREAD"];   removeLabelIds = [];          break;
+    case "flag":   addLabelIds = ["STARRED"];  removeLabelIds = [];          break;
+    case "unflag": addLabelIds = [];           removeLabelIds = ["STARRED"]; break;
+    default:
+      return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "invalid_action" })) };
+  }
+  const resp = await fetch(
+    "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchModify",
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: messageIds, addLabelIds, removeLabelIds }),
+    },
+  );
+  if (!resp.ok) {
+    const err = resp.status === 401
+      ? "gmail_auth_failed"
+      : `Gmail batchModify failed: ${resp.status}`;
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+  }
+  return { succeeded: [...messageIds], failed: [] };
+}
+
+// ── Outlook bulk helpers ──────────────────────────────────────────────────────
+
+/** Outlook bulk move: per-message Graph messages/{id}/move with a shared token. */
+async function outlookBulkMove(
+  inbox: InboxRow,
+  messageIds: string[],
+  destinationFolderId: string,
+): Promise<BulkOpResult> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const succeeded: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const r = await fetch(
+      `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/move`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ destinationId: destinationFolderId }),
+      },
+    );
+    if (r.ok) {
+      succeeded.push(messageId);
+    } else {
+      failed.push({
+        id: messageId,
+        error: r.status === 401
+          ? "outlook_auth_failed"
+          : r.status === 404 ? "message_not_found" : `Outlook move failed: ${r.status}`,
+      });
+    }
+  }
+  return { succeeded, failed };
+}
+
+/** Outlook bulk delete: per-message Graph calls (move to Deleted Items or permanentDelete). */
+async function outlookBulkDelete(
+  inbox: InboxRow,
+  messageIds: string[],
+  permanent: boolean,
+): Promise<BulkOpResult> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const succeeded: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const encodedId = encodeURIComponent(messageId);
+    let r: Response;
+    if (permanent) {
+      r = await fetch(
+        `https://graph.microsoft.com/v1.0/me/messages/${encodedId}/permanentDelete`,
+        { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+    } else {
+      r = await fetch(
+        `https://graph.microsoft.com/v1.0/me/messages/${encodedId}/move`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ destinationId: "deleteditems" }),
+        },
+      );
+    }
+    if (r.ok) {
+      succeeded.push(messageId);
+    } else {
+      failed.push({
+        id: messageId,
+        error: r.status === 401
+          ? "outlook_auth_failed"
+          : r.status === 404 ? "message_not_found" : `Outlook delete failed: ${r.status}`,
+      });
+    }
+  }
+  return { succeeded, failed };
+}
+
+/** Outlook bulk flag: per-message Graph PATCH with a shared token. */
+async function outlookBulkFlag(
+  inbox: InboxRow,
+  messageIds: string[],
+  action: string,
+): Promise<BulkOpResult> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  let patch: Record<string, unknown>;
+  switch (action) {
+    case "read":   patch = { isRead: true };                        break;
+    case "unread": patch = { isRead: false };                       break;
+    case "flag":   patch = { flag: { flagStatus: "flagged" } };    break;
+    case "unflag": patch = { flag: { flagStatus: "notFlagged" } }; break;
+    default:
+      return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "invalid_action" })) };
+  }
+  const succeeded: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const r = await fetch(
+      `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      },
+    );
+    if (r.ok) {
+      succeeded.push(messageId);
+    } else {
+      failed.push({
+        id: messageId,
+        error: r.status === 401
+          ? "outlook_auth_failed"
+          : r.status === 404 ? "message_not_found" : `Outlook PATCH failed: ${r.status}`,
+      });
+    }
+  }
+  return { succeeded, failed };
+}
+
+// ── Fastmail bulk helpers ─────────────────────────────────────────────────────
+
+/** Fastmail bulk move: single JMAP Email/set update with all mailboxIds at once. */
+async function fastmailBulkMove(
+  inbox: InboxRow,
+  messageIds: string[],
+  destinationFolderId: string,
+): Promise<BulkOpResult> {
+  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
+
+  const updateMap: Record<string, unknown> = {};
+  for (const id of messageIds) {
+    updateMap[id] = { mailboxIds: { [destinationFolderId]: true } };
+  }
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [["Email/set", { accountId, update: updateMap }, "a"]],
+    }),
+  });
+  if (!apiResp.ok) {
+    const err = apiResp.status === 401
+      ? "fastmail_auth_failed"
+      : `Fastmail JMAP Email/set failed: ${apiResp.statusText}`;
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+  }
+
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
+  const notUpdated =
+    ((setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated) ?? {};
+  const succeeded = messageIds.filter((id) => !notUpdated[id]);
+  const failed = messageIds
+    .filter((id) => !!notUpdated[id])
+    .map((id) => ({ id, error: "fastmail_update_failed" }));
+  return { succeeded, failed };
+}
+
+/** Fastmail bulk delete: JMAP Email/set destroy (permanent) or Trash mailboxId update (soft). */
+async function fastmailBulkDelete(
+  inbox: InboxRow,
+  messageIds: string[],
+  permanent: boolean,
+): Promise<BulkOpResult> {
+  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
+
+  if (permanent) {
+    const apiResp = await fetch(apiUrl, {
+      method: "POST",
+      headers: { Authorization: authHeader, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+        methodCalls: [["Email/set", { accountId, destroy: messageIds }, "a"]],
+      }),
+    });
+    if (!apiResp.ok) {
+      const err = apiResp.status === 401
+        ? "fastmail_auth_failed"
+        : `Fastmail JMAP Email/set destroy failed: ${apiResp.statusText}`;
+      return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+    }
+    const data = (await apiResp.json()) as {
+      methodResponses?: [string, Record<string, unknown>, string][];
+    };
+    const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
+    const notDestroyed =
+      ((setResp?.[1] as { notDestroyed?: Record<string, unknown> } | undefined)?.notDestroyed) ?? {};
+    const succeeded = messageIds.filter((id) => !notDestroyed[id]);
+    const failed = messageIds
+      .filter((id) => !!notDestroyed[id])
+      .map((id) => ({ id, error: "fastmail_destroy_failed" }));
+    return { succeeded, failed };
+  }
+
+  // Soft-delete: resolve Trash mailbox role, then update all messages' mailboxIds.
+  const trashResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        ["Mailbox/query", { accountId, filter: { role: "trash" }, limit: 1 }, "a"],
+        ["Mailbox/get", { accountId, "#ids": { resultOf: "a", name: "Mailbox/query", path: "/ids" } }, "b"],
+      ],
+    }),
+  });
+  if (!trashResp.ok) {
+    const err = trashResp.status === 401
+      ? "fastmail_auth_failed"
+      : `Fastmail JMAP Mailbox/query failed: ${trashResp.statusText}`;
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+  }
+  const trashData = (await trashResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const mbGet = trashData.methodResponses?.find(([n]) => n === "Mailbox/get");
+  const trashMailboxes =
+    ((mbGet?.[1] as { list?: { id: string }[] } | undefined)?.list) ?? [];
+  const trashId = trashMailboxes[0]?.id;
+  if (!trashId) {
+    return {
+      succeeded: [],
+      failed: messageIds.map((id) => ({ id, error: "fastmail_trash_mailbox_not_found" })),
+    };
+  }
+
+  const updateMap: Record<string, unknown> = {};
+  for (const id of messageIds) {
+    updateMap[id] = { mailboxIds: { [trashId]: true } };
+  }
+  const moveResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [["Email/set", { accountId, update: updateMap }, "a"]],
+    }),
+  });
+  if (!moveResp.ok) {
+    const err = moveResp.status === 401
+      ? "fastmail_auth_failed"
+      : `Fastmail JMAP Email/set failed: ${moveResp.statusText}`;
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+  }
+  const moveData = (await moveResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const setResp2 = moveData.methodResponses?.find(([n]) => n === "Email/set");
+  const notUpdated =
+    ((setResp2?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated) ?? {};
+  const succeeded2 = messageIds.filter((id) => !notUpdated[id]);
+  const failed2 = messageIds
+    .filter((id) => !!notUpdated[id])
+    .map((id) => ({ id, error: "fastmail_trash_failed" }));
+  return { succeeded: succeeded2, failed: failed2 };
+}
+
+/** Fastmail bulk flag: single JMAP Email/set update for all messages. */
+async function fastmailBulkFlag(
+  inbox: InboxRow,
+  messageIds: string[],
+  action: string,
+): Promise<BulkOpResult> {
+  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
+
+  const updateMap: Record<string, unknown> = {};
+  for (const id of messageIds) {
+    const patch: Record<string, unknown> = {};
+    switch (action) {
+      case "read":   patch["keywords/$seen"]    = true;  break;
+      case "unread": patch["keywords/$seen"]    = null;  break;
+      case "flag":   patch["keywords/$flagged"] = true;  break;
+      case "unflag": patch["keywords/$flagged"] = null;  break;
+      default:
+        return {
+          succeeded: [],
+          failed: messageIds.map((mid) => ({ id: mid, error: "invalid_action" })),
+        };
+    }
+    updateMap[id] = patch;
+  }
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [["Email/set", { accountId, update: updateMap }, "a"]],
+    }),
+  });
+  if (!apiResp.ok) {
+    const err = apiResp.status === 401
+      ? "fastmail_auth_failed"
+      : `Fastmail JMAP Email/set failed: ${apiResp.statusText}`;
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+  }
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
+  const notUpdated =
+    ((setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated) ?? {};
+  const succeeded = messageIds.filter((id) => !notUpdated[id]);
+  const failed = messageIds
+    .filter((id) => !!notUpdated[id])
+    .map((id) => ({ id, error: "fastmail_update_failed" }));
+  return { succeeded, failed };
+}
+
+// ── Bulk execute functions ────────────────────────────────────────────────────
+
+/**
+ * `bulk_move` handler — moves multiple messages to a destination folder.
+ *
+ * Scope: manage:folders
+ * Capability gate: caps.move
+ * Cap: MAX_BULK_IDS (500)
+ */
+async function executeBulkMove(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveBulkArgs(rawArgs, "bulk_move", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageIds } = resolved;
+
+  if (messageIds.length > MAX_BULK_IDS) return bulkCapError(messageIds.length);
+
+  const args = rawArgs as Record<string, unknown>;
+  const destinationFolderId =
+    typeof args["destination_folder_id"] === "string"
+      ? args["destination_folder_id"].trim()
+      : "";
+  if (!destinationFolderId) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "bulk_move: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
+
+  let bulkResult: BulkOpResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        bulkResult = await gmailBulkMove(inbox, messageIds, destinationFolderId);
+        break;
+      case "outlook":
+        bulkResult = await outlookBulkMove(inbox, messageIds, destinationFolderId);
+        break;
+      case "fastmail":
+        bulkResult = await fastmailBulkMove(inbox, messageIds, destinationFolderId);
+        break;
+      default: // imap and all IMAP service variants
+        bulkResult = await imapBulkMove(inbox, messageIds, destinationFolderId);
+        break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] bulk_move: provider_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: `Provider error during bulk_move: ${message}. Please try again in a moment.`,
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  return formatBulkResult(
+    bulkResult.succeeded,
+    bulkResult.failed,
+    "bulk_move",
+    inbox.id,
+    { destination_folder_id: destinationFolderId },
+  );
+}
+
+/**
+ * `bulk_delete` handler — trashes or permanently expunges multiple messages.
+ *
+ * Scope: delete:email
+ * Confirm gate: requireConfirm (destructive)
+ * Capability gate: caps.delete
+ * Cap: MAX_BULK_IDS (500)
+ * Default behaviour: move to Trash. Set permanent:true for hard delete.
+ */
+async function executeBulkDelete(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveBulkArgs(rawArgs, "bulk_delete", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageIds } = resolved;
+
+  if (messageIds.length > MAX_BULK_IDS) return bulkCapError(messageIds.length);
+
+  // rawArgs was validated as a non-null object by resolveBulkArgs above.
+  const args = rawArgs as Record<string, unknown>;
+  const guard = requireConfirm(args);
+  if (guard) return guard;
+
+  const permanent = args["permanent"] === true;
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
+
+  let bulkResult: BulkOpResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        bulkResult = await gmailBulkDelete(inbox, messageIds, permanent);
+        break;
+      case "outlook":
+        bulkResult = await outlookBulkDelete(inbox, messageIds, permanent);
+        break;
+      case "fastmail":
+        bulkResult = await fastmailBulkDelete(inbox, messageIds, permanent);
+        break;
+      default: // imap and all IMAP service variants
+        bulkResult = await imapBulkDelete(inbox, messageIds, permanent);
+        break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] bulk_delete: provider_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: `Provider error during bulk_delete: ${message}. Please try again in a moment.`,
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  return formatBulkResult(
+    bulkResult.succeeded,
+    bulkResult.failed,
+    "bulk_delete",
+    inbox.id,
+    { permanent },
+  );
+}
+
+/**
+ * `bulk_flag` handler — applies a read/unread/flag/unflag action to multiple messages.
+ *
+ * Scope: send:email
+ * Capability gate: caps.flags
+ * Cap: MAX_BULK_IDS (500)
+ */
+async function executeBulkFlag(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveBulkArgs(rawArgs, "bulk_flag", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageIds } = resolved;
+
+  if (messageIds.length > MAX_BULK_IDS) return bulkCapError(messageIds.length);
+
+  const args = rawArgs as Record<string, unknown>;
+  const action = typeof args["action"] === "string" ? args["action"] : "";
+  if (!["read", "unread", "flag", "unflag"].includes(action)) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "bulk_flag: action must be one of: read, unread, flag, unflag.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
+
+  let bulkResult: BulkOpResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        bulkResult = await gmailBulkFlag(inbox, messageIds, action);
+        break;
+      case "outlook":
+        bulkResult = await outlookBulkFlag(inbox, messageIds, action);
+        break;
+      case "fastmail":
+        bulkResult = await fastmailBulkFlag(inbox, messageIds, action);
+        break;
+      default: // imap and all IMAP service variants
+        bulkResult = await imapBulkFlag(inbox, messageIds, action);
+        break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] bulk_flag: provider_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: `Provider error during bulk_flag: ${message}. Please try again in a moment.`,
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  return formatBulkResult(
+    bulkResult.succeeded,
+    bulkResult.failed,
+    "bulk_flag",
+    inbox.id,
+    { action },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 (cont.) — Search-and-act tools
+//
+// Tools: search_and_move, search_and_delete
+//
+// Both run the provider search on the server and apply the bulk operation to
+// the results, avoiding stale IDs being passed by the agent.
+// ---------------------------------------------------------------------------
+
+/**
+ * `search_and_move` handler — searches for messages and moves all matches to a folder.
+ *
+ * Scope: manage:folders
+ * Capability gate: caps.move
+ * Cap: MAX_BULK_IDS (500)
+ */
+async function executeSearchAndMove(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "search_and_move: arguments must be an object with inbox_id, query, and destination_folder_id.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const args = rawArgs as Record<string, unknown>;
+
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: {
+        content: [{ type: "text", text: "search_and_move: inbox_id is required and must be a UUID string." }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const query = typeof args["query"] === "string" ? args["query"].trim() : "";
+  if (!query) {
+    return {
+      result: {
+        content: [{ type: "text", text: "search_and_move: query is required and must be a non-empty string." }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const destinationFolderId =
+    typeof args["destination_folder_id"] === "string"
+      ? args["destination_folder_id"].trim()
+      : "";
+  if (!destinationFolderId) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "search_and_move: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const limit = Math.min(
+    Math.max(1, typeof args["limit"] === "number" ? Math.floor(args["limit"]) : MAX_BULK_IDS),
+    MAX_BULK_IDS,
+  );
+
+  const includeFolders: string[] = Array.isArray(args["include_folders"])
+    ? (args["include_folders"] as unknown[])
+        .filter((f): f is string => typeof f === "string" && f.length > 0)
+    : [];
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `Inbox ${inboxId} not found or not accessible to this API key. ` +
+            "Verify the inbox UUID in the MCPEmails dashboard.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "inbox_not_found",
+    };
+  }
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
+
+  // ── Run search to collect message IDs ─────────────────────────────────────
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS)
+  );
+
+  let searchResult: SearchEmailsResult;
+  try {
+    let searchPromise: Promise<SearchEmailsResult>;
+    switch (inbox.provider) {
+      case "gmail":
+        searchPromise = searchGmailMessages(inbox, query, limit, 0, includeFolders);
+        break;
+      case "outlook":
+        searchPromise = searchOutlookMessages(inbox, query, limit, 0, includeFolders);
+        break;
+      case "fastmail":
+        searchPromise = searchFastmailMessages(inbox, query, limit, 0, includeFolders);
+        break;
+      case "imap":
+        searchPromise = searchImapMessages(inbox, query, limit, 0, includeFolders);
+        break;
+      default:
+        return {
+          result: {
+            content: [{
+              type: "text",
+              text:
+                `Provider '${inbox.provider}' is not yet supported by search_and_move. ` +
+                "Supported providers: gmail, outlook, fastmail, imap.",
+            }],
+            isError: true,
+          },
+          logStatus: "error",
+          logErrorCode: "provider_error",
+        };
+    }
+    searchResult = await Promise.race([searchPromise, timeoutPromise]);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message === "search_timeout") {
+      return {
+        result: {
+          content: [{ type: "text", text: "Search timed out after 30 seconds. Try a simpler or more specific query." }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "search_timeout",
+      };
+    }
+    console.error("[mcp-server] search_and_move: search_error", {
+      inbox_id: inboxId,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{ type: "text", text: `Provider error while searching: ${message}. Please try again in a moment.` }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  const messageIds = searchResult.messages.map((m) => m.id);
+
+  if (messageIds.length === 0) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            succeeded: 0,
+            failed: 0,
+            operation: "search_and_move",
+            inbox_id: inboxId,
+            destination_folder_id: destinationFolderId,
+            query,
+            results: [],
+          }),
+        }],
+      },
+      logStatus: "success",
+      logErrorCode: null,
+    };
+  }
+
+  // ── Apply bulk move to search results ─────────────────────────────────────
+  let bulkResult: BulkOpResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        bulkResult = await gmailBulkMove(inbox, messageIds, destinationFolderId);
+        break;
+      case "outlook":
+        bulkResult = await outlookBulkMove(inbox, messageIds, destinationFolderId);
+        break;
+      case "fastmail":
+        bulkResult = await fastmailBulkMove(inbox, messageIds, destinationFolderId);
+        break;
+      default: // imap
+        bulkResult = await imapBulkMove(inbox, messageIds, destinationFolderId);
+        break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] search_and_move: move_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{ type: "text", text: `Provider error during move: ${message}. Please try again in a moment.` }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  return formatBulkResult(
+    bulkResult.succeeded,
+    bulkResult.failed,
+    "search_and_move",
+    inbox.id,
+    { destination_folder_id: destinationFolderId, query },
+  );
+}
+
+/**
+ * `search_and_delete` handler — searches for messages and deletes all matches.
+ *
+ * Scope: delete:email
+ * Confirm gate: requireConfirm (destructive)
+ * Capability gate: caps.delete
+ * Cap: MAX_BULK_IDS (500)
+ * Default behaviour: move to Trash. Set permanent:true for hard delete.
+ */
+async function executeSearchAndDelete(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "search_and_delete: arguments must be an object with inbox_id, query, and confirm.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const args = rawArgs as Record<string, unknown>;
+
+  const guard = requireConfirm(args);
+  if (guard) return guard;
+
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: {
+        content: [{ type: "text", text: "search_and_delete: inbox_id is required and must be a UUID string." }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const query = typeof args["query"] === "string" ? args["query"].trim() : "";
+  if (!query) {
+    return {
+      result: {
+        content: [{ type: "text", text: "search_and_delete: query is required and must be a non-empty string." }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const permanent = args["permanent"] === true;
+  const limit = Math.min(
+    Math.max(1, typeof args["limit"] === "number" ? Math.floor(args["limit"]) : MAX_BULK_IDS),
+    MAX_BULK_IDS,
+  );
+  const includeFolders: string[] = Array.isArray(args["include_folders"])
+    ? (args["include_folders"] as unknown[])
+        .filter((f): f is string => typeof f === "string" && f.length > 0)
+    : [];
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `Inbox ${inboxId} not found or not accessible to this API key. ` +
+            "Verify the inbox UUID in the MCPEmails dashboard.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "inbox_not_found",
+    };
+  }
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
+
+  // ── Run search to collect message IDs ─────────────────────────────────────
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS)
+  );
+
+  let searchResult: SearchEmailsResult;
+  try {
+    let searchPromise: Promise<SearchEmailsResult>;
+    switch (inbox.provider) {
+      case "gmail":
+        searchPromise = searchGmailMessages(inbox, query, limit, 0, includeFolders);
+        break;
+      case "outlook":
+        searchPromise = searchOutlookMessages(inbox, query, limit, 0, includeFolders);
+        break;
+      case "fastmail":
+        searchPromise = searchFastmailMessages(inbox, query, limit, 0, includeFolders);
+        break;
+      case "imap":
+        searchPromise = searchImapMessages(inbox, query, limit, 0, includeFolders);
+        break;
+      default:
+        return {
+          result: {
+            content: [{
+              type: "text",
+              text:
+                `Provider '${inbox.provider}' is not yet supported by search_and_delete. ` +
+                "Supported providers: gmail, outlook, fastmail, imap.",
+            }],
+            isError: true,
+          },
+          logStatus: "error",
+          logErrorCode: "provider_error",
+        };
+    }
+    searchResult = await Promise.race([searchPromise, timeoutPromise]);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message === "search_timeout") {
+      return {
+        result: {
+          content: [{ type: "text", text: "Search timed out after 30 seconds. Try a simpler or more specific query." }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "search_timeout",
+      };
+    }
+    console.error("[mcp-server] search_and_delete: search_error", {
+      inbox_id: inboxId,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{ type: "text", text: `Provider error while searching: ${message}. Please try again in a moment.` }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  const messageIds = searchResult.messages.map((m) => m.id);
+
+  if (messageIds.length === 0) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            succeeded: 0,
+            failed: 0,
+            operation: "search_and_delete",
+            inbox_id: inboxId,
+            permanent,
+            query,
+            results: [],
+          }),
+        }],
+      },
+      logStatus: "success",
+      logErrorCode: null,
+    };
+  }
+
+  // ── Apply bulk delete to search results ───────────────────────────────────
+  let bulkResult: BulkOpResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":
+        bulkResult = await gmailBulkDelete(inbox, messageIds, permanent);
+        break;
+      case "outlook":
+        bulkResult = await outlookBulkDelete(inbox, messageIds, permanent);
+        break;
+      case "fastmail":
+        bulkResult = await fastmailBulkDelete(inbox, messageIds, permanent);
+        break;
+      default: // imap
+        bulkResult = await imapBulkDelete(inbox, messageIds, permanent);
+        break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] search_and_delete: delete_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{ type: "text", text: `Provider error during delete: ${message}. Please try again in a moment.` }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  return formatBulkResult(
+    bulkResult.succeeded,
+    bulkResult.failed,
+    "search_and_delete",
+    inbox.id,
+    { permanent, query },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// create_draft / update_draft / list_drafts / send_draft — types + helpers
+// ---------------------------------------------------------------------------
+
+/** Common folder names for the Drafts mailbox across IMAP providers, tried in order. */
+const DRAFT_FOLDER_CANDIDATES = ["Drafts", "Draft", "INBOX.Drafts", "INBOX.Draft"];
+
+interface DraftSummary {
+  draft_id: string;
+  subject: string;
+  to: EmailAddressEntry[];
+  cc: EmailAddressEntry[];
+  created_at: string;
+}
+
+interface DraftCreateResult {
+  draft_id: string;
+  subject: string;
+  to: EmailAddressEntry[];
+  created_at: string;
+}
+
+interface DraftUpdateResult {
+  draft_id: string;
+  subject: string;
+  updated_at: string;
+}
+
+interface DraftSendResult {
+  draft_id: string;
+  message_id: string;
+  sent_at: string;
+}
+
+interface DraftParams {
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject: string;
+  body: string;
+  htmlBody?: string;
+}
+
+// ── IMAP draft helpers ────────────────────────────────────────────────────────
+
+async function imapListDrafts(
+  inbox: InboxRow,
+  limit: number,
+): Promise<DraftSummary[]> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    let summaries: ImapMessageSummary[] = [];
+    let draftFolder = DRAFT_FOLDER_CANDIDATES[0];
+    for (const folder of DRAFT_FOLDER_CANDIDATES) {
+      try {
+        await client.selectMailbox(folder);
+        draftFolder = folder;
+        const uids = await client.uidSearch("ALL");
+        if (uids.length === 0) break;
+        const page = uids.slice(-limit).reverse();
+        summaries = await client.fetchSummaries(page);
+        break;
+      } catch {
+        // Try next candidate folder.
+      }
+    }
+    return summaries.map((s) => ({
+      draft_id: encodeImapId(draftFolder, s.uid),
+      subject: s.envelope.subject || "(no subject)",
+      to: s.envelope.to.map((a) => ({ name: a.name, email: a.email })),
+      cc: [],
+      created_at: imapDateToIso(s.envelope.date),
+    }));
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+async function imapCreateDraft(
+  inbox: InboxRow,
+  params: DraftParams,
+): Promise<DraftCreateResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+  const messageId = crypto.randomUUID();
+  const from = inbox.display_name
+    ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
+    : inbox.email_address;
+
+  const mime = buildMimeMessage({
+    from,
+    to: params.to.length ? params.to : [inbox.email_address],
+    cc: params.cc.length ? params.cc : undefined,
+    subject: params.subject,
+    textBody: params.body,
+    htmlBody: params.htmlBody,
+    messageId,
+  });
+
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+
+    let draftFolder = DRAFT_FOLDER_CANDIDATES[0];
+    let uid: number | undefined;
+    for (const folder of DRAFT_FOLDER_CANDIDATES) {
+      const res = await client.appendWithFlags(folder, mime, ["\\Draft", "\\Seen"]);
+      if (res.ok) {
+        draftFolder = folder;
+        uid = res.uid;
+        break;
+      }
+    }
+    if (uid === undefined) {
+      // APPENDUID not supported — find UID by Message-ID header search.
+      await client.selectMailbox(draftFolder);
+      const found = await client.uidSearch(
+        `HEADER Message-ID "<${messageId}@mcpemails.com>"`,
+      );
+      uid = found.length > 0 ? found[found.length - 1] : 0;
+    }
+
+    return {
+      draft_id: encodeImapId(draftFolder, uid ?? 0),
+      subject: params.subject,
+      to: params.to.map((e) => parseEmailAddress(e)),
+      created_at: new Date().toISOString(),
+    };
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+async function imapUpdateDraft(
+  inbox: InboxRow,
+  draftId: string,
+  params: DraftParams,
+): Promise<DraftUpdateResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+  const { folder, uid: oldUid } = decodeImapId(draftId);
+  if (!Number.isFinite(oldUid) || oldUid <= 0) throw new Error("draft_not_found");
+  const messageId = crypto.randomUUID();
+  const from = inbox.display_name
+    ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
+    : inbox.email_address;
+
+  const mime = buildMimeMessage({
+    from,
+    to: params.to.length ? params.to : [inbox.email_address],
+    cc: params.cc.length ? params.cc : undefined,
+    subject: params.subject,
+    textBody: params.body,
+    htmlBody: params.htmlBody,
+    messageId,
+  });
+
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+
+    // Append the updated draft.
+    let newUid: number | undefined;
+    const res = await client.appendWithFlags(folder, mime, ["\\Draft", "\\Seen"]);
+    if (res.ok) {
+      newUid = res.uid;
+    }
+    if (newUid === undefined) {
+      await client.selectMailbox(imapFolderName(folder));
+      const found = await client.uidSearch(
+        `HEADER Message-ID "<${messageId}@mcpemails.com>"`,
+      );
+      newUid = found.length > 0 ? found[found.length - 1] : 0;
+    }
+
+    // Delete the old draft.
+    await client.selectMailbox(imapFolderName(folder));
+    await client.uidStore([oldUid], ["\\Deleted"], "add");
+    await client.uidExpunge([oldUid]);
+
+    return {
+      draft_id: encodeImapId(folder, newUid ?? 0),
+      subject: params.subject,
+      updated_at: new Date().toISOString(),
+    };
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+async function imapSendDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftSendResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(draftId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("draft_not_found");
+  const password = await decryptStoredToken(inbox.imap_password);
+
+  // Step 1: Fetch the raw MIME from the Drafts folder.
+  let rawMime: string | null = null;
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    const msg = await client.fetchMessageRaw(uid);
+    if (!msg) throw new Error("draft_not_found");
+    rawMime = msg.raw;
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+
+  if (!rawMime) throw new Error("draft_not_found");
+
+  // Step 2: Parse recipients from headers.
+  const parsed = parseEmail(rawMime);
+  const h = parsed.headers;
+  const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
+  const ccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
+  const bccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? ""));
+  const recipients = [...toAddrs, ...ccAddrs, ...bccAddrs]
+    .map((a) => a.email)
+    .filter(Boolean);
+
+  if (recipients.length === 0) throw new Error("draft_has_no_recipients");
+
+  // Step 3: Send via SMTP.
+  await imapSmtpSend(inbox, rawMime, recipients);
+
+  // Step 4: Append to Sent folder (best-effort).
+  await appendToSentFolder(inbox, rawMime);
+
+  // Step 5: Delete the draft (best-effort — failure must not fail the send).
+  client = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: inbox.email_address,
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    await client.uidStore([uid], ["\\Deleted"], "add");
+    await client.uidExpunge([uid]);
+  } catch {
+    // best-effort
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+
+  const origMsgId = decodeEncodedWords(getHeader(parsed.headers, "message-id") ?? "");
+  return {
+    draft_id: draftId,
+    message_id: origMsgId || `<${draftId}@mcpemails.com>`,
+    sent_at: new Date().toISOString(),
+  };
+}
+
+// ── Gmail draft helpers ───────────────────────────────────────────────────────
+
+async function gmailListDrafts(
+  inbox: InboxRow,
+  limit: number,
+): Promise<DraftSummary[]> {
+  const token = await withFreshGmailToken(inbox);
+  const listResp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/drafts?maxResults=${limit}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!listResp.ok) {
+    if (listResp.status === 401) throw new Error("gmail_auth_failed");
+    throw new Error(`Gmail drafts.list error: ${listResp.statusText}`);
+  }
+  const listData = (await listResp.json()) as {
+    drafts?: { id: string; message: { id: string } }[];
+  };
+  const drafts = listData.drafts ?? [];
+
+  const summaries: DraftSummary[] = [];
+  for (const d of drafts) {
+    try {
+      const msgResp = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${d.message.id}` +
+        `?format=metadata&metadataHeaders=Subject&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Date`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!msgResp.ok) continue;
+      const msgData = (await msgResp.json()) as {
+        payload?: { headers?: { name: string; value: string }[] };
+        internalDate?: string;
+      };
+      const hdr = msgData.payload?.headers ?? [];
+      const subject = hdr.find((h) => h.name === "Subject")?.value ?? "(no subject)";
+      const toRaw = hdr.find((h) => h.name === "To")?.value ?? "";
+      const ccRaw = hdr.find((h) => h.name === "Cc")?.value ?? "";
+      const internalDate = msgData.internalDate
+        ? new Date(parseInt(msgData.internalDate, 10)).toISOString()
+        : new Date().toISOString();
+      summaries.push({
+        draft_id: d.id,
+        subject,
+        to: parseAddressList(toRaw),
+        cc: parseAddressList(ccRaw),
+        created_at: internalDate,
+      });
+    } catch {
+      // Skip drafts that fail to fetch metadata.
+    }
+  }
+  return summaries;
+}
+
+async function gmailCreateDraft(
+  inbox: InboxRow,
+  params: DraftParams,
+): Promise<DraftCreateResult> {
+  const token = await withFreshGmailToken(inbox);
+  const messageId = crypto.randomUUID();
+  const from = inbox.display_name
+    ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
+    : inbox.email_address;
+
+  const mime = buildMimeMessage({
+    from,
+    to: params.to.length ? params.to : [inbox.email_address],
+    cc: params.cc.length ? params.cc : undefined,
+    subject: params.subject,
+    textBody: params.body,
+    htmlBody: params.htmlBody,
+    messageId,
+  });
+
+  const resp = await fetch(
+    "https://gmail.googleapis.com/gmail/v1/users/me/drafts",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: { raw: mimeMessageToBase64url(mime) } }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    throw new Error(`Gmail drafts.create error: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as { id: string };
+  return {
+    draft_id: data.id,
+    subject: params.subject,
+    to: params.to.map((e) => parseEmailAddress(e)),
+    created_at: new Date().toISOString(),
+  };
+}
+
+async function gmailUpdateDraft(
+  inbox: InboxRow,
+  draftId: string,
+  params: DraftParams,
+): Promise<DraftUpdateResult> {
+  const token = await withFreshGmailToken(inbox);
+  const messageId = crypto.randomUUID();
+  const from = inbox.display_name
+    ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
+    : inbox.email_address;
+
+  const mime = buildMimeMessage({
+    from,
+    to: params.to.length ? params.to : [inbox.email_address],
+    cc: params.cc.length ? params.cc : undefined,
+    subject: params.subject,
+    textBody: params.body,
+    htmlBody: params.htmlBody,
+    messageId,
+  });
+
+  const resp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: { raw: mimeMessageToBase64url(mime) } }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (resp.status === 404) throw new Error("draft_not_found");
+    throw new Error(`Gmail drafts.update error: ${resp.statusText}`);
+  }
+  return {
+    draft_id: draftId,
+    subject: params.subject,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+async function gmailSendDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftSendResult> {
+  const token = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    "https://gmail.googleapis.com/gmail/v1/users/me/drafts/send",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: draftId }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (resp.status === 404) throw new Error("draft_not_found");
+    if (resp.status === 429) throw new Error("quota_exceeded");
+    throw new Error(`Gmail drafts.send error: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as { id?: string };
+  return {
+    draft_id: draftId,
+    message_id: data.id ?? draftId,
+    sent_at: new Date().toISOString(),
+  };
+}
+
+// ── Outlook draft helpers ─────────────────────────────────────────────────────
+
+async function outlookListDrafts(
+  inbox: InboxRow,
+  limit: number,
+): Promise<DraftSummary[]> {
+  const token = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/mailFolders/Drafts/messages` +
+    `?$select=id,subject,toRecipients,ccRecipients,createdDateTime` +
+    `&$top=${limit}&$orderby=createdDateTime%20desc`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    throw new Error(`Outlook draft list error: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as {
+    value?: {
+      id: string;
+      subject?: string;
+      toRecipients?: { emailAddress: { address: string; name?: string } }[];
+      ccRecipients?: { emailAddress: { address: string; name?: string } }[];
+      createdDateTime?: string;
+    }[];
+  };
+  return (data.value ?? []).map((m) => ({
+    draft_id: m.id,
+    subject: m.subject ?? "(no subject)",
+    to: (m.toRecipients ?? []).map((r) => ({
+      name: r.emailAddress.name ?? "",
+      email: r.emailAddress.address,
+    })),
+    cc: (m.ccRecipients ?? []).map((r) => ({
+      name: r.emailAddress.name ?? "",
+      email: r.emailAddress.address,
+    })),
+    created_at: m.createdDateTime ?? new Date().toISOString(),
+  }));
+}
+
+async function outlookCreateDraft(
+  inbox: InboxRow,
+  params: DraftParams,
+): Promise<DraftCreateResult> {
+  const token = await withFreshOutlookToken(inbox);
+  const mapRecip = (e: string) => {
+    const p = parseEmailAddress(e);
+    return { emailAddress: { address: p.email, ...(p.name ? { name: p.name } : {}) } };
+  };
+  const body: Record<string, unknown> = {
+    subject: params.subject,
+    body: {
+      contentType: params.htmlBody ? "html" : "text",
+      content: params.htmlBody ?? params.body,
+    },
+    ...(params.to.length ? { toRecipients: params.to.map(mapRecip) } : {}),
+    ...(params.cc.length ? { ccRecipients: params.cc.map(mapRecip) } : {}),
+    ...(params.bcc.length ? { bccRecipients: params.bcc.map(mapRecip) } : {}),
+  };
+  const resp = await fetch(
+    "https://graph.microsoft.com/v1.0/me/mailFolders/Drafts/messages",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    throw new Error(`Outlook create draft error: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as { id: string; createdDateTime?: string };
+  return {
+    draft_id: data.id,
+    subject: params.subject,
+    to: params.to.map((e) => parseEmailAddress(e)),
+    created_at: data.createdDateTime ?? new Date().toISOString(),
+  };
+}
+
+async function outlookUpdateDraft(
+  inbox: InboxRow,
+  draftId: string,
+  params: DraftParams,
+): Promise<DraftUpdateResult> {
+  const token = await withFreshOutlookToken(inbox);
+  const mapRecip = (e: string) => {
+    const p = parseEmailAddress(e);
+    return { emailAddress: { address: p.email, ...(p.name ? { name: p.name } : {}) } };
+  };
+  const patch: Record<string, unknown> = {
+    subject: params.subject,
+    body: {
+      contentType: params.htmlBody ? "html" : "text",
+      content: params.htmlBody ?? params.body,
+    },
+    ...(params.to.length ? { toRecipients: params.to.map(mapRecip) } : {}),
+    ...(params.cc.length ? { ccRecipients: params.cc.map(mapRecip) } : {}),
+    ...(params.bcc.length ? { bccRecipients: params.bcc.map(mapRecip) } : {}),
+  };
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(patch),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("draft_not_found");
+    throw new Error(`Outlook update draft error: ${resp.statusText}`);
+  }
+  return {
+    draft_id: draftId,
+    subject: params.subject,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+async function outlookSendDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftSendResult> {
+  const token = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}/send`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Length": "0",
+      },
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("draft_not_found");
+    throw new Error(`Outlook send draft error: ${resp.statusText}`);
+  }
+  return {
+    draft_id: draftId,
+    message_id: draftId,
+    sent_at: new Date().toISOString(),
+  };
+}
+
+// ── Fastmail draft helpers ────────────────────────────────────────────────────
+
+/** Shared session discovery for Fastmail JMAP draft operations. */
+async function getFastmailSession(inbox: InboxRow): Promise<{
+  accountId: string;
+  apiUrl: string;
+  authHeader: string;
+}> {
+  const authHeader = await buildFastmailAuthHeader(inbox);
+  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
+    headers: { Authorization: authHeader },
+  });
+  if (!sessionResp.ok) {
+    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
+  }
+  const session = (await sessionResp.json()) as {
+    primaryAccounts?: Record<string, string>;
+    apiUrl?: string;
+  };
+  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
+  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
+  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
+  return { accountId, apiUrl, authHeader };
+}
+
+async function fastmailListDrafts(
+  inbox: InboxRow,
+  limit: number,
+): Promise<DraftSummary[]> {
+  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
+  const jmapBody = {
+    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+    methodCalls: [
+      ["Email/query", {
+        accountId,
+        filter: { hasKeyword: "$draft" },
+        sort: [{ property: "receivedAt", isAscending: false }],
+        limit,
+      }, "q1"],
+      ["Email/get", {
+        accountId,
+        "#ids": { resultOf: "q1", name: "Email/query", path: "/ids" },
+        properties: ["id", "subject", "to", "cc", "receivedAt"],
+      }, "g1"],
+    ],
+  };
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify(jmapBody),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP list drafts error: ${apiResp.statusText}`);
+  }
+  const apiData = (await apiResp.json()) as {
+    methodResponses?: [string, {
+      list?: {
+        id: string;
+        subject?: string;
+        to?: { name?: string; email: string }[];
+        cc?: { name?: string; email: string }[];
+        receivedAt?: string;
+      }[];
+    }, string][];
+  };
+  const emails = apiData.methodResponses
+    ?.find(([name]) => name === "Email/get")?.[1]?.list ?? [];
+  return emails.map((e) => ({
+    draft_id: e.id,
+    subject: e.subject ?? "(no subject)",
+    to: (e.to ?? []).map((a) => ({ name: a.name ?? "", email: a.email })),
+    cc: (e.cc ?? []).map((a) => ({ name: a.name ?? "", email: a.email })),
+    created_at: e.receivedAt ?? new Date().toISOString(),
+  }));
+}
+
+async function fastmailCreateDraft(
+  inbox: InboxRow,
+  params: DraftParams,
+): Promise<DraftCreateResult> {
+  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
+  const { draftsId } = await resolveFastmailRoleMailboxes(apiUrl, authHeader, accountId);
+  if (!draftsId) throw new Error("Fastmail JMAP: could not resolve Drafts mailbox.");
+
+  const fromAddress = inbox.display_name
+    ? { name: inbox.display_name, email: inbox.email_address }
+    : { email: inbox.email_address };
+  const mapAddr = (e: string) => {
+    const p = parseEmailAddress(e);
+    return p.name ? { name: p.name, email: p.email } : { email: p.email };
+  };
+
+  const bodyValues: Record<string, unknown> = {
+    textPart: { value: params.body, charset: "utf-8" },
+  };
+  if (params.htmlBody) bodyValues["htmlPart"] = { value: params.htmlBody, charset: "utf-8" };
+
+  const emailCreate: Record<string, unknown> = {
+    mailboxIds: { [draftsId]: true },
+    from: [fromAddress],
+    ...(params.to.length ? { to: params.to.map(mapAddr) } : {}),
+    ...(params.cc.length ? { cc: params.cc.map(mapAddr) } : {}),
+    ...(params.bcc.length ? { bcc: params.bcc.map(mapAddr) } : {}),
+    subject: params.subject,
+    bodyValues,
+    textBody: [{ partId: "textPart", type: "text/plain" }],
+    ...(params.htmlBody ? { htmlBody: [{ partId: "htmlPart", type: "text/html" }] } : {}),
+    keywords: { "$draft": true },
+  };
+
+  const jmapBody = {
+    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+    methodCalls: [["Email/set", { accountId, create: { draft: emailCreate } }, "e1"]],
+  };
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify(jmapBody),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP create draft error: ${apiResp.statusText}`);
+  }
+  const apiData = (await apiResp.json()) as {
+    methodResponses?: [string, { created?: Record<string, { id?: string }> }, string][];
+  };
+  const created = apiData.methodResponses?.find(([n]) => n === "Email/set")?.[1]?.created;
+  const draftId = created?.["draft"]?.id;
+  if (!draftId) throw new Error("Fastmail JMAP: draft creation returned no id.");
+  return {
+    draft_id: draftId,
+    subject: params.subject,
+    to: params.to.map((e) => parseEmailAddress(e)),
+    created_at: new Date().toISOString(),
+  };
+}
+
+async function fastmailUpdateDraft(
+  inbox: InboxRow,
+  draftId: string,
+  params: DraftParams,
+): Promise<DraftUpdateResult> {
+  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
+  const mapAddr = (e: string) => {
+    const p = parseEmailAddress(e);
+    return p.name ? { name: p.name, email: p.email } : { email: p.email };
+  };
+
+  const bodyValues: Record<string, unknown> = {
+    textPart: { value: params.body, charset: "utf-8" },
+  };
+  if (params.htmlBody) bodyValues["htmlPart"] = { value: params.htmlBody, charset: "utf-8" };
+
+  const update: Record<string, unknown> = {
+    subject: params.subject,
+    bodyValues,
+    textBody: [{ partId: "textPart", type: "text/plain" }],
+    ...(params.htmlBody ? { htmlBody: [{ partId: "htmlPart", type: "text/html" }] } : {}),
+    ...(params.to.length ? { to: params.to.map(mapAddr) } : {}),
+    ...(params.cc.length ? { cc: params.cc.map(mapAddr) } : {}),
+    ...(params.bcc.length ? { bcc: params.bcc.map(mapAddr) } : {}),
+  };
+
+  const jmapBody = {
+    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+    methodCalls: [["Email/set", { accountId, update: { [draftId]: update } }, "e1"]],
+  };
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify(jmapBody),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP update draft error: ${apiResp.statusText}`);
+  }
+  const apiData = (await apiResp.json()) as {
+    methodResponses?: [string, {
+      notUpdated?: Record<string, { type: string; description?: string }>;
+    }, string][];
+  };
+  const notUpdated = apiData.methodResponses?.find(([n]) => n === "Email/set")?.[1]?.notUpdated;
+  if (notUpdated?.[draftId]) {
+    const errObj = notUpdated[draftId];
+    if (errObj.type === "notFound") throw new Error("draft_not_found");
+    throw new Error(`Fastmail JMAP update draft failed: ${errObj.description ?? errObj.type}`);
+  }
+  return {
+    draft_id: draftId,
+    subject: params.subject,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+async function fastmailSendDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftSendResult> {
+  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
+  const { sentId } = await resolveFastmailRoleMailboxes(apiUrl, authHeader, accountId);
+
+  const successUpdate: Record<string, unknown> = {
+    "keywords/$draft": null,
+    "keywords/$seen": true,
+  };
+  if (sentId) successUpdate[`mailboxIds/${sentId}`] = true;
+
+  const submissionSet: Record<string, unknown> = {
+    accountId,
+    create: {
+      sub1: {
+        emailId: draftId,
+        envelope: { mailFrom: { email: inbox.email_address } },
+      },
+    },
+    onSuccessUpdateEmail: { sub1: successUpdate },
+  };
+
+  const jmapBody = {
+    using: [
+      "urn:ietf:params:jmap:core",
+      "urn:ietf:params:jmap:mail",
+      "urn:ietf:params:jmap:submission",
+    ],
+    methodCalls: [["EmailSubmission/set", submissionSet, "s1"]],
+  };
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify(jmapBody),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP send draft error: ${apiResp.statusText}`);
+  }
+  const apiData = (await apiResp.json()) as {
+    methodResponses?: [string, {
+      notCreated?: Record<string, { type: string; description?: string }>;
+    }, string][];
+  };
+  const subResp = apiData.methodResponses?.find(([n]) => n === "EmailSubmission/set")?.[1];
+  if (subResp?.notCreated?.["sub1"]) {
+    const errObj = subResp.notCreated["sub1"];
+    if (errObj.type === "emailNotFound") throw new Error("draft_not_found");
+    throw new Error(`Fastmail JMAP submission failed: ${errObj.description ?? errObj.type}`);
+  }
+  return {
+    draft_id: draftId,
+    message_id: draftId,
+    sent_at: new Date().toISOString(),
+  };
+}
+
+// ── Drafts execute functions ──────────────────────────────────────────────────
+
+async function executeListDrafts(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "list_drafts: arguments must be an object with inbox_id." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: { content: [{ type: "text", text: "list_drafts: inbox_id is required and must be a UUID string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const limit = typeof args["limit"] === "number"
+    ? Math.min(50, Math.max(1, Math.floor(args["limit"])))
+    : 20;
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key. Verify the inbox UUID in the MCPEmails dashboard.` }], isError: true },
+      logStatus: "error", logErrorCode: "inbox_not_found",
+    };
+  }
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  let drafts: DraftSummary[];
+  try {
+    switch (inbox.provider) {
+      case "gmail":    drafts = await gmailListDrafts(inbox, limit);    break;
+      case "outlook":  drafts = await outlookListDrafts(inbox, limit);  break;
+      case "fastmail": drafts = await fastmailListDrafts(inbox, limit); break;
+      default:         drafts = await imapListDrafts(inbox, limit);     break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" || message === "imap_auth_failed";
+    if (isAuth) {
+      return {
+        result: { content: [{ type: "text", text: `Unable to access ${inbox.provider} inbox: OAuth token has been revoked or expired. The user must reconnect their inbox at https://mcpemails.com/dashboard/inboxes.` }], isError: true },
+        logStatus: "error", logErrorCode: "auth_failed",
+      };
+    }
+    console.error("[mcp-server] list_drafts: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+    return {
+      result: { content: [{ type: "text", text: `Failed to list drafts for ${inbox.provider} inbox: ${message}` }], isError: true },
+      logStatus: "error", logErrorCode: "provider_error",
+    };
+  }
+
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify({ inbox_id: inbox.id, drafts }, null, 2) }] },
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+async function executeCreateDraft(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "create_draft: arguments must be an object with inbox_id, subject, and body." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: { content: [{ type: "text", text: "create_draft: inbox_id is required and must be a UUID string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const subject = typeof args["subject"] === "string" && args["subject"].length > 0
+    ? args["subject"] : null;
+  if (!subject) {
+    return {
+      result: { content: [{ type: "text", text: "create_draft: subject is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const body = typeof args["body"] === "string" && args["body"].length > 0
+    ? args["body"] : null;
+  if (!body) {
+    return {
+      result: { content: [{ type: "text", text: "create_draft: body is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const to: string[] = Array.isArray(args["to"]) ? (args["to"] as string[]) : [];
+  const cc: string[] = Array.isArray(args["cc"]) ? (args["cc"] as string[]) : [];
+  const bcc: string[] = Array.isArray(args["bcc"]) ? (args["bcc"] as string[]) : [];
+  const htmlBody = typeof args["html_body"] === "string" ? args["html_body"] : undefined;
+
+  for (const addr of [...to, ...cc, ...bcc]) {
+    if (typeof addr !== "string" || !isValidEmailAddress(addr)) {
+      return {
+        result: { content: [{ type: "text", text: `create_draft: invalid email address: "${String(addr)}".` }], isError: true },
+        logStatus: "error", logErrorCode: "invalid_recipient",
+      };
+    }
+  }
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key. Verify the inbox UUID in the MCPEmails dashboard.` }], isError: true },
+      logStatus: "error", logErrorCode: "inbox_not_found",
+    };
+  }
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  const draftParams: DraftParams = { to, cc, bcc, subject, body, htmlBody };
+  let draftResult: DraftCreateResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":    draftResult = await gmailCreateDraft(inbox, draftParams);    break;
+      case "outlook":  draftResult = await outlookCreateDraft(inbox, draftParams);  break;
+      case "fastmail": draftResult = await fastmailCreateDraft(inbox, draftParams); break;
+      default:         draftResult = await imapCreateDraft(inbox, draftParams);     break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" || message === "imap_auth_failed";
+    if (isAuth) {
+      return {
+        result: { content: [{ type: "text", text: `Unable to access ${inbox.provider} inbox: OAuth token has been revoked or expired. The user must reconnect their inbox at https://mcpemails.com/dashboard/inboxes.` }], isError: true },
+        logStatus: "error", logErrorCode: "auth_failed",
+      };
+    }
+    console.error("[mcp-server] create_draft: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+    return {
+      result: { content: [{ type: "text", text: `Failed to create draft for ${inbox.provider} inbox: ${message}` }], isError: true },
+      logStatus: "error", logErrorCode: "provider_error",
+    };
+  }
+
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify(draftResult) }] },
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+async function executeUpdateDraft(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "update_draft: arguments must be an object with inbox_id, draft_id, subject, and body." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: { content: [{ type: "text", text: "update_draft: inbox_id is required and must be a UUID string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+    ? args["draft_id"] : null;
+  if (!draftId) {
+    return {
+      result: { content: [{ type: "text", text: "update_draft: draft_id is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const subject = typeof args["subject"] === "string" && args["subject"].length > 0
+    ? args["subject"] : null;
+  if (!subject) {
+    return {
+      result: { content: [{ type: "text", text: "update_draft: subject is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const body = typeof args["body"] === "string" && args["body"].length > 0
+    ? args["body"] : null;
+  if (!body) {
+    return {
+      result: { content: [{ type: "text", text: "update_draft: body is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const to: string[] = Array.isArray(args["to"]) ? (args["to"] as string[]) : [];
+  const cc: string[] = Array.isArray(args["cc"]) ? (args["cc"] as string[]) : [];
+  const bcc: string[] = Array.isArray(args["bcc"]) ? (args["bcc"] as string[]) : [];
+  const htmlBody = typeof args["html_body"] === "string" ? args["html_body"] : undefined;
+
+  for (const addr of [...to, ...cc, ...bcc]) {
+    if (typeof addr !== "string" || !isValidEmailAddress(addr)) {
+      return {
+        result: { content: [{ type: "text", text: `update_draft: invalid email address: "${String(addr)}".` }], isError: true },
+        logStatus: "error", logErrorCode: "invalid_recipient",
+      };
+    }
+  }
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key. Verify the inbox UUID in the MCPEmails dashboard.` }], isError: true },
+      logStatus: "error", logErrorCode: "inbox_not_found",
+    };
+  }
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  const draftParams: DraftParams = { to, cc, bcc, subject, body, htmlBody };
+  let updateResult: DraftUpdateResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":    updateResult = await gmailUpdateDraft(inbox, draftId, draftParams);    break;
+      case "outlook":  updateResult = await outlookUpdateDraft(inbox, draftId, draftParams);  break;
+      case "fastmail": updateResult = await fastmailUpdateDraft(inbox, draftId, draftParams); break;
+      default:         updateResult = await imapUpdateDraft(inbox, draftId, draftParams);     break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message === "draft_not_found") {
+      return {
+        result: { content: [{ type: "text", text: `Draft ${draftId} not found. Use list_drafts to see available draft IDs.` }], isError: true },
+        logStatus: "error", logErrorCode: "draft_not_found",
+      };
+    }
+    const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" || message === "imap_auth_failed";
+    if (isAuth) {
+      return {
+        result: { content: [{ type: "text", text: `Unable to access ${inbox.provider} inbox: OAuth token has been revoked or expired. The user must reconnect their inbox at https://mcpemails.com/dashboard/inboxes.` }], isError: true },
+        logStatus: "error", logErrorCode: "auth_failed",
+      };
+    }
+    console.error("[mcp-server] update_draft: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+    return {
+      result: { content: [{ type: "text", text: `Failed to update draft for ${inbox.provider} inbox: ${message}` }], isError: true },
+      logStatus: "error", logErrorCode: "provider_error",
+    };
+  }
+
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify(updateResult) }] },
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+async function executeSendDraft(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "send_draft: arguments must be an object with inbox_id and draft_id." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: { content: [{ type: "text", text: "send_draft: inbox_id is required and must be a UUID string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+    ? args["draft_id"] : null;
+  if (!draftId) {
+    return {
+      result: { content: [{ type: "text", text: "send_draft: draft_id is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key. Verify the inbox UUID in the MCPEmails dashboard.` }], isError: true },
+      logStatus: "error", logErrorCode: "inbox_not_found",
+    };
+  }
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  let sendResult: DraftSendResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":    sendResult = await gmailSendDraft(inbox, draftId);    break;
+      case "outlook":  sendResult = await outlookSendDraft(inbox, draftId);  break;
+      case "fastmail": sendResult = await fastmailSendDraft(inbox, draftId); break;
+      default:         sendResult = await imapSendDraft(inbox, draftId);     break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message === "draft_not_found") {
+      return {
+        result: { content: [{ type: "text", text: `Draft ${draftId} not found. Use list_drafts to see available draft IDs.` }], isError: true },
+        logStatus: "error", logErrorCode: "draft_not_found",
+      };
+    }
+    if (message === "draft_has_no_recipients") {
+      return {
+        result: { content: [{ type: "text", text: "send_draft: the draft has no recipients. Add at least one To address via update_draft before sending." }], isError: true },
+        logStatus: "error", logErrorCode: "draft_has_no_recipients",
+      };
+    }
+    const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" || message === "imap_auth_failed";
+    if (isAuth) {
+      return {
+        result: { content: [{ type: "text", text: `Unable to access ${inbox.provider} inbox: OAuth token has been revoked or expired. The user must reconnect their inbox at https://mcpemails.com/dashboard/inboxes.` }], isError: true },
+        logStatus: "error", logErrorCode: "auth_failed",
+      };
+    }
+    if (message === "quota_exceeded") {
+      return {
+        result: { content: [{ type: "text", text: "Your email account has exceeded its sending quota. Please try again later." }], isError: true },
+        logStatus: "error", logErrorCode: "quota_exceeded",
+      };
+    }
+    console.error("[mcp-server] send_draft: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+    return {
+      result: {
+        content: [{ type: "text", text: `An error occurred while sending the draft via ${inbox.provider}. The message may or may not have been delivered. Do not retry automatically to avoid duplicate delivery.` }],
+        isError: true,
+      },
+      logStatus: "error", logErrorCode: "provider_error",
+    };
+  }
+
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify(sendResult) }] },
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Method handlers
 // ---------------------------------------------------------------------------
 
@@ -8914,6 +14815,108 @@ async function handleToolsCall(
     } else if (toolName === "archive_email") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeArchiveEmail(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "list_folders") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeListFolders(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "create_folder") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeCreateFolder(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "rename_folder") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeRenameFolder(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "delete_folder") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeDeleteFolder(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "move_email") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeMoveEmail(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "copy_email") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeCopyEmail(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "delete_email") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeDeleteEmail(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "bulk_move") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeBulkMove(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "bulk_delete") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeBulkDelete(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "bulk_flag") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeBulkFlag(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "search_and_move") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeSearchAndMove(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "search_and_delete") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeSearchAndDelete(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "forward_email") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeForwardEmail(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "list_drafts") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeListDrafts(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "create_draft") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeCreateDraft(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "update_draft") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeUpdateDraft(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "send_draft") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeSendDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };

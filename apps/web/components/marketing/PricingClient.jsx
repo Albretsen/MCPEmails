@@ -1,169 +1,129 @@
 'use client';
 
 import { useState, Fragment } from 'react';
+import { useTranslations } from 'next-intl';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
 // NOTE: the "Team" tier keeps the internal key `pro` so live Stripe prices
 // (keyed by plan id) resolve correctly. Only its display name is "Team".
+// User-facing copy (name, desc, cta, features, badge) is read from the
+// `pricing` message bundle via `plans.<key>.*`.
 
 const PLANS = [
   {
     key: 'free',
-    name: 'Free',
     monthly: 0,
     annual: 0,
-    per: '/forever',
+    perKey: 'card.perForever',
     featured: false,
-    badge: null,
-    desc: 'Everything, unlimited. For everyone building with MCP agents.',
-    cta: 'Start free',
     ctaHref: '/signup',
     ctaPrimary: false,
   },
   {
     key: 'solo',
-    name: 'Solo',
     monthly: 12,
     annual: 10,        // effective monthly when billed yearly ($120/yr)
-    per: '/month',
+    perKey: 'card.perMonth',
     featured: false,
-    badge: null,
-    desc: 'For power users running agents around the clock.',
-    cta: 'Get Solo',
     ctaHref: '/signup',
     ctaPrimary: false,
   },
   {
     key: 'pro',
-    name: 'Team',
     monthly: 49,
     annual: 41,        // effective monthly when billed yearly ($490/yr)
-    per: '/month',
+    perKey: 'card.perMonth',
     featured: true,
-    badge: 'Most popular',
-    desc: 'For businesses and teams that need roles, SSO, and audit logs.',
-    cta: 'Get Team',
     ctaHref: '/signup',
     ctaPrimary: true,
   },
 ];
 
 /* ─── Comparison table data ─────────────────────────────────── */
+// Plan-availability matrix only. Labels (section + feature names) and string
+// values are resolved from the message bundle by key.
 
 const TABLE_SECTIONS = [
   {
-    label: 'Usage',
+    key: 'usage',
     rows: [
-      { feature: 'Connected inboxes',    free: 'Unlimited', solo: 'Unlimited', pro: 'Unlimited' },
-      { feature: 'MCP tool calls',       free: 'Unlimited', solo: 'Unlimited', pro: 'Unlimited' },
-      { feature: 'API keys',             free: 'Unlimited', solo: 'Unlimited', pro: 'Unlimited' },
-      { feature: 'Team members',         free: 'Unlimited', solo: 'Unlimited', pro: 'Unlimited' },
-      { feature: 'Burst rate limit',     free: '60 / min',  solo: '300 / min', pro: '1,000 / min' },
+      { key: 'inboxes',  free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
+      { key: 'calls',    free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
+      { key: 'keys',     free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
+      { key: 'members',  free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
+      { key: 'burst',    free: 'values.burstFree', solo: 'values.burstSolo', pro: 'values.burstPro' },
     ],
   },
   {
-    label: 'Email providers',
+    key: 'providers',
     rows: [
-      { feature: 'Gmail (OAuth)',                       free: true, solo: true, pro: true },
-      { feature: 'Outlook / Microsoft 365 (OAuth)',     free: true, solo: true, pro: true },
-      { feature: 'Fastmail (OAuth + app password)',     free: true, solo: true, pro: true },
-      { feature: 'iCloud, Yahoo, Zoho, Yandex (app password)', free: true, solo: true, pro: true },
-      { feature: 'Any IMAP / SMTP mailbox',             free: true, solo: true, pro: true },
+      { key: 'gmail',       free: true, solo: true, pro: true },
+      { key: 'outlook',     free: true, solo: true, pro: true },
+      { key: 'fastmail',    free: true, solo: true, pro: true },
+      { key: 'appPassword', free: true, solo: true, pro: true },
+      { key: 'imap',        free: true, solo: true, pro: true },
     ],
   },
   {
-    label: 'MCP tools',
+    key: 'mcpTools',
+    // MCP tool names are not translated; render the raw names verbatim.
     rows: [
-      { feature: 'list_inboxes',    free: true, solo: true, pro: true },
-      { feature: 'list_inbox',      free: true, solo: true, pro: true },
-      { feature: 'read_email',      free: true, solo: true, pro: true },
-      { feature: 'search_emails',   free: true, solo: true, pro: true },
-      { feature: 'send_email',      free: true, solo: true, pro: true },
-      { feature: 'reply_to_email',  free: true, solo: true, pro: true },
+      { name: 'list_inboxes',    free: true, solo: true, pro: true },
+      { name: 'list_inbox',      free: true, solo: true, pro: true },
+      { name: 'read_email',      free: true, solo: true, pro: true },
+      { name: 'search_emails',   free: true, solo: true, pro: true },
+      { name: 'send_email',      free: true, solo: true, pro: true },
+      { name: 'reply_to_email',  free: true, solo: true, pro: true },
     ],
   },
   {
-    label: 'Analytics & security',
+    key: 'analytics',
     rows: [
-      { feature: 'Usage analytics dashboard',  free: true,      solo: true,       pro: true },
-      { feature: 'Analytics history',          free: '7 days',  solo: '90 days',  pro: '1 year' },
-      { feature: 'Team roles & workspaces',    free: false,     solo: false,      pro: true },
-      { feature: 'SSO (SAML / OIDC)',          free: false,     solo: false,      pro: true },
-      { feature: 'Audit log',                  free: false,     solo: false,      pro: true },
+      { key: 'dashboard', free: true,                 solo: true,                pro: true },
+      { key: 'history',   free: 'values.history7',    solo: 'values.history90',  pro: 'values.history1y' },
+      { key: 'roles',     free: false,                solo: false,               pro: true },
+      { key: 'sso',       free: false,                solo: false,               pro: true },
+      { key: 'audit',     free: false,                solo: false,               pro: true },
     ],
   },
   {
-    label: 'Privacy & security',
+    key: 'privacy',
     rows: [
-      { feature: 'Email never stored',              free: true,  solo: true,  pro: true },
-      { feature: 'Credentials encrypted at rest',   free: true,  solo: true,  pro: true },
-      { feature: 'SOC 2 Type II report on request', free: false, solo: false, pro: true },
+      { key: 'neverStored', free: true,  solo: true,  pro: true },
+      { key: 'encrypted',   free: true,  solo: true,  pro: true },
+      { key: 'soc2',        free: false, solo: false, pro: true },
     ],
   },
   {
-    label: 'Support',
+    key: 'support',
     rows: [
-      { feature: 'Community forum',  free: true,  solo: true,  pro: true },
-      { feature: 'Email support',    free: false, solo: true,  pro: true },
-      { feature: 'Priority support', free: false, solo: false, pro: true },
+      { key: 'community', free: true,  solo: true,  pro: true },
+      { key: 'email',     free: false, solo: true,  pro: true },
+      { key: 'priority',  free: false, solo: false, pro: true },
     ],
-  },
-];
-
-const FAQ_ITEMS = [
-  {
-    q: 'Is there really no usage limit?',
-    a: 'Correct. Connected inboxes, MCP tool calls, API keys, and team members are unlimited on every plan, including Free. The only limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) to protect the platform from abuse. Paid plans add higher burst throughput, team features, and support, never more usage.',
-  },
-  {
-    q: 'What counts as an MCP call?',
-    a: 'Each JSON-RPC tool invocation against your /mcp endpoint counts as one call: list_inboxes, list_inbox, read_email, search_emails, send_email, or reply_to_email. Calls are unlimited; they only count toward your per-minute fair-use ceiling.',
-  },
-  {
-    q: 'Is my email content stored anywhere?',
-    a: 'No. Email bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent. Nothing is persisted between calls. The only data we store is an encrypted OAuth token or app password so we can authenticate future requests.',
-  },
-  {
-    q: 'What\'s the difference between Solo and Team?',
-    a: 'Free already gives everyone unlimited usage. Solo ($12/mo) is for power users who run agents hard: it raises the burst rate limit to 300 requests/minute, extends analytics history to 90 days, and adds email support. Team ($49/mo) is for businesses: a 1,000/minute ceiling, team roles and multiple workspaces, SSO (SAML/OIDC), an audit log, 1-year analytics history, and priority support.',
-  },
-  {
-    q: 'Can I change or cancel my plan?',
-    a: 'Yes. Upgrade, downgrade, or cancel any time from the billing section of your dashboard. If you cancel a paid plan, you keep access until the end of your billing period, then drop to Free automatically. Since Free is unlimited, you lose only the higher burst limit, team features, and support.',
-  },
-  {
-    q: 'How does the annual discount work?',
-    a: 'Paying annually saves about 17% versus monthly billing: Solo is $120/year and Team is $490/year. You\'re charged once for 12 months upfront. If you cancel mid-year, we refund the unused whole months.',
-  },
-  {
-    q: 'What email providers are supported?',
-    a: 'Gmail and Microsoft 365 / Outlook use OAuth 2.0. Fastmail supports both OAuth and app passwords. iCloud, Yahoo, Zoho, and Yandex connect with an app-specific password, and any other mailbox works through the generic IMAP / SMTP connector.',
-  },
-  {
-    q: 'Is there a refund policy?',
-    a: 'If you\'re unsatisfied within 30 days of your first paid invoice, contact us for a full refund, no questions asked.',
   },
 ];
 
 /* ─── Sub-components ─────────────────────────────────────────── */
 
 function BillingToggle({ annual, onChange }) {
+  const t = useTranslations('pricing');
   return (
     <div className="billing-toggle">
       <button
         className={'billing-opt' + (!annual ? ' active' : '')}
         onClick={() => onChange(false)}
       >
-        Monthly
+        {t('billing.monthly')}
       </button>
       <button
         className={'billing-opt' + (annual ? ' active' : '')}
         onClick={() => onChange(true)}
       >
-        Annual
-        <span className="billing-save">Save ~17%</span>
+        {t('billing.annual')}
+        <span className="billing-save">{t('billing.save')}</span>
       </button>
     </div>
   );
@@ -173,6 +133,7 @@ function BillingToggle({ annual, onChange }) {
  * @param {{ annual: boolean, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
  */
 function PlanCards({ annual, stripePrices }) {
+  const t = useTranslations('pricing');
   return (
     <div className="price-grid">
       {PLANS.map(plan => {
@@ -202,58 +163,33 @@ function PlanCards({ annual, stripePrices }) {
             ? `$${liveAnnualMonthly}`
             : `$${liveMonthly}`;
 
-        const perDisplay = liveMonthly === 0 ? plan.per : '/month';
+        const perDisplay = liveMonthly === 0 ? t(plan.perKey) : t('card.perMonth');
+        const features = t.raw(`plans.${plan.key}.features`);
 
         return (
           <div className={'price' + (plan.featured ? ' featured' : '')} key={plan.key}>
             <div>
-              <h4>{plan.name}</h4>
+              <h4>{t(`plans.${plan.key}.name`)}</h4>
               <div className="num">
                 {priceDisplay}
                 {perDisplay && <small> {perDisplay}</small>}
               </div>
               {annual && liveMonthly > 0 && (
-                <p className="price-annual-note">Billed ${liveAnnualTotal}/year</p>
+                <p className="price-annual-note">{t('card.billedYearly', { total: liveAnnualTotal })}</p>
               )}
-              <p className="price-desc">{plan.desc}</p>
+              <p className="price-desc">{t(`plans.${plan.key}.desc`)}</p>
             </div>
             <ul>
-              {plan.key === 'free' && (
-                <>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited connected inboxes</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited MCP tool calls</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Unlimited API keys &amp; team members</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, iCloud, Fastmail &amp; any IMAP</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />60 requests / minute</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Community support</li>
-                </>
-              )}
-              {plan.key === 'solo' && (
-                <>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Everything in Free, unlimited</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />300 requests / minute (5× burst)</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Full usage analytics (90-day history)</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Gmail, Outlook, iCloud, Fastmail &amp; any IMAP</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Email support</li>
-                </>
-              )}
-              {plan.key === 'pro' && (
-                <>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Everything in Solo, unlimited</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />1,000 requests / minute</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Team roles &amp; multiple workspaces</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />SSO (SAML / OIDC) + audit log</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Full usage analytics (1-year history)</li>
-                  <li><MIcon name="check" size={14} color="var(--mint-600)" />Priority support</li>
-                </>
-              )}
+              {features.map((f) => (
+                <li key={f}><MIcon name="check" size={14} color="var(--mint-600)" />{f}</li>
+              ))}
             </ul>
             <a
               className={'btn btn-lg ' + (plan.ctaPrimary ? 'btn-primary' : 'btn-secondary')}
               href={plan.ctaHref}
               style={{ textAlign: 'center', justifyContent: 'center' }}
             >
-              {plan.cta}
+              {t(`plans.${plan.key}.cta`)}
             </a>
           </div>
         );
@@ -277,31 +213,43 @@ function TableCell({ value }) {
 }
 
 function ComparisonTable() {
+  const t = useTranslations('pricing');
+  // String cell values are stored as message keys (e.g. "values.unlimited");
+  // booleans render as check/dash. Translate keys, pass booleans through.
+  const cell = (v) => (typeof v === 'string' ? t(`comparison.${v}`) : v);
+
   return (
     <div className="comparison-wrap">
       <table className="comparison-tbl">
         <thead>
           <tr>
-            <th className="feat-col">Feature</th>
-            <th>Free</th>
-            <th>Solo</th>
-            <th className="featured-col">Team</th>
+            <th className="feat-col">{t('comparison.featureCol')}</th>
+            <th>{t('comparison.free')}</th>
+            <th>{t('comparison.solo')}</th>
+            <th className="featured-col">{t('comparison.team')}</th>
           </tr>
         </thead>
         <tbody>
           {TABLE_SECTIONS.map(section => (
-            <Fragment key={section.label}>
+            <Fragment key={section.key}>
               <tr className="tbl-section-head">
-                <td colSpan={4}>{section.label}</td>
+                <td colSpan={4}>{t(`comparison.sections.${section.key}.label`)}</td>
               </tr>
-              {section.rows.map(row => (
-                <tr key={row.feature}>
-                  <td className="feat-name">{row.feature}</td>
-                  <TableCell value={row.free} />
-                  <TableCell value={row.solo} />
-                  <TableCell value={row.pro} />
-                </tr>
-              ))}
+              {section.rows.map(row => {
+                // MCP tool rows carry a raw `name`; all others reference a
+                // translated feature label by `key`.
+                const featureLabel = row.name
+                  ? row.name
+                  : t(`comparison.sections.${section.key}.rows.${row.key}`);
+                return (
+                  <tr key={row.name || row.key}>
+                    <td className="feat-name">{featureLabel}</td>
+                    <TableCell value={cell(row.free)} />
+                    <TableCell value={cell(row.solo)} />
+                    <TableCell value={cell(row.pro)} />
+                  </tr>
+                );
+              })}
             </Fragment>
           ))}
         </tbody>
@@ -332,6 +280,8 @@ function FaqItem({ q, a }) {
  */
 export default function PricingClient({ stripePrices }) {
   const [annual, setAnnual] = useState(false);
+  const t = useTranslations('pricing');
+  const faqItems = t.raw('faq.items');
 
   return (
     <div>
@@ -340,14 +290,12 @@ export default function PricingClient({ stripePrices }) {
       {/* Hero */}
       <section className="pricing-page-hero">
         <div className="container">
-          <div className="eye-label">Pricing</div>
+          <div className="eye-label">{t('hero.eyebrow')}</div>
           <h1 className="pricing-page-h1">
-            Unlimited, free.<br />Upgrade for more power.
+            {t('hero.titleLine1')}<br />{t('hero.titleLine2')}
           </h1>
           <p className="pricing-page-lead">
-            Every plan, including Free, has unlimited inboxes, calls, API keys, and
-            team members. Paid plans add higher burst limits, team features, and support.
-            Email is never stored, on any plan.
+            {t('hero.lead')}
           </p>
           <BillingToggle annual={annual} onChange={setAnnual} />
         </div>
@@ -358,10 +306,12 @@ export default function PricingClient({ stripePrices }) {
         <div className="container">
           <PlanCards annual={annual} stripePrices={stripePrices} />
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
-            All plans include: email never stored · credentials encrypted at rest · EU &amp; US hosting
+            {t('cardsFootnote.all')}
           </p>
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
-            Need something custom? <a href="mailto:sales@mcpemails.com">Contact us</a>.
+            {t.rich('cardsFootnote.custom', {
+              contact: (chunks) => <a href="mailto:sales@mcpemails.com">{chunks}</a>,
+            })}
           </p>
         </div>
       </section>
@@ -370,8 +320,8 @@ export default function PricingClient({ stripePrices }) {
       <section className="section" id="compare" style={{ paddingTop: 80, paddingBottom: 80 }}>
         <div className="container">
           <div className="section-head" style={{ marginBottom: 32 }}>
-            <div className="eye-label">Full comparison</div>
-            <h2 style={{ fontSize: 36 }}>Everything side by side.</h2>
+            <div className="eye-label">{t('comparison.eyebrow')}</div>
+            <h2 style={{ fontSize: 36 }}>{t('comparison.title')}</h2>
           </div>
           <ComparisonTable />
         </div>
@@ -381,11 +331,11 @@ export default function PricingClient({ stripePrices }) {
       <section className="section" id="faq" style={{ paddingTop: 64, paddingBottom: 80, background: 'var(--bg-page)' }}>
         <div className="container">
           <div className="section-head" style={{ marginBottom: 32 }}>
-            <div className="eye-label">FAQ</div>
-            <h2 style={{ fontSize: 36 }}>Common questions.</h2>
+            <div className="eye-label">{t('faq.eyebrow')}</div>
+            <h2 style={{ fontSize: 36 }}>{t('faq.title')}</h2>
           </div>
           <div className="faq-list">
-            {FAQ_ITEMS.map(item => (
+            {faqItems.map(item => (
               <FaqItem key={item.q} q={item.q} a={item.a} />
             ))}
           </div>
@@ -395,14 +345,13 @@ export default function PricingClient({ stripePrices }) {
       {/* CTA band */}
       <section className="pricing-cta-band">
         <div className="container">
-          <h2 className="pricing-cta-h">Ready to give your agent an inbox?</h2>
+          <h2 className="pricing-cta-h">{t('ctaBand.title')}</h2>
           <p className="pricing-cta-sub">
-            Start on Free: no credit card, unlimited from day one.
-            Upgrade when you need higher burst limits or team features.
+            {t('ctaBand.sub')}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">Get started free</a>
-            <a className="btn btn-on-dark btn-lg" href="/docs">Read the docs</a>
+            <a className="btn btn-primary btn-lg" href="/signup">{t('ctaBand.ctaPrimary')}</a>
+            <a className="btn btn-on-dark btn-lg" href="/docs">{t('ctaBand.ctaSecondary')}</a>
           </div>
         </div>
       </section>

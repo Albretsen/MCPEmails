@@ -1,0 +1,187 @@
+{
+  "meta": {
+    "title": "Vilkår for bruk",
+    "description": "Vilkårene som regulerer din bruk av MCPEmails: akseptabel bruk, ansvar, oppsigelse av konto og lovvalg."
+  },
+  "hero": {
+    "eyebrow": "Juridisk",
+    "title": "Vilkår for bruk",
+    "lead": "Disse vilkårene regulerer din tilgang til og bruk av MCPEmails. Ved å opprette en konto eller bruke tjenesten samtykker du til å være bundet av dem. Vennligst les dem nøye.",
+    "dates": "Sist oppdatert: {lastUpdated}  ·  Trer i kraft: {effective}"
+  },
+  "agreement": {
+    "title": "1. Aksept av disse vilkårene",
+    "p1": "Disse vilkårene for bruk («Vilkårene») utgjør en juridisk bindende avtale mellom deg («du» eller «Bruker») og {company} («MCPEmails», «vi», «oss» eller «vår»), og regulerer din tilgang til og bruk av MCPEmails-tjenesten, inkludert nettstedet på <b>mcpemails.com</b>, dashbordet, API-endepunktet for Model Context Protocol (MCP), og all tilhørende programvare og dokumentasjon (samlet kalt «Tjenesten»).",
+    "p2": "Ved å opprette en konto, akseptere disse Vilkårene eller bruke en hvilken som helst del av Tjenesten, bekrefter du at du er minst 16 år gammel (eller den laveste alderen for digitalt samtykke i din jurisdiksjon, dersom denne er høyere), at du har rettslig handleevne til å inngå en bindende avtale, og at du samtykker til å være bundet av disse Vilkårene og vår <privacy>Personvernerklæring</privacy>, som ved henvisning inngår som en del av disse Vilkårene.",
+    "p3": "Dersom du aksepterer disse Vilkårene på vegne av et selskap eller en annen juridisk enhet, innestår og garanterer du for at du har fullmakt til å binde den enheten, og i så fall viser «du» til den enheten.",
+    "p4": "Dersom du ikke samtykker til disse Vilkårene, må du ikke opprette en konto eller bruke Tjenesten."
+  },
+  "serviceDescription": {
+    "title": "2. Beskrivelse av Tjenesten",
+    "p1": "MCPEmails tilbyr en programvare-som-en-tjeneste-plattform som lar deg koble til e-postkontoer (Gmail, Microsoft Outlook, Fastmail og kompatible IMAP-kontoer) og gjøre disse kontoene tilgjengelige for AI-agenter via Model Context Protocol (MCP). Tjenesten omfatter:",
+    "list": [
+      "Et nettbasert dashbord for å administrere tilkoblede e-postkontoer, API-nøkler og overvåking av bruk.",
+      "Et MCP-kompatibelt HTTP-endepunkt som AI-agenter autentiserer seg mot ved hjelp av API-nøkler du genererer.",
+      "OAuth-integrasjon med støttede e-postleverandører for å innhente og administrere delegert tilgang til dine postkasser.",
+      "En bruks- og revisjonslogg som viser hvilke verktøy agentene dine har kalt og når."
+    ],
+    "p2": "MCPEmails fungerer som en protokollbro. Vi lagrer ikke e-postinnhold på våre servere; vi henter det direkte fra din e-postleverandør i det øyeblikket en agent ber om det, og returnerer det i samme HTTP-respons. Se vår <privacy>Personvernerklæring</privacy> for en fullstendig beskrivelse av hvilke data vi beholder og ikke beholder.",
+    "p3": "Vi forbeholder oss retten til å endre, suspendere eller avvikle enhver del av Tjenesten når som helst. Der det er praktisk mulig vil vi gi minst 30 dagers varsel om vesentlige endringer til betalende brukere."
+  },
+  "accountRegistration": {
+    "title": "3. Kontoregistrering og sikkerhet",
+    "h31": "3.1 Registrering",
+    "p31": "Du må registrere en konto for å bruke de fleste funksjonene i Tjenesten. Du samtykker til å oppgi nøyaktig, oppdatert og fullstendig informasjon ved registrering, og til å holde denne informasjonen oppdatert. Kontoer som registreres med falsk, unøyaktig eller villedende informasjon kan suspenderes eller sies opp uten varsel.",
+    "h32": "3.2 Én konto per person",
+    "p32": "Hver konto er ment for bruk av én enkeltperson eller én juridisk enhet. Du må ikke dele påloggingsinformasjon med andre eller opprette flere kontoer for å omgå plangrenser eller andre begrensninger.",
+    "h33": "3.3 Kontosikkerhet",
+    "p33": "Du er ansvarlig for å ivareta sikkerheten til din kontoinformasjon, inkludert passordet ditt og alle API-nøkler du genererer. Du må varsle oss umiddelbart på <email></email> dersom du mistenker uautorisert tilgang til kontoen din. MCPEmails er ikke ansvarlig for tap eller skade som oppstår som følge av at du ikke ivaretar sikkerheten til din påloggingsinformasjon.",
+    "h34": "3.4 API-nøkler",
+    "p34": "API-nøkler du genererer gir tilgang til MCP-endepunktet på dine vegne. Du er alene ansvarlig for alle handlinger som utføres ved bruk av nøkler du har generert, inkludert handlinger utført av AI-agenter som du har gitt disse nøklene til. Behandle API-nøkler som hemmeligheter. Tilbakekall enhver nøkkel du mistenker er kompromittert."
+  },
+  "acceptableUse": {
+    "title": "4. Akseptabel bruk",
+    "h41": "4.1 Tillatt bruk",
+    "p41": "Du kan bruke Tjenesten til ethvert lovlig formål som er i samsvar med disse Vilkårene. Typisk tillatt bruk omfatter å koble til dine egne e-postkontoer, generere API-nøkler for AI-agenter du driver, og bygge applikasjoner eller arbeidsflyter for deg selv eller din organisasjon.",
+    "h42": "4.2 Forbudt atferd",
+    "p42": "Du må ikke bruke Tjenesten, direkte eller indirekte, til noe av det følgende:",
+    "list": [
+      "<b>Uautorisert tilgang.</b> Koble til e-postkontoer som du ikke eier eller ikke har fullmakt til å aksessere på vegne av kontoinnehaveren.",
+      "<b>Spam og masseutsendelser.</b> Sende uoppfordret kommersiell e-post, masse-e-post eller meldinger som bryter med CAN-SPAM Act, CASL, EUs ePrivacy-direktiv eller tilsvarende lover i din jurisdiksjon.",
+      "<b>Phishing og svindel.</b> Sende meldinger som utgir seg for å være en annen person eller organisasjon, eller som er utformet for å lure mottakere til å avsløre påloggingsinformasjon, finansielle opplysninger eller annen sensitiv informasjon.",
+      "<b>Spredning av skadevare.</b> Sende e-post som inneholder skadelig kode, løsepengevirus, spionvare eller annen programvare utformet for å skade eller skaffe uautorisert tilgang til en mottakers enhet eller data.",
+      "<b>Trakassering og misbruk.</b> Bruke Tjenesten til å true, trakassere, skremme, forfølge eller skade en person.",
+      "<b>Ulovlig innhold.</b> Overføre, lagre eller aksessere innhold som er ulovlig etter gjeldende lov, inkludert innhold som krenker immaterielle rettigheter, bryter personvernlovgivning eller utgjør overgrepsmateriale av barn (CSAM).",
+      "<b>Omgåelse.</b> Forsøke å omgå autentisering, hastighetsgrenser, tilgangskontroller eller andre sikkerhetstiltak i Tjenesten eller i en tredjepartstjeneste (inkludert e-postleverandører).",
+      "<b>Omvendt utvikling.</b> Forsøke å dekompilere, demontere, foreta omvendt utvikling av eller på annen måte utlede kildekoden til Tjenesten.",
+      "<b>Forstyrrelse.</b> Introdusere virus, tjenestenektangrep eller annen kode eller handling som forstyrrer driften av Tjenesten eller dens infrastruktur.",
+      "<b>Videresalg uten tillatelse.</b> Videreselge eller viderelisensiere tilgang til Tjenesten til tredjeparter uten vårt forutgående skriftlige samtykke.",
+      "<b>Automatisert innhøsting.</b> Bruke Tjenesten til å høste eller samle inn e-postdata i stor skala for andre formål enn din egen legitime agentdrevne arbeidsflyt."
+    ],
+    "h43": "4.3 Ansvar for agenter",
+    "p43": "Du er ansvarlig for handlingene til enhver AI-agent eller ethvert automatisert system som aksesserer Tjenesten ved hjelp av en API-nøkkel du har generert. Dette omfatter handlinger som agenten utfører autonomt. Du må sørge for at agenter som opererer under dine API-nøkler overholder disse Vilkårene og gjeldende lov.",
+    "h44": "4.4 Overholdelse av e-postleverandørens vilkår",
+    "p44": "Du må overholde vilkårene for bruk og API-retningslinjene til enhver e-postleverandør hvis konto du kobler til MCPEmails (inkludert Google, Microsoft og Fastmail). MCPEmails er ikke ansvarlig for suspensjon eller begrensning av e-postkontoen din av en tredjepartsleverandør.",
+    "h45": "4.5 Håndheving",
+    "p45": "Vi forbeholder oss retten til å undersøke mistenkte brudd på disse reglene. Dersom vi etter eget skjønn fastslår at du har brutt denne delen, kan vi suspendere eller si opp kontoen din, fjerne eller deaktivere tilgang til bestemte API-nøkler eller tilkoblede innbokser, og rapportere brudd til rettshåndhevende myndigheter der loven krever det eller der vi anser det hensiktsmessig for å beskytte andre."
+  },
+  "plansAndPayment": {
+    "title": "5. Planer, gebyrer og betaling",
+    "h51": "5.1 Gratisplan",
+    "p51": "Gratisplanen tilbys vederlagsfritt og er underlagt bruksgrensene som er beskrevet på vår <pricing>Prisside</pricing>. Vi forbeholder oss retten til å endre eller avvikle Gratisplanen med 30 dagers varsel.",
+    "h52": "5.2 Betalte planer",
+    "p52": "Betalte planer faktureres månedlig eller årlig på forskudd. Ved å abonnere på en betalt plan gir du oss fullmakt til å belaste den registrerte betalingsmåten ved starten av hver faktureringsperiode. Alle gebyrer er eksklusive gjeldende avgifter, som legges til der loven krever det.",
+    "h53": "5.3 Oppgraderinger og nedgraderinger",
+    "p53": "Du kan oppgradere planen din når som helst; den nye prisen trer i kraft umiddelbart og fordeles forholdsmessig for resten av den gjeldende faktureringsperioden. Nedgradering trer i kraft ved starten av neste faktureringsperiode. Funksjoner som overstiger den nye planens grenser vil bli deaktivert på nedgraderingsdatoen.",
+    "h54": "5.4 Refusjoner",
+    "p54": "Betalinger for månedlige planer refunderes ikke, med unntak av der gjeldende forbrukervernlovgivning krever det. For årlige planer kan du be om en forholdsmessig refusjon for ubrukte hele måneder innen 14 dager etter fornyelsesdatoen ved å kontakte oss på <email></email>.",
+    "h55": "5.5 Forsinket betaling og suspensjon",
+    "p55": "Dersom en betaling mislykkes, vil vi forsøke belastningen på nytt og varsle deg per e-post. Dersom betaling fortsatt er utestående etter 7 dager, kan vi suspendere tilgangen til betalte funksjoner inntil saldoen er gjort opp. Dersom betaling fortsatt er utestående etter 30 dager, kan vi si opp kontoen i samsvar med punkt 8.",
+    "h56": "5.6 Prisendringer",
+    "p56": "Vi kan endre priser for betalte planer med minst 30 dagers skriftlig varsel til din registrerte e-postadresse. Prisendringer vil ikke gjelde før din neste fornyelsesdato.",
+    "h57": "5.7 Rimelig bruk og tjenestegrenser",
+    "p57a": "For å beskytte plattformstabiliteten og sikre rettferdig tilgang for alle kunder, anvender Tjenesten en hastighetsgrense for forespørsler per minutt for hver plan (en «rimelig bruk-grense»), som beskrevet på vår <pricing>Prisside</pricing>. Vi kan også anvende rimelige tekniske tiltak for å hindre misbruk, automatisert innhøsting eller bruk som vesentlig forringer Tjenesten for andre.",
+    "p57b": "Der en plan beskrives som «ubegrenset» viser dette til fraværet av faste månedlige brukskvoter; den er fortsatt underlagt denne rimelig bruk-grensen og punkt 4 (Akseptabel bruk). Vi forbeholder oss retten til å innføre, endre eller fjerne bruksgrenser og rimelig bruk-terskler for enhver plan, inkludert Gratisplanen, med fremtidig virkning. Vi vil gi minst 30 dagers varsel til din registrerte e-postadresse før en endring trer i kraft for ditt arbeidsområde, og kan anvende nye grenser på nye abonnementer umiddelbart."
+  },
+  "intellectualProperty": {
+    "title": "6. Immaterielle rettigheter",
+    "h61": "6.1 MCPEmails' immaterielle rettigheter",
+    "p61": "Alle immaterielle rettigheter i Tjenesten, inkludert programvaren, design, logoer, varemerker og dokumentasjon, eies av MCPEmails eller dets lisensgivere. Ingenting i disse Vilkårene gir deg noen rett, eiendomsrett eller interesse i MCPEmails' immaterielle rettigheter, utover den begrensede lisensen til å bruke Tjenesten som beskrevet i disse Vilkårene.",
+    "h62": "6.2 Dine data og ditt innhold",
+    "p62": "Du beholder alle rettigheter til ditt e-postinnhold og dine kontodata. Ved å bruke Tjenesten gir du MCPEmails en begrenset, ikke-eksklusiv, royaltyfri lisens til å behandle og overføre dine data utelukkende i den grad det er nødvendig for å levere Tjenesten. Vi erverver ikke eierskap til dine data, og vi vil aldri bruke ditt e-postinnhold til andre formål enn å oppfylle agentens verktøykall.",
+    "h63": "6.3 Tilbakemeldinger",
+    "p63": "Dersom du gir oss tilbakemeldinger, forslag eller ideer om Tjenesten, gir du oss en ubegrenset, evigvarende, ugjenkallelig, royaltyfri lisens til å bruke og innlemme disse tilbakemeldingene i Tjenesten uten kompensasjon eller kreditering til deg."
+  },
+  "liability": {
+    "title": "7. Ansvarsfraskrivelser og ansvarsbegrensning",
+    "h71": "7.1 Tjenesten leveres «som den er»",
+    "p71": "Tjenesten leveres «som den er» og «slik den er tilgjengelig», uten garantier av noe slag, verken uttrykkelige eller underforståtte, inkludert (men ikke begrenset til) underforståtte garantier om salgbarhet, egnethet for et bestemt formål, fravær av krenkelse, og uavbrutt eller feilfri drift. Vi garanterer ikke at Tjenesten vil oppfylle dine krav, at e-postlevering vil være pålitelig eller fullstendig, eller at feil vil bli rettet.",
+    "h72": "7.2 Tredjepartstjenester",
+    "p72": "Tjenesten integreres med tredjeparts e-postleverandører (Google Gmail, Microsoft Outlook, Fastmail, IMAP-servere). Vi er ikke ansvarlige for tilgjengeligheten, påliteligheten eller ytelsen til disse tjenestene, for endringer i deres API-er eller OAuth-retningslinjer, eller for tap av e-posttilgang som følge av en tredjepartsleverandørs handlinger.",
+    "h73": "7.3 Handlinger utført av AI-agenter",
+    "p73": "MCPEmails er en protokollbro. Vi overfører instruksjoner fra AI-agenter til dine e-postleverandører og returnerer resultater. Vi er ikke ansvarlige for innholdet i e-poster som sendes, videresendes eller besvares av AI-agenter som opptrer under dine API-nøkler, og heller ikke for konsekvenser av autonome agenthandlinger, inkludert utilsiktet sletting av e-post, feilsendte meldinger eller datalekkasje som følge av logiske feil hos agenten.",
+    "h74": "7.4 Ansvarsbegrensning",
+    "p74a": "I den maksimale utstrekning gjeldende lov tillater, skal MCPEmails, dets styremedlemmer, ansatte, agenter eller leverandører under ingen omstendigheter være ansvarlige for indirekte, tilfeldige, særskilte, følgemessige, pønale eller eksemplariske skader, inkludert tap av fortjeneste, tap av data, tap av goodwill eller driftsavbrudd, som oppstår av eller i forbindelse med din bruk av eller manglende evne til å bruke Tjenesten, selv om MCPEmails har blitt informert om muligheten for slike skader.",
+    "p74b": "I den maksimale utstrekning gjeldende lov tillater, er MCPEmails' samlede totale ansvar overfor deg for alle krav som oppstår av eller relaterer seg til disse Vilkårene eller Tjenesten, enten i kontrakt, erstatning utenfor kontrakt (inkludert uaktsomhet), lov eller på annet grunnlag, begrenset til det høyeste av: (a) beløpet du betalte til MCPEmails i de 12 månedene forut for hendelsen som ga opphav til kravet; eller (b) USD 100.",
+    "p74c": "Enkelte jurisdiksjoner tillater ikke utelukkelse eller begrensning av visse skader. I disse jurisdiksjonene gjelder begrensningene ovenfor i den maksimale utstrekning loven tillater.",
+    "h75": "7.5 Skadesløsholdelse",
+    "p75": "Du samtykker til å holde MCPEmails og dets ledere, styremedlemmer, ansatte og agenter skadesløse, og å forsvare dem mot, ethvert krav, ansvar, skade, tap, kostnad og utgift (inkludert rimelige advokatkostnader) som oppstår av eller relaterer seg til: (a) din bruk av Tjenesten i strid med disse Vilkårene eller gjeldende lov; (b) e-post du eller dine agenter sender ved bruk av Tjenesten; (c) ditt brudd på tredjeparts rettigheter, inkludert immaterielle rettigheter eller personvernrettigheter; eller (d) enhver tvist mellom deg og en tredjepart (inkludert dine e-postmottakere)."
+  },
+  "accountTermination": {
+    "title": "8. Oppsigelse av konto",
+    "h81": "8.1 Oppsigelse fra deg",
+    "p81a": "Du kan stenge kontoen din når som helst ved å gå til <b>Dashbord → Innstillinger → Slett konto</b> og følge bekreftelsestrinnene. Sletting av konto er permanent. Alle tilkoblede innbokskonfigurasjoner, API-nøkler og revisjonslogger knyttet til ditt arbeidsområde vil bli slettet innen 30 dager etter sletteforespørselen.",
+    "p81b": "Dersom du er på en betalt plan, stopper stenging av kontoen din fremtidig fakturering, men gir deg ikke rett til refusjon av beløp som allerede er belastet, med unntak av det som er beskrevet i punkt 5.4.",
+    "h82": "8.2 Oppsigelse fra MCPEmails av saklig grunn",
+    "p82": "Vi kan suspendere eller si opp kontoen din umiddelbart, uten forutgående varsel eller ansvar, dersom:",
+    "list82": [
+      "Du bryter punkt 4 (Akseptabel bruk) eller en annen vesentlig bestemmelse i disse Vilkårene.",
+      "Vi er pålagt å gjøre det ved lov, rettskjennelse eller av en tilsynsmyndighet.",
+      "Din bruk av Tjenesten utgjør en risiko for sikkerheten, integriteten eller tilgjengeligheten til Tjenesten eller for andre brukere.",
+      "Du oppgir falsk, unøyaktig eller villedende informasjon ved registrering eller på et senere tidspunkt.",
+      "Betaling for en betalt plan er utestående i mer enn 30 dager etter forfallsdatoen."
+    ],
+    "p82after": "Der oppsigelse av saklig grunn fører til sletting av kontoen din, vil vi ikke gi refusjon for noen ubrukt del av et betalt abonnement.",
+    "h83": "8.3 Oppsigelse fra MCPEmails for bekvemmelighet",
+    "p83": "Vi kan si opp kontoen din av enhver grunn som ikke dekkes av punkt 8.2 ved å gi minst 30 dagers skriftlig varsel til din registrerte e-postadresse. Ved en slik oppsigelse vil vi gi en forholdsmessig refusjon for enhver ubrukt del av et forhåndsbetalt årlig abonnement.",
+    "h84": "8.4 Suspensjon",
+    "p84": "I stedet for umiddelbar oppsigelse kan vi, etter eget skjønn, midlertidig suspendere din tilgang til Tjenesten mens vi undersøker et mistenkt brudd. Vi vil forsøke å gi varsel om suspensjon med mindre dette vil skade en pågående undersøkelse eller er forbudt ved lov.",
+    "h85": "8.5 Virkning av oppsigelse",
+    "p85": "Ved oppsigelse av kontoen din av en hvilken som helst grunn:",
+    "list85": [
+      "Din rett til å aksessere og bruke Tjenesten opphører umiddelbart.",
+      "Alle API-nøkler knyttet til kontoen din tilbakekalles umiddelbart.",
+      "OAuth-tokentildelinger utstedt til MCPEmails av din e-postleverandør tilbakekalles; din e-postleverandør kan bruke opptil 24 timer på å reflektere dette.",
+      "Dine data vil bli slettet i samsvar med vår oppbevaringsplan som er beskrevet i Personvernerklæringen."
+    ],
+    "p85after": "Følgende bestemmelser består etter oppsigelse: Punkt 6 (Immaterielle rettigheter), punkt 7 (Ansvarsfraskrivelser og ansvarsbegrensning), punkt 8.5 (Virkning av oppsigelse), punkt 9 (Lovvalg og tvister), samt andre bestemmelser som etter sin art bør bestå."
+  },
+  "governingLaw": {
+    "title": "9. Lovvalg og tvisteløsning",
+    "h91": "9.1 Lovvalg",
+    "p91": "Disse Vilkårene og enhver tvist som oppstår av eller i forbindelse med dem eller Tjenesten skal reguleres av og tolkes i samsvar med lovene i <b>Norge</b>, uten hensyn til dets lovvalgsregler. FN-konvensjonen om kontrakter for internasjonale løsørekjøp kommer ikke til anvendelse.",
+    "h92": "9.2 Verneting",
+    "p92": "Ethvert søksmål eller enhver rettsforfølgning relatert til disse Vilkårene eller Tjenesten skal anlegges utelukkende ved domstolene i <b>Oslo, Norge</b>. Du samtykker til den personlige jurisdiksjonen til disse domstolene og fraskriver deg enhver innsigelse mot verneting.",
+    "h93": "9.3 Forbrukerrettigheter (EØS/Storbritannia)",
+    "p93": "Ingenting i disse Vilkårene påvirker lovbestemte rettigheter du måtte ha som forbruker etter lovene i ditt bostedsland, som ikke kan utelukkes eller begrenses ved avtale. Dersom du er en forbruker bosatt i Den europeiske union, kan du også sende inn en klage gjennom EUs nettbaserte plattform for tvisteløsning på <odr>ec.europa.eu/consumers/odr</odr>.",
+    "h94": "9.4 Uformell løsning",
+    "p94": "Før du innleder en formell rettsprosess, oppfordrer vi deg til å kontakte oss på <email></email> slik at vi kan forsøke å løse tvisten uformelt. Vi vil svare innen 14 virkedager og arbeide i god tro mot en løsning.",
+    "h95": "9.5 Fraskrivelse av gruppesøksmål",
+    "p95": "I den utstrekning gjeldende lov tillater, samtykker du til at enhver tvisteløsningsprosess kun skal gjennomføres på individuelt grunnlag. Du fraskriver deg enhver rett til å reise eller delta i et gruppe-, kollektivt eller representativt søksmål mot MCPEmails."
+  },
+  "general": {
+    "title": "10. Alminnelige bestemmelser",
+    "h101": "10.1 Hele avtalen",
+    "p101": "Disse Vilkårene, sammen med Personvernerklæringen og eventuelle supplerende vilkår som gjelder for bestemte funksjoner eller planer, utgjør hele avtalen mellom deg og MCPEmails vedrørende Tjenesten og erstatter alle tidligere avtaler, fremstillinger og forståelser.",
+    "h102": "10.2 Endringer",
+    "p102": "Vi kan oppdatere disse Vilkårene fra tid til annen. Når vi gjør vesentlige endringer, vil vi oppdatere «Sist oppdatert»-datoen øverst på denne siden og sende et e-postvarsel til din registrerte adresse minst 14 dager før endringene trer i kraft. Din fortsatte bruk av Tjenesten etter ikrafttredelsesdatoen utgjør din aksept av de reviderte Vilkårene. Dersom du er uenig i en vesentlig endring, kan du stenge kontoen din før ikrafttredelsesdatoen.",
+    "h103": "10.3 Ugyldighet",
+    "p103": "Dersom en bestemmelse i disse Vilkårene blir funnet ugyldig, ulovlig eller ikke kan håndheves av en kompetent domstol, skal den bestemmelsen endres i det minste omfang som er nødvendig for å gjøre den håndhevbar, og de øvrige bestemmelsene skal fortsette å gjelde fullt ut.",
+    "h104": "10.4 Avkall",
+    "p104": "Vår manglende håndheving av en rettighet eller bestemmelse i disse Vilkårene utgjør ikke et avkall på den rettigheten eller bestemmelsen. Ethvert avkall må være skriftlig og signert av en autorisert representant for MCPEmails.",
+    "h105": "10.5 Overdragelse",
+    "p105": "Du kan ikke overdra eller overføre disse Vilkårene eller noen rettigheter eller forpliktelser etter dem uten vårt forutgående skriftlige samtykke. Vi kan overdra disse Vilkårene til et tilknyttet selskap eller i forbindelse med en fusjon, et oppkjøp eller et salg av eiendeler, forutsatt at erververen påtar seg alle forpliktelser etter disse Vilkårene.",
+    "h106": "10.6 Force majeure",
+    "p106": "MCPEmails er ikke ansvarlig for forsinkelse eller manglende oppfyllelse av sine forpliktelser etter disse Vilkårene der slik forsinkelse eller mislighold skyldes omstendigheter utenfor vår rimelige kontroll, inkludert naturkatastrofer, myndighetshandlinger, svikt i internettinfrastruktur eller driftsavbrudd hos tredjepartstjenester.",
+    "h107": "10.7 Meldinger",
+    "p107": "Meldinger fra MCPEmails til deg vil bli sendt til e-postadressen som er registrert på kontoen din. Meldinger fra deg til MCPEmails skal sendes til <email></email>. Meldinger anses mottatt 24 timer etter at de er sendt, med mindre avsenderen mottar en melding om leveringsfeil.",
+    "h108": "10.8 Intet partnerskap",
+    "p108": "Ingenting i disse Vilkårene skaper et partnerskap, fellesforetak, agentur, franchise eller ansettelsesforhold mellom deg og MCPEmails."
+  },
+  "contact": {
+    "title": "11. Kontakt oss",
+    "intro": "Dersom du har spørsmål om disse Vilkårene eller trenger å nå vårt juridiske team:",
+    "legalLabel": "Juridiske henvendelser",
+    "privacyLabel": "Personvernspørsmål",
+    "securityLabel": "Sikkerhetsrapporter",
+    "postalLabel": "Postadresse",
+    "responseLabel": "Responstid",
+    "responseValue": "Vi svarer på alle juridiske henvendelser innen 14 virkedager"
+  },
+  "cta": {
+    "title": "Spørsmål om disse Vilkårene?",
+    "sub": "Vårt juridiske team hjelper deg gjerne. Ta kontakt, så svarer vi innen 14 virkedager.",
+    "contactBtn": "Kontakt det juridiske teamet",
+    "privacyBtn": "Les vår Personvernerklæring"
+  }
+}

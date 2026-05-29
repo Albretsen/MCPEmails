@@ -1,0 +1,265 @@
+{
+  "meta": {
+    "title": "Docs",
+    "description": "Get started with MCPEmails in minutes. Quick-start guide, tool reference, and example responses for Gmail, Outlook, and IMAP agents."
+  },
+  "hero": {
+    "eyebrow": "Documentation",
+    "titleLine1": "Your agent has an inbox",
+    "titleLine2": "in four steps.",
+    "lead": "Connect any email account, paste one URL into an OAuth-capable MCP client and authorize. Clients without OAuth use an API key instead. Full tool reference and connection guide below.",
+    "ctaQuickStart": "Quick start",
+    "ctaOAuth": "OAuth (claude.ai)",
+    "ctaTools": "Tool reference",
+    "ctaProviders": "Provider support"
+  },
+  "quickstart": {
+    "eyebrow": "Quick start",
+    "heading": "Up and running in minutes.",
+    "sub": "No SDK required. MCPEmails speaks standard MCP over HTTP, so it drops into any MCP-compatible agent.",
+    "steps": {
+      "signup": {
+        "label": "Sign up & connect an inbox",
+        "heading": "Create your account and connect Gmail",
+        "body": "Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Pick Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete the OAuth flow or paste an app password. Your inbox is ready in under a minute.",
+        "cta": "Connect your inbox →"
+      },
+      "apikey": {
+        "label": "Create an API key",
+        "heading": "Generate a bearer token for your agent",
+        "body": "In Dashboard → API Keys, click \"Create key\". Name it, select the scopes your agent needs (read:email and/or send:email), and copy the key. It is shown only once."
+      },
+      "addclient": {
+        "label": "Add MCPEmails to your agent",
+        "heading": "Paste the MCP endpoint into your client",
+        "body": "Pick the tab for your client below. MCP clients with OAuth 2.0 support (claude.ai, Claude Desktop, Cursor, and others) just paste the URL and authorize, no API key needed. Clients without OAuth, plus scripted access, use the API key from step 02."
+      },
+      "firstcall": {
+        "label": "Make your first call",
+        "heading": "Ask your agent to check your inbox",
+        "body": "No copy-pasting inbox UUIDs. Your agent calls list_inboxes first to discover every connected inbox and its UUID, then you ask: \"Check my inbox and summarise the last 5 unread messages.\""
+      }
+    }
+  },
+  "copy": {
+    "copy": "Copy",
+    "copied": "Copied!"
+  },
+  "clientTabs": {
+    "oauth": "OAuth clients",
+    "claude": "API key (Desktop)",
+    "cursor": "API key (Cursor)",
+    "raw": "Raw cURL"
+  },
+  "endpoint": {
+    "eyebrow": "Endpoint",
+    "heading": "One URL, standard MCP.",
+    "sub": "All traffic goes to a single Streamable HTTP endpoint. Authenticate with a bearer token from your dashboard.",
+    "bodyMethods": "Send a JSON-RPC 2.0 request body. Supported methods: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.",
+    "infoTransport": "Transport: <b>Streamable HTTP</b> (MCP 2025-06-18)",
+    "infoAuth": "Auth: <b>Authorization: Bearer &lt;api-key&gt;</b>",
+    "infoRateLimits": "Rate limits: <b>100 req/min · 1,000/hr · 10,000/day</b> per key",
+    "infoFormat": "Response format: <b>JSON-RPC 2.0</b>",
+    "handshakeLabel": "Initialize handshake"
+  },
+  "oauth": {
+    "eyebrow": "OAuth connection",
+    "heading": "Zero-config for OAuth-capable clients.",
+    "sub": "MCP clients that support OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others) connect automatically via authorization code + PKCE. No API key, no config file. Paste the URL and click Connect.",
+    "step1": "<b>Step 1:</b> Go to claude.ai → Customize → Connectors → Add connector",
+    "step2": "<b>Step 2:</b> Paste <code>https://www.mcpemails.com/api/mcp</code> as the server URL",
+    "step3": "<b>Step 3:</b> Click Connect. MCPEmails opens an authorization screen",
+    "step4": "<b>Step 4:</b> Sign in with your mcpemails account and approve access",
+    "stepDone": "<b>Done:</b> All six tools are live. claude.ai refreshes tokens automatically",
+    "howTitle": "How it works under the hood",
+    "howP1": "claude.ai registers itself via <b>RFC 7591 Dynamic Client Registration</b>, so you never pre-register a client ID.",
+    "howP2": "Authorization uses <b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636), so no client secret is ever transmitted.",
+    "howP3": "Tokens are scoped to exactly the permissions you approve: <code>read:email</code> and/or <code>send:email</code>.",
+    "noOauthNote": "<b>Using a client without OAuth support?</b> Create an API key in Dashboard → API Keys and pass it as a bearer token. API key and OAuth connections use the same MCP endpoint and the same six tools."
+  },
+  "tools": {
+    "eyebrow": "Tool reference",
+    "heading": "Six tools. All the email ops your agent needs.",
+    "sub": "Start with <code>list_inboxes</code> to discover available inboxes and their UUIDs. The remaining five tools each take an <code>inbox_id</code> returned by that call. Click \"Show example\" to see a full request and response.",
+    "noParams": "No parameters. Call with an empty arguments object:",
+    "showExample": "Show example request & response",
+    "hideExample": "Hide example request & response",
+    "labelRequest": "Request",
+    "labelResponse": "Response",
+    "thParameter": "Parameter",
+    "thType": "Type",
+    "thRequired": "Required",
+    "thDescription": "Description",
+    "badgeRequired": "required",
+    "badgeOptional": "optional",
+    "list_inboxes": {
+      "title": "List Inboxes",
+      "desc": "Returns all inboxes the current API key or OAuth token can access. Call this first to discover inbox_id values, so you never copy-paste UUIDs from the dashboard."
+    },
+    "list_inbox": {
+      "title": "List Inbox",
+      "desc": "List email summaries from a connected inbox, newest first. Supports pagination, folder selection, and unread filtering.",
+      "params": {
+        "inbox_id": "UUID of the inbox to list. Call list_inboxes first to discover available inbox IDs.",
+        "limit": "Max results to return. Default 20, max 100.",
+        "offset": "Zero-based pagination offset. Default 0.",
+        "folder": "Folder to list. Default \"INBOX\". Other values: \"SENT\", \"DRAFTS\", \"TRASH\".",
+        "unread_only": "Return only unread messages. Default false."
+      }
+    },
+    "read_email": {
+      "title": "Read Email",
+      "desc": "Fetch the full content of a single email by ID, including plain-text body, optional sanitized HTML, and optional attachment data.",
+      "params": {
+        "inbox_id": "UUID of the inbox containing the email. Call list_inboxes to get available inbox IDs.",
+        "message_id": "Provider message ID from list_inbox or search_emails.",
+        "include_html": "Include sanitized HTML body. Default false.",
+        "include_attachments": "Include base64 attachment data. Default false.",
+        "mark_as_read": "Mark message as read after fetching. Default false."
+      }
+    },
+    "search_emails": {
+      "title": "Search Emails",
+      "desc": "Search an inbox using provider-native query syntax. Gmail supports Gmail search operators; Outlook uses $search; Fastmail and IMAP inboxes use text search.",
+      "params": {
+        "inbox_id": "UUID of the inbox to search. Call list_inboxes to get available inbox IDs.",
+        "query": "Search query. For Gmail: \"from:alice@example.com after:2026/01/01\". For Outlook: natural-language or KQL queries.",
+        "limit": "Max results. Default 20, max 100.",
+        "offset": "Pagination offset. Default 0.",
+        "include_folders": "Restrict search to these folder names. Default: search all folders."
+      }
+    },
+    "send_email": {
+      "title": "Send Email",
+      "desc": "Send a new email from a connected inbox. Supports plain text, optional HTML body, CC/BCC, and file attachments (up to 10 MB total).",
+      "params": {
+        "inbox_id": "UUID of the inbox to send from. Call list_inboxes to get available inbox IDs.",
+        "to": "Recipient email addresses. Max 50.",
+        "subject": "Email subject line. Max 998 characters.",
+        "body": "Plain-text email body.",
+        "cc": "CC recipients. Default [].",
+        "bcc": "BCC recipients. Default [].",
+        "html_body": "HTML version of the body (multipart/alternative). Caller is responsible for safe HTML.",
+        "reply_to": "Reply-To header address.",
+        "attachments": "File attachments. Each item: '{' filename, mime_type, data (base64) '}'. Max 20 items, 10 MB total."
+      }
+    },
+    "reply_to_email": {
+      "title": "Reply to Email",
+      "desc": "Send a reply to an existing email. Threading headers (In-Reply-To, References) are set automatically. Supports reply-all and attachments.",
+      "params": {
+        "inbox_id": "UUID of the inbox that contains the original message. Call list_inboxes to get available inbox IDs.",
+        "message_id": "Provider message ID of the email being replied to.",
+        "body": "Plain-text reply body.",
+        "html_body": "Optional HTML version of the reply.",
+        "reply_all": "Reply to all original recipients (To + Cc). Default false.",
+        "attachments": "File attachments. Same schema as send_email. Max 20 items."
+      }
+    }
+  },
+  "errors": {
+    "eyebrow": "Error codes",
+    "heading": "Error codes & retry guidance.",
+    "sub": "Auth, scope, and rate limit failures return a JSON-RPC <code>error</code> object with a numeric code. Tool execution failures (inbox not found, provider error, etc.) return a normal <code>result</code> with <code>isError: true</code> and a human-readable message in <code>content[0].text</code>.",
+    "thCode": "Code",
+    "thType": "Type",
+    "thWhen": "When it occurs",
+    "thRetryable": "Retryable",
+    "retryableNo": "No",
+    "exampleLabel": "Example execution error response",
+    "rows": {
+      "auth": "Missing, malformed, revoked, or expired API key. Also returned when the API key lacks the required scope for the called tool.",
+      "method": "Unknown JSON-RPC method (e.g. calling a method other than initialize, tools/list, tools/call)",
+      "param": "Unknown tool name, or missing / invalid parameter in tools/call",
+      "rate": "Per-key rate limit or plan daily quota exceeded. Check data.error_code: \"rate_limit_exceeded\" vs \"quota_exceeded\". Check data.retry_after (seconds) before retrying.",
+      "tool": "Tool executed but encountered an error (inbox not found, message not found, provider auth failure, invalid recipient, attachment too large, provider 5xx). The error description is in content[0].text."
+    }
+  },
+  "rateLimits": {
+    "eyebrow": "Rate limits",
+    "heading": "Rate limits & quotas.",
+    "perKeyTag": "Per-key rolling windows",
+    "perKeyHeading": "100 req / min · 1,000 / hr · 10,000 / day",
+    "perKeyBody": "Enforced per API key regardless of plan. When exceeded, the server returns error code <code>-32029</code> with <code>data.error_code: \"rate_limit_exceeded\"</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying.",
+    "planTag": "Plan per-minute ceiling",
+    "planHeading": "Free 60 / min · Solo 300 / min · Team 1,000 / min",
+    "planBody": "Usage is unlimited; this is a per-workspace fair-use burst limit (aggregated across all your API keys). When exceeded, calls return <code>data.error_code: \"rate_limit_exceeded\"</code> with <code>data.window: \"per_minute\"</code> and a <code>data.retry_after</code> countdown (seconds). Upgrade your plan for a higher ceiling.",
+    "retryTag": "Retrying safely",
+    "retryHeading": "Always honour retry_after; never retry sends blindly",
+    "retryBody": "For <code>rate_limit_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>send_email</code> on <code>provider_error</code>, since the message may have already been accepted by the provider."
+  },
+  "cta": {
+    "heading": "Ready to connect your inbox?",
+    "sub": "Start on the Free plan: unlimited, no card required. Upgrade to Solo or Team for higher burst limits and team features.",
+    "primary": "Get started free",
+    "secondary": "See pricing"
+  },
+  "providers": {
+    "meta": {
+      "title": "Provider Support",
+      "description": "See which email providers MCPEmails supports and which features are available per provider: Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP."
+    },
+    "labels": {
+      "generic": "Generic IMAP"
+    },
+    "features": {
+      "read": "Read email",
+      "search": "Search",
+      "send": "Send email",
+      "reply": "Reply",
+      "forward": "Forward",
+      "flags": "Read/unread + starred flags",
+      "folders": "Folders",
+      "labels": "Labels / tags",
+      "move": "Move",
+      "copy": "Copy",
+      "delete": "Delete / trash",
+      "permanent_delete": "Permanent delete (expunge)",
+      "drafts": "Drafts (create / edit / send)",
+      "contacts": "Contacts API",
+      "scheduling": "Scheduled send",
+      "search_syntax": "Search syntax"
+    },
+    "sections": {
+      "Core": "Core",
+      "Flags & state": "Flags & state",
+      "Folders & labels": "Folders & labels",
+      "Delete": "Delete",
+      "Drafts": "Drafts",
+      "Contacts": "Contacts",
+      "Scheduling": "Scheduling",
+      "Search": "Search"
+    },
+    "hero": {
+      "eyebrow": "Provider support",
+      "heading": "What works, per provider.",
+      "lead": "MCPEmails connects Gmail, Outlook, Fastmail, and any IMAP inbox (iCloud, Yahoo, Zoho, Yandex, generic). Not every provider exposes the same APIs — this table shows exactly what each one supports today.",
+      "ctaConnect": "Connect an inbox",
+      "ctaBack": "Back to docs"
+    },
+    "legend": {
+      "supported": "Supported",
+      "notSupported": "Not supported",
+      "planned": "Planned (not yet shipped)",
+      "imapNote": "<b>iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</b> all run through the same Deno IMAP/SMTP transport and share identical capabilities. The columns are shown separately for clarity but their feature set is identical."
+    },
+    "ariaSupported": "Supported",
+    "ariaNotSupported": "Not supported",
+    "plannedBadge": "planned",
+    "table": {
+      "feature": "Feature"
+    },
+    "notes": {
+      "gmail": "<b>Gmail — folders vs labels:</b> Gmail uses a flat label system rather than hierarchical folders. \"Move\" is implemented as label add/remove. Native copy is not available via the Gmail REST API.",
+      "permanentDelete": "<b>Permanent delete:</b> Gmail and Outlook move to Trash when you delete — permanent expunge is not exposed by their APIs. IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.",
+      "contacts": "<b>Contacts API:</b> Gmail uses the Google People API; Outlook uses Microsoft Graph <code>/contacts</code>. Fastmail CardDAV and IMAP-based contacts are deferred to a later release.",
+      "scheduling": "<b>Scheduling:</b> Planned for all providers via a server-side queue (not provider-native scheduling). No provider exposes a native scheduled-send API that is accessible without storing credentials server-side."
+    },
+    "cta": {
+      "heading": "Ready to connect your inbox?",
+      "sub": "Free plan: unlimited connections, no card required.",
+      "primary": "Get started free",
+      "secondary": "Read the docs"
+    }
+  }
+}

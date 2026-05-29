@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Icon, Btn, Avatar } from '../Primitives';
 import { createClient } from '@/lib/supabase/client';
@@ -19,6 +20,7 @@ import { CreateWorkspaceModal } from './CreateWorkspaceModal';
  *   - Clicking a nav item also calls `onClose` so the drawer closes.
  */
 export function Sidebar({ route, setRoute, counts, user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, isOpen, onClose }) {
+  const tr = useTranslations('dashboardChrome');
   const router = useRouter();
   const [wsMenuOpen, setWsMenuOpen] = useState(false);
   const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
@@ -80,15 +82,15 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
   }
 
   const items = [
-    { id: "overview", label: "Overview",   icon: "activity" },
-    { id: "inboxes",  label: "Inboxes",    icon: "inbox",   count: counts.inboxes },
-    { id: "keys",     label: "API keys",   icon: "key",     count: counts.keys },
-    { id: "members",  label: "Members",    icon: "users",   count: counts.members > 1 ? counts.members : undefined },
-    { id: "usage",    label: "Usage",      icon: "zap" },
+    { id: "overview", label: tr('sidebar.navOverview'), icon: "activity" },
+    { id: "inboxes",  label: tr('sidebar.navInboxes'),  icon: "inbox",   count: counts.inboxes },
+    { id: "keys",     label: tr('sidebar.navKeys'),     icon: "key",     count: counts.keys },
+    { id: "members",  label: tr('sidebar.navMembers'),  icon: "users",   count: counts.members > 1 ? counts.members : undefined },
+    { id: "usage",    label: tr('sidebar.navUsage'),    icon: "zap" },
   ];
   const settings = [
-    { id: "settings", label: "Settings",   icon: "settings" },
-    { id: "security", label: "Security",   icon: "shield" },
+    { id: "settings", label: tr('sidebar.navSettings'), icon: "settings" },
+    { id: "security", label: tr('sidebar.navSecurity'), icon: "shield" },
   ];
 
   return (
@@ -120,14 +122,14 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
             </span>
             <span className="ws-meta">
               <span className="ws-name">{activeWs.displayName || activeWs.slug}</span>
-              <span className="ws-plan">{(activeWs.plan ?? 'free')} plan</span>
+              <span className="ws-plan">{tr('sidebar.planSuffix', { plan: activeWs.plan ?? 'free' })}</span>
             </span>
             <Icon name="chevron" size={14} color="var(--fg-3)" />
           </button>
 
           {wsMenuOpen && (
             <div className="ws-menu" role="listbox">
-              <div className="ws-menu-label">Workspaces</div>
+              <div className="ws-menu-label">{tr('sidebar.workspacesLabel')}</div>
               {workspaces.map((w) => (
                 <button
                   key={w.id}
@@ -142,7 +144,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
                   </span>
                   <span className="ws-meta">
                     <span className="ws-name">{w.displayName || w.slug}</span>
-                    <span className="ws-plan">{w.plan} plan{w.isOwner ? '' : ' · member'}</span>
+                    <span className="ws-plan">{tr('sidebar.planSuffix', { plan: w.plan })}{w.isOwner ? '' : ` · ${tr('sidebar.memberSuffix')}`}</span>
                   </span>
                   {w.id === activeWorkspaceId && <Icon name="check" size={14} color="var(--brand)" />}
                 </button>
@@ -157,14 +159,14 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
                   onClick={() => { setWsMenuOpen(false); setShowCreateWorkspace(true); }}
                 >
                   <span className="ws-glyph sm plus" aria-hidden="true"><Icon name="plus" size={13} color="var(--brand)" /></span>
-                  <span className="ws-meta"><span className="ws-name">New workspace</span></span>
+                  <span className="ws-meta"><span className="ws-name">{tr('sidebar.newWorkspace')}</span></span>
                 </button>
               ) : (
                 <a href="/pricing" className="ws-menu-item ws-menu-upsell">
                   <span className="ws-glyph sm plus" aria-hidden="true"><Icon name="zap" size={13} color="var(--brand)" /></span>
                   <span className="ws-meta">
-                    <span className="ws-name">New workspace</span>
-                    <span className="ws-plan">Workspaces are a Team feature. Upgrade</span>
+                    <span className="ws-name">{tr('sidebar.newWorkspace')}</span>
+                    <span className="ws-plan">{tr('sidebar.newWorkspaceUpsell')}</span>
                   </span>
                 </a>
               )}
@@ -173,7 +175,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
         </div>
 
         <nav className="nav">
-          <div className="section-label">Workspace</div>
+          <div className="section-label">{tr('sidebar.sectionWorkspace')}</div>
           {items.map(it => (
             <div key={it.id}
                  className={"nav-item" + (route === it.id ? " active" : "")}
@@ -187,7 +189,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
             </div>
           ))}
 
-          <div className="section-label">Account</div>
+          <div className="section-label">{tr('sidebar.sectionAccount')}</div>
           {settings.map(it => (
             <div key={it.id}
                  className={"nav-item" + (route === it.id ? " active" : "")}
@@ -205,15 +207,15 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
           <Avatar initials={user?.initials ?? '?'} />
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {user?.displayName || user?.email || 'Account'}
+              {user?.displayName || user?.email || tr('sidebar.accountFallback')}
             </div>
             <div style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--fg-3)", textTransform: "capitalize" }}>
-              {workspace?.plan ?? 'free'} plan
+              {tr('sidebar.planSuffix', { plan: workspace?.plan ?? 'free' })}
             </div>
           </div>
           <button
             onClick={handleSignOut}
-            title="Sign out"
+            title={tr('sidebar.signOut')}
             style={{
               background: "none",
               border: "none",
@@ -253,14 +255,15 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
  * The hamburger button is hidden on desktop via CSS (`.menu-btn`).
  */
 export function Topbar({ route, workspace, onMenuOpen, onOpenSearch }) {
+  const tr = useTranslations('dashboardChrome');
   const labels = {
-    overview: "Overview",
-    inboxes:  "Inboxes",
-    keys:     "API keys",
-    members:  "Members",
-    usage:    "Usage",
-    settings: "Settings",
-    security: "Security",
+    overview: tr('sidebar.navOverview'),
+    inboxes:  tr('sidebar.navInboxes'),
+    keys:     tr('sidebar.navKeys'),
+    members:  tr('sidebar.navMembers'),
+    usage:    tr('sidebar.navUsage'),
+    settings: tr('sidebar.navSettings'),
+    security: tr('sidebar.navSecurity'),
   };
   return (
     <header className="topbar">
@@ -268,13 +271,13 @@ export function Topbar({ route, workspace, onMenuOpen, onOpenSearch }) {
       <button
         className="menu-btn"
         onClick={onMenuOpen}
-        aria-label="Open navigation menu"
+        aria-label={tr('sidebar.openMenu')}
       >
         <Icon name="menu" size={20} color="currentColor" />
       </button>
 
       <div className="crumbs">
-        <span>{workspace?.slug ?? 'workspace'}</span>
+        <span>{workspace?.slug ?? tr('sidebar.workspaceFallback')}</span>
         <span className="sep">/</span>
         <span className="here">{labels[route]}</span>
       </div>
@@ -283,10 +286,10 @@ export function Topbar({ route, workspace, onMenuOpen, onOpenSearch }) {
         type="button"
         className="search"
         onClick={onOpenSearch}
-        aria-label="Open search (Command K)"
+        aria-label={tr('sidebar.openSearch')}
       >
         <Icon name="search" size={14} color="var(--fg-3)" />
-        <span className="search-placeholder">Search pages, inboxes, members…</span>
+        <span className="search-placeholder">{tr('sidebar.searchPlaceholder')}</span>
         <span className="kbd">⌘K</span>
       </button>
       <Btn variant="ghost" size="sm" icon="bell">{""}</Btn>

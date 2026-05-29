@@ -1,0 +1,187 @@
+{
+  "meta": {
+    "title": "mcpemails · Dale una bandeja de entrada a tu agente de IA.",
+    "description": "Conecta tus cuentas de correo a Claude, Cursor o cualquier cliente compatible con MCP. Lee, envía, busca y responde correos mediante el Model Context Protocol."
+  },
+  "nav": {
+    "features": "Características",
+    "how": "Cómo funciona",
+    "pricing": "Precios",
+    "docs": "Documentación",
+    "signIn": "Iniciar sesión",
+    "getStarted": "Empieza gratis"
+  },
+  "hero": {
+    "titleLine1": "Dale a tu agente",
+    "titleLine2": "de IA una",
+    "titleAccent": "bandeja de entrada.",
+    "lead": "Conecta Gmail, Outlook, iCloud, Fastmail o cualquier bandeja IMAP una sola vez. Pega una URL de endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP. Los clientes OAuth se conectan con un clic, sin configurar claves de API. Tu agente lee, busca y envía correo en vivo, y nunca almacenamos tu correo.",
+    "ctaPrimary": "Conecta tu bandeja de entrada",
+    "ctaSecondary": "Lee la documentación",
+    "metaUnlimited": "Ilimitado, gratis para siempre",
+    "metaNoCard": "Sin tarjeta",
+    "metaNeverStored": "El correo nunca se almacena",
+    "pipe": {
+      "flow": "Cómo fluye una llamada",
+      "agent": "Agente de IA",
+      "agentSub": "claude.ai · Desktop · Cursor",
+      "serverSub": "endpoint /api/mcp",
+      "provider": "Tu proveedor",
+      "providerSub": "Gmail · Outlook · IMAP",
+      "logCalls": "el agente llama a",
+      "logReturns": "devuelve los IDs de la bandeja, sin copiar y pegar del panel",
+      "logFetches": "mcpemails obtiene vía la API de Gmail (token rotado)",
+      "logResult": "20 mensajes devueltos",
+      "logNothing": "nada almacenado",
+      "legendPipe": "mcpemails (la tubería)",
+      "legendLive": "petición en vivo",
+      "legendData": "tus datos, tu proveedor"
+    }
+  },
+  "trusted": {
+    "label": "Funciona con todos los agentes y clientes compatibles con MCP"
+  },
+  "features": {
+    "eyebrow": "Principios",
+    "titleLine1": "Seis cosas que creemos",
+    "titleLine2": "sobre el correo y los agentes.",
+    "sub": "Las decisiones que dieron forma al producto. Si alguna deja de ser cierta, es un error que vale la pena reportar.",
+    "items": {
+      "0": {
+        "tag": "Alcance",
+        "h": "Seis herramientas. Toda la superficie.",
+        "p": "Cada tarea de correo que tu agente necesita cabe en seis llamadas: <code>list_inboxes</code>, <code>list_inbox</code>, <code>read_email</code>, <code>search_emails</code>, <code>send_email</code>, <code>reply_to_email</code>. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP. Esa es toda la integración."
+      },
+      "1": {
+        "tag": "Almacenamiento",
+        "h": "El correo se obtiene en vivo. Nunca se almacena.",
+        "p": "Cada llamada a una herramienta consulta tu proveedor en tiempo real: la API de Gmail, Microsoft Graph, Fastmail JMAP o IMAP. Los cuerpos de los mensajes, los asuntos y los adjuntos van al agente y se descartan de inmediato. Persistimos una sola cosa por bandeja, un token cifrado o una contraseña de aplicación, para poder hacer la siguiente llamada."
+      },
+      "2": {
+        "tag": "Envío",
+        "h": "El envío pasa por tu proveedor.",
+        "p": "Cuando tu agente llama a <code>send_email</code> o <code>reply_to_email</code>, el mensaje se envía mediante la API de Gmail, Microsoft Graph o tu propio servidor SMTP. La reputación de tu dominio y la entregabilidad quedan completamente en tus manos. Nunca retransmitimos correo desde nuestro propio dominio."
+      },
+      "3": {
+        "tag": "Proveedores",
+        "h": "Gmail, Outlook, iCloud, Fastmail y cualquier bandeja IMAP.",
+        "p": "OAuth 2.0 para Gmail, Outlook y Fastmail; contraseñas específicas de aplicación para iCloud, Yahoo, Zoho y Yandex; un conector IMAP / SMTP genérico para todo lo demás. Conecta varias bandejas, etiquétalas por caso de uso (work-gmail, ops-outlook, support-imap) y limita cada clave de API a las bandejas que quieras que ese agente alcance."
+      },
+      "4": {
+        "tag": "Acceso",
+        "h": "OAuth 2.0 para agentes. Un clic para revocar.",
+        "p": "Cualquier cliente MCP que admita OAuth (claude.ai, Claude Desktop, Cursor y otros) se conecta automáticamente mediante código de autorización + PKCE. Sin configurar claves de API. Las claves de API existen para clientes sin OAuth y para acceso por scripts. En cualquier caso, revocas cualquier conexión desde el panel con un clic."
+      },
+      "5": {
+        "tag": "Seguridad",
+        "h": "Las credenciales se cifran en reposo.",
+        "p": "Los tokens de OAuth y las contraseñas de aplicación se cifran con AES-256-GCM antes de escribirse en la base de datos. El descifrado ocurre solo dentro de una Edge Function aislada en el momento de la llamada. La clave de cifrado se guarda como un secreto de entorno, separada de la base de datos."
+      }
+    }
+  },
+  "howItWorks": {
+    "eyebrow": "Cómo funciona",
+    "title": "Tú eres el usuario. Nosotros somos la tubería.",
+    "sub": "Tres pasos desde el registro hasta que tu agente lee y envía correo.",
+    "steps": {
+      "0": {
+        "h": "Conecta tu bandeja de entrada",
+        "p": "Inicia sesión y haz clic en <b>Conectar bandeja</b>. Elige Gmail, Outlook, iCloud, Fastmail o cualquier bandeja IMAP, luego completa OAuth o pega una contraseña de aplicación. Las credenciales se cifran; el correo nunca se almacena."
+      },
+      "1": {
+        "h": "Pega la URL: OAuth o clave de API",
+        "p": "Para un cliente MCP que admita OAuth 2.0 (claude.ai, Claude Desktop, Cursor y otros), pega <code>https://www.mcpemails.com/api/mcp</code>, haz clic en Conectar y autoriza. No hace falta clave. Para clientes sin OAuth (Cline, JetBrains, scripts personalizados), genera en su lugar una clave de API limitada en el panel."
+      },
+      "2": {
+        "h": "Tu agente trabaja la bandeja",
+        "p": "El agente llama a herramientas como <code>search_emails()</code> o <code>reply_to_email()</code>. MCPEmails obtiene en vivo desde tu proveedor y devuelve el resultado. Nada se almacena en caché entre llamadas."
+      }
+    },
+    "tools": {
+      "0": "Descubre todas las bandejas conectadas y sus IDs. Llama a esto primero, sin copiar y pegar UUIDs del panel.",
+      "1": "Lista los mensajes recientes con remitente, asunto, fecha y fragmento, hasta 100 por llamada.",
+      "2": "Obtiene un solo mensaje por ID. Devuelve el texto plano analizado y el cuerpo HTML saneado, además de los metadatos de los adjuntos.",
+      "3": "Búsqueda nativa del proveedor: sintaxis de consulta de Gmail, Microsoft Graph, JMAP o IMAP SEARCH. Devuelve hasta 100 coincidencias.",
+      "4": "Envía un mensaje nuevo a través de la cuenta conectada. Despachado mediante la API de Gmail, Microsoft Graph, Fastmail JMAP o SMTP: tu dominio, tu entregabilidad.",
+      "5": "Responde dentro del hilo con los encabezados Message-ID y References correctos. Funciona en Gmail, Outlook, Fastmail y cualquier bandeja IMAP."
+    }
+  },
+  "quote": {
+    "text": "Quería que mis agentes trabajaran mi bandeja de entrada, pero cada opción implicaba entregar a un tercero una copia de mi correo. Así que construí la tubería que deseaba que existiera: conéctate una vez, tu correo se obtiene en vivo y nunca se almacena, y puedes cortarle el acceso a cualquier agente con un clic. Ese es el producto en el que confío con mi propia bandeja.",
+    "role": "fundador, mcpemails"
+  },
+  "pricing": {
+    "eyebrow": "Precios",
+    "title": "Ilimitado en todos los planes.",
+    "sub": "Gratis es genuinamente ilimitado. Mejora para obtener límites de ráfaga más altos, funciones de equipo y soporte. Cambia de plan cuando quieras.",
+    "perForever": "/para siempre",
+    "perMonth": "/mes",
+    "tiers": {
+      "free": {
+        "name": "Gratis",
+        "desc": "Todo, ilimitado. Para todos los que construyen con agentes MCP.",
+        "features": [
+          "Bandejas conectadas ilimitadas",
+          "Llamadas a herramientas MCP ilimitadas",
+          "Claves de API y miembros de equipo ilimitados",
+          "Gmail, Outlook, iCloud, Fastmail y cualquier IMAP",
+          "60 peticiones / minuto",
+          "Soporte de la comunidad"
+        ],
+        "cta": "Empieza gratis"
+      },
+      "solo": {
+        "name": "Solo",
+        "desc": "Para usuarios avanzados que ejecutan agentes a todas horas.",
+        "features": [
+          "Todo lo de Gratis, ilimitado",
+          "300 peticiones / minuto (ráfaga 5×)",
+          "Analíticas de uso completas (historial de 90 días)",
+          "Gmail, Outlook, iCloud, Fastmail y cualquier IMAP",
+          "Soporte por correo"
+        ],
+        "cta": "Obtener Solo"
+      },
+      "team": {
+        "name": "Team",
+        "desc": "Para empresas y equipos que necesitan roles, SSO y registros de auditoría.",
+        "features": [
+          "Todo lo de Solo, ilimitado",
+          "1.000 peticiones / minuto",
+          "Roles de equipo y múltiples espacios de trabajo",
+          "SSO (SAML / OIDC) + registro de auditoría",
+          "Analíticas de uso completas (historial de 1 año)",
+          "Soporte prioritario"
+        ],
+        "cta": "Obtener Team"
+      }
+    },
+    "footnote": "Todos los planes: el correo se obtiene en vivo y nunca se almacena. Tokens de OAuth cifrados en reposo. ¿Necesitas algo a medida? <contact>Contáctanos</contact>. <comparison>Ver la comparación completa de funciones →</comparison>"
+  },
+  "footer": {
+    "tagline": "Un servidor MCP alojado que da a los agentes de IA acceso de lectura y envío a tu bandeja de entrada, sin almacenar nunca tu correo.",
+    "productHeading": "Producto",
+    "resourcesHeading": "Recursos",
+    "companyHeading": "Empresa",
+    "linkFeatures": "Características",
+    "linkHow": "Cómo funciona",
+    "linkPricing": "Precios",
+    "linkDocs": "Documentación",
+    "linkToolReference": "Referencia de herramientas",
+    "linkQuickstart": "Inicio rápido",
+    "linkOauth": "Conexión OAuth",
+    "linkProviders": "Soporte de proveedores",
+    "linkPrivacy": "Privacidad",
+    "linkTerms": "Términos",
+    "copyright": "© 2026 mcpemails.",
+    "legal": "El correo nunca se almacena · Credenciales cifradas en reposo"
+  },
+  "languageSwitcher": {
+    "label": "Idioma",
+    "en": "English",
+    "nb": "Norsk",
+    "es": "Español",
+    "fr": "Français",
+    "zh": "中文"
+  }
+}

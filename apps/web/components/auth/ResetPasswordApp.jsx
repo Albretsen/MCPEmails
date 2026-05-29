@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 
@@ -82,6 +83,7 @@ function Spinner() {
  */
 export function ResetPasswordApp() {
   const router = useRouter();
+  const t = useTranslations('auth');
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -115,17 +117,17 @@ export function ResetPasswordApp() {
     let valid = true;
 
     if (!password || password.length < 8) {
-      setPasswordError('Password must be at least 8 characters.');
+      setPasswordError(t('reset.errorPasswordLength'));
       valid = false;
     } else {
       setPasswordError('');
     }
 
     if (!confirmPassword) {
-      setConfirmError('Please confirm your new password.');
+      setConfirmError(t('reset.errorConfirmRequired'));
       valid = false;
     } else if (password !== confirmPassword) {
-      setConfirmError('Passwords do not match.');
+      setConfirmError(t('reset.errorMismatch'));
       valid = false;
     } else {
       setConfirmError('');
@@ -147,7 +149,7 @@ export function ResetPasswordApp() {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      setServerError(error.message ?? 'Something went wrong. Please try again.');
+      setServerError(error.message ?? t('reset.errorGeneric'));
       setStep('error');
       return;
     }
@@ -187,7 +189,7 @@ export function ResetPasswordApp() {
         {(step === 'form' || step === 'error') && (
           <a className="auth-back" href="/login">
             <MIcon name="arrow" size={14} color="currentColor" strokeWidth={2} />
-            Back to sign in
+            {t('reset.backToSignIn')}
           </a>
         )}
 
@@ -216,7 +218,7 @@ export function ResetPasswordApp() {
               <Spinner />
             </div>
             <p className="sub" style={{ margin: 0 }}>
-              Verifying your reset link…
+              {t('reset.verifying')}
             </p>
           </div>
         )}
@@ -238,10 +240,9 @@ export function ResetPasswordApp() {
             >
               <MIcon name="lock" size={22} color="var(--red-600)" />
             </div>
-            <h1>Link expired</h1>
+            <h1>{t('reset.expiredTitle')}</h1>
             <p className="sub">
-              This password reset link has expired or has already been used.
-              Reset links are valid for 60 minutes and can only be used once.
+              {t('reset.expiredBody')}
             </p>
 
             <div style={{ marginTop: 24 }}>
@@ -250,12 +251,12 @@ export function ResetPasswordApp() {
                 className="auth-submit"
                 onClick={() => router.push('/forgot-password')}
               >
-                Request a new link
+                {t('reset.requestNewLink')}
               </MBtn>
             </div>
 
             <div className="auth-footer" style={{ marginTop: 16 }}>
-              <a href="/login">Back to sign in</a>
+              <a href="/login">{t('reset.backToSignIn')}</a>
             </div>
           </div>
         )}
@@ -263,10 +264,9 @@ export function ResetPasswordApp() {
         {/* ── Form state ──────────────────────────────────────────── */}
         {(step === 'form' || step === 'error') && (
           <div className="auth-card">
-            <h1>Choose a new password</h1>
+            <h1>{t('reset.title')}</h1>
             <p className="sub">
-              Pick a strong password for your account. You'll use it to sign in
-              from now on.
+              {t('reset.intro')}
             </p>
 
             {serverError && (
@@ -290,12 +290,12 @@ export function ResetPasswordApp() {
 
             <form className="auth-fields" onSubmit={handleSubmit} noValidate>
               <div className="field">
-                <label htmlFor="reset-password">New password</label>
+                <label htmlFor="reset-password">{t('reset.newPasswordLabel')}</label>
                 <input
                   id="reset-password"
                   className={'input' + (passwordError ? ' err' : '')}
                   type="password"
-                  placeholder="8+ characters"
+                  placeholder={t('reset.newPasswordPlaceholder')}
                   autoComplete="new-password"
                   value={password}
                   onChange={handlePasswordChange}
@@ -310,12 +310,12 @@ export function ResetPasswordApp() {
               </div>
 
               <div className="field">
-                <label htmlFor="reset-confirm">Confirm new password</label>
+                <label htmlFor="reset-confirm">{t('reset.confirmLabel')}</label>
                 <input
                   id="reset-confirm"
                   className={'input' + (confirmError ? ' err' : '')}
                   type="password"
-                  placeholder="Re-enter your new password"
+                  placeholder={t('reset.confirmPlaceholder')}
                   autoComplete="new-password"
                   value={confirmPassword}
                   onChange={handleConfirmChange}
@@ -335,7 +335,7 @@ export function ResetPasswordApp() {
                 type="submit"
                 onClick={handleSubmit}
               >
-                Set new password
+                {t('reset.submit')}
               </MBtn>
             </form>
           </div>
@@ -362,10 +362,10 @@ export function ResetPasswordApp() {
               <Spinner />
             </div>
             <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 6px' }}>
-              Updating your password…
+              {t('reset.updating')}
             </h1>
             <p className="sub" style={{ margin: 0 }}>
-              Just a moment.
+              {t('shared.justAMoment')}
             </p>
           </div>
         )}
@@ -387,9 +387,9 @@ export function ResetPasswordApp() {
             >
               <MIcon name="check" size={22} color="var(--mint-600)" />
             </div>
-            <h1>Password updated</h1>
+            <h1>{t('reset.successTitle')}</h1>
             <p className="sub">
-              Your password has been changed. Redirecting you to sign in…
+              {t('reset.successBody')}
             </p>
           </div>
         )}

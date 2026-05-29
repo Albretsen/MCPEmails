@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "title": "Priser",
+    "description": "Alle planer, inkludert Gratis, har ubegrenset antall innbokser, kall, API-nøkler og teammedlemmer. Betalte planer gir høyere burst-grenser, teamfunksjoner og kundestøtte. E-post lagres aldri, uansett plan."
+  },
+  "hero": {
+    "eyebrow": "Priser",
+    "titleLine1": "Ubegrenset, gratis.",
+    "titleLine2": "Oppgrader for mer kraft.",
+    "lead": "Alle planer, inkludert Gratis, har ubegrenset antall innbokser, kall, API-nøkler og teammedlemmer. Betalte planer gir høyere burst-grenser, teamfunksjoner og kundestøtte. E-post lagres aldri, uansett plan."
+  },
+  "billing": {
+    "monthly": "Månedlig",
+    "annual": "Årlig",
+    "save": "Spar ~17 %"
+  },
+  "card": {
+    "perForever": "/for alltid",
+    "perMonth": "/måned",
+    "billedYearly": "Faktureres ${total}/år"
+  },
+  "plans": {
+    "free": {
+      "name": "Gratis",
+      "desc": "Alt, ubegrenset. For alle som bygger med MCP-agenter.",
+      "cta": "Start gratis",
+      "features": [
+        "Ubegrenset antall tilkoblede innbokser",
+        "Ubegrenset antall MCP-verktøykall",
+        "Ubegrenset antall API-nøkler og teammedlemmer",
+        "Gmail, Outlook, iCloud, Fastmail og enhver IMAP",
+        "60 forespørsler / minutt",
+        "Fellesskapsstøtte"
+      ]
+    },
+    "solo": {
+      "name": "Solo",
+      "desc": "For erfarne brukere som kjører agenter døgnet rundt.",
+      "cta": "Få Solo",
+      "features": [
+        "Alt i Gratis, ubegrenset",
+        "300 forespørsler / minutt (5× burst)",
+        "Full bruksanalyse (90-dagers historikk)",
+        "Gmail, Outlook, iCloud, Fastmail og enhver IMAP",
+        "E-poststøtte"
+      ]
+    },
+    "pro": {
+      "name": "Team",
+      "badge": "Mest populær",
+      "desc": "For bedrifter og team som trenger roller, SSO og revisjonslogg.",
+      "cta": "Få Team",
+      "features": [
+        "Alt i Solo, ubegrenset",
+        "1 000 forespørsler / minutt",
+        "Teamroller og flere arbeidsområder",
+        "SSO (SAML / OIDC) + revisjonslogg",
+        "Full bruksanalyse (1-års historikk)",
+        "Prioritert støtte"
+      ]
+    }
+  },
+  "cardsFootnote": {
+    "all": "Alle planer inkluderer: e-post lagres aldri · legitimasjon kryptert i hvile · hosting i EU og USA",
+    "custom": "Trenger du noe tilpasset? <contact>Kontakt oss</contact>."
+  },
+  "comparison": {
+    "eyebrow": "Full sammenligning",
+    "title": "Alt side om side.",
+    "featureCol": "Funksjon",
+    "free": "Gratis",
+    "solo": "Solo",
+    "team": "Team",
+    "sections": {
+      "usage": {
+        "label": "Bruk",
+        "rows": {
+          "inboxes": "Tilkoblede innbokser",
+          "calls": "MCP-verktøykall",
+          "keys": "API-nøkler",
+          "members": "Teammedlemmer",
+          "burst": "Burst-grense"
+        }
+      },
+      "providers": {
+        "label": "E-postleverandører",
+        "rows": {
+          "gmail": "Gmail (OAuth)",
+          "outlook": "Outlook / Microsoft 365 (OAuth)",
+          "fastmail": "Fastmail (OAuth + app-passord)",
+          "appPassword": "iCloud, Yahoo, Zoho, Yandex (app-passord)",
+          "imap": "Enhver IMAP- / SMTP-postkasse"
+        }
+      },
+      "mcpTools": {
+        "label": "MCP-verktøy"
+      },
+      "analytics": {
+        "label": "Analyse og sikkerhet",
+        "rows": {
+          "dashboard": "Dashbord for bruksanalyse",
+          "history": "Analysehistorikk",
+          "roles": "Teamroller og arbeidsområder",
+          "sso": "SSO (SAML / OIDC)",
+          "audit": "Revisjonslogg"
+        }
+      },
+      "privacy": {
+        "label": "Personvern og sikkerhet",
+        "rows": {
+          "neverStored": "E-post lagres aldri",
+          "encrypted": "Legitimasjon kryptert i hvile",
+          "soc2": "SOC 2 Type II-rapport på forespørsel"
+        }
+      },
+      "support": {
+        "label": "Kundestøtte",
+        "rows": {
+          "community": "Fellesskapsforum",
+          "email": "E-poststøtte",
+          "priority": "Prioritert støtte"
+        }
+      }
+    },
+    "values": {
+      "unlimited": "Ubegrenset",
+      "burstFree": "60 / min",
+      "burstSolo": "300 / min",
+      "burstPro": "1 000 / min",
+      "history7": "7 dager",
+      "history90": "90 dager",
+      "history1y": "1 år"
+    }
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Vanlige spørsmål.",
+    "items": [
+      {
+        "q": "Finnes det virkelig ingen bruksgrense?",
+        "a": "Riktig. Tilkoblede innbokser, MCP-verktøykall, API-nøkler og teammedlemmer er ubegrenset på alle planer, inkludert Gratis. Den eneste grensen er et fair-use-tak per minutt (60/min på Gratis, 300/min på Solo, 1 000/min på Team) for å beskytte plattformen mot misbruk. Betalte planer gir høyere burst-kapasitet, teamfunksjoner og kundestøtte, aldri mer bruk."
+      },
+      {
+        "q": "Hva regnes som et MCP-kall?",
+        "a": "Hvert JSON-RPC-verktøykall mot /mcp-endepunktet ditt regnes som ett kall: list_inboxes, list_inbox, read_email, search_emails, send_email eller reply_to_email. Kall er ubegrenset; de teller kun mot fair-use-taket ditt per minutt."
+      },
+      {
+        "q": "Lagres e-postinnholdet mitt noe sted?",
+        "a": "Nei. E-postinnhold, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten. Ingenting lagres mellom kall. Det eneste vi lagrer er et kryptert OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler."
+      },
+      {
+        "q": "Hva er forskjellen mellom Solo og Team?",
+        "a": "Gratis gir allerede alle ubegrenset bruk. Solo ($12/mnd) er for erfarne brukere som kjører agenter hardt: den hever burst-grensen til 300 forespørsler/minutt, utvider analysehistorikken til 90 dager og legger til e-poststøtte. Team ($49/mnd) er for bedrifter: et tak på 1 000/minutt, teamroller og flere arbeidsområder, SSO (SAML/OIDC), en revisjonslogg, 1-års analysehistorikk og prioritert støtte."
+      },
+      {
+        "q": "Kan jeg endre eller si opp planen min?",
+        "a": "Ja. Oppgrader, nedgrader eller si opp når som helst fra faktureringsdelen av dashbordet ditt. Hvis du sier opp en betalt plan, beholder du tilgangen ut faktureringsperioden, og går deretter automatisk over til Gratis. Siden Gratis er ubegrenset, mister du kun den høyere burst-grensen, teamfunksjonene og kundestøtten."
+      },
+      {
+        "q": "Hvordan fungerer årsrabatten?",
+        "a": "Å betale årlig sparer omtrent 17 % sammenlignet med månedlig fakturering: Solo koster $120/år og Team koster $490/år. Du belastes én gang for 12 måneder på forhånd. Hvis du sier opp midt i året, refunderer vi de ubrukte hele månedene."
+      },
+      {
+        "q": "Hvilke e-postleverandører støttes?",
+        "a": "Gmail og Microsoft 365 / Outlook bruker OAuth 2.0. Fastmail støtter både OAuth og app-passord. iCloud, Yahoo, Zoho og Yandex kobles til med et app-spesifikt passord, og enhver annen postkasse fungerer gjennom den generiske IMAP- / SMTP-tilkoblingen."
+      },
+      {
+        "q": "Finnes det en refusjonsordning?",
+        "a": "Hvis du er misfornøyd innen 30 dager etter din første betalte faktura, kontakt oss for full refusjon, uten spørsmål."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Klar til å gi agenten din en innboks?",
+    "sub": "Start på Gratis: ingen kredittkort, ubegrenset fra dag én. Oppgrader når du trenger høyere burst-grenser eller teamfunksjoner.",
+    "ctaPrimary": "Kom i gang gratis",
+    "ctaSecondary": "Les dokumentasjonen"
+  }
+}

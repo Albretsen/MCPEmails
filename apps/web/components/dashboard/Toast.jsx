@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon } from '../Primitives';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -120,9 +121,10 @@ export function useToast() {
 // ─── Container ───────────────────────────────────────────────────────────────
 
 function ToastContainer({ toasts, dismiss, timers }) {
+  const tr = useTranslations('dashboardChrome');
   if (toasts.length === 0) return null;
   return (
-    <div className="toast-stack" aria-label="Notifications">
+    <div className="toast-stack" aria-label={tr('toast.ariaNotifications')}>
       {toasts.map((t) => (
         <ToastItem key={t.id} t={t} dismiss={dismiss} timers={timers} />
       ))}
@@ -133,6 +135,7 @@ function ToastContainer({ toasts, dismiss, timers }) {
 // ─── Individual toast ────────────────────────────────────────────────────────
 
 function ToastItem({ t, dismiss, timers }) {
+  const tr = useTranslations('dashboardChrome');
   const { id, message, variant, action, ms } = t;
 
   /**
@@ -180,7 +183,7 @@ function ToastItem({ t, dismiss, timers }) {
       <button
         className="toast-close"
         onClick={() => dismiss(id)}
-        aria-label="Dismiss notification"
+        aria-label={tr('toast.dismiss')}
         type="button"
       >
         <Icon name="x" size={12} />

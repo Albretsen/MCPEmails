@@ -1,0 +1,231 @@
+{
+  "meta": {
+    "title": "Política de privacidad",
+    "description": "Cómo MCPEmails recopila, usa y protege tus datos. Nuestra política de privacidad para usuarios, propietarios de espacios de trabajo y agentes de IA."
+  },
+  "hero": {
+    "eyebrow": "Legal",
+    "title": "Política de privacidad",
+    "lead": "Construimos MCPEmails con la privacidad como primer principio. El contenido de tu correo nunca se almacena en nuestros servidores. Pasa hacia tu agente y desaparece. Esta política explica qué sí recopilamos, y por qué.",
+    "dates": "Última actualización: {lastUpdated}  ·  Vigente desde: {effectiveDate}"
+  },
+  "whoWeAre": {
+    "title": "1. Quiénes somos",
+    "p1": "{companyName} (\"MCPEmails\", \"nosotros\", \"nos\" o \"nuestro\") opera el servicio MCPEmails disponible en <b>mcpemails.com</b>, incluidas todas las páginas del panel, los endpoints de API y el servidor de Model Context Protocol (MCP) que los agentes de IA usan para acceder a las cuentas de correo conectadas.",
+    "p2": "A los efectos de la legislación aplicable de protección de datos (incluido el Reglamento General de Protección de Datos de la UE, \"RGPD\"), MCPEmails es el responsable del tratamiento de los datos de cuenta y de uso. Para el contenido del correo, actuamos como encargado del tratamiento en tu nombre: transmitimos el contenido que nos autorizas a recuperar y no lo almacenamos.",
+    "p3": "Nuestra dirección registrada es: {companyAddress}. Puedes contactar a nuestro equipo de privacidad en <email></email>."
+  },
+  "dataWeCollect": {
+    "title": "2. Datos que recopilamos",
+    "accountTitle": "2.1 Datos de cuenta",
+    "accountP": "Cuando creas una cuenta recopilamos tu dirección de correo y una contraseña con hash (nunca almacenamos contraseñas en texto plano). Opcionalmente puedes proporcionar un nombre para mostrar. Estos datos son necesarios para crear y mantener tu cuenta.",
+    "workspaceTitle": "2.2 Datos de espacio de trabajo y configuración",
+    "workspaceP": "Almacenamos el nombre del espacio de trabajo que elijas y la configuración de cada bandeja conectada (tipo de proveedor, dirección de correo, estado de OAuth y marca de tiempo de conexión). <b>No</b> almacenamos tokens de acceso de OAuth ni contraseñas de aplicación en texto plano. Se cifran con AES-256-GCM antes de escribirse en la base de datos, y la clave de cifrado se guarda en un almacén de secretos separado.",
+    "apiKeysTitle": "2.3 Claves de API",
+    "apiKeysP": "Almacenamos un hash SHA-256 de cada clave de API que creas, junto con el nombre de la clave, sus alcances, la marca de tiempo de creación y la del último uso. El valor en bruto de la clave se te muestra exactamente una vez en el momento de la creación y nunca se almacena de forma recuperable.",
+    "logsTitle": "2.4 Registros de uso y auditoría",
+    "logsP": "Para cada llamada a una herramienta MCP que hace tu agente, registramos: el nombre de la herramienta (p. ej. <c>read_email</c>), la clave de API que hizo la llamada, la bandeja a la que se accedió, la marca de tiempo y si la llamada tuvo éxito. <b>No</b> registramos asuntos, cuerpos, destinatarios ni ningún otro contenido de correo en estos registros.",
+    "emailContentTitle": "2.5 Contenido del correo: no se almacena",
+    "emailContentP": "Cuando tu agente llama a <c>read_email</c>, <c>list_inbox</c> o cualquier otra herramienta de correo, obtenemos el contenido solicitado en vivo desde tu proveedor de correo y lo devolvemos a tu agente en la misma respuesta HTTP. El contenido nunca se escribe en disco, se almacena en caché ni se registra. Una vez enviada la respuesta HTTP, no conservamos ninguna copia de ningún cuerpo de correo, asunto, adjunto o dato de contacto.",
+    "technicalTitle": "2.6 Datos técnicos y operativos",
+    "technicalP": "Recopilamos datos operativos estándar del lado del servidor, incluidas direcciones IP (para limitación de tasa y prevención de abuso), marcas de tiempo de peticiones, códigos de estado HTTP y tipos de error. Estos datos se conservan en forma agregada y anonimizada y no se vinculan a cuentas individuales después de 30 días.",
+    "cookiesTitle": "2.7 Cookies y almacenamiento local",
+    "cookiesP": "El panel establece una cookie de sesión propia emitida por Supabase Auth para mantenerte con la sesión iniciada. No usamos cookies de seguimiento, cookies de publicidad ni cookies de terceros. Almacenamos una única preferencia de tema (<c>mcpe-theme</c>) en el almacenamiento local de tu navegador."
+  },
+  "howWeUseData": {
+    "title": "3. Cómo usamos tus datos",
+    "intro": "Usamos los datos descritos arriba para los siguientes fines:",
+    "providingTitle": "3.1 Prestación del servicio",
+    "providingP": "Usamos tus datos de cuenta para autenticarte, la configuración de tu espacio de trabajo para enrutar las llamadas a herramientas MCP al proveedor de correo correcto y tus claves de API para autorizar las peticiones del agente. Sin estos datos el servicio no puede funcionar. La base jurídica según el RGPD es la <b>ejecución de un contrato</b>.",
+    "securityTitle": "3.2 Seguridad y prevención de abuso",
+    "securityP": "Usamos direcciones IP, tasas de petición y patrones de error para detectar y bloquear actividad abusiva, aplicar límites de tasa y proteger la disponibilidad del servicio para todos los usuarios. La base jurídica son nuestros <b>intereses legítimos</b> en operar un servicio seguro.",
+    "analyticsTitle": "3.3 Analíticas de uso y mejora del producto",
+    "analyticsP": "Usamos datos de uso agregados y anonimizados (recuentos de llamadas a herramientas, tasas de error, latencia) para entender cómo se usa el servicio y priorizar mejoras. No usamos datos de uso a nivel individual para este fin. La base jurídica son nuestros <b>intereses legítimos</b> en mejorar el servicio.",
+    "billingTitle": "3.4 Facturación y aplicación de planes",
+    "billingP": "Usamos los recuentos de uso para determinar si tu espacio de trabajo ha alcanzado los límites del plan y para calcular tu factura en los planes de pago. La base jurídica es la <b>ejecución de un contrato</b>.",
+    "legalTitle": "3.5 Cumplimiento legal",
+    "legalP": "Podemos tratar y divulgar datos cuando lo exija la legislación aplicable, una orden judicial o una autoridad reguladora. La base jurídica es el <b>cumplimiento de una obligación legal</b>.",
+    "neverTitle": "3.6 Lo que nunca haremos",
+    "neverList": [
+      "Vender tus datos personales o de uso a terceros.",
+      "Usar el contenido de tu correo para entrenar modelos de IA.",
+      "Usar tus datos para mostrarte publicidad.",
+      "Compartir tus datos con terceros para sus propios fines de marketing."
+    ],
+    "googleTitle": "3.7 Servicios de la API de Google: uso limitado",
+    "googleP1": "El uso y la transferencia a cualquier otra aplicación por parte de MCPEmails de la información recibida de las API de Google (incluida la API de Gmail) se ajustará a la <link>Política de datos de usuario de los servicios de la API de Google</link>, incluidos los requisitos de <b>uso limitado</b>.",
+    "googleP2": "Cuando conectas una cuenta de Gmail, concedes a MCPEmails los siguientes alcances de Gmail. Solicitamos cada alcance únicamente para proporcionar las funciones que invocas a través de tu agente de IA, y los usamos solo en tu nombre:",
+    "googleScopeReadonly": "<c>gmail.readonly</c>: listar mensajes y leer el contenido de los mensajes para que tu agente pueda buscar, leer y resumir correo a petición tuya.",
+    "googleScopeSend": "<c>gmail.send</c>: redactar y enviar mensajes que tu agente crea a petición tuya.",
+    "googleLimitedIntro": "De acuerdo con los requisitos de uso limitado, MCPEmails:",
+    "googleLimitedList": [
+      "usa los datos de usuario de Google solo para proporcionar y mejorar las funciones de cara al usuario descritas arriba;",
+      "no transfiere ni vende datos de usuario de Google a terceros, intermediarios de datos o redes publicitarias;",
+      "no usa los datos de usuario de Google para mostrar anuncios;",
+      "no usa los datos de usuario de Google para desarrollar, mejorar o entrenar modelos de IA o de aprendizaje automático generalizados o no personalizados;",
+      "no permite que personas lean datos de usuario de Google a menos que (a) des consentimiento explícito para mensajes específicos, (b) sea necesario por motivos de seguridad como investigar abusos, (c) sea obligatorio para cumplir la legislación aplicable, o (d) los datos hayan sido agregados y anonimizados."
+    ],
+    "googleP3": "Como se describe en la Sección 2.5, el contenido de correo recuperado de la API de Gmail se transmite hacia tu agente en la misma petición y MCPEmails nunca lo almacena, lo guarda en caché ni lo registra."
+  },
+  "dataRetention": {
+    "title": "4. Conservación de datos",
+    "intro": "Conservamos cada categoría de datos durante los siguientes períodos:",
+    "thCategory": "Categoría de datos",
+    "thPeriod": "Período de conservación",
+    "thReason": "Motivo",
+    "rows": [
+      {
+        "category": "Datos de cuenta (correo, nombre para mostrar)",
+        "period": "Hasta la eliminación de la cuenta, más 30 días",
+        "reason": "Operación del servicio; ventana de recuperación"
+      },
+      {
+        "category": "Configuración de espacio de trabajo y bandeja",
+        "period": "Hasta que la elimines, más 30 días",
+        "reason": "Operación del servicio; ventana de recuperación"
+      },
+      {
+        "category": "Tokens de OAuth / contraseñas de aplicación cifrados",
+        "period": "Hasta desconectar la bandeja o eliminar la cuenta",
+        "reason": "Necesario para autenticar las llamadas a la API del proveedor"
+      },
+      {
+        "category": "Hashes de claves de API",
+        "period": "Hasta su revocación, más 30 días",
+        "reason": "Pista de auditoría; ventana de recuperación"
+      },
+      {
+        "category": "Registros de auditoría de llamadas a herramientas MCP",
+        "period": "90 días (Gratis y Solo); 1 año (Team)",
+        "reason": "Auditoría de seguridad; función del plan"
+      },
+      {
+        "category": "Métricas de uso agregadas",
+        "period": "2 años",
+        "reason": "Historial de facturación; analíticas de producto"
+      },
+      {
+        "category": "Registros operativos del servidor (IP, estado)",
+        "period": "30 días en bruto; agregado anonimizado conservado",
+        "reason": "Prevención de abuso; disponibilidad"
+      },
+      {
+        "category": "Contenido del correo",
+        "period": "No se almacena; conservación cero",
+        "reason": "Privacidad por diseño"
+      }
+    ],
+    "outro": "Cuando eliminas tu cuenta, iniciamos la eliminación de todos los datos personales en un plazo de 30 días. Las estadísticas de uso agregadas y no personales derivadas de tu cuenta pueden conservarse más allá de este período en forma anonimizada."
+  },
+  "thirdParties": {
+    "title": "5. Terceros e intercambio de datos",
+    "infraTitle": "5.1 Proveedores de infraestructura (encargados del tratamiento)",
+    "infraP": "Usamos los siguientes subencargados para operar el servicio. Cada uno está vinculado por un Acuerdo de Tratamiento de Datos y trata los datos solo siguiendo nuestras instrucciones:",
+    "thProvider": "Proveedor",
+    "thPurpose": "Finalidad",
+    "thData": "Datos tratados",
+    "thLocation": "Ubicación",
+    "supabasePurpose": "Base de datos, autenticación, edge functions",
+    "supabaseData": "Datos de cuenta, configuración del espacio de trabajo, registros de auditoría",
+    "supabaseLocation": "UE (Fráncfort) o EE. UU. (Virginia); eliges al registrarte",
+    "vercelPurpose": "Alojamiento web, CDN",
+    "vercelData": "Metadatos de peticiones HTTP; sin contenido de correo",
+    "vercelLocation": "Edge global (región más cercana al usuario)",
+    "stripeProvider": "(solo planes de pago)",
+    "stripePurpose": "Procesamiento de pagos",
+    "stripeData": "Correo de facturación, datos de tarjeta de pago (almacenados por Stripe, no por nosotros)",
+    "stripeLocation": "EE. UU. (Stripe tiene certificación PCI-DSS)",
+    "emailProvidersTitle": "5.2 Proveedores de correo (tus proveedores, no los nuestros)",
+    "emailProvidersP": "Cuando conectas Gmail, Outlook o una cuenta de Fastmail / IMAP, MCPEmails se autentica con ese proveedor usando las credenciales que proporcionas. La propia política de privacidad de tu proveedor de correo rige los datos guardados en tu buzón. MCPEmails accede a tu buzón solo cuando tu agente hace una llamada a una herramienta, y solo para los mensajes o carpetas específicos que la herramienta solicita.",
+    "noBrokersTitle": "5.3 Sin intermediarios de datos ni redes publicitarias",
+    "noBrokersP": "No compartimos ningún dato con intermediarios de datos, redes publicitarias, plataformas de redes sociales ni empresas de analíticas que construyen perfiles de usuario.",
+    "legalDisclosuresTitle": "5.4 Divulgaciones legales",
+    "legalDisclosuresP": "Podemos divulgar datos personales si lo exige la ley, un proceso legal válido (como una orden judicial o citación), o para proteger los derechos, la propiedad o la seguridad de MCPEmails, nuestros usuarios o el público. Cuando la ley lo permita, notificaremos a los usuarios afectados antes de divulgar sus datos.",
+    "businessTransfersTitle": "5.5 Transferencias empresariales",
+    "businessTransfersP": "En caso de fusión, adquisición o venta de activos, los datos personales pueden transferirse como parte de esa transacción. Notificaremos a los usuarios a través de la dirección de correo de su cuenta antes de que ocurra cualquier transferencia de este tipo y antes de que sus datos queden sujetos a una política de privacidad diferente."
+  },
+  "internationalTransfers": {
+    "title": "6. Transferencias internacionales de datos",
+    "p1": "MCPEmails se opera desde Noruega, que está sujeta al marco de protección de datos del Espacio Económico Europeo (EEE). Si accedes al servicio desde fuera del EEE, tus datos pueden transferirse y tratarse en países dentro del EEE.",
+    "p2": "Nuestros subencargados de infraestructura (Supabase, Vercel) operan bajo Cláusulas Contractuales Tipo (CCT) aprobadas por la Comisión Europea para transferencias de datos a terceros países. Para Stripe, el tratamiento está cubierto por su certificación del Marco de Privacidad de Datos UE-EE. UU.",
+    "p3": "Los clientes empresariales pueden optar por almacenar todos los datos de cuenta y configuración exclusivamente en infraestructura ubicada en la UE (región de Fráncfort) sin coste adicional."
+  },
+  "yourRights": {
+    "title": "7. Tus derechos",
+    "intro": "Según tu ubicación, puedes tener los siguientes derechos sobre tus datos personales:",
+    "rights": [
+      {
+        "term": "Acceso.",
+        "desc": " Solicitar una copia de todos los datos personales que tenemos sobre ti."
+      },
+      {
+        "term": "Rectificación.",
+        "desc": " Pedirnos que corrijamos datos inexactos o incompletos."
+      },
+      {
+        "term": "Supresión (\"derecho al olvido\").",
+        "desc": " Solicitar la eliminación de tus datos personales. Puedes activarlo tú mismo eliminando tu cuenta en Panel → Configuración → Eliminar cuenta."
+      },
+      {
+        "term": "Limitación.",
+        "desc": " Pedirnos que limitemos el tratamiento de tus datos en determinadas circunstancias."
+      },
+      {
+        "term": "Portabilidad de datos.",
+        "desc": " Solicitar tus datos en un formato legible por máquina (JSON)."
+      },
+      {
+        "term": "Oposición.",
+        "desc": " Oponerte al tratamiento basado en intereses legítimos."
+      },
+      {
+        "term": "Retirar el consentimiento.",
+        "desc": " Cuando el tratamiento se base en el consentimiento, retirarlo en cualquier momento sin afectar a la licitud del tratamiento previo."
+      }
+    ],
+    "exercise": "Para ejercer cualquiera de estos derechos, escríbenos a <email></email>. Responderemos en un plazo de 30 días (o 72 horas para solicitudes urgentes relacionadas con la seguridad). Podemos pedirte que verifiques tu identidad antes de procesar la solicitud.",
+    "complaint": "Si te encuentras en el EEE o el Reino Unido, tienes derecho a presentar una reclamación ante tu autoridad de control local. En Noruega, esta es el <b>Datatilsynet</b> (datatilsynet.no)."
+  },
+  "security": {
+    "title": "8. Seguridad",
+    "intro": "Nos tomamos en serio la seguridad de tus datos e implementamos medidas técnicas y organizativas adecuadas, entre ellas:",
+    "measures": [
+      "Todos los datos en tránsito se cifran usando TLS 1.2 o superior. Las conexiones que no admiten TLS se rechazan.",
+      "Los tokens de OAuth y las credenciales IMAP se cifran en reposo usando AES-256-GCM. La clave de cifrado se guarda en una instancia separada de Supabase Vault y nunca se ubica junto a los datos cifrados.",
+      "Las claves de API se procesan con hash SHA-256 antes de almacenarse. La clave en bruto no puede recuperarse a partir del hash.",
+      "El acceso a la base de datos está protegido por políticas de Seguridad a Nivel de Fila (RLS) que impiden que un espacio de trabajo acceda a los datos de otro, incluso en caso de un error de lógica de consulta.",
+      "El acceso administrativo a la infraestructura de producción requiere autenticación multifactor y queda registrado."
+    ],
+    "reportP": "A pesar de estas medidas, ningún sistema es perfectamente seguro. Si descubres una vulnerabilidad de seguridad, repórtala de forma responsable a <securityEmail></securityEmail>. Procuramos acusar recibo de los informes en un plazo de 24 horas y resolver las vulnerabilidades confirmadas en 72 horas para los problemas críticos.",
+    "breachP": "En caso de una violación de datos personales que probablemente entrañe un riesgo para tus derechos y libertades, notificaremos a los usuarios afectados y a la autoridad de control pertinente en un plazo de 72 horas desde que tengamos conocimiento de la violación, conforme al Artículo 33 del RGPD."
+  },
+  "children": {
+    "title": "9. Privacidad de los menores",
+    "p": "MCPEmails no está dirigido a menores de 16 años. No recopilamos conscientemente datos personales de nadie menor de 16 años. Si crees que hemos recopilado inadvertidamente datos de un menor, contáctanos en <email></email> y los eliminaremos sin demora."
+  },
+  "changes": {
+    "title": "10. Cambios en esta política",
+    "intro": "Podemos actualizar esta Política de privacidad de vez en cuando. Cuando hagamos cambios materiales (como recopilar nuevas categorías de datos o compartir datos con nuevos terceros):",
+    "list": [
+      "Actualizaremos la fecha de «Última actualización» en la parte superior de esta página.",
+      "Enviaremos una notificación por correo a la dirección registrada en tu cuenta al menos 14 días antes de que los cambios entren en vigor.",
+      "Mostraremos un aviso destacado en el panel durante 14 días después de que el cambio entre en vigor."
+    ],
+    "outro": "Tu uso continuado del servicio después de que un cambio entre en vigor constituye la aceptación de la política actualizada. Si no estás de acuerdo con un cambio material, puedes eliminar tu cuenta antes de la fecha de entrada en vigor."
+  },
+  "contact": {
+    "title": "11. Contáctanos",
+    "intro": "Si tienes preguntas sobre esta Política de privacidad, deseas ejercer un derecho como interesado o quieres reportar una preocupación de privacidad, contáctanos:",
+    "emailLabel": "Correo",
+    "securityLabel": "Problemas de seguridad",
+    "postalLabel": "Dirección postal",
+    "responseLabel": "Tiempo de respuesta",
+    "responseValue": "Respondemos a todas las solicitudes de privacidad en un plazo de 30 días"
+  },
+  "cta": {
+    "title": "¿Preguntas sobre tus datos?",
+    "sub": "Nuestro equipo de privacidad está aquí para ayudar. Escríbenos y responderemos en un plazo de 30 días.",
+    "contactBtn": "Contactar al equipo de privacidad",
+    "termsBtn": "Lee nuestros Términos"
+  }
+}

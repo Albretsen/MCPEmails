@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon, Btn } from '../Primitives';
 
 /**
@@ -18,6 +19,7 @@ import { Icon, Btn } from '../Primitives';
  */
 
 export function FastmailAppPasswordForm() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [appPassword, setAppPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +41,7 @@ export function FastmailAppPasswordForm() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setErrorMessage(data.error ?? 'Connection failed. Please try again.');
+        setErrorMessage(data.error ?? t('fastmail.errorConnection'));
         setStatus('error');
         return;
       }
@@ -50,7 +52,7 @@ export function FastmailAppPasswordForm() {
         window.location.href = '/dashboard?connected=fastmail';
       }, 800);
     } catch {
-      setErrorMessage('A network error occurred. Please check your connection and try again.');
+      setErrorMessage(t('fastmail.errorNetwork'));
       setStatus('error');
     }
   }
@@ -61,8 +63,8 @@ export function FastmailAppPasswordForm() {
         <div className="success-icon-wrap">
           <Icon name="check" size={28} color="var(--mint-600)" />
         </div>
-        <h2 className="success-heading">Fastmail connected</h2>
-        <p className="success-body">Redirecting you to your inboxes…</p>
+        <h2 className="success-heading">{t('fastmail.successTitle')}</h2>
+        <p className="success-body">{t('fastmail.successBody')}</p>
       </div>
     );
   }
@@ -79,8 +81,8 @@ export function FastmailAppPasswordForm() {
           </svg>
         </div>
         <div>
-          <h1 className="app-password-title">Connect Fastmail</h1>
-          <p className="app-password-subtitle">App password connection</p>
+          <h1 className="app-password-title">{t('fastmail.title')}</h1>
+          <p className="app-password-subtitle">{t('fastmail.subtitle')}</p>
         </div>
       </div>
 
@@ -88,17 +90,18 @@ export function FastmailAppPasswordForm() {
       <div className="app-password-callout">
         <Icon name="shield" size={14} color="var(--cobalt-500)" />
         <p>
-          Use a Fastmail{' '}
-          <a
-            href="https://www.fastmail.com/settings/security/devicekeys"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-link"
-          >
-            app password
-          </a>
-          , not your main Fastmail password. App passwords can be revoked
-          individually without changing your account password.
+          {t.rich('fastmail.callout', {
+            link: (c) => (
+              <a
+                href="https://www.fastmail.com/settings/security/devicekeys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-link"
+              >
+                {c}
+              </a>
+            ),
+          })}
         </p>
       </div>
 
@@ -113,13 +116,13 @@ export function FastmailAppPasswordForm() {
       {/* Email field */}
       <div className="form-field">
         <label className="form-label" htmlFor="fm-email">
-          Fastmail email address
+          {t('fastmail.emailLabel')}
         </label>
         <input
           id="fm-email"
           type="email"
           className="form-input"
-          placeholder="you@fastmail.com"
+          placeholder={t('fastmail.emailPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -132,14 +135,14 @@ export function FastmailAppPasswordForm() {
       {/* App password field */}
       <div className="form-field">
         <label className="form-label" htmlFor="fm-app-password">
-          App password
+          {t('fastmail.appPasswordLabel')}
         </label>
         <div className="input-with-toggle">
           <input
             id="fm-app-password"
             type={showPassword ? 'text' : 'password'}
             className="form-input"
-            placeholder="xxxx-xxxx-xxxx-xxxx"
+            placeholder={t('fastmail.appPasswordPlaceholder')}
             value={appPassword}
             onChange={(e) => setAppPassword(e.target.value)}
             required
@@ -149,7 +152,7 @@ export function FastmailAppPasswordForm() {
           <button
             type="button"
             className="toggle-visibility"
-            aria-label={showPassword ? 'Hide app password' : 'Show app password'}
+            aria-label={showPassword ? t('fastmail.hideAppPassword') : t('fastmail.showAppPassword')}
             onClick={() => setShowPassword((prev) => !prev)}
             disabled={status === 'loading'}
           >
@@ -157,8 +160,9 @@ export function FastmailAppPasswordForm() {
           </button>
         </div>
         <p className="form-hint">
-          In Fastmail: Settings → Privacy &amp; Security → App Passwords → New app password.
-          Select <em>Mail (IMAP/SMTP)</em> access.
+          {t.rich('fastmail.hint', {
+            em: (c) => <em>{c}</em>,
+          })}
         </p>
       </div>
 
@@ -169,14 +173,14 @@ export function FastmailAppPasswordForm() {
         disabled={status === 'loading' || !email || !appPassword}
         className="app-password-submit"
       >
-        {status === 'loading' ? 'Verifying…' : 'Connect inbox'}
+        {status === 'loading' ? t('fastmail.verifying') : t('fastmail.connectInbox')}
       </Btn>
 
       {/* Back link */}
       <div className="app-password-footer">
         <a href="/auth/fastmail" className="back-link">
           <Icon name="chevron" size={14} className="back-icon" />
-          Connect with Fastmail OAuth instead
+          {t('fastmail.oauthInstead')}
         </a>
       </div>
     </form>

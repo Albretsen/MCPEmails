@@ -1,0 +1,265 @@
+{
+  "meta": {
+    "title": "文档",
+    "description": "几分钟内开始使用 MCPEmails。面向 Gmail、Outlook 和 IMAP 智能体的快速入门指南、工具参考和示例响应。"
+  },
+  "hero": {
+    "eyebrow": "文档",
+    "titleLine1": "四步即可让你的智能体",
+    "titleLine2": "拥有一个收件箱。",
+    "lead": "连接任意电子邮件账户，把一个 URL 粘贴到支持 OAuth 的 MCP 客户端中并授权。不支持 OAuth 的客户端则改用 API 密钥。下方提供完整的工具参考和连接指南。",
+    "ctaQuickStart": "快速开始",
+    "ctaOAuth": "OAuth（claude.ai）",
+    "ctaTools": "工具参考",
+    "ctaProviders": "服务商支持"
+  },
+  "quickstart": {
+    "eyebrow": "快速开始",
+    "heading": "几分钟内即可上手运行。",
+    "sub": "无需 SDK。MCPEmails 通过 HTTP 讲标准 MCP，因此可接入任何兼容 MCP 的智能体。",
+    "steps": {
+      "signup": {
+        "label": "注册并连接收件箱",
+        "heading": "创建账户并连接 Gmail",
+        "body": "在 mcpemails.com 注册，然后前往 仪表盘 → 收件箱 → 连接收件箱。选择 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 流程或粘贴一个应用密码。你的收件箱在一分钟内即可就绪。",
+        "cta": "连接你的收件箱 →"
+      },
+      "apikey": {
+        "label": "创建 API 密钥",
+        "heading": "为你的智能体生成一个 bearer 令牌",
+        "body": "在 仪表盘 → API 密钥 中，点击“创建密钥”。为它命名，选择你的智能体所需的权限范围（read:email 和/或 send:email），然后复制密钥。它仅显示一次。"
+      },
+      "addclient": {
+        "label": "将 MCPEmails 添加到你的智能体",
+        "heading": "把 MCP 端点粘贴到你的客户端中",
+        "body": "在下方选择你的客户端对应的标签页。支持 OAuth 2.0 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等）只需粘贴 URL 并授权，无需 API 密钥。不支持 OAuth 的客户端以及脚本化访问，则使用第 02 步中的 API 密钥。"
+      },
+      "firstcall": {
+        "label": "发起你的第一次调用",
+        "heading": "让你的智能体检查你的收件箱",
+        "body": "无需复制粘贴收件箱 UUID。你的智能体会先调用 list_inboxes 来发现每一个已连接的收件箱及其 UUID，然后你只需说：“检查我的收件箱并总结最近 5 封未读邮件。”"
+      }
+    }
+  },
+  "copy": {
+    "copy": "复制",
+    "copied": "已复制！"
+  },
+  "clientTabs": {
+    "oauth": "OAuth 客户端",
+    "claude": "API 密钥（Desktop）",
+    "cursor": "API 密钥（Cursor）",
+    "raw": "原始 cURL"
+  },
+  "endpoint": {
+    "eyebrow": "端点",
+    "heading": "一个 URL，标准 MCP。",
+    "sub": "所有流量都发往单个 Streamable HTTP 端点。使用来自仪表盘的 bearer 令牌进行身份验证。",
+    "bodyMethods": "发送一个 JSON-RPC 2.0 请求体。支持的方法：<code>initialize</code>、<code>tools/list</code>、<code>tools/call</code>。",
+    "infoTransport": "传输：<b>Streamable HTTP</b>（MCP 2025-06-18）",
+    "infoAuth": "认证：<b>Authorization: Bearer &lt;api-key&gt;</b>",
+    "infoRateLimits": "速率限制：每个密钥 <b>100 次/分钟 · 1,000 次/小时 · 10,000 次/天</b>",
+    "infoFormat": "响应格式：<b>JSON-RPC 2.0</b>",
+    "handshakeLabel": "初始化握手"
+  },
+  "oauth": {
+    "eyebrow": "OAuth 连接",
+    "heading": "对支持 OAuth 的客户端零配置。",
+    "sub": "支持 OAuth 2.0 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等）会通过授权码 + PKCE 自动连接。无需 API 密钥，无需配置文件。粘贴 URL 并点击连接。",
+    "step1": "<b>第 1 步：</b>前往 claude.ai → 自定义 → 连接器 → 添加连接器",
+    "step2": "<b>第 2 步：</b>把 <code>https://www.mcpemails.com/api/mcp</code> 粘贴为服务器 URL",
+    "step3": "<b>第 3 步：</b>点击连接。MCPEmails 会打开一个授权界面",
+    "step4": "<b>第 4 步：</b>用你的 mcpemails 账户登录并批准访问",
+    "stepDone": "<b>完成：</b>全部六个工具已上线。claude.ai 会自动刷新令牌",
+    "howTitle": "底层工作原理",
+    "howP1": "claude.ai 通过 <b>RFC 7591 动态客户端注册</b>自行注册，因此你永远不必预先注册客户端 ID。",
+    "howP2": "授权使用 <b>OAuth 2.0 授权码 + PKCE</b>（RFC 7636），因此从不传输任何客户端密钥。",
+    "howP3": "令牌的权限范围严格限定为你所批准的权限：<code>read:email</code> 和/或 <code>send:email</code>。",
+    "noOauthNote": "<b>使用不支持 OAuth 的客户端？</b>在 仪表盘 → API 密钥 中创建一个 API 密钥，并将其作为 bearer 令牌传递。API 密钥连接和 OAuth 连接使用同一个 MCP 端点和同样的六个工具。"
+  },
+  "tools": {
+    "eyebrow": "工具参考",
+    "heading": "六个工具。满足你智能体所需的全部邮件操作。",
+    "sub": "先用 <code>list_inboxes</code> 发现可用的收件箱及其 UUID。其余五个工具各需要一个由该调用返回的 <code>inbox_id</code>。点击“显示示例”可查看完整的请求和响应。",
+    "noParams": "无参数。使用空的参数对象进行调用：",
+    "showExample": "显示示例请求与响应",
+    "hideExample": "隐藏示例请求与响应",
+    "labelRequest": "请求",
+    "labelResponse": "响应",
+    "thParameter": "参数",
+    "thType": "类型",
+    "thRequired": "必需",
+    "thDescription": "说明",
+    "badgeRequired": "必需",
+    "badgeOptional": "可选",
+    "list_inboxes": {
+      "title": "列出收件箱",
+      "desc": "返回当前 API 密钥或 OAuth 令牌可访问的所有收件箱。先调用此工具以发现 inbox_id 值，从而无需从仪表盘复制粘贴 UUID。"
+    },
+    "list_inbox": {
+      "title": "列出收件箱内容",
+      "desc": "从已连接的收件箱列出邮件摘要，最新的在前。支持分页、文件夹选择和未读筛选。",
+      "params": {
+        "inbox_id": "要列出的收件箱的 UUID。先调用 list_inboxes 以发现可用的收件箱 ID。",
+        "limit": "返回的最大结果数。默认 20，最大 100。",
+        "offset": "从零开始的分页偏移量。默认 0。",
+        "folder": "要列出的文件夹。默认为 \"INBOX\"。其他取值：\"SENT\"、\"DRAFTS\"、\"TRASH\"。",
+        "unread_only": "仅返回未读邮件。默认 false。"
+      }
+    },
+    "read_email": {
+      "title": "读取邮件",
+      "desc": "按 ID 获取单封邮件的完整内容，包括纯文本正文、可选的清理过的 HTML，以及可选的附件数据。",
+      "params": {
+        "inbox_id": "包含该邮件的收件箱的 UUID。调用 list_inboxes 以获取可用的收件箱 ID。",
+        "message_id": "来自 list_inbox 或 search_emails 的服务商邮件 ID。",
+        "include_html": "包含清理过的 HTML 正文。默认 false。",
+        "include_attachments": "包含 base64 附件数据。默认 false。",
+        "mark_as_read": "获取后将邮件标记为已读。默认 false。"
+      }
+    },
+    "search_emails": {
+      "title": "搜索邮件",
+      "desc": "使用服务商原生查询语法搜索收件箱。Gmail 支持 Gmail 搜索运算符；Outlook 使用 $search；Fastmail 和 IMAP 收件箱使用文本搜索。",
+      "params": {
+        "inbox_id": "要搜索的收件箱的 UUID。调用 list_inboxes 以获取可用的收件箱 ID。",
+        "query": "搜索查询。对于 Gmail：\"from:alice@example.com after:2026/01/01\"。对于 Outlook：自然语言或 KQL 查询。",
+        "limit": "最大结果数。默认 20，最大 100。",
+        "offset": "分页偏移量。默认 0。",
+        "include_folders": "将搜索限定在这些文件夹名称内。默认：搜索所有文件夹。"
+      }
+    },
+    "send_email": {
+      "title": "发送邮件",
+      "desc": "从已连接的收件箱发送一封新邮件。支持纯文本、可选 HTML 正文、抄送/密送以及文件附件（总计最多 10 MB）。",
+      "params": {
+        "inbox_id": "用于发送的收件箱的 UUID。调用 list_inboxes 以获取可用的收件箱 ID。",
+        "to": "收件人电子邮件地址。最多 50 个。",
+        "subject": "邮件主题行。最多 998 个字符。",
+        "body": "纯文本邮件正文。",
+        "cc": "抄送收件人。默认 []。",
+        "bcc": "密送收件人。默认 []。",
+        "html_body": "正文的 HTML 版本（multipart/alternative）。调用方负责确保 HTML 安全。",
+        "reply_to": "Reply-To 头地址。",
+        "attachments": "文件附件。每一项：'{' filename, mime_type, data (base64) '}'。最多 20 项，总计 10 MB。"
+      }
+    },
+    "reply_to_email": {
+      "title": "回复邮件",
+      "desc": "对一封现有邮件发送回复。会话头（In-Reply-To、References）会自动设置。支持全部回复和附件。",
+      "params": {
+        "inbox_id": "包含原始邮件的收件箱的 UUID。调用 list_inboxes 以获取可用的收件箱 ID。",
+        "message_id": "被回复邮件的服务商邮件 ID。",
+        "body": "纯文本回复正文。",
+        "html_body": "可选的回复 HTML 版本。",
+        "reply_all": "回复全部原始收件人（To + Cc）。默认 false。",
+        "attachments": "文件附件。与 send_email 模式相同。最多 20 项。"
+      }
+    }
+  },
+  "errors": {
+    "eyebrow": "错误代码",
+    "heading": "错误代码与重试指南。",
+    "sub": "认证、权限范围和速率限制失败会返回一个带有数字代码的 JSON-RPC <code>error</code> 对象。工具执行失败（收件箱未找到、服务商错误等）会返回一个正常的 <code>result</code>，其中 <code>isError: true</code>，并在 <code>content[0].text</code> 中提供人类可读的消息。",
+    "thCode": "代码",
+    "thType": "类型",
+    "thWhen": "发生时机",
+    "thRetryable": "可重试",
+    "retryableNo": "否",
+    "exampleLabel": "执行错误响应示例",
+    "rows": {
+      "auth": "API 密钥缺失、格式错误、已撤销或已过期。当 API 密钥缺少所调用工具所需的权限范围时也会返回。",
+      "method": "未知的 JSON-RPC 方法（例如调用 initialize、tools/list、tools/call 以外的方法）",
+      "param": "未知的工具名称，或 tools/call 中缺少 / 无效的参数",
+      "rate": "超出每密钥速率限制或套餐每日配额。检查 data.error_code：\"rate_limit_exceeded\" 还是 \"quota_exceeded\"。重试前检查 data.retry_after（秒）。",
+      "tool": "工具已执行但遇到错误（收件箱未找到、邮件未找到、服务商认证失败、收件人无效、附件过大、服务商 5xx）。错误描述在 content[0].text 中。"
+    }
+  },
+  "rateLimits": {
+    "eyebrow": "速率限制",
+    "heading": "速率限制与配额。",
+    "perKeyTag": "每密钥滚动窗口",
+    "perKeyHeading": "100 次/分钟 · 1,000 次/小时 · 10,000 次/天",
+    "perKeyBody": "无论套餐如何，均按每个 API 密钥强制执行。超出时，服务器返回错误代码 <code>-32029</code>，并附带 <code>data.error_code: \"rate_limit_exceeded\"</code> 和一个 <code>data.retry_after</code> 字段（秒）。重试前请遵守该值。",
+    "planTag": "套餐每分钟上限",
+    "planHeading": "免费 60 次/分钟 · Solo 300 次/分钟 · Team 1,000 次/分钟",
+    "planBody": "用量是无限量的；这是一个每工作区的合理使用突发限制（在你所有 API 密钥间汇总）。超出时，调用会返回 <code>data.error_code: \"rate_limit_exceeded\"</code>，并附带 <code>data.window: \"per_minute\"</code> 和一个 <code>data.retry_after</code> 倒计时（秒）。升级你的套餐可获得更高的上限。",
+    "retryTag": "安全重试",
+    "retryHeading": "始终遵守 retry_after；切勿盲目重试发送",
+    "retryBody": "对于 <code>rate_limit_exceeded</code> 错误，请在重试前等待 <code>data.retry_after</code> 秒。对于 <code>provider_error</code> 请使用指数退避。请勿在 <code>provider_error</code> 时自动重试 <code>send_email</code>，因为该邮件可能已被服务商接受。"
+  },
+  "cta": {
+    "heading": "准备好连接你的收件箱了吗？",
+    "sub": "从免费套餐开始：无限量，无需信用卡。升级到 Solo 或 Team 可获得更高的突发限额和团队功能。",
+    "primary": "免费开始使用",
+    "secondary": "查看价格"
+  },
+  "providers": {
+    "meta": {
+      "title": "服务商支持",
+      "description": "查看 MCPEmails 支持哪些电子邮件服务商，以及各服务商分别可用哪些功能：Gmail、Outlook、Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP。"
+    },
+    "labels": {
+      "generic": "通用 IMAP"
+    },
+    "features": {
+      "read": "读取邮件",
+      "search": "搜索",
+      "send": "发送邮件",
+      "reply": "回复",
+      "forward": "转发",
+      "flags": "已读/未读 + 星标标记",
+      "folders": "文件夹",
+      "labels": "标签 / 标记",
+      "move": "移动",
+      "copy": "复制",
+      "delete": "删除 / 移至回收站",
+      "permanent_delete": "永久删除（彻底清除）",
+      "drafts": "草稿（创建 / 编辑 / 发送）",
+      "contacts": "联系人 API",
+      "scheduling": "定时发送",
+      "search_syntax": "搜索语法"
+    },
+    "sections": {
+      "Core": "核心",
+      "Flags & state": "标记与状态",
+      "Folders & labels": "文件夹与标签",
+      "Delete": "删除",
+      "Drafts": "草稿",
+      "Contacts": "联系人",
+      "Scheduling": "定时",
+      "Search": "搜索"
+    },
+    "hero": {
+      "eyebrow": "服务商支持",
+      "heading": "各服务商分别支持什么。",
+      "lead": "MCPEmails 连接 Gmail、Outlook、Fastmail 以及任何 IMAP 收件箱（iCloud、Yahoo、Zoho、Yandex、通用）。并非每个服务商都提供相同的 API —— 此表精确展示了每一个服务商目前支持的内容。",
+      "ctaConnect": "连接一个收件箱",
+      "ctaBack": "返回文档"
+    },
+    "legend": {
+      "supported": "支持",
+      "notSupported": "不支持",
+      "planned": "计划中（尚未上线）",
+      "imapNote": "<b>iCloud、Yahoo、Zoho、Yandex 和通用 IMAP</b> 全部通过同一个 Deno IMAP/SMTP 传输运行，并共享完全相同的能力。这些列分开展示只是为了清晰，但它们的功能集是相同的。"
+    },
+    "ariaSupported": "支持",
+    "ariaNotSupported": "不支持",
+    "plannedBadge": "计划中",
+    "table": {
+      "feature": "功能"
+    },
+    "notes": {
+      "gmail": "<b>Gmail —— 文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。",
+      "permanentDelete": "<b>永久删除：</b>Gmail 和 Outlook 在你删除时会移至回收站 —— 它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
+      "contacts": "<b>联系人 API：</b>Gmail 使用 Google People API；Outlook 使用 Microsoft Graph <code>/contacts</code>。Fastmail CardDAV 和基于 IMAP 的联系人将推迟到后续版本。",
+      "scheduling": "<b>定时：</b>计划通过一个服务器端队列为所有服务商提供（而非服务商原生定时）。没有任何服务商提供可在不于服务器端存储凭据的情况下访问的原生定时发送 API。"
+    },
+    "cta": {
+      "heading": "准备好连接你的收件箱了吗？",
+      "sub": "免费套餐：无限量连接，无需信用卡。",
+      "primary": "免费开始使用",
+      "secondary": "阅读文档"
+    }
+  }
+}

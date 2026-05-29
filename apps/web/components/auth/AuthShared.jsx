@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { MIcon } from '../MarketingPrimitives';
 
 export function ThemeBtn() {
+  const t = useTranslations('auth');
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
@@ -24,8 +26,8 @@ export function ThemeBtn() {
     <button
       className="theme-toggle"
       onClick={() => setDark((d) => !d)}
-      title="Toggle theme"
-      aria-label="Toggle theme"
+      title={t('shared.toggleTheme')}
+      aria-label={t('shared.toggleTheme')}
     >
       <MIcon name={dark ? 'sun' : 'moon'} size={16} color="currentColor" />
     </button>
@@ -75,6 +77,7 @@ export function GitHubIcon() {
 }
 
 export function SocialButton({ icon, label, loading, onClick, disabled }) {
+  const t = useTranslations('auth');
   return (
     <button
       type="button"
@@ -93,16 +96,17 @@ export function SocialButton({ icon, label, loading, onClick, disabled }) {
       }}
     >
       {loading ? <Spinner size={18} /> : icon}
-      {loading ? 'Signing in…' : label}
+      {loading ? t('shared.signingIn') : label}
     </button>
   );
 }
 
 export function OrDivider() {
+  const t = useTranslations('auth');
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0 8px' }}>
       <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
-      <span style={{ fontSize: 12, color: 'var(--fg-3)', fontFamily: 'var(--font-sans)' }}>or</span>
+      <span style={{ fontSize: 12, color: 'var(--fg-3)', fontFamily: 'var(--font-sans)' }}>{t('shared.or')}</span>
       <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
     </div>
   );

@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "title": "价格",
+    "description": "每个套餐（包括免费版）都拥有无限量的收件箱、调用、API 密钥和团队成员。付费套餐额外提供更高的突发限额、团队功能和支持。在任何套餐中，邮件都从不存储。"
+  },
+  "hero": {
+    "eyebrow": "价格",
+    "titleLine1": "无限量，免费。",
+    "titleLine2": "升级获得更强能力。",
+    "lead": "每个套餐（包括免费版）都拥有无限量的收件箱、调用、API 密钥和团队成员。付费套餐额外提供更高的突发限额、团队功能和支持。在任何套餐中，邮件都从不存储。"
+  },
+  "billing": {
+    "monthly": "按月",
+    "annual": "按年",
+    "save": "节省约 17%"
+  },
+  "card": {
+    "perForever": "/永久",
+    "perMonth": "/月",
+    "billedYearly": "按 ${total}/年 计费"
+  },
+  "plans": {
+    "free": {
+      "name": "免费",
+      "desc": "一切功能，无限量。献给所有用 MCP 智能体进行构建的人。",
+      "cta": "免费开始",
+      "features": [
+        "无限量连接收件箱",
+        "无限量 MCP 工具调用",
+        "无限量 API 密钥和团队成员",
+        "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP",
+        "60 次请求 / 分钟",
+        "社区支持"
+      ]
+    },
+    "solo": {
+      "name": "Solo",
+      "desc": "面向全天候运行智能体的重度用户。",
+      "cta": "获取 Solo",
+      "features": [
+        "包含免费版的一切，无限量",
+        "300 次请求 / 分钟（5 倍突发）",
+        "完整使用分析（90 天历史）",
+        "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP",
+        "邮件支持"
+      ]
+    },
+    "pro": {
+      "name": "Team",
+      "badge": "最受欢迎",
+      "desc": "面向需要角色、SSO 和审计日志的企业和团队。",
+      "cta": "获取 Team",
+      "features": [
+        "包含 Solo 的一切，无限量",
+        "1,000 次请求 / 分钟",
+        "团队角色和多个工作区",
+        "SSO（SAML / OIDC）+ 审计日志",
+        "完整使用分析（1 年历史）",
+        "优先支持"
+      ]
+    }
+  },
+  "cardsFootnote": {
+    "all": "所有套餐均包含：邮件从不存储 · 凭据静态加密 · 欧盟和美国托管",
+    "custom": "需要定制方案？<contact>联系我们</contact>。"
+  },
+  "comparison": {
+    "eyebrow": "完整对比",
+    "title": "并排查看一切。",
+    "featureCol": "功能",
+    "free": "免费",
+    "solo": "Solo",
+    "team": "Team",
+    "sections": {
+      "usage": {
+        "label": "用量",
+        "rows": {
+          "inboxes": "连接的收件箱",
+          "calls": "MCP 工具调用",
+          "keys": "API 密钥",
+          "members": "团队成员",
+          "burst": "突发速率限制"
+        }
+      },
+      "providers": {
+        "label": "电子邮件服务商",
+        "rows": {
+          "gmail": "Gmail（OAuth）",
+          "outlook": "Outlook / Microsoft 365（OAuth）",
+          "fastmail": "Fastmail（OAuth + 应用密码）",
+          "appPassword": "iCloud、Yahoo、Zoho、Yandex（应用密码）",
+          "imap": "任何 IMAP / SMTP 邮箱"
+        }
+      },
+      "mcpTools": {
+        "label": "MCP 工具"
+      },
+      "analytics": {
+        "label": "分析与安全",
+        "rows": {
+          "dashboard": "使用分析仪表盘",
+          "history": "分析历史",
+          "roles": "团队角色和工作区",
+          "sso": "SSO（SAML / OIDC）",
+          "audit": "审计日志"
+        }
+      },
+      "privacy": {
+        "label": "隐私与安全",
+        "rows": {
+          "neverStored": "邮件从不存储",
+          "encrypted": "凭据静态加密",
+          "soc2": "可应要求提供 SOC 2 Type II 报告"
+        }
+      },
+      "support": {
+        "label": "支持",
+        "rows": {
+          "community": "社区论坛",
+          "email": "邮件支持",
+          "priority": "优先支持"
+        }
+      }
+    },
+    "values": {
+      "unlimited": "无限量",
+      "burstFree": "60 / 分钟",
+      "burstSolo": "300 / 分钟",
+      "burstPro": "1,000 / 分钟",
+      "history7": "7 天",
+      "history90": "90 天",
+      "history1y": "1 年"
+    }
+  },
+  "faq": {
+    "eyebrow": "常见问题",
+    "title": "常见疑问。",
+    "items": [
+      {
+        "q": "真的没有用量限制吗？",
+        "a": "没错。连接的收件箱、MCP 工具调用、API 密钥和团队成员在每个套餐（包括免费版）中都是无限量的。唯一的限制是每分钟的合理使用上限（免费版 60/分钟，Solo 300/分钟，Team 1,000/分钟），用于保护平台免受滥用。付费套餐额外提供更高的突发吞吐量、团队功能和支持，而不是更多用量。"
+      },
+      {
+        "q": "什么算作一次 MCP 调用？",
+        "a": "对你的 /mcp 端点发起的每一次 JSON-RPC 工具调用都算作一次调用：list_inboxes、list_inbox、read_email、search_emails、send_email 或 reply_to_email。调用是无限量的；它们只计入你每分钟的合理使用上限。"
+      },
+      {
+        "q": "我的邮件内容会被存储在任何地方吗？",
+        "a": "不会。邮件正文、主题、附件和会话内容都是从你的服务商实时获取并直接返回给智能体。两次调用之间不会持久化任何内容。我们存储的唯一数据是一个加密的 OAuth 令牌或应用密码，以便我们能为后续请求进行身份验证。"
+      },
+      {
+        "q": "Solo 和 Team 有什么区别？",
+        "a": "免费版已经为每个人提供了无限用量。Solo（$12/月）面向重度运行智能体的高级用户：它将突发速率限制提升至每分钟 300 次请求，把分析历史延长至 90 天，并增加邮件支持。Team（$49/月）面向企业：每分钟 1,000 次上限、团队角色和多个工作区、SSO（SAML/OIDC）、审计日志、1 年分析历史以及优先支持。"
+      },
+      {
+        "q": "我可以更改或取消套餐吗？",
+        "a": "可以。随时在仪表盘的计费部分升级、降级或取消。如果你取消付费套餐，你将保留访问权限直到当前计费周期结束，然后自动降至免费版。由于免费版是无限量的，你只会失去更高的突发限额、团队功能和支持。"
+      },
+      {
+        "q": "年度折扣如何计算？",
+        "a": "按年付费相比按月付费可节省约 17%：Solo 为 $120/年，Team 为 $490/年。你会一次性预付 12 个月。如果你在年中取消，我们会退还未使用的整月费用。"
+      },
+      {
+        "q": "支持哪些电子邮件服务商？",
+        "a": "Gmail 和 Microsoft 365 / Outlook 使用 OAuth 2.0。Fastmail 同时支持 OAuth 和应用密码。iCloud、Yahoo、Zoho 和 Yandex 通过应用专用密码连接，任何其他邮箱都可通过通用 IMAP / SMTP 连接器使用。"
+      },
+      {
+        "q": "有退款政策吗？",
+        "a": "如果你在首张付费账单的 30 天内不满意，请联系我们获得全额退款，无需任何理由。"
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "准备好为你的智能体配备一个收件箱了吗？",
+    "sub": "从免费版开始：无需信用卡，从第一天起就无限量。当你需要更高的突发限额或团队功能时再升级。",
+    "ctaPrimary": "免费开始使用",
+    "ctaSecondary": "阅读文档"
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "title": "Tarifs",
+    "description": "Chaque formule, y compris Gratuit, offre des boîtes, des appels, des clés API et des membres d'équipe illimités. Les formules payantes ajoutent des limites de pointe plus élevées, des fonctionnalités d'équipe et du support. Les e-mails ne sont jamais stockés, quelle que soit la formule."
+  },
+  "hero": {
+    "eyebrow": "Tarifs",
+    "titleLine1": "Illimité, gratuit.",
+    "titleLine2": "Passez à la vitesse supérieure.",
+    "lead": "Chaque formule, y compris Gratuit, offre des boîtes, des appels, des clés API et des membres d'équipe illimités. Les formules payantes ajoutent des limites de pointe plus élevées, des fonctionnalités d'équipe et du support. Les e-mails ne sont jamais stockés, quelle que soit la formule."
+  },
+  "billing": {
+    "monthly": "Mensuel",
+    "annual": "Annuel",
+    "save": "Économisez ~17 %"
+  },
+  "card": {
+    "perForever": "/pour toujours",
+    "perMonth": "/mois",
+    "billedYearly": "Facturé {total} $/an"
+  },
+  "plans": {
+    "free": {
+      "name": "Gratuit",
+      "desc": "Tout, en illimité. Pour quiconque construit avec des agents MCP.",
+      "cta": "Commencer gratuitement",
+      "features": [
+        "Boîtes connectées illimitées",
+        "Appels d'outils MCP illimités",
+        "Clés API et membres d'équipe illimités",
+        "Gmail, Outlook, iCloud, Fastmail et toute boîte IMAP",
+        "60 requêtes / minute",
+        "Support communautaire"
+      ]
+    },
+    "solo": {
+      "name": "Solo",
+      "desc": "Pour les utilisateurs intensifs qui font tourner des agents en continu.",
+      "cta": "Choisir Solo",
+      "features": [
+        "Tout ce qui est dans Gratuit, en illimité",
+        "300 requêtes / minute (5× en pointe)",
+        "Analytique d'usage complète (historique de 90 jours)",
+        "Gmail, Outlook, iCloud, Fastmail et toute boîte IMAP",
+        "Support par e-mail"
+      ]
+    },
+    "pro": {
+      "name": "Team",
+      "badge": "Le plus populaire",
+      "desc": "Pour les entreprises et les équipes qui ont besoin de rôles, de SSO et de journaux d'audit.",
+      "cta": "Choisir Team",
+      "features": [
+        "Tout ce qui est dans Solo, en illimité",
+        "1 000 requêtes / minute",
+        "Rôles d'équipe et espaces de travail multiples",
+        "SSO (SAML / OIDC) + journal d'audit",
+        "Analytique d'usage complète (historique d'un an)",
+        "Support prioritaire"
+      ]
+    }
+  },
+  "cardsFootnote": {
+    "all": "Toutes les formules incluent : e-mails jamais stockés · identifiants chiffrés au repos · hébergement UE et US",
+    "custom": "Besoin de quelque chose de sur mesure ? <contact>Contactez-nous</contact>."
+  },
+  "comparison": {
+    "eyebrow": "Comparatif complet",
+    "title": "Tout côte à côte.",
+    "featureCol": "Fonctionnalité",
+    "free": "Gratuit",
+    "solo": "Solo",
+    "team": "Team",
+    "sections": {
+      "usage": {
+        "label": "Usage",
+        "rows": {
+          "inboxes": "Boîtes connectées",
+          "calls": "Appels d'outils MCP",
+          "keys": "Clés API",
+          "members": "Membres d'équipe",
+          "burst": "Limite de débit en pointe"
+        }
+      },
+      "providers": {
+        "label": "Fournisseurs d'e-mail",
+        "rows": {
+          "gmail": "Gmail (OAuth)",
+          "outlook": "Outlook / Microsoft 365 (OAuth)",
+          "fastmail": "Fastmail (OAuth + mot de passe d'application)",
+          "appPassword": "iCloud, Yahoo, Zoho, Yandex (mot de passe d'application)",
+          "imap": "Toute boîte IMAP / SMTP"
+        }
+      },
+      "mcpTools": {
+        "label": "Outils MCP"
+      },
+      "analytics": {
+        "label": "Analytique et sécurité",
+        "rows": {
+          "dashboard": "Tableau de bord d'analytique d'usage",
+          "history": "Historique d'analytique",
+          "roles": "Rôles d'équipe et espaces de travail",
+          "sso": "SSO (SAML / OIDC)",
+          "audit": "Journal d'audit"
+        }
+      },
+      "privacy": {
+        "label": "Confidentialité et sécurité",
+        "rows": {
+          "neverStored": "E-mails jamais stockés",
+          "encrypted": "Identifiants chiffrés au repos",
+          "soc2": "Rapport SOC 2 Type II sur demande"
+        }
+      },
+      "support": {
+        "label": "Support",
+        "rows": {
+          "community": "Forum communautaire",
+          "email": "Support par e-mail",
+          "priority": "Support prioritaire"
+        }
+      }
+    },
+    "values": {
+      "unlimited": "Illimité",
+      "burstFree": "60 / min",
+      "burstSolo": "300 / min",
+      "burstPro": "1 000 / min",
+      "history7": "7 jours",
+      "history90": "90 jours",
+      "history1y": "1 an"
+    }
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Questions fréquentes.",
+    "items": [
+      {
+        "q": "N'y a-t-il vraiment aucune limite d'usage ?",
+        "a": "Exact. Les boîtes connectées, les appels d'outils MCP, les clés API et les membres d'équipe sont illimités sur chaque formule, y compris Gratuit. La seule limite est un plafond d'usage équitable par minute (60/min sur Gratuit, 300/min sur Solo, 1 000/min sur Team) afin de protéger la plateforme des abus. Les formules payantes ajoutent un débit de pointe plus élevé, des fonctionnalités d'équipe et du support, jamais plus d'usage."
+      },
+      {
+        "q": "Qu'est-ce qui compte comme un appel MCP ?",
+        "a": "Chaque invocation d'outil JSON-RPC sur votre point de terminaison /mcp compte pour un appel : list_inboxes, list_inbox, read_email, search_emails, send_email ou reply_to_email. Les appels sont illimités ; ils ne comptent que pour votre plafond d'usage équitable par minute."
+      },
+      {
+        "q": "Le contenu de mes e-mails est-il stocké quelque part ?",
+        "a": "Non. Les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent. Rien n'est conservé entre les appels. La seule donnée que nous stockons est un jeton OAuth chiffré ou un mot de passe d'application afin de pouvoir authentifier les requêtes futures."
+      },
+      {
+        "q": "Quelle est la différence entre Solo et Team ?",
+        "a": "Gratuit offre déjà à tous un usage illimité. Solo (12 $/mois) est destiné aux utilisateurs intensifs qui sollicitent fortement les agents : il élève la limite de débit de pointe à 300 requêtes/minute, étend l'historique d'analytique à 90 jours et ajoute le support par e-mail. Team (49 $/mois) est destiné aux entreprises : un plafond de 1 000/minute, des rôles d'équipe et des espaces de travail multiples, le SSO (SAML/OIDC), un journal d'audit, un historique d'analytique d'un an et un support prioritaire."
+      },
+      {
+        "q": "Puis-je changer ou annuler ma formule ?",
+        "a": "Oui. Passez à une formule supérieure ou inférieure, ou annulez à tout moment depuis la section facturation de votre tableau de bord. Si vous annulez une formule payante, vous conservez l'accès jusqu'à la fin de votre période de facturation, puis vous repassez automatiquement à Gratuit. Comme Gratuit est illimité, vous ne perdez que la limite de pointe supérieure, les fonctionnalités d'équipe et le support."
+      },
+      {
+        "q": "Comment fonctionne la remise annuelle ?",
+        "a": "Payer à l'année permet d'économiser environ 17 % par rapport à la facturation mensuelle : Solo est à 120 $/an et Team à 490 $/an. Vous êtes facturé une fois pour 12 mois d'avance. Si vous annulez en cours d'année, nous remboursons les mois entiers non utilisés."
+      },
+      {
+        "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
+        "a": "Gmail et Microsoft 365 / Outlook utilisent OAuth 2.0. Fastmail prend en charge à la fois OAuth et les mots de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
+      },
+      {
+        "q": "Existe-t-il une politique de remboursement ?",
+        "a": "Si vous n'êtes pas satisfait dans les 30 jours suivant votre première facture payée, contactez-nous pour un remboursement intégral, sans poser de questions."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Prêt à offrir une boîte de réception à votre agent ?",
+    "sub": "Commencez avec Gratuit : sans carte de crédit, illimité dès le premier jour. Passez à une formule supérieure quand vous avez besoin de limites de pointe plus élevées ou de fonctionnalités d'équipe.",
+    "ctaPrimary": "Commencer gratuitement",
+    "ctaSecondary": "Lire la documentation"
+  }
+}

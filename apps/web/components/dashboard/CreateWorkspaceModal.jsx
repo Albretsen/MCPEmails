@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon, Btn } from '../Primitives';
 
 /**
@@ -14,6 +15,7 @@ import { Icon, Btn } from '../Primitives';
  * @param {string}     planLabel  - The plan the new workspace inherits (e.g. "Team").
  */
 export function CreateWorkspaceModal({ onClose, planLabel = 'Team' }) {
+  const tr = useTranslations('dashboardChrome');
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -21,7 +23,7 @@ export function CreateWorkspaceModal({ onClose, planLabel = 'Team' }) {
   const handleCreate = async () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      setError('Enter a name for the workspace.');
+      setError(tr('workspace.errorNameRequired'));
       return;
     }
     setSubmitting(true);
@@ -34,14 +36,14 @@ export function CreateWorkspaceModal({ onClose, planLabel = 'Team' }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error ?? 'Failed to create workspace.');
+        setError(data.error ?? tr('workspace.errorCreateFailed'));
         setSubmitting(false);
         return;
       }
       // The new workspace is now active (cookie set by the route). Reload into it.
       window.location.assign('/dashboard');
     } catch {
-      setError('Network error. Please try again.');
+      setError(tr('workspace.errorNetwork'));
       setSubmitting(false);
     }
   };
@@ -52,14 +54,14 @@ export function CreateWorkspaceModal({ onClose, planLabel = 'Team' }) {
         <div className="modal-h">
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
             <div>
-              <h2 style={{ margin: 0 }}>New workspace</h2>
+              <h2 style={{ margin: 0 }}>{tr('workspace.title')}</h2>
               <div className="sub" style={{ marginTop: 4 }}>
-                Inboxes, API keys and members are scoped per workspace. This one inherits your {planLabel} plan.
+                {tr('workspace.subtitle', { plan: planLabel })}
               </div>
             </div>
             <button
               onClick={onClose}
-              aria-label="Close"
+              aria-label={tr('workspace.close')}
               style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--fg-3)', padding: 4, flexShrink: 0, lineHeight: 1 }}
             >
               <Icon name="x" size={16} />
@@ -69,13 +71,13 @@ export function CreateWorkspaceModal({ onClose, planLabel = 'Team' }) {
 
         <div className="modal-body">
           <div className="field">
-            <label htmlFor="ws-name">Workspace name</label>
+            <label htmlFor="ws-name">{tr('workspace.nameLabel')}</label>
             <input
               id="ws-name"
               className="input"
               type="text"
               maxLength={60}
-              placeholder="Acme Marketing"
+              placeholder={tr('workspace.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !submitting) handleCreate(); }}
@@ -103,9 +105,9 @@ export function CreateWorkspaceModal({ onClose, planLabel = 'Team' }) {
         </div>
 
         <div className="modal-foot">
-          <Btn variant="ghost" onClick={onClose} disabled={submitting}>Cancel</Btn>
+          <Btn variant="ghost" onClick={onClose} disabled={submitting}>{tr('workspace.cancel')}</Btn>
           <Btn variant="primary" icon="plus" onClick={handleCreate} disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create workspace'}
+            {submitting ? tr('workspace.creating') : tr('workspace.create')}
           </Btn>
         </div>
       </div>

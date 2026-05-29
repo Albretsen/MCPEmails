@@ -236,6 +236,42 @@ export class ImapClient {
     return resp.status === "OK";
   }
 
+  /**
+   * Like append() but accepts a custom flags list and returns the assigned UID
+   * when the server supports UIDPLUS (RFC 4315).
+   *
+   *   appendWithFlags("Drafts", mime, ["\\Draft", "\\Seen"])
+   *     → { ok: true, uid: 42 }   // UIDPLUS supported
+   *     → { ok: true, uid: undefined } // UIDPLUS not supported
+   *     → { ok: false }               // server rejected the APPEND
+   *
+   * Used by the drafts tools (create_draft / update_draft) so the returned
+   * draft_id can be encoded as "<folder>:<uid>".
+   */
+  async appendWithFlags(
+    mailbox: string,
+    message: string,
+    flags: string[],
+  ): Promise<{ ok: boolean; uid?: number }> {
+    const tag = this.nextTag();
+    const bytes = this.encoder.encode(message);
+    const flagStr = flags.length ? ` (${flags.join(" ")})` : "";
+    await this.write(
+      `${tag} APPEND ${quoteImap(mailbox)}${flagStr} {${bytes.length}}${CRLF}`,
+    );
+    const cont = await this.readLine();
+    if (!cont.startsWith("+")) {
+      return { ok: false };
+    }
+    await this.conn.write(bytes);
+    await this.write(CRLF);
+    const resp = await this.readTagged(tag);
+    if (resp.status !== "OK") return { ok: false };
+    // Parse APPENDUID response code: [APPENDUID <uidvalidity> <uid>]
+    const m = resp.text.match(/\[APPENDUID\s+\d+\s+(\d+)\]/i);
+    return { ok: true, uid: m ? parseInt(m[1], 10) : undefined };
+  }
+
   // ── Phase-1+ low-level verbs (flags, MOVE, EXPUNGE, folders) ─────────────────
   // These are pure building blocks — no MCP tools call them yet (wired in later
   // phases). Each method mirrors the style of markSeen / append above.
