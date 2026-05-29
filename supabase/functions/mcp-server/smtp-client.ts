@@ -194,7 +194,7 @@ class SmtpSession {
 }
 
 async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
-  let timer: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error("SMTP read timeout")), ms);
   });

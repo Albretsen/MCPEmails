@@ -1,24 +1,32 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { MBtn, MIcon } from '../MarketingPrimitives';
 import { CLIENT_LOGOS, MCP_CLIENT_BRANDS } from '../dashboard/clientLogos';
 
+// Rich-text tag handlers shared across sections (inline code + bold).
+const RICH = {
+  code: (chunks) => <code className="t-code-inline">{chunks}</code>,
+  b: (chunks) => <strong>{chunks}</strong>,
+};
+
 export function Nav({ onSignIn, onGetStarted }) {
+  const t = useTranslations('home');
   return (
     <header className="nav">
       <div className="container nav-row">
         <a className="brand" href="/"><img src="/logo-wordmark.svg" alt="mcpemails" /></a>
         <nav className="nav-links">
-          <a href="#features">Features</a>
-          <a href="#how">How it works</a>
-          <a href="#pricing">Pricing</a>
-          <a href="/docs">Docs</a>
+          <a href="#features">{t('nav.features')}</a>
+          <a href="#how">{t('nav.how')}</a>
+          <a href="#pricing">{t('nav.pricing')}</a>
+          <a href="/docs">{t('nav.docs')}</a>
         </nav>
         <div className="nav-grow" />
         <div className="nav-cta">
-          <a className="btn btn-ghost" onClick={onSignIn} href="/login">Sign in</a>
-          <a className="btn btn-primary" onClick={onGetStarted} href="/signup">Get started free</a>
+          <a className="btn btn-ghost" onClick={onSignIn} href="/login">{t('nav.signIn')}</a>
+          <a className="btn btn-primary" onClick={onGetStarted} href="/signup">{t('nav.getStarted')}</a>
         </div>
       </div>
     </header>
@@ -28,28 +36,27 @@ export function Nav({ onSignIn, onGetStarted }) {
 /* ============== HERO ============== */
 
 export function HeroTextBlock({ onGetStarted }) {
+  const t = useTranslations('home');
   return (
     <div>
       <h1 className="h1" style={{ marginTop: 0 }}>
-        Give your AI<br/>agent an <span className="accent">inbox.</span>
+        {t('hero.titleLine1')}<br/>{t('hero.titleLine2')} <span className="accent">{t('hero.titleAccent')}</span>
       </h1>
-      <p className="lead">
-        Connect Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and we never store your email.
-      </p>
+      <p className="lead">{t('hero.lead')}</p>
       <div className="hero-cta">
-        <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>Connect your inbox</MBtn>
-        <MBtn variant="secondary" size="lg" href="/docs">Read the docs</MBtn>
+        <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
+        <MBtn variant="secondary" size="lg" href="/docs">{t('hero.ctaSecondary')}</MBtn>
       </div>
       <div className="hero-meta">
-        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> Unlimited, free forever</span>
-        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> No card required</span>
-        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> Email never stored</span>
+        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaUnlimited')}</span>
+        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaNoCard')}</span>
+        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaNeverStored')}</span>
       </div>
     </div>
   );
 }
 
-/* Variant A: Endpoint + client-tabbed code snippet */
+/* Variant A: Endpoint + client-tabbed code snippet (developer mockup, untranslated) */
 export function HeroEndpointCard() {
   const [client, setClient] = useState("oauth");
   const [copied, setCopied] = useState(false);
@@ -130,14 +137,15 @@ Token:  mcpe_live_••••`,
   );
 }
 
-/* Variant B: Agent → mcpemails → Provider pipe diagram (canonical) */
+/* Variant B: Agent -> mcpemails -> Provider pipe diagram (canonical, default hero) */
 export function HeroPipeDiagram() {
+  const t = useTranslations('home');
   return (
     <div className="pipe-diagram">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
           <span style={{ width: 7, height: 7, borderRadius: 999, background: "var(--mint-500)", boxShadow: "0 0 0 2px rgba(31,203,139,0.2)" }}/>
-          <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, fontWeight: 500, color: "var(--fg-3)", letterSpacing: "0.04em", textTransform: "uppercase", whiteSpace: "nowrap" }}>How a call flows</span>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, fontWeight: 500, color: "var(--fg-3)", letterSpacing: "0.04em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{t('hero.pipe.flow')}</span>
         </div>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>t+0ms → t+312ms</span>
       </div>
@@ -145,8 +153,8 @@ export function HeroPipeDiagram() {
       <div className="pipe-row" style={{ marginTop: 6 }}>
         <div className="pipe-node">
           <MIcon name="cpu" size={22} color="var(--fg-2)"/>
-          <div className="h">AI agent</div>
-          <div className="s">claude.ai · Desktop · Cursor</div>
+          <div className="h">{t('hero.pipe.agent')}</div>
+          <div className="s">{t('hero.pipe.agentSub')}</div>
         </div>
         <div className="pipe-arrow-wrap">
           <span className="pipe-tag">MCP</span>
@@ -155,7 +163,7 @@ export function HeroPipeDiagram() {
         <div className="pipe-node brand">
           <MIcon name="server" size={22} color="#fff"/>
           <div className="h">mcpemails</div>
-          <div className="s">/api/mcp endpoint</div>
+          <div className="s">{t('hero.pipe.serverSub')}</div>
         </div>
         <div className="pipe-arrow-wrap">
           <span className="pipe-tag">JMAP</span>
@@ -163,8 +171,8 @@ export function HeroPipeDiagram() {
         </div>
         <div className="pipe-node">
           <MIcon name="mail" size={22} color="var(--fg-2)"/>
-          <div className="h">Your provider</div>
-          <div className="s">Gmail · Outlook · IMAP</div>
+          <div className="h">{t('hero.pipe.provider')}</div>
+          <div className="s">{t('hero.pipe.providerSub')}</div>
         </div>
       </div>
 
@@ -175,24 +183,24 @@ export function HeroPipeDiagram() {
           <span className="pill"><span className="d"/>list_inboxes()</span>
         </div>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.7, color: "var(--fg-2)" }}>
-          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> agent calls <span style={{ color: "var(--mint-700)" }}>list_inboxes</span>()</div>
-          <div><span style={{ color: "var(--fg-3)" }}>·</span> returns inbox IDs, no dashboard copy-paste</div>
-          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> agent calls <span style={{ color: "var(--mint-700)" }}>list_inbox</span>(inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
-          <div><span style={{ color: "var(--fg-3)" }}>·</span> mcpemails fetches via Gmail API (token rotated)</div>
-          <div><span style={{ color: "var(--mint-700)" }}>←</span> 20 messages returned · <span style={{ color: "var(--fg-3)" }}>nothing stored</span></div>
+          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>list_inboxes</span>()</div>
+          <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logReturns')}</div>
+          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>list_inbox</span>(inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
+          <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logFetches')}</div>
+          <div><span style={{ color: "var(--mint-700)" }}>←</span> {t('hero.pipe.logResult')} · <span style={{ color: "var(--fg-3)" }}>{t('hero.pipe.logNothing')}</span></div>
         </div>
       </div>
 
       <div className="pipe-legend">
-        <span className="li"><span className="swatch"/> mcpemails (the pipe)</span>
-        <span className="li"><span className="swatch mint"/> live request</span>
-        <span className="li"><span className="swatch gray"/> your data, your provider</span>
+        <span className="li"><span className="swatch"/> {t('hero.pipe.legendPipe')}</span>
+        <span className="li"><span className="swatch mint"/> {t('hero.pipe.legendLive')}</span>
+        <span className="li"><span className="swatch gray"/> {t('hero.pipe.legendData')}</span>
       </div>
     </div>
   );
 }
 
-/* Variant C: Live MCP terminal showing tool calls firing */
+/* Variant C: Live MCP terminal showing tool calls firing (developer mockup, untranslated) */
 export function HeroMcpTerminal() {
   const fullLog = React.useMemo(() => [
     { ts: "14:02:16", arrow: "→", tool: "list_inboxes",   args: "",                            ok: "2 inboxes", ms: "84ms"  },
@@ -274,12 +282,15 @@ function MarqueeItem({ name, logo, color }) {
 }
 
 export function Trusted() {
-  // Duplicate the list so the track loops seamlessly under translateX(-50%).
-  const loop = [...MCP_CLIENT_BRANDS, ...MCP_CLIENT_BRANDS];
+  const t = useTranslations('home');
+  // Repeat the list so a single segment always overflows even ultra-wide screens,
+  // then duplicate that segment so the track loops seamlessly under translateX(-50%).
+  const segment = [...MCP_CLIENT_BRANDS, ...MCP_CLIENT_BRANDS, ...MCP_CLIENT_BRANDS];
+  const loop = [...segment, ...segment];
   return (
     <section className="trusted">
       <div className="container">
-        <span className="trusted-label">Works with every MCP-compatible agent and client</span>
+        <span className="trusted-label">{t('trusted.label')}</span>
       </div>
       <div className="marquee">
         <div className="marquee-track">
@@ -294,64 +305,26 @@ export function Trusted() {
 
 /* ============== FEATURES ============== */
 export function Features() {
-  const principles = [
-    {
-      n: "01",
-      h: "Six tools. The whole surface area.",
-      p: <>Every email task your agent needs fits in six calls: <code className="t-code-inline">list_inboxes</code>, <code className="t-code-inline">list_inbox</code>, <code className="t-code-inline">read_email</code>, <code className="t-code-inline">search_emails</code>, <code className="t-code-inline">send_email</code>, <code className="t-code-inline">reply_to_email</code>. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. That's the entire integration.</>,
-      tag: "Scope",
-    },
-    {
-      n: "02",
-      h: "Email is fetched live. Never stored.",
-      p: "Every tool call hits your provider in real time: Gmail API, Microsoft Graph, Fastmail JMAP, or IMAP. Message bodies, subjects, and attachments go to the agent and are discarded immediately. We persist one thing per inbox, an encrypted token or app password, so we can make the next call.",
-      tag: "Storage",
-    },
-    {
-      n: "03",
-      h: "Sending goes through your provider.",
-      p: <>When your agent calls <code className="t-code-inline">send_email</code> or <code className="t-code-inline">reply_to_email</code>, the message is dispatched via the Gmail API, Microsoft Graph, or your own SMTP server. Your domain reputation and deliverability stay entirely in your hands. We never relay mail from our own domain.</>,
-      tag: "Sending",
-    },
-    {
-      n: "04",
-      h: "Gmail, Outlook, iCloud, Fastmail & any IMAP inbox.",
-      p: "OAuth 2.0 for Gmail, Outlook, and Fastmail; app-specific passwords for iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Connect multiple inboxes, label them by use case (work-gmail, ops-outlook, support-imap), and scope each API key to the inboxes you want that agent to reach.",
-      tag: "Providers",
-    },
-    {
-      n: "05",
-      h: "OAuth 2.0 for agents. One click to revoke.",
-      p: "Any MCP client that supports OAuth (claude.ai, Claude Desktop, Cursor, and others) connects automatically via authorization code + PKCE. No API key setup. API keys are there for clients without OAuth and for scripted access. Either way, you revoke any connection from the dashboard in one click.",
-      tag: "Access",
-    },
-    {
-      n: "06",
-      h: "Credentials are encrypted at rest.",
-      p: "OAuth tokens and app passwords are AES-256-GCM encrypted before being written to the database. Decryption happens only inside an isolated Edge Function at call time. The encryption key is stored as an environment secret, separate from the database.",
-      tag: "Security",
-    },
-  ];
+  const t = useTranslations('home');
+  const tags = ['Scope', 'Storage', 'Sending', 'Providers', 'Access', 'Security'];
   return (
     <section className="section principles" id="features">
       <div className="container">
         <div className="section-head principles-head">
-          <div className="eye-label">Principles</div>
-          <h2>Six things we believe<br/>about email and agents.</h2>
-          <p className="sub">
-            The decisions that shaped the product. If any of them stop being true, that's a bug worth filing.
-          </p>
+          <div className="eye-label">{t('features.eyebrow')}</div>
+          <h2>{t('features.titleLine1')}<br/>{t('features.titleLine2')}</h2>
+          <p className="sub">{t('features.sub')}</p>
         </div>
         <ol className="principle-list">
-          {principles.map(it => (
-            <li className="principle" key={it.n}>
+          {tags.map((_, i) => (
+            <li className="principle" key={i}>
               <div className="p-num">
-                <span className="n">{it.n}</span>
-                <span className="t">{it.tag}</span>
+                <span className="n">{String(i + 1).padStart(2, '0')}</span>
+                <span className="t">{t(`features.items.${i}.tag`)}</span>
               </div>
               <div className="p-body">
-                <h3>{it.h}</h3>
-                <p>{it.p}</p>
+                <h3>{t(`features.items.${i}.h`)}</h3>
+                <p>{t.rich(`features.items.${i}.p`, RICH)}</p>
               </div>
             </li>
           ))}
@@ -363,45 +336,32 @@ export function Features() {
 
 /* ============== HOW IT WORKS ============== */
 export function HowItWorks() {
+  const t = useTranslations('home');
+  const toolNames = ['list_inboxes', 'list_inbox', 'read_email', 'search_emails', 'send_email', 'reply_to_email'];
   return (
     <section className="section how" id="how">
       <div className="container">
         <div className="section-head">
-          <div className="eye-label">How it works</div>
-          <h2>You're the user. We're the pipe.</h2>
-          <p className="sub">Three steps from sign-up to your agent reading and sending mail.</p>
+          <div className="eye-label">{t('howItWorks.eyebrow')}</div>
+          <h2>{t('howItWorks.title')}</h2>
+          <p className="sub">{t('howItWorks.sub')}</p>
         </div>
 
         <div className="how-steps">
-          <div className="step">
-            <span className="num">01</span>
-            <h4>Connect your inbox</h4>
-            <p>Sign in and click <strong>Connect Inbox</strong>. Choose Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete OAuth or paste an app password. Credentials are encrypted; email is never stored.</p>
-          </div>
-          <div className="step">
-            <span className="num">02</span>
-            <h4>Paste the URL: OAuth or API key</h4>
-            <p>For an MCP client that supports OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others), paste <code className="t-code-inline">https://www.mcpemails.com/api/mcp</code>, click Connect, and authorize. No key needed. For clients without OAuth (Cline, JetBrains, custom scripts), generate a scoped API key in the dashboard instead.</p>
-          </div>
-          <div className="step">
-            <span className="num">03</span>
-            <h4>Your agent works the inbox</h4>
-            <p>The agent calls tools like <code className="t-code-inline">search_emails()</code> or <code className="t-code-inline">reply_to_email()</code>. MCPEmails fetches live from your provider and returns the result. Nothing is cached between calls.</p>
-          </div>
+          {[0, 1, 2].map((i) => (
+            <div className="step" key={i}>
+              <span className="num">{String(i + 1).padStart(2, '0')}</span>
+              <h4>{t(`howItWorks.steps.${i}.h`)}</h4>
+              <p>{t.rich(`howItWorks.steps.${i}.p`, RICH)}</p>
+            </div>
+          ))}
         </div>
 
         <div className="tools">
-          {[
-            { n: "list_inboxes",   d: "Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard." },
-            { n: "list_inbox",     d: "List recent messages with sender, subject, date, and snippet, up to 100 per call." },
-            { n: "read_email",     d: "Fetch a single message by ID. Returns parsed plain-text and sanitized HTML body, plus attachment metadata." },
-            { n: "search_emails",  d: "Provider-native search: Gmail query syntax, Microsoft Graph, JMAP, or IMAP SEARCH. Returns up to 100 matches." },
-            { n: "send_email",     d: "Send a new message via the connected account. Dispatched through Gmail API, Microsoft Graph, Fastmail JMAP, or SMTP: your domain, your deliverability." },
-            { n: "reply_to_email", d: "Reply in-thread with correct Message-ID and References headers. Works across Gmail, Outlook, Fastmail, and any IMAP inbox." },
-          ].map(t => (
-            <div className="tool" key={t.n}>
-              <div className="name">{t.n}()</div>
-              <div className="desc">{t.d}</div>
+          {toolNames.map((name, i) => (
+            <div className="tool" key={name}>
+              <div className="name">{name}()</div>
+              <div className="desc">{t(`howItWorks.tools.${i}`)}</div>
             </div>
           ))}
         </div>
@@ -412,13 +372,12 @@ export function HowItWorks() {
 
 /* ============== QUOTE ============== */
 export function Quote() {
+  const t = useTranslations('home');
   return (
     <section className="quote">
       <div className="container">
-        <div className="text">
-          "I wanted my agents to work my inbox, but every option meant handing a third party a copy of my email. So I built the pipe I wished existed: connect once, your mail is fetched live and never stored, and you can cut off any agent in a click. That's the product I trust with my own inbox."
-        </div>
-        <div className="who"><strong>Asgeir Albretsen</strong> · founder, mcpemails</div>
+        <div className="text">&ldquo;{t('quote.text')}&rdquo;</div>
+        <div className="who"><strong>Asgeir Albretsen</strong> · {t('quote.role')}</div>
       </div>
     </section>
   );
@@ -429,147 +388,133 @@ export function Quote() {
  * @param {{ onGetStarted?: () => void, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
  */
 export function Pricing({ onGetStarted, stripePrices }) {
+  const t = useTranslations('home');
+  // Static, non-translated attributes per tier. `msgKey` indexes the message
+  // bundle; `priceKey` indexes the live Stripe prices map (Team is `pro` there).
   const tiers = [
-    {
-      key: "free",
-      name: "Free",
-      price: "$0",
-      per: "/forever",
-      accent: false,
-      desc: "Everything, unlimited. For everyone building with MCP agents.",
-      features: [
-        "Unlimited connected inboxes",
-        "Unlimited MCP tool calls",
-        "Unlimited API keys & team members",
-        "Gmail, Outlook, iCloud, Fastmail & any IMAP",
-        "60 requests / minute",
-        "Community support",
-      ],
-      cta: "Start free",
-      ctaHref: "/signup",
-    },
-    {
-      key: "solo",
-      name: "Solo",
-      price: "$12",
-      per: "/month",
-      accent: false,
-      desc: "For power users running agents around the clock.",
-      features: [
-        "Everything in Free, unlimited",
-        "300 requests / minute (5× burst)",
-        "Full usage analytics (90-day history)",
-        "Gmail, Outlook, iCloud, Fastmail & any IMAP",
-        "Email support",
-      ],
-      cta: "Get Solo",
-      ctaHref: "/signup",
-    },
-    {
-      key: "pro",
-      name: "Team",
-      price: "$49",
-      per: "/month",
-      accent: true,
-      desc: "For businesses and teams. Practically limitless.",
-      features: [
-        "Everything in Solo, unlimited",
-        "1,000 requests / minute",
-        "Team roles & multiple workspaces",
-        "SSO (SAML / OIDC) + audit log",
-        "Full usage analytics (1-year history)",
-        "Priority support",
-      ],
-      cta: "Get Team",
-      ctaHref: "/signup",
-    },
+    { msgKey: 'free', priceKey: 'free', price: '$0',  per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
+    { msgKey: 'solo', priceKey: 'solo', price: '$12', per: t('pricing.perMonth'),   accent: false, ctaHref: '/signup' },
+    { msgKey: 'team', priceKey: 'pro',  price: '$49', per: t('pricing.perMonth'),   accent: true,  ctaHref: '/signup' },
   ];
   return (
     <section className="section" id="pricing">
       <div className="container">
         <div className="section-head">
-          <div className="eye-label">Pricing</div>
-          <h2>Unlimited on every plan.</h2>
-          <p className="sub">Free is genuinely unlimited. Upgrade for higher burst limits, team features, and support. Switch plans any time.</p>
+          <div className="eye-label">{t('pricing.eyebrow')}</div>
+          <h2>{t('pricing.title')}</h2>
+          <p className="sub">{t('pricing.sub')}</p>
         </div>
         <div className="price-grid">
-          {tiers.map(t => {
-            // Custom-priced tiers (Enterprise) always show their static label
-            // ("Custom"); a configured Stripe price must never override it.
-            const isCustomPlan = t.price === "Custom";
-            // Derive live monthly price display from Stripe when available
-            const liveMonthlyCents = stripePrices?.[t.key]?.monthlyCents;
+          {tiers.map((tier) => {
+            const liveMonthlyCents = stripePrices?.[tier.priceKey]?.monthlyCents;
             const livePrice =
-              !isCustomPlan && liveMonthlyCents != null && liveMonthlyCents > 0
+              liveMonthlyCents != null && liveMonthlyCents > 0
                 ? `$${liveMonthlyCents / 100}`
-                : t.price;
+                : tier.price;
+            const features = t.raw(`pricing.tiers.${tier.msgKey}.features`);
 
             return (
-              <div className={"price" + (t.accent ? " featured" : "")} key={t.name}>
+              <div className={"price" + (tier.accent ? " featured" : "")} key={tier.msgKey}>
                 <div>
-                  <h4>{t.name}</h4>
+                  <h4>{t(`pricing.tiers.${tier.msgKey}.name`)}</h4>
                   <div className="num">
                     {livePrice}
-                    {t.per && <small> {t.per}</small>}
+                    {tier.per && <small> {tier.per}</small>}
                   </div>
-                  <p className="price-desc">{t.desc}</p>
+                  <p className="price-desc">{t(`pricing.tiers.${tier.msgKey}.desc`)}</p>
                 </div>
                 <ul>
-                  {t.features.map(f => (
+                  {features.map((f) => (
                     <li key={f}><MIcon name="check" size={14} color="var(--mint-600)"/>{f}</li>
                   ))}
                 </ul>
                 <a
-                  className={"btn " + (t.accent ? "btn-primary" : "btn-secondary")}
-                  href={t.ctaHref}
-                  onClick={t.ctaHref === "/signup" ? onGetStarted : undefined}
+                  className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
+                  href={tier.ctaHref}
+                  onClick={tier.ctaHref === "/signup" ? onGetStarted : undefined}
                 >
-                  {t.cta}
+                  {t(`pricing.tiers.${tier.msgKey}.cta`)}
                 </a>
               </div>
             );
           })}
         </div>
         <p className="pricing-footnote">
-          All plans: email is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <a href="mailto:sales@mcpemails.com">Contact us</a>. <a href="/pricing">See full feature comparison →</a>
+          {t.rich('pricing.footnote', {
+            contact: (chunks) => <a href="mailto:sales@mcpemails.com">{chunks}</a>,
+            comparison: (chunks) => <a href="/pricing">{chunks}</a>,
+          })}
         </p>
       </div>
     </section>
   );
 }
 
+/* ============== LANGUAGE SWITCHER ============== */
+/**
+ * Minimal locale switcher. Only the home page is localized for now, so each
+ * option links to the home page in that language. As more routes are
+ * localized, swap these anchors for next-intl's locale-aware Link.
+ */
+function LanguageSwitcher() {
+  const t = useTranslations('home');
+  const locale = useLocale();
+  const options = [
+    { code: 'en', href: '/' },
+    { code: 'nb', href: '/nb' },
+  ];
+  return (
+    <div className="lang-switch" aria-label={t('languageSwitcher.label')}>
+      <MIcon name="globe" size={13} color="var(--fg-3)" />
+      {options.map((o) => (
+        <a
+          key={o.code}
+          href={o.href}
+          className={"lang-opt" + (locale === o.code ? " active" : "")}
+          aria-current={locale === o.code ? 'true' : undefined}
+        >
+          {t(`languageSwitcher.${o.code}`)}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 /* ============== FOOTER ============== */
 export function Footer() {
+  const t = useTranslations('home');
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-grid">
           <div className="brand-cell">
             <img src="/logo-mark-dark.svg" alt="mcpemails" />
-            <p>A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing your email.</p>
+            <p>{t('footer.tagline')}</p>
+            <LanguageSwitcher />
           </div>
           <div>
-            <h5>Product</h5>
-            <a href="#features">Features</a>
-            <a href="#how">How it works</a>
-            <a href="#pricing">Pricing</a>
-            <a href="/docs">Docs</a>
+            <h5>{t('footer.productHeading')}</h5>
+            <a href="#features">{t('footer.linkFeatures')}</a>
+            <a href="#how">{t('footer.linkHow')}</a>
+            <a href="#pricing">{t('footer.linkPricing')}</a>
+            <a href="/docs">{t('footer.linkDocs')}</a>
           </div>
           <div>
-            <h5>Resources</h5>
-            <a href="/docs#tools">Tool reference</a>
-            <a href="/docs#quickstart">Quickstart</a>
-            <a href="/docs#oauth">OAuth connection</a>
+            <h5>{t('footer.resourcesHeading')}</h5>
+            <a href="/docs#tools">{t('footer.linkToolReference')}</a>
+            <a href="/docs#quickstart">{t('footer.linkQuickstart')}</a>
+            <a href="/docs#oauth">{t('footer.linkOauth')}</a>
+            <a href="/docs/providers">{t('footer.linkProviders')}</a>
           </div>
           <div>
-            <h5>Company</h5>
-            <a href="/privacy">Privacy</a>
-            <a href="/terms">Terms</a>
+            <h5>{t('footer.companyHeading')}</h5>
+            <a href="/privacy">{t('footer.linkPrivacy')}</a>
+            <a href="/terms">{t('footer.linkTerms')}</a>
           </div>
         </div>
         <div className="legal">
-          <span>© 2026 mcpemails.</span>
-          <span>Email never stored · Credentials encrypted at rest</span>
+          <span>{t('footer.copyright')}</span>
+          <span>{t('footer.legal')}</span>
         </div>
       </div>
     </footer>

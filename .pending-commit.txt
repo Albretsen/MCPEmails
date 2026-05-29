@@ -1,0 +1,5 @@
+dev: implement task-1 — add new scopes (delete:email, manage:contacts, schedule:email) and register them
+dev: implement task-2 — provider capability matrix + extend list_inboxes
+dev: implement task-3 — provider support page (/docs/providers)
+dev: implement task-4 — extend ImapClient with uidStore/uidCopy/uidMove/uidExpunge/listMailboxes/mailboxStatus/createMailbox/deleteMailbox/renameMailbox
+dev: implement task-5 — shared destructive-action plumbing (requireConfirm, MAX_BULK_IDS, bulkCapError)

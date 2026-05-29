@@ -964,6 +964,17 @@ async function routeMethod(
 // Input schemas are sourced from Documents/Architecture/mcp-tool-design.md
 // §3. Keep this in sync with that document — changing a schema here is a
 // breaking API change for any connected MCP client.
+//
+// ── Destructive-action convention ────────────────────────────────────────────
+// Every tool that deletes, permanently modifies, or bulk-affects messages MUST:
+//   1. Include a `confirm` boolean property (required, no default) in its
+//      inputSchema.  Description: "Must be true to confirm the operation."
+//   2. Call `requireConfirm(input)` at the top of its handler and return the
+//      result immediately if non-null.
+//   3. For bulk tools: enforce the `MAX_BULK_IDS` cap (500) before processing
+//      and return a structured error if exceeded.
+// This ensures a uniform `confirm=true` gate and error shape across all
+// destructive tools.  See `requireConfirm` and `MAX_BULK_IDS` below.
 // ---------------------------------------------------------------------------
 
 interface ToolDefinition {
@@ -1345,7 +1356,10 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     description:
       "Returns all email inboxes the current API key is permitted to access. " +
       "Call this first to discover inbox_id values required by the other tools. " +
-      "Each result includes the inbox UUID, email address, display name, and provider.",
+      "Each result includes the inbox UUID, email address, display name, provider, " +
+      "optional service brand (icloud/yahoo/zoho/yandex/generic), and a capabilities " +
+      "object describing which features (flags, folders, labels, move, copy, delete, " +
+      "forward, drafts, contacts_api, scheduling) are supported for that inbox.",
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
@@ -1354,6 +1368,257 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     },
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Provider capability matrix (single source of truth)
+//
+// Maps every provider/service value to the set of features MCPEmails
+// supports for that backend.  Later tools MUST consult this before
+// attempting an operation and MUST return unsupportedFeatureError() when
+// the relevant field is false.
+//
+// Keep in sync with Documents/provider-support.md and the Task-3 web page.
+// ---------------------------------------------------------------------------
+
+/**
+ * Feature flags exposed per provider.  Each field corresponds to a capability
+ * that may or may not be available depending on the backing protocol.
+ */
+interface ProviderCapabilities {
+  /** IMAP \Seen / \Flagged or equivalent flag/keyword support */
+  flags: boolean;
+  /** Hierarchical folder support (IMAP, Graph mailFolders, JMAP Mailbox) */
+  folders: boolean;
+  /** Flat label / tag support (Gmail only) */
+  labels: boolean;
+  /** Moving messages between folders / mailboxes */
+  move: boolean;
+  /** Copying messages to another folder */
+  copy: boolean;
+  /** Deleting / trashing messages */
+  delete: boolean;
+  /**
+   * Whether the provider supports soft-delete to Trash, hard expunge, or both.
+   *   'trash'   — only move-to-Trash is safe (Gmail, Outlook)
+   *   'expunge' — only hard expunge (rare)
+   *   'both'    — Trash or permanent delete selectable (IMAP, Fastmail)
+   */
+  trash_vs_expunge: "trash" | "expunge" | "both";
+  /** Forwarding messages (synthesising a forwarded MIME body + send) */
+  forward: boolean;
+  /** Draft create / update / list / send */
+  drafts: boolean;
+  /** Provider-native contacts / address-book API */
+  contacts_api: boolean;
+  /** Server-side scheduled send */
+  scheduling: boolean;
+  /**
+   * Query syntax accepted by search_emails for this provider.
+   *   'gmail'  — Gmail query language (from:, subject:, after:, …)
+   *   'odata'  — Microsoft OData $filter
+   *   'jmap'   — JMAP FilterCondition
+   *   'imap'   — IMAP SEARCH criteria
+   */
+  search_syntax: "gmail" | "odata" | "jmap" | "imap";
+}
+
+/**
+ * Authoritative capability map.
+ *
+ * Key = `inbox.provider` value as stored in the DB:
+ *   'gmail' | 'outlook' | 'fastmail' | 'imap'
+ *
+ * The 'imap' entry covers every service variant (icloud, yahoo, zoho,
+ * yandex, generic) — they all run through the same Deno IMAP/SMTP client.
+ */
+const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
+  gmail: {
+    flags: true,         // read/unread + starred via Gmail labels
+    folders: false,      // Gmail uses labels, not folders
+    labels: true,
+    move: true,          // label add/remove simulates move
+    copy: false,         // Gmail API has no native copy
+    delete: true,
+    trash_vs_expunge: "trash",
+    forward: true,
+    drafts: true,        // Gmail Drafts API
+    contacts_api: true,  // Google People API
+    scheduling: false,
+    search_syntax: "gmail",
+  },
+  outlook: {
+    flags: true,         // isRead, flag.flagStatus via Graph
+    folders: true,       // Graph mailFolders
+    labels: false,
+    move: true,          // Graph messages/{id}/move
+    copy: true,          // Graph messages/{id}/copy
+    delete: true,
+    trash_vs_expunge: "trash",
+    forward: true,       // Graph createForward or MIME send
+    drafts: true,        // Graph createDraft / send
+    contacts_api: true,  // Graph /contacts
+    scheduling: false,
+    search_syntax: "odata",
+  },
+  fastmail: {
+    flags: true,         // JMAP Email/set keywords
+    folders: true,       // JMAP Mailbox/get
+    labels: false,
+    move: true,          // JMAP Email/set mailboxIds
+    copy: true,          // JMAP Email/copy
+    delete: true,
+    trash_vs_expunge: "both",
+    forward: true,       // Compose + JMAP send
+    drafts: true,        // JMAP Email/set $draft keyword
+    contacts_api: false, // CardDAV out of scope for v0.1
+    scheduling: false,
+    search_syntax: "jmap",
+  },
+  imap: {
+    flags: true,         // IMAP UID STORE \Seen \Flagged
+    folders: true,       // IMAP LIST + SELECT
+    labels: false,
+    move: true,          // IMAP MOVE (or COPY+STORE \Deleted+EXPUNGE fallback)
+    copy: true,          // IMAP UID COPY
+    delete: true,
+    trash_vs_expunge: "both",
+    forward: true,       // Compose + SMTP send
+    drafts: true,        // IMAP APPEND to Drafts with \Draft flag
+    contacts_api: false, // No standard contacts API over IMAP/SMTP
+    scheduling: false,
+    search_syntax: "imap",
+  },
+};
+
+/**
+ * Returns the capability set for the given provider, defaulting to the
+ * generic IMAP set for any unknown provider (fail-safe for new service values).
+ */
+function getProviderCapabilities(provider: string): ProviderCapabilities {
+  return PROVIDER_CAPABILITIES[provider] ?? PROVIDER_CAPABILITIES["imap"];
+}
+
+/**
+ * Returns a structured handler result indicating that the requested feature
+ * is not supported for the given provider.  Every tool that gates on a
+ * capability MUST call this (rather than crafting ad-hoc error strings) so
+ * the shape is consistent and parseable by MCP clients.
+ *
+ * Usage:
+ *   const caps = getProviderCapabilities(inbox.provider);
+ *   if (!caps.copy) return unsupportedFeatureError("copy", inbox.provider);
+ */
+function unsupportedFeatureError(
+  feature: string,
+  provider: string,
+): {
+  result: { content: { type: string; text: string }[] };
+  logStatus: "error";
+  logErrorCode: string;
+} {
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          error: "unsupported_feature",
+          feature,
+          provider,
+          message:
+            `The '${feature}' feature is not supported for provider '${provider}'.`,
+        }),
+      }],
+    },
+    logStatus: "error",
+    logErrorCode: String(-32601),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Destructive-action plumbing
+//
+// requireConfirm — gate for every destructive / irreversible tool.
+// MAX_BULK_IDS   — hard cap on bulk-UID operations to prevent runaway calls.
+//
+// Usage (in any destructive handler):
+//
+//   const guard = requireConfirm(input);
+//   if (guard) return guard;
+//
+//   if (Array.isArray(input.message_ids) && input.message_ids.length > MAX_BULK_IDS) {
+//     return bulkCapError(input.message_ids.length);
+//   }
+// ---------------------------------------------------------------------------
+
+/** Maximum number of message UIDs accepted by any bulk tool in a single call. */
+const MAX_BULK_IDS = 500;
+
+/**
+ * Returns a structured error result when `input.confirm` is not exactly `true`.
+ * Returns `null` when the caller may proceed.
+ *
+ * Every destructive tool MUST call this and short-circuit on a non-null return:
+ *
+ *   const guard = requireConfirm(input);
+ *   if (guard) return guard;
+ */
+function requireConfirm(
+  input: Record<string, unknown>,
+): {
+  result: { content: { type: string; text: string }[] };
+  logStatus: "error";
+  logErrorCode: string;
+} | null {
+  if (input["confirm"] !== true) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            error: "confirmation_required",
+            message:
+              "This operation requires confirm=true. Set confirm to true to proceed.",
+          }),
+        }],
+      },
+      logStatus: "error",
+      logErrorCode: String(-32600),
+    };
+  }
+  return null;
+}
+
+/**
+ * Returns a structured error result when a bulk tool receives more IDs than
+ * `MAX_BULK_IDS` allows.
+ *
+ *   if (ids.length > MAX_BULK_IDS) return bulkCapError(ids.length);
+ */
+function bulkCapError(
+  received: number,
+): {
+  result: { content: { type: string; text: string }[] };
+  logStatus: "error";
+  logErrorCode: string;
+} {
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          error: "bulk_cap_exceeded",
+          max: MAX_BULK_IDS,
+          received,
+          message:
+            `Bulk operations are capped at ${MAX_BULK_IDS} message IDs per call. ` +
+            `Received ${received}. Split the request into smaller batches.`,
+        }),
+      }],
+    },
+    logStatus: "error",
+    logErrorCode: String(-32602),
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Inbox types and credential helpers
@@ -1512,7 +1777,7 @@ async function executeListInboxes(apiKey: ApiKeyRow): Promise<{
 }> {
   let query = supabase
     .from("inboxes")
-    .select("id, email_address, display_name, provider, status")
+    .select("id, email_address, display_name, provider, service, status")
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
     .eq("status", "active")
@@ -1533,11 +1798,19 @@ async function executeListInboxes(apiKey: ApiKeyRow): Promise<{
     };
   }
 
-  const inboxes = (data ?? []).map((row: { id: string; email_address: string; display_name: string | null; provider: string }) => ({
+  const inboxes = (data ?? []).map((row: {
+    id: string;
+    email_address: string;
+    display_name: string | null;
+    provider: string;
+    service: string | null;
+  }) => ({
     inbox_id: row.id,
     email_address: row.email_address,
     display_name: row.display_name ?? row.email_address,
     provider: row.provider,
+    service: row.service ?? null,
+    capabilities: getProviderCapabilities(row.provider),
   }));
 
   return {

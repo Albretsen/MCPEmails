@@ -56,6 +56,25 @@ export interface ImapRawMessage {
   flags: string[];
 }
 
+/** Returned by {@link ImapClient.listMailboxes}. */
+export interface ImapMailboxInfo {
+  /** Decoded mailbox name (e.g. "INBOX", "Sent", "Archive/2024"). */
+  name: string;
+  /** Hierarchy delimiter reported by the server, e.g. "/" or ".". */
+  delimiter: string;
+  /** Attribute flags, e.g. ["\\HasChildren", "\\Noinferiors"]. */
+  flags: string[];
+}
+
+/** Returned by {@link ImapClient.mailboxStatus}. */
+export interface ImapMailboxStatus {
+  messages: number;
+  unseen: number;
+  recent: number;
+  uidNext: number;
+  uidValidity: number;
+}
+
 const CRLF = "\r\n";
 const COMMAND_TIMEOUT_MS = 15_000;
 
@@ -217,6 +236,167 @@ export class ImapClient {
     return resp.status === "OK";
   }
 
+  // ── Phase-1+ low-level verbs (flags, MOVE, EXPUNGE, folders) ─────────────────
+  // These are pure building blocks — no MCP tools call them yet (wired in later
+  // phases). Each method mirrors the style of markSeen / append above.
+
+  /**
+   * Generic UID STORE flag setter/unsetter.
+   *   mode "add"    → +FLAGS (flags…)
+   *   mode "remove" → -FLAGS (flags…)
+   * Use IMAP system flags like "\\Seen", "\\Flagged", "\\Deleted".
+   * Accepts bulk UID sets (uids are compressed to a compact range string).
+   */
+  async uidStore(uids: number[], flags: string[], mode: "add" | "remove"): Promise<void> {
+    if (uids.length === 0) return;
+    const tag = this.nextTag();
+    const uidSet = toUidSet(uids);
+    const modePrefix = mode === "add" ? "+" : "-";
+    const flagList = flags.join(" ");
+    await this.write(`${tag} UID STORE ${uidSet} ${modePrefix}FLAGS (${flagList})${CRLF}`);
+    const resp = await this.readTagged(tag);
+    if (resp.status !== "OK") {
+      throw new Error(`UID STORE failed: ${resp.text}`);
+    }
+  }
+
+  /**
+   * UID COPY messages to a destination mailbox.
+   * Accepts bulk UID sets.
+   */
+  async uidCopy(uids: number[], targetMailbox: string): Promise<void> {
+    if (uids.length === 0) return;
+    const tag = this.nextTag();
+    const uidSet = toUidSet(uids);
+    await this.write(`${tag} UID COPY ${uidSet} ${quoteImap(targetMailbox)}${CRLF}`);
+    const resp = await this.readTagged(tag);
+    if (resp.status !== "OK") {
+      throw new Error(`UID COPY failed: ${resp.text}`);
+    }
+  }
+
+  /**
+   * UID MOVE messages to a destination mailbox (RFC 6851).
+   * Falls back to COPY + STORE \\Deleted + UID EXPUNGE on servers that lack MOVE.
+   * Accepts bulk UID sets.
+   */
+  async uidMove(uids: number[], targetMailbox: string): Promise<void> {
+    if (uids.length === 0) return;
+    const uidSet = toUidSet(uids);
+    const moveTag = this.nextTag();
+    await this.write(`${moveTag} UID MOVE ${uidSet} ${quoteImap(targetMailbox)}${CRLF}`);
+    const moveResp = await this.readTagged(moveTag);
+    if (moveResp.status === "OK") return;
+    // Server doesn't support RFC 6851 MOVE — fall back: COPY → \\Deleted → EXPUNGE.
+    await this.uidCopy(uids, targetMailbox);
+    await this.uidStore(uids, ["\\Deleted"], "add");
+    await this.uidExpunge(uids);
+  }
+
+  /**
+   * Expunge only the given UIDs (RFC 4315 UID EXPUNGE).
+   * Falls back to a plain EXPUNGE on servers that don't support the extension.
+   * The calling code must have already marked the UIDs \\Deleted before calling this.
+   */
+  async uidExpunge(uids: number[]): Promise<void> {
+    if (uids.length === 0) return;
+    const uidSet = toUidSet(uids);
+    const tag = this.nextTag();
+    await this.write(`${tag} UID EXPUNGE ${uidSet}${CRLF}`);
+    const resp = await this.readTagged(tag);
+    if (resp.status !== "OK") {
+      // RFC 4315 UID EXPUNGE not supported — fall back to plain EXPUNGE.
+      const fallbackTag = this.nextTag();
+      await this.write(`${fallbackTag} EXPUNGE${CRLF}`);
+      await this.readTagged(fallbackTag).catch(() => {});
+    }
+  }
+
+  /**
+   * LIST all mailboxes matching the given pattern (default: all).
+   * Returns mailboxes sorted by name.
+   */
+  async listMailboxes(pattern = "*"): Promise<ImapMailboxInfo[]> {
+    const tag = this.nextTag();
+    await this.write(`${tag} LIST "" ${quoteImap(pattern)}${CRLF}`);
+    const resp = await this.readTagged(tag);
+    if (resp.status !== "OK") {
+      throw new Error(`LIST failed: ${resp.text}`);
+    }
+    const mailboxes: ImapMailboxInfo[] = [];
+    for (const line of resp.untagged) {
+      // Format: * LIST (\Attr …) "delimiter" mailbox-name-or-quoted
+      const m = /^\* LIST \(([^)]*)\) ("[^"]*"|NIL) (.+)$/.exec(line);
+      if (!m) continue;
+      const flags = m[1].split(/\s+/).filter(Boolean);
+      const delimiter = m[2] === "NIL" ? "/" : m[2].slice(1, -1);
+      let name = m[3].trim();
+      if (name.startsWith('"')) {
+        name = name.slice(1, -1).replace(/\\(.)/g, "$1");
+      }
+      mailboxes.push({ name, delimiter, flags });
+    }
+    mailboxes.sort((a, b) => a.name.localeCompare(b.name));
+    return mailboxes;
+  }
+
+  /**
+   * STATUS a single mailbox — returns message/unseen/recent counts and UID info.
+   */
+  async mailboxStatus(mailbox: string): Promise<ImapMailboxStatus> {
+    const tag = this.nextTag();
+    await this.write(
+      `${tag} STATUS ${quoteImap(mailbox)} (MESSAGES UNSEEN RECENT UIDNEXT UIDVALIDITY)${CRLF}`,
+    );
+    const resp = await this.readTagged(tag);
+    if (resp.status !== "OK") {
+      throw new Error(`STATUS failed for "${mailbox}": ${resp.text}`);
+    }
+    const line = resp.untagged.find((l) => /^\* STATUS\b/.test(l));
+    const pick = (key: string): number => {
+      if (!line) return 0;
+      const m = new RegExp(`\\b${key}\\b\\s+(\\d+)`).exec(line);
+      return m ? Number(m[1]) : 0;
+    };
+    return {
+      messages: pick("MESSAGES"),
+      unseen: pick("UNSEEN"),
+      recent: pick("RECENT"),
+      uidNext: pick("UIDNEXT"),
+      uidValidity: pick("UIDVALIDITY"),
+    };
+  }
+
+  /** CREATE a new mailbox. Throws on server error. */
+  async createMailbox(mailbox: string): Promise<void> {
+    const tag = this.nextTag();
+    await this.write(`${tag} CREATE ${quoteImap(mailbox)}${CRLF}`);
+    const resp = await this.readTagged(tag);
+    if (resp.status !== "OK") {
+      throw new Error(`CREATE failed for "${mailbox}": ${resp.text}`);
+    }
+  }
+
+  /** DELETE a mailbox. Throws on server error. */
+  async deleteMailbox(mailbox: string): Promise<void> {
+    const tag = this.nextTag();
+    await this.write(`${tag} DELETE ${quoteImap(mailbox)}${CRLF}`);
+    const resp = await this.readTagged(tag);
+    if (resp.status !== "OK") {
+      throw new Error(`DELETE failed for "${mailbox}": ${resp.text}`);
+    }
+  }
+
+  /** RENAME a mailbox. Throws on server error. */
+  async renameMailbox(from: string, to: string): Promise<void> {
+    const tag = this.nextTag();
+    await this.write(`${tag} RENAME ${quoteImap(from)} ${quoteImap(to)}${CRLF}`);
+    const resp = await this.readTagged(tag);
+    if (resp.status !== "OK") {
+      throw new Error(`RENAME failed from "${from}" to "${to}": ${resp.text}`);
+    }
+  }
+
   /** Send LOGOUT and close the socket. Best-effort; always closes. */
   async logout(): Promise<void> {
     try {
@@ -335,6 +515,29 @@ export class ImapClient {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+/**
+ * Compress an array of UIDs to a compact IMAP UID-set string, collapsing
+ * consecutive runs into ranges. E.g. [1,2,3,5,7,8] → "1:3,5,7:8".
+ * Deduplicates and sorts the input before building ranges.
+ */
+function toUidSet(uids: number[]): string {
+  if (uids.length === 0) return "";
+  const sorted = [...new Set(uids)].sort((a, b) => a - b);
+  const ranges: string[] = [];
+  let start = sorted[0];
+  let end = sorted[0];
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === end + 1) {
+      end = sorted[i];
+    } else {
+      ranges.push(start === end ? `${start}` : `${start}:${end}`);
+      start = end = sorted[i];
+    }
+  }
+  ranges.push(start === end ? `${start}` : `${start}:${end}`);
+  return ranges.join(",");
+}
+
 function quoteImap(s: string): string {
   return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
@@ -344,7 +547,7 @@ function escapeQuoted(s: string): string {
 }
 
 async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
-  let timer: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error("IMAP read timeout")), ms);
   });
