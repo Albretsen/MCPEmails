@@ -2648,8 +2648,8 @@ async function readImapMessage(
       reply_to: replyToList[0] ?? null,
       subject,
       date: imapDateToIso(getHeader(h, "date")),
-      body_text: parsed.text,
-      body_html: includeHtml && parsed.html ? sanitizeEmailHtml(parsed.html) : null,
+      body_text: parsed.text ?? (parsed.html ? stripHtmlToText(parsed.html) : null),
+      body_html: parsed.html ? sanitizeEmailHtml(parsed.html) : null,
       attachments,
       is_read: markAsRead ? true : msg.flags.includes("\\Seen"),
       labels: [],
@@ -3194,6 +3194,32 @@ async function executeListInbox(
  * directly in a user-facing browser without an additional pass through a
  * DOM-based sanitizer.
  */
+
+/**
+ * Convert an HTML body to readable plain text: drop <style>/<script> blocks and
+ * all tags, decode common entities, and collapse whitespace. Used as the
+ * `body_text` fallback for HTML-only messages so an agent reading `body_text`
+ * always gets the content (e.g. OTP codes) without needing `include_html`.
+ */
+function stripHtmlToText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/div>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function sanitizeEmailHtml(html: string): string {
   let result = html;
 
@@ -3580,8 +3606,8 @@ async function readGmailMessage(
     date: msg.internalDate
       ? new Date(Number(msg.internalDate)).toISOString()
       : new Date().toISOString(),
-    body_text: textPlain,
-    body_html: includeHtml && textHtml ? sanitizeEmailHtml(textHtml) : null,
+    body_text: textPlain ?? (textHtml ? stripHtmlToText(textHtml) : null),
+    body_html: textHtml ? sanitizeEmailHtml(textHtml) : null,
     attachments,
     is_read: markAsRead ? true : isRead,
     labels: labelIds,
@@ -3677,19 +3703,8 @@ async function readOutlookMessage(
 
   if (bodyContentType === "html") {
     bodyHtml = bodyContent;
-    // Derive plain text by stripping all HTML tags.
-    bodyText = bodyContent
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/p>/gi, "\n\n")
-      .replace(/<\/div>/gi, "\n")
-      .replace(/<[^>]+>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .trim();
+    // Derive plain text from the HTML so body_text always has the content.
+    bodyText = stripHtmlToText(bodyContent);
   } else {
     bodyText = bodyContent;
   }
@@ -3784,9 +3799,7 @@ async function readOutlookMessage(
     subject: msg.subject ?? "(no subject)",
     date: msg.receivedDateTime ?? new Date().toISOString(),
     body_text: bodyText,
-    body_html: includeHtml && bodyHtml
-      ? sanitizeEmailHtml(bodyHtml)
-      : null,
+    body_html: bodyHtml ? sanitizeEmailHtml(bodyHtml) : null,
     attachments,
     is_read: markAsRead ? true : (msg.isRead ?? true),
     labels: msg.categories ?? [],
@@ -3878,7 +3891,7 @@ async function readFastmailMessage(
             "headers",
           ],
           fetchTextBodyValues: true,
-          fetchHTMLBodyValues: includeHtml,
+          fetchHTMLBodyValues: true,
           fetchAllBodyValues: false,
           maxBodyValueBytes: 5 * 1024 * 1024, // 5 MB per body part
         },
@@ -3977,12 +3990,10 @@ async function readFastmailMessage(
   }
 
   let bodyHtml: string | null = null;
-  if (includeHtml) {
-    for (const part of email.htmlBody ?? []) {
-      if (part.partId && bodyValues[part.partId]?.value) {
-        bodyHtml = bodyValues[part.partId].value ?? null;
-        break;
-      }
+  for (const part of email.htmlBody ?? []) {
+    if (part.partId && bodyValues[part.partId]?.value) {
+      bodyHtml = bodyValues[part.partId].value ?? null;
+      break;
     }
   }
 
@@ -4046,8 +4057,8 @@ async function readFastmailMessage(
     reply_to: email.replyTo?.[0] ? mapAddr(email.replyTo[0]) : null,
     subject: email.subject ?? "(no subject)",
     date: email.receivedAt ?? new Date().toISOString(),
-    body_text: bodyText,
-    body_html: includeHtml && bodyHtml ? sanitizeEmailHtml(bodyHtml) : null,
+    body_text: bodyText ?? (bodyHtml ? stripHtmlToText(bodyHtml) : null),
+    body_html: bodyHtml ? sanitizeEmailHtml(bodyHtml) : null,
     attachments,
     is_read: markAsRead ? true : !!(email.keywords?.["$seen"]),
     labels: [], // Fastmail uses mailboxIds, not labels — omitted for simplicity

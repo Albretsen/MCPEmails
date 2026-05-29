@@ -2830,7 +2830,7 @@ const BILLING_PLANS = [
 /**
  * BillingSection — shows the current plan and upgrade options.
  *
- * For free-plan workspaces it renders Pro and Enterprise upgrade cards.
+ * For free-plan workspaces it renders Solo and Team upgrade cards.
  * For paid-plan workspaces it shows the active plan and a link to the
  * customer portal (task: Implement Stripe Customer Portal link).
  *

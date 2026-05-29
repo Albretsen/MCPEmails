@@ -844,8 +844,8 @@ export default function DocsClient() {
         <div className="container">
           <h2 className="pricing-cta-h">Ready to connect your inbox?</h2>
           <p className="pricing-cta-sub">
-            Start on the Free plan — 500 MCP calls / month, no card required.
-            Upgrade to Solo or Pro when your agent needs more.
+            Start on the Free plan — unlimited, no card required.
+            Upgrade to Solo or Team for higher burst limits and team features.
           </p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href="/signup">Get started free</a>

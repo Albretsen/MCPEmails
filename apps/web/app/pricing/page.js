@@ -19,7 +19,7 @@ export const metadata = {
         url: '/og.png',
         width: 1200,
         height: 630,
-        alt: 'mcpemails Pricing — Free, Pro, and Enterprise plans',
+        alt: 'mcpemails Pricing — Free, Solo, and Team plans',
       },
     ],
   },

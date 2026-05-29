@@ -47,9 +47,9 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     plan: workspace?.plan ?? 'free',
   };
 
-  // The plan a newly created workspace would inherit (enterprise outranks pro).
-  const ownsEnterprise = workspaces.some((w) => w.isOwner && w.plan === 'enterprise');
-  const inheritPlanLabel = ownsEnterprise ? 'Enterprise' : 'Pro';
+  // The plan a newly created workspace would inherit. Paid workspaces (incl.
+  // any legacy enterprise) are "Team".
+  const inheritPlanLabel = 'Team';
 
   async function switchWorkspace(id) {
     setWsMenuOpen(false);
