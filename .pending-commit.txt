@@ -4,3 +4,11 @@ dev: implement task-3 — provider support page (/docs/providers)
 dev: implement task-4 — extend ImapClient with uidStore/uidCopy/uidMove/uidExpunge/listMailboxes/mailboxStatus/createMailbox/deleteMailbox/renameMailbox
 dev: implement task-5 — shared destructive-action plumbing (requireConfirm, MAX_BULK_IDS, bulkCapError)
 dev: implement task-6 — mark_read, mark_unread, flag_email, unflag_email, archive_email tools
+dev: implement task-7 — list_folders tool (read:email, all four providers)
+dev: implement task-8 — create_folder, rename_folder, delete_folder (manage:folders)
+dev: implement task-9 — move_email and copy_email tools (manage:folders scope)
+dev: implement task-10 — delete_email tool (confirm-gated, trash-by-default, permanent flag)
+dev: implement task-11 — bulk_move, bulk_delete, bulk_flag tools
+dev: implement task-12 — search_and_move and search_and_delete tools
+dev: implement task-13 — forward_email tool
+dev: implement task-14 — create_draft, update_draft, list_drafts, send_draft

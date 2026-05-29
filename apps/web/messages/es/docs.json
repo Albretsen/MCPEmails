@@ -1,0 +1,265 @@
+{
+  "meta": {
+    "title": "Documentación",
+    "description": "Empieza con MCPEmails en minutos. Guía de inicio rápido, referencia de herramientas y respuestas de ejemplo para agentes de Gmail, Outlook e IMAP."
+  },
+  "hero": {
+    "eyebrow": "Documentación",
+    "titleLine1": "Tu agente tiene una bandeja de entrada",
+    "titleLine2": "en cuatro pasos.",
+    "lead": "Conecta cualquier cuenta de correo, pega una URL en un cliente MCP con OAuth y autoriza. Los clientes sin OAuth usan una clave de API en su lugar. Referencia completa de herramientas y guía de conexión más abajo.",
+    "ctaQuickStart": "Inicio rápido",
+    "ctaOAuth": "OAuth (claude.ai)",
+    "ctaTools": "Referencia de herramientas",
+    "ctaProviders": "Soporte de proveedores"
+  },
+  "quickstart": {
+    "eyebrow": "Inicio rápido",
+    "heading": "En marcha en minutos.",
+    "sub": "No se requiere SDK. MCPEmails habla MCP estándar sobre HTTP, así que encaja en cualquier agente compatible con MCP.",
+    "steps": {
+      "signup": {
+        "label": "Regístrate y conecta una bandeja",
+        "heading": "Crea tu cuenta y conecta Gmail",
+        "body": "Regístrate en mcpemails.com, luego ve a Panel → Bandejas → Conectar bandeja. Elige Gmail, Outlook, iCloud, Fastmail o cualquier bandeja IMAP, después completa el flujo de OAuth o pega una contraseña de aplicación. Tu bandeja queda lista en menos de un minuto.",
+        "cta": "Conecta tu bandeja de entrada →"
+      },
+      "apikey": {
+        "label": "Crea una clave de API",
+        "heading": "Genera un token bearer para tu agente",
+        "body": "En Panel → Claves de API, haz clic en «Crear clave». Ponle nombre, selecciona los alcances que necesita tu agente (read:email y/o send:email) y copia la clave. Solo se muestra una vez."
+      },
+      "addclient": {
+        "label": "Añade MCPEmails a tu agente",
+        "heading": "Pega el endpoint MCP en tu cliente",
+        "body": "Elige la pestaña de tu cliente más abajo. Los clientes MCP con soporte de OAuth 2.0 (claude.ai, Claude Desktop, Cursor y otros) solo pegan la URL y autorizan, sin necesidad de clave de API. Los clientes sin OAuth, además del acceso por scripts, usan la clave de API del paso 02."
+      },
+      "firstcall": {
+        "label": "Haz tu primera llamada",
+        "heading": "Pídele a tu agente que revise tu bandeja",
+        "body": "Sin copiar y pegar UUIDs de bandejas. Tu agente llama primero a list_inboxes para descubrir cada bandeja conectada y su UUID, y luego le preguntas: «Revisa mi bandeja y resume los últimos 5 mensajes no leídos.»"
+      }
+    }
+  },
+  "copy": {
+    "copy": "Copiar",
+    "copied": "¡Copiado!"
+  },
+  "clientTabs": {
+    "oauth": "Clientes OAuth",
+    "claude": "Clave de API (Desktop)",
+    "cursor": "Clave de API (Cursor)",
+    "raw": "cURL en bruto"
+  },
+  "endpoint": {
+    "eyebrow": "Endpoint",
+    "heading": "Una URL, MCP estándar.",
+    "sub": "Todo el tráfico va a un único endpoint Streamable HTTP. Autentícate con un token bearer de tu panel.",
+    "bodyMethods": "Envía un cuerpo de petición JSON-RPC 2.0. Métodos admitidos: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.",
+    "infoTransport": "Transporte: <b>Streamable HTTP</b> (MCP 2025-06-18)",
+    "infoAuth": "Autenticación: <b>Authorization: Bearer &lt;api-key&gt;</b>",
+    "infoRateLimits": "Límites de tasa: <b>100 pet/min · 1.000/h · 10.000/día</b> por clave",
+    "infoFormat": "Formato de respuesta: <b>JSON-RPC 2.0</b>",
+    "handshakeLabel": "Handshake de inicialización"
+  },
+  "oauth": {
+    "eyebrow": "Conexión OAuth",
+    "heading": "Cero configuración para clientes con OAuth.",
+    "sub": "Los clientes MCP que admiten OAuth 2.0 (claude.ai, Claude Desktop, Cursor y otros) se conectan automáticamente mediante código de autorización + PKCE. Sin clave de API, sin archivo de configuración. Pega la URL y haz clic en Conectar.",
+    "step1": "<b>Paso 1:</b> Ve a claude.ai → Personalizar → Conectores → Añadir conector",
+    "step2": "<b>Paso 2:</b> Pega <code>https://www.mcpemails.com/api/mcp</code> como la URL del servidor",
+    "step3": "<b>Paso 3:</b> Haz clic en Conectar. MCPEmails abre una pantalla de autorización",
+    "step4": "<b>Paso 4:</b> Inicia sesión con tu cuenta de mcpemails y aprueba el acceso",
+    "stepDone": "<b>Listo:</b> Las seis herramientas están activas. claude.ai actualiza los tokens automáticamente",
+    "howTitle": "Cómo funciona internamente",
+    "howP1": "claude.ai se registra a sí mismo mediante el <b>Registro dinámico de clientes RFC 7591</b>, así que nunca pre-registras un ID de cliente.",
+    "howP2": "La autorización usa <b>Código de autorización OAuth 2.0 + PKCE</b> (RFC 7636), así que nunca se transmite ningún secreto de cliente.",
+    "howP3": "Los tokens se limitan exactamente a los permisos que apruebas: <code>read:email</code> y/o <code>send:email</code>.",
+    "noOauthNote": "<b>¿Usas un cliente sin soporte de OAuth?</b> Crea una clave de API en Panel → Claves de API y pásala como token bearer. Las conexiones por clave de API y por OAuth usan el mismo endpoint MCP y las mismas seis herramientas."
+  },
+  "tools": {
+    "eyebrow": "Referencia de herramientas",
+    "heading": "Seis herramientas. Todas las operaciones de correo que tu agente necesita.",
+    "sub": "Empieza con <code>list_inboxes</code> para descubrir las bandejas disponibles y sus UUIDs. Las cinco herramientas restantes toman cada una un <code>inbox_id</code> devuelto por esa llamada. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
+    "noParams": "Sin parámetros. Llama con un objeto de argumentos vacío:",
+    "showExample": "Mostrar petición y respuesta de ejemplo",
+    "hideExample": "Ocultar petición y respuesta de ejemplo",
+    "labelRequest": "Petición",
+    "labelResponse": "Respuesta",
+    "thParameter": "Parámetro",
+    "thType": "Tipo",
+    "thRequired": "Obligatorio",
+    "thDescription": "Descripción",
+    "badgeRequired": "obligatorio",
+    "badgeOptional": "opcional",
+    "list_inboxes": {
+      "title": "List Inboxes",
+      "desc": "Devuelve todas las bandejas a las que la clave de API o el token de OAuth actuales pueden acceder. Llama a esto primero para descubrir los valores de inbox_id, así nunca copias y pegas UUIDs del panel."
+    },
+    "list_inbox": {
+      "title": "List Inbox",
+      "desc": "Lista resúmenes de correos de una bandeja conectada, los más nuevos primero. Admite paginación, selección de carpeta y filtrado de no leídos.",
+      "params": {
+        "inbox_id": "UUID de la bandeja a listar. Llama primero a list_inboxes para descubrir los IDs de bandeja disponibles.",
+        "limit": "Máximo de resultados a devolver. Predeterminado 20, máximo 100.",
+        "offset": "Desplazamiento de paginación basado en cero. Predeterminado 0.",
+        "folder": "Carpeta a listar. Predeterminado \"INBOX\". Otros valores: \"SENT\", \"DRAFTS\", \"TRASH\".",
+        "unread_only": "Devolver solo mensajes no leídos. Predeterminado false."
+      }
+    },
+    "read_email": {
+      "title": "Read Email",
+      "desc": "Obtiene el contenido completo de un solo correo por ID, incluido el cuerpo en texto plano, HTML saneado opcional y datos de adjuntos opcionales.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene el correo. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "message_id": "ID de mensaje del proveedor de list_inbox o search_emails.",
+        "include_html": "Incluir el cuerpo HTML saneado. Predeterminado false.",
+        "include_attachments": "Incluir datos de adjuntos en base64. Predeterminado false.",
+        "mark_as_read": "Marcar el mensaje como leído tras obtenerlo. Predeterminado false."
+      }
+    },
+    "search_emails": {
+      "title": "Search Emails",
+      "desc": "Busca en una bandeja usando la sintaxis de consulta nativa del proveedor. Gmail admite operadores de búsqueda de Gmail; Outlook usa $search; las bandejas de Fastmail e IMAP usan búsqueda de texto.",
+      "params": {
+        "inbox_id": "UUID de la bandeja en la que buscar. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "query": "Consulta de búsqueda. Para Gmail: \"from:alice@example.com after:2026/01/01\". Para Outlook: consultas en lenguaje natural o KQL.",
+        "limit": "Máximo de resultados. Predeterminado 20, máximo 100.",
+        "offset": "Desplazamiento de paginación. Predeterminado 0.",
+        "include_folders": "Restringir la búsqueda a estos nombres de carpeta. Predeterminado: buscar en todas las carpetas."
+      }
+    },
+    "send_email": {
+      "title": "Send Email",
+      "desc": "Envía un correo nuevo desde una bandeja conectada. Admite texto plano, cuerpo HTML opcional, CC/CCO y adjuntos (hasta 10 MB en total).",
+      "params": {
+        "inbox_id": "UUID de la bandeja desde la que enviar. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "to": "Direcciones de correo de los destinatarios. Máximo 50.",
+        "subject": "Línea de asunto del correo. Máximo 998 caracteres.",
+        "body": "Cuerpo del correo en texto plano.",
+        "cc": "Destinatarios en CC. Predeterminado [].",
+        "bcc": "Destinatarios en CCO. Predeterminado [].",
+        "html_body": "Versión HTML del cuerpo (multipart/alternative). Quien llama es responsable de un HTML seguro.",
+        "reply_to": "Dirección del encabezado Reply-To.",
+        "attachments": "Adjuntos de archivo. Cada elemento: '{' filename, mime_type, data (base64) '}'. Máximo 20 elementos, 10 MB en total."
+      }
+    },
+    "reply_to_email": {
+      "title": "Reply to Email",
+      "desc": "Envía una respuesta a un correo existente. Los encabezados de hilo (In-Reply-To, References) se establecen automáticamente. Admite responder a todos y adjuntos.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene el mensaje original. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "message_id": "ID de mensaje del proveedor del correo al que se responde.",
+        "body": "Cuerpo de la respuesta en texto plano.",
+        "html_body": "Versión HTML opcional de la respuesta.",
+        "reply_all": "Responder a todos los destinatarios originales (Para + Cc). Predeterminado false.",
+        "attachments": "Adjuntos de archivo. Mismo esquema que send_email. Máximo 20 elementos."
+      }
+    }
+  },
+  "errors": {
+    "eyebrow": "Códigos de error",
+    "heading": "Códigos de error y guía de reintentos.",
+    "sub": "Los fallos de autenticación, alcance y límite de tasa devuelven un objeto <code>error</code> JSON-RPC con un código numérico. Los fallos de ejecución de herramientas (bandeja no encontrada, error del proveedor, etc.) devuelven un <code>result</code> normal con <code>isError: true</code> y un mensaje legible en <code>content[0].text</code>.",
+    "thCode": "Código",
+    "thType": "Tipo",
+    "thWhen": "Cuándo ocurre",
+    "thRetryable": "Reintentable",
+    "retryableNo": "No",
+    "exampleLabel": "Ejemplo de respuesta de error de ejecución",
+    "rows": {
+      "auth": "Clave de API ausente, malformada, revocada o caducada. También se devuelve cuando la clave de API carece del alcance requerido para la herramienta llamada.",
+      "method": "Método JSON-RPC desconocido (p. ej. llamar a un método distinto de initialize, tools/list, tools/call)",
+      "param": "Nombre de herramienta desconocido, o parámetro ausente / inválido en tools/call",
+      "rate": "Límite de tasa por clave o cuota diaria del plan superados. Revisa data.error_code: \"rate_limit_exceeded\" vs \"quota_exceeded\". Revisa data.retry_after (segundos) antes de reintentar.",
+      "tool": "La herramienta se ejecutó pero encontró un error (bandeja no encontrada, mensaje no encontrado, fallo de autenticación del proveedor, destinatario inválido, adjunto demasiado grande, 5xx del proveedor). La descripción del error está en content[0].text."
+    }
+  },
+  "rateLimits": {
+    "eyebrow": "Límites de tasa",
+    "heading": "Límites de tasa y cuotas.",
+    "perKeyTag": "Ventanas móviles por clave",
+    "perKeyHeading": "100 pet / min · 1.000 / h · 10.000 / día",
+    "perKeyBody": "Aplicados por clave de API independientemente del plan. Cuando se superan, el servidor devuelve el código de error <code>-32029</code> con <code>data.error_code: \"rate_limit_exceeded\"</code> y un campo <code>data.retry_after</code> (segundos). Respeta ese valor antes de reintentar.",
+    "planTag": "Tope por minuto del plan",
+    "planHeading": "Gratis 60 / min · Solo 300 / min · Team 1.000 / min",
+    "planBody": "El uso es ilimitado; este es un límite de ráfaga de uso justo por espacio de trabajo (agregado entre todas tus claves de API). Cuando se supera, las llamadas devuelven <code>data.error_code: \"rate_limit_exceeded\"</code> con <code>data.window: \"per_minute\"</code> y una cuenta atrás <code>data.retry_after</code> (segundos). Mejora tu plan para un tope más alto.",
+    "retryTag": "Reintentar de forma segura",
+    "retryHeading": "Respeta siempre retry_after; nunca reintentes envíos a ciegas",
+    "retryBody": "Para errores <code>rate_limit_exceeded</code>, espera <code>data.retry_after</code> segundos antes de reintentar. Usa retroceso exponencial para <code>provider_error</code>. No reintentes automáticamente <code>send_email</code> ante <code>provider_error</code>, ya que el mensaje puede haber sido aceptado por el proveedor."
+  },
+  "cta": {
+    "heading": "¿Listo para conectar tu bandeja de entrada?",
+    "sub": "Empieza en el plan Gratis: ilimitado, sin tarjeta. Mejora a Solo o Team para límites de ráfaga más altos y funciones de equipo.",
+    "primary": "Empieza gratis",
+    "secondary": "Ver precios"
+  },
+  "providers": {
+    "meta": {
+      "title": "Soporte de proveedores",
+      "description": "Mira qué proveedores de correo admite MCPEmails y qué funciones están disponibles por proveedor: Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex e IMAP genérico."
+    },
+    "labels": {
+      "generic": "IMAP genérico"
+    },
+    "features": {
+      "read": "Leer correo",
+      "search": "Buscar",
+      "send": "Enviar correo",
+      "reply": "Responder",
+      "forward": "Reenviar",
+      "flags": "Marcas de leído/no leído + destacado",
+      "folders": "Carpetas",
+      "labels": "Etiquetas / tags",
+      "move": "Mover",
+      "copy": "Copiar",
+      "delete": "Eliminar / papelera",
+      "permanent_delete": "Eliminación permanente (expunge)",
+      "drafts": "Borradores (crear / editar / enviar)",
+      "contacts": "API de contactos",
+      "scheduling": "Envío programado",
+      "search_syntax": "Sintaxis de búsqueda"
+    },
+    "sections": {
+      "Core": "Esencial",
+      "Flags & state": "Marcas y estado",
+      "Folders & labels": "Carpetas y etiquetas",
+      "Delete": "Eliminar",
+      "Drafts": "Borradores",
+      "Contacts": "Contactos",
+      "Scheduling": "Programación",
+      "Search": "Búsqueda"
+    },
+    "hero": {
+      "eyebrow": "Soporte de proveedores",
+      "heading": "Qué funciona, por proveedor.",
+      "lead": "MCPEmails conecta Gmail, Outlook, Fastmail y cualquier bandeja IMAP (iCloud, Yahoo, Zoho, Yandex, genérica). No todos los proveedores exponen las mismas APIs — esta tabla muestra exactamente qué admite hoy cada uno.",
+      "ctaConnect": "Conectar una bandeja",
+      "ctaBack": "Volver a la documentación"
+    },
+    "legend": {
+      "supported": "Compatible",
+      "notSupported": "No compatible",
+      "planned": "Planificado (aún no lanzado)",
+      "imapNote": "<b>iCloud, Yahoo, Zoho, Yandex e IMAP genérico</b> funcionan todos a través del mismo transporte IMAP/SMTP de Deno y comparten capacidades idénticas. Las columnas se muestran por separado para mayor claridad, pero su conjunto de funciones es idéntico."
+    },
+    "ariaSupported": "Compatible",
+    "ariaNotSupported": "No compatible",
+    "plannedBadge": "planificado",
+    "table": {
+      "feature": "Característica"
+    },
+    "notes": {
+      "gmail": "<b>Gmail — carpetas vs etiquetas:</b> Gmail usa un sistema plano de etiquetas en lugar de carpetas jerárquicas. «Mover» se implementa como añadir/quitar etiquetas. La copia nativa no está disponible a través de la API REST de Gmail.",
+      "permanentDelete": "<b>Eliminación permanente:</b> Gmail y Outlook mueven a la Papelera cuando eliminas — el expunge permanente no lo exponen sus APIs. Los proveedores IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, genérico) admiten tanto la papelera como el expunge definitivo.",
+      "contacts": "<b>API de contactos:</b> Gmail usa la API People de Google; Outlook usa Microsoft Graph <code>/contacts</code>. Los contactos de Fastmail CardDAV y los basados en IMAP se posponen a una versión posterior.",
+      "scheduling": "<b>Programación:</b> Planificada para todos los proveedores mediante una cola del lado del servidor (no programación nativa del proveedor). Ningún proveedor expone una API nativa de envío programado accesible sin almacenar credenciales en el servidor."
+    },
+    "cta": {
+      "heading": "¿Listo para conectar tu bandeja de entrada?",
+      "sub": "Plan Gratis: conexiones ilimitadas, sin tarjeta.",
+      "primary": "Empieza gratis",
+      "secondary": "Lee la documentación"
+    }
+  }
+}

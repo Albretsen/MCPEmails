@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
 export function LoginApp() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -52,15 +54,15 @@ export function LoginApp() {
   }
 
   function validateEmail(value) {
-    if (!value || value.trim() === '') return 'Enter your email address.';
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim())) return 'Enter a valid email address.';
+    if (!value || value.trim() === '') return t('login.errorEmailRequired');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim())) return t('login.errorEmailInvalid');
     return '';
   }
 
   async function handlePasswordSubmit(e) {
     e?.preventDefault();
     const emailErr = validateEmail(email);
-    const passErr = password.trim() === '' ? 'Enter your password.' : '';
+    const passErr = password.trim() === '' ? t('login.errorPasswordRequired') : '';
     setEmailError(emailErr);
     setPasswordError(passErr);
     if (emailErr || passErr) return;
@@ -72,7 +74,7 @@ export function LoginApp() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
     if (error) {
-      setServerError('Incorrect email or password.');
+      setServerError(t('login.errorIncorrect'));
       setStep('error');
     } else {
       window.location.href = getRedirectDestination();
@@ -94,7 +96,7 @@ export function LoginApp() {
     });
 
     if (error) {
-      setServerError(error.message ?? 'Something went wrong. Please try again.');
+      setServerError(error.message ?? t('login.errorGeneric'));
       setStep('error');
     } else {
       setStep('sent');
@@ -131,14 +133,14 @@ export function LoginApp() {
     <>
       <SocialButton
         icon={<GoogleIcon />}
-        label="Continue with Google"
+        label={t('shared.continueWithGoogle')}
         loading={socialLoading === 'google'}
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
       <SocialButton
         icon={<GitHubIcon />}
-        label="Continue with GitHub"
+        label={t('shared.continueWithGitHub')}
         loading={socialLoading === 'github'}
         onClick={handleGitHubSignIn}
         disabled={anyBusy}
@@ -166,7 +168,7 @@ export function LoginApp() {
       <div className="auth-wrap">
         <a className="auth-back" href="/">
           <MIcon name="arrow" size={14} color="currentColor" strokeWidth={2} />
-          Back to home
+          {t('shared.backToHome')}
         </a>
 
         <div className="auth-brand">
@@ -180,9 +182,9 @@ export function LoginApp() {
               <Spinner />
             </div>
             <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 6px' }}>
-              {step === 'sending' ? 'Sending your link…' : 'Signing you in…'}
+              {step === 'sending' ? t('login.sendingYourLink') : t('login.signingYouIn')}
             </h1>
-            <p className="sub" style={{ margin: 0 }}>Just a moment.</p>
+            <p className="sub" style={{ margin: 0 }}>{t('shared.justAMoment')}</p>
           </div>
         )}
 
@@ -192,16 +194,17 @@ export function LoginApp() {
             <div style={{ width: 48, height: 48, borderRadius: 999, background: 'var(--mint-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
               <MIcon name="mail" size={22} color="var(--mint-600)" />
             </div>
-            <h1>Check your email</h1>
+            <h1>{t('shared.checkYourEmail')}</h1>
             <p className="sub">
-              We sent a magic link to{' '}
-              <strong style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{email}</strong>.
-              Click the link to sign in. It expires in 60 minutes.
+              {t.rich('login.magicLinkSentLead', {
+                email,
+                strong: (c) => <strong style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{c}</strong>,
+              })}
             </p>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', marginTop: 8, lineHeight: 1.6 }}>
-              Didn't get it? Check your spam folder, or{' '}
+              {t('shared.didntGetItPrefix')}
               <button onClick={handleRetry} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--brand)', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, textDecoration: 'underline' }}>
-                try a different address
+                {t('shared.tryDifferentAddress')}
               </button>.
             </div>
           </div>
@@ -210,16 +213,16 @@ export function LoginApp() {
         {/* ── Password form ──────────────────────────────────────────────── */}
         {!isSubmitting && step !== 'sent' && mode === 'password' && (
           <div className="auth-card">
-            <h1>Sign in</h1>
+            <h1>{t('login.title')}</h1>
             {socialButtons}
             {errorBanner}
             <form className="auth-fields" onSubmit={handlePasswordSubmit} noValidate>
               <div className="field">
-                <label htmlFor="login-email">Email</label>
+                <label htmlFor="login-email">{t('login.emailLabel')}</label>
                 <input
                   id="login-email"
                   className={'input' + (emailError ? ' err' : '')}
-                  type="email" placeholder="you@company.com" autoComplete="email"
+                  type="email" placeholder={t('login.emailPlaceholder')} autoComplete="email"
                   value={email} onChange={handleEmailChange}
                   aria-invalid={emailError ? 'true' : undefined}
                   aria-describedby={emailError ? 'login-email-error' : undefined}
@@ -228,15 +231,15 @@ export function LoginApp() {
               </div>
               <div className="field">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <label htmlFor="login-password">Password</label>
+                  <label htmlFor="login-password">{t('login.passwordLabel')}</label>
                   <a href="/forgot-password" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', textDecoration: 'none' }}>
-                    Forgot password?
+                    {t('login.forgotPassword')}
                   </a>
                 </div>
                 <input
                   id="login-password"
                   className={'input' + (passwordError ? ' err' : '')}
-                  type="password" placeholder="Your password" autoComplete="current-password"
+                  type="password" placeholder={t('login.passwordPlaceholder')} autoComplete="current-password"
                   value={password} onChange={handlePasswordChange}
                   aria-invalid={passwordError ? 'true' : undefined}
                   aria-describedby={passwordError ? 'login-password-error' : undefined}
@@ -244,16 +247,16 @@ export function LoginApp() {
                 {passwordError && <div id="login-password-error" className="err-msg" role="alert">{passwordError}</div>}
               </div>
               <MBtn variant="primary" className="auth-submit" type="submit" disabled={anyBusy}>
-                Sign in
+                {t('login.submit')}
               </MBtn>
             </form>
             <div style={{ textAlign: 'center', marginTop: 12 }}>
               <button onClick={() => switchMode('magic-link')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', textDecoration: 'underline' }}>
-                Sign in without a password
+                {t('login.switchToMagicLink')}
               </button>
             </div>
             <div className="auth-footer">
-              Don't have an account? <a href="/signup">Create a workspace</a>
+              {t('login.noAccountPrefix')}<a href="/signup">{t('login.createWorkspace')}</a>
             </div>
           </div>
         )}
@@ -261,19 +264,19 @@ export function LoginApp() {
         {/* ── Magic link form ────────────────────────────────────────────── */}
         {!isSubmitting && step !== 'sent' && mode === 'magic-link' && (
           <div className="auth-card">
-            <h1>Sign in</h1>
+            <h1>{t('login.title')}</h1>
             {socialButtons}
             <p className="sub" style={{ margin: '0 0 12px' }}>
-              Enter your email and we'll send you a magic link. No password needed.
+              {t('login.magicLinkIntro')}
             </p>
             {errorBanner}
             <form className="auth-fields" onSubmit={handleMagicLinkSubmit} noValidate>
               <div className="field">
-                <label htmlFor="login-email-ml">Email</label>
+                <label htmlFor="login-email-ml">{t('login.emailLabel')}</label>
                 <input
                   id="login-email-ml"
                   className={'input' + (emailError ? ' err' : '')}
-                  type="email" placeholder="you@company.com" autoComplete="email"
+                  type="email" placeholder={t('login.emailPlaceholder')} autoComplete="email"
                   value={email} onChange={handleEmailChange}
                   aria-invalid={emailError ? 'true' : undefined}
                   aria-describedby={emailError ? 'login-email-ml-error' : undefined}
@@ -281,16 +284,16 @@ export function LoginApp() {
                 {emailError && <div id="login-email-ml-error" className="err-msg" role="alert">{emailError}</div>}
               </div>
               <MBtn variant="primary" className="auth-submit" type="submit" disabled={anyBusy}>
-                Send magic link
+                {t('login.sendMagicLink')}
               </MBtn>
             </form>
             <div style={{ textAlign: 'center', marginTop: 12 }}>
               <button onClick={() => switchMode('password')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', textDecoration: 'underline' }}>
-                Use password instead
+                {t('login.switchToPassword')}
               </button>
             </div>
             <div className="auth-footer">
-              Don't have an account? <a href="/signup">Create a workspace</a>
+              {t('login.noAccountPrefix')}<a href="/signup">{t('login.createWorkspace')}</a>
             </div>
           </div>
         )}
@@ -298,7 +301,7 @@ export function LoginApp() {
         {!isSubmitting && step !== 'sent' && (
           <div className="auth-microcopy">
             <MIcon name="shield" size={13} color="var(--mint-600)" />
-            We never store your email content. SOC 2 in progress. GDPR-friendly.
+            {t('shared.microcopy')}
           </div>
         )}
       </div>

@@ -1,0 +1,187 @@
+{
+  "meta": {
+    "title": "mcpemails · 为你的 AI 智能体配备一个收件箱。",
+    "description": "将你的电子邮件账户连接到 Claude、Cursor 或任何兼容 MCP 的客户端。通过 Model Context Protocol 阅读、发送、搜索和回复邮件。"
+  },
+  "nav": {
+    "features": "功能",
+    "how": "工作原理",
+    "pricing": "价格",
+    "docs": "文档",
+    "signIn": "登录",
+    "getStarted": "免费开始使用"
+  },
+  "hero": {
+    "titleLine1": "为你的 AI",
+    "titleLine2": "智能体配备一个",
+    "titleAccent": "收件箱。",
+    "lead": "一次性连接 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱。把一个 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。OAuth 客户端只需一键即可连接，无需配置 API 密钥。你的智能体实时阅读、搜索和发送邮件，而我们从不存储你的邮件。",
+    "ctaPrimary": "连接你的收件箱",
+    "ctaSecondary": "阅读文档",
+    "metaUnlimited": "无限量，永久免费",
+    "metaNoCard": "无需信用卡",
+    "metaNeverStored": "邮件从不存储",
+    "pipe": {
+      "flow": "一次调用的流程",
+      "agent": "AI 智能体",
+      "agentSub": "claude.ai · Desktop · Cursor",
+      "serverSub": "/api/mcp 端点",
+      "provider": "你的服务商",
+      "providerSub": "Gmail · Outlook · IMAP",
+      "logCalls": "智能体调用",
+      "logReturns": "返回收件箱 ID，无需在仪表盘里复制粘贴",
+      "logFetches": "mcpemails 通过 Gmail API 获取（令牌已轮换）",
+      "logResult": "返回 20 封邮件",
+      "logNothing": "不存储任何内容",
+      "legendPipe": "mcpemails（管道）",
+      "legendLive": "实时请求",
+      "legendData": "你的数据，你的服务商"
+    }
+  },
+  "trusted": {
+    "label": "适用于所有兼容 MCP 的智能体和客户端"
+  },
+  "features": {
+    "eyebrow": "原则",
+    "titleLine1": "关于邮件与智能体，",
+    "titleLine2": "我们坚信的六件事。",
+    "sub": "这些决定塑造了产品。如果其中任何一条不再成立，那就是一个值得提交的 bug。",
+    "items": {
+      "0": {
+        "tag": "范围",
+        "h": "六个工具，覆盖全部能力。",
+        "p": "你的智能体所需的每一项邮件任务都能用六次调用完成：<code>list_inboxes</code>、<code>list_inbox</code>、<code>read_email</code>、<code>search_emails</code>、<code>send_email</code>、<code>reply_to_email</code>。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。这就是全部集成。"
+      },
+      "1": {
+        "tag": "存储",
+        "h": "邮件实时获取，从不存储。",
+        "p": "每一次工具调用都会实时访问你的服务商：Gmail API、Microsoft Graph、Fastmail JMAP 或 IMAP。邮件正文、主题和附件会发送给智能体，并随即被丢弃。我们每个收件箱只持久化一样东西，即一个加密的令牌或应用专用密码，以便进行下一次调用。"
+      },
+      "2": {
+        "tag": "发送",
+        "h": "发送通过你自己的服务商进行。",
+        "p": "当你的智能体调用 <code>send_email</code> 或 <code>reply_to_email</code> 时，邮件会通过 Gmail API、Microsoft Graph 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。"
+      },
+      "3": {
+        "tag": "服务商",
+        "h": "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP 收件箱。",
+        "p": "Gmail、Outlook 和 Fastmail 使用 OAuth 2.0；iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-outlook、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。"
+      },
+      "4": {
+        "tag": "访问",
+        "h": "为智能体提供 OAuth 2.0，一键撤销。",
+        "p": "任何支持 OAuth 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等）都会通过授权码 + PKCE 自动连接。无需配置 API 密钥。API 密钥则面向不支持 OAuth 的客户端和脚本化访问。无论哪种方式，你都可以在仪表盘里一键撤销任何连接。"
+      },
+      "5": {
+        "tag": "安全",
+        "h": "凭据在静态时加密。",
+        "p": "OAuth 令牌和应用密码在写入数据库前会经过 AES-256-GCM 加密。解密只在调用时于一个隔离的 Edge Function 内部进行。加密密钥作为环境密钥存储，与数据库分离。"
+      }
+    }
+  },
+  "howItWorks": {
+    "eyebrow": "工作原理",
+    "title": "你是用户。我们是管道。",
+    "sub": "从注册到你的智能体开始阅读和发送邮件，只需三步。",
+    "steps": {
+      "0": {
+        "h": "连接你的收件箱",
+        "p": "登录并点击<b>连接收件箱</b>。选择 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 或粘贴一个应用密码。凭据会被加密；邮件从不存储。"
+      },
+      "1": {
+        "h": "粘贴 URL：OAuth 或 API 密钥",
+        "p": "对于支持 OAuth 2.0 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等），粘贴 <code>https://www.mcpemails.com/api/mcp</code>，点击连接并授权。无需密钥。对于不支持 OAuth 的客户端（Cline、JetBrains、自定义脚本），改为在仪表盘里生成一个限定范围的 API 密钥。"
+      },
+      "2": {
+        "h": "你的智能体处理收件箱",
+        "p": "智能体调用诸如 <code>search_emails()</code> 或 <code>reply_to_email()</code> 之类的工具。MCPEmails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。"
+      }
+    },
+    "tools": {
+      "0": "发现所有已连接的收件箱及其 ID。先调用此工具，无需从仪表盘复制粘贴 UUID。",
+      "1": "列出最近的邮件，包含发件人、主题、日期和摘要，每次调用最多 100 封。",
+      "2": "按 ID 获取单封邮件。返回解析后的纯文本和清理过的 HTML 正文，以及附件元数据。",
+      "3": "服务商原生搜索：Gmail 查询语法、Microsoft Graph、JMAP 或 IMAP SEARCH。最多返回 100 条匹配结果。",
+      "4": "通过已连接的账户发送新邮件。经由 Gmail API、Microsoft Graph、Fastmail JMAP 或 SMTP 发出：你的域名，你的送达率。",
+      "5": "在邮件会话内回复，并附带正确的 Message-ID 和 References 头。适用于 Gmail、Outlook、Fastmail 及任何 IMAP 收件箱。"
+    }
+  },
+  "quote": {
+    "text": "我希望我的智能体能处理我的收件箱，但每一个方案都意味着把我的邮件副本交给第三方。于是我打造了一直渴望存在的那条管道：连接一次，你的邮件实时获取且从不存储，并且你可以一键切断任何智能体。这就是我敢用自己收件箱去信任的产品。",
+    "role": "创始人，mcpemails"
+  },
+  "pricing": {
+    "eyebrow": "价格",
+    "title": "每个套餐都无限量。",
+    "sub": "免费版是真正的无限量。升级可获得更高的突发限额、团队功能和支持。随时切换套餐。",
+    "perForever": "/永久",
+    "perMonth": "/月",
+    "tiers": {
+      "free": {
+        "name": "免费",
+        "desc": "一切功能，无限量。献给所有用 MCP 智能体进行构建的人。",
+        "features": [
+          "无限量连接收件箱",
+          "无限量 MCP 工具调用",
+          "无限量 API 密钥和团队成员",
+          "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP",
+          "60 次请求 / 分钟",
+          "社区支持"
+        ],
+        "cta": "免费开始"
+      },
+      "solo": {
+        "name": "Solo",
+        "desc": "面向全天候运行智能体的重度用户。",
+        "features": [
+          "包含免费版的一切，无限量",
+          "300 次请求 / 分钟（5 倍突发）",
+          "完整使用分析（90 天历史）",
+          "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP",
+          "邮件支持"
+        ],
+        "cta": "获取 Solo"
+      },
+      "team": {
+        "name": "Team",
+        "desc": "面向需要角色、SSO 和审计日志的企业和团队。",
+        "features": [
+          "包含 Solo 的一切，无限量",
+          "1,000 次请求 / 分钟",
+          "团队角色和多个工作区",
+          "SSO（SAML / OIDC）+ 审计日志",
+          "完整使用分析（1 年历史）",
+          "优先支持"
+        ],
+        "cta": "获取 Team"
+      }
+    },
+    "footnote": "所有套餐：邮件实时获取且从不存储。OAuth 令牌静态加密。需要定制方案？<contact>联系我们</contact>。<comparison>查看完整功能对比 →</comparison>"
+  },
+  "footer": {
+    "tagline": "一个托管的 MCP 服务器，让 AI 智能体能够读取并发送你收件箱中的邮件，且从不存储你的邮件。",
+    "productHeading": "产品",
+    "resourcesHeading": "资源",
+    "companyHeading": "公司",
+    "linkFeatures": "功能",
+    "linkHow": "工作原理",
+    "linkPricing": "价格",
+    "linkDocs": "文档",
+    "linkToolReference": "工具参考",
+    "linkQuickstart": "快速开始",
+    "linkOauth": "OAuth 连接",
+    "linkProviders": "服务商支持",
+    "linkPrivacy": "隐私",
+    "linkTerms": "条款",
+    "copyright": "© 2026 mcpemails.",
+    "legal": "邮件从不存储 · 凭据静态加密"
+  },
+  "languageSwitcher": {
+    "label": "语言",
+    "en": "English",
+    "nb": "Norsk",
+    "es": "Español",
+    "fr": "Français",
+    "zh": "中文"
+  }
+}

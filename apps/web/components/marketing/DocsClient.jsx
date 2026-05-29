@@ -1,43 +1,43 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 
+// Rich-text tag handlers shared across this page (inline code + bold).
+const RICH = {
+  code: (chunks) => <code className="t-code-inline">{chunks}</code>,
+  b: (chunks) => <strong>{chunks}</strong>,
+};
+
 /* ─── Quick-start steps ──────────────────────────────────────── */
+// Structural data only; user-facing text is resolved via t('quickstart.steps.<id>.*').
 
 const QUICKSTART_STEPS = [
   {
     num: '01',
-    label: 'Sign up & connect an inbox',
-    heading: 'Create your account and connect Gmail',
-    body: 'Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Pick Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete the OAuth flow or paste an app password. Your inbox is ready in under a minute.',
+    id: 'signup',
     code: null,
-    cta: { label: 'Connect your inbox →', href: '/signup' },
+    cta: { id: 'signup', href: '/signup' },
   },
   {
     num: '02',
-    label: 'Create an API key',
-    heading: 'Generate a bearer token for your agent',
-    body: 'In Dashboard → API Keys, click "Create key". Name it, select the scopes your agent needs (read:email and/or send:email), and copy the key. It is shown only once.',
+    id: 'apikey',
     code: `# Your key looks like this:
 mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
     cta: null,
   },
   {
     num: '03',
-    label: 'Add MCPEmails to your agent',
-    heading: 'Paste the MCP endpoint into your client',
-    body: 'Pick the tab for your client below. MCP clients with OAuth 2.0 support (claude.ai, Claude Desktop, Cursor, and others) just paste the URL and authorize, no API key needed. Clients without OAuth, plus scripted access, use the API key from step 02.',
+    id: 'addclient',
     code: null,
     tabs: true,
     cta: null,
   },
   {
     num: '04',
-    label: 'Make your first call',
-    heading: 'Ask your agent to check your inbox',
-    body: 'No copy-pasting inbox UUIDs. Your agent calls list_inboxes first to discover every connected inbox and its UUID, then you ask: "Check my inbox and summarise the last 5 unread messages."',
+    id: 'firstcall',
     code: `# The agent calls list_inboxes first, so no hardcoded UUIDs.
 # System prompt (optional, for multi-inbox setups):
 You have access to email via MCPEmails.
@@ -106,8 +106,6 @@ const TOOLS = [
   {
     name: 'list_inboxes',
     scope: 'read:email',
-    title: 'List Inboxes',
-    desc: 'Returns all inboxes the current API key or OAuth token can access. Call this first to discover inbox_id values, so you never copy-paste UUIDs from the dashboard.',
     params: [],
     example: {
       request: `{
@@ -138,14 +136,12 @@ const TOOLS = [
   {
     name: 'list_inbox',
     scope: 'read:email',
-    title: 'List Inbox',
-    desc: 'List email summaries from a connected inbox, newest first. Supports pagination, folder selection, and unread filtering.',
     params: [
-      { name: 'inbox_id', type: 'string (uuid)', required: true,  desc: 'UUID of the inbox to list. Call list_inboxes first to discover available inbox IDs.' },
-      { name: 'limit',    type: 'integer',       required: false, desc: 'Max results to return. Default 20, max 100.' },
-      { name: 'offset',   type: 'integer',       required: false, desc: 'Zero-based pagination offset. Default 0.' },
-      { name: 'folder',   type: 'string',        required: false, desc: 'Folder to list. Default "INBOX". Other values: "SENT", "DRAFTS", "TRASH".' },
-      { name: 'unread_only', type: 'boolean',    required: false, desc: 'Return only unread messages. Default false.' },
+      { name: 'inbox_id', type: 'string (uuid)', required: true },
+      { name: 'limit',    type: 'integer',       required: false },
+      { name: 'offset',   type: 'integer',       required: false },
+      { name: 'folder',   type: 'string',        required: false },
+      { name: 'unread_only', type: 'boolean',    required: false },
     ],
     example: {
       request: `{
@@ -181,14 +177,12 @@ const TOOLS = [
   {
     name: 'read_email',
     scope: 'read:email',
-    title: 'Read Email',
-    desc: 'Fetch the full content of a single email by ID, including plain-text body, optional sanitized HTML, and optional attachment data.',
     params: [
-      { name: 'inbox_id',           type: 'string (uuid)', required: true,  desc: 'UUID of the inbox containing the email. Call list_inboxes to get available inbox IDs.' },
-      { name: 'message_id',         type: 'string',        required: true,  desc: 'Provider message ID from list_inbox or search_emails.' },
-      { name: 'include_html',       type: 'boolean',       required: false, desc: 'Include sanitized HTML body. Default false.' },
-      { name: 'include_attachments',type: 'boolean',       required: false, desc: 'Include base64 attachment data. Default false.' },
-      { name: 'mark_as_read',       type: 'boolean',       required: false, desc: 'Mark message as read after fetching. Default false.' },
+      { name: 'inbox_id',           type: 'string (uuid)', required: true },
+      { name: 'message_id',         type: 'string',        required: true },
+      { name: 'include_html',       type: 'boolean',       required: false },
+      { name: 'include_attachments',type: 'boolean',       required: false },
+      { name: 'mark_as_read',       type: 'boolean',       required: false },
     ],
     example: {
       request: `{
@@ -220,14 +214,12 @@ const TOOLS = [
   {
     name: 'search_emails',
     scope: 'read:email',
-    title: 'Search Emails',
-    desc: 'Search an inbox using provider-native query syntax. Gmail supports Gmail search operators; Outlook uses $search; Fastmail and IMAP inboxes use text search.',
     params: [
-      { name: 'inbox_id',       type: 'string (uuid)', required: true,  desc: 'UUID of the inbox to search. Call list_inboxes to get available inbox IDs.' },
-      { name: 'query',          type: 'string',        required: true,  desc: 'Search query. For Gmail: "from:alice@example.com after:2026/01/01". For Outlook: natural-language or KQL queries.' },
-      { name: 'limit',          type: 'integer',       required: false, desc: 'Max results. Default 20, max 100.' },
-      { name: 'offset',         type: 'integer',       required: false, desc: 'Pagination offset. Default 0.' },
-      { name: 'include_folders',type: 'array',         required: false, desc: 'Restrict search to these folder names. Default: search all folders.' },
+      { name: 'inbox_id',       type: 'string (uuid)', required: true },
+      { name: 'query',          type: 'string',        required: true },
+      { name: 'limit',          type: 'integer',       required: false },
+      { name: 'offset',         type: 'integer',       required: false },
+      { name: 'include_folders',type: 'array',         required: false },
     ],
     example: {
       request: `{
@@ -263,18 +255,16 @@ const TOOLS = [
   {
     name: 'send_email',
     scope: 'send:email',
-    title: 'Send Email',
-    desc: 'Send a new email from a connected inbox. Supports plain text, optional HTML body, CC/BCC, and file attachments (up to 10 MB total).',
     params: [
-      { name: 'inbox_id', type: 'string (uuid)',  required: true,  desc: 'UUID of the inbox to send from. Call list_inboxes to get available inbox IDs.' },
-      { name: 'to',       type: 'array[string]',  required: true,  desc: 'Recipient email addresses. Max 50.' },
-      { name: 'subject',  type: 'string',         required: true,  desc: 'Email subject line. Max 998 characters.' },
-      { name: 'body',     type: 'string',         required: true,  desc: 'Plain-text email body.' },
-      { name: 'cc',       type: 'array[string]',  required: false, desc: 'CC recipients. Default [].' },
-      { name: 'bcc',      type: 'array[string]',  required: false, desc: 'BCC recipients. Default [].' },
-      { name: 'html_body',type: 'string',         required: false, desc: 'HTML version of the body (multipart/alternative). Caller is responsible for safe HTML.' },
-      { name: 'reply_to', type: 'string',         required: false, desc: 'Reply-To header address.' },
-      { name: 'attachments', type: 'array',       required: false, desc: 'File attachments. Each item: { filename, mime_type, data (base64) }. Max 20 items, 10 MB total.' },
+      { name: 'inbox_id', type: 'string (uuid)',  required: true },
+      { name: 'to',       type: 'array[string]',  required: true },
+      { name: 'subject',  type: 'string',         required: true },
+      { name: 'body',     type: 'string',         required: true },
+      { name: 'cc',       type: 'array[string]',  required: false },
+      { name: 'bcc',      type: 'array[string]',  required: false },
+      { name: 'html_body',type: 'string',         required: false },
+      { name: 'reply_to', type: 'string',         required: false },
+      { name: 'attachments', type: 'array',       required: false },
     ],
     example: {
       request: `{
@@ -303,15 +293,13 @@ const TOOLS = [
   {
     name: 'reply_to_email',
     scope: 'send:email',
-    title: 'Reply to Email',
-    desc: 'Send a reply to an existing email. Threading headers (In-Reply-To, References) are set automatically. Supports reply-all and attachments.',
     params: [
-      { name: 'inbox_id',   type: 'string (uuid)', required: true,  desc: 'UUID of the inbox that contains the original message. Call list_inboxes to get available inbox IDs.' },
-      { name: 'message_id', type: 'string',        required: true,  desc: 'Provider message ID of the email being replied to.' },
-      { name: 'body',       type: 'string',        required: true,  desc: 'Plain-text reply body.' },
-      { name: 'html_body',  type: 'string',        required: false, desc: 'Optional HTML version of the reply.' },
-      { name: 'reply_all',  type: 'boolean',       required: false, desc: 'Reply to all original recipients (To + Cc). Default false.' },
-      { name: 'attachments',type: 'array',         required: false, desc: 'File attachments. Same schema as send_email. Max 20 items.' },
+      { name: 'inbox_id',   type: 'string (uuid)', required: true },
+      { name: 'message_id', type: 'string',        required: true },
+      { name: 'body',       type: 'string',        required: true },
+      { name: 'html_body',  type: 'string',        required: false },
+      { name: 'reply_all',  type: 'boolean',       required: false },
+      { name: 'attachments',type: 'array',         required: false },
     ],
     example: {
       request: `{
@@ -342,16 +330,17 @@ const TOOLS = [
 /* ─── Error codes ────────────────────────────────────────────── */
 
 const ERROR_CODES = [
-  { code: '-32001', type: 'JSON-RPC error', when: 'Missing, malformed, revoked, or expired API key. Also returned when the API key lacks the required scope for the called tool.', retryable: false },
-  { code: '-32601', type: 'JSON-RPC error', when: 'Unknown JSON-RPC method (e.g. calling a method other than initialize, tools/list, tools/call)', retryable: false },
-  { code: '-32602', type: 'JSON-RPC error', when: 'Unknown tool name, or missing / invalid parameter in tools/call', retryable: false },
-  { code: '-32029', type: 'JSON-RPC error', when: 'Per-key rate limit or plan daily quota exceeded. Check data.error_code: "rate_limit_exceeded" vs "quota_exceeded". Check data.retry_after (seconds) before retrying.', retryable: true },
-  { code: 'isError: true', type: 'Tool result', when: 'Tool executed but encountered an error (inbox not found, message not found, provider auth failure, invalid recipient, attachment too large, provider 5xx). The error description is in content[0].text.', retryable: false },
+  { code: '-32001', type: 'JSON-RPC error', whenKey: 'auth', retryable: false },
+  { code: '-32601', type: 'JSON-RPC error', whenKey: 'method', retryable: false },
+  { code: '-32602', type: 'JSON-RPC error', whenKey: 'param', retryable: false },
+  { code: '-32029', type: 'JSON-RPC error', whenKey: 'rate', retryable: true },
+  { code: 'isError: true', type: 'Tool result', whenKey: 'tool', retryable: false },
 ];
 
 /* ─── Sub-components ─────────────────────────────────────────── */
 
 function CodeBlock({ code, lang = '' }) {
+  const t = useTranslations('docs');
   const [copied, setCopied] = useState(false);
   const copy = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -366,7 +355,7 @@ function CodeBlock({ code, lang = '' }) {
         {lang && <span className="docs-code-lang">{lang}</span>}
         <button className="copy-btn" onClick={copy} style={{ marginLeft: 'auto' }}>
           <MIcon name="copy" size={12} color="var(--fg-3)" />
-          {copied ? 'Copied!' : 'Copy'}
+          {copied ? t('copy.copied') : t('copy.copy')}
         </button>
       </div>
       <pre className="docs-pre"><code>{code}</code></pre>
@@ -375,18 +364,19 @@ function CodeBlock({ code, lang = '' }) {
 }
 
 function ClientTabs() {
+  const t = useTranslations('docs');
   const [tab, setTab] = useState('oauth');
-  const labels = { oauth: 'OAuth clients', claude: 'API key (Desktop)', cursor: 'API key (Cursor)', raw: 'Raw cURL' };
+  const tabKeys = ['oauth', 'claude', 'cursor', 'raw'];
   return (
     <div style={{ marginTop: 16 }}>
       <div className="client-tabs">
-        {Object.keys(labels).map(k => (
+        {tabKeys.map(k => (
           <button
             key={k}
             className={'client-tab' + (tab === k ? ' active' : '')}
             onClick={() => setTab(k)}
           >
-            {labels[k]}
+            {t(`clientTabs.${k}`)}
           </button>
         ))}
       </div>
@@ -396,20 +386,22 @@ function ClientTabs() {
 }
 
 function QuickstartStep({ step }) {
+  const t = useTranslations('docs');
+  const base = `quickstart.steps.${step.id}`;
   return (
     <div className="docs-step">
       <div className="docs-step-num">
         <span className="num">{step.num}</span>
-        <span className="t">{step.label}</span>
+        <span className="t">{t(`${base}.label`)}</span>
       </div>
       <div className="docs-step-body">
-        <h3>{step.heading}</h3>
-        <p>{step.body}</p>
+        <h3>{t(`${base}.heading`)}</h3>
+        <p>{t(`${base}.body`)}</p>
         {step.tabs && <ClientTabs />}
         {step.code && <CodeBlock code={step.code} />}
         {step.cta && (
           <a className="btn btn-primary" href={step.cta.href} style={{ marginTop: 16 }}>
-            {step.cta.label}
+            {t(`${base}.cta`)}
           </a>
         )}
       </div>
@@ -418,6 +410,7 @@ function QuickstartStep({ step }) {
 }
 
 function ParamBadge({ required }) {
+  const t = useTranslations('docs');
   return (
     <span
       className="docs-badge"
@@ -427,7 +420,7 @@ function ParamBadge({ required }) {
         border: required ? '1px solid rgba(37,71,229,0.18)' : '1px solid var(--border-1)',
       }}
     >
-      {required ? 'required' : 'optional'}
+      {required ? t('tools.badgeRequired') : t('tools.badgeOptional')}
     </span>
   );
 }
@@ -449,6 +442,7 @@ function ScopeBadge({ scope }) {
 }
 
 function ToolSection({ tool }) {
+  const t = useTranslations('docs');
   const [showExample, setShowExample] = useState(false);
   return (
     <div className="docs-tool" id={'tool-' + tool.name}>
@@ -457,22 +451,22 @@ function ToolSection({ tool }) {
           <code className="docs-tool-name">{tool.name}</code>
           <ScopeBadge scope={tool.scope} />
         </div>
-        <p className="docs-tool-desc">{tool.desc}</p>
+        <p className="docs-tool-desc">{t(`tools.${tool.name}.desc`)}</p>
       </div>
 
       {tool.params.length === 0 ? (
         <div className="docs-params-wrap" style={{ padding: '12px 16px', color: 'var(--fg-3)', fontSize: 13, fontFamily: 'var(--font-sans)' }}>
-          No parameters. Call with an empty arguments object: <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>{'{}'}</code>
+          {t('tools.noParams')} <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>{'{}'}</code>
         </div>
       ) : (
         <div className="docs-params-wrap">
           <table className="docs-params-tbl">
             <thead>
               <tr>
-                <th>Parameter</th>
-                <th>Type</th>
-                <th>Required</th>
-                <th>Description</th>
+                <th>{t('tools.thParameter')}</th>
+                <th>{t('tools.thType')}</th>
+                <th>{t('tools.thRequired')}</th>
+                <th>{t('tools.thDescription')}</th>
               </tr>
             </thead>
             <tbody>
@@ -481,7 +475,7 @@ function ToolSection({ tool }) {
                   <td><code className="docs-param-name">{p.name}</code></td>
                   <td><span className="docs-type">{p.type}</span></td>
                   <td><ParamBadge required={p.required} /></td>
-                  <td className="docs-param-desc">{p.desc}</td>
+                  <td className="docs-param-desc">{t(`tools.${tool.name}.params.${p.name}`)}</td>
                 </tr>
               ))}
             </tbody>
@@ -494,17 +488,17 @@ function ToolSection({ tool }) {
         onClick={() => setShowExample(v => !v)}
       >
         <MIcon name="arrow" size={12} color="var(--cobalt-600)" />
-        {showExample ? 'Hide' : 'Show'} example request &amp; response
+        {showExample ? t('tools.hideExample') : t('tools.showExample')}
       </button>
 
       {showExample && (
         <div className="docs-example-grid">
           <div>
-            <div className="docs-example-label">Request</div>
+            <div className="docs-example-label">{t('tools.labelRequest')}</div>
             <CodeBlock code={tool.example.request} lang="json" />
           </div>
           <div>
-            <div className="docs-example-label">Response</div>
+            <div className="docs-example-label">{t('tools.labelResponse')}</div>
             <CodeBlock code={tool.example.response} lang="json" />
           </div>
         </div>
@@ -516,6 +510,7 @@ function ToolSection({ tool }) {
 /* ─── Page ───────────────────────────────────────────────────── */
 
 export default function DocsClient() {
+  const t = useTranslations('docs');
   return (
     <div>
       <Nav />
@@ -523,20 +518,18 @@ export default function DocsClient() {
       {/* Hero */}
       <section className="pricing-page-hero">
         <div className="container">
-          <div className="eye-label">Documentation</div>
+          <div className="eye-label">{t('hero.eyebrow')}</div>
           <h1 className="pricing-page-h1">
-            Your agent has an inbox<br />in four steps.
+            {t('hero.titleLine1')}<br />{t('hero.titleLine2')}
           </h1>
           <p className="pricing-page-lead">
-            Connect any email account, paste one URL into an OAuth-capable MCP
-            client and authorize. Clients without OAuth use an API key instead.
-            Full tool reference and connection guide below.
+            {t('hero.lead')}
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <a className="btn btn-primary btn-lg" href="#quickstart">Quick start</a>
-            <a className="btn btn-secondary btn-lg" href="#oauth">OAuth (claude.ai)</a>
-            <a className="btn btn-secondary btn-lg" href="#tools">Tool reference</a>
-            <a className="btn btn-secondary btn-lg" href="/docs/providers">Provider support</a>
+            <a className="btn btn-primary btn-lg" href="#quickstart">{t('hero.ctaQuickStart')}</a>
+            <a className="btn btn-secondary btn-lg" href="#oauth">{t('hero.ctaOAuth')}</a>
+            <a className="btn btn-secondary btn-lg" href="#tools">{t('hero.ctaTools')}</a>
+            <a className="btn btn-secondary btn-lg" href="/docs/providers">{t('hero.ctaProviders')}</a>
           </div>
         </div>
       </section>
@@ -545,9 +538,9 @@ export default function DocsClient() {
       <section className="section" id="quickstart" style={{ paddingTop: 80, paddingBottom: 80 }}>
         <div className="container">
           <div className="section-head">
-            <div className="eye-label">Quick start</div>
-            <h2>Up and running in minutes.</h2>
-            <p className="sub">No SDK required. MCPEmails speaks standard MCP over HTTP, so it drops into any MCP-compatible agent.</p>
+            <div className="eye-label">{t('quickstart.eyebrow')}</div>
+            <h2>{t('quickstart.heading')}</h2>
+            <p className="sub">{t('quickstart.sub')}</p>
           </div>
           <div className="docs-steps">
             {QUICKSTART_STEPS.map(step => (
@@ -561,11 +554,10 @@ export default function DocsClient() {
       <section className="section" id="endpoint" style={{ paddingTop: 64, paddingBottom: 64, background: 'var(--bg-page)' }}>
         <div className="container">
           <div className="section-head">
-            <div className="eye-label">Endpoint</div>
-            <h2>One URL, standard MCP.</h2>
+            <div className="eye-label">{t('endpoint.eyebrow')}</div>
+            <h2>{t('endpoint.heading')}</h2>
             <p className="sub">
-              All traffic goes to a single Streamable HTTP endpoint. Authenticate with a
-              bearer token from your dashboard.
+              {t('endpoint.sub')}
             </p>
           </div>
 
@@ -576,33 +568,32 @@ export default function DocsClient() {
                 <code className="docs-url">https://www.mcpemails.com/api/mcp</code>
               </div>
               <p style={{ margin: '12px 0 0', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.6 }}>
-                Send a JSON-RPC 2.0 request body. Supported methods: <code>initialize</code>,{' '}
-                <code>tools/list</code>, <code>tools/call</code>.
+                {t.rich('endpoint.bodyMethods', RICH)}
               </p>
             </div>
 
             <div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span>Transport: <strong>Streamable HTTP</strong> (MCP 2025-06-18)</span>
+                <span>{t.rich('endpoint.infoTransport', RICH)}</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span>Auth: <strong>Authorization: Bearer &lt;api-key&gt;</strong></span>
+                <span>{t.rich('endpoint.infoAuth', RICH)}</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span>Rate limits: <strong>100 req/min · 1,000/hr · 10,000/day</strong> per key</span>
+                <span>{t.rich('endpoint.infoRateLimits', RICH)}</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span>Response format: <strong>JSON-RPC 2.0</strong></span>
+                <span>{t.rich('endpoint.infoFormat', RICH)}</span>
               </div>
             </div>
           </div>
 
           <div style={{ marginTop: 32 }}>
-            <div className="docs-example-label" style={{ marginBottom: 8 }}>Initialize handshake</div>
+            <div className="docs-example-label" style={{ marginBottom: 8 }}>{t('endpoint.handshakeLabel')}</div>
             <CodeBlock
               code={`curl -X POST https://www.mcpemails.com/api/mcp \\
   -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
@@ -627,12 +618,10 @@ export default function DocsClient() {
       <section className="section" id="oauth" style={{ paddingTop: 64, paddingBottom: 64 }}>
         <div className="container">
           <div className="section-head">
-            <div className="eye-label">OAuth connection</div>
-            <h2>Zero-config for OAuth-capable clients.</h2>
+            <div className="eye-label">{t('oauth.eyebrow')}</div>
+            <h2>{t('oauth.heading')}</h2>
             <p className="sub">
-              MCP clients that support OAuth 2.0 (claude.ai, Claude Desktop, Cursor,
-              and others) connect automatically via authorization code + PKCE.
-              No API key, no config file. Paste the URL and click Connect.
+              {t('oauth.sub')}
             </p>
           </div>
 
@@ -640,44 +629,38 @@ export default function DocsClient() {
             <div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Step 1:</strong> Go to claude.ai → Customize → Connectors → Add connector</span>
+                <span>{t.rich('oauth.step1', RICH)}</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Step 2:</strong> Paste <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>https://www.mcpemails.com/api/mcp</code> as the server URL</span>
+                <span>{t.rich('oauth.step2', RICH)}</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Step 3:</strong> Click Connect. MCPEmails opens an authorization screen</span>
+                <span>{t.rich('oauth.step3', RICH)}</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Step 4:</strong> Sign in with your mcpemails account and approve access</span>
+                <span>{t.rich('oauth.step4', RICH)}</span>
               </div>
               <div className="docs-info-row">
                 <MIcon name="check" size={14} color="var(--mint-600)" />
-                <span><strong>Done:</strong> All six tools are live. claude.ai refreshes tokens automatically</span>
+                <span>{t.rich('oauth.stepDone', RICH)}</span>
               </div>
             </div>
 
             <div>
               <div className="docs-endpoint-card">
                 <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', lineHeight: 1.7 }}>
-                  <p style={{ margin: '0 0 10px', fontWeight: 600, color: 'var(--fg-1)' }}>How it works under the hood</p>
+                  <p style={{ margin: '0 0 10px', fontWeight: 600, color: 'var(--fg-1)' }}>{t('oauth.howTitle')}</p>
                   <p style={{ margin: '0 0 8px' }}>
-                    claude.ai registers itself via{' '}
-                    <strong>RFC 7591 Dynamic Client Registration</strong>, so you never
-                    pre-register a client ID.
+                    {t.rich('oauth.howP1', RICH)}
                   </p>
                   <p style={{ margin: '0 0 8px' }}>
-                    Authorization uses <strong>OAuth 2.0 Authorization Code + PKCE</strong> (RFC 7636),
-                    so no client secret is ever transmitted.
+                    {t.rich('oauth.howP2', RICH)}
                   </p>
                   <p style={{ margin: 0 }}>
-                    Tokens are scoped to exactly the permissions you approve:{' '}
-                    <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 4px', borderRadius: 3 }}>read:email</code>{' '}
-                    and/or{' '}
-                    <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', background: 'var(--bg-sunken)', padding: '1px 4px', borderRadius: 3 }}>send:email</code>.
+                    {t.rich('oauth.howP3', RICH)}
                   </p>
                 </div>
               </div>
@@ -685,9 +668,7 @@ export default function DocsClient() {
           </div>
 
           <div style={{ padding: '14px 18px', background: 'var(--bg-sunken)', borderRadius: 8, border: '1px solid var(--border-1)', fontSize: 13, color: 'var(--fg-3)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
-            <strong style={{ color: 'var(--fg-2)' }}>Using a client without OAuth support?</strong>{' '}
-            Create an API key in Dashboard → API Keys and pass it as a bearer token.
-            API key and OAuth connections use the same MCP endpoint and the same six tools.
+            {t.rich('oauth.noOauthNote', RICH)}
           </div>
         </div>
       </section>
@@ -696,22 +677,19 @@ export default function DocsClient() {
       <section className="section" id="tools" style={{ paddingTop: 80, paddingBottom: 80 }}>
         <div className="container">
           <div className="section-head">
-            <div className="eye-label">Tool reference</div>
-            <h2>Six tools. All the email ops your agent needs.</h2>
+            <div className="eye-label">{t('tools.eyebrow')}</div>
+            <h2>{t('tools.heading')}</h2>
             <p className="sub">
-              Start with <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>list_inboxes</code>{' '}
-              to discover available inboxes and their UUIDs. The remaining five tools each take an{' '}
-              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>inbox_id</code>{' '}
-              returned by that call. Click "Show example" to see a full request and response.
+              {t.rich('tools.sub', RICH)}
             </p>
           </div>
 
           {/* Tool nav */}
           <div className="docs-tool-nav">
-            {TOOLS.map(t => (
-              <a key={t.name} className="docs-tool-nav-item" href={'#tool-' + t.name}>
-                <code>{t.name}</code>
-                <ScopeBadge scope={t.scope} />
+            {TOOLS.map(tool => (
+              <a key={tool.name} className="docs-tool-nav-item" href={'#tool-' + tool.name}>
+                <code>{tool.name}</code>
+                <ScopeBadge scope={tool.scope} />
               </a>
             ))}
           </div>
@@ -728,13 +706,10 @@ export default function DocsClient() {
       <section className="section" id="errors" style={{ paddingTop: 64, paddingBottom: 64, background: 'var(--bg-page)' }}>
         <div className="container">
           <div className="section-head">
-            <div className="eye-label">Error codes</div>
-            <h2>Error codes &amp; retry guidance.</h2>
+            <div className="eye-label">{t('errors.eyebrow')}</div>
+            <h2>{t('errors.heading')}</h2>
             <p className="sub">
-              Auth, scope, and rate limit failures return a JSON-RPC <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>error</code> object with a numeric code.
-              Tool execution failures (inbox not found, provider error, etc.) return a normal{' '}
-              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>result</code> with{' '}
-              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>isError: true</code> and a human-readable message in <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>content[0].text</code>.
+              {t.rich('errors.sub', RICH)}
             </p>
           </div>
 
@@ -742,10 +717,10 @@ export default function DocsClient() {
             <table className="comparison-tbl">
               <thead>
                 <tr>
-                  <th>Code</th>
-                  <th>Type</th>
-                  <th>When it occurs</th>
-                  <th style={{ textAlign: 'center' }}>Retryable</th>
+                  <th>{t('errors.thCode')}</th>
+                  <th>{t('errors.thType')}</th>
+                  <th>{t('errors.thWhen')}</th>
+                  <th style={{ textAlign: 'center' }}>{t('errors.thRetryable')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -764,11 +739,11 @@ export default function DocsClient() {
                         {e.type}
                       </span>
                     </td>
-                    <td style={{ color: 'var(--fg-2)', fontSize: 14 }}>{e.when}</td>
+                    <td style={{ color: 'var(--fg-2)', fontSize: 14 }}>{t(`errors.rows.${e.whenKey}`)}</td>
                     <td style={{ textAlign: 'center' }}>
                       {e.retryable
                         ? <MIcon name="check" size={16} color="var(--mint-600)" />
-                        : <span style={{ color: 'var(--fg-4)', fontSize: 16 }}>No</span>
+                        : <span style={{ color: 'var(--fg-4)', fontSize: 16 }}>{t('errors.retryableNo')}</span>
                       }
                     </td>
                   </tr>
@@ -778,7 +753,7 @@ export default function DocsClient() {
           </div>
 
           <div style={{ marginTop: 32 }}>
-            <div className="docs-example-label" style={{ marginBottom: 8 }}>Example execution error response</div>
+            <div className="docs-example-label" style={{ marginBottom: 8 }}>{t('errors.exampleLabel')}</div>
             <CodeBlock
               code={`// Tool execution error: inbox not found
 {
@@ -816,25 +791,25 @@ export default function DocsClient() {
       <section className="section" id="rate-limits" style={{ paddingTop: 64, paddingBottom: 64 }}>
         <div className="container" style={{ maxWidth: 800 }}>
           <div className="section-head">
-            <div className="eye-label">Rate limits</div>
-            <h2>Rate limits &amp; quotas.</h2>
+            <div className="eye-label">{t('rateLimits.eyebrow')}</div>
+            <h2>{t('rateLimits.heading')}</h2>
           </div>
 
           <div className="docs-steps" style={{ gap: 14 }}>
             <div className="step">
-              <div className="num">Per-key rolling windows</div>
-              <h4>100 req / min · 1,000 / hr · 10,000 / day</h4>
-              <p>Enforced per API key regardless of plan. When exceeded, the server returns error code <code>-32029</code> with <code>data.error_code: "rate_limit_exceeded"</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying.</p>
+              <div className="num">{t('rateLimits.perKeyTag')}</div>
+              <h4>{t('rateLimits.perKeyHeading')}</h4>
+              <p>{t.rich('rateLimits.perKeyBody', RICH)}</p>
             </div>
             <div className="step">
-              <div className="num">Plan per-minute ceiling</div>
-              <h4>Free 60 / min · Solo 300 / min · Team 1,000 / min</h4>
-              <p>Usage is unlimited; this is a per-workspace fair-use burst limit (aggregated across all your API keys). When exceeded, calls return <code>data.error_code: "rate_limit_exceeded"</code> with <code>data.window: "per_minute"</code> and a <code>data.retry_after</code> countdown (seconds). Upgrade your plan for a higher ceiling.</p>
+              <div className="num">{t('rateLimits.planTag')}</div>
+              <h4>{t('rateLimits.planHeading')}</h4>
+              <p>{t.rich('rateLimits.planBody', RICH)}</p>
             </div>
             <div className="step">
-              <div className="num">Retrying safely</div>
-              <h4>Always honour retry_after; never retry sends blindly</h4>
-              <p>For <code>rate_limit_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>send_email</code> on <code>provider_error</code>, since the message may have already been accepted by the provider.</p>
+              <div className="num">{t('rateLimits.retryTag')}</div>
+              <h4>{t('rateLimits.retryHeading')}</h4>
+              <p>{t.rich('rateLimits.retryBody', RICH)}</p>
             </div>
           </div>
         </div>
@@ -843,14 +818,13 @@ export default function DocsClient() {
       {/* CTA band */}
       <section className="pricing-cta-band">
         <div className="container">
-          <h2 className="pricing-cta-h">Ready to connect your inbox?</h2>
+          <h2 className="pricing-cta-h">{t('cta.heading')}</h2>
           <p className="pricing-cta-sub">
-            Start on the Free plan: unlimited, no card required.
-            Upgrade to Solo or Team for higher burst limits and team features.
+            {t('cta.sub')}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">Get started free</a>
-            <a className="btn btn-on-dark btn-lg" href="/pricing">See pricing</a>
+            <a className="btn btn-primary btn-lg" href="/signup">{t('cta.primary')}</a>
+            <a className="btn btn-on-dark btn-lg" href="/pricing">{t('cta.secondary')}</a>
           </div>
         </div>
       </section>

@@ -1,0 +1,187 @@
+{
+  "meta": {
+    "title": "Términos del servicio",
+    "description": "Los términos que rigen tu uso de MCPEmails: uso aceptable, responsabilidad, terminación de cuenta y ley aplicable."
+  },
+  "hero": {
+    "eyebrow": "Legal",
+    "title": "Términos del servicio",
+    "lead": "Estos términos rigen tu acceso y uso de MCPEmails. Al crear una cuenta o usar el servicio aceptas quedar vinculado por ellos. Léelos detenidamente.",
+    "dates": "Última actualización: {lastUpdated}  ·  Vigente desde: {effective}"
+  },
+  "agreement": {
+    "title": "1. Aceptación de estos Términos",
+    "p1": "Estos Términos del servicio (\"Términos\") constituyen un acuerdo legalmente vinculante entre tú (\"tú\" o \"Usuario\") y {company} (\"MCPEmails\", \"nosotros\", \"nos\" o \"nuestro\"), que rige tu acceso y uso del servicio MCPEmails, incluido el sitio web en <b>mcpemails.com</b>, el panel, el endpoint de API de Model Context Protocol (MCP) y todo el software y la documentación relacionados (colectivamente, el \"Servicio\").",
+    "p2": "Al crear una cuenta, aceptar estos Términos o usar cualquier parte del Servicio, confirmas que tienes al menos 16 años (o la edad mínima de consentimiento digital en tu jurisdicción, si es mayor), que tienes la capacidad legal para celebrar un acuerdo vinculante y que aceptas quedar vinculado por estos Términos y por nuestra <privacy>Política de privacidad</privacy>, que se incorpora a estos Términos por referencia.",
+    "p3": "Si aceptas estos Términos en nombre de una empresa u otra entidad legal, declaras y garantizas que tienes autoridad para vincular a esa entidad, en cuyo caso \"tú\" se refiere a esa entidad.",
+    "p4": "Si no estás de acuerdo con estos Términos, no crees una cuenta ni uses el Servicio."
+  },
+  "serviceDescription": {
+    "title": "2. Descripción del Servicio",
+    "p1": "MCPEmails proporciona una plataforma de software como servicio que te permite conectar cuentas de correo (Gmail, Microsoft Outlook, Fastmail y cuentas IMAP compatibles) y exponer esas cuentas a agentes de IA mediante el Model Context Protocol (MCP). El Servicio incluye:",
+    "list": [
+      "Un panel web para gestionar cuentas de correo conectadas, claves de API y monitoreo de uso.",
+      "Un endpoint HTTP compatible con MCP contra el cual los agentes de IA se autentican usando claves de API que generas.",
+      "Integración con OAuth con proveedores de correo compatibles para obtener y gestionar el acceso delegado a tus buzones.",
+      "Un registro de uso y auditoría que muestra qué herramientas han llamado tus agentes y cuándo."
+    ],
+    "p2": "MCPEmails actúa como un puente de protocolo. No almacenamos el contenido del correo en nuestros servidores; lo recuperamos en vivo desde tu proveedor de correo en el momento en que un agente lo solicita y lo devolvemos en la misma respuesta HTTP. Consulta nuestra <privacy>Política de privacidad</privacy> para una descripción completa de qué datos sí conservamos y cuáles no.",
+    "p3": "Nos reservamos el derecho de modificar, suspender o discontinuar cualquier parte del Servicio en cualquier momento. Cuando sea posible, daremos al menos 30 días de aviso de cambios materiales a los usuarios de pago."
+  },
+  "accountRegistration": {
+    "title": "3. Registro y seguridad de la cuenta",
+    "h31": "3.1 Registro",
+    "p31": "Debes registrar una cuenta para usar la mayoría de las funciones del Servicio. Aceptas proporcionar información precisa, actual y completa durante el registro y mantener esa información actualizada. Las cuentas registradas con información falsa, inexacta o engañosa pueden ser suspendidas o terminadas sin previo aviso.",
+    "h32": "3.2 Una cuenta por persona",
+    "p32": "Cada cuenta es para el uso de una persona física o una entidad legal. No puedes compartir credenciales de inicio de sesión con otras personas ni crear múltiples cuentas para eludir los límites del plan u otras restricciones.",
+    "h33": "3.3 Seguridad de la cuenta",
+    "p33": "Eres responsable de mantener la seguridad de las credenciales de tu cuenta, incluidas tu contraseña y cualquier clave de API que generes. Debes notificarnos de inmediato en <email></email> si sospechas de un acceso no autorizado a tu cuenta. MCPEmails no es responsable de ninguna pérdida o daño que surja de tu incumplimiento de mantener la seguridad de tus credenciales.",
+    "h34": "3.4 Claves de API",
+    "p34": "Las claves de API que generas otorgan acceso al endpoint MCP en tu nombre. Eres el único responsable de todas las acciones realizadas con las claves que has generado, incluidas las acciones realizadas por agentes de IA a los que has proporcionado esas claves. Trata las claves de API como secretos. Revoca cualquier clave que sospeches que ha sido comprometida."
+  },
+  "acceptableUse": {
+    "title": "4. Uso aceptable",
+    "h41": "4.1 Uso permitido",
+    "p41": "Puedes usar el Servicio para cualquier fin lícito que sea coherente con estos Términos. Los usos permitidos típicos incluyen conectar tus propias cuentas de correo, generar claves de API para agentes de IA que operas y construir aplicaciones o flujos de trabajo para ti o tu organización.",
+    "h42": "4.2 Conducta prohibida",
+    "p42": "No debes usar el Servicio, directa o indirectamente, para ninguno de los siguientes fines:",
+    "list": [
+      "<b>Acceso no autorizado.</b> Conectar cuentas de correo que no posees o que no estás autorizado a acceder en nombre del titular de la cuenta.",
+      "<b>Spam y mensajería masiva.</b> Enviar correo comercial no solicitado, correo masivo o cualquier mensaje que infrinja la Ley CAN-SPAM, CASL, la Directiva ePrivacy de la UE o leyes equivalentes en tu jurisdicción.",
+      "<b>Phishing y fraude.</b> Enviar mensajes que suplanten a otra persona u organización, o que estén diseñados para engañar a los destinatarios para que revelen credenciales, datos financieros u otra información sensible.",
+      "<b>Distribución de malware.</b> Enviar correo que contenga código malicioso, ransomware, spyware o cualquier otro software diseñado para dañar o acceder sin autorización al dispositivo o los datos de un destinatario.",
+      "<b>Acoso y abuso.</b> Usar el Servicio para amenazar, acosar, intimidar, acechar o dañar a cualquier persona.",
+      "<b>Contenido ilegal.</b> Transmitir, almacenar o acceder a contenido que sea ilegal según la legislación aplicable, incluido el contenido que infringe derechos de propiedad intelectual, viola leyes de privacidad o constituye material de abuso sexual infantil (CSAM).",
+      "<b>Elusión.</b> Intentar eludir la autenticación, los límites de tasa, los controles de acceso o cualquier otra medida de seguridad del Servicio o de cualquier servicio de terceros (incluidos los proveedores de correo).",
+      "<b>Ingeniería inversa.</b> Intentar descompilar, desensamblar, aplicar ingeniería inversa o derivar de otro modo el código fuente del Servicio.",
+      "<b>Interferencia.</b> Introducir virus, ataques de denegación de servicio o cualquier otro código o acción que interfiera con el funcionamiento del Servicio o su infraestructura.",
+      "<b>Reventa sin permiso.</b> Revender o sublicenciar el acceso al Servicio a terceros sin nuestro consentimiento previo por escrito.",
+      "<b>Raspado automatizado.</b> Usar el Servicio para raspar o recolectar datos de correo a gran escala con fines distintos de tu propio flujo de trabajo legítimo impulsado por agentes."
+    ],
+    "h43": "4.3 Responsabilidad por los agentes",
+    "p43": "Eres responsable de las acciones de cualquier agente de IA o sistema automatizado que acceda al Servicio usando una clave de API que hayas generado. Esto incluye las acciones que el agente realice de forma autónoma. Debes asegurarte de que los agentes que operan bajo tus claves de API cumplan con estos Términos y con la legislación aplicable.",
+    "h44": "4.4 Cumplimiento de los términos del proveedor de correo",
+    "p44": "Debes cumplir con los términos del servicio y las políticas de API de cualquier proveedor de correo cuya cuenta conectes a MCPEmails (incluidos Google, Microsoft y Fastmail). MCPEmails no es responsable de ninguna suspensión o restricción de tu cuenta de correo por parte de un proveedor externo.",
+    "h45": "4.5 Aplicación",
+    "p45": "Nos reservamos el derecho de investigar presuntas infracciones de estas reglas. Si determinamos, a nuestro exclusivo criterio, que has infringido esta sección, podemos suspender o terminar tu cuenta, eliminar o deshabilitar el acceso a claves de API o bandejas conectadas específicas, y reportar las infracciones a las autoridades policiales cuando lo exija la ley o cuando lo consideremos apropiado para proteger a otros."
+  },
+  "plansAndPayment": {
+    "title": "5. Planes, tarifas y pago",
+    "h51": "5.1 Plan Gratis",
+    "p51": "El plan Gratis se proporciona sin coste y está sujeto a los límites de uso descritos en nuestra <pricing>página de Precios</pricing>. Nos reservamos el derecho de cambiar o discontinuar el plan Gratis con 30 días de aviso.",
+    "h52": "5.2 Planes de pago",
+    "p52": "Los planes de pago se facturan mensual o anualmente por adelantado. Al suscribirte a un plan de pago nos autorizas a cargar el método de pago registrado al inicio de cada período de facturación. Todas las tarifas excluyen los impuestos aplicables, que se añadirán cuando lo exija la ley.",
+    "h53": "5.3 Mejoras y reducciones de plan",
+    "p53": "Puedes mejorar tu plan en cualquier momento; la nueva tarifa entra en vigor de inmediato y se prorratea por el resto del período de facturación actual. La reducción de plan entra en vigor al inicio del siguiente período de facturación. Las funciones que excedan los límites del nuevo plan se deshabilitarán en la fecha de reducción.",
+    "h54": "5.4 Reembolsos",
+    "p54": "Los pagos de los planes mensuales no son reembolsables salvo cuando lo exija la legislación aplicable de protección al consumidor. Para los planes anuales, puedes solicitar un reembolso prorrateado por los meses completos no utilizados dentro de los 14 días de tu fecha de renovación contactándonos en <email></email>.",
+    "h55": "5.5 Pago tardío y suspensión",
+    "p55": "Si un pago falla, reintentaremos el cargo y te notificaremos por correo. Si el pago sigue pendiente después de 7 días, podemos suspender el acceso a las funciones de pago hasta que se salde el saldo. Si el pago sigue pendiente después de 30 días, podemos terminar la cuenta conforme a la Sección 8.",
+    "h56": "5.6 Cambios de precio",
+    "p56": "Podemos cambiar los precios de los planes de pago con al menos 30 días de aviso por escrito a tu dirección de correo registrada. Los cambios de precio no se aplicarán hasta tu próxima fecha de renovación.",
+    "h57": "5.7 Uso justo y límites del servicio",
+    "p57a": "Para proteger la estabilidad de la plataforma y garantizar un acceso justo para todos los clientes, el Servicio aplica un límite de tasa de peticiones por minuto a cada plan (un «límite de uso justo»), como se describe en nuestra <pricing>página de Precios</pricing>. También podemos aplicar medidas técnicas razonables para prevenir el abuso, el raspado automatizado o el uso que degrade materialmente el Servicio para otros.",
+    "p57b": "Cuando un plan se describe como «ilimitado», eso se refiere a la ausencia de cuotas mensuales fijas de uso; sigue estando sujeto a este límite de uso justo y a la Sección 4 (Uso aceptable). Nos reservamos el derecho de introducir, cambiar o eliminar límites de uso y umbrales de uso justo para cualquier plan, incluido el plan Gratis, de forma prospectiva. Daremos al menos 30 días de aviso a tu dirección de correo registrada antes de que un cambio entre en vigor para tu espacio de trabajo, y podemos aplicar nuevos límites a las suscripciones nuevas de inmediato."
+  },
+  "intellectualProperty": {
+    "title": "6. Propiedad intelectual",
+    "h61": "6.1 Propiedad intelectual de MCPEmails",
+    "p61": "Todos los derechos de propiedad intelectual del Servicio, incluidos el software, los diseños, los logotipos, las marcas comerciales y la documentación, son propiedad de MCPEmails o de sus licenciantes. Nada en estos Términos te otorga ningún derecho, título o interés sobre la propiedad intelectual de MCPEmails, salvo la licencia limitada para usar el Servicio según se describe en estos Términos.",
+    "h62": "6.2 Tus datos y contenido",
+    "p62": "Conservas todos los derechos sobre el contenido de tu correo y los datos de tu cuenta. Al usar el Servicio otorgas a MCPEmails una licencia limitada, no exclusiva y libre de regalías para procesar y transmitir tus datos únicamente en la medida necesaria para prestar el Servicio. No adquirimos la propiedad de tus datos, y nunca usaremos el contenido de tu correo para fines distintos de cumplir la llamada a la herramienta de tu agente.",
+    "h63": "6.3 Comentarios",
+    "p63": "Si nos proporcionas comentarios, sugerencias o ideas sobre el Servicio, nos otorgas una licencia ilimitada, perpetua, irrevocable y libre de regalías para usar e incorporar esos comentarios en el Servicio sin compensación ni atribución hacia ti."
+  },
+  "liability": {
+    "title": "7. Renuncias y limitación de responsabilidad",
+    "h71": "7.1 Servicio proporcionado \"tal cual\"",
+    "p71": "El Servicio se proporciona \"tal cual\" y \"según disponibilidad\" sin garantías de ningún tipo, ya sean expresas o implícitas, incluidas (entre otras) las garantías implícitas de comerciabilidad, idoneidad para un fin particular, no infracción y funcionamiento ininterrumpido o sin errores. No garantizamos que el Servicio cumplirá tus requisitos, que la entrega de correo será confiable o completa, ni que los defectos serán corregidos.",
+    "h72": "7.2 Servicios de terceros",
+    "p72": "El Servicio se integra con proveedores de correo externos (Google Gmail, Microsoft Outlook, Fastmail, servidores IMAP). No somos responsables de la disponibilidad, confiabilidad o rendimiento de esos servicios, de los cambios en sus API o políticas de OAuth, ni de ninguna pérdida de acceso al correo resultante de las acciones de un proveedor externo.",
+    "h73": "7.3 Acciones de los agentes de IA",
+    "p73": "MCPEmails es un puente de protocolo. Transmitimos instrucciones de los agentes de IA a tus proveedores de correo y devolvemos resultados. No somos responsables del contenido de los correos enviados, reenviados o respondidos por agentes de IA que actúan bajo tus claves de API, ni de ninguna consecuencia de las acciones autónomas de los agentes, incluida la eliminación accidental de correo, los mensajes mal dirigidos o la fuga de datos resultante de errores de lógica del agente.",
+    "h74": "7.4 Limitación de responsabilidad",
+    "p74a": "En la máxima medida permitida por la legislación aplicable, en ningún caso MCPEmails, sus directores, empleados, agentes o proveedores serán responsables de ningún daño indirecto, incidental, especial, consecuente, punitivo o ejemplar, incluida la pérdida de beneficios, la pérdida de datos, la pérdida de buen nombre o la interrupción del negocio, que surja de o en relación con tu uso o incapacidad de usar el Servicio, incluso si se ha advertido a MCPEmails de la posibilidad de tales daños.",
+    "p74b": "En la máxima medida permitida por la legislación aplicable, la responsabilidad total agregada de MCPEmails hacia ti por todas las reclamaciones que surjan de o se relacionen con estos Términos o el Servicio, ya sea por contrato, agravio (incluida la negligencia), ley u otro, se limita al mayor de: (a) el importe que pagaste a MCPEmails en los 12 meses anteriores al evento que dio lugar a la reclamación; o (b) 100 USD.",
+    "p74c": "Algunas jurisdicciones no permiten la exclusión o limitación de ciertos daños. En esas jurisdicciones, las limitaciones anteriores se aplican en la máxima medida permitida por la ley.",
+    "h75": "7.5 Indemnización",
+    "p75": "Aceptas indemnizar, defender y eximir de responsabilidad a MCPEmails y a sus directivos, directores, empleados y agentes frente a cualquier reclamación, responsabilidad, daño, pérdida, coste y gasto (incluidos los honorarios legales razonables) que surja de o se relacione con: (a) tu uso del Servicio en infracción de estos Términos o de la legislación aplicable; (b) cualquier correo que tú o tus agentes envíen usando el Servicio; (c) tu infracción de cualquier derecho de terceros, incluidos los derechos de propiedad intelectual o de privacidad; o (d) cualquier disputa entre tú y un tercero (incluidos tus destinatarios de correo)."
+  },
+  "accountTermination": {
+    "title": "8. Terminación de la cuenta",
+    "h81": "8.1 Terminación por tu parte",
+    "p81a": "Puedes cerrar tu cuenta en cualquier momento navegando a <b>Panel → Configuración → Eliminar cuenta</b> y siguiendo los pasos de confirmación. La eliminación de la cuenta es permanente. Todas las configuraciones de bandejas conectadas, las claves de API y los registros de auditoría asociados con tu espacio de trabajo se eliminarán en un plazo de 30 días desde la solicitud de eliminación.",
+    "p81b": "Si estás en un plan de pago, cerrar tu cuenta detiene la facturación futura pero no te da derecho a un reembolso de los importes ya cobrados, salvo lo descrito en la Sección 5.4.",
+    "h82": "8.2 Terminación por causa por parte de MCPEmails",
+    "p82": "Podemos suspender o terminar tu cuenta de inmediato, sin previo aviso ni responsabilidad, si:",
+    "list82": [
+      "Infringes la Sección 4 (Uso aceptable) o cualquier otra disposición material de estos Términos.",
+      "Estamos obligados a hacerlo por ley, orden judicial o autoridad reguladora.",
+      "Tu uso del Servicio supone un riesgo para la seguridad, integridad o disponibilidad del Servicio o para otros usuarios.",
+      "Proporcionas información falsa, inexacta o fraudulenta durante el registro o en cualquier momento posterior.",
+      "El pago de un plan de pago sigue pendiente durante más de 30 días después de la fecha de vencimiento."
+    ],
+    "p82after": "Cuando la terminación por causa resulte en la eliminación de tu cuenta, no proporcionaremos un reembolso por ninguna porción no utilizada de una suscripción de pago.",
+    "h83": "8.3 Terminación por conveniencia por parte de MCPEmails",
+    "p83": "Podemos terminar tu cuenta por cualquier motivo no cubierto por la Sección 8.2 proporcionando al menos 30 días de aviso por escrito a tu dirección de correo registrada. En caso de dicha terminación, proporcionaremos un reembolso prorrateado por cualquier porción no utilizada de una suscripción anual prepagada.",
+    "h84": "8.4 Suspensión",
+    "p84": "En lugar de la terminación inmediata podemos, a nuestro criterio, suspender temporalmente tu acceso al Servicio mientras investigamos una presunta infracción. Intentaremos dar aviso de la suspensión a menos que hacerlo perjudique una investigación en curso o esté prohibido por ley.",
+    "h85": "8.5 Efecto de la terminación",
+    "p85": "Tras la terminación de tu cuenta por cualquier motivo:",
+    "list85": [
+      "Tu derecho a acceder y usar el Servicio cesa de inmediato.",
+      "Todas las claves de API asociadas a tu cuenta se revocan de inmediato.",
+      "Las concesiones de token de OAuth emitidas a MCPEmails por tu proveedor de correo se revocan; tu proveedor de correo puede tardar hasta 24 horas en reflejar esto.",
+      "Tus datos se eliminarán conforme a nuestro calendario de conservación descrito en la Política de privacidad."
+    ],
+    "p85after": "Las siguientes disposiciones sobreviven a la terminación: Sección 6 (Propiedad intelectual), Sección 7 (Renuncias y limitación de responsabilidad), Sección 8.5 (Efecto de la terminación), Sección 9 (Ley aplicable y disputas) y cualquier otra disposición que por su naturaleza deba sobrevivir."
+  },
+  "governingLaw": {
+    "title": "9. Ley aplicable y resolución de disputas",
+    "h91": "9.1 Ley aplicable",
+    "p91": "Estos Términos y cualquier disputa que surja de o en relación con ellos o el Servicio se regirán e interpretarán de acuerdo con las leyes de <b>Noruega</b>, sin tener en cuenta sus disposiciones sobre conflicto de leyes. La Convención de las Naciones Unidas sobre los Contratos de Compraventa Internacional de Mercaderías no se aplica.",
+    "h92": "9.2 Jurisdicción",
+    "p92": "Cualquier acción o procedimiento legal relacionado con estos Términos o el Servicio se interpondrá exclusivamente ante los tribunales de <b>Oslo, Noruega</b>. Consientes la jurisdicción personal de esos tribunales y renuncias a cualquier objeción sobre la sede.",
+    "h93": "9.3 Derechos del consumidor (EEE/RU)",
+    "p93": "Nada en estos Términos afecta a los derechos legales que puedas tener como consumidor según las leyes de tu país de residencia que no puedan excluirse ni limitarse por contrato. Si eres un consumidor residente en la Unión Europea, también puedes presentar una reclamación a través de la plataforma de Resolución de Litigios en Línea de la UE en <odr>ec.europa.eu/consumers/odr</odr>.",
+    "h94": "9.4 Resolución informal",
+    "p94": "Antes de iniciar cualquier procedimiento legal formal, te animamos a contactarnos en <email></email> para que podamos intentar resolver la disputa de manera informal. Responderemos en un plazo de 14 días hábiles y trabajaremos de buena fe hacia una resolución.",
+    "h95": "9.5 Renuncia a la acción colectiva",
+    "p95": "En la medida permitida por la legislación aplicable, aceptas que cualquier procedimiento de resolución de disputas se llevará a cabo únicamente de forma individual. Renuncias a cualquier derecho a iniciar o participar en una acción colectiva, conjunta o representativa contra MCPEmails."
+  },
+  "general": {
+    "title": "10. Disposiciones generales",
+    "h101": "10.1 Acuerdo completo",
+    "p101": "Estos Términos, junto con la Política de privacidad y cualquier término complementario aplicable a funciones o planes específicos, constituyen el acuerdo completo entre tú y MCPEmails en relación con el Servicio y reemplazan todos los acuerdos, declaraciones y entendimientos previos.",
+    "h102": "10.2 Modificaciones",
+    "p102": "Podemos actualizar estos Términos de vez en cuando. Cuando hagamos cambios materiales actualizaremos la fecha de «Última actualización» en la parte superior de esta página y enviaremos una notificación por correo a tu dirección registrada al menos 14 días antes de que los cambios entren en vigor. Tu uso continuado del Servicio después de la fecha de entrada en vigor constituye tu aceptación de los Términos revisados. Si no estás de acuerdo con un cambio material, puedes cerrar tu cuenta antes de la fecha de entrada en vigor.",
+    "h103": "10.3 Divisibilidad",
+    "p103": "Si un tribunal de jurisdicción competente determina que alguna disposición de estos Términos es inválida, ilegal o inaplicable, esa disposición se modificará en la medida mínima necesaria para hacerla aplicable, y las disposiciones restantes seguirán en pleno vigor y efecto.",
+    "h104": "10.4 Renuncia",
+    "p104": "Nuestro incumplimiento de hacer valer cualquier derecho o disposición de estos Términos no constituirá una renuncia a ese derecho o disposición. Cualquier renuncia debe constar por escrito y estar firmada por un representante autorizado de MCPEmails.",
+    "h105": "10.5 Cesión",
+    "p105": "No puedes ceder ni transferir estos Términos ni ningún derecho u obligación derivados de ellos sin nuestro consentimiento previo por escrito. Podemos ceder estos Términos a una filial o en relación con una fusión, adquisición o venta de activos, siempre que el cesionario asuma todas las obligaciones bajo estos Términos.",
+    "h106": "10.6 Fuerza mayor",
+    "p106": "MCPEmails no es responsable de ningún retraso o incumplimiento de sus obligaciones bajo estos Términos cuando dicho retraso o incumplimiento resulte de circunstancias fuera de nuestro control razonable, incluidos desastres naturales, acciones gubernamentales, fallos de la infraestructura de internet o interrupciones de servicios de terceros.",
+    "h107": "10.7 Notificaciones",
+    "p107": "Las notificaciones de MCPEmails hacia ti se enviarán a la dirección de correo registrada en tu cuenta. Las notificaciones de ti hacia MCPEmails deben enviarse a <email></email>. Las notificaciones se consideran recibidas 24 horas después de su envío, a menos que el remitente reciba una notificación de fallo de entrega.",
+    "h108": "10.8 Ausencia de sociedad",
+    "p108": "Nada en estos Términos crea una sociedad, empresa conjunta, agencia, franquicia o relación laboral entre tú y MCPEmails."
+  },
+  "contact": {
+    "title": "11. Contáctanos",
+    "intro": "Si tienes preguntas sobre estos Términos o necesitas contactar a nuestro equipo legal:",
+    "legalLabel": "Consultas legales",
+    "privacyLabel": "Preguntas de privacidad",
+    "securityLabel": "Informes de seguridad",
+    "postalLabel": "Dirección postal",
+    "responseLabel": "Tiempo de respuesta",
+    "responseValue": "Respondemos a todas las consultas legales en un plazo de 14 días hábiles"
+  },
+  "cta": {
+    "title": "¿Preguntas sobre estos Términos?",
+    "sub": "Nuestro equipo legal estará encantado de ayudar. Contáctanos y responderemos en un plazo de 14 días hábiles.",
+    "contactBtn": "Contactar al equipo legal",
+    "privacyBtn": "Lee nuestra Política de privacidad"
+  }
+}

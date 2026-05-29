@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 /**
  * InviteAcceptUI: client component for the /invite/[token] accept page.
@@ -11,12 +12,6 @@ import { useRouter } from 'next/navigation';
  *  - Logged in: Accept button that calls POST /api/workspaces/invite/[token]/accept.
  *  - After accept: redirect to /dashboard?joined=1.
  */
-
-const ROLE_LABELS = {
-  admin:  'Admin',
-  member: 'Member',
-  viewer: 'Viewer',
-};
 
 function maskEmail(email) {
   const [local, domain] = email.split('@');
@@ -36,9 +31,15 @@ export function InviteAcceptUI({
   inviteEmail,
 }) {
   const router = useRouter();
+  const t = useTranslations('auth');
   const [accepting, setAccepting] = useState(false);
   const [error, setError]         = useState(null);
 
+  const ROLE_LABELS = {
+    admin:  t('invite.roleAdmin'),
+    member: t('invite.roleMember'),
+    viewer: t('invite.roleViewer'),
+  };
   const roleLabel = ROLE_LABELS[role] ?? role;
   const emailMismatch = isLoggedIn && userEmail && inviteEmail &&
     userEmail.toLowerCase() !== inviteEmail.toLowerCase();
@@ -50,12 +51,12 @@ export function InviteAcceptUI({
       const res = await fetch(`/api/workspaces/invite/${token}/accept`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? 'Failed to accept invite. Please try again.');
+        setError(data.error ?? t('invite.errorAccept'));
         return;
       }
       router.push('/dashboard?joined=1');
     } catch {
-      setError('Network error. Please try again.');
+      setError(t('invite.errorNetwork'));
     } finally {
       setAccepting(false);
     }
@@ -101,26 +102,29 @@ export function InviteAcceptUI({
         </div>
 
         <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--fg-1, #0f172a)', letterSpacing: '-0.3px', marginBottom: 8 }}>
-          You've been invited
+          {t('invite.heading')}
         </div>
 
         <div style={{ fontSize: 14, color: 'var(--fg-2, #475569)', lineHeight: 1.6, marginBottom: 28 }}>
-          <strong style={{ color: 'var(--fg-1, #0f172a)' }}>{inviterName}</strong>
-          {' '}invited you to join{' '}
-          <strong style={{ color: 'var(--fg-1, #0f172a)' }}>{workspaceName}</strong>
-          {' '}as a{' '}
-          <span style={{
-            display: 'inline-block',
-            padding: '1px 8px',
-            borderRadius: 20,
-            background: 'var(--brand-soft, #eef1fd)',
-            color: 'var(--brand, #2547e5)',
-            fontSize: 12,
-            fontWeight: 600,
-          }}>
-            {roleLabel}
-          </span>
-          .
+          {t.rich('invite.body', {
+            inviter: inviterName,
+            workspace: workspaceName,
+            role: roleLabel,
+            strong: (c) => <strong style={{ color: 'var(--fg-1, #0f172a)' }}>{c}</strong>,
+            role_tag: (c) => (
+              <span style={{
+                display: 'inline-block',
+                padding: '1px 8px',
+                borderRadius: 20,
+                background: 'var(--brand-soft, #eef1fd)',
+                color: 'var(--brand, #2547e5)',
+                fontSize: 12,
+                fontWeight: 600,
+              }}>
+                {c}
+              </span>
+            ),
+          })}
         </div>
 
         {/* Email mismatch warning */}
@@ -135,9 +139,11 @@ export function InviteAcceptUI({
             marginBottom: 20,
             lineHeight: 1.5,
           }}>
-            ⚠ This invite was sent to <strong>{maskEmail(inviteEmail)}</strong>.
-            You're signed in as <strong>{userEmail}</strong>.
-            Please sign in with the correct account to accept.
+            {t.rich('invite.emailMismatch', {
+              inviteEmail: maskEmail(inviteEmail),
+              userEmail,
+              strong: (c) => <strong>{c}</strong>,
+            })}
           </div>
         )}
 
@@ -177,7 +183,7 @@ export function InviteAcceptUI({
               fontFamily: 'inherit',
             }}
           >
-            {accepting ? 'Joining workspace…' : 'Accept invitation →'}
+            {accepting ? t('invite.joining') : t('invite.acceptInvitation')}
           </button>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -193,7 +199,7 @@ export function InviteAcceptUI({
                 textDecoration: 'none',
               }}
             >
-              Create account to accept
+              {t('invite.createAccount')}
             </a>
             <a
               href={`/login?redirect=/invite/${token}`}
@@ -208,7 +214,7 @@ export function InviteAcceptUI({
                 textDecoration: 'none',
               }}
             >
-              Sign in to accept
+              {t('invite.signInToAccept')}
             </a>
           </div>
         )}
@@ -216,8 +222,9 @@ export function InviteAcceptUI({
         {/* Expiry notice */}
         {expiresAt && (
           <div style={{ marginTop: 20, textAlign: 'center', fontSize: 12, color: 'var(--fg-3, #94a3b8)' }}>
-            Invite expires{' '}
-            {new Date(expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            {t('invite.expires', {
+              date: new Date(expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            })}
           </div>
         )}
       </div>

@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "title": "Pricing",
+    "description": "Every plan, including Free, has unlimited inboxes, calls, API keys, and team members. Paid plans add higher burst limits, team features, and support. Email is never stored, on any plan."
+  },
+  "hero": {
+    "eyebrow": "Pricing",
+    "titleLine1": "Unlimited, free.",
+    "titleLine2": "Upgrade for more power.",
+    "lead": "Every plan, including Free, has unlimited inboxes, calls, API keys, and team members. Paid plans add higher burst limits, team features, and support. Email is never stored, on any plan."
+  },
+  "billing": {
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "save": "Save ~17%"
+  },
+  "card": {
+    "perForever": "/forever",
+    "perMonth": "/month",
+    "billedYearly": "Billed ${total}/year"
+  },
+  "plans": {
+    "free": {
+      "name": "Free",
+      "desc": "Everything, unlimited. For everyone building with MCP agents.",
+      "cta": "Start free",
+      "features": [
+        "Unlimited connected inboxes",
+        "Unlimited MCP tool calls",
+        "Unlimited API keys & team members",
+        "Gmail, Outlook, iCloud, Fastmail & any IMAP",
+        "60 requests / minute",
+        "Community support"
+      ]
+    },
+    "solo": {
+      "name": "Solo",
+      "desc": "For power users running agents around the clock.",
+      "cta": "Get Solo",
+      "features": [
+        "Everything in Free, unlimited",
+        "300 requests / minute (5× burst)",
+        "Full usage analytics (90-day history)",
+        "Gmail, Outlook, iCloud, Fastmail & any IMAP",
+        "Email support"
+      ]
+    },
+    "pro": {
+      "name": "Team",
+      "badge": "Most popular",
+      "desc": "For businesses and teams that need roles, SSO, and audit logs.",
+      "cta": "Get Team",
+      "features": [
+        "Everything in Solo, unlimited",
+        "1,000 requests / minute",
+        "Team roles & multiple workspaces",
+        "SSO (SAML / OIDC) + audit log",
+        "Full usage analytics (1-year history)",
+        "Priority support"
+      ]
+    }
+  },
+  "cardsFootnote": {
+    "all": "All plans include: email never stored · credentials encrypted at rest · EU & US hosting",
+    "custom": "Need something custom? <contact>Contact us</contact>."
+  },
+  "comparison": {
+    "eyebrow": "Full comparison",
+    "title": "Everything side by side.",
+    "featureCol": "Feature",
+    "free": "Free",
+    "solo": "Solo",
+    "team": "Team",
+    "sections": {
+      "usage": {
+        "label": "Usage",
+        "rows": {
+          "inboxes": "Connected inboxes",
+          "calls": "MCP tool calls",
+          "keys": "API keys",
+          "members": "Team members",
+          "burst": "Burst rate limit"
+        }
+      },
+      "providers": {
+        "label": "Email providers",
+        "rows": {
+          "gmail": "Gmail (OAuth)",
+          "outlook": "Outlook / Microsoft 365 (OAuth)",
+          "fastmail": "Fastmail (OAuth + app password)",
+          "appPassword": "iCloud, Yahoo, Zoho, Yandex (app password)",
+          "imap": "Any IMAP / SMTP mailbox"
+        }
+      },
+      "mcpTools": {
+        "label": "MCP tools"
+      },
+      "analytics": {
+        "label": "Analytics & security",
+        "rows": {
+          "dashboard": "Usage analytics dashboard",
+          "history": "Analytics history",
+          "roles": "Team roles & workspaces",
+          "sso": "SSO (SAML / OIDC)",
+          "audit": "Audit log"
+        }
+      },
+      "privacy": {
+        "label": "Privacy & security",
+        "rows": {
+          "neverStored": "Email never stored",
+          "encrypted": "Credentials encrypted at rest",
+          "soc2": "SOC 2 Type II report on request"
+        }
+      },
+      "support": {
+        "label": "Support",
+        "rows": {
+          "community": "Community forum",
+          "email": "Email support",
+          "priority": "Priority support"
+        }
+      }
+    },
+    "values": {
+      "unlimited": "Unlimited",
+      "burstFree": "60 / min",
+      "burstSolo": "300 / min",
+      "burstPro": "1,000 / min",
+      "history7": "7 days",
+      "history90": "90 days",
+      "history1y": "1 year"
+    }
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Common questions.",
+    "items": [
+      {
+        "q": "Is there really no usage limit?",
+        "a": "Correct. Connected inboxes, MCP tool calls, API keys, and team members are unlimited on every plan, including Free. The only limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) to protect the platform from abuse. Paid plans add higher burst throughput, team features, and support, never more usage."
+      },
+      {
+        "q": "What counts as an MCP call?",
+        "a": "Each JSON-RPC tool invocation against your /mcp endpoint counts as one call: list_inboxes, list_inbox, read_email, search_emails, send_email, or reply_to_email. Calls are unlimited; they only count toward your per-minute fair-use ceiling."
+      },
+      {
+        "q": "Is my email content stored anywhere?",
+        "a": "No. Email bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent. Nothing is persisted between calls. The only data we store is an encrypted OAuth token or app password so we can authenticate future requests."
+      },
+      {
+        "q": "What's the difference between Solo and Team?",
+        "a": "Free already gives everyone unlimited usage. Solo ($12/mo) is for power users who run agents hard: it raises the burst rate limit to 300 requests/minute, extends analytics history to 90 days, and adds email support. Team ($49/mo) is for businesses: a 1,000/minute ceiling, team roles and multiple workspaces, SSO (SAML/OIDC), an audit log, 1-year analytics history, and priority support."
+      },
+      {
+        "q": "Can I change or cancel my plan?",
+        "a": "Yes. Upgrade, downgrade, or cancel any time from the billing section of your dashboard. If you cancel a paid plan, you keep access until the end of your billing period, then drop to Free automatically. Since Free is unlimited, you lose only the higher burst limit, team features, and support."
+      },
+      {
+        "q": "How does the annual discount work?",
+        "a": "Paying annually saves about 17% versus monthly billing: Solo is $120/year and Team is $490/year. You're charged once for 12 months upfront. If you cancel mid-year, we refund the unused whole months."
+      },
+      {
+        "q": "What email providers are supported?",
+        "a": "Gmail and Microsoft 365 / Outlook use OAuth 2.0. Fastmail supports both OAuth and app passwords. iCloud, Yahoo, Zoho, and Yandex connect with an app-specific password, and any other mailbox works through the generic IMAP / SMTP connector."
+      },
+      {
+        "q": "Is there a refund policy?",
+        "a": "If you're unsatisfied within 30 days of your first paid invoice, contact us for a full refund, no questions asked."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Ready to give your agent an inbox?",
+    "sub": "Start on Free: no credit card, unlimited from day one. Upgrade when you need higher burst limits or team features.",
+    "ctaPrimary": "Get started free",
+    "ctaSecondary": "Read the docs"
+  }
+}

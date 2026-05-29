@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "title": "Precios",
+    "description": "Todos los planes, incluido Gratis, tienen bandejas, llamadas, claves de API y miembros de equipo ilimitados. Los planes de pago añaden límites de ráfaga más altos, funciones de equipo y soporte. El correo nunca se almacena, en ningún plan."
+  },
+  "hero": {
+    "eyebrow": "Precios",
+    "titleLine1": "Ilimitado, gratis.",
+    "titleLine2": "Mejora para más potencia.",
+    "lead": "Todos los planes, incluido Gratis, tienen bandejas, llamadas, claves de API y miembros de equipo ilimitados. Los planes de pago añaden límites de ráfaga más altos, funciones de equipo y soporte. El correo nunca se almacena, en ningún plan."
+  },
+  "billing": {
+    "monthly": "Mensual",
+    "annual": "Anual",
+    "save": "Ahorra ~17%"
+  },
+  "card": {
+    "perForever": "/para siempre",
+    "perMonth": "/mes",
+    "billedYearly": "Facturado ${total}/año"
+  },
+  "plans": {
+    "free": {
+      "name": "Gratis",
+      "desc": "Todo, ilimitado. Para todos los que construyen con agentes MCP.",
+      "cta": "Empieza gratis",
+      "features": [
+        "Bandejas conectadas ilimitadas",
+        "Llamadas a herramientas MCP ilimitadas",
+        "Claves de API y miembros de equipo ilimitados",
+        "Gmail, Outlook, iCloud, Fastmail y cualquier IMAP",
+        "60 peticiones / minuto",
+        "Soporte de la comunidad"
+      ]
+    },
+    "solo": {
+      "name": "Solo",
+      "desc": "Para usuarios avanzados que ejecutan agentes a todas horas.",
+      "cta": "Obtener Solo",
+      "features": [
+        "Todo lo de Gratis, ilimitado",
+        "300 peticiones / minuto (ráfaga 5×)",
+        "Analíticas de uso completas (historial de 90 días)",
+        "Gmail, Outlook, iCloud, Fastmail y cualquier IMAP",
+        "Soporte por correo"
+      ]
+    },
+    "pro": {
+      "name": "Team",
+      "badge": "Más popular",
+      "desc": "Para empresas y equipos que necesitan roles, SSO y registros de auditoría.",
+      "cta": "Obtener Team",
+      "features": [
+        "Todo lo de Solo, ilimitado",
+        "1.000 peticiones / minuto",
+        "Roles de equipo y múltiples espacios de trabajo",
+        "SSO (SAML / OIDC) + registro de auditoría",
+        "Analíticas de uso completas (historial de 1 año)",
+        "Soporte prioritario"
+      ]
+    }
+  },
+  "cardsFootnote": {
+    "all": "Todos los planes incluyen: el correo nunca se almacena · credenciales cifradas en reposo · alojamiento en la UE y EE. UU.",
+    "custom": "¿Necesitas algo a medida? <contact>Contáctanos</contact>."
+  },
+  "comparison": {
+    "eyebrow": "Comparación completa",
+    "title": "Todo lado a lado.",
+    "featureCol": "Característica",
+    "free": "Gratis",
+    "solo": "Solo",
+    "team": "Team",
+    "sections": {
+      "usage": {
+        "label": "Uso",
+        "rows": {
+          "inboxes": "Bandejas conectadas",
+          "calls": "Llamadas a herramientas MCP",
+          "keys": "Claves de API",
+          "members": "Miembros de equipo",
+          "burst": "Límite de ráfaga"
+        }
+      },
+      "providers": {
+        "label": "Proveedores de correo",
+        "rows": {
+          "gmail": "Gmail (OAuth)",
+          "outlook": "Outlook / Microsoft 365 (OAuth)",
+          "fastmail": "Fastmail (OAuth + contraseña de aplicación)",
+          "appPassword": "iCloud, Yahoo, Zoho, Yandex (contraseña de aplicación)",
+          "imap": "Cualquier buzón IMAP / SMTP"
+        }
+      },
+      "mcpTools": {
+        "label": "Herramientas MCP"
+      },
+      "analytics": {
+        "label": "Analíticas y seguridad",
+        "rows": {
+          "dashboard": "Panel de analíticas de uso",
+          "history": "Historial de analíticas",
+          "roles": "Roles de equipo y espacios de trabajo",
+          "sso": "SSO (SAML / OIDC)",
+          "audit": "Registro de auditoría"
+        }
+      },
+      "privacy": {
+        "label": "Privacidad y seguridad",
+        "rows": {
+          "neverStored": "El correo nunca se almacena",
+          "encrypted": "Credenciales cifradas en reposo",
+          "soc2": "Informe SOC 2 Type II bajo petición"
+        }
+      },
+      "support": {
+        "label": "Soporte",
+        "rows": {
+          "community": "Foro de la comunidad",
+          "email": "Soporte por correo",
+          "priority": "Soporte prioritario"
+        }
+      }
+    },
+    "values": {
+      "unlimited": "Ilimitado",
+      "burstFree": "60 / min",
+      "burstSolo": "300 / min",
+      "burstPro": "1.000 / min",
+      "history7": "7 días",
+      "history90": "90 días",
+      "history1y": "1 año"
+    }
+  },
+  "faq": {
+    "eyebrow": "Preguntas frecuentes",
+    "title": "Preguntas comunes.",
+    "items": [
+      {
+        "q": "¿De verdad no hay límite de uso?",
+        "a": "Correcto. Las bandejas conectadas, las llamadas a herramientas MCP, las claves de API y los miembros de equipo son ilimitados en todos los planes, incluido Gratis. El único límite es un tope de uso justo por minuto (60/min en Gratis, 300/min en Solo, 1.000/min en Team) para proteger la plataforma del abuso. Los planes de pago añaden mayor rendimiento de ráfaga, funciones de equipo y soporte, nunca más uso."
+      },
+      {
+        "q": "¿Qué cuenta como una llamada MCP?",
+        "a": "Cada invocación de herramienta JSON-RPC contra tu endpoint /mcp cuenta como una llamada: list_inboxes, list_inbox, read_email, search_emails, send_email o reply_to_email. Las llamadas son ilimitadas; solo cuentan para tu tope de uso justo por minuto."
+      },
+      {
+        "q": "¿Se almacena en algún sitio el contenido de mi correo?",
+        "a": "No. Los cuerpos de los correos, los asuntos, los adjuntos y el contenido de los hilos se obtienen en vivo desde tu proveedor y se devuelven directamente al agente. Nada se persiste entre llamadas. Los únicos datos que almacenamos son un token de OAuth cifrado o una contraseña de aplicación para poder autenticar peticiones futuras."
+      },
+      {
+        "q": "¿Cuál es la diferencia entre Solo y Team?",
+        "a": "Gratis ya da a todos uso ilimitado. Solo ($12/mes) es para usuarios avanzados que exigen mucho a sus agentes: eleva el límite de ráfaga a 300 peticiones/minuto, amplía el historial de analíticas a 90 días y añade soporte por correo. Team ($49/mes) es para empresas: un tope de 1.000/minuto, roles de equipo y múltiples espacios de trabajo, SSO (SAML/OIDC), un registro de auditoría, historial de analíticas de 1 año y soporte prioritario."
+      },
+      {
+        "q": "¿Puedo cambiar o cancelar mi plan?",
+        "a": "Sí. Mejora, baja de categoría o cancela cuando quieras desde la sección de facturación de tu panel. Si cancelas un plan de pago, conservas el acceso hasta el final de tu período de facturación y luego pasas a Gratis automáticamente. Como Gratis es ilimitado, solo pierdes el límite de ráfaga más alto, las funciones de equipo y el soporte."
+      },
+      {
+        "q": "¿Cómo funciona el descuento anual?",
+        "a": "Pagar anualmente ahorra alrededor del 17% frente a la facturación mensual: Solo cuesta $120/año y Team cuesta $490/año. Se te cobra una vez por 12 meses por adelantado. Si cancelas a mitad de año, reembolsamos los meses completos no utilizados."
+      },
+      {
+        "q": "¿Qué proveedores de correo son compatibles?",
+        "a": "Gmail y Microsoft 365 / Outlook usan OAuth 2.0. Fastmail admite tanto OAuth como contraseñas de aplicación. iCloud, Yahoo, Zoho y Yandex se conectan con una contraseña específica de aplicación, y cualquier otro buzón funciona mediante el conector IMAP / SMTP genérico."
+      },
+      {
+        "q": "¿Hay política de reembolso?",
+        "a": "Si no estás satisfecho dentro de los 30 días de tu primera factura de pago, contáctanos para un reembolso completo, sin preguntas."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "¿Listo para darle a tu agente una bandeja de entrada?",
+    "sub": "Empieza en Gratis: sin tarjeta de crédito, ilimitado desde el primer día. Mejora cuando necesites límites de ráfaga más altos o funciones de equipo.",
+    "ctaPrimary": "Empieza gratis",
+    "ctaSecondary": "Lee la documentación"
+  }
+}

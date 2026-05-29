@@ -1,11 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
+import { useAppLocale } from '../i18n/AppLocaleProvider';
+import { routing } from '@/i18n/routing';
 import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
+
+// Rich-text tag handlers shared across pages (inline code + bold).
+const RICH = {
+  code: (chunks) => <code className="t-code-inline">{chunks}</code>,
+  b: (chunks) => <strong>{chunks}</strong>,
+};
 
 function PageHeader({ title, sub, action }) {
   return (
@@ -28,6 +37,7 @@ function PageHeader({ title, sub, action }) {
  * and preserve whitespace.
  */
 function CopyField({ value, label, multiline = false }) {
+  const t = useTranslations('dashboard');
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard?.writeText(value).then(() => {
@@ -65,8 +75,8 @@ function CopyField({ value, label, multiline = false }) {
         </code>
         <button
           onClick={copy}
-          title={copied ? 'Copied' : 'Copy'}
-          aria-label={copied ? 'Copied' : 'Copy to clipboard'}
+          title={copied ? t('copy.copied') : t('copy.copy')}
+          aria-label={copied ? t('copy.copied') : t('copy.copyAria')}
           style={{
             position: 'absolute', right: 10, top: multiline ? 12 : '50%',
             transform: multiline ? 'none' : 'translateY(-50%)',
@@ -129,12 +139,7 @@ const MCP_CLIENTS = [
     logo: 'claude',
     oauth: true,
     guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
-    steps: () => [
-      'In claude.ai or Claude Desktop, open Settings → Connectors.',
-      'Click "Add custom connector".',
-      'Paste the URL above as the connector URL, then click "Add".',
-      'Click "Connect" and sign in with mcpemails to authorize. No API key needed.',
-    ],
+    stepKeys: ['clients.claude.step1', 'clients.claude.step2', 'clients.claude.step3', 'clients.claude.step4'],
   },
   {
     k: 'chatgpt',
@@ -144,13 +149,8 @@ const MCP_CLIENTS = [
     logo: 'chatgpt',
     oauth: true,
     guide: 'https://help.openai.com/en/articles/12584461',
-    steps: () => [
-      'Open Settings → Apps & Connectors → Advanced settings and turn on Developer mode.',
-      'Back in Apps & Connectors, click "Create".',
-      'Enter a name and paste the URL above as the Connector URL.',
-      'Pick OAuth, click "Create", then authorize with mcpemails.',
-    ],
-    note: 'Full MCP is a beta limited to ChatGPT Business and Enterprise/Edu workspaces.',
+    stepKeys: ['clients.chatgpt.step1', 'clients.chatgpt.step2', 'clients.chatgpt.step3', 'clients.chatgpt.step4'],
+    noteKey: 'clients.chatgpt.note',
   },
   {
     k: 'cursor',
@@ -160,11 +160,7 @@ const MCP_CLIENTS = [
     logo: 'cursor',
     oauth: true,
     guide: 'https://cursor.com/docs/mcp',
-    steps: () => [
-      'Edit ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).',
-      'Add the server below under "mcpServers".',
-      'Cursor prompts you to sign in via OAuth. Authorize with mcpemails.',
-    ],
+    stepKeys: ['clients.cursor.step1', 'clients.cursor.step2', 'clients.cursor.step3'],
     config: (url) => `// ~/.cursor/mcp.json
 {
   "mcpServers": {
@@ -182,11 +178,7 @@ const MCP_CLIENTS = [
     logo: 'vscode',
     oauth: true,
     guide: 'https://code.visualstudio.com/docs/copilot/customization/mcp-servers',
-    steps: () => [
-      'Open the Command Palette (⇧⌘P) and run "MCP: Add Server".',
-      'Choose "HTTP", paste the URL above, and give it a name.',
-      'Start the server from the MCP view and authorize when prompted.',
-    ],
+    stepKeys: ['clients.vscode.step1', 'clients.vscode.step2', 'clients.vscode.step3'],
     config: (url) => `// .vscode/mcp.json
 {
   "servers": {
@@ -206,12 +198,7 @@ const MCP_CLIENTS = [
     oauth: false,
     needsKey: true,
     guide: 'https://docs.cline.bot/mcp/configuring-mcp-servers',
-    steps: () => [
-      'In the Cline panel, click the MCP Servers icon, then open the "Remote Servers" tab.',
-      'Enter a name and paste the URL above.',
-      'Set Transport Type to "Streamable HTTP", then click "Add Server".',
-      'Add an "Authorization: Bearer <key>" header using your API key.',
-    ],
+    stepKeys: ['clients.cline.step1', 'clients.cline.step2', 'clients.cline.step3', 'clients.cline.step4'],
   },
   {
     k: 'windsurf',
@@ -221,11 +208,7 @@ const MCP_CLIENTS = [
     logo: 'windsurf',
     oauth: true,
     guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
-    steps: () => [
-      'Open Cascade’s MCP settings, or edit ~/.codeium/windsurf/mcp_config.json.',
-      'Add the server below. Note the field is "serverUrl", not "url".',
-      'Refresh MCP servers in Cascade and authorize with mcpemails when prompted.',
-    ],
+    stepKeys: ['clients.windsurf.step1', 'clients.windsurf.step2', 'clients.windsurf.step3'],
     config: (url) => `// ~/.codeium/windsurf/mcp_config.json
 {
   "mcpServers": {
@@ -243,11 +226,7 @@ const MCP_CLIENTS = [
     logo: 'gemini',
     oauth: true,
     guide: 'https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md',
-    steps: () => [
-      'Edit ~/.gemini/settings.json (global) or .gemini/settings.json (project).',
-      'Add the server below under "mcpServers" using the "httpUrl" field.',
-      'On first connect the CLI auto-discovers OAuth and opens the browser flow.',
-    ],
+    stepKeys: ['clients.gemini.step1', 'clients.gemini.step2', 'clients.gemini.step3'],
     config: (url) => `// ~/.gemini/settings.json
 {
   "mcpServers": {
@@ -265,11 +244,7 @@ const MCP_CLIENTS = [
     logo: 'zed',
     oauth: true,
     guide: 'https://zed.dev/docs/ai/mcp',
-    steps: () => [
-      'In the Agent Panel settings click "Add Custom Server", or edit settings.json.',
-      'Add the server below under "context_servers".',
-      'Zed prompts the OAuth flow when no Authorization header is set. Sign in with mcpemails.',
-    ],
+    stepKeys: ['clients.zed.step1', 'clients.zed.step2', 'clients.zed.step3'],
     config: (url) => `// settings.json
 {
   "context_servers": {
@@ -288,11 +263,7 @@ const MCP_CLIENTS = [
     oauth: false,
     needsKey: true,
     guide: 'https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html',
-    steps: () => [
-      'Open Settings → Tools → AI Assistant → Model Context Protocol (MCP).',
-      'Click "Add" and select "Streamable HTTP" as the connection type.',
-      'Paste the URL above, then add an "Authorization: Bearer <key>" header with your API key.',
-    ],
+    stepKeys: ['clients.jetbrains.step1', 'clients.jetbrains.step2', 'clients.jetbrains.step3'],
   },
   {
     k: 'raycast',
@@ -302,11 +273,7 @@ const MCP_CLIENTS = [
     logo: 'raycast',
     oauth: true,
     guide: 'https://manual.raycast.com/ai/model-context-protocol',
-    steps: () => [
-      'Run the "Install MCP Server" command (or "Manage MCP Servers").',
-      'Enter a name, set Transport to "HTTP", and paste the URL above.',
-      'Press "Install MCP Server", then click "Sign In" to authorize with mcpemails.',
-    ],
+    stepKeys: ['clients.raycast.step1', 'clients.raycast.step2', 'clients.raycast.step3'],
   },
   {
     k: 'warp',
@@ -316,11 +283,7 @@ const MCP_CLIENTS = [
     logo: 'warp',
     oauth: true,
     guide: 'https://docs.warp.dev/agent-platform/capabilities/mcp/',
-    steps: () => [
-      'Open Settings → Agents → MCP servers and click "+ Add".',
-      'Select the "Streamable HTTP or SSE Server (URL)" tab.',
-      'Paste the URL above and confirm, then complete browser OAuth when prompted.',
-    ],
+    stepKeys: ['clients.warp.step1', 'clients.warp.step2', 'clients.warp.step3'],
   },
   {
     k: 'api',
@@ -331,10 +294,7 @@ const MCP_CLIENTS = [
     oauth: false,
     needsKey: true,
     guide: null,
-    steps: () => [
-      'Create an API key in Dashboard → API Keys, then copy it (shown only once).',
-      'Send requests to the URL above with an Authorization: Bearer header.',
-    ],
+    stepKeys: ['clients.api.step1', 'clients.api.step2'],
     config: (url) => `curl -X POST ${url} \\
   -H "Authorization: Bearer mcpe_live_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
@@ -349,7 +309,8 @@ const MCP_CLIENTS = [
  * a shortcut to create an API key.
  */
 function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
-  const steps = client.steps(mcpUrl);
+  const t = useTranslations('dashboard');
+  const steps = client.stepKeys.map((k) => t(k));
   const config = client.config ? client.config(mcpUrl) : null;
 
   return (
@@ -361,13 +322,13 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <ClientLogo color={client.color} logo={client.logo} size={38} />
               <div>
-                <h2 id="client-guide-title" style={{ margin: 0 }}>Connect {client.name}</h2>
+                <h2 id="client-guide-title" style={{ margin: 0 }}>{t('clients.connectTitle', { name: client.name })}</h2>
                 <div className="sub" style={{ marginTop: 2 }}>
-                  {client.oauth ? 'Paste the URL and authorize. No API key needed.' : 'Authenticate with a bearer token.'}
+                  {client.oauth ? t('clients.subOauth') : t('clients.subBearer')}
                 </div>
               </div>
             </div>
-            <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--fg-3)', padding: 4, flexShrink: 0, lineHeight: 1 }}>
+            <button onClick={onClose} aria-label={t('clients.close')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--fg-3)', padding: 4, flexShrink: 0, lineHeight: 1 }}>
               <Icon name="x" size={16} />
             </button>
           </div>
@@ -375,7 +336,7 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
 
         {/* Body */}
         <div className="modal-body">
-          <CopyField value={mcpUrl} label="MCP server URL" />
+          <CopyField value={mcpUrl} label={t('clients.mcpServerUrl')} />
 
           <ol style={{ margin: '4px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {steps.map((s, i) => (
@@ -391,26 +352,26 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
             ))}
           </ol>
 
-          {client.note ? (
+          {client.noteKey ? (
             <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5 }}>
               <Icon name="zap" size={13} color="var(--fg-4)" style={{ flexShrink: 0, marginTop: 1 }} />
-              <span>{client.note}</span>
+              <span>{t(client.noteKey)}</span>
             </div>
           ) : null}
 
-          {config ? <CopyField value={config} label="Configuration" multiline /> : null}
+          {config ? <CopyField value={config} label={t('clients.configuration')} multiline /> : null}
 
           {client.needsKey ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--brand-soft)', border: '1px solid rgba(37,71,229,0.15)', borderRadius: 8 }}>
               <Icon name="key" size={15} color="var(--brand)" />
               <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.5 }}>
-                Need a token first?
+                {t('clients.needToken')}
               </span>
               <button
                 onClick={() => { onGoToKeys?.(); onClose(); }}
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--brand)', whiteSpace: 'nowrap' }}
               >
-                Create an API key →
+                {t('clients.createKeyLink')}
               </button>
             </div>
           ) : null}
@@ -425,10 +386,10 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
               rel="noopener noreferrer"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 14px', height: 34, marginRight: 'auto', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, color: 'var(--fg-2)', textDecoration: 'none' }}
             >
-              Official {client.name} guide ↗
+              {t('clients.officialGuide', { name: client.name })}
             </a>
           ) : null}
-          <Btn variant="primary" onClick={onClose}>Done</Btn>
+          <Btn variant="primary" onClick={onClose}>{t('clients.done')}</Btn>
         </div>
       </div>
     </div>
@@ -442,6 +403,7 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
  * per-client guide opens on click).
  */
 function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys }) {
+  const t = useTranslations('dashboard');
   const [activeClient, setActiveClient] = useState(null);
 
   const step1Done = inboxCount > 0;
@@ -452,14 +414,14 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
     <div className="card" style={{ marginTop: 16 }}>
       <div className="card-h">
         <div>
-          <div className="title">Get started</div>
+          <div className="title">{t('guide.title')}</div>
           <div className="sub">
             {allDone
-              ? 'All set. Your workspace is ready to use.'
-              : 'Two steps to give your AI agents live email access.'}
+              ? t('guide.subAllDone')
+              : t('guide.subSteps')}
           </div>
         </div>
-        {allDone && <Badge tone="live" dot="live">Ready</Badge>}
+        {allDone && <Badge tone="live" dot="live">{t('guide.ready')}</Badge>}
       </div>
 
       <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -473,15 +435,15 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
           <StepDot num={1} done={step1Done} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: step1Done ? 'var(--fg-3)' : 'var(--fg-1)' }}>
-              Connect an inbox
+              {t('guide.step1Title')}
             </div>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
-              Give your agents access to Gmail, Outlook, or any IMAP mailbox.
+              {t('guide.step1Desc')}
             </div>
           </div>
           {!step1Done ? (
             <div style={{ flexShrink: 0 }}>
-              <Btn variant="primary" size="sm" icon="plus" onClick={onConnect}>Connect inbox</Btn>
+              <Btn variant="primary" size="sm" icon="plus" onClick={onConnect}>{t('guide.connectInbox')}</Btn>
             </div>
           ) : null}
         </div>
@@ -495,19 +457,19 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
             <StepDot num={2} done={step2Done} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
-                Connect your MCP client
+                {t('guide.step2Title')}
               </div>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
-                Paste this endpoint into your client, then pick it below for a step-by-step guide.
+                {t('guide.step2Desc')}
               </div>
             </div>
           </div>
 
-          <CopyField value={mcpUrl} label="MCP server URL" />
+          <CopyField value={mcpUrl} label={t('guide.mcpServerUrl')} />
 
           <div>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', marginBottom: 8 }}>
-              Choose your client
+              {t('guide.chooseClient')}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
               {MCP_CLIENTS.map((c) => (
@@ -566,6 +528,7 @@ function StepDot({ num, done }) {
 
 /* ---------------- Overview ---------------- */
 export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers }) {
+  const t = useTranslations('dashboard');
   const inboxCount = stats?.inboxCount ?? 0;
   // Last 14 days of real per-day call counts, sliced from the 30-day series.
   const last14 = (usageData?.dailyCounts ?? []).slice(-14);
@@ -600,31 +563,31 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
   return (
     <div className="page">
       <PageHeader
-        title="Overview"
-        sub="Real-time view of your connected inboxes and MCP traffic."
-        action={<Btn variant="primary" icon="plus" onClick={onConnect}>Connect inbox</Btn>}
+        title={t('overview.title')}
+        sub={t('overview.sub')}
+        action={<Btn variant="primary" icon="plus" onClick={onConnect}>{t('overview.connectInbox')}</Btn>}
       />
 
       <div className="stat-grid">
         <div className="stat">
-          <div className="label">Inboxes connected</div>
+          <div className="label">{t('overview.inboxesConnected')}</div>
           <div className="value">{inboxCount.toLocaleString()}</div>
-          <div className="delta">{inboxCount === 1 ? "1 active inbox" : `${inboxCount} active inboxes`}</div>
+          <div className="delta">{inboxCount === 1 ? t('overview.oneActiveInbox') : t('overview.activeInboxes', { count: inboxCount })}</div>
         </div>
         <div className="stat">
-          <div className="label">API keys</div>
+          <div className="label">{t('overview.apiKeys')}</div>
           <div className="value">{apiKeysCount.toLocaleString()}</div>
-          <div className="delta">{apiKeysCount === 1 ? "1 active key" : `${apiKeysCount} active keys`}</div>
+          <div className="delta">{apiKeysCount === 1 ? t('overview.oneActiveKey') : t('overview.activeKeys', { count: apiKeysCount })}</div>
         </div>
         <div className="stat">
-          <div className="label">Calls today</div>
+          <div className="label">{t('overview.callsToday')}</div>
           <div className="value" style={dailyAtLimit ? { color: 'var(--red-600, #dc2626)' } : dailyNearLimit ? { color: 'var(--amber-600, #d97706)' } : {}}>
             {callsToday.toLocaleString()}
           </div>
           <div className="delta">
             {dailyCap != null
-              ? `of ${dailyCap.toLocaleString()} daily limit · UTC day`
-              : 'MCP tool calls (UTC day)'}
+              ? t('overview.ofDailyLimit', { cap: dailyCap.toLocaleString() })
+              : t('overview.callsUtcDay')}
           </div>
           {/* Mini progress bar for daily quota */}
           {dailyCap != null && (
@@ -650,14 +613,14 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
           )}
         </div>
         <div className="stat">
-          <div className="label">Calls this month</div>
+          <div className="label">{t('overview.callsThisMonth')}</div>
           <div className="value" style={monthlyAtLimit ? { color: 'var(--red-600, #dc2626)' } : monthlyNearLimit ? { color: 'var(--amber-600, #d97706)' } : {}}>
             {callsThisMonth.toLocaleString()}
           </div>
           <div className="delta">
             {monthlyCap != null
-              ? `of ${monthlyCap.toLocaleString()} monthly limit · UTC month`
-              : 'MCP tool calls (UTC month)'}
+              ? t('overview.ofMonthlyLimit', { cap: monthlyCap.toLocaleString() })
+              : t('overview.callsUtcMonth')}
           </div>
           {/* Mini progress bar for monthly quota */}
           {monthlyCap != null && (
@@ -689,9 +652,9 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
           role={onGoToMembers ? 'button' : undefined}
           tabIndex={onGoToMembers ? 0 : undefined}
           onKeyDown={onGoToMembers ? (e) => { if (e.key === 'Enter') onGoToMembers(); } : undefined}
-          title={onGoToMembers ? 'Go to Members' : undefined}
+          title={onGoToMembers ? t('overview.goToMembers') : undefined}
         >
-          <div className="label">Team members</div>
+          <div className="label">{t('overview.teamMembers')}</div>
           <div
             className="value"
             style={seatAtLimit ? { color: 'var(--amber-600, #d97706)' } : seatNearLimit ? { color: 'var(--amber-600, #d97706)' } : {}}
@@ -700,8 +663,12 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
           </div>
           <div className="delta">
             {seatCap != null
-              ? `of ${seatCap} seat${seatCap !== 1 ? 's' : ''} · ${seatCap - memberCount} remaining`
-              : `${memberCount === 1 ? '1 member' : `${memberCount} members`} · unlimited`}
+              ? (seatCap === 1
+                  ? t('overview.ofSeat', { cap: seatCap, remaining: seatCap - memberCount })
+                  : t('overview.ofSeats', { cap: seatCap, remaining: seatCap - memberCount }))
+              : (memberCount === 1
+                  ? t('overview.oneMemberUnlimited')
+                  : t('overview.membersUnlimited', { count: memberCount }))}
           </div>
           {/* Mini progress bar for seat usage */}
           {seatCap != null && (
@@ -741,11 +708,11 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
           <div className="card">
             <div className="card-h">
               <div>
-                <div className="title">Calls per day</div>
-                <div className="sub">Last 14 days · across all tools</div>
+                <div className="title">{t('overview.callsPerDayTitle')}</div>
+                <div className="sub">{t('overview.callsPerDaySub')}</div>
               </div>
               <div className="grow"></div>
-              <Badge tone="brand">Pro</Badge>
+              <Badge tone="brand">{t('overview.pro')}</Badge>
             </div>
             <div className="card-body">
               <UsageBars dailyCounts={last14} />
@@ -755,16 +722,16 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
           <div className="card">
             <div className="card-h">
               <div>
-                <div className="title">Recent activity</div>
-                <div className="sub">Live MCP tool calls</div>
+                <div className="title">{t('overview.recentActivityTitle')}</div>
+                <div className="sub">{t('overview.recentActivitySub')}</div>
               </div>
             </div>
             <div>
               {activity.length === 0 ? (
                 <div className="empty" style={{ padding: '32px 20px' }}>
                   <div className="ico"><Icon name="activity" size={20} /></div>
-                  <h3 style={{ fontSize: 14 }}>No activity yet</h3>
-                  <p style={{ fontSize: 12.5 }}>MCP tool calls will appear here in real time.</p>
+                  <h3 style={{ fontSize: 14 }}>{t('overview.noActivityTitle')}</h3>
+                  <p style={{ fontSize: 12.5 }}>{t('overview.noActivityDesc')}</p>
                 </div>
               ) : (
                 activity.map((a) => (
@@ -803,6 +770,7 @@ function formatBarDate(dateStr) {
  *                oldest first (typically the last 14 days).
  */
 function UsageBars({ dailyCounts }) {
+  const t = useTranslations('dashboard');
   if (!dailyCounts || dailyCounts.length === 0) {
     return (
       <div style={{
@@ -814,7 +782,7 @@ function UsageBars({ dailyCounts }) {
         fontSize: 12.5,
         color: 'var(--fg-3)',
       }}>
-        No call data for this period.
+        {t('overview.noCallData')}
       </div>
     );
   }
@@ -854,6 +822,7 @@ function UsageBars({ dailyCounts }) {
  *                 oldest first (index 0 = 29 days ago, index 29 = today).
  */
 function UsageChart30({ dailyCounts }) {
+  const t = useTranslations('dashboard');
   if (!dailyCounts || dailyCounts.length === 0) {
     return (
       <div style={{
@@ -865,7 +834,7 @@ function UsageChart30({ dailyCounts }) {
         fontSize: 13,
         color: 'var(--fg-3)',
       }}>
-        No call data for this period.
+        {t('usage.noCallData')}
       </div>
     );
   }
@@ -900,6 +869,7 @@ function UsageChart30({ dailyCounts }) {
 
 /* ---------------- Inboxes ---------------- */
 export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck }) {
+  const t = useTranslations('dashboard');
   // Count errored inboxes to conditionally show a page-level warning banner.
   const erroredCount = inboxes.filter(ib => ib.status === "error").length;
 
@@ -947,17 +917,19 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
   };
 
   const connectAction = (
-    <Btn variant="primary" icon="plus" onClick={onConnect}>Connect inbox</Btn>
+    <Btn variant="primary" icon="plus" onClick={onConnect}>{t('inboxes.connectInbox')}</Btn>
   );
 
   return (
     <div className="page">
       <PageHeader
-        title="Inboxes"
+        title={t('inboxes.title')}
         sub={
           maxInboxes !== null
-            ? `${inboxes.length} of ${maxInboxes} inbox${maxInboxes !== 1 ? 'es' : ''} connected · Email accounts your agents can read and send through.`
-            : 'Email accounts your agents can read and send through.'
+            ? (maxInboxes === 1
+                ? t('inboxes.subWithCountSingular', { count: inboxes.length, max: maxInboxes })
+                : t('inboxes.subWithCount', { count: inboxes.length, max: maxInboxes }))
+            : t('inboxes.sub')
         }
         action={connectAction}
       />
@@ -988,7 +960,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
               transition: 'width 0.3s',
             }} />
           </div>
-          <span>{inboxes.length} of {maxInboxes} inbox{maxInboxes !== 1 ? 'es' : ''} used</span>
+          <span>{maxInboxes === 1 ? t('inboxes.usedSingular', { count: inboxes.length, max: maxInboxes }) : t('inboxes.usedPlural', { count: inboxes.length, max: maxInboxes })}</span>
         </div>
       )}
 
@@ -1010,8 +982,8 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
           <Icon name="zap" size={15} color="var(--red-700)" />
           <span>
             {erroredCount === 1
-              ? "1 inbox has lost access and needs to be reconnected."
-              : `${erroredCount} inboxes have lost access and need to be reconnected.`}
+              ? t('inboxes.errorBannerOne')
+              : t('inboxes.errorBannerMany', { count: erroredCount })}
           </span>
         </div>
       )}
@@ -1022,11 +994,11 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
           <table className="tbl">
             <thead>
               <tr>
-                <th>Label</th>
-                <th>Address</th>
-                <th>Provider</th>
-                <th>Status</th>
-                <th>Calls (30d)</th>
+                <th>{t('inboxes.colLabel')}</th>
+                <th>{t('inboxes.colAddress')}</th>
+                <th>{t('inboxes.colProvider')}</th>
+                <th>{t('inboxes.colStatus')}</th>
+                <th>{t('inboxes.colCalls')}</th>
                 <th className="right">{""}</th>
               </tr>
             </thead>
@@ -1042,11 +1014,11 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                     </span>
                   </td>
                   <td>
-                    {ib.status === "active"  ? <Badge tone="live"    dot="live">Connected</Badge>  : null}
-                    {ib.status === "pending" ? <Badge tone="neutral">Pending</Badge>               : null}
+                    {ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
+                    {ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
                     {ib.status === "error"   ? (
                       <div>
-                        <Badge tone="red" dot="red">Error</Badge>
+                        <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
                         {ib.lastError ? (
                           <div style={{
                             marginTop: 4,
@@ -1061,7 +1033,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                         ) : null}
                       </div>
                     ) : null}
-                    {ib.status === "revoked" ? <Badge tone="amber"   dot="amber">Expired</Badge>   : null}
+                    {ib.status === "revoked" ? <Badge tone="amber"   dot="amber">{t('inboxes.statusExpired')}</Badge>   : null}
                   </td>
                   <td className="mono">{ib.calls.toLocaleString()}</td>
                   <td className="right">
@@ -1072,7 +1044,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                         icon="refresh"
                         onClick={() => onReconnect(ib)}
                       >
-                        Reconnect
+                        {t('inboxes.reconnect')}
                       </Btn>
                     ) : (
                       <Btn
@@ -1081,8 +1053,8 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                         icon="refresh"
                         className={checkingId === ib.id ? "is-checking" : ""}
                         disabled={checkingId === ib.id}
-                        aria-label="Check connection"
-                        title="Check connection"
+                        aria-label={t('inboxes.checkConnection')}
+                        title={t('inboxes.checkConnection')}
                         onClick={() => handleCheck(ib)}
                       >
                         {""}
@@ -1092,7 +1064,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                       variant="ghost"
                       size="sm"
                       icon="trash"
-                      aria-label="Disconnect inbox"
+                      aria-label={t('inboxes.disconnectInbox')}
                       onClick={() => handleDisconnectRequest(ib)}
                     >
                       {""}
@@ -1106,10 +1078,10 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
         ) : (
           <div className="empty">
             <div className="ico"><Icon name="inbox" size={20} /></div>
-            <h3>No inboxes connected</h3>
-            <p>Connect Gmail, Outlook, or any IMAP provider to give your agents access.</p>
+            <h3>{t('inboxes.emptyTitle')}</h3>
+            <p>{t('inboxes.emptyDesc')}</p>
             <div style={{ marginTop: 8 }}>
-              <Btn variant="primary" icon="plus" onClick={onConnect}>Connect inbox</Btn>
+              <Btn variant="primary" icon="plus" onClick={onConnect}>{t('inboxes.connectInbox')}</Btn>
             </div>
           </div>
         )}
@@ -1129,6 +1101,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
 }
 
 function DisconnectDialog({ inbox, disconnecting, onConfirm, onCancel }) {
+  const t = useTranslations('dashboard');
   return (
     <div className="scrim" onClick={onCancel}>
       <div
@@ -1144,16 +1117,16 @@ function DisconnectDialog({ inbox, disconnecting, onConfirm, onCancel }) {
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
             <div>
               <h2 id="disconnect-dialog-title" style={{ margin: 0 }}>
-                Disconnect inbox?
+                {t('inboxes.disconnectDialog.title')}
               </h2>
               <div className="sub" style={{ marginTop: 4 }}>
-                This will revoke OAuth access and remove this inbox from your workspace.
+                {t('inboxes.disconnectDialog.sub')}
               </div>
             </div>
             <button
               onClick={onCancel}
               disabled={disconnecting}
-              aria-label="Cancel"
+              aria-label={t('inboxes.disconnectDialog.cancel')}
               style={{
                 background: "transparent",
                 border: "none",
@@ -1200,17 +1173,16 @@ function DisconnectDialog({ inbox, disconnecting, onConfirm, onCancel }) {
             color: "var(--fg-2)",
             lineHeight: 1.55,
           }}>
-            Any API keys currently authorised to access this inbox will lose access immediately.
-            You can reconnect this inbox at any time.
+            {t('inboxes.disconnectDialog.body')}
           </p>
 
           {/* Actions */}
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
             <Btn variant="secondary" onClick={onCancel} disabled={disconnecting}>
-              Cancel
+              {t('inboxes.disconnectDialog.cancel')}
             </Btn>
             <Btn variant="danger" icon="trash" onClick={onConfirm} disabled={disconnecting}>
-              {disconnecting ? "Disconnecting…" : "Disconnect"}
+              {disconnecting ? t('inboxes.disconnectDialog.disconnecting') : t('inboxes.disconnectDialog.disconnect')}
             </Btn>
           </div>
         </div>
@@ -1236,18 +1208,18 @@ function formatDate(iso) {
  * Formats last_used_at as a relative time when recent, falling back to
  * absolute date for older entries. Returns "Never" when null.
  */
-function formatLastUsed(iso) {
-  if (!iso) return 'Never';
+function formatLastUsed(iso, t) {
+  if (!iso) return t('apiKeys.never');
   const diffMs = Date.now() - new Date(iso).getTime();
   const diffSec = Math.floor(diffMs / 1000);
-  if (diffSec < 60) return 'Just now';
+  if (diffSec < 60) return t('apiKeys.justNow');
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffMin < 60) return t('apiKeys.minutesAgo', { n: diffMin });
   const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffHr < 24) return t('apiKeys.hoursAgo', { n: diffHr });
   const diffDay = Math.floor(diffHr / 24);
-  if (diffDay === 1) return 'Yesterday';
-  if (diffDay < 30) return `${diffDay}d ago`;
+  if (diffDay === 1) return t('apiKeys.yesterday');
+  if (diffDay < 30) return t('apiKeys.daysAgo', { n: diffDay });
   return formatDate(iso);
 }
 
@@ -1270,9 +1242,9 @@ function maskedKey(keyPrefix) {
 // list/read/search tools; send:email gates send/reply). search:email is
 // accepted for parity with the OAuth flow but read:email already covers search.
 const SCOPE_OPTIONS = [
-  { value: 'read:email',   label: 'read:email',   desc: 'List, read and search email messages' },
-  { value: 'search:email', label: 'search:email', desc: 'Search across inbox contents' },
-  { value: 'send:email',   label: 'send:email',   desc: 'Send and reply to emails' },
+  { value: 'read:email',   label: 'read:email',   descKey: 'apiKeys.scopes.readDesc' },
+  { value: 'search:email', label: 'search:email', descKey: 'apiKeys.scopes.searchDesc' },
+  { value: 'send:email',   label: 'send:email',   descKey: 'apiKeys.scopes.sendDesc' },
 ];
 
 /**
@@ -1282,6 +1254,7 @@ const SCOPE_OPTIONS = [
  * spinner label. Errors surface inline below the form.
  */
 function CreateKeyModal({ onCreate, onCancel }) {
+  const t = useTranslations('dashboard');
   const [name, setName] = useState('');
   const [selectedScopes, setSelectedScopes] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -1299,15 +1272,15 @@ function CreateKeyModal({ onCreate, onCancel }) {
 
     const trimmed = name.trim();
     if (trimmed.length === 0) {
-      setError('Name is required.');
+      setError(t('apiKeys.createModal.errNameRequired'));
       return;
     }
     if (trimmed.length > 128) {
-      setError('Name must be 128 characters or fewer.');
+      setError(t('apiKeys.createModal.errNameTooLong'));
       return;
     }
     if (selectedScopes.length === 0) {
-      setError('Select at least one scope.');
+      setError(t('apiKeys.createModal.errScopeRequired'));
       return;
     }
 
@@ -1317,7 +1290,7 @@ function CreateKeyModal({ onCreate, onCancel }) {
       await onCreate(trimmed, selectedScopes);
       // onCreate resolves with key data; parent (KeysPage) handles the reveal modal.
     } catch (err) {
-      setError(err?.message ?? 'Failed to create API key. Please try again.');
+      setError(err?.message ?? t('apiKeys.createModal.errCreateFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -1337,15 +1310,15 @@ function CreateKeyModal({ onCreate, onCancel }) {
         <div className="modal-h">
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
             <div>
-              <h2 id="create-key-dialog-title" style={{ margin: 0 }}>New API key</h2>
+              <h2 id="create-key-dialog-title" style={{ margin: 0 }}>{t('apiKeys.createModal.title')}</h2>
               <div className="sub" style={{ marginTop: 4 }}>
-                Give your key a name and choose its permissions.
+                {t('apiKeys.createModal.sub')}
               </div>
             </div>
             <button
               onClick={onCancel}
               disabled={submitting}
-              aria-label="Cancel"
+              aria-label={t('apiKeys.createModal.cancel')}
               style={{
                 background: 'transparent', border: 'none',
                 cursor: submitting ? 'not-allowed' : 'pointer',
@@ -1367,13 +1340,13 @@ function CreateKeyModal({ onCreate, onCancel }) {
                 display: 'block', fontFamily: 'var(--font-sans)', fontSize: 13,
                 fontWeight: 500, color: 'var(--fg-2)', marginBottom: 6,
               }}>
-                Key name
+                {t('apiKeys.createModal.keyName')}
               </label>
               <input
                 id="key-name"
                 className="input"
                 type="text"
-                placeholder="e.g. Claude Desktop, My Agent"
+                placeholder={t('apiKeys.createModal.keyNamePlaceholder')}
                 value={name}
                 onChange={e => setName(e.target.value)}
                 disabled={submitting}
@@ -1389,7 +1362,7 @@ function CreateKeyModal({ onCreate, onCancel }) {
                 fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
                 color: 'var(--fg-2)', marginBottom: 8,
               }}>
-                Permissions
+                {t('apiKeys.createModal.permissions')}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {SCOPE_OPTIONS.map(opt => {
@@ -1427,7 +1400,7 @@ function CreateKeyModal({ onCreate, onCancel }) {
                           fontFamily: 'var(--font-sans)', fontSize: 12,
                           color: 'var(--fg-3)', marginTop: 1,
                         }}>
-                          {opt.desc}
+                          {t(opt.descKey)}
                         </div>
                       </div>
                     </label>
@@ -1451,10 +1424,10 @@ function CreateKeyModal({ onCreate, onCancel }) {
             {/* Actions */}
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <Btn variant="secondary" onClick={onCancel} disabled={submitting}>
-                Cancel
+                {t('apiKeys.createModal.cancel')}
               </Btn>
               <Btn variant="primary" icon="key" type="submit" disabled={submitting}>
-                {submitting ? 'Creating…' : 'Create key'}
+                {submitting ? t('apiKeys.createModal.creating') : t('apiKeys.createModal.createKey')}
               </Btn>
             </div>
           </div>
@@ -1480,6 +1453,7 @@ function CreateKeyModal({ onCreate, onCancel }) {
  *   onDone   called when the user clicks "Done" after acknowledging
  */
 function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
+  const t = useTranslations('dashboard');
   const [copied, setCopied] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -1504,10 +1478,10 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
         <div className="modal-h">
           <div>
             <h2 id="reveal-key-dialog-title" style={{ margin: 0 }}>
-              Copy your API key
+              {t('apiKeys.revealModal.title')}
             </h2>
             <div className="sub" style={{ marginTop: 4 }}>
-              This is the only time your key will be shown. Copy it now.
+              {t('apiKeys.revealModal.sub')}
             </div>
           </div>
         </div>
@@ -1525,7 +1499,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
               {keyName}
             </span>
             <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginLeft: 2 }}>
-              · created just now
+              {t('apiKeys.revealModal.createdJustNow')}
             </span>
           </div>
 
@@ -1548,7 +1522,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
             {/* Show/hide toggle */}
             <button
               onClick={() => setVisible(v => !v)}
-              title={visible ? 'Hide key' : 'Show key'}
+              title={visible ? t('copy.hideKey') : t('copy.showKey')}
               style={{
                 position: 'absolute', right: 44, top: '50%', transform: 'translateY(-50%)',
                 background: 'transparent', border: 'none', cursor: 'pointer',
@@ -1561,7 +1535,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
             {/* Copy button */}
             <button
               onClick={handleCopy}
-              title="Copy key"
+              title={t('copy.copyKey')}
               style={{
                 position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                 background: 'transparent', border: 'none', cursor: 'pointer',
@@ -1576,7 +1550,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
           {/* Ready-to-paste connection URL: the simplest way to connect. */}
           {mcpUrl ? (
             <div style={{ marginBottom: 16 }}>
-              <CopyField value={`${mcpUrl}?key=${rawKey}`} label="Or paste this URL straight into your MCP client (no OAuth needed)" />
+              <CopyField value={`${mcpUrl}?key=${rawKey}`} label={t('apiKeys.revealModal.urlLabel')} />
             </div>
           ) : null}
 
@@ -1589,7 +1563,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
           }}>
             <Icon name="zap" size={14} color="var(--amber-700)" style={{ flexShrink: 0, marginTop: 1 }} />
             <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--amber-700)', lineHeight: 1.5 }}>
-              Store this key somewhere safe. It cannot be shown again. If you lose it, revoke this key and create a new one.
+              {t('apiKeys.revealModal.warning')}
             </span>
           </div>
 
@@ -1605,14 +1579,14 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
               style={{ marginTop: 2, accentColor: 'var(--brand)', flexShrink: 0 }}
             />
             <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)', lineHeight: 1.5 }}>
-              I have copied my API key and understand it cannot be shown again.
+              {t('apiKeys.revealModal.acknowledge')}
             </span>
           </label>
 
           {/* Done button: only enabled after acknowledge */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Btn variant="primary" onClick={onDone} disabled={!acknowledged}>
-              Done
+              {t('apiKeys.revealModal.done')}
             </Btn>
           </div>
         </div>
@@ -1624,6 +1598,7 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
 /* ── RevokeDialog ─────────────────────────────────────────────────────────── */
 
 function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
+  const t = useTranslations('dashboard');
   return (
     <div className="scrim" onClick={onCancel}>
       <div
@@ -1637,15 +1612,15 @@ function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
         <div className="modal-h">
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
             <div>
-              <h2 id="revoke-dialog-title" style={{ margin: 0 }}>Revoke API key?</h2>
+              <h2 id="revoke-dialog-title" style={{ margin: 0 }}>{t('apiKeys.revokeDialog.title')}</h2>
               <div className="sub" style={{ marginTop: 4 }}>
-                This key will stop working immediately. This cannot be undone.
+                {t('apiKeys.revokeDialog.sub')}
               </div>
             </div>
             <button
               onClick={onCancel}
               disabled={revoking}
-              aria-label="Cancel"
+              aria-label={t('apiKeys.revokeDialog.cancel')}
               style={{
                 background: "transparent", border: "none",
                 cursor: revoking ? "not-allowed" : "pointer",
@@ -1677,13 +1652,13 @@ function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
           </div>
 
           <p style={{ margin: "0 0 20px", fontFamily: "var(--font-sans)", fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55 }}>
-            Any MCP client using this key will be disconnected. You can create a new key at any time.
+            {t('apiKeys.revokeDialog.body')}
           </p>
 
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <Btn variant="secondary" onClick={onCancel} disabled={revoking}>Cancel</Btn>
+            <Btn variant="secondary" onClick={onCancel} disabled={revoking}>{t('apiKeys.revokeDialog.cancel')}</Btn>
             <Btn variant="danger" icon="trash" onClick={onConfirm} disabled={revoking}>
-              {revoking ? "Revoking…" : "Revoke key"}
+              {revoking ? t('apiKeys.revokeDialog.revoking') : t('apiKeys.revokeDialog.revokeKey')}
             </Btn>
           </div>
         </div>
@@ -1694,6 +1669,7 @@ function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
 
 /* ---------------- API Keys ---------------- */
 export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
+  const t = useTranslations('dashboard');
   const [copiedId, setCopiedId] = useState(null);
   // The key object pending revoke confirmation, or null.
   const [confirmKey, setConfirmKey] = useState(null);
@@ -1759,9 +1735,9 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
   return (
     <div className="page">
       <PageHeader
-        title="API keys"
-        sub="Used by MCP clients to authenticate against mcpemails.com."
-        action={<Btn variant="primary" icon={creating ? 'refresh' : 'plus'} onClick={() => setCreateOpen(true)} disabled={creating}>{creating ? 'Creating…' : 'New key'}</Btn>}
+        title={t('apiKeys.title')}
+        sub={t('apiKeys.sub')}
+        action={<Btn variant="primary" icon={creating ? 'refresh' : 'plus'} onClick={() => setCreateOpen(true)} disabled={creating}>{creating ? t('apiKeys.creating') : t('apiKeys.newKey')}</Btn>}
       />
 
       <div className="card">
@@ -1770,11 +1746,11 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
           <table className="tbl">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Key</th>
-                <th>Scopes</th>
-                <th>Created</th>
-                <th>Last used</th>
+                <th>{t('apiKeys.colName')}</th>
+                <th>{t('apiKeys.colKey')}</th>
+                <th>{t('apiKeys.colScopes')}</th>
+                <th>{t('apiKeys.colCreated')}</th>
+                <th>{t('apiKeys.colLastUsed')}</th>
                 <th className="right">{""}</th>
               </tr>
             </thead>
@@ -1792,14 +1768,14 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
                         size="sm"
                         icon={copiedId === k.id ? "check" : "copy"}
                         onClick={() => copyPrefix(k)}
-                        title="Copy key prefix"
+                        title={t('apiKeys.copyPrefix')}
                       >{""}</Btn>
                     </div>
                   </td>
                   <td>
                     <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                       {k.scopes.length === 0
-                        ? <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-3)" }}>No scopes</span>
+                        ? <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-3)" }}>{t('apiKeys.noScopes')}</span>
                         : k.scopes.map(s => <Badge key={s} tone="neutral">{s}</Badge>)
                       }
                     </div>
@@ -1808,10 +1784,10 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
                     {formatDate(k.createdAt)}
                   </td>
                   <td style={{ whiteSpace: "nowrap", color: k.lastUsedAt ? "var(--fg-2)" : "var(--fg-3)", fontFamily: "var(--font-sans)", fontSize: 13 }}>
-                    {formatLastUsed(k.lastUsedAt)}
+                    {formatLastUsed(k.lastUsedAt, t)}
                   </td>
                   <td className="right">
-                    <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>Revoke</Btn>
+                    <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
                   </td>
                 </tr>
               ))}
@@ -1821,10 +1797,10 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
         ) : (
           <div className="empty">
             <div className="ico"><Icon name="key" size={20} /></div>
-            <h3>No API keys yet</h3>
-            <p>Create a key to connect Claude Desktop or any MCP client to your inboxes.</p>
+            <h3>{t('apiKeys.emptyTitle')}</h3>
+            <p>{t('apiKeys.emptyDesc')}</p>
             <div style={{ marginTop: 8 }}>
-              <Btn variant="primary" icon="plus" onClick={() => setCreateOpen(true)} disabled={creating}>New key</Btn>
+              <Btn variant="primary" icon="plus" onClick={() => setCreateOpen(true)} disabled={creating}>{t('apiKeys.newKey')}</Btn>
             </div>
           </div>
         )}
@@ -1833,19 +1809,18 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-h">
           <div>
-            <div className="title">Connect with a URL (no OAuth needed)</div>
-            <div className="sub">Paste this URL into any MCP client (Claude, Cursor, VS Code…). Replace <code className="t-code-inline">YOUR_API_KEY</code> with a key from above.</div>
+            <div className="title">{t('apiKeys.connectUrlTitle')}</div>
+            <div className="sub">{t.rich('apiKeys.connectUrlSub', RICH)}</div>
           </div>
         </div>
         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <CopyField value={`${mcpUrl}?key=YOUR_API_KEY`} label="MCP server URL" />
+          <CopyField value={`${mcpUrl}?key=YOUR_API_KEY`} label={t('apiKeys.mcpServerUrl')} />
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', lineHeight: 1.6 }}>
-            The key travels in the URL, so anyone with the link has full access. Treat it like a password, and prefer an
-            {' '}<code className="t-code-inline">Authorization: Bearer</code> header for scripts and shared environments:
+            {t.rich('apiKeys.urlWarning', RICH)}
           </div>
           <CopyField
             value={`curl -X POST ${mcpUrl} \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`}
-            label="Authorization header (programmatic)"
+            label={t('apiKeys.authHeaderLabel')}
             multiline
           />
         </div>
@@ -1891,6 +1866,7 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
  *   byInbox      Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
  */
 export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
+  const t = useTranslations('dashboard');
   const {
     dailyCounts = [],
     totalCalls = 0,
@@ -1920,8 +1896,8 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
   return (
     <div className="page">
       <PageHeader
-        title="Usage"
-        sub="MCP tool calls over the last 30 days across all inboxes."
+        title={t('usage.title')}
+        sub={t('usage.sub')}
       />
 
       {/* Daily quota status card: shown whenever a cap exists */}
@@ -1957,10 +1933,10 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
               marginBottom: 6,
             }}>
               {dailyAtLimit
-                ? 'Daily quota exhausted. MCP calls are being rejected'
+                ? t('usage.quotaExhausted')
                 : dailyNearLimit
-                  ? `Daily quota at ${Math.round(dailyPct * 100)}%, approaching limit`
-                  : 'Daily quota'}
+                  ? t('usage.quotaApproaching', { pct: Math.round(dailyPct * 100) })
+                  : t('usage.dailyQuota')}
             </div>
             <div style={{
               height: 6,
@@ -1987,8 +1963,8 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
                 ? 'var(--red-600, #dc2626)'
                 : 'var(--fg-3)',
             }}>
-              {callsToday.toLocaleString()} of {dailyCap.toLocaleString()} calls used today (UTC day)
-              {dailyAtLimit && ' · resets at midnight UTC'}
+              {t('usage.usedToday', { used: callsToday.toLocaleString(), cap: dailyCap.toLocaleString() })}
+              {dailyAtLimit && t('usage.resetsMidnight')}
             </div>
           </div>
           {(dailyAtLimit || dailyNearLimit) && (
@@ -2012,7 +1988,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
               }}
             >
               <Icon name="zap" size={13} color="#fff" />
-              Upgrade plan
+              {t('usage.upgradePlan')}
             </a>
           )}
         </div>
@@ -2025,20 +2001,19 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
             <div className="ico">
               <Icon name="activity" size={20} />
             </div>
-            <h3>No MCP calls yet</h3>
+            <h3>{t('usage.emptyTitle')}</h3>
             <p>
-              Usage data will appear here once your AI agent starts making tool
-              calls. Connect an inbox and create an API key to get started.
+              {t('usage.emptyDesc')}
             </p>
             <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
               {onConnect && (
                 <Btn variant="primary" icon="plus" onClick={onConnect}>
-                  Connect inbox
+                  {t('usage.connectInbox')}
                 </Btn>
               )}
               {onGoToKeys && (
                 <Btn variant="secondary" icon="key" onClick={onGoToKeys}>
-                  Create API key
+                  {t('usage.createApiKey')}
                 </Btn>
               )}
               <a
@@ -2054,7 +2029,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
                   padding: '0 2px',
                 }}
               >
-                View quick-start docs →
+                {t('usage.viewDocs')}
               </a>
             </div>
           </div>
@@ -2065,17 +2040,17 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
           {/* Summary stats */}
           <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
             <div className="stat">
-              <div className="label">Total calls (30d)</div>
+              <div className="label">{t('usage.totalCalls')}</div>
               <div className="value">{totalCalls.toLocaleString()}</div>
-              <div className="delta">across all tools and inboxes</div>
+              <div className="delta">{t('usage.totalCallsDelta')}</div>
             </div>
             <div className="stat">
-              <div className="label">Daily average</div>
+              <div className="label">{t('usage.dailyAverage')}</div>
               <div className="value">{avgPerDay.toLocaleString()}</div>
-              <div className="delta">calls per day</div>
+              <div className="delta">{t('usage.dailyAverageDelta')}</div>
             </div>
             <div className="stat">
-              <div className="label">Busiest day</div>
+              <div className="label">{t('usage.busiestDay')}</div>
               <div className="value">{busiestDay.count.toLocaleString()}</div>
               <div className="delta">
                 {busiestDay.date ? formatBarDate(busiestDay.date) : '–'}
@@ -2087,8 +2062,8 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
           <div className="card" style={{ marginTop: 14 }}>
             <div className="card-h">
               <div>
-                <div className="title">Calls per day</div>
-                <div className="sub">Last 30 days · all tools and inboxes</div>
+                <div className="title">{t('usage.callsPerDayTitle')}</div>
+                <div className="sub">{t('usage.callsPerDaySub')}</div>
               </div>
             </div>
             <div className="card-body">
@@ -2099,38 +2074,38 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
           {/* Breakdown by tool */}
           <div className="card" style={{ marginTop: 14 }}>
             <div className="card-h">
-              <div className="title">Calls by tool</div>
+              <div className="title">{t('usage.callsByToolTitle')}</div>
             </div>
             {byTool.length === 0 ? (
               <div className="empty" style={{ padding: '28px 20px' }}>
                 <div className="ico"><Icon name="zap" size={18} /></div>
-                <h3 style={{ fontSize: 14 }}>No tool calls recorded</h3>
-                <p style={{ fontSize: 12.5 }}>No calls in the last 30 days.</p>
+                <h3 style={{ fontSize: 14 }}>{t('usage.noToolCallsTitle')}</h3>
+                <p style={{ fontSize: 12.5 }}>{t('usage.noToolCallsDesc')}</p>
               </div>
             ) : (
               <div className="tbl-wrap">
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th>Tool</th>
-                    <th>Calls</th>
-                    <th>Share</th>
+                    <th>{t('usage.colTool')}</th>
+                    <th>{t('usage.colCalls')}</th>
+                    <th>{t('usage.colShare')}</th>
                     <th style={{ width: 200 }}>{''}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {byTool.map((t) => (
-                    <tr key={t.tool}>
+                  {byTool.map((row) => (
+                    <tr key={row.tool}>
                       <td>
                         <code
                           className="mono"
                           style={{ color: 'var(--cobalt-700)', fontWeight: 500 }}
                         >
-                          {t.tool}
+                          {row.tool}
                         </code>
                       </td>
-                      <td className="mono">{t.count.toLocaleString()}</td>
-                      <td className="mono">{t.pct}%</td>
+                      <td className="mono">{row.count.toLocaleString()}</td>
+                      <td className="mono">{row.pct}%</td>
                       <td>
                         <div style={{
                           height: 6,
@@ -2139,7 +2114,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
                           overflow: 'hidden',
                         }}>
                           <div style={{
-                            width: t.pct + '%',
+                            width: row.pct + '%',
                             height: '100%',
                             background: 'var(--cobalt-500)',
                             borderRadius: 3,
@@ -2159,16 +2134,16 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
           {byInbox.length > 0 && (
             <div className="card" style={{ marginTop: 14 }}>
               <div className="card-h">
-                <div className="title">Calls by inbox</div>
+                <div className="title">{t('usage.callsByInboxTitle')}</div>
               </div>
               <div className="tbl-wrap">
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th>Inbox</th>
-                    <th>Address</th>
-                    <th>Calls</th>
-                    <th>Share</th>
+                    <th>{t('usage.colInbox')}</th>
+                    <th>{t('usage.colAddress')}</th>
+                    <th>{t('usage.colCalls')}</th>
+                    <th>{t('usage.colShare')}</th>
                     <th style={{ width: 200 }}>{''}</th>
                   </tr>
                 </thead>
@@ -2226,6 +2201,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
  *   email        read-only email address from Supabase Auth (never editable here)
  */
 function ProfileSection({ displayName: initialDisplayName, email }) {
+  const t = useTranslations('dashboard');
   const [name, setName] = useState(initialDisplayName ?? '');
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -2239,11 +2215,11 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
 
     const trimmed = name.trim();
     if (trimmed.length === 0) {
-      toast({ message: 'Display name cannot be empty.', variant: 'error' });
+      toast({ message: t('settings.profile.errEmpty'), variant: 'error' });
       return;
     }
     if (trimmed.length > 100) {
-      toast({ message: 'Display name must be 100 characters or fewer.', variant: 'error' });
+      toast({ message: t('settings.profile.errTooLong'), variant: 'error' });
       return;
     }
 
@@ -2257,7 +2233,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
       });
 
       if (!res.ok) {
-        let message = 'Failed to save changes.';
+        let message = t('settings.profile.errSaveFailed');
         try {
           const data = await res.json();
           if (typeof data?.error === 'string') message = data.error;
@@ -2266,9 +2242,9 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
         return;
       }
 
-      toast({ message: 'Profile updated.', variant: 'success' });
+      toast({ message: t('settings.profile.updated'), variant: 'success' });
     } catch {
-      toast({ message: 'Network error. Please try again.', variant: 'error' });
+      toast({ message: t('settings.profile.networkError'), variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -2283,8 +2259,8 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
     <div className="card" style={{ maxWidth: 640 }}>
       <div className="card-h">
         <div>
-          <div className="title">Profile</div>
-          <div className="sub">Your name as it appears in the dashboard and audit logs.</div>
+          <div className="title">{t('settings.profile.title')}</div>
+          <div className="sub">{t('settings.profile.sub')}</div>
         </div>
       </div>
       <form onSubmit={handleSubmit}>
@@ -2303,7 +2279,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
                 marginBottom: 6,
               }}
             >
-              Display name
+              {t('settings.profile.displayName')}
             </label>
             <input
               id="profile-display-name"
@@ -2313,7 +2289,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
               onChange={e => setName(e.target.value)}
               disabled={saving}
               maxLength={100}
-              placeholder="Your name"
+              placeholder={t('settings.profile.namePlaceholder')}
               style={{ width: '100%', boxSizing: 'border-box' }}
               autoComplete="name"
             />
@@ -2332,7 +2308,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
                 marginBottom: 6,
               }}
             >
-              Email address
+              {t('settings.profile.email')}
             </label>
             <input
               id="profile-email"
@@ -2359,7 +2335,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
                 color: 'var(--fg-3)',
               }}
             >
-              Email cannot be changed here. Contact support to update your email address.
+              {t('settings.profile.emailHint')}
             </span>
           </div>
 
@@ -2371,14 +2347,14 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
               onClick={handleCancel}
               disabled={saving || !isDirty}
             >
-              Cancel
+              {t('settings.profile.cancel')}
             </Btn>
             <Btn
               variant="primary"
               type="submit"
               disabled={saving || !isDirty}
             >
-              {saving ? 'Saving…' : 'Save changes'}
+              {saving ? t('settings.profile.saving') : t('settings.profile.saveChanges')}
             </Btn>
           </div>
         </div>
@@ -2401,6 +2377,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
  * dashboard actions (inbox disconnect, key revoke, etc.).
  */
 function PasswordSection() {
+  const t = useTranslations('dashboard');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -2419,23 +2396,23 @@ function PasswordSection() {
     // Client-side validation: surface immediately inline so the user can
     // fix typos without waiting for a round trip.
     if (!currentPassword) {
-      setInlineError('Current password is required.');
+      setInlineError(t('settings.password.errCurrentRequired'));
       return;
     }
     if (!newPassword) {
-      setInlineError('New password is required.');
+      setInlineError(t('settings.password.errNewRequired'));
       return;
     }
     if (newPassword.length < 8) {
-      setInlineError('New password must be at least 8 characters.');
+      setInlineError(t('settings.password.errTooShort'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setInlineError('New passwords do not match.');
+      setInlineError(t('settings.password.errMismatch'));
       return;
     }
     if (currentPassword === newPassword) {
-      setInlineError('New password must be different from your current password.');
+      setInlineError(t('settings.password.errSame'));
       return;
     }
 
@@ -2448,7 +2425,7 @@ function PasswordSection() {
       });
 
       if (!res.ok) {
-        let message = 'Failed to update password.';
+        let message = t('settings.password.errUpdateFailed');
         try {
           const data = await res.json();
           if (typeof data?.error === 'string') message = data.error;
@@ -2461,9 +2438,9 @@ function PasswordSection() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      toast({ message: 'Password updated successfully.', variant: 'success' });
+      toast({ message: t('settings.password.updated'), variant: 'success' });
     } catch {
-      toast({ message: 'Network error. Please try again.', variant: 'error' });
+      toast({ message: t('settings.password.networkError'), variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -2482,8 +2459,8 @@ function PasswordSection() {
     <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
       <div className="card-h">
         <div>
-          <div className="title">Change password</div>
-          <div className="sub">Choose a strong password at least 8 characters long.</div>
+          <div className="title">{t('settings.password.title')}</div>
+          <div className="sub">{t('settings.password.sub')}</div>
         </div>
       </div>
       <form onSubmit={handleSubmit}>
@@ -2492,7 +2469,7 @@ function PasswordSection() {
           {/* Current password */}
           <div className="field">
             <label htmlFor="pwd-current" style={labelStyle}>
-              Current password
+              {t('settings.password.current')}
             </label>
             <input
               id="pwd-current"
@@ -2509,7 +2486,7 @@ function PasswordSection() {
           {/* New password */}
           <div className="field">
             <label htmlFor="pwd-new" style={labelStyle}>
-              New password
+              {t('settings.password.new')}
             </label>
             <input
               id="pwd-new"
@@ -2526,7 +2503,7 @@ function PasswordSection() {
           {/* Confirm new password */}
           <div className="field">
             <label htmlFor="pwd-confirm" style={labelStyle}>
-              Confirm new password
+              {t('settings.password.confirm')}
             </label>
             <input
               id="pwd-confirm"
@@ -2561,7 +2538,7 @@ function PasswordSection() {
           {/* Action */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Btn variant="primary" type="submit" disabled={saving}>
-              {saving ? 'Updating…' : 'Update password'}
+              {saving ? t('settings.password.updating') : t('settings.password.updatePassword')}
             </Btn>
           </div>
         </div>
@@ -2584,6 +2561,7 @@ function PasswordSection() {
 /*   4. On confirm: POST /api/user/delete-account, then redirect to / */
 /* ------------------------------------------------------------------ */
 function DeleteAccountSection({ email }) {
+  const t = useTranslations('dashboard');
   const [open, setOpen] = useState(false);
   const [confirmValue, setConfirmValue] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -2616,7 +2594,7 @@ function DeleteAccountSection({ email }) {
         body: JSON.stringify({ confirmEmail: confirmValue.trim() }),
       });
       if (!res.ok) {
-        let msg = 'Failed to delete account. Please try again.';
+        let msg = t('settings.deleteAccount.errFailed');
         try {
           const data = await res.json();
           if (typeof data?.error === 'string') msg = data.error;
@@ -2628,7 +2606,7 @@ function DeleteAccountSection({ email }) {
       // Server signed us out. Redirect to homepage.
       window.location.href = '/';
     } catch {
-      setError('Network error. Please check your connection and try again.');
+      setError(t('settings.deleteAccount.networkError'));
       setDeleting(false);
     }
   }
@@ -2650,11 +2628,10 @@ function DeleteAccountSection({ email }) {
         >
           <div>
             <div className="title" style={{ color: 'var(--red-700)' }}>
-              Delete account
+              {t('settings.deleteAccount.title')}
             </div>
             <div className="sub">
-              All connected inboxes and API keys will be revoked immediately.
-              This cannot be undone.
+              {t('settings.deleteAccount.sub')}
             </div>
           </div>
         </div>
@@ -2663,7 +2640,7 @@ function DeleteAccountSection({ email }) {
           style={{ display: 'flex', justifyContent: 'flex-end' }}
         >
           <Btn variant="danger" onClick={handleOpen}>
-            Delete account
+            {t('settings.deleteAccount.button')}
           </Btn>
         </div>
       </div>
@@ -2716,12 +2693,10 @@ function DeleteAccountSection({ email }) {
                   className="title"
                   style={{ color: 'var(--red-700)', fontSize: 15 }}
                 >
-                  Delete your account?
+                  {t('settings.deleteAccount.dialogTitle')}
                 </div>
                 <div className="sub" style={{ marginTop: 4 }}>
-                  This will immediately revoke all API keys and disconnect all
-                  inboxes. Your data is retained for audit purposes but you will
-                  lose access permanently.
+                  {t('settings.deleteAccount.dialogSub')}
                 </div>
               </div>
             </div>
@@ -2743,7 +2718,7 @@ function DeleteAccountSection({ email }) {
                     marginBottom: 8,
                   }}
                 >
-                  Type{' '}
+                  {t('settings.deleteAccount.typePrefix')}{' '}
                   <span
                     style={{
                       fontFamily: 'var(--font-mono)',
@@ -2756,7 +2731,7 @@ function DeleteAccountSection({ email }) {
                   >
                     {email}
                   </span>{' '}
-                  to confirm:
+                  {t('settings.deleteAccount.typeToConfirm')}
                 </label>
                 <input
                   id="delete-account-confirm"
@@ -2809,14 +2784,14 @@ function DeleteAccountSection({ email }) {
                   onClick={handleCancel}
                   disabled={deleting}
                 >
-                  Cancel
+                  {t('settings.deleteAccount.cancel')}
                 </Btn>
                 <Btn
                   variant="danger"
                   onClick={handleConfirm}
                   disabled={!emailMatches || deleting}
                 >
-                  {deleting ? 'Deleting…' : 'Delete account'}
+                  {deleting ? t('settings.deleteAccount.deleting') : t('settings.deleteAccount.button')}
                 </Btn>
               </div>
             </div>
@@ -2842,7 +2817,7 @@ const BILLING_PLANS = [
     monthlyPrice: 12,
     yearlyMonthlyPrice: 10,     // effective monthly cost when billed yearly ($120/yr)
     yearlyAnnualTotal: 120,
-    features: ['Unlimited everything', '300 requests / minute (5× burst)', 'Full analytics (90-day history)', 'Email support'],
+    featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeature4'],
     highlighted: false,
   },
   {
@@ -2851,7 +2826,7 @@ const BILLING_PLANS = [
     monthlyPrice: 49,
     yearlyMonthlyPrice: 41,     // effective monthly cost when billed yearly ($490/yr)
     yearlyAnnualTotal: 490,
-    features: ['Unlimited everything', '1,000 requests / minute', 'Team roles & multiple workspaces', 'SSO (SAML / OIDC) + audit log', 'Full analytics (1-year history)', 'Priority support'],
+    featureKeys: ['billing.plans.teamFeature1', 'billing.plans.teamFeature2', 'billing.plans.teamFeature3', 'billing.plans.teamFeature4', 'billing.plans.teamFeature5', 'billing.plans.teamFeature6'],
     highlighted: true,
   },
 ];
@@ -2867,6 +2842,7 @@ const BILLING_PLANS = [
  *   currentPlan: 'free' | 'pro' | 'enterprise' from workspaces.plan
  */
 function BillingSection({ currentPlan, stripePrices }) {
+  const t = useTranslations('dashboard');
   const [interval, setInterval] = useState('month');
   const [upgrading, setUpgrading] = useState(null); // planId while loading
   const [openingPortal, setOpeningPortal] = useState(false);
@@ -2893,7 +2869,7 @@ function BillingSection({ currentPlan, stripePrices }) {
         const message =
           typeof data?.error === 'string'
             ? data.error
-            : 'Failed to open billing portal. Please try again.';
+            : t('billing.errPortalFailed');
         toast({ message, variant: 'error' });
         return;
       }
@@ -2901,10 +2877,10 @@ function BillingSection({ currentPlan, stripePrices }) {
       if (typeof data?.url === 'string') {
         window.location.href = data.url;
       } else {
-        toast({ message: 'Unexpected response. Please try again.', variant: 'error' });
+        toast({ message: t('billing.errUnexpected'), variant: 'error' });
       }
     } catch {
-      toast({ message: 'Network error. Please try again.', variant: 'error' });
+      toast({ message: t('billing.networkError'), variant: 'error' });
     } finally {
       setOpeningPortal(false);
     }
@@ -2926,7 +2902,7 @@ function BillingSection({ currentPlan, stripePrices }) {
         const message =
           typeof data?.error === 'string'
             ? data.error
-            : 'Failed to start checkout. Please try again.';
+            : t('billing.errCheckoutFailed');
         toast({ message, variant: 'error' });
         return;
       }
@@ -2935,16 +2911,23 @@ function BillingSection({ currentPlan, stripePrices }) {
         // Redirect to Stripe Checkout hosted page
         window.location.href = data.url;
       } else {
-        toast({ message: 'Unexpected response from checkout. Please try again.', variant: 'error' });
+        toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
       }
     } catch {
-      toast({ message: 'Network error. Please try again.', variant: 'error' });
+      toast({ message: t('billing.networkError'), variant: 'error' });
     } finally {
       setUpgrading(null);
     }
   };
 
   const isOnPaidPlan = currentPlan === 'solo' || currentPlan === 'pro' || currentPlan === 'enterprise';
+
+  // Display label for the current plan. "free" is translated; paid plan names
+  // (Solo / Team / Enterprise) are brand-style names kept as-is (capitalized).
+  const planKey = currentPlan ?? 'free';
+  const planDisplay = planKey === 'free'
+    ? t('billing.free')
+    : (planKey === 'pro' ? 'Team' : planKey.charAt(0).toUpperCase() + planKey.slice(1));
 
   // Derived usage values for the widget
   const monthlyUsed = usage?.monthly?.used ?? null;
@@ -2963,13 +2946,13 @@ function BillingSection({ currentPlan, stripePrices }) {
     <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
       <div className="card-h">
         <div>
-          <div className="title">Billing &amp; plan</div>
-          <div className="sub">Manage your subscription and usage limits.</div>
+          <div className="title">{t('billing.title')}</div>
+          <div className="sub">{t('billing.sub')}</div>
         </div>
         {/* Current plan badge */}
         <div style={{ marginLeft: 'auto' }}>
-          <Badge tone={currentPlan === 'free' ? 'neutral' : 'brand'} style={{ textTransform: 'capitalize' }}>
-            {currentPlan ?? 'free'} plan
+          <Badge tone={currentPlan === 'free' ? 'neutral' : 'brand'}>
+            {t('billing.planBadge', { plan: planDisplay })}
           </Badge>
         </div>
       </div>
@@ -2988,14 +2971,14 @@ function BillingSection({ currentPlan, stripePrices }) {
             gap: 12,
           }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              This month&rsquo;s usage
+              {t('billing.thisMonthsUsage')}
             </div>
 
             {/* Monthly calls */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>
-                  MCP calls this month
+                  {t('billing.mcpCallsThisMonth')}
                 </span>
                 <span style={{
                   fontFamily: 'var(--font-mono, monospace)',
@@ -3021,8 +3004,8 @@ function BillingSection({ currentPlan, stripePrices }) {
               {monthlyCap != null && (
                 <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-4)', marginTop: 4 }}>
                   {monthlyCap - (monthlyUsed ?? 0) > 0
-                    ? `${(monthlyCap - (monthlyUsed ?? 0)).toLocaleString()} calls remaining · resets ${new Date(usage.monthly.resets_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                    : 'Monthly quota exhausted · resets ' + new Date(usage.monthly.resets_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    ? t('billing.callsRemaining', { remaining: (monthlyCap - (monthlyUsed ?? 0)).toLocaleString(), date: new Date(usage.monthly.resets_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) })
+                    : t('billing.monthlyExhausted', { date: new Date(usage.monthly.resets_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) })}
                 </div>
               )}
             </div>
@@ -3031,7 +3014,7 @@ function BillingSection({ currentPlan, stripePrices }) {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>
-                  Calls today (burst cap)
+                  {t('billing.callsTodayBurst')}
                 </span>
                 <span style={{
                   fontFamily: 'var(--font-mono, monospace)',
@@ -3056,7 +3039,7 @@ function BillingSection({ currentPlan, stripePrices }) {
               )}
               {dailyCap != null && (
                 <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-4)', marginTop: 4 }}>
-                  Resets at midnight UTC
+                  {t('billing.resetsMidnight')}
                 </div>
               )}
             </div>
@@ -3088,8 +3071,7 @@ function BillingSection({ currentPlan, stripePrices }) {
                   color: 'var(--fg-1)',
                   marginBottom: 4,
                 }}>
-                  You&apos;re on the{' '}
-                  <span style={{ textTransform: 'capitalize' }}>{currentPlan}</span> plan.
+                  {t('billing.onPlan', { plan: planDisplay })}
                 </div>
                 <div style={{
                   fontFamily: 'var(--font-sans)',
@@ -3097,7 +3079,7 @@ function BillingSection({ currentPlan, stripePrices }) {
                   color: 'var(--fg-3)',
                   lineHeight: 1.5,
                 }}>
-                  Manage your subscription, update your payment method, download invoices, or cancel, all from the Stripe billing portal.
+                  {t('billing.portalDesc')}
                 </div>
               </div>
 
@@ -3109,7 +3091,7 @@ function BillingSection({ currentPlan, stripePrices }) {
                   onClick={handleOpenPortal}
                   disabled={openingPortal}
                 >
-                  {openingPortal ? 'Opening portal…' : 'Manage billing'}
+                  {openingPortal ? t('billing.openingPortal') : t('billing.manageBilling')}
                 </Btn>
               </div>
             </div>
@@ -3125,11 +3107,11 @@ function BillingSection({ currentPlan, stripePrices }) {
             }}>
               {/* What you can do in the portal */}
               {[
-                'View & download invoices',
-                'Update payment method',
-                'Change or cancel plan',
-              ].map(item => (
-                <div key={item} style={{
+                'billing.portalItem1',
+                'billing.portalItem2',
+                'billing.portalItem3',
+              ].map(itemKey => (
+                <div key={itemKey} style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
@@ -3140,7 +3122,7 @@ function BillingSection({ currentPlan, stripePrices }) {
                     fontSize: 12,
                     color: 'var(--fg-3)',
                   }}>
-                    {item}
+                    {t(itemKey)}
                   </span>
                 </div>
               ))}
@@ -3151,7 +3133,7 @@ function BillingSection({ currentPlan, stripePrices }) {
           <>
             {/* Interval toggle */}
             <div style={{ display: 'flex', gap: 0, alignSelf: 'flex-start', borderRadius: 8, border: '1px solid var(--border-1)', overflow: 'hidden' }}>
-              {[{ value: 'month', label: 'Monthly' }, { value: 'year', label: 'Annual (save 20%)' }].map(opt => (
+              {[{ value: 'month', label: t('billing.monthly') }, { value: 'year', label: t('billing.annual') }].map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => setInterval(opt.value)}
@@ -3227,7 +3209,7 @@ function BillingSection({ currentPlan, stripePrices }) {
                           {plan.name}
                         </span>
                         {plan.highlighted && (
-                          <Badge tone="brand">Most popular</Badge>
+                          <Badge tone="brand">{t('billing.mostPopular')}</Badge>
                         )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
@@ -3238,28 +3220,28 @@ function BillingSection({ currentPlan, stripePrices }) {
                           color: 'var(--fg-1)',
                           lineHeight: 1,
                         }}>
-                          {isCustom ? 'Custom' : `$${price}`}
+                          {isCustom ? t('billing.custom') : `$${price}`}
                         </span>
                         {!isCustom && (
                           <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                            /month
+                            {t('billing.perMonth')}
                           </span>
                         )}
                       </div>
                       {!isCustom && interval === 'year' && (
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-3)', marginTop: 2 }}>
-                          Billed ${yearlyAnnualTotal}/year
+                          {t('billing.billedYearly', { total: yearlyAnnualTotal })}
                         </div>
                       )}
                     </div>
 
                     {/* Feature list */}
                     <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {plan.features.map(feat => (
-                        <li key={feat} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      {plan.featureKeys.map(featKey => (
+                        <li key={featKey} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                           <Icon name="check" size={12} color="var(--mint-600)" style={{ flexShrink: 0, marginTop: 2 }} />
                           <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.4 }}>
-                            {feat}
+                            {t(featKey)}
                           </span>
                         </li>
                       ))}
@@ -3272,7 +3254,7 @@ function BillingSection({ currentPlan, stripePrices }) {
                         href="mailto:sales@mcpemails.com"
                         style={{ marginTop: 'auto', textAlign: 'center', justifyContent: 'center' }}
                       >
-                        Talk to sales
+                        {t('billing.talkToSales')}
                       </a>
                     ) : (
                       <Btn
@@ -3282,10 +3264,10 @@ function BillingSection({ currentPlan, stripePrices }) {
                         style={{ marginTop: 'auto' }}
                       >
                         {isLoading
-                          ? 'Redirecting…'
+                          ? t('billing.redirecting')
                           : isCurrentPlanMatch
-                          ? 'Current plan'
-                          : `Get ${plan.name}`}
+                          ? t('billing.currentPlan')
+                          : t('billing.getPlan', { plan: plan.name })}
                       </Btn>
                     )}
                   </div>
@@ -3300,11 +3282,10 @@ function BillingSection({ currentPlan, stripePrices }) {
               color: 'var(--fg-3)',
               lineHeight: 1.5,
             }}>
-              You&apos;ll be redirected to Stripe to complete payment securely.
-              Cancel any time and keep access until the end of your billing period.
+              {t('billing.redirectNote')}
             </p>
             <p style={{ fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5, marginTop: 4 }}>
-              Need something custom? <a href="mailto:sales@mcpemails.com" style={{ color: 'var(--brand)', fontWeight: 600 }}>Contact us</a>.
+              {t('billing.customNote')} <a href="mailto:sales@mcpemails.com" style={{ color: 'var(--brand)', fontWeight: 600 }}>{t('billing.contactUs')}</a>.
             </p>
           </>
         )}
@@ -3313,11 +3294,57 @@ function BillingSection({ currentPlan, stripePrices }) {
   );
 }
 
+/**
+ * LanguageSection: lets the user switch the app interface language.
+ * The choice is persisted to localStorage by AppLocaleProvider.
+ */
+function LanguageSection() {
+  const t = useTranslations('dashboard');
+  const { locale, setLocale } = useAppLocale();
+
+  // Each language is shown by its own native name (autonym) so the option is
+  // recognizable regardless of the current interface language.
+  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文' };
+  const options = routing.locales.map((value) => ({ value, label: LOCALE_LABELS[value] || value }));
+
+  return (
+    <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
+      <div className="card-h"><div className="title">{t('settings.languageHeading')}</div></div>
+      <div className="card-body">
+        <div style={{ display: 'flex', gap: 0, alignSelf: 'flex-start', borderRadius: 8, border: '1px solid var(--border-1)', overflow: 'hidden', width: 'fit-content' }}>
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setLocale(opt.value)}
+              aria-pressed={locale === opt.value}
+              style={{
+                padding: '6px 16px',
+                fontFamily: 'var(--font-sans)',
+                fontSize: 12.5,
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                background: locale === opt.value ? 'var(--brand)' : 'transparent',
+                color: locale === opt.value ? '#fff' : 'var(--fg-2)',
+                transition: 'background 120ms, color 120ms',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SettingsPage({ user, workspace, stripePrices }) {
+  const t = useTranslations('dashboard');
 
   return (
     <div className="page">
-      <PageHeader title="Settings" sub="Profile, workspace, and account." />
+      <PageHeader title={t('settings.title')} sub={t('settings.sub')} />
 
       {/* Profile section: display name + read-only email */}
       <ProfileSection
@@ -3328,12 +3355,15 @@ export function SettingsPage({ user, workspace, stripePrices }) {
       {/* Password change section */}
       <PasswordSection />
 
+      {/* Language selector */}
+      <LanguageSection />
+
       {/* Billing section: current plan + upgrade */}
       <BillingSection currentPlan={workspace?.plan ?? 'free'} stripePrices={stripePrices} />
 
       {/* Workspace section */}
       <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
-        <div className="card-h"><div className="title">Workspace</div></div>
+        <div className="card-h"><div className="title">{t('settings.workspace.title')}</div></div>
         <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="field">
             <label
@@ -3347,7 +3377,7 @@ export function SettingsPage({ user, workspace, stripePrices }) {
                 marginBottom: 6,
               }}
             >
-              Workspace name
+              {t('settings.workspace.name')}
             </label>
             <input
               id="settings-workspace-name"
@@ -3357,8 +3387,8 @@ export function SettingsPage({ user, workspace, stripePrices }) {
             />
           </div>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <Btn variant="secondary">Cancel</Btn>
-            <Btn variant="primary">Save changes</Btn>
+            <Btn variant="secondary">{t('settings.workspace.cancel')}</Btn>
+            <Btn variant="primary">{t('settings.workspace.saveChanges')}</Btn>
           </div>
         </div>
       </div>
@@ -3377,19 +3407,19 @@ export function SettingsPage({ user, workspace, stripePrices }) {
  * Formats an ISO timestamp as a compact relative label for "last active" display.
  * Falls back to an absolute date string for timestamps older than 7 days.
  */
-function formatSessionAge(iso) {
+function formatSessionAge(iso, t) {
   if (!iso) return '–';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '–';
   const diffMs = Date.now() - d.getTime();
   const diffSec = Math.floor(diffMs / 1000);
-  if (diffSec < 60) return 'Just now';
+  if (diffSec < 60) return t('security.justNow');
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffMin < 60) return t('security.minutesAgo', { n: diffMin });
   const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffHr < 24) return t('security.hoursAgo', { n: diffHr });
   const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 7) return `${diffDay}d ago`;
+  if (diffDay < 7) return t('security.daysAgo', { n: diffDay });
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
@@ -3412,6 +3442,7 @@ function deviceIcon(os) {
  * the current session, so the user stays logged in on this device.
  */
 function ActiveSessionsSection() {
+  const t = useTranslations('dashboard');
   const [sessions, setSessions] = useState(null);   // null = loading
   const [fetchErr, setFetchErr] = useState(null);
   const [signingOut, setSigningOut] = useState(false);
@@ -3424,7 +3455,7 @@ function ActiveSessionsSection() {
     try {
       const res = await fetch('/api/security/sessions');
       if (!res.ok) {
-        let msg = 'Failed to load sessions.';
+        let msg = t('security.errLoadSessions');
         try { const d = await res.json(); if (typeof d?.error === 'string') msg = d.error; } catch { /* ignore */ }
         setFetchErr(msg);
         return;
@@ -3432,7 +3463,7 @@ function ActiveSessionsSection() {
       const data = await res.json();
       setSessions(data.sessions ?? []);
     } catch {
-      setFetchErr('Network error. Please try again.');
+      setFetchErr(t('security.networkError'));
     }
   };
 
@@ -3449,7 +3480,7 @@ function ActiveSessionsSection() {
     try {
       const res = await fetch('/api/security/sessions', { method: 'DELETE' });
       if (!res.ok) {
-        let msg = 'Failed to sign out other sessions.';
+        let msg = t('security.errSignOut');
         try { const d = await res.json(); if (typeof d?.error === 'string') msg = d.error; } catch { /* ignore */ }
         toast({ message: msg, variant: 'error' });
         return;
@@ -3458,12 +3489,12 @@ function ActiveSessionsSection() {
       setSessions(prev => (prev ?? []).filter(s => s.isCurrent));
       toast({
         message: otherSessionCount === 1
-          ? 'Signed out 1 other session.'
-          : `Signed out ${otherSessionCount} other sessions.`,
+          ? t('security.signedOutOne')
+          : t('security.signedOutMany', { count: otherSessionCount }),
         variant: 'success',
       });
     } catch {
-      toast({ message: 'Network error. Please try again.', variant: 'error' });
+      toast({ message: t('security.networkError'), variant: 'error' });
     } finally {
       setSigningOut(false);
     }
@@ -3473,9 +3504,9 @@ function ActiveSessionsSection() {
     <div className="card" style={{ marginTop: 14 }}>
       <div className="card-h">
         <div>
-          <div className="title">Active sessions</div>
+          <div className="title">{t('security.sessionsTitle')}</div>
           <div className="sub">
-            Devices and browsers currently signed into your account.
+            {t('security.sessionsSub')}
           </div>
         </div>
         {otherSessionCount > 0 && (
@@ -3487,8 +3518,8 @@ function ActiveSessionsSection() {
               disabled={signingOut}
             >
               {signingOut
-                ? 'Signing out…'
-                : `Sign out ${otherSessionCount === 1 ? 'other session' : `${otherSessionCount} other sessions`}`}
+                ? t('security.signingOut')
+                : (otherSessionCount === 1 ? t('security.signOutOther') : t('security.signOutOthers', { count: otherSessionCount }))}
             </Btn>
           </div>
         )}
@@ -3526,7 +3557,7 @@ function ActiveSessionsSection() {
           gap: 12,
         }}>
           <span>{fetchErr}</span>
-          <Btn variant="secondary" size="sm" onClick={loadSessions}>Retry</Btn>
+          <Btn variant="secondary" size="sm" onClick={loadSessions}>{t('security.retry')}</Btn>
         </div>
       )}
 
@@ -3534,8 +3565,8 @@ function ActiveSessionsSection() {
       {sessions !== null && sessions.length === 0 && (
         <div className="empty">
           <div className="ico"><Icon name="shield" size={20} /></div>
-          <h3>No active sessions found</h3>
-          <p>Your session data could not be retrieved.</p>
+          <h3>{t('security.noSessionsTitle')}</h3>
+          <p>{t('security.noSessionsDesc')}</p>
         </div>
       )}
 
@@ -3544,11 +3575,11 @@ function ActiveSessionsSection() {
         <table className="tbl">
           <thead>
             <tr>
-              <th>Device</th>
-              <th>IP address</th>
-              <th>Signed in</th>
-              <th>Last active</th>
-              <th style={{ minWidth: 80 }}>Status</th>
+              <th>{t('security.colDevice')}</th>
+              <th>{t('security.colIp')}</th>
+              <th>{t('security.colSignedIn')}</th>
+              <th>{t('security.colLastActive')}</th>
+              <th style={{ minWidth: 80 }}>{t('security.colStatus')}</th>
             </tr>
           </thead>
           <tbody>
@@ -3598,7 +3629,7 @@ function ActiveSessionsSection() {
                     fontFamily: 'var(--font-mono)', fontSize: 12,
                     color: 'var(--fg-3)',
                   }}>
-                    {formatSessionAge(session.createdAt)}
+                    {formatSessionAge(session.createdAt, t)}
                   </span>
                 </td>
 
@@ -3608,16 +3639,16 @@ function ActiveSessionsSection() {
                     fontFamily: 'var(--font-mono)', fontSize: 12,
                     color: 'var(--fg-3)',
                   }}>
-                    {formatSessionAge(session.lastActiveAt)}
+                    {formatSessionAge(session.lastActiveAt, t)}
                   </span>
                 </td>
 
                 {/* Status badge */}
                 <td>
                   {session.isCurrent ? (
-                    <Badge tone="live" dot="live">This device</Badge>
+                    <Badge tone="live" dot="live">{t('security.thisDevice')}</Badge>
                   ) : (
-                    <Badge tone="neutral">Active</Badge>
+                    <Badge tone="neutral">{t('security.active')}</Badge>
                   )}
                 </td>
               </tr>
@@ -3659,14 +3690,14 @@ function formatAuditTimestamp(iso) {
  * Columns: Tool, Inbox, API Key, Timestamp, Status
  */
 function AuditTable({ entries }) {
+  const t = useTranslations('dashboard');
   if (entries.length === 0) {
     return (
       <div className="empty">
         <div className="ico"><Icon name="shield" size={20} /></div>
-        <h3>No MCP tool calls yet</h3>
+        <h3>{t('security.noCallsTitle')}</h3>
         <p>
-          Every tool call made through the MCP endpoint will appear here with its
-          status and the API key used.
+          {t('security.noCallsDesc')}
         </p>
       </div>
     );
@@ -3677,12 +3708,12 @@ function AuditTable({ entries }) {
     <table className="tbl">
       <thead>
         <tr>
-          <th>Tool</th>
-          <th>Inbox</th>
-          <th>API key</th>
-          <th>Timestamp</th>
-          <th>Status</th>
-          <th style={{ minWidth: 64 }}>Duration</th>
+          <th>{t('security.colTool')}</th>
+          <th>{t('security.colInbox')}</th>
+          <th>{t('security.colApiKey')}</th>
+          <th>{t('security.colTimestamp')}</th>
+          <th>{t('security.colStatus')}</th>
+          <th style={{ minWidth: 64 }}>{t('security.colDuration')}</th>
         </tr>
       </thead>
       <tbody>
@@ -3747,12 +3778,12 @@ function AuditTable({ entries }) {
             {/* Status badge */}
             <td>
               {entry.status === 'success' ? (
-                <Badge tone="live" dot="live">Success</Badge>
+                <Badge tone="live" dot="live">{t('security.statusSuccess')}</Badge>
               ) : entry.status === 'rate_limited' ? (
-                <Badge tone="amber" dot="amber">Rate limited</Badge>
+                <Badge tone="amber" dot="amber">{t('security.statusRateLimited')}</Badge>
               ) : (
                 <div>
-                  <Badge tone="red" dot="red">Error</Badge>
+                  <Badge tone="red" dot="red">{t('security.statusError')}</Badge>
                   {entry.errorCode && (
                     <div style={{ marginTop: 3, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--red-700)' }}>
                       {entry.errorCode}
@@ -3790,6 +3821,7 @@ function AuditTable({ entries }) {
  * Subsequent pages are fetched client-side from GET /api/security/audit-log.
  */
 export function SecurityPage({ auditLog }) {
+  const t = useTranslations('dashboard');
   const initialEntries = auditLog?.entries ?? [];
   const initialTotal   = auditLog?.total    ?? 0;
   const pageSize       = auditLog?.pageSize ?? PAGE_SIZE;
@@ -3815,7 +3847,7 @@ export function SecurityPage({ auditLog }) {
         `/api/security/audit-log?page=${nextPage}&pageSize=${pageSize}`,
       );
       if (!res.ok) {
-        let msg = 'Failed to load audit log.';
+        let msg = t('security.errLoadAudit');
         try {
           const data = await res.json();
           if (typeof data?.error === 'string') msg = data.error;
@@ -3828,7 +3860,7 @@ export function SecurityPage({ auditLog }) {
       setTotal(data.total ?? 0);
       setPage(nextPage);
     } catch {
-      setFetchErr('Network error. Please try again.');
+      setFetchErr(t('security.networkError'));
     } finally {
       setLoading(false);
     }
@@ -3843,8 +3875,8 @@ export function SecurityPage({ auditLog }) {
   return (
     <div className="page">
       <PageHeader
-        title="Security"
-        sub="Active sessions and audit trail of every MCP tool call."
+        title={t('security.title')}
+        sub={t('security.sub')}
       />
 
       {/* Active sessions: loaded client-side */}
@@ -3853,11 +3885,11 @@ export function SecurityPage({ auditLog }) {
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-h">
           <div>
-            <div className="title">Audit log</div>
+            <div className="title">{t('security.auditTitle')}</div>
             <div className="sub">
               {total > 0
-                ? `Showing ${rangeStart}–${rangeEnd} of ${total.toLocaleString()} tool calls`
-                : 'MCP tool calls across all API keys and inboxes'}
+                ? t('security.auditShowing', { start: rangeStart, end: rangeEnd, total: total.toLocaleString() })
+                : t('security.auditSub')}
             </div>
           </div>
           {/* Pagination controls: only shown when there is more than one page */}
@@ -3869,7 +3901,7 @@ export function SecurityPage({ auditLog }) {
                 color: 'var(--fg-3)',
                 userSelect: 'none',
               }}>
-                Page {page + 1} of {totalPages}
+                {t('security.pageOf', { page: page + 1, total: totalPages })}
               </span>
               <Btn
                 variant="secondary"
@@ -3877,7 +3909,7 @@ export function SecurityPage({ auditLog }) {
                 icon="chevron"
                 onClick={handlePrev}
                 disabled={page === 0 || loading}
-                title="Previous page"
+                title={t('security.prevPage')}
               >
                 {''}
               </Btn>
@@ -3887,7 +3919,7 @@ export function SecurityPage({ auditLog }) {
                 icon="chevron"
                 onClick={handleNext}
                 disabled={page >= totalPages - 1 || loading}
-                title="Next page"
+                title={t('security.nextPage')}
               >
                 {''}
               </Btn>
@@ -3930,7 +3962,7 @@ export function SecurityPage({ auditLog }) {
               fontSize: 12,
               color: 'var(--fg-3)',
             }}>
-              {rangeStart}–{rangeEnd} of {total.toLocaleString()} results
+              {t('security.resultsRange', { start: rangeStart, end: rangeEnd, total: total.toLocaleString() })}
             </span>
             <div style={{ display: 'flex', gap: 6 }}>
               <Btn
@@ -3939,7 +3971,7 @@ export function SecurityPage({ auditLog }) {
                 onClick={handlePrev}
                 disabled={page === 0 || loading}
               >
-                ← Previous
+                {t('security.previous')}
               </Btn>
               <Btn
                 variant="secondary"
@@ -3947,7 +3979,7 @@ export function SecurityPage({ auditLog }) {
                 onClick={handleNext}
                 disabled={page >= totalPages - 1 || loading}
               >
-                Next →
+                {t('security.next')}
               </Btn>
             </div>
           </div>
@@ -3963,13 +3995,14 @@ export function SecurityPage({ auditLog }) {
    ───────────────────────────────────────────────────────────────────────────── */
 
 const ROLE_COLORS = {
-  owner:  { bg: 'var(--bg-sunken)',   color: 'var(--fg-2)',    label: 'Owner'  },
-  admin:  { bg: 'var(--cobalt-50)',   color: 'var(--cobalt-700, #1d4ed8)', label: 'Admin'  },
-  member: { bg: 'var(--live-soft)',   color: 'var(--mint-600)', label: 'Member' },
-  viewer: { bg: 'rgba(245,158,11,.1)', color: 'var(--amber-600, #d97706)', label: 'Viewer' },
+  owner:  { bg: 'var(--bg-sunken)',   color: 'var(--fg-2)',    labelKey: 'members.roleOwner'  },
+  admin:  { bg: 'var(--cobalt-50)',   color: 'var(--cobalt-700, #1d4ed8)', labelKey: 'members.roleAdmin'  },
+  member: { bg: 'var(--live-soft)',   color: 'var(--mint-600)', labelKey: 'members.roleMember' },
+  viewer: { bg: 'rgba(245,158,11,.1)', color: 'var(--amber-600, #d97706)', labelKey: 'members.roleViewer' },
 };
 
 function RoleBadge({ role }) {
+  const t = useTranslations('dashboard');
   const c = ROLE_COLORS[role] ?? ROLE_COLORS.member;
   return (
     <span style={{
@@ -3982,7 +4015,7 @@ function RoleBadge({ role }) {
       fontWeight: 600,
       fontFamily: 'var(--font-sans)',
     }}>
-      {c.label}
+      {t(c.labelKey)}
     </span>
   );
 }
@@ -4007,6 +4040,7 @@ export function MembersPage({
   onRemove,
   onChangeRole,
 }) {
+  const t = useTranslations('dashboard');
   const { toast } = useToast();
 
   // Invite form state
@@ -4034,7 +4068,7 @@ export function MembersPage({
       await onInvite(inviteEmail.trim().toLowerCase(), inviteRole);
       setInviteEmail('');
     } catch (err) {
-      setInviteError(err.message ?? 'Failed to send invite.');
+      setInviteError(err.message ?? t('members.errInviteFailed'));
     } finally {
       setInviting(false);
     }
@@ -4047,7 +4081,7 @@ export function MembersPage({
       await onRemove(confirmRemove.userId);
       setConfirmRemove(null);
     } catch (err) {
-      toast({ message: err.message ?? 'Failed to remove member.', variant: 'error' });
+      toast({ message: err.message ?? t('members.errRemoveFailed'), variant: 'error' });
     } finally {
       setRemoving(false);
     }
@@ -4058,7 +4092,7 @@ export function MembersPage({
     try {
       await onChangeRole(userId, newRole);
     } catch (err) {
-      toast({ message: err.message ?? 'Failed to update role.', variant: 'error' });
+      toast({ message: err.message ?? t('members.errRoleFailed'), variant: 'error' });
     } finally {
       setChangingRole(null);
     }
@@ -4068,15 +4102,15 @@ export function MembersPage({
     try {
       await onCancelInvite(inviteId);
     } catch (err) {
-      toast({ message: err.message ?? 'Failed to cancel invite.', variant: 'error' });
+      toast({ message: err.message ?? t('members.errCancelFailed'), variant: 'error' });
     }
   };
 
   return (
     <div className="page">
       <PageHeader
-        title="Members"
-        sub={`${members.length} member${members.length !== 1 ? 's' : ''}${planLimits?.maxMembers ? ` · ${planLimits.maxMembers} seat limit` : ''}`}
+        title={t('members.title')}
+        sub={`${members.length === 1 ? t('members.subOne') : t('members.subMany', { count: members.length })}${planLimits?.maxMembers ? t('members.seatLimit', { max: planLimits.maxMembers }) : ''}`}
       />
 
       {/* ── Invite form (owner/admin only) ─────────────────────────────────── */}
@@ -4084,8 +4118,8 @@ export function MembersPage({
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-h">
             <div>
-              <div className="title">Invite a collaborator</div>
-              <div className="sub">They'll receive an email with a 7-day accept link. Invites grant access to this workspace only.</div>
+              <div className="title">{t('members.inviteTitle')}</div>
+              <div className="sub">{t('members.inviteSub')}</div>
             </div>
           </div>
           <div className="card-body">
@@ -4093,7 +4127,7 @@ export function MembersPage({
               <form onSubmit={handleInviteSubmit} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <input
                   type="email"
-                  placeholder="colleague@example.com"
+                  placeholder={t('members.invitePlaceholder')}
                   value={inviteEmail}
                   onChange={e => setInviteEmail(e.target.value)}
                   required
@@ -4125,12 +4159,12 @@ export function MembersPage({
                     cursor: 'pointer',
                   }}
                 >
-                  {canChangeRoles && <option value="admin">Admin</option>}
-                  <option value="member">Member</option>
-                  <option value="viewer">Viewer</option>
+                  {canChangeRoles && <option value="admin">{t('members.roleAdmin')}</option>}
+                  <option value="member">{t('members.roleMember')}</option>
+                  <option value="viewer">{t('members.roleViewer')}</option>
                 </select>
                 <Btn variant="primary" type="submit" disabled={inviting || !inviteEmail.trim()}>
-                  {inviting ? 'Sending…' : 'Send invite'}
+                  {inviting ? t('members.sending') : t('members.sendInvite')}
                 </Btn>
               </form>
             )}
@@ -4149,9 +4183,9 @@ export function MembersPage({
           <table className="tbl">
             <thead>
               <tr>
-                <th>Member</th>
-                <th>Role</th>
-                <th>Joined</th>
+                <th>{t('members.colMember')}</th>
+                <th>{t('members.colRole')}</th>
+                <th>{t('members.colJoined')}</th>
                 {canManage && <th className="right">{''}</th>}
               </tr>
             </thead>
@@ -4170,7 +4204,7 @@ export function MembersPage({
                             {m.displayName || m.email}
                             {isCurrentUser && (
                               <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--fg-3)', fontWeight: 400 }}>
-                                (you)
+                                {t('members.you')}
                               </span>
                             )}
                           </div>
@@ -4197,9 +4231,9 @@ export function MembersPage({
                             cursor: changingRole === m.userId ? 'wait' : 'pointer',
                           }}
                         >
-                          <option value="admin">Admin</option>
-                          <option value="member">Member</option>
-                          <option value="viewer">Viewer</option>
+                          <option value="admin">{t('members.roleAdmin')}</option>
+                          <option value="member">{t('members.roleMember')}</option>
+                          <option value="viewer">{t('members.roleViewer')}</option>
                         </select>
                       ) : (
                         <RoleBadge role={m.role} />
@@ -4216,8 +4250,8 @@ export function MembersPage({
                             size="sm"
                             icon="trash"
                             onClick={() => setConfirmRemove(m)}
-                            aria-label={`Remove ${m.displayName || m.email}`}
-                            title={`Remove ${m.displayName || m.email}`}
+                            aria-label={t('members.removeMember', { name: m.displayName || m.email })}
+                            title={t('members.removeMember', { name: m.displayName || m.email })}
                           />
                         )}
                       </td>
@@ -4235,18 +4269,18 @@ export function MembersPage({
         <div className="card">
           <div className="card-h">
             <div>
-              <div className="title">Pending invites</div>
-              <div className="sub">{pendingInvites.length} invite{pendingInvites.length !== 1 ? 's' : ''} waiting to be accepted</div>
+              <div className="title">{t('members.pendingTitle')}</div>
+              <div className="sub">{pendingInvites.length === 1 ? t('members.pendingSubOne') : t('members.pendingSubMany', { count: pendingInvites.length })}</div>
             </div>
           </div>
           <div className="tbl-wrap">
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Sent</th>
-                  <th>Expires</th>
+                  <th>{t('members.colEmail')}</th>
+                  <th>{t('members.colRole')}</th>
+                  <th>{t('members.colSent')}</th>
+                  <th>{t('members.colExpires')}</th>
                   <th className="right">{''}</th>
                 </tr>
               </thead>
@@ -4267,8 +4301,8 @@ export function MembersPage({
                         size="sm"
                         icon="x"
                         onClick={() => handleCancelInvite(inv.id)}
-                        aria-label={`Cancel invite to ${inv.email}`}
-                        title="Cancel invite"
+                        aria-label={t('members.cancelInviteAria', { email: inv.email })}
+                        title={t('members.cancelInvite')}
                       />
                     </td>
                   </tr>
@@ -4298,15 +4332,14 @@ export function MembersPage({
             boxShadow: '0 8px 32px rgba(0,0,0,.12)',
           }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--fg-1)', marginBottom: 10 }}>
-              Remove member?
+              {t('members.removeDialogTitle')}
             </div>
             <div style={{ fontSize: 13.5, color: 'var(--fg-2)', lineHeight: 1.6, marginBottom: 24 }}>
-              <strong>{confirmRemove.displayName || confirmRemove.email}</strong> will lose access
-              to this workspace and their API keys will be revoked immediately.
+              {t.rich('members.removeDialogBody', { ...RICH, name: confirmRemove.displayName || confirmRemove.email })}
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <Btn variant="ghost" onClick={() => { if (!removing) setConfirmRemove(null); }}>
-                Cancel
+                {t('members.cancel')}
               </Btn>
               <Btn
                 variant="primary"
@@ -4314,7 +4347,7 @@ export function MembersPage({
                 onClick={handleRemoveConfirm}
                 disabled={removing}
               >
-                {removing ? 'Removing…' : 'Remove member'}
+                {removing ? t('members.removing') : t('members.removeMemberBtn')}
               </Btn>
             </div>
           </div>

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { MBtn, MIcon } from '../MarketingPrimitives';
 import { CLIENT_LOGOS, MCP_CLIENT_BRANDS } from '../dashboard/clientLogos';
 
@@ -16,12 +17,12 @@ export function Nav({ onSignIn, onGetStarted }) {
   return (
     <header className="nav">
       <div className="container nav-row">
-        <a className="brand" href="/"><img src="/logo-wordmark.svg" alt="mcpemails" /></a>
+        <Link className="brand" href="/"><img src="/logo-wordmark.svg" alt="mcpemails" /></Link>
         <nav className="nav-links">
           <a href="#features">{t('nav.features')}</a>
           <a href="#how">{t('nav.how')}</a>
           <a href="#pricing">{t('nav.pricing')}</a>
-          <a href="/docs">{t('nav.docs')}</a>
+          <Link href="/docs">{t('nav.docs')}</Link>
         </nav>
         <div className="nav-grow" />
         <div className="nav-cta">
@@ -462,6 +463,9 @@ function LanguageSwitcher() {
   const options = [
     { code: 'en', href: '/' },
     { code: 'nb', href: '/nb' },
+    { code: 'es', href: '/es' },
+    { code: 'fr', href: '/fr' },
+    { code: 'zh', href: '/zh' },
   ];
   return (
     <div className="lang-switch" aria-label={t('languageSwitcher.label')}>
@@ -497,19 +501,19 @@ export function Footer() {
             <a href="#features">{t('footer.linkFeatures')}</a>
             <a href="#how">{t('footer.linkHow')}</a>
             <a href="#pricing">{t('footer.linkPricing')}</a>
-            <a href="/docs">{t('footer.linkDocs')}</a>
+            <Link href="/docs">{t('footer.linkDocs')}</Link>
           </div>
           <div>
             <h5>{t('footer.resourcesHeading')}</h5>
-            <a href="/docs#tools">{t('footer.linkToolReference')}</a>
-            <a href="/docs#quickstart">{t('footer.linkQuickstart')}</a>
-            <a href="/docs#oauth">{t('footer.linkOauth')}</a>
-            <a href="/docs/providers">{t('footer.linkProviders')}</a>
+            <Link href="/docs#tools">{t('footer.linkToolReference')}</Link>
+            <Link href="/docs#quickstart">{t('footer.linkQuickstart')}</Link>
+            <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
+            <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
           </div>
           <div>
             <h5>{t('footer.companyHeading')}</h5>
-            <a href="/privacy">{t('footer.linkPrivacy')}</a>
-            <a href="/terms">{t('footer.linkTerms')}</a>
+            <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
+            <Link href="/terms">{t('footer.linkTerms')}</Link>
           </div>
         </div>
         <div className="legal">

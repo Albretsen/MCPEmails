@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon } from '../Primitives';
 
 /* CommandPalette.jsx: global ⌘K search/navigation popup.
@@ -11,13 +12,13 @@ import { Icon } from '../Primitives';
    passed in as props, so everything in the app is searchable from one place. */
 
 const PAGES = [
-  { id: 'overview', label: 'Overview',  icon: 'activity', keywords: 'home dashboard stats activity' },
-  { id: 'inboxes',  label: 'Inboxes',   icon: 'inbox',    keywords: 'mail email accounts connect' },
-  { id: 'keys',     label: 'API keys',  icon: 'key',      keywords: 'tokens secrets credentials mcp' },
-  { id: 'members',  label: 'Members',   icon: 'users',    keywords: 'team people users invite workspace' },
-  { id: 'usage',    label: 'Usage',     icon: 'zap',      keywords: 'billing calls quota limits metrics' },
-  { id: 'settings', label: 'Settings',  icon: 'settings', keywords: 'account profile password preferences' },
-  { id: 'security', label: 'Security',  icon: 'shield',   keywords: 'audit log sessions devices' },
+  { id: 'overview', labelKey: 'commandPalette.pageOverview', icon: 'activity', keywords: 'home dashboard stats activity' },
+  { id: 'inboxes',  labelKey: 'commandPalette.pageInboxes',  icon: 'inbox',    keywords: 'mail email accounts connect' },
+  { id: 'keys',     labelKey: 'commandPalette.pageKeys',     icon: 'key',      keywords: 'tokens secrets credentials mcp' },
+  { id: 'members',  labelKey: 'commandPalette.pageMembers',  icon: 'users',    keywords: 'team people users invite workspace' },
+  { id: 'usage',    labelKey: 'commandPalette.pageUsage',    icon: 'zap',      keywords: 'billing calls quota limits metrics' },
+  { id: 'settings', labelKey: 'commandPalette.pageSettings', icon: 'settings', keywords: 'account profile password preferences' },
+  { id: 'security', labelKey: 'commandPalette.pageSecurity', icon: 'shield',   keywords: 'audit log sessions devices' },
 ];
 
 function matches(query, ...fields) {
@@ -38,6 +39,7 @@ function matches(query, ...fields) {
  * @param keys       live API key rows ({ id, name })
  */
 export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [], members = [], keys = [] }) {
+  const tr = useTranslations('dashboardChrome');
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const inputRef = useRef(null);
@@ -48,35 +50,36 @@ export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [
     const q = query.trim();
 
     const pageItems = PAGES
+      .map(p => ({ ...p, label: tr(p.labelKey) }))
       .filter(p => matches(q, p.label, p.keywords))
-      .map(p => ({ key: `page:${p.id}`, label: p.label, icon: p.icon, sub: 'Page', run: () => setRoute(p.id) }));
+      .map(p => ({ key: `page:${p.id}`, label: p.label, icon: p.icon, sub: tr('commandPalette.groupTitlePage'), run: () => setRoute(p.id) }));
 
     const actionItems = [
-      { label: 'Connect inbox', icon: 'plus', keywords: 'add new mail account gmail outlook fastmail', run: () => onConnect?.() },
+      { label: tr('commandPalette.actionConnectInbox'), icon: 'plus', keywords: 'add new mail account gmail outlook fastmail', run: () => onConnect?.() },
     ]
       .filter(a => matches(q, a.label, a.keywords))
-      .map((a, i) => ({ key: `action:${i}`, label: a.label, icon: a.icon, sub: 'Action', run: a.run }));
+      .map((a, i) => ({ key: `action:${i}`, label: a.label, icon: a.icon, sub: tr('commandPalette.groupTitleAction'), run: a.run }));
 
     const inboxItems = inboxes
       .filter(ib => matches(q, ib.label, ib.address, ib.provider))
-      .map(ib => ({ key: `inbox:${ib.id}`, label: ib.label || ib.address, icon: 'inbox', sub: ib.address || ib.provider || 'Inbox', run: () => setRoute('inboxes') }));
+      .map(ib => ({ key: `inbox:${ib.id}`, label: ib.label || ib.address, icon: 'inbox', sub: ib.address || ib.provider || tr('commandPalette.inboxFallback'), run: () => setRoute('inboxes') }));
 
     const memberItems = members
       .filter(m => matches(q, m.displayName, m.email, m.role))
-      .map(m => ({ key: `member:${m.userId}`, label: m.displayName || m.email, icon: 'users', sub: m.email || m.role || 'Member', run: () => setRoute('members') }));
+      .map(m => ({ key: `member:${m.userId}`, label: m.displayName || m.email, icon: 'users', sub: m.email || m.role || tr('commandPalette.memberFallback'), run: () => setRoute('members') }));
 
     const keyItems = keys
       .filter(k => matches(q, k.name))
-      .map(k => ({ key: `key:${k.id}`, label: k.name || 'API key', icon: 'key', sub: 'API key', run: () => setRoute('keys') }));
+      .map(k => ({ key: `key:${k.id}`, label: k.name || tr('commandPalette.keyFallback'), icon: 'key', sub: tr('commandPalette.subApiKey'), run: () => setRoute('keys') }));
 
     return [
-      { title: 'Pages', items: pageItems },
-      { title: 'Actions', items: actionItems },
-      { title: 'Inboxes', items: inboxItems },
-      { title: 'Members', items: memberItems },
-      { title: 'API keys', items: keyItems },
+      { title: tr('commandPalette.groupPages'), items: pageItems },
+      { title: tr('commandPalette.groupActions'), items: actionItems },
+      { title: tr('commandPalette.groupInboxes'), items: inboxItems },
+      { title: tr('commandPalette.groupMembers'), items: memberItems },
+      { title: tr('commandPalette.groupApiKeys'), items: keyItems },
     ].filter(g => g.items.length > 0);
-  }, [query, inboxes, members, keys, setRoute, onConnect]);
+  }, [query, inboxes, members, keys, setRoute, onConnect, tr]);
 
   // Flatten for keyboard navigation.
   const flat = useMemo(() => groups.flatMap(g => g.items), [groups]);
@@ -121,24 +124,24 @@ export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [
 
   return (
     <div className="cmdk-scrim" onMouseDown={onClose}>
-      <div className="cmdk" role="dialog" aria-modal="true" aria-label="Command palette" onMouseDown={e => e.stopPropagation()}>
+      <div className="cmdk" role="dialog" aria-modal="true" aria-label={tr('commandPalette.ariaLabel')} onMouseDown={e => e.stopPropagation()}>
         <div className="cmdk-input-row">
           <Icon name="search" size={16} color="var(--fg-3)" />
           <input
             ref={inputRef}
             className="cmdk-input"
-            placeholder="Search pages, inboxes, members…"
+            placeholder={tr('commandPalette.searchPlaceholder')}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            aria-label="Search"
+            aria-label={tr('commandPalette.ariaSearch')}
           />
-          <span className="cmdk-esc">Esc</span>
+          <span className="cmdk-esc">{tr('commandPalette.esc')}</span>
         </div>
 
         <div className="cmdk-list" ref={listRef}>
           {flat.length === 0 && (
-            <div className="cmdk-empty">No results for “{query}”.</div>
+            <div className="cmdk-empty">{tr('commandPalette.noResults', { query })}</div>
           )}
           {groups.map(group => (
             <div className="cmdk-group" key={group.title}>
@@ -168,9 +171,9 @@ export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [
         </div>
 
         <div className="cmdk-foot">
-          <span><span className="cmdk-kbd">↑</span><span className="cmdk-kbd">↓</span> navigate</span>
-          <span><span className="cmdk-kbd">↵</span> select</span>
-          <span><span className="cmdk-kbd">esc</span> close</span>
+          <span><span className="cmdk-kbd">↑</span><span className="cmdk-kbd">↓</span> {tr('commandPalette.footNavigate')}</span>
+          <span><span className="cmdk-kbd">↵</span> {tr('commandPalette.footSelect')}</span>
+          <span><span className="cmdk-kbd">esc</span> {tr('commandPalette.footClose')}</span>
         </div>
       </div>
     </div>

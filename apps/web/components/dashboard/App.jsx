@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import { Icon, Btn } from '../Primitives';
@@ -58,6 +59,7 @@ export function DashboardApp(props) {
  */
 function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
   const searchParams = useSearchParams();
+  const tr = useTranslations('dashboardChrome');
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
   const { toast } = useToast();
@@ -124,24 +126,24 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
 
     if (connectedParam) {
       const label = connectedParam.charAt(0).toUpperCase() + connectedParam.slice(1);
-      toast({ message: `${label} inbox connected successfully.`, variant: 'success' });
+      toast({ message: tr('app.connectedSuccess', { provider: label }), variant: 'success' });
       setRouteState('inboxes');
     } else if (errorParam === 'inbox_limit_reached') {
       const plan = workspace?.plan ?? 'free';
       const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
       toast({
-        message: `Your ${planLabel} plan inbox limit has been reached. Upgrade at mcpemails.com/pricing to connect more.`,
+        message: tr('app.inboxLimitReached', { plan: planLabel }),
         variant: 'warning',
       });
       setRouteState('inboxes');
     } else if (errorParam === 'token_exchange_failed') {
-      toast({ message: 'Could not connect inbox. Token exchange with the provider failed. Please try again.', variant: 'error' });
+      toast({ message: tr('app.tokenExchangeFailed'), variant: 'error' });
       setRouteState('inboxes');
     } else if (errorParam === 'cancelled') {
-      toast({ message: 'Inbox connection cancelled.', variant: 'info' });
+      toast({ message: tr('app.connectionCancelled'), variant: 'info' });
       setRouteState('inboxes');
     } else if (errorParam) {
-      toast({ message: `Inbox connection failed (${errorParam}). Please try again.`, variant: 'error' });
+      toast({ message: tr('app.connectionFailed', { error: errorParam }), variant: 'error' });
       setRouteState('inboxes');
     }
 
@@ -163,13 +165,13 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
     if (!checkoutParam) return;
     if (checkoutParam === 'success') {
       const planParam = readQuery(searchParams, 'plan');
-      const planLabel = planParam ? planParam.charAt(0).toUpperCase() + planParam.slice(1) : 'your new plan';
+      const planLabel = planParam ? planParam.charAt(0).toUpperCase() + planParam.slice(1) : tr('app.checkoutSuccessPlanFallback');
       toast({
-        message: `Welcome to ${planLabel}. Your subscription is activating now; this may take a moment.`,
+        message: tr('app.checkoutSuccess', { plan: planLabel }),
         variant: 'success',
       });
     } else if (checkoutParam === 'cancelled') {
-      toast({ message: 'Checkout cancelled. You can upgrade any time from Settings.', variant: 'info' });
+      toast({ message: tr('app.checkoutCancelled'), variant: 'info' });
     }
     // Clean up the query params from the URL without a reload.
     try {
@@ -185,7 +187,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
   useEffect(() => {
     const joinedParam = readQuery(searchParams, 'joined');
     if (joinedParam === '1') {
-      toast({ message: "You've joined the workspace. Welcome!", variant: 'success' });
+      toast({ message: tr('app.joinedWorkspace'), variant: 'success' });
       try {
         const url = new URL(window.location.href);
         url.searchParams.delete('joined');
@@ -217,7 +219,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
     try {
       const res = await fetch(`/api/inboxes/${id}`, { method: 'DELETE' });
       if (!res.ok) {
-        let message = 'Failed to disconnect inbox.';
+        let message = tr('app.inboxDisconnectFailed');
         try {
           const data = await res.json();
           if (typeof data?.error === 'string') message = data.error;
@@ -226,7 +228,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
         throw new Error(message);
       }
       setInboxes(xs => xs.filter(x => x.id !== id));
-      toast({ message: 'Inbox disconnected.', variant: 'info' });
+      toast({ message: tr('app.inboxDisconnected'), variant: 'info' });
     } catch (err) {
       // Re-throw so the confirmation dialog knows to stay open.
       throw err;
@@ -246,11 +248,11 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
       const res = await fetch(`/api/inboxes/${inbox.id}/check`, { method: 'POST' });
       try { data = await res.json(); } catch { /* ignore JSON parse failure */ }
       if (!res.ok) {
-        toast({ message: data?.error || data?.message || 'Connection check failed.', variant: 'error' });
+        toast({ message: data?.error || data?.message || tr('app.connectionCheckFailed'), variant: 'error' });
         return;
       }
     } catch {
-      toast({ message: 'Connection check failed. Please try again.', variant: 'error' });
+      toast({ message: tr('app.connectionCheckFailedRetry'), variant: 'error' });
       return;
     }
     // Reflect the server-confirmed status locally, unless the check could not
@@ -261,7 +263,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
       )));
     }
     toast({
-      message: data.message || (data.ok ? 'Connection is healthy.' : 'Connection check failed.'),
+      message: data.message || (data.ok ? tr('app.connectionHealthy') : tr('app.connectionCheckFailed')),
       variant: data.ok ? 'success' : 'error',
     });
   };
@@ -301,7 +303,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
     try {
       const res = await fetch(`/api/api-keys/${id}/revoke`, { method: 'PATCH' });
       if (!res.ok) {
-        let message = 'Failed to revoke API key.';
+        let message = tr('app.apiKeyRevokeFailed');
         try {
           const data = await res.json();
           if (typeof data?.error === 'string') message = data.error;
@@ -311,14 +313,14 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
         // Re-throw so the confirmation dialog knows to stay open.
         throw new Error(message);
       }
-      toast({ message: 'API key revoked.', variant: 'info' });
+      toast({ message: tr('app.apiKeyRevoked'), variant: 'info' });
     } catch (err) {
       // Only restore + toast for network-level failures; API failures already
       // handled above (key already restored, toast already shown).
       if (err instanceof TypeError) {
         // TypeError = network failure (fetch itself threw)
         setKeys(previous);
-        toast({ message: 'Failed to revoke API key.', variant: 'error' });
+        toast({ message: tr('app.apiKeyRevokeFailed'), variant: 'error' });
       }
       // Re-throw so the confirmation dialog knows to stay open.
       throw err;
@@ -330,7 +332,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
     const next = { id: String(Date.now()), label, address: address || label, provider, status: "active", calls: 0 };
     setInboxes(xs => [...xs, next]);
     setShowConnect(false);
-    toast({ message: `${label} connected successfully.`, variant: 'success' });
+    toast({ message: tr('app.inboxConnectedSuccess', { label }), variant: 'success' });
     if (firstrun) {
       // After first inbox, nudge them to keys
       setTimeout(() => setRoute("keys"), 1200);
@@ -354,7 +356,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
       body: JSON.stringify({ name, scopes, workspaceId: workspace.id }),
     });
     if (!res.ok) {
-      let message = 'Failed to create API key.';
+      let message = tr('app.apiKeyCreateFailed');
       try {
         const data = await res.json();
         if (typeof data?.error === 'string') message = data.error;
@@ -371,7 +373,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
   const onKeyCreated = (keyRow) => {
     setKeys(xs => [keyRow, ...xs]);
     toast({
-      message: 'API key created. Copy it now; it won\'t be shown again.',
+      message: tr('app.apiKeyCreated'),
       variant: 'success',
     });
   };
@@ -384,10 +386,10 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
       body: JSON.stringify({ workspaceId: workspace.id, email, role }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? 'Failed to send invite.');
+    if (!res.ok) throw new Error(data.error ?? tr('app.inviteSendFailed'));
     // Optimistically add to pending invites list.
     setPendingInvites(xs => [data, ...xs]);
-    toast({ message: `Invite sent to ${email}.`, variant: 'success' });
+    toast({ message: tr('app.inviteSent', { email }), variant: 'success' });
   };
 
   /** Cancel a pending invite via DELETE /api/workspaces/invite/[token]. */
@@ -403,11 +405,11 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      toast({ message: data.error ?? 'Failed to cancel invite.', variant: 'error' });
+      toast({ message: data.error ?? tr('app.inviteCancelFailed'), variant: 'error' });
       return;
     }
     setPendingInvites(xs => xs.filter(x => x.id !== inviteId));
-    toast({ message: 'Invite cancelled.', variant: 'info' });
+    toast({ message: tr('app.inviteCancelled'), variant: 'info' });
   };
 
   /** Remove a member via DELETE /api/workspaces/members/[userId]. */
@@ -417,9 +419,9 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
       { method: 'DELETE' },
     );
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error ?? 'Failed to remove member.');
+    if (!res.ok) throw new Error(data.error ?? tr('app.memberRemoveFailed'));
     setMembers(xs => xs.filter(x => x.userId !== userId));
-    toast({ message: 'Member removed.', variant: 'info' });
+    toast({ message: tr('app.memberRemoved'), variant: 'info' });
   };
 
   /** Change a member's role via PATCH /api/workspaces/members/[userId]. */
@@ -430,9 +432,9 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
       body: JSON.stringify({ workspaceId: workspace.id, role }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error ?? 'Failed to update role.');
+    if (!res.ok) throw new Error(data.error ?? tr('app.roleUpdateFailed'));
     setMembers(xs => xs.map(x => x.userId === userId ? { ...x, role } : x));
-    toast({ message: 'Role updated.', variant: 'success' });
+    toast({ message: tr('app.roleUpdated'), variant: 'success' });
   };
 
   return (
@@ -478,11 +480,11 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
       />
 
       <TweaksPanel>
-        <TweakSection label="Theme"/>
-        <TweakToggle  label="Dark mode" value={t.dark} onChange={v => setTweak("dark", v)}/>
-        <TweakSection label="Layout"/>
-        <TweakRadio   label="Density" value={t.density}
-                      options={[{value:"compact", label:"Compact"},{value:"spacious", label:"Spacious"}]}
+        <TweakSection label={tr('app.themeLabel')}/>
+        <TweakToggle  label={tr('app.darkModeLabel')} value={t.dark} onChange={v => setTweak("dark", v)}/>
+        <TweakSection label={tr('app.layoutLabel')}/>
+        <TweakRadio   label={tr('app.densityLabel')} value={t.density}
+                      options={[{value:"compact", label:tr('app.densityCompact')},{value:"spacious", label:tr('app.densitySpacious')}]}
                       onChange={v => setTweak("density", v)}/>
       </TweaksPanel>
     </div>
@@ -490,6 +492,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
 }
 
 function FirstRunBanner({ onConnect }) {
+  const tr = useTranslations('dashboardChrome');
   return (
     <div style={{ padding: "16px 32px 0" }}>
       <div style={{
@@ -501,12 +504,12 @@ function FirstRunBanner({ onConnect }) {
           <Icon name="mail" size={20} color="#fff"/>
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, color: "var(--fg-1)" }}>Welcome to mcpemails</div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, color: "var(--fg-1)" }}>{tr('app.firstRunTitle')}</div>
           <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-2)", marginTop: 2 }}>
-            Connect your first inbox to get a working MCP endpoint in under a minute.
+            {tr('app.firstRunBody')}
           </div>
         </div>
-        <Btn variant="primary" icon="plus" onClick={onConnect}>Connect inbox</Btn>
+        <Btn variant="primary" icon="plus" onClick={onConnect}>{tr('app.firstRunCta')}</Btn>
       </div>
     </div>
   );

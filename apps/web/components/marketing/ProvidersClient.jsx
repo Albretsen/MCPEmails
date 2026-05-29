@@ -1,6 +1,13 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Nav, Footer } from './Sections';
+
+// Rich-text tag handlers shared across this page (inline code + bold).
+const RICH = {
+  code: (chunks) => <code className="t-code-inline">{chunks}</code>,
+  b: (chunks) => <strong>{chunks}</strong>,
+};
 
 // ---------------------------------------------------------------------------
 // Capability data — mirrors PROVIDER_CAPABILITIES in
@@ -139,8 +146,9 @@ const MATRIX = {
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function Check() {
+  const t = useTranslations('docs');
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-label="Supported">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-label={t('providers.ariaSupported')}>
       <circle cx="8" cy="8" r="8" fill="var(--mint-100)" />
       <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--mint-600)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -148,8 +156,9 @@ function Check() {
 }
 
 function Cross() {
+  const t = useTranslations('docs');
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-label="Not supported">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-label={t('providers.ariaNotSupported')}>
       <circle cx="8" cy="8" r="8" fill="var(--bg-sunken)" />
       <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="var(--fg-4)" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
@@ -157,6 +166,7 @@ function Cross() {
 }
 
 function Planned() {
+  const t = useTranslations('docs');
   return (
     <span style={{
       fontSize: 11, fontWeight: 600, letterSpacing: '0.04em',
@@ -165,7 +175,7 @@ function Planned() {
       border: '1px solid rgba(217,119,6,0.2)',
       whiteSpace: 'nowrap',
     }}>
-      planned
+      {t('providers.plannedBadge')}
     </span>
   );
 }
@@ -191,6 +201,7 @@ function Cell({ value }) {
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default function ProvidersClient() {
+  const t = useTranslations('docs');
   // Group rows by section for the section-head rows
   const sections = [];
   const seen = {};
@@ -209,18 +220,16 @@ export default function ProvidersClient() {
       {/* Hero */}
       <section className="pricing-page-hero">
         <div className="container">
-          <div className="eye-label">Provider support</div>
+          <div className="eye-label">{t('providers.hero.eyebrow')}</div>
           <h1 className="pricing-page-h1">
-            What works, per provider.
+            {t('providers.hero.heading')}
           </h1>
           <p className="pricing-page-lead">
-            MCPEmails connects Gmail, Outlook, Fastmail, and any IMAP inbox (iCloud,
-            Yahoo, Zoho, Yandex, generic). Not every provider exposes the same APIs —
-            this table shows exactly what each one supports today.
+            {t('providers.hero.lead')}
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <a className="btn btn-primary btn-lg" href="/signup">Connect an inbox</a>
-            <a className="btn btn-secondary btn-lg" href="/docs">Back to docs</a>
+            <a className="btn btn-primary btn-lg" href="/signup">{t('providers.hero.ctaConnect')}</a>
+            <a className="btn btn-secondary btn-lg" href="/docs">{t('providers.hero.ctaBack')}</a>
           </div>
         </div>
       </section>
@@ -233,18 +242,15 @@ export default function ProvidersClient() {
             fontSize: 13, fontFamily: 'var(--font-sans)', color: 'var(--fg-3)',
             marginBottom: 24,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Check /> Supported</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Cross /> Not supported</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Planned /> Planned (not yet shipped)</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Check /> {t('providers.legend.supported')}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Cross /> {t('providers.legend.notSupported')}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Planned /> {t('providers.legend.planned')}</div>
           </div>
           <p style={{
             fontSize: 13, fontFamily: 'var(--font-sans)', color: 'var(--fg-3)',
             lineHeight: 1.6, maxWidth: 760, marginBottom: 32,
           }}>
-            <strong style={{ color: 'var(--fg-2)' }}>iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</strong>{' '}
-            all run through the same Deno IMAP/SMTP transport and share identical
-            capabilities. The columns are shown separately for clarity but their
-            feature set is identical.
+            {t.rich('providers.legend.imapNote', RICH)}
           </p>
         </div>
       </section>
@@ -256,9 +262,9 @@ export default function ProvidersClient() {
             <table className="comparison-tbl">
               <thead>
                 <tr>
-                  <th className="feat-col" style={{ minWidth: 200 }}>Feature</th>
+                  <th className="feat-col" style={{ minWidth: 200 }}>{t('providers.table.feature')}</th>
                   {PROVIDERS.map(p => (
-                    <th key={p.key} style={{ minWidth: 90 }}>{p.label}</th>
+                    <th key={p.key} style={{ minWidth: 90 }}>{p.key === 'generic' ? t('providers.labels.generic') : p.label}</th>
                   ))}
                 </tr>
               </thead>
@@ -266,11 +272,11 @@ export default function ProvidersClient() {
                 {sections.map(({ section, rows }) => (
                   <>
                     <tr key={'section-' + section} className="tbl-section-head">
-                      <td colSpan={PROVIDERS.length + 1}>{section}</td>
+                      <td colSpan={PROVIDERS.length + 1}>{t(`providers.sections.${section}`)}</td>
                     </tr>
                     {rows.map(row => (
                       <tr key={row.key}>
-                        <td className="feat-name">{row.label}</td>
+                        <td className="feat-name">{t(`providers.features.${row.key}`)}</td>
                         {PROVIDERS.map(p => (
                           <Cell key={p.key} value={row[p.key]} />
                         ))}
@@ -289,24 +295,16 @@ export default function ProvidersClient() {
             fontSize: 13, fontFamily: 'var(--font-sans)', color: 'var(--fg-3)', lineHeight: 1.6,
           }}>
             <p style={{ margin: 0 }}>
-              <strong style={{ color: 'var(--fg-2)' }}>Gmail — folders vs labels:</strong>{' '}
-              Gmail uses a flat label system rather than hierarchical folders.
-              "Move" is implemented as label add/remove. Native copy is not available via the Gmail REST API.
+              {t.rich('providers.notes.gmail', RICH)}
             </p>
             <p style={{ margin: 0 }}>
-              <strong style={{ color: 'var(--fg-2)' }}>Permanent delete:</strong>{' '}
-              Gmail and Outlook move to Trash when you delete — permanent expunge is not exposed by their APIs.
-              IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.
+              {t.rich('providers.notes.permanentDelete', RICH)}
             </p>
             <p style={{ margin: 0 }}>
-              <strong style={{ color: 'var(--fg-2)' }}>Contacts API:</strong>{' '}
-              Gmail uses the Google People API; Outlook uses Microsoft Graph{' '}
-              <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, background: 'var(--bg-sunken)', padding: '1px 5px', borderRadius: 4 }}>/contacts</code>.
-              Fastmail CardDAV and IMAP-based contacts are deferred to a later release.
+              {t.rich('providers.notes.contacts', RICH)}
             </p>
             <p style={{ margin: 0 }}>
-              <strong style={{ color: 'var(--fg-2)' }}>Scheduling:</strong>{' '}
-              Planned for all providers via a server-side queue (not provider-native scheduling). No provider exposes a native scheduled-send API that is accessible without storing credentials server-side.
+              {t.rich('providers.notes.scheduling', RICH)}
             </p>
           </div>
         </div>
@@ -315,13 +313,13 @@ export default function ProvidersClient() {
       {/* CTA */}
       <section className="pricing-cta-band">
         <div className="container">
-          <h2 className="pricing-cta-h">Ready to connect your inbox?</h2>
+          <h2 className="pricing-cta-h">{t('providers.cta.heading')}</h2>
           <p className="pricing-cta-sub">
-            Free plan: unlimited connections, no card required.
+            {t('providers.cta.sub')}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">Get started free</a>
-            <a className="btn btn-on-dark btn-lg" href="/docs">Read the docs</a>
+            <a className="btn btn-primary btn-lg" href="/signup">{t('providers.cta.primary')}</a>
+            <a className="btn btn-on-dark btn-lg" href="/docs">{t('providers.cta.secondary')}</a>
           </div>
         </div>
       </section>

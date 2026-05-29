@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { MIcon } from '../MarketingPrimitives';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 
 // ─── Theme toggle ─────────────────────────────────────────────────────────────
 
 function ThemeBtn() {
+  const t = useTranslations('auth');
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
@@ -24,7 +26,7 @@ function ThemeBtn() {
   }, [dark]);
 
   return (
-    <button className="theme-toggle" onClick={() => setDark((d) => !d)} title="Toggle theme" aria-label="Toggle theme">
+    <button className="theme-toggle" onClick={() => setDark((d) => !d)} title={t('shared.toggleTheme')} aria-label={t('shared.toggleTheme')}>
       <MIcon name={dark ? 'sun' : 'moon'} size={16} color="currentColor" />
     </button>
   );
@@ -76,6 +78,7 @@ function ClientMark({ clientId, logoUrl, size = 36 }) {
 // ─── Permission row ───────────────────────────────────────────────────────────
 
 function PermRow({ icon, title, desc, enabled, onToggle, required }) {
+  const t = useTranslations('auth');
   return (
     <div className="az-perm">
       <div className="pico"><Icon name={icon} size={16} /></div>
@@ -89,7 +92,7 @@ function PermRow({ icon, title, desc, enabled, onToggle, required }) {
             display: 'inline-flex', alignItems: 'center', gap: 6,
             fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)',
           }}>
-            <Icon name="shield" size={11} color="var(--mint-600)" />required
+            <Icon name="shield" size={11} color="var(--mint-600)" />{t('authorize.required')}
           </span>
         ) : (
           <Switch checked={enabled} onChange={onToggle} />
@@ -167,16 +170,16 @@ function Switch({ checked, onChange }) {
 // ─── Done screen ──────────────────────────────────────────────────────────────
 
 function DoneScreen({ client, grantCount, totalInboxes }) {
+  const t = useTranslations('auth');
   return (
     <>
       <div className="az-success">
         <div className="ring">
           <Icon name="check" size={28} color="var(--mint-700)" strokeWidth={2.2} />
         </div>
-        <h1>{client.client_name} is connected</h1>
+        <h1>{t('authorize.connectedTitle', { clientName: client.client_name })}</h1>
         <p>
-          It can now access {grantCount} of your {totalInboxes} inboxes.
-          You&apos;ll see its calls live in your dashboard.
+          {t('authorize.connectedBody', { grantCount, totalInboxes })}
         </p>
       </div>
 
@@ -184,15 +187,16 @@ function DoneScreen({ client, grantCount, totalInboxes }) {
         <p style={{
           fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', marginBottom: 24,
         }}>
-          The MCP client will receive its bearer token automatically via the redirect.
-          You can revoke access at any time from the <strong>API Keys</strong> page.
+          {t.rich('authorize.connectedNote', {
+            strong: (c) => <strong>{c}</strong>,
+          })}
         </p>
       </div>
 
       <div className="az-foot">
         <div className="grow" />
-        <a className="btn btn-secondary" href="/dashboard">Back to dashboard</a>
-        <a className="btn btn-primary" href="/dashboard/security">View audit log</a>
+        <a className="btn btn-secondary" href="/dashboard">{t('authorize.backToDashboardBtn')}</a>
+        <a className="btn btn-primary" href="/dashboard/security">{t('authorize.viewAuditLog')}</a>
       </div>
     </>
   );
@@ -230,6 +234,7 @@ export function AuthorizeApp({
   preApproved = false,
 }) {
   const router = useRouter();
+  const t = useTranslations('auth');
 
   // Track which scopes the user has toggled on/off.
   const [enabledScopes, setEnabledScopes] = useState(() => {
@@ -327,7 +332,7 @@ export function AuthorizeApp({
       <div className="az-wrap">
         <a className="auth-back" href="/dashboard">
           <MIcon name="arrow" size={14} color="currentColor" strokeWidth={2} />
-          Back to dashboard
+          {t('authorize.backToDashboard')}
         </a>
 
         <div className="az-card">
@@ -352,11 +357,14 @@ export function AuthorizeApp({
           {step === 'review' && (
             <>
               <div className="az-body">
-                <h1>Authorize {client.client_name}?</h1>
+                <h1>{t('authorize.title', { clientName: client.client_name })}</h1>
                 <div className="who">
-                  <strong>{client.client_name}</strong>
-                  {client.client_byline ? ` · ${client.client_byline}` : ''}
-                  {' '}is requesting access to your <strong>{workspaceName || 'workspace'}</strong>.
+                  {t.rich('authorize.who', {
+                    clientName: client.client_name,
+                    byline: client.client_byline ? ` · ${client.client_byline}` : '',
+                    workspace: workspaceName || t('authorize.workspaceFallback'),
+                    strong: (c) => <strong>{c}</strong>,
+                  })}
                 </div>
 
                 {/* Client ID badge */}
@@ -371,7 +379,7 @@ export function AuthorizeApp({
                     letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500,
                     whiteSpace: 'nowrap',
                   }}>
-                    OAuth client
+                    {t('authorize.oauthClient')}
                   </span>
                   <code className="mono" style={{
                     fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-2)',
@@ -390,7 +398,7 @@ export function AuthorizeApp({
                   }}>
                     <Icon name="check" size={14} color="var(--mint-700, #15803d)" strokeWidth={2.2} />
                     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--mint-700, #15803d)' }}>
-                      You&apos;ve previously authorized this app. Confirm below to issue a new token.
+                      {t('authorize.preApproved')}
                     </span>
                   </div>
                 )}
@@ -402,7 +410,7 @@ export function AuthorizeApp({
                       fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
                       color: 'var(--fg-2)', marginBottom: 8,
                     }}>
-                      This agent will be able to:
+                      {t('authorize.willBeAbleTo')}
                     </div>
                     <div className="az-perms">
                       {requestedScopes.map((s) => (
@@ -423,7 +431,7 @@ export function AuthorizeApp({
                     fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)',
                     padding: '12px 0', marginBottom: 8,
                   }}>
-                    No specific permissions requested. This connection gets read-only access (list and search inboxes, read emails) by default.
+                    {t('authorize.noScopes')}
                   </div>
                 )}
 
@@ -432,7 +440,7 @@ export function AuthorizeApp({
                   fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
                   color: 'var(--fg-2)', marginBottom: 8,
                 }}>
-                  Inboxes this agent can access:
+                  {t('authorize.inboxesLabel')}
                 </div>
 
                 {inboxes.length > 0 ? (
@@ -457,24 +465,24 @@ export function AuthorizeApp({
                     background: 'var(--ink-25)', border: '1px solid var(--border-1)',
                     fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)',
                   }}>
-                    No connected inboxes yet.{' '}
+                    {t('authorize.noInboxesPrefix')}
                     <a href="/dashboard/inboxes" style={{ color: 'var(--brand)' }}>
-                      Connect an inbox
+                      {t('authorize.connectInbox')}
                     </a>
-                    {' '}before authorizing an agent.
+                    {t('authorize.noInboxesSuffix')}
                   </div>
                 )}
 
                 {/* Connection name */}
                 <div className="field" style={{ marginBottom: 6 }}>
-                  <label>Name this connection</label>
+                  <label>{t('authorize.nameConnection')}</label>
                   <input
                     className="input"
                     value={keyLabel}
                     onChange={(e) => setKeyLabel(e.target.value)}
                   />
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                    Shown in your dashboard so you can revoke it later.
+                    {t('authorize.nameConnectionHint')}
                   </span>
                 </div>
               </div>
@@ -482,21 +490,21 @@ export function AuthorizeApp({
               <div className="az-foot">
                 <div className="grow">
                   {inboxes.length > 0 && (
-                    <>
-                      Granting access to{' '}
-                      <strong style={{ color: 'var(--fg-2)' }}>{grantCount}</strong>
-                      {' '}of {inboxes.length} inbox{inboxes.length !== 1 ? 'es' : ''}
-                    </>
+                    t.rich('authorize.grantingAccessTo', {
+                      count: grantCount,
+                      total: inboxes.length,
+                      strong: (c) => <strong style={{ color: 'var(--fg-2)' }}>{c}</strong>,
+                    })
                   )}
                 </div>
-                <Btn variant="ghost" onClick={handleDeny}>Deny</Btn>
+                <Btn variant="ghost" onClick={handleDeny}>{t('authorize.deny')}</Btn>
                 <Btn
                   variant="primary"
                   icon="shield"
                   onClick={handleAllow}
                   disabled={inboxes.length > 0 && grantCount === 0}
                 >
-                  Allow access
+                  {t('authorize.allowAccess')}
                 </Btn>
               </div>
             </>
@@ -510,10 +518,10 @@ export function AuthorizeApp({
             }}>
               <Icon name="refresh" size={28} color="var(--brand)" className="spin" />
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: 16, fontWeight: 600 }}>
-                Issuing token for {client.client_name}…
+                {t('authorize.issuingToken', { clientName: client.client_name })}
               </div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-3)' }}>
-                POST /api/oauth/authorize · generating authorization code
+                {t('authorize.issuingTokenSub')}
               </div>
               <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
@@ -542,14 +550,14 @@ export function AuthorizeApp({
                 <Icon name="x" size={22} color="var(--red-600, #dc2626)" />
               </div>
               <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 700, color: 'var(--fg-1)', marginBottom: 8 }}>
-                Authorization failed
+                {t('authorize.failedTitle')}
               </h2>
               <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', marginBottom: 24 }}>
-                {errorMsg || 'An unexpected error occurred. Please try again.'}
+                {errorMsg || t('authorize.failedGeneric')}
               </p>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                <Btn variant="ghost" onClick={() => setStep('review')}>Try again</Btn>
-                <Btn variant="secondary" onClick={handleDeny}>Cancel</Btn>
+                <Btn variant="ghost" onClick={() => setStep('review')}>{t('authorize.tryAgain')}</Btn>
+                <Btn variant="secondary" onClick={handleDeny}>{t('authorize.cancel')}</Btn>
               </div>
             </div>
           )}
@@ -557,8 +565,7 @@ export function AuthorizeApp({
 
         <div className="auth-microcopy" style={{ marginTop: 20 }}>
           <Icon name="shield" size={13} color="var(--mint-600)" />
-          mcpemails never reveals your provider credentials to {client.client_name}.
-          Revoke this connection from the API Keys page at any time.
+          {t('authorize.microcopy', { clientName: client.client_name })}
         </div>
       </div>
     </div>

@@ -1,0 +1,265 @@
+{
+  "meta": {
+    "title": "Docs",
+    "description": "Démarrez avec MCPEmails en quelques minutes. Guide de démarrage rapide, référence des outils et exemples de réponses pour les agents Gmail, Outlook et IMAP."
+  },
+  "hero": {
+    "eyebrow": "Documentation",
+    "titleLine1": "Votre agent a une boîte de réception",
+    "titleLine2": "en quatre étapes.",
+    "lead": "Connectez n'importe quel compte e-mail, collez une URL dans un client MCP compatible OAuth et autorisez. Les clients sans OAuth utilisent plutôt une clé API. Référence complète des outils et guide de connexion ci-dessous.",
+    "ctaQuickStart": "Démarrage rapide",
+    "ctaOAuth": "OAuth (claude.ai)",
+    "ctaTools": "Référence des outils",
+    "ctaProviders": "Fournisseurs pris en charge"
+  },
+  "quickstart": {
+    "eyebrow": "Démarrage rapide",
+    "heading": "Opérationnel en quelques minutes.",
+    "sub": "Aucun SDK requis. MCPEmails parle le MCP standard via HTTP, donc il s'intègre dans tout agent compatible MCP.",
+    "steps": {
+      "signup": {
+        "label": "Inscrivez-vous et connectez une boîte",
+        "heading": "Créez votre compte et connectez Gmail",
+        "body": "Inscrivez-vous sur mcpemails.com, puis allez dans Tableau de bord → Boîtes → Connecter une boîte. Choisissez Gmail, Outlook, iCloud, Fastmail ou toute boîte IMAP, puis effectuez le flux OAuth ou collez un mot de passe d'application. Votre boîte est prête en moins d'une minute.",
+        "cta": "Connecter votre boîte →"
+      },
+      "apikey": {
+        "label": "Créez une clé API",
+        "heading": "Générez un jeton bearer pour votre agent",
+        "body": "Dans Tableau de bord → Clés API, cliquez sur « Créer une clé ». Nommez-la, sélectionnez les portées dont votre agent a besoin (read:email et/ou send:email), et copiez la clé. Elle n'est affichée qu'une seule fois."
+      },
+      "addclient": {
+        "label": "Ajoutez MCPEmails à votre agent",
+        "heading": "Collez le point de terminaison MCP dans votre client",
+        "body": "Choisissez l'onglet de votre client ci-dessous. Les clients MCP qui prennent en charge OAuth 2.0 (claude.ai, Claude Desktop, Cursor et autres) n'ont qu'à coller l'URL et autoriser, aucune clé API nécessaire. Les clients sans OAuth, ainsi que l'accès par script, utilisent la clé API de l'étape 02."
+      },
+      "firstcall": {
+        "label": "Effectuez votre premier appel",
+        "heading": "Demandez à votre agent de vérifier votre boîte de réception",
+        "body": "Aucun copier-coller d'UUID de boîte. Votre agent appelle d'abord list_inboxes pour découvrir chaque boîte connectée et son UUID, puis vous demandez : « Vérifie ma boîte et résume les 5 derniers messages non lus. »"
+      }
+    }
+  },
+  "copy": {
+    "copy": "Copier",
+    "copied": "Copié !"
+  },
+  "clientTabs": {
+    "oauth": "Clients OAuth",
+    "claude": "Clé API (Desktop)",
+    "cursor": "Clé API (Cursor)",
+    "raw": "cURL brut"
+  },
+  "endpoint": {
+    "eyebrow": "Point de terminaison",
+    "heading": "Une URL, MCP standard.",
+    "sub": "Tout le trafic passe par un unique point de terminaison Streamable HTTP. Authentifiez-vous avec un jeton bearer issu de votre tableau de bord.",
+    "bodyMethods": "Envoyez un corps de requête JSON-RPC 2.0. Méthodes prises en charge : <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.",
+    "infoTransport": "Transport : <b>Streamable HTTP</b> (MCP 2025-06-18)",
+    "infoAuth": "Auth : <b>Authorization: Bearer &lt;api-key&gt;</b>",
+    "infoRateLimits": "Limites de débit : <b>100 req/min · 1 000/h · 10 000/jour</b> par clé",
+    "infoFormat": "Format de réponse : <b>JSON-RPC 2.0</b>",
+    "handshakeLabel": "Handshake d'initialisation"
+  },
+  "oauth": {
+    "eyebrow": "Connexion OAuth",
+    "heading": "Zéro configuration pour les clients compatibles OAuth.",
+    "sub": "Les clients MCP qui prennent en charge OAuth 2.0 (claude.ai, Claude Desktop, Cursor et autres) se connectent automatiquement via le code d'autorisation + PKCE. Aucune clé API, aucun fichier de configuration. Collez l'URL et cliquez sur Connecter.",
+    "step1": "<b>Étape 1 :</b> Allez dans claude.ai → Customize → Connectors → Add connector",
+    "step2": "<b>Étape 2 :</b> Collez <code>https://www.mcpemails.com/api/mcp</code> comme URL du serveur",
+    "step3": "<b>Étape 3 :</b> Cliquez sur Connect. MCPEmails ouvre un écran d'autorisation",
+    "step4": "<b>Étape 4 :</b> Connectez-vous avec votre compte mcpemails et approuvez l'accès",
+    "stepDone": "<b>Terminé :</b> Les six outils sont actifs. claude.ai renouvelle les jetons automatiquement",
+    "howTitle": "Comment ça fonctionne en coulisses",
+    "howP1": "claude.ai s'enregistre via <b>RFC 7591 Dynamic Client Registration</b>, donc vous ne préenregistrez jamais d'ID client.",
+    "howP2": "L'autorisation utilise <b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636), donc aucun secret client n'est jamais transmis.",
+    "howP3": "Les jetons sont limités exactement aux autorisations que vous approuvez : <code>read:email</code> et/ou <code>send:email</code>.",
+    "noOauthNote": "<b>Vous utilisez un client sans prise en charge d'OAuth ?</b> Créez une clé API dans Tableau de bord → Clés API et passez-la comme jeton bearer. Les connexions par clé API et par OAuth utilisent le même point de terminaison MCP et les mêmes six outils."
+  },
+  "tools": {
+    "eyebrow": "Référence des outils",
+    "heading": "Six outils. Toutes les opérations e-mail dont votre agent a besoin.",
+    "sub": "Commencez par <code>list_inboxes</code> pour découvrir les boîtes disponibles et leurs UUID. Les cinq autres outils prennent chacun un <code>inbox_id</code> renvoyé par cet appel. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.",
+    "noParams": "Aucun paramètre. Appelez avec un objet d'arguments vide :",
+    "showExample": "Afficher l'exemple de requête et réponse",
+    "hideExample": "Masquer l'exemple de requête et réponse",
+    "labelRequest": "Requête",
+    "labelResponse": "Réponse",
+    "thParameter": "Paramètre",
+    "thType": "Type",
+    "thRequired": "Requis",
+    "thDescription": "Description",
+    "badgeRequired": "requis",
+    "badgeOptional": "optionnel",
+    "list_inboxes": {
+      "title": "Lister les boîtes",
+      "desc": "Renvoie toutes les boîtes auxquelles la clé API ou le jeton OAuth actuel peut accéder. Appelez ceci en premier pour découvrir les valeurs inbox_id, afin de ne jamais copier-coller d'UUID depuis le tableau de bord."
+    },
+    "list_inbox": {
+      "title": "Lister une boîte",
+      "desc": "Listez les résumés des e-mails d'une boîte connectée, du plus récent au plus ancien. Prend en charge la pagination, la sélection de dossier et le filtrage des non lus.",
+      "params": {
+        "inbox_id": "UUID de la boîte à lister. Appelez d'abord list_inboxes pour découvrir les ID de boîtes disponibles.",
+        "limit": "Nombre maximal de résultats à renvoyer. Par défaut 20, max 100.",
+        "offset": "Décalage de pagination basé sur zéro. Par défaut 0.",
+        "folder": "Dossier à lister. Par défaut « INBOX ». Autres valeurs : « SENT », « DRAFTS », « TRASH ».",
+        "unread_only": "Renvoyer uniquement les messages non lus. Par défaut false."
+      }
+    },
+    "read_email": {
+      "title": "Lire un e-mail",
+      "desc": "Récupérez le contenu complet d'un e-mail unique par ID, y compris le corps en texte brut, le HTML assaini optionnel et les données de pièces jointes optionnelles.",
+      "params": {
+        "inbox_id": "UUID de la boîte contenant l'e-mail. Appelez list_inboxes pour obtenir les ID de boîtes disponibles.",
+        "message_id": "ID de message du fournisseur depuis list_inbox ou search_emails.",
+        "include_html": "Inclure le corps HTML assaini. Par défaut false.",
+        "include_attachments": "Inclure les données de pièces jointes en base64. Par défaut false.",
+        "mark_as_read": "Marquer le message comme lu après récupération. Par défaut false."
+      }
+    },
+    "search_emails": {
+      "title": "Rechercher des e-mails",
+      "desc": "Recherchez dans une boîte en utilisant la syntaxe de requête native du fournisseur. Gmail prend en charge les opérateurs de recherche Gmail ; Outlook utilise $search ; les boîtes Fastmail et IMAP utilisent la recherche textuelle.",
+      "params": {
+        "inbox_id": "UUID de la boîte où rechercher. Appelez list_inboxes pour obtenir les ID de boîtes disponibles.",
+        "query": "Requête de recherche. Pour Gmail : « from:alice@example.com after:2026/01/01 ». Pour Outlook : requêtes en langage naturel ou KQL.",
+        "limit": "Nombre maximal de résultats. Par défaut 20, max 100.",
+        "offset": "Décalage de pagination. Par défaut 0.",
+        "include_folders": "Restreindre la recherche à ces noms de dossiers. Par défaut : rechercher dans tous les dossiers."
+      }
+    },
+    "send_email": {
+      "title": "Envoyer un e-mail",
+      "desc": "Envoyez un nouvel e-mail depuis une boîte connectée. Prend en charge le texte brut, un corps HTML optionnel, CC/BCC et les pièces jointes (jusqu'à 10 Mo au total).",
+      "params": {
+        "inbox_id": "UUID de la boîte d'envoi. Appelez list_inboxes pour obtenir les ID de boîtes disponibles.",
+        "to": "Adresses e-mail des destinataires. Max 50.",
+        "subject": "Objet de l'e-mail. Max 998 caractères.",
+        "body": "Corps de l'e-mail en texte brut.",
+        "cc": "Destinataires en CC. Par défaut [].",
+        "bcc": "Destinataires en BCC. Par défaut [].",
+        "html_body": "Version HTML du corps (multipart/alternative). L'appelant est responsable du HTML sûr.",
+        "reply_to": "Adresse de l'en-tête Reply-To.",
+        "attachments": "Pièces jointes. Chaque élément : '{' filename, mime_type, data (base64) '}'. Max 20 éléments, 10 Mo au total."
+      }
+    },
+    "reply_to_email": {
+      "title": "Répondre à un e-mail",
+      "desc": "Envoyez une réponse à un e-mail existant. Les en-têtes de threading (In-Reply-To, References) sont définis automatiquement. Prend en charge la réponse à tous et les pièces jointes.",
+      "params": {
+        "inbox_id": "UUID de la boîte qui contient le message d'origine. Appelez list_inboxes pour obtenir les ID de boîtes disponibles.",
+        "message_id": "ID de message du fournisseur de l'e-mail auquel on répond.",
+        "body": "Corps de la réponse en texte brut.",
+        "html_body": "Version HTML optionnelle de la réponse.",
+        "reply_all": "Répondre à tous les destinataires d'origine (To + Cc). Par défaut false.",
+        "attachments": "Pièces jointes. Même schéma que send_email. Max 20 éléments."
+      }
+    }
+  },
+  "errors": {
+    "eyebrow": "Codes d'erreur",
+    "heading": "Codes d'erreur et conseils de réessai.",
+    "sub": "Les échecs d'authentification, de portée et de limite de débit renvoient un objet <code>error</code> JSON-RPC avec un code numérique. Les échecs d'exécution d'outil (boîte introuvable, erreur du fournisseur, etc.) renvoient un <code>result</code> normal avec <code>isError: true</code> et un message lisible dans <code>content[0].text</code>.",
+    "thCode": "Code",
+    "thType": "Type",
+    "thWhen": "Quand cela survient",
+    "thRetryable": "Réessayable",
+    "retryableNo": "Non",
+    "exampleLabel": "Exemple de réponse d'erreur d'exécution",
+    "rows": {
+      "auth": "Clé API manquante, mal formée, révoquée ou expirée. Également renvoyé lorsque la clé API n'a pas la portée requise pour l'outil appelé.",
+      "method": "Méthode JSON-RPC inconnue (par ex. appel d'une méthode autre qu'initialize, tools/list, tools/call)",
+      "param": "Nom d'outil inconnu, ou paramètre manquant / invalide dans tools/call",
+      "rate": "Limite de débit par clé ou quota quotidien de la formule dépassé. Vérifiez data.error_code : « rate_limit_exceeded » contre « quota_exceeded ». Vérifiez data.retry_after (secondes) avant de réessayer.",
+      "tool": "L'outil s'est exécuté mais a rencontré une erreur (boîte introuvable, message introuvable, échec d'authentification du fournisseur, destinataire invalide, pièce jointe trop volumineuse, fournisseur 5xx). La description de l'erreur se trouve dans content[0].text."
+    }
+  },
+  "rateLimits": {
+    "eyebrow": "Limites de débit",
+    "heading": "Limites de débit et quotas.",
+    "perKeyTag": "Fenêtres glissantes par clé",
+    "perKeyHeading": "100 req / min · 1 000 / h · 10 000 / jour",
+    "perKeyBody": "Appliqué par clé API quelle que soit la formule. En cas de dépassement, le serveur renvoie le code d'erreur <code>-32029</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code> et un champ <code>data.retry_after</code> (secondes). Respectez cette valeur avant de réessayer.",
+    "planTag": "Plafond par minute de la formule",
+    "planHeading": "Gratuit 60 / min · Solo 300 / min · Team 1 000 / min",
+    "planBody": "L'usage est illimité ; il s'agit d'une limite de pointe d'usage équitable par espace de travail (agrégée sur toutes vos clés API). En cas de dépassement, les appels renvoient <code>data.error_code: \"rate_limit_exceeded\"</code> avec <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Passez à une formule supérieure pour un plafond plus élevé.",
+    "retryTag": "Réessayer en toute sécurité",
+    "retryHeading": "Respectez toujours retry_after ; ne réessayez jamais les envois à l'aveugle",
+    "retryBody": "Pour les erreurs <code>rate_limit_exceeded</code>, attendez <code>data.retry_after</code> secondes avant de réessayer. Utilisez un backoff exponentiel pour <code>provider_error</code>. Ne réessayez pas automatiquement <code>send_email</code> en cas de <code>provider_error</code>, car le message a peut-être déjà été accepté par le fournisseur."
+  },
+  "cta": {
+    "heading": "Prêt à connecter votre boîte de réception ?",
+    "sub": "Commencez avec la formule Gratuit : illimitée, aucune carte requise. Passez à Solo ou Team pour des limites de pointe plus élevées et des fonctionnalités d'équipe.",
+    "primary": "Commencer gratuitement",
+    "secondary": "Voir les tarifs"
+  },
+  "providers": {
+    "meta": {
+      "title": "Fournisseurs pris en charge",
+      "description": "Découvrez quels fournisseurs d'e-mail MCPEmails prend en charge et quelles fonctionnalités sont disponibles par fournisseur : Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex et IMAP générique."
+    },
+    "labels": {
+      "generic": "IMAP générique"
+    },
+    "features": {
+      "read": "Lire l'e-mail",
+      "search": "Rechercher",
+      "send": "Envoyer un e-mail",
+      "reply": "Répondre",
+      "forward": "Transférer",
+      "flags": "Marqueurs lu/non lu + favoris",
+      "folders": "Dossiers",
+      "labels": "Étiquettes / tags",
+      "move": "Déplacer",
+      "copy": "Copier",
+      "delete": "Supprimer / corbeille",
+      "permanent_delete": "Suppression définitive (expunge)",
+      "drafts": "Brouillons (créer / modifier / envoyer)",
+      "contacts": "API Contacts",
+      "scheduling": "Envoi programmé",
+      "search_syntax": "Syntaxe de recherche"
+    },
+    "sections": {
+      "Core": "Essentiel",
+      "Flags & state": "Marqueurs et état",
+      "Folders & labels": "Dossiers et étiquettes",
+      "Delete": "Supprimer",
+      "Drafts": "Brouillons",
+      "Contacts": "Contacts",
+      "Scheduling": "Programmation",
+      "Search": "Recherche"
+    },
+    "hero": {
+      "eyebrow": "Fournisseurs pris en charge",
+      "heading": "Ce qui fonctionne, par fournisseur.",
+      "lead": "MCPEmails connecte Gmail, Outlook, Fastmail et toute boîte IMAP (iCloud, Yahoo, Zoho, Yandex, générique). Tous les fournisseurs n'exposent pas les mêmes API — ce tableau montre exactement ce que chacun prend en charge aujourd'hui.",
+      "ctaConnect": "Connecter une boîte",
+      "ctaBack": "Retour aux docs"
+    },
+    "legend": {
+      "supported": "Pris en charge",
+      "notSupported": "Non pris en charge",
+      "planned": "Prévu (pas encore livré)",
+      "imapNote": "<b>iCloud, Yahoo, Zoho, Yandex et IMAP générique</b> passent tous par le même transport Deno IMAP/SMTP et partagent des capacités identiques. Les colonnes sont affichées séparément pour plus de clarté, mais leur ensemble de fonctionnalités est identique."
+    },
+    "ariaSupported": "Pris en charge",
+    "ariaNotSupported": "Non pris en charge",
+    "plannedBadge": "prévu",
+    "table": {
+      "feature": "Fonctionnalité"
+    },
+    "notes": {
+      "gmail": "<b>Gmail — dossiers vs étiquettes :</b> Gmail utilise un système d'étiquettes plat plutôt que des dossiers hiérarchiques. « Déplacer » est implémenté comme l'ajout/la suppression d'étiquette. La copie native n'est pas disponible via l'API REST Gmail.",
+      "permanentDelete": "<b>Suppression définitive :</b> Gmail et Outlook déplacent vers la corbeille lors de la suppression — l'expunge définitif n'est pas exposé par leurs API. Les fournisseurs IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, générique) prennent en charge à la fois la corbeille et l'expunge définitif.",
+      "contacts": "<b>API Contacts :</b> Gmail utilise l'API Google People ; Outlook utilise Microsoft Graph <code>/contacts</code>. Les contacts Fastmail CardDAV et basés sur IMAP sont reportés à une version ultérieure.",
+      "scheduling": "<b>Programmation :</b> Prévue pour tous les fournisseurs via une file d'attente côté serveur (pas une programmation native du fournisseur). Aucun fournisseur n'expose une API d'envoi programmé native accessible sans stocker les identifiants côté serveur."
+    },
+    "cta": {
+      "heading": "Prêt à connecter votre boîte de réception ?",
+      "sub": "Formule Gratuit : connexions illimitées, aucune carte requise.",
+      "primary": "Commencer gratuitement",
+      "secondary": "Lire la documentation"
+    }
+  }
+}

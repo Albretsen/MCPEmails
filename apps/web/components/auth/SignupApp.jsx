@@ -1,19 +1,20 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
-const SIGNUP_LOADING_MESSAGES = [
-  'Creating your workspace…',
-  'Setting things up…',
-  'Sending confirmation email…',
-  'Almost there…',
-  'Preparing your dashboard…',
-];
-
 export function SignupApp() {
+  const t = useTranslations('auth');
+  const SIGNUP_LOADING_MESSAGES = [
+    t('signup.loading1'),
+    t('signup.loading2'),
+    t('signup.loading3'),
+    t('signup.loading4'),
+    t('signup.loading5'),
+  ];
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -60,13 +61,13 @@ export function SignupApp() {
   function validate() {
     let valid = true;
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
-      setEmailError('Enter a valid email address.');
+      setEmailError(t('signup.errorEmailInvalid'));
       valid = false;
     } else {
       setEmailError('');
     }
     if (!password || password.length < 8) {
-      setPasswordError('Password must be at least 8 characters.');
+      setPasswordError(t('signup.errorPasswordLength'));
       valid = false;
     } else {
       setPasswordError('');
@@ -89,7 +90,7 @@ export function SignupApp() {
     });
 
     if (error) {
-      setServerError(error.message ?? 'Something went wrong. Please try again.');
+      setServerError(error.message ?? t('signup.errorGeneric'));
       setStep('error');
     } else {
       setStep('sent');
@@ -115,14 +116,14 @@ export function SignupApp() {
     <>
       <SocialButton
         icon={<GoogleIcon />}
-        label="Continue with Google"
+        label={t('shared.continueWithGoogle')}
         loading={socialLoading === 'google'}
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
       <SocialButton
         icon={<GitHubIcon />}
-        label="Continue with GitHub"
+        label={t('shared.continueWithGitHub')}
         loading={socialLoading === 'github'}
         onClick={handleGitHubSignIn}
         disabled={anyBusy}
@@ -137,7 +138,7 @@ export function SignupApp() {
       <div className="auth-wrap">
         <a className="auth-back" href="/">
           <MIcon name="arrow" size={14} color="currentColor" strokeWidth={2} />
-          Back to home
+          {t('shared.backToHome')}
         </a>
 
         <div className="auth-brand">
@@ -147,7 +148,7 @@ export function SignupApp() {
         {/* ── Form ──────────────────────────────────────────────────── */}
         {(step === 'form' || step === 'error') && (
           <div className="auth-card">
-            <h1>Create your workspace</h1>
+            <h1>{t('signup.title')}</h1>
             {socialButtons}
             {serverError && (
               <div
@@ -163,11 +164,11 @@ export function SignupApp() {
             )}
             <form className="auth-fields" onSubmit={handleSubmit} noValidate>
               <div className="field">
-                <label htmlFor="signup-email">Work email</label>
+                <label htmlFor="signup-email">{t('signup.emailLabel')}</label>
                 <input
                   id="signup-email"
                   className={'input' + (emailError ? ' err' : '')}
-                  type="email" placeholder="you@company.com" autoComplete="email"
+                  type="email" placeholder={t('signup.emailPlaceholder')} autoComplete="email"
                   value={email} onChange={handleEmailChange}
                   aria-invalid={emailError ? 'true' : undefined}
                   aria-describedby={emailError ? 'signup-email-error' : undefined}
@@ -175,11 +176,11 @@ export function SignupApp() {
                 {emailError && <div id="signup-email-error" className="err-msg" role="alert">{emailError}</div>}
               </div>
               <div className="field">
-                <label htmlFor="signup-password">Password</label>
+                <label htmlFor="signup-password">{t('signup.passwordLabel')}</label>
                 <input
                   id="signup-password"
                   className={'input' + (passwordError ? ' err' : '')}
-                  type="password" placeholder="8+ characters" autoComplete="new-password"
+                  type="password" placeholder={t('signup.passwordPlaceholder')} autoComplete="new-password"
                   value={password} onChange={handlePasswordChange}
                   aria-invalid={passwordError ? 'true' : undefined}
                   aria-describedby={passwordError ? 'signup-password-error' : undefined}
@@ -187,11 +188,11 @@ export function SignupApp() {
                 {passwordError && <div id="signup-password-error" className="err-msg" role="alert">{passwordError}</div>}
               </div>
               <MBtn variant="primary" className="auth-submit" type="submit" disabled={anyBusy}>
-                Create workspace
+                {t('signup.submit')}
               </MBtn>
             </form>
             <div className="auth-footer">
-              Already have an account? <a href="/login">Sign in</a>
+              {t('signup.haveAccountPrefix')}<a href="/login">{t('signup.signIn')}</a>
             </div>
           </div>
         )}
@@ -204,7 +205,7 @@ export function SignupApp() {
             </div>
             <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 6px' }}>{loadingMsg}</h1>
             <p className="sub" style={{ margin: 0, color: 'var(--fg-3)', fontSize: 13 }}>
-              This can take a few seconds while we send your confirmation email.
+              {t('signup.submittingSub')}
             </p>
           </div>
         )}
@@ -215,16 +216,17 @@ export function SignupApp() {
             <div style={{ width: 48, height: 48, borderRadius: 999, background: 'var(--mint-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
               <MIcon name="mail" size={22} color="var(--mint-600)" />
             </div>
-            <h1>Check your email</h1>
+            <h1>{t('shared.checkYourEmail')}</h1>
             <p className="sub">
-              We sent a confirmation link to{' '}
-              <strong style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{email}</strong>.
-              Click it to activate your account. It expires in 60 minutes.
+              {t.rich('signup.sentLead', {
+                email,
+                strong: (c) => <strong style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{c}</strong>,
+              })}
             </p>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', marginTop: 8, lineHeight: 1.6 }}>
-              Didn't get it? Check your spam folder, or{' '}
+              {t('shared.didntGetItPrefix')}
               <button onClick={handleRetry} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--brand)', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, textDecoration: 'underline' }}>
-                try a different address
+                {t('shared.tryDifferentAddress')}
               </button>.
             </div>
           </div>
@@ -233,7 +235,7 @@ export function SignupApp() {
         {(step === 'form' || step === 'error') && (
           <div className="auth-microcopy">
             <MIcon name="shield" size={13} color="var(--mint-600)" />
-            We never store your email content. SOC 2 in progress. GDPR-friendly.
+            {t('shared.microcopy')}
           </div>
         )}
       </div>

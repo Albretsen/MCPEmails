@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 
@@ -80,6 +81,7 @@ function Spinner() {
  * redirects the user to /reset-password to enter their new password.
  */
 export function ForgotPasswordApp() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [step, setStep] = useState('form'); // 'form' | 'sending' | 'sent' | 'error'
@@ -87,9 +89,9 @@ export function ForgotPasswordApp() {
 
   /** Basic email format validation. */
   function validateEmail(value) {
-    if (!value || value.trim() === '') return 'Enter your email address.';
+    if (!value || value.trim() === '') return t('forgot.errorEmailRequired');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim()))
-      return 'Enter a valid email address.';
+      return t('forgot.errorEmailInvalid');
     return '';
   }
 
@@ -118,7 +120,7 @@ export function ForgotPasswordApp() {
     if (error) {
       // Only surface genuine technical errors, not "user not found" (Supabase
       // handles that transparently to prevent user enumeration).
-      setServerError(error.message ?? 'Something went wrong. Please try again.');
+      setServerError(error.message ?? t('forgot.errorGeneric'));
       setStep('error');
     } else {
       // Always show the success state, even if no account exists for this
@@ -148,7 +150,7 @@ export function ForgotPasswordApp() {
       <div className="auth-wrap">
         <a className="auth-back" href="/login">
           <MIcon name="arrow" size={14} color="currentColor" strokeWidth={2} />
-          Back to sign in
+          {t('shared.backToSignIn')}
         </a>
 
         <div className="auth-brand">
@@ -158,10 +160,9 @@ export function ForgotPasswordApp() {
         {/* ── Form state ──────────────────────────────────────────── */}
         {(step === 'form' || step === 'error') && (
           <div className="auth-card">
-            <h1>Reset your password</h1>
+            <h1>{t('forgot.title')}</h1>
             <p className="sub">
-              Enter your account email and we'll send a reset link. The link
-              expires in 60 minutes.
+              {t('forgot.intro')}
             </p>
 
             {serverError && (
@@ -185,12 +186,12 @@ export function ForgotPasswordApp() {
 
             <form className="auth-fields" onSubmit={handleSubmit} noValidate>
               <div className="field">
-                <label htmlFor="forgot-email">Account email</label>
+                <label htmlFor="forgot-email">{t('forgot.emailLabel')}</label>
                 <input
                   id="forgot-email"
                   className={'input' + (emailError ? ' err' : '')}
                   type="email"
-                  placeholder="you@company.com"
+                  placeholder={t('forgot.emailPlaceholder')}
                   autoComplete="email"
                   value={email}
                   onChange={handleEmailChange}
@@ -210,13 +211,13 @@ export function ForgotPasswordApp() {
                 type="submit"
                 onClick={handleSubmit}
               >
-                Send reset link
+                {t('forgot.submit')}
               </MBtn>
             </form>
 
             <div className="auth-footer">
-              Remember your password?{' '}
-              <a href="/login">Sign in</a>
+              {t('forgot.rememberPrefix')}
+              <a href="/login">{t('forgot.signIn')}</a>
             </div>
           </div>
         )}
@@ -242,10 +243,10 @@ export function ForgotPasswordApp() {
               <Spinner />
             </div>
             <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 6px' }}>
-              Sending your link…
+              {t('forgot.sendingYourLink')}
             </h1>
             <p className="sub" style={{ margin: 0 }}>
-              Just a moment.
+              {t('shared.justAMoment')}
             </p>
           </div>
         )}
@@ -267,12 +268,12 @@ export function ForgotPasswordApp() {
             >
               <MIcon name="mail" size={22} color="var(--mint-600)" />
             </div>
-            <h1>Check your email</h1>
+            <h1>{t('shared.checkYourEmail')}</h1>
             <p className="sub">
-              If an account exists for{' '}
-              <strong style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{email}</strong>,
-              we've sent a reset link. Click it to choose a new password. It
-              expires in 60 minutes.
+              {t.rich('forgot.sentLead', {
+                email,
+                strong: (c) => <strong style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{c}</strong>,
+              })}
             </p>
 
             <div
@@ -284,7 +285,7 @@ export function ForgotPasswordApp() {
                 lineHeight: 1.6,
               }}
             >
-              Didn't get it? Check your spam folder, or{' '}
+              {t('shared.didntGetItPrefix')}
               <button
                 onClick={handleRetry}
                 style={{
@@ -299,13 +300,13 @@ export function ForgotPasswordApp() {
                   textDecoration: 'underline',
                 }}
               >
-                try a different address
+                {t('shared.tryDifferentAddress')}
               </button>
               .
             </div>
 
             <div className="auth-footer" style={{ marginTop: 24 }}>
-              <a href="/login">Back to sign in</a>
+              <a href="/login">{t('forgot.backToSignIn')}</a>
             </div>
           </div>
         )}
@@ -313,7 +314,7 @@ export function ForgotPasswordApp() {
         {(step === 'form' || step === 'error') && (
           <div className="auth-microcopy">
             <MIcon name="shield" size={13} color="var(--mint-600)" />
-            We never store your email content. SOC 2 in progress. GDPR-friendly.
+            {t('shared.microcopy')}
           </div>
         )}
       </div>

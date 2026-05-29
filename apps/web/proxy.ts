@@ -8,23 +8,46 @@ import type { NextRequest } from 'next/server';
  * Composes two concerns:
  *
  *  - next-intl handles locale negotiation, prefixing, and hreflang headers for
- *    the localized marketing routes.
+ *    the public marketing routes (URL-based locale).
  *  - updateSession refreshes the Supabase session cookie and guards protected
  *    routes for everything else (dashboard, auth, api).
  *
- * Only the marketing home is localized for now, so the locale handling runs
- * exclusively on '/', '/en', and '/nb'. Every other path keeps its existing
- * Supabase behaviour unchanged, including the OAuth callback and API routes.
+ * The authenticated app and auth screens are NOT URL-localized (they use a
+ * client-side locale from localStorage); they must keep their exact existing
+ * Supabase behaviour, including the OAuth callback and API routes.
  */
 const intlMiddleware = createMiddleware(routing);
 
+/**
+ * Public marketing pages that are localized via URL (next-intl handles these).
+ * Everything NOT in this set (dashboard, auth screens, OAuth callbacks, API)
+ * goes to Supabase updateSession with its existing behaviour fully intact.
+ */
+const MARKETING_PATHS = new Set([
+  '/',
+  '/pricing',
+  '/docs',
+  '/docs/providers',
+  '/privacy',
+  '/terms',
+]);
+
 function isLocalizedRoute(pathname: string): boolean {
-  return (
-    pathname === '/' ||
-    routing.locales.some(
-      (locale) => pathname === `/${locale}` || pathname === `/${locale}/`,
-    )
-  );
+  // Strip a leading locale segment (e.g. /nb/pricing -> /pricing, /nb -> /).
+  let path = pathname;
+  for (const locale of routing.locales) {
+    if (path === `/${locale}`) {
+      path = '/';
+      break;
+    }
+    if (path.startsWith(`/${locale}/`)) {
+      path = path.slice(`/${locale}`.length);
+      break;
+    }
+  }
+  // Normalize a trailing slash (but keep root '/').
+  if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+  return MARKETING_PATHS.has(path);
 }
 
 export default async function proxy(request: NextRequest) {
