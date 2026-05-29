@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { generateApiKey } from '@/lib/api-keys/generate';
 import { checkApiKeyLimit } from '@/lib/plans/check-api-key-limit';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /**
  * POST /api/api-keys
@@ -30,16 +31,18 @@ import { checkRateLimit } from '@/lib/rate-limit';
  *   Documents/Architecture/api-key-management.md §1 (format), §4.1 (creation flow)
  */
 
+// Must match the scopes the MCP server enforces (read:email gates list/read/
+// search tools; send:email gates send/reply). Kept in sync with the OAuth
+// authorize flow's VALID_SCOPES so dashboard- and OAuth-issued keys behave
+// identically.
 const VALID_SCOPES = [
-  'email:read',
-  'email:send',
-  'email:search',
-  'inbox:manage',
-  'admin',
+  'read:email',
+  'search:email',
+  'send:email',
 ] as const;
 
 /** Scopes available to workspace viewers (read-only). */
-const VIEWER_SCOPES = new Set(['email:read', 'email:search']);
+const VIEWER_SCOPES = new Set(['read:email', 'search:email']);
 
 type Scope = (typeof VALID_SCOPES)[number];
 
@@ -124,12 +127,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     workspaceId = member.workspace_id;
     callerRole = member.role;
   } else {
-    // Legacy single-workspace path.
+    // No explicit workspace — fall back to the caller's active workspace
+    // (cookie-aware, multi-workspace safe), then look up their role in it.
+    const activeWorkspaceId = await resolveActiveWorkspaceId(supabase, user.id);
+    if (!activeWorkspaceId) {
+      return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
+    }
     const { data: member, error: memberError } = await supabase
       .from('workspace_members')
       .select('workspace_id, role')
       .eq('user_id', user.id)
-      .single();
+      .eq('workspace_id', activeWorkspaceId)
+      .maybeSingle();
 
     if (memberError || !member) {
       return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });

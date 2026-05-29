@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
-import { createServiceRoleClient } from '@/lib/supabase/service';
 
 function hashToken(raw: string): string {
   return crypto.createHash('sha256').update(raw, 'utf8').digest('hex');
@@ -42,14 +41,19 @@ export async function POST(
   }
 
   const tokenHash = hashToken(rawToken);
-  const service = createServiceRoleClient();
 
-  // 2. Call the atomic RPC.
-  const { data, error } = await service.rpc('accept_workspace_invite', {
-    p_token_hash: tokenHash,
-    p_user_id:    user.id,
-    p_user_email: user.email ?? '',
-  });
+  // 2. Call the atomic RPC via the USER client so the function reads the
+  //    accepting identity from the verified JWT (auth.uid() / email claim)
+  //    rather than trusting caller-supplied parameters.
+  //    Signature changed (single arg) ahead of database.types regeneration.
+  const rpc = supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => Promise<{
+    data: Array<{ workspace_id: string; workspace_slug: string; role: string }> | null;
+    error: { code: string; message: string } | null;
+  }>;
+  const { data, error } = await rpc('accept_workspace_invite', { p_token_hash: tokenHash });
 
   if (error) {
     // Map PL/pgSQL exception messages to HTTP status codes.

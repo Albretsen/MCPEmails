@@ -5,20 +5,23 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 /**
  * DELETE /api/user/delete-account
  *
- * Soft-deletes the authenticated user's workspace and all associated data,
- * then signs the user out.
+ * Soft-deletes every workspace the authenticated user owns (and all associated
+ * data), removes the user from any workspace they were invited to, then signs
+ * them out.
  *
  * Steps:
  *   1. Authenticate the requesting user via Supabase session cookie.
  *   2. Validate the request body: confirmEmail must exactly match the user's email.
- *   3. Look up the user's workspace (they must be the owner).
- *   4. Soft-delete all active API keys in the workspace (set deleted_at).
- *   5. Soft-delete all connected inboxes in the workspace (set deleted_at).
- *   6. Soft-delete the workspace itself (set deleted_at).
- *      my_workspace_ids() now excludes this workspace, making all tenant data
- *      invisible to the authenticated role immediately.
- *   7. Sign the user out (invalidate session cookies).
- *   8. Return { success: true }.
+ *   3. Look up ALL workspaces the user owns.
+ *   4. For each owned workspace: revoke API keys + OAuth refresh chains,
+ *      disconnect inboxes and null their encrypted credentials, drop pending
+ *      invites, and soft-delete the workspace.
+ *   5. Remove the user's membership rows everywhere (owned + invited).
+ *   6. Sign the user out (invalidate session cookies).
+ *   7. Return { success: true }.
+ *
+ * Residual (by design): the auth.users row is retained (soft-delete model);
+ * audit/activity logs are preserved for integrity.
  *
  * Security:
  *   - Requires a valid session cookie.
@@ -72,15 +75,13 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // 3. Fetch the workspace owned by this user.
-  //    Uses the authenticated client — the RLS workspaces_select_members policy
-  //    ensures this returns only workspaces the user belongs to.
-  const { data: workspace, error: workspaceError } = await supabase
+  // 3. Fetch ALL workspaces owned by this user (a Pro user may own several).
+  const service = createServiceRoleClient();
+  const { data: ownedWorkspaces, error: workspaceError } = await service
     .from('workspaces')
-    .select('id, owner_id')
+    .select('id')
     .eq('owner_id', user.id)
-    .is('deleted_at', null)
-    .maybeSingle();
+    .is('deleted_at', null);
 
   if (workspaceError) {
     console.error('[delete-account] workspace lookup failed:', workspaceError.message);
@@ -90,66 +91,68 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  if (!workspace) {
-    // No workspace found — nothing to delete. Sign out anyway and report success.
-    await supabase.auth.signOut();
-    return NextResponse.json({ success: true }, { status: 200 });
-  }
-
-  const workspaceId = workspace.id;
+  const ownedIds = (ownedWorkspaces ?? []).map((w) => w.id);
   const now = new Date().toISOString();
 
-  // Ownership is established (workspace owned by this user + email confirmed).
-  // The soft-delete mutations below run as the service role; see the security
-  // note in the docblock for why RLS cannot perform them.
-  const service = createServiceRoleClient();
+  // 4. Tear down every owned workspace: revoke keys + refresh chains, disconnect
+  //    inboxes AND wipe their encrypted credentials, drop pending invites, then
+  //    soft-delete the workspace. All scoped to the owned workspace ids.
+  if (ownedIds.length > 0) {
+    const steps = [
+      // Soft-delete API keys.
+      service.from('api_keys')
+        .update({ deleted_at: now, updated_at: now })
+        .in('workspace_id', ownedIds).is('deleted_at', null),
+      // Kill OAuth refresh-token chains so connections can't resurrect.
+      service.from('oauth_refresh_tokens')
+        .update({ revoked_at: now })
+        .in('workspace_id', ownedIds).is('revoked_at', null),
+      // Disconnect inboxes AND null the encrypted credential columns (no PII left at rest).
+      service.from('inboxes')
+        .update({
+          deleted_at: now,
+          status: 'revoked',
+          updated_at: now,
+          oauth_access_token: null,
+          oauth_refresh_token: null,
+          imap_password: null,
+        })
+        .in('workspace_id', ownedIds).is('deleted_at', null),
+      // Remove pending invites.
+      service.from('workspace_invites').delete().in('workspace_id', ownedIds),
+      // Soft-delete the workspaces themselves.
+      service.from('workspaces')
+        .update({ deleted_at: now, updated_at: now })
+        .in('id', ownedIds),
+    ];
 
-  // 4. Soft-delete all active API keys in the workspace.
-  const { error: keysError } = await service
-    .from('api_keys')
-    .update({ deleted_at: now, updated_at: now })
-    .eq('workspace_id', workspaceId)
-    .is('deleted_at', null);
-
-  if (keysError) {
-    console.error('[delete-account] api_keys soft-delete failed:', keysError.message);
-    return NextResponse.json(
-      { error: 'Failed to revoke API keys. Please try again.' },
-      { status: 500 },
-    );
+    const results = await Promise.all(steps);
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      console.error('[delete-account] teardown failed:', failed.error.message);
+      return NextResponse.json(
+        { error: 'Failed to delete account data. Please try again.' },
+        { status: 500 },
+      );
+    }
   }
 
-  // 5. Soft-delete all connected inboxes in the workspace.
-  const { error: inboxesError } = await service
-    .from('inboxes')
-    .update({ deleted_at: now, status: 'revoked', updated_at: now })
-    .eq('workspace_id', workspaceId)
-    .is('deleted_at', null);
+  // 5. Remove the user from ALL workspaces (owned + any they were invited to),
+  //    so no dangling membership remains after the account is gone.
+  const { error: membershipError } = await service
+    .from('workspace_members')
+    .delete()
+    .eq('user_id', user.id);
 
-  if (inboxesError) {
-    console.error('[delete-account] inboxes soft-delete failed:', inboxesError.message);
-    return NextResponse.json(
-      { error: 'Failed to disconnect inboxes. Please try again.' },
-      { status: 500 },
-    );
-  }
-
-  // 6. Soft-delete the workspace itself. Scoped to the owned workspace.
-  const { error: workspaceUpdateError } = await service
-    .from('workspaces')
-    .update({ deleted_at: now, updated_at: now })
-    .eq('id', workspaceId)
-    .eq('owner_id', user.id);
-
-  if (workspaceUpdateError) {
-    console.error('[delete-account] workspace soft-delete failed:', workspaceUpdateError.message);
+  if (membershipError) {
+    console.error('[delete-account] membership removal failed:', membershipError.message);
     return NextResponse.json(
       { error: 'Failed to delete account. Please try again.' },
       { status: 500 },
     );
   }
 
-  // 7. Sign the user out to invalidate all session cookies.
+  // 6. Sign the user out to invalidate all session cookies.
   //    Failures here are non-fatal — the workspace is already deleted and the
   //    user will be locked out on next page load regardless.
   const { error: signOutError } = await supabase.auth.signOut();

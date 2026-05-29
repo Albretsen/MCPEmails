@@ -1423,12 +1423,13 @@ function maskedKey(keyPrefix) {
 
 /* ── CreateKeyModal ───────────────────────────────────────────────────────── */
 
+// Scope vocabulary must match what the MCP server enforces (read:email gates
+// list/read/search tools; send:email gates send/reply). search:email is
+// accepted for parity with the OAuth flow but read:email already covers search.
 const SCOPE_OPTIONS = [
-  { value: 'email:read',   label: 'email:read',   desc: 'Read email messages and attachments' },
-  { value: 'email:send',   label: 'email:send',   desc: 'Send and reply to emails' },
-  { value: 'email:search', label: 'email:search', desc: 'Search across inbox contents' },
-  { value: 'inbox:manage', label: 'inbox:manage', desc: 'Manage folders and organise messages' },
-  { value: 'admin',        label: 'admin',        desc: 'Inspect workspace configuration' },
+  { value: 'read:email',   label: 'read:email',   desc: 'List, read and search email messages' },
+  { value: 'search:email', label: 'search:email', desc: 'Search across inbox contents' },
+  { value: 'send:email',   label: 'send:email',   desc: 'Send and reply to emails' },
 ];
 
 /**

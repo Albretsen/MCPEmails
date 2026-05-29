@@ -51,31 +51,22 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // 2. Resolve the user's workspace via workspace_members.
-  const { data: member, error: memberError } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .single();
-
-  if (memberError || !member) {
-    return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
-  }
-
-  const workspaceId = member.workspace_id;
-
-  // 3. Fetch the inbox (including credentials, which never leave this handler).
+  // 2. Fetch the inbox (including credentials, which never leave this handler).
+  //    RLS on inboxes restricts SELECT to workspaces the user is a member of
+  //    (and to non-deleted rows), so this both authorizes and scopes the read —
+  //    correct even when the user belongs to multiple workspaces.
   const { data: inbox, error: fetchError } = await supabase
     .from('inboxes')
     .select('*')
     .eq('id', inboxId)
-    .eq('workspace_id', workspaceId)
     .is('deleted_at', null)
     .single<Tables<'inboxes'>>();
 
   if (fetchError || !inbox) {
     return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
   }
+
+  const workspaceId = inbox.workspace_id;
 
   // 4. Run the credential check. `healthy` is null while inconclusive.
   let healthy: boolean | null = null;
