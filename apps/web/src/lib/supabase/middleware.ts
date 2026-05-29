@@ -74,7 +74,12 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
  * Returns true if the given pathname requires an authenticated session.
  */
 function isProtectedPath(pathname: string): boolean {
-  const protectedPrefixes = ['/dashboard', '/settings', '/api/mcp'];
+  // NOTE: /api/mcp is intentionally NOT listed here. It authenticates via a
+  // Bearer API key (mcpe_…), not a Supabase session cookie. Gating it behind
+  // the cookie check would 307-redirect token-bearing MCP clients to /login.
+  // The route handler enforces auth itself and returns 401 + WWW-Authenticate
+  // for OAuth discovery.
+  const protectedPrefixes = ['/dashboard', '/settings'];
   return protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
