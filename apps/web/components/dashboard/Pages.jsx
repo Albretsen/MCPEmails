@@ -1451,6 +1451,317 @@ function CreateKeyModal({ onCreate, onCancel }) {
   );
 }
 
+/* ── EditConnectionModal ──────────────────────────────────────────────────── */
+
+/**
+ * Modal for editing an existing connection's granted access — its scopes and
+ * which inboxes it can reach — without the user reconnecting their MCP client.
+ *
+ * Inbox access has two modes:
+ *   - "All inboxes": stored as inboxIds = null. Any inbox connected later is
+ *     automatically reachable, so the user never has to re-grant.
+ *   - "Specific inboxes": an explicit allowlist; at least one must be selected.
+ *
+ * On save it calls onSave(apiKey.id, { scopes, inboxIds }). onSave throws on
+ * failure so the error can be shown inline; on success the modal closes.
+ */
+function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
+  const t = useTranslations('dashboard');
+  const [selectedScopes, setSelectedScopes] = useState(apiKey.scopes ?? []);
+  // inboxIds === null means "all inboxes". Otherwise it's an explicit allowlist.
+  const [allInboxes, setAllInboxes] = useState(apiKey.inboxIds == null);
+  const [selectedInboxIds, setSelectedInboxIds] = useState(
+    () => (Array.isArray(apiKey.inboxIds) ? apiKey.inboxIds : []),
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const toggleScope = (value) => {
+    setSelectedScopes(prev =>
+      prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]
+    );
+  };
+
+  const toggleInbox = (id) => {
+    setSelectedInboxIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (submitting) return;
+
+    if (selectedScopes.length === 0) {
+      setError(t('apiKeys.editModal.errScopeRequired'));
+      return;
+    }
+    if (!allInboxes && selectedInboxIds.length === 0) {
+      setError(t('apiKeys.editModal.errInboxRequired'));
+      return;
+    }
+
+    setError(null);
+    setSubmitting(true);
+    try {
+      await onSave(apiKey.id, {
+        scopes: selectedScopes,
+        inboxIds: allInboxes ? null : selectedInboxIds,
+      });
+      onClose();
+    } catch (err) {
+      setError(err?.message ?? t('apiKeys.editModal.errSaveFailed'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="scrim" onClick={submitting ? undefined : onClose}>
+      <div
+        className="modal"
+        onClick={e => e.stopPropagation()}
+        style={{ width: 520 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-connection-dialog-title"
+      >
+        {/* Header */}
+        <div className="modal-h">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div>
+              <h2 id="edit-connection-dialog-title" style={{ margin: 0 }}>{t('apiKeys.editModal.title')}</h2>
+              <div className="sub" style={{ marginTop: 4 }}>
+                {t('apiKeys.editModal.sub', { name: apiKey.name })}
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              disabled={submitting}
+              aria-label={t('apiKeys.editModal.cancel')}
+              style={{
+                background: 'transparent', border: 'none',
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                color: 'var(--fg-3)', padding: 4, flexShrink: 0,
+                lineHeight: 1, opacity: submitting ? 0.4 : 1,
+              }}
+            >
+              <Icon name="x" size={16} />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            {/* Scopes */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{
+                fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
+                color: 'var(--fg-2)', marginBottom: 8,
+              }}>
+                {t('apiKeys.editModal.permissions')}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {SCOPE_OPTIONS.map(opt => {
+                  const checked = selectedScopes.includes(opt.value);
+                  return (
+                    <label
+                      key={opt.value}
+                      style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 10,
+                        padding: '10px 12px',
+                        border: `1px solid ${checked ? 'var(--border-focus)' : 'var(--border-1)'}`,
+                        borderRadius: 8,
+                        background: checked ? 'var(--brand-soft)' : 'var(--bg-surface)',
+                        cursor: submitting ? 'not-allowed' : 'pointer',
+                        transition: 'border-color 120ms, background 120ms',
+                        opacity: submitting ? 0.7 : 1,
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => !submitting && toggleScope(opt.value)}
+                        disabled={submitting}
+                        style={{ marginTop: 1, accentColor: 'var(--brand)', flexShrink: 0 }}
+                      />
+                      <div>
+                        <code style={{
+                          fontFamily: 'var(--font-mono)', fontSize: 12.5,
+                          color: checked ? 'var(--cobalt-700)' : 'var(--fg-1)',
+                          fontWeight: 500,
+                        }}>
+                          {opt.label}
+                        </code>
+                        <div style={{
+                          fontFamily: 'var(--font-sans)', fontSize: 12,
+                          color: 'var(--fg-3)', marginTop: 1,
+                        }}>
+                          {t(opt.descKey)}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Inbox access */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{
+                fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
+                color: 'var(--fg-2)', marginBottom: 8,
+              }}>
+                {t('apiKeys.editModal.inboxAccess')}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {/* All inboxes */}
+                <label
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                    padding: '10px 12px',
+                    border: `1px solid ${allInboxes ? 'var(--border-focus)' : 'var(--border-1)'}`,
+                    borderRadius: 8,
+                    background: allInboxes ? 'var(--brand-soft)' : 'var(--bg-surface)',
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    opacity: submitting ? 0.7 : 1,
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="inbox-access-mode"
+                    checked={allInboxes}
+                    onChange={() => !submitting && setAllInboxes(true)}
+                    disabled={submitting}
+                    style={{ marginTop: 1, accentColor: 'var(--brand)', flexShrink: 0 }}
+                  />
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
+                      {t('apiKeys.editModal.allInboxes')}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginTop: 1 }}>
+                      {t('apiKeys.editModal.allInboxesDesc')}
+                    </div>
+                  </div>
+                </label>
+
+                {/* Specific inboxes */}
+                <label
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                    padding: '10px 12px',
+                    border: `1px solid ${!allInboxes ? 'var(--border-focus)' : 'var(--border-1)'}`,
+                    borderRadius: 8,
+                    background: !allInboxes ? 'var(--brand-soft)' : 'var(--bg-surface)',
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    opacity: submitting ? 0.7 : 1,
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="inbox-access-mode"
+                    checked={!allInboxes}
+                    onChange={() => !submitting && setAllInboxes(false)}
+                    disabled={submitting}
+                    style={{ marginTop: 1, accentColor: 'var(--brand)', flexShrink: 0 }}
+                  />
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
+                      {t('apiKeys.editModal.specificInboxes')}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginTop: 1 }}>
+                      {t('apiKeys.editModal.specificInboxesDesc')}
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              {/* Inbox checkboxes, shown only in "specific" mode */}
+              {!allInboxes && (
+                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {inboxes.length === 0 ? (
+                    <div style={{
+                      padding: '10px 12px', borderRadius: 8,
+                      background: 'var(--bg-sunken)', border: '1px solid var(--border-1)',
+                      fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)',
+                    }}>
+                      {t('apiKeys.editModal.noInboxes')}
+                    </div>
+                  ) : (
+                    inboxes.map(ib => {
+                      const checked = selectedInboxIds.includes(ib.id);
+                      return (
+                        <label
+                          key={ib.id}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '9px 12px',
+                            border: `1px solid ${checked ? 'var(--brand)' : 'var(--border-1)'}`,
+                            background: checked ? 'var(--brand-soft)' : 'var(--bg-surface)',
+                            borderRadius: 8,
+                            cursor: submitting ? 'not-allowed' : 'pointer',
+                            opacity: submitting ? 0.7 : 1,
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => !submitting && toggleInbox(ib.id)}
+                            disabled={submitting}
+                            style={{ accentColor: 'var(--brand)', flexShrink: 0 }}
+                          />
+                          <ProviderLogo kind={ib.provider} size={18} />
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{
+                              fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600,
+                              color: 'var(--fg-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>
+                              {ib.label}
+                            </div>
+                            <div style={{
+                              fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)',
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>
+                              {ib.address}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Error message */}
+            {error && (
+              <div style={{
+                marginBottom: 16, padding: '10px 12px',
+                background: 'var(--red-100)', border: '1px solid rgba(229,72,77,0.25)',
+                borderRadius: 8, fontFamily: 'var(--font-sans)', fontSize: 13,
+                color: 'var(--red-700)',
+              }}>
+                {error}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <Btn variant="secondary" onClick={onClose} disabled={submitting}>
+                {t('apiKeys.editModal.cancel')}
+              </Btn>
+              <Btn variant="primary" icon="check" type="submit" disabled={submitting}>
+                {submitting ? t('apiKeys.editModal.saving') : t('apiKeys.editModal.save')}
+              </Btn>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ── KeyRevealModal ───────────────────────────────────────────────────────── */
 
 /**
@@ -1682,11 +1993,13 @@ function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
 }
 
 /* ---------------- API Keys ---------------- */
-export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
+export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, onRevoke, onUpdate }) {
   const t = useTranslations('dashboard');
   const [copiedId, setCopiedId] = useState(null);
   // The key object pending revoke confirmation, or null.
   const [confirmKey, setConfirmKey] = useState(null);
+  // The key object currently being edited (scopes + inbox access), or null.
+  const [editKey, setEditKey] = useState(null);
   // True while the revoke API call is in flight.
   const [revoking, setRevoking] = useState(false);
   // True when the create-key modal is open.
@@ -1763,6 +2076,7 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
                 <th>{t('apiKeys.colName')}</th>
                 <th>{t('apiKeys.colKey')}</th>
                 <th>{t('apiKeys.colScopes')}</th>
+                <th>{t('apiKeys.colAccess')}</th>
                 <th>{t('apiKeys.colCreated')}</th>
                 <th>{t('apiKeys.colLastUsed')}</th>
                 <th className="right">{""}</th>
@@ -1794,6 +2108,12 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
                       }
                     </div>
                   </td>
+                  <td>
+                    {k.inboxIds == null
+                      ? <Badge tone="live">{t('apiKeys.accessAll')}</Badge>
+                      : <Badge tone="neutral">{t('apiKeys.accessCount', { count: k.inboxIds.length })}</Badge>
+                    }
+                  </td>
                   <td style={{ whiteSpace: "nowrap", color: "var(--fg-2)", fontFamily: "var(--font-sans)", fontSize: 13 }}>
                     {formatDate(k.createdAt)}
                   </td>
@@ -1801,7 +2121,12 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
                     {formatLastUsed(k.lastUsedAt, t)}
                   </td>
                   <td className="right">
-                    <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
+                    <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                      {onUpdate && (
+                        <Btn variant="secondary" size="sm" icon="settings" onClick={() => setEditKey(k)}>{t('apiKeys.editAccess')}</Btn>
+                      )}
+                      <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -1862,6 +2187,15 @@ export function KeysPage({ keys, mcpUrl, onCreate, onKeyCreated, onRevoke }) {
           keyName={revealData.name}
           mcpUrl={mcpUrl}
           onDone={handleRevealDone}
+        />
+      )}
+
+      {editKey && (
+        <EditConnectionModal
+          apiKey={editKey}
+          inboxes={inboxes}
+          onSave={onUpdate}
+          onClose={() => setEditKey(null)}
         />
       )}
     </div>

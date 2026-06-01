@@ -174,7 +174,7 @@ async function fetchInboxes(supabase, workspaceId) {
 async function fetchApiKeys(supabase, workspaceId) {
   const { data, error } = await supabase
     .from('api_keys')
-    .select('id, name, key_prefix, scopes, created_at, last_used_at, expires_at')
+    .select('id, name, key_prefix, scopes, inbox_ids, created_at, last_used_at, expires_at')
     .eq('workspace_id', workspaceId)
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
@@ -189,6 +189,8 @@ async function fetchApiKeys(supabase, workspaceId) {
     name: row.name,
     keyPrefix: row.key_prefix,
     scopes: row.scopes ?? [],
+    // null = all inboxes (including any connected later); array = explicit allowlist.
+    inboxIds: row.inbox_ids ?? null,
     createdAt: row.created_at,
     lastUsedAt: row.last_used_at ?? null,
     expiresAt: row.expires_at ?? null,

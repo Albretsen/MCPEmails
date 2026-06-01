@@ -19,6 +19,8 @@
     "apiKeyRevoked": "API-nøkkel tilbakekalt.",
     "apiKeyCreateFailed": "Kunne ikke opprette API-nøkkelen.",
     "apiKeyCreated": "API-nøkkel opprettet. Kopier den nå; den vises ikke igjen.",
+    "apiKeyUpdated": "Tilkoblingstilgang oppdatert.",
+    "apiKeyUpdateFailed": "Kunne ikke oppdatere tilkoblingstilgangen.",
     "inviteSendFailed": "Kunne ikke sende invitasjonen.",
     "inviteSent": "Invitasjon sendt til {email}.",
     "inviteCancelFailed": "Kunne ikke avbryte invitasjonen.",

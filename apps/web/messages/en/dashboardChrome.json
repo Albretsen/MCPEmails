@@ -19,6 +19,8 @@
     "apiKeyRevoked": "API key revoked.",
     "apiKeyCreateFailed": "Failed to create API key.",
     "apiKeyCreated": "API key created. Copy it now; it won't be shown again.",
+    "apiKeyUpdated": "Connection access updated.",
+    "apiKeyUpdateFailed": "Failed to update connection access.",
     "inviteSendFailed": "Failed to send invite.",
     "inviteSent": "Invite sent to {email}.",
     "inviteCancelFailed": "Failed to cancel invite.",
