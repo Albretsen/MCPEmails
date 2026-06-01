@@ -27,6 +27,14 @@ export async function DELETE(
 
   const { id: inviteId } = await params;
 
+  // Validate the id is a UUID before it reaches `.eq('id', ...)`. An invalid
+  // value would otherwise trigger a Postgres uuid-cast error surfaced as a
+  // misleading 500 ("Failed to cancel invite.").
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!inviteId || !UUID_RE.test(inviteId)) {
+    return NextResponse.json({ error: 'Invite not found.' }, { status: 404 });
+  }
+
   let body: unknown;
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
