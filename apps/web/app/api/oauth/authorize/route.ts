@@ -59,6 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     challenge_method,
     scopes,
     inbox_ids,
+    all_inboxes,
     key_name,
   } = body as Record<string, unknown>;
 
@@ -110,6 +111,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const requestedInboxIds = Array.isArray(inbox_ids)
     ? (inbox_ids as unknown[]).filter((id): id is string => typeof id === 'string')
     : [];
+
+  // Inbox access mode. "All inboxes" is stored as inbox_ids = null, which the MCP
+  // server treats as access to every inbox in the workspace (including ones
+  // connected later). In "specific" mode at least one inbox must be selected —
+  // an empty list would otherwise be indistinguishable from "all" and silently
+  // over-grant.
+  const wantsAllInboxes = all_inboxes === true;
+  if (!wantsAllInboxes && requestedInboxIds.length === 0) {
+    return NextResponse.json(
+      { error: 'Select at least one inbox, or choose all inboxes.' },
+      { status: 400 },
+    );
+  }
+  const effectiveInboxIds: string[] | null = wantsAllInboxes ? null : requestedInboxIds;
 
   // ── Client validation (re-validate server-side) ───────────────────────────
   const { data: oauthClient, error: clientError } = await supabase
@@ -168,7 +183,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     code_challenge:       code_challenge,
     code_challenge_method: 'S256',
     scopes:               approvedScopes,
-    inbox_ids:            requestedInboxIds.length > 0 ? requestedInboxIds : null,
+    inbox_ids:            effectiveInboxIds,
   });
 
   if (insertError) {
@@ -182,7 +197,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       user_id:   user.id,
       client_id: oauthClient.client_id,
       scopes:    approvedScopes,
-      inbox_ids: requestedInboxIds.length > 0 ? requestedInboxIds : null,
+      inbox_ids: effectiveInboxIds,
     },
     { onConflict: 'user_id, client_id' }
   );
@@ -199,7 +214,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     metadata: {
       client_id:  oauthClient.client_id,
       scopes:     approvedScopes,
-      inbox_ids:  requestedInboxIds.length > 0 ? requestedInboxIds : null,
+      inbox_ids:  effectiveInboxIds,
     },
   });
 
