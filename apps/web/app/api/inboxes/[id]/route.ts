@@ -52,14 +52,6 @@ async function revokeOutlookToken(): Promise<void> {
   });
 }
 
-async function revokeFastmailToken(token: string): Promise<void> {
-  await fetch('https://www.fastmail.com/oauth/revoke', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ token }),
-  });
-}
-
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function DELETE(
@@ -114,8 +106,6 @@ export async function DELETE(
         await revokeGoogleGrant(token);
       } else if (inbox.provider === 'outlook') {
         await revokeOutlookToken();
-      } else if (inbox.provider === 'fastmail') {
-        await revokeFastmailToken(token);
       }
     } catch (err) {
       // Local cleanup proceeds regardless; the provider token expires naturally

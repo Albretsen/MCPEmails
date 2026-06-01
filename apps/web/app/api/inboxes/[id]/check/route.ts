@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { decryptToken } from '@/lib/crypto';
 import { withFreshGmailToken, verifyGmailAccess, InboxAuthError } from '@/lib/email-providers/gmail';
 import { withFreshOutlookToken, verifyOutlookAccess, OutlookAuthError } from '@/lib/email-providers/outlook';
-import { withFreshFastmailToken, verifyFastmailAccess, FastmailAuthError } from '@/lib/email-providers/fastmail';
 import { openImapSession, McpEmailsError, ImapAuthError } from '@/lib/email/imap';
 import type { Tables } from '@/types/database.types';
 
@@ -94,10 +93,6 @@ export async function POST(
       const token = await withFreshOutlookToken(inbox);
       healthy = await verifyOutlookAccess(token);
       if (!healthy) reason = `Microsoft rejected the saved access. ${RECONNECT_HINT}`;
-    } else if (inbox.provider === 'fastmail') {
-      const token = await withFreshFastmailToken(inbox);
-      healthy = await verifyFastmailAccess(token);
-      if (!healthy) reason = `Fastmail rejected the saved access. ${RECONNECT_HINT}`;
     } else {
       return NextResponse.json(
         { error: `Unsupported provider: ${inbox.provider}` },
@@ -111,7 +106,6 @@ export async function POST(
     if (
       err instanceof InboxAuthError ||
       err instanceof OutlookAuthError ||
-      err instanceof FastmailAuthError ||
       err instanceof ImapAuthError ||
       (err instanceof McpEmailsError &&
         (err.code === 'AUTH_FAILED' ||

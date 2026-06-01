@@ -176,13 +176,6 @@ export function FastmailAppPasswordForm() {
         {status === 'loading' ? t('fastmail.verifying') : t('fastmail.connectInbox')}
       </Btn>
 
-      {/* Back link */}
-      <div className="app-password-footer">
-        <a href="/auth/fastmail" className="back-link">
-          <Icon name="chevron" size={14} className="back-icon" />
-          {t('fastmail.oauthInstead')}
-        </a>
-      </div>
     </form>
   );
 }

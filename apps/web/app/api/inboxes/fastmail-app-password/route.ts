@@ -130,7 +130,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const { error: upsertError } = await supabase.from('inboxes').upsert(
     {
       workspace_id: workspaceId,
-      provider: 'fastmail',
+      // Fastmail app passwords grant IMAP/SMTP, not JMAP. Store as a branded
+      // IMAP inbox (like iCloud/Yahoo/Zoho) so every operation routes over the
+      // transport the credential actually grants; `service` carries the brand
+      // for the dashboard label/logo. provider 'fastmail' = OAuth/JMAP only.
+      provider: 'imap',
+      service: 'fastmail',
       email_address: email,
       imap_host: FASTMAIL_IMAP_HOST,
       imap_port: FASTMAIL_IMAP_PORT,
