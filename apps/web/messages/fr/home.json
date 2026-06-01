@@ -183,5 +183,10 @@
     "es": "Español",
     "fr": "Français",
     "zh": "中文"
+  },
+  "preview": {
+    "eyebrow": "Aperçu du produit",
+    "title": "Visualisez toute votre opération MCP en un coup d'œil.",
+    "sub": "Un tableau de bord en temps réel pour chaque boîte connectée, clé d'API et appel d'outil — pour toujours savoir ce que font vos agents."
   }
 }

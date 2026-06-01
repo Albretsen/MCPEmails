@@ -217,6 +217,22 @@ export function getPlanLimits(planId: string): PlanLimits {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: user-facing display name for a plan slug stored in `workspaces.plan`.
+//
+// The DB stores internal ids ('free' | 'solo' | 'pro'); the public pricing page
+// only ever shows "Free", "Solo", and "Team" (the `pro` id's display name). Use
+// this everywhere a plan is shown to a user so the dashboard never leaks the
+// internal "pro" id (which read as "Pro plan" and didn't match the pricing
+// page). Unknown/legacy slugs (e.g. 'enterprise') are Title-cased as a fallback.
+// ---------------------------------------------------------------------------
+export function planDisplayName(planId: string | null | undefined): string {
+  if (!planId) return PLANS.free.name;
+  const plan = PLANS[planId as PlanId];
+  if (plan) return plan.name;
+  return planId.charAt(0).toUpperCase() + planId.slice(1);
+}
+
+// ---------------------------------------------------------------------------
 // Helper: resolve the EFFECTIVE limits for a specific workspace.
 //
 // Grandfathered ("legacy") workspaces keep the launch-era unlimited *usage*

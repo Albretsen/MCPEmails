@@ -197,7 +197,7 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 }
 .marquee-track {
   display: flex; width: max-content;
-  animation: marquee-scroll 48s linear infinite;
+  animation: marquee-scroll 80s linear infinite;
 }
 .marquee:hover .marquee-track { animation-play-state: paused; }
 .marquee-item {
@@ -841,4 +841,9 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   /* === Docs endpoint URL bar: allow copy btn to wrap if needed === */
   .endpoint-url { flex-wrap: wrap; gap: var(--space-2); }
   .copy-btn { margin-left: 0; }
+}
+
+/* === Dashboard preview mockup: collapse the sidebar on small screens === */
+@media (max-width: 640px) {
+  .dash-preview-aside { display: none !important; }
 }

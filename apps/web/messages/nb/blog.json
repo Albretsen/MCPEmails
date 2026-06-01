@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "title": "Blogg",
+    "description": "Veiledninger, dypdykk og feltnotater om AI-agenter, Model Context Protocol og hvordan du kobler ekte e-post til Claude, Cursor og en hvilken som helst MCP-klient."
+  },
+  "blogName": "mcpemails-bloggen",
+  "index": {
+    "eyebrow": "MCPEmails-bloggen",
+    "title": "Notater om agenter, e-post og MCP",
+    "lead": "Veiledninger, dypdykk og feltnotater om hvordan du kobler ekte e-post til Claude, Cursor og en hvilken som helst MCP-kompatibel klient.",
+    "filterAria": "Filtrer innlegg etter tema",
+    "all": "Alle",
+    "empty": "Ingen innlegg merket «{tag}» ennå.",
+    "minRead": "{minutes} min"
+  },
+  "post": {
+    "home": "Hjem",
+    "blog": "Blogg",
+    "toc": "På denne siden",
+    "writtenBy": "Skrevet av",
+    "back": "← Tilbake til alle innlegg",
+    "minRead": "{minutes} min lesing",
+    "cta": {
+      "title": "Gi agenten din en innboks",
+      "sub": "Koble Gmail, Outlook, Fastmail eller en hvilken som helst IMAP-konto til AI-agenten din på minutter.",
+      "primary": "Kom i gang gratis",
+      "secondary": "Les dokumentasjonen"
+    }
+  }
+}

@@ -183,5 +183,10 @@
     "es": "Español",
     "fr": "Français",
     "zh": "中文"
+  },
+  "preview": {
+    "eyebrow": "Produktforhåndsvisning",
+    "title": "Se hele MCP-driften din med ett blikk.",
+    "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall – så du alltid vet hva agentene dine gjør."
   }
 }

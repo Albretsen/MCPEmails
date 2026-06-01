@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "title": "Blog",
+    "description": "Guides, deep-dives, and field notes on AI agents, the Model Context Protocol, and connecting real email to Claude, Cursor, and any MCP client."
+  },
+  "blogName": "mcpemails Blog",
+  "index": {
+    "eyebrow": "The MCPEmails blog",
+    "title": "Notes on agents, email & MCP",
+    "lead": "Guides, deep-dives, and field notes on connecting real email to Claude, Cursor, and any MCP-compatible client.",
+    "filterAria": "Filter posts by topic",
+    "all": "All",
+    "empty": "No posts tagged “{tag}” yet.",
+    "minRead": "{minutes} min"
+  },
+  "post": {
+    "home": "Home",
+    "blog": "Blog",
+    "toc": "On this page",
+    "writtenBy": "Written by",
+    "back": "← Back to all posts",
+    "minRead": "{minutes} min read",
+    "cta": {
+      "title": "Give your agent an inbox",
+      "sub": "Connect Gmail, Outlook, Fastmail, or any IMAP account to your AI agent in minutes.",
+      "primary": "Get started free",
+      "secondary": "Read the docs"
+    }
+  }
+}

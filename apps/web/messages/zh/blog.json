@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "title": "博客",
+    "description": "关于 AI 智能体、Model Context Protocol，以及如何将真实邮箱连接到 Claude、Cursor 和任意 MCP 客户端的指南、深度解析与实践笔记。"
+  },
+  "blogName": "mcpemails 博客",
+  "index": {
+    "eyebrow": "MCPEmails 博客",
+    "title": "关于智能体、邮件与 MCP 的笔记",
+    "lead": "关于如何将真实邮箱连接到 Claude、Cursor 和任意兼容 MCP 客户端的指南、深度解析与实践笔记。",
+    "filterAria": "按主题筛选文章",
+    "all": "全部",
+    "empty": "暂无标记为“{tag}”的文章。",
+    "minRead": "{minutes} 分钟"
+  },
+  "post": {
+    "home": "首页",
+    "blog": "博客",
+    "toc": "本页目录",
+    "writtenBy": "作者",
+    "back": "← 返回所有文章",
+    "minRead": "{minutes} 分钟阅读",
+    "cta": {
+      "title": "为你的智能体接入收件箱",
+      "sub": "几分钟内将 Gmail、Outlook、Fastmail 或任意 IMAP 账户连接到你的 AI 智能体。",
+      "primary": "免费开始",
+      "secondary": "阅读文档"
+    }
+  }
+}

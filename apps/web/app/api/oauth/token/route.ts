@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { generateApiKey } from '@/lib/api-keys/generate';
+import { getActiveApiKeyNames, disambiguateApiKeyName } from '@/lib/api-keys/unique-name';
 import { sha256hex, computeS256Challenge, generateRefreshToken } from '@/lib/oauth/crypto';
 import { oauthError } from '@/lib/oauth/errors';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -171,12 +172,18 @@ export async function POST(req: NextRequest): Promise<Response> {
     const { rawKey, keyHash, keyPrefix } = generateApiKey();
     const accessExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
 
+    // Keep OAuth-issued key names distinguishable in the audit log: when the
+    // same client is authorized more than once, suffix " (2)", " (3)", … rather
+    // than minting another indistinguishable "OAuth: <client>" row.
+    const existingNames = await getActiveApiKeyNames(service, authCode.workspace_id);
+    const keyName = disambiguateApiKeyName(existingNames, `OAuth: ${authCode.client_name}`);
+
     const { data: keyRow, error: keyInsertErr } = await service
       .from('api_keys')
       .insert({
         workspace_id: authCode.workspace_id,
         created_by:   authCode.user_id,
-        name:         `OAuth: ${authCode.client_name}`,
+        name:         keyName,
         key_prefix:   keyPrefix,
         key_hash:     keyHash,
         scopes:       authCode.scopes,
@@ -316,12 +323,14 @@ export async function POST(req: NextRequest): Promise<Response> {
       // Legacy refresh token (issued before connections were linked to a single
       // api_keys row): create the row now and point this chain at it so all
       // future refreshes rotate in place.
+      const legacyExistingNames = await getActiveApiKeyNames(service, rt.workspace_id);
+      const legacyKeyName = disambiguateApiKeyName(legacyExistingNames, `OAuth: ${rt.client_name}`);
       const { data: keyRow, error: keyInsertErr } = await service
         .from('api_keys')
         .insert({
           workspace_id: rt.workspace_id,
           created_by:   rt.user_id,
-          name:         `OAuth: ${rt.client_name}`,
+          name:         legacyKeyName,
           key_prefix:   keyPrefix,
           key_hash:     keyHash,
           scopes:       rt.scopes,

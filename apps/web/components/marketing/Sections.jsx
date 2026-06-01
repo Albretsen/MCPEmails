@@ -19,10 +19,11 @@ export function Nav({ onSignIn, onGetStarted }) {
       <div className="container nav-row">
         <Link className="brand" href="/"><img src="/logo-wordmark.svg" alt="mcpemails" /></Link>
         <nav className="nav-links">
-          <a href="#features">{t('nav.features')}</a>
-          <a href="#how">{t('nav.how')}</a>
-          <a href="#pricing">{t('nav.pricing')}</a>
+          <Link href="/#features">{t('nav.features')}</Link>
+          <Link href="/#how">{t('nav.how')}</Link>
+          <Link href="/#pricing">{t('nav.pricing')}</Link>
           <Link href="/docs">{t('nav.docs')}</Link>
+          <Link href="/blog">Blog</Link>
         </nav>
         <div className="nav-grow" />
         <div className="nav-cta">
@@ -186,7 +187,7 @@ export function HeroPipeDiagram() {
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.7, color: "var(--fg-2)" }}>
           <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>list_inboxes</span>()</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logReturns')}</div>
-          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>list_inbox</span>(inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
+          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>list_messages</span>(inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logFetches')}</div>
           <div><span style={{ color: "var(--mint-700)" }}>←</span> {t('hero.pipe.logResult')} · <span style={{ color: "var(--fg-3)" }}>{t('hero.pipe.logNothing')}</span></div>
         </div>
@@ -205,7 +206,7 @@ export function HeroPipeDiagram() {
 export function HeroMcpTerminal() {
   const fullLog = React.useMemo(() => [
     { ts: "14:02:16", arrow: "→", tool: "list_inboxes",   args: "",                            ok: "2 inboxes", ms: "84ms"  },
-    { ts: "14:02:18", arrow: "→", tool: "list_inbox",     args: "inbox_id=3f7a · limit=20",    ok: "20 msgs",   ms: "182ms" },
+    { ts: "14:02:18", arrow: "→", tool: "list_messages",     args: "inbox_id=3f7a · limit=20",    ok: "20 msgs",   ms: "182ms" },
     { ts: "14:02:21", arrow: "→", tool: "read_email",     args: "uid=4821",                    ok: "1.2kb",     ms: "97ms"  },
     { ts: "14:02:23", arrow: "→", tool: "search_emails",  args: "from:stripe after:2026-05",   ok: "3 hits",    ms: "238ms" },
     { ts: "14:02:25", arrow: "→", tool: "reply_to_email", args: "uid=4821",                    ok: "queued",    ms: "311ms" },
@@ -335,10 +336,146 @@ export function Features() {
   );
 }
 
+/* ============== DASHBOARD PREVIEW ============== */
+/**
+ * A self-consistent, on-brand mockup of the dashboard so prospects can see the
+ * product before signing up. Rendered in HTML/CSS (not a screenshot) so it
+ * never drifts from the real naming — note "Team" plan and the real tool names
+ * (list_messages, read_email, send_email).
+ */
+export function DashboardPreview() {
+  const t = useTranslations('home');
+
+  const navItems = [
+    { label: 'Overview', icon: 'cpu', active: true },
+    { label: 'Inboxes', icon: 'inbox', count: 4 },
+    { label: 'API keys', icon: 'lock', count: 3 },
+    { label: 'Usage', icon: 'zap' },
+  ];
+  const stats = [
+    { label: 'Inboxes connected', value: '4' },
+    { label: 'MCP calls (30d)', value: '12,484' },
+    { label: 'Avg. response', value: '214ms' },
+    { label: 'Plan', value: 'Team' },
+  ];
+  const activity = [
+    { tool: 'list_messages', inbox: 'work-gmail', time: 'just now' },
+    { tool: 'read_email', inbox: 'work-gmail', time: '12s ago' },
+    { tool: 'send_email', inbox: 'ops-fastmail', time: '1m ago' },
+    { tool: 'search_emails', inbox: 'support-outlook', time: '3m ago' },
+  ];
+
+  return (
+    <section className="section" id="preview" style={{ paddingTop: 72, paddingBottom: 72 }}>
+      <div className="container">
+        <div className="section-head">
+          <div className="eye-label">{t('preview.eyebrow')}</div>
+          <h2>{t('preview.title')}</h2>
+          <p className="sub">{t('preview.sub')}</p>
+        </div>
+
+        {/* Browser-chrome framed mockup */}
+        <div style={{
+          marginTop: 36,
+          borderRadius: 14,
+          border: '1px solid var(--border-1)',
+          background: 'var(--bg-surface, #fff)',
+          boxShadow: '0 24px 60px -24px rgba(15,23,42,0.28)',
+          overflow: 'hidden',
+        }}>
+          {/* Top bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderBottom: '1px solid var(--border-1)', background: 'var(--bg-page)' }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {['#ff5f57', '#febc2e', '#28c840'].map(c => (
+                <span key={c} style={{ width: 11, height: 11, borderRadius: 999, background: c, opacity: 0.9 }} />
+              ))}
+            </div>
+            <div style={{
+              flex: 1, maxWidth: 360, margin: '0 auto', textAlign: 'center',
+              fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-3)',
+              background: 'var(--bg-surface, #fff)', border: '1px solid var(--border-1)',
+              borderRadius: 7, padding: '3px 10px',
+            }}>
+              app.mcpemails.com/dashboard
+            </div>
+            <div style={{ width: 60 }} />
+          </div>
+
+          {/* Body: sidebar + main */}
+          <div style={{ display: 'flex', minHeight: 360 }}>
+            {/* Sidebar */}
+            <div className="dash-preview-aside" style={{ width: 210, flexShrink: 0, borderRight: '1px solid var(--border-1)', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--bg-page)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px 14px' }}>
+                <MIcon name="mail" size={18} color="var(--cobalt-600)" />
+                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 15, color: 'var(--fg-1)' }}>mcpemails</span>
+              </div>
+              {navItems.map(it => (
+                <div key={it.label} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8,
+                  fontFamily: 'var(--font-sans)', fontSize: 13.5,
+                  color: it.active ? 'var(--cobalt-700)' : 'var(--fg-2)',
+                  background: it.active ? 'var(--brand-soft, rgba(37,99,235,0.08))' : 'transparent',
+                  fontWeight: it.active ? 600 : 500,
+                }}>
+                  <MIcon name={it.icon} size={15} color={it.active ? 'var(--cobalt-600)' : 'var(--fg-3)'} />
+                  <span style={{ flex: 1 }}>{it.label}</span>
+                  {it.count != null && (
+                    <span style={{ fontSize: 11, color: 'var(--fg-3)', background: 'var(--bg-sunken)', borderRadius: 999, padding: '1px 7px' }}>{it.count}</span>
+                  )}
+                </div>
+              ))}
+              <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 9, padding: '10px 8px 2px' }}>
+                <span style={{ width: 28, height: 28, borderRadius: 999, background: 'var(--cobalt-600)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600 }}>J</span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--fg-1)' }}>jordan</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>Team plan</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main */}
+            <div style={{ flex: 1, padding: '22px 24px', minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: 'var(--fg-1)' }}>Overview</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', marginTop: 2, marginBottom: 18 }}>
+                Real-time view of your connected inboxes and MCP traffic.
+              </div>
+
+              {/* Stat cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 18 }}>
+                {stats.map(s => (
+                  <div key={s.label} style={{ border: '1px solid var(--border-1)', borderRadius: 10, padding: '12px 14px', background: 'var(--bg-surface, #fff)' }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-3)', marginBottom: 6 }}>{s.label}</div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 700, color: 'var(--fg-1)' }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recent activity */}
+              <div style={{ border: '1px solid var(--border-1)', borderRadius: 10, overflow: 'hidden', background: 'var(--bg-surface, #fff)' }}>
+                <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-1)', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
+                  Recent activity
+                </div>
+                {activity.map((a, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderTop: i === 0 ? 'none' : '1px solid var(--border-1)' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--mint-500)', flexShrink: 0 }} />
+                    <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--cobalt-700)' }}>{a.tool}()</code>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>· {a.inbox}</span>
+                    <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-4, var(--fg-3))' }}>{a.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ============== HOW IT WORKS ============== */
 export function HowItWorks() {
   const t = useTranslations('home');
-  const toolNames = ['list_inboxes', 'list_inbox', 'read_email', 'search_emails', 'send_email', 'reply_to_email'];
+  const toolNames = ['list_inboxes', 'list_messages', 'read_email', 'search_emails', 'send_email', 'reply_to_email'];
   return (
     <section className="section how" id="how">
       <div className="container">
@@ -498,9 +635,9 @@ export function Footer() {
           </div>
           <div>
             <h5>{t('footer.productHeading')}</h5>
-            <a href="#features">{t('footer.linkFeatures')}</a>
-            <a href="#how">{t('footer.linkHow')}</a>
-            <a href="#pricing">{t('footer.linkPricing')}</a>
+            <Link href="/#features">{t('footer.linkFeatures')}</Link>
+            <Link href="/#how">{t('footer.linkHow')}</Link>
+            <Link href="/#pricing">{t('footer.linkPricing')}</Link>
             <Link href="/docs">{t('footer.linkDocs')}</Link>
           </div>
           <div>
@@ -509,6 +646,7 @@ export function Footer() {
             <Link href="/docs#quickstart">{t('footer.linkQuickstart')}</Link>
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
             <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
+            <Link href="/blog">Blog</Link>
           </div>
           <div>
             <h5>{t('footer.companyHeading')}</h5>

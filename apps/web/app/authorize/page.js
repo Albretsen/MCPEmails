@@ -20,12 +20,22 @@ const VALID_SCOPES = new Set([
   'read:email',
   'search:email',
   'send:email',
+  'manage:folders',
+  'delete:email',
+  'manage:drafts',
+  'manage:contacts',
+  'schedule:email',
 ]);
 
 const SCOPE_META = {
-  'read:email':   { icon: 'inbox',  title: 'Read your inbox',          desc: 'list_inboxes, list_inbox, read_email.', required: false },
-  'search:email': { icon: 'search', title: 'Search your emails',       desc: 'search_emails across your messages.', required: false },
-  'send:email':   { icon: 'mail',   title: 'Send email on your behalf', desc: 'send_email, reply_to_email.', required: false },
+  'read:email':      { icon: 'inbox',  title: 'Read your inbox',           desc: 'list_inboxes, list_inbox, read_email, search_emails.', required: false },
+  'search:email':    { icon: 'search', title: 'Search your emails',        desc: 'search_emails across your messages.', required: false },
+  'send:email':      { icon: 'mail',   title: 'Send email on your behalf',  desc: 'send_email, reply_to_email, forward_email.', required: false },
+  'manage:folders':  { icon: 'menu',   title: 'Manage folders & labels',    desc: 'create/rename/delete folders, move and copy messages.', required: false },
+  'delete:email':    { icon: 'trash',  title: 'Delete emails',              desc: 'delete and bulk-delete messages.', required: false },
+  'manage:drafts':   { icon: 'copy',   title: 'Manage drafts',              desc: 'create, update, list and delete drafts.', required: false },
+  'manage:contacts': { icon: 'users',  title: 'Manage contacts',            desc: 'list and look up address-book contacts.', required: false },
+  'schedule:email':  { icon: 'bell',   title: 'Schedule emails',            desc: 'schedule sends and manage scheduled messages.', required: false },
 };
 
 export default async function AuthorizePage({ searchParams }) {

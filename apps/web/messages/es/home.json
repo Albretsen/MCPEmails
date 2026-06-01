@@ -183,5 +183,10 @@
     "es": "Español",
     "fr": "Français",
     "zh": "中文"
+  },
+  "preview": {
+    "eyebrow": "Vista del producto",
+    "title": "Ve toda tu operación MCP de un vistazo.",
+    "sub": "Un panel en tiempo real para cada bandeja conectada, clave de API y llamada a herramientas, para que siempre sepas qué hacen tus agentes."
   }
 }

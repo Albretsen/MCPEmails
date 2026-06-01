@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "title": "Blog",
+    "description": "Guides, analyses approfondies et notes de terrain sur les agents IA, le Model Context Protocol et la connexion d’une vraie messagerie à Claude, Cursor et tout client MCP."
+  },
+  "blogName": "Blog mcpemails",
+  "index": {
+    "eyebrow": "Le blog MCPEmails",
+    "title": "Notes sur les agents, l’e-mail et MCP",
+    "lead": "Guides, analyses approfondies et notes de terrain sur la connexion d’une vraie messagerie à Claude, Cursor et tout client compatible MCP.",
+    "filterAria": "Filtrer les articles par thème",
+    "all": "Tous",
+    "empty": "Aucun article avec l’étiquette “{tag}” pour l’instant.",
+    "minRead": "{minutes} min"
+  },
+  "post": {
+    "home": "Accueil",
+    "blog": "Blog",
+    "toc": "Sur cette page",
+    "writtenBy": "Écrit par",
+    "back": "← Retour à tous les articles",
+    "minRead": "{minutes} min de lecture",
+    "cta": {
+      "title": "Donnez une boîte de réception à votre agent",
+      "sub": "Connectez Gmail, Outlook, Fastmail ou n’importe quel compte IMAP à votre agent IA en quelques minutes.",
+      "primary": "Commencer gratuitement",
+      "secondary": "Lire la documentation"
+    }
+  }
+}

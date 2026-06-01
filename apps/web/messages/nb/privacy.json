@@ -26,7 +26,7 @@
     "logsTitle": "2.4 Bruks- og revisjonslogger",
     "logsP": "For hvert MCP-verktøykall agenten din gjør, registrerer vi: verktøyets navn (f.eks. <c>read_email</c>), API-nøkkelen som gjorde kallet, innboksen som ble aksessert, tidsstempelet, og om kallet lyktes. Vi registrerer<b> ikke</b> e-postemner, -innhold, -mottakere eller annet e-postinnhold i disse loggene.",
     "emailContentTitle": "2.5 E-postinnhold: ikke lagret",
-    "emailContentP": "Når agenten din kaller <c>read_email</c>, <c>list_inbox</c> eller et annet e-postverktøy, henter vi det forespurte innholdet direkte fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning.",
+    "emailContentP": "Når agenten din kaller <c>read_email</c>, <c>list_messages</c> eller et annet e-postverktøy, henter vi det forespurte innholdet direkte fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning.",
     "technicalTitle": "2.6 Tekniske og driftsmessige data",
     "technicalP": "Vi samler inn standard driftsdata på serversiden, inkludert IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Disse dataene oppbevares i aggregert, anonymisert form og knyttes ikke til individuelle kontoer etter 30 dager.",
     "cookiesTitle": "2.7 Informasjonskapsler og lokal lagring",

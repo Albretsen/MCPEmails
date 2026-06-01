@@ -57,7 +57,7 @@ const CLIENT_SNIPPETS = {
 #        https://www.mcpemails.com/api/mcp
 #
 #   3. Click Connect and sign in with your mcpemails account.
-#   4. All six tools are live immediately.
+#   4. Every tool your approved scopes allow is live immediately.
 #
 # Claude Desktop and Cursor follow the same OAuth flow when
 # the server URL is configured in their MCP settings.`,
@@ -100,54 +100,84 @@ curl -X POST https://www.mcpemails.com/api/mcp \\
   }'`,
 };
 
-/* ─── Tool reference data ────────────────────────────────────── */
+/* ─── Scope styling ──────────────────────────────────────────── */
+// Each tool is gated by exactly one scope. tools/list only returns the tools
+// your key (or OAuth token) is scoped for. Colours map to the four token
+// families available in the marketing theme.
 
-const TOOLS = [
+const SCOPE_STYLES = {
+  'read:email':     { bg: 'var(--mint-50)',   fg: 'var(--mint-700)',   border: '1px solid rgba(31,203,139,0.25)' },
+  'send:email':     { bg: 'var(--amber-50)',  fg: 'var(--amber-700)',  border: '1px solid rgba(217,119,6,0.2)' },
+  'manage:folders': { bg: 'var(--cobalt-50)', fg: 'var(--cobalt-700)', border: '1px solid rgba(37,71,229,0.18)' },
+  'manage:drafts':  { bg: 'var(--cobalt-50)', fg: 'var(--cobalt-700)', border: '1px solid rgba(37,71,229,0.18)' },
+  'manage:contacts':{ bg: 'var(--mint-50)',   fg: 'var(--mint-700)',   border: '1px solid rgba(31,203,139,0.25)' },
+  'schedule:email': { bg: 'var(--amber-50)',  fg: 'var(--amber-700)',  border: '1px solid rgba(217,119,6,0.2)' },
+  'delete:email':   { bg: 'var(--red-50)',    fg: 'var(--red-700)',    border: '1px solid rgba(229,72,77,0.25)' },
+};
+
+/* ─── Tool reference data ────────────────────────────────────── */
+// Grouped by required scope, in the same order the MCP server's tool registry
+// returns them. params/examples are structural; descriptions are resolved via
+// t('tools.<name>.desc') and t('tools.<name>.params.<param>').
+
+const TOOL_GROUPS = [
   {
-    name: 'list_inboxes',
     scope: 'read:email',
-    params: [],
-    example: {
-      request: `{
+    key: 'read',
+    tools: [
+      {
+        name: 'list_inboxes',
+        params: [],
+        example: {
+          request: `{
   "jsonrpc": "2.0", "id": 1, "method": "tools/call",
   "params": {
     "name": "list_inboxes",
     "arguments": {}
   }
 }`,
-      response: `{
+          response: `{
   "inboxes": [
     {
       "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
       "email_address": "alice@example.com",
       "display_name": "Alice (Work)",
-      "provider": "gmail"
+      "provider": "gmail",
+      "service": null,
+      "capabilities": {
+        "flags": true, "folders": false, "labels": true,
+        "move": true, "copy": false, "delete": true,
+        "trash_vs_expunge": "trash", "forward": true, "drafts": true,
+        "contacts_api": true, "contacts_db": true, "scheduling": true,
+        "search_syntax": "gmail"
+      }
     },
     {
       "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
-      "email_address": "alice@company.com",
-      "display_name": "Company Outlook",
-      "provider": "outlook"
+      "email_address": "alice@fastmail.com",
+      "display_name": "Fastmail",
+      "provider": "imap",
+      "service": "fastmail",
+      "capabilities": { "search_syntax": "imap", "copy": true }
     }
   ]
 }`,
-    },
-  },
-  {
-    name: 'list_inbox',
-    scope: 'read:email',
-    params: [
-      { name: 'inbox_id', type: 'string (uuid)', required: true },
-      { name: 'limit',    type: 'integer',       required: false },
-      { name: 'offset',   type: 'integer',       required: false },
-      { name: 'folder',   type: 'string',        required: false },
-      { name: 'unread_only', type: 'boolean',    required: false },
-    ],
-    example: {
-      request: `{
+        },
+      },
+      {
+        name: 'list_messages',
+        params: [
+          { name: 'inbox_id', type: 'string (uuid)', required: true },
+          { name: 'limit',    type: 'integer',       required: false },
+          { name: 'offset',   type: 'integer',       required: false },
+          { name: 'folder',   type: 'string',        required: false },
+          { name: 'unread_only', type: 'boolean',    required: false },
+        ],
+        example: {
+          request: `{
   "jsonrpc": "2.0", "id": 2, "method": "tools/call",
   "params": {
-    "name": "list_inbox",
+    "name": "list_messages",
     "arguments": {
       "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
       "limit": 5,
@@ -155,7 +185,7 @@ const TOOLS = [
     }
   }
 }`,
-      response: `{
+          response: `{
   "messages": [
     {
       "id": "18a3c2d7f9b1e4a0",
@@ -172,20 +202,19 @@ const TOOLS = [
   "has_more": true,
   "next_offset": 5
 }`,
-    },
-  },
-  {
-    name: 'read_email',
-    scope: 'read:email',
-    params: [
-      { name: 'inbox_id',           type: 'string (uuid)', required: true },
-      { name: 'message_id',         type: 'string',        required: true },
-      { name: 'include_html',       type: 'boolean',       required: false },
-      { name: 'include_attachments',type: 'boolean',       required: false },
-      { name: 'mark_as_read',       type: 'boolean',       required: false },
-    ],
-    example: {
-      request: `{
+        },
+      },
+      {
+        name: 'read_email',
+        params: [
+          { name: 'inbox_id',           type: 'string (uuid)', required: true },
+          { name: 'message_id',         type: 'string',        required: true },
+          { name: 'include_html',       type: 'boolean',       required: false },
+          { name: 'include_attachments',type: 'boolean',       required: false },
+          { name: 'mark_as_read',       type: 'boolean',       required: false },
+        ],
+        example: {
+          request: `{
   "jsonrpc": "2.0", "id": 3, "method": "tools/call",
   "params": {
     "name": "read_email",
@@ -196,7 +225,7 @@ const TOOLS = [
     }
   }
 }`,
-      response: `{
+          response: `{
   "id": "18a3c2d7f9b1e4a0",
   "from": { "name": "Alice Nguyen", "email": "alice@example.com" },
   "to": [{ "name": "Bob Smith", "email": "bob@example.com" }],
@@ -209,20 +238,19 @@ const TOOLS = [
   "is_read": true,
   "labels": ["INBOX", "IMPORTANT"]
 }`,
-    },
-  },
-  {
-    name: 'search_emails',
-    scope: 'read:email',
-    params: [
-      { name: 'inbox_id',       type: 'string (uuid)', required: true },
-      { name: 'query',          type: 'string',        required: true },
-      { name: 'limit',          type: 'integer',       required: false },
-      { name: 'offset',         type: 'integer',       required: false },
-      { name: 'include_folders',type: 'array',         required: false },
-    ],
-    example: {
-      request: `{
+        },
+      },
+      {
+        name: 'search_emails',
+        params: [
+          { name: 'inbox_id',       type: 'string (uuid)', required: true },
+          { name: 'query',          type: 'string',        required: true },
+          { name: 'limit',          type: 'integer',       required: false },
+          { name: 'offset',         type: 'integer',       required: false },
+          { name: 'include_folders',type: 'array',         required: false },
+        ],
+        example: {
+          request: `{
   "jsonrpc": "2.0", "id": 4, "method": "tools/call",
   "params": {
     "name": "search_emails",
@@ -233,7 +261,7 @@ const TOOLS = [
     }
   }
 }`,
-      response: `{
+          response: `{
   "messages": [
     {
       "id": "18a3c2d7f9b1e4a0",
@@ -250,25 +278,55 @@ const TOOLS = [
   "next_offset": 10,
   "query_normalized": "from:alice@example.com subject:forecast"
 }`,
-    },
+        },
+      },
+      {
+        name: 'list_folders',
+        params: [
+          { name: 'inbox_id', type: 'string (uuid)', required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 5, "method": "tools/call",
+  "params": {
+    "name": "list_folders",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d"
+    }
+  }
+}`,
+          response: `{
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "folders": [
+    { "id": "INBOX",   "name": "INBOX",   "type": "folder", "total_messages": 412, "unread_messages": 12 },
+    { "id": "Archive", "name": "Archive", "type": "folder", "total_messages": 9803, "unread_messages": 0 },
+    { "id": "Sent",    "name": "Sent",    "type": "folder", "total_messages": 880, "unread_messages": null }
+  ]
+}`,
+        },
+      },
+    ],
   },
   {
-    name: 'send_email',
     scope: 'send:email',
-    params: [
-      { name: 'inbox_id', type: 'string (uuid)',  required: true },
-      { name: 'to',       type: 'array[string]',  required: true },
-      { name: 'subject',  type: 'string',         required: true },
-      { name: 'body',     type: 'string',         required: true },
-      { name: 'cc',       type: 'array[string]',  required: false },
-      { name: 'bcc',      type: 'array[string]',  required: false },
-      { name: 'html_body',type: 'string',         required: false },
-      { name: 'reply_to', type: 'string',         required: false },
-      { name: 'attachments', type: 'array',       required: false },
-    ],
-    example: {
-      request: `{
-  "jsonrpc": "2.0", "id": 5, "method": "tools/call",
+    key: 'send',
+    tools: [
+      {
+        name: 'send_email',
+        params: [
+          { name: 'inbox_id', type: 'string (uuid)',  required: true },
+          { name: 'to',       type: 'array[string]',  required: true },
+          { name: 'subject',  type: 'string',         required: true },
+          { name: 'body',     type: 'string',         required: true },
+          { name: 'cc',       type: 'array[string]',  required: false },
+          { name: 'bcc',      type: 'array[string]',  required: false },
+          { name: 'html_body',type: 'string',         required: false },
+          { name: 'reply_to', type: 'string',         required: false },
+          { name: 'attachments', type: 'array',       required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 6, "method": "tools/call",
   "params": {
     "name": "send_email",
     "arguments": {
@@ -279,7 +337,7 @@ const TOOLS = [
     }
   }
 }`,
-      response: `{
+          response: `{
   "message_id": "18b4d3e8g0c2f5b1",
   "thread_id": "18b4d3e8g0c2f5b1",
   "sent_at": "2026-05-24T11:15:00Z",
@@ -288,22 +346,21 @@ const TOOLS = [
   "subject": "Follow-up on Q2 Forecast",
   "status": "sent"
 }`,
-    },
-  },
-  {
-    name: 'reply_to_email',
-    scope: 'send:email',
-    params: [
-      { name: 'inbox_id',   type: 'string (uuid)', required: true },
-      { name: 'message_id', type: 'string',        required: true },
-      { name: 'body',       type: 'string',        required: true },
-      { name: 'html_body',  type: 'string',        required: false },
-      { name: 'reply_all',  type: 'boolean',       required: false },
-      { name: 'attachments',type: 'array',         required: false },
-    ],
-    example: {
-      request: `{
-  "jsonrpc": "2.0", "id": 6, "method": "tools/call",
+        },
+      },
+      {
+        name: 'reply_to_email',
+        params: [
+          { name: 'inbox_id',   type: 'string (uuid)', required: true },
+          { name: 'message_id', type: 'string',        required: true },
+          { name: 'body',       type: 'string',        required: true },
+          { name: 'html_body',  type: 'string',        required: false },
+          { name: 'reply_all',  type: 'boolean',       required: false },
+          { name: 'attachments',type: 'array',         required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 7, "method": "tools/call",
   "params": {
     "name": "reply_to_email",
     "arguments": {
@@ -314,7 +371,7 @@ const TOOLS = [
     }
   }
 }`,
-      response: `{
+          response: `{
   "message_id": "18b4d3e8g0c2f5b2",
   "thread_id": "18a3c2d7f9b1e4a0",
   "sent_at": "2026-05-24T11:17:00Z",
@@ -323,9 +380,794 @@ const TOOLS = [
   "subject": "Re: Q2 Forecast Report",
   "status": "sent"
 }`,
-    },
+        },
+      },
+      {
+        name: 'forward_email',
+        params: [
+          { name: 'inbox_id',           type: 'string (uuid)', required: true },
+          { name: 'message_id',         type: 'string',        required: true },
+          { name: 'to',                 type: 'array[string]', required: true },
+          { name: 'cc',                 type: 'array[string]', required: false },
+          { name: 'bcc',                type: 'array[string]', required: false },
+          { name: 'body',               type: 'string',        required: false },
+          { name: 'html_body',          type: 'string',        required: false },
+          { name: 'include_attachments',type: 'boolean',       required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 8, "method": "tools/call",
+  "params": {
+    "name": "forward_email",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "message_id": "18a3c2d7f9b1e4a0",
+      "to": ["dana@example.com"],
+      "body": "FYI — see the Q2 forecast below.",
+      "include_attachments": true
+    }
+  }
+}`,
+          response: `{
+  "message_id": "18b4d3e8g0c2f5c9",
+  "thread_id": "18b4d3e8g0c2f5c9",
+  "sent_at": "2026-05-24T11:20:00Z",
+  "forwarded_from": "18a3c2d7f9b1e4a0",
+  "to": [{ "name": "Dana Lee", "email": "dana@example.com" }],
+  "subject": "Fwd: Q2 Forecast Report",
+  "status": "sent"
+}`,
+        },
+      },
+      {
+        name: 'mark_read',
+        params: [
+          { name: 'inbox_id',   type: 'string (uuid)', required: true },
+          { name: 'message_id', type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 9, "method": "tools/call",
+  "params": {
+    "name": "mark_read",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "message_id": "18a3c2d7f9b1e4a0"
+    }
+  }
+}`,
+          response: `{
+  "success": true,
+  "message_id": "18a3c2d7f9b1e4a0",
+  "operation": "mark_read",
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c"
+}`,
+        },
+      },
+      {
+        name: 'mark_unread',
+        params: [
+          { name: 'inbox_id',   type: 'string (uuid)', required: true },
+          { name: 'message_id', type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 10, "method": "tools/call",
+  "params": {
+    "name": "mark_unread",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "message_id": "18a3c2d7f9b1e4a0"
+    }
+  }
+}`,
+          response: `{
+  "success": true,
+  "message_id": "18a3c2d7f9b1e4a0",
+  "operation": "mark_unread",
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c"
+}`,
+        },
+      },
+      {
+        name: 'flag_email',
+        params: [
+          { name: 'inbox_id',   type: 'string (uuid)', required: true },
+          { name: 'message_id', type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 11, "method": "tools/call",
+  "params": {
+    "name": "flag_email",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "message_id": "18a3c2d7f9b1e4a0"
+    }
+  }
+}`,
+          response: `{
+  "success": true,
+  "message_id": "18a3c2d7f9b1e4a0",
+  "operation": "flag_email",
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c"
+}`,
+        },
+      },
+      {
+        name: 'unflag_email',
+        params: [
+          { name: 'inbox_id',   type: 'string (uuid)', required: true },
+          { name: 'message_id', type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 12, "method": "tools/call",
+  "params": {
+    "name": "unflag_email",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "message_id": "18a3c2d7f9b1e4a0"
+    }
+  }
+}`,
+          response: `{
+  "success": true,
+  "message_id": "18a3c2d7f9b1e4a0",
+  "operation": "unflag_email",
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c"
+}`,
+        },
+      },
+      {
+        name: 'archive_email',
+        params: [
+          { name: 'inbox_id',   type: 'string (uuid)', required: true },
+          { name: 'message_id', type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 13, "method": "tools/call",
+  "params": {
+    "name": "archive_email",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "message_id": "18a3c2d7f9b1e4a0"
+    }
+  }
+}`,
+          response: `{
+  "success": true,
+  "message_id": "18a3c2d7f9b1e4a0",
+  "operation": "archive_email",
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c"
+}`,
+        },
+      },
+      {
+        name: 'bulk_flag',
+        params: [
+          { name: 'inbox_id',    type: 'string (uuid)', required: true },
+          { name: 'message_ids', type: 'array[string]', required: true },
+          { name: 'action',      type: 'enum',          required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 14, "method": "tools/call",
+  "params": {
+    "name": "bulk_flag",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "message_ids": ["18a3c2d7f9b1e4a0", "18a3c2d7f9b1e4a1"],
+      "action": "read"
+    }
+  }
+}`,
+          response: `{
+  "succeeded": 2,
+  "failed": 0,
+  "operation": "bulk_flag",
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+  "results": [
+    { "message_id": "18a3c2d7f9b1e4a0", "success": true },
+    { "message_id": "18a3c2d7f9b1e4a1", "success": true }
+  ]
+}`,
+        },
+      },
+    ],
+  },
+  {
+    scope: 'manage:folders',
+    key: 'folders',
+    tools: [
+      {
+        name: 'create_folder',
+        params: [
+          { name: 'inbox_id', type: 'string (uuid)', required: true },
+          { name: 'name',     type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 15, "method": "tools/call",
+  "params": {
+    "name": "create_folder",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "name": "Receipts"
+    }
+  }
+}`,
+          response: `{
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "folder_id": "Receipts",
+  "name": "Receipts",
+  "type": "folder"
+}`,
+        },
+      },
+      {
+        name: 'rename_folder',
+        params: [
+          { name: 'inbox_id',  type: 'string (uuid)', required: true },
+          { name: 'folder_id', type: 'string',        required: true },
+          { name: 'new_name',  type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 16, "method": "tools/call",
+  "params": {
+    "name": "rename_folder",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "folder_id": "Receipts",
+      "new_name": "Receipts 2026"
+    }
+  }
+}`,
+          response: `{
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "folder_id": "Receipts 2026",
+  "name": "Receipts 2026",
+  "type": "folder"
+}`,
+        },
+      },
+      {
+        name: 'delete_folder',
+        params: [
+          { name: 'inbox_id',  type: 'string (uuid)', required: true },
+          { name: 'folder_id', type: 'string',        required: true },
+          { name: 'confirm',   type: 'boolean',       required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 17, "method": "tools/call",
+  "params": {
+    "name": "delete_folder",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "folder_id": "Receipts 2026",
+      "confirm": true
+    }
+  }
+}`,
+          response: `{
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "folder_id": "Receipts 2026",
+  "deleted": true
+}`,
+        },
+      },
+      {
+        name: 'move_email',
+        params: [
+          { name: 'inbox_id',             type: 'string (uuid)', required: true },
+          { name: 'message_id',           type: 'string',        required: true },
+          { name: 'destination_folder_id',type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 18, "method": "tools/call",
+  "params": {
+    "name": "move_email",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "message_id": "4412",
+      "destination_folder_id": "Archive"
+    }
+  }
+}`,
+          response: `{
+  "success": true,
+  "message_id": "4412",
+  "operation": "move_email",
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "destination_folder_id": "Archive"
+}`,
+        },
+      },
+      {
+        name: 'copy_email',
+        params: [
+          { name: 'inbox_id',             type: 'string (uuid)', required: true },
+          { name: 'message_id',           type: 'string',        required: true },
+          { name: 'destination_folder_id',type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 19, "method": "tools/call",
+  "params": {
+    "name": "copy_email",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "message_id": "4412",
+      "destination_folder_id": "Receipts"
+    }
+  }
+}`,
+          response: `{
+  "success": true,
+  "message_id": "4412",
+  "operation": "copy_email",
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "destination_folder_id": "Receipts"
+}`,
+        },
+      },
+      {
+        name: 'bulk_move',
+        params: [
+          { name: 'inbox_id',             type: 'string (uuid)', required: true },
+          { name: 'message_ids',          type: 'array[string]', required: true },
+          { name: 'destination_folder_id',type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 20, "method": "tools/call",
+  "params": {
+    "name": "bulk_move",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "message_ids": ["4412", "4418", "4420"],
+      "destination_folder_id": "Archive"
+    }
+  }
+}`,
+          response: `{
+  "succeeded": 3,
+  "failed": 0,
+  "operation": "bulk_move",
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "destination_folder_id": "Archive",
+  "results": [
+    { "message_id": "4412", "success": true },
+    { "message_id": "4418", "success": true },
+    { "message_id": "4420", "success": true }
+  ]
+}`,
+        },
+      },
+      {
+        name: 'search_and_move',
+        params: [
+          { name: 'inbox_id',             type: 'string (uuid)', required: true },
+          { name: 'query',                type: 'string',        required: true },
+          { name: 'destination_folder_id',type: 'string',        required: true },
+          { name: 'include_folders',      type: 'array',         required: false },
+          { name: 'limit',                type: 'integer',       required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 21, "method": "tools/call",
+  "params": {
+    "name": "search_and_move",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "query": "from:newsletter@example.com",
+      "destination_folder_id": "Archive"
+    }
+  }
+}`,
+          response: `{
+  "succeeded": 42,
+  "failed": 0,
+  "operation": "search_and_move",
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "destination_folder_id": "Archive",
+  "results": [{ "message_id": "5001", "success": true }]
+}`,
+        },
+      },
+    ],
+  },
+  {
+    scope: 'delete:email',
+    key: 'delete',
+    tools: [
+      {
+        name: 'delete_email',
+        params: [
+          { name: 'inbox_id',   type: 'string (uuid)', required: true },
+          { name: 'message_id', type: 'string',        required: true },
+          { name: 'permanent',  type: 'boolean',       required: false },
+          { name: 'confirm',    type: 'boolean',       required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 22, "method": "tools/call",
+  "params": {
+    "name": "delete_email",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "message_id": "4412",
+      "permanent": false,
+      "confirm": true
+    }
+  }
+}`,
+          response: `{
+  "success": true,
+  "message_id": "4412",
+  "operation": "delete_email",
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "permanent": false
+}`,
+        },
+      },
+      {
+        name: 'bulk_delete',
+        params: [
+          { name: 'inbox_id',    type: 'string (uuid)', required: true },
+          { name: 'message_ids', type: 'array[string]', required: true },
+          { name: 'permanent',   type: 'boolean',       required: false },
+          { name: 'confirm',     type: 'boolean',       required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 23, "method": "tools/call",
+  "params": {
+    "name": "bulk_delete",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "message_ids": ["4412", "4418"],
+      "confirm": true
+    }
+  }
+}`,
+          response: `{
+  "succeeded": 2,
+  "failed": 0,
+  "operation": "bulk_delete",
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "permanent": false,
+  "results": [
+    { "message_id": "4412", "success": true },
+    { "message_id": "4418", "success": true }
+  ]
+}`,
+        },
+      },
+      {
+        name: 'search_and_delete',
+        params: [
+          { name: 'inbox_id',       type: 'string (uuid)', required: true },
+          { name: 'query',          type: 'string',        required: true },
+          { name: 'permanent',      type: 'boolean',       required: false },
+          { name: 'include_folders',type: 'array',         required: false },
+          { name: 'limit',          type: 'integer',       required: false },
+          { name: 'confirm',        type: 'boolean',       required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 24, "method": "tools/call",
+  "params": {
+    "name": "search_and_delete",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "query": "older_than:2y from:promo@example.com",
+      "confirm": true
+    }
+  }
+}`,
+          response: `{
+  "succeeded": 318,
+  "failed": 0,
+  "operation": "search_and_delete",
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "permanent": false,
+  "results": [{ "message_id": "2001", "success": true }]
+}`,
+        },
+      },
+    ],
+  },
+  {
+    scope: 'manage:drafts',
+    key: 'drafts',
+    tools: [
+      {
+        name: 'list_drafts',
+        params: [
+          { name: 'inbox_id', type: 'string (uuid)', required: true },
+          { name: 'limit',    type: 'integer',       required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 25, "method": "tools/call",
+  "params": {
+    "name": "list_drafts",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c"
+    }
+  }
+}`,
+          response: `{
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+  "drafts": [
+    {
+      "draft_id": "r-8821",
+      "subject": "Re: Contract review",
+      "to": [{ "name": "Erin Park", "email": "erin@example.com" }],
+      "cc": [],
+      "created_at": "2026-05-24T09:00:00Z"
+    }
+  ]
+}`,
+        },
+      },
+      {
+        name: 'create_draft',
+        params: [
+          { name: 'inbox_id', type: 'string (uuid)',  required: true },
+          { name: 'subject',  type: 'string',         required: true },
+          { name: 'body',     type: 'string',         required: true },
+          { name: 'to',       type: 'array[string]',  required: false },
+          { name: 'cc',       type: 'array[string]',  required: false },
+          { name: 'bcc',      type: 'array[string]',  required: false },
+          { name: 'html_body',type: 'string',         required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 26, "method": "tools/call",
+  "params": {
+    "name": "create_draft",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "to": ["erin@example.com"],
+      "subject": "Contract review",
+      "body": "Hi Erin, draft notes attached."
+    }
+  }
+}`,
+          response: `{
+  "draft_id": "r-8830",
+  "subject": "Contract review",
+  "to": [{ "name": null, "email": "erin@example.com" }],
+  "created_at": "2026-05-24T11:40:00Z"
+}`,
+        },
+      },
+      {
+        name: 'update_draft',
+        params: [
+          { name: 'inbox_id', type: 'string (uuid)',  required: true },
+          { name: 'draft_id', type: 'string',         required: true },
+          { name: 'subject',  type: 'string',         required: true },
+          { name: 'body',     type: 'string',         required: true },
+          { name: 'to',       type: 'array[string]',  required: false },
+          { name: 'cc',       type: 'array[string]',  required: false },
+          { name: 'bcc',      type: 'array[string]',  required: false },
+          { name: 'html_body',type: 'string',         required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 27, "method": "tools/call",
+  "params": {
+    "name": "update_draft",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "draft_id": "r-8830",
+      "subject": "Contract review — v2",
+      "body": "Hi Erin, revised notes attached.",
+      "to": ["erin@example.com"]
+    }
+  }
+}`,
+          response: `{
+  "draft_id": "r-8831",
+  "subject": "Contract review — v2",
+  "to": [{ "name": null, "email": "erin@example.com" }],
+  "created_at": "2026-05-24T11:45:00Z"
+}`,
+        },
+      },
+      {
+        name: 'send_draft',
+        params: [
+          { name: 'inbox_id', type: 'string (uuid)', required: true },
+          { name: 'draft_id', type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 28, "method": "tools/call",
+  "params": {
+    "name": "send_draft",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "draft_id": "r-8831"
+    }
+  }
+}`,
+          response: `{
+  "message_id": "18b4d3e8g0c2f5d4",
+  "draft_id": "r-8831",
+  "sent_at": "2026-05-24T11:46:00Z",
+  "status": "sent"
+}`,
+        },
+      },
+    ],
+  },
+  {
+    scope: 'manage:contacts',
+    key: 'contacts',
+    tools: [
+      {
+        name: 'search_contacts',
+        params: [
+          { name: 'query',    type: 'string',        required: true },
+          { name: 'inbox_id', type: 'string (uuid)', required: false },
+          { name: 'limit',    type: 'integer',       required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 29, "method": "tools/call",
+  "params": {
+    "name": "search_contacts",
+    "arguments": {
+      "query": "alice",
+      "limit": 5
+    }
+  }
+}`,
+          response: `{
+  "contacts": [
+    {
+      "email_address": "alice@example.com",
+      "display_name": "Alice Nguyen",
+      "message_count": 87,
+      "last_contacted_at": "2026-05-24T10:30:00Z"
+    }
+  ]
+}`,
+        },
+      },
+      {
+        name: 'get_contact',
+        params: [
+          { name: 'inbox_id',      type: 'string (uuid)', required: true },
+          { name: 'email_address', type: 'string',        required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 30, "method": "tools/call",
+  "params": {
+    "name": "get_contact",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "email_address": "alice@example.com"
+    }
+  }
+}`,
+          response: `{
+  "email_address": "alice@example.com",
+  "display_name": "Alice Nguyen",
+  "message_count": 87,
+  "last_contacted_at": "2026-05-24T10:30:00Z"
+}`,
+        },
+      },
+    ],
+  },
+  {
+    scope: 'schedule:email',
+    key: 'schedule',
+    tools: [
+      {
+        name: 'schedule_send',
+        params: [
+          { name: 'inbox_id',    type: 'string (uuid)',  required: true },
+          { name: 'to',          type: 'array[string]',  required: true },
+          { name: 'subject',     type: 'string',         required: true },
+          { name: 'body',        type: 'string',         required: true },
+          { name: 'send_at',     type: 'string (ISO 8601)', required: true },
+          { name: 'cc',          type: 'array[string]',  required: false },
+          { name: 'bcc',         type: 'array[string]',  required: false },
+          { name: 'html_body',   type: 'string',         required: false },
+          { name: 'attachments', type: 'array',          required: false },
+          { name: 'reply_to',    type: 'string',         required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 31, "method": "tools/call",
+  "params": {
+    "name": "schedule_send",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "to": ["carol@example.com"],
+      "subject": "Reminder: kickoff at 9am",
+      "body": "See you tomorrow.",
+      "send_at": "2026-06-02T07:00:00Z"
+    }
+  }
+}`,
+          response: `{
+  "scheduled": true,
+  "scheduled_send_id": "c91e0b2a-7f3d-4a18-9c44-2b6e1d8f0a55",
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+  "send_at": "2026-06-02T07:00:00Z",
+  "status": "pending"
+}`,
+        },
+      },
+      {
+        name: 'list_scheduled',
+        params: [
+          { name: 'inbox_id', type: 'string (uuid)', required: false },
+          { name: 'limit',    type: 'integer',       required: false },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 32, "method": "tools/call",
+  "params": {
+    "name": "list_scheduled",
+    "arguments": {}
+  }
+}`,
+          response: `{
+  "scheduled_sends": [
+    {
+      "scheduled_send_id": "c91e0b2a-7f3d-4a18-9c44-2b6e1d8f0a55",
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "send_at": "2026-06-02T07:00:00Z",
+      "status": "pending",
+      "to": ["carol@example.com"],
+      "subject": "Reminder: kickoff at 9am"
+    }
+  ],
+  "total": 1
+}`,
+        },
+      },
+      {
+        name: 'cancel_scheduled',
+        params: [
+          { name: 'scheduled_send_id', type: 'string (uuid)', required: true },
+        ],
+        example: {
+          request: `{
+  "jsonrpc": "2.0", "id": 33, "method": "tools/call",
+  "params": {
+    "name": "cancel_scheduled",
+    "arguments": {
+      "scheduled_send_id": "c91e0b2a-7f3d-4a18-9c44-2b6e1d8f0a55"
+    }
+  }
+}`,
+          response: `{
+  "cancelled": true,
+  "scheduled_send_id": "c91e0b2a-7f3d-4a18-9c44-2b6e1d8f0a55",
+  "previous_status": "pending"
+}`,
+        },
+      },
+    ],
   },
 ];
+
+// Flattened list — used for the in-page tool navigation.
+const ALL_TOOLS = TOOL_GROUPS.flatMap(g => g.tools.map(t => ({ ...t, scope: g.scope })));
 
 /* ─── Error codes ────────────────────────────────────────────── */
 
@@ -426,15 +1268,11 @@ function ParamBadge({ required }) {
 }
 
 function ScopeBadge({ scope }) {
-  const isSend = scope === 'send:email';
+  const s = SCOPE_STYLES[scope] ?? SCOPE_STYLES['read:email'];
   return (
     <span
       className="docs-badge"
-      style={{
-        background: isSend ? 'var(--amber-50)' : 'var(--mint-50)',
-        color: isSend ? 'var(--amber-700)' : 'var(--mint-700)',
-        border: isSend ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(31,203,139,0.25)',
-      }}
+      style={{ background: s.bg, color: s.fg, border: s.border }}
     >
       {scope}
     </span>
@@ -503,6 +1341,23 @@ function ToolSection({ tool }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ScopeGroupHeading({ group }) {
+  const t = useTranslations('docs');
+  return (
+    <div className="docs-scope-group" style={{ marginTop: 40, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 650, color: 'var(--fg-1)' }}>
+          {t(`tools.scopes.${group.key}.title`)}
+        </h3>
+        <ScopeBadge scope={group.scope} />
+      </div>
+      <p style={{ margin: '6px 0 0', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.6 }}>
+        {t(`tools.scopes.${group.key}.desc`)}
+      </p>
     </div>
   );
 }
@@ -611,6 +1466,29 @@ export default function DocsClient() {
               lang="bash"
             />
           </div>
+
+          {/* Polling vs. push clarification: the API is pull-only. */}
+          <div style={{
+            marginTop: 28,
+            display: 'flex',
+            gap: 12,
+            padding: '16px 18px',
+            borderRadius: 12,
+            border: '1px solid var(--border-1)',
+            background: 'var(--bg-surface)',
+          }}>
+            <div style={{ flexShrink: 0, marginTop: 2 }}>
+              <MIcon name="refresh" size={18} color="var(--cobalt-600)" />
+            </div>
+            <div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: 'var(--fg-1)', marginBottom: 4 }}>
+                {t('endpoint.pollingHeading')}
+              </div>
+              <p style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.6 }}>
+                {t.rich('endpoint.pollingBody', RICH)}
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -686,7 +1564,7 @@ export default function DocsClient() {
 
           {/* Tool nav */}
           <div className="docs-tool-nav">
-            {TOOLS.map(tool => (
+            {ALL_TOOLS.map(tool => (
               <a key={tool.name} className="docs-tool-nav-item" href={'#tool-' + tool.name}>
                 <code>{tool.name}</code>
                 <ScopeBadge scope={tool.scope} />
@@ -695,8 +1573,13 @@ export default function DocsClient() {
           </div>
 
           <div className="docs-tools-list">
-            {TOOLS.map(tool => (
-              <ToolSection key={tool.name} tool={tool} />
+            {TOOL_GROUPS.map(group => (
+              <div key={group.key}>
+                <ScopeGroupHeading group={group} />
+                {group.tools.map(tool => (
+                  <ToolSection key={tool.name} tool={{ ...tool, scope: group.scope }} />
+                ))}
+              </div>
             ))}
           </div>
         </div>

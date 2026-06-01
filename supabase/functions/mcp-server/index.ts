@@ -5902,7 +5902,21 @@ interface MimeMessageParams {
   from: string;
   to: string[];
   cc?: string[];
-  /** BCC recipients are passed to send APIs but omitted from MIME headers */
+  /**
+   * BCC recipients. By default these are NOT written to any MIME header (the
+   * direct-send path applies BCC at the SMTP envelope / send-API level only).
+   * They are emitted as a real `Bcc:` header ONLY when `includeBccHeader` is
+   * set — used exclusively when persisting an IMAP DRAFT so that send_draft,
+   * which reconstructs its recipient list by re-parsing the stored MIME, can
+   * recover the BCC addresses. The Bcc header is stripped again before the
+   * draft is transmitted (see imapSendDraft / stripBccHeader).
+   */
+  bcc?: string[];
+  /**
+   * When true, write a `Bcc:` header into the MIME (draft persistence only).
+   * Never set on the direct-send path — see the security note in buildMimeMessage.
+   */
+  includeBccHeader?: boolean;
   subject: string;
   textBody: string;
   htmlBody?: string;
@@ -5941,8 +5955,12 @@ interface MimeMessageParams {
  * reliable UTF-8 transport. Attachment data passes through as-is — the caller
  * provides base64 data from the MCP tool arguments.
  *
- * BCC addresses are intentionally NOT written to any MIME header; they are
- * handled at the send-API level (RCPT TO / toRecipients etc.) only.
+ * SECURITY: BCC addresses are NOT written to any MIME header for the direct
+ * send path; they are handled at the send-API level (RCPT TO / toRecipients
+ * etc.) only, so To/Cc recipients never see BCC addresses. The single, opt-in
+ * exception is `includeBccHeader: true`, used ONLY when storing an IMAP draft
+ * (the user's own private copy); that header is stripped before the draft is
+ * ever transmitted. No other caller may set `includeBccHeader`.
  */
 function buildMimeMessage(params: MimeMessageParams): string {
   const boundary = `mcpe_${crypto.randomUUID().replace(/-/g, "")}`;
@@ -5952,6 +5970,11 @@ function buildMimeMessage(params: MimeMessageParams): string {
   lines.push(`From: ${params.from}`);
   lines.push(`To: ${params.to.join(", ")}`);
   if (params.cc?.length) lines.push(`Cc: ${params.cc.join(", ")}`);
+  // Bcc is written ONLY for draft persistence (includeBccHeader). It is stripped
+  // before transmission so To/Cc recipients never see BCC addresses.
+  if (params.includeBccHeader && params.bcc?.length) {
+    lines.push(`Bcc: ${params.bcc.join(", ")}`);
+  }
   lines.push(`Subject: ${encodeMimeHeaderValue(params.subject)}`);
   lines.push(`Date: ${new Date().toUTCString()}`);
   lines.push(`Message-ID: <${params.messageId}@mcpemails.com>`);
@@ -9612,10 +9635,17 @@ async function gmailListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
   const listData = (await listResp.json()) as {
     labels?: { id: string; name: string; type?: string }[];
   };
-  const labels = (listData.labels ?? []).slice(0, 30);
+  // Return EVERY label — never silently drop folders (a dropped label makes a
+  // valid move/rename target look nonexistent). The per-label detail fan-out
+  // (message counts) is the expensive part, so only the COUNT enrichment is
+  // capped: the first GMAIL_LABEL_COUNT_LIMIT labels get counts; the rest are
+  // listed with null counts (explicit, not a dropped folder).
+  const labels = listData.labels ?? [];
+  const GMAIL_LABEL_COUNT_LIMIT = 50;
+  const enrichCount = Math.min(labels.length, GMAIL_LABEL_COUNT_LIMIT);
 
   const detailResults = await Promise.allSettled(
-    labels.map(async (lbl) => {
+    labels.slice(0, enrichCount).map(async (lbl) => {
       const dr = await fetch(
         `https://gmail.googleapis.com/gmail/v1/users/me/labels/${encodeURIComponent(lbl.id)}`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
@@ -9626,9 +9656,10 @@ async function gmailListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
   );
 
   return labels.map((lbl, i) => {
+    const settled = i < enrichCount ? detailResults[i] : undefined;
     const detail =
-      detailResults[i].status === "fulfilled"
-        ? (detailResults[i] as PromiseFulfilledResult<{ messagesTotal?: number; messagesUnread?: number } | null>).value
+      settled && settled.status === "fulfilled"
+        ? (settled as PromiseFulfilledResult<{ messagesTotal?: number; messagesUnread?: number } | null>).value
         : null;
     return {
       id: lbl.id,
@@ -10620,6 +10651,11 @@ async function gmailModifyLabels(
   );
   if (!resp.ok) {
     if (resp.status === 401) throw new Error("gmail_auth_failed");
+    // 404 = nonexistent message id (a common mistake). Map to the same
+    // "message_not_found" signal the other providers emit so handleFlagError /
+    // the move/flag handlers return a clean message_not_found result instead of
+    // a generic provider_error.
+    if (resp.status === 404) throw new Error("message_not_found");
     const body = await resp.text();
     throw new Error(`Gmail modify failed: ${body}`);
   }
@@ -11364,6 +11400,12 @@ async function gmailMoveEmail(
   messageId: string,
   destinationLabelId: string,
 ): Promise<void> {
+  // NOTE: This "move" assumes the message currently lives in INBOX — it adds the
+  // destination label and removes the INBOX label. Gmail's flat label model has
+  // no folders, so without a source-folder hint we cannot remove an arbitrary
+  // source label; if the message is NOT in INBOX this effectively acts as a
+  // copy (the destination label is added, but the original label remains). A
+  // general source-folder move is impossible here without knowing the source.
   await gmailModifyLabels(inbox, messageId, [destinationLabelId], ["INBOX"]);
 }
 
@@ -11739,8 +11781,10 @@ async function imapDeleteEmail(
       await client.uidStore([uid], ["\\Deleted"], "add");
       await client.uidExpunge([uid]);
     } else {
-      // Soft-delete: move to Trash (uidMove falls back to COPY+EXPUNGE if needed)
-      await client.uidMove([uid], "Trash");
+      // Soft-delete: move to the resolved Trash mailbox (handles namespaced/
+      // localized trash like INBOX.Trash via imapFolderName). uidMove falls
+      // back to COPY+EXPUNGE if RFC 6851 MOVE is unsupported.
+      await client.uidMove([uid], imapFolderName("TRASH"));
     }
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -12264,7 +12308,12 @@ async function imapBulkDelete(
         await client.uidStore(uids, ["\\Deleted"], "add");
         await client.uidExpunge(uids);
       } else {
-        await client.uidMove(uids, "Trash");
+        // Resolve the trash mailbox via the same imapFolderName resolver the
+        // single-message delete path uses for mailbox names, so servers with a
+        // namespaced/localized trash (e.g. INBOX.Trash) work instead of failing
+        // on a raw "Trash" literal. uidMove falls back to COPY+EXPUNGE if MOVE
+        // is unsupported.
+        await client.uidMove(uids, imapFolderName("TRASH"));
       }
       for (const item of items) succeeded.push(item.messageId);
     } catch (err) {
@@ -12351,8 +12400,10 @@ async function imapBulkFlag(
 // ── Gmail bulk helpers ────────────────────────────────────────────────────────
 
 /**
- * Gmail bulk move: messages.batchModify — adds destination label, removes INBOX.
- * Throws "gmail_auth_failed" on 401.
+ * Gmail bulk move: per-message messages.modify — adds destination label, removes INBOX.
+ * batchModify returns 200 with no per-id body and silently skips invalid ids, so
+ * we loop per message to report accurate succeeded/failed lists.
+ * Maps 401 → "gmail_auth_failed".
  */
 async function gmailBulkMove(
   inbox: InboxRow,
@@ -12360,25 +12411,32 @@ async function gmailBulkMove(
   destinationLabelId: string,
 ): Promise<BulkOpResult> {
   const accessToken = await withFreshGmailToken(inbox);
-  const resp = await fetch(
-    "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchModify",
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ids: messageIds,
-        addLabelIds: [destinationLabelId],
-        removeLabelIds: ["INBOX"],
-      }),
-    },
-  );
-  if (!resp.ok) {
-    const err = resp.status === 401
-      ? "gmail_auth_failed"
-      : `Gmail batchModify failed: ${resp.status}`;
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+  const succeeded: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const r = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/modify`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          addLabelIds: [destinationLabelId],
+          removeLabelIds: ["INBOX"],
+        }),
+      },
+    );
+    if (r.ok) {
+      succeeded.push(messageId);
+    } else {
+      failed.push({
+        id: messageId,
+        error: r.status === 401
+          ? "gmail_auth_failed"
+          : r.status === 404 ? "message_not_found" : `Gmail modify failed: ${r.status}`,
+      });
+    }
   }
-  return { succeeded: [...messageIds], failed: [] };
+  return { succeeded, failed };
 }
 
 /**
@@ -12393,22 +12451,28 @@ async function gmailBulkDelete(
   const accessToken = await withFreshGmailToken(inbox);
 
   if (permanent) {
-    // Gmail messages.batchDelete permanently removes all listed messages.
-    const resp = await fetch(
-      "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchDelete",
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: messageIds }),
-      },
-    );
-    if (!resp.ok) {
-      const err = resp.status === 401
-        ? "gmail_auth_failed"
-        : `Gmail batchDelete failed: ${resp.status}`;
-      return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+    // Gmail messages.batchDelete returns 204 with no per-id body and silently
+    // skips invalid ids, so we loop per message (messages.delete) to report
+    // accurate succeeded/failed lists.
+    const permSucceeded: string[] = [];
+    const permFailed: { id: string; error: string }[] = [];
+    for (const messageId of messageIds) {
+      const r = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}`,
+        { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      if (r.ok) {
+        permSucceeded.push(messageId);
+      } else {
+        permFailed.push({
+          id: messageId,
+          error: r.status === 401
+            ? "gmail_auth_failed"
+            : r.status === 404 ? "message_not_found" : `Gmail delete failed: ${r.status}`,
+        });
+      }
     }
-    return { succeeded: [...messageIds], failed: [] };
+    return { succeeded: permSucceeded, failed: permFailed };
   }
 
   // Soft-delete: Gmail has no batch-trash endpoint; call /trash per message with shared token.
@@ -12434,15 +12498,16 @@ async function gmailBulkDelete(
 }
 
 /**
- * Gmail bulk flag: messages.batchModify with appropriate label add/remove.
- * Throws "gmail_auth_failed" on 401.
+ * Gmail bulk flag: per-message messages.modify with appropriate label add/remove.
+ * batchModify returns 200 with no per-id body and silently skips invalid ids, so
+ * we loop per message to report accurate succeeded/failed lists.
+ * Maps 401 → "gmail_auth_failed".
  */
 async function gmailBulkFlag(
   inbox: InboxRow,
   messageIds: string[],
   action: string,
 ): Promise<BulkOpResult> {
-  const accessToken = await withFreshGmailToken(inbox);
   let addLabelIds: string[];
   let removeLabelIds: string[];
   switch (action) {
@@ -12453,21 +12518,30 @@ async function gmailBulkFlag(
     default:
       return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "invalid_action" })) };
   }
-  const resp = await fetch(
-    "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchModify",
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: messageIds, addLabelIds, removeLabelIds }),
-    },
-  );
-  if (!resp.ok) {
-    const err = resp.status === 401
-      ? "gmail_auth_failed"
-      : `Gmail batchModify failed: ${resp.status}`;
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+  const accessToken = await withFreshGmailToken(inbox);
+  const succeeded: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const r = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/modify`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ addLabelIds, removeLabelIds }),
+      },
+    );
+    if (r.ok) {
+      succeeded.push(messageId);
+    } else {
+      failed.push({
+        id: messageId,
+        error: r.status === 401
+          ? "gmail_auth_failed"
+          : r.status === 404 ? "message_not_found" : `Gmail modify failed: ${r.status}`,
+      });
+    }
   }
-  return { succeeded: [...messageIds], failed: [] };
+  return { succeeded, failed };
 }
 
 // ── Outlook bulk helpers ──────────────────────────────────────────────────────
@@ -13586,6 +13660,41 @@ async function imapListDrafts(
   }
 }
 
+/**
+ * Remove every `Bcc:` header (including folded continuation lines) from a raw
+ * RFC 5322 message, operating only on the header block (before the first blank
+ * line). A persisted IMAP draft may legitimately contain a Bcc header (it's the
+ * user's own copy), but the SENT copy MUST NOT — BCC may only affect the SMTP
+ * envelope. The BCC addresses are read from the stored MIME for RCPT TO and
+ * then this strips the header from the transmitted body.
+ */
+function stripBccHeader(rawMime: string): string {
+  // Split header block from body on the first blank line (CRLF or LF).
+  const sep = rawMime.search(/\r?\n\r?\n/);
+  if (sep === -1) return rawMime; // No body separator — treat whole thing as headers below.
+  const headerEnd = sep;
+  const headerBlock = rawMime.slice(0, headerEnd);
+  const rest = rawMime.slice(headerEnd); // includes the leading blank-line separator
+
+  const headerLines = headerBlock.split(/\r?\n/);
+  const kept: string[] = [];
+  let skipping = false;
+  for (const line of headerLines) {
+    const isContinuation = /^[ \t]/.test(line);
+    if (skipping) {
+      // Folded continuation of a Bcc header — keep dropping it.
+      if (isContinuation) continue;
+      skipping = false;
+    }
+    if (/^bcc[ \t]*:/i.test(line)) {
+      skipping = true; // Drop this header line and any folded continuations.
+      continue;
+    }
+    kept.push(line);
+  }
+  return kept.join("\r\n") + rest;
+}
+
 async function imapCreateDraft(
   inbox: InboxRow,
   params: DraftParams,
@@ -13603,6 +13712,10 @@ async function imapCreateDraft(
     from,
     to: params.to.length ? params.to : [inbox.email_address],
     cc: params.cc.length ? params.cc : undefined,
+    // Persist BCC into the draft MIME so imapSendDraft can recover the BCC
+    // recipients later. Stripped from the transmitted copy at send time.
+    bcc: params.bcc.length ? params.bcc : undefined,
+    includeBccHeader: true,
     subject: params.subject,
     textBody: params.body,
     htmlBody: params.htmlBody,
@@ -13671,6 +13784,10 @@ async function imapUpdateDraft(
     from,
     to: params.to.length ? params.to : [inbox.email_address],
     cc: params.cc.length ? params.cc : undefined,
+    // Persist BCC into the draft MIME so imapSendDraft can recover the BCC
+    // recipients later. Stripped from the transmitted copy at send time.
+    bcc: params.bcc.length ? params.bcc : undefined,
+    includeBccHeader: true,
     subject: params.subject,
     textBody: params.body,
     htmlBody: params.htmlBody,
@@ -13686,22 +13803,26 @@ async function imapUpdateDraft(
       password,
     });
 
-    // Append the updated draft.
+    // The draft physically lives in `folder` (decoded from the draft_id). Use
+    // that RAW name consistently for append, fallback search, AND expunge so
+    // all three target the same mailbox — otherwise (e.g. folder "Draft" vs
+    // imapFolderName("Draft")="Drafts") the old draft would be left orphaned.
+    // Mirrors imapCreateDraft, which uses the folder name consistently.
     let newUid: number | undefined;
     const res = await client.appendWithFlags(folder, mime, ["\\Draft", "\\Seen"]);
     if (res.ok) {
       newUid = res.uid;
     }
     if (newUid === undefined) {
-      await client.selectMailbox(imapFolderName(folder));
+      await client.selectMailbox(folder);
       const found = await client.uidSearch(
         `HEADER Message-ID "<${messageId}@mcpemails.com>"`,
       );
       newUid = found.length > 0 ? found[found.length - 1] : 0;
     }
 
-    // Delete the old draft.
-    await client.selectMailbox(imapFolderName(folder));
+    // Delete the old draft (same mailbox the new copy was appended to).
+    await client.selectMailbox(folder);
     await client.uidStore([oldUid], ["\\Deleted"], "add");
     await client.uidExpunge([oldUid]);
 
@@ -13764,11 +13885,17 @@ async function imapSendDraft(
 
   if (recipients.length === 0) throw new Error("draft_has_no_recipients");
 
-  // Step 3: Send via SMTP.
-  await imapSmtpSend(inbox, rawMime, recipients);
+  // Step 3: Send via SMTP. The BCC addresses parsed above are included in the
+  // envelope (RCPT TO via `recipients`), but the transmitted message body MUST
+  // NOT contain a Bcc header — strip it so To/Cc recipients never see the BCC
+  // addresses. (The draft still in the Drafts folder may keep its Bcc header;
+  // that's the user's own copy.)
+  const sentMime = stripBccHeader(rawMime);
+  await imapSmtpSend(inbox, sentMime, recipients);
 
-  // Step 4: Append to Sent folder (best-effort).
-  await appendToSentFolder(inbox, rawMime);
+  // Step 4: Append to Sent folder (best-effort). Use the BCC-stripped copy so
+  // the Sent record matches what was actually transmitted.
+  await appendToSentFolder(inbox, sentMime);
 
   // Step 5: Delete the draft (best-effort — failure must not fail the send).
   client = null;
@@ -14797,7 +14924,25 @@ async function executeSearchContacts(
   // with ILIKE so the match is case-insensitive on the DB side.
   // Filters are applied before transforms (.order, .limit) to stay within
   // PostgrestFilterBuilder's type surface.
-  const pattern = `%${query}%`;
+  //
+  // SECURITY: `query` is user-controlled and is embedded into the `.or()`
+  // PostgREST filter DSL.  Without sanitisation, characters like commas,
+  // parentheses, and double-quotes could add/alter OR branches (filter
+  // injection) or produce malformed-query 500s.  (A dot inside the value is
+  // safe: PostgREST splits column.op.value on the first two dots only, so
+  // remaining dots stay in the value.)  We neutralise the grammar:
+  //   1. Cap length to bound query cost / abuse.
+  //   2. Strip PostgREST DSL grammar characters that delimit/structure filters
+  //      ( , ( ) " \ ) and the PostgREST `*` wildcard.
+  //   3. Escape the LIKE metacharacters % and _ so they match literally.
+  // The result can only ever be the value content of the two ilike branches —
+  // it cannot introduce new conditions or remove the workspace/inbox filters,
+  // which are separate AND conditions outside the .or().
+  const sanitizedQuery = query
+    .slice(0, 200)
+    .replace(/[,()"\\*]/g, "") // remove PostgREST DSL delimiters + wildcard
+    .replace(/[%_]/g, "\\$&"); // escape LIKE metacharacters to match literally
+  const pattern = `%${sanitizedQuery}%`;
   let dbQuery = supabase
     .from("contacts")
     .select("id, inbox_id, email_address, display_name, message_count, last_contacted_at")
@@ -15084,6 +15229,14 @@ async function executeScheduleSend(
       logStatus: "error", logErrorCode: "-32602",
     };
   }
+  // Cap how far ahead a send may be scheduled to prevent queue bloat / abuse.
+  const MAX_SCHEDULE_HORIZON_MS = 365 * 24 * 60 * 60 * 1000; // one year
+  if (sendAtMs > Date.now() + MAX_SCHEDULE_HORIZON_MS) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: send_at must be within 365 days from now." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
   const sendAt = new Date(sendAtMs).toISOString();
 
   // ── RFC 5322 address validation ────────────────────────────────────────────
@@ -15115,7 +15268,7 @@ async function executeScheduleSend(
   }
 
   // ── Capability check ───────────────────────────────────────────────────────
-  const caps = getProviderCapabilities(inbox.provider, inbox.service ?? undefined);
+  const caps = getProviderCapabilities(inbox.provider);
   if (!caps.scheduling) {
     return unsupportedFeatureError("scheduling", inbox.provider);
   }
@@ -15332,6 +15485,17 @@ async function executeCancelScheduled(
 
   const row = existing as { id: string; inbox_id: string; status: string; send_at: string };
 
+  // Honour API key inbox restriction BEFORE revealing any status/existence.
+  // A key scoped to specific inboxes must not learn the status (or existence)
+  // of a same-workspace scheduled send belonging to an inbox outside its scope,
+  // so this check runs ahead of the status check below.
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0 && !apiKey.inbox_ids.includes(row.inbox_id)) {
+    return {
+      result: { content: [{ type: "text", text: `cancel_scheduled: scheduled send ${scheduledSendId} not found or not accessible.` }], isError: true },
+      logStatus: "error", logErrorCode: "not_found",
+    };
+  }
+
   if (row.status !== "pending") {
     return {
       result: {
@@ -15344,14 +15508,6 @@ async function executeCancelScheduled(
         isError: true,
       },
       logStatus: "error", logErrorCode: "not_cancellable",
-    };
-  }
-
-  // Honour API key inbox restriction.
-  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0 && !apiKey.inbox_ids.includes(row.inbox_id)) {
-    return {
-      result: { content: [{ type: "text", text: `cancel_scheduled: scheduled send ${scheduledSendId} is not accessible to this API key.` }], isError: true },
-      logStatus: "error", logErrorCode: "inbox_not_found",
     };
   }
 
@@ -15972,6 +16128,9 @@ async function handleToolsCall(
 //   pending → sending  (optimistic lock before send attempt)
 //   sending → sent     (on success, sent_at populated)
 //   sending → error    (on failure, error_detail populated)
+//   sending → error    (stale reclaim: row stuck in 'sending' past
+//                        STALE_SENDING_MS — failed, never retried, to avoid
+//                        a possible double-send after a mid-flight crash)
 //
 // See migration 20260603000001_create_scheduled_sends.sql for table schema,
 // RLS policies, and pg_cron setup instructions.
@@ -15979,8 +16138,36 @@ async function handleToolsCall(
 
 const MAX_DISPATCH_BATCH = 50;
 
+// A row that has been in 'sending' longer than this is considered stale: the
+// dispatch invocation that claimed it crashed mid-flight.  We do NOT reset it
+// to 'pending' — the email may already have been (partially) sent before the
+// crash, and re-dispatching would risk a double-send.  Instead we move it to
+// the terminal 'error' status so it stops being silently stuck and becomes
+// queryable, accepting that the operator must verify/resend manually if needed.
+const STALE_SENDING_MS = 15 * 60 * 1000;
+
 async function handleScheduledDispatch(): Promise<Response> {
   const now = new Date().toISOString();
+
+  // ── Reclaim stale 'sending' rows ──────────────────────────────────────────
+  // Mark rows stuck in 'sending' past the threshold as failed (terminal).  We
+  // intentionally fail (never reset to 'pending') to avoid re-sending an email
+  // that may already have gone out before the previous invocation crashed.
+  // Runs globally across all workspaces — correct for a cron dispatcher.
+  const staleCutoff = new Date(Date.now() - STALE_SENDING_MS).toISOString();
+  const { error: reclaimErr } = await supabase
+    .from("scheduled_sends")
+    .update({
+      status: "error",
+      error_detail: "dispatch interrupted; marked failed to avoid double-send",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("status", "sending")
+    .lt("updated_at", staleCutoff);
+  if (reclaimErr) {
+    // Non-fatal: log and continue with the pending dispatch below.
+    console.warn("[dispatch] Failed to reclaim stale sending rows:", reclaimErr.message);
+  }
 
   // Fetch pending rows due for sending, ordered by send_at ASC so the
   // oldest-due messages are dispatched first.
@@ -16014,15 +16201,23 @@ async function handleScheduledDispatch(): Promise<Response> {
   for (const row of pending) {
     // Optimistic lock: atomically transition pending → sending so a
     // concurrent cron invocation cannot pick up the same row.
-    const { error: lockErr } = await supabase
+    const { data: claimed, error: lockErr } = await supabase
       .from("scheduled_sends")
       .update({ status: "sending", updated_at: new Date().toISOString() })
       .eq("id", row.id)
-      .eq("status", "pending"); // only transitions from pending
+      .eq("status", "pending") // only transitions from pending
+      .select("id");
 
     if (lockErr) {
-      // Another worker beat us to it — skip silently.
+      // Genuine DB error — log and skip.
       console.warn(`[dispatch] Could not lock row ${row.id}:`, lockErr.message);
+      continue;
+    }
+
+    if (!claimed || claimed.length === 0) {
+      // A zero-row update means another worker already transitioned this row
+      // out of "pending" (PostgREST returns error:null on a 0-row match).
+      // Skip — do NOT send, do NOT count toward dispatched/errored.
       continue;
     }
 

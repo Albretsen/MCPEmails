@@ -157,6 +157,18 @@
       "body": "Cualquier clave de API autorizada actualmente para acceder a esta bandeja perderá el acceso de inmediato. Puedes reconectar esta bandeja en cualquier momento.",
       "disconnecting": "Desconectando…",
       "disconnect": "Desconectar"
+    },
+    "detail": {
+      "close": "Cerrar",
+      "openAria": "Ver detalles de {label}",
+      "connectionStatus": "Estado de conexión",
+      "authMethod": "Autenticación",
+      "authOauth": "Token OAuth",
+      "authAppPassword": "Contraseña de aplicación",
+      "connectedOn": "Conectada el",
+      "lastCall": "Última llamada correcta",
+      "lastCallNone": "Sin llamadas correctas en los últimos 30 días",
+      "disconnect": "Desconectar"
     }
   },
   "apiKeys": {
@@ -192,7 +204,12 @@
     "scopes": {
       "readDesc": "Listar, leer y buscar mensajes de correo",
       "searchDesc": "Buscar en el contenido de la bandeja",
-      "sendDesc": "Enviar y responder correos"
+      "sendDesc": "Enviar y responder correos",
+      "foldersDesc": "Crear, renombrar y eliminar carpetas; mover y copiar mensajes",
+      "deleteDesc": "Eliminar mensajes de correo, incluso en lote",
+      "draftsDesc": "Crear, actualizar y eliminar borradores",
+      "contactsDesc": "Listar y consultar contactos de la libreta de direcciones",
+      "scheduleDesc": "Programar envíos y gestionar correos programados"
     },
     "createModal": {
       "title": "Nueva clave de API",
@@ -203,6 +220,7 @@
       "permissions": "Permisos",
       "errNameRequired": "El nombre es obligatorio.",
       "errNameTooLong": "El nombre debe tener 128 caracteres o menos.",
+      "errNameDuplicate": "Ya existe una clave con este nombre. Elige un nombre distinto para que las claves se puedan diferenciar en el registro de auditoría.",
       "errScopeRequired": "Selecciona al menos un alcance.",
       "errCreateFailed": "No se pudo crear la clave de API. Inténtalo de nuevo.",
       "creating": "Creando…",
@@ -272,6 +290,7 @@
     "colCalls": "Llamadas",
     "colShare": "Cuota",
     "callsByInboxTitle": "Llamadas por bandeja",
+    "inboxArchived": "Archivada",
     "colInbox": "Bandeja",
     "colAddress": "Dirección"
   },
@@ -287,7 +306,10 @@
       "displayName": "Nombre para mostrar",
       "namePlaceholder": "Tu nombre",
       "email": "Dirección de correo",
-      "emailHint": "El correo no se puede cambiar aquí. Contacta a soporte para actualizar tu dirección de correo.",
+      "emailHint": "Cambiar tu correo envía un enlace de confirmación a la nueva dirección. El cambio solo se aplica después de que hagas clic en ese enlace.",
+      "emailChange": "Cambiar correo",
+      "emailSending": "Enviando…",
+      "emailConfirmSent": "Enlace de confirmación enviado a {email}. Haz clic en él para terminar de cambiar tu correo.",
       "cancel": "Cancelar",
       "saving": "Guardando…",
       "saveChanges": "Guardar cambios",
@@ -295,7 +317,9 @@
       "errTooLong": "El nombre para mostrar debe tener 100 caracteres o menos.",
       "errSaveFailed": "No se pudieron guardar los cambios.",
       "updated": "Perfil actualizado.",
-      "networkError": "Error de red. Inténtalo de nuevo."
+      "networkError": "Error de red. Inténtalo de nuevo.",
+      "errEmailInvalid": "Introduce una dirección de correo válida.",
+      "errEmailFailed": "No se pudo iniciar el cambio de correo."
     },
     "password": {
       "title": "Cambiar contraseña",

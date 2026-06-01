@@ -99,7 +99,7 @@ async function fetchActivityFeed(supabase, workspaceId) {
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {string} workspaceId
- * @returns {Promise<Array<{ id: string, label: string, address: string, provider: string, status: string, calls: number }>>}
+ * @returns {Promise<Array<{ id: string, label: string, address: string, provider: string, status: string, lastError: string|null, hasImap: boolean, calls: number, createdAt: string, lastCallAt: string|null }>>}
  */
 async function fetchInboxes(supabase, workspaceId) {
   const [{ data: rows, error }, { data: logRows }] = await Promise.all([
@@ -110,11 +110,12 @@ async function fetchInboxes(supabase, workspaceId) {
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
 
-    // Fetch inbox_id for all activity_log rows in the last 30 days so we can
-    // aggregate call counts per inbox without a GROUP BY RPC.
+    // Fetch inbox_id + status + created_at for all activity_log rows in the
+    // last 30 days so we can aggregate call counts and the last successful call
+    // per inbox without a GROUP BY RPC.
     supabase
       .from('activity_log')
-      .select('inbox_id')
+      .select('inbox_id, status, created_at')
       .eq('workspace_id', workspaceId)
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
       .not('inbox_id', 'is', null),
@@ -125,11 +126,17 @@ async function fetchInboxes(supabase, workspaceId) {
     return [];
   }
 
-  // Build a call-count map keyed by inbox_id.
+  // Build a call-count map and a last-successful-call map keyed by inbox_id.
+  // lastCallByInbox is scoped to the 30-day analytics window, matching the
+  // call count; older successes read as "no successful calls in 30 days".
   const callsByInbox = {};
+  const lastCallByInbox = {};
   for (const row of logRows ?? []) {
-    if (row.inbox_id) {
-      callsByInbox[row.inbox_id] = (callsByInbox[row.inbox_id] ?? 0) + 1;
+    if (!row.inbox_id) continue;
+    callsByInbox[row.inbox_id] = (callsByInbox[row.inbox_id] ?? 0) + 1;
+    if (row.status === 'success') {
+      const prev = lastCallByInbox[row.inbox_id];
+      if (!prev || row.created_at > prev) lastCallByInbox[row.inbox_id] = row.created_at;
     }
   }
 
@@ -152,6 +159,10 @@ async function fetchInboxes(supabase, workspaceId) {
     // Safe to expose: imap_host is not a secret (always 'imap.fastmail.com').
     hasImap: !!row.imap_host,
     calls: callsByInbox[row.id] ?? 0,
+    // When the inbox connection was first created.
+    createdAt: row.created_at,
+    // Most recent successful MCP call (within the 30-day window), or null.
+    lastCallAt: lastCallByInbox[row.id] ?? null,
   }));
 }
 
@@ -272,7 +283,7 @@ async function fetchOverviewStats(supabase, workspaceId) {
  *   dailyCounts: Array<{ date: string, count: number }>,
  *   totalCalls: number,
  *   byTool: Array<{ tool: string, count: number, pct: number }>,
- *   byInbox: Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>,
+ *   byInbox: Array<{ inboxId: string, label: string, address: string, archived: boolean, count: number, pct: number }>,
  * }>}
  */
 async function fetchUsageData(supabase, workspaceId) {
@@ -284,11 +295,14 @@ async function fetchUsageData(supabase, workspaceId) {
       .select('tool_name, inbox_id, created_at')
       .eq('workspace_id', workspaceId)
       .gte('created_at', thirtyDaysAgo),
+    // Include soft-deleted inboxes here (no deleted_at filter): a call can be
+    // attributed to an inbox that was since deleted/revoked, and we still want
+    // to show its original label/address (greyed-out) instead of "Unknown
+    // inbox" so the usage breakdown stays meaningful.
     supabase
       .from('inboxes')
-      .select('id, display_name, email_address')
-      .eq('workspace_id', workspaceId)
-      .is('deleted_at', null),
+      .select('id, display_name, email_address, deleted_at')
+      .eq('workspace_id', workspaceId),
   ]);
 
   if (activityResult.error) {
@@ -297,12 +311,15 @@ async function fetchUsageData(supabase, workspaceId) {
 
   const rows = activityResult.data ?? [];
 
-  // Build inbox label lookup: id → { label, address }
+  // Build inbox label lookup: id → { label, address, archived }
   const inboxMap = {};
   for (const ib of inboxesResult.data ?? []) {
     inboxMap[ib.id] = {
       label: ib.display_name ?? ib.email_address.split('@')[0],
       address: ib.email_address,
+      // Deleted/revoked inboxes still resolve their original label, but are
+      // flagged so the UI can render them as archived.
+      archived: !!ib.deleted_at,
     };
   }
 
@@ -342,13 +359,20 @@ async function fetchUsageData(supabase, workspaceId) {
     .sort((a, b) => b.count - a.count);
 
   const byInbox = Object.entries(countsByInbox)
-    .map(([inboxId, count]) => ({
-      inboxId,
-      label: inboxMap[inboxId]?.label ?? 'Unknown inbox',
-      address: inboxMap[inboxId]?.address ?? '',
-      count,
-      pct: totalCalls > 0 ? Math.round((count / totalCalls) * 100) : 0,
-    }))
+    .map(([inboxId, count]) => {
+      const entry = inboxMap[inboxId];
+      return {
+        inboxId,
+        // Resolve the original label even for deleted inboxes. Only a row that
+        // was hard-deleted (no soft-delete record at all) falls back to the id.
+        label: entry?.label ?? `Inbox ${inboxId.slice(0, 8)}`,
+        address: entry?.address ?? '',
+        // True when the inbox was deleted/revoked, or when no row exists at all.
+        archived: entry ? entry.archived : true,
+        count,
+        pct: totalCalls > 0 ? Math.round((count / totalCalls) * 100) : 0,
+      };
+    })
     .sort((a, b) => b.count - a.count);
 
   return { dailyCounts, totalCalls, byTool, byInbox };

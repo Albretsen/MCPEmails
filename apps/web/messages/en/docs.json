@@ -27,7 +27,7 @@
       "apikey": {
         "label": "Create an API key",
         "heading": "Generate a bearer token for your agent",
-        "body": "In Dashboard → API Keys, click \"Create key\". Name it, select the scopes your agent needs (read:email and/or send:email), and copy the key. It is shown only once."
+        "body": "In Dashboard → API Keys, click \"Create key\". Name it, select the scopes your agent needs — from read:email and send:email through manage:folders, delete:email, manage:drafts, manage:contacts, and schedule:email — and copy the key. It is shown only once."
       },
       "addclient": {
         "label": "Add MCPEmails to your agent",
@@ -60,7 +60,9 @@
     "infoAuth": "Auth: <b>Authorization: Bearer &lt;api-key&gt;</b>",
     "infoRateLimits": "Rate limits: <b>100 req/min · 1,000/hr · 10,000/day</b> per key",
     "infoFormat": "Response format: <b>JSON-RPC 2.0</b>",
-    "handshakeLabel": "Initialize handshake"
+    "handshakeLabel": "Initialize handshake",
+    "pollingHeading": "Polling, not push",
+    "pollingBody": "MCPEmails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b> — an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>list_messages</code> with <code>unread_only: true</code> at whatever interval your workflow needs (mind the rate limits above)."
   },
   "oauth": {
     "eyebrow": "OAuth connection",
@@ -70,17 +72,47 @@
     "step2": "<b>Step 2:</b> Paste <code>https://www.mcpemails.com/api/mcp</code> as the server URL",
     "step3": "<b>Step 3:</b> Click Connect. MCPEmails opens an authorization screen",
     "step4": "<b>Step 4:</b> Sign in with your mcpemails account and approve access",
-    "stepDone": "<b>Done:</b> All six tools are live. claude.ai refreshes tokens automatically",
+    "stepDone": "<b>Done:</b> Every tool your approved scopes allow is live. claude.ai refreshes tokens automatically",
     "howTitle": "How it works under the hood",
     "howP1": "claude.ai registers itself via <b>RFC 7591 Dynamic Client Registration</b>, so you never pre-register a client ID.",
     "howP2": "Authorization uses <b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636), so no client secret is ever transmitted.",
-    "howP3": "Tokens are scoped to exactly the permissions you approve: <code>read:email</code> and/or <code>send:email</code>.",
-    "noOauthNote": "<b>Using a client without OAuth support?</b> Create an API key in Dashboard → API Keys and pass it as a bearer token. API key and OAuth connections use the same MCP endpoint and the same six tools."
+    "howP3": "Tokens are scoped to exactly the permissions you approve — from <code>read:email</code> and <code>send:email</code> through <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, and <code>schedule:email</code>.",
+    "noOauthNote": "<b>Using a client without OAuth support?</b> Create an API key in Dashboard → API Keys and pass it as a bearer token. API key and OAuth connections use the same MCP endpoint and the same tool catalogue."
   },
   "tools": {
     "eyebrow": "Tool reference",
-    "heading": "Six tools. All the email ops your agent needs.",
-    "sub": "Start with <code>list_inboxes</code> to discover available inboxes and their UUIDs. The remaining five tools each take an <code>inbox_id</code> returned by that call. Click \"Show example\" to see a full request and response.",
+    "heading": "33 tools. Every email operation your agent needs.",
+    "sub": "Start with <code>list_inboxes</code> to discover available inboxes and their UUIDs — every other tool takes an <code>inbox_id</code> returned by that call. Tools are grouped by the scope that unlocks them; <code>tools/list</code> only returns the tools your key (or OAuth token) is scoped for. Click \"Show example\" to see a full request and response.",
+    "scopes": {
+      "read": {
+        "title": "Read & search",
+        "desc": "Discover inboxes and folders, list and read messages, and run provider-native searches. Read-only — never changes anything."
+      },
+      "send": {
+        "title": "Send & message state",
+        "desc": "Send, reply, and forward, plus non-destructive state changes: mark read/unread, flag/unflag, archive, and bulk flag. Sends are irreversible."
+      },
+      "folders": {
+        "title": "Folders & organization",
+        "desc": "Create, rename, and delete folders (labels on Gmail), and move or copy messages — one at a time, in bulk, or straight from a search."
+      },
+      "delete": {
+        "title": "Delete",
+        "desc": "Trash or permanently expunge messages — one at a time, in bulk, or from a search. Every delete requires confirm: true."
+      },
+      "drafts": {
+        "title": "Drafts",
+        "desc": "List, create, update, and send drafts stored in the provider's Drafts folder."
+      },
+      "contacts": {
+        "title": "Contacts",
+        "desc": "Search a contact list built automatically from the From, To, and Reply-To headers seen in your mail. No manual setup."
+      },
+      "schedule": {
+        "title": "Scheduled send",
+        "desc": "Queue an email for a future time, list pending scheduled sends, and cancel them before they go out."
+      }
+    },
     "noParams": "No parameters. Call with an empty arguments object:",
     "showExample": "Show example request & response",
     "hideExample": "Hide example request & response",
@@ -94,10 +126,10 @@
     "badgeOptional": "optional",
     "list_inboxes": {
       "title": "List Inboxes",
-      "desc": "Returns all inboxes the current API key or OAuth token can access. Call this first to discover inbox_id values, so you never copy-paste UUIDs from the dashboard."
+      "desc": "Returns every inbox the current API key or OAuth token can access. Call this first to discover inbox_id values, so you never copy-paste UUIDs from the dashboard. Each result includes the email address, provider, optional service brand (icloud/yahoo/zoho/yandex/generic/fastmail), and a capabilities object describing which features that inbox supports."
     },
-    "list_inbox": {
-      "title": "List Inbox",
+    "list_messages": {
+      "title": "List Messages",
       "desc": "List email summaries from a connected inbox, newest first. Supports pagination, folder selection, and unread filtering.",
       "params": {
         "inbox_id": "UUID of the inbox to list. Call list_inboxes first to discover available inbox IDs.",
@@ -112,7 +144,7 @@
       "desc": "Fetch the full content of a single email by ID, including plain-text body, optional sanitized HTML, and optional attachment data.",
       "params": {
         "inbox_id": "UUID of the inbox containing the email. Call list_inboxes to get available inbox IDs.",
-        "message_id": "Provider message ID from list_inbox or search_emails.",
+        "message_id": "Provider message ID from list_messages or search_emails.",
         "include_html": "Include sanitized HTML body. Default false.",
         "include_attachments": "Include base64 attachment data. Default false.",
         "mark_as_read": "Mark message as read after fetching. Default false."
@@ -154,6 +186,263 @@
         "html_body": "Optional HTML version of the reply.",
         "reply_all": "Reply to all original recipients (To + Cc). Default false.",
         "attachments": "File attachments. Same schema as send_email. Max 20 items."
+      }
+    },
+    "mark_read": {
+      "title": "Mark Email as Read",
+      "desc": "Mark a single email message as read. Non-destructive — it only changes the read flag, never deletes or moves the message. Works across every provider.",
+      "params": {
+        "inbox_id": "UUID of the inbox containing the message. Call list_inboxes to get available inbox IDs.",
+        "message_id": "Provider message ID from list_messages or search_emails."
+      }
+    },
+    "list_folders": {
+      "title": "List Folders",
+      "desc": "List every folder (or label, on Gmail) in an inbox. Each entry has the provider-native folder ID, display name, type (folder vs label), and message counts. Use the IDs as the folder argument for list_messages and as the source/destination for move and copy.",
+      "params": {
+        "inbox_id": "UUID of the inbox whose folders to list. Call list_inboxes to get available inbox IDs."
+      }
+    },
+    "forward_email": {
+      "title": "Forward Email",
+      "desc": "Forward an existing message to new recipients. Your optional note is prepended above a standard forwarded-message header block and the original body. Set include_attachments to re-attach the original files. The subject is prefixed with 'Fwd:' if needed. Irreversible.",
+      "params": {
+        "inbox_id": "UUID of the inbox that holds the original message. Call list_inboxes to get available inbox IDs.",
+        "message_id": "Provider message ID of the email to forward, from list_messages or search_emails.",
+        "to": "Recipient email addresses. Max 50.",
+        "cc": "CC recipients. Default [].",
+        "bcc": "BCC recipients. Default [].",
+        "body": "Optional plain-text note to prepend above the forwarded message.",
+        "html_body": "Optional HTML version of the note (multipart/alternative).",
+        "include_attachments": "Re-attach the original message's attachments. Files over the 10 MB budget are omitted. Default false."
+      }
+    },
+    "mark_unread": {
+      "title": "Mark Email as Unread",
+      "desc": "Mark a single email message as unread. Non-destructive — only the read flag changes. Works across every provider.",
+      "params": {
+        "inbox_id": "UUID of the inbox containing the message. Call list_inboxes to get available inbox IDs.",
+        "message_id": "Provider message ID from list_messages or search_emails."
+      }
+    },
+    "flag_email": {
+      "title": "Flag Email",
+      "desc": "Flag (star / mark for follow-up) a single message. Non-destructive. Maps to the provider's native star or flag — Gmail STARRED label, IMAP \\Flagged, Outlook flag, Fastmail $flagged keyword.",
+      "params": {
+        "inbox_id": "UUID of the inbox containing the message. Call list_inboxes to get available inbox IDs.",
+        "message_id": "Provider message ID from list_messages or search_emails."
+      }
+    },
+    "unflag_email": {
+      "title": "Unflag Email",
+      "desc": "Remove the flag (star / follow-up mark) from a single message. Non-destructive.",
+      "params": {
+        "inbox_id": "UUID of the inbox containing the message. Call list_inboxes to get available inbox IDs.",
+        "message_id": "Provider message ID from list_messages or search_emails."
+      }
+    },
+    "archive_email": {
+      "title": "Archive Email",
+      "desc": "Move a message out of the Inbox to the archive. Non-destructive — the message is preserved, not deleted. On Gmail this removes the INBOX label; on IMAP/Outlook/Fastmail it moves to the Archive mailbox.",
+      "params": {
+        "inbox_id": "UUID of the inbox containing the message. Call list_inboxes to get available inbox IDs.",
+        "message_id": "Provider message ID from list_messages or search_emails."
+      }
+    },
+    "bulk_flag": {
+      "title": "Bulk Flag",
+      "desc": "Apply one read/unread/flag/unflag action to up to 500 messages in a single call. Returns succeeded/failed counts plus a per-message result list.",
+      "params": {
+        "inbox_id": "UUID of the inbox that owns the messages. Call list_inboxes to get available inbox IDs.",
+        "message_ids": "Provider message IDs to update. Max 500 per call.",
+        "action": "Action to apply to all messages: \"read\", \"unread\", \"flag\", or \"unflag\"."
+      }
+    },
+    "create_folder": {
+      "title": "Create Folder",
+      "desc": "Create a new folder (or label, on Gmail) in an inbox. Returns the provider-native folder/label ID and display name.",
+      "params": {
+        "inbox_id": "UUID of the inbox to create the folder/label in. Call list_inboxes to get available inbox IDs.",
+        "name": "Name of the new folder or label. 1–255 characters."
+      }
+    },
+    "rename_folder": {
+      "title": "Rename Folder",
+      "desc": "Rename an existing folder or label. Call list_folders first to obtain the folder_id.",
+      "params": {
+        "inbox_id": "UUID of the inbox that owns the folder/label.",
+        "folder_id": "Provider-native folder/label ID from list_folders.",
+        "new_name": "New display name. 1–255 characters."
+      }
+    },
+    "delete_folder": {
+      "title": "Delete Folder",
+      "desc": "Permanently delete a folder (or label, on Gmail). Irreversible — messages inside may be lost depending on the provider. Requires confirm: true. Call list_folders first to obtain the folder_id.",
+      "params": {
+        "inbox_id": "UUID of the inbox that owns the folder/label.",
+        "folder_id": "Provider-native folder/label ID from list_folders.",
+        "confirm": "Must be true to confirm this destructive operation."
+      }
+    },
+    "move_email": {
+      "title": "Move Email",
+      "desc": "Move a message to a different folder. On Gmail this adds the destination label and removes INBOX (Gmail has no separate folders). Call list_folders to obtain the destination_folder_id.",
+      "params": {
+        "inbox_id": "UUID of the inbox that owns the message.",
+        "message_id": "Provider message ID from list_messages, read_email, or search_emails.",
+        "destination_folder_id": "Provider-native folder/label ID of the destination, from list_folders. For IMAP this is the mailbox name; for Gmail the label ID; for Outlook/Fastmail the opaque folder ID."
+      }
+    },
+    "copy_email": {
+      "title": "Copy Email",
+      "desc": "Copy a message to another folder, leaving the original in place. Not supported on Gmail (the Gmail API has no native copy) — use move_email there instead. Call list_folders to obtain the destination_folder_id.",
+      "params": {
+        "inbox_id": "UUID of the inbox that owns the message.",
+        "message_id": "Provider message ID from list_messages, read_email, or search_emails.",
+        "destination_folder_id": "Provider-native folder ID of the destination, from list_folders."
+      }
+    },
+    "bulk_move": {
+      "title": "Bulk Move",
+      "desc": "Move up to 500 messages to a destination folder in one call. Returns succeeded/failed counts plus per-message results. Call list_folders to obtain the destination_folder_id.",
+      "params": {
+        "inbox_id": "UUID of the inbox that owns the messages.",
+        "message_ids": "Provider message IDs to move. Max 500 per call.",
+        "destination_folder_id": "Provider-native folder/label ID of the destination, from list_folders."
+      }
+    },
+    "search_and_move": {
+      "title": "Search and Move",
+      "desc": "Run a search and move every match to a destination folder in one server-side operation — avoids stale message IDs. Capped at 500 matches per call. Returns succeeded/failed counts plus per-message results.",
+      "params": {
+        "inbox_id": "UUID of the inbox to search and operate on.",
+        "query": "Search query, in the inbox's native syntax (Gmail operators, Outlook KQL, or IMAP search).",
+        "destination_folder_id": "Provider-native folder/label ID of the destination, from list_folders.",
+        "include_folders": "Restrict the search to these folder names. Default: all folders.",
+        "limit": "Maximum number of matches to move. Default 500, max 500."
+      }
+    },
+    "delete_email": {
+      "title": "Delete Email",
+      "desc": "Delete a single message. By default it moves to the provider's Trash (safer). Set permanent: true to hard-delete (bypasses Trash; may be irreversible). Requires confirm: true. Permanent expunge is available on IMAP and Fastmail; Gmail and Outlook support trash only.",
+      "params": {
+        "inbox_id": "UUID of the inbox that owns the message.",
+        "message_id": "Provider message ID from list_messages, read_email, or search_emails.",
+        "permanent": "When true, hard-delete (bypass Trash). When false or omitted, move to Trash. Default false.",
+        "confirm": "Must be true to confirm this destructive operation."
+      }
+    },
+    "bulk_delete": {
+      "title": "Bulk Delete",
+      "desc": "Delete up to 500 messages in one call. Defaults to Trash; set permanent: true for a hard delete. Requires confirm: true. Returns succeeded/failed counts plus per-message results.",
+      "params": {
+        "inbox_id": "UUID of the inbox that owns the messages.",
+        "message_ids": "Provider message IDs to delete. Max 500 per call.",
+        "permanent": "When true, hard-delete (bypass Trash). When false or omitted, move to Trash. Default false.",
+        "confirm": "Must be true to confirm this destructive operation."
+      }
+    },
+    "search_and_delete": {
+      "title": "Search and Delete",
+      "desc": "Run a search and delete every match in one server-side operation — avoids stale message IDs. Capped at 500 matches per call. Defaults to Trash; set permanent: true for a hard delete. Requires confirm: true.",
+      "params": {
+        "inbox_id": "UUID of the inbox to search and operate on.",
+        "query": "Search query, in the inbox's native syntax (Gmail operators, Outlook KQL, or IMAP search).",
+        "permanent": "When true, hard-delete matches (bypass Trash). When false or omitted, move to Trash. Default false.",
+        "include_folders": "Restrict the search to these folder names. Default: all folders.",
+        "limit": "Maximum number of matches to delete. Default 500, max 500.",
+        "confirm": "Must be true to confirm this destructive operation."
+      }
+    },
+    "list_drafts": {
+      "title": "List Drafts",
+      "desc": "Return drafts saved in the inbox's Drafts folder. Each result includes the draft_id, subject, recipients, and created timestamp. Use the draft_id with update_draft or send_draft.",
+      "params": {
+        "inbox_id": "UUID of the inbox whose drafts to list.",
+        "limit": "Maximum number of drafts to return. Default 20, max 50."
+      }
+    },
+    "create_draft": {
+      "title": "Create Draft",
+      "desc": "Save a new draft in the inbox's Drafts folder without sending it. Returns a draft_id for update_draft or send_draft. Subject and body are required; recipients are optional (drafts may be incomplete).",
+      "params": {
+        "inbox_id": "UUID of the inbox to save the draft in.",
+        "subject": "Draft subject line.",
+        "body": "Plain-text body of the draft.",
+        "to": "Optional recipient addresses. Default [].",
+        "cc": "Optional CC recipients. Default [].",
+        "bcc": "Optional BCC recipients. Default [].",
+        "html_body": "Optional HTML body."
+      }
+    },
+    "update_draft": {
+      "title": "Update Draft",
+      "desc": "Replace the content of an existing draft. All supplied fields overwrite the stored draft. Call list_drafts to obtain draft_id values.",
+      "params": {
+        "inbox_id": "UUID of the inbox that owns the draft.",
+        "draft_id": "Provider draft ID from create_draft or list_drafts.",
+        "subject": "Updated subject line.",
+        "body": "Updated plain-text body.",
+        "to": "Updated recipient list. Default [].",
+        "cc": "Updated CC list. Default [].",
+        "bcc": "Updated BCC list. Default [].",
+        "html_body": "Updated HTML body."
+      }
+    },
+    "send_draft": {
+      "title": "Send Draft",
+      "desc": "Send a previously saved draft. The draft is removed from the Drafts folder after sending. Irreversible.",
+      "params": {
+        "inbox_id": "UUID of the inbox that contains the draft.",
+        "draft_id": "Provider draft ID from create_draft or list_drafts."
+      }
+    },
+    "search_contacts": {
+      "title": "Search Contacts",
+      "desc": "Search the derived contact list by name or email. Contacts are built automatically from the headers seen during read, search, and send — no manual setup. Returns matches sorted by most-recently-contacted, each with display name, email, message count, and last-contacted timestamp.",
+      "params": {
+        "query": "Name or email fragment, matched case-insensitively against display name and address. At least 1 character.",
+        "inbox_id": "Optional. Restrict results to contacts seen from one inbox. Omit to search across every inbox the key can access.",
+        "limit": "Maximum number of contacts to return. Default 20, max 50."
+      }
+    },
+    "get_contact": {
+      "title": "Get Contact",
+      "desc": "Retrieve the full contact record for one email address within an inbox: display name, address, cumulative message count, and last-seen timestamp. Call search_contacts first to discover known addresses.",
+      "params": {
+        "inbox_id": "UUID of the inbox associated with the contact.",
+        "email_address": "The email address to look up. Matched case-insensitively."
+      }
+    },
+    "schedule_send": {
+      "title": "Schedule Send",
+      "desc": "Queue an email to be sent at a future time. Recipients and body are validated immediately; if validation fails it is not queued. The dispatcher runs every minute, so actual delivery may be up to 60 seconds after send_at. Use list_scheduled and cancel_scheduled to manage pending sends.",
+      "params": {
+        "inbox_id": "UUID of the inbox to send from.",
+        "to": "Recipient email addresses. Max 50.",
+        "subject": "Email subject line. Max 998 characters.",
+        "body": "Plain-text email body.",
+        "send_at": "ISO 8601 datetime with timezone at which to send. Must be in the future, e.g. \"2026-06-02T09:00:00Z\".",
+        "cc": "CC recipients. Default [].",
+        "bcc": "BCC recipients. Default [].",
+        "html_body": "Optional HTML version of the body.",
+        "attachments": "File attachments. Same schema as send_email. Max 20 items, 10 MB total.",
+        "reply_to": "Optional Reply-To header address."
+      }
+    },
+    "list_scheduled": {
+      "title": "List Scheduled Sends",
+      "desc": "List pending scheduled sends for the workspace (status pending or sending), earliest first. Optionally filter by inbox. Use cancel_scheduled to cancel one before it dispatches.",
+      "params": {
+        "inbox_id": "Optional. Restrict results to scheduled sends for one inbox.",
+        "limit": "Maximum number of results. Default 20, max 100."
+      }
+    },
+    "cancel_scheduled": {
+      "title": "Cancel Scheduled Send",
+      "desc": "Cancel a pending scheduled send so the dispatcher skips it. Only sends still in 'pending' state can be cancelled — once 'sending', 'sent', or 'error' they cannot. Use list_scheduled to find the scheduled_send_id.",
+      "params": {
+        "scheduled_send_id": "UUID of the scheduled send to cancel."
       }
     }
   },
@@ -242,7 +531,7 @@
       "supported": "Supported",
       "notSupported": "Not supported",
       "planned": "Planned (not yet shipped)",
-      "imapNote": "<b>iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</b> all run through the same Deno IMAP/SMTP transport and share identical capabilities. The columns are shown separately for clarity but their feature set is identical."
+      "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</b> all connect over the same IMAP/SMTP transport (Fastmail and iCloud use an app-specific password) and share an identical feature set, including IMAP search syntax. The columns are shown separately for clarity."
     },
     "ariaSupported": "Supported",
     "ariaNotSupported": "Not supported",
