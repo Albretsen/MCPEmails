@@ -216,7 +216,8 @@
       "delete": "删除 / 移至回收站",
       "permanent_delete": "永久删除（彻底清除）",
       "drafts": "草稿（创建 / 编辑 / 发送）",
-      "contacts": "联系人 API",
+      "contacts": "原生联系人 API",
+      "contacts_db": "联系人搜索（数据库同步）",
       "scheduling": "定时发送",
       "search_syntax": "搜索语法"
     },
@@ -252,8 +253,9 @@
     "notes": {
       "gmail": "<b>Gmail —— 文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。",
       "permanentDelete": "<b>永久删除：</b>Gmail 和 Outlook 在你删除时会移至回收站 —— 它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
-      "contacts": "<b>联系人 API：</b>Gmail 使用 Google People API；Outlook 使用 Microsoft Graph <code>/contacts</code>。Fastmail CardDAV 和基于 IMAP 的联系人将推迟到后续版本。",
-      "scheduling": "<b>定时：</b>计划通过一个服务器端队列为所有服务商提供（而非服务商原生定时）。没有任何服务商提供可在不于服务器端存储凭据的情况下访问的原生定时发送 API。"
+      "contacts": "<b>原生联系人 API：</b>Gmail 使用 Google People API；Outlook 使用 Microsoft Graph <code>/contacts</code>。Fastmail CardDAV 超出 v0.1 范围。",
+      "contacts_db": "<b>联系人搜索（数据库）：</b>所有服务商均从邮件头同步联系人。使用 <code>search_contacts</code> 和 <code>get_contact</code> 进行查询。",
+      "scheduling": "<b>定时：</b>通过 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule_send</code>、<code>list_scheduled</code> 和 <code>cancel_scheduled</code>。"
     },
     "cta": {
       "heading": "准备好连接你的收件箱了吗？",

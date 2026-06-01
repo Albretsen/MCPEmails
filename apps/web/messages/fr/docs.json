@@ -216,7 +216,8 @@
       "delete": "Supprimer / corbeille",
       "permanent_delete": "Suppression définitive (expunge)",
       "drafts": "Brouillons (créer / modifier / envoyer)",
-      "contacts": "API Contacts",
+      "contacts": "API Contacts native",
+      "contacts_db": "Recherche de contacts (synchronisée avec la BD)",
       "scheduling": "Envoi programmé",
       "search_syntax": "Syntaxe de recherche"
     },
@@ -252,8 +253,9 @@
     "notes": {
       "gmail": "<b>Gmail — dossiers vs étiquettes :</b> Gmail utilise un système d'étiquettes plat plutôt que des dossiers hiérarchiques. « Déplacer » est implémenté comme l'ajout/la suppression d'étiquette. La copie native n'est pas disponible via l'API REST Gmail.",
       "permanentDelete": "<b>Suppression définitive :</b> Gmail et Outlook déplacent vers la corbeille lors de la suppression — l'expunge définitif n'est pas exposé par leurs API. Les fournisseurs IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, générique) prennent en charge à la fois la corbeille et l'expunge définitif.",
-      "contacts": "<b>API Contacts :</b> Gmail utilise l'API Google People ; Outlook utilise Microsoft Graph <code>/contacts</code>. Les contacts Fastmail CardDAV et basés sur IMAP sont reportés à une version ultérieure.",
-      "scheduling": "<b>Programmation :</b> Prévue pour tous les fournisseurs via une file d'attente côté serveur (pas une programmation native du fournisseur). Aucun fournisseur n'expose une API d'envoi programmé native accessible sans stocker les identifiants côté serveur."
+      "contacts": "<b>API Contacts native :</b> Gmail utilise l'API Google People ; Outlook utilise Microsoft Graph <code>/contacts</code>. Les contacts Fastmail CardDAV sont hors portée pour v0.1.",
+      "contacts_db": "<b>Recherche de contacts (BD) :</b> Tous les fournisseurs synchronisent les contacts depuis les en-têtes des messages. Utilisez <code>search_contacts</code> et <code>get_contact</code>.",
+      "scheduling": "<b>Programmation :</b> Prise en charge pour tous les fournisseurs via la file <code>scheduled_sends</code>. Utilisez <code>schedule_send</code>, <code>list_scheduled</code> et <code>cancel_scheduled</code>."
     },
     "cta": {
       "heading": "Prêt à connecter votre boîte de réception ?",

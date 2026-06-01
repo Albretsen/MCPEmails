@@ -2,15 +2,8 @@ import type { Metadata } from 'next';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { routing } from '@/i18n/routing';
+import { metaAlternates, localePath, OG_LOCALE } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
-
-const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com').replace(/\/$/, '');
-
-const OG_LOCALE: Record<string, string> = { en: 'en_US', nb: 'nb_NO' };
-
-function pathForLocale(locale: string): string {
-  return locale === routing.defaultLocale ? '' : `/${locale}`;
-}
 
 export async function generateMetadata({
   params,
@@ -26,17 +19,10 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: {
-      canonical: `${APP_URL}${pathForLocale(locale)}`,
-      languages: {
-        en: APP_URL,
-        nb: `${APP_URL}/nb`,
-        'x-default': APP_URL,
-      },
-    },
+    alternates: metaAlternates(locale, ''),
     openGraph: {
       type: 'website',
-      url: `${APP_URL}${pathForLocale(locale)}`,
+      url: localePath(locale, ''),
       title,
       description,
       locale: OG_LOCALE[locale],

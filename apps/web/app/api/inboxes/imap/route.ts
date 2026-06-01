@@ -15,7 +15,11 @@ import { validateImapCredential } from '@/lib/email/validate-imap';
  * Stored with provider = 'imap', service = 'generic'. The edge function infers
  * implicit-TLS vs STARTTLS for sending from smtp_port (587 → STARTTLS).
  *
- * Body: { email, appPassword, imapHost, imapPort, smtpHost, smtpPort }
+ * Body: { email, username?, appPassword, imapHost, imapPort, smtpHost, smtpPort }
+ *
+ * `username` is the optional SASL login username for hosts that issue one
+ * distinct from the email address (e.g. domeneshop). When blank, the email
+ * address is used as the username — the common case.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // 1. Authenticate.
@@ -37,6 +41,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // 3. Parse and validate the request body.
   let email: string;
+  let username: string;
   let appPassword: string;
   let imapHost: string;
   let smtpHost: string;
@@ -46,6 +51,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = (await request.json()) as Record<string, unknown>;
     email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    // Usernames may be case-sensitive — trim only, never lowercase.
+    username = typeof body.username === 'string' ? body.username.trim() : '';
     appPassword = typeof body.appPassword === 'string' ? body.appPassword.trim() : '';
     imapHost = typeof body.imapHost === 'string' ? body.imapHost.trim().toLowerCase() : '';
     smtpHost = typeof body.smtpHost === 'string' ? body.smtpHost.trim().toLowerCase() : '';
@@ -93,6 +100,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     host: imapHost,
     port: imapPort,
     email,
+    username: username || undefined,
     password: appPassword,
   });
 
@@ -113,6 +121,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       imap_host: imapHost,
       imap_port: imapPort,
       imap_tls: true,
+      imap_username: username || null,
       smtp_host: smtpHost,
       smtp_port: smtpPort,
       smtp_tls: true,

@@ -216,7 +216,8 @@
       "delete": "Slett / papirkurv",
       "permanent_delete": "Permanent sletting (expunge)",
       "drafts": "Utkast (opprett / rediger / send)",
-      "contacts": "Kontakter-API",
+      "contacts": "Innebygd kontakter-API",
+      "contacts_db": "Kontaktsøk (DB-synkronisert)",
       "scheduling": "Planlagt sending",
       "search_syntax": "Søkesyntaks"
     },
@@ -252,8 +253,9 @@
     "notes": {
       "gmail": "<b>Gmail — mapper vs. etiketter:</b> Gmail bruker et flatt etikettsystem i stedet for hierarkiske mapper. \"Flytt\" er implementert som legg til / fjern etikett. Native kopiering er ikke tilgjengelig via Gmail REST-API-et.",
       "permanentDelete": "<b>Permanent sletting:</b> Gmail og Outlook flytter til papirkurven når du sletter — permanent expunge eksponeres ikke av API-ene deres. IMAP-leverandører (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) støtter både papirkurv og hard expunge.",
-      "contacts": "<b>Kontakter-API:</b> Gmail bruker Google People API; Outlook bruker Microsoft Graph <code>/contacts</code>. Fastmail CardDAV og IMAP-baserte kontakter er utsatt til en senere utgivelse.",
-      "scheduling": "<b>Planlegging:</b> Planlagt for alle leverandører via en server-side kø (ikke leverandørenes egen planlegging). Ingen leverandør eksponerer et eget API for planlagt sending som er tilgjengelig uten å lagre legitimasjon på serversiden."
+      "contacts": "<b>Innebygd kontakter-API:</b> Gmail bruker Google People API; Outlook bruker Microsoft Graph <code>/contacts</code>. Fastmail CardDAV er utenfor omfanget for v0.1.",
+      "contacts_db": "<b>Kontaktsøk (DB):</b> Alle leverandører synkroniserer kontakter fra meldingshoder. Bruk <code>search_contacts</code> og <code>get_contact</code>.",
+      "scheduling": "<b>Planlegging:</b> Støttet for alle leverandører via <code>scheduled_sends</code>-køen. Bruk <code>schedule_send</code>, <code>list_scheduled</code> og <code>cancel_scheduled</code>."
     },
     "cta": {
       "heading": "Klar til å koble til innboksen din?",

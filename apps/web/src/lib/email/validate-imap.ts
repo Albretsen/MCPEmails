@@ -42,17 +42,23 @@ export interface ImapCredential {
   host: string;
   /** IMAP server port (993 for implicit TLS). */
   port: number;
-  /** Full email address used as the SASL username. */
+  /** Full email address (the sender identity). */
   email: string;
-  /** App-specific password (never the user's main password). */
+  /**
+   * SASL login username. Most providers use the email address, but some
+   * independent hosts issue a distinct username. When omitted, `email` is used.
+   */
+  username?: string;
+  /** Mailbox password (an app password where the provider requires one). */
   password: string;
 }
 
 /** Provider-neutral user-facing messages, keyed by error code. */
 export const IMAP_VALIDATION_MESSAGES: Record<ImapValidationErrorCode, string> = {
   AUTH_FAILED:
-    'Incorrect email or password. Make sure you are using an app-specific ' +
-    'password (not your main account password).',
+    'The mail server rejected these credentials. Check the username and ' +
+    'password — some hosts use a separate login username (not your email ' +
+    'address), and providers with 2-step verification require an app password.',
   CONNECTION_REFUSED:
     'Could not connect to the mail server. Please check the host and try again.',
   CONNECTION_TIMEOUT:
@@ -200,8 +206,10 @@ export async function validateImapCredential(
         };
       }
 
-      // 3. Authenticate using SASL PLAIN.
-      const plainToken = buildPlainAuthToken(cred.email, cred.password);
+      // 3. Authenticate using SASL PLAIN. The login username defaults to the
+      //    email address but may be overridden for hosts that issue a separate
+      //    username (e.g. domeneshop).
+      const plainToken = buildPlainAuthToken(cred.username || cred.email, cred.password);
       socket.write(`A0001 AUTHENTICATE PLAIN ${plainToken}\r\n`);
 
       const authResult = await readTaggedResponse(socket, 'A0001');

@@ -873,6 +873,73 @@ async function writeActivityLog(params: ActivityLogParams): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Contacts derivation — upsertContacts
+// ---------------------------------------------------------------------------
+
+/**
+ * Fire-and-forget upsert of contact rows derived from email message headers.
+ *
+ * Called on every successful read_email, search_emails, and send_email.
+ * Silently skips invalid addresses and swallows DB errors so a contacts
+ * failure never blocks a tool response.
+ *
+ * Each address that isn't the inbox's own address is upserted into
+ * `public.contacts` keyed by (inbox_id, lower(email_address)), incrementing
+ * message_count and refreshing last_contacted_at and display_name.
+ *
+ * Idempotency: ON CONFLICT on the unique index (inbox_id, lower(email_address))
+ * ensures duplicate calls for the same address are collapsed into one row.
+ *
+ * @param inbox   Resolved InboxRow — provides workspace_id and inbox_id.
+ * @param entries Raw EmailAddressEntry list from message headers.
+ * @param seenAt  ISO 8601 timestamp of the message (for last_contacted_at).
+ */
+async function upsertContacts(
+  inbox: InboxRow,
+  entries: EmailAddressEntry[],
+  seenAt: string,
+): Promise<void> {
+  // Normalise and deduplicate; exclude the inbox's own address.
+  const own = (inbox.email_address ?? "").toLowerCase().trim();
+  const seen = new Set<string>();
+  const rows: Record<string, unknown>[] = [];
+
+  for (const entry of entries) {
+    const addr = (entry.email ?? "").toLowerCase().trim();
+    if (!addr || addr === own || seen.has(addr)) continue;
+    seen.add(addr);
+    rows.push({
+      workspace_id: inbox.workspace_id,
+      inbox_id: inbox.id,
+      email_address: addr,
+      display_name: entry.name?.trim() || null,
+      message_count: 1,
+      last_contacted_at: seenAt,
+      updated_at: new Date().toISOString(),
+    });
+  }
+
+  if (rows.length === 0) return;
+
+  // Upsert in a single statement; conflict target is the partial unique index.
+  const { error } = await supabase.from("contacts").upsert(rows, {
+    onConflict: "inbox_id,email_address",
+    ignoreDuplicates: false,
+  });
+
+  if (error) {
+    // Non-fatal — log and continue.
+    console.error("[mcp-server] upsertContacts_failed", {
+      inbox_id: inbox.id,
+      workspace_id: inbox.workspace_id,
+      count: rows.length,
+      error: error.message,
+      error_code: error.code,
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Envelope validation
 // ---------------------------------------------------------------------------
 
@@ -2224,6 +2291,234 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     },
   },
 
+  // ── manage:contacts scope ────────────────────────────────────────────────────
+
+  {
+    name: "search_contacts",
+    title: "Search Contacts",
+    description:
+      "Search the derived contact list by name or email address. " +
+      "Contacts are automatically populated from message headers seen during " +
+      "read_email, search_emails, and send_email — no manual setup is needed. " +
+      "Returns matching contacts sorted by most-recently-contacted first, " +
+      "each with their display name, email address, message count, and " +
+      "last-contacted timestamp. Optionally restrict to a specific inbox; " +
+      "if inbox_id is omitted, searches across all inboxes in the workspace.",
+    requiredScope: "manage:contacts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description:
+            "Name or email address fragment to search for. " +
+            "Matched case-insensitively against both display_name and email_address. " +
+            "Must be at least 1 character. Example: 'alice' matches 'Alice Smith' " +
+            "and 'alice@example.com'.",
+        },
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description:
+            "Optional. When provided, restricts results to contacts seen " +
+            "from that specific inbox. When omitted, searches across all " +
+            "inboxes the API key is permitted to access within the workspace.",
+        },
+        limit: {
+          type: "integer",
+          minimum: 1,
+          maximum: 50,
+          default: 20,
+          description: "Maximum number of contacts to return. Defaults to 20.",
+        },
+      },
+      required: ["query"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "get_contact",
+    title: "Get Contact",
+    description:
+      "Retrieve the full contact record for a single email address within a " +
+      "specific inbox. Returns the contact's display name, email address, " +
+      "cumulative message count (how many times this address has appeared in " +
+      "message headers), and the timestamp of the most-recently-seen message. " +
+      "Contacts are automatically populated from message traffic — call " +
+      "search_contacts first to discover which addresses are known.",
+    requiredScope: "manage:contacts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the inbox associated with the contact.",
+        },
+        email_address: {
+          type: "string",
+          description:
+            "The email address to look up. Matched case-insensitively " +
+            "(the address is normalised to lowercase before querying).",
+        },
+      },
+      required: ["inbox_id", "email_address"],
+      additionalProperties: false,
+    },
+  },
+
+  // ── schedule:email scope ─────────────────────────────────────────────────────
+
+  {
+    name: "schedule_send",
+    title: "Schedule Send",
+    description:
+      "Schedule an email to be sent at a future date and time. " +
+      "The message is stored in a pending queue and dispatched automatically " +
+      "by the server when send_at is reached. All recipient addresses and the " +
+      "message body are validated immediately at schedule time — if validation " +
+      "fails the message will not be queued. Use list_scheduled to view pending " +
+      "scheduled sends and cancel_scheduled to cancel before they are sent.",
+    requiredScope: "schedule:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description:
+            "UUID of the inbox to send from. The email will appear to the " +
+            "recipient as being sent from the email address of this inbox.",
+        },
+        to: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          minItems: 1,
+          maxItems: 50,
+          description:
+            "List of recipient email addresses. Each must be a valid RFC 5322 address. " +
+            "Maximum 50 recipients.",
+        },
+        cc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "List of CC recipient email addresses. Optional.",
+        },
+        bcc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "List of BCC recipient email addresses. Optional.",
+        },
+        subject: {
+          type: "string",
+          minLength: 1,
+          maxLength: 998,
+          description: "Email subject line. Must be non-empty. Maximum 998 characters.",
+        },
+        body: {
+          type: "string",
+          minLength: 1,
+          description:
+            "Email body as plain text. If html_body is also provided, the message is " +
+            "sent as multipart/alternative.",
+        },
+        html_body: {
+          type: "string",
+          description: "Optional HTML version of the email body.",
+        },
+        attachments: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              filename: { type: "string", description: "Attachment filename." },
+              mime_type: { type: "string", description: "MIME type of the attachment." },
+              data: { type: "string", description: "Base64-encoded attachment content." },
+            },
+            required: ["filename", "mime_type", "data"],
+            additionalProperties: false,
+          },
+          default: [],
+          maxItems: 20,
+          description:
+            "Optional file attachments. Maximum 20 items. Total size must not exceed 10 MB.",
+        },
+        reply_to: {
+          type: "string",
+          format: "email",
+          description: "Optional Reply-To header address.",
+        },
+        send_at: {
+          type: "string",
+          format: "date-time",
+          description:
+            "ISO 8601 datetime string (with timezone) at which the message should be sent. " +
+            "Must be in the future. Example: '2026-06-01T09:00:00Z' or " +
+            "'2026-06-01T09:00:00+02:00'. The dispatcher runs every minute so the " +
+            "actual send time may be up to 60 seconds after send_at.",
+        },
+      },
+      required: ["inbox_id", "to", "subject", "body", "send_at"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "list_scheduled",
+    title: "List Scheduled Sends",
+    description:
+      "List pending scheduled email sends for the workspace. Returns all messages " +
+      "with status 'pending' or 'sending', ordered by scheduled send time (earliest first). " +
+      "Optionally filter by inbox. Use cancel_scheduled to cancel a pending send before " +
+      "it is dispatched.",
+    requiredScope: "schedule:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: {
+          type: "string",
+          format: "uuid",
+          description:
+            "Optional. When provided, restricts results to scheduled sends for that inbox.",
+        },
+        limit: {
+          type: "integer",
+          minimum: 1,
+          maximum: 100,
+          default: 20,
+          description: "Maximum number of results to return. Defaults to 20.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "cancel_scheduled",
+    title: "Cancel Scheduled Send",
+    description:
+      "Cancel a pending scheduled email send. Sets the status to 'cancelled' so the " +
+      "dispatcher will not send the message. Only messages with status 'pending' can be " +
+      "cancelled — messages already in 'sending', 'sent', or 'error' state cannot be " +
+      "cancelled. Use list_scheduled to find the scheduled_send_id.",
+    requiredScope: "schedule:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        scheduled_send_id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the scheduled send to cancel.",
+        },
+      },
+      required: ["scheduled_send_id"],
+      additionalProperties: false,
+    },
+  },
+
   // ── No scope beyond read:email ───────────────────────────────────────────
 
   {
@@ -2286,7 +2581,13 @@ interface ProviderCapabilities {
   drafts: boolean;
   /** Provider-native contacts / address-book API */
   contacts_api: boolean;
-  /** Server-side scheduled send */
+  /**
+   * DB-synced contacts derived from message headers (search_contacts /
+   * get_contact tools — Task 15-16).  True for all providers because the
+   * contacts table is populated from email metadata regardless of protocol.
+   */
+  contacts_db: boolean;
+  /** Server-side scheduled send (via scheduled_sends queue — Task 17-18) */
   scheduling: boolean;
   /**
    * Query syntax accepted by search_emails for this provider.
@@ -2319,7 +2620,8 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     forward: true,
     drafts: true,        // Gmail Drafts API
     contacts_api: true,  // Google People API
-    scheduling: false,
+    contacts_db: true,   // DB-synced from message headers
+    scheduling: true,    // via scheduled_sends queue
     search_syntax: "gmail",
   },
   outlook: {
@@ -2333,7 +2635,8 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     forward: true,       // Graph createForward or MIME send
     drafts: true,        // Graph createDraft / send
     contacts_api: true,  // Graph /contacts
-    scheduling: false,
+    contacts_db: true,   // DB-synced from message headers
+    scheduling: true,    // via scheduled_sends queue
     search_syntax: "odata",
   },
   fastmail: {
@@ -2347,7 +2650,8 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     forward: true,       // Compose + JMAP send
     drafts: true,        // JMAP Email/set $draft keyword
     contacts_api: false, // CardDAV out of scope for v0.1
-    scheduling: false,
+    contacts_db: true,   // DB-synced from message headers
+    scheduling: true,    // via scheduled_sends queue
     search_syntax: "jmap",
   },
   imap: {
@@ -2361,7 +2665,8 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     forward: true,       // Compose + SMTP send
     drafts: true,        // IMAP APPEND to Drafts with \Draft flag
     contacts_api: false, // No standard contacts API over IMAP/SMTP
-    scheduling: false,
+    contacts_db: true,   // DB-synced from message headers
+    scheduling: true,    // via scheduled_sends queue
     search_syntax: "imap",
   },
 };
@@ -2520,6 +2825,8 @@ interface InboxRow {
   imap_host: string | null;
   imap_port: number | null;
   imap_tls: boolean;
+  /** Optional SASL login username; falls back to email_address when null. */
+  imap_username: string | null;
   /** AES-256-GCM ciphertext encoded as base64url text. */
   imap_password: string | null;
   smtp_host: string | null;
@@ -2531,8 +2838,18 @@ interface InboxRow {
 const INBOX_SELECT_COLUMNS =
   "id, workspace_id, provider, email_address, display_name, " +
   "oauth_access_token, oauth_refresh_token, oauth_token_expires_at, " +
-  "imap_host, imap_port, imap_tls, imap_password, " +
+  "imap_host, imap_port, imap_tls, imap_username, imap_password, " +
   "smtp_host, smtp_port, smtp_tls, status";
+
+/**
+ * The SASL login username for IMAP/SMTP auth. Most providers authenticate with
+ * the email address, but some independent hosts (e.g. domeneshop) issue a
+ * distinct username, stored in imap_username. The sender identity / From header
+ * always remains email_address — this is only the credential's login name.
+ */
+function imapAuthUser(inbox: InboxRow): string {
+  return inbox.imap_username || inbox.email_address;
+}
 
 /**
  * Decrypts an AES-256-GCM ciphertext produced by
@@ -3696,7 +4013,7 @@ async function listImapMessages(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
 
@@ -3780,7 +4097,7 @@ async function readImapMessage(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -3869,7 +4186,7 @@ async function searchImapMessages(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -3943,7 +4260,7 @@ async function imapSmtpSend(
         host: inbox.smtp_host,
         port: inbox.smtp_port,
         security,
-        email: inbox.email_address,
+        email: imapAuthUser(inbox),
         password,
       },
       { from: inbox.email_address, recipients, rawMessage: mimeMessage },
@@ -3971,7 +4288,7 @@ async function appendToSentFolder(inbox: InboxRow, mimeMessage: string): Promise
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     for (const mbox of SENT_FOLDER_CANDIDATES) {
@@ -4054,7 +4371,7 @@ async function replyImapMessage(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -5462,6 +5779,13 @@ async function executeReadEmail(
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
+  // Derive contacts from headers (fire-and-forget; never blocks the response).
+  upsertContacts(
+    inbox,
+    [readResult.from, ...readResult.to, ...readResult.cc],
+    readResult.date,
+  ).catch(() => { /* already logged inside upsertContacts */ });
+
   return {
     result: {
       content: [{ type: "text", text: JSON.stringify(readResult) }],
@@ -8412,6 +8736,13 @@ async function executeSendEmail(
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
+  // Derive contacts from recipients (fire-and-forget; never blocks the response).
+  upsertContacts(
+    inbox,
+    [...sendResult.to, ...sendResult.cc, ...sendResult.bcc],
+    sendResult.sent_at,
+  ).catch(() => { /* already logged inside upsertContacts */ });
+
   return {
     result: {
       content: [{ type: "text", text: JSON.stringify(sendResult) }],
@@ -9180,6 +9511,19 @@ async function executeSearchEmails(
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
+  // Derive contacts from message summaries (fire-and-forget).
+  // Each summary carries from + to; use the most-recent date seen per message.
+  if (searchResult.messages.length > 0) {
+    const allEntries: EmailAddressEntry[] = [];
+    for (const msg of searchResult.messages) {
+      allEntries.push(msg.from, ...msg.to);
+    }
+    const latestDate = searchResult.messages.reduce<string>((best, msg) =>
+      msg.date > best ? msg.date : best, searchResult.messages[0].date);
+    upsertContacts(inbox, allEntries, latestDate)
+      .catch(() => { /* already logged inside upsertContacts */ });
+  }
+
   return {
     result: {
       content: [{ type: "text", text: JSON.stringify(searchResult) }],
@@ -9242,7 +9586,7 @@ async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     const mailboxes = await client.listMailboxes();
@@ -9566,7 +9910,7 @@ async function imapCreateFolder(inbox: InboxRow, name: string): Promise<{ id: st
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.createMailbox(name);
@@ -9677,7 +10021,7 @@ async function imapRenameFolder(inbox: InboxRow, folderId: string, newName: stri
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.renameMailbox(folderId, newName);
@@ -9783,7 +10127,7 @@ async function imapDeleteFolder(inbox: InboxRow, folderId: string): Promise<void
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.deleteMailbox(folderId);
@@ -10242,7 +10586,7 @@ async function imapUpdateFlags(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -10276,7 +10620,7 @@ async function imapArchiveEmail(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -11016,7 +11360,7 @@ async function imapMoveEmail(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -11048,7 +11392,7 @@ async function imapCopyEmail(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -11436,7 +11780,7 @@ async function imapDeleteEmail(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -11903,7 +12247,7 @@ async function imapBulkMove(
       client = await ImapClient.connect({
         host: inbox.imap_host,
         port: inbox.imap_port,
-        email: inbox.email_address,
+        email: imapAuthUser(inbox),
         password,
       });
       await client.selectMailbox(imapFolderName(folder));
@@ -11960,7 +12304,7 @@ async function imapBulkDelete(
       client = await ImapClient.connect({
         host: inbox.imap_host,
         port: inbox.imap_port,
-        email: inbox.email_address,
+        email: imapAuthUser(inbox),
         password,
       });
       await client.selectMailbox(imapFolderName(folder));
@@ -12034,7 +12378,7 @@ async function imapBulkFlag(
       client = await ImapClient.connect({
         host: inbox.imap_host,
         port: inbox.imap_port,
-        email: inbox.email_address,
+        email: imapAuthUser(inbox),
         password,
       });
       await client.selectMailbox(imapFolderName(folder));
@@ -13258,7 +13602,7 @@ async function imapListDrafts(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     let summaries: ImapMessageSummary[] = [];
@@ -13319,7 +13663,7 @@ async function imapCreateDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
 
@@ -13387,7 +13731,7 @@ async function imapUpdateDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
 
@@ -13441,7 +13785,7 @@ async function imapSendDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -13481,7 +13825,7 @@ async function imapSendDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
-      email: inbox.email_address,
+      email: imapAuthUser(inbox),
       password,
     });
     await client.selectMailbox(imapFolderName(folder));
@@ -14451,6 +14795,661 @@ async function executeSendDraft(
 }
 
 // ---------------------------------------------------------------------------
+// Contacts tools — Phase 6
+// ---------------------------------------------------------------------------
+
+/**
+ * `search_contacts` — search the derived contacts table by name or email.
+ *
+ * Scope: manage:contacts
+ * Required params: query (string)
+ * Optional params: inbox_id (UUID), limit (integer 1–50, default 20)
+ *
+ * Searches both email_address and display_name case-insensitively.
+ * When inbox_id is provided the search is scoped to that inbox; otherwise
+ * it spans all inboxes the API key can access within the workspace.
+ * Results are sorted by last_contacted_at DESC (most-recently-seen first).
+ */
+async function executeSearchContacts(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "search_contacts: arguments must be an object with a query field." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+
+  const query = typeof args["query"] === "string" && args["query"].length > 0
+    ? args["query"] : null;
+  if (!query) {
+    return {
+      result: { content: [{ type: "text", text: "search_contacts: query is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  const limit = typeof args["limit"] === "number"
+    ? Math.min(50, Math.max(1, Math.floor(args["limit"])))
+    : 20;
+
+  // If an inbox_id was supplied, validate it is accessible to this API key.
+  if (inboxId) {
+    const inbox = await resolveInbox(inboxId, apiKey);
+    if (!inbox) {
+      return {
+        result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
+        logStatus: "error", logErrorCode: "inbox_not_found",
+      };
+    }
+  }
+
+  // Build the Supabase query.  Both email_address and display_name are searched
+  // with ILIKE so the match is case-insensitive on the DB side.
+  // Filters are applied before transforms (.order, .limit) to stay within
+  // PostgrestFilterBuilder's type surface.
+  const pattern = `%${query}%`;
+  let dbQuery = supabase
+    .from("contacts")
+    .select("id, inbox_id, email_address, display_name, message_count, last_contacted_at")
+    .eq("workspace_id", apiKey.workspace_id)
+    .is("deleted_at", null)
+    .or(`email_address.ilike.${pattern},display_name.ilike.${pattern}`);
+
+  // Narrow to a specific inbox when one was requested.
+  if (inboxId) {
+    dbQuery = dbQuery.eq("inbox_id", inboxId);
+  } else if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+    // API key scoped to specific inboxes — honour that restriction.
+    dbQuery = dbQuery.in("inbox_id", apiKey.inbox_ids);
+  }
+
+  const { data, error } = await dbQuery
+    .order("last_contacted_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.error("[mcp-server] search_contacts: db_error", {
+      workspace_id: apiKey.workspace_id,
+      error: error.message,
+    });
+    return {
+      result: { content: [{ type: "text", text: "search_contacts: database error while querying contacts." }], isError: true },
+      logStatus: "error", logErrorCode: "db_error",
+    };
+  }
+
+  const contacts = (data ?? []).map((row: {
+    id: string;
+    inbox_id: string;
+    email_address: string;
+    display_name: string | null;
+    message_count: number;
+    last_contacted_at: string;
+  }) => ({
+    id: row.id,
+    inbox_id: row.inbox_id,
+    email_address: row.email_address,
+    display_name: row.display_name ?? null,
+    message_count: row.message_count,
+    last_contacted_at: row.last_contacted_at,
+  }));
+
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify({ query, contacts, total: contacts.length }, null, 2) }] },
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+/**
+ * `get_contact` — retrieve a single contact record by inbox + email address.
+ *
+ * Scope: manage:contacts
+ * Required params: inbox_id (UUID), email_address (string)
+ *
+ * Returns the contact's full record including message_count and
+ * last_contacted_at.  The email_address is normalised to lowercase before
+ * querying so matches are case-insensitive.
+ */
+async function executeGetContact(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "get_contact: arguments must be an object with inbox_id and email_address." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: { content: [{ type: "text", text: "get_contact: inbox_id is required and must be a UUID string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  const rawEmail = typeof args["email_address"] === "string" ? args["email_address"].trim() : null;
+  if (!rawEmail) {
+    return {
+      result: { content: [{ type: "text", text: "get_contact: email_address is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const emailAddress = rawEmail.toLowerCase();
+
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
+      logStatus: "error", logErrorCode: "inbox_not_found",
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("contacts")
+    .select("id, inbox_id, email_address, display_name, message_count, last_contacted_at, created_at, updated_at")
+    .eq("inbox_id", inbox.id)
+    .eq("email_address", emailAddress)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[mcp-server] get_contact: db_error", {
+      inbox_id: inbox.id,
+      email_address: emailAddress,
+      error: error.message,
+    });
+    return {
+      result: { content: [{ type: "text", text: "get_contact: database error while querying contacts." }], isError: true },
+      logStatus: "error", logErrorCode: "db_error",
+    };
+  }
+
+  if (!data) {
+    return {
+      result: { content: [{ type: "text", text: JSON.stringify({ found: false, inbox_id: inbox.id, email_address: emailAddress }) }] },
+      logStatus: "success", logErrorCode: null,
+    };
+  }
+
+  const contact = data as {
+    id: string;
+    inbox_id: string;
+    email_address: string;
+    display_name: string | null;
+    message_count: number;
+    last_contacted_at: string;
+    created_at: string;
+    updated_at: string;
+  };
+
+  return {
+    result: { content: [{ type: "text", text: JSON.stringify({ found: true, contact }, null, 2) }] },
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Scheduling tools — Phase 7
+// ---------------------------------------------------------------------------
+
+/**
+ * `schedule_send` — insert a future-delivery row into scheduled_sends.
+ *
+ * Scope: schedule:email
+ * Required params: inbox_id (UUID), to (string[]), subject, body, send_at (ISO 8601)
+ * Optional params: cc, bcc, html_body, attachments, reply_to
+ *
+ * Validates all inputs using the same rules as send_email, then inserts a
+ * scheduled_sends row with the full send_email payload stored as JSONB.
+ * The dispatcher (handleScheduledDispatch / pg_cron every minute) picks it
+ * up when send_at <= now().
+ */
+async function executeScheduleSend(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: arguments must be an object." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+
+  // inbox_id (required)
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  if (!inboxId) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: inbox_id is required and must be a UUID string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  // to (required, non-empty array, max 50)
+  const toRaw = args["to"];
+  if (!Array.isArray(toRaw) || toRaw.length === 0) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: to is required and must be a non-empty array of email address strings." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  if (toRaw.length > 50) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: to must not exceed 50 recipients." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const to = toRaw as string[];
+
+  // cc / bcc (optional)
+  const cc: string[] = Array.isArray(args["cc"]) ? (args["cc"] as string[]) : [];
+  const bcc: string[] = Array.isArray(args["bcc"]) ? (args["bcc"] as string[]) : [];
+
+  // subject (required, 1–998 chars)
+  const subjectRaw = args["subject"];
+  if (typeof subjectRaw !== "string" || subjectRaw.trim().length === 0) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: subject is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  if (subjectRaw.length > 998) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: subject must not exceed 998 characters." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const subject = subjectRaw;
+
+  // body (required)
+  const bodyRaw = args["body"];
+  if (typeof bodyRaw !== "string" || bodyRaw.trim().length === 0) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: body is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const body = bodyRaw;
+
+  // html_body (optional)
+  const htmlBody = typeof args["html_body"] === "string" ? args["html_body"] : undefined;
+
+  // attachments (optional, max 20)
+  const attachmentsRaw = args["attachments"];
+  const attachments: Array<{ filename: string; mime_type: string; data: string }> = [];
+  if (Array.isArray(attachmentsRaw)) {
+    if (attachmentsRaw.length > 20) {
+      return {
+        result: { content: [{ type: "text", text: "schedule_send: attachments must not exceed 20 items." }], isError: true },
+        logStatus: "error", logErrorCode: "-32602",
+      };
+    }
+    for (const att of attachmentsRaw) {
+      if (
+        typeof att !== "object" || att === null ||
+        typeof (att as Record<string, unknown>)["filename"] !== "string" ||
+        typeof (att as Record<string, unknown>)["mime_type"] !== "string" ||
+        typeof (att as Record<string, unknown>)["data"] !== "string"
+      ) {
+        return {
+          result: { content: [{ type: "text", text: "schedule_send: each attachment must have filename, mime_type, and data fields." }], isError: true },
+          logStatus: "error", logErrorCode: "-32602",
+        };
+      }
+      attachments.push(att as { filename: string; mime_type: string; data: string });
+    }
+  }
+
+  // reply_to (optional)
+  const replyTo = typeof args["reply_to"] === "string" ? args["reply_to"] : undefined;
+
+  // send_at (required — ISO 8601, must be in the future)
+  const sendAtRaw = args["send_at"];
+  if (typeof sendAtRaw !== "string" || sendAtRaw.trim().length === 0) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: send_at is required and must be an ISO 8601 datetime string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const sendAtMs = Date.parse(sendAtRaw);
+  if (isNaN(sendAtMs)) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: send_at is not a valid ISO 8601 datetime string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  if (sendAtMs <= Date.now()) {
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: send_at must be in the future." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const sendAt = new Date(sendAtMs).toISOString();
+
+  // ── RFC 5322 address validation ────────────────────────────────────────────
+  const addrChecks: Array<{ field: string; addr: unknown }> = [
+    ...to.map((addr) => ({ field: "to", addr })),
+    ...cc.map((addr) => ({ field: "cc", addr })),
+    ...bcc.map((addr) => ({ field: "bcc", addr })),
+    ...(replyTo !== undefined ? [{ field: "reply_to", addr: replyTo }] : []),
+  ];
+  for (const { field, addr } of addrChecks) {
+    if (typeof addr !== "string" || !isValidEmailAddress(addr)) {
+      return {
+        result: {
+          content: [{ type: "text", text: `schedule_send: invalid email address in '${field}': "${String(addr)}".` }],
+          isError: true,
+        },
+        logStatus: "error", logErrorCode: "invalid_recipient",
+      };
+    }
+  }
+
+  // ── Inbox resolution + access control ─────────────────────────────────────
+  const inbox = await resolveInbox(inboxId, apiKey);
+  if (!inbox) {
+    return {
+      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
+      logStatus: "error", logErrorCode: "inbox_not_found",
+    };
+  }
+
+  // ── Capability check ───────────────────────────────────────────────────────
+  const caps = getProviderCapabilities(inbox.provider, inbox.service ?? undefined);
+  if (!caps.scheduling) {
+    return unsupportedFeatureError("scheduling", inbox.provider);
+  }
+
+  // ── Build payload (mirrors send_email args, stored as JSONB for dispatcher) ─
+  const payload: Record<string, unknown> = { to, cc, bcc, subject, body };
+  if (htmlBody !== undefined) payload["html_body"] = htmlBody;
+  if (attachments.length > 0) payload["attachments"] = attachments;
+  if (replyTo !== undefined) payload["reply_to"] = replyTo;
+
+  // ── Insert into scheduled_sends ────────────────────────────────────────────
+  const { data: row, error: insertErr } = await supabase
+    .from("scheduled_sends")
+    .insert({
+      workspace_id: apiKey.workspace_id,
+      inbox_id: inbox.id,
+      payload,
+      send_at: sendAt,
+      status: "pending",
+    })
+    .select("id, inbox_id, send_at, status, created_at")
+    .single();
+
+  if (insertErr) {
+    console.error("[mcp-server] schedule_send: insert_error", {
+      workspace_id: apiKey.workspace_id,
+      inbox_id: inbox.id,
+      error: insertErr.message,
+    });
+    return {
+      result: { content: [{ type: "text", text: "schedule_send: database error while scheduling the send." }], isError: true },
+      logStatus: "error", logErrorCode: "db_error",
+    };
+  }
+
+  const created = row as { id: string; inbox_id: string; send_at: string; status: string; created_at: string };
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          scheduled: true,
+          id: created.id,
+          inbox_id: created.inbox_id,
+          to,
+          subject,
+          send_at: created.send_at,
+          status: created.status,
+          created_at: created.created_at,
+        }, null, 2),
+      }],
+    },
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+/**
+ * `list_scheduled` — list pending scheduled sends for the workspace.
+ *
+ * Scope: schedule:email
+ * Optional params: inbox_id (UUID), limit (integer 1–100, default 20)
+ *
+ * Returns rows with status IN ('pending', 'sending'), ordered by send_at ASC.
+ * Each row includes a payload summary (to, subject) without the full body or
+ * attachments to keep the response compact.
+ */
+async function executeListScheduled(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "list_scheduled: arguments must be an object." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+
+  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  const limit = typeof args["limit"] === "number"
+    ? Math.min(100, Math.max(1, Math.floor(args["limit"])))
+    : 20;
+
+  // If inbox_id provided, validate accessibility.
+  if (inboxId) {
+    const inbox = await resolveInbox(inboxId, apiKey);
+    if (!inbox) {
+      return {
+        result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
+        logStatus: "error", logErrorCode: "inbox_not_found",
+      };
+    }
+  }
+
+  // Build query — workspace-scoped, pending/sending only.
+  let dbQuery = supabase
+    .from("scheduled_sends")
+    .select("id, inbox_id, payload, send_at, status, created_at")
+    .eq("workspace_id", apiKey.workspace_id)
+    .in("status", ["pending", "sending"]);
+
+  if (inboxId) {
+    dbQuery = dbQuery.eq("inbox_id", inboxId);
+  } else if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+    // API key scoped to specific inboxes — honour the restriction.
+    dbQuery = dbQuery.in("inbox_id", apiKey.inbox_ids);
+  }
+
+  const { data, error } = await dbQuery
+    .order("send_at", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    console.error("[mcp-server] list_scheduled: db_error", {
+      workspace_id: apiKey.workspace_id,
+      error: error.message,
+    });
+    return {
+      result: { content: [{ type: "text", text: "list_scheduled: database error while listing scheduled sends." }], isError: true },
+      logStatus: "error", logErrorCode: "db_error",
+    };
+  }
+
+  const rows = (data ?? []).map((row: {
+    id: string;
+    inbox_id: string;
+    payload: Record<string, unknown>;
+    send_at: string;
+    status: string;
+    created_at: string;
+  }) => ({
+    id: row.id,
+    inbox_id: row.inbox_id,
+    send_at: row.send_at,
+    status: row.status,
+    created_at: row.created_at,
+    // Payload summary: expose to + subject without the full body/attachments.
+    to: Array.isArray(row.payload["to"]) ? row.payload["to"] : [],
+    subject: typeof row.payload["subject"] === "string" ? row.payload["subject"] : "",
+  }));
+
+  return {
+    result: {
+      content: [{ type: "text", text: JSON.stringify({ scheduled_sends: rows, total: rows.length }, null, 2) }],
+    },
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+/**
+ * `cancel_scheduled` — set status='cancelled' on a pending scheduled send.
+ *
+ * Scope: schedule:email
+ * Required params: scheduled_send_id (UUID)
+ *
+ * Only rows with status 'pending' can be cancelled.  The UPDATE uses an
+ * optimistic `.eq("status", "pending")` guard so a row that is already
+ * being dispatched (status='sending') is not accidentally cancelled.
+ * Returns the cancelled row's id, inbox_id, and send_at.
+ */
+async function executeCancelScheduled(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "cancel_scheduled: arguments must be an object." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+
+  const scheduledSendId = typeof args["scheduled_send_id"] === "string" ? args["scheduled_send_id"] : null;
+  if (!scheduledSendId) {
+    return {
+      result: { content: [{ type: "text", text: "cancel_scheduled: scheduled_send_id is required and must be a UUID string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  // Fetch the row (workspace-scoped) to confirm existence and current status.
+  const { data: existing, error: fetchErr } = await supabase
+    .from("scheduled_sends")
+    .select("id, inbox_id, status, send_at")
+    .eq("id", scheduledSendId)
+    .eq("workspace_id", apiKey.workspace_id)
+    .maybeSingle();
+
+  if (fetchErr) {
+    console.error("[mcp-server] cancel_scheduled: db_error", {
+      id: scheduledSendId,
+      error: fetchErr.message,
+    });
+    return {
+      result: { content: [{ type: "text", text: "cancel_scheduled: database error while fetching the scheduled send." }], isError: true },
+      logStatus: "error", logErrorCode: "db_error",
+    };
+  }
+
+  if (!existing) {
+    return {
+      result: { content: [{ type: "text", text: `cancel_scheduled: scheduled send ${scheduledSendId} not found or not accessible.` }], isError: true },
+      logStatus: "error", logErrorCode: "not_found",
+    };
+  }
+
+  const row = existing as { id: string; inbox_id: string; status: string; send_at: string };
+
+  if (row.status !== "pending") {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `cancel_scheduled: cannot cancel scheduled send ${scheduledSendId} — ` +
+            `current status is '${row.status}'. Only 'pending' sends can be cancelled.`,
+        }],
+        isError: true,
+      },
+      logStatus: "error", logErrorCode: "not_cancellable",
+    };
+  }
+
+  // Honour API key inbox restriction.
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0 && !apiKey.inbox_ids.includes(row.inbox_id)) {
+    return {
+      result: { content: [{ type: "text", text: `cancel_scheduled: scheduled send ${scheduledSendId} is not accessible to this API key.` }], isError: true },
+      logStatus: "error", logErrorCode: "inbox_not_found",
+    };
+  }
+
+  // Update to 'cancelled' with optimistic status guard against dispatcher race.
+  const { error: updateErr } = await supabase
+    .from("scheduled_sends")
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .eq("id", scheduledSendId)
+    .eq("workspace_id", apiKey.workspace_id)
+    .eq("status", "pending");
+
+  if (updateErr) {
+    console.error("[mcp-server] cancel_scheduled: update_error", {
+      id: scheduledSendId,
+      error: updateErr.message,
+    });
+    return {
+      result: { content: [{ type: "text", text: "cancel_scheduled: database error while cancelling the scheduled send." }], isError: true },
+      logStatus: "error", logErrorCode: "db_error",
+    };
+  }
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          cancelled: true,
+          id: row.id,
+          inbox_id: row.inbox_id,
+          send_at: row.send_at,
+          previous_status: "pending",
+        }, null, 2),
+      }],
+    },
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Method handlers
 // ---------------------------------------------------------------------------
 
@@ -14920,6 +15919,36 @@ async function handleToolsCall(
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "search_contacts") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeSearchContacts(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "get_contact") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeGetContact(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "schedule_send") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeScheduleSend(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "list_scheduled") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeListScheduled(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "cancel_scheduled") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeCancelScheduled(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
     } else {
       // Tool is registered in TOOL_REGISTRY but not yet implemented.
       // Returns a structured error so MCP clients receive a valid JSON-RPC
@@ -14984,10 +16013,211 @@ async function handleToolsCall(
 // Main request handler
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Scheduled-send dispatcher
+// ---------------------------------------------------------------------------
+//
+// Entry point: POST /dispatch (mcp-server edge function, path suffix)
+// Caller:      pg_cron → dispatch_scheduled_sends() SQL function → net.http_post
+// Auth:        X-Dispatch-Secret header matched against DISPATCH_SECRET env var
+//
+// Picks up to MAX_DISPATCH_BATCH pending scheduled_sends rows with
+// send_at <= now(), sends each via the existing per-provider send path
+// (sendGmailMessage / sendOutlookMessage / sendFastmailMessage / sendImapMessage),
+// and transitions status to 'sent' or 'error'.
+//
+// Status lifecycle enforced here:
+//   pending → sending  (optimistic lock before send attempt)
+//   sending → sent     (on success, sent_at populated)
+//   sending → error    (on failure, error_detail populated)
+//
+// See migration 20260603000001_create_scheduled_sends.sql for table schema,
+// RLS policies, and pg_cron setup instructions.
+// ---------------------------------------------------------------------------
+
+const MAX_DISPATCH_BATCH = 50;
+
+async function handleScheduledDispatch(): Promise<Response> {
+  const now = new Date().toISOString();
+
+  // Fetch pending rows due for sending, ordered by send_at ASC so the
+  // oldest-due messages are dispatched first.
+  const { data: rows, error: fetchErr } = await supabase
+    .from("scheduled_sends")
+    .select("id, inbox_id, payload")
+    .eq("status", "pending")
+    .lte("send_at", now)
+    .order("send_at", { ascending: true })
+    .limit(MAX_DISPATCH_BATCH);
+
+  if (fetchErr) {
+    console.error("[dispatch] Failed to fetch pending rows:", fetchErr.message);
+    return new Response(
+      JSON.stringify({ error: "db_error", detail: fetchErr.message }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  const pending = rows ?? [];
+  if (pending.length === 0) {
+    return new Response(
+      JSON.stringify({ dispatched: 0, errored: 0, total: 0 }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  let dispatched = 0;
+  let errored = 0;
+
+  for (const row of pending) {
+    // Optimistic lock: atomically transition pending → sending so a
+    // concurrent cron invocation cannot pick up the same row.
+    const { error: lockErr } = await supabase
+      .from("scheduled_sends")
+      .update({ status: "sending", updated_at: new Date().toISOString() })
+      .eq("id", row.id)
+      .eq("status", "pending"); // only transitions from pending
+
+    if (lockErr) {
+      // Another worker beat us to it — skip silently.
+      console.warn(`[dispatch] Could not lock row ${row.id}:`, lockErr.message);
+      continue;
+    }
+
+    try {
+      // ── Look up the inbox ──────────────────────────────────────────────
+      const { data: inbox, error: inboxErr } = await supabase
+        .from("inboxes")
+        .select(INBOX_SELECT_COLUMNS)
+        .eq("id", row.inbox_id)
+        .single<InboxRow>();
+
+      if (inboxErr || !inbox) {
+        throw new Error(
+          `Inbox ${row.inbox_id} not found: ${inboxErr?.message ?? "no data"}`,
+        );
+      }
+
+      // ── Build SendEmailParams from stored payload ───────────────────────
+      const payload = (row.payload ?? {}) as Record<string, unknown>;
+      const sendParams: SendEmailParams = {
+        to: Array.isArray(payload["to"]) ? (payload["to"] as string[]) : [],
+        cc: Array.isArray(payload["cc"]) ? (payload["cc"] as string[]) : [],
+        bcc: Array.isArray(payload["bcc"]) ? (payload["bcc"] as string[]) : [],
+        subject:
+          typeof payload["subject"] === "string" ? payload["subject"] : "",
+        textBody:
+          typeof payload["body"] === "string" ? payload["body"] : "",
+        htmlBody:
+          typeof payload["html_body"] === "string"
+            ? payload["html_body"]
+            : undefined,
+        attachments: Array.isArray(payload["attachments"])
+          ? (payload["attachments"] as Array<{
+              filename: string;
+              mime_type: string;
+              data: string;
+            }>)
+          : [],
+        replyTo:
+          typeof payload["reply_to"] === "string"
+            ? payload["reply_to"]
+            : undefined,
+      };
+
+      // ── Per-provider send (mirrors executeSendEmail dispatch) ──────────
+      let sendResult: SendEmailResult;
+      switch (inbox.provider) {
+        case "gmail":
+          sendResult = await sendGmailMessage(inbox, sendParams);
+          break;
+        case "outlook":
+          sendResult = await sendOutlookMessage(inbox, sendParams);
+          break;
+        case "fastmail":
+          sendResult = await sendFastmailMessage(inbox, sendParams);
+          break;
+        case "imap":
+          sendResult = await sendImapMessage(inbox, sendParams);
+          break;
+        default:
+          throw new Error(
+            `Provider '${inbox.provider}' is not supported by the scheduled-send dispatcher.`,
+          );
+      }
+
+      // ── Mark sent ──────────────────────────────────────────────────────
+      await supabase
+        .from("scheduled_sends")
+        .update({
+          status: "sent",
+          sent_at: sendResult.sent_at,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id);
+
+      dispatched++;
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      console.error(
+        `[dispatch] scheduled_send ${row.id} failed:`,
+        detail,
+      );
+
+      // Truncate error_detail to 1 000 chars to match column convention.
+      await supabase
+        .from("scheduled_sends")
+        .update({
+          status: "error",
+          error_detail: detail.slice(0, 1000),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id);
+
+      errored++;
+    }
+  }
+
+  console.log(
+    `[dispatch] Done: dispatched=${dispatched} errored=${errored} total=${pending.length}`,
+  );
+  return new Response(
+    JSON.stringify({ dispatched, errored, total: pending.length }),
+    { status: 200, headers: { "Content-Type": "application/json" } },
+  );
+}
+
 async function handleRequest(req: Request): Promise<Response> {
   // ── CORS preflight ────────────────────────────────────────────────────────
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
+  // ── Scheduled-send dispatcher route ───────────────────────────────────────
+  // Called every minute by pg_cron via net.http_post.  Secured with
+  // DISPATCH_SECRET env var — no API key required.
+  // See handleScheduledDispatch() and migration 20260603000001 for details.
+  const reqUrl = new URL(req.url);
+  if (reqUrl.pathname.endsWith("/dispatch")) {
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed — use HTTP POST" }),
+        { status: 405, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    const dispatchSecret = Deno.env.get("DISPATCH_SECRET");
+    const providedSecret = req.headers.get("x-dispatch-secret");
+    if (
+      !dispatchSecret ||
+      !providedSecret ||
+      providedSecret !== dispatchSecret
+    ) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized — invalid or missing X-Dispatch-Secret" }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return handleScheduledDispatch();
   }
 
   // ── HTTP method guard ─────────────────────────────────────────────────────

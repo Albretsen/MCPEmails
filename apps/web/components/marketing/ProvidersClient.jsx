@@ -122,17 +122,25 @@ const MATRIX = {
   },
   // ── Contacts ───────────────────────────────────────────────────────────
   contacts: {
-    label: 'Contacts API',
+    label: 'Native contacts API',
     section: 'Contacts',
     gmail: true, outlook: true, fastmail: false,
     icloud: false, yahoo: false, zoho: false, yandex: false, generic: false,
+  },
+  contacts_db: {
+    label: 'Contact search (DB-synced)',
+    section: 'Contacts',
+    // Populated from message headers for every provider (Task 15-16)
+    gmail: true, outlook: true, fastmail: true,
+    icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Scheduling ─────────────────────────────────────────────────────────
   scheduling: {
     label: 'Scheduled send',
     section: 'Scheduling',
-    gmail: 'planned', outlook: 'planned', fastmail: 'planned',
-    icloud: 'planned', yahoo: 'planned', zoho: 'planned', yandex: 'planned', generic: 'planned',
+    // Shipped via server-side scheduled_sends queue (Task 17-18) for all providers
+    gmail: true, outlook: true, fastmail: true,
+    icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Search syntax ──────────────────────────────────────────────────────
   search_syntax: {
@@ -302,6 +310,9 @@ export default function ProvidersClient() {
             </p>
             <p style={{ margin: 0 }}>
               {t.rich('providers.notes.contacts', RICH)}
+            </p>
+            <p style={{ margin: 0 }}>
+              {t.rich('providers.notes.contacts_db', RICH)}
             </p>
             <p style={{ margin: 0 }}>
               {t.rich('providers.notes.scheduling', RICH)}
