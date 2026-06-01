@@ -191,7 +191,7 @@ body { background: var(--bg-page); }
 .btn { font-family: var(--font-sans); font-weight: 500; font-size: 13.5px; line-height: 1;
   border-radius: 8px; padding: 0 14px; height: 34px; display: inline-flex;
   align-items: center; gap: 8px; border: 1px solid transparent; cursor: pointer;
-  transition: all 120ms var(--ease-out); }
+  white-space: nowrap; transition: all 120ms var(--ease-out); }
 .btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .btn-primary   { background: var(--brand); color: var(--fg-on-brand); }
 .btn-primary:hover   { background: var(--brand-hover); }
@@ -212,7 +212,7 @@ body { background: var(--bg-page); }
 /* === Badges === */
 .badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px;
   border-radius: 999px; font-family: var(--font-sans); font-size: 12px; font-weight: 500; line-height: 1;
-  border: 1px solid transparent; }
+  white-space: nowrap; border: 1px solid transparent; }
 .b-live    { background: var(--mint-50); color: var(--mint-700); border-color: rgba(31,203,139,0.25); }
 .b-brand   { background: var(--cobalt-50); color: var(--cobalt-700); border-color: rgba(37,71,229,0.18); }
 .b-neutral { background: var(--ink-100); color: var(--ink-700); border-color: var(--border-1); }
