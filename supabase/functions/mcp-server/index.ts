@@ -21,6 +21,66 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 // ---------------------------------------------------------------------------
+// Reconnect / auth-failure helpers
+// ---------------------------------------------------------------------------
+
+/** Canonical app origin (apex domain). Override via APP_URL for previews. */
+const APP_URL = (Deno.env.get("APP_URL") ?? "https://mcpemails.com").replace(/\/+$/, "");
+
+/**
+ * Build the URL the user should open to reconnect a broken inbox.
+ *
+ * For OAuth providers (gmail, outlook) we return a deep link into the OAuth
+ * start route, scoped to the specific inbox. The route passes the inbox's
+ * email address to the provider as a `login_hint` so the account chooser
+ * pre-selects the right account — the user just has to be signed in to the
+ * dashboard and approve. App-password providers (fastmail, imap) can't be
+ * re-authorized via OAuth, so we send the user to the inbox list to update
+ * their credentials.
+ */
+function reconnectUrl(provider: string, inboxId: string): string {
+  if (provider === "gmail" || provider === "outlook") {
+    return `${APP_URL}/auth/${provider}?inbox=${encodeURIComponent(inboxId)}`;
+  }
+  return `${APP_URL}/dashboard/inboxes`;
+}
+
+interface ToolErrorResult {
+  result: { content: { type: string; text: string }[]; isError: boolean };
+  logStatus: "error";
+  logErrorCode: string;
+}
+
+/**
+ * Standard tool result for an expired/revoked inbox token. The text is written
+ * for the calling agent: it names the failed action, explains the cause, and
+ * gives a single clickable reconnect link the agent can relay to the user.
+ *
+ * @param action human-readable verb phrase, e.g. "access" / "send a reply via".
+ */
+function authFailedResult(
+  provider: string,
+  inboxId: string,
+  action = "access",
+): ToolErrorResult {
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text:
+          `Unable to ${action} the ${provider} inbox: its OAuth token has been ` +
+          `revoked or expired, so the inbox has been marked 'error'. Ask the user ` +
+          `to reconnect it by opening this link in their browser (they may need ` +
+          `to sign in to MCP Emails first): ${reconnectUrl(provider, inboxId)}`,
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: "auth_failed",
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -3209,7 +3269,7 @@ async function withFreshOutlookToken(inbox: InboxRow): Promise<string> {
         refresh_token: refreshToken,
         grant_type: "refresh_token",
         scope:
-          "https://graph.microsoft.com/Mail.Read " +
+          "https://graph.microsoft.com/Mail.ReadWrite " +
           "https://graph.microsoft.com/Mail.Send " +
           "offline_access",
       }),
@@ -4619,21 +4679,7 @@ async function executeListInbox(
       message === "imap_auth_failed";
 
     if (isAuthFailure) {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Unable to access ${inbox.provider} inbox: OAuth token has been ` +
-              "revoked or expired. The user must reconnect their inbox at " +
-              "https://mcpemails.com/dashboard/inboxes. " +
-              "Inbox status has been updated to 'error'.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "access");
     }
 
     console.error("[mcp-server] list_messages: provider_error", {
@@ -5744,20 +5790,7 @@ async function executeReadEmail(
       message === "imap_auth_failed";
 
     if (isAuthFailure) {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Unable to access ${inbox.provider} inbox: OAuth token has been ` +
-              "revoked or expired. The user must reconnect their inbox at " +
-              "https://mcpemails.com/dashboard/inboxes.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "access");
     }
 
     console.error("[mcp-server] read_email: provider_error", {
@@ -6241,7 +6274,8 @@ async function sendOutlookMessage(
   );
 
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 429) throw new Error("quota_exceeded");
     let errMsg = resp.statusText;
     try {
@@ -6904,7 +6938,8 @@ async function replyOutlookMessage(
   );
 
   if (!sendResp.ok) {
-    if (sendResp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (sendResp.status === 401 || sendResp.status === 403) throw new Error("outlook_auth_failed");
     if (sendResp.status === 429) throw new Error("quota_exceeded");
     let errMsg = sendResp.statusText;
     try {
@@ -7923,21 +7958,7 @@ async function executeForwardEmail(
       message === "imap_auth_failed";
 
     if (isAuthFailure) {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Unable to forward via ${inbox.provider}: OAuth token has been ` +
-              "revoked or expired. The user must reconnect their inbox at " +
-              "https://mcpemails.com/dashboard/inboxes. " +
-              "Inbox status has been updated to 'error'.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "forward via");
     }
 
     if (message === "quota_exceeded") {
@@ -8270,21 +8291,7 @@ async function executeReplyToEmail(
       message === "imap_auth_failed";
 
     if (isAuthFailure) {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Unable to send reply via ${inbox.provider}: OAuth token has been ` +
-              "revoked or expired. The user must reconnect their inbox at " +
-              "https://mcpemails.com/dashboard/inboxes. " +
-              "Inbox status has been updated to 'error'.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "send reply via");
     }
 
     if (message === "quota_exceeded") {
@@ -8694,21 +8701,7 @@ async function executeSendEmail(
       message === "imap_auth_failed";
 
     if (isAuthFailure) {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Unable to access ${inbox.provider} inbox: OAuth token has been ` +
-              "revoked or expired. The user must reconnect their inbox at " +
-              "https://mcpemails.com/dashboard/inboxes. " +
-              "Inbox status has been updated to 'error'.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "access");
     }
 
     // Unknown provider error — log it but do NOT include raw error detail
@@ -9458,21 +9451,7 @@ async function executeSearchEmails(
       message === "imap_auth_failed";
 
     if (isAuthFailure) {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Unable to access ${inbox.provider} inbox: OAuth token has been ` +
-              "revoked or expired. The user must reconnect their inbox at " +
-              "https://mcpemails.com/dashboard/inboxes. " +
-              "Inbox status has been updated to 'error'.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "access");
     }
 
     // Provider-signalled invalid query (Outlook 400 responses)
@@ -9849,20 +9828,7 @@ async function executeListFolders(
       message === "fastmail_auth_failed" ||
       message === "imap_auth_failed";
     if (isAuth) {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Unable to access ${inbox.provider} inbox: OAuth token has been ` +
-              "revoked or expired. The user must reconnect their inbox at " +
-              "https://mcpemails.com/dashboard/inboxes.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "access");
     }
     console.error("[mcp-server] list_folders: provider_error", {
       inbox_id: inbox.id,
@@ -9960,7 +9926,8 @@ async function outlookCreateFolder(inbox: InboxRow, name: string): Promise<{ id:
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     throw new Error(`Graph mailFolders create failed: ${resp.statusText}`);
   }
   const data = (await resp.json()) as { id: string; displayName: string };
@@ -10069,7 +10036,8 @@ async function outlookRenameFolder(inbox: InboxRow, folderId: string, newName: s
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("folder_not_found");
     throw new Error(`Graph mailFolders PATCH failed: ${resp.statusText}`);
   }
@@ -10167,7 +10135,8 @@ async function outlookDeleteFolder(inbox: InboxRow, folderId: string): Promise<v
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("folder_not_found");
     throw new Error(`Graph mailFolders delete failed: ${resp.statusText}`);
   }
@@ -10293,6 +10262,7 @@ async function resolveFolderArgs(
 function folderProviderError(
   toolName: string,
   provider: string,
+  inboxId: string,
   err: unknown,
 ): { result: { content: { type: string; text: string }[]; isError: boolean }; logStatus: "error"; logErrorCode: string } {
   const message = err instanceof Error ? err.message : String(err);
@@ -10302,20 +10272,7 @@ function folderProviderError(
     message === "fastmail_auth_failed" ||
     message === "imap_auth_failed";
   if (isAuth) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Unable to access ${provider} inbox: OAuth token has been ` +
-            "revoked or expired. The user must reconnect their inbox at " +
-            "https://mcpemails.com/dashboard/inboxes.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "auth_failed",
-    };
+    return authFailedResult(provider, inboxId, "access");
   }
   if (message === "folder_not_found") {
     return {
@@ -10400,7 +10357,7 @@ async function executeCreateFolder(
         break;
     }
   } catch (err) {
-    return folderProviderError("create_folder", inbox.provider, err);
+    return folderProviderError("create_folder", inbox.provider, inbox.id, err);
   }
 
   return {
@@ -10472,7 +10429,7 @@ async function executeRenameFolder(
         break;
     }
   } catch (err) {
-    return folderProviderError("rename_folder", inbox.provider, err);
+    return folderProviderError("rename_folder", inbox.provider, inbox.id, err);
   }
 
   return {
@@ -10543,7 +10500,7 @@ async function executeDeleteFolder(
         break;
     }
   } catch (err) {
-    return folderProviderError("delete_folder", inbox.provider, err);
+    return folderProviderError("delete_folder", inbox.provider, inbox.id, err);
   }
 
   return {
@@ -10692,7 +10649,8 @@ async function outlookPatchMessage(
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     const body = await resp.text();
     throw new Error(`Outlook PATCH failed: ${body}`);
   }
@@ -10721,7 +10679,8 @@ async function outlookArchiveEmail(
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     const body = await resp.text();
     throw new Error(`Outlook move to archive failed: ${body}`);
   }
@@ -11056,20 +11015,7 @@ function handleFlagError(
     message === "imap_auth_failed";
 
   if (isAuthFailure) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Unable to access ${provider} inbox: OAuth token has been ` +
-            "revoked or expired. The user must reconnect their inbox at " +
-            "https://mcpemails.com/dashboard/inboxes.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "auth_failed",
-    };
+    return authFailedResult(provider, inboxId, "access");
   }
 
   console.error(`[mcp-server] ${toolName}: provider_error`, {
@@ -11441,7 +11387,8 @@ async function outlookMoveEmail(
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("message_not_found");
     const body = await resp.text();
     throw new Error(`Graph move failed: ${body}`);
@@ -11466,7 +11413,8 @@ async function outlookCopyEmail(
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("message_not_found");
     const body = await resp.text();
     throw new Error(`Graph copy failed: ${body}`);
@@ -11862,7 +11810,8 @@ async function outlookDeleteEmail(
     );
   }
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("message_not_found");
     const body = await resp.text();
     throw new Error(`Graph delete failed: ${body}`);
@@ -14091,7 +14040,8 @@ async function outlookCreateDraft(
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     throw new Error(`Outlook create draft error: ${resp.statusText}`);
   }
   const data = (await resp.json()) as { id: string; createdDateTime?: string };
@@ -14135,7 +14085,8 @@ async function outlookUpdateDraft(
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("draft_not_found");
     throw new Error(`Outlook update draft error: ${resp.statusText}`);
   }
@@ -14162,7 +14113,8 @@ async function outlookSendDraft(
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("draft_not_found");
     throw new Error(`Outlook send draft error: ${resp.statusText}`);
   }
@@ -14480,10 +14432,7 @@ async function executeListDrafts(
     const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
       message === "fastmail_auth_failed" || message === "imap_auth_failed";
     if (isAuth) {
-      return {
-        result: { content: [{ type: "text", text: `Unable to access ${inbox.provider} inbox: OAuth token has been revoked or expired. The user must reconnect their inbox at https://mcpemails.com/dashboard/inboxes.` }], isError: true },
-        logStatus: "error", logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "access");
     }
     console.error("[mcp-server] list_drafts: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
     return {
@@ -14575,10 +14524,7 @@ async function executeCreateDraft(
     const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
       message === "fastmail_auth_failed" || message === "imap_auth_failed";
     if (isAuth) {
-      return {
-        result: { content: [{ type: "text", text: `Unable to access ${inbox.provider} inbox: OAuth token has been revoked or expired. The user must reconnect their inbox at https://mcpemails.com/dashboard/inboxes.` }], isError: true },
-        logStatus: "error", logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "access");
     }
     console.error("[mcp-server] create_draft: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
     return {
@@ -14684,10 +14630,7 @@ async function executeUpdateDraft(
     const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
       message === "fastmail_auth_failed" || message === "imap_auth_failed";
     if (isAuth) {
-      return {
-        result: { content: [{ type: "text", text: `Unable to access ${inbox.provider} inbox: OAuth token has been revoked or expired. The user must reconnect their inbox at https://mcpemails.com/dashboard/inboxes.` }], isError: true },
-        logStatus: "error", logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "access");
     }
     console.error("[mcp-server] update_draft: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
     return {
@@ -14769,10 +14712,7 @@ async function executeSendDraft(
     const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
       message === "fastmail_auth_failed" || message === "imap_auth_failed";
     if (isAuth) {
-      return {
-        result: { content: [{ type: "text", text: `Unable to access ${inbox.provider} inbox: OAuth token has been revoked or expired. The user must reconnect their inbox at https://mcpemails.com/dashboard/inboxes.` }], isError: true },
-        logStatus: "error", logErrorCode: "auth_failed",
-      };
+      return authFailedResult(inbox.provider, inbox.id, "access");
     }
     if (message === "quota_exceeded") {
       return {

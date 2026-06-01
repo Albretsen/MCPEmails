@@ -77,9 +77,11 @@ export const IMAP_PRESETS: Record<BrandedImapService, ImapPreset> = {
     service: 'zoho',
     label: 'Zoho Mail',
     logoKind: 'zoho',
-    // Defaults to the global (.com) data center. Region-specific hosts
-    // (imap.zoho.eu, imap.zoho.in, imap.zoho.com.au, imap.zoho.jp, …) are
-    // handled by the region selector added in Phase 4.
+    // Defaults to the global (.com) data center, personal account type.
+    // Region-specific hosts (imap.zoho.eu, imap.zoho.in, imap.zoho.com.au,
+    // imap.zoho.jp, imap.zohocloud.ca, …) are handled by the region selector.
+    // Custom-domain / organization accounts use the `imappro`/`smtppro` hosts
+    // for the same data center — see zohoHosts() below.
     imapHost: 'imap.zoho.com',
     imapPort: 993,
     smtpHost: 'smtp.zoho.com',
@@ -87,8 +89,9 @@ export const IMAP_PRESETS: Record<BrandedImapService, ImapPreset> = {
     smtpSecurity: 'tls',
     appPasswordHelpUrl: 'https://www.zoho.com/mail/help/imap-access.html',
     hint:
-      'If two-factor authentication is enabled, generate an application-specific ' +
-      'password in Zoho Account → Security.',
+      'Enable IMAP access in Zoho first (Settings → Mail Accounts → IMAP Access ' +
+      'is OFF by default). If two-factor authentication is enabled, also generate ' +
+      'an application-specific password in Zoho Account → Security.',
   },
   yandex: {
     service: 'yandex',
@@ -101,8 +104,10 @@ export const IMAP_PRESETS: Record<BrandedImapService, ImapPreset> = {
     smtpSecurity: 'tls',
     appPasswordHelpUrl: 'https://yandex.com/support/id/en/authorization/app-passwords.html',
     hint:
-      'Enable IMAP in Yandex Mail settings first, then generate an app password ' +
-      'in Yandex ID → Security.',
+      'In Yandex Mail → Settings, enable IMAP and turn on "App passwords and OAuth ' +
+      'tokens" (both are required). Then generate an app password in Yandex ID → ' +
+      'Security. Yandex 360 custom-domain accounts can set a login below if it ' +
+      'differs from the email.',
   },
 };
 
@@ -140,6 +145,58 @@ export const DEFAULT_ZOHO_REGION = 'com';
 /** Resolve a Zoho region by value, falling back to the global (.com) data center. */
 export function zohoRegion(value: string | undefined | null): ZohoRegion {
   return ZOHO_REGIONS.find((r) => r.value === value) ?? ZOHO_REGIONS[0];
+}
+
+/**
+ * Zoho serves two classes of mailbox on different hosts within each data center:
+ *
+ *  - 'personal'      → @zohomail.com / free accounts: imap.zoho.<tld>  / smtp.zoho.<tld>
+ *  - 'organization'  → paid custom-domain (you@yourdomain): imappro.zoho.<tld> / smtppro.zoho.<tld>
+ *
+ * The organization host is the personal host with the leading service prefix
+ * promoted to its "pro" variant (imap → imappro, smtp → smtppro). This holds
+ * across every data center TLD, including Canada's imap.zohocloud.ca →
+ * imappro.zohocloud.ca. Ports are 993/465 regardless of account type.
+ *
+ * Verified against Zoho's IMAP/SMTP configuration docs (2026):
+ * https://www.zoho.com/mail/help/imap-access.html
+ */
+export type ZohoAccountType = 'personal' | 'organization';
+
+export const DEFAULT_ZOHO_ACCOUNT_TYPE: ZohoAccountType = 'personal';
+
+/** Type guard for the accepted Zoho account-type values. */
+export function isZohoAccountType(value: unknown): value is ZohoAccountType {
+  return value === 'personal' || value === 'organization';
+}
+
+/**
+ * Promote a personal Zoho host to its organization ("pro") equivalent by
+ * transforming the documented prefix: imap → imappro, smtp → smtppro. The
+ * data-center suffix (e.g. `.zoho.eu`, `.zohocloud.ca`) is preserved verbatim.
+ * Any host that doesn't begin with a known prefix is returned unchanged.
+ */
+function toProHost(host: string): string {
+  if (host.startsWith('imap.')) return 'imappro.' + host.slice('imap.'.length);
+  if (host.startsWith('smtp.')) return 'smtppro.' + host.slice('smtp.'.length);
+  return host;
+}
+
+/**
+ * Resolve the Zoho IMAP/SMTP hosts for a given data-center region and account
+ * type. Personal accounts use the region's documented hosts as-is; organization
+ * (custom-domain) accounts use the `imappro`/`smtppro` variants. Defaults to the
+ * global (.com) region and personal account type when inputs are absent.
+ */
+export function zohoHosts(
+  region: string | undefined | null,
+  accountType: ZohoAccountType = DEFAULT_ZOHO_ACCOUNT_TYPE
+): { imapHost: string; smtpHost: string } {
+  const r = zohoRegion(region);
+  if (accountType === 'organization') {
+    return { imapHost: toProHost(r.imapHost), smtpHost: toProHost(r.smtpHost) };
+  }
+  return { imapHost: r.imapHost, smtpHost: r.smtpHost };
 }
 
 /** Type guard: is the given string a branded service with a fixed preset? */

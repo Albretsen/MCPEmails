@@ -141,7 +141,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       oauth_access_token: encryptedAccessToken,
       oauth_refresh_token: encryptedRefreshToken,
       oauth_token_expires_at: tokenExpiresAt,
-      oauth_scope: 'Mail.Read Mail.Send offline_access',
+      oauth_scope: 'Mail.ReadWrite Mail.Send offline_access',
       status: 'active',
       last_error: null,
       deleted_at: null,

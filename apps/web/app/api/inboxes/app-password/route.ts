@@ -4,7 +4,13 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
-import { IMAP_PRESETS, isBrandedImapService, zohoRegion } from '@/lib/email-providers/imap-presets';
+import {
+  IMAP_PRESETS,
+  isBrandedImapService,
+  isZohoAccountType,
+  zohoHosts,
+  DEFAULT_ZOHO_ACCOUNT_TYPE,
+} from '@/lib/email-providers/imap-presets';
 
 /**
  * POST /api/inboxes/app-password
@@ -17,7 +23,13 @@ import { IMAP_PRESETS, isBrandedImapService, zohoRegion } from '@/lib/email-prov
  * All such inboxes are stored with provider = 'imap' and a `service` tag; the
  * edge function serves them through its generic IMAP/SMTP path (Phase 1).
  *
- * Body: { service, email, appPassword }
+ * Body: { service, email, appPassword, region?, zohoAccountType?, loginUsername? }
+ *   region/zohoAccountType apply to Zoho only and select the data-center host
+ *   and the personal vs organization (imappro/smtppro) host variant.
+ *   loginUsername is an optional IMAP/SMTP login distinct from the email address
+ *   (e.g. Yandex 360 custom-domain accounts). When present it is persisted to
+ *   inboxes.imap_username and the edge function authenticates with it instead of
+ *   the email address. When absent/blank, authentication uses the email address.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // 1. Authenticate.
@@ -42,6 +54,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   let email: string;
   let appPassword: string;
   let region: string | undefined;
+  // Zoho only. Whitelisted to the two known values; anything else (absent,
+  // unknown, malformed) falls back to 'personal' so behavior is unchanged.
+  let zohoAccountType = DEFAULT_ZOHO_ACCOUNT_TYPE;
+  // Optional login override (e.g. Yandex 360 custom-domain accounts whose IMAP
+  // login differs from the email address). null = use the email address.
+  let loginUsername: string | null = null;
 
   try {
     const body = (await request.json()) as {
@@ -49,11 +67,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       email?: unknown;
       appPassword?: unknown;
       region?: unknown;
+      zohoAccountType?: unknown;
+      loginUsername?: unknown;
     };
     service = typeof body.service === 'string' ? body.service.trim().toLowerCase() : '';
     email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
     appPassword = typeof body.appPassword === 'string' ? body.appPassword.trim() : '';
     region = typeof body.region === 'string' ? body.region : undefined;
+    if (isZohoAccountType(body.zohoAccountType)) zohoAccountType = body.zohoAccountType;
+    // Optional login override: trim, drop if empty/whitespace, reject control
+    // chars/newlines, cap at 255. Anything invalid falls back to null (use the
+    // email address) so a malformed value never breaks the connect flow.
+    if (typeof body.loginUsername === 'string') {
+      const trimmed = body.loginUsername.trim();
+      // eslint-disable-next-line no-control-regex
+      if (trimmed && trimmed.length <= 255 && !/[\x00-\x1f\x7f]/.test(trimmed)) {
+        loginUsername = trimmed;
+      }
+    }
   } catch {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
@@ -70,9 +101,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const preset = IMAP_PRESETS[service];
 
-  // Zoho's host depends on the account's data center region.
-  const imapHost = service === 'zoho' ? zohoRegion(region).imapHost : preset.imapHost;
-  const smtpHost = service === 'zoho' ? zohoRegion(region).smtpHost : preset.smtpHost;
+  // Zoho's host depends on the account's data center region AND account type:
+  // personal (@zohomail.com) uses imap.zoho.<tld>; organization/custom-domain
+  // accounts use the imappro.zoho.<tld> / smtppro.zoho.<tld> variants.
+  const zoho = service === 'zoho' ? zohoHosts(region, zohoAccountType) : null;
+  const imapHost = zoho ? zoho.imapHost : preset.imapHost;
+  const smtpHost = zoho ? zoho.smtpHost : preset.smtpHost;
 
   // 4. Enforce the plan inbox cap for brand-new addresses only (reconnects reuse
   //    the existing row via upsert and must be allowed even at the cap).
@@ -95,11 +129,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // 5. Validate the credential against the provider's IMAP server.
+  // 5. Validate the credential against the provider's IMAP server. The SASL
+  //    login uses the override when supplied (mirrors the edge function's
+  //    imap_username || email_address resolution), otherwise the email address.
   const validation = await validateImapCredential({
     host: imapHost,
     port: preset.imapPort,
     email,
+    username: loginUsername ?? undefined,
     password: appPassword,
   });
 
@@ -119,6 +156,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       provider: 'imap',
       service,
       email_address: email,
+      // Distinct SASL login when provided (e.g. Yandex 360 custom domains);
+      // null restores the default of authenticating with the email address.
+      imap_username: loginUsername,
       imap_host: imapHost,
       imap_port: preset.imapPort,
       imap_tls: true,

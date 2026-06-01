@@ -20,6 +20,46 @@ export class ImapAuthError extends Error {
   }
 }
 
+/**
+ * Thrown when the server refuses the connection because the account has hit its
+ * simultaneous-connection / rate limit (e.g. Yahoo caps an account at 5 IMAP
+ * connections). Distinct from {@link ImapAuthError}: connection-limit refusals
+ * are transient and retryable, whereas auth failures are permanent.
+ */
+export class ImapConnectionLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ImapConnectionLimitError";
+  }
+}
+
+/**
+ * Detect whether a server response (greeting or AUTHENTICATE NO/BYE text)
+ * indicates a transient connection/rate limit that is worth retrying.
+ *
+ * Mirrors the retryable connection-limit condition in the web reference
+ * `connectImapWithRetry` (apps/web/src/lib/email/imap.ts) — `connection limit`,
+ * `too many connections`, `[LIMIT]` — and additionally covers the resp-code
+ * markers Yahoo / iCloud / Fastmail emit on the connect path itself:
+ * `[OVERQUOTA]`, `[ALERT]`, `[UNAVAILABLE]`, `over quota`, `too many`,
+ * `try again`. Genuine bad-credential responses do NOT match any of these and
+ * therefore fall through to {@link ImapAuthError}.
+ */
+function isConnectionLimitResponse(text: string): boolean {
+  const t = text.toLowerCase();
+  return (
+    t.includes("connection limit") ||
+    t.includes("too many connections") ||
+    t.includes("too many") ||
+    t.includes("[limit]") ||
+    t.includes("[overquota]") ||
+    t.includes("over quota") ||
+    t.includes("[alert]") ||
+    t.includes("[unavailable]") ||
+    t.includes("try again")
+  );
+}
+
 export interface ImapConnectConfig {
   host: string;
   port: number;
@@ -93,15 +133,78 @@ export class ImapClient {
     this.buffer = new Uint8Array(64 * 1024);
   }
 
-  /** Open a TLS connection, read the greeting, and authenticate via SASL PLAIN. */
+  /**
+   * Open an authenticated IMAP session, retrying transient connection-limit
+   * refusals with exponential back-off.
+   *
+   * Yahoo caps an account at 5 simultaneous IMAP connections (Fastmail/iCloud
+   * have similar caps); concurrent MCP tool calls — or a server-side connection
+   * still lingering after a prior LOGOUT — can transiently exceed the cap and
+   * the server refuses the connect/greeting/AUTH. We retry such refusals.
+   *
+   * Back-off mirrors the web reference `connectImapWithRetry`
+   * (apps/web/src/lib/email/imap.ts): up to 3 attempts, waiting
+   * 5s → 10s before the 2nd and 3rd attempts (5_000 * 2^(attempt-1)).
+   *
+   * Genuine auth failures (bad credentials) throw {@link ImapAuthError} and are
+   * NOT retried — they surface immediately so callers map them to
+   * `imap_auth_failed`.
+   */
   static async connect(cfg: ImapConnectConfig): Promise<ImapClient> {
+    const maxRetries = 3;
+    let lastErr: unknown;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await ImapClient.connectOnce(cfg);
+      } catch (err) {
+        lastErr = err;
+
+        // Only the connection-limit / rate-limit class is retryable. Auth
+        // failures and all other errors are permanent and rethrown at once.
+        if (!(err instanceof ImapConnectionLimitError)) {
+          throw err;
+        }
+
+        if (attempt < maxRetries) {
+          const waitMs = 5_000 * Math.pow(2, attempt - 1); // 5s, 10s
+          await new Promise((r) => setTimeout(r, waitMs));
+          continue;
+        }
+      }
+    }
+
+    // Retries exhausted on a connection-limit condition: surface a clear error.
+    throw new ImapConnectionLimitError(
+      `IMAP connection limit reached for ${cfg.host} after ${maxRetries} attempts: ${
+        lastErr instanceof Error ? lastErr.message : String(lastErr)
+      }`,
+    );
+  }
+
+  /**
+   * One connect attempt: open a TLS connection, read the greeting, and
+   * authenticate via SASL PLAIN.
+   *
+   * Throws {@link ImapConnectionLimitError} when the greeting or AUTH response
+   * signals a transient connection/rate limit (retryable), and
+   * {@link ImapAuthError} on genuine authentication failure (not retryable).
+   */
+  private static async connectOnce(cfg: ImapConnectConfig): Promise<ImapClient> {
     const conn = await Deno.connectTls({ hostname: cfg.host, port: cfg.port });
     const client = new ImapClient(conn);
 
-    // Server greeting: expect "* OK ...".
+    // Server greeting: expect "* OK ...". A "* BYE" (or any non-OK greeting)
+    // carrying a connection-limit marker means the account is over its cap —
+    // retryable. Other non-OK greetings are a protocol error.
     const greeting = await client.readLine();
     if (!greeting.startsWith("* OK")) {
       client.close();
+      if (isConnectionLimitResponse(greeting)) {
+        throw new ImapConnectionLimitError(
+          `IMAP connection refused at greeting: ${greeting.slice(0, 120)}`,
+        );
+      }
       throw new Error(`Unexpected IMAP greeting: ${greeting.slice(0, 80)}`);
     }
 
@@ -112,6 +215,15 @@ export class ImapClient {
     const resp = await client.readTagged(tag);
     if (resp.status !== "OK") {
       client.close();
+      // Some servers report a connection-limit refusal as a NO/BYE on AUTH
+      // rather than at the greeting (text like [OVERQUOTA]/[UNAVAILABLE]/
+      // "too many connections"). Treat those as retryable; everything else is
+      // a genuine credential failure.
+      if (isConnectionLimitResponse(resp.text)) {
+        throw new ImapConnectionLimitError(
+          `IMAP connection refused at auth: ${resp.text}`,
+        );
+      }
       throw new ImapAuthError(`IMAP authentication failed: ${resp.text}`);
     }
     return client;

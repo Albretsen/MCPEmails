@@ -9,7 +9,18 @@ import {
   isBrandedImapService,
   ZOHO_REGIONS,
   DEFAULT_ZOHO_REGION,
+  DEFAULT_ZOHO_ACCOUNT_TYPE,
 } from '@/lib/email-providers/imap-presets';
+
+/**
+ * Zoho serves personal (@zohomail.com) and organization (paid custom-domain)
+ * mailboxes on different hosts (imap.zoho vs imappro.zoho), so the user must
+ * tell us which they have. Sent to the connect route as `zohoAccountType`.
+ */
+const ZOHO_ACCOUNT_TYPES = [
+  { value: 'personal', label: 'Personal (@zohomail.com)' },
+  { value: 'organization', label: 'Custom domain / Organization' },
+];
 
 /**
  * ConnectModal.jsx: inbox connection modal.
@@ -77,6 +88,10 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
     smtpPort: GENERIC_IMAP_DEFAULTS.smtpPort,
   });
   const [zohoRegion, setZohoRegion] = useState(DEFAULT_ZOHO_REGION);
+  const [zohoAccountType, setZohoAccountType] = useState(DEFAULT_ZOHO_ACCOUNT_TYPE);
+  // Optional login override for Yandex 360 custom-domain accounts whose IMAP
+  // login differs from the email address. Blank → authenticate with the email.
+  const [yandexLogin, setYandexLogin] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
 
@@ -143,7 +158,16 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
     } else if (isPreset) {
       endpoint = '/api/inboxes/app-password';
       body = { service: provider, email, appPassword };
-      if (provider === 'zoho') body.region = zohoRegion;
+      if (provider === 'zoho') {
+        body.region = zohoRegion;
+        body.zohoAccountType = zohoAccountType;
+      }
+      if (provider === 'yandex') {
+        // Optional login override for Yandex 360 custom-domain accounts. Only
+        // sent when non-empty; blank authenticates with the email address.
+        const login = yandexLogin.trim();
+        if (login) body.loginUsername = login;
+      }
     } else {
       // Generic IMAP/SMTP.
       const imapHost = form.imapHost.trim().toLowerCase();
@@ -391,6 +415,25 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
             <>
               {provider === 'zoho' && (
                 <div className="field">
+                  <label htmlFor="cm-zoho-account-type">Account type</label>
+                  <select
+                    id="cm-zoho-account-type"
+                    className="input"
+                    value={zohoAccountType}
+                    onChange={e => setZohoAccountType(e.target.value)}
+                  >
+                    {ZOHO_ACCOUNT_TYPES.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                    Paid accounts on a custom domain use Zoho&apos;s organization (imappro) servers.
+                  </span>
+                </div>
+              )}
+
+              {provider === 'zoho' && (
+                <div className="field">
                   <label htmlFor="cm-zoho-region">{tr('connect.zohoRegionLabel')}</label>
                   <select
                     id="cm-zoho-region"
@@ -421,6 +464,24 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   autoFocus
                 />
               </div>
+
+              {provider === 'yandex' && (
+                <div className="field">
+                  <label htmlFor="cm-yandex-login">Login (if different from email)</label>
+                  <input
+                    id="cm-yandex-login"
+                    className="input"
+                    type="text"
+                    placeholder="Optional"
+                    value={yandexLogin}
+                    onChange={e => setYandexLogin(e.target.value)}
+                    autoComplete="username"
+                  />
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                    Yandex 360 custom-domain accounts may sign in with a login that differs from the email address. Leave blank to use the email.
+                  </span>
+                </div>
+              )}
 
               {isGeneric && (
                 <>
