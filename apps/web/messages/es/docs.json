@@ -216,7 +216,8 @@
       "delete": "Eliminar / papelera",
       "permanent_delete": "Eliminación permanente (expunge)",
       "drafts": "Borradores (crear / editar / enviar)",
-      "contacts": "API de contactos",
+      "contacts": "API de contactos nativa",
+      "contacts_db": "Búsqueda de contactos (sincronizada con BD)",
       "scheduling": "Envío programado",
       "search_syntax": "Sintaxis de búsqueda"
     },
@@ -252,8 +253,9 @@
     "notes": {
       "gmail": "<b>Gmail — carpetas vs etiquetas:</b> Gmail usa un sistema plano de etiquetas en lugar de carpetas jerárquicas. «Mover» se implementa como añadir/quitar etiquetas. La copia nativa no está disponible a través de la API REST de Gmail.",
       "permanentDelete": "<b>Eliminación permanente:</b> Gmail y Outlook mueven a la Papelera cuando eliminas — el expunge permanente no lo exponen sus APIs. Los proveedores IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, genérico) admiten tanto la papelera como el expunge definitivo.",
-      "contacts": "<b>API de contactos:</b> Gmail usa la API People de Google; Outlook usa Microsoft Graph <code>/contacts</code>. Los contactos de Fastmail CardDAV y los basados en IMAP se posponen a una versión posterior.",
-      "scheduling": "<b>Programación:</b> Planificada para todos los proveedores mediante una cola del lado del servidor (no programación nativa del proveedor). Ningún proveedor expone una API nativa de envío programado accesible sin almacenar credenciales en el servidor."
+      "contacts": "<b>API de contactos nativa:</b> Gmail usa la API People de Google; Outlook usa Microsoft Graph <code>/contacts</code>. Contactos CardDAV de Fastmail y los basados en IMAP están fuera del alcance de v0.1.",
+      "contacts_db": "<b>Búsqueda de contactos (BD):</b> Todos los proveedores sincronizan contactos desde los encabezados de mensajes. Usa <code>search_contacts</code> y <code>get_contact</code>.",
+      "scheduling": "<b>Programación:</b> Compatible con todos los proveedores a través de la cola <code>scheduled_sends</code>. Usa <code>schedule_send</code>, <code>list_scheduled</code> y <code>cancel_scheduled</code>."
     },
     "cta": {
       "heading": "¿Listo para conectar tu bandeja de entrada?",

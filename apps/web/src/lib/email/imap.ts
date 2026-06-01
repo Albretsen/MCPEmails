@@ -100,8 +100,13 @@ export interface ImapConfig {
   host: string;
   /** IMAP server port (993 for implicit TLS). */
   port: number;
-  /** Full email address used as the username. */
+  /** Full email address (sender identity; also the default SASL username). */
   email: string;
+  /**
+   * SASL login username for PLAIN auth. Defaults to `email`. Set this for hosts
+   * that issue a login username distinct from the email address.
+   */
+  username?: string;
   /** Authentication mechanism. */
   authMethod: 'XOAUTH2' | 'PLAIN';
   /**
@@ -732,7 +737,7 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
         throw new McpEmailsError('AUTH_FAILED', 'PLAIN auth requires an appPassword');
       }
 
-      const payload = buildPlainAuthToken(config.email, config.appPassword);
+      const payload = buildPlainAuthToken(config.username || config.email, config.appPassword);
       await socketWrite(socket, `${authTag} AUTHENTICATE PLAIN ${payload}\r\n`);
 
       const authResult = await readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);

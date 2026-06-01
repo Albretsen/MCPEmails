@@ -72,6 +72,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     email: '',
+    username: '',
     password: '',
     imapHost: '',
     imapPort: GENERIC_IMAP_DEFAULTS.imapPort,
@@ -160,7 +161,10 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
         return;
       }
       endpoint = '/api/inboxes/imap';
-      body = { email, appPassword, imapHost, imapPort, smtpHost, smtpPort };
+      // Optional: a login username distinct from the email address. Blank means
+      // the server authenticates with the email address.
+      const username = form.username.trim();
+      body = { email, username, appPassword, imapHost, imapPort, smtpHost, smtpPort };
     }
 
     setSubmitting(true);
@@ -433,6 +437,21 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
 
               {isGeneric && (
                 <>
+                  <div className="field">
+                    <label htmlFor="cm-username">{tr('connect.usernameLabel')}</label>
+                    <input
+                      id="cm-username"
+                      className="input"
+                      type="text"
+                      placeholder={tr('connect.usernamePlaceholder')}
+                      value={form.username}
+                      onChange={e => setForm(prev => ({ ...prev, username: e.target.value }))}
+                      autoComplete="username"
+                    />
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                      {tr('connect.usernameHint')}
+                    </span>
+                  </div>
                   <div className="field" style={{ display: 'flex', gap: 10 }}>
                     <div style={{ flex: 1 }}>
                       <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>

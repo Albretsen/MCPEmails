@@ -1068,6 +1068,7 @@ export type Database = {
           imap_password: string | null
           imap_port: number | null
           imap_tls: boolean
+          imap_username: string | null
           last_error: string | null
           last_sync_at: string | null
           oauth_access_token: string | null
@@ -1093,6 +1094,7 @@ export type Database = {
           imap_password?: string | null
           imap_port?: number | null
           imap_tls?: boolean
+          imap_username?: string | null
           last_error?: string | null
           last_sync_at?: string | null
           oauth_access_token?: string | null
@@ -1118,6 +1120,7 @@ export type Database = {
           imap_password?: string | null
           imap_port?: number | null
           imap_tls?: boolean
+          imap_username?: string | null
           last_error?: string | null
           last_sync_at?: string | null
           oauth_access_token?: string | null

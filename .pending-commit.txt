@@ -12,3 +12,13 @@ dev: implement task-11 — bulk_move, bulk_delete, bulk_flag tools
 dev: implement task-12 — search_and_move and search_and_delete tools
 dev: implement task-13 — forward_email tool
 dev: implement task-14 — create_draft, update_draft, list_drafts, send_draft
+dev: implement task-15 — contacts table + upsertContacts derivation routine
+dev: implement task-16 — search_contacts and get_contact tools
+dev: implement task-17 — scheduled_sends migration + /dispatch route in mcp-server
+dev: implement task-18 — schedule_send, list_scheduled, cancel_scheduled tools
+dev: implement task-19 — reconcile capability matrix and Provider Support page with shipped reality
+dev: checklist complete — agent stopped
+dev: checklist complete — agent stopped
+dev: checklist complete — agent stopped
+dev: checklist complete — agent stopped
+dev: checklist complete — agent stopped

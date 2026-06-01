@@ -216,7 +216,8 @@
       "delete": "Delete / trash",
       "permanent_delete": "Permanent delete (expunge)",
       "drafts": "Drafts (create / edit / send)",
-      "contacts": "Contacts API",
+      "contacts": "Native contacts API",
+      "contacts_db": "Contact search (DB-synced)",
       "scheduling": "Scheduled send",
       "search_syntax": "Search syntax"
     },
@@ -252,8 +253,9 @@
     "notes": {
       "gmail": "<b>Gmail — folders vs labels:</b> Gmail uses a flat label system rather than hierarchical folders. \"Move\" is implemented as label add/remove. Native copy is not available via the Gmail REST API.",
       "permanentDelete": "<b>Permanent delete:</b> Gmail and Outlook move to Trash when you delete — permanent expunge is not exposed by their APIs. IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.",
-      "contacts": "<b>Contacts API:</b> Gmail uses the Google People API; Outlook uses Microsoft Graph <code>/contacts</code>. Fastmail CardDAV and IMAP-based contacts are deferred to a later release.",
-      "scheduling": "<b>Scheduling:</b> Planned for all providers via a server-side queue (not provider-native scheduling). No provider exposes a native scheduled-send API that is accessible without storing credentials server-side."
+      "contacts": "<b>Native contacts API:</b> Gmail uses the Google People API; Outlook uses Microsoft Graph <code>/contacts</code>. Fastmail CardDAV and IMAP-based contacts are out of scope for v0.1.",
+      "contacts_db": "<b>Contact search (DB-synced):</b> All providers automatically populate a contacts table from <code>From</code>, <code>To</code>, and <code>Reply-To</code> headers seen during read, search, and send operations. Use <code>search_contacts</code> and <code>get_contact</code> to query it.",
+      "scheduling": "<b>Scheduling:</b> Supported for all providers via a server-side <code>scheduled_sends</code> queue. Use <code>schedule_send</code>, <code>list_scheduled</code>, and <code>cancel_scheduled</code>. Delivery uses each provider's existing send path — no provider-native scheduling API is required."
     },
     "cta": {
       "heading": "Ready to connect your inbox?",

@@ -1,6 +1,6 @@
 # Email Provider Support — Status & Development Plan
 
-Status: draft · Last updated: 2026-05-29
+Status: current · Last updated: 2026-05-29
 
 This document records **what email providers MCPEmails supports today** and lays
 out a development plan for adding a **generic IMAP/SMTP connector** plus
@@ -17,8 +17,25 @@ provider has **two independent halves** that must both work:
 - **Connect-time** (Next.js app, `apps/web`) — validate the credential and
   persist an `inboxes` row.
 - **Serve-time** (Supabase edge function `supabase/functions/mcp-server`, Deno) —
-  the MCP tools (`list_inbox`, `read_email`, `search_emails`, `send_email`,
-  `reply_to_email`) dispatch on `inbox.provider`.
+  MCP tools dispatch on `inbox.provider`.
+
+### Shipped MCP tools (v0.1)
+
+**Core:** `list_inboxes`, `list_inbox`, `read_email`, `search_emails`, `send_email`, `reply_to_email`
+
+**Flags & state:** `mark_read`, `mark_unread`, `flag_email`, `unflag_email`, `archive_email`
+
+**Folders / labels:** `list_folders`, `create_folder`, `rename_folder`, `delete_folder`, `move_email`, `copy_email`
+
+**Delete & bulk:** `delete_email`, `bulk_move`, `bulk_delete`, `bulk_flag`, `search_and_move`, `search_and_delete`
+
+**Forward:** `forward_email`
+
+**Drafts:** `create_draft`, `update_draft`, `list_drafts`, `send_draft`
+
+**Contacts (DB-synced):** `search_contacts`, `get_contact`
+
+**Scheduling:** `schedule_send`, `list_scheduled`, `cancel_scheduled`
 
 | Provider | Connect-time | Serve-time | Credential | Code |
 |---|---|---|---|---|
@@ -106,14 +123,16 @@ work in a third-party client.
 
 ## 5. Development plan (phased)
 
-> **Status (2026-05-29): Phases 0–5 complete and shipped.** The `service` column
+> **Status (2026-05-29): All phases complete and shipped.** The `service` column
 > migration is applied to the remote DB, the MCP edge function (with the Deno
-> IMAP + SMTP clients and `mime.ts`) is deployed, and all five tools dispatch
+> IMAP + SMTP clients and `mime.ts`) is deployed, and all tools dispatch on
 > `provider='imap'`. Connect routes (`/api/inboxes/app-password`,
 > `/api/inboxes/imap`) and the ConnectModal are wired for iCloud, Yahoo, Zoho
 > (with region selector), Yandex, and the generic connector. Sent-folder
 > `APPEND` after SMTP send and `/api/inboxes/[id]/check` health checks both work
-> for `provider='imap'`. **Not yet runtime-tested against live mailboxes.**
+> for `provider='imap'`. Additionally, the full v0.1 operator tool suite (flags,
+> folders, delete, bulk, forward, drafts, contacts, scheduling) is shipped for
+> all providers. **Not yet runtime-tested against live mailboxes.**
 > Deferred by design: XOAUTH2 for Yahoo/Yandex (app passwords work today).
 
 ### Phase 0 — Shared foundation ✅
@@ -178,7 +197,40 @@ work in a third-party client.
 
 ---
 
-## 6. Testing & deployment
+## 6. Capability matrix (v0.1 shipped reality)
+
+This table mirrors `PROVIDER_CAPABILITIES` in `supabase/functions/mcp-server/index.ts`
+and the web page at `/docs/providers`. Keep all three in sync.
+
+| Feature | Gmail | Outlook | Fastmail | iCloud | Yahoo | Zoho | Yandex | Generic IMAP |
+|---|---|---|---|---|---|---|---|---|
+| Read email | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Search | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Send email | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Reply | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Forward | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Flags (read/unread, starred) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Folders | ❌ (labels only) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Labels / tags | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Move | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Copy | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Delete (trash) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Permanent delete (expunge) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Drafts | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Native contacts API | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Contact search (DB-synced) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Scheduled send | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Search syntax | Gmail | OData | JMAP | IMAP | IMAP | IMAP | IMAP | IMAP |
+
+**Notes:**
+- Gmail "folders" are implemented as label add/remove (move = swap labels). Native copy is not available via the Gmail REST API.
+- Gmail and Outlook support trash-only delete; IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.
+- Contact search is powered by the `contacts` DB table, populated from message headers across all providers. Native API contacts (Gmail People API, Graph `/contacts`) are additional for Gmail/Outlook.
+- Scheduled send is delivered via the server-side `scheduled_sends` queue for all providers — no provider-native scheduling API is required.
+
+---
+
+## 7. Testing & deployment
 
 - **Per-provider matrix**: connect (happy path), wrong password (`AUTH_FAILED`),
   `list_inbox`, `read_email`, `search_emails`, `send_email`, `reply_to_email`,
@@ -192,7 +244,7 @@ work in a third-party client.
 
 ---
 
-## 7. Out of scope — not connectable
+## 8. Out of scope — not connectable
 
 These cannot be supported by a cloud service and must not be offered:
 
@@ -204,7 +256,7 @@ These cannot be supported by a cloud service and must not be offered:
 
 ---
 
-## 8. Risks & notes
+## 9. Risks & notes
 
 - **Biggest risk is Phase 1**, not the presets. The presets are thin once the
   Deno IMAP/SMTP client exists; almost all real engineering is the transport
