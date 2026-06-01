@@ -42,11 +42,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // create_workspace is not yet in the generated Database types, so call it
   // through a narrowly-typed view of rpc() rather than a blanket `any`.
+  // NOTE: .rpc() is a prototype method that internally dereferences `this`
+  // (`return this.rest.rpc(...)`). Casting it into a bare `const` detaches the
+  // method, so `this` is undefined at call time and it throws a TypeError —
+  // an unhandled 500. Bind it back to the client to preserve `this`.
   type CreatedWorkspace = { id: string; slug: string; display_name: string; plan: string };
-  const rpc = supabase.rpc as unknown as (
+  const rpc = (supabase.rpc as unknown as (
     fn: string,
     args: Record<string, unknown>,
-  ) => Promise<{ data: CreatedWorkspace[] | null; error: { code: string; message: string } | null }>;
+  ) => Promise<{ data: CreatedWorkspace[] | null; error: { code: string; message: string } | null }>).bind(supabase);
 
   const { data, error } = await rpc('create_workspace', { p_name: name.trim() });
 
