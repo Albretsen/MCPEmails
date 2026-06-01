@@ -169,7 +169,7 @@ function Switch({ checked, onChange }) {
 
 // ─── Done screen ──────────────────────────────────────────────────────────────
 
-function DoneScreen({ client, grantCount, totalInboxes }) {
+function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
   const t = useTranslations('auth');
   return (
     <>
@@ -179,7 +179,9 @@ function DoneScreen({ client, grantCount, totalInboxes }) {
         </div>
         <h1>{t('authorize.connectedTitle', { clientName: client.client_name })}</h1>
         <p>
-          {t('authorize.connectedBody', { grantCount, totalInboxes })}
+          {allInboxes
+            ? t('authorize.connectedBodyAll')
+            : t('authorize.connectedBody', { grantCount, totalInboxes })}
         </p>
       </div>
 
@@ -245,7 +247,12 @@ export function AuthorizeApp({
     return initial;
   });
 
-  // Track which inboxes the user wants to grant access to.
+  // Inbox access mode. "All inboxes" (default) grants access to every inbox in
+  // the workspace, including ones connected later — it is stored as
+  // inbox_ids = null. "Specific inboxes" restricts access to an explicit list.
+  const [allInboxes, setAllInboxes] = useState(true);
+
+  // Track which inboxes the user wants to grant access to (specific mode only).
   // Default: all connected inboxes are checked; error/pending inboxes unchecked.
   const [grantedInboxes, setGrantedInboxes] = useState(() => {
     const initial = {};
@@ -262,11 +269,12 @@ export function AuthorizeApp({
   const [step, setStep] = useState('review'); // review | granting | done | error
   const [errorMsg, setErrorMsg] = useState('');
 
-  const grantCount = Object.values(grantedInboxes).filter(Boolean).length;
   const selectedScopes = requestedScopes.filter((s) => enabledScopes[s.scope]);
   const selectedInboxIds = Object.entries(grantedInboxes)
     .filter(([, v]) => v)
     .map(([id]) => id);
+  // In "all inboxes" mode the effective grant count is the whole workspace.
+  const grantCount = allInboxes ? inboxes.length : selectedInboxIds.length;
 
   const handleAllow = async () => {
     setStep('granting');
@@ -283,7 +291,9 @@ export function AuthorizeApp({
           code_challenge:   codeChallenge,
           challenge_method: challengeMethod,
           scopes:           selectedScopes.map((s) => s.scope),
-          inbox_ids:        selectedInboxIds,
+          // null = all inboxes (including future ones); array = explicit allowlist.
+          all_inboxes:      allInboxes,
+          inbox_ids:        allInboxes ? null : selectedInboxIds,
           key_name:         keyLabel,
         }),
       });
@@ -443,34 +453,86 @@ export function AuthorizeApp({
                   {t('authorize.inboxesLabel')}
                 </div>
 
-                {inboxes.length > 0 ? (
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: inboxes.length === 1 ? '1fr' : '1fr 1fr',
-                    gap: 8,
-                    marginBottom: 18,
+                {/* Access mode: all inboxes vs a specific allowlist */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                  <label style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px',
+                    border: '1px solid ' + (allInboxes ? 'var(--brand)' : 'var(--border-1)'),
+                    background: allInboxes ? 'var(--cobalt-50)' : 'var(--bg-surface)',
+                    borderRadius: 10, cursor: 'pointer', transition: 'all 120ms var(--ease-out)',
                   }}>
-                    {inboxes.map((ib) => (
-                      <InboxToggle
-                        key={ib.id}
-                        inbox={ib}
-                        checked={!!grantedInboxes[ib.id]}
-                        onChange={(v) => setGrantedInboxes((prev) => ({ ...prev, [ib.id]: v }))}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{
-                    padding: '12px', borderRadius: 8, marginBottom: 18,
-                    background: 'var(--ink-25)', border: '1px solid var(--border-1)',
-                    fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)',
+                    <input
+                      type="radio"
+                      name="az-inbox-mode"
+                      checked={allInboxes}
+                      onChange={() => setAllInboxes(true)}
+                      style={{ marginTop: 2, accentColor: 'var(--brand)', flexShrink: 0 }}
+                    />
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
+                        {t('authorize.allInboxes')}
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginTop: 1 }}>
+                        {t('authorize.allInboxesDesc')}
+                      </div>
+                    </div>
+                  </label>
+
+                  <label style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px',
+                    border: '1px solid ' + (!allInboxes ? 'var(--brand)' : 'var(--border-1)'),
+                    background: !allInboxes ? 'var(--cobalt-50)' : 'var(--bg-surface)',
+                    borderRadius: 10, cursor: 'pointer', transition: 'all 120ms var(--ease-out)',
                   }}>
-                    {t('authorize.noInboxesPrefix')}
-                    <a href="/dashboard/inboxes" style={{ color: 'var(--brand)' }}>
-                      {t('authorize.connectInbox')}
-                    </a>
-                    {t('authorize.noInboxesSuffix')}
-                  </div>
+                    <input
+                      type="radio"
+                      name="az-inbox-mode"
+                      checked={!allInboxes}
+                      onChange={() => setAllInboxes(false)}
+                      style={{ marginTop: 2, accentColor: 'var(--brand)', flexShrink: 0 }}
+                    />
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
+                        {t('authorize.specificInboxes')}
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginTop: 1 }}>
+                        {t('authorize.specificInboxesDesc')}
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Inbox checklist (specific mode only) */}
+                {!allInboxes && (
+                  inboxes.length > 0 ? (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: inboxes.length === 1 ? '1fr' : '1fr 1fr',
+                      gap: 8,
+                      marginBottom: 18,
+                    }}>
+                      {inboxes.map((ib) => (
+                        <InboxToggle
+                          key={ib.id}
+                          inbox={ib}
+                          checked={!!grantedInboxes[ib.id]}
+                          onChange={(v) => setGrantedInboxes((prev) => ({ ...prev, [ib.id]: v }))}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{
+                      padding: '12px', borderRadius: 8, marginBottom: 18,
+                      background: 'var(--ink-25)', border: '1px solid var(--border-1)',
+                      fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)',
+                    }}>
+                      {t('authorize.noInboxesPrefix')}
+                      <a href="/dashboard/inboxes" style={{ color: 'var(--brand)' }}>
+                        {t('authorize.connectInbox')}
+                      </a>
+                      {t('authorize.noInboxesSuffix')}
+                    </div>
+                  )
                 )}
 
                 {/* Connection name */}
@@ -489,20 +551,24 @@ export function AuthorizeApp({
 
               <div className="az-foot">
                 <div className="grow">
-                  {inboxes.length > 0 && (
+                  {allInboxes ? (
+                    t.rich('authorize.grantingAll', {
+                      strong: (c) => <strong style={{ color: 'var(--fg-2)' }}>{c}</strong>,
+                    })
+                  ) : inboxes.length > 0 ? (
                     t.rich('authorize.grantingAccessTo', {
                       count: grantCount,
                       total: inboxes.length,
                       strong: (c) => <strong style={{ color: 'var(--fg-2)' }}>{c}</strong>,
                     })
-                  )}
+                  ) : null}
                 </div>
                 <Btn variant="ghost" onClick={handleDeny}>{t('authorize.deny')}</Btn>
                 <Btn
                   variant="primary"
                   icon="shield"
                   onClick={handleAllow}
-                  disabled={inboxes.length > 0 && grantCount === 0}
+                  disabled={!allInboxes && grantCount === 0}
                 >
                   {t('authorize.allowAccess')}
                 </Btn>
@@ -533,6 +599,7 @@ export function AuthorizeApp({
               client={client}
               grantCount={grantCount}
               totalInboxes={inboxes.length}
+              allInboxes={allInboxes}
             />
           )}
 
