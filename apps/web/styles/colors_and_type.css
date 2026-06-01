@@ -81,6 +81,24 @@
   --live:         var(--mint-500);   /* the "connected" dot */
   --live-soft:    var(--mint-50);
 
+  /* ============== COMPAT ALIASES ==============
+     Tokens referenced by app components that predate this palette. Defined as
+     var() references so they stay theme-aware: the dark theme only overrides the
+     base bg and red tokens, and these resolve lazily at use time. Without them,
+     e.g. the delete-account dialog rendered with no surface color and the
+     destructive icons fell back to an undefined color. */
+  --surface:      var(--bg-surface);
+  --surface-2:    var(--bg-sunken);
+  --bg-card:      var(--bg-surface);
+  --bg-input:     var(--bg-surface);
+  --red-50:       var(--red-100);
+  --red-200:      var(--red-100);
+  --red-600:      var(--red-500);
+  --amber-50:     var(--amber-100);
+  --amber-200:    var(--amber-100);
+  --amber-600:    var(--amber-500);
+  --amber-800:    var(--amber-700);
+
   /* ============== TYPOGRAPHY: FAMILIES ============== */
   --font-sans:    "Geist", ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
   --font-mono:    "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
