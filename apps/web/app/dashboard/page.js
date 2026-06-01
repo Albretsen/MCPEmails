@@ -104,7 +104,7 @@ async function fetchInboxes(supabase, workspaceId) {
   const [{ data: rows, error }, { data: logRows }] = await Promise.all([
     supabase
       .from('inboxes')
-      .select('id, display_name, email_address, provider, status, last_error, imap_host, created_at')
+      .select('id, display_name, email_address, provider, service, status, last_error, imap_host, created_at')
       .eq('workspace_id', workspaceId)
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
@@ -137,7 +137,13 @@ async function fetchInboxes(supabase, workspaceId) {
     // Use display_name when set; fall back to the local-part of the email address.
     label: row.display_name ?? row.email_address.split('@')[0],
     address: row.email_address,
-    provider: row.provider,
+    // Branded IMAP inboxes (iCloud, Yahoo, Zoho, Yandex) are stored as
+    // provider 'imap' with the brand in `service`. Surface the brand so the
+    // list shows the real logo/name; generic IMAP stays 'imap'.
+    provider:
+      row.provider === 'imap' && row.service && row.service !== 'generic'
+        ? row.service
+        : row.provider,
     status: row.status,
     // Human-readable error shown on errored inboxes; null when healthy.
     lastError: row.last_error ?? null,
