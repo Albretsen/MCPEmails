@@ -802,7 +802,7 @@ interface ActivityLogParams {
   apiKeyId: string;
   /** UUID of the inbox the tool operated on, or null for non-inbox operations. */
   inboxId: string | null;
-  /** The name of the MCP tool that was called (e.g. "list_inbox"). */
+  /** The name of the MCP tool that was called (e.g. "list_messages"). */
   toolName: string;
   /** Outcome of the call. */
   status: "success" | "error" | "rate_limited";
@@ -1069,13 +1069,15 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   // ── read:email scope ────────────────────────────────────────────────────────
 
   {
-    name: "list_inbox",
-    title: "List Inbox",
+    name: "list_messages",
+    title: "List Messages",
     description:
-      "List email messages in an inbox. Returns message summaries " +
+      "List email messages inside an inbox. Returns message summaries " +
       "(sender, subject, date, preview, read status, attachment flag) ordered " +
       "newest first. Supports filtering by folder, unread status, and pagination. " +
-      "Use read_email to fetch the full content of a specific message.",
+      "Use read_email to fetch the full content of a specific message. " +
+      "Note: this lists the MESSAGES within one inbox — to discover which inboxes " +
+      "exist and obtain their inbox_id, call list_inboxes first.",
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
@@ -1085,8 +1087,8 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           format: "uuid",
           description:
             "UUID of the inbox to list. Must be an inbox in the current workspace " +
-            "that the API key is permitted to access. Obtain inbox UUIDs from the " +
-            "MCPEmails dashboard or from the API key creation flow.",
+            "that the API key is permitted to access. Call list_inboxes to discover " +
+            "the available inbox_id values.",
         },
         limit: {
           type: "integer",
@@ -1150,7 +1152,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Provider-native message identifier. For Gmail this is the message ID " +
             "string returned by the Gmail API (e.g., '18a3c2d7f9b1e4a0'). For Outlook " +
             "it is the Graph API item ID. For IMAP providers it is the UID as a string. " +
-            "Always obtained from a previous call to list_inbox or search_emails.",
+            "Always obtained from a previous call to list_messages or search_emails.",
         },
         include_html: {
           type: "boolean",
@@ -1247,7 +1249,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
       "message counts (total and unread). " +
       "IMAP providers use LIST + STATUS; Gmail uses labels.list + labels.get; " +
       "Outlook uses Graph mailFolders; Fastmail uses JMAP Mailbox/get. " +
-      "Use the returned folder names/IDs as the 'folder' argument for list_inbox, " +
+      "Use the returned folder names/IDs as the 'folder' argument for list_messages, " +
       "and as source/destination for move_email and copy_email.",
     requiredScope: "read:email",
     inputSchema: {
@@ -1387,7 +1389,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Provider-native message ID as returned by list_inbox, read_email, or search_emails.",
+            "Provider-native message ID as returned by list_messages, read_email, or search_emails.",
         },
         destination_folder_id: {
           type: "string",
@@ -1424,7 +1426,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Provider-native message ID as returned by list_inbox, read_email, or search_emails.",
+            "Provider-native message ID as returned by list_messages, read_email, or search_emails.",
         },
         destination_folder_id: {
           type: "string",
@@ -1463,7 +1465,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Provider-native message ID as returned by list_inbox, read_email, or search_emails.",
+            "Provider-native message ID as returned by list_messages, read_email, or search_emails.",
         },
         permanent: {
           type: "boolean",
@@ -1510,7 +1512,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           minItems: 1,
           maxItems: 500,
           description:
-            "Provider-native message IDs to move (from list_inbox, read_email, or search_emails). " +
+            "Provider-native message IDs to move (from list_messages, read_email, or search_emails). " +
             "Maximum 500 IDs per call.",
         },
         destination_folder_id: {
@@ -1931,7 +1933,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           type: "string",
           description:
             "Provider-native message identifier of the email to forward, as returned " +
-            "by list_inbox, read_email, or search_emails.",
+            "by list_messages, read_email, or search_emails.",
         },
         to: {
           type: "array",
@@ -2001,7 +2003,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Provider-native message identifier as returned by list_inbox or search_emails.",
+            "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
       required: ["inbox_id", "message_id"],
@@ -2028,7 +2030,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Provider-native message identifier as returned by list_inbox or search_emails.",
+            "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
       required: ["inbox_id", "message_id"],
@@ -2055,7 +2057,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Provider-native message identifier as returned by list_inbox or search_emails.",
+            "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
       required: ["inbox_id", "message_id"],
@@ -2082,7 +2084,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Provider-native message identifier as returned by list_inbox or search_emails.",
+            "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
       required: ["inbox_id", "message_id"],
@@ -2111,7 +2113,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Provider-native message identifier as returned by list_inbox or search_emails.",
+            "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
       required: ["inbox_id", "message_id"],
@@ -3381,7 +3383,7 @@ async function buildFastmailAuthHeader(inbox: InboxRow): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
-// Email summary types (shared across list_inbox and search_emails tools)
+// Email summary types (shared across list_messages and search_emails tools)
 // ---------------------------------------------------------------------------
 
 interface EmailAddressEntry {
@@ -3454,7 +3456,7 @@ function normalizePreview(text: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Gmail provider — list_inbox
+// Gmail provider — list_messages
 // ---------------------------------------------------------------------------
 
 /**
@@ -3501,7 +3503,7 @@ function gmailHasAttachments(msg: GmailMessageMeta): boolean {
 }
 
 /**
- * Implements `list_inbox` for Gmail.
+ * Implements `list_messages` for Gmail.
  *
  * Flow:
  *   1. GET /users/me/messages?labelIds=…&q=…&maxResults=… → {id, threadId}[]
@@ -3609,7 +3611,7 @@ async function listGmailMessages(
 }
 
 // ---------------------------------------------------------------------------
-// Outlook provider — list_inbox
+// Outlook provider — list_messages
 // ---------------------------------------------------------------------------
 
 /**
@@ -3644,7 +3646,7 @@ interface OutlookMessage {
 }
 
 /**
- * Implements `list_inbox` for Outlook using Microsoft Graph.
+ * Implements `list_messages` for Outlook using Microsoft Graph.
  *
  * Single API call returns all required fields including the attachment flag.
  * Graph's `$count=true` is used to get an accurate total message count.
@@ -3720,11 +3722,11 @@ async function listOutlookMessages(
 }
 
 // ---------------------------------------------------------------------------
-// Fastmail provider — list_inbox (JMAP)
+// Fastmail provider — list_messages (JMAP)
 // ---------------------------------------------------------------------------
 
 /**
- * Implements `list_inbox` for Fastmail using JMAP (RFC 8620/8621).
+ * Implements `list_messages` for Fastmail using JMAP (RFC 8620/8621).
  *
  * JMAP is Fastmail's native HTTP protocol and is preferred over raw IMAP in
  * Edge Function contexts because it is purely HTTP-based. Fastmail supports
@@ -3963,7 +3965,7 @@ function bytesToBase64(bytes: Uint8Array): string {
 const ATTACHMENT_DATA_BUDGET = 10 * 1024 * 1024;
 
 // ---------------------------------------------------------------------------
-// Generic IMAP provider — list_inbox
+// Generic IMAP provider — list_messages
 // ---------------------------------------------------------------------------
 
 /**
@@ -3986,7 +3988,7 @@ function imapFolderName(folder: string): string {
 }
 
 /**
- * Implements `list_inbox` for IMAP inboxes connected with an app password.
+ * Implements `list_messages` for IMAP inboxes connected with an app password.
  *
  * Opens a TLS IMAP session, selects the folder, UID-searches (ALL or UNSEEN),
  * takes the newest `limit` UIDs at `offset`, and fetches ENVELOPE + FLAGS +
@@ -4457,7 +4459,7 @@ async function replyImapMessage(
 }
 
 // ---------------------------------------------------------------------------
-// list_inbox — top-level handler
+// list_messages — top-level handler
 // ---------------------------------------------------------------------------
 
 interface ListInboxArgs {
@@ -4469,7 +4471,7 @@ interface ListInboxArgs {
 }
 
 /**
- * Executes the `list_inbox` tool end-to-end.
+ * Executes the `list_messages` tool end-to-end.
  *
  * Returns the JSON-RPC result object plus the values needed for activity
  * logging. Never throws — all errors are captured and returned as
@@ -4493,7 +4495,7 @@ async function executeListInbox(
       result: {
         content: [{
           type: "text",
-          text: "list_inbox: arguments must be an object with at least inbox_id.",
+          text: "list_messages: arguments must be an object with at least inbox_id.",
         }],
         isError: true,
       },
@@ -4511,7 +4513,7 @@ async function executeListInbox(
       result: {
         content: [{
           type: "text",
-          text: "list_inbox: inbox_id is required and must be a UUID string.",
+          text: "list_messages: inbox_id is required and must be a UUID string.",
         }],
         isError: true,
       },
@@ -4599,7 +4601,7 @@ async function executeListInbox(
             content: [{
               type: "text",
               text:
-                `Provider '${inbox.provider}' is not yet supported by list_inbox. ` +
+                `Provider '${inbox.provider}' is not yet supported by list_messages. ` +
                 "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
@@ -4634,7 +4636,7 @@ async function executeListInbox(
       };
     }
 
-    console.error("[mcp-server] list_inbox: provider_error", {
+    console.error("[mcp-server] list_messages: provider_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
       error: message,
@@ -7904,7 +7906,7 @@ async function executeForwardEmail(
             type: "text",
             text:
               `Message ${messageId} not found in inbox ${inboxId}. ` +
-              "It may have been deleted or moved. Use list_inbox or search_emails " +
+              "It may have been deleted or moved. Use list_messages or search_emails " +
               "to find the current message ID.",
           }],
           isError: true,
@@ -8251,7 +8253,7 @@ async function executeReplyToEmail(
             type: "text",
             text:
               `Message ${messageId} not found in inbox ${inboxId}. ` +
-              "It may have been deleted or moved. Use list_inbox or search_emails " +
+              "It may have been deleted or moved. Use list_messages or search_emails " +
               "to find the current message ID.",
           }],
           isError: true,
@@ -15582,7 +15584,7 @@ function handleToolsList(
   apiKey: ApiKeyRow,
 ): JsonRpcSuccessResponse {
   // Filter the registry to only tools the API key's scopes allow.
-  // An API key with only read:email will see list_inbox, read_email, search_emails.
+  // An API key with only read:email will see list_messages, read_email, search_emails.
   // An API key with send:email (in addition or alone) will also see send_email, reply_to_email.
   const visibleTools = TOOL_REGISTRY
     .filter((tool) => apiKey.scopes.includes(tool.requiredScope))
@@ -15735,7 +15737,7 @@ async function handleToolsCall(
   }
 
   // ── Execute the tool ──────────────────────────────────────────────────────
-  // Tool implementations (list_inbox, read_email, etc.) are added in the
+  // Tool implementations (list_messages, read_email, etc.) are added in the
   // "MCP Tools — Implementation" checklist tasks. Until each tool is
   // implemented, this handler returns a structured error so the MCP client
   // receives a valid JSON-RPC response rather than HTTP 5xx.
@@ -15757,7 +15759,7 @@ async function handleToolsCall(
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "list_inbox") {
+    } else if (toolName === "list_messages") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListInbox(rawArgs, apiKey);
       logStatus = ls;
