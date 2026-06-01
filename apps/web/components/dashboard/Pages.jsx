@@ -10,6 +10,20 @@ import { useToast } from './Toast';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
+// Display names for the inbox Provider column, keyed by the provider/brand
+// value (generic IMAP is 'imap'; branded IMAP surfaces its service). Avoids the
+// naive CSS capitalize that would render "Imap" / "ICloud".
+const PROVIDER_LABELS = {
+  gmail: 'Gmail',
+  outlook: 'Outlook',
+  fastmail: 'Fastmail',
+  imap: 'IMAP',
+  icloud: 'iCloud',
+  yahoo: 'Yahoo',
+  zoho: 'Zoho',
+  yandex: 'Yandex',
+};
+
 // Rich-text tag handlers shared across pages (inline code + bold).
 const RICH = {
   code: (chunks) => <code className="t-code-inline">{chunks}</code>,
@@ -1010,7 +1024,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                   <td>
                     <span style={{ display:"inline-flex", alignItems:"center", gap:8 }}>
                       <ProviderLogo kind={ib.provider} size={18} />
-                      <span style={{ textTransform:"capitalize", color:"var(--fg-2)" }}>{ib.provider}</span>
+                      <span style={{ color:"var(--fg-2)" }}>{PROVIDER_LABELS[ib.provider] ?? ib.provider}</span>
                     </span>
                   </td>
                   <td>

@@ -183,7 +183,14 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
       }
 
       // Success: notify the parent so it can update its optimistic inbox list.
-      onConnect({ provider, address: email, label: email });
+      // Match the shape a page refresh renders from the DB, otherwise the row
+      // visibly changes on reload. The list surfaces the brand for branded IMAP
+      // (icloud/yahoo/zoho/yandex) and Fastmail, and 'imap' for the generic
+      // connector; the label falls back to the address local-part when there's
+      // no display name.
+      const optimisticProvider = provider === 'generic' ? 'imap' : provider;
+      const optimisticLabel = email.split('@')[0] || email;
+      onConnect({ provider: optimisticProvider, address: email, label: optimisticLabel });
     } catch {
       setFormError(tr('connect.errorNetwork'));
     } finally {
