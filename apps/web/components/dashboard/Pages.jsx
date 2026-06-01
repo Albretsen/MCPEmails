@@ -896,6 +896,14 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
   const [disconnecting, setDisconnecting] = useState(false);
   // id of the inbox whose connection check is currently in flight, or null
   const [checkingId, setCheckingId] = useState(null);
+  // inbox whose detail modal is open, or null
+  const [detailInbox, setDetailInbox] = useState(null);
+
+  // Keep the open detail modal in sync with refreshed inbox data (e.g. after a
+  // connection check updates status) instead of showing a stale snapshot.
+  const detailInboxLive = detailInbox
+    ? (inboxes.find(ib => ib.id === detailInbox.id) ?? detailInbox)
+    : null;
 
   const handleCheck = async (inbox) => {
     if (checkingId) return;
@@ -1018,7 +1026,15 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
             </thead>
             <tbody>
               {inboxes.map(ib => (
-                <tr key={ib.id}>
+                <tr
+                  key={ib.id}
+                  onClick={() => setDetailInbox(ib)}
+                  style={{ cursor: 'pointer' }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={t('inboxes.detail.openAria', { label: ib.label })}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailInbox(ib); } }}
+                >
                   <td><strong style={{ fontWeight: 600 }}>{ib.label}</strong></td>
                   <td className="mono">{ib.address}</td>
                   <td>
@@ -1050,7 +1066,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                     {ib.status === "revoked" ? <Badge tone="amber"   dot="amber">{t('inboxes.statusExpired')}</Badge>   : null}
                   </td>
                   <td className="mono">{ib.calls.toLocaleString()}</td>
-                  <td className="right">
+                  <td className="right" onClick={e => e.stopPropagation()}>
                     {ib.status === "error" ? (
                       <Btn
                         variant="secondary"
@@ -1100,6 +1116,18 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
           </div>
         )}
       </div>
+
+      {/* Inbox detail / diagnostics modal */}
+      {detailInboxLive && (
+        <InboxDetailModal
+          inbox={detailInboxLive}
+          checking={checkingId === detailInboxLive.id}
+          onClose={() => setDetailInbox(null)}
+          onReconnect={(ib) => { setDetailInbox(null); onReconnect(ib); }}
+          onCheck={(ib) => handleCheck(ib)}
+          onDisconnect={(ib) => { setDetailInbox(null); handleDisconnectRequest(ib); }}
+        />
+      )}
 
       {/* Disconnect confirmation dialog */}
       {confirmInbox && (
@@ -1205,6 +1233,125 @@ function DisconnectDialog({ inbox, disconnecting, onConfirm, onCancel }) {
   );
 }
 
+/**
+ * InboxDetailModal: a per-inbox diagnostic view.
+ *
+ * Surfaces the information needed to diagnose a broken connection without
+ * digging through the audit log — authentication method, connection status,
+ * when it was connected, the last successful MCP call, and the most recent
+ * error — plus the actions to fix it (reconnect / check / disconnect).
+ */
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect }) {
+  const t = useTranslations('dashboard');
+  if (!inbox) return null;
+
+  // OAuth providers authenticate with a token; IMAP/Fastmail use an app
+  // password (surfaced by hasImap). This is what "OAuth token status" maps to.
+  const usesOauth = !inbox.hasImap;
+
+  const statusLabel =
+    inbox.status === 'active'  ? t('inboxes.statusConnected') :
+    inbox.status === 'pending' ? t('inboxes.statusPending')   :
+    inbox.status === 'error'   ? t('inboxes.statusError')     :
+    inbox.status === 'revoked' ? t('inboxes.statusExpired')   :
+    inbox.status;
+
+  const statusBadge =
+    inbox.status === 'active'  ? <Badge tone="live"    dot="live">{statusLabel}</Badge> :
+    inbox.status === 'pending' ? <Badge tone="neutral">{statusLabel}</Badge> :
+    inbox.status === 'error'   ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
+    inbox.status === 'revoked' ? <Badge tone="amber"   dot="amber">{statusLabel}</Badge> :
+    <Badge tone="neutral">{statusLabel}</Badge>;
+
+  const Row = ({ label, children }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, padding: '10px 0', borderBottom: '1px solid var(--border-1)' }}>
+      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', flexShrink: 0 }}>{label}</span>
+      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, color: 'var(--fg-1)', textAlign: 'right' }}>{children}</span>
+    </div>
+  );
+
+  return (
+    <div className="scrim" onClick={onClose}>
+      <div
+        className="modal"
+        onClick={e => e.stopPropagation()}
+        style={{ width: 480 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="inbox-detail-title"
+      >
+        <div className="modal-h">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              <ProviderLogo kind={inbox.provider} size={24} />
+              <div style={{ minWidth: 0 }}>
+                <h2 id="inbox-detail-title" style={{ margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inbox.label}</h2>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-3)', marginTop: 2 }}>{inbox.address}</div>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              aria-label={t('inboxes.detail.close')}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--fg-3)', padding: 4, flexShrink: 0, lineHeight: 1 }}
+            >
+              <Icon name="x" size={16} />
+            </button>
+          </div>
+        </div>
+
+        <div className="modal-body">
+          <div style={{ marginBottom: 16 }}>
+            <Row label={t('inboxes.detail.connectionStatus')}>{statusBadge}</Row>
+            <Row label={t('inboxes.colProvider')}>{PROVIDER_LABELS[inbox.provider] ?? inbox.provider}</Row>
+            <Row label={t('inboxes.detail.authMethod')}>
+              {usesOauth ? t('inboxes.detail.authOauth') : t('inboxes.detail.authAppPassword')}
+            </Row>
+            <Row label={t('inboxes.detail.connectedOn')}>{formatDate(inbox.createdAt)}</Row>
+            <Row label={t('inboxes.detail.lastCall')}>
+              {inbox.lastCallAt ? formatLastUsed(inbox.lastCallAt, t) : t('inboxes.detail.lastCallNone')}
+            </Row>
+          </div>
+
+          {/* Surface the most recent error prominently so a broken connection
+              is self-explanatory. */}
+          {inbox.status === 'error' && inbox.lastError && (
+            <div style={{
+              padding: '10px 12px',
+              marginBottom: 16,
+              background: 'var(--red-100)',
+              border: '1px solid rgba(229,72,77,0.25)',
+              borderRadius: 8,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 12.5,
+              color: 'var(--red-700)',
+              lineHeight: 1.5,
+            }}>
+              {inbox.lastError}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <Btn variant="ghost" icon="trash" onClick={() => onDisconnect(inbox)}>
+              {t('inboxes.detail.disconnect')}
+            </Btn>
+            <Btn
+              variant="secondary"
+              icon="refresh"
+              disabled={checking}
+              onClick={() => onCheck(inbox)}
+            >
+              {t('inboxes.checkConnection')}
+            </Btn>
+            <Btn variant="primary" icon="refresh" onClick={() => onReconnect(inbox)}>
+              {t('inboxes.reconnect')}
+            </Btn>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── API Keys helpers ─────────────────────────────────────────────────────── */
 
 /**
@@ -1252,13 +1399,19 @@ function maskedKey(keyPrefix) {
 
 /* ── CreateKeyModal ───────────────────────────────────────────────────────── */
 
-// Scope vocabulary must match what the MCP server enforces (read:email gates
-// list/read/search tools; send:email gates send/reply). search:email is
-// accepted for parity with the OAuth flow but read:email already covers search.
+// Scope vocabulary must match what the MCP server enforces (each tool gates on
+// a requiredScope) and the grantable lists in api-keys/route.ts + the OAuth
+// authorize flow. search:email is vestigial (read:email already covers search)
+// but kept for parity and backward compatibility.
 const SCOPE_OPTIONS = [
-  { value: 'read:email',   label: 'read:email',   descKey: 'apiKeys.scopes.readDesc' },
-  { value: 'search:email', label: 'search:email', descKey: 'apiKeys.scopes.searchDesc' },
-  { value: 'send:email',   label: 'send:email',   descKey: 'apiKeys.scopes.sendDesc' },
+  { value: 'read:email',      label: 'read:email',      descKey: 'apiKeys.scopes.readDesc' },
+  { value: 'search:email',    label: 'search:email',    descKey: 'apiKeys.scopes.searchDesc' },
+  { value: 'send:email',      label: 'send:email',      descKey: 'apiKeys.scopes.sendDesc' },
+  { value: 'manage:folders',  label: 'manage:folders',  descKey: 'apiKeys.scopes.foldersDesc' },
+  { value: 'delete:email',    label: 'delete:email',    descKey: 'apiKeys.scopes.deleteDesc' },
+  { value: 'manage:drafts',   label: 'manage:drafts',   descKey: 'apiKeys.scopes.draftsDesc' },
+  { value: 'manage:contacts', label: 'manage:contacts', descKey: 'apiKeys.scopes.contactsDesc' },
+  { value: 'schedule:email',  label: 'schedule:email',  descKey: 'apiKeys.scopes.scheduleDesc' },
 ];
 
 /**
@@ -1267,12 +1420,20 @@ const SCOPE_OPTIONS = [
  * While the request is in flight, inputs are disabled and the button shows a
  * spinner label. Errors surface inline below the form.
  */
-function CreateKeyModal({ onCreate, onCancel }) {
+function CreateKeyModal({ onCreate, onCancel, existingNames = [] }) {
   const t = useTranslations('dashboard');
   const [name, setName] = useState('');
   const [selectedScopes, setSelectedScopes] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Inline duplicate-name warning (case-insensitive). The server enforces this
+  // with a 409; surfacing it as the user types avoids a wasted round-trip and
+  // keeps key names distinguishable in the audit log.
+  const trimmedName = name.trim();
+  const isDuplicate =
+    trimmedName.length > 0 &&
+    existingNames.some(n => (n ?? '').trim().toLowerCase() === trimmedName.toLowerCase());
 
   const toggleScope = (value) => {
     setSelectedScopes(prev =>
@@ -1295,6 +1456,10 @@ function CreateKeyModal({ onCreate, onCancel }) {
     }
     if (selectedScopes.length === 0) {
       setError(t('apiKeys.createModal.errScopeRequired'));
+      return;
+    }
+    if (isDuplicate) {
+      setError(t('apiKeys.createModal.errNameDuplicate'));
       return;
     }
 
@@ -1366,8 +1531,20 @@ function CreateKeyModal({ onCreate, onCancel }) {
                 disabled={submitting}
                 maxLength={128}
                 autoFocus
-                style={{ width: '100%', boxSizing: 'border-box' }}
+                aria-invalid={isDuplicate || undefined}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  borderColor: isDuplicate ? 'var(--red-500)' : undefined,
+                }}
               />
+              {isDuplicate && (
+                <div style={{
+                  marginTop: 6, fontFamily: 'var(--font-sans)', fontSize: 12,
+                  color: 'var(--red-500)',
+                }}>
+                  {t('apiKeys.createModal.errNameDuplicate')}
+                </div>
+              )}
             </div>
 
             {/* Scopes */}
@@ -1440,7 +1617,7 @@ function CreateKeyModal({ onCreate, onCancel }) {
               <Btn variant="secondary" onClick={onCancel} disabled={submitting}>
                 {t('apiKeys.createModal.cancel')}
               </Btn>
-              <Btn variant="primary" icon="key" type="submit" disabled={submitting}>
+              <Btn variant="primary" icon="key" type="submit" disabled={submitting || isDuplicate}>
                 {submitting ? t('apiKeys.createModal.creating') : t('apiKeys.createModal.createKey')}
               </Btn>
             </div>
@@ -2178,6 +2355,7 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
         <CreateKeyModal
           onCreate={handleCreate}
           onCancel={() => setCreateOpen(false)}
+          existingNames={keys.map(k => k.name)}
         />
       )}
 
@@ -2497,9 +2675,16 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
                 </thead>
                 <tbody>
                   {byInbox.map((ib) => (
-                    <tr key={ib.inboxId}>
+                    <tr key={ib.inboxId} style={ib.archived ? { opacity: 0.6 } : undefined}>
                       <td>
-                        <strong style={{ fontWeight: 600 }}>{ib.label}</strong>
+                        <strong style={{ fontWeight: 600, color: ib.archived ? 'var(--fg-3)' : undefined }}>
+                          {ib.label}
+                        </strong>
+                        {ib.archived && (
+                          <span style={{ marginLeft: 8 }}>
+                            <Badge tone="neutral">{t('usage.inboxArchived')}</Badge>
+                          </span>
+                        )}
                       </td>
                       <td className="mono" style={{ color: 'var(--fg-3)' }}>
                         {ib.address}
@@ -2554,6 +2739,49 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
+  // Email change is its own self-contained flow: it does not write the users
+  // table directly — POST /api/user/email starts a confirmation flow and the
+  // address only changes once the user clicks the link sent to the new inbox.
+  const [emailValue, setEmailValue] = useState(email ?? '');
+  const [emailSaving, setEmailSaving] = useState(false);
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const normalizedEmail = emailValue.trim().toLowerCase();
+  const emailDirty = normalizedEmail !== (email ?? '').toLowerCase();
+  const emailValid = EMAIL_RE.test(normalizedEmail) && normalizedEmail.length <= 254;
+
+  const handleEmailSubmit = async () => {
+    if (emailSaving || !emailDirty) return;
+    if (!emailValid) {
+      toast({ message: t('settings.profile.errEmailInvalid'), variant: 'error' });
+      return;
+    }
+
+    setEmailSaving(true);
+    try {
+      const res = await fetch('/api/user/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      if (!res.ok) {
+        let message = t('settings.profile.errEmailFailed');
+        try {
+          const data = await res.json();
+          if (typeof data?.error === 'string') message = data.error;
+        } catch { /* ignore */ }
+        toast({ message, variant: 'error' });
+        return;
+      }
+
+      toast({ message: t('settings.profile.emailConfirmSent', { email: normalizedEmail }), variant: 'success' });
+    } catch {
+      toast({ message: t('settings.profile.networkError'), variant: 'error' });
+    } finally {
+      setEmailSaving(false);
+    }
+  };
+
   // True when there is a pending unsaved change
   const isDirty = name.trim() !== (initialDisplayName ?? '').trim();
 
@@ -2600,7 +2828,6 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
 
   const handleCancel = () => {
     setName(initialDisplayName ?? '');
-    setFeedback({ state: 'idle', message: '' });
   };
 
   return (
@@ -2643,7 +2870,7 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
             />
           </div>
 
-          {/* Email: read-only */}
+          {/* Email: editable via a confirmation flow */}
           <div className="field">
             <label
               htmlFor="profile-email"
@@ -2658,21 +2885,28 @@ function ProfileSection({ displayName: initialDisplayName, email }) {
             >
               {t('settings.profile.email')}
             </label>
-            <input
-              id="profile-email"
-              className="input"
-              type="email"
-              value={email ?? ''}
-              readOnly
-              disabled
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                cursor: 'default',
-                opacity: 0.7,
-              }}
-              aria-describedby="profile-email-hint"
-            />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <input
+                id="profile-email"
+                className="input"
+                type="email"
+                value={emailValue}
+                onChange={e => setEmailValue(e.target.value)}
+                disabled={emailSaving}
+                maxLength={254}
+                autoComplete="email"
+                style={{ flex: 1, minWidth: 0, boxSizing: 'border-box' }}
+                aria-describedby="profile-email-hint"
+              />
+              <Btn
+                variant="secondary"
+                type="button"
+                onClick={handleEmailSubmit}
+                disabled={emailSaving || !emailDirty || !emailValid}
+              >
+                {emailSaving ? t('settings.profile.emailSending') : t('settings.profile.emailChange')}
+              </Btn>
+            </div>
             <span
               id="profile-email-hint"
               style={{

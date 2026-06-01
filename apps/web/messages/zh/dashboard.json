@@ -157,6 +157,18 @@
       "body": "当前有权访问此收件箱的所有 API 密钥将立即失去访问权限。你可以随时重新连接此收件箱。",
       "disconnecting": "正在断开…",
       "disconnect": "断开"
+    },
+    "detail": {
+      "close": "关闭",
+      "openAria": "查看 {label} 的详情",
+      "connectionStatus": "连接状态",
+      "authMethod": "身份验证",
+      "authOauth": "OAuth 令牌",
+      "authAppPassword": "应用专用密码",
+      "connectedOn": "连接于",
+      "lastCall": "最近一次成功调用",
+      "lastCallNone": "过去 30 天内没有成功调用",
+      "disconnect": "断开连接"
     }
   },
   "apiKeys": {
@@ -192,7 +204,12 @@
     "scopes": {
       "readDesc": "列出、读取和搜索邮件",
       "searchDesc": "在收件箱内容中搜索",
-      "sendDesc": "发送和回复邮件"
+      "sendDesc": "发送和回复邮件",
+      "foldersDesc": "创建、重命名和删除文件夹；移动和复制邮件",
+      "deleteDesc": "删除邮件，包括批量删除",
+      "draftsDesc": "创建、更新和删除草稿",
+      "contactsDesc": "列出和查找通讯录联系人",
+      "scheduleDesc": "安排发送并管理已计划的邮件"
     },
     "createModal": {
       "title": "新建 API 密钥",
@@ -203,6 +220,7 @@
       "permissions": "权限",
       "errNameRequired": "名称为必填项。",
       "errNameTooLong": "名称不得超过 128 个字符。",
+      "errNameDuplicate": "已存在同名密钥。请选择一个不同的名称，以便在审计日志中区分各密钥。",
       "errScopeRequired": "请至少选择一个权限范围。",
       "errCreateFailed": "创建 API 密钥失败。请重试。",
       "creating": "正在创建…",
@@ -272,6 +290,7 @@
     "colCalls": "调用次数",
     "colShare": "占比",
     "callsByInboxTitle": "按收件箱划分的调用量",
+    "inboxArchived": "已归档",
     "colInbox": "收件箱",
     "colAddress": "地址"
   },
@@ -287,7 +306,10 @@
       "displayName": "显示名称",
       "namePlaceholder": "你的名称",
       "email": "电子邮件地址",
-      "emailHint": "电子邮件无法在此处更改。请联系支持以更新你的电子邮件地址。",
+      "emailHint": "更改电子邮件会向新地址发送一个确认链接。只有点击该链接后，更改才会生效。",
+      "emailChange": "更改邮箱",
+      "emailSending": "正在发送…",
+      "emailConfirmSent": "确认链接已发送至 {email}。请点击该链接以完成邮箱更改。",
       "cancel": "取消",
       "saving": "正在保存…",
       "saveChanges": "保存更改",
@@ -295,7 +317,9 @@
       "errTooLong": "显示名称不得超过 100 个字符。",
       "errSaveFailed": "保存更改失败。",
       "updated": "个人资料已更新。",
-      "networkError": "网络错误。请重试。"
+      "networkError": "网络错误。请重试。",
+      "errEmailInvalid": "请输入有效的电子邮件地址。",
+      "errEmailFailed": "无法开始更改邮箱。"
     },
     "password": {
       "title": "更改密码",

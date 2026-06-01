@@ -4,6 +4,7 @@ import { generateApiKey } from '@/lib/api-keys/generate';
 import { checkApiKeyLimit } from '@/lib/plans/check-api-key-limit';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
+import { getActiveApiKeyNames, isApiKeyNameTaken } from '@/lib/api-keys/unique-name';
 
 /**
  * POST /api/api-keys
@@ -31,14 +32,22 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
  *   Documents/Architecture/api-key-management.md §1 (format), §4.1 (creation flow)
  */
 
-// Must match the scopes the MCP server enforces (read:email gates list/read/
-// search tools; send:email gates send/reply). Kept in sync with the OAuth
-// authorize flow's VALID_SCOPES so dashboard- and OAuth-issued keys behave
-// identically.
+// Must match the scopes the MCP server enforces (supabase/functions/mcp-server
+// gates each tool on a requiredScope). Kept in sync with the OAuth authorize
+// flow's VALID_SCOPES so dashboard- and OAuth-issued keys behave identically.
+//
+// search:email is vestigial — no tool requires it (read:email already gates
+// search_emails) — but it is retained for parity and backward compatibility
+// with keys/consents already issued with it.
 const VALID_SCOPES = [
   'read:email',
   'search:email',
   'send:email',
+  'manage:folders',
+  'delete:email',
+  'manage:drafts',
+  'manage:contacts',
+  'schedule:email',
 ] as const;
 
 /** Scopes available to workspace viewers (read-only). */
@@ -181,6 +190,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         upgrade_url: '/pricing',
       },
       { status: 403 },
+    );
+  }
+
+  // 3d. Reject a duplicate name within the workspace so keys stay
+  // distinguishable in the audit log and usage stats. Case-insensitive match
+  // against active (non-revoked) keys.
+  const existingNames = await getActiveApiKeyNames(supabase, workspaceId);
+  if (isApiKeyNameTaken(existingNames, trimmedName)) {
+    return NextResponse.json(
+      {
+        error: `An API key named "${trimmedName}" already exists in this workspace. Choose a distinct name so keys stay distinguishable in the audit log.`,
+        error_code: 'duplicate_name',
+      },
+      { status: 409 },
     );
   }
 

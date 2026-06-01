@@ -183,5 +183,10 @@
     "es": "Español",
     "fr": "Français",
     "zh": "中文"
+  },
+  "preview": {
+    "eyebrow": "Product preview",
+    "title": "See your whole MCP operation at a glance.",
+    "sub": "A real-time dashboard for every connected inbox, API key, and tool call — so you always know what your agents are doing."
   }
 }

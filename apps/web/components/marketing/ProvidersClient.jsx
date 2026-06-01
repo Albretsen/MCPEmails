@@ -146,7 +146,7 @@ const MATRIX = {
   search_syntax: {
     label: 'Search syntax',
     section: 'Search',
-    gmail: 'Gmail', outlook: 'OData', fastmail: 'JMAP',
+    gmail: 'Gmail', outlook: 'OData', fastmail: 'IMAP',
     icloud: 'IMAP', yahoo: 'IMAP', zoho: 'IMAP', yandex: 'IMAP', generic: 'IMAP',
   },
 };

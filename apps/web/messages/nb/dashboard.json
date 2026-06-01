@@ -157,6 +157,18 @@
       "body": "Alle API-nøkler som for øyeblikket er autorisert til å få tilgang til denne innboksen, vil miste tilgangen umiddelbart. Du kan koble til denne innboksen på nytt når som helst.",
       "disconnecting": "Kobler fra…",
       "disconnect": "Koble fra"
+    },
+    "detail": {
+      "close": "Lukk",
+      "openAria": "Vis detaljer for {label}",
+      "connectionStatus": "Tilkoblingsstatus",
+      "authMethod": "Autentisering",
+      "authOauth": "OAuth-token",
+      "authAppPassword": "App-passord",
+      "connectedOn": "Tilkoblet",
+      "lastCall": "Siste vellykkede kall",
+      "lastCallNone": "Ingen vellykkede kall de siste 30 dagene",
+      "disconnect": "Koble fra"
     }
   },
   "apiKeys": {
@@ -192,7 +204,12 @@
     "scopes": {
       "readDesc": "List opp, les og søk i e-postmeldinger",
       "searchDesc": "Søk på tvers av innboksinnhold",
-      "sendDesc": "Send og svar på e-poster"
+      "sendDesc": "Send og svar på e-poster",
+      "foldersDesc": "Opprett, gi nytt navn og slett mapper; flytt og kopier meldinger",
+      "deleteDesc": "Slett e-postmeldinger, også i bulk",
+      "draftsDesc": "Opprett, oppdater og slett utkast",
+      "contactsDesc": "List opp og slå opp kontakter i adresseboken",
+      "scheduleDesc": "Planlegg sending og administrer planlagte e-poster"
     },
     "createModal": {
       "title": "Ny API-nøkkel",
@@ -203,6 +220,7 @@
       "permissions": "Tillatelser",
       "errNameRequired": "Navn er påkrevd.",
       "errNameTooLong": "Navnet kan ikke være lengre enn 128 tegn.",
+      "errNameDuplicate": "En nøkkel med dette navnet finnes allerede. Velg et eget navn så nøklene er lette å skille fra hverandre i revisjonsloggen.",
       "errScopeRequired": "Velg minst én tillatelse.",
       "errCreateFailed": "Kunne ikke opprette API-nøkkel. Prøv igjen.",
       "creating": "Oppretter…",
@@ -272,6 +290,7 @@
     "colCalls": "Kall",
     "colShare": "Andel",
     "callsByInboxTitle": "Kall per innboks",
+    "inboxArchived": "Arkivert",
     "colInbox": "Innboks",
     "colAddress": "Adresse"
   },
@@ -287,7 +306,10 @@
       "displayName": "Visningsnavn",
       "namePlaceholder": "Navnet ditt",
       "email": "E-postadresse",
-      "emailHint": "E-post kan ikke endres her. Kontakt kundestøtte for å oppdatere e-postadressen din.",
+      "emailHint": "Å endre e-posten sender en bekreftelseslenke til den nye adressen. Endringen trer i kraft først når du klikker på lenken.",
+      "emailChange": "Endre e-post",
+      "emailSending": "Sender…",
+      "emailConfirmSent": "Bekreftelseslenke sendt til {email}. Klikk på den for å fullføre endringen av e-posten.",
       "cancel": "Avbryt",
       "saving": "Lagrer…",
       "saveChanges": "Lagre endringer",
@@ -295,7 +317,9 @@
       "errTooLong": "Visningsnavn kan ikke være lengre enn 100 tegn.",
       "errSaveFailed": "Kunne ikke lagre endringer.",
       "updated": "Profil oppdatert.",
-      "networkError": "Nettverksfeil. Prøv igjen."
+      "networkError": "Nettverksfeil. Prøv igjen.",
+      "errEmailInvalid": "Skriv inn en gyldig e-postadresse.",
+      "errEmailFailed": "Kunne ikke starte e-postendring."
     },
     "password": {
       "title": "Endre passord",

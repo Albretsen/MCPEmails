@@ -157,6 +157,18 @@
       "body": "Toutes les clés API actuellement autorisées à accéder à cette boîte perdront l'accès immédiatement. Vous pouvez reconnecter cette boîte à tout moment.",
       "disconnecting": "Déconnexion…",
       "disconnect": "Déconnecter"
+    },
+    "detail": {
+      "close": "Fermer",
+      "openAria": "Voir les détails de {label}",
+      "connectionStatus": "État de la connexion",
+      "authMethod": "Authentification",
+      "authOauth": "Jeton OAuth",
+      "authAppPassword": "Mot de passe d'application",
+      "connectedOn": "Connectée le",
+      "lastCall": "Dernier appel réussi",
+      "lastCallNone": "Aucun appel réussi au cours des 30 derniers jours",
+      "disconnect": "Déconnecter"
     }
   },
   "apiKeys": {
@@ -192,7 +204,12 @@
     "scopes": {
       "readDesc": "Lister, lire et rechercher des messages e-mail",
       "searchDesc": "Rechercher dans le contenu des boîtes",
-      "sendDesc": "Envoyer des e-mails et y répondre"
+      "sendDesc": "Envoyer des e-mails et y répondre",
+      "foldersDesc": "Créer, renommer et supprimer des dossiers ; déplacer et copier des messages",
+      "deleteDesc": "Supprimer des e-mails, y compris en masse",
+      "draftsDesc": "Créer, modifier et supprimer des brouillons",
+      "contactsDesc": "Lister et consulter les contacts du carnet d'adresses",
+      "scheduleDesc": "Programmer des envois et gérer les e-mails programmés"
     },
     "createModal": {
       "title": "Nouvelle clé API",
@@ -203,6 +220,7 @@
       "permissions": "Autorisations",
       "errNameRequired": "Le nom est requis.",
       "errNameTooLong": "Le nom doit comporter 128 caractères ou moins.",
+      "errNameDuplicate": "Une clé portant ce nom existe déjà. Choisissez un nom distinct pour que les clés restent identifiables dans le journal d'audit.",
       "errScopeRequired": "Sélectionnez au moins une portée.",
       "errCreateFailed": "Échec de la création de la clé API. Veuillez réessayer.",
       "creating": "Création…",
@@ -272,6 +290,7 @@
     "colCalls": "Appels",
     "colShare": "Part",
     "callsByInboxTitle": "Appels par boîte",
+    "inboxArchived": "Archivée",
     "colInbox": "Boîte",
     "colAddress": "Adresse"
   },
@@ -287,7 +306,10 @@
       "displayName": "Nom affiché",
       "namePlaceholder": "Votre nom",
       "email": "Adresse e-mail",
-      "emailHint": "L'e-mail ne peut pas être modifié ici. Contactez le support pour mettre à jour votre adresse e-mail.",
+      "emailHint": "Changer votre e-mail envoie un lien de confirmation à la nouvelle adresse. Le changement ne prend effet qu'après avoir cliqué sur ce lien.",
+      "emailChange": "Changer l'e-mail",
+      "emailSending": "Envoi…",
+      "emailConfirmSent": "Lien de confirmation envoyé à {email}. Cliquez dessus pour finaliser le changement d'e-mail.",
       "cancel": "Annuler",
       "saving": "Enregistrement…",
       "saveChanges": "Enregistrer les modifications",
@@ -295,7 +317,9 @@
       "errTooLong": "Le nom affiché doit comporter 100 caractères ou moins.",
       "errSaveFailed": "Échec de l'enregistrement des modifications.",
       "updated": "Profil mis à jour.",
-      "networkError": "Erreur réseau. Veuillez réessayer."
+      "networkError": "Erreur réseau. Veuillez réessayer.",
+      "errEmailInvalid": "Saisissez une adresse e-mail valide.",
+      "errEmailFailed": "Impossible de lancer le changement d'e-mail."
     },
     "password": {
       "title": "Changer le mot de passe",

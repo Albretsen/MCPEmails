@@ -26,7 +26,7 @@
     "logsTitle": "2.4 Usage and audit logs",
     "logsP": "For every MCP tool call your agent makes, we record: the tool name (e.g. <c>read_email</c>), the API key that made the call, the inbox that was accessed, the timestamp, and whether the call succeeded. We do<b> not</b> record email subjects, bodies, recipients, or any other email content in these logs.",
     "emailContentTitle": "2.5 Email content: not stored",
-    "emailContentP": "When your agent calls <c>read_email</c>, <c>list_inbox</c>, or any other email tool, we fetch the requested content live from your email provider and return it to your agent in the same HTTP response. The content is never written to disk, cached, or logged. Once the HTTP response is sent, we hold no copy of any email body, subject, attachment, or contact detail.",
+    "emailContentP": "When your agent calls <c>read_email</c>, <c>list_messages</c>, or any other email tool, we fetch the requested content live from your email provider and return it to your agent in the same HTTP response. The content is never written to disk, cached, or logged. Once the HTTP response is sent, we hold no copy of any email body, subject, attachment, or contact detail.",
     "technicalTitle": "2.6 Technical and operational data",
     "technicalP": "We collect standard server-side operational data including IP addresses (for rate limiting and abuse prevention), request timestamps, HTTP status codes, and error types. This data is retained in aggregated, anonymised form and is not linked to individual accounts after 30 days.",
     "cookiesTitle": "2.7 Cookies and local storage",

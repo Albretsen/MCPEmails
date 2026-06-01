@@ -27,7 +27,7 @@
       "apikey": {
         "label": "Crea una clave de API",
         "heading": "Genera un token bearer para tu agente",
-        "body": "En Panel → Claves de API, haz clic en «Crear clave». Ponle nombre, selecciona los alcances que necesita tu agente (read:email y/o send:email) y copia la clave. Solo se muestra una vez."
+        "body": "En Panel → Claves de API, haz clic en «Crear clave». Ponle nombre, selecciona los alcances que necesita tu agente —desde read:email y send:email hasta manage:folders, delete:email, manage:drafts, manage:contacts y schedule:email— y copia la clave. Solo se muestra una vez."
       },
       "addclient": {
         "label": "Añade MCPEmails a tu agente",
@@ -60,7 +60,9 @@
     "infoAuth": "Autenticación: <b>Authorization: Bearer &lt;api-key&gt;</b>",
     "infoRateLimits": "Límites de tasa: <b>100 pet/min · 1.000/h · 10.000/día</b> por clave",
     "infoFormat": "Formato de respuesta: <b>JSON-RPC 2.0</b>",
-    "handshakeLabel": "Handshake de inicialización"
+    "handshakeLabel": "Handshake de inicialización",
+    "pollingHeading": "Sondeo, no push",
+    "pollingBody": "MCPEmails es solo de petición/respuesta: cada resultado proviene de una llamada a una herramienta que hace tu agente. <b>No hay webhooks, notificaciones push ni eventos iniciados por el servidor</b>: un correo entrante nunca activa por sí solo una llamada del agente. Para reaccionar al correo nuevo, haz que tu agente <b>sondee</b> de forma periódica, p. ej. llamando a <code>list_messages</code> con <code>unread_only: true</code> al intervalo que necesite tu flujo (ten en cuenta los límites de tasa anteriores)."
   },
   "oauth": {
     "eyebrow": "Conexión OAuth",
@@ -70,17 +72,47 @@
     "step2": "<b>Paso 2:</b> Pega <code>https://www.mcpemails.com/api/mcp</code> como la URL del servidor",
     "step3": "<b>Paso 3:</b> Haz clic en Conectar. MCPEmails abre una pantalla de autorización",
     "step4": "<b>Paso 4:</b> Inicia sesión con tu cuenta de mcpemails y aprueba el acceso",
-    "stepDone": "<b>Listo:</b> Las seis herramientas están activas. claude.ai actualiza los tokens automáticamente",
+    "stepDone": "<b>Listo:</b> Todas las herramientas que permiten los alcances aprobados están activas. claude.ai actualiza los tokens automáticamente",
     "howTitle": "Cómo funciona internamente",
     "howP1": "claude.ai se registra a sí mismo mediante el <b>Registro dinámico de clientes RFC 7591</b>, así que nunca pre-registras un ID de cliente.",
     "howP2": "La autorización usa <b>Código de autorización OAuth 2.0 + PKCE</b> (RFC 7636), así que nunca se transmite ningún secreto de cliente.",
-    "howP3": "Los tokens se limitan exactamente a los permisos que apruebas: <code>read:email</code> y/o <code>send:email</code>.",
-    "noOauthNote": "<b>¿Usas un cliente sin soporte de OAuth?</b> Crea una clave de API en Panel → Claves de API y pásala como token bearer. Las conexiones por clave de API y por OAuth usan el mismo endpoint MCP y las mismas seis herramientas."
+    "howP3": "Los tokens se limitan exactamente a los permisos que apruebas: desde <code>read:email</code> y <code>send:email</code> hasta <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code> y <code>schedule:email</code>.",
+    "noOauthNote": "<b>¿Usas un cliente sin soporte de OAuth?</b> Crea una clave de API en Panel → Claves de API y pásala como token bearer. Las conexiones por clave de API y por OAuth usan el mismo endpoint MCP y el mismo catálogo de herramientas."
   },
   "tools": {
     "eyebrow": "Referencia de herramientas",
-    "heading": "Seis herramientas. Todas las operaciones de correo que tu agente necesita.",
-    "sub": "Empieza con <code>list_inboxes</code> para descubrir las bandejas disponibles y sus UUIDs. Las cinco herramientas restantes toman cada una un <code>inbox_id</code> devuelto por esa llamada. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
+    "heading": "33 herramientas. Todas las operaciones de correo que tu agente necesita.",
+    "sub": "Empieza con <code>list_inboxes</code> para descubrir las bandejas disponibles y sus UUIDs: todas las demás herramientas toman un <code>inbox_id</code> devuelto por esa llamada. Las herramientas se agrupan según el alcance que las habilita; <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token de OAuth) tiene alcance. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
+    "scopes": {
+      "read": {
+        "title": "Leer y buscar",
+        "desc": "Descubre bandejas y carpetas, lista y lee mensajes, y ejecuta búsquedas nativas del proveedor. Solo lectura: nunca modifica nada."
+      },
+      "send": {
+        "title": "Enviar y estado del mensaje",
+        "desc": "Envía, responde y reenvía, además de cambios de estado no destructivos: marcar como leído/no leído, destacar/quitar destacado, archivar y destacar en lote. Los envíos son irreversibles."
+      },
+      "folders": {
+        "title": "Carpetas y organización",
+        "desc": "Crea, renombra y elimina carpetas (etiquetas en Gmail), y mueve o copia mensajes: uno a uno, en lote o directamente desde una búsqueda."
+      },
+      "delete": {
+        "title": "Eliminar",
+        "desc": "Envía mensajes a la papelera o elimínalos de forma permanente: uno a uno, en lote o desde una búsqueda. Toda eliminación requiere confirm: true."
+      },
+      "drafts": {
+        "title": "Borradores",
+        "desc": "Lista, crea, actualiza y envía borradores almacenados en la carpeta de Borradores del proveedor."
+      },
+      "contacts": {
+        "title": "Contactos",
+        "desc": "Busca en una lista de contactos creada automáticamente a partir de los encabezados From, To y Reply-To vistos en tu correo. Sin configuración manual."
+      },
+      "schedule": {
+        "title": "Envío programado",
+        "desc": "Pon en cola un correo para una fecha futura, lista los envíos programados pendientes y cancélalos antes de que salgan."
+      }
+    },
     "noParams": "Sin parámetros. Llama con un objeto de argumentos vacío:",
     "showExample": "Mostrar petición y respuesta de ejemplo",
     "hideExample": "Ocultar petición y respuesta de ejemplo",
@@ -94,10 +126,10 @@
     "badgeOptional": "opcional",
     "list_inboxes": {
       "title": "List Inboxes",
-      "desc": "Devuelve todas las bandejas a las que la clave de API o el token de OAuth actuales pueden acceder. Llama a esto primero para descubrir los valores de inbox_id, así nunca copias y pegas UUIDs del panel."
+      "desc": "Devuelve todas las bandejas a las que la clave de API o el token de OAuth actuales pueden acceder. Llama a esto primero para descubrir los valores de inbox_id, así nunca copias y pegas UUIDs del panel. Cada resultado incluye la dirección de correo, el proveedor, la marca de servicio opcional (icloud/yahoo/zoho/yandex/generic/fastmail) y un objeto de capacidades que describe qué funciones admite esa bandeja."
     },
-    "list_inbox": {
-      "title": "List Inbox",
+    "list_messages": {
+      "title": "Listar mensajes",
       "desc": "Lista resúmenes de correos de una bandeja conectada, los más nuevos primero. Admite paginación, selección de carpeta y filtrado de no leídos.",
       "params": {
         "inbox_id": "UUID de la bandeja a listar. Llama primero a list_inboxes para descubrir los IDs de bandeja disponibles.",
@@ -112,7 +144,7 @@
       "desc": "Obtiene el contenido completo de un solo correo por ID, incluido el cuerpo en texto plano, HTML saneado opcional y datos de adjuntos opcionales.",
       "params": {
         "inbox_id": "UUID de la bandeja que contiene el correo. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
-        "message_id": "ID de mensaje del proveedor de list_inbox o search_emails.",
+        "message_id": "ID de mensaje del proveedor de list_messages o search_emails.",
         "include_html": "Incluir el cuerpo HTML saneado. Predeterminado false.",
         "include_attachments": "Incluir datos de adjuntos en base64. Predeterminado false.",
         "mark_as_read": "Marcar el mensaje como leído tras obtenerlo. Predeterminado false."
@@ -154,6 +186,263 @@
         "html_body": "Versión HTML opcional de la respuesta.",
         "reply_all": "Responder a todos los destinatarios originales (Para + Cc). Predeterminado false.",
         "attachments": "Adjuntos de archivo. Mismo esquema que send_email. Máximo 20 elementos."
+      }
+    },
+    "mark_read": {
+      "title": "Marcar correo como leído",
+      "desc": "Marca un único mensaje de correo como leído. No destructivo: solo cambia el indicador de leído, nunca elimina ni mueve el mensaje. Funciona con todos los proveedores.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene el mensaje. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "message_id": "ID de mensaje del proveedor obtenido de list_messages o search_emails."
+      }
+    },
+    "list_folders": {
+      "title": "List Folders",
+      "desc": "Lista todas las carpetas (o etiquetas, en Gmail) de una bandeja. Cada entrada tiene el ID de carpeta nativo del proveedor, el nombre visible, el tipo (carpeta o etiqueta) y los recuentos de mensajes. Usa los IDs como argumento folder de list_messages y como origen/destino para mover y copiar.",
+      "params": {
+        "inbox_id": "UUID de la bandeja cuyas carpetas listar. Llama a list_inboxes para obtener los IDs de bandeja disponibles."
+      }
+    },
+    "forward_email": {
+      "title": "Forward Email",
+      "desc": "Reenvía un mensaje existente a nuevos destinatarios. Tu nota opcional se antepone sobre un bloque de encabezado de mensaje reenviado estándar y el cuerpo original. Activa include_attachments para volver a adjuntar los archivos originales. El asunto se prefija con 'Fwd:' si es necesario. Irreversible.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene el mensaje original. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "message_id": "ID de mensaje del proveedor del correo a reenviar, de list_messages o search_emails.",
+        "to": "Direcciones de correo de los destinatarios. Máximo 50.",
+        "cc": "Destinatarios en CC. Predeterminado [].",
+        "bcc": "Destinatarios en CCO. Predeterminado [].",
+        "body": "Nota opcional en texto plano para anteponer sobre el mensaje reenviado.",
+        "html_body": "Versión HTML opcional de la nota (multipart/alternative).",
+        "include_attachments": "Volver a adjuntar los adjuntos del mensaje original. Los archivos que superen el presupuesto de 10 MB se omiten. Predeterminado false."
+      }
+    },
+    "mark_unread": {
+      "title": "Mark Email as Unread",
+      "desc": "Marca un único mensaje de correo como no leído. No destructivo: solo cambia el indicador de leído. Funciona con todos los proveedores.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene el mensaje. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "message_id": "ID de mensaje del proveedor obtenido de list_messages o search_emails."
+      }
+    },
+    "flag_email": {
+      "title": "Flag Email",
+      "desc": "Destaca (estrella / marca para seguimiento) un único mensaje. No destructivo. Se corresponde con la estrella o marca nativa del proveedor: etiqueta STARRED de Gmail, \\Flagged de IMAP, marca de Outlook, palabra clave $flagged de Fastmail.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene el mensaje. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "message_id": "ID de mensaje del proveedor obtenido de list_messages o search_emails."
+      }
+    },
+    "unflag_email": {
+      "title": "Unflag Email",
+      "desc": "Quita el destacado (estrella / marca de seguimiento) de un único mensaje. No destructivo.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene el mensaje. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "message_id": "ID de mensaje del proveedor obtenido de list_messages o search_emails."
+      }
+    },
+    "archive_email": {
+      "title": "Archive Email",
+      "desc": "Mueve un mensaje fuera de la bandeja de entrada al archivo. No destructivo: el mensaje se conserva, no se elimina. En Gmail esto quita la etiqueta INBOX; en IMAP/Outlook/Fastmail lo mueve al buzón de Archivo.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene el mensaje. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "message_id": "ID de mensaje del proveedor obtenido de list_messages o search_emails."
+      }
+    },
+    "bulk_flag": {
+      "title": "Bulk Flag",
+      "desc": "Aplica una acción de leído/no leído/destacar/quitar destacado a hasta 500 mensajes en una sola llamada. Devuelve los recuentos de éxitos/fallos más una lista de resultados por mensaje.",
+      "params": {
+        "inbox_id": "UUID de la bandeja propietaria de los mensajes. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "message_ids": "IDs de mensaje del proveedor a actualizar. Máximo 500 por llamada.",
+        "action": "Acción a aplicar a todos los mensajes: \"read\", \"unread\", \"flag\" o \"unflag\"."
+      }
+    },
+    "create_folder": {
+      "title": "Create Folder",
+      "desc": "Crea una nueva carpeta (o etiqueta, en Gmail) en una bandeja. Devuelve el ID de carpeta/etiqueta nativo del proveedor y el nombre visible.",
+      "params": {
+        "inbox_id": "UUID de la bandeja en la que crear la carpeta/etiqueta. Llama a list_inboxes para obtener los IDs de bandeja disponibles.",
+        "name": "Nombre de la nueva carpeta o etiqueta. De 1 a 255 caracteres."
+      }
+    },
+    "rename_folder": {
+      "title": "Rename Folder",
+      "desc": "Renombra una carpeta o etiqueta existente. Llama primero a list_folders para obtener el folder_id.",
+      "params": {
+        "inbox_id": "UUID de la bandeja propietaria de la carpeta/etiqueta.",
+        "folder_id": "ID de carpeta/etiqueta nativo del proveedor de list_folders.",
+        "new_name": "Nuevo nombre visible. De 1 a 255 caracteres."
+      }
+    },
+    "delete_folder": {
+      "title": "Delete Folder",
+      "desc": "Elimina permanentemente una carpeta (o etiqueta, en Gmail). Irreversible: los mensajes que contiene pueden perderse según el proveedor. Requiere confirm: true. Llama primero a list_folders para obtener el folder_id.",
+      "params": {
+        "inbox_id": "UUID de la bandeja propietaria de la carpeta/etiqueta.",
+        "folder_id": "ID de carpeta/etiqueta nativo del proveedor de list_folders.",
+        "confirm": "Debe ser true para confirmar esta operación destructiva."
+      }
+    },
+    "move_email": {
+      "title": "Move Email",
+      "desc": "Mueve un mensaje a otra carpeta. En Gmail esto añade la etiqueta de destino y quita INBOX (Gmail no tiene carpetas separadas). Llama a list_folders para obtener el destination_folder_id.",
+      "params": {
+        "inbox_id": "UUID de la bandeja propietaria del mensaje.",
+        "message_id": "ID de mensaje del proveedor de list_messages, read_email o search_emails.",
+        "destination_folder_id": "ID de carpeta/etiqueta nativo del proveedor del destino, de list_folders. Para IMAP es el nombre del buzón; para Gmail el ID de etiqueta; para Outlook/Fastmail el ID opaco de carpeta."
+      }
+    },
+    "copy_email": {
+      "title": "Copy Email",
+      "desc": "Copia un mensaje a otra carpeta, dejando el original en su sitio. No compatible con Gmail (la API de Gmail no tiene copia nativa): usa move_email allí en su lugar. Llama a list_folders para obtener el destination_folder_id.",
+      "params": {
+        "inbox_id": "UUID de la bandeja propietaria del mensaje.",
+        "message_id": "ID de mensaje del proveedor de list_messages, read_email o search_emails.",
+        "destination_folder_id": "ID de carpeta nativo del proveedor del destino, de list_folders."
+      }
+    },
+    "bulk_move": {
+      "title": "Bulk Move",
+      "desc": "Mueve hasta 500 mensajes a una carpeta de destino en una sola llamada. Devuelve los recuentos de éxitos/fallos más resultados por mensaje. Llama a list_folders para obtener el destination_folder_id.",
+      "params": {
+        "inbox_id": "UUID de la bandeja propietaria de los mensajes.",
+        "message_ids": "IDs de mensaje del proveedor a mover. Máximo 500 por llamada.",
+        "destination_folder_id": "ID de carpeta/etiqueta nativo del proveedor del destino, de list_folders."
+      }
+    },
+    "search_and_move": {
+      "title": "Search and Move",
+      "desc": "Ejecuta una búsqueda y mueve cada coincidencia a una carpeta de destino en una sola operación del lado del servidor, lo que evita IDs de mensaje obsoletos. Limitado a 500 coincidencias por llamada. Devuelve los recuentos de éxitos/fallos más resultados por mensaje.",
+      "params": {
+        "inbox_id": "UUID de la bandeja en la que buscar y operar.",
+        "query": "Consulta de búsqueda, en la sintaxis nativa de la bandeja (operadores de Gmail, KQL de Outlook o búsqueda IMAP).",
+        "destination_folder_id": "ID de carpeta/etiqueta nativo del proveedor del destino, de list_folders.",
+        "include_folders": "Restringir la búsqueda a estos nombres de carpeta. Predeterminado: todas las carpetas.",
+        "limit": "Número máximo de coincidencias a mover. Predeterminado 500, máximo 500."
+      }
+    },
+    "delete_email": {
+      "title": "Delete Email",
+      "desc": "Elimina un único mensaje. De forma predeterminada lo mueve a la Papelera del proveedor (más seguro). Activa permanent: true para una eliminación definitiva (omite la Papelera; puede ser irreversible). Requiere confirm: true. El expunge permanente está disponible en IMAP y Fastmail; Gmail y Outlook solo admiten la papelera.",
+      "params": {
+        "inbox_id": "UUID de la bandeja propietaria del mensaje.",
+        "message_id": "ID de mensaje del proveedor de list_messages, read_email o search_emails.",
+        "permanent": "Cuando es true, eliminación definitiva (omite la Papelera). Cuando es false o se omite, mueve a la Papelera. Predeterminado false.",
+        "confirm": "Debe ser true para confirmar esta operación destructiva."
+      }
+    },
+    "bulk_delete": {
+      "title": "Bulk Delete",
+      "desc": "Elimina hasta 500 mensajes en una sola llamada. De forma predeterminada usa la Papelera; activa permanent: true para una eliminación definitiva. Requiere confirm: true. Devuelve los recuentos de éxitos/fallos más resultados por mensaje.",
+      "params": {
+        "inbox_id": "UUID de la bandeja propietaria de los mensajes.",
+        "message_ids": "IDs de mensaje del proveedor a eliminar. Máximo 500 por llamada.",
+        "permanent": "Cuando es true, eliminación definitiva (omite la Papelera). Cuando es false o se omite, mueve a la Papelera. Predeterminado false.",
+        "confirm": "Debe ser true para confirmar esta operación destructiva."
+      }
+    },
+    "search_and_delete": {
+      "title": "Search and Delete",
+      "desc": "Ejecuta una búsqueda y elimina cada coincidencia en una sola operación del lado del servidor, lo que evita IDs de mensaje obsoletos. Limitado a 500 coincidencias por llamada. De forma predeterminada usa la Papelera; activa permanent: true para una eliminación definitiva. Requiere confirm: true.",
+      "params": {
+        "inbox_id": "UUID de la bandeja en la que buscar y operar.",
+        "query": "Consulta de búsqueda, en la sintaxis nativa de la bandeja (operadores de Gmail, KQL de Outlook o búsqueda IMAP).",
+        "permanent": "Cuando es true, eliminación definitiva de las coincidencias (omite la Papelera). Cuando es false o se omite, mueve a la Papelera. Predeterminado false.",
+        "include_folders": "Restringir la búsqueda a estos nombres de carpeta. Predeterminado: todas las carpetas.",
+        "limit": "Número máximo de coincidencias a eliminar. Predeterminado 500, máximo 500.",
+        "confirm": "Debe ser true para confirmar esta operación destructiva."
+      }
+    },
+    "list_drafts": {
+      "title": "List Drafts",
+      "desc": "Devuelve los borradores guardados en la carpeta de Borradores de la bandeja. Cada resultado incluye el draft_id, el asunto, los destinatarios y la marca de tiempo de creación. Usa el draft_id con update_draft o send_draft.",
+      "params": {
+        "inbox_id": "UUID de la bandeja cuyos borradores listar.",
+        "limit": "Número máximo de borradores a devolver. Predeterminado 20, máximo 50."
+      }
+    },
+    "create_draft": {
+      "title": "Create Draft",
+      "desc": "Guarda un nuevo borrador en la carpeta de Borradores de la bandeja sin enviarlo. Devuelve un draft_id para update_draft o send_draft. El asunto y el cuerpo son obligatorios; los destinatarios son opcionales (los borradores pueden estar incompletos).",
+      "params": {
+        "inbox_id": "UUID de la bandeja en la que guardar el borrador.",
+        "subject": "Línea de asunto del borrador.",
+        "body": "Cuerpo del borrador en texto plano.",
+        "to": "Direcciones de destinatarios opcionales. Predeterminado [].",
+        "cc": "Destinatarios en CC opcionales. Predeterminado [].",
+        "bcc": "Destinatarios en CCO opcionales. Predeterminado [].",
+        "html_body": "Cuerpo HTML opcional."
+      }
+    },
+    "update_draft": {
+      "title": "Update Draft",
+      "desc": "Reemplaza el contenido de un borrador existente. Todos los campos proporcionados sobrescriben el borrador almacenado. Llama a list_drafts para obtener los valores de draft_id.",
+      "params": {
+        "inbox_id": "UUID de la bandeja propietaria del borrador.",
+        "draft_id": "ID de borrador del proveedor de create_draft o list_drafts.",
+        "subject": "Línea de asunto actualizada.",
+        "body": "Cuerpo en texto plano actualizado.",
+        "to": "Lista de destinatarios actualizada. Predeterminado [].",
+        "cc": "Lista de CC actualizada. Predeterminado [].",
+        "bcc": "Lista de CCO actualizada. Predeterminado [].",
+        "html_body": "Cuerpo HTML actualizado."
+      }
+    },
+    "send_draft": {
+      "title": "Send Draft",
+      "desc": "Envía un borrador guardado previamente. El borrador se elimina de la carpeta de Borradores tras el envío. Irreversible.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene el borrador.",
+        "draft_id": "ID de borrador del proveedor de create_draft o list_drafts."
+      }
+    },
+    "search_contacts": {
+      "title": "Search Contacts",
+      "desc": "Busca en la lista de contactos derivada por nombre o correo. Los contactos se crean automáticamente a partir de los encabezados vistos durante las operaciones de lectura, búsqueda y envío, sin configuración manual. Devuelve las coincidencias ordenadas por contacto más reciente, cada una con nombre visible, correo, recuento de mensajes y marca de tiempo del último contacto.",
+      "params": {
+        "query": "Fragmento de nombre o correo, comparado sin distinguir mayúsculas con el nombre visible y la dirección. Al menos 1 carácter.",
+        "inbox_id": "Opcional. Restringe los resultados a los contactos vistos en una bandeja. Omítelo para buscar en todas las bandejas a las que la clave puede acceder.",
+        "limit": "Número máximo de contactos a devolver. Predeterminado 20, máximo 50."
+      }
+    },
+    "get_contact": {
+      "title": "Get Contact",
+      "desc": "Recupera el registro completo de un contacto para una dirección de correo dentro de una bandeja: nombre visible, dirección, recuento acumulado de mensajes y marca de tiempo de última aparición. Llama primero a search_contacts para descubrir las direcciones conocidas.",
+      "params": {
+        "inbox_id": "UUID de la bandeja asociada al contacto.",
+        "email_address": "La dirección de correo a buscar. Comparada sin distinguir mayúsculas."
+      }
+    },
+    "schedule_send": {
+      "title": "Schedule Send",
+      "desc": "Pone en cola un correo para enviarlo en una fecha futura. Los destinatarios y el cuerpo se validan de inmediato; si la validación falla, no se pone en cola. El despachador se ejecuta cada minuto, así que la entrega real puede demorarse hasta 60 segundos tras send_at. Usa list_scheduled y cancel_scheduled para gestionar los envíos pendientes.",
+      "params": {
+        "inbox_id": "UUID de la bandeja desde la que enviar.",
+        "to": "Direcciones de correo de los destinatarios. Máximo 50.",
+        "subject": "Línea de asunto del correo. Máximo 998 caracteres.",
+        "body": "Cuerpo del correo en texto plano.",
+        "send_at": "Fecha y hora ISO 8601 con zona horaria a la que enviar. Debe estar en el futuro, p. ej. \"2026-06-02T09:00:00Z\".",
+        "cc": "Destinatarios en CC. Predeterminado [].",
+        "bcc": "Destinatarios en CCO. Predeterminado [].",
+        "html_body": "Versión HTML opcional del cuerpo.",
+        "attachments": "Adjuntos de archivo. Mismo esquema que send_email. Máximo 20 elementos, 10 MB en total.",
+        "reply_to": "Dirección del encabezado Reply-To opcional."
+      }
+    },
+    "list_scheduled": {
+      "title": "List Scheduled Sends",
+      "desc": "Lista los envíos programados pendientes del espacio de trabajo (estado pending o sending), los más próximos primero. Opcionalmente filtra por bandeja. Usa cancel_scheduled para cancelar uno antes de que se despache.",
+      "params": {
+        "inbox_id": "Opcional. Restringe los resultados a los envíos programados de una bandeja.",
+        "limit": "Número máximo de resultados. Predeterminado 20, máximo 100."
+      }
+    },
+    "cancel_scheduled": {
+      "title": "Cancel Scheduled Send",
+      "desc": "Cancela un envío programado pendiente para que el despachador lo omita. Solo se pueden cancelar los envíos que aún están en estado 'pending'; una vez en 'sending', 'sent' o 'error' ya no se pueden. Usa list_scheduled para encontrar el scheduled_send_id.",
+      "params": {
+        "scheduled_send_id": "UUID del envío programado a cancelar."
       }
     }
   },
@@ -242,7 +531,7 @@
       "supported": "Compatible",
       "notSupported": "No compatible",
       "planned": "Planificado (aún no lanzado)",
-      "imapNote": "<b>iCloud, Yahoo, Zoho, Yandex e IMAP genérico</b> funcionan todos a través del mismo transporte IMAP/SMTP de Deno y comparten capacidades idénticas. Las columnas se muestran por separado para mayor claridad, pero su conjunto de funciones es idéntico."
+      "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex e IMAP genérico</b> funcionan todos a través del mismo transporte IMAP/SMTP (Fastmail e iCloud usan una contraseña específica de aplicación) y comparten un conjunto de funciones idéntico, incluida la sintaxis de búsqueda IMAP. Las columnas se muestran por separado para mayor claridad."
     },
     "ariaSupported": "Compatible",
     "ariaNotSupported": "No compatible",

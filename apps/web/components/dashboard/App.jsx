@@ -26,11 +26,11 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 // SEED_KEYS removed: API keys are now fetched server-side and passed as props.
 
 const SEED_ACTIVITY = [
-  { tool: "list_inbox",     account: "work-gmail",   time: "just now", ok: true },
+  { tool: "list_messages",     account: "work-gmail",   time: "just now", ok: true },
   { tool: "read_email",     account: "work-gmail",   time: "12s ago",  ok: true },
   { tool: "send_email",     account: "personal",     time: "1m ago",   ok: true },
   { tool: "search_emails",  account: "work-gmail",   time: "3m ago",   ok: true },
-  { tool: "list_inbox",     account: "ops-fastmail", time: "8m ago",   ok: false },
+  { tool: "list_messages",     account: "ops-fastmail", time: "8m ago",   ok: false },
   { tool: "reply_to_email", account: "personal",     time: "14m ago",  ok: true },
 ];
 

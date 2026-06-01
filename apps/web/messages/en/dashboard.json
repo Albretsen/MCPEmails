@@ -157,6 +157,18 @@
       "body": "Any API keys currently authorised to access this inbox will lose access immediately. You can reconnect this inbox at any time.",
       "disconnecting": "Disconnecting…",
       "disconnect": "Disconnect"
+    },
+    "detail": {
+      "close": "Close",
+      "openAria": "View details for {label}",
+      "connectionStatus": "Connection status",
+      "authMethod": "Authentication",
+      "authOauth": "OAuth token",
+      "authAppPassword": "App password",
+      "connectedOn": "Connected on",
+      "lastCall": "Last successful call",
+      "lastCallNone": "No successful calls in the last 30 days",
+      "disconnect": "Disconnect"
     }
   },
   "apiKeys": {
@@ -192,7 +204,12 @@
     "scopes": {
       "readDesc": "List, read and search email messages",
       "searchDesc": "Search across inbox contents",
-      "sendDesc": "Send and reply to emails"
+      "sendDesc": "Send and reply to emails",
+      "foldersDesc": "Create, rename and delete folders; move and copy messages",
+      "deleteDesc": "Delete and bulk-delete email messages",
+      "draftsDesc": "Create, update and delete drafts",
+      "contactsDesc": "List and look up address-book contacts",
+      "scheduleDesc": "Schedule sends and manage scheduled emails"
     },
     "createModal": {
       "title": "New API key",
@@ -203,6 +220,7 @@
       "permissions": "Permissions",
       "errNameRequired": "Name is required.",
       "errNameTooLong": "Name must be 128 characters or fewer.",
+      "errNameDuplicate": "A key with this name already exists. Choose a distinct name so keys stay distinguishable in the audit log.",
       "errScopeRequired": "Select at least one scope.",
       "errCreateFailed": "Failed to create API key. Please try again.",
       "creating": "Creating…",
@@ -272,6 +290,7 @@
     "colCalls": "Calls",
     "colShare": "Share",
     "callsByInboxTitle": "Calls by inbox",
+    "inboxArchived": "Archived",
     "colInbox": "Inbox",
     "colAddress": "Address"
   },
@@ -287,7 +306,10 @@
       "displayName": "Display name",
       "namePlaceholder": "Your name",
       "email": "Email address",
-      "emailHint": "Email cannot be changed here. Contact support to update your email address.",
+      "emailHint": "Changing your email sends a confirmation link to the new address. The change takes effect only after you click that link.",
+      "emailChange": "Change email",
+      "emailSending": "Sending…",
+      "emailConfirmSent": "Confirmation link sent to {email}. Click it to finish changing your email.",
       "cancel": "Cancel",
       "saving": "Saving…",
       "saveChanges": "Save changes",
@@ -295,7 +317,9 @@
       "errTooLong": "Display name must be 100 characters or fewer.",
       "errSaveFailed": "Failed to save changes.",
       "updated": "Profile updated.",
-      "networkError": "Network error. Please try again."
+      "networkError": "Network error. Please try again.",
+      "errEmailInvalid": "Enter a valid email address.",
+      "errEmailFailed": "Failed to start email change."
     },
     "password": {
       "title": "Change password",

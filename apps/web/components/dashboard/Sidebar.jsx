@@ -7,6 +7,7 @@ import { Icon, Btn, Avatar } from '../Primitives';
 import { createClient } from '@/lib/supabase/client';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
 import { sectionToPath } from './routes';
+import { planDisplayName } from '@/lib/stripe/plans';
 
 /* Sidebar.jsx: left nav with mobile-collapsible drawer support. */
 
@@ -127,7 +128,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
             </span>
             <span className="ws-meta">
               <span className="ws-name">{activeWs.displayName || activeWs.slug}</span>
-              <span className="ws-plan">{tr('sidebar.planSuffix', { plan: activeWs.plan ?? 'free' })}</span>
+              <span className="ws-plan">{tr('sidebar.planSuffix', { plan: planDisplayName(activeWs.plan) })}</span>
             </span>
             <Icon name="chevron" size={14} color="var(--fg-3)" />
           </button>
@@ -149,7 +150,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
                   </span>
                   <span className="ws-meta">
                     <span className="ws-name">{w.displayName || w.slug}</span>
-                    <span className="ws-plan">{tr('sidebar.planSuffix', { plan: w.plan })}{w.isOwner ? '' : ` · ${tr('sidebar.memberSuffix')}`}</span>
+                    <span className="ws-plan">{tr('sidebar.planSuffix', { plan: planDisplayName(w.plan) })}{w.isOwner ? '' : ` · ${tr('sidebar.memberSuffix')}`}</span>
                   </span>
                   {w.id === activeWorkspaceId && <Icon name="check" size={14} color="var(--brand)" />}
                 </button>
@@ -213,7 +214,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
               {user?.displayName || user?.email || tr('sidebar.accountFallback')}
             </div>
             <div style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--fg-3)", textTransform: "capitalize" }}>
-              {tr('sidebar.planSuffix', { plan: workspace?.plan ?? 'free' })}
+              {tr('sidebar.planSuffix', { plan: planDisplayName(workspace?.plan) })}
             </div>
           </div>
           <button

@@ -28,6 +28,7 @@ const MARKETING_PATHS = new Set([
   '/pricing',
   '/docs',
   '/docs/providers',
+  '/blog',
   '/privacy',
   '/terms',
 ]);
@@ -47,6 +48,8 @@ function isLocalizedRoute(pathname: string): boolean {
   }
   // Normalize a trailing slash (but keep root '/').
   if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+  // Blog has dynamic post slugs (/blog/<slug>) on top of the index.
+  if (path === '/blog' || path.startsWith('/blog/')) return true;
   return MARKETING_PATHS.has(path);
 }
 

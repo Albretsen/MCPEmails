@@ -36,8 +36,19 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
  */
 
 // Must match the scopes the MCP server enforces and the OAuth authorize flow's
-// VALID_SCOPES. Kept in sync with app/api/api-keys/route.ts.
-const VALID_SCOPES = ['read:email', 'search:email', 'send:email'] as const;
+// VALID_SCOPES. Kept in sync with app/api/api-keys/route.ts. search:email is
+// vestigial (read:email already covers search) but retained for parity and
+// backward compatibility.
+const VALID_SCOPES = [
+  'read:email',
+  'search:email',
+  'send:email',
+  'manage:folders',
+  'delete:email',
+  'manage:drafts',
+  'manage:contacts',
+  'schedule:email',
+] as const;
 
 /** Scopes available to workspace viewers (read-only). */
 const VIEWER_SCOPES = new Set(['read:email', 'search:email']);

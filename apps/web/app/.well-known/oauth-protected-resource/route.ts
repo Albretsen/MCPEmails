@@ -19,7 +19,16 @@ export async function GET() {
       resource: `${base}/api/mcp`,
       authorization_servers: [base],
       bearer_methods_supported: ['header'],
-      scopes_supported: ['read:email', 'search:email', 'send:email'],
+      scopes_supported: [
+        'read:email',
+        'search:email',
+        'send:email',
+        'manage:folders',
+        'delete:email',
+        'manage:drafts',
+        'manage:contacts',
+        'schedule:email',
+      ],
     },
     {
       headers: {
