@@ -4663,40 +4663,30 @@ export function MembersPage({
 
       {/* ── Confirm-remove dialog ────────────────────────────────────────────── */}
       {confirmRemove && (
-        <div style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,.45)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000,
-          padding: 16,
-        }}>
-          <div style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-1)',
-            borderRadius: 16,
-            padding: '28px 32px',
-            maxWidth: 400,
-            width: '100%',
-            boxShadow: '0 8px 32px rgba(0,0,0,.12)',
-          }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--fg-1)', marginBottom: 10 }}>
-              {t('members.removeDialogTitle')}
+        <div className="scrim" onClick={() => { if (!removing) setConfirmRemove(null); }}>
+          <div
+            className="modal"
+            onClick={e => e.stopPropagation()}
+            style={{ width: 420 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-member-dialog-title"
+          >
+            <div className="modal-h">
+              <h2 id="remove-member-dialog-title">{t('members.removeDialogTitle')}</h2>
             </div>
-            <div style={{ fontSize: 13.5, color: 'var(--fg-2)', lineHeight: 1.6, marginBottom: 24 }}>
-              {t.rich('members.removeDialogBody', { ...RICH, name: confirmRemove.displayName || confirmRemove.email })}
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <Btn variant="ghost" onClick={() => { if (!removing) setConfirmRemove(null); }}>
-                {t('members.cancel')}
-              </Btn>
-              <Btn
-                variant="primary"
-                style={{ background: 'var(--red-600, #dc2626)' }}
-                onClick={handleRemoveConfirm}
-                disabled={removing}
-              >
-                {removing ? t('members.removing') : t('members.removeMemberBtn')}
-              </Btn>
+            <div className="modal-body">
+              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--fg-2)', lineHeight: 1.6 }}>
+                {t.rich('members.removeDialogBody', { ...RICH, name: confirmRemove.displayName || confirmRemove.email })}
+              </p>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
+                <Btn variant="secondary" onClick={() => { if (!removing) setConfirmRemove(null); }} disabled={removing}>
+                  {t('members.cancel')}
+                </Btn>
+                <Btn variant="destructive" icon="trash" onClick={handleRemoveConfirm} disabled={removing}>
+                  {removing ? t('members.removing') : t('members.removeMemberBtn')}
+                </Btn>
+              </div>
             </div>
           </div>
         </div>

@@ -201,6 +201,10 @@ body { background: var(--bg-page); }
 .btn-ghost:hover     { background: var(--ink-100); color: var(--fg-1); }
 .btn-danger    { background: transparent; color: var(--red-700); border-color: var(--border-1); }
 .btn-danger:hover    { background: var(--red-100); border-color: rgba(229,72,77,0.3); }
+/* Solid destructive CTA — for the confirm button in a destructive dialog. */
+.btn-destructive { background: var(--red-500); color: #fff; }
+.btn-destructive:hover { background: var(--red-700); }
+.btn-destructive.btn-disabled, .btn-destructive:disabled { background: var(--red-500); opacity: 0.55; cursor: default; }
 .btn-sm { height: 28px; padding: 0 10px; font-size: 12.5px; }
 .btn .btn-ico { width: 14px; height: 14px; }
 
