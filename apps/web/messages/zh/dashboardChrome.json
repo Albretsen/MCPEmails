@@ -19,6 +19,8 @@
     "apiKeyRevoked": "API 密钥已撤销。",
     "apiKeyCreateFailed": "创建 API 密钥失败。",
     "apiKeyCreated": "API 密钥已创建。请立即复制，它不会再次显示。",
+    "apiKeyUpdated": "已更新连接访问权限。",
+    "apiKeyUpdateFailed": "更新连接访问权限失败。",
     "inviteSendFailed": "发送邀请失败。",
     "inviteSent": "邀请已发送至 {email}。",
     "inviteCancelFailed": "取消邀请失败。",

@@ -19,6 +19,8 @@
     "apiKeyRevoked": "Clave de API revocada.",
     "apiKeyCreateFailed": "No se pudo crear la clave de API.",
     "apiKeyCreated": "Clave de API creada. Cópiala ahora; no se volverá a mostrar.",
+    "apiKeyUpdated": "Acceso de la conexión actualizado.",
+    "apiKeyUpdateFailed": "No se pudo actualizar el acceso de la conexión.",
     "inviteSendFailed": "No se pudo enviar la invitación.",
     "inviteSent": "Invitación enviada a {email}.",
     "inviteCancelFailed": "No se pudo cancelar la invitación.",

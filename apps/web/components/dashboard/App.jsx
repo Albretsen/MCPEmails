@@ -327,6 +327,34 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
     }
   };
 
+  /**
+   * Updates an existing key's scopes and inbox access via PATCH /api/api-keys/[id].
+   *
+   * Called by KeysPage > EditConnectionModal on save. `inboxIds` is null for
+   * "all inboxes" or a non-empty array of inbox ids for an explicit allowlist.
+   * On success the row is updated in local state so the change is reflected
+   * immediately without a reload. Throws on API error so the modal can surface
+   * an inline message.
+   */
+  const onUpdateKey = async (id, { scopes, inboxIds }) => {
+    const res = await fetch(`/api/api-keys/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scopes, inboxIds }),
+    });
+    if (!res.ok) {
+      let message = tr('app.apiKeyUpdateFailed');
+      try {
+        const data = await res.json();
+        if (typeof data?.error === 'string') message = data.error;
+      } catch { /* ignore JSON parse failure */ }
+      throw new Error(message);
+    }
+    const updated = await res.json(); // { id, scopes, inboxIds, ... }
+    setKeys(xs => xs.map(x => (x.id === id ? { ...x, scopes: updated.scopes, inboxIds: updated.inboxIds } : x)));
+    toast({ message: tr('app.apiKeyUpdated'), variant: 'success' });
+  };
+
   const onConnect = ({ label, provider, address }) => {
     // Optimistic update: the real row will appear on next page load via router.refresh().
     const next = { id: String(Date.now()), label, address: address || label, provider, status: "active", calls: 0 };
@@ -460,7 +488,7 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
 
         {route === "overview" && <OverviewPage inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} />}
-        {route === "keys"     && <KeysPage     keys={keys} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} />}
+        {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
         {route === "settings" && <SettingsPage user={user} workspace={workspace} stripePrices={stripePrices} />}
