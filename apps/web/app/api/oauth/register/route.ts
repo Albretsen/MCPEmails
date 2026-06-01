@@ -10,13 +10,14 @@ import type { Json } from '@/types/database.types';
  *
  * RFC 7591 Dynamic Client Registration. Allows OAuth clients to register
  * themselves without a pre-issued client_id. Dynamically registered clients
- * are capped to the minimal read/search/send scope set; manage:* access
- * requires first-party registration.
+ * are allowed the full grantable scope set; the user remains in control —
+ * nothing is granted until they explicitly select scopes and approve on the
+ * /authorize consent screen, and they can revoke at any time.
  *
  * Security controls:
  * - IP rate limiting: 10 registrations / IP / hour
  * - SSRF: all redirect_uris validated via isValidRedirectUri
- * - Scope cap: dynamic clients never get manage:* permissions
+ * - User consent gate: every scope is opt-in/confirmable on the consent screen
  * - Audit log: every registration recorded with IP + submitted metadata
  * - deactivated_at: malicious clients can be deactivated without losing audit trail
  */
@@ -27,7 +28,21 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-const DYNAMIC_SCOPES = ['read:email', 'search:email', 'send:email'];
+// The scope set a dynamically-registered client is permitted to request. This
+// is the full grantable set (kept in sync with VALID_SCOPES in the api-keys and
+// oauth/authorize routes). It is the CEILING of what the client may ask for —
+// the user still chooses which of these to actually grant on the consent screen.
+// search:email is vestigial (read:email covers search) but kept for parity.
+const DYNAMIC_SCOPES = [
+  'read:email',
+  'search:email',
+  'send:email',
+  'manage:folders',
+  'delete:email',
+  'manage:drafts',
+  'manage:contacts',
+  'schedule:email',
+];
 
 export async function OPTIONS(): Promise<Response> {
   return new Response(null, { status: 204, headers: CORS_HEADERS });
