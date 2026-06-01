@@ -100,11 +100,21 @@ export default async function AuthorizePage({ searchParams }) {
     }
   }
 
-  // ── 5. Filter requested scopes ────────────────────────────────────────────
+  // ── 5. Resolve the selectable scope menu ──────────────────────────────────
+  // Offer EVERY scope the client is permitted to use (its scopes_allowed, in our
+  // canonical VALID_SCOPES order) so the user can choose what to grant — not just
+  // whatever the client put in the `scope` param. Many MCP clients (especially
+  // dynamically-registered ones) send no `scope` at all; without this they'd land
+  // on a read-only default with nothing to select.
+  const offeredScopes = [...VALID_SCOPES].filter((s) =>
+    oauthClient.scopes_allowed.includes(s),
+  );
+  // Scopes the client explicitly asked for — used only for the "previously
+  // approved" hint below, not to restrict what the user may select.
   const requestedScopes = rawScope
     .split(/[\s,]+/)
     .filter(Boolean)
-    .filter((s) => VALID_SCOPES.has(s) && oauthClient.scopes_allowed.includes(s));
+    .filter((s) => offeredScopes.includes(s));
 
   // ── 6. Require authentication ─────────────────────────────────────────────
   const { data: { user } } = await supabase.auth.getUser();
@@ -164,7 +174,7 @@ export default async function AuthorizePage({ searchParams }) {
   const csrfToken = await issueCsrfToken(user.id);
 
   // ── 11. Render consent UI ─────────────────────────────────────────────────
-  const scopesWithMeta = requestedScopes.map((scope) => ({
+  const scopesWithMeta = offeredScopes.map((scope) => ({
     scope,
     ...(SCOPE_META[scope] ?? { icon: 'key', title: scope, desc: '', required: false }),
   }));
