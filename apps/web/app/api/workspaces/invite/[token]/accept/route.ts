@@ -46,13 +46,16 @@ export async function POST(
   //    accepting identity from the verified JWT (auth.uid() / email claim)
   //    rather than trusting caller-supplied parameters.
   //    Signature changed (single arg) ahead of database.types regeneration.
-  const rpc = supabase.rpc as unknown as (
+  // .rpc() dereferences `this` internally (`return this.rest.rpc(...)`), so it
+  // must stay bound to the client — a detached `const` call throws a TypeError
+  // (unhandled 500). Bind it back after the type cast.
+  const rpc = (supabase.rpc as unknown as (
     fn: string,
     args: Record<string, unknown>,
   ) => Promise<{
     data: Array<{ workspace_id: string; workspace_slug: string; role: string }> | null;
     error: { code: string; message: string } | null;
-  }>;
+  }>).bind(supabase);
   const { data, error } = await rpc('accept_workspace_invite', { p_token_hash: tokenHash });
 
   if (error) {
