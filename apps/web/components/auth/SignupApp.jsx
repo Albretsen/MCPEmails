@@ -44,18 +44,36 @@ export function SignupApp() {
     return () => clearTimeout(loadingTimerRef.current);
   }, [step]);
 
+  // Preserve a `?redirect=/path` query param (e.g. when arriving from an invite
+  // link) so the user lands back where they started after confirming/signing in,
+  // instead of always being dropped on /dashboard. Only relative paths are honored.
+  function getSafeRedirect() {
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    return redirect && redirect.startsWith('/') ? redirect : null;
+  }
+
   function buildCallbackUrl() {
-    return `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`;
+    const callbackUrl = new URL('/auth/callback', process.env.NEXT_PUBLIC_APP_URL || window.location.origin);
+    const redirect = getSafeRedirect();
+    if (redirect) callbackUrl.searchParams.set('next', redirect);
+    return callbackUrl.toString();
+  }
+
+  function buildOAuthUrl(provider) {
+    const url = new URL(`/auth/${provider}`, window.location.origin);
+    const redirect = getSafeRedirect();
+    if (redirect) url.searchParams.set('next', redirect);
+    return url.toString();
   }
 
   function handleGoogleSignIn() {
     setSocialLoading('google');
-    window.location.href = '/auth/google';
+    window.location.href = buildOAuthUrl('google');
   }
 
   function handleGitHubSignIn() {
     setSocialLoading('github');
-    window.location.href = '/auth/github';
+    window.location.href = buildOAuthUrl('github');
   }
 
   function validate() {

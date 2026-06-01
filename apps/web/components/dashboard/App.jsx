@@ -439,8 +439,16 @@ function DashboardInner({ initialRoute = 'overview', user, workspace, workspaces
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? tr('app.inviteSendFailed'));
-    // Optimistically add to pending invites list.
-    setPendingInvites(xs => [data, ...xs]);
+    // Optimistically add to pending invites list. Normalize to the same shape
+    // the server loader returns ({ id, ... }); the POST response names the id
+    // `inviteId`, and MembersPage / onCancelInvite key off `id`.
+    setPendingInvites(xs => [{
+      id:        data.inviteId,
+      email:     data.email,
+      role:      data.role,
+      expiresAt: data.expiresAt,
+      createdAt: data.createdAt,
+    }, ...xs]);
     toast({ message: tr('app.inviteSent', { email }), variant: 'success' });
   };
 
