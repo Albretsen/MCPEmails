@@ -274,7 +274,7 @@ export async function refreshOutlookAccessToken(
       client_secret: clientSecret,
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
-      scope: 'Mail.Read Mail.Send offline_access openid profile email',
+      scope: 'Mail.ReadWrite Mail.Send offline_access openid profile email',
     }),
   });
 

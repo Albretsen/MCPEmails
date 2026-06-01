@@ -19,6 +19,13 @@ import { randomBytes } from 'crypto';
  * prompt=consent       → Forces the consent screen so a refresh token is
  *                        always returned, even for repeat authorizations.
  *
+ * Optional query param:
+ *   ?inbox=<uuid>  → Reconnect flow. If the id resolves to an inbox in the
+ *                    user's active workspace, its email address is passed to
+ *                    Google as `login_hint` so the account chooser pre-selects
+ *                    the correct account. Used by the deep link the MCP server
+ *                    surfaces to agents when an inbox's token is revoked.
+ *
  * References:
  *   https://developers.google.com/identity/protocols/oauth2/web-server
  *   Documents/Architecture/email-provider-oauth-flows.md §2
@@ -34,7 +41,7 @@ const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.modify',
 ];
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
 
   // Verify the user is authenticated before starting the OAuth flow.
@@ -61,6 +68,23 @@ export async function GET() {
   // Note: the plan inbox cap is enforced in the callback, where the email
   // address is known. That lets reconnecting an existing inbox proceed even
   // at the cap while still blocking brand-new connections.
+
+  // Optional reconnect hint: if ?inbox=<uuid> resolves to an inbox in this
+  // workspace, use its email address as Google's login_hint so the account
+  // chooser pre-selects the right account. Best-effort — a missing or
+  // mismatched id simply falls back to the normal chooser.
+  const inboxId = new URL(request.url).searchParams.get('inbox');
+  let loginHint: string | null = null;
+  if (inboxId) {
+    const { data: inbox } = await supabase
+      .from('inboxes')
+      .select('email_address')
+      .eq('id', inboxId)
+      .eq('workspace_id', workspaceId)
+      .eq('provider', 'gmail')
+      .maybeSingle();
+    loginHint = inbox?.email_address ?? null;
+  }
 
   // Generate a 32-byte cryptographically random state nonce.
   // This ties the callback to this specific authorization request and
@@ -96,6 +120,10 @@ export async function GET() {
     prompt: 'consent',
     state,
   });
+
+  if (loginHint) {
+    params.set('login_hint', loginHint);
+  }
 
   return NextResponse.redirect(`${GMAIL_AUTH_ENDPOINT}?${params.toString()}`);
 }

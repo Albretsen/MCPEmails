@@ -16,12 +16,20 @@ import { randomBytes } from 'crypto';
  * registration must set "Supported account types" to match.
  *
  * Scopes requested:
- *   - Mail.Read        : list and read message bodies via Microsoft Graph
+ *   - Mail.ReadWrite   : list/read messages AND mutate them (mark read, flag,
+ *                        move, archive, copy, delete, drafts, folders) via Graph
  *   - Mail.Send        : send messages via Microsoft Graph
  *   - offline_access   : causes Microsoft to issue a refresh token
  *   - openid           : required for OIDC; provides id_token with user info
  *   - profile          : adds display name to id_token
  *   - email            : ensures the email claim is present in id_token
+ *
+ * Optional query param:
+ *   ?inbox=<uuid>  → Reconnect flow. If the id resolves to an inbox in the
+ *                    user's active workspace, its email address is passed to
+ *                    Microsoft as `login_hint` so the account chooser
+ *                    pre-selects the correct account. Used by the deep link the
+ *                    MCP server surfaces to agents when an inbox's token fails.
  *
  * References:
  *   https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow
@@ -31,8 +39,16 @@ import { randomBytes } from 'crypto';
 const OUTLOOK_AUTH_ENDPOINT =
   'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
 
+// NOTE: Mail.ReadWrite is a superset of Mail.Read and is required for all
+// mailbox-mutating Graph ops (mark read/unread, flag, move, archive, copy,
+// delete, draft create/update, folder create/rename/delete). Mail.Send is NOT
+// covered by ReadWrite and must be requested separately.
+// IMPORTANT: Existing Outlook inboxes connected before this change must
+// RECONNECT (re-consent) to receive the widened scope — a silent token refresh
+// will NOT grant Mail.ReadWrite. `prompt=consent` (set in the authorize call)
+// ensures reconnection re-prompts for the new scope.
 const OUTLOOK_SCOPES = [
-  'Mail.Read',
+  'Mail.ReadWrite',
   'Mail.Send',
   'offline_access',
   'openid',
@@ -40,7 +56,7 @@ const OUTLOOK_SCOPES = [
   'email',
 ];
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
   const supabase = await createClient();
 
   // Verify the user is authenticated before starting the OAuth flow.
@@ -67,6 +83,23 @@ export async function GET(): Promise<NextResponse> {
   // Note: the plan inbox cap is enforced in the callback, where the email
   // address is known. That lets reconnecting an existing inbox proceed even
   // at the cap while still blocking brand-new connections.
+
+  // Optional reconnect hint: if ?inbox=<uuid> resolves to an inbox in this
+  // workspace, use its email address as Microsoft's login_hint so the account
+  // chooser pre-selects the right account. Best-effort — a missing or
+  // mismatched id simply falls back to the normal chooser.
+  const inboxId = new URL(request.url).searchParams.get('inbox');
+  let loginHint: string | null = null;
+  if (inboxId) {
+    const { data: inbox } = await supabase
+      .from('inboxes')
+      .select('email_address')
+      .eq('id', inboxId)
+      .eq('workspace_id', workspaceId)
+      .eq('provider', 'outlook')
+      .maybeSingle();
+    loginHint = inbox?.email_address ?? null;
+  }
 
   // Generate a 32-byte cryptographically random state nonce.
   // This ties the callback to this specific authorization request and
@@ -106,6 +139,10 @@ export async function GET(): Promise<NextResponse> {
     response_mode: 'query',
     state,
   });
+
+  if (loginHint) {
+    params.set('login_hint', loginHint);
+  }
 
   return NextResponse.redirect(`${OUTLOOK_AUTH_ENDPOINT}?${params.toString()}`);
 }

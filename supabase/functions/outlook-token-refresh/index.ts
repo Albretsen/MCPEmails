@@ -183,7 +183,7 @@ async function callOutlookRefreshEndpoint(
       grant_type: 'refresh_token',
       // Request the same scope set originally granted so Microsoft issues a
       // refresh token in the response (keeping the sliding window alive).
-      scope: 'Mail.Read Mail.Send offline_access openid profile email',
+      scope: 'Mail.ReadWrite Mail.Send offline_access openid profile email',
     }),
   });
 
