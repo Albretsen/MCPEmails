@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Icon, Btn, Avatar } from '../Primitives';
 import { createClient } from '@/lib/supabase/client';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
+import { sectionToPath } from './routes';
 
 /* Sidebar.jsx: left nav with mobile-collapsible drawer support. */
 
@@ -75,7 +76,11 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     router.push('/');
   }
 
-  function handleNavClick(id) {
+  function handleNavClick(e, id) {
+    // Let the browser handle modifier-clicks (open in new tab/window) natively;
+    // the items are real links, so only intercept plain left-clicks for SPA nav.
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
     setRoute(id);
     // Close the drawer on mobile after navigation
     if (onClose) onClose();
@@ -177,29 +182,27 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
         <nav className="nav">
           <div className="section-label">{tr('sidebar.sectionWorkspace')}</div>
           {items.map(it => (
-            <div key={it.id}
-                 className={"nav-item" + (route === it.id ? " active" : "")}
-                 onClick={() => handleNavClick(it.id)}
-                 role="button"
-                 tabIndex={0}
-                 onKeyDown={e => e.key === 'Enter' && handleNavClick(it.id)}>
+            <a key={it.id}
+               href={sectionToPath(it.id)}
+               className={"nav-item" + (route === it.id ? " active" : "")}
+               aria-current={route === it.id ? "page" : undefined}
+               onClick={e => handleNavClick(e, it.id)}>
               <Icon name={it.icon} size={16} />
               <span>{it.label}</span>
               {it.count != null ? <span className="count">{it.count}</span> : null}
-            </div>
+            </a>
           ))}
 
           <div className="section-label">{tr('sidebar.sectionAccount')}</div>
           {settings.map(it => (
-            <div key={it.id}
-                 className={"nav-item" + (route === it.id ? " active" : "")}
-                 onClick={() => handleNavClick(it.id)}
-                 role="button"
-                 tabIndex={0}
-                 onKeyDown={e => e.key === 'Enter' && handleNavClick(it.id)}>
+            <a key={it.id}
+               href={sectionToPath(it.id)}
+               className={"nav-item" + (route === it.id ? " active" : "")}
+               aria-current={route === it.id ? "page" : undefined}
+               onClick={e => handleNavClick(e, it.id)}>
               <Icon name={it.icon} size={16} />
               <span>{it.label}</span>
-            </div>
+            </a>
           ))}
         </nav>
 

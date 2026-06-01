@@ -144,8 +144,6 @@ The table below lists every environment variable the application requires. "Scop
 | `GMAIL_CLIENT_SECRET` | Secret | Vercel env UI (server only); `.env.local` for local | Google OAuth 2.0 client secret for Gmail integration. |
 | `OUTLOOK_CLIENT_ID` | Secret | Vercel env UI (server only); `.env.local` for local | Microsoft Identity Platform application (client) ID for Outlook integration. |
 | `OUTLOOK_CLIENT_SECRET` | Secret | Vercel env UI (server only); `.env.local` for local | Microsoft Identity Platform client secret for Outlook integration. |
-| `FASTMAIL_CLIENT_ID` | Secret | Vercel env UI (server only); `.env.local` for local | Fastmail OAuth 2.0 client ID. |
-| `FASTMAIL_CLIENT_SECRET` | Secret | Vercel env UI (server only); `.env.local` for local | Fastmail OAuth 2.0 client secret. |
 | `STRIPE_SECRET_KEY` | Secret | Vercel env UI (server only); `.env.local` for local | Stripe API secret key for billing operations. Use `sk_test_*` in dev/preview, `sk_live_*` in production. |
 | `STRIPE_WEBHOOK_SECRET` | Secret | Vercel env UI (server only); `.env.local` for local | Stripe webhook signing secret used to verify that webhook payloads originate from Stripe. |
 

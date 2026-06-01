@@ -1,12 +1,13 @@
-import { redirect } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
-import { DashboardApp } from '../../components/dashboard/App';
-import { resolvePlanLimits } from '../../src/lib/stripe/plans';
-import { fetchStripePrices } from '../../src/lib/stripe/getPrices';
-import '../../styles/dashboard.css';
-import '../../styles/theme.css';
+import { DashboardApp } from '../../../components/dashboard/App';
+import { pathSegmentToSection } from '../../../components/dashboard/routes';
+import { resolvePlanLimits } from '../../../src/lib/stripe/plans';
+import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
+import '../../../styles/dashboard.css';
+import '../../../styles/theme.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -479,7 +480,15 @@ async function fetchPendingInvites(supabase, workspaceId) {
   }));
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ params }) {
+  // Optional catch-all: `/dashboard` → section undefined; `/dashboard/inboxes`
+  // → section ['inboxes']. Resolve to a valid route id, or 404 on an unknown
+  // segment / extra path depth so bad URLs don't silently render the overview.
+  const { section } = await params;
+  if (Array.isArray(section) && section.length > 1) notFound();
+  const initialRoute = pathSegmentToSection(section?.[0]);
+  if (initialRoute === null) notFound();
+
   const supabase = await createClient();
 
   const {
@@ -594,6 +603,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardApp
+      initialRoute={initialRoute}
       user={{ displayName, email, initials, id: user.id }}
       workspace={{ id: workspace?.id ?? '', slug: workspaceSlug, plan }}
       workspaces={workspaces}

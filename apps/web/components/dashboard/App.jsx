@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
+import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage } from './Pages';
 import { ConnectModal } from './ConnectModal';
 import { CommandPalette } from './CommandPalette';
@@ -57,22 +58,43 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
   const searchParams = useSearchParams();
   const tr = useTranslations('dashboardChrome');
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
   const { toast } = useToast();
 
-  const [route, setRouteState] = useState(firstrun ? "inboxes" : "overview");
+  // Initial section comes from the URL (resolved server-side by the catch-all
+  // route); firstrun still forces the inboxes section for the connect flow.
+  const [route, setRouteState] = useState(firstrun ? "inboxes" : initialRoute);
   // Mobile sidebar drawer state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Wrap setRoute so we also close the mobile drawer on navigation
+  // Navigate to a section: update state, close the mobile drawer, and push the
+  // matching URL so the section is deep-linkable and back/forward work. Browser
+  // back/forward is handled by the popstate listener below (state-only, no push).
   const setRoute = (r) => {
     setRouteState(r);
     setSidebarOpen(false);
+    try {
+      const path = sectionToPath(r);
+      if (window.location.pathname !== path) {
+        window.history.pushState({ route: r }, '', path + window.location.search);
+      }
+    } catch { /* SSR / unsupported history: state still updates */ }
   };
+
+  // Keep the active section in sync with browser back/forward navigation.
+  useEffect(() => {
+    const onPopState = () => {
+      const segment = window.location.pathname.replace(/^\/dashboard\/?/, '').split('/')[0];
+      const resolved = pathSegmentToSection(segment);
+      setRouteState(resolved ?? 'overview');
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
   // Initialise from server-fetched data; fallback to empty array so the
   // empty-state UI renders correctly on first run or when fetch fails.
   const [inboxes, setInboxes] = useState(serverInboxes ?? []);
@@ -152,6 +174,9 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
         const url = new URL(window.location.href);
         url.searchParams.delete('connected');
         url.searchParams.delete('error');
+        // Every branch above activates the inboxes section; reflect that in the
+        // URL (OAuth callbacks land on the bare /dashboard) so a refresh stays.
+        url.pathname = sectionToPath('inboxes');
         window.history.replaceState({}, '', url.toString());
       } catch { /* ignore */ }
     }
@@ -282,7 +307,6 @@ function DashboardInner({ user, workspace, workspaces = [], activeWorkspaceId, c
     const oauthRoutes = {
       gmail: '/auth/gmail',
       outlook: '/auth/outlook',
-      fastmail: '/auth/fastmail',
     };
     if (inbox.hasImap) {
       window.location.href = '/auth/fastmail/app-password';

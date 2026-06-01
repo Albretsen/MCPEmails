@@ -49,7 +49,6 @@ const PROVIDERS = [
 const OAUTH_ROUTES = {
   gmail: '/auth/gmail',
   outlook: '/auth/outlook',
-  fastmail: '/auth/fastmail',
 };
 
 /**
@@ -67,8 +66,6 @@ const OAUTH_ROUTES = {
 export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 'free' }) {
   const tr = useTranslations('dashboardChrome');
   const [provider, setProvider] = useState('gmail');
-  /** 'oauth' | 'apppassword': only relevant when provider === 'fastmail' */
-  const [fastmailMode, setFastmailMode] = useState('oauth');
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     email: '',
@@ -89,8 +86,10 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   const isGeneric = provider === 'generic';
   const preset = isPreset ? IMAP_PRESETS[provider] : null;
   /** True when "Connect" should open the in-modal credentials step. */
+  // Fastmail connects via app password (IMAP/SMTP); Fastmail OAuth is partner-
+  // gated and unsupported here, so it is not offered.
   const usesAppPassword =
-    isPreset || isGeneric || (provider === 'fastmail' && fastmailMode === 'apppassword');
+    isPreset || isGeneric || provider === 'fastmail';
 
   // ── Step 1: provider selected ──────────────────────────────────────────────
 
@@ -107,7 +106,6 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   const connectLabel = () => {
     if (provider === 'gmail') return tr('connect.connectWithGoogle');
     if (provider === 'outlook') return tr('connect.connectWithMicrosoft');
-    if (provider === 'fastmail' && fastmailMode === 'oauth') return tr('connect.connectWithFastmail');
     return tr('connect.enterCredentials');
   };
 
@@ -341,43 +339,25 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 ))}
               </div>
 
-              {/* Fastmail mode toggle: only shown when Fastmail is selected */}
+              {/* Fastmail: app-password guidance + help link */}
               {provider === 'fastmail' && (
-                <div style={{ marginTop: 12 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      background: 'var(--bg-sunken)',
-                      borderRadius: 8,
-                      padding: 3,
-                      gap: 2,
-                    }}
+                <p style={{
+                  margin: '12px 0 0',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 12,
+                  color: 'var(--fg-3)',
+                  lineHeight: 1.5,
+                }}>
+                  {tr('connect.fastmailHintAppPassword')}{' '}
+                  <a
+                    href="https://www.fastmail.help/hc/en-us/articles/5076446901519"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--brand)' }}
                   >
-                    <FastmailModeTab
-                      active={fastmailMode === 'oauth'}
-                      onClick={() => setFastmailMode('oauth')}
-                      icon="shield"
-                      label={tr('connect.fastmailTabOauth')}
-                    />
-                    <FastmailModeTab
-                      active={fastmailMode === 'apppassword'}
-                      onClick={() => setFastmailMode('apppassword')}
-                      icon="key"
-                      label={tr('connect.fastmailTabAppPassword')}
-                    />
-                  </div>
-                  <p style={{
-                    margin: '8px 0 0',
-                    fontFamily: 'var(--font-sans)',
-                    fontSize: 12,
-                    color: 'var(--fg-3)',
-                    lineHeight: 1.5,
-                  }}>
-                    {fastmailMode === 'oauth'
-                      ? tr('connect.fastmailHintOauth')
-                      : tr('connect.fastmailHintAppPassword')}
-                  </p>
-                </div>
+                    {tr('connect.howToGenerate')}
+                  </a>.
+                </p>
               )}
 
               {/* App-password providers: short guidance + help link */}
@@ -605,37 +585,5 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
 
       </div>
     </div>
-  );
-}
-
-// ── Internal: Fastmail mode toggle tab ─────────────────────────────────────────
-
-function FastmailModeTab({ active, onClick, icon, label }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-        height: 30,
-        padding: '0 12px',
-        background: active ? 'var(--bg-surface)' : 'transparent',
-        border: active ? '1px solid var(--border-1)' : '1px solid transparent',
-        borderRadius: 6,
-        cursor: 'pointer',
-        fontFamily: 'var(--font-sans)',
-        fontSize: 13,
-        fontWeight: active ? 500 : 400,
-        color: active ? 'var(--fg-1)' : 'var(--fg-3)',
-        boxShadow: active ? 'var(--shadow-1)' : 'none',
-        transition: 'all var(--dur-1) var(--ease-out)',
-      }}
-    >
-      <Icon name={icon} size={13} color={active ? 'var(--brand)' : 'var(--fg-4)'} />
-      {label}
-    </button>
   );
 }
