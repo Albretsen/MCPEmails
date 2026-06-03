@@ -622,6 +622,45 @@ function LanguageSwitcher() {
 }
 
 /* ============== FOOTER ============== */
+
+// Public MCP endpoint shown across the site (canonical apex host).
+const FOOTER_MCP_URL = "https://mcpemails.com/api/mcp";
+const FOOTER_CONTACT_EMAIL = "hello@mcpemails.com";
+
+/* A single copyable contact row in the footer (email or MCP endpoint).
+   Renders the value, an optional link (mailto), and a copy-to-clipboard button. */
+function FooterCopy({ icon, label, value, href }) {
+  const t = useTranslations('home');
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(value);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <div className="footer-copy">
+      <span className="footer-copy-label">{label}</span>
+      <div className="footer-copy-field">
+        <MIcon name={icon} size={13} color="var(--ink-400)" />
+        {href
+          ? <a className="footer-copy-value" href={href}>{value}</a>
+          : <span className="footer-copy-value">{value}</span>}
+        <button
+          type="button"
+          className="footer-copy-btn"
+          onClick={copy}
+          aria-label={copied ? t('footer.copied') : t('footer.copyAria', { label })}
+        >
+          <MIcon name={copied ? 'check' : 'copy'} size={13} color={copied ? 'var(--mint-500)' : 'currentColor'} />
+          <span>{copied ? t('footer.copied') : t('footer.copy')}</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function Footer() {
   const t = useTranslations('home');
   return (
@@ -631,6 +670,10 @@ export function Footer() {
           <div className="brand-cell">
             <img src="/logo-mark-dark.svg" alt="mcpemails" />
             <p>{t('footer.tagline')}</p>
+            <div className="footer-contact">
+              <FooterCopy icon="mail" label={t('footer.contactLabel')} value={FOOTER_CONTACT_EMAIL} href={`mailto:${FOOTER_CONTACT_EMAIL}`} />
+              <FooterCopy icon="server" label={t('footer.mcpLabel')} value={FOOTER_MCP_URL} />
+            </div>
             <LanguageSwitcher />
           </div>
           <div>

@@ -44,7 +44,6 @@ const ZOHO_ACCOUNT_TYPES = [
 /** Provider cards shown in step 1. `subKey` resolves a dashboardChrome key. */
 const PROVIDERS = [
   { k: 'gmail',    label: 'Gmail',    subKey: 'connect.subGmail',       logoKind: 'gmail' },
-  { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook' },
   { k: 'fastmail', label: 'Fastmail', subKey: 'connect.subFastmail',    logoKind: 'imap' },
   // Branded IMAP presets (app password).
   ...Object.values(IMAP_PRESETS).map(p => ({
@@ -55,6 +54,9 @@ const PROVIDERS = [
   })),
   // Generic catch-all connector.
   { k: 'generic', label: 'IMAP / SMTP', subKey: 'connect.subGeneric', logoKind: 'imap' },
+  // Outlook is temporarily unavailable (Microsoft connector not live yet) —
+  // shown LAST, greyed out / non-selectable with a "coming soon" flag until it ships.
+  { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook', disabled: true },
 ];
 
 /** The server-side route that initiates the OAuth flow for each provider. */
@@ -350,25 +352,29 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 {PROVIDERS.map(p => (
                   <div
                     key={p.k}
-                    className={'provider-chip' + (provider === p.k ? ' sel' : '')}
-                    onClick={() => setProvider(p.k)}
+                    className={'provider-chip' + (provider === p.k ? ' sel' : '') + (p.disabled ? ' disabled' : '')}
+                    onClick={() => { if (!p.disabled) setProvider(p.k); }}
                     role="radio"
                     aria-checked={provider === p.k}
-                    tabIndex={0}
-                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setProvider(p.k); }}
+                    aria-disabled={p.disabled || undefined}
+                    tabIndex={p.disabled ? -1 : 0}
+                    onKeyDown={e => { if (!p.disabled && (e.key === 'Enter' || e.key === ' ')) setProvider(p.k); }}
+                    title={p.disabled ? tr('connect.comingSoon') : undefined}
+                    style={p.disabled ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
                   >
                     <ProviderLogo kind={p.logoKind} size={26} />
                     <div className="pn">{p.label}</div>
-                    <div className="ps">{tr(p.subKey)}</div>
+                    <div className="ps">{p.disabled ? tr('connect.comingSoon') : tr(p.subKey)}</div>
                   </div>
                 ))}
               </div>
 
-              {/* OAuth verification-pending warning (Gmail / Outlook).
-                  Gated behind OAUTH_VERIFICATION_PENDING so the owner can hide
-                  it after Google + Microsoft verification complete, without a
-                  code change. */}
-              {OAUTH_VERIFICATION_PENDING && (provider === 'gmail' || provider === 'outlook') && (
+              {/* Gmail verification-pending warning. Gated behind
+                  OAUTH_VERIFICATION_PENDING so the owner can hide it after
+                  Google verification completes, without a code change. Only
+                  Gmail applies — Outlook is currently disabled (coming soon),
+                  and the Google/CASA review text never applied to Microsoft. */}
+              {OAUTH_VERIFICATION_PENDING && provider === 'gmail' && (
                 <div
                   role="note"
                   style={{
@@ -397,11 +403,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     gap: 6,
                   }}>
                     <li>{tr('connect.verificationWarningReview')}</li>
-                    {provider === 'gmail' ? (
-                      <li>{tr('connect.verificationWarningGoogleScreen')}</li>
-                    ) : (
-                      <li>{tr('connect.verificationWarningOutlookScreen')}</li>
-                    )}
+                    <li>{tr('connect.verificationWarningGoogleScreen')}</li>
                     <li>{tr('connect.verificationWarningReauth')}</li>
                   </ul>
                 </div>

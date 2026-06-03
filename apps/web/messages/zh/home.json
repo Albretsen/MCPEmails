@@ -174,7 +174,12 @@
     "linkPrivacy": "隐私",
     "linkTerms": "条款",
     "copyright": "© 2026 mcpemails.",
-    "legal": "邮件从不存储 · 凭据静态加密"
+    "legal": "邮件从不存储 · 凭据静态加密",
+    "contactLabel": "联系",
+    "mcpLabel": "MCP 端点",
+    "copy": "复制",
+    "copied": "已复制",
+    "copyAria": "复制{label}"
   },
   "languageSwitcher": {
     "label": "语言",

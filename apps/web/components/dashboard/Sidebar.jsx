@@ -258,7 +258,38 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
  * `onMenuOpen` is called when the hamburger button is tapped on mobile.
  * The hamburger button is hidden on desktop via CSS (`.menu-btn`).
  */
-export function Topbar({ route, workspace, onMenuOpen, onOpenSearch }) {
+/**
+ * TopbarMcpLink: compact copy-to-clipboard control for the workspace MCP
+ * endpoint, surfaced in the topbar so the URL is reachable from any dashboard
+ * page. Shows the URL without its scheme to stay compact; clicking copies the
+ * full URL.
+ */
+function TopbarMcpLink({ url }) {
+  const tr = useTranslations('dashboardChrome');
+  const [copied, setCopied] = useState(false);
+  const display = url.replace(/^https?:\/\//, '');
+  const copy = () => {
+    navigator.clipboard?.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }).catch(() => {});
+  };
+  return (
+    <button
+      type="button"
+      className="mcp-link"
+      onClick={copy}
+      title={tr('topbar.mcpCopyTitle')}
+      aria-label={copied ? tr('topbar.mcpCopied') : tr('topbar.mcpCopy')}
+    >
+      <span className="mcp-link-label">{tr('topbar.mcpLabel')}</span>
+      <code className="mcp-link-url">{display}</code>
+      <Icon name={copied ? 'check' : 'copy'} size={13} color={copied ? 'var(--mint-500)' : 'var(--fg-3)'} />
+    </button>
+  );
+}
+
+export function Topbar({ route, workspace, mcpUrl, onMenuOpen, onOpenSearch }) {
   const tr = useTranslations('dashboardChrome');
   const labels = {
     overview: tr('sidebar.navOverview'),
@@ -286,6 +317,7 @@ export function Topbar({ route, workspace, onMenuOpen, onOpenSearch }) {
         <span className="here">{labels[route]}</span>
       </div>
       <div className="grow"></div>
+      {mcpUrl ? <TopbarMcpLink url={mcpUrl} /> : null}
       <button
         type="button"
         className="search"

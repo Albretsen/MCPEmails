@@ -61,9 +61,16 @@
     "searchPlaceholder": "Search pages, inboxes, members…",
     "openSearch": "Open search (Command K)"
   },
+  "topbar": {
+    "mcpLabel": "MCP endpoint",
+    "mcpCopy": "Copy MCP endpoint URL",
+    "mcpCopied": "MCP endpoint URL copied",
+    "mcpCopyTitle": "Copy your MCP endpoint URL"
+  },
   "connect": {
     "subGmail": "OAuth 2.0 · recommended",
     "subOutlook": "OAuth 2.0 · Microsoft 365",
+    "comingSoon": "Coming soon",
     "subFastmail": "OAuth 2.0 or app password",
     "subAppPassword": "App password",
     "subGeneric": "Any provider",

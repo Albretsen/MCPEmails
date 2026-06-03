@@ -145,6 +145,25 @@ body { background: var(--bg-page); }
   padding: 2px 5px;
 }
 
+/* MCP endpoint copy control: lets users grab the workspace URL from any page. */
+.topbar .mcp-link {
+  display: flex; align-items: center; gap: 8px;
+  height: 32px; max-width: 360px; padding: 0 10px;
+  background: var(--ink-50); border: 1px solid var(--border-1); border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 120ms var(--ease-out), background 120ms var(--ease-out);
+}
+.topbar .mcp-link:hover { border-color: var(--border-2); background: var(--ink-100); }
+.topbar .mcp-link:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.topbar .mcp-link .mcp-link-label {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--fg-3); white-space: nowrap;
+}
+.topbar .mcp-link .mcp-link-url {
+  font-family: var(--font-mono); font-size: 12px; color: var(--fg-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+
 /* === Page content === */
 .page { padding: 28px 32px; overflow: auto; flex: 1; min-height: 0; }
 .page-header { display: flex; align-items: end; gap: 16px; margin-bottom: 24px; }
@@ -985,6 +1004,9 @@ body { background: var(--bg-page); }
   .topbar .search {
     width: 200px;
   }
+  /* Cap the MCP endpoint width so it shares the row gracefully */
+  .topbar .mcp-link { max-width: 240px; }
+  .topbar .mcp-link .mcp-link-label { display: none; }
 }
 
 /* ── Mobile: ≤767px ───────────────────────────────────────────────────── */
@@ -1030,6 +1052,8 @@ body { background: var(--bg-page); }
   .topbar .search {
     display: none;
   }
+  /* Keep the MCP endpoint reachable but tighten it for narrow screens */
+  .topbar .mcp-link { max-width: 200px; padding: 0 8px; }
 
   /* Page content: tighter padding on small screens */
   .page {

@@ -512,7 +512,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace, workspaces
         onClose={() => setSidebarOpen(false)}
       />
       <div className="main-col">
-        <Topbar route={route} workspace={workspace} onMenuOpen={() => setSidebarOpen(true)} onOpenSearch={() => setShowCommand(true)} />
+        <Topbar route={route} workspace={workspace} mcpUrl={mcpUrl} onMenuOpen={() => setSidebarOpen(true)} onOpenSearch={() => setShowCommand(true)} />
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
           <FirstRunBanner onConnect={() => setShowConnect(true)} />

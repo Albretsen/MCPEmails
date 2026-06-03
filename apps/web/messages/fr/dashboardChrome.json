@@ -61,9 +61,16 @@
     "searchPlaceholder": "Rechercher des pages, des boîtes, des membres…",
     "openSearch": "Ouvrir la recherche (Command K)"
   },
+  "topbar": {
+    "mcpLabel": "Point de terminaison MCP",
+    "mcpCopy": "Copier l’URL du point de terminaison MCP",
+    "mcpCopied": "URL du point de terminaison MCP copiée",
+    "mcpCopyTitle": "Copiez l’URL de votre point de terminaison MCP"
+  },
   "connect": {
     "subGmail": "OAuth 2.0 · recommandé",
     "subOutlook": "OAuth 2.0 · Microsoft 365",
+    "comingSoon": "Bientôt disponible",
     "subFastmail": "OAuth 2.0 ou mot de passe d'application",
     "subAppPassword": "Mot de passe d'application",
     "subGeneric": "Tout fournisseur",

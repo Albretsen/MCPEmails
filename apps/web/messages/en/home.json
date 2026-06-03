@@ -174,7 +174,12 @@
     "linkPrivacy": "Privacy",
     "linkTerms": "Terms",
     "copyright": "© 2026 mcpemails.",
-    "legal": "Email never stored · Credentials encrypted at rest"
+    "legal": "Email never stored · Credentials encrypted at rest",
+    "contactLabel": "Contact",
+    "mcpLabel": "MCP endpoint",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyAria": "Copy {label}"
   },
   "languageSwitcher": {
     "label": "Language",
