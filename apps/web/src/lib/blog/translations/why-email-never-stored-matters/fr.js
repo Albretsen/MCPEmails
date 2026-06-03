@@ -39,7 +39,7 @@ Un corpus stocké de courriels réels est irrésistible. Il est tentant de s’e
 
 ## Comment fonctionne réellement la récupération en direct
 
-Voici le chemin parcouru par un seul appel \`read_email\` à travers MCP Emails :
+Voici le chemin parcouru par un seul appel \`email_read\` (action \`read\`) à travers MCP Emails :
 
 \`\`\`
 agent  →  serveur MCP  →  Edge Function isolée
@@ -60,7 +60,7 @@ Si vous voulez les rouages plus profonds du modèle d’identifiants — jetons 
 
 Le « jamais stocké » n’est pas gratuit. Il y a un coût réel, et je préfère le nommer plutôt que faire comme s’il n’existait pas.
 
-Comme nous ne tenons pas d’index local, la recherche s’exécute contre la recherche de votre fournisseur à chaque fois. Vous obtenez une [recherche native du fournisseur](/docs) — opérateurs Gmail, KQL Outlook, recherche texte IMAP — qui est puissante, mais c’est leur latence et leur sémantique de requête, pas un index sur mesure réglé par nous. Et il n’y a pas de push : nous ne pouvons pas notifier votre agent à l’instant où un courriel arrive, parce que nous ne surveillons pas une copie synchronisée. Pour réagir aux nouveaux messages, votre agent interroge régulièrement (par exemple, \`list_messages\` avec \`unread_only: true\` à intervalles réguliers).
+Comme nous ne tenons pas d’index local, la recherche s’exécute contre la recherche de votre fournisseur à chaque fois. Vous obtenez une [recherche native du fournisseur](/docs) — opérateurs Gmail, KQL Outlook, recherche texte IMAP — qui est puissante, mais c’est leur latence et leur sémantique de requête, pas un index sur mesure réglé par nous. Et il n’y a pas de push : nous ne pouvons pas notifier votre agent à l’instant où un courriel arrive, parce que nous ne surveillons pas une copie synchronisée. Pour réagir aux nouveaux messages, votre agent interroge régulièrement (par exemple, \`email_read\` avec l’action \`list\` et \`unread_only: true\` à intervalles réguliers).
 
 Pour la plupart des gens, c’est un compromis facile. Une recherche légèrement plus lente et une boucle d’interrogation, en échange de ne jamais créer une seconde copie de vos données les plus sensibles. Je prends.
 

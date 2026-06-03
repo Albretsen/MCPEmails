@@ -24,12 +24,9 @@ MCP er en standard måte å eksponere **verktøy** og **ressurser** til en språ
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose"
   ]
 }
 \`\`\`
@@ -40,12 +37,12 @@ Agenten ser aldri et passord. Den ser verb. Akkurat den endringen er det som gj�
 
 ### Oppdagelse før handling
 
-Et veloppdragent e-postverktøy er **tilstandsløst sett fra agentens ståsted**. Agenten skal ikke hardkode en postboks-UUID. I stedet kaller den \`list_inboxes\` først, oppdager hva som er tilgjengelig, og handler så:
+Et veloppdragent e-postverktøy er **tilstandsløst sett fra agentens ståsted**. Agenten skal ikke hardkode en postboks-UUID. I stedet kaller den \`inbox_list\` først, oppdager hva som er tilgjengelig, og handler så:
 
-- \`list_inboxes\` → returnerer tilkoblede kontoer og hva de kan
-- \`list_messages\` → paginert, nyeste først, per innboks
-- \`read_email\` → den parsede meldingskroppen, avsenderen og metadataene for én melding
-- \`send_email\` → skriv og send, med leverandøren valgt for deg
+- \`inbox_list\` → returnerer tilkoblede kontoer og hva de kan
+- \`email_read\` (handling \`list\`) → paginert, nyeste først, per innboks
+- \`email_read\` (handling \`read\`) → den parsede meldingskroppen, avsenderen og metadataene for én melding
+- \`email_compose\` (handling \`send\`) → skriv og send, med leverandøren valgt for deg
 
 Dette oppdagelse-først-mønsteret er forskjellen mellom en demo og noe du ville stolt på en tirsdag ettermiddag.
 
@@ -53,10 +50,10 @@ Dette oppdagelse-først-mønsteret er forskjellen mellom en demo og noe du ville
 
 La oss si at du vil at Claude skal sortere morgeninnboksen din. Med e-post eksponert over MCP ser samtalen slik ut:
 
-1. Agenten kaller \`list_inboxes\` og finner jobb-Gmail-en din.
-2. Den kaller \`list_messages\` for de siste 24 timene.
-3. For alt som ser presserende ut, kaller den \`read_email\` for å få hele innholdet.
-4. Den skriver utkast til svar og kaller \`reply_to_email\` — eller oppsummerer bare og venter på klarsignal fra deg.
+1. Agenten kaller \`inbox_list\` og finner jobb-Gmail-en din.
+2. Den kaller \`email_read\` (handling \`list\`) for de siste 24 timene.
+3. For alt som ser presserende ut, kaller den \`email_read\` (handling \`read\`) for å få hele innholdet.
+4. Den skriver utkast til svar og kaller \`email_compose\` (handling \`reply\`) — eller oppsummerer bare og venter på klarsignal fra deg.
 
 Ingen passord krysset ledningen. Ingen leverandørspesifikk kode lå i ledeteksten din. Agenten resonnerte over verb og fikk gjort ekte arbeid.
 

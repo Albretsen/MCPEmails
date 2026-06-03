@@ -36,24 +36,21 @@ This is the heart of it, so I want to slow down here.
 
 If you've ever set up email in a mail client, you've met IMAP and SMTP. They're the protocols email runs on, and they are not friendly. IMAP makes you juggle folder state, message flags, partial fetches, and a query syntax that varies by server. SMTP makes you hand-build MIME messages with the right headers or your reply lands in the wrong thread. Handing all of that to a language model is a bad idea. The model will get the encoding wrong, leak a credential into a log, or fire off a malformed send.
 
-An MCP email server replaces that with **verbs**. The agent doesn't see protocols. It sees a short menu of actions. MCP Emails ships six core tools:
+An MCP email server replaces that with **verbs**. The agent doesn't see protocols. It sees a short menu of actions. MCP Emails ships a handful of consolidated tools, and these three are the daily drivers:
 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose"
   ]
 }
 \`\`\`
 
-Plus a few more for flags, folders, scheduling, and contact search. But those six cover the daily work. The agent always starts with \`list_inboxes\` to discover which accounts are connected and their \`inbox_id\` — it never copy-pastes a UUID from a config file. Then it lists, reads, searches, sends.
+Each one except \`inbox_list\` takes an \`action\` — \`email_read\` covers list, read, and search; \`email_compose\` covers send, reply, and forward. A few more tools round out the surface (\`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, \`contact_search\`), but those few core verbs cover the daily work. The agent always starts with \`inbox_list\` to discover which accounts are connected and their \`inbox_id\` — it never copy-pastes a UUID from a config file. Then it lists, reads, searches, sends.
 
-The shift from "here's a library, figure it out" to "here are six verbs" is the whole point. Verbs are predictable. They have a fixed shape, a documented response, and a permission attached. That's what makes email safe to automate instead of merely demo-able.
+The shift from "here's a library, figure it out" to "here are three verbs — each taking an action" is the whole point. Verbs are predictable. They have a fixed shape, a documented response, and a permission attached. That's what makes email safe to automate instead of merely demo-able.
 
 ## Why an agent needs verbs, not your password
 
@@ -69,10 +66,10 @@ The capability-not-credential model is also why you can [revoke a connection in 
 
 A real interaction looks like this. Say you ask Claude to catch you up on your inbox:
 
-1. The agent calls \`list_inboxes\` and finds your work Gmail.
-2. It calls \`list_messages\` with \`unread_only: true\` to get what's new.
-3. For anything that looks important, it calls \`read_email\` to pull the full body.
-4. It summarizes, and if you've approved send access, it can draft a reply with \`reply_to_email\` — which sets the threading headers automatically so the reply lands in the right conversation.
+1. The agent calls \`inbox_list\` and finds your work Gmail.
+2. It calls \`email_read\` with \`action: "list"\` and \`unread_only: true\` to get what's new.
+3. For anything that looks important, it calls \`email_read\` with \`action: "read"\` to pull the full body.
+4. It summarizes, and if you've approved send access, it can draft a reply with \`email_compose\` (\`action: "reply"\`) — which sets the threading headers automatically so the reply lands in the right conversation.
 
 One honest limitation worth knowing up front: this is **polling, not push**. There are no webhooks. The server won't ping your agent when new mail arrives. To react to new email, the agent has to check on a schedule. That's a deliberate trade-off, and it shapes how you'd build something like an [auto-responder](/blog/build-email-auto-responder-mcp-agent) or an [inbox triage routine](/blog/ai-agent-triage-summarize-inbox).
 

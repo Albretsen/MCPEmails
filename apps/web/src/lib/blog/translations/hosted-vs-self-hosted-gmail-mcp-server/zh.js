@@ -65,15 +65,15 @@ MCP 还很年轻。规范在变，Google 在轮换要求，你克隆的那个仓
 
 ### 凭据已加密，邮件从不存储
 
-每个收件箱唯一被持久化的东西就是 OAuth 令牌，并且它以 AES-256-GCM 静态加密。密钥作为一个环境密钥存在，与数据库分开，解密只在调用时于一个隔离的 Edge Function 内部发生。邮件本身完全不被存储——每一次 \`read_email\`、\`search_emails\` 或 \`list_messages\` 调用都实时打到 Gmail，把结果交给你的代理，然后丢弃。这就是自托管那一节里说的加密工作，已经做好并持续维护。[把邮件访问交给 AI 代理安全吗](/blog/is-it-safe-to-give-ai-agent-email-access)完整走了一遍安全模型。
+每个收件箱唯一被持久化的东西就是 OAuth 令牌，并且它以 AES-256-GCM 静态加密。密钥作为一个环境密钥存在，与数据库分开，解密只在调用时于一个隔离的 Edge Function 内部发生。邮件本身完全不被存储——每一次 \`email_read\` 调用（无论是列出、读取还是搜索）都实时打到 Gmail，把结果交给你的代理，然后丢弃。这就是自托管那一节里说的加密工作，已经做好并持续维护。[把邮件访问交给 AI 代理安全吗](/blog/is-it-safe-to-give-ai-agent-email-access)完整走了一遍安全模型。
 
 ### 多服务商免费附带
 
-同一个端点、同样六个核心工具——\`list_inboxes\`、\`list_messages\`、\`read_email\`、\`search_emails\`、\`send_email\`、\`reply_to_email\`，外加用于标记、文件夹、定时和联系人的几个——可以跨 Gmail、Outlook、iCloud、Fastmail 以及任何 IMAP 收件箱使用。下周加一个 Outlook 账户，你的代理什么都不用改。
+同一个端点、同样的核心工具——\`inbox_list\`、\`email_read\`、\`email_compose\`、用于标记和文件夹的 \`email_organize\`，外加 \`folder\`、\`draft\`、\`schedule\` 和 \`contact_search\`——可以跨 Gmail、Outlook、iCloud、Fastmail 以及任何 IMAP 收件箱使用。下周加一个 Outlook 账户，你的代理什么都不用改。
 
 ### 发送始终走你自己的服务商
 
-MCP Emails 从不从自己的域名转发邮件。\`send_email\` 通过你的 Gmail（或 Microsoft Graph，或你自己的 SMTP）发出，所以你的域名信誉和送达率仍然是你自己的。这跟你自托管能得到的属性一样，只是不用你自己去建。
+MCP Emails 从不从自己的域名转发邮件。\`email_compose\`（配合 \`send\` 操作）通过你的 Gmail（或 Microsoft Graph，或你自己的 SMTP）发出，所以你的域名信誉和送达率仍然是你自己的。这跟你自托管能得到的属性一样，只是不用你自己去建。
 
 ### 诚实的代价：你信任一家厂商
 

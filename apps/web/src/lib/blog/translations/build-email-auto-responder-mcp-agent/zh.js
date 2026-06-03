@@ -98,7 +98,7 @@ def send_with_backoff(**kwargs):
     delay = 2
     for attempt in range(3):
         try:
-            return reply_to_email(**kwargs)
+            return email_compose(action="reply", **kwargs)
         except RateLimited as e:
             sleep(e.retry_after or delay)
             delay *= 2
@@ -123,7 +123,7 @@ def send_with_backoff(**kwargs):
 
 ### 让人留在闭环里，至少一开始要这样
 
-这套东西最安全的版本根本不是自动回复器——而是一个自动*起草器*。智能体读取、起草并把回复暂存好，但由人来批准发送。MCP Emails 支持草稿，所以你可以让循环去创建一份草稿，而不是调用 \`reply_to_email\`，然后由你自己把好的那些发出去。先在草稿模式下跑一周。看看它本来会发出什么。只有到那时，再把你信得过的那些切到自动发送。
+这套东西最安全的版本根本不是自动回复器——而是一个自动*起草器*。智能体读取、起草并把回复暂存好，但由人来批准发送。MCP Emails 支持草稿，所以你可以让循环调用 \`draft\`（动作 \`create\`），而不是调用 \`email_compose\`，然后由你自己把好的那些发出去。先在草稿模式下跑一周。看看它本来会发出什么。只有到那时，再把你信得过的那些切到自动发送。
 
 ### 阻断循环和自我回复
 
@@ -141,7 +141,7 @@ def send_with_backoff(**kwargs):
 如果明天就要为一个真实收件箱上线这套东西，我会从小而无聊的地方起步：
 
 1. 一把带 \`read:email\` 和 \`send:email\` 的 API 密钥，限定到一个收件箱。
-2. 每两分钟轮询一次 \`list_messages(unread_only: true)\`。
+2. 每两分钟轮询一次 \`email_read(action: "list", unread_only: true)\`。
 3. 白名单里只放恰好一个客服别名。
 4. 只用草稿模式——创建草稿，不自动发送任何东西。
 5. 读了一周草稿之后，对那些显而易见的情形开启自动发送，其余的继续起草。

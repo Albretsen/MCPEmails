@@ -5,7 +5,7 @@ export default {
   coverAlt: '如何通过 MCP 让你的 AI 智能体访问邮箱——MCPEmails',
   content: `要让 AI 智能体访问邮箱，你需要把邮箱连接到一台 MCP 服务器，再把智能体指向一个端点 URL。智能体随后就能拿到一小组工具，用来读取、搜索和发送邮件。难点其实不在智能体本身——而在于如何做到这一点，又不让你的密码泄露到提示词、日志或向量库里。这"最后一公里"正是本指南要讲的内容。
 
-如果你只想走最快的路径：在仪表盘里连接一个邮箱，把 MCP 端点粘贴到 [claude.ai](https://claude.ai)、Claude Desktop、Cursor 或你自己的智能体里，然后先调用一次 \`list_inboxes\`。本文余下部分会解释背后实际发生了什么、为什么安全模型至关重要，以及如何接入每一个受支持的服务商。
+如果你只想走最快的路径：在仪表盘里连接一个邮箱，把 MCP 端点粘贴到 [claude.ai](https://claude.ai)、Claude Desktop、Cursor 或你自己的智能体里，然后先调用一次 \`inbox_list\`。本文余下部分会解释背后实际发生了什么、为什么安全模型至关重要，以及如何接入每一个受支持的服务商。
 
 ## "通过 MCP 收发邮件"到底意味着什么
 
@@ -45,25 +45,26 @@ export default {
 
 ## 你的智能体能拿到哪些工具
 
-六个核心工具覆盖了全部能力面，另有若干用于标记、文件夹、定时和联系人的工具。智能体总是先调用 \`list_inboxes\` 来发现连接了哪些账户、并取得每个邮箱的 ID——它从不把 UUID 写死在代码里。
+一小组整合后的、基于动作（action）的工具覆盖了全部能力面：读取、撰写、整理，另有若干用于文件夹、定时和联系人的工具。智能体总是先调用 \`inbox_list\` 来发现连接了哪些账户、并取得每个邮箱的 ID——它从不把 UUID 写死在代码里。
 
-- \`list_inboxes\` —— 发现已连接的账户及其能力
-- \`list_messages\` —— 分页、按最新优先、按邮箱列出
-- \`read_email\` —— 解析后的纯文本，可选经过净化的 HTML，可选附件
-- \`search_emails\` —— 服务商原生语法（Gmail 操作符、Outlook KQL、IMAP 文本搜索）
-- \`send_email\` —— 撰写邮件，支持 CC/BCC、HTML 以及总计不超过 10 MB 的附件
-- \`reply_to_email\` —— 同上，并且会替你设置好线程头（In-Reply-To、References）
+- \`inbox_list\` —— 发现已连接的账户及其能力
+- \`email_read\`（动作 \`list\`）—— 分页、按最新优先、按邮箱列出
+- \`email_read\`（动作 \`read\`）—— 解析后的纯文本，可选经过净化的 HTML，可选附件
+- \`email_read\`（动作 \`search\`）—— 服务商原生语法（Gmail 操作符、Outlook KQL、IMAP 文本搜索）
+- \`email_compose\`（动作 \`send\`）—— 撰写邮件，支持 CC/BCC、HTML 以及总计不超过 10 MB 的附件
+- \`email_compose\`（动作 \`reply\`）—— 同上，并且会替你设置好线程头（In-Reply-To、References）
+- \`email_organize\` —— 移动、删除、标记或归档（每次调用一个动作）
 
-有一个值得开门见山说清楚的局限：这是**轮询，而非推送**。没有 webhook。要对新邮件做出反应，你的智能体需要按计划轮询，例如带 \`unread_only: true\` 的 \`list_messages\`。你搭建的任何自动回复器都靠定时器运转，而不是即时触发。[自动回复器搭建指南](/blog/build-email-auto-responder-mcp-agent) 展示了如何把这件事做好。
+有一个值得开门见山说清楚的局限：这是**轮询，而非推送**。没有 webhook。要对新邮件做出反应，你的智能体需要按计划轮询，例如带 \`unread_only: true\` 的 \`email_read\`（动作 \`list\`）。你搭建的任何自动回复器都靠定时器运转，而不是即时触发。[自动回复器搭建指南](/blog/build-email-auto-responder-mcp-agent) 展示了如何把这件事做好。
 
 一次早间整理流程读起来是这样的：
 
 \`\`\`json
 {
-  "step1": "list_inboxes  → finds your work Gmail",
-  "step2": "list_messages → last 24h, unread_only",
-  "step3": "read_email    → full body for anything urgent",
-  "step4": "reply_to_email → draft, or just summarize and wait"
+  "step1": "inbox_list                  → finds your work Gmail",
+  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step3": "email_read (action read)    → full body for anything urgent",
+  "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }
 \`\`\`
 
@@ -100,7 +101,7 @@ Cline、JetBrains、自定义脚本以及裸 cURL 使用带 scope 的 API key。
 
 简短的回答：安全，而 [让 AI 智能体访问邮箱安全吗](/blog/is-it-safe-to-give-ai-agent-email-access) 这篇文章把完整的论证讲透了。模型持有的是受限的能力，而不是你的密码；凭据经过加密；什么都不存储；发送始终留在你自己的服务商；访问权一键即可吊销。
 
-关于速率限制，在所有套餐上，每个 API key 都被限制在每分钟 100 次请求、每小时 1,000 次、每天 10,000 次。此外还有一个按工作区计算的突发上限，会随你的套餐递增——Free 为 60/min，Solo 为 300/min，Team 为 1,000/min。当你触及上限时，服务器会返回一个可重试的错误，并附带一个以秒为单位的 \`retry_after\` 值。请遵守它。另外，绝不要盲目地自动重试 \`send_email\`——那样你会发出重复邮件。
+关于速率限制，在所有套餐上，每个 API key 都被限制在每分钟 100 次请求、每小时 1,000 次、每天 10,000 次。此外还有一个按工作区计算的突发上限，会随你的套餐递增——Free 为 60/min，Solo 为 300/min，Team 为 1,000/min。当你触及上限时，服务器会返回一个可重试的错误，并附带一个以秒为单位的 \`retry_after\` 值。请遵守它。另外，绝不要盲目地自动重试 \`email_compose\` 的发送——那样你会发出重复邮件。
 
 ## 价格
 
@@ -114,5 +115,5 @@ Cline、JetBrains、自定义脚本以及裸 cURL 使用带 scope 的 API key。
 
 ## 开始上手
 
-连接一个邮箱，把端点粘贴进你的智能体，然后调用 \`list_inboxes\`。整个上手过程就这么多。[免费开始](/signup) 或浏览一下 [快速上手](/docs#quickstart)——几分钟内你就能让一个智能体读取真实的邮件了。`,
+连接一个邮箱，把端点粘贴进你的智能体，然后调用 \`inbox_list\`。整个上手过程就这么多。[免费开始](/signup) 或浏览一下 [快速上手](/docs#quickstart)——几分钟内你就能让一个智能体读取真实的邮件了。`,
 };

@@ -52,11 +52,11 @@ Un appel JSON-RPC brut pour lister vos boîtes de réception ressemble à ceci :
   "jsonrpc": "2.0",
   "id": 1,
   "method": "tools/call",
-  "params": { "name": "list_inboxes", "arguments": {} }
+  "params": { "name": "inbox_list", "arguments": {} }
 }
 \`\`\`
 
-Envoyez cela en POST vers \`https://mcpemails.com/api/mcp\` avec l’en-tête bearer et vous récupérez vos boîtes de réception connectées et leurs identifiants. À partir de là, l’agent appelle \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\` et \`reply_to_email\` — les six outils principaux, plus quelques autres pour les drapeaux, les dossiers, la planification et les contacts.
+Envoyez cela en POST vers \`https://mcpemails.com/api/mcp\` avec l’en-tête bearer et vous récupérez vos boîtes de réception connectées et leurs identifiants. À partir de là, l’agent appelle \`email_read\` (avec \`action\` réglé sur list, read ou search) et \`email_compose\` (\`action\` send, reply ou forward) — les outils principaux, plus \`email_organize\`, \`folder\`, \`schedule\` et \`contact_search\` pour les drapeaux, les dossiers, la planification et les contacts.
 
 La seule chose que les clés API exigent de vous et qu’OAuth ne demande pas : traitez la clé comme un mot de passe. C’est un secret à longue durée de vie, en clair. Placez-le dans une variable d’environnement, pas dans du code source que vous pousserez sur GitHub. Si une clé fuite, révoquez-la depuis le tableau de bord et passez à une nouvelle.
 
@@ -76,7 +76,7 @@ Votre client est claude.ai, Claude Desktop ou Cursor. Vous ne voulez aucun secre
 
 Votre client n’a pas de support OAuth — Cline, JetBrains, les exécuteurs d’outils façon OpenAI, ou votre propre code. Vous scriptez contre le point de terminaison avec cURL ou un petit programme. Vous avez besoin d’un identifiant stable qu’un processus sans interface peut utiliser sans qu’un humain ait à cliquer sur un écran de consentement. Une clé restreinte est exactement ce qu’il faut ici, et il existe un guide complet pour les [clients Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Une dernière chose vraie quel que soit votre choix : les limites de débit. Chaque clé API est plafonnée à 100 requêtes/minute, 1 000/heure et 10 000/jour, et chaque espace de travail dispose d’un plafond de pointe selon le plan (60/min sur [Free](/pricing), jusqu’à 1 000/min sur Team). Quand vous atteignez une limite, le serveur vous renvoie une valeur \`retry_after\` en secondes. Respectez-la, et ne réessayez jamais à l’aveugle un \`send_email\` — vous enverriez le message deux fois.
+Une dernière chose vraie quel que soit votre choix : les limites de débit. Chaque clé API est plafonnée à 100 requêtes/minute, 1 000/heure et 10 000/jour, et chaque espace de travail dispose d’un plafond de pointe selon le plan (60/min sur [Free](/pricing), jusqu’à 1 000/min sur Team). Quand vous atteignez une limite, le serveur vous renvoie une valeur \`retry_after\` en secondes. Respectez-la, et ne réessayez jamais à l’aveugle un envoi via \`email_compose\` — vous enverriez le message deux fois.
 
 ## Le bilan
 

@@ -29,24 +29,21 @@ Este es el meollo del asunto, así que quiero ir despacio aquí.
 
 Si alguna vez has configurado el correo en un cliente de correo, te has topado con IMAP y SMTP. Son los protocolos sobre los que funciona el correo, y no son nada amables. IMAP te obliga a hacer malabares con el estado de las carpetas, las marcas de los mensajes, las descargas parciales y una sintaxis de consulta que varía según el servidor. SMTP te obliga a construir a mano mensajes MIME con las cabeceras correctas o tu respuesta cae en el hilo equivocado. Entregar todo eso a un modelo de lenguaje es mala idea. El modelo se equivocará con la codificación, filtrará una credencial en un registro o disparará un envío mal formado.
 
-Un servidor de correo MCP reemplaza eso con **verbos**. El agente no ve protocolos. Ve un menú corto de acciones. MCP Emails incluye seis herramientas básicas:
+Un servidor de correo MCP reemplaza eso con **verbos**. El agente no ve protocolos. Ve un menú corto de acciones. MCP Emails incluye un puñado de herramientas consolidadas, y estas tres son las que más trabajan a diario:
 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose"
   ]
 }
 \`\`\`
 
-Más algunas otras para marcas, carpetas, programación y búsqueda de contactos. Pero esas seis cubren el trabajo diario. El agente siempre empieza con \`list_inboxes\` para descubrir qué cuentas están conectadas y su \`inbox_id\` —nunca copia y pega un UUID de un archivo de configuración—. Luego lista, lee, busca, envía.
+Cada una salvo \`inbox_list\` recibe una \`action\`: \`email_read\` cubre listar, leer y buscar; \`email_compose\` cubre enviar, responder y reenviar. Algunas herramientas más completan la superficie (\`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, \`contact_search\`), pero esos pocos verbos básicos cubren el trabajo diario. El agente siempre empieza con \`inbox_list\` para descubrir qué cuentas están conectadas y su \`inbox_id\` —nunca copia y pega un UUID de un archivo de configuración—. Luego lista, lee, busca, envía.
 
-El cambio de "aquí tienes una biblioteca, apáñatelas" a "aquí tienes seis verbos" es el quid de la cuestión. Los verbos son predecibles. Tienen una forma fija, una respuesta documentada y un permiso adjunto. Eso es lo que hace que el correo sea seguro de automatizar en vez de solo apto para una demo.
+El cambio de "aquí tienes una biblioteca, apáñatelas" a "aquí tienes tres verbos, cada uno con una acción" es el quid de la cuestión. Los verbos son predecibles. Tienen una forma fija, una respuesta documentada y un permiso adjunto. Eso es lo que hace que el correo sea seguro de automatizar en vez de solo apto para una demo.
 
 ## Por qué un agente necesita verbos, no tu contraseña
 
@@ -62,10 +59,10 @@ El modelo de capacidad-no-credencial es también la razón por la que puedes [re
 
 Una interacción real tiene este aspecto. Pongamos que le pides a Claude que te ponga al día de tu bandeja de entrada:
 
-1. El agente llama a \`list_inboxes\` y encuentra tu Gmail del trabajo.
-2. Llama a \`list_messages\` con \`unread_only: true\` para obtener las novedades.
-3. Para cualquier cosa que parezca importante, llama a \`read_email\` para extraer el cuerpo completo.
-4. Resume, y si has aprobado el acceso de envío, puede redactar una respuesta con \`reply_to_email\` —que fija las cabeceras de hilo automáticamente para que la respuesta caiga en la conversación correcta—.
+1. El agente llama a \`inbox_list\` y encuentra tu Gmail del trabajo.
+2. Llama a \`email_read\` con \`action: "list"\` y \`unread_only: true\` para obtener las novedades.
+3. Para cualquier cosa que parezca importante, llama a \`email_read\` con \`action: "read"\` para extraer el cuerpo completo.
+4. Resume, y si has aprobado el acceso de envío, puede redactar una respuesta con \`email_compose\` (\`action: "reply"\`) —que fija las cabeceras de hilo automáticamente para que la respuesta caiga en la conversación correcta—.
 
 Una limitación honesta que conviene saber de entrada: esto es **sondeo, no envío automático**. No hay webhooks. El servidor no avisará a tu agente cuando llegue correo nuevo. Para reaccionar a correo nuevo, el agente tiene que comprobarlo según una programación. Es una concesión deliberada, y define cómo construirías algo como un [autorrespondedor](/blog/build-email-auto-responder-mcp-agent) o una [rutina de clasificación de la bandeja](/blog/ai-agent-triage-summarize-inbox).
 

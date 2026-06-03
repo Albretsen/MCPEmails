@@ -46,7 +46,7 @@ A stored corpus of real email is irresistible. It's tempting to use it to improv
 
 ## How live-fetch actually works
 
-Here's the path a single \`read_email\` call takes through MCP Emails:
+Here's the path a single \`email_read\` call (action \`read\`) takes through MCP Emails:
 
 \`\`\`
 agent  →  MCP server  →  isolated Edge Function
@@ -67,7 +67,7 @@ If you want the deeper mechanics of the credential model — OAuth tokens versus
 
 Never-stored isn't free. There's a real cost, and I'd rather name it than pretend it away.
 
-Because we don't hold a local index, search runs against your provider's search every time. You get [provider-native search](/docs) — Gmail operators, Outlook KQL, IMAP text search — which is powerful, but it's their latency and their query semantics, not a custom index tuned by us. And there's no push: we can't notify your agent the instant mail arrives because we're not watching a synced copy. To react to new mail, your agent polls (for example, \`list_messages\` with \`unread_only: true\` on a schedule).
+Because we don't hold a local index, search runs against your provider's search every time. You get [provider-native search](/docs) — Gmail operators, Outlook KQL, IMAP text search — which is powerful, but it's their latency and their query semantics, not a custom index tuned by us. And there's no push: we can't notify your agent the instant mail arrives because we're not watching a synced copy. To react to new mail, your agent polls (for example, \`email_read\` with action \`list\` and \`unread_only: true\` on a schedule).
 
 For most people that's an easy trade. Slightly slower search and a polling loop, in exchange for never creating a second copy of your most sensitive data. I'll take that.
 

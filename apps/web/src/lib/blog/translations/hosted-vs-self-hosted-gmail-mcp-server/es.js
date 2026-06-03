@@ -65,15 +65,15 @@ Te registras, vas a **Dashboard → Inboxes → Connect Inbox**, eliges Gmail y 
 
 ### Las credenciales están cifradas y el correo nunca se almacena
 
-El token OAuth es lo único que se persiste por buzón, y está cifrado con AES-256-GCM en reposo. La clave vive como un secreto de entorno, separada de la base de datos, y el descifrado ocurre solo dentro de una Edge Function aislada en el momento de la llamada. El correo en sí no se almacena en absoluto: cada llamada \`read_email\`, \`search_emails\` o \`list_messages\` consulta Gmail en vivo, entrega el resultado a tu agente y lo descarta. Ese es el trabajo de cifrado de la sección de autoalojamiento, hecho y mantenido. [¿Es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) recorre el modelo de seguridad completo.
+El token OAuth es lo único que se persiste por buzón, y está cifrado con AES-256-GCM en reposo. La clave vive como un secreto de entorno, separada de la base de datos, y el descifrado ocurre solo dentro de una Edge Function aislada en el momento de la llamada. El correo en sí no se almacena en absoluto: cada llamada \`email_read\` (ya sea para listar, leer o buscar) consulta Gmail en vivo, entrega el resultado a tu agente y lo descarta. Ese es el trabajo de cifrado de la sección de autoalojamiento, hecho y mantenido. [¿Es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) recorre el modelo de seguridad completo.
 
 ### El multiproveedor viene gratis
 
-El mismo endpoint y las mismas seis herramientas principales —\`list_inboxes\`, \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\`, más algunas otras para flags, carpetas, programación y contactos— funcionan en Gmail, Outlook, iCloud, Fastmail y cualquier buzón IMAP. Añade una cuenta de Outlook la semana que viene y nada cambia en tu agente.
+El mismo endpoint y las mismas herramientas principales —\`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` para flags y carpetas, más \`folder\`, \`draft\`, \`schedule\` y \`contact_search\`— funcionan en Gmail, Outlook, iCloud, Fastmail y cualquier buzón IMAP. Añade una cuenta de Outlook la semana que viene y nada cambia en tu agente.
 
 ### El envío se queda en tu proveedor
 
-MCP Emails nunca retransmite correo desde su propio dominio. \`send_email\` sale a través de tu Gmail (o Microsoft Graph, o tu propio SMTP), así que la reputación de tu dominio y la entregabilidad siguen siendo tuyas. Es la misma propiedad que obtendrías autoalojando, sin tener que construirla.
+MCP Emails nunca retransmite correo desde su propio dominio. \`email_compose\` (con la acción \`send\`) sale a través de tu Gmail (o Microsoft Graph, o tu propio SMTP), así que la reputación de tu dominio y la entregabilidad siguen siendo tuyas. Es la misma propiedad que obtendrías autoalojando, sin tener que construirla.
 
 ### El coste honesto: confías en un proveedor
 

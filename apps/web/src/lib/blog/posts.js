@@ -94,12 +94,10 @@ MCP is a standard way to expose **tools** and **resources** to a language model.
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose",
+    "email_organize"
   ]
 }
 \`\`\`
@@ -110,12 +108,12 @@ The agent never sees a password. It sees verbs. That single shift is what makes 
 
 ### Discovery before action
 
-A well-behaved email tool is **stateless from the agent's point of view**. The agent shouldn't hardcode a mailbox UUID. Instead it calls \`list_inboxes\` first, discovers what's available, and then acts:
+A well-behaved email tool is **stateless from the agent's point of view**. The agent shouldn't hardcode a mailbox UUID. Instead it calls \`inbox_list\` first, discovers what's available, and then acts:
 
-- \`list_inboxes\` → returns connected accounts and their capabilities
-- \`list_messages\` → paginated, newest-first, per inbox
-- \`read_email\` → the parsed body, sender, and metadata for one message
-- \`send_email\` → compose and dispatch, with the provider chosen for you
+- \`inbox_list\` → returns connected accounts and their capabilities
+- \`email_read\` (action \`list\`) → paginated, newest-first, per inbox
+- \`email_read\` (action \`read\`) → the parsed body, sender, and metadata for one message
+- \`email_compose\` (action \`send\`) → compose and dispatch, with the provider chosen for you
 
 This discovery-first pattern is the difference between a demo and something you'd trust on a Tuesday afternoon.
 
@@ -123,10 +121,10 @@ This discovery-first pattern is the difference between a demo and something you'
 
 Say you want Claude to triage your morning inbox. With email exposed over MCP, the conversation looks like this:
 
-1. The agent calls \`list_inboxes\` and finds your work Gmail.
-2. It calls \`list_messages\` for the last 24 hours.
-3. For anything that looks urgent, it calls \`read_email\` to get the full body.
-4. It drafts replies and calls \`reply_to_email\` — or just summarises and waits for your go-ahead.
+1. The agent calls \`inbox_list\` and finds your work Gmail.
+2. It calls \`email_read\` with action \`list\` for the last 24 hours.
+3. For anything that looks urgent, it calls \`email_read\` with action \`read\` to get the full body.
+4. It drafts replies and calls \`email_compose\` with action \`reply\` — or just summarises and waits for your go-ahead.
 
 No passwords crossed the wire. No provider-specific code lived in your prompt. The agent reasoned over verbs and got real work done.
 

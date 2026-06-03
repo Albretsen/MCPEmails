@@ -24,12 +24,9 @@ MCP es una forma estándar de exponer **herramientas** y **recursos** a un model
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose"
   ]
 }
 \`\`\`
@@ -40,12 +37,12 @@ El agente nunca ve una contraseña. Ve verbos. Ese único cambio es lo que hace 
 
 ### Descubrir antes de actuar
 
-Una buena herramienta de correo es **sin estado desde el punto de vista del agente**. El agente no debería tener fijada a fuego el UUID de un buzón. En su lugar, llama primero a \`list_inboxes\`, descubre qué hay disponible y luego actúa:
+Una buena herramienta de correo es **sin estado desde el punto de vista del agente**. El agente no debería tener fijada a fuego el UUID de un buzón. En su lugar, llama primero a \`inbox_list\`, descubre qué hay disponible y luego actúa:
 
-- \`list_inboxes\` → devuelve las cuentas conectadas y sus capacidades
-- \`list_messages\` → paginado, lo más reciente primero, por bandeja
-- \`read_email\` → el cuerpo analizado, el remitente y los metadatos de un mensaje
-- \`send_email\` → redacta y envía, con el proveedor elegido por ti
+- \`inbox_list\` → devuelve las cuentas conectadas y sus capacidades
+- \`email_read\` (acción \`list\`) → paginado, lo más reciente primero, por bandeja
+- \`email_read\` (acción \`read\`) → el cuerpo analizado, el remitente y los metadatos de un mensaje
+- \`email_compose\` (acción \`send\`) → redacta y envía, con el proveedor elegido por ti
 
 Este patrón de descubrir primero es la diferencia entre una demo y algo en lo que confiarías un martes por la tarde.
 
@@ -53,10 +50,10 @@ Este patrón de descubrir primero es la diferencia entre una demo y algo en lo q
 
 Imagina que quieres que Claude clasifique tu bandeja de entrada por la mañana. Con el correo expuesto sobre MCP, la conversación se ve así:
 
-1. El agente llama a \`list_inboxes\` y encuentra tu Gmail del trabajo.
-2. Llama a \`list_messages\` para las últimas 24 horas.
-3. Para cualquier cosa que parezca urgente, llama a \`read_email\` para obtener el cuerpo completo.
-4. Redacta respuestas y llama a \`reply_to_email\`, o simplemente resume y espera tu visto bueno.
+1. El agente llama a \`inbox_list\` y encuentra tu Gmail del trabajo.
+2. Llama a \`email_read\` (acción \`list\`) para las últimas 24 horas.
+3. Para cualquier cosa que parezca urgente, llama a \`email_read\` (acción \`read\`) para obtener el cuerpo completo.
+4. Redacta respuestas y llama a \`email_compose\` (acción \`reply\`), o simplemente resume y espera tu visto bueno.
 
 Ninguna contraseña cruzó el cable. Ningún código específico de proveedor vivió en tu prompt. El agente razonó sobre verbos e hizo trabajo de verdad.
 
