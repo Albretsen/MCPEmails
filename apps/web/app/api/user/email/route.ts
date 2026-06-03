@@ -49,6 +49,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object.' }, { status: 400 });
+  }
+
   const { email } = body as { email?: unknown };
   const normalized = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
