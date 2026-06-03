@@ -44,16 +44,56 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // ── 2. Resolve the user's billing record ──────────────────────────────────
-  // Billing (the Stripe customer) is tied to the user, not a workspace.
+  // ── 2. Resolve the user's Stripe customer id ──────────────────────────────
+  // Billing (the Stripe customer) is tied to the user, not a workspace, so the
+  // authoritative source is `user_billing.stripe_customer_id`. However, plans
+  // that were seeded manually (or by an older workspace-scoped flow) can leave
+  // `user_billing.stripe_customer_id` NULL while a workspace the user owns still
+  // carries the real `cus_...` id. In that case the user is genuinely a paying
+  // customer but the portal would 422. Fall back to the workspace's customer id,
+  // and backfill `user_billing` so the next call resolves directly.
   const { data: billing } = await supabase
     .from('user_billing')
     .select('stripe_customer_id')
     .eq('user_id', user.id)
     .maybeSingle();
 
+  let customerId: string | null = billing?.stripe_customer_id ?? null;
+
+  if (!customerId) {
+    // Fallback: any non-deleted workspace this user owns that has a customer id.
+    const { data: ownedWorkspaces } = await supabase
+      .from('workspaces')
+      .select('stripe_customer_id')
+      .eq('owner_id', user.id)
+      .is('deleted_at', null)
+      .not('stripe_customer_id', 'is', null)
+      .order('created_at', { ascending: true });
+
+    const workspaceCustomerId =
+      ownedWorkspaces?.find((w) => w.stripe_customer_id)?.stripe_customer_id ?? null;
+
+    if (workspaceCustomerId) {
+      customerId = workspaceCustomerId;
+      // Backfill user_billing (service role: the user RLS policy may block the
+      // write, and this self-heals the desync so the webhook stays authoritative).
+      try {
+        const serviceClient = createServiceRoleClient();
+        await serviceClient
+          .from('user_billing')
+          .upsert(
+            { user_id: user.id, stripe_customer_id: workspaceCustomerId },
+            { onConflict: 'user_id' },
+          );
+      } catch (backfillErr) {
+        // Non-fatal: we can still open the portal with the workspace customer id.
+        console.error('[portal] user_billing backfill failed:', backfillErr);
+      }
+    }
+  }
+
   // ── 3. Guard: only users with a Stripe customer have a portal ─────────────
-  if (!billing?.stripe_customer_id) {
+  if (!customerId) {
     return NextResponse.json(
       {
         error:
@@ -73,7 +113,7 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
   // ── 5. Create the Stripe Billing Portal session ────────────────────────────
   try {
     const session = await stripe.billingPortal.sessions.create({
-      customer: billing.stripe_customer_id,
+      customer: customerId,
       return_url: returnUrl,
     });
 
@@ -93,10 +133,20 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
     if (isResourceMissing) {
       try {
         const serviceClient = createServiceRoleClient();
-        await serviceClient
-          .from('user_billing')
-          .update({ stripe_customer_id: null })
-          .eq('user_id', user.id);
+        // Null the stale id on BOTH user_billing and every owned workspace.
+        // If we only cleared user_billing, the workspace fallback (step 2) would
+        // re-pick the same dead id on the next attempt and loop indefinitely.
+        await Promise.all([
+          serviceClient
+            .from('user_billing')
+            .update({ stripe_customer_id: null })
+            .eq('user_id', user.id),
+          serviceClient
+            .from('workspaces')
+            .update({ stripe_customer_id: null })
+            .eq('owner_id', user.id)
+            .eq('stripe_customer_id', customerId),
+        ]);
         console.error(
           '[portal] nulled stale stripe_customer_id for user',
           user.id,

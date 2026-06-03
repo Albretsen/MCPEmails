@@ -215,6 +215,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  * Fired after a customer completes Stripe Checkout. Metadata carries `user_id`
  * and `plan_id` (set in /api/stripe/checkout). We activate the plan immediately
  * (rather than waiting for subscription.created) to avoid a redirect race.
+ *
+ * The subscription status is derived from the actual subscription (retrieved
+ * from Stripe) rather than hardcoded to 'active', so a checkout that completes
+ * with a `trialing`/`incomplete`/`past_due` subscription is reflected
+ * accurately. If the subscription cannot be retrieved we fall back to the
+ * Stripe-provided `payment_status` as a best-effort hint, never an unconditional
+ * 'active'. The authoritative state is still the subsequent
+ * customer.subscription.* events.
  */
 async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session,
@@ -241,12 +249,57 @@ async function handleCheckoutSessionCompleted(
       ? session.subscription
       : session.subscription?.id ?? null;
 
+  // Derive the real subscription status instead of assuming 'active'.
+  let subscriptionStatus: string | null = null;
+  let currentPeriodEnd: number | null = null;
+  let resolvedPlan: PlanId | 'free' = planId;
+
+  if (subscriptionId) {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      subscriptionStatus = subscription.status;
+      currentPeriodEnd =
+        subscription.items.data[0]?.current_period_end ?? null;
+
+      // Prefer the price the customer actually subscribed to over the metadata
+      // plan_id (they should agree, but the subscription is authoritative).
+      const priceId = subscription.items.data[0]?.price?.id;
+      const resolved = getPlanByStripePriceId(priceId);
+      if (resolved) {
+        resolvedPlan = resolved.plan.id;
+      } else if (priceId) {
+        console.error(
+          `[stripe-webhook] checkout.session.completed: price "${priceId}" on sub ${subscriptionId} does not map to a known plan; using metadata plan_id "${planId}" (session ${session.id})`,
+        );
+      }
+
+      // If the subscription is NOT entitled (e.g. incomplete), do not grant the
+      // paid plan; downgrade to free and persist the raw status for visibility.
+      if (!ENTITLED_STATUSES.has(subscription.status)) {
+        resolvedPlan = 'free';
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(
+        `[stripe-webhook] checkout.session.completed: failed to retrieve subscription ${subscriptionId}: ${message}. Falling back to session.payment_status.`,
+      );
+      // Best-effort fallback: a paid checkout session implies an active sub.
+      subscriptionStatus =
+        session.payment_status === 'paid' ? 'active' : (session.payment_status ?? null);
+    }
+  } else {
+    // No subscription id on the session (unexpected for mode=subscription).
+    subscriptionStatus =
+      session.payment_status === 'paid' ? 'active' : (session.payment_status ?? null);
+  }
+
   await applyUserPlan({
     userId,
     customerId,
     subscriptionId,
-    newPlan: planId,
-    subscriptionStatus: 'active',
+    newPlan: resolvedPlan,
+    subscriptionStatus,
+    currentPeriodEnd,
     source: 'checkout.session.completed',
   });
 }
@@ -296,9 +349,25 @@ async function handleSubscriptionUpserted(
 
   const resolved = getPlanByStripePriceId(priceId);
   if (!resolved) {
+    // Unknown / archived price: we cannot map it to a current plan. Do NOT
+    // crash and do NOT blindly downgrade (that would yank access from a paying
+    // customer whose subscription is merely on a legacy/archived price id). But
+    // we also must not silently drop the event: persist the customer +
+    // subscription linkage and the raw status so the row is not orphaned (the
+    // portal/dunning banner keeps working) while leaving the existing plan
+    // untouched. This is loud-logged so the price can be reconciled.
     console.error(
-      `[stripe-webhook] price ID "${priceId}" does not map to a known plan (sub ${subscription.id})`,
+      `[stripe-webhook] price ID "${priceId}" does not map to a known plan (sub ${subscription.id}, status=${status}); persisting linkage + status WITHOUT changing plan. Reconcile this price.`,
     );
+    await applyUserPlan({
+      userId,
+      customerId,
+      subscriptionId: subscription.id,
+      newPlan: null, // sentinel: keep the current plan, only sync linkage/status
+      subscriptionStatus: status,
+      currentPeriodEnd: subscription.items.data[0]?.current_period_end ?? null,
+      source: `customer.subscription.upserted (unmapped price ${priceId})`,
+    });
     return;
   }
 
@@ -358,8 +427,14 @@ interface ApplyUserPlanOptions {
   customerId: string | null;
   /** The Stripe subscription id, if any. */
   subscriptionId?: string | null;
-  /** Plan to grant the user: 'free' | 'solo' | 'pro'. */
-  newPlan: PlanId | 'free';
+  /**
+   * Plan to grant the user: 'free' | 'solo' | 'pro'.
+   * `null` is a sentinel meaning "do not change the plan" — used when a
+   * subscription is on an unknown/archived price we cannot map: we still want to
+   * sync the customer/subscription linkage and raw status, but must not change
+   * the plan column.
+   */
+  newPlan: PlanId | 'free' | null;
   /** Raw Stripe subscription status to persist (for dunning banners). */
   subscriptionStatus?: string | null;
   /** Unix seconds of current period end, if known. */
@@ -414,7 +489,7 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   // ── Upsert user_billing (single source of truth) ──────────────────────────
   const billingUpdate: {
     user_id: string;
-    plan: string;
+    plan?: string;
     updated_at: string;
     stripe_customer_id?: string;
     stripe_subscription_id?: string | null;
@@ -422,9 +497,10 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
     current_period_end?: string;
   } = {
     user_id: resolvedUserId,
-    plan: newPlan,
     updated_at: new Date().toISOString(),
   };
+  // newPlan === null means "leave the plan as-is" (unknown/archived price).
+  if (newPlan !== null) billingUpdate.plan = newPlan;
   if (customerId) billingUpdate.stripe_customer_id = customerId;
   if (subscriptionId !== undefined) billingUpdate.stripe_subscription_id = subscriptionId;
   if (subscriptionStatus !== undefined) billingUpdate.subscription_status = subscriptionStatus;
@@ -443,23 +519,31 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   }
 
   // ── Project plan onto ALL workspaces the user owns ────────────────────────
+  // When newPlan === null (unmapped price) we only sync the customer linkage and
+  // leave the plan column untouched on both user_billing and workspaces.
+  const workspaceUpdate: {
+    plan?: string;
+    stripe_customer_id?: string;
+    updated_at: string;
+  } = {
+    updated_at: new Date().toISOString(),
+  };
+  if (newPlan !== null) workspaceUpdate.plan = newPlan;
+  if (customerId) workspaceUpdate.stripe_customer_id = customerId;
+
   const { error: wsError } = await supabase
     .from('workspaces')
-    .update({
-      plan: newPlan,
-      stripe_customer_id: customerId ?? undefined,
-      updated_at: new Date().toISOString(),
-    })
+    .update(workspaceUpdate)
     .eq('owner_id', resolvedUserId)
     .is('deleted_at', null);
 
   if (wsError) {
     throw new Error(
-      `[stripe-webhook] ${source}: failed to project plan "${newPlan}" onto workspaces of ${resolvedUserId}: ${wsError.message}`,
+      `[stripe-webhook] ${source}: failed to project plan "${newPlan ?? '(unchanged)'}" onto workspaces of ${resolvedUserId}: ${wsError.message}`,
     );
   }
 
   console.log(
-    `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${newPlan}" (status=${subscriptionStatus ?? 'n/a'}); propagated to all owned workspaces`,
+    `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${newPlan ?? '(unchanged)'}" (status=${subscriptionStatus ?? 'n/a'}); propagated to all owned workspaces`,
   );
 }
