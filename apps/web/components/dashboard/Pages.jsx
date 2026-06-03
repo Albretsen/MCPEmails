@@ -1441,6 +1441,11 @@ function CreateKeyModal({ onCreate, onCancel, existingNames = [] }) {
     );
   };
 
+  const allScopesSelected = selectedScopes.length === SCOPE_OPTIONS.length;
+  const toggleAllScopes = () => {
+    setSelectedScopes(allScopesSelected ? [] : SCOPE_OPTIONS.map(o => o.value));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitting) return;
@@ -1550,10 +1555,30 @@ function CreateKeyModal({ onCreate, onCancel, existingNames = [] }) {
             {/* Scopes */}
             <div style={{ marginBottom: 20 }}>
               <div style={{
-                fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
-                color: 'var(--fg-2)', marginBottom: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 12, marginBottom: 8,
               }}>
-                {t('apiKeys.createModal.permissions')}
+                <div style={{
+                  fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
+                  color: 'var(--fg-2)',
+                }}>
+                  {t('apiKeys.createModal.permissions')}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => !submitting && toggleAllScopes()}
+                  disabled={submitting}
+                  style={{
+                    background: 'transparent', border: 'none', padding: 0,
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500,
+                    color: 'var(--brand)', opacity: submitting ? 0.5 : 1,
+                  }}
+                >
+                  {allScopesSelected
+                    ? t('apiKeys.createModal.clearAll')
+                    : t('apiKeys.createModal.selectAll')}
+                </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {SCOPE_OPTIONS.map(opt => {

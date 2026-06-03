@@ -218,6 +218,8 @@
       "keyName": "密钥名称",
       "keyNamePlaceholder": "例如 Claude Desktop、My Agent",
       "permissions": "权限",
+      "selectAll": "全选",
+      "clearAll": "全部清除",
       "errNameRequired": "名称为必填项。",
       "errNameTooLong": "名称不得超过 128 个字符。",
       "errNameDuplicate": "已存在同名密钥。请选择一个不同的名称，以便在审计日志中区分各密钥。",

@@ -218,6 +218,8 @@
       "keyName": "Nom de la clé",
       "keyNamePlaceholder": "ex. Claude Desktop, Mon agent",
       "permissions": "Autorisations",
+      "selectAll": "Tout sélectionner",
+      "clearAll": "Tout effacer",
       "errNameRequired": "Le nom est requis.",
       "errNameTooLong": "Le nom doit comporter 128 caractères ou moins.",
       "errNameDuplicate": "Une clé portant ce nom existe déjà. Choisissez un nom distinct pour que les clés restent identifiables dans le journal d'audit.",
