@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createServiceRoleClient } from '@/lib/supabase/service';
 
 /**
  * Shape returned by the get_current_user_sessions() Postgres function.
@@ -180,13 +179,14 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
  *
  * 1. Per-session revoke (body: { sessionId: string })
  *    Revokes a single specific session by deleting its row from auth.sessions
- *    via the service-role client. The caller must own the session (verified by
- *    checking user_id). The current session cannot be self-revoked this way.
+ *    via the public.revoke_user_session() SECURITY DEFINER RPC (called through
+ *    the user/RLS client). The RPC scopes the delete to auth.uid(), so the caller
+ *    can only ever revoke their own session. The current session cannot be
+ *    self-revoked this way.
  *
- *    Supabase JS does not expose a client-side admin.deleteSession() method
- *    in the browser SDK; deleting the auth.sessions row directly via service
- *    role is the supported server-side equivalent (the Auth server checks this
- *    table on every refresh-token exchange).
+ *    auth.sessions is not exposed by PostgREST, so the RPC is the supported
+ *    server-side path (the Auth server checks this table on every refresh-token
+ *    exchange, so removing the row invalidates the device).
  *
  * 2. Bulk revoke (no body / body without sessionId)
  *    Signs out all active sessions EXCEPT the current one using Supabase Auth's
@@ -239,43 +239,27 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const service = createServiceRoleClient();
+    // auth.sessions lives in the `auth` schema, which PostgREST does NOT expose
+    // (only public + graphql_public). Querying it via .schema('auth').from(...)
+    // returns PGRST106 and 500s every time. Instead we call a public-schema
+    // SECURITY DEFINER RPC (revoke_user_session) through the user (RLS) client.
+    // The function deletes auth.sessions WHERE id = $1 AND user_id = auth.uid(),
+    // so ownership is enforced server-side and a foreign/nonexistent id simply
+    // returns zero rows -> 404.
+    const { data: revoked, error: rpcError } = await supabase.rpc(
+      'revoke_user_session',
+      { p_session_id: sessionId },
+    );
 
-    // auth.sessions is in the auth schema, not public. The generated Database
-    // types only cover the public schema, so we bypass TS types with an `any`
-    // cast and target the auth schema explicitly via .schema('auth').
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const authSchema = (service as any).schema('auth');
-
-    // Verify ownership: only delete if the session belongs to auth.uid().
-    // We read before deleting to give a proper 404 vs 403 response.
-    const { data: sessionRow, error: fetchError } = await authSchema
-      .from('sessions')
-      .select('id, user_id')
-      .eq('id', sessionId)
-      .maybeSingle() as { data: { id: string; user_id: string } | null; error: { message: string } | null };
-
-    if (fetchError) {
-      console.error('[sessions:DELETE] fetch session failed:', fetchError.message);
-      return NextResponse.json({ error: 'Failed to look up session.' }, { status: 500 });
-    }
-    if (!sessionRow) {
-      return NextResponse.json({ error: 'Session not found.' }, { status: 404 });
-    }
-    if (sessionRow.user_id !== user.id) {
-      // This session belongs to a different user — treat as not found.
-      return NextResponse.json({ error: 'Session not found.' }, { status: 404 });
-    }
-
-    const { error: deleteError } = await authSchema
-      .from('sessions')
-      .delete()
-      .eq('id', sessionId)
-      .eq('user_id', user.id) as { error: { message: string } | null };
-
-    if (deleteError) {
-      console.error('[sessions:DELETE] per-session delete failed:', deleteError.message);
+    if (rpcError) {
+      console.error('[sessions:DELETE] revoke_user_session rpc failed:', rpcError.message);
       return NextResponse.json({ error: 'Failed to revoke session.' }, { status: 500 });
+    }
+
+    // The RPC returns one row ({ revoked_session_id }) on success, zero rows when
+    // the session does not exist or belongs to another user.
+    if (!revoked || (Array.isArray(revoked) && revoked.length === 0)) {
+      return NextResponse.json({ error: 'Session not found.' }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, revokedSessionId: sessionId });
