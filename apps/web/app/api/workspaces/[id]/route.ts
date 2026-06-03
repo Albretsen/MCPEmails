@@ -42,6 +42,10 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object.' }, { status: 400 });
+  }
+
   const { displayName } = body as Record<string, unknown>;
   if (typeof displayName !== 'string' || displayName.trim().length === 0) {
     return NextResponse.json({ error: 'A workspace name is required.' }, { status: 400 });
@@ -145,6 +149,9 @@ export async function DELETE(
   let body: unknown;
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object.' }, { status: 400 });
   }
   const { confirmName } = body as { confirmName?: unknown };
   if (typeof confirmName !== 'string' || confirmName.trim().length === 0) {

@@ -91,6 +91,9 @@ export async function DELETE(
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object.' }, { status: 400 });
+  }
   const { workspaceId } = body as Record<string, unknown>;
   if (typeof workspaceId !== 'string' || !workspaceId) {
     return NextResponse.json({ error: 'workspaceId is required.' }, { status: 400 });
