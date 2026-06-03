@@ -2265,7 +2265,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         subject: {
           type: "string",
-          description: "Updated subject line.",
+          description: "Updated subject line. Optional — omit to keep the draft's existing subject.",
         },
         body: {
           type: "string",
@@ -2276,7 +2276,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description: "Updated HTML body.",
         },
       },
-      required: ["draft_id", "subject", "body"],
+      required: ["draft_id", "body"],
       additionalProperties: false,
     },
   },
@@ -3474,6 +3474,38 @@ function unsupportedFeatureError(
     },
     logStatus: "error",
     logErrorCode: String(-32601),
+  };
+}
+
+/**
+ * Structured error for permanent=true on a trash-only provider (Gmail/Outlook).
+ * These providers can only move messages to Trash; they cannot expunge. Tell
+ * the caller exactly how to retry rather than attempting a doomed API call.
+ */
+function permanentDeleteUnsupportedError(
+  provider: string,
+): {
+  result: { content: { type: string; text: string }[]; isError: true };
+  logStatus: "error";
+  logErrorCode: string;
+} {
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          error: "unsupported_permanent_delete",
+          provider,
+          message:
+            `Provider '${provider}' only supports moving messages to Trash and ` +
+            `cannot permanently delete (expunge) them. Retry with permanent: false ` +
+            `(or omit permanent) to move the message to Trash.`,
+        }),
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: "unsupported_permanent_delete",
   };
 }
 
@@ -4796,7 +4828,8 @@ async function listOutlookMessages(
     thread_id: msg.conversationId ?? msg.id,
   }));
 
-  return { messages, total, has_more: hasMore, next_offset: offset + limit };
+  // `@odata.count` is exact when present, null otherwise — never an estimate.
+  return { messages, total, total_is_estimate: false, has_more: hasMore, next_offset: offset + limit };
 }
 
 // ---------------------------------------------------------------------------
@@ -4995,7 +5028,8 @@ async function listFastmailMessages(
     thread_id: email.threadId ?? email.id,
   }));
 
-  return { messages, total, has_more: hasMore, next_offset: offset + limit };
+  // JMAP Email/query returns an exact total — never an estimate.
+  return { messages, total, total_is_estimate: false, has_more: hasMore, next_offset: offset + limit };
 }
 
 // ---------------------------------------------------------------------------
@@ -5142,6 +5176,8 @@ async function listImapMessages(
     return {
       messages,
       total,
+      // IMAP reports an exact mailbox/search count, never an estimate.
+      total_is_estimate: false,
       has_more: offset + limit < total,
       next_offset: offset + limit,
     };
@@ -5232,7 +5268,7 @@ async function readImapMessage(
       subject,
       date: imapDateToIso(getHeader(h, "date")),
       body_text: parsed.text ?? (parsed.html ? stripHtmlToText(parsed.html) : null),
-      body_html: parsed.html ? sanitizeEmailHtml(parsed.html) : null,
+      body_html: includeHtml && parsed.html ? sanitizeEmailHtml(parsed.html) : null,
       attachments,
       is_read: markAsRead ? true : msg.flags.includes("\\Seen"),
       labels: [],
@@ -6166,7 +6202,7 @@ async function readGmailMessage(
       ? new Date(Number(msg.internalDate)).toISOString()
       : new Date().toISOString(),
     body_text: textPlain ?? (textHtml ? stripHtmlToText(textHtml) : null),
-    body_html: textHtml ? sanitizeEmailHtml(textHtml) : null,
+    body_html: includeHtml && textHtml ? sanitizeEmailHtml(textHtml) : null,
     attachments,
     is_read: markAsRead ? true : isRead,
     labels: labelIds,
@@ -6358,7 +6394,7 @@ async function readOutlookMessage(
     subject: msg.subject ?? "(no subject)",
     date: msg.receivedDateTime ?? new Date().toISOString(),
     body_text: bodyText,
-    body_html: bodyHtml ? sanitizeEmailHtml(bodyHtml) : null,
+    body_html: includeHtml && bodyHtml ? sanitizeEmailHtml(bodyHtml) : null,
     attachments,
     is_read: markAsRead ? true : (msg.isRead ?? true),
     labels: msg.categories ?? [],
@@ -6617,7 +6653,7 @@ async function readFastmailMessage(
     subject: email.subject ?? "(no subject)",
     date: email.receivedAt ?? new Date().toISOString(),
     body_text: bodyText ?? (bodyHtml ? stripHtmlToText(bodyHtml) : null),
-    body_html: bodyHtml ? sanitizeEmailHtml(bodyHtml) : null,
+    body_html: includeHtml && bodyHtml ? sanitizeEmailHtml(bodyHtml) : null,
     attachments,
     is_read: markAsRead ? true : !!(email.keywords?.["$seen"]),
     labels: [], // Fastmail uses mailboxIds, not labels — omitted for simplicity
@@ -13030,6 +13066,13 @@ async function executeDeleteEmail(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
 
+  // Providers that only support trash (Gmail, Outlook) can't permanently expunge.
+  // Reject permanent=true proactively rather than surfacing a confusing
+  // provider_error (e.g. Gmail's "insufficient authentication scopes").
+  if (permanent && caps.trash_vs_expunge === "trash") {
+    return permanentDeleteUnsupportedError(inbox.provider);
+  }
+
   // ── Per-provider dispatch ────────────────────────────────────────────────
   try {
     switch (inbox.provider) {
@@ -13972,6 +14015,12 @@ async function executeBulkDelete(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
 
+  // Trash-only providers (Gmail/Outlook) can't permanently expunge — reject up
+  // front so the whole batch fails clearly rather than per-message provider errors.
+  if (permanent && caps.trash_vs_expunge === "trash") {
+    return permanentDeleteUnsupportedError(inbox.provider);
+  }
+
   let bulkResult: BulkOpResult;
   try {
     switch (inbox.provider) {
@@ -14386,6 +14435,12 @@ async function executeSearchAndDelete(
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
+
+  // Trash-only providers (Gmail/Outlook) can't permanently expunge — reject up
+  // front before running the search so the caller gets a clear instruction.
+  if (permanent && caps.trash_vs_expunge === "trash") {
+    return permanentDeleteUnsupportedError(inbox.provider);
+  }
 
   // ── Run search to collect message IDs ─────────────────────────────────────
   const timeoutPromise = new Promise<never>((_, reject) =>
@@ -15768,7 +15823,7 @@ async function executeUpdateDraft(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "draft_update: arguments must be an object with inbox_id, draft_id, subject, and body." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_update: arguments must be an object with inbox_id, draft_id, and body (subject is optional)." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15781,14 +15836,11 @@ async function executeUpdateDraft(
       logStatus: "error", logErrorCode: "-32602",
     };
   }
-  const subject = typeof args["subject"] === "string" && args["subject"].length > 0
-    ? args["subject"] : null;
-  if (!subject) {
-    return {
-      result: { content: [{ type: "text", text: "draft_update: subject is required and must be a non-empty string." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
+  // `subject` is OPTIONAL on update: omit it to keep the draft's current subject.
+  // (A caller changing only the body shouldn't have to resend the subject.) When
+  // omitted we resolve the existing subject below, after the inbox is resolved.
+  const subjectProvided = typeof args["subject"] === "string";
+  const subject = subjectProvided ? (args["subject"] as string) : null;
   const body = typeof args["body"] === "string" && args["body"].length > 0
     ? args["body"] : null;
   if (!body) {
@@ -15819,7 +15871,27 @@ async function executeUpdateDraft(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
 
-  const draftParams: DraftParams = { to, cc, bcc, subject, body, htmlBody };
+  // When subject was omitted, preserve the draft's existing subject rather than
+  // blanking it (provider updates are full-replace). Look it up from the draft
+  // list; if the draft can't be found there, fall back to an empty subject.
+  let effectiveSubject = subject ?? "";
+  if (!subjectProvided) {
+    try {
+      let existing: DraftSummary[];
+      switch (inbox.provider) {
+        case "gmail":    existing = await gmailListDrafts(inbox, 50);    break;
+        case "outlook":  existing = await outlookListDrafts(inbox, 50);  break;
+        case "fastmail": existing = await fastmailListDrafts(inbox, 50); break;
+        default:         existing = await imapListDrafts(inbox, 50);     break;
+      }
+      const match = existing.find((d) => d.draft_id === draftId);
+      if (match) effectiveSubject = match.subject;
+    } catch {
+      // Non-fatal: if we can't read the current subject, proceed with empty.
+    }
+  }
+
+  const draftParams: DraftParams = { to, cc, bcc, subject: effectiveSubject, body, htmlBody };
   let updateResult: DraftUpdateResult;
   try {
     switch (inbox.provider) {
@@ -16094,7 +16166,13 @@ function foldContactEntries(
 function finalizeContactHits(
   acc: Map<string, ContactHit & { _newestDate: string }>,
 ): ContactHit[] {
-  return Array.from(acc.values()).map(({ _newestDate: _drop, ...hit }) => hit);
+  return Array.from(acc.values()).map(({ _newestDate: _drop, ...hit }) => ({
+    ...hit,
+    // Never emit a null display_name: fall back to the email's local-part
+    // (or the full address if there's no local-part) so callers always have a label.
+    display_name: hit.display_name ??
+      (hit.email_address.split("@")[0] || hit.email_address),
+  }));
 }
 
 /**
