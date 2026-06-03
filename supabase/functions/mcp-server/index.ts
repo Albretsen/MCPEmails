@@ -3,6 +3,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ImapAuthError, ImapClient, ImapMessageSummary } from "./imap-client.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
+import {
+  type NormalizedSearch,
+  parseIsoDate,
+  SEARCH_FIELD_DESCRIPTIONS,
+  toGmailQuery,
+  toGraphSearch,
+  toImapSearch,
+  toJmapFilter,
+} from "./search-translate.ts";
 
 // ---------------------------------------------------------------------------
 // Supabase service-role client
@@ -1119,15 +1128,13 @@ async function routeMethod(
 // breaking API change for any connected MCP client.
 //
 // ── Destructive-action convention ────────────────────────────────────────────
-// Every tool that deletes, permanently modifies, or bulk-affects messages MUST:
-//   1. Include a `confirm` boolean property (required, no default) in its
-//      inputSchema.  Description: "Must be true to confirm the operation."
-//   2. Call `requireConfirm(input)` at the top of its handler and return the
-//      result immediately if non-null.
-//   3. For bulk tools: enforce the `MAX_BULK_IDS` cap (500) before processing
-//      and return a structured error if exceeded.
-// This ensures a uniform `confirm=true` gate and error shape across all
-// destructive tools.  See `requireConfirm` and `MAX_BULK_IDS` below.
+// Tools that delete, permanently modify, or bulk-affect messages are marked
+// with `annotations.destructiveHint: true` so the MCP client can surface a
+// human-in-the-loop confirmation. The server does NOT enforce a `confirm=true`
+// flag — that round-trip added friction without protecting the human.
+//   - For bulk tools: enforce the `MAX_BULK_IDS` cap (500) before processing
+//     and return a structured error if exceeded.
+// See `MAX_BULK_IDS` below.
 // ---------------------------------------------------------------------------
 
 interface ToolDefinition {
@@ -1146,6 +1153,11 @@ interface ToolDefinition {
     | "manage:drafts"
     | "manage:contacts"
     | "schedule:email";
+  /**
+   * Optional alternative scopes that ALSO authorize this tool. A key is
+   * authorized if it holds `requiredScope` OR any scope listed here.
+   */
+  altScopes?: string[];
   /** JSON Schema (Draft 7) for argument validation */
   inputSchema: Record<string, unknown>;
   /**
@@ -1165,6 +1177,20 @@ interface ToolDefinition {
     idempotentHint?: boolean;
     openWorldHint?: boolean;
   };
+}
+
+/**
+ * Returns true when the given scopes authorize the tool. A key is authorized if
+ * it holds the tool's `requiredScope` OR any of its optional `altScopes`.
+ */
+function isToolAuthorized(tool: ToolDefinition, scopes: string[]): boolean {
+  if (scopes.includes(tool.requiredScope)) return true;
+  if (tool.altScopes) {
+    for (const alt of tool.altScopes) {
+      if (scopes.includes(alt)) return true;
+    }
+  }
+  return false;
 }
 
 /** All tools available in MCPEmails, in canonical display order. */
@@ -1214,9 +1240,15 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           type: "string",
           format: "uuid",
           description:
-            "UUID of the inbox to list. Must be an inbox in the current workspace " +
-            "that the API key is permitted to access. Call list_inboxes to discover " +
-            "the available inbox_id values.",
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         limit: {
           type: "integer",
@@ -1251,7 +1283,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "unread email as a task queue.",
         },
       },
-      required: ["inbox_id"],
+      required: [],
       additionalProperties: false,
     },
   },
@@ -1272,7 +1304,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that contains the email.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -1306,7 +1347,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "fetching its content. Defaults to false to avoid unintended state changes.",
         },
       },
-      required: ["inbox_id", "message_id"],
+      required: ["message_id"],
       additionalProperties: false,
     },
   },
@@ -1321,13 +1362,23 @@ const TOOL_REGISTRY: ToolDefinition[] = [
       "For IMAP providers (Fastmail), a subset of IMAP SEARCH criteria is supported. " +
       "Returns message summaries ordered by relevance or date depending on the provider.",
     requiredScope: "read:email",
+    altScopes: ["search:email"],
     inputSchema: {
       type: "object",
       properties: {
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox to search.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         query: {
           type: "string",
@@ -1362,7 +1413,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "IMAP providers support per-folder search.",
         },
       },
-      required: ["inbox_id", "query"],
+      required: ["query"],
       additionalProperties: false,
     },
   },
@@ -1386,10 +1437,19 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox whose folders to list.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
       },
-      required: ["inbox_id"],
+      required: [],
       additionalProperties: false,
     },
   },
@@ -1411,7 +1471,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox to create the folder/label in.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         name: {
           type: "string",
@@ -1420,7 +1489,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           description: "Name of the new folder or label.",
         },
       },
-      required: ["inbox_id", "name"],
+      required: ["name"],
       additionalProperties: false,
     },
   },
@@ -1440,7 +1509,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that owns the folder/label.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         folder_id: {
           type: "string",
@@ -1456,7 +1534,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           description: "New display name for the folder or label.",
         },
       },
-      required: ["inbox_id", "folder_id", "new_name"],
+      required: ["folder_id", "new_name"],
       additionalProperties: false,
     },
   },
@@ -1467,7 +1545,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     description:
       "Permanently delete a folder (or label, for Gmail). " +
       "THIS ACTION IS IRREVERSIBLE — all messages inside the folder may be lost " +
-      "depending on the provider. Requires confirm=true. " +
+      "depending on the provider. " +
       "IMAP providers use the IMAP DELETE command; Gmail uses labels.delete; " +
       "Outlook uses Graph mailFolders delete; Fastmail uses JMAP Mailbox/set destroy. " +
       "Use list_folders to obtain the folder_id before calling this tool.",
@@ -1478,19 +1556,24 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that owns the folder/label.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         folder_id: {
           type: "string",
           description:
             "Provider-native folder/label ID as returned by list_folders.",
         },
-        confirm: {
-          type: "boolean",
-          description: "Must be true to confirm the destructive delete operation.",
-        },
       },
-      required: ["inbox_id", "folder_id", "confirm"],
+      required: ["folder_id"],
       additionalProperties: false,
     },
   },
@@ -1512,7 +1595,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that owns the message.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -1528,7 +1620,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "for Outlook/Fastmail the opaque folder ID.",
         },
       },
-      required: ["inbox_id", "message_id", "destination_folder_id"],
+      required: ["message_id", "destination_folder_id"],
       additionalProperties: false,
     },
   },
@@ -1549,7 +1641,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that owns the message.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -1563,7 +1664,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "For IMAP this is the mailbox name; for Outlook/Fastmail the opaque folder ID.",
         },
       },
-      required: ["inbox_id", "message_id", "destination_folder_id"],
+      required: ["message_id", "destination_folder_id"],
       additionalProperties: false,
     },
   },
@@ -1580,7 +1681,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
       "Gmail calls messages.delete (bypasses Trash); " +
       "Outlook calls Graph messages/{id}/permanentDelete; " +
       "Fastmail uses JMAP Email/set destroy. " +
-      "This action requires confirm:true and may be irreversible when permanent:true is set.",
+      "This action may be irreversible when permanent:true is set.",
     requiredScope: "delete:email",
     inputSchema: {
       type: "object",
@@ -1588,7 +1689,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that owns the message.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -1602,12 +1712,8 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "When false or omitted, moves the message to Trash. " +
             "Default: false.",
         },
-        confirm: {
-          type: "boolean",
-          description: "Must be true to confirm the destructive delete operation.",
-        },
       },
-      required: ["inbox_id", "message_id", "confirm"],
+      required: ["message_id"],
       additionalProperties: false,
     },
   },
@@ -1632,7 +1738,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that owns the messages.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_ids: {
           type: "array",
@@ -1651,7 +1766,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Outlook/Fastmail: opaque folder ID.",
         },
       },
-      required: ["inbox_id", "message_ids", "destination_folder_id"],
+      required: ["message_ids", "destination_folder_id"],
       additionalProperties: false,
     },
   },
@@ -1660,7 +1775,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     name: "bulk_delete",
     title: "Bulk Delete",
     description:
-      "Delete up to 500 email messages in one call. Requires confirm:true. " +
+      "Delete up to 500 email messages in one call. " +
       "By default moves messages to Trash (safer). Set permanent:true for hard delete. " +
       "IMAP: UID MOVE to Trash or \\\\Deleted+UID EXPUNGE per source-folder group; " +
       "Gmail: messages.batchDelete (permanent) or per-message trash (soft); " +
@@ -1674,7 +1789,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that owns the messages.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_ids: {
           type: "array",
@@ -1690,12 +1814,8 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "When true, hard-deletes messages (bypasses Trash). " +
             "When false or omitted, moves messages to Trash. Default: false.",
         },
-        confirm: {
-          type: "boolean",
-          description: "Must be true to confirm the destructive bulk delete operation.",
-        },
       },
-      required: ["inbox_id", "message_ids", "confirm"],
+      required: ["message_ids"],
       additionalProperties: false,
     },
   },
@@ -1717,7 +1837,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that owns the messages.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_ids: {
           type: "array",
@@ -1736,7 +1865,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "'flag' stars/flags; 'unflag' removes the flag/star.",
         },
       },
-      required: ["inbox_id", "message_ids", "action"],
+      required: ["message_ids", "action"],
       additionalProperties: false,
     },
   },
@@ -1763,7 +1892,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox to search and operate on.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         query: {
           type: "string",
@@ -1794,7 +1932,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Maximum number of matching messages to move. Default: 500.",
         },
       },
-      required: ["inbox_id", "query", "destination_folder_id"],
+      required: ["query", "destination_folder_id"],
       additionalProperties: false,
     },
   },
@@ -1804,7 +1942,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     title: "Search and Delete",
     description:
       "Run a search and delete all matching messages in one server-side operation — " +
-      "avoids stale message IDs. Requires confirm:true. " +
+      "avoids stale message IDs. " +
       "Capped at 500 results per call. " +
       "Default: move matches to Trash (safer). Set permanent:true for hard delete. " +
       "IMAP: UID MOVE to Trash or \\\\Deleted+UID EXPUNGE per source-folder group; " +
@@ -1818,7 +1956,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox to search and operate on.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         query: {
           type: "string",
@@ -1846,12 +1993,8 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           description:
             "Maximum number of matching messages to delete. Default: 500.",
         },
-        confirm: {
-          type: "boolean",
-          description: "Must be true to confirm the destructive search-and-delete operation.",
-        },
       },
-      required: ["inbox_id", "query", "confirm"],
+      required: ["query"],
       additionalProperties: false,
     },
   },
@@ -1874,8 +2017,15 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           type: "string",
           format: "uuid",
           description:
-            "UUID of the inbox to send from. The email will appear to the recipient " +
-            "as being sent from the email address associated with this inbox.",
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         to: {
           type: "array",
@@ -1958,7 +2108,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "email client will address the reply to this address rather than the sender.",
         },
       },
-      required: ["inbox_id", "to", "subject", "body"],
+      required: ["to", "subject", "body"],
       additionalProperties: false,
     },
   },
@@ -1979,8 +2129,15 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           type: "string",
           format: "uuid",
           description:
-            "UUID of the inbox that contains the original message and from which the " +
-            "reply will be sent.",
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -2029,7 +2186,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           description: "Optional attachments to include with the reply.",
         },
       },
-      required: ["inbox_id", "message_id", "body"],
+      required: ["message_id", "body"],
       additionalProperties: false,
     },
   },
@@ -2054,8 +2211,15 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           type: "string",
           format: "uuid",
           description:
-            "UUID of the inbox that contains the original message and from which " +
-            "the forward will be sent.",
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -2105,7 +2269,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Defaults to false.",
         },
       },
-      required: ["inbox_id", "message_id", "to"],
+      required: ["message_id", "to"],
       additionalProperties: false,
     },
   },
@@ -2126,7 +2290,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox containing the message.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -2134,7 +2307,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
-      required: ["inbox_id", "message_id"],
+      required: ["message_id"],
       additionalProperties: false,
     },
   },
@@ -2153,7 +2326,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox containing the message.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -2161,7 +2343,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
-      required: ["inbox_id", "message_id"],
+      required: ["message_id"],
       additionalProperties: false,
     },
   },
@@ -2180,7 +2362,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox containing the message.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -2188,7 +2379,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
-      required: ["inbox_id", "message_id"],
+      required: ["message_id"],
       additionalProperties: false,
     },
   },
@@ -2207,7 +2398,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox containing the message.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -2215,7 +2415,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
-      required: ["inbox_id", "message_id"],
+      required: ["message_id"],
       additionalProperties: false,
     },
   },
@@ -2236,7 +2436,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox containing the message.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         message_id: {
           type: "string",
@@ -2244,7 +2453,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Provider-native message identifier as returned by list_messages or search_emails.",
         },
       },
-      required: ["inbox_id", "message_id"],
+      required: ["message_id"],
       additionalProperties: false,
     },
   },
@@ -2267,7 +2476,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox whose drafts to list.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         limit: {
           type: "integer",
@@ -2277,7 +2495,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           description: "Maximum number of drafts to return. Defaults to 20.",
         },
       },
-      required: ["inbox_id"],
+      required: [],
       additionalProperties: false,
     },
   },
@@ -2298,7 +2516,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox to save the draft in.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         to: {
           type: "array",
@@ -2331,7 +2558,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           description: "Optional HTML body of the draft.",
         },
       },
-      required: ["inbox_id", "subject", "body"],
+      required: ["subject", "body"],
       additionalProperties: false,
     },
   },
@@ -2351,7 +2578,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that owns the draft.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         draft_id: {
           type: "string",
@@ -2388,7 +2624,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           description: "Updated HTML body.",
         },
       },
-      required: ["inbox_id", "draft_id", "subject", "body"],
+      required: ["draft_id", "subject", "body"],
       additionalProperties: false,
     },
   },
@@ -2409,14 +2645,23 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox that contains the draft.",
+          description:
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         draft_id: {
           type: "string",
           description: "Provider-native draft identifier as returned by create_draft or list_drafts.",
         },
       },
-      required: ["inbox_id", "draft_id"],
+      required: ["draft_id"],
       additionalProperties: false,
     },
   },
@@ -2484,7 +2729,10 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the inbox associated with the contact.",
+          description:
+            "UUID of the inbox associated with the contact. Optional; when " +
+            "omitted, the contact is looked up across all inboxes the API key " +
+            "can access.",
         },
         email_address: {
           type: "string",
@@ -2493,7 +2741,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "(the address is normalised to lowercase before querying).",
         },
       },
-      required: ["inbox_id", "email_address"],
+      required: ["email_address"],
       additionalProperties: false,
     },
   },
@@ -2518,8 +2766,15 @@ const TOOL_REGISTRY: ToolDefinition[] = [
           type: "string",
           format: "uuid",
           description:
-            "UUID of the inbox to send from. The email will appear to the " +
-            "recipient as being sent from the email address of this inbox.",
+            "UUID of the inbox to use. Optional when the API key has access to " +
+            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+            "with an email address. Call list_inboxes to discover inboxes.",
+        },
+        inbox: {
+          type: "string",
+          description:
+            "Email address of the inbox to use, as a friendly alternative to " +
+            "inbox_id. Optional; ignored if inbox_id is given.",
         },
         to: {
           type: "array",
@@ -2591,7 +2846,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "actual send time may be up to 60 seconds after send_at.",
         },
       },
-      required: ["inbox_id", "to", "subject", "body", "send_at"],
+      required: ["to", "subject", "body", "send_at"],
       additionalProperties: false,
     },
   },
@@ -2785,11 +3040,20 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     type: "object",
     properties: {
       messages: { type: "array", items: EMAIL_SUMMARY_SCHEMA },
-      total: { type: "integer" },
+      total: {
+        type: ["integer", "null"],
+        description:
+          "Total matching messages. Exact for IMAP/Fastmail, an estimate for " +
+          "Gmail (see total_is_estimate), null when the provider cannot supply a count.",
+      },
+      total_is_estimate: {
+        type: "boolean",
+        description: "True when total is a provider estimate rather than an exact count.",
+      },
       has_more: { type: "boolean" },
       next_offset: { type: "integer" },
     },
-    required: ["messages", "total", "has_more", "next_offset"],
+    required: ["messages", "has_more", "next_offset"],
     additionalProperties: false,
   },
   read_email: {
@@ -2819,12 +3083,21 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     type: "object",
     properties: {
       messages: { type: "array", items: SEARCH_EMAIL_SUMMARY_SCHEMA },
-      total: { type: "integer" },
+      total: {
+        type: ["integer", "null"],
+        description:
+          "Total matching messages. Exact for IMAP/Fastmail, an estimate for " +
+          "Gmail (see total_is_estimate), null when the provider cannot supply a count.",
+      },
+      total_is_estimate: {
+        type: "boolean",
+        description: "True when total is a provider estimate rather than an exact count.",
+      },
       has_more: { type: "boolean" },
       next_offset: { type: "integer" },
       query_normalized: { type: "string" },
     },
-    required: ["messages", "total", "has_more", "next_offset"],
+    required: ["messages", "has_more", "next_offset"],
     additionalProperties: false,
   },
   list_folders: {
@@ -3323,13 +3596,9 @@ function unsupportedFeatureError(
 // ---------------------------------------------------------------------------
 // Destructive-action plumbing
 //
-// requireConfirm — gate for every destructive / irreversible tool.
-// MAX_BULK_IDS   — hard cap on bulk-UID operations to prevent runaway calls.
+// MAX_BULK_IDS — hard cap on bulk-UID operations to prevent runaway calls.
 //
-// Usage (in any destructive handler):
-//
-//   const guard = requireConfirm(input);
-//   if (guard) return guard;
+// Usage (in any bulk handler):
 //
 //   if (Array.isArray(input.message_ids) && input.message_ids.length > MAX_BULK_IDS) {
 //     return bulkCapError(input.message_ids.length);
@@ -3338,41 +3607,6 @@ function unsupportedFeatureError(
 
 /** Maximum number of message UIDs accepted by any bulk tool in a single call. */
 const MAX_BULK_IDS = 500;
-
-/**
- * Returns a structured error result when `input.confirm` is not exactly `true`.
- * Returns `null` when the caller may proceed.
- *
- * Every destructive tool MUST call this and short-circuit on a non-null return:
- *
- *   const guard = requireConfirm(input);
- *   if (guard) return guard;
- */
-function requireConfirm(
-  input: Record<string, unknown>,
-): {
-  result: { content: { type: string; text: string }[] };
-  logStatus: "error";
-  logErrorCode: string;
-} | null {
-  if (input["confirm"] !== true) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            error: "confirmation_required",
-            message:
-              "This operation requires confirm=true. Set confirm to true to proceed.",
-          }),
-        }],
-      },
-      logStatus: "error",
-      logErrorCode: String(-32600),
-    };
-  }
-  return null;
-}
 
 /**
  * Returns a structured error result when a bulk tool receives more IDs than
@@ -4129,7 +4363,14 @@ interface EmailSummary {
 
 interface ListInboxResult {
   messages: EmailSummary[];
-  total: number;
+  /**
+   * Total number of messages matching the query. Exact for IMAP and Fastmail;
+   * an estimate for Gmail (see `total_is_estimate`); `null` when the provider
+   * cannot supply a count (Outlook without `@odata.count`).
+   */
+  total: number | null;
+  /** True when `total` is a provider estimate rather than an exact count. */
+  total_is_estimate?: boolean;
   has_more: boolean;
   next_offset: number;
 }
@@ -4276,6 +4517,7 @@ async function listGmailMessages(
   };
 
   const allRefs = listData.messages ?? [];
+  // Gmail's resultSizeEstimate is an approximation, not an exact count.
   const total = listData.resultSizeEstimate ?? allRefs.length;
   const hasMore =
     !!listData.nextPageToken || allRefs.length > offset + limit;
@@ -4286,6 +4528,7 @@ async function listGmailMessages(
     return {
       messages: [],
       total,
+      total_is_estimate: true,
       has_more: hasMore,
       next_offset: offset + limit,
     };
@@ -4328,7 +4571,13 @@ async function listGmailMessages(
     };
   });
 
-  return { messages, total, has_more: hasMore, next_offset: offset + limit };
+  return {
+    messages,
+    total,
+    total_is_estimate: true,
+    has_more: hasMore,
+    next_offset: offset + limit,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -4417,7 +4666,9 @@ async function listOutlookMessages(
   };
 
   const rawMessages = data.value ?? [];
-  const total = data["@odata.count"] ?? rawMessages.length;
+  // `$count=true` (with ConsistencyLevel: eventual) yields an exact count.
+  // When Graph omits it, report `null` (unknown) rather than fabricate one.
+  const total = data["@odata.count"] ?? null;
   const hasMore = !!data["@odata.nextLink"];
 
   const messages: EmailSummary[] = rawMessages.map((msg) => ({
@@ -4893,7 +5144,7 @@ async function readImapMessage(
  */
 async function searchImapMessages(
   inbox: InboxRow,
-  query: string,
+  search: NormalizedSearch,
   limit: number,
   offset: number,
   includeFolders: string[],
@@ -4914,13 +5165,15 @@ async function searchImapMessages(
     });
     await client.selectMailbox(imapFolderName(folder));
 
-    // SECURITY: strip CR/LF and other control chars from the free-text query
-    // before interpolating it into the raw `UID SEARCH TEXT "..."` command
-    // line — otherwise CRLF would break out and inject arbitrary IMAP commands.
+    // Translate the normalized search into RFC 3501 SEARCH criteria. The
+    // translator quotes/escapes string operands; "ALL" is a valid match-all.
+    // SECURITY: strip CR/LF and other control chars from the final criteria
+    // string before interpolating it into the raw `UID SEARCH …` command line —
+    // otherwise CRLF (e.g. via the `raw` escape hatch) would break out and
+    // inject arbitrary IMAP commands.
     // deno-lint-ignore no-control-regex
-    const safeQuery = query.replace(/[\x00-\x1F\x7F]+/g, " ");
-    const quoted = `"${safeQuery.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
-    const allUids = await client.uidSearch(`TEXT ${quoted}`);
+    const criteria = toImapSearch(search).replace(/[\x00-\x1F\x7F]+/g, " ");
+    const allUids = await client.uidSearch(criteria);
     const total = allUids.length;
 
     const ordered = allUids.slice().sort((a, b) => b - a);
@@ -4951,9 +5204,11 @@ async function searchImapMessages(
     return {
       messages,
       total,
+      // IMAP UID SEARCH returns the full matching set, so total is exact.
+      total_is_estimate: false,
       has_more: offset + limit < total,
       next_offset: offset + limit,
-      query_normalized: query,
+      query_normalized: criteria,
     };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -6381,7 +6636,8 @@ async function executeReadEmail(
             type: "text",
             text:
               `Message ${messageId} not found in inbox ${inboxId}. ` +
-              "The message may have been deleted or the ID is incorrect.",
+              "The message may have been deleted or the ID is stale — " +
+              "call list_messages or search_emails to get current message IDs.",
           }],
           isError: true,
         },
@@ -9308,7 +9564,14 @@ interface SearchEmailSummary extends EmailSummary {
 
 interface SearchEmailsResult {
   messages: SearchEmailSummary[];
-  total: number;
+  /**
+   * Total number of messages matching the query. Exact for IMAP and Fastmail;
+   * an estimate for Gmail (see `total_is_estimate`); `null` when the provider
+   * cannot supply a count (Outlook without `@odata.count`).
+   */
+  total: number | null;
+  /** True when `total` is a provider estimate rather than an exact count. */
+  total_is_estimate?: boolean;
   has_more: boolean;
   next_offset: number;
   /** The query as received (providers do not expose a normalized form). */
@@ -9331,16 +9594,18 @@ interface SearchEmailsResult {
  */
 async function searchGmailMessages(
   inbox: InboxRow,
-  query: string,
+  search: NormalizedSearch,
   limit: number,
   offset: number,
   includeFolders: string[],
 ): Promise<SearchEmailsResult> {
   const accessToken = await withFreshGmailToken(inbox);
 
+  const q = toGmailQuery(search);
+
   const fetchCount = Math.min(offset + limit, 100);
   const params = new URLSearchParams({
-    q: query,
+    q,
     maxResults: String(fetchCount),
   });
 
@@ -9374,6 +9639,7 @@ async function searchGmailMessages(
   };
 
   const allRefs = listData.messages ?? [];
+  // Gmail's resultSizeEstimate is an approximation, not an exact count.
   const total = listData.resultSizeEstimate ?? allRefs.length;
   const hasMore =
     !!listData.nextPageToken || allRefs.length > offset + limit;
@@ -9384,9 +9650,10 @@ async function searchGmailMessages(
     return {
       messages: [],
       total,
+      total_is_estimate: true,
       has_more: hasMore,
       next_offset: offset + limit,
-      query_normalized: query,
+      query_normalized: q,
     };
   }
 
@@ -9438,9 +9705,10 @@ async function searchGmailMessages(
   return {
     messages,
     total,
+    total_is_estimate: true,
     has_more: hasMore,
     next_offset: offset + limit,
-    query_normalized: query,
+    query_normalized: q,
   };
 }
 
@@ -9460,12 +9728,14 @@ async function searchGmailMessages(
  * listed folder and merging the results. This increases API call count but
  * respects the folder constraint as faithfully as Graph allows.
  *
- * Note: Graph `$search` requires `ConsistencyLevel: eventual` and does not
- * support `$count=true` alongside `$search`.
+ * Note: Graph `$search` requires `ConsistencyLevel: eventual` and does NOT
+ * support `$count=true` alongside `$search` on the messages resource (Graph
+ * rejects the request). We therefore report `total: null` (unknown) rather
+ * than fabricate a count.
  */
 async function searchOutlookMessages(
   inbox: InboxRow,
-  query: string,
+  search: NormalizedSearch,
   limit: number,
   offset: number,
   includeFolders: string[],
@@ -9485,15 +9755,33 @@ async function searchOutlookMessages(
     baseUrl = "https://graph.microsoft.com/v1.0/me/messages";
   }
 
+  // Graph CANNOT combine $search and $filter on /messages, so pick exactly one
+  // (per search-translate.ts policy): prefer $search when free-text criteria
+  // exist, else fall back to $filter. $count works with $filter (yielding an
+  // exact total) but NOT with $search.
+  const { search: kql, filter } = toGraphSearch(search);
+
   // Graph rejects $skip when combined with $search, so page client-side: fetch
   // the first (offset + limit) matches and slice the requested window. Capped
   // at Graph's max page size for $search.
   const fetchTop = Math.min(offset + limit, 1000);
   const params = new URLSearchParams({
-    $search: `"${query}"`,
     $select: select,
     $top: String(fetchTop),
   });
+
+  // Human-readable echo of what we actually sent to the provider.
+  let queryNormalized = "";
+  if (kql) {
+    params.set("$search", `"${kql}"`);
+    queryNormalized = kql;
+  } else if (filter) {
+    // $count works alongside $filter (but not $search), giving an exact total.
+    params.set("$filter", filter);
+    params.set("$count", "true");
+    queryNormalized = filter;
+  }
+  // else: neither — list without $search/$filter (match all).
 
   const resp = await fetch(`${baseUrl}?${params}`, {
     headers: {
@@ -9514,15 +9802,17 @@ async function searchOutlookMessages(
 
   const data = (await resp.json()) as {
     value?: OutlookMessage[];
+    "@odata.count"?: number;
     "@odata.nextLink"?: string;
   };
 
   const rawMessages = data.value ?? [];
   const hasMore = !!data["@odata.nextLink"];
   const pageMessages = rawMessages.slice(offset, offset + limit);
-  // Graph does not return a total count for $search; use the fetched count as a
-  // lower-bound estimate.
-  const total = hasMore ? rawMessages.length + 1 : rawMessages.length;
+  // With $filter we requested $count=true and Graph returns an exact total via
+  // @odata.count. With $search, Graph rejects $count, so total stays null
+  // (unknown) rather than fabricated.
+  const total = data["@odata.count"] ?? null;
 
   const folder = includeFolders.length === 1 ? includeFolders[0] : "INBOX";
   const messages: SearchEmailSummary[] = pageMessages.map((msg) => ({
@@ -9548,9 +9838,11 @@ async function searchOutlookMessages(
   return {
     messages,
     total,
+    // $filter+$count yields an exact total; otherwise total is null (unknown).
+    total_is_estimate: false,
     has_more: hasMore,
     next_offset: offset + limit,
-    query_normalized: query,
+    query_normalized: queryNormalized,
   };
 }
 
@@ -9574,7 +9866,7 @@ async function searchOutlookMessages(
  */
 async function searchFastmailMessages(
   inbox: InboxRow,
-  query: string,
+  search: NormalizedSearch,
   limit: number,
   offset: number,
   includeFolders: string[],
@@ -9615,15 +9907,18 @@ async function searchFastmailMessages(
     ARCHIVE: "archive",
   };
 
-  // Build the Email/query filter.
-  // `text` is JMAP's full-text search operator (searches subject, body, from, to, etc.)
-  const emailFilter: Record<string, unknown> = { text: query };
+  // Build the Email/query filter from the normalized search criteria.
+  // toJmapFilter returns either {} (no criteria), a single FilterCondition, or
+  // a { operator:"AND", conditions:[…] } FilterOperator. `raw` is ignored for
+  // JMAP (no free-form query-string escape hatch).
+  const translatedFilter = toJmapFilter(search);
 
   // Step 2: If include_folders is non-empty, resolve the first folder to a
-  // mailbox ID and add it as an `inMailbox` constraint.
+  // mailbox ID and capture it as an `inMailbox` constraint.
   // We use only the first folder: JMAP's `inMailbox` takes a single ID, and
   // multi-folder union search would require `inMailboxOtherThan` plus a separate
   // query-merge, which is outside the scope of this tool.
+  let mailboxConstraint: Record<string, unknown> | null = null;
   let resolvedFolder: string | null = null;
   if (includeFolders.length > 0) {
     resolvedFolder = includeFolders[0];
@@ -9659,10 +9954,36 @@ async function searchFastmailMessages(
       const mbResult = mbData.methodResponses?.find(([n]) => n === "Mailbox/query");
       const mbIds = (mbResult?.[1] as { ids?: string[] } | undefined)?.ids ?? [];
       if (mbIds.length > 0) {
-        emailFilter["inMailbox"] = mbIds[0];
+        mailboxConstraint = { inMailbox: mbIds[0] };
       }
     }
     // If mailbox resolution fails, fall through to full-inbox search.
+  }
+
+  // AND-combine the translated filter with the mailbox constraint:
+  //  - both present → { operator:"AND", conditions:[…translated…, mailbox] }
+  //    (flatten when the translated filter is itself an AND operator)
+  //  - only translated criteria → use them directly
+  //  - only a mailbox constraint → use it directly
+  //  - neither → omit the filter entirely (match all)
+  const hasTranslated = Object.keys(translatedFilter).length > 0;
+  let emailFilter: Record<string, unknown> | undefined;
+  if (hasTranslated && mailboxConstraint) {
+    const isAndOp = translatedFilter["operator"] === "AND" &&
+      Array.isArray(translatedFilter["conditions"]);
+    const baseConditions = isAndOp
+      ? (translatedFilter["conditions"] as Record<string, unknown>[])
+      : [translatedFilter];
+    emailFilter = {
+      operator: "AND",
+      conditions: [...baseConditions, mailboxConstraint],
+    };
+  } else if (hasTranslated) {
+    emailFilter = translatedFilter;
+  } else if (mailboxConstraint) {
+    emailFilter = mailboxConstraint;
+  } else {
+    emailFilter = undefined;
   }
 
   // Step 3: Run Email/query with text filter, then Email/get for metadata.
@@ -9673,7 +9994,8 @@ async function searchFastmailMessages(
         "Email/query",
         {
           accountId,
-          filter: emailFilter,
+          // Omit `filter` (undefined) for a match-all query.
+          ...(emailFilter ? { filter: emailFilter } : {}),
           sort: [{ property: "receivedAt", isAscending: false }],
           position: offset,
           limit,
@@ -9772,9 +10094,12 @@ async function searchFastmailMessages(
   return {
     messages,
     total,
+    // JMAP calculateTotal:true yields an exact total.
+    total_is_estimate: false,
     has_more: hasMore,
     next_offset: offset + limit,
-    query_normalized: query,
+    // Echo the JMAP filter we actually sent (or "all" when unfiltered).
+    query_normalized: emailFilter ? JSON.stringify(emailFilter) : "all",
   };
 }
 
@@ -9784,6 +10109,124 @@ async function searchFastmailMessages(
 
 /** Search timeout: 30 seconds, matching the architecture doc specification. */
 const SEARCH_TIMEOUT_MS = 30_000;
+
+/**
+ * Build a `NormalizedSearch` from a tool's raw arguments, shared by
+ * search_emails / search_and_move / search_and_delete.
+ *
+ * - String fields (from/to/cc/subject/body/text) are included when a non-empty
+ *   string.
+ * - `unread` is included when strictly `true` or `false`; `has_attachment` and
+ *   `flagged` only when truthy (only `true` is meaningful).
+ * - `since`/`before` ISO strings are validated via parseIsoDate; an invalid
+ *   value yields an error.
+ * - `query` (legacy) maps to `raw`.
+ *
+ * Returns either the built search, or a `{ field }` indicating which date arg
+ * failed validation. The empty-criteria check is left to the caller (the error
+ * text differs per tool only by name, but we centralise it here too).
+ */
+function buildNormalizedSearch(
+  args: Record<string, unknown>,
+):
+  | { ok: true; search: NormalizedSearch; empty: boolean }
+  | { ok: false; badDate: "since" | "before" } {
+  const search: NormalizedSearch = {};
+
+  const str = (k: string): string | undefined => {
+    const v = args[k];
+    if (typeof v === "string" && v.trim() !== "") return v.trim();
+    return undefined;
+  };
+
+  const from = str("from");
+  if (from) search.from = from;
+  const to = str("to");
+  if (to) search.to = to;
+  const cc = str("cc");
+  if (cc) search.cc = cc;
+  const subject = str("subject");
+  if (subject) search.subject = subject;
+  const body = str("body");
+  if (body) search.body = body;
+  const text = str("text");
+  if (text) search.text = text;
+
+  if (args["unread"] === true) search.unread = true;
+  else if (args["unread"] === false) search.unread = false;
+
+  if (args["has_attachment"] === true) search.has_attachment = true;
+  if (args["flagged"] === true) search.flagged = true;
+
+  // Dates: validate by parsing; keep the raw ISO string on success.
+  const since = str("since");
+  if (since) {
+    try {
+      parseIsoDate(since);
+    } catch {
+      return { ok: false, badDate: "since" };
+    }
+    search.since = since;
+  }
+  const before = str("before");
+  if (before) {
+    try {
+      parseIsoDate(before);
+    } catch {
+      return { ok: false, badDate: "before" };
+    }
+    search.before = before;
+  }
+
+  // Legacy free-text query → raw escape hatch.
+  const raw = str("query");
+  if (raw) search.raw = raw;
+
+  const empty = Object.keys(search).length === 0;
+  return { ok: true, search, empty };
+}
+
+/** Standard tool error for an invalid ISO date argument. */
+function invalidSearchDateError(
+  field: "since" | "before",
+): {
+  result: { content: { type: string; text: string }[]; isError: boolean };
+  logStatus: "error";
+  logErrorCode: string;
+} {
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: `Invalid date for '${field}': expected ISO 8601 (e.g. 2026-06-01).`,
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: "-32602",
+  };
+}
+
+/** Standard tool error when no search criterion was provided. */
+function noSearchCriterionError(): {
+  result: { content: { type: string; text: string }[]; isError: boolean };
+  logStatus: "error";
+  logErrorCode: string;
+} {
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text:
+          "Provide at least one search criterion (e.g. from, subject, since, unread) " +
+          "or a raw query string.",
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: "-32602",
+  };
+}
 
 /**
  * Executes the `search_emails` tool end-to-end.
@@ -9824,7 +10267,7 @@ async function executeSearchEmails(
       result: {
         content: [{
           type: "text",
-          text: "search_emails: arguments must be an object with at least inbox_id and query.",
+          text: "search_emails: arguments must be an object with structured search fields or a query.",
         }],
         isError: true,
       },
@@ -9835,21 +10278,11 @@ async function executeSearchEmails(
 
   const args = rawArgs as Record<string, unknown>;
 
-  // query (required, non-empty)
-  const query = typeof args["query"] === "string" ? args["query"].trim() : "";
-  if (!query) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: "search_emails: query is required and must be a non-empty string.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
+  // Build the normalized, provider-agnostic search from the args.
+  const built = buildNormalizedSearch(args);
+  if (!built.ok) return invalidSearchDateError(built.badDate);
+  if (built.empty) return noSearchCriterionError();
+  const search = built.search;
 
   const limit = Math.min(
     Math.max(
@@ -9887,7 +10320,7 @@ async function executeSearchEmails(
       case "gmail":
         searchPromise = searchGmailMessages(
           inbox,
-          query,
+          search,
           limit,
           offset,
           includeFolders,
@@ -9896,7 +10329,7 @@ async function executeSearchEmails(
       case "outlook":
         searchPromise = searchOutlookMessages(
           inbox,
-          query,
+          search,
           limit,
           offset,
           includeFolders,
@@ -9905,7 +10338,7 @@ async function executeSearchEmails(
       case "fastmail":
         searchPromise = searchFastmailMessages(
           inbox,
-          query,
+          search,
           limit,
           offset,
           includeFolders,
@@ -9914,7 +10347,7 @@ async function executeSearchEmails(
       case "imap":
         searchPromise = searchImapMessages(
           inbox,
-          query,
+          search,
           limit,
           offset,
           includeFolders,
@@ -10738,7 +11171,7 @@ function folderProviderError(
       result: {
         content: [{
           type: "text",
-          text: `Folder not found. Use list_folders to verify the folder_id.`,
+          text: `Folder not found. Call list_folders to get valid folder IDs.`,
         }],
         isError: true,
       },
@@ -10907,7 +11340,7 @@ async function executeRenameFolder(
  *
  * Scope: manage:folders
  * Capability gate: caps.folders || caps.labels
- * Confirm gate: requireConfirm (destructive — irreversible)
+ * Destructive — irreversible (client confirms via annotations.destructiveHint).
  */
 async function executeDeleteFolder(
   rawArgs: unknown,
@@ -10920,10 +11353,6 @@ async function executeDeleteFolder(
   const resolved = await resolveFolderArgs(rawArgs, "delete_folder", apiKey, true);
   if (resolved.error) return resolved.error;
   const { inbox, args } = resolved;
-
-  // ── Confirm gate (destructive) ───────────────────────────────────────────
-  const guard = requireConfirm(args);
-  if (guard) return guard;
 
   const folderId = args["folder_id"] as string;
 
@@ -11421,7 +11850,8 @@ function handleFlagError(
           type: "text",
           text:
             `Message ${messageId} not found in inbox ${inboxId}. ` +
-            "The message may have been deleted or the ID is incorrect.",
+            "The message may have been deleted or the ID is stale — " +
+            "call list_messages or search_emails to get current message IDs.",
         }],
         isError: true,
       },
@@ -12364,7 +12794,7 @@ async function fastmailDeleteEmail(
  * `delete_email` handler — trashes or permanently expunges a single message.
  *
  * Scope: delete:email
- * Confirm gate: requireConfirm (destructive)
+ * Destructive (client confirms via annotations.destructiveHint).
  * Capability gate: caps.delete
  * Default behaviour: move to Trash (soft delete). Set permanent:true for hard delete.
  */
@@ -12380,11 +12810,8 @@ async function executeDeleteEmail(
   if (resolved.error) return resolved.error;
   const { inbox, messageId } = resolved;
 
-  // ── Confirm gate (destructive) ───────────────────────────────────────────
   // rawArgs was validated as a non-null object by resolveFlagArgs above.
   const args = rawArgs as Record<string, unknown>;
-  const guard = requireConfirm(args);
-  if (guard) return guard;
 
   // ── Parse permanent flag ──────────────────────────────────────────────────
   const permanent = args["permanent"] === true;
@@ -13290,7 +13717,7 @@ async function executeBulkMove(
  * `bulk_delete` handler — trashes or permanently expunges multiple messages.
  *
  * Scope: delete:email
- * Confirm gate: requireConfirm (destructive)
+ * Destructive (client confirms via annotations.destructiveHint).
  * Capability gate: caps.delete
  * Cap: MAX_BULK_IDS (500)
  * Default behaviour: move to Trash. Set permanent:true for hard delete.
@@ -13311,8 +13738,6 @@ async function executeBulkDelete(
 
   // rawArgs was validated as a non-null object by resolveBulkArgs above.
   const args = rawArgs as Record<string, unknown>;
-  const guard = requireConfirm(args);
-  if (guard) return guard;
 
   const permanent = args["permanent"] === true;
 
@@ -13478,7 +13903,7 @@ async function executeSearchAndMove(
       result: {
         content: [{
           type: "text",
-          text: "search_and_move: arguments must be an object with inbox_id, query, and destination_folder_id.",
+          text: "search_and_move: arguments must be an object with search fields (or query) and destination_folder_id.",
         }],
         isError: true,
       },
@@ -13489,17 +13914,12 @@ async function executeSearchAndMove(
 
   const args = rawArgs as Record<string, unknown>;
 
-  const query = typeof args["query"] === "string" ? args["query"].trim() : "";
-  if (!query) {
-    return {
-      result: {
-        content: [{ type: "text", text: "search_and_move: query is required and must be a non-empty string." }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
+  const built = buildNormalizedSearch(args);
+  if (!built.ok) return invalidSearchDateError(built.badDate);
+  if (built.empty) return noSearchCriterionError();
+  const search = built.search;
+  // Human-readable echo of the criteria for the result payload.
+  const query = JSON.stringify(search);
 
   const destinationFolderId =
     typeof args["destination_folder_id"] === "string"
@@ -13547,16 +13967,16 @@ async function executeSearchAndMove(
     let searchPromise: Promise<SearchEmailsResult>;
     switch (inbox.provider) {
       case "gmail":
-        searchPromise = searchGmailMessages(inbox, query, limit, 0, includeFolders);
+        searchPromise = searchGmailMessages(inbox, search, limit, 0, includeFolders);
         break;
       case "outlook":
-        searchPromise = searchOutlookMessages(inbox, query, limit, 0, includeFolders);
+        searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
         break;
       case "fastmail":
-        searchPromise = searchFastmailMessages(inbox, query, limit, 0, includeFolders);
+        searchPromise = searchFastmailMessages(inbox, search, limit, 0, includeFolders);
         break;
       case "imap":
-        searchPromise = searchImapMessages(inbox, query, limit, 0, includeFolders);
+        searchPromise = searchImapMessages(inbox, search, limit, 0, includeFolders);
         break;
       default:
         return {
@@ -13666,7 +14086,7 @@ async function executeSearchAndMove(
  * `search_and_delete` handler — searches for messages and deletes all matches.
  *
  * Scope: delete:email
- * Confirm gate: requireConfirm (destructive)
+ * Destructive (client confirms via annotations.destructiveHint).
  * Capability gate: caps.delete
  * Cap: MAX_BULK_IDS (500)
  * Default behaviour: move to Trash. Set permanent:true for hard delete.
@@ -13684,7 +14104,7 @@ async function executeSearchAndDelete(
       result: {
         content: [{
           type: "text",
-          text: "search_and_delete: arguments must be an object with inbox_id, query, and confirm.",
+          text: "search_and_delete: arguments must be an object with search fields (or query).",
         }],
         isError: true,
       },
@@ -13695,20 +14115,12 @@ async function executeSearchAndDelete(
 
   const args = rawArgs as Record<string, unknown>;
 
-  const guard = requireConfirm(args);
-  if (guard) return guard;
-
-  const query = typeof args["query"] === "string" ? args["query"].trim() : "";
-  if (!query) {
-    return {
-      result: {
-        content: [{ type: "text", text: "search_and_delete: query is required and must be a non-empty string." }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
+  const built = buildNormalizedSearch(args);
+  if (!built.ok) return invalidSearchDateError(built.badDate);
+  if (built.empty) return noSearchCriterionError();
+  const search = built.search;
+  // Human-readable echo of the criteria for the result payload.
+  const query = JSON.stringify(search);
 
   const permanent = args["permanent"] === true;
   const limit = Math.min(
@@ -13738,16 +14150,16 @@ async function executeSearchAndDelete(
     let searchPromise: Promise<SearchEmailsResult>;
     switch (inbox.provider) {
       case "gmail":
-        searchPromise = searchGmailMessages(inbox, query, limit, 0, includeFolders);
+        searchPromise = searchGmailMessages(inbox, search, limit, 0, includeFolders);
         break;
       case "outlook":
-        searchPromise = searchOutlookMessages(inbox, query, limit, 0, includeFolders);
+        searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
         break;
       case "fastmail":
-        searchPromise = searchFastmailMessages(inbox, query, limit, 0, includeFolders);
+        searchPromise = searchFastmailMessages(inbox, search, limit, 0, includeFolders);
         break;
       case "imap":
-        searchPromise = searchImapMessages(inbox, query, limit, 0, includeFolders);
+        searchPromise = searchImapMessages(inbox, search, limit, 0, includeFolders);
         break;
       default:
         return {
@@ -15917,7 +16329,7 @@ function handleToolsList(
   // An API key with only read:email will see list_messages, read_email, search_emails.
   // An API key with send:email (in addition or alone) will also see send_email, reply_to_email.
   const visibleTools = TOOL_REGISTRY
-    .filter((tool) => apiKey.scopes.includes(tool.requiredScope))
+    .filter((tool) => isToolAuthorized(tool, apiKey.scopes))
     .map((tool) => ({
       name: tool.name,
       title: tool.title,
@@ -16032,7 +16444,7 @@ async function handleToolsCall(
       `Unknown tool: ${toolName}`,
       {
         available_tools: TOOL_REGISTRY
-          .filter((t) => apiKey.scopes.includes(t.requiredScope))
+          .filter((t) => isToolAuthorized(t, apiKey.scopes))
           .map((t) => t.name),
       },
     );
@@ -16041,7 +16453,7 @@ async function handleToolsCall(
   // ── Scope check ───────────────────────────────────────────────────────────
   // Run before any I/O or credential loading so unauthorised calls are rejected
   // with minimal resource consumption. All scope violations are logged.
-  if (!apiKey.scopes.includes(tool.requiredScope)) {
+  if (!isToolAuthorized(tool, apiKey.scopes)) {
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
@@ -16058,14 +16470,24 @@ async function handleToolsCall(
       key_id: apiKey.id,
       tool_name: toolName,
       required_scope: tool.requiredScope,
+      alt_scopes: tool.altScopes ?? [],
       key_scopes: apiKey.scopes,
     });
+
+    const acceptedScopes = [tool.requiredScope, ...(tool.altScopes ?? [])];
+    const scopeList = acceptedScopes.length > 1
+      ? `one of the '${acceptedScopes.join("', '")}' scopes is`
+      : `the '${tool.requiredScope}' scope is`;
 
     return jsonRpcErrorBody(
       id,
       RPC_INVALID_API_KEY,
-      `Insufficient scope: the '${tool.requiredScope}' scope is required to call ${toolName}.`,
-      { required_scope: tool.requiredScope, key_scopes: apiKey.scopes },
+      `Insufficient scope: ${scopeList} required to call ${toolName}.`,
+      {
+        required_scope: tool.requiredScope,
+        accepted_scopes: acceptedScopes,
+        key_scopes: apiKey.scopes,
+      },
     );
   }
 

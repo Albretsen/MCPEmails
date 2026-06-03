@@ -174,7 +174,12 @@
     "linkPrivacy": "Privacidad",
     "linkTerms": "Términos",
     "copyright": "© 2026 mcpemails.",
-    "legal": "El correo nunca se almacena · Credenciales cifradas en reposo"
+    "legal": "El correo nunca se almacena · Credenciales cifradas en reposo",
+    "contactLabel": "Contacto",
+    "mcpLabel": "Endpoint MCP",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copyAria": "Copiar {label}"
   },
   "languageSwitcher": {
     "label": "Idioma",

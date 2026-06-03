@@ -686,6 +686,29 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .footer .brand-cell { display: flex; flex-direction: column; gap: 12px; }
 .footer .brand-cell img { height: 28px; align-self: flex-start; }
 .footer .brand-cell p { margin: 0; font-family: var(--font-sans); font-size: 13.5px; color: var(--ink-400); max-width: 320px; line-height: 1.55; }
+.footer .footer-contact { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.footer .footer-copy { display: flex; flex-direction: column; gap: 5px; }
+.footer .footer-copy-label {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink-500);
+}
+.footer .footer-copy-field {
+  display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+  max-width: 100%; background: var(--ink-800); border: 1px solid var(--ink-700);
+  border-radius: 8px; padding: 6px 8px 6px 10px;
+}
+.footer .footer-copy-value {
+  display: block; padding: 0; font-family: var(--font-mono); font-size: 13px; color: var(--ink-200);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+a.footer-copy-value:hover { color: #fff; text-decoration: none; }
+.footer .footer-copy-btn {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  background: transparent; border: none; cursor: pointer;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500; color: var(--ink-400);
+  padding: 3px 6px; border-radius: 6px; transition: color 120ms var(--ease-out), background 120ms var(--ease-out);
+}
+.footer .footer-copy-btn:hover { color: #fff; background: var(--ink-700); }
 .footer .lang-switch { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; }
 .footer .lang-switch .lang-opt {
   display: inline; padding: 0; font-family: var(--font-sans); font-size: 13px;

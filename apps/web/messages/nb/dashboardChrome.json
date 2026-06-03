@@ -61,9 +61,16 @@
     "searchPlaceholder": "Søk i sider, innbokser, medlemmer…",
     "openSearch": "Åpne søk (Command K)"
   },
+  "topbar": {
+    "mcpLabel": "MCP-endepunkt",
+    "mcpCopy": "Kopier MCP-endepunkt-URL",
+    "mcpCopied": "MCP-endepunkt-URL kopiert",
+    "mcpCopyTitle": "Kopier din MCP-endepunkt-URL"
+  },
   "connect": {
     "subGmail": "OAuth 2.0 · anbefalt",
     "subOutlook": "OAuth 2.0 · Microsoft 365",
+    "comingSoon": "Kommer snart",
     "subFastmail": "OAuth 2.0 eller app-passord",
     "subAppPassword": "App-passord",
     "subGeneric": "Alle leverandører",

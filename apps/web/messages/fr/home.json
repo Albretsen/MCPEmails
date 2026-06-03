@@ -174,7 +174,12 @@
     "linkPrivacy": "Confidentialité",
     "linkTerms": "Conditions",
     "copyright": "© 2026 mcpemails.",
-    "legal": "E-mails jamais stockés · Identifiants chiffrés au repos"
+    "legal": "E-mails jamais stockés · Identifiants chiffrés au repos",
+    "contactLabel": "Contact",
+    "mcpLabel": "Point de terminaison MCP",
+    "copy": "Copier",
+    "copied": "Copié",
+    "copyAria": "Copier {label}"
   },
   "languageSwitcher": {
     "label": "Langue",

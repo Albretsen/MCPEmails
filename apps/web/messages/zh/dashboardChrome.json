@@ -61,9 +61,16 @@
     "searchPlaceholder": "搜索页面、收件箱、成员…",
     "openSearch": "打开搜索（Command K）"
   },
+  "topbar": {
+    "mcpLabel": "MCP 端点",
+    "mcpCopy": "复制 MCP 端点 URL",
+    "mcpCopied": "已复制 MCP 端点 URL",
+    "mcpCopyTitle": "复制你的 MCP 端点 URL"
+  },
   "connect": {
     "subGmail": "OAuth 2.0 · 推荐",
     "subOutlook": "OAuth 2.0 · Microsoft 365",
+    "comingSoon": "即将推出",
     "subFastmail": "OAuth 2.0 或应用专用密码",
     "subAppPassword": "应用专用密码",
     "subGeneric": "任意提供商",

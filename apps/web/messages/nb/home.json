@@ -174,7 +174,12 @@
     "linkPrivacy": "Personvern",
     "linkTerms": "Vilkår",
     "copyright": "© 2026 mcpemails.",
-    "legal": "E-post lagres aldri · Legitimasjon kryptert ved lagring"
+    "legal": "E-post lagres aldri · Legitimasjon kryptert ved lagring",
+    "contactLabel": "Kontakt",
+    "mcpLabel": "MCP-endepunkt",
+    "copy": "Kopier",
+    "copied": "Kopiert",
+    "copyAria": "Kopier {label}"
   },
   "languageSwitcher": {
     "label": "Språk",
