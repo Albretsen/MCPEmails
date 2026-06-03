@@ -27,6 +27,7 @@
     "logsP": "对于你的智能体发起的每一次 MCP 工具调用，我们会记录：工具名称（例如 <c>read_email</c>）、发起调用的 API 密钥、被访问的收件箱、时间戳，以及调用是否成功。我们<b>不会</b>在这些日志中记录邮件主题、正文、收件人或任何其他邮件内容。",
     "emailContentTitle": "2.5 邮件内容：不存储",
     "emailContentP": "当你的智能体调用 <c>read_email</c>、<c>list_messages</c> 或任何其他邮件工具时，我们会从你的电子邮件服务商实时获取所请求的内容，并在同一个 HTTP 响应中返回给你的智能体。该内容绝不会被写入磁盘、缓存或记录。一旦 HTTP 响应发出，我们就不再持有任何邮件正文、主题、附件或联系人详情的副本。",
+    "emailContentAgentP": "你的邮件内容仅会发送至由<b>你本人</b>连接并使用的 MCP 客户端或 AI 智能体（例如 Claude、Cursor 或你选择的其他 MCP 客户端）。当你调用某个工具时，MCPEmails 会将所请求的内容传输给该客户端，以便其完成你的请求。MCPEmails 不会将你的邮件内容发送给任何由我们自行选择的 AI 提供商。内容一旦到达你所选择的客户端，即受该客户端或 AI 提供商自身的隐私政策和条款约束，你有责任自行查阅这些政策和条款。MCPEmails 仅作为传输通道，不会保留任何内容副本。",
     "technicalTitle": "2.6 技术与运营数据",
     "technicalP": "我们收集标准的服务器端运营数据，包括 IP 地址（用于速率限制和防滥用）、请求时间戳、HTTP 状态码和错误类型。此数据以聚合、匿名化的形式保留，并在 30 天后不再与个人账户关联。",
     "cookiesTitle": "2.7 Cookie 与本地存储",
@@ -57,6 +58,7 @@
     "googleP2": "当你连接一个 Gmail 账户时，你会授予 MCPEmails 以下 Gmail 权限范围。我们请求每一项权限范围，仅为提供你通过 AI 智能体调用的功能，且我们仅代表你使用它们：",
     "googleScopeReadonly": "<c>gmail.readonly</c>：列出邮件并读取邮件内容，以便你的智能体能够按你的请求搜索、阅读和总结邮件。",
     "googleScopeSend": "<c>gmail.send</c>：撰写并发送你的智能体按你的请求创建的邮件。",
+    "googleScopeModify": "<c>gmail.modify</c>：按你的指示整理邮件，包括添加和移除标签、将邮件标记为已读或未读、归档邮件、在文件夹之间移动邮件，以及将邮件移至回收站。",
     "googleLimitedIntro": "与有限使用要求保持一致，MCPEmails：",
     "googleLimitedList": [
       "仅使用 Google 用户数据来提供和改进上述面向用户的功能；",

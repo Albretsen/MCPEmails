@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
+import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import {
   IMAP_PRESETS,
   GENERIC_IMAP_DEFAULTS,
@@ -362,6 +363,49 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   </div>
                 ))}
               </div>
+
+              {/* OAuth verification-pending warning (Gmail / Outlook).
+                  Gated behind OAUTH_VERIFICATION_PENDING so the owner can hide
+                  it after Google + Microsoft verification complete, without a
+                  code change. */}
+              {OAUTH_VERIFICATION_PENDING && (provider === 'gmail' || provider === 'outlook') && (
+                <div
+                  role="note"
+                  style={{
+                    marginTop: 16,
+                    padding: '12px 14px',
+                    background: 'var(--amber-100)',
+                    border: '1px solid rgba(240,165,62,0.35)',
+                    borderRadius: 8,
+                    fontFamily: 'var(--font-sans)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <Icon name="alert-triangle" size={14} color="var(--amber-700)" />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--amber-700)' }}>
+                      {tr('connect.verificationWarningTitle')}
+                    </span>
+                  </div>
+                  <ul style={{
+                    margin: 0,
+                    paddingLeft: 18,
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                    color: 'var(--fg-2)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                  }}>
+                    <li>{tr('connect.verificationWarningReview')}</li>
+                    {provider === 'gmail' ? (
+                      <li>{tr('connect.verificationWarningGoogleScreen')}</li>
+                    ) : (
+                      <li>{tr('connect.verificationWarningOutlookScreen')}</li>
+                    )}
+                    <li>{tr('connect.verificationWarningReauth')}</li>
+                  </ul>
+                </div>
+              )}
 
               {/* Fastmail: app-password guidance + help link */}
               {provider === 'fastmail' && (

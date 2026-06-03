@@ -116,7 +116,12 @@
     "viewUpgradeOptions": "Ver opciones de mejora",
     "back": "Atrás",
     "verifying": "Verificando…",
-    "connectInbox": "Conectar bandeja de entrada"
+    "connectInbox": "Conectar bandeja de entrada",
+    "verificationWarningTitle": "Antes de conectar: verificación de la app en curso",
+    "verificationWarningReview": "mcpemails.com está actualmente en el proceso de verificación de Google y de evaluación de seguridad CASA. Esto es normal mientras se completa la revisión.",
+    "verificationWarningGoogleScreen": "Google mostrará una pantalla que dice «Google no ha verificado esta aplicación». Para continuar, haz clic en «Configuración avanzada» y luego en «Ir a mcpemails.com (no seguro)».",
+    "verificationWarningOutlookScreen": "Microsoft puede mostrar una advertencia de consentimiento de «editor no verificado». Revisa los permisos y haz clic en «Aceptar» para continuar.",
+    "verificationWarningReauth": "Durante la revisión, el acceso de la conexión caduca aproximadamente cada 7 días, por lo que tendrás que volver a conectar esta bandeja de entrada periódicamente."
   },
   "commandPalette": {
     "pageOverview": "Resumen",

@@ -20,13 +20,11 @@ export async function generateMetadata({ params }) {
       title: `${title} · mcpemails`,
       description,
       locale: OG_LOCALE[locale],
-      images: [{ url: '/og.png', width: 1200, height: 630, alt: 'mcpemails Terms of Service' }],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${title} · mcpemails`,
       description,
-      images: ['/og.png'],
     },
   };
 }
@@ -96,6 +94,7 @@ export default async function TermsPage({ params }) {
                 ))}
               </ul>
               <p>{t.rich('serviceDescription.p2', richTags)}</p>
+              <p>{t('serviceDescription.p2b')}</p>
               <p>{t('serviceDescription.p3')}</p>
             </LegalSection>
 

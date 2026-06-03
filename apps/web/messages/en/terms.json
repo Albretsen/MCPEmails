@@ -26,6 +26,7 @@
       "A usage and audit log showing which tools your agents have called and when."
     ],
     "p2": "MCPEmails acts as a protocol bridge. We do not store email content on our servers; we retrieve it live from your email provider at the moment an agent requests it and return it in the same HTTP response. See our <privacy>Privacy Policy</privacy> for a full description of what data we do and do not retain.",
+    "p2b": "Email content is delivered only to the MCP client or AI agent that you have connected and choose to use. Once content reaches that client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCPEmails does not select an AI provider on your behalf and retains no copy of your email content.",
     "p3": "We reserve the right to modify, suspend, or discontinue any part of the Service at any time. Where practicable we will give at least 30 days' notice of material changes to paid users."
   },
   "accountRegistration": {

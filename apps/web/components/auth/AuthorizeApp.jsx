@@ -75,15 +75,117 @@ function ClientMark({ clientId, logoUrl, size = 36 }) {
   );
 }
 
+// ─── Access presets ─────────────────────────────────────────────────────────
+//
+// Connect-time presets let a user quickly pick how much access to grant without
+// reasoning about every individual scope. Selecting a preset pre-fills the
+// per-scope toggles; manually editing a toggle flips the active mode to
+// "custom" (handled in AuthorizeApp). Each preset is intersected with the
+// scopes the client actually offered (offeredScopes) — a preset only ever
+// selects scopes within that set.
+
+const PRESETS = [
+  { id: 'readOnly', icon: 'eye',      scopes: ['read:email', 'search:email'] },
+  { id: 'standard', icon: 'zap',      scopes: ['read:email', 'search:email', 'send:email', 'manage:drafts', 'manage:contacts'], recommended: true },
+  { id: 'full',     icon: 'shield',   scopes: ['read:email', 'search:email', 'send:email', 'manage:folders', 'delete:email', 'manage:drafts', 'manage:contacts', 'schedule:email'] },
+];
+
+// ─── Preset cards (radiogroup) ───────────────────────────────────────────────
+
+function PresetCards({ presets, mode, onSelect }) {
+  const t = useTranslations('auth');
+
+  // Keyboard: arrow keys move selection between enabled (offered) presets,
+  // matching native radiogroup semantics.
+  const selectableIds = presets.filter((p) => p.available).map((p) => p.id).concat('custom');
+
+  const handleKeyDown = (e, currentId) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowRight' && e.key !== 'ArrowUp' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const idx = selectableIds.indexOf(currentId);
+    if (idx === -1) return;
+    const dir = (e.key === 'ArrowDown' || e.key === 'ArrowRight') ? 1 : -1;
+    const next = selectableIds[(idx + dir + selectableIds.length) % selectableIds.length];
+    onSelect(next);
+  };
+
+  return (
+    <div className="az-presets" role="radiogroup" aria-label={t('authorize.accessLevelLabel')}>
+      {presets.map((p) => {
+        const selected = mode === p.id;
+        const disabled = !p.available;
+        return (
+          <div
+            key={p.id}
+            role="radio"
+            aria-checked={selected}
+            aria-disabled={disabled}
+            tabIndex={disabled ? -1 : (selected || (mode === 'custom' && p.id === presets.find((x) => x.available)?.id) ? 0 : -1)}
+            className={'az-preset' + (selected ? ' is-selected' : '') + (disabled ? ' is-disabled' : '')}
+            title={disabled ? t('authorize.presetNotOffered') : undefined}
+            onClick={() => { if (!disabled) onSelect(p.id); }}
+            onKeyDown={(e) => {
+              if (disabled) return;
+              if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onSelect(p.id); }
+              else handleKeyDown(e, p.id);
+            }}
+          >
+            <div className="az-preset-ico"><Icon name={p.icon} size={16} /></div>
+            <div className="az-preset-main">
+              <div className="az-preset-title-row">
+                <span className="az-preset-title">{t(`authorize.preset.${p.id}.title`)}</span>
+                {p.recommended && (
+                  <span className="az-preset-badge">{t('authorize.recommended')}</span>
+                )}
+              </div>
+              <div className="az-preset-desc">{t(`authorize.preset.${p.id}.desc`)}</div>
+            </div>
+            <span className="az-preset-radio" aria-hidden="true" />
+          </div>
+        );
+      })}
+
+      {/* Custom card */}
+      <div
+        role="radio"
+        aria-checked={mode === 'custom'}
+        tabIndex={mode === 'custom' ? 0 : -1}
+        className={'az-preset' + (mode === 'custom' ? ' is-selected' : '')}
+        onClick={() => onSelect('custom')}
+        onKeyDown={(e) => {
+          if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onSelect('custom'); }
+          else handleKeyDown(e, 'custom');
+        }}
+      >
+        <div className="az-preset-ico"><Icon name="settings" size={16} /></div>
+        <div className="az-preset-main">
+          <div className="az-preset-title-row">
+            <span className="az-preset-title">{t('authorize.preset.custom.title')}</span>
+          </div>
+          <div className="az-preset-desc">{t('authorize.preset.custom.desc')}</div>
+        </div>
+        <span className="az-preset-radio" aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
 // ─── Permission row ───────────────────────────────────────────────────────────
 
-function PermRow({ icon, title, desc, enabled, onToggle, required }) {
+function PermRow({ icon, title, desc, enabled, onToggle, required, destructive }) {
   const t = useTranslations('auth');
   return (
-    <div className="az-perm">
-      <div className="pico"><Icon name={icon} size={16} /></div>
+    <div className={'az-perm' + (destructive ? ' is-destructive' : '')}>
+      <div className={'pico' + (destructive ? ' destructive' : '')}><Icon name={icon} size={16} /></div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="ph">{title}</div>
+        <div className="ph">
+          {title}
+          {destructive && (
+            <span className="az-perm-warn">
+              <Icon name="trash" size={11} color="var(--red-700)" />{t('authorize.destructive')}
+            </span>
+          )}
+        </div>
         <div className="pd">{desc}</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', marginLeft: 12 }}>
@@ -238,14 +340,72 @@ export function AuthorizeApp({
   const router = useRouter();
   const t = useTranslations('auth');
 
-  // Track which scopes the user has toggled on/off.
+  // The set of scopes this client is allowed to offer (canonical order).
+  const offeredScopeIds = requestedScopes.map((s) => s.scope);
+  const offeredScopeSet = new Set(offeredScopeIds);
+
+  // Build the preset list, intersected with what the client offers. A preset is
+  // only "available" when ALL of its scopes are offered — partially-offered
+  // presets are greyed out (with a tooltip) so the user is never surprised that
+  // a named preset granted less than its label implies. `effectiveScopes` is the
+  // exact set a preset selects (already === its scopes when available).
+  const presets = PRESETS.map((p) => {
+    const effectiveScopes = p.scopes.filter((s) => offeredScopeSet.has(s));
+    return {
+      ...p,
+      effectiveScopes,
+      available: effectiveScopes.length === p.scopes.length && effectiveScopes.length > 0,
+    };
+  });
+
+  // Pick the initial mode: prefer "standard" if fully available, else the first
+  // available preset, else "custom". This determines the default selection.
+  const defaultPreset =
+    presets.find((p) => p.id === 'standard' && p.available) ??
+    presets.find((p) => p.available) ??
+    null;
+
+  const [mode, setMode] = useState(defaultPreset ? defaultPreset.id : 'custom');
+
+  // Track which scopes the user has toggled on/off. Initialised from the default
+  // preset's scopes (or all offered scopes when no preset is available).
   const [enabledScopes, setEnabledScopes] = useState(() => {
     const initial = {};
+    const initialOn = defaultPreset ? new Set(defaultPreset.effectiveScopes) : offeredScopeSet;
     for (const s of requestedScopes) {
-      initial[s.scope] = true; // all requested scopes default to enabled
+      initial[s.scope] = initialOn.has(s.scope);
     }
     return initial;
   });
+
+  // Whether the granular per-scope toggles are revealed. The Custom mode always
+  // reveals them; presets keep them collapsed behind a "Customize" affordance.
+  const [showCustom, setShowCustom] = useState(mode === 'custom');
+
+  // Selecting a preset (or "custom") from the radiogroup.
+  const selectPreset = (id) => {
+    setMode(id);
+    if (id === 'custom') {
+      setShowCustom(true);
+      return; // keep the user's current toggles
+    }
+    const preset = presets.find((p) => p.id === id);
+    if (!preset || !preset.available) return;
+    const on = new Set(preset.effectiveScopes);
+    setEnabledScopes(() => {
+      const next = {};
+      for (const s of requestedScopes) next[s.scope] = on.has(s.scope);
+      return next;
+    });
+  };
+
+  // Toggling an individual scope flips the active mode to "custom" without
+  // losing the user's edits.
+  const toggleScope = (scope, value) => {
+    setEnabledScopes((prev) => ({ ...prev, [scope]: value }));
+    setMode('custom');
+    setShowCustom(true);
+  };
 
   // Inbox access mode. "All inboxes" (default) grants access to every inbox in
   // the workspace, including ones connected later — it is stored as
@@ -420,21 +580,39 @@ export function AuthorizeApp({
                       fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
                       color: 'var(--fg-2)', marginBottom: 8,
                     }}>
-                      {t('authorize.willBeAbleTo')}
+                      {t('authorize.accessLevelLabel')}
                     </div>
-                    <div className="az-perms">
-                      {requestedScopes.map((s) => (
-                        <PermRow
-                          key={s.scope}
-                          icon={s.icon || 'key'}
-                          title={s.title || s.scope}
-                          desc={s.desc || ''}
-                          enabled={enabledScopes[s.scope] ?? true}
-                          onToggle={(v) => setEnabledScopes((prev) => ({ ...prev, [s.scope]: v }))}
-                          required={s.required ?? false}
-                        />
-                      ))}
-                    </div>
+
+                    {/* Preset cards (radiogroup) */}
+                    <PresetCards presets={presets} mode={mode} onSelect={selectPreset} />
+
+                    {/* Customize affordance + granular per-scope toggles */}
+                    <button
+                      type="button"
+                      className="az-customize-toggle"
+                      aria-expanded={showCustom}
+                      onClick={() => setShowCustom((v) => !v)}
+                    >
+                      <Icon name="chevron" size={14} className={showCustom ? 'az-chev-open' : 'az-chev'} />
+                      {showCustom ? t('authorize.hideCustomize') : t('authorize.customize')}
+                    </button>
+
+                    {showCustom && (
+                      <div className="az-perms" style={{ marginTop: 8 }}>
+                        {requestedScopes.map((s) => (
+                          <PermRow
+                            key={s.scope}
+                            icon={s.icon || 'key'}
+                            title={s.title || s.scope}
+                            desc={s.desc || ''}
+                            enabled={enabledScopes[s.scope] ?? false}
+                            onToggle={(v) => toggleScope(s.scope, v)}
+                            required={s.required ?? false}
+                            destructive={s.destructive ?? false}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div style={{
@@ -568,7 +746,7 @@ export function AuthorizeApp({
                   variant="primary"
                   icon="shield"
                   onClick={handleAllow}
-                  disabled={!allInboxes && grantCount === 0}
+                  disabled={(!allInboxes && grantCount === 0) || selectedScopes.length === 0}
                 >
                   {t('authorize.allowAccess')}
                 </Btn>

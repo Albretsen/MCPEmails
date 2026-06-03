@@ -60,8 +60,16 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     // Already-authenticated user visiting an auth page → honor ?redirect= if
     // present (e.g. /login?redirect=/authorize?...), otherwise send to /dashboard.
     const redirectParam = request.nextUrl.searchParams.get('redirect');
+    // SECURITY: only accept same-origin relative paths. A protocol-relative
+    // URL like `//evil.com` (or `/\evil.com`) passes a bare startsWith('/')
+    // check and resolves to an external origin → open redirect.
+    const isSafeRedirect =
+      !!redirectParam &&
+      redirectParam.startsWith('/') &&
+      !redirectParam.startsWith('//') &&
+      !redirectParam.startsWith('/\\');
     const destination =
-      redirectParam && redirectParam.startsWith('/')
+      isSafeRedirect
         ? new URL(redirectParam, request.nextUrl.origin).toString()
         : new URL('/dashboard', request.nextUrl.origin).toString();
     return NextResponse.redirect(destination);

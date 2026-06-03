@@ -38,7 +38,11 @@ export async function GET(request: Request) {
 
   // Session cookies are now written. Redirect to the dashboard (or the
   // originally-requested path stored in the `next` param).
-  // Only allow relative `next` paths to prevent open-redirect attacks.
-  const redirectPath = next.startsWith('/') ? next : '/dashboard';
+  // Only allow same-origin relative `next` paths to prevent open-redirect
+  // attacks. A protocol-relative URL like `//evil.com` (or `/\evil.com`)
+  // passes a bare startsWith('/') check but resolves to an external origin.
+  const isSafeNext =
+    next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\');
+  const redirectPath = isSafeNext ? next : '/dashboard';
   return NextResponse.redirect(`${origin}${redirectPath}`);
 }

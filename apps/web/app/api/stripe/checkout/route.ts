@@ -88,12 +88,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // ── 4. Resolve the user's workspace ───────────────────────────────────────
+  // ── 4. Resolve the user's primary workspace (for a display label only) ────
+  // The subscription is tied to the USER, not this workspace; we only read the
+  // workspace to give the Stripe customer a friendly name.
   const { data: workspace, error: wsError } = await supabase
     .from('workspaces')
-    .select('id, display_name, plan, owner_id')
+    .select('id, display_name')
     .eq('owner_id', user.id)
     .is('deleted_at', null)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .single();
 
   if (wsError || !workspace) {
@@ -103,23 +107,52 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Prevent a no-op checkout: if the workspace is already on this plan, bail.
-  if (workspace.plan === planId) {
+  // ── 4b. Guard against a duplicate / no-op subscription ─────────────────────
+  // The subscription is per-user. If the user already has an entitled plan,
+  // route plan/interval changes through the Billing Portal instead of creating
+  // a second Stripe subscription (which would double-charge them).
+  const { data: billing } = await supabase
+    .from('user_billing')
+    .select('plan, subscription_status')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  const entitledStatuses = ['active', 'trialing', 'past_due', 'unpaid'];
+  const hasEntitledSubscription =
+    billing != null &&
+    billing.plan !== 'free' &&
+    (billing.subscription_status == null ||
+      entitledStatuses.includes(billing.subscription_status));
+
+  if (hasEntitledSubscription) {
+    if (billing!.plan === planId) {
+      return NextResponse.json(
+        { error: `You are already on the ${plan.name} plan.` },
+        { status: 409 },
+      );
+    }
+    // Different paid plan: must change it in the portal, not via a new checkout.
     return NextResponse.json(
-      { error: `Your workspace is already on the ${plan.name} plan.` },
+      {
+        error:
+          'You already have an active subscription. ' +
+          'Use the billing portal to change your plan or interval.',
+        error_code: 'subscription_exists',
+        portal: true,
+      },
       { status: 409 },
     );
   }
 
-  // ── 5. Get or create the Stripe Customer for this workspace ───────────────
+  // ── 5. Get or create the single Stripe Customer for this user ─────────────
   const ownerEmail = user.email ?? '';
   let customerId: string;
 
   try {
     const result = await getOrCreateStripeCustomer({
-      workspaceId: workspace.id,
+      userId: user.id,
       ownerEmail,
-      workspaceName: workspace.display_name,
+      displayName: workspace.display_name,
     });
     customerId = result.customerId;
   } catch (err) {
@@ -153,14 +186,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       allow_promotion_codes: true,
       // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
-      // Pass workspace context through to the subscription for the webhook handler.
+      // Pass USER context through to the subscription for the webhook handler.
+      // The subscription is tied to the user; the webhook resolves the owner
+      // from user_id (or the customer) and propagates to all owned workspaces.
       subscription_data: {
         metadata: {
-          workspace_id: workspace.id,
+          user_id: user.id,
         },
       },
       metadata: {
-        workspace_id: workspace.id,
+        user_id: user.id,
         plan_id: planId,
         interval,
       },

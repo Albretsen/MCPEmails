@@ -116,7 +116,12 @@
     "viewUpgradeOptions": "Se oppgraderingsalternativer",
     "back": "Tilbake",
     "verifying": "Verifiserer…",
-    "connectInbox": "Koble til innboks"
+    "connectInbox": "Koble til innboks",
+    "verificationWarningTitle": "Før du kobler til: appverifisering pågår",
+    "verificationWarningReview": "mcpemails.com er for tiden under Googles verifisering og CASA-sikkerhetsvurdering. Dette er forventet mens vurderingen pågår.",
+    "verificationWarningGoogleScreen": "Google viser et skjermbilde med «Google har ikke verifisert denne appen». For å fortsette, klikk «Avansert» og deretter «Gå til mcpemails.com (usikkert)».",
+    "verificationWarningOutlookScreen": "Microsoft kan vise en samtykkeadvarsel om «uverifisert utgiver». Se gjennom tillatelsene og klikk «Godta» for å fortsette.",
+    "verificationWarningReauth": "Mens vurderingen pågår, utløper tilgangen omtrent hver 7. dag, så du må koble til denne innboksen på nytt med jevne mellomrom."
   },
   "commandPalette": {
     "pageOverview": "Oversikt",

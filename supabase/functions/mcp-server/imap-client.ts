@@ -687,6 +687,14 @@ function toUidSet(uids: number[]): string {
 }
 
 function quoteImap(s: string): string {
+  // SECURITY: reject CR/LF and other control chars before quoting. These flow
+  // into raw IMAP command lines (SELECT/CREATE/RENAME/DELETE/COPY/MOVE/APPEND/
+  // LIST/STATUS); a folder name containing CRLF would break out of the command
+  // line and inject arbitrary IMAP commands.
+  // deno-lint-ignore no-control-regex
+  if (/[\x00-\x1F\x7F]/.test(s)) {
+    throw new Error("Invalid folder name: control characters are not allowed");
+  }
   return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 

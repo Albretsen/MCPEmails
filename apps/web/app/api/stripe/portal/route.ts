@@ -43,27 +43,20 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // ── 2. Resolve the user's workspace ───────────────────────────────────────
-  const { data: workspace, error: wsError } = await supabase
-    .from('workspaces')
-    .select('id, plan, stripe_customer_id')
-    .eq('owner_id', user.id)
-    .is('deleted_at', null)
-    .single();
+  // ── 2. Resolve the user's billing record ──────────────────────────────────
+  // Billing (the Stripe customer) is tied to the user, not a workspace.
+  const { data: billing } = await supabase
+    .from('user_billing')
+    .select('stripe_customer_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
 
-  if (wsError || !workspace) {
-    return NextResponse.json(
-      { error: 'Workspace not found.' },
-      { status: 404 },
-    );
-  }
-
-  // ── 3. Guard: only paid plans have a customer portal ──────────────────────
-  if (!workspace.stripe_customer_id) {
+  // ── 3. Guard: only users with a Stripe customer have a portal ─────────────
+  if (!billing?.stripe_customer_id) {
     return NextResponse.json(
       {
         error:
-          'No billing account found for this workspace. ' +
+          'No billing account found. ' +
           'Upgrade to a paid plan to access the customer portal.',
       },
       { status: 422 },
@@ -79,7 +72,7 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
   // ── 5. Create the Stripe Billing Portal session ────────────────────────────
   try {
     const session = await stripe.billingPortal.sessions.create({
-      customer: workspace.stripe_customer_id,
+      customer: billing.stripe_customer_id,
       return_url: returnUrl,
     });
 

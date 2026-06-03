@@ -26,6 +26,7 @@
       "Un registro de uso y auditoría que muestra qué herramientas han llamado tus agentes y cuándo."
     ],
     "p2": "MCPEmails actúa como un puente de protocolo. No almacenamos el contenido del correo en nuestros servidores; lo recuperamos en vivo desde tu proveedor de correo en el momento en que un agente lo solicita y lo devolvemos en la misma respuesta HTTP. Consulta nuestra <privacy>Política de privacidad</privacy> para una descripción completa de qué datos sí conservamos y cuáles no.",
+    "p2b": "El contenido del correo solo se entrega al cliente MCP o agente de IA que has conectado y eliges utilizar. Una vez que el contenido llega a ese cliente, se rige por la política de privacidad y los términos propios de ese cliente o proveedor de IA, que eres responsable de revisar. MCPEmails no selecciona un proveedor de IA en tu nombre y no conserva ninguna copia del contenido de tu correo.",
     "p3": "Nos reservamos el derecho de modificar, suspender o discontinuar cualquier parte del Servicio en cualquier momento. Cuando sea posible, daremos al menos 30 días de aviso de cambios materiales a los usuarios de pago."
   },
   "accountRegistration": {

@@ -20,13 +20,11 @@ export async function generateMetadata({ params }) {
       title: `${title} · mcpemails`,
       description,
       locale: OG_LOCALE[locale],
-      images: [{ url: '/og.png', width: 1200, height: 630, alt: 'mcpemails Privacy Policy' }],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${title} · mcpemails`,
       description,
-      images: ['/og.png'],
     },
   };
 }
@@ -106,6 +104,7 @@ export default async function PrivacyPage({ params }) {
 
               <h4>{t('dataWeCollect.emailContentTitle')}</h4>
               <p>{t.rich('dataWeCollect.emailContentP', richTags)}</p>
+              <p>{t.rich('dataWeCollect.emailContentAgentP', richTags)}</p>
 
               <h4>{t('dataWeCollect.technicalTitle')}</h4>
               <p>{t('dataWeCollect.technicalP')}</p>
@@ -159,6 +158,7 @@ export default async function PrivacyPage({ params }) {
               <ul>
                 <li>{t.rich('howWeUseData.googleScopeReadonly', richTags)}</li>
                 <li>{t.rich('howWeUseData.googleScopeSend', richTags)}</li>
+                <li>{t.rich('howWeUseData.googleScopeModify', richTags)}</li>
               </ul>
               <p>{t('howWeUseData.googleLimitedIntro')}</p>
               <ul>

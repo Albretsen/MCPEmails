@@ -26,6 +26,7 @@
       "Un journal d'utilisation et d'audit indiquant quels outils vos agents ont appelés et à quel moment."
     ],
     "p2": "MCPEmails agit comme un pont de protocole. Nous ne stockons pas le contenu des e-mails sur nos serveurs ; nous le récupérons en direct auprès de votre fournisseur de messagerie au moment où un agent le demande et le renvoyons dans la même réponse HTTP. Consultez notre <privacy>Politique de confidentialité</privacy> pour une description complète des données que nous conservons et de celles que nous ne conservons pas.",
+    "p2b": "Le contenu des e-mails n'est transmis qu'au client MCP ou à l'agent IA que vous avez connecté et que vous choisissez d'utiliser. Une fois le contenu parvenu à ce client, il est régi par la politique de confidentialité et les conditions propres à ce client ou à ce fournisseur d'IA, qu'il vous appartient de consulter. MCPEmails ne sélectionne pas de fournisseur d'IA en votre nom et ne conserve aucune copie du contenu de vos e-mails.",
     "p3": "Nous nous réservons le droit de modifier, suspendre ou interrompre toute partie du Service à tout moment. Dans la mesure du possible, nous donnerons un préavis d'au moins 30 jours en cas de modifications substantielles affectant les utilisateurs payants."
   },
   "accountRegistration": {
