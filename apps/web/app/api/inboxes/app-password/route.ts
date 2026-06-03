@@ -141,7 +141,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!validation.ok) {
-    return NextResponse.json({ error: validation.message }, { status: 422 });
+    // AUTH_FAILED means the mail server rejected the credentials (wrong app
+    // password / account-level auth issue). Surface a structured error_code so
+    // the client can distinguish a credential rejection from other 422 causes
+    // (bad input, unsupported provider, etc.). All other error codes retain
+    // their own messages with no extra error_code (network / TLS / protocol
+    // errors are handled separately and the message is already actionable).
+    const body: Record<string, string> = { error: validation.message };
+    if (validation.code === 'AUTH_FAILED') body.error_code = 'auth_failed';
+    return NextResponse.json(body, { status: 422 });
   }
 
   // 6. Encrypt the app password: never store plaintext.

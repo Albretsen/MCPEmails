@@ -50,7 +50,7 @@
       "0": {
         "tag": "Scope",
         "h": "Six tools. The whole surface area.",
-        "p": "Every email task your agent needs fits in six calls: <code>list_inboxes</code>, <code>list_inbox</code>, <code>read_email</code>, <code>search_emails</code>, <code>send_email</code>, <code>reply_to_email</code>. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. That's the entire integration."
+        "p": "Every email task your agent needs fits in six calls: <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code>. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. That's the entire integration."
       },
       "1": {
         "tag": "Storage",
@@ -60,7 +60,7 @@
       "2": {
         "tag": "Sending",
         "h": "Sending goes through your provider.",
-        "p": "When your agent calls <code>send_email</code> or <code>reply_to_email</code>, the message is dispatched via the Gmail API, Microsoft Graph, or your own SMTP server. Your domain reputation and deliverability stay entirely in your hands. We never relay mail from our own domain."
+        "p": "When your agent calls <code>email_send</code> or <code>email_reply</code>, the message is dispatched via the Gmail API, Microsoft Graph, or your own SMTP server. Your domain reputation and deliverability stay entirely in your hands. We never relay mail from our own domain."
       },
       "3": {
         "tag": "Providers",
@@ -90,11 +90,11 @@
       },
       "1": {
         "h": "Paste the URL: OAuth or API key",
-        "p": "For an MCP client that supports OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others), paste <code>https://www.mcpemails.com/api/mcp</code>, click Connect, and authorize. No key needed. For clients without OAuth (Cline, JetBrains, custom scripts), generate a scoped API key in the dashboard instead."
+        "p": "For an MCP client that supports OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others), paste <code>https://mcpemails.com/api/mcp</code>, click Connect, and authorize. No key needed. For clients without OAuth (Cline, JetBrains, custom scripts), generate a scoped API key in the dashboard instead."
       },
       "2": {
         "h": "Your agent works the inbox",
-        "p": "The agent calls tools like <code>search_emails()</code> or <code>reply_to_email()</code>. MCPEmails fetches live from your provider and returns the result. Nothing is cached between calls."
+        "p": "The agent calls tools like <code>email_search()</code> or <code>email_reply()</code>. MCPEmails fetches live from your provider and returns the result. Nothing is cached between calls."
       }
     },
     "tools": {

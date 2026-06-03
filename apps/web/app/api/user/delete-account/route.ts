@@ -17,11 +17,15 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
  *      disconnect inboxes and null their encrypted credentials, drop pending
  *      invites, and soft-delete the workspace.
  *   5. Remove the user's membership rows everywhere (owned + invited).
- *   6. Sign the user out (invalidate session cookies).
- *   7. Return { success: true }.
+ *   6. Ban the auth user via the service-role admin API (~100-year ban_duration)
+ *      so the credentials can no longer be used to log in.
+ *   7. Sign the user out (invalidate session cookies).
+ *   8. Return { success: true }.
  *
  * Residual (by design): the auth.users row is retained (soft-delete model);
- * audit/activity logs are preserved for integrity.
+ * audit/activity logs are preserved for integrity. The auth user is banned
+ * via the service-role admin API so they cannot log in again despite the row
+ * remaining in auth.users.
  *
  * Security:
  *   - Requires a valid session cookie.
@@ -34,6 +38,8 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
  *     Postgres rejects under the user's RLS context as "new row violates
  *     row-level security policy". Authorization is fully established before any
  *     mutation, and every write is scoped to the owned workspace_id.
+ *   - After teardown, the auth user is permanently banned (ban_duration ~100 years)
+ *     via auth.admin.updateUserById so that credentials can never be reused to log in.
  *   - No credentials, tokens, or secrets are logged.
  *   - Data is soft-deleted, not hard-deleted, to preserve the audit trail.
  */
@@ -152,7 +158,21 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // 6. Sign the user out to invalidate all session cookies.
+  // 6. Ban the auth user so they can never log in again, even though the
+  //    auth.users row is retained for audit purposes. We set a ban_duration of
+  //    ~100 years (876_600 h) and stamp app_metadata.deleted_at for traceability.
+  //    This uses the service-role admin API (requires SUPABASE_SERVICE_ROLE_KEY).
+  //    Failure is non-fatal: the workspace data is already destroyed; we log it
+  //    and continue so the caller still gets a clean response.
+  const { error: banError } = await service.auth.admin.updateUserById(user.id, {
+    ban_duration: '876600h',
+    app_metadata: { deleted_at: now },
+  });
+  if (banError) {
+    console.error('[delete-account] auth ban failed (non-fatal):', banError.message);
+  }
+
+  // 7. Sign the user out to invalidate all session cookies.
   //    Failures here are non-fatal: the workspace is already deleted and the
   //    user will be locked out on next page load regardless.
   const { error: signOutError } = await supabase.auth.signOut();

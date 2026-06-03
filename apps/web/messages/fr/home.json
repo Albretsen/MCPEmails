@@ -50,7 +50,7 @@
       "0": {
         "tag": "Périmètre",
         "h": "Six outils. Toute la surface d'action.",
-        "p": "Chaque tâche e-mail dont votre agent a besoin tient en six appels : <code>list_inboxes</code>, <code>list_inbox</code>, <code>read_email</code>, <code>search_emails</code>, <code>send_email</code>, <code>reply_to_email</code>. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP. C'est toute l'intégration."
+        "p": "Chaque tâche e-mail dont votre agent a besoin tient en six appels : <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code>. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP. C'est toute l'intégration."
       },
       "1": {
         "tag": "Stockage",
@@ -60,7 +60,7 @@
       "2": {
         "tag": "Envoi",
         "h": "L'envoi passe par votre fournisseur.",
-        "p": "Lorsque votre agent appelle <code>send_email</code> ou <code>reply_to_email</code>, le message est expédié via l'API Gmail, Microsoft Graph ou votre propre serveur SMTP. La réputation de votre domaine et votre délivrabilité restent entièrement entre vos mains. Nous ne relayons jamais de courrier depuis notre propre domaine."
+        "p": "Lorsque votre agent appelle <code>email_send</code> ou <code>email_reply</code>, le message est expédié via l'API Gmail, Microsoft Graph ou votre propre serveur SMTP. La réputation de votre domaine et votre délivrabilité restent entièrement entre vos mains. Nous ne relayons jamais de courrier depuis notre propre domaine."
       },
       "3": {
         "tag": "Fournisseurs",
@@ -90,11 +90,11 @@
       },
       "1": {
         "h": "Collez l'URL : OAuth ou clé API",
-        "p": "Pour un client MCP qui prend en charge OAuth 2.0 (claude.ai, Claude Desktop, Cursor et autres), collez <code>https://www.mcpemails.com/api/mcp</code>, cliquez sur Connecter et autorisez. Aucune clé nécessaire. Pour les clients sans OAuth (Cline, JetBrains, scripts personnalisés), générez plutôt une clé API limitée dans le tableau de bord."
+        "p": "Pour un client MCP qui prend en charge OAuth 2.0 (claude.ai, Claude Desktop, Cursor et autres), collez <code>https://mcpemails.com/api/mcp</code>, cliquez sur Connecter et autorisez. Aucune clé nécessaire. Pour les clients sans OAuth (Cline, JetBrains, scripts personnalisés), générez plutôt une clé API limitée dans le tableau de bord."
       },
       "2": {
         "h": "Votre agent travaille la boîte de réception",
-        "p": "L'agent appelle des outils comme <code>search_emails()</code> ou <code>reply_to_email()</code>. MCPEmails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
+        "p": "L'agent appelle des outils comme <code>email_search()</code> ou <code>email_reply()</code>. MCPEmails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
       }
     },
     "tools": {

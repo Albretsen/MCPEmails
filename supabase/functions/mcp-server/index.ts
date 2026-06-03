@@ -897,7 +897,7 @@ interface ActivityLogParams {
   apiKeyId: string;
   /** UUID of the inbox the tool operated on, or null for non-inbox operations. */
   inboxId: string | null;
-  /** The name of the MCP tool that was called (e.g. "list_messages"). */
+  /** The name of the MCP tool that was called (e.g. "email_list"). */
   toolName: string;
   /** Outcome of the call. */
   status: "success" | "error" | "rate_limited";
@@ -974,7 +974,7 @@ async function writeActivityLog(params: ActivityLogParams): Promise<void> {
 /**
  * Fire-and-forget upsert of contact rows derived from email message headers.
  *
- * Called on every successful read_email, search_emails, and send_email.
+ * Called on every successful email_read, email_search, and email_send.
  * Silently skips invalid addresses and swallows DB errors so a contacts
  * failure never blocks a tool response.
  *
@@ -1193,18 +1193,73 @@ function isToolAuthorized(tool: ToolDefinition, scopes: string[]): boolean {
   return false;
 }
 
+/**
+ * Shared JSON-Schema properties for the structured, provider-agnostic search
+ * fields exposed by email_search / email_search_and_move / email_search_and_delete. The
+ * server translates these into each provider's native query dialect, so the
+ * agent never needs to know Gmail operators, KQL, OData, JMAP filters, or IMAP
+ * SEARCH syntax. Descriptions are sourced verbatim from SEARCH_FIELD_DESCRIPTIONS.
+ */
+const STRUCTURED_SEARCH_PROPERTIES: Record<string, Record<string, unknown>> = {
+  from: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.from },
+  to: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.to },
+  cc: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.cc },
+  subject: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.subject },
+  body: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.body },
+  text: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.text },
+  unread: { type: "boolean", description: SEARCH_FIELD_DESCRIPTIONS.unread },
+  has_attachment: {
+    type: "boolean",
+    description: SEARCH_FIELD_DESCRIPTIONS.has_attachment,
+  },
+  flagged: { type: "boolean", description: SEARCH_FIELD_DESCRIPTIONS.flagged },
+  since: {
+    type: "string",
+    format: "date-time",
+    description: SEARCH_FIELD_DESCRIPTIONS.since,
+  },
+  before: {
+    type: "string",
+    format: "date-time",
+    description: SEARCH_FIELD_DESCRIPTIONS.before,
+  },
+};
+
+/** Description for the legacy `query` raw escape-hatch field. */
+const RAW_QUERY_DESCRIPTION =
+  "Raw provider-native query string (escape hatch). Prefer the structured " +
+  "fields above. Combined with them where supported; ignored on Fastmail.";
+
+/** Shared `inbox_id` property — the standard copy inlined across most tools. */
+const INBOX_ID_PROPERTY = {
+  type: "string",
+  format: "uuid",
+  description:
+    "UUID of the inbox to use. Optional when the API key has access to " +
+    "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
+    "with an email address. Call inbox_list to discover inboxes.",
+} as const;
+
+/** Shared `inbox` property — the email-address alternative to `inbox_id`. */
+const INBOX_PROPERTY = {
+  type: "string",
+  description:
+    "Email address of the inbox to use, as a friendly alternative to " +
+    "inbox_id. Optional; ignored if inbox_id is given.",
+} as const;
+
 /** All tools available in MCPEmails, in canonical display order. */
 const TOOL_REGISTRY: ToolDefinition[] = [
   // ── read:email scope ────────────────────────────────────────────────────────
 
-  // list_inboxes is registered FIRST, intentionally. It is the entry point for
+  // inbox_list is registered FIRST, intentionally. It is the entry point for
   // every other tool (all of which require an inbox_id that only this tool can
   // supply). Some MCP clients build their tool-search index from the head of the
   // tools/list response and can drop the final entry on a fresh connection; if
   // this tool is last, a just-connected client cannot discover any inbox_id and
   // every request fails until the tool list is manually refreshed. Keep it first.
   {
-    name: "list_inboxes",
+    name: "inbox_list",
     title: "List Inboxes",
     description:
       "List inboxes. Returns all email inboxes (mailboxes/accounts) the current " +
@@ -1223,33 +1278,21 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "list_messages",
+    name: "email_list",
     title: "List Messages",
     description:
       "List email messages inside an inbox. Returns message summaries " +
       "(sender, subject, date, preview, read status, attachment flag) ordered " +
       "newest first. Supports filtering by folder, unread status, and pagination. " +
-      "Use read_email to fetch the full content of a specific message. " +
+      "Use email_read to fetch the full content of a specific message. " +
       "Note: this lists the MESSAGES within one inbox — to discover which inboxes " +
-      "exist and obtain their inbox_id, call list_inboxes first.",
+      "exist and obtain their inbox_id, call inbox_list first.",
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         limit: {
           type: "integer",
           minimum: 1,
@@ -1289,7 +1332,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "read_email",
+    name: "email_read",
     title: "Read Email",
     description:
       "Fetch the full content of a single email by its provider message ID. " +
@@ -1301,27 +1344,13 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
           description:
-            "Provider-native message identifier. For Gmail this is the message ID " +
-            "string returned by the Gmail API (e.g., '18a3c2d7f9b1e4a0'). For Outlook " +
-            "it is the Graph API item ID. For IMAP providers it is the UID as a string. " +
-            "Always obtained from a previous call to list_messages or search_emails.",
+            "Opaque provider-native message identifier. Always obtained from a " +
+            "previous call to email_list or email_search.",
         },
         include_html: {
           type: "boolean",
@@ -1353,39 +1382,81 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "search_emails",
+    name: "email_read_batch",
+    title: "Read Emails (batch)",
+    description:
+      "Read multiple emails in a single call by their provider message IDs — ideal " +
+      "for triaging an inbox without one email_read round-trip per message. " +
+      "Returns a `messages` array (each in the same shape as email_read) plus a " +
+      "per-ID `errors` array; a single bad or missing ID never fails the whole batch. " +
+      "When include_attachments is true, attachment data shares a single 10 MB budget " +
+      "across the whole call — attachments beyond the budget are omitted. Max 50 IDs.",
+    requiredScope: "read:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        message_ids: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 1,
+          maxItems: 50,
+          description:
+            "Provider-native message IDs to read (from email_list or email_search). " +
+            "Max 50 per call.",
+        },
+        include_html: {
+          type: "boolean",
+          default: false,
+          description:
+            "When true, each message includes the sanitized HTML body in addition to " +
+            "the plain-text body. Set to true only when the agent needs to process " +
+            "formatting, links, or structure from the HTML.",
+        },
+        include_attachments: {
+          type: "boolean",
+          default: false,
+          description:
+            "When true, each attachment is included as a base64-encoded data field. " +
+            "Attachments increase response size significantly; request only when the " +
+            "agent needs attachment content. The 10 MB total size limit is shared " +
+            "across all messages in the call.",
+        },
+        mark_as_read: {
+          type: "boolean",
+          default: false,
+          description:
+            "When true, marks each message as read at the provider after successfully " +
+            "fetching its content. Defaults to false to avoid unintended state changes.",
+        },
+      },
+      required: ["message_ids"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "email_search",
     title: "Search Emails",
     description:
-      "Full-text search across an inbox using the provider's native search engine. " +
-      "For Gmail, use Gmail search operators (e.g., 'from:alice@example.com subject:report'). " +
-      "For Outlook/Graph, the query is passed as a $search parameter. " +
-      "For IMAP providers (Fastmail), a subset of IMAP SEARCH criteria is supported. " +
+      "Search an inbox using structured, provider-agnostic fields. Supply any of " +
+      "from, to, cc, subject, body, text, unread, has_attachment, flagged, since, " +
+      "before (combined with AND); the server translates them into the inbox's " +
+      "native search syntax, so you never need to know provider query syntax. " +
+      "An optional `query` field is a raw provider-native escape hatch. " +
       "Returns message summaries ordered by relevance or date depending on the provider.",
     requiredScope: "read:email",
     altScopes: ["search:email"],
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        ...STRUCTURED_SEARCH_PROPERTIES,
         query: {
           type: "string",
-          minLength: 1,
-          description:
-            "Search query string. The query syntax is provider-specific — see the " +
-            "description above for per-provider guidance.",
+          description: RAW_QUERY_DESCRIPTION,
         },
         limit: {
           type: "integer",
@@ -1413,41 +1484,27 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "IMAP providers support per-folder search.",
         },
       },
-      required: ["query"],
+      required: [],
       additionalProperties: false,
     },
   },
 
   {
-    name: "list_folders",
+    name: "folder_list",
     title: "List Folders",
     description:
       "List all folders (or labels, for Gmail) for an inbox. " +
       "Returns each folder's provider-native ID, display name, type " +
       "('folder' for hierarchical providers, 'label' for Gmail), and " +
       "message counts (total and unread). " +
-      "IMAP providers use LIST + STATUS; Gmail uses labels.list + labels.get; " +
-      "Outlook uses Graph mailFolders; Fastmail uses JMAP Mailbox/get. " +
-      "Use the returned folder names/IDs as the 'folder' argument for list_messages, " +
-      "and as source/destination for move_email and copy_email.",
+      "Use the returned folder names/IDs as the 'folder' argument for email_list, " +
+      "and as source/destination for email_move.",
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
       },
       required: [],
       additionalProperties: false,
@@ -1457,31 +1514,17 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   // ── manage:folders scope ─────────────────────────────────────────────────────
 
   {
-    name: "create_folder",
+    name: "folder_create",
     title: "Create Folder",
     description:
       "Create a new folder (or label, for Gmail) in an inbox. " +
-      "IMAP providers use the IMAP CREATE command; Gmail uses labels.create; " +
-      "Outlook uses Graph mailFolders create; Fastmail uses JMAP Mailbox/set create. " +
       "Returns the provider-native folder/label ID and display name of the created item.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         name: {
           type: "string",
           minLength: 1,
@@ -1495,35 +1538,21 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "rename_folder",
+    name: "folder_rename",
     title: "Rename Folder",
     description:
       "Rename an existing folder or label. " +
-      "IMAP providers use the IMAP RENAME command; Gmail uses labels.patch; " +
-      "Outlook uses Graph mailFolders PATCH; Fastmail uses JMAP Mailbox/set update. " +
-      "Use list_folders to obtain the folder_id before calling this tool.",
+      "Use folder_list to obtain the folder_id before calling this tool.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         folder_id: {
           type: "string",
           description:
-            "Provider-native folder/label ID as returned by list_folders. " +
+            "Provider-native folder/label ID as returned by folder_list. " +
             "For IMAP this is the mailbox name (e.g. 'INBOX/Work'); " +
             "for Gmail the label ID; for Outlook/Fastmail the opaque folder ID.",
         },
@@ -1540,37 +1569,23 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "delete_folder",
+    name: "folder_delete",
     title: "Delete Folder",
     description:
       "Permanently delete a folder (or label, for Gmail). " +
       "THIS ACTION IS IRREVERSIBLE — all messages inside the folder may be lost " +
       "depending on the provider. " +
-      "IMAP providers use the IMAP DELETE command; Gmail uses labels.delete; " +
-      "Outlook uses Graph mailFolders delete; Fastmail uses JMAP Mailbox/set destroy. " +
-      "Use list_folders to obtain the folder_id before calling this tool.",
+      "Use folder_list to obtain the folder_id before calling this tool.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         folder_id: {
           type: "string",
           description:
-            "Provider-native folder/label ID as returned by list_folders.",
+            "Provider-native folder/label ID as returned by folder_list.",
         },
       },
       required: ["folder_id"],
@@ -1579,89 +1594,28 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "move_email",
+    name: "email_move",
     title: "Move Email",
     description:
       "Move an email message to a different folder (or label, for Gmail). " +
-      "IMAP providers use UID MOVE (with COPY+\\\\Deleted+EXPUNGE fallback); " +
-      "Gmail simulates move by adding the destination label and removing the INBOX label; " +
-      "Outlook uses Graph messages/{id}/move; Fastmail uses JMAP Email/set to update mailboxIds. " +
-      "Use list_folders to obtain the destination_folder_id before calling this tool. " +
-      "Gmail does not support copy_email — use move_email instead.",
+      "On Gmail, moving adds the destination label and removes the INBOX label.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
           description:
-            "Provider-native message ID as returned by list_messages, read_email, or search_emails.",
+            "Provider-native message ID as returned by email_list, email_read, or email_search.",
         },
         destination_folder_id: {
           type: "string",
           description:
-            "Provider-native folder/label ID of the destination, as returned by list_folders. " +
-            "For IMAP this is the mailbox name (e.g. 'Archive'); " +
-            "for Gmail the label ID to add (INBOX label is removed automatically); " +
-            "for Outlook/Fastmail the opaque folder ID.",
-        },
-      },
-      required: ["message_id", "destination_folder_id"],
-      additionalProperties: false,
-    },
-  },
-
-  {
-    name: "copy_email",
-    title: "Copy Email",
-    description:
-      "Copy an email message to a different folder, leaving the original in place. " +
-      "IMAP providers use UID COPY; " +
-      "Outlook uses Graph messages/{id}/copy; Fastmail uses JMAP Email/copy. " +
-      "Gmail does not support copy — use move_email for Gmail inboxes. " +
-      "Use list_folders to obtain the destination_folder_id before calling this tool.",
-    requiredScope: "manage:folders",
-    inputSchema: {
-      type: "object",
-      properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
-        message_id: {
-          type: "string",
-          description:
-            "Provider-native message ID as returned by list_messages, read_email, or search_emails.",
-        },
-        destination_folder_id: {
-          type: "string",
-          description:
-            "Provider-native folder ID of the destination, as returned by list_folders. " +
-            "For IMAP this is the mailbox name; for Outlook/Fastmail the opaque folder ID.",
+            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
+            "Names and aliases are resolved automatically.",
         },
       },
       required: ["message_id", "destination_folder_id"],
@@ -1672,38 +1626,23 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   // ── delete:email scope ─────────────────────────────────────────────────────
 
   {
-    name: "delete_email",
+    name: "email_delete",
     title: "Delete Email",
     description:
       "Delete (trash or permanently expunge) a single email message. " +
       "By default the message is moved to the provider's Trash folder (safer). " +
-      "Set permanent:true to hard-delete: IMAP uses \\\\Deleted + UID EXPUNGE; " +
-      "Gmail calls messages.delete (bypasses Trash); " +
-      "Outlook calls Graph messages/{id}/permanentDelete; " +
-      "Fastmail uses JMAP Email/set destroy. " +
+      "Set permanent:true to hard-delete (bypasses Trash). " +
       "This action may be irreversible when permanent:true is set.",
     requiredScope: "delete:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
           description:
-            "Provider-native message ID as returned by list_messages, read_email, or search_emails.",
+            "Provider-native message ID as returned by email_list, email_read, or email_search.",
         },
         permanent: {
           type: "boolean",
@@ -1721,49 +1660,33 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   // ── bulk operations ─────────────────────────────────────────────────────────
 
   {
-    name: "bulk_move",
+    name: "email_move_batch",
     title: "Bulk Move",
     description:
       "Move up to 500 email messages to a destination folder in one call. " +
-      "IMAP: UID MOVE per source-folder group (falls back to COPY+EXPUNGE if MOVE unsupported); " +
-      "Gmail: messages.batchModify (label swap — removes INBOX, adds destination label); " +
-      "Outlook: per-message Graph move; " +
-      "Fastmail: single JMAP Email/set update for all messages. " +
-      "Returns succeeded/failed counts and per-message results. " +
-      "Use list_folders to obtain destination_folder_id.",
+      "On Gmail, moving adds the destination label and removes the INBOX label. " +
+      "Returns succeeded/failed counts and per-message results.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         message_ids: {
           type: "array",
           items: { type: "string" },
           minItems: 1,
           maxItems: 500,
           description:
-            "Provider-native message IDs to move (from list_messages, read_email, or search_emails). " +
+            "Provider-native message IDs to move (from email_list, email_read, or email_search). " +
             "Maximum 500 IDs per call.",
         },
         destination_folder_id: {
           type: "string",
           description:
-            "Provider-native folder/label ID of the destination, as returned by list_folders. " +
-            "For IMAP: mailbox name (e.g. 'Archive'); Gmail: label ID to add; " +
-            "Outlook/Fastmail: opaque folder ID.",
+            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
+            "Names and aliases are resolved automatically.",
         },
       },
       required: ["message_ids", "destination_folder_id"],
@@ -1772,34 +1695,19 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "bulk_delete",
+    name: "email_delete_batch",
     title: "Bulk Delete",
     description:
       "Delete up to 500 email messages in one call. " +
-      "By default moves messages to Trash (safer). Set permanent:true for hard delete. " +
-      "IMAP: UID MOVE to Trash or \\\\Deleted+UID EXPUNGE per source-folder group; " +
-      "Gmail: messages.batchDelete (permanent) or per-message trash (soft); " +
-      "Outlook: per-message Graph calls; " +
-      "Fastmail: JMAP Email/set destroy (permanent) or Trash mailbox update (soft). " +
+      "By default moves messages to Trash (safer). Set permanent:true for hard delete " +
+      "(bypasses Trash; irreversible). " +
       "Returns succeeded/failed counts and per-message results.",
     requiredScope: "delete:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         message_ids: {
           type: "array",
           items: { type: "string" },
@@ -1821,33 +1729,16 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "bulk_flag",
-    title: "Bulk Flag",
+    name: "email_flag",
+    title: "Flag or Mark Messages",
     description:
-      "Apply a read/unread/flag/unflag action to up to 500 messages in one call. " +
-      "IMAP: single UID STORE command per source-folder group; " +
-      "Gmail: messages.batchModify; " +
-      "Outlook: per-message Graph PATCH; " +
-      "Fastmail: single JMAP Email/set update for all messages. " +
-      "Returns succeeded/failed counts and per-message results.",
+      "Apply a read/unread/flag/unflag action to one or more messages in a single call. Use action 'read' or 'unread' to change read status, or 'flag'/'unflag' to add or remove a star/follow-up flag. Pass one message ID to update a single message, or up to 500 to update many at once. Get message IDs from email_list or email_search.",
     requiredScope: "send:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         message_ids: {
           type: "array",
           items: { type: "string" },
@@ -1873,49 +1764,35 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   // ── search-and-act (Phase 3 cont.) ───────────────────────────────────────────
 
   {
-    name: "search_and_move",
+    name: "email_search_and_move",
     title: "Search and Move",
     description:
       "Run a search and move all matching messages to a destination folder in one " +
       "server-side operation — avoids stale message IDs. " +
+      "Search uses structured, provider-agnostic fields (from, to, cc, subject, body, " +
+      "text, unread, has_attachment, flagged, since, before) that the server translates " +
+      "into the inbox's native search syntax, so you never need provider query syntax; " +
+      "`query` is a raw escape hatch. " +
       "Capped at 500 results per call. " +
-      "IMAP: UID MOVE per source-folder group; " +
-      "Gmail: messages.batchModify (label swap); " +
-      "Outlook: per-message Graph move; " +
-      "Fastmail: JMAP Email/set update for all matches. " +
-      "Returns succeeded/failed counts and per-message results. " +
-      "Use list_folders to obtain destination_folder_id.",
+      "On Gmail, moving adds the destination label and removes the INBOX label. " +
+      "Returns succeeded/failed counts and per-message results.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        ...STRUCTURED_SEARCH_PROPERTIES,
         query: {
           type: "string",
-          minLength: 1,
-          description:
-            "Search query string. Gmail: Gmail search syntax (from:, subject:, etc.); " +
-            "Outlook: KQL syntax; Fastmail: JMAP filter string; IMAP: IMAP SEARCH criteria.",
+          description: RAW_QUERY_DESCRIPTION,
         },
         destination_folder_id: {
           type: "string",
           description:
-            "Provider-native folder/label ID of the destination, as returned by list_folders. " +
-            "For IMAP: mailbox name (e.g. 'Archive'); Gmail: label ID to add; " +
-            "Outlook/Fastmail: opaque folder ID.",
+            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
+            "Names and aliases are resolved automatically.",
         },
         include_folders: {
           type: "array",
@@ -1932,47 +1809,35 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Maximum number of matching messages to move. Default: 500.",
         },
       },
-      required: ["query", "destination_folder_id"],
+      required: ["destination_folder_id"],
       additionalProperties: false,
     },
   },
 
   {
-    name: "search_and_delete",
+    name: "email_search_and_delete",
     title: "Search and Delete",
     description:
       "Run a search and delete all matching messages in one server-side operation — " +
       "avoids stale message IDs. " +
+      "Search uses structured, provider-agnostic fields (from, to, cc, subject, body, " +
+      "text, unread, has_attachment, flagged, since, before) that the server translates " +
+      "into the inbox's native search syntax, so you never need provider query syntax; " +
+      "`query` is a raw escape hatch. " +
       "Capped at 500 results per call. " +
-      "Default: move matches to Trash (safer). Set permanent:true for hard delete. " +
-      "IMAP: UID MOVE to Trash or \\\\Deleted+UID EXPUNGE per source-folder group; " +
-      "Gmail: trash or messages.delete; Outlook: Graph delete or permanentDelete; " +
-      "Fastmail: JMAP Email/set destroy or Trash mailbox update. " +
+      "Default: move matches to Trash (safer). Set permanent:true for hard delete " +
+      "(bypasses Trash; irreversible). " +
       "Returns succeeded/failed counts and per-message results.",
     requiredScope: "delete:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        ...STRUCTURED_SEARCH_PROPERTIES,
         query: {
           type: "string",
-          minLength: 1,
-          description:
-            "Search query string. Gmail: Gmail search syntax; " +
-            "Outlook: KQL syntax; Fastmail: JMAP filter string; IMAP: IMAP SEARCH criteria.",
+          description: RAW_QUERY_DESCRIPTION,
         },
         permanent: {
           type: "boolean",
@@ -1994,7 +1859,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
             "Maximum number of matching messages to delete. Default: 500.",
         },
       },
-      required: ["query"],
+      required: [],
       additionalProperties: false,
     },
   },
@@ -2002,7 +1867,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   // ── send:email scope ────────────────────────────────────────────────────────
 
   {
-    name: "send_email",
+    name: "email_send",
     title: "Send Email",
     description:
       "Compose and send a new email from a connected inbox. Supports plain-text " +
@@ -2013,20 +1878,8 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         to: {
           type: "array",
           items: { type: "string", format: "email" },
@@ -2114,31 +1967,20 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "reply_to_email",
+    name: "email_reply",
     title: "Reply to Email",
     description:
       "Reply to an existing email, maintaining correct thread headers (In-Reply-To, References). " +
       "The recipient, subject (prefixed with 'Re:'), and threading headers are derived from " +
       "the original message — only the reply body is required. Optionally reply to all " +
-      "recipients of the original message using reply_all.",
+      "recipients of the original message using reply_all. " +
+      "This action is irreversible — use carefully.",
     requiredScope: "send:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
           description:
@@ -2192,40 +2034,26 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "forward_email",
+    name: "email_forward",
     title: "Forward Email",
     description:
       "Forward an existing email to one or more new recipients. Fetches the original " +
       "message and prepends an optional introductory note followed by the standard " +
       "'---------- Forwarded message ----------' header block (From, Date, Subject, To) " +
       "and the original body. Optionally re-attaches original attachments. " +
-      "IMAP, Gmail, and Fastmail construct a new MIME message via their respective send " +
-      "paths; Outlook fetches the original and uses Graph sendMail. " +
       "The forward subject is prefixed with 'Fwd:' if not already present. " +
       "This action is irreversible — use carefully.",
     requiredScope: "send:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
           description:
             "Provider-native message identifier of the email to forward, as returned " +
-            "by list_messages, read_email, or search_emails.",
+            "by email_list, email_read, or email_search.",
         },
         to: {
           type: "array",
@@ -2277,180 +2105,21 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   // ── send:email scope — state changes (non-destructive) ─────────────────────
 
   {
-    name: "mark_read",
-    title: "Mark Email as Read",
-    description:
-      "Mark a single email message as read. Non-destructive. " +
-      "Provider dispatch: IMAP sets \\\\Seen flag; Gmail removes the UNREAD label; " +
-      "Outlook sets isRead=true via Graph; Fastmail sets $seen keyword via JMAP.",
-    requiredScope: "send:email",
-    inputSchema: {
-      type: "object",
-      properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
-        message_id: {
-          type: "string",
-          description:
-            "Provider-native message identifier as returned by list_messages or search_emails.",
-        },
-      },
-      required: ["message_id"],
-      additionalProperties: false,
-    },
-  },
-
-  {
-    name: "mark_unread",
-    title: "Mark Email as Unread",
-    description:
-      "Mark a single email message as unread. Non-destructive. " +
-      "Provider dispatch: IMAP removes \\\\Seen flag; Gmail adds the UNREAD label; " +
-      "Outlook sets isRead=false via Graph; Fastmail removes $seen keyword via JMAP.",
-    requiredScope: "send:email",
-    inputSchema: {
-      type: "object",
-      properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
-        message_id: {
-          type: "string",
-          description:
-            "Provider-native message identifier as returned by list_messages or search_emails.",
-        },
-      },
-      required: ["message_id"],
-      additionalProperties: false,
-    },
-  },
-
-  {
-    name: "flag_email",
-    title: "Flag Email",
-    description:
-      "Flag (star / mark for follow-up) a single email message. Non-destructive. " +
-      "Provider dispatch: IMAP sets \\\\Flagged; Gmail adds STARRED label; " +
-      "Outlook sets flag.flagStatus=flagged via Graph; Fastmail sets $flagged keyword via JMAP.",
-    requiredScope: "send:email",
-    inputSchema: {
-      type: "object",
-      properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
-        message_id: {
-          type: "string",
-          description:
-            "Provider-native message identifier as returned by list_messages or search_emails.",
-        },
-      },
-      required: ["message_id"],
-      additionalProperties: false,
-    },
-  },
-
-  {
-    name: "unflag_email",
-    title: "Unflag Email",
-    description:
-      "Remove the flag (star / follow-up mark) from a single email message. Non-destructive. " +
-      "Provider dispatch: IMAP removes \\\\Flagged; Gmail removes STARRED label; " +
-      "Outlook sets flag.flagStatus=notFlagged via Graph; Fastmail removes $flagged keyword via JMAP.",
-    requiredScope: "send:email",
-    inputSchema: {
-      type: "object",
-      properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
-        message_id: {
-          type: "string",
-          description:
-            "Provider-native message identifier as returned by list_messages or search_emails.",
-        },
-      },
-      required: ["message_id"],
-      additionalProperties: false,
-    },
-  },
-
-  {
-    name: "archive_email",
+    name: "email_archive",
     title: "Archive Email",
     description:
-      "Move a message out of the Inbox to the archive location. Non-destructive — message is " +
-      "preserved, not deleted. Provider dispatch: IMAP moves to 'Archive' mailbox via uidMove " +
-      "(falls back to COPY+DELETE if MOVE unsupported); Gmail removes the INBOX label; " +
-      "Outlook moves to the archive mail folder via Graph; Fastmail moves to the archive " +
-      "mailbox via JMAP Email/set.",
+      "Move a message out of the Inbox to the archive location. Non-destructive — the " +
+      "message is preserved, not deleted. On Gmail this removes the INBOX label.",
     requiredScope: "send:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
           description:
-            "Provider-native message identifier as returned by list_messages or search_emails.",
+            "Provider-native message identifier as returned by email_list or email_search.",
         },
       },
       required: ["message_id"],
@@ -2461,32 +2130,18 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   // ── manage:drafts scope ──────────────────────────────────────────────────────
 
   {
-    name: "list_drafts",
+    name: "draft_list",
     title: "List Drafts",
     description:
       "Return draft messages saved in the inbox's Drafts folder. " +
       "Each result includes the draft_id, subject, recipients, and created timestamp. " +
-      "IMAP: UID SEARCH in the Drafts mailbox; Gmail: drafts.list API; " +
-      "Outlook: Graph mailFolders/Drafts/messages; Fastmail: JMAP Email/query with $draft keyword. " +
-      "Use the returned draft_id with update_draft or send_draft.",
+      "Use the returned draft_id with draft_update or draft_send.",
     requiredScope: "manage:drafts",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         limit: {
           type: "integer",
           minimum: 1,
@@ -2501,32 +2156,18 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "create_draft",
+    name: "draft_create",
     title: "Create Draft",
     description:
       "Save a new email draft in the inbox's Drafts folder without sending it. " +
-      "Returns a draft_id that can be used with update_draft or send_draft. " +
-      "IMAP: APPEND to Drafts with \\\\Draft flag; Gmail: drafts.create; " +
-      "Outlook: create message in Drafts folder via Graph; Fastmail: JMAP Email/set with $draft keyword. " +
+      "Returns a draft_id that can be used with draft_update or draft_send. " +
       "At minimum, subject and body are required; to/cc/bcc are optional (drafts may be incomplete).",
     requiredScope: "manage:drafts",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         to: {
           type: "array",
           items: { type: "string", format: "email" },
@@ -2564,34 +2205,20 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "update_draft",
+    name: "draft_update",
     title: "Update Draft",
     description:
       "Replace the content of an existing draft. All supplied fields overwrite the stored draft. " +
-      "IMAP: appends updated message to Drafts then expunges the old UID; " +
-      "Gmail: drafts.update; Outlook: PATCH message via Graph; Fastmail: JMAP Email/set update. " +
-      "Use list_drafts to obtain draft_id values.",
+      "Use draft_list to obtain draft_id values.",
     requiredScope: "manage:drafts",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         draft_id: {
           type: "string",
-          description: "Provider-native draft identifier as returned by create_draft or list_drafts.",
+          description: "Provider-native draft identifier as returned by draft_create or draft_list.",
         },
         to: {
           type: "array",
@@ -2630,35 +2257,20 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "send_draft",
+    name: "draft_send",
     title: "Send Draft",
     description:
       "Send a previously saved draft. The draft is removed from the Drafts folder after sending. " +
-      "IMAP: reads the draft MIME, submits via SMTP, then expunges the draft UID; " +
-      "Gmail: drafts.send; Outlook: POST /messages/{id}/send via Graph; " +
-      "Fastmail: JMAP EmailSubmission/set then removes $draft keyword. " +
       "This action is irreversible — use carefully.",
     requiredScope: "manage:drafts",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         draft_id: {
           type: "string",
-          description: "Provider-native draft identifier as returned by create_draft or list_drafts.",
+          description: "Provider-native draft identifier as returned by draft_create or draft_list.",
         },
       },
       required: ["draft_id"],
@@ -2669,12 +2281,12 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   // ── manage:contacts scope ────────────────────────────────────────────────────
 
   {
-    name: "search_contacts",
+    name: "contact_search",
     title: "Search Contacts",
     description:
       "Search the derived contact list by name or email address. " +
       "Contacts are automatically populated from message headers seen during " +
-      "read_email, search_emails, and send_email — no manual setup is needed. " +
+      "email_read, email_search, and email_send — no manual setup is needed. " +
       "Returns matching contacts sorted by most-recently-contacted first, " +
       "each with their display name, email address, message count, and " +
       "last-contacted timestamp. Optionally restrict to a specific inbox; " +
@@ -2712,70 +2324,24 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     },
   },
 
-  {
-    name: "get_contact",
-    title: "Get Contact",
-    description:
-      "Retrieve the full contact record for a single email address within a " +
-      "specific inbox. Returns the contact's display name, email address, " +
-      "cumulative message count (how many times this address has appeared in " +
-      "message headers), and the timestamp of the most-recently-seen message. " +
-      "Contacts are automatically populated from message traffic — call " +
-      "search_contacts first to discover which addresses are known.",
-    requiredScope: "manage:contacts",
-    inputSchema: {
-      type: "object",
-      properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox associated with the contact. Optional; when " +
-            "omitted, the contact is looked up across all inboxes the API key " +
-            "can access.",
-        },
-        email_address: {
-          type: "string",
-          description:
-            "The email address to look up. Matched case-insensitively " +
-            "(the address is normalised to lowercase before querying).",
-        },
-      },
-      required: ["email_address"],
-      additionalProperties: false,
-    },
-  },
-
   // ── schedule:email scope ─────────────────────────────────────────────────────
 
   {
-    name: "schedule_send",
+    name: "schedule_create",
     title: "Schedule Send",
     description:
       "Schedule an email to be sent at a future date and time. " +
       "The message is stored in a pending queue and dispatched automatically " +
       "by the server when send_at is reached. All recipient addresses and the " +
       "message body are validated immediately at schedule time — if validation " +
-      "fails the message will not be queued. Use list_scheduled to view pending " +
-      "scheduled sends and cancel_scheduled to cancel before they are sent.",
+      "fails the message will not be queued. Use schedule_list to view pending " +
+      "scheduled sends and schedule_cancel to cancel before they are sent.",
     requiredScope: "schedule:email",
     inputSchema: {
       type: "object",
       properties: {
-        inbox_id: {
-          type: "string",
-          format: "uuid",
-          description:
-            "UUID of the inbox to use. Optional when the API key has access to " +
-            "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-            "with an email address. Call list_inboxes to discover inboxes.",
-        },
-        inbox: {
-          type: "string",
-          description:
-            "Email address of the inbox to use, as a friendly alternative to " +
-            "inbox_id. Optional; ignored if inbox_id is given.",
-        },
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
         to: {
           type: "array",
           items: { type: "string", format: "email" },
@@ -2852,12 +2418,12 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "list_scheduled",
+    name: "schedule_list",
     title: "List Scheduled Sends",
     description:
       "List pending scheduled email sends for the workspace. Returns all messages " +
       "with status 'pending' or 'sending', ordered by scheduled send time (earliest first). " +
-      "Optionally filter by inbox. Use cancel_scheduled to cancel a pending send before " +
+      "Optionally filter by inbox. Use schedule_cancel to cancel a pending send before " +
       "it is dispatched.",
     requiredScope: "schedule:email",
     inputSchema: {
@@ -2882,13 +2448,13 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   {
-    name: "cancel_scheduled",
+    name: "schedule_cancel",
     title: "Cancel Scheduled Send",
     description:
       "Cancel a pending scheduled email send. Sets the status to 'cancelled' so the " +
       "dispatcher will not send the message. Only messages with status 'pending' can be " +
       "cancelled — messages already in 'sending', 'sent', or 'error' state cannot be " +
-      "cancelled. Use list_scheduled to find the scheduled_send_id.",
+      "cancelled. Use schedule_list to find the scheduled_send_id.",
     requiredScope: "schedule:email",
     inputSchema: {
       type: "object",
@@ -2926,7 +2492,7 @@ const ADDRESS_ENTRY_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-/** JSON-Schema fragment for a message summary (list_messages). */
+/** JSON-Schema fragment for a message summary (email_list). */
 const EMAIL_SUMMARY_SCHEMA = {
   type: "object",
   properties: {
@@ -2944,7 +2510,7 @@ const EMAIL_SUMMARY_SCHEMA = {
   additionalProperties: true,
 } as const;
 
-/** JSON-Schema fragment for a search result summary (search_emails). */
+/** JSON-Schema fragment for a search result summary (email_search). */
 const SEARCH_EMAIL_SUMMARY_SCHEMA = {
   type: "object",
   properties: {
@@ -3013,7 +2579,7 @@ const SENT_MESSAGE_SCHEMA = {
  * `structuredContent` object the tool's success path returns.
  */
 const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
-  list_inboxes: {
+  inbox_list: {
     type: "object",
     properties: {
       inboxes: {
@@ -3036,7 +2602,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["inboxes"],
     additionalProperties: false,
   },
-  list_messages: {
+  email_list: {
     type: "object",
     properties: {
       messages: { type: "array", items: EMAIL_SUMMARY_SCHEMA },
@@ -3056,7 +2622,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["messages", "has_more", "next_offset"],
     additionalProperties: false,
   },
-  read_email: {
+  email_read: {
     type: "object",
     properties: {
       id: { type: "string" },
@@ -3079,7 +2645,56 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["id", "thread_id", "from", "subject", "date"],
     additionalProperties: true,
   },
-  search_emails: {
+  email_read_batch: {
+    type: "object",
+    properties: {
+      messages: {
+        type: "array",
+        // Same per-message shape as email_read's result.
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            thread_id: { type: "string" },
+            from: ADDRESS_ENTRY_SCHEMA,
+            to: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+            cc: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+            bcc: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+            reply_to: { type: ["object", "null"], additionalProperties: true },
+            subject: { type: "string" },
+            date: { type: "string", description: "ISO 8601 UTC timestamp." },
+            body_text: { type: ["string", "null"] },
+            body_html: { type: ["string", "null"] },
+            attachments: {
+              type: "array",
+              items: { type: "object", additionalProperties: true },
+            },
+            is_read: { type: "boolean" },
+            labels: { type: "array", items: { type: "string" } },
+            in_reply_to: { type: ["string", "null"] },
+            references: { type: "array", items: { type: "string" } },
+          },
+          required: ["id", "thread_id", "from", "subject", "date"],
+          additionalProperties: true,
+        },
+      },
+      errors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            message_id: { type: "string" },
+            error: { type: "string" },
+          },
+          required: ["message_id", "error"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["messages", "errors"],
+    additionalProperties: false,
+  },
+  email_search: {
     type: "object",
     properties: {
       messages: { type: "array", items: SEARCH_EMAIL_SUMMARY_SCHEMA },
@@ -3100,7 +2715,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["messages", "has_more", "next_offset"],
     additionalProperties: false,
   },
-  list_folders: {
+  folder_list: {
     type: "object",
     properties: {
       inbox_id: { type: "string" },
@@ -3123,7 +2738,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["inbox_id", "folders"],
     additionalProperties: false,
   },
-  create_folder: {
+  folder_create: {
     type: "object",
     properties: {
       inbox_id: { type: "string" },
@@ -3137,7 +2752,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["inbox_id", "created"],
     additionalProperties: false,
   },
-  rename_folder: {
+  folder_rename: {
     type: "object",
     properties: {
       inbox_id: { type: "string" },
@@ -3148,7 +2763,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["inbox_id", "folder_id", "new_name", "status"],
     additionalProperties: false,
   },
-  delete_folder: {
+  folder_delete: {
     type: "object",
     properties: {
       inbox_id: { type: "string" },
@@ -3158,7 +2773,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["inbox_id", "folder_id", "status"],
     additionalProperties: false,
   },
-  move_email: {
+  email_move: {
     type: "object",
     properties: {
       success: { type: "boolean" },
@@ -3170,19 +2785,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["success", "message_id", "operation", "inbox_id", "destination_folder_id"],
     additionalProperties: false,
   },
-  copy_email: {
-    type: "object",
-    properties: {
-      success: { type: "boolean" },
-      message_id: { type: "string" },
-      operation: { type: "string" },
-      inbox_id: { type: "string" },
-      destination_folder_id: { type: "string" },
-    },
-    required: ["success", "message_id", "operation", "inbox_id", "destination_folder_id"],
-    additionalProperties: false,
-  },
-  delete_email: {
+  email_delete: {
     type: "object",
     properties: {
       success: { type: "boolean" },
@@ -3194,20 +2797,16 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["success", "message_id", "operation", "inbox_id", "permanent"],
     additionalProperties: false,
   },
-  bulk_move: BULK_RESULT_SCHEMA,
-  bulk_delete: BULK_RESULT_SCHEMA,
-  bulk_flag: BULK_RESULT_SCHEMA,
-  search_and_move: BULK_RESULT_SCHEMA,
-  search_and_delete: BULK_RESULT_SCHEMA,
-  send_email: SENT_MESSAGE_SCHEMA,
-  reply_to_email: SENT_MESSAGE_SCHEMA,
-  forward_email: SENT_MESSAGE_SCHEMA,
-  mark_read: FLAG_RESULT_SCHEMA,
-  mark_unread: FLAG_RESULT_SCHEMA,
-  flag_email: FLAG_RESULT_SCHEMA,
-  unflag_email: FLAG_RESULT_SCHEMA,
-  archive_email: FLAG_RESULT_SCHEMA,
-  list_drafts: {
+  email_move_batch: BULK_RESULT_SCHEMA,
+  email_delete_batch: BULK_RESULT_SCHEMA,
+  email_flag: BULK_RESULT_SCHEMA,
+  email_search_and_move: BULK_RESULT_SCHEMA,
+  email_search_and_delete: BULK_RESULT_SCHEMA,
+  email_send: SENT_MESSAGE_SCHEMA,
+  email_reply: SENT_MESSAGE_SCHEMA,
+  email_forward: SENT_MESSAGE_SCHEMA,
+  email_archive: FLAG_RESULT_SCHEMA,
+  draft_list: {
     type: "object",
     properties: {
       inbox_id: { type: "string" },
@@ -3230,7 +2829,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["inbox_id", "drafts"],
     additionalProperties: false,
   },
-  create_draft: {
+  draft_create: {
     type: "object",
     properties: {
       draft_id: { type: "string" },
@@ -3241,7 +2840,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["draft_id", "subject", "created_at"],
     additionalProperties: true,
   },
-  update_draft: {
+  draft_update: {
     type: "object",
     properties: {
       draft_id: { type: "string" },
@@ -3251,7 +2850,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["draft_id", "subject", "updated_at"],
     additionalProperties: true,
   },
-  send_draft: {
+  draft_send: {
     type: "object",
     properties: {
       draft_id: { type: "string" },
@@ -3261,7 +2860,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["draft_id", "message_id", "sent_at"],
     additionalProperties: true,
   },
-  search_contacts: {
+  contact_search: {
     type: "object",
     properties: {
       query: { type: "string" },
@@ -3286,18 +2885,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["query", "contacts", "total"],
     additionalProperties: false,
   },
-  get_contact: {
-    type: "object",
-    properties: {
-      found: { type: "boolean" },
-      inbox_id: { type: "string" },
-      email_address: { type: "string" },
-      contact: { type: "object", additionalProperties: true },
-    },
-    required: ["found"],
-    additionalProperties: true,
-  },
-  schedule_send: {
+  schedule_create: {
     type: "object",
     properties: {
       scheduled: { type: "boolean" },
@@ -3312,7 +2900,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["scheduled", "id", "inbox_id", "send_at", "status"],
     additionalProperties: false,
   },
-  list_scheduled: {
+  schedule_list: {
     type: "object",
     properties: {
       total: { type: "integer" },
@@ -3337,7 +2925,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["scheduled_sends", "total"],
     additionalProperties: false,
   },
-  cancel_scheduled: {
+  schedule_cancel: {
     type: "object",
     properties: {
       cancelled: { type: "boolean" },
@@ -3361,43 +2949,38 @@ const TOOL_ANNOTATIONS: Record<
   { readOnlyHint: boolean; destructiveHint: boolean; idempotentHint: boolean }
 > = {
   // Read-only tools.
-  list_inboxes: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  list_messages: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  read_email: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  search_emails: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  list_folders: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  list_drafts: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  list_scheduled: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  search_contacts: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
-  get_contact: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  inbox_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  email_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  email_read: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  email_read_batch: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  email_search: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  folder_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  draft_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  schedule_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  contact_search: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   // Non-destructive mutations — non-idempotent (each call produces a new effect).
-  send_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-  reply_to_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-  forward_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-  send_draft: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-  schedule_send: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-  create_folder: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-  rename_folder: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  email_send: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  email_reply: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  email_forward: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  draft_send: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  schedule_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  folder_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  folder_rename: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   // Non-destructive mutations — idempotent by default per spec ToolAnnotations.
-  move_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  copy_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  bulk_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  search_and_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  create_draft: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  update_draft: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  cancel_scheduled: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  email_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  email_move_batch: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  email_search_and_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  draft_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  draft_update: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  schedule_cancel: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   // Idempotent state toggles.
-  mark_read: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  mark_unread: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  flag_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  unflag_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  archive_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  bulk_flag: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  email_archive: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  email_flag: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   // Destructive tools.
-  delete_email: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
-  bulk_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
-  delete_folder: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
-  search_and_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  email_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  email_delete_batch: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  folder_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  email_search_and_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
 };
 
 // Attach outputSchema + annotations to every registry entry. Done once at module
@@ -3460,15 +3043,15 @@ interface ProviderCapabilities {
   /** Provider-native contacts / address-book API */
   contacts_api: boolean;
   /**
-   * DB-synced contacts derived from message headers (search_contacts /
-   * get_contact tools — Task 15-16).  True for all providers because the
+   * DB-synced contacts derived from message headers (contact_search
+   * tool — Task 15-16).  True for all providers because the
    * contacts table is populated from email metadata regardless of protocol.
    */
   contacts_db: boolean;
   /** Server-side scheduled send (via scheduled_sends queue — Task 17-18) */
   scheduling: boolean;
   /**
-   * Query syntax accepted by search_emails for this provider.
+   * Query syntax accepted by email_search for this provider.
    *   'gmail'  — Gmail query language (from:, subject:, after:, …)
    *   'odata'  — Microsoft OData $filter
    *   'jmap'   — JMAP FilterCondition
@@ -3796,7 +3379,7 @@ async function encryptForStorage(plaintext: string): Promise<string> {
 }
 
 /**
- * list_inboxes — returns all inboxes the API key may access.
+ * inbox_list — returns all inboxes the API key may access.
  *
  * If the key has a non-null inbox_ids allowlist, only those inboxes are
  * returned. Otherwise all active inboxes in the workspace are returned.
@@ -3822,7 +3405,7 @@ async function executeListInboxes(apiKey: ApiKeyRow): Promise<{
   const { data, error } = await query;
 
   if (error) {
-    console.error("[mcp-server] list_inboxes: db_error", { error: error.message });
+    console.error("[mcp-server] inbox_list: db_error", { error: error.message });
     return {
       result: { content: [{ type: "text", text: "Failed to retrieve inboxes." }] },
       logStatus: "error",
@@ -3983,7 +3566,7 @@ async function resolveInboxArg(
 
 /**
  * Standard, agent-actionable error result for a failed inbox resolution.
- * Messages tell the calling agent exactly what to do next (call list_inboxes
+ * Messages tell the calling agent exactly what to do next (call inbox_list
  * / pass inbox_id / ask the user to connect an inbox) — never "check the
  * dashboard".
  */
@@ -3995,13 +3578,13 @@ function inboxResolutionError(
   switch (reason) {
     case "not_found":
       text =
-        "No inbox matches the given inbox_id/inbox. Call list_inboxes to see " +
+        "No inbox matches the given inbox_id/inbox. Call inbox_list to see " +
         "the available inboxes (each with its inbox_id and email address).";
       break;
     case "ambiguous":
       text =
         "Multiple inboxes are accessible, so inbox_id (or inbox) is required. " +
-        "Call list_inboxes to choose one, then pass its inbox_id.";
+        "Call inbox_list to choose one, then pass its inbox_id.";
       break;
     case "none":
       text =
@@ -4338,7 +3921,7 @@ async function buildFastmailAuthHeader(inbox: InboxRow): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
-// Email summary types (shared across list_messages and search_emails tools)
+// Email summary types (shared across email_list and email_search tools)
 // ---------------------------------------------------------------------------
 
 interface EmailAddressEntry {
@@ -4418,7 +4001,7 @@ function normalizePreview(text: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Gmail provider — list_messages
+// Gmail provider — email_list
 // ---------------------------------------------------------------------------
 
 /**
@@ -4465,7 +4048,7 @@ function gmailHasAttachments(msg: GmailMessageMeta): boolean {
 }
 
 /**
- * Implements `list_messages` for Gmail.
+ * Implements `email_list` for Gmail.
  *
  * Flow:
  *   1. GET /users/me/messages?labelIds=…&q=…&maxResults=… → {id, threadId}[]
@@ -4581,26 +4164,62 @@ async function listGmailMessages(
 }
 
 // ---------------------------------------------------------------------------
-// Outlook provider — list_messages
+// Outlook provider — email_list
 // ---------------------------------------------------------------------------
+
+/**
+ * Single source of truth mapping a canonical folder alias to each provider's
+ * native value. Every provider-specific folder map (`outlookWellKnownFolder`,
+ * `imapFolderName`) and the cross-provider `resolveFolderId` helper derive from
+ * this table — keep this the only place provider folder vocabulary lives.
+ *
+ * - `gmail`: system label ID (e.g. "INBOX", "TRASH"). Gmail has no system
+ *   "archive" label — archiving means removing the INBOX label — so the
+ *   `archive` alias has no Gmail value (`null`); resolveFolderId falls through
+ *   to listing / pass-through, and email_archive handles the real archive op.
+ * - `outlook`: Graph well-known folder name (e.g. "inbox", "deleteditems").
+ * - `fastmail`: JMAP mailbox `role`; resolved to a concrete mailbox id at
+ *   runtime via the folder list (no static id exists).
+ * - `imap`: common mailbox name; for IMAP the name *is* the id.
+ *
+ * `aliases` lists every accepted user-facing token (case-insensitive) for the
+ * canonical entry, including the legacy UPPER canonical names used by callers.
+ */
+interface CanonicalFolderAlias {
+  /** Accepted user-facing tokens (matched case-insensitively). */
+  aliases: string[];
+  /** Gmail system label ID, or null when no system label exists (archive). */
+  gmail: string | null;
+  /** Microsoft Graph well-known folder name. */
+  outlook: string;
+  /** Fastmail JMAP mailbox role (resolved to a mailbox id at runtime). */
+  fastmail: string;
+  /** Common IMAP mailbox name (the name is the id). */
+  imap: string;
+}
+
+const CANONICAL_FOLDER_ALIASES: CanonicalFolderAlias[] = [
+  { aliases: ["inbox"], gmail: "INBOX", outlook: "inbox", fastmail: "inbox", imap: "INBOX" },
+  { aliases: ["sent"], gmail: "SENT", outlook: "sentitems", fastmail: "sent", imap: "Sent" },
+  { aliases: ["drafts", "draft"], gmail: "DRAFT", outlook: "drafts", fastmail: "drafts", imap: "Drafts" },
+  { aliases: ["trash", "deleted"], gmail: "TRASH", outlook: "deleteditems", fastmail: "trash", imap: "Trash" },
+  { aliases: ["archive"], gmail: null, outlook: "archive", fastmail: "archive", imap: "Archive" },
+  { aliases: ["spam", "junk"], gmail: "SPAM", outlook: "junkemail", fastmail: "junk", imap: "Junk" },
+];
+
+/** Case-insensitive lookup of a canonical alias entry by any of its tokens. */
+function lookupCanonicalAlias(token: string): CanonicalFolderAlias | undefined {
+  const lower = token.trim().toLowerCase();
+  return CANONICAL_FOLDER_ALIASES.find((e) => e.aliases.includes(lower));
+}
 
 /**
  * Maps MCPEmails canonical folder names to Microsoft Graph well-known
  * folder names. Unknown names are passed through as displayName filters.
+ * Derives from CANONICAL_FOLDER_ALIASES (single source of truth).
  */
 function outlookWellKnownFolder(folder: string): string {
-  const MAP: Record<string, string> = {
-    INBOX: "inbox",
-    SENT: "sentitems",
-    DRAFTS: "drafts",
-    DRAFT: "drafts",
-    TRASH: "deleteditems",
-    DELETED: "deleteditems",
-    SPAM: "junkemail",
-    JUNK: "junkemail",
-    ARCHIVE: "archive",
-  };
-  return MAP[folder.toUpperCase()] ?? folder;
+  return lookupCanonicalAlias(folder)?.outlook ?? folder;
 }
 
 interface OutlookMessage {
@@ -4616,7 +4235,7 @@ interface OutlookMessage {
 }
 
 /**
- * Implements `list_messages` for Outlook using Microsoft Graph.
+ * Implements `email_list` for Outlook using Microsoft Graph.
  *
  * Single API call returns all required fields including the attachment flag.
  * Graph's `$count=true` is used to get an accurate total message count.
@@ -4694,11 +4313,11 @@ async function listOutlookMessages(
 }
 
 // ---------------------------------------------------------------------------
-// Fastmail provider — list_messages (JMAP)
+// Fastmail provider — email_list (JMAP)
 // ---------------------------------------------------------------------------
 
 /**
- * Implements `list_messages` for Fastmail using JMAP (RFC 8620/8621).
+ * Implements `email_list` for Fastmail using JMAP (RFC 8620/8621).
  *
  * JMAP is Fastmail's native HTTP protocol and is preferred over raw IMAP in
  * Edge Function contexts because it is purely HTTP-based. Fastmail supports
@@ -4898,7 +4517,7 @@ async function listFastmailMessages(
 
 /**
  * IMAP UIDs are unique only within a mailbox, so the message id exposed to MCP
- * clients encodes the folder: "<folder>:<uid>". read_email/reply_to_email decode
+ * clients encodes the folder: "<folder>:<uid>". email_read/email_reply decode
  * it to know which mailbox to SELECT. A bare numeric id is treated as INBOX.
  */
 function encodeImapId(folder: string, uid: number): string {
@@ -4937,7 +4556,7 @@ function bytesToBase64(bytes: Uint8Array): string {
 const ATTACHMENT_DATA_BUDGET = 10 * 1024 * 1024;
 
 // ---------------------------------------------------------------------------
-// Generic IMAP provider — list_messages
+// Generic IMAP provider — email_list
 // ---------------------------------------------------------------------------
 
 /**
@@ -4946,26 +4565,16 @@ const ATTACHMENT_DATA_BUDGET = 10 * 1024 * 1024;
  * (e.g. iCloud uses "Sent Messages"); INBOX is universal.
  */
 function imapFolderName(folder: string): string {
-  const MAP: Record<string, string> = {
-    INBOX: "INBOX",
-    SENT: "Sent",
-    DRAFTS: "Drafts",
-    DRAFT: "Drafts",
-    TRASH: "Trash",
-    SPAM: "Junk",
-    JUNK: "Junk",
-    ARCHIVE: "Archive",
-  };
-  return MAP[folder.toUpperCase()] ?? folder;
+  return lookupCanonicalAlias(folder)?.imap ?? folder;
 }
 
 /**
- * Implements `list_messages` for IMAP inboxes connected with an app password.
+ * Implements `email_list` for IMAP inboxes connected with an app password.
  *
  * Opens a TLS IMAP session, selects the folder, UID-searches (ALL or UNSEEN),
  * takes the newest `limit` UIDs at `offset`, and fetches ENVELOPE + FLAGS +
  * BODYSTRUCTURE. Body preview is not fetched during listing (deferred to
- * read_email), so `preview` is empty here.
+ * email_read), so `preview` is empty here.
  *
  * Throws "imap_auth_failed" on credential rejection so the dispatcher can emit
  * a reconnect prompt.
@@ -5039,11 +4648,11 @@ async function listImapMessages(
 }
 
 // ---------------------------------------------------------------------------
-// Generic IMAP provider — read_email
+// Generic IMAP provider — email_read
 // ---------------------------------------------------------------------------
 
 /**
- * Implements `read_email` for IMAP inboxes. The message id is "<folder>:<uid>"
+ * Implements `email_read` for IMAP inboxes. The message id is "<folder>:<uid>"
  * (see encodeImapId); the folder is SELECTed and the full RFC 822 message is
  * fetched and parsed via mime.ts.
  *
@@ -5134,11 +4743,11 @@ async function readImapMessage(
 }
 
 // ---------------------------------------------------------------------------
-// Generic IMAP provider — search_emails
+// Generic IMAP provider — email_search
 // ---------------------------------------------------------------------------
 
 /**
- * Implements `search_emails` for IMAP inboxes using IMAP SEARCH TEXT (matches
+ * Implements `email_search` for IMAP inboxes using IMAP SEARCH TEXT (matches
  * headers + body). Searches the first folder in includeFolders (default INBOX);
  * IMAP SEARCH is single-mailbox. Newest UIDs first; no relevance score.
  */
@@ -5219,7 +4828,7 @@ async function searchImapMessages(
 }
 
 // ---------------------------------------------------------------------------
-// Generic IMAP provider — send_email / reply_to_email (SMTP)
+// Generic IMAP provider — email_send / email_reply (SMTP)
 // ---------------------------------------------------------------------------
 
 /**
@@ -5291,7 +4900,7 @@ async function appendToSentFolder(inbox: InboxRow, mimeMessage: string): Promise
   }
 }
 
-/** Implements `send_email` for IMAP inboxes via SMTP submission. */
+/** Implements `email_send` for IMAP inboxes via SMTP submission. */
 async function sendImapMessage(
   inbox: InboxRow,
   params: SendEmailParams,
@@ -5334,7 +4943,7 @@ async function sendImapMessage(
   };
 }
 
-/** Implements `reply_to_email` for IMAP inboxes: read original, then SMTP send. */
+/** Implements `email_reply` for IMAP inboxes: read original, then SMTP send. */
 async function replyImapMessage(
   inbox: InboxRow,
   originalMessageId: string,
@@ -5397,7 +5006,7 @@ async function replyImapMessage(
 
   if (recipients.length === 0) {
     throw new Error(
-      "reply_to_email: could not determine reply recipients from original message.",
+      "email_reply: could not determine reply recipients from original message.",
     );
   }
 
@@ -5440,7 +5049,7 @@ async function replyImapMessage(
 }
 
 // ---------------------------------------------------------------------------
-// list_messages — top-level handler
+// email_list — top-level handler
 // ---------------------------------------------------------------------------
 
 interface ListInboxArgs {
@@ -5452,7 +5061,7 @@ interface ListInboxArgs {
 }
 
 /**
- * Executes the `list_messages` tool end-to-end.
+ * Executes the `email_list` tool end-to-end.
  *
  * Returns the JSON-RPC result object plus the values needed for activity
  * logging. Never throws — all errors are captured and returned as
@@ -5476,7 +5085,7 @@ async function executeListInbox(
       result: {
         content: [{
           type: "text",
-          text: "list_messages: arguments must be an object with at least inbox_id.",
+          text: "email_list: arguments must be an object with at least inbox_id.",
         }],
         isError: true,
       },
@@ -5504,7 +5113,7 @@ async function executeListInbox(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "list_messages");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_list");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -5554,7 +5163,7 @@ async function executeListInbox(
             content: [{
               type: "text",
               text:
-                `Provider '${inbox.provider}' is not yet supported by list_messages. ` +
+                `Provider '${inbox.provider}' is not yet supported by email_list. ` +
                 "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
@@ -5575,7 +5184,7 @@ async function executeListInbox(
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
 
-    console.error("[mcp-server] list_messages: provider_error", {
+    console.error("[mcp-server] email_list: provider_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
       error: message,
@@ -5708,7 +5317,7 @@ function sanitizeEmailHtml(html: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// read_email — shared output types
+// email_read — shared output types
 // ---------------------------------------------------------------------------
 
 interface ReadEmailAttachmentMeta {
@@ -5759,7 +5368,7 @@ interface ReadEmailResult {
 }
 
 // ---------------------------------------------------------------------------
-// Gmail provider — read_email
+// Gmail provider — email_read
 // ---------------------------------------------------------------------------
 
 /**
@@ -5882,7 +5491,7 @@ function walkGmailPayload(part: GmailFullPart): {
 }
 
 /**
- * Implements `read_email` for Gmail.
+ * Implements `email_read` for Gmail.
  *
  * Flow:
  *   1. GET /users/me/messages/{id}?format=full → full MIME payload
@@ -6047,11 +5656,11 @@ async function readGmailMessage(
 }
 
 // ---------------------------------------------------------------------------
-// Outlook provider — read_email
+// Outlook provider — email_read
 // ---------------------------------------------------------------------------
 
 /**
- * Implements `read_email` for Outlook via Microsoft Graph.
+ * Implements `email_read` for Outlook via Microsoft Graph.
  *
  * Flow:
  *   1. GET /me/messages/{id}?$select=... → message with body
@@ -6239,11 +5848,11 @@ async function readOutlookMessage(
 }
 
 // ---------------------------------------------------------------------------
-// Fastmail provider — read_email (JMAP)
+// Fastmail provider — email_read (JMAP)
 // ---------------------------------------------------------------------------
 
 /**
- * Implements `read_email` for Fastmail using JMAP (RFC 8621).
+ * Implements `email_read` for Fastmail using JMAP (RFC 8621).
  *
  * Flow:
  *   1. GET /jmap/session → discover accountId and apiUrl
@@ -6498,7 +6107,7 @@ async function readFastmailMessage(
 }
 
 // ---------------------------------------------------------------------------
-// read_email — top-level handler
+// email_read — top-level handler
 // ---------------------------------------------------------------------------
 
 interface ReadEmailArgs {
@@ -6510,12 +6119,65 @@ interface ReadEmailArgs {
 }
 
 /**
- * Executes the `read_email` tool end-to-end.
+ * Executes the `email_read` tool end-to-end.
  *
  * Validates arguments, resolves the inbox, dispatches to the correct provider
  * implementation, and returns a fully assembled ReadEmailResult.
  * Never throws — all errors are captured as structured tool execution errors.
  */
+/**
+ * Dispatch a single message read to the correct provider reader. Shared by
+ * email_read (single) and email_read_batch (batch) so the provider switch lives in
+ * one place. Throws provider sentinels ("gmail_auth_failed", "message_not_found",
+ * etc.) on failure; callers translate those into tool errors / per-ID errors.
+ */
+function readOneMessage(
+  inbox: InboxRow,
+  messageId: string,
+  opts: {
+    include_html: boolean;
+    include_attachments: boolean;
+    mark_as_read: boolean;
+  },
+): Promise<ReadEmailResult> {
+  switch (inbox.provider) {
+    case "gmail":
+      return readGmailMessage(
+        inbox,
+        messageId,
+        opts.include_html,
+        opts.include_attachments,
+        opts.mark_as_read,
+      );
+    case "outlook":
+      return readOutlookMessage(
+        inbox,
+        messageId,
+        opts.include_html,
+        opts.include_attachments,
+        opts.mark_as_read,
+      );
+    case "fastmail":
+      return readFastmailMessage(
+        inbox,
+        messageId,
+        opts.include_html,
+        opts.include_attachments,
+        opts.mark_as_read,
+      );
+    case "imap":
+      return readImapMessage(
+        inbox,
+        messageId,
+        opts.include_html,
+        opts.include_attachments,
+        opts.mark_as_read,
+      );
+    default:
+      return Promise.reject(new Error("unsupported_provider"));
+  }
+}
+
 async function executeReadEmail(
   rawArgs: unknown,
   apiKey: ApiKeyRow,
@@ -6534,7 +6196,7 @@ async function executeReadEmail(
       result: {
         content: [{
           type: "text",
-          text: "read_email: arguments must be an object with inbox_id and message_id.",
+          text: "email_read: arguments must be an object with inbox_id and message_id.",
         }],
         isError: true,
       },
@@ -6552,7 +6214,7 @@ async function executeReadEmail(
       result: {
         content: [{
           type: "text",
-          text: "read_email: message_id is required and must be a non-empty string.",
+          text: "email_read: message_id is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -6567,65 +6229,35 @@ async function executeReadEmail(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "read_email");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_read");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
   // ── Provider dispatch ─────────────────────────────────────────────────────
+  const supportedProviders = ["gmail", "outlook", "fastmail", "imap"];
+  if (!supportedProviders.includes(inbox.provider)) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `Provider '${inbox.provider}' is not yet supported by email_read. ` +
+            "Supported providers: gmail, outlook, fastmail, imap.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
   let readResult: ReadEmailResult;
   try {
-    switch (inbox.provider) {
-      case "gmail":
-        readResult = await readGmailMessage(
-          inbox,
-          messageId,
-          includeHtml,
-          includeAttachments,
-          markAsRead,
-        );
-        break;
-      case "outlook":
-        readResult = await readOutlookMessage(
-          inbox,
-          messageId,
-          includeHtml,
-          includeAttachments,
-          markAsRead,
-        );
-        break;
-      case "fastmail":
-        readResult = await readFastmailMessage(
-          inbox,
-          messageId,
-          includeHtml,
-          includeAttachments,
-          markAsRead,
-        );
-        break;
-      case "imap":
-        readResult = await readImapMessage(
-          inbox,
-          messageId,
-          includeHtml,
-          includeAttachments,
-          markAsRead,
-        );
-        break;
-      default:
-        return {
-          result: {
-            content: [{
-              type: "text",
-              text:
-                `Provider '${inbox.provider}' is not yet supported by read_email. ` +
-                "Supported providers: gmail, outlook, fastmail, imap.",
-            }],
-            isError: true,
-          },
-          logStatus: "error",
-          logErrorCode: "provider_error",
-        };
-    }
+    readResult = await readOneMessage(inbox, messageId, {
+      include_html: includeHtml,
+      include_attachments: includeAttachments,
+      mark_as_read: markAsRead,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 
@@ -6637,7 +6269,7 @@ async function executeReadEmail(
             text:
               `Message ${messageId} not found in inbox ${inboxId}. ` +
               "The message may have been deleted or the ID is stale — " +
-              "call list_messages or search_emails to get current message IDs.",
+              "call email_list or email_search to get current message IDs.",
           }],
           isError: true,
         },
@@ -6656,7 +6288,7 @@ async function executeReadEmail(
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
 
-    console.error("[mcp-server] read_email: provider_error", {
+    console.error("[mcp-server] email_read: provider_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
       message_id: messageId,
@@ -6686,6 +6318,201 @@ async function executeReadEmail(
 
   return {
     result: { ...jsonOk(readResult as unknown as Record<string, unknown>), isError: false },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+/** Max number of message IDs email_read_batch will accept in one call. */
+const READ_EMAILS_MAX_IDS = 50;
+
+/**
+ * Executes the `email_read_batch` batch-read tool end-to-end.
+ *
+ * Reads up to 50 messages by provider message ID. Per-message failures are
+ * collected into an `errors` array rather than failing the whole batch — except
+ * an auth failure, which is fatal (every read would fail) and returns the
+ * standard reconnect prompt.
+ *
+ * When include_attachments is true, attachment data shares a single 10 MB budget
+ * (ATTACHMENT_DATA_BUDGET) across the whole batch: once the cumulative byte count
+ * is exceeded, further attachments are returned with `data: null` and a note.
+ *
+ * Never throws — all errors are captured as structured results.
+ */
+async function executeReadEmails(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  // ── Input validation ──────────────────────────────────────────────────────
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "email_read_batch: arguments must be an object with message_ids and an inbox.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const args = rawArgs as Record<string, unknown>;
+
+  const messageIds = Array.isArray(args["message_ids"])
+    ? (args["message_ids"] as unknown[])
+        .filter((m): m is string => typeof m === "string" && m.trim() !== "")
+        .map((m) => m.trim())
+    : [];
+
+  if (messageIds.length === 0) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "email_read_batch: message_ids is required and must be a non-empty array of strings.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  if (messageIds.length > READ_EMAILS_MAX_IDS) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            error: "too_many_message_ids",
+            max: READ_EMAILS_MAX_IDS,
+            received: messageIds.length,
+            message:
+              `email_read_batch accepts at most ${READ_EMAILS_MAX_IDS} message IDs per call. ` +
+              `Received ${messageIds.length}. Split the request into smaller batches.`,
+          }),
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const includeHtml = args["include_html"] === true;
+  const includeAttachments = args["include_attachments"] === true;
+  const markAsRead = args["mark_as_read"] === true;
+
+  // ── Inbox resolution + access control ─────────────────────────────────────
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_read_batch");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
+
+  const supportedProviders = ["gmail", "outlook", "fastmail", "imap"];
+  if (!supportedProviders.includes(inbox.provider)) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            `Provider '${inbox.provider}' is not yet supported by email_read_batch. ` +
+            "Supported providers: gmail, outlook, fastmail, imap.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  // ── Read each message; collect successes + per-ID errors ──────────────────
+  const messages: ReadEmailResult[] = [];
+  const errors: { message_id: string; error: string }[] = [];
+
+  // Cumulative attachment-byte budget shared across the batch.
+  let attachmentBudgetRemaining = ATTACHMENT_DATA_BUDGET;
+
+  for (const messageId of messageIds) {
+    let readResult: ReadEmailResult;
+    try {
+      readResult = await readOneMessage(inbox, messageId, {
+        include_html: includeHtml,
+        include_attachments: includeAttachments,
+        mark_as_read: markAsRead,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+
+      // Auth failure is fatal for the whole batch — every read would fail.
+      const isAuthFailure =
+        message === "gmail_auth_failed" ||
+        message === "outlook_auth_failed" ||
+        message === "fastmail_auth_failed" ||
+        message === "imap_auth_failed";
+      if (isAuthFailure) {
+        return authFailedResult(inbox.provider, inbox.id, "access");
+      }
+
+      if (message === "message_not_found") {
+        errors.push({
+          message_id: messageId,
+          error:
+            "Message not found. The message may have been deleted or the ID is stale — " +
+            "call email_list or email_search to get current message IDs.",
+        });
+      } else {
+        console.error("[mcp-server] email_read_batch: provider_error", {
+          inbox_id: inboxId,
+          provider: inbox.provider,
+          message_id: messageId,
+          error: message,
+        });
+        errors.push({ message_id: messageId, error: `Provider error: ${message}` });
+      }
+      continue;
+    }
+
+    // Enforce the shared attachment budget across the batch: once exceeded,
+    // omit further attachment data (keep metadata) and mark it.
+    if (includeAttachments && readResult.attachments.length > 0) {
+      for (const att of readResult.attachments) {
+        if (att.data === null) continue; // already omitted by the reader
+        if (att.size_bytes <= attachmentBudgetRemaining) {
+          attachmentBudgetRemaining -= att.size_bytes;
+        } else {
+          att.data = null;
+        }
+      }
+    }
+
+    messages.push(readResult);
+  }
+
+  // ── Contacts (fire-and-forget) ────────────────────────────────────────────
+  if (messages.length > 0) {
+    const entries: EmailAddressEntry[] = [];
+    let latestDate = messages[0].date;
+    for (const m of messages) {
+      entries.push(m.from, ...m.to, ...m.cc);
+      if (m.date > latestDate) latestDate = m.date;
+    }
+    upsertContacts(inbox, entries, latestDate)
+      .catch(() => { /* already logged inside upsertContacts */ });
+  }
+
+  return {
+    result: {
+      ...jsonOk({ messages, errors } as unknown as Record<string, unknown>),
+      isError: false,
+    },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -6774,7 +6601,7 @@ interface MimeMessageParams {
    * BCC recipients. By default these are NOT written to any MIME header (the
    * direct-send path applies BCC at the SMTP envelope / send-API level only).
    * They are emitted as a real `Bcc:` header ONLY when `includeBccHeader` is
-   * set — used exclusively when persisting an IMAP DRAFT so that send_draft,
+   * set — used exclusively when persisting an IMAP DRAFT so that draft_send,
    * which reconstructs its recipient list by re-parsing the stored MIME, can
    * recover the BCC addresses. The Bcc header is stripped again before the
    * draft is transmitted (see imapSendDraft / stripBccHeader).
@@ -6954,7 +6781,7 @@ function mimeMessageToBase64url(mimeText: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// send_email — output and parameter types
+// email_send — output and parameter types
 // ---------------------------------------------------------------------------
 
 interface SendEmailResult {
@@ -6984,7 +6811,7 @@ interface SendEmailParams {
 }
 
 // ---------------------------------------------------------------------------
-// Gmail provider — send_email
+// Gmail provider — email_send
 // ---------------------------------------------------------------------------
 
 /**
@@ -7071,7 +6898,7 @@ async function sendGmailMessage(
 }
 
 // ---------------------------------------------------------------------------
-// Outlook provider — send_email
+// Outlook provider — email_send
 // ---------------------------------------------------------------------------
 
 /**
@@ -7242,7 +7069,7 @@ async function resolveFastmailRoleMailboxes(
 }
 
 // ---------------------------------------------------------------------------
-// Fastmail provider — send_email (JMAP)
+// Fastmail provider — email_send (JMAP)
 // ---------------------------------------------------------------------------
 
 /**
@@ -7494,7 +7321,7 @@ async function sendFastmailMessage(
 }
 
 // ---------------------------------------------------------------------------
-// reply_to_email — types
+// email_reply — types
 // ---------------------------------------------------------------------------
 
 /**
@@ -7512,7 +7339,7 @@ interface ReplyToEmailParams {
    * (original To + Cc), not just the original sender.
    */
   replyAll: boolean;
-  /** Attachments to include with the reply (same shape as send_email). */
+  /** Attachments to include with the reply (same shape as email_send). */
   attachments: Array<{ filename: string; mime_type: string; data: string }>;
 }
 
@@ -7534,7 +7361,7 @@ interface ReplyToEmailResult {
 }
 
 // ---------------------------------------------------------------------------
-// reply_to_email — Gmail provider
+// email_reply — Gmail provider
 // ---------------------------------------------------------------------------
 
 /**
@@ -7613,7 +7440,7 @@ async function replyGmailMessage(
 
   if (replyAddresses.length === 0) {
     throw new Error(
-      "reply_to_email: could not determine reply recipients from original message headers.",
+      "email_reply: could not determine reply recipients from original message headers.",
     );
   }
 
@@ -7690,7 +7517,7 @@ async function replyGmailMessage(
 }
 
 // ---------------------------------------------------------------------------
-// reply_to_email — Outlook provider
+// email_reply — Outlook provider
 // ---------------------------------------------------------------------------
 
 /**
@@ -7784,7 +7611,7 @@ async function replyOutlookMessage(
 
   if (toRecipients.length === 0) {
     throw new Error(
-      "reply_to_email: could not determine reply recipients from original message.",
+      "email_reply: could not determine reply recipients from original message.",
     );
   }
 
@@ -7863,7 +7690,7 @@ async function replyOutlookMessage(
 }
 
 // ---------------------------------------------------------------------------
-// reply_to_email — Fastmail provider (JMAP)
+// email_reply — Fastmail provider (JMAP)
 // ---------------------------------------------------------------------------
 
 /**
@@ -8015,7 +7842,7 @@ async function replyFastmailMessage(
 
   if (toAddresses.length === 0) {
     throw new Error(
-      "reply_to_email: could not determine reply recipients from original message.",
+      "email_reply: could not determine reply recipients from original message.",
     );
   }
 
@@ -8219,7 +8046,7 @@ async function replyFastmailMessage(
 }
 
 // ---------------------------------------------------------------------------
-// forward_email — types
+// email_forward — types
 // ---------------------------------------------------------------------------
 
 interface ForwardEmailParams {
@@ -8255,7 +8082,7 @@ interface ForwardEmailResult {
 }
 
 // ---------------------------------------------------------------------------
-// forward_email — shared helpers
+// email_forward — shared helpers
 // ---------------------------------------------------------------------------
 
 /**
@@ -8300,7 +8127,7 @@ function makeForwardSubject(origSubject: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// forward_email — IMAP provider
+// email_forward — IMAP provider
 // ---------------------------------------------------------------------------
 
 /**
@@ -8373,7 +8200,7 @@ async function forwardImapMessage(
 }
 
 // ---------------------------------------------------------------------------
-// forward_email — Gmail provider
+// email_forward — Gmail provider
 // ---------------------------------------------------------------------------
 
 /**
@@ -8446,7 +8273,7 @@ async function forwardGmailMessage(
 }
 
 // ---------------------------------------------------------------------------
-// forward_email — Outlook provider
+// email_forward — Outlook provider
 // ---------------------------------------------------------------------------
 
 /**
@@ -8519,7 +8346,7 @@ async function forwardOutlookMessage(
 }
 
 // ---------------------------------------------------------------------------
-// forward_email — Fastmail provider (JMAP)
+// email_forward — Fastmail provider (JMAP)
 // ---------------------------------------------------------------------------
 
 /**
@@ -8592,11 +8419,11 @@ async function forwardFastmailMessage(
 }
 
 // ---------------------------------------------------------------------------
-// forward_email — top-level handler
+// email_forward — top-level handler
 // ---------------------------------------------------------------------------
 
 /**
- * Executes the `forward_email` tool end-to-end.
+ * Executes the `email_forward` tool end-to-end.
  *
  * Validates and normalises arguments, resolves the inbox, reads the original
  * message, builds the forwarded body with the standard header block, and
@@ -8608,7 +8435,7 @@ async function forwardFastmailMessage(
  *  - Requires `send:email` scope (belt-and-suspenders check in addition to
  *    middleware enforcement).
  *  - Total recipient cap of 50 to prevent accidental mass forward.
- *  - Same provider_error / delivery_status caution as send_email applies.
+ *  - Same provider_error / delivery_status caution as email_send applies.
  */
 async function executeForwardEmail(
   rawArgs: unknown,
@@ -8628,7 +8455,7 @@ async function executeForwardEmail(
       result: {
         content: [{
           type: "text",
-          text: "forward_email: arguments must be an object with inbox_id, message_id, and to.",
+          text: "email_forward: arguments must be an object with inbox_id, message_id, and to.",
         }],
         isError: true,
       },
@@ -8649,7 +8476,7 @@ async function executeForwardEmail(
       result: {
         content: [{
           type: "text",
-          text: "forward_email: message_id is required and must be a non-empty string.",
+          text: "email_forward: message_id is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -8665,7 +8492,7 @@ async function executeForwardEmail(
       result: {
         content: [{
           type: "text",
-          text: "forward_email: to is required and must be a non-empty array of email address strings.",
+          text: "email_forward: to is required and must be a non-empty array of email address strings.",
         }],
         isError: true,
       },
@@ -8678,7 +8505,7 @@ async function executeForwardEmail(
       result: {
         content: [{
           type: "text",
-          text: "forward_email: to must not exceed 50 recipients.",
+          text: "email_forward: to must not exceed 50 recipients.",
         }],
         isError: true,
       },
@@ -8723,7 +8550,7 @@ async function executeForwardEmail(
           content: [{
             type: "text",
             text:
-              `forward_email: invalid email address in '${field}': "${String(addr)}". ` +
+              `email_forward: invalid email address in '${field}': "${String(addr)}". ` +
               "All addresses must be valid RFC 5322 email addresses (e.g., user@example.com).",
           }],
           isError: true,
@@ -8740,7 +8567,7 @@ async function executeForwardEmail(
       result: {
         content: [{
           type: "text",
-          text: "forward_email: the 'send:email' scope is required to forward messages.",
+          text: "email_forward: the 'send:email' scope is required to forward messages.",
         }],
         isError: true,
       },
@@ -8751,7 +8578,7 @@ async function executeForwardEmail(
 
   // ── Inbox resolution + access control ────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "forward_email");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_forward");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -8786,7 +8613,7 @@ async function executeForwardEmail(
             content: [{
               type: "text",
               text:
-                `Provider '${inbox.provider}' is not yet supported by forward_email. ` +
+                `Provider '${inbox.provider}' is not yet supported by email_forward. ` +
                 "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
@@ -8805,7 +8632,7 @@ async function executeForwardEmail(
             type: "text",
             text:
               `Message ${messageId} not found in inbox ${inboxId}. ` +
-              "It may have been deleted or moved. Use list_messages or search_emails " +
+              "It may have been deleted or moved. Use email_list or email_search " +
               "to find the current message ID.",
           }],
           isError: true,
@@ -8842,7 +8669,7 @@ async function executeForwardEmail(
     }
 
     // Unknown provider error — do not include raw error detail.
-    console.error("[mcp-server] forward_email: provider_error", {
+    console.error("[mcp-server] email_forward: provider_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
       error: message,
@@ -8873,11 +8700,11 @@ async function executeForwardEmail(
 }
 
 // ---------------------------------------------------------------------------
-// reply_to_email — top-level handler
+// email_reply — top-level handler
 // ---------------------------------------------------------------------------
 
 /**
- * Executes the `reply_to_email` tool end-to-end.
+ * Executes the `email_reply` tool end-to-end.
  *
  * Validates and normalises arguments, resolves the inbox, checks scope,
  * fetches the original message to derive threading headers and recipients,
@@ -8891,7 +8718,7 @@ async function executeForwardEmail(
  *  - Total recipient cap of 50 to prevent accidental mass reply-all.
  *  - Original message threading headers (In-Reply-To, References) are derived
  *    from the provider — callers cannot inject arbitrary headers.
- *  - Same provider_error / delivery_status caution as send_email applies.
+ *  - Same provider_error / delivery_status caution as email_send applies.
  */
 async function executeReplyToEmail(
   rawArgs: unknown,
@@ -8911,7 +8738,7 @@ async function executeReplyToEmail(
       result: {
         content: [{
           type: "text",
-          text: "reply_to_email: arguments must be an object with inbox_id, message_id, and body.",
+          text: "email_reply: arguments must be an object with inbox_id, message_id, and body.",
         }],
         isError: true,
       },
@@ -8932,7 +8759,7 @@ async function executeReplyToEmail(
       result: {
         content: [{
           type: "text",
-          text: "reply_to_email: message_id is required and must be a non-empty string.",
+          text: "email_reply: message_id is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -8951,7 +8778,7 @@ async function executeReplyToEmail(
       result: {
         content: [{
           type: "text",
-          text: "reply_to_email: body is required and must be a non-empty string.",
+          text: "email_reply: body is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -8977,7 +8804,7 @@ async function executeReplyToEmail(
         result: {
           content: [{
             type: "text",
-            text: "reply_to_email: attachments must be an array when provided.",
+            text: "email_reply: attachments must be an array when provided.",
           }],
           isError: true,
         },
@@ -8990,7 +8817,7 @@ async function executeReplyToEmail(
         result: {
           content: [{
             type: "text",
-            text: "reply_to_email: attachments must not exceed 20 items per call.",
+            text: "email_reply: attachments must not exceed 20 items per call.",
           }],
           isError: true,
         },
@@ -9013,7 +8840,7 @@ async function executeReplyToEmail(
           result: {
             content: [{
               type: "text",
-              text: "reply_to_email: each attachment must have filename (string), mime_type (string), and data (base64 string) fields.",
+              text: "email_reply: each attachment must have filename (string), mime_type (string), and data (base64 string) fields.",
             }],
             isError: true,
           },
@@ -9030,7 +8857,7 @@ async function executeReplyToEmail(
             content: [{
               type: "text",
               text:
-                "reply_to_email: total attachment size exceeds the 10 MB limit. " +
+                "email_reply: total attachment size exceeds the 10 MB limit. " +
                 "Reduce attachment sizes or split into multiple messages.",
             }],
             isError: true,
@@ -9049,7 +8876,7 @@ async function executeReplyToEmail(
       result: {
         content: [{
           type: "text",
-          text: "reply_to_email: the 'send:email' scope is required to send replies.",
+          text: "email_reply: the 'send:email' scope is required to send replies.",
         }],
         isError: true,
       },
@@ -9060,7 +8887,7 @@ async function executeReplyToEmail(
 
   // ── Inbox resolution + access control ────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "reply_to_email");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_reply");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -9088,7 +8915,7 @@ async function executeReplyToEmail(
             content: [{
               type: "text",
               text:
-                `Provider '${inbox.provider}' is not yet supported by reply_to_email. ` +
+                `Provider '${inbox.provider}' is not yet supported by email_reply. ` +
                 "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
@@ -9107,7 +8934,7 @@ async function executeReplyToEmail(
             type: "text",
             text:
               `Message ${messageId} not found in inbox ${inboxId}. ` +
-              "It may have been deleted or moved. Use list_messages or search_emails " +
+              "It may have been deleted or moved. Use email_list or email_search " +
               "to find the current message ID.",
           }],
           isError: true,
@@ -9145,7 +8972,7 @@ async function executeReplyToEmail(
 
     if (
       message.startsWith(
-        "reply_to_email: could not determine reply recipients",
+        "email_reply: could not determine reply recipients",
       )
     ) {
       return {
@@ -9159,7 +8986,7 @@ async function executeReplyToEmail(
     }
 
     // Unknown provider error — do not include raw error detail.
-    console.error("[mcp-server] reply_to_email: provider_error", {
+    console.error("[mcp-server] email_reply: provider_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
       error: message,
@@ -9190,14 +9017,14 @@ async function executeReplyToEmail(
 }
 
 // ---------------------------------------------------------------------------
-// send_email — top-level handler
+// email_send — top-level handler
 // ---------------------------------------------------------------------------
 
 /** Maximum total attachment size across all attachments in one send call. */
 const SEND_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
 
 /**
- * Executes the `send_email` tool end-to-end.
+ * Executes the `email_send` tool end-to-end.
  *
  * Validates and normalises all arguments, checks email address syntax,
  * enforces attachment size limits, resolves the inbox, dispatches to the
@@ -9230,7 +9057,7 @@ async function executeSendEmail(
       result: {
         content: [{
           type: "text",
-          text: "send_email: arguments must be an object with at least inbox_id, to, subject, and body.",
+          text: "email_send: arguments must be an object with at least inbox_id, to, subject, and body.",
         }],
         isError: true,
       },
@@ -9248,7 +9075,7 @@ async function executeSendEmail(
       result: {
         content: [{
           type: "text",
-          text: "send_email: to is required and must be a non-empty array of email address strings.",
+          text: "email_send: to is required and must be a non-empty array of email address strings.",
         }],
         isError: true,
       },
@@ -9261,7 +9088,7 @@ async function executeSendEmail(
       result: {
         content: [{
           type: "text",
-          text: "send_email: to must not exceed 50 recipients per RFC 5322 / provider limits.",
+          text: "email_send: to must not exceed 50 recipients per RFC 5322 / provider limits.",
         }],
         isError: true,
       },
@@ -9286,7 +9113,7 @@ async function executeSendEmail(
       result: {
         content: [{
           type: "text",
-          text: "send_email: subject is required and must be a non-empty string.",
+          text: "email_send: subject is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -9299,7 +9126,7 @@ async function executeSendEmail(
       result: {
         content: [{
           type: "text",
-          text: "send_email: subject must not exceed 998 characters (RFC 5322 limit).",
+          text: "email_send: subject must not exceed 998 characters (RFC 5322 limit).",
         }],
         isError: true,
       },
@@ -9316,7 +9143,7 @@ async function executeSendEmail(
       result: {
         content: [{
           type: "text",
-          text: "send_email: body is required and must be a non-empty string.",
+          text: "email_send: body is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -9341,7 +9168,7 @@ async function executeSendEmail(
         result: {
           content: [{
             type: "text",
-            text: "send_email: attachments must not exceed 20 items per call.",
+            text: "email_send: attachments must not exceed 20 items per call.",
           }],
           isError: true,
         },
@@ -9363,7 +9190,7 @@ async function executeSendEmail(
           result: {
             content: [{
               type: "text",
-              text: "send_email: each attachment must be an object with filename (string), mime_type (string), and data (base64 string) fields.",
+              text: "email_send: each attachment must be an object with filename (string), mime_type (string), and data (base64 string) fields.",
             }],
             isError: true,
           },
@@ -9382,7 +9209,7 @@ async function executeSendEmail(
             content: [{
               type: "text",
               text:
-                "send_email: total attachment size exceeds the 10 MB limit. " +
+                "email_send: total attachment size exceeds the 10 MB limit. " +
                 "Reduce attachment sizes or split into multiple messages.",
             }],
             isError: true,
@@ -9416,7 +9243,7 @@ async function executeSendEmail(
           content: [{
             type: "text",
             text:
-              `send_email: invalid email address in '${field}': "${String(addr)}". ` +
+              `email_send: invalid email address in '${field}': "${String(addr)}". ` +
               "All addresses must be valid RFC 5322 email addresses (e.g., user@example.com).",
           }],
           isError: true,
@@ -9429,7 +9256,7 @@ async function executeSendEmail(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "send_email");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_send");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -9466,7 +9293,7 @@ async function executeSendEmail(
             content: [{
               type: "text",
               text:
-                `Provider '${inbox.provider}' is not yet supported by send_email. ` +
+                `Provider '${inbox.provider}' is not yet supported by email_send. ` +
                 "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
@@ -9506,7 +9333,7 @@ async function executeSendEmail(
 
     // Unknown provider error — log it but do NOT include raw error detail
     // in the response (may contain provider internals or account info).
-    console.error("[mcp-server] send_email: provider_error", {
+    console.error("[mcp-server] email_send: provider_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
       error: message,
@@ -9546,11 +9373,11 @@ async function executeSendEmail(
 }
 
 // ---------------------------------------------------------------------------
-// search_emails — shared output types
+// email_search — shared output types
 // ---------------------------------------------------------------------------
 
 /**
- * A single email summary in a `search_emails` result.
+ * A single email summary in a `email_search` result.
  * Extends EmailSummary with an optional provider relevance score.
  */
 interface SearchEmailSummary extends EmailSummary {
@@ -9579,11 +9406,11 @@ interface SearchEmailsResult {
 }
 
 // ---------------------------------------------------------------------------
-// Gmail provider — search_emails
+// Gmail provider — email_search
 // ---------------------------------------------------------------------------
 
 /**
- * Implements `search_emails` for Gmail.
+ * Implements `email_search` for Gmail.
  *
  * Uses the Gmail messages.list `q` parameter, which accepts the full Gmail
  * search operator syntax (from:, to:, subject:, after:, before:, has:, etc.).
@@ -9713,11 +9540,11 @@ async function searchGmailMessages(
 }
 
 // ---------------------------------------------------------------------------
-// Outlook provider — search_emails
+// Outlook provider — email_search
 // ---------------------------------------------------------------------------
 
 /**
- * Implements `search_emails` for Outlook using Microsoft Graph.
+ * Implements `email_search` for Outlook using Microsoft Graph.
  *
  * Uses the `$search` OData operator which supports KQL (Keyword Query Language)
  * queries. KQL is a superset of simple keyword search and supports field-scoped
@@ -9847,11 +9674,11 @@ async function searchOutlookMessages(
 }
 
 // ---------------------------------------------------------------------------
-// Fastmail provider — search_emails (JMAP)
+// Fastmail provider — email_search (JMAP)
 // ---------------------------------------------------------------------------
 
 /**
- * Implements `search_emails` for Fastmail using JMAP (RFC 8620/8621).
+ * Implements `email_search` for Fastmail using JMAP (RFC 8620/8621).
  *
  * JMAP's `Email/query` accepts a `filter` object with a `text` field that
  * performs a provider-native full-text search across subject, from, to, cc,
@@ -10104,7 +9931,7 @@ async function searchFastmailMessages(
 }
 
 // ---------------------------------------------------------------------------
-// search_emails — top-level handler
+// email_search — top-level handler
 // ---------------------------------------------------------------------------
 
 /** Search timeout: 30 seconds, matching the architecture doc specification. */
@@ -10112,7 +9939,7 @@ const SEARCH_TIMEOUT_MS = 30_000;
 
 /**
  * Build a `NormalizedSearch` from a tool's raw arguments, shared by
- * search_emails / search_and_move / search_and_delete.
+ * email_search / email_search_and_move / email_search_and_delete.
  *
  * - String fields (from/to/cc/subject/body/text) are included when a non-empty
  *   string.
@@ -10229,7 +10056,7 @@ function noSearchCriterionError(): {
 }
 
 /**
- * Executes the `search_emails` tool end-to-end.
+ * Executes the `email_search` tool end-to-end.
  *
  * Validates and normalises arguments, resolves the inbox, dispatches to the
  * correct provider's search function (Gmail `q=`, Graph `$search`, Fastmail
@@ -10247,7 +10074,7 @@ function noSearchCriterionError(): {
  *    interpolated into a URL path or SQL string. No injection risk.
  *  - Maximum `limit` is capped at 100 to prevent oversized payloads.
  *  - All results are plain metadata summaries — no body content is returned.
- *    Body content is only available via read_email.
+ *    Body content is only available via email_read.
  */
 async function executeSearchEmails(
   rawArgs: unknown,
@@ -10267,7 +10094,7 @@ async function executeSearchEmails(
       result: {
         content: [{
           type: "text",
-          text: "search_emails: arguments must be an object with structured search fields or a query.",
+          text: "email_search: arguments must be an object with structured search fields or a query.",
         }],
         isError: true,
       },
@@ -10304,7 +10131,7 @@ async function executeSearchEmails(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "search_emails");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_search");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -10359,7 +10186,7 @@ async function executeSearchEmails(
             content: [{
               type: "text",
               text:
-                `Provider '${inbox.provider}' is not yet supported by search_emails. ` +
+                `Provider '${inbox.provider}' is not yet supported by email_search. ` +
                 "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
@@ -10418,7 +10245,7 @@ async function executeSearchEmails(
       };
     }
 
-    console.error("[mcp-server] search_emails: provider_error", {
+    console.error("[mcp-server] email_search: provider_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
       error: message,
@@ -10461,7 +10288,7 @@ async function executeSearchEmails(
 // ---------------------------------------------------------------------------
 // Phase 1 — Flags & state tools
 //
-// Tools: mark_read, mark_unread, flag_email, unflag_email, archive_email
+// Tools: email_flag, email_archive
 //
 // All tools are scoped under `send:email` (state-change, non-destructive).
 // Each follows the same pattern as executeReadEmail:
@@ -10478,10 +10305,10 @@ interface FlagUpdateResult {
 }
 
 // ---------------------------------------------------------------------------
-// list_folders — provider helpers + handler
+// folder_list — provider helpers + handler
 // ---------------------------------------------------------------------------
 
-/** Normalized folder/label entry returned by list_folders. */
+/** Normalized folder/label entry returned by folder_list. */
 interface FolderEntry {
   /** Provider-native folder/label ID (IMAP: mailbox name; Gmail: label ID; Outlook: folder ID; Fastmail: mailbox JMAP ID). */
   id: string;
@@ -10683,8 +10510,92 @@ async function fastmailListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
   }));
 }
 
+/** Dispatches to the provider folder lister for the given inbox. */
+function listFoldersForProvider(inbox: InboxRow): Promise<FolderEntry[]> {
+  switch (inbox.provider) {
+    case "gmail":
+      return gmailListFolders(inbox);
+    case "outlook":
+      return outlookListFolders(inbox);
+    case "fastmail":
+      return fastmailListFolders(inbox);
+    default: // imap and all IMAP service variants
+      return imapListFolders(inbox);
+  }
+}
+
 /**
- * `list_folders` handler — dispatches to the appropriate provider helper.
+ * Resolves a user-supplied destination folder (a canonical alias like "inbox"/
+ * "trash", a folder/label *name* like "Receipts", or an already-valid provider
+ * folder id) to the provider-native folder/label id expected by the move/copy
+ * helpers. Centralizes folder addressing so agents never need a folder_list
+ * round-trip just to learn an opaque id.
+ *
+ * Resolution order:
+ *   1. Empty input → throws Error("folder_required") (callers map to a tool error).
+ *   2. Canonical alias hit → provider-native value with NO network call for
+ *      Gmail/Outlook/IMAP (Gmail system label id / Outlook well-known name /
+ *      IMAP common name, which is its own id). Fastmail has no static id, so its
+ *      alias falls through to the listing step and matches by canonical name.
+ *      The Gmail `archive` alias has no system label (null) and likewise falls
+ *      through (archive-as-move is unsupported; email_archive handles it).
+ *   3. Otherwise list folders once and match `nameOrId` case-insensitively
+ *      against each FolderEntry.name (returning that entry's id), or return it
+ *      immediately if it already exactly equals some FolderEntry.id.
+ *   4. No match → return `nameOrId` unchanged (best-effort pass-through: it may
+ *      already be a valid provider id we don't enumerate; if not, the provider
+ *      rejects it and the existing "call folder_list" error guides the agent).
+ */
+async function resolveFolderId(inbox: InboxRow, nameOrId: string): Promise<string> {
+  const trimmed = nameOrId.trim();
+  if (!trimmed) throw new Error("folder_required");
+
+  // ── Canonical alias hit ────────────────────────────────────────────────────
+  const alias = lookupCanonicalAlias(trimmed);
+  if (alias) {
+    switch (inbox.provider) {
+      case "gmail":
+        // Gmail `archive` has no system label (null) → fall through to listing.
+        if (alias.gmail) return alias.gmail;
+        break;
+      case "outlook":
+        return alias.outlook;
+      case "fastmail":
+        // No static id; fall through and match the mailbox by canonical name.
+        break;
+      default: // imap — the common name is the id.
+        return alias.imap;
+    }
+  }
+
+  // ── List once and match by name (or accept an exact id) ─────────────────────
+  const folders = await listFoldersForProvider(inbox);
+
+  // If the input already is a valid provider id, accept it verbatim.
+  const byId = folders.find((f) => f.id === trimmed);
+  if (byId) return byId.id;
+
+  const lower = trimmed.toLowerCase();
+
+  // For a Fastmail (or fell-through) alias, also try matching the canonical
+  // IMAP-style name (e.g. alias "trash" → mailbox named "Trash") so role-less
+  // listings still resolve common folders.
+  const aliasNames = alias
+    ? new Set([alias.imap.toLowerCase(), ...alias.aliases.map((a) => a.toLowerCase())])
+    : null;
+
+  const byName = folders.find((f) => {
+    const fn = f.name.toLowerCase();
+    return fn === lower || (aliasNames?.has(fn) ?? false);
+  });
+  if (byName) return byName.id;
+
+  // ── No match → best-effort pass-through (provider validates / rejects). ─────
+  return trimmed;
+}
+
+/**
+ * `folder_list` handler — dispatches to the appropriate provider helper.
  *
  * Scope: read:email
  * Capability gate: caps.folders || caps.labels (covers all four providers)
@@ -10707,7 +10618,7 @@ async function executeListFolders(
       result: {
         content: [{
           type: "text",
-          text: "list_folders: arguments must be an object with inbox_id.",
+          text: "folder_list: arguments must be an object with inbox_id.",
         }],
         isError: true,
       },
@@ -10718,7 +10629,7 @@ async function executeListFolders(
   const args = rawArgs as Record<string, unknown>;
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "list_folders");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "folder_list");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -10755,7 +10666,7 @@ async function executeListFolders(
     if (isAuth) {
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
-    console.error("[mcp-server] list_folders: provider_error", {
+    console.error("[mcp-server] folder_list: provider_error", {
       inbox_id: inbox.id,
       provider: inbox.provider,
       error: message,
@@ -10782,10 +10693,10 @@ async function executeListFolders(
 }
 
 // ---------------------------------------------------------------------------
-// create_folder / rename_folder / delete_folder — provider helpers + handlers
+// folder_create / folder_rename / folder_delete — provider helpers + handlers
 // ---------------------------------------------------------------------------
 
-// ── create_folder helpers ──────────────────────────────────────────────────
+// ── folder_create helpers ──────────────────────────────────────────────────
 
 async function imapCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
@@ -10897,7 +10808,7 @@ async function fastmailCreateFolder(inbox: InboxRow, name: string): Promise<{ id
   return { id: newId, name };
 }
 
-// ── rename_folder helpers ──────────────────────────────────────────────────
+// ── folder_rename helpers ──────────────────────────────────────────────────
 
 async function imapRenameFolder(inbox: InboxRow, folderId: string, newName: string): Promise<void> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
@@ -11004,7 +10915,7 @@ async function fastmailRenameFolder(inbox: InboxRow, folderId: string, newName: 
   if (notUpdated?.[folderId]) throw new Error("folder_not_found");
 }
 
-// ── delete_folder helpers ──────────────────────────────────────────────────
+// ── folder_delete helpers ──────────────────────────────────────────────────
 
 async function imapDeleteFolder(inbox: InboxRow, folderId: string): Promise<void> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
@@ -11171,7 +11082,7 @@ function folderProviderError(
       result: {
         content: [{
           type: "text",
-          text: `Folder not found. Call list_folders to get valid folder IDs.`,
+          text: `Folder not found. Call folder_list to get valid folder IDs.`,
         }],
         isError: true,
       },
@@ -11193,10 +11104,10 @@ function folderProviderError(
   };
 }
 
-// ── create_folder handler ──────────────────────────────────────────────────
+// ── folder_create handler ──────────────────────────────────────────────────
 
 /**
- * `create_folder` handler — creates a folder/label in an inbox.
+ * `folder_create` handler — creates a folder/label in an inbox.
  *
  * Scope: manage:folders
  * Capability gate: caps.folders || caps.labels
@@ -11209,7 +11120,7 @@ async function executeCreateFolder(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const resolved = await resolveFolderArgs(rawArgs, "create_folder", apiKey, false);
+  const resolved = await resolveFolderArgs(rawArgs, "folder_create", apiKey, false);
   if (resolved.error) return resolved.error;
   const { inbox, args } = resolved;
 
@@ -11217,7 +11128,7 @@ async function executeCreateFolder(
   if (!name) {
     return {
       result: {
-        content: [{ type: "text", text: "create_folder: name is required and must be a non-empty string." }],
+        content: [{ type: "text", text: "folder_create: name is required and must be a non-empty string." }],
         isError: true,
       },
       logStatus: "error",
@@ -11249,7 +11160,7 @@ async function executeCreateFolder(
         break;
     }
   } catch (err) {
-    return folderProviderError("create_folder", inbox.provider, inbox.id, err);
+    return folderProviderError("folder_create", inbox.provider, inbox.id, err);
   }
 
   return {
@@ -11259,10 +11170,10 @@ async function executeCreateFolder(
   };
 }
 
-// ── rename_folder handler ──────────────────────────────────────────────────
+// ── folder_rename handler ──────────────────────────────────────────────────
 
 /**
- * `rename_folder` handler — renames a folder/label in an inbox.
+ * `folder_rename` handler — renames a folder/label in an inbox.
  *
  * Scope: manage:folders
  * Capability gate: caps.folders || caps.labels
@@ -11275,7 +11186,7 @@ async function executeRenameFolder(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const resolved = await resolveFolderArgs(rawArgs, "rename_folder", apiKey, true);
+  const resolved = await resolveFolderArgs(rawArgs, "folder_rename", apiKey, true);
   if (resolved.error) return resolved.error;
   const { inbox, args } = resolved;
 
@@ -11284,7 +11195,7 @@ async function executeRenameFolder(
   if (!newName) {
     return {
       result: {
-        content: [{ type: "text", text: "rename_folder: new_name is required and must be a non-empty string." }],
+        content: [{ type: "text", text: "folder_rename: new_name is required and must be a non-empty string." }],
         isError: true,
       },
       logStatus: "error",
@@ -11315,7 +11226,7 @@ async function executeRenameFolder(
         break;
     }
   } catch (err) {
-    return folderProviderError("rename_folder", inbox.provider, inbox.id, err);
+    return folderProviderError("folder_rename", inbox.provider, inbox.id, err);
   }
 
   return {
@@ -11333,10 +11244,10 @@ async function executeRenameFolder(
   };
 }
 
-// ── delete_folder handler ──────────────────────────────────────────────────
+// ── folder_delete handler ──────────────────────────────────────────────────
 
 /**
- * `delete_folder` handler — permanently deletes a folder/label from an inbox.
+ * `folder_delete` handler — permanently deletes a folder/label from an inbox.
  *
  * Scope: manage:folders
  * Capability gate: caps.folders || caps.labels
@@ -11350,7 +11261,7 @@ async function executeDeleteFolder(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const resolved = await resolveFolderArgs(rawArgs, "delete_folder", apiKey, true);
+  const resolved = await resolveFolderArgs(rawArgs, "folder_delete", apiKey, true);
   if (resolved.error) return resolved.error;
   const { inbox, args } = resolved;
 
@@ -11379,7 +11290,7 @@ async function executeDeleteFolder(
         break;
     }
   } catch (err) {
-    return folderProviderError("delete_folder", inbox.provider, inbox.id, err);
+    return folderProviderError("folder_delete", inbox.provider, inbox.id, err);
   }
 
   return {
@@ -11851,7 +11762,7 @@ function handleFlagError(
           text:
             `Message ${messageId} not found in inbox ${inboxId}. ` +
             "The message may have been deleted or the ID is stale — " +
-            "call list_messages or search_emails to get current message IDs.",
+            "call email_list or email_search to get current message IDs.",
         }],
         isError: true,
       },
@@ -11892,202 +11803,6 @@ function handleFlagError(
 
 // ── Top-level execute functions ────────────────────────────────────────────
 
-/** Marks a message as read across all providers. */
-async function executeMarkRead(
-  rawArgs: unknown,
-  apiKey: ApiKeyRow,
-): Promise<{
-  result: { content: { type: string; text: string }[]; isError?: boolean };
-  logStatus: "success" | "error";
-  logErrorCode: string | null;
-}> {
-  const resolved = await resolveFlagArgs(rawArgs, "mark_read", apiKey);
-  if (resolved.error) return resolved.error;
-  const { inbox, messageId } = resolved;
-
-  const caps = getProviderCapabilities(inbox.provider);
-  if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
-
-  try {
-    switch (inbox.provider) {
-      case "gmail":
-        await gmailModifyLabels(inbox, messageId, [], ["UNREAD"]);
-        break;
-      case "outlook":
-        await outlookPatchMessage(inbox, messageId, { isRead: true });
-        break;
-      case "fastmail":
-        await fastmailSetKeywords(inbox, messageId, { "$seen": true }, {});
-        break;
-      default: // "imap" and all IMAP service variants
-        await imapUpdateFlags(inbox, messageId, ["\\Seen"], "add");
-        break;
-    }
-  } catch (err) {
-    return handleFlagError(err, "mark_read", inbox.id, inbox.provider, messageId);
-  }
-
-  const flagResult: FlagUpdateResult = {
-    success: true,
-    message_id: messageId,
-    operation: "mark_read",
-    inbox_id: inbox.id,
-  };
-  return {
-    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
-    logStatus: "success",
-    logErrorCode: null,
-  };
-}
-
-/** Marks a message as unread across all providers. */
-async function executeMarkUnread(
-  rawArgs: unknown,
-  apiKey: ApiKeyRow,
-): Promise<{
-  result: { content: { type: string; text: string }[]; isError?: boolean };
-  logStatus: "success" | "error";
-  logErrorCode: string | null;
-}> {
-  const resolved = await resolveFlagArgs(rawArgs, "mark_unread", apiKey);
-  if (resolved.error) return resolved.error;
-  const { inbox, messageId } = resolved;
-
-  const caps = getProviderCapabilities(inbox.provider);
-  if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
-
-  try {
-    switch (inbox.provider) {
-      case "gmail":
-        await gmailModifyLabels(inbox, messageId, ["UNREAD"], []);
-        break;
-      case "outlook":
-        await outlookPatchMessage(inbox, messageId, { isRead: false });
-        break;
-      case "fastmail":
-        await fastmailSetKeywords(inbox, messageId, {}, { "$seen": null });
-        break;
-      default:
-        await imapUpdateFlags(inbox, messageId, ["\\Seen"], "remove");
-        break;
-    }
-  } catch (err) {
-    return handleFlagError(err, "mark_unread", inbox.id, inbox.provider, messageId);
-  }
-
-  const flagResult: FlagUpdateResult = {
-    success: true,
-    message_id: messageId,
-    operation: "mark_unread",
-    inbox_id: inbox.id,
-  };
-  return {
-    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
-    logStatus: "success",
-    logErrorCode: null,
-  };
-}
-
-/** Flags (stars) a message across all providers. */
-async function executeFlagEmail(
-  rawArgs: unknown,
-  apiKey: ApiKeyRow,
-): Promise<{
-  result: { content: { type: string; text: string }[]; isError?: boolean };
-  logStatus: "success" | "error";
-  logErrorCode: string | null;
-}> {
-  const resolved = await resolveFlagArgs(rawArgs, "flag_email", apiKey);
-  if (resolved.error) return resolved.error;
-  const { inbox, messageId } = resolved;
-
-  const caps = getProviderCapabilities(inbox.provider);
-  if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
-
-  try {
-    switch (inbox.provider) {
-      case "gmail":
-        await gmailModifyLabels(inbox, messageId, ["STARRED"], []);
-        break;
-      case "outlook":
-        await outlookPatchMessage(inbox, messageId, {
-          flag: { flagStatus: "flagged" },
-        });
-        break;
-      case "fastmail":
-        await fastmailSetKeywords(inbox, messageId, { "$flagged": true }, {});
-        break;
-      default:
-        await imapUpdateFlags(inbox, messageId, ["\\Flagged"], "add");
-        break;
-    }
-  } catch (err) {
-    return handleFlagError(err, "flag_email", inbox.id, inbox.provider, messageId);
-  }
-
-  const flagResult: FlagUpdateResult = {
-    success: true,
-    message_id: messageId,
-    operation: "flag_email",
-    inbox_id: inbox.id,
-  };
-  return {
-    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
-    logStatus: "success",
-    logErrorCode: null,
-  };
-}
-
-/** Removes the flag (star) from a message across all providers. */
-async function executeUnflagEmail(
-  rawArgs: unknown,
-  apiKey: ApiKeyRow,
-): Promise<{
-  result: { content: { type: string; text: string }[]; isError?: boolean };
-  logStatus: "success" | "error";
-  logErrorCode: string | null;
-}> {
-  const resolved = await resolveFlagArgs(rawArgs, "unflag_email", apiKey);
-  if (resolved.error) return resolved.error;
-  const { inbox, messageId } = resolved;
-
-  const caps = getProviderCapabilities(inbox.provider);
-  if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
-
-  try {
-    switch (inbox.provider) {
-      case "gmail":
-        await gmailModifyLabels(inbox, messageId, [], ["STARRED"]);
-        break;
-      case "outlook":
-        await outlookPatchMessage(inbox, messageId, {
-          flag: { flagStatus: "notFlagged" },
-        });
-        break;
-      case "fastmail":
-        await fastmailSetKeywords(inbox, messageId, {}, { "$flagged": null });
-        break;
-      default:
-        await imapUpdateFlags(inbox, messageId, ["\\Flagged"], "remove");
-        break;
-    }
-  } catch (err) {
-    return handleFlagError(err, "unflag_email", inbox.id, inbox.provider, messageId);
-  }
-
-  const flagResult: FlagUpdateResult = {
-    success: true,
-    message_id: messageId,
-    operation: "unflag_email",
-    inbox_id: inbox.id,
-  };
-  return {
-    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
-    logStatus: "success",
-    logErrorCode: null,
-  };
-}
-
 /** Moves a message to the archive folder across all providers. */
 async function executeArchiveEmail(
   rawArgs: unknown,
@@ -12097,7 +11812,7 @@ async function executeArchiveEmail(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const resolved = await resolveFlagArgs(rawArgs, "archive_email", apiKey);
+  const resolved = await resolveFlagArgs(rawArgs, "email_archive", apiKey);
   if (resolved.error) return resolved.error;
   const { inbox, messageId } = resolved;
 
@@ -12121,13 +11836,13 @@ async function executeArchiveEmail(
         break;
     }
   } catch (err) {
-    return handleFlagError(err, "archive_email", inbox.id, inbox.provider, messageId);
+    return handleFlagError(err, "email_archive", inbox.id, inbox.provider, messageId);
   }
 
   const flagResult: FlagUpdateResult = {
     success: true,
     message_id: messageId,
-    operation: "archive_email",
+    operation: "email_archive",
     inbox_id: inbox.id,
   };
   return {
@@ -12138,7 +11853,7 @@ async function executeArchiveEmail(
 }
 
 // ---------------------------------------------------------------------------
-// move_email / copy_email — provider helpers + handlers
+// email_move — provider helpers + handlers
 // ---------------------------------------------------------------------------
 
 // ── IMAP helpers ────────────────────────────────────────────────────────────
@@ -12175,41 +11890,10 @@ async function imapMoveEmail(
   }
 }
 
-async function imapCopyEmail(
-  inbox: InboxRow,
-  messageId: string,
-  destinationFolderId: string,
-): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
-    throw new Error("imap_auth_failed");
-  }
-  const { folder, uid } = decodeImapId(messageId);
-  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
-
-  const password = await decryptStoredToken(inbox.imap_password);
-  let client: ImapClient | null = null;
-  try {
-    client = await ImapClient.connect({
-      host: inbox.imap_host,
-      port: inbox.imap_port,
-      email: imapAuthUser(inbox),
-      password,
-    });
-    await client.selectMailbox(imapFolderName(folder));
-    await client.uidCopy([uid], destinationFolderId);
-  } catch (err) {
-    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
-    throw err;
-  } finally {
-    if (client) await client.logout().catch(() => {});
-  }
-}
-
 // ── Gmail helper ─────────────────────────────────────────────────────────────
 
 /**
  * Gmail "move": add the destination label and remove INBOX.
- * Gmail has no native copy operation; copy_email gates on caps.copy=false.
  */
 async function gmailMoveEmail(
   inbox: InboxRow,
@@ -12250,32 +11934,6 @@ async function outlookMoveEmail(
     if (resp.status === 404) throw new Error("message_not_found");
     const body = await resp.text();
     throw new Error(`Graph move failed: ${body}`);
-  }
-}
-
-async function outlookCopyEmail(
-  inbox: InboxRow,
-  messageId: string,
-  destinationFolderId: string,
-): Promise<void> {
-  const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/copy`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ destinationId: destinationFolderId }),
-    },
-  );
-  if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
-    if (resp.status === 404) throw new Error("message_not_found");
-    const body = await resp.text();
-    throw new Error(`Graph copy failed: ${body}`);
   }
 }
 
@@ -12355,59 +12013,10 @@ async function fastmailMoveEmail(
   if (notUpdated?.[messageId]) throw new Error("message_not_found");
 }
 
-/**
- * Fastmail "copy": Email/copy JMAP method.
- * Copies the message into the destination mailbox; original is unchanged.
- */
-async function fastmailCopyEmail(
-  inbox: InboxRow,
-  messageId: string,
-  destinationFolderId: string,
-): Promise<void> {
-  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        [
-          "Email/copy",
-          {
-            fromAccountId: accountId,
-            accountId,
-            create: {
-              copy1: {
-                id: messageId,
-                mailboxIds: { [destinationFolderId]: true },
-              },
-            },
-          },
-          "a",
-        ],
-      ],
-    }),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP Email/copy failed: ${apiResp.statusText}`);
-  }
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const copyResp = data.methodResponses?.find(([n]) => n === "Email/copy");
-  const notCreated = (copyResp?.[1] as { notCreated?: Record<string, unknown> } | undefined)?.notCreated;
-  if (notCreated?.["copy1"]) throw new Error("message_not_found");
-}
-
 // ── Handlers ─────────────────────────────────────────────────────────────────
 
 /**
- * `move_email` handler — moves a message to the specified folder/label.
+ * `email_move` handler — moves a message to the specified folder/label.
  *
  * Scope: manage:folders
  * Capability gate: caps.move
@@ -12420,7 +12029,7 @@ async function executeMoveEmail(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const resolved = await resolveFlagArgs(rawArgs, "move_email", apiKey);
+  const resolved = await resolveFlagArgs(rawArgs, "email_move", apiKey);
   if (resolved.error) return resolved.error;
   const { inbox, messageId } = resolved;
 
@@ -12435,7 +12044,7 @@ async function executeMoveEmail(
       result: {
         content: [{
           type: "text",
-          text: "move_email: destination_folder_id is required and must be a non-empty string.",
+          text: "email_move: destination_folder_id is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -12448,72 +12057,16 @@ async function executeMoveEmail(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
 
-  // ── Per-provider dispatch ────────────────────────────────────────────────
+  // ── Resolve destination (alias / name / id) → provider-native id ──────────
+  let resolvedDest: string;
   try {
-    switch (inbox.provider) {
-      case "gmail":
-        await gmailMoveEmail(inbox, messageId, destinationFolderId);
-        break;
-      case "outlook":
-        await outlookMoveEmail(inbox, messageId, destinationFolderId);
-        break;
-      case "fastmail":
-        await fastmailMoveEmail(inbox, messageId, destinationFolderId);
-        break;
-      default: // imap and all service variants
-        await imapMoveEmail(inbox, messageId, destinationFolderId);
-        break;
-    }
-  } catch (err) {
-    return handleFlagError(err, "move_email", inbox.id, inbox.provider, messageId);
-  }
-
-  return {
-    result: {
-      ...jsonOk({
-        success: true,
-        message_id: messageId,
-        operation: "move_email",
-        inbox_id: inbox.id,
-        destination_folder_id: destinationFolderId,
-      }),
-      isError: false,
-    },
-    logStatus: "success",
-    logErrorCode: null,
-  };
-}
-
-/**
- * `copy_email` handler — copies a message to the specified folder.
- *
- * Scope: manage:folders
- * Capability gate: caps.copy
- */
-async function executeCopyEmail(
-  rawArgs: unknown,
-  apiKey: ApiKeyRow,
-): Promise<{
-  result: { content: { type: string; text: string }[]; isError?: boolean };
-  logStatus: "success" | "error";
-  logErrorCode: string | null;
-}> {
-  const resolved = await resolveFlagArgs(rawArgs, "copy_email", apiKey);
-  if (resolved.error) return resolved.error;
-  const { inbox, messageId } = resolved;
-
-  // ── Validate destination_folder_id ──────────────────────────────────────
-  const args = rawArgs as Record<string, unknown>;
-  const destinationFolderId =
-    typeof args["destination_folder_id"] === "string"
-      ? args["destination_folder_id"].trim()
-      : "";
-  if (!destinationFolderId) {
+    resolvedDest = await resolveFolderId(inbox, destinationFolderId);
+  } catch (_err) {
     return {
       result: {
         content: [{
           type: "text",
-          text: "copy_email: destination_folder_id is required and must be a non-empty string.",
+          text: "email_move: destination_folder_id is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -12522,25 +12075,24 @@ async function executeCopyEmail(
     };
   }
 
-  // ── Capability gate ──────────────────────────────────────────────────────
-  const caps = getProviderCapabilities(inbox.provider);
-  if (!caps.copy) return unsupportedFeatureError("copy", inbox.provider);
-
   // ── Per-provider dispatch ────────────────────────────────────────────────
   try {
     switch (inbox.provider) {
+      case "gmail":
+        await gmailMoveEmail(inbox, messageId, resolvedDest);
+        break;
       case "outlook":
-        await outlookCopyEmail(inbox, messageId, destinationFolderId);
+        await outlookMoveEmail(inbox, messageId, resolvedDest);
         break;
       case "fastmail":
-        await fastmailCopyEmail(inbox, messageId, destinationFolderId);
+        await fastmailMoveEmail(inbox, messageId, resolvedDest);
         break;
-      default: // imap and all service variants (gmail is gated out by caps.copy=false)
-        await imapCopyEmail(inbox, messageId, destinationFolderId);
+      default: // imap and all service variants
+        await imapMoveEmail(inbox, messageId, resolvedDest);
         break;
     }
   } catch (err) {
-    return handleFlagError(err, "copy_email", inbox.id, inbox.provider, messageId);
+    return handleFlagError(err, "email_move", inbox.id, inbox.provider, messageId);
   }
 
   return {
@@ -12548,7 +12100,7 @@ async function executeCopyEmail(
       ...jsonOk({
         success: true,
         message_id: messageId,
-        operation: "copy_email",
+        operation: "email_move",
         inbox_id: inbox.id,
         destination_folder_id: destinationFolderId,
       }),
@@ -12559,7 +12111,7 @@ async function executeCopyEmail(
   };
 }
 
-// ── delete_email provider helpers ──────────────────────────────────────────
+// ── email_delete provider helpers ──────────────────────────────────────────
 
 /**
  * IMAP delete: move to "Trash" (soft) or \\Deleted + UID EXPUNGE (permanent).
@@ -12788,10 +12340,10 @@ async function fastmailDeleteEmail(
   }
 }
 
-// ── delete_email top-level handler ────────────────────────────────────────────
+// ── email_delete top-level handler ────────────────────────────────────────────
 
 /**
- * `delete_email` handler — trashes or permanently expunges a single message.
+ * `email_delete` handler — trashes or permanently expunges a single message.
  *
  * Scope: delete:email
  * Destructive (client confirms via annotations.destructiveHint).
@@ -12806,7 +12358,7 @@ async function executeDeleteEmail(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const resolved = await resolveFlagArgs(rawArgs, "delete_email", apiKey);
+  const resolved = await resolveFlagArgs(rawArgs, "email_delete", apiKey);
   if (resolved.error) return resolved.error;
   const { inbox, messageId } = resolved;
 
@@ -12837,7 +12389,7 @@ async function executeDeleteEmail(
         break;
     }
   } catch (err) {
-    return handleFlagError(err, "delete_email", inbox.id, inbox.provider, messageId);
+    return handleFlagError(err, "email_delete", inbox.id, inbox.provider, messageId);
   }
 
   return {
@@ -12845,7 +12397,7 @@ async function executeDeleteEmail(
       ...jsonOk({
         success: true,
         message_id: messageId,
-        operation: "delete_email",
+        operation: "email_delete",
         inbox_id: inbox.id,
         permanent,
       }),
@@ -12858,7 +12410,7 @@ async function executeDeleteEmail(
 
 // ---------------------------------------------------------------------------
 // Bulk operation helpers and execute functions
-// (Task 11: bulk_move, bulk_delete, bulk_flag)
+// (Task 11: email_move_batch, email_delete_batch, email_flag)
 // ---------------------------------------------------------------------------
 
 /** Shared return type for all per-provider bulk helpers. */
@@ -13626,7 +13178,7 @@ async function fastmailBulkFlag(
 // ── Bulk execute functions ────────────────────────────────────────────────────
 
 /**
- * `bulk_move` handler — moves multiple messages to a destination folder.
+ * `email_move_batch` handler — moves multiple messages to a destination folder.
  *
  * Scope: manage:folders
  * Capability gate: caps.move
@@ -13640,7 +13192,7 @@ async function executeBulkMove(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const resolved = await resolveBulkArgs(rawArgs, "bulk_move", apiKey);
+  const resolved = await resolveBulkArgs(rawArgs, "email_move_batch", apiKey);
   if (resolved.error) return resolved.error;
   const { inbox, messageIds } = resolved;
 
@@ -13656,7 +13208,7 @@ async function executeBulkMove(
       result: {
         content: [{
           type: "text",
-          text: "bulk_move: destination_folder_id is required and must be a non-empty string.",
+          text: "email_move_batch: destination_folder_id is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -13668,25 +13220,43 @@ async function executeBulkMove(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
 
+  // ── Resolve destination (alias / name / id) → provider-native id ──────────
+  let resolvedDest: string;
+  try {
+    resolvedDest = await resolveFolderId(inbox, destinationFolderId);
+  } catch (_err) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "email_move_batch: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
   let bulkResult: BulkOpResult;
   try {
     switch (inbox.provider) {
       case "gmail":
-        bulkResult = await gmailBulkMove(inbox, messageIds, destinationFolderId);
+        bulkResult = await gmailBulkMove(inbox, messageIds, resolvedDest);
         break;
       case "outlook":
-        bulkResult = await outlookBulkMove(inbox, messageIds, destinationFolderId);
+        bulkResult = await outlookBulkMove(inbox, messageIds, resolvedDest);
         break;
       case "fastmail":
-        bulkResult = await fastmailBulkMove(inbox, messageIds, destinationFolderId);
+        bulkResult = await fastmailBulkMove(inbox, messageIds, resolvedDest);
         break;
       default: // imap and all IMAP service variants
-        bulkResult = await imapBulkMove(inbox, messageIds, destinationFolderId);
+        bulkResult = await imapBulkMove(inbox, messageIds, resolvedDest);
         break;
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] bulk_move: provider_error", {
+    console.error("[mcp-server] email_move_batch: provider_error", {
       inbox_id: inbox.id,
       provider: inbox.provider,
       error: message,
@@ -13695,7 +13265,7 @@ async function executeBulkMove(
       result: {
         content: [{
           type: "text",
-          text: `Provider error during bulk_move: ${message}. Please try again in a moment.`,
+          text: `Provider error during email_move_batch: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
@@ -13707,14 +13277,14 @@ async function executeBulkMove(
   return formatBulkResult(
     bulkResult.succeeded,
     bulkResult.failed,
-    "bulk_move",
+    "email_move_batch",
     inbox.id,
     { destination_folder_id: destinationFolderId },
   );
 }
 
 /**
- * `bulk_delete` handler — trashes or permanently expunges multiple messages.
+ * `email_delete_batch` handler — trashes or permanently expunges multiple messages.
  *
  * Scope: delete:email
  * Destructive (client confirms via annotations.destructiveHint).
@@ -13730,7 +13300,7 @@ async function executeBulkDelete(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const resolved = await resolveBulkArgs(rawArgs, "bulk_delete", apiKey);
+  const resolved = await resolveBulkArgs(rawArgs, "email_delete_batch", apiKey);
   if (resolved.error) return resolved.error;
   const { inbox, messageIds } = resolved;
 
@@ -13762,7 +13332,7 @@ async function executeBulkDelete(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] bulk_delete: provider_error", {
+    console.error("[mcp-server] email_delete_batch: provider_error", {
       inbox_id: inbox.id,
       provider: inbox.provider,
       error: message,
@@ -13771,7 +13341,7 @@ async function executeBulkDelete(
       result: {
         content: [{
           type: "text",
-          text: `Provider error during bulk_delete: ${message}. Please try again in a moment.`,
+          text: `Provider error during email_delete_batch: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
@@ -13783,14 +13353,14 @@ async function executeBulkDelete(
   return formatBulkResult(
     bulkResult.succeeded,
     bulkResult.failed,
-    "bulk_delete",
+    "email_delete_batch",
     inbox.id,
     { permanent },
   );
 }
 
 /**
- * `bulk_flag` handler — applies a read/unread/flag/unflag action to multiple messages.
+ * `email_flag` handler — applies a read/unread/flag/unflag action to one or more messages.
  *
  * Scope: send:email
  * Capability gate: caps.flags
@@ -13804,7 +13374,7 @@ async function executeBulkFlag(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const resolved = await resolveBulkArgs(rawArgs, "bulk_flag", apiKey);
+  const resolved = await resolveBulkArgs(rawArgs, "email_flag", apiKey);
   if (resolved.error) return resolved.error;
   const { inbox, messageIds } = resolved;
 
@@ -13817,7 +13387,7 @@ async function executeBulkFlag(
       result: {
         content: [{
           type: "text",
-          text: "bulk_flag: action must be one of: read, unread, flag, unflag.",
+          text: "email_flag: action must be one of: read, unread, flag, unflag.",
         }],
         isError: true,
       },
@@ -13847,7 +13417,7 @@ async function executeBulkFlag(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] bulk_flag: provider_error", {
+    console.error("[mcp-server] email_flag: provider_error", {
       inbox_id: inbox.id,
       provider: inbox.provider,
       error: message,
@@ -13856,7 +13426,7 @@ async function executeBulkFlag(
       result: {
         content: [{
           type: "text",
-          text: `Provider error during bulk_flag: ${message}. Please try again in a moment.`,
+          text: `Provider error during email_flag: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
@@ -13868,7 +13438,7 @@ async function executeBulkFlag(
   return formatBulkResult(
     bulkResult.succeeded,
     bulkResult.failed,
-    "bulk_flag",
+    "email_flag",
     inbox.id,
     { action },
   );
@@ -13877,14 +13447,14 @@ async function executeBulkFlag(
 // ---------------------------------------------------------------------------
 // Phase 3 (cont.) — Search-and-act tools
 //
-// Tools: search_and_move, search_and_delete
+// Tools: email_search_and_move, email_search_and_delete
 //
 // Both run the provider search on the server and apply the bulk operation to
 // the results, avoiding stale IDs being passed by the agent.
 // ---------------------------------------------------------------------------
 
 /**
- * `search_and_move` handler — searches for messages and moves all matches to a folder.
+ * `email_search_and_move` handler — searches for messages and moves all matches to a folder.
  *
  * Scope: manage:folders
  * Capability gate: caps.move
@@ -13903,7 +13473,7 @@ async function executeSearchAndMove(
       result: {
         content: [{
           type: "text",
-          text: "search_and_move: arguments must be an object with search fields (or query) and destination_folder_id.",
+          text: "email_search_and_move: arguments must be an object with search fields (or query) and destination_folder_id.",
         }],
         isError: true,
       },
@@ -13930,7 +13500,7 @@ async function executeSearchAndMove(
       result: {
         content: [{
           type: "text",
-          text: "search_and_move: destination_folder_id is required and must be a non-empty string.",
+          text: "email_search_and_move: destination_folder_id is required and must be a non-empty string.",
         }],
         isError: true,
       },
@@ -13950,12 +13520,31 @@ async function executeSearchAndMove(
     : [];
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "search_and_move");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_search_and_move");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
+
+  // ── Resolve destination (alias / name / id) → provider-native id ──────────
+  // Done now (before the search) so an unresolvable destination fails fast.
+  let resolvedDest: string;
+  try {
+    resolvedDest = await resolveFolderId(inbox, destinationFolderId);
+  } catch (_err) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "email_search_and_move: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
 
   // ── Run search to collect message IDs ─────────────────────────────────────
   const timeoutPromise = new Promise<never>((_, reject) =>
@@ -13984,7 +13573,7 @@ async function executeSearchAndMove(
             content: [{
               type: "text",
               text:
-                `Provider '${inbox.provider}' is not yet supported by search_and_move. ` +
+                `Provider '${inbox.provider}' is not yet supported by email_search_and_move. ` +
                 "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
@@ -14006,7 +13595,7 @@ async function executeSearchAndMove(
         logErrorCode: "search_timeout",
       };
     }
-    console.error("[mcp-server] search_and_move: search_error", {
+    console.error("[mcp-server] email_search_and_move: search_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
       error: message,
@@ -14028,7 +13617,7 @@ async function executeSearchAndMove(
       result: jsonOk({
         succeeded: 0,
         failed: 0,
-        operation: "search_and_move",
+        operation: "email_search_and_move",
         inbox_id: inboxId,
         destination_folder_id: destinationFolderId,
         query,
@@ -14044,21 +13633,21 @@ async function executeSearchAndMove(
   try {
     switch (inbox.provider) {
       case "gmail":
-        bulkResult = await gmailBulkMove(inbox, messageIds, destinationFolderId);
+        bulkResult = await gmailBulkMove(inbox, messageIds, resolvedDest);
         break;
       case "outlook":
-        bulkResult = await outlookBulkMove(inbox, messageIds, destinationFolderId);
+        bulkResult = await outlookBulkMove(inbox, messageIds, resolvedDest);
         break;
       case "fastmail":
-        bulkResult = await fastmailBulkMove(inbox, messageIds, destinationFolderId);
+        bulkResult = await fastmailBulkMove(inbox, messageIds, resolvedDest);
         break;
       default: // imap
-        bulkResult = await imapBulkMove(inbox, messageIds, destinationFolderId);
+        bulkResult = await imapBulkMove(inbox, messageIds, resolvedDest);
         break;
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] search_and_move: move_error", {
+    console.error("[mcp-server] email_search_and_move: move_error", {
       inbox_id: inbox.id,
       provider: inbox.provider,
       error: message,
@@ -14076,14 +13665,14 @@ async function executeSearchAndMove(
   return formatBulkResult(
     bulkResult.succeeded,
     bulkResult.failed,
-    "search_and_move",
+    "email_search_and_move",
     inbox.id,
     { destination_folder_id: destinationFolderId, query },
   );
 }
 
 /**
- * `search_and_delete` handler — searches for messages and deletes all matches.
+ * `email_search_and_delete` handler — searches for messages and deletes all matches.
  *
  * Scope: delete:email
  * Destructive (client confirms via annotations.destructiveHint).
@@ -14104,7 +13693,7 @@ async function executeSearchAndDelete(
       result: {
         content: [{
           type: "text",
-          text: "search_and_delete: arguments must be an object with search fields (or query).",
+          text: "email_search_and_delete: arguments must be an object with search fields (or query).",
         }],
         isError: true,
       },
@@ -14133,7 +13722,7 @@ async function executeSearchAndDelete(
     : [];
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "search_and_delete");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_search_and_delete");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -14167,7 +13756,7 @@ async function executeSearchAndDelete(
             content: [{
               type: "text",
               text:
-                `Provider '${inbox.provider}' is not yet supported by search_and_delete. ` +
+                `Provider '${inbox.provider}' is not yet supported by email_search_and_delete. ` +
                 "Supported providers: gmail, outlook, fastmail, imap.",
             }],
             isError: true,
@@ -14189,7 +13778,7 @@ async function executeSearchAndDelete(
         logErrorCode: "search_timeout",
       };
     }
-    console.error("[mcp-server] search_and_delete: search_error", {
+    console.error("[mcp-server] email_search_and_delete: search_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
       error: message,
@@ -14211,7 +13800,7 @@ async function executeSearchAndDelete(
       result: jsonOk({
         succeeded: 0,
         failed: 0,
-        operation: "search_and_delete",
+        operation: "email_search_and_delete",
         inbox_id: inboxId,
         permanent,
         query,
@@ -14241,7 +13830,7 @@ async function executeSearchAndDelete(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] search_and_delete: delete_error", {
+    console.error("[mcp-server] email_search_and_delete: delete_error", {
       inbox_id: inbox.id,
       provider: inbox.provider,
       error: message,
@@ -14259,14 +13848,14 @@ async function executeSearchAndDelete(
   return formatBulkResult(
     bulkResult.succeeded,
     bulkResult.failed,
-    "search_and_delete",
+    "email_search_and_delete",
     inbox.id,
     { permanent, query },
   );
 }
 
 // ---------------------------------------------------------------------------
-// create_draft / update_draft / list_drafts / send_draft — types + helpers
+// draft_create / draft_update / draft_list / draft_send — types + helpers
 // ---------------------------------------------------------------------------
 
 /** Common folder names for the Drafts mailbox across IMAP providers, tried in order. */
@@ -15215,7 +14804,7 @@ async function executeListDrafts(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "list_drafts: arguments must be an object with inbox_id." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_list: arguments must be an object with inbox_id." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15225,7 +14814,7 @@ async function executeListDrafts(
     : 20;
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "list_drafts");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "draft_list");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -15247,7 +14836,7 @@ async function executeListDrafts(
     if (isAuth) {
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
-    console.error("[mcp-server] list_drafts: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+    console.error("[mcp-server] draft_list: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
     return {
       result: { content: [{ type: "text", text: `Failed to list drafts for ${inbox.provider} inbox: ${message}` }], isError: true },
       logStatus: "error", logErrorCode: "provider_error",
@@ -15270,7 +14859,7 @@ async function executeCreateDraft(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "create_draft: arguments must be an object with inbox_id, subject, and body." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_create: arguments must be an object with inbox_id, subject, and body." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15279,7 +14868,7 @@ async function executeCreateDraft(
     ? args["subject"] : null;
   if (!subject) {
     return {
-      result: { content: [{ type: "text", text: "create_draft: subject is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_create: subject is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15287,7 +14876,7 @@ async function executeCreateDraft(
     ? args["body"] : null;
   if (!body) {
     return {
-      result: { content: [{ type: "text", text: "create_draft: body is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_create: body is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15299,14 +14888,14 @@ async function executeCreateDraft(
   for (const addr of [...to, ...cc, ...bcc]) {
     if (typeof addr !== "string" || !isValidEmailAddress(addr)) {
       return {
-        result: { content: [{ type: "text", text: `create_draft: invalid email address: "${String(addr)}".` }], isError: true },
+        result: { content: [{ type: "text", text: `draft_create: invalid email address: "${String(addr)}".` }], isError: true },
         logStatus: "error", logErrorCode: "invalid_recipient",
       };
     }
   }
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "create_draft");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "draft_create");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -15329,7 +14918,7 @@ async function executeCreateDraft(
     if (isAuth) {
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
-    console.error("[mcp-server] create_draft: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+    console.error("[mcp-server] draft_create: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
     return {
       result: { content: [{ type: "text", text: `Failed to create draft for ${inbox.provider} inbox: ${message}` }], isError: true },
       logStatus: "error", logErrorCode: "provider_error",
@@ -15352,7 +14941,7 @@ async function executeUpdateDraft(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "update_draft: arguments must be an object with inbox_id, draft_id, subject, and body." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_update: arguments must be an object with inbox_id, draft_id, subject, and body." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15361,7 +14950,7 @@ async function executeUpdateDraft(
     ? args["draft_id"] : null;
   if (!draftId) {
     return {
-      result: { content: [{ type: "text", text: "update_draft: draft_id is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_update: draft_id is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15369,7 +14958,7 @@ async function executeUpdateDraft(
     ? args["subject"] : null;
   if (!subject) {
     return {
-      result: { content: [{ type: "text", text: "update_draft: subject is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_update: subject is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15377,7 +14966,7 @@ async function executeUpdateDraft(
     ? args["body"] : null;
   if (!body) {
     return {
-      result: { content: [{ type: "text", text: "update_draft: body is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_update: body is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15389,14 +14978,14 @@ async function executeUpdateDraft(
   for (const addr of [...to, ...cc, ...bcc]) {
     if (typeof addr !== "string" || !isValidEmailAddress(addr)) {
       return {
-        result: { content: [{ type: "text", text: `update_draft: invalid email address: "${String(addr)}".` }], isError: true },
+        result: { content: [{ type: "text", text: `draft_update: invalid email address: "${String(addr)}".` }], isError: true },
         logStatus: "error", logErrorCode: "invalid_recipient",
       };
     }
   }
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "update_draft");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "draft_update");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -15416,7 +15005,7 @@ async function executeUpdateDraft(
     const message = err instanceof Error ? err.message : String(err);
     if (message === "draft_not_found") {
       return {
-        result: { content: [{ type: "text", text: `Draft ${draftId} not found. Use list_drafts to see available draft IDs.` }], isError: true },
+        result: { content: [{ type: "text", text: `Draft ${draftId} not found. Use draft_list to see available draft IDs.` }], isError: true },
         logStatus: "error", logErrorCode: "draft_not_found",
       };
     }
@@ -15425,7 +15014,7 @@ async function executeUpdateDraft(
     if (isAuth) {
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
-    console.error("[mcp-server] update_draft: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+    console.error("[mcp-server] draft_update: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
     return {
       result: { content: [{ type: "text", text: `Failed to update draft for ${inbox.provider} inbox: ${message}` }], isError: true },
       logStatus: "error", logErrorCode: "provider_error",
@@ -15448,7 +15037,7 @@ async function executeSendDraft(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "send_draft: arguments must be an object with inbox_id and draft_id." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_send: arguments must be an object with inbox_id and draft_id." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15457,13 +15046,13 @@ async function executeSendDraft(
     ? args["draft_id"] : null;
   if (!draftId) {
     return {
-      result: { content: [{ type: "text", text: "send_draft: draft_id is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_send: draft_id is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "send_draft");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "draft_send");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -15482,13 +15071,13 @@ async function executeSendDraft(
     const message = err instanceof Error ? err.message : String(err);
     if (message === "draft_not_found") {
       return {
-        result: { content: [{ type: "text", text: `Draft ${draftId} not found. Use list_drafts to see available draft IDs.` }], isError: true },
+        result: { content: [{ type: "text", text: `Draft ${draftId} not found. Use draft_list to see available draft IDs.` }], isError: true },
         logStatus: "error", logErrorCode: "draft_not_found",
       };
     }
     if (message === "draft_has_no_recipients") {
       return {
-        result: { content: [{ type: "text", text: "send_draft: the draft has no recipients. Add at least one To address via update_draft before sending." }], isError: true },
+        result: { content: [{ type: "text", text: "draft_send: the draft has no recipients. Add at least one To address via draft_update before sending." }], isError: true },
         logStatus: "error", logErrorCode: "draft_has_no_recipients",
       };
     }
@@ -15503,7 +15092,7 @@ async function executeSendDraft(
         logStatus: "error", logErrorCode: "quota_exceeded",
       };
     }
-    console.error("[mcp-server] send_draft: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+    console.error("[mcp-server] draft_send: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
     return {
       result: {
         content: [{ type: "text", text: `An error occurred while sending the draft via ${inbox.provider}. The message may or may not have been delivered. Do not retry automatically to avoid duplicate delivery.` }],
@@ -15524,7 +15113,7 @@ async function executeSendDraft(
 // ---------------------------------------------------------------------------
 
 /**
- * `search_contacts` — search the derived contacts table by name or email.
+ * `contact_search` — search the derived contacts table by name or email.
  *
  * Scope: manage:contacts
  * Required params: query (string)
@@ -15545,7 +15134,7 @@ async function executeSearchContacts(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "search_contacts: arguments must be an object with a query field." }], isError: true },
+      result: { content: [{ type: "text", text: "contact_search: arguments must be an object with a query field." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15555,7 +15144,7 @@ async function executeSearchContacts(
     ? args["query"] : null;
   if (!query) {
     return {
-      result: { content: [{ type: "text", text: "search_contacts: query is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: "contact_search: query is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15618,12 +15207,12 @@ async function executeSearchContacts(
     .order("last_contacted_at", { ascending: false })
     .limit(limit);
   if (error) {
-    console.error("[mcp-server] search_contacts: db_error", {
+    console.error("[mcp-server] contact_search: db_error", {
       workspace_id: apiKey.workspace_id,
       error: error.message,
     });
     return {
-      result: { content: [{ type: "text", text: "search_contacts: database error while querying contacts." }], isError: true },
+      result: { content: [{ type: "text", text: "contact_search: database error while querying contacts." }], isError: true },
       logStatus: "error", logErrorCode: "db_error",
     };
   }
@@ -15650,128 +15239,19 @@ async function executeSearchContacts(
   };
 }
 
-/**
- * `get_contact` — retrieve a single contact record by inbox + email address.
- *
- * Scope: manage:contacts
- * Required params: inbox_id (UUID), email_address (string)
- *
- * Returns the contact's full record including message_count and
- * last_contacted_at.  The email_address is normalised to lowercase before
- * querying so matches are case-insensitive.
- */
-async function executeGetContact(
-  rawArgs: unknown,
-  apiKey: ApiKeyRow,
-): Promise<{
-  result: { content: { type: string; text: string }[]; isError?: boolean };
-  logStatus: "success" | "error";
-  logErrorCode: string | null;
-}> {
-  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
-    return {
-      result: { content: [{ type: "text", text: "get_contact: arguments must be an object with inbox_id and email_address." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
-  const args = rawArgs as Record<string, unknown>;
-
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-
-  const rawEmail = typeof args["email_address"] === "string" ? args["email_address"].trim() : null;
-  if (!rawEmail) {
-    return {
-      result: { content: [{ type: "text", text: "get_contact: email_address is required and must be a non-empty string." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
-  const emailAddress = rawEmail.toLowerCase();
-
-  // If an inbox_id was supplied, validate it is accessible to this API key and
-  // scope the lookup to that inbox. When omitted, search across ALL inboxes the
-  // key can access (mirrors search_contacts' workspace-wide scoping).
-  let scopedInboxId: string | null = null;
-  if (inboxId) {
-    const inbox = await resolveInbox(inboxId, apiKey);
-    if (!inbox) {
-      return {
-        result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
-        logStatus: "error", logErrorCode: "inbox_not_found",
-      };
-    }
-    scopedInboxId = inbox.id;
-  }
-
-  let contactQuery = supabase
-    .from("contacts")
-    .select("id, inbox_id, email_address, display_name, message_count, last_contacted_at, created_at, updated_at")
-    .eq("workspace_id", apiKey.workspace_id)
-    .eq("email_address", emailAddress)
-    .is("deleted_at", null);
-
-  if (scopedInboxId) {
-    contactQuery = contactQuery.eq("inbox_id", scopedInboxId);
-  } else if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
-    // API key scoped to specific inboxes — honour that restriction.
-    contactQuery = contactQuery.in("inbox_id", apiKey.inbox_ids);
-  }
-
-  // maybeSingle would 500 if the same address exists across multiple inboxes;
-  // order + limit(1) returns the most recently contacted match instead.
-  const { data: rows, error } = await contactQuery
-    .order("last_contacted_at", { ascending: false })
-    .limit(1);
-  const data = rows && rows.length > 0 ? rows[0] : null;
-
-  if (error) {
-    console.error("[mcp-server] get_contact: db_error", {
-      inbox_id: scopedInboxId,
-      email_address: emailAddress,
-      error: error.message,
-    });
-    return {
-      result: { content: [{ type: "text", text: "get_contact: database error while querying contacts." }], isError: true },
-      logStatus: "error", logErrorCode: "db_error",
-    };
-  }
-
-  if (!data) {
-    return {
-      result: jsonOk({ found: false, inbox_id: scopedInboxId, email_address: emailAddress }),
-      logStatus: "success", logErrorCode: null,
-    };
-  }
-
-  const contact = data as {
-    id: string;
-    inbox_id: string;
-    email_address: string;
-    display_name: string | null;
-    message_count: number;
-    last_contacted_at: string;
-    created_at: string;
-    updated_at: string;
-  };
-
-  return {
-    result: jsonOk({ found: true, contact }, true),
-    logStatus: "success", logErrorCode: null,
-  };
-}
-
 // ---------------------------------------------------------------------------
 // Scheduling tools — Phase 7
 // ---------------------------------------------------------------------------
 
 /**
- * `schedule_send` — insert a future-delivery row into scheduled_sends.
+ * `schedule_create` — insert a future-delivery row into scheduled_sends.
  *
  * Scope: schedule:email
  * Required params: inbox_id (UUID), to (string[]), subject, body, send_at (ISO 8601)
  * Optional params: cc, bcc, html_body, attachments, reply_to
  *
- * Validates all inputs using the same rules as send_email, then inserts a
- * scheduled_sends row with the full send_email payload stored as JSONB.
+ * Validates all inputs using the same rules as email_send, then inserts a
+ * scheduled_sends row with the full email_send payload stored as JSONB.
  * The dispatcher (handleScheduledDispatch / pg_cron every minute) picks it
  * up when send_at <= now().
  */
@@ -15785,7 +15265,7 @@ async function executeScheduleSend(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: arguments must be an object." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: arguments must be an object." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15795,13 +15275,13 @@ async function executeScheduleSend(
   const toRaw = args["to"];
   if (!Array.isArray(toRaw) || toRaw.length === 0) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: to is required and must be a non-empty array of email address strings." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: to is required and must be a non-empty array of email address strings." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
   if (toRaw.length > 50) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: to must not exceed 50 recipients." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: to must not exceed 50 recipients." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15815,13 +15295,13 @@ async function executeScheduleSend(
   const subjectRaw = args["subject"];
   if (typeof subjectRaw !== "string" || subjectRaw.trim().length === 0) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: subject is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: subject is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
   if (subjectRaw.length > 998) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: subject must not exceed 998 characters." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: subject must not exceed 998 characters." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15831,7 +15311,7 @@ async function executeScheduleSend(
   const bodyRaw = args["body"];
   if (typeof bodyRaw !== "string" || bodyRaw.trim().length === 0) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: body is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: body is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15846,7 +15326,7 @@ async function executeScheduleSend(
   if (Array.isArray(attachmentsRaw)) {
     if (attachmentsRaw.length > 20) {
       return {
-        result: { content: [{ type: "text", text: "schedule_send: attachments must not exceed 20 items." }], isError: true },
+        result: { content: [{ type: "text", text: "schedule_create: attachments must not exceed 20 items." }], isError: true },
         logStatus: "error", logErrorCode: "-32602",
       };
     }
@@ -15858,7 +15338,7 @@ async function executeScheduleSend(
         typeof (att as Record<string, unknown>)["data"] !== "string"
       ) {
         return {
-          result: { content: [{ type: "text", text: "schedule_send: each attachment must have filename, mime_type, and data fields." }], isError: true },
+          result: { content: [{ type: "text", text: "schedule_create: each attachment must have filename, mime_type, and data fields." }], isError: true },
           logStatus: "error", logErrorCode: "-32602",
         };
       }
@@ -15873,20 +15353,20 @@ async function executeScheduleSend(
   const sendAtRaw = args["send_at"];
   if (typeof sendAtRaw !== "string" || sendAtRaw.trim().length === 0) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: send_at is required and must be an ISO 8601 datetime string." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: send_at is required and must be an ISO 8601 datetime string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
   const sendAtMs = Date.parse(sendAtRaw);
   if (isNaN(sendAtMs)) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: send_at is not a valid ISO 8601 datetime string." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: send_at is not a valid ISO 8601 datetime string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
   if (sendAtMs <= Date.now()) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: send_at must be in the future." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: send_at must be in the future." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15894,7 +15374,7 @@ async function executeScheduleSend(
   const MAX_SCHEDULE_HORIZON_MS = 365 * 24 * 60 * 60 * 1000; // one year
   if (sendAtMs > Date.now() + MAX_SCHEDULE_HORIZON_MS) {
     return {
-      result: { content: [{ type: "text", text: "schedule_send: send_at must be within 365 days from now." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: send_at must be within 365 days from now." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -15911,7 +15391,7 @@ async function executeScheduleSend(
     if (typeof addr !== "string" || !isValidEmailAddress(addr)) {
       return {
         result: {
-          content: [{ type: "text", text: `schedule_send: invalid email address in '${field}': "${String(addr)}".` }],
+          content: [{ type: "text", text: `schedule_create: invalid email address in '${field}': "${String(addr)}".` }],
           isError: true,
         },
         logStatus: "error", logErrorCode: "invalid_recipient",
@@ -15921,7 +15401,7 @@ async function executeScheduleSend(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "schedule_send");
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "schedule_create");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -15931,7 +15411,7 @@ async function executeScheduleSend(
     return unsupportedFeatureError("scheduling", inbox.provider);
   }
 
-  // ── Build payload (mirrors send_email args, stored as JSONB for dispatcher) ─
+  // ── Build payload (mirrors email_send args, stored as JSONB for dispatcher) ─
   const payload: Record<string, unknown> = { to, cc, bcc, subject, body };
   if (htmlBody !== undefined) payload["html_body"] = htmlBody;
   if (attachments.length > 0) payload["attachments"] = attachments;
@@ -15951,13 +15431,13 @@ async function executeScheduleSend(
     .single();
 
   if (insertErr) {
-    console.error("[mcp-server] schedule_send: insert_error", {
+    console.error("[mcp-server] schedule_create: insert_error", {
       workspace_id: apiKey.workspace_id,
       inbox_id: inbox.id,
       error: insertErr.message,
     });
     return {
-      result: { content: [{ type: "text", text: "schedule_send: database error while scheduling the send." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_create: database error while scheduling the send." }], isError: true },
       logStatus: "error", logErrorCode: "db_error",
     };
   }
@@ -15979,7 +15459,7 @@ async function executeScheduleSend(
 }
 
 /**
- * `list_scheduled` — list pending scheduled sends for the workspace.
+ * `schedule_list` — list pending scheduled sends for the workspace.
  *
  * Scope: schedule:email
  * Optional params: inbox_id (UUID), limit (integer 1–100, default 20)
@@ -15998,7 +15478,7 @@ async function executeListScheduled(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "list_scheduled: arguments must be an object." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_list: arguments must be an object." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -16039,12 +15519,12 @@ async function executeListScheduled(
     .limit(limit);
 
   if (error) {
-    console.error("[mcp-server] list_scheduled: db_error", {
+    console.error("[mcp-server] schedule_list: db_error", {
       workspace_id: apiKey.workspace_id,
       error: error.message,
     });
     return {
-      result: { content: [{ type: "text", text: "list_scheduled: database error while listing scheduled sends." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_list: database error while listing scheduled sends." }], isError: true },
       logStatus: "error", logErrorCode: "db_error",
     };
   }
@@ -16074,7 +15554,7 @@ async function executeListScheduled(
 }
 
 /**
- * `cancel_scheduled` — set status='cancelled' on a pending scheduled send.
+ * `schedule_cancel` — set status='cancelled' on a pending scheduled send.
  *
  * Scope: schedule:email
  * Required params: scheduled_send_id (UUID)
@@ -16094,7 +15574,7 @@ async function executeCancelScheduled(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "cancel_scheduled: arguments must be an object." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_cancel: arguments must be an object." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -16103,7 +15583,7 @@ async function executeCancelScheduled(
   const scheduledSendId = typeof args["scheduled_send_id"] === "string" ? args["scheduled_send_id"] : null;
   if (!scheduledSendId) {
     return {
-      result: { content: [{ type: "text", text: "cancel_scheduled: scheduled_send_id is required and must be a UUID string." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_cancel: scheduled_send_id is required and must be a UUID string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -16117,19 +15597,19 @@ async function executeCancelScheduled(
     .maybeSingle();
 
   if (fetchErr) {
-    console.error("[mcp-server] cancel_scheduled: db_error", {
+    console.error("[mcp-server] schedule_cancel: db_error", {
       id: scheduledSendId,
       error: fetchErr.message,
     });
     return {
-      result: { content: [{ type: "text", text: "cancel_scheduled: database error while fetching the scheduled send." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_cancel: database error while fetching the scheduled send." }], isError: true },
       logStatus: "error", logErrorCode: "db_error",
     };
   }
 
   if (!existing) {
     return {
-      result: { content: [{ type: "text", text: `cancel_scheduled: scheduled send ${scheduledSendId} not found or not accessible.` }], isError: true },
+      result: { content: [{ type: "text", text: `schedule_cancel: scheduled send ${scheduledSendId} not found or not accessible.` }], isError: true },
       logStatus: "error", logErrorCode: "not_found",
     };
   }
@@ -16142,7 +15622,7 @@ async function executeCancelScheduled(
   // so this check runs ahead of the status check below.
   if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0 && !apiKey.inbox_ids.includes(row.inbox_id)) {
     return {
-      result: { content: [{ type: "text", text: `cancel_scheduled: scheduled send ${scheduledSendId} not found or not accessible.` }], isError: true },
+      result: { content: [{ type: "text", text: `schedule_cancel: scheduled send ${scheduledSendId} not found or not accessible.` }], isError: true },
       logStatus: "error", logErrorCode: "not_found",
     };
   }
@@ -16153,7 +15633,7 @@ async function executeCancelScheduled(
         content: [{
           type: "text",
           text:
-            `cancel_scheduled: cannot cancel scheduled send ${scheduledSendId} — ` +
+            `schedule_cancel: cannot cancel scheduled send ${scheduledSendId} — ` +
             `current status is '${row.status}'. Only 'pending' sends can be cancelled.`,
         }],
         isError: true,
@@ -16171,12 +15651,12 @@ async function executeCancelScheduled(
     .eq("status", "pending");
 
   if (updateErr) {
-    console.error("[mcp-server] cancel_scheduled: update_error", {
+    console.error("[mcp-server] schedule_cancel: update_error", {
       id: scheduledSendId,
       error: updateErr.message,
     });
     return {
-      result: { content: [{ type: "text", text: "cancel_scheduled: database error while cancelling the scheduled send." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_cancel: database error while cancelling the scheduled send." }], isError: true },
       logStatus: "error", logErrorCode: "db_error",
     };
   }
@@ -16326,8 +15806,8 @@ function handleToolsList(
   apiKey: ApiKeyRow,
 ): JsonRpcSuccessResponse {
   // Filter the registry to only tools the API key's scopes allow.
-  // An API key with only read:email will see list_messages, read_email, search_emails.
-  // An API key with send:email (in addition or alone) will also see send_email, reply_to_email.
+  // An API key with only read:email will see email_list, email_read, email_search.
+  // An API key with send:email (in addition or alone) will also see email_send, email_reply.
   const visibleTools = TOOL_REGISTRY
     .filter((tool) => isToolAuthorized(tool, apiKey.scopes))
     .map((tool) => ({
@@ -16492,7 +15972,7 @@ async function handleToolsCall(
   }
 
   // ── Execute the tool ──────────────────────────────────────────────────────
-  // Tool implementations (list_messages, read_email, etc.) are added in the
+  // Tool implementations (email_list, email_read, etc.) are added in the
   // "MCP Tools — Implementation" checklist tasks. Until each tool is
   // implemented, this handler returns a structured error so the MCP client
   // receives a valid JSON-RPC response rather than HTTP 5xx.
@@ -16508,199 +15988,169 @@ async function handleToolsCall(
 
   try {
     // ── Dispatch to the implemented tool handler ───────────────────────────
-    if (toolName === "list_inboxes") {
+    if (toolName === "inbox_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListInboxes(apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "list_messages") {
+    } else if (toolName === "email_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListInbox(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "read_email") {
+    } else if (toolName === "email_read") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeReadEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "send_email") {
+    } else if (toolName === "email_read_batch") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeReadEmails(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (toolName === "email_send") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSendEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "reply_to_email") {
+    } else if (toolName === "email_reply") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeReplyToEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "search_emails") {
+    } else if (toolName === "email_search") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSearchEmails(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "mark_read") {
-      const { result, logStatus: ls, logErrorCode: lec } =
-        await executeMarkRead(rawArgs, apiKey);
-      logStatus = ls;
-      logErrorCode = lec;
-      toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "mark_unread") {
-      const { result, logStatus: ls, logErrorCode: lec } =
-        await executeMarkUnread(rawArgs, apiKey);
-      logStatus = ls;
-      logErrorCode = lec;
-      toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "flag_email") {
-      const { result, logStatus: ls, logErrorCode: lec } =
-        await executeFlagEmail(rawArgs, apiKey);
-      logStatus = ls;
-      logErrorCode = lec;
-      toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "unflag_email") {
-      const { result, logStatus: ls, logErrorCode: lec } =
-        await executeUnflagEmail(rawArgs, apiKey);
-      logStatus = ls;
-      logErrorCode = lec;
-      toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "archive_email") {
+    } else if (toolName === "email_archive") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeArchiveEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "list_folders") {
+    } else if (toolName === "folder_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListFolders(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "create_folder") {
+    } else if (toolName === "folder_create") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeCreateFolder(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "rename_folder") {
+    } else if (toolName === "folder_rename") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeRenameFolder(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "delete_folder") {
+    } else if (toolName === "folder_delete") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeDeleteFolder(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "move_email") {
+    } else if (toolName === "email_move") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeMoveEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "copy_email") {
-      const { result, logStatus: ls, logErrorCode: lec } =
-        await executeCopyEmail(rawArgs, apiKey);
-      logStatus = ls;
-      logErrorCode = lec;
-      toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "delete_email") {
+    } else if (toolName === "email_delete") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeDeleteEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "bulk_move") {
+    } else if (toolName === "email_move_batch") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeBulkMove(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "bulk_delete") {
+    } else if (toolName === "email_delete_batch") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeBulkDelete(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "bulk_flag") {
+    } else if (toolName === "email_flag") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeBulkFlag(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "search_and_move") {
+    } else if (toolName === "email_search_and_move") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSearchAndMove(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "search_and_delete") {
+    } else if (toolName === "email_search_and_delete") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSearchAndDelete(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "forward_email") {
+    } else if (toolName === "email_forward") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeForwardEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "list_drafts") {
+    } else if (toolName === "draft_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListDrafts(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "create_draft") {
+    } else if (toolName === "draft_create") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeCreateDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "update_draft") {
+    } else if (toolName === "draft_update") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeUpdateDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "send_draft") {
+    } else if (toolName === "draft_send") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSendDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "search_contacts") {
+    } else if (toolName === "contact_search") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSearchContacts(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "get_contact") {
-      const { result, logStatus: ls, logErrorCode: lec } =
-        await executeGetContact(rawArgs, apiKey);
-      logStatus = ls;
-      logErrorCode = lec;
-      toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "schedule_send") {
+    } else if (toolName === "schedule_create") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeScheduleSend(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "list_scheduled") {
+    } else if (toolName === "schedule_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListScheduled(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "cancel_scheduled") {
+    } else if (toolName === "schedule_cancel") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeCancelScheduled(rawArgs, apiKey);
       logStatus = ls;

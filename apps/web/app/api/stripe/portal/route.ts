@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 
 /**
@@ -79,10 +80,49 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const stripeCode = (err as Record<string, unknown>)?.code as string | undefined;
     console.error('[portal] stripe.billingPortal.sessions.create failed:', message);
 
-    // Surface a helpful message if the portal is not configured in Stripe.
-    if (message.includes('portal configuration')) {
+    // ── 5a. Missing / invalid customer (e.g. test-mode ID used against live key)
+    // Self-heal: null out the stale customer ID so the account recovers on the
+    // next checkout attempt (which will create a fresh live-mode customer).
+    const isResourceMissing =
+      stripeCode === 'resource_missing' ||
+      message.toLowerCase().includes('no such customer');
+
+    if (isResourceMissing) {
+      try {
+        const serviceClient = createServiceRoleClient();
+        await serviceClient
+          .from('user_billing')
+          .update({ stripe_customer_id: null })
+          .eq('user_id', user.id);
+        console.error(
+          '[portal] nulled stale stripe_customer_id for user',
+          user.id,
+          '(resource_missing)',
+        );
+      } catch (healErr) {
+        console.error('[portal] self-heal update failed:', healErr);
+      }
+      return NextResponse.json(
+        {
+          error:
+            'No active billing account found. ' +
+            'Start a subscription to manage billing.',
+        },
+        { status: 422 },
+      );
+    }
+
+    // ── 5b. Portal not configured in Stripe dashboard
+    const isPortalUnconfigured =
+      message.includes('portal configuration') ||
+      message.toLowerCase().includes('no configuration provided') ||
+      message.toLowerCase().includes('default configuration has not been created') ||
+      (message.toLowerCase().includes('configuration') && stripeCode === 'invalid_request_error');
+
+    if (isPortalUnconfigured) {
       return NextResponse.json(
         {
           error:
@@ -93,6 +133,7 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    // ── 5c. Genuinely unexpected error
     return NextResponse.json(
       { error: 'Failed to open the billing portal. Please try again.' },
       { status: 500 },

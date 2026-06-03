@@ -142,7 +142,7 @@
       },
       {
         "q": "什么算作一次 MCP 调用？",
-        "a": "对你的 /mcp 端点发起的每一次 JSON-RPC 工具调用都算作一次调用：list_inboxes、list_inbox、read_email、search_emails、send_email 或 reply_to_email。调用是无限量的；它们只计入你每分钟的合理使用上限。"
+        "a": "对你的 /mcp 端点发起的每一次 JSON-RPC 工具调用都算作一次调用：inbox_list、email_list、email_read、email_search、email_send 或 email_reply。调用是无限量的；它们只计入你每分钟的合理使用上限。"
       },
       {
         "q": "我的邮件内容会被存储在任何地方吗？",

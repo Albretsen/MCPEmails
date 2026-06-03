@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 
 /**
  * Shape returned by the get_current_user_sessions() Postgres function.
@@ -25,12 +26,40 @@ interface DeviceInfo {
 
 /**
  * Parses a User-Agent string into a human-readable browser + OS label.
+ *
+ * Non-browser clients (curl, Python, Axios, raw HTTP tools, MCP clients, etc.)
+ * are identified first. Only if the UA contains genuine browser signals is an
+ * OS label derived. This prevents curl or other API clients from being labelled
+ * "Chrome / macOS" just because their UA string happens to contain "Mozilla".
+ *
  * Returns generic fallbacks when the string is null or unrecognised.
  */
 function parseDevice(ua: string | null): DeviceInfo {
-  if (!ua) return { browser: 'Unknown browser', os: 'Unknown device' };
+  if (!ua) return { browser: 'Unknown client', os: 'API' };
 
-  // Browser. Order matters: Edge contains "Chrome", OPR contains "Opera"
+  // Detect known non-browser / API clients before looking for browser tokens.
+  // Many of these embed "Mozilla" in their UA to appear browser-like, so they
+  // must be matched before the browser detection block.
+  if (/\bcurl\b/i.test(ua)) return { browser: 'curl', os: 'API client' };
+  if (/python-requests/i.test(ua)) return { browser: 'Python (requests)', os: 'API client' };
+  if (/^python\//i.test(ua)) return { browser: 'Python', os: 'API client' };
+  if (/\baxios\b/i.test(ua)) return { browser: 'Axios', os: 'API client' };
+  if (/\bgot\b\/|node-fetch|undici/i.test(ua)) return { browser: 'Node.js HTTP', os: 'API client' };
+  if (/\bwget\b/i.test(ua)) return { browser: 'wget', os: 'API client' };
+  if (/\bhttpie\b/i.test(ua)) return { browser: 'HTTPie', os: 'API client' };
+  if (/\bpostman\b/i.test(ua)) return { browser: 'Postman', os: 'API client' };
+  if (/\binsomnia\b/i.test(ua)) return { browser: 'Insomnia', os: 'API client' };
+
+  // --- Genuine browser detection ---
+  // A real browser UA always contains "Mozilla/5.0". Absence is a strong signal
+  // that this is a non-browser script, even if none of the patterns above matched.
+  if (!/Mozilla\/5\.0/i.test(ua)) {
+    // Capture the first token of the UA as a label so the raw agent is visible.
+    const firstToken = ua.split(/[\s/]/)[0] ?? 'Unknown client';
+    return { browser: firstToken, os: 'API client' };
+  }
+
+  // Browser. Order matters: Edge contains "Chrome", OPR contains "Opera".
   let browser = 'Browser';
   if (/Edg\//i.test(ua)) browser = 'Edge';
   else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) browser = 'Opera';
@@ -38,11 +67,8 @@ function parseDevice(ua: string | null): DeviceInfo {
   else if (/Chrome\//i.test(ua)) browser = 'Chrome';
   else if (/Safari\//i.test(ua)) browser = 'Safari';
   else if (/MSIE|Trident/i.test(ua)) browser = 'Internet Explorer';
-  else if (/curl/i.test(ua)) browser = 'curl';
-  else if (/python-requests|python\//i.test(ua)) browser = 'Python';
-  else if (/axios/i.test(ua)) browser = 'HTTP client';
 
-  // OS. Check mobile first so "iPhone" beats "Macintosh"
+  // OS. Check mobile first so "iPhone" beats "Macintosh".
   let os = 'Unknown OS';
   if (/iPhone/i.test(ua)) os = 'iPhone';
   else if (/iPad/i.test(ua)) os = 'iPad';
@@ -150,18 +176,29 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
 /**
  * DELETE /api/security/sessions
  *
- * Signs out all active sessions for the authenticated user EXCEPT the current one.
- * Uses Supabase Auth's built-in `scope: 'others'` sign-out which invalidates all
- * refresh tokens except the one belonging to the calling session.
+ * Two modes, selected by the request body:
  *
- * After this call, any other device/browser the user is logged into will be
- * prompted to re-authenticate on their next request.
+ * 1. Per-session revoke (body: { sessionId: string })
+ *    Revokes a single specific session by deleting its row from auth.sessions
+ *    via the service-role client. The caller must own the session (verified by
+ *    checking user_id). The current session cannot be self-revoked this way.
+ *
+ *    Supabase JS does not expose a client-side admin.deleteSession() method
+ *    in the browser SDK; deleting the auth.sessions row directly via service
+ *    role is the supported server-side equivalent (the Auth server checks this
+ *    table on every refresh-token exchange).
+ *
+ * 2. Bulk revoke (no body / body without sessionId)
+ *    Signs out all active sessions EXCEPT the current one using Supabase Auth's
+ *    built-in `scope: 'others'` mechanism, which invalidates all refresh tokens
+ *    except the one belonging to the calling session.
  *
  * Security:
  *   - Requires a valid Supabase session cookie.
- *   - Does not affect the current session: the user remains logged in here.
+ *   - Per-session: enforces user_id ownership before deletion.
+ *   - Bulk: does not affect the current session; the user stays logged in here.
  */
-export async function DELETE(_request: NextRequest): Promise<NextResponse> {
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
 
   // 1. Verify auth.
@@ -174,8 +211,78 @@ export async function DELETE(_request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // 2. Revoke all other refresh tokens for this user. The current session's
-  //    refresh token is preserved: the calling browser stays logged in.
+  // 2. Parse optional body.
+  let sessionId: string | null = null;
+  try {
+    const body = await request.json() as Record<string, unknown>;
+    if (typeof body?.sessionId === 'string' && body.sessionId) {
+      sessionId = body.sessionId;
+    }
+  } catch {
+    // No body or non-JSON body → bulk mode.
+  }
+
+  // 3a. Per-session revoke: delete the specific auth.sessions row.
+  if (sessionId) {
+    // Determine the current session so we can block self-revoke.
+    const {
+      data: { session: currentSession },
+    } = await supabase.auth.getSession();
+    const currentSessionId = currentSession?.access_token
+      ? extractSessionId(currentSession.access_token)
+      : null;
+
+    if (currentSessionId && sessionId === currentSessionId) {
+      return NextResponse.json(
+        { error: 'Cannot revoke the current session this way. Use sign-out instead.' },
+        { status: 400 },
+      );
+    }
+
+    const service = createServiceRoleClient();
+
+    // auth.sessions is in the auth schema, not public. The generated Database
+    // types only cover the public schema, so we bypass TS types with an `any`
+    // cast and target the auth schema explicitly via .schema('auth').
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const authSchema = (service as any).schema('auth');
+
+    // Verify ownership: only delete if the session belongs to auth.uid().
+    // We read before deleting to give a proper 404 vs 403 response.
+    const { data: sessionRow, error: fetchError } = await authSchema
+      .from('sessions')
+      .select('id, user_id')
+      .eq('id', sessionId)
+      .maybeSingle() as { data: { id: string; user_id: string } | null; error: { message: string } | null };
+
+    if (fetchError) {
+      console.error('[sessions:DELETE] fetch session failed:', fetchError.message);
+      return NextResponse.json({ error: 'Failed to look up session.' }, { status: 500 });
+    }
+    if (!sessionRow) {
+      return NextResponse.json({ error: 'Session not found.' }, { status: 404 });
+    }
+    if (sessionRow.user_id !== user.id) {
+      // This session belongs to a different user — treat as not found.
+      return NextResponse.json({ error: 'Session not found.' }, { status: 404 });
+    }
+
+    const { error: deleteError } = await authSchema
+      .from('sessions')
+      .delete()
+      .eq('id', sessionId)
+      .eq('user_id', user.id) as { error: { message: string } | null };
+
+    if (deleteError) {
+      console.error('[sessions:DELETE] per-session delete failed:', deleteError.message);
+      return NextResponse.json({ error: 'Failed to revoke session.' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, revokedSessionId: sessionId });
+  }
+
+  // 3b. Bulk revoke: revoke all other refresh tokens for this user.
+  //     The current session's refresh token is preserved: the calling browser stays logged in.
   const { error: signOutError } = await supabase.auth.signOut({ scope: 'others' });
 
   if (signOutError) {

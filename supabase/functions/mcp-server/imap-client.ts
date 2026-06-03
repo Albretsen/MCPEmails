@@ -7,7 +7,7 @@
  *
  * Scope (Phase 1): connect → authenticate → SELECT → UID SEARCH → UID FETCH
  * (ENVELOPE + FLAGS + BODYSTRUCTURE) → LOGOUT. This is enough for list_inbox;
- * read_email/search/send build on the same connection primitives.
+ * email_read/search/send build on the same connection primitives.
  *
  * Auth failures throw ImapAuthError so callers can surface a reconnect prompt.
  * A faithful Node reference lives at apps/web/src/lib/email/imap.ts.
@@ -357,7 +357,7 @@ export class ImapClient {
    *     → { ok: true, uid: undefined } // UIDPLUS not supported
    *     → { ok: false }               // server rejected the APPEND
    *
-   * Used by the drafts tools (create_draft / update_draft) so the returned
+   * Used by the drafts tools (draft_create / draft_update) so the returned
    * draft_id can be encoded as "<folder>:<uid>".
    */
   async appendWithFlags(

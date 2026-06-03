@@ -13,10 +13,10 @@ MCPEmails exposes exactly five tools in its initial release. Each tool maps to a
 | Tool name | Human title | Required scope | Provider support |
 |---|---|---|---|
 | `list_inbox` | List Inbox | `read:email` | Gmail, Outlook, Fastmail, IMAP |
-| `read_email` | Read Email | `read:email` | Gmail, Outlook, Fastmail, IMAP |
-| `send_email` | Send Email | `send:email` | Gmail, Outlook, Fastmail, SMTP |
-| `reply_to_email` | Reply to Email | `send:email` | Gmail, Outlook, Fastmail, SMTP |
-| `search_emails` | Search Emails | `read:email` | Gmail, Outlook, Fastmail, IMAP |
+| `email_read` | Read Email | `read:email` | Gmail, Outlook, Fastmail, IMAP |
+| `email_send` | Send Email | `send:email` | Gmail, Outlook, Fastmail, SMTP |
+| `email_reply` | Reply to Email | `send:email` | Gmail, Outlook, Fastmail, SMTP |
+| `email_search` | Search Emails | `read:email` | Gmail, Outlook, Fastmail, IMAP |
 
 All five tools are registered on a single MCP server that operates as a Supabase Edge Function exposed at:
 
@@ -60,15 +60,15 @@ All MCPEmails tool names follow the pattern `<verb>_<noun>` using snake_case. Th
 
 ### Deliberate name choices
 
-- **`list_inbox`** rather than `list_emails` or `get_inbox`: The noun `inbox` signals that the result is a mailbox-level view (a list of message summaries), not individual email content. This distinction matters when an agent is deciding whether to call `list_inbox` (to get a preview) or `read_email` (to get the full content of one message).
+- **`list_inbox`** rather than `list_emails` or `get_inbox`: The noun `inbox` signals that the result is a mailbox-level view (a list of message summaries), not individual email content. This distinction matters when an agent is deciding whether to call `list_inbox` (to get a preview) or `email_read` (to get the full content of one message).
 
-- **`read_email`** rather than `get_email` or `fetch_email`: `read` implies that the full content is returned, including body text. `get` is ambiguous — it could return just metadata. `fetch` has network-level connotations. `read` is the closest verb to the user-intent.
+- **`email_read`** rather than `get_email` or `fetch_email`: `read` implies that the full content is returned, including body text. `get` is ambiguous — it could return just metadata. `fetch` has network-level connotations. `read` is the closest verb to the user-intent.
 
-- **`send_email`** rather than `compose_email` or `create_email`: `send` makes clear that the action is irreversible and has external side effects. `compose` suggests a draft workflow (which would be a separate tool set). `create` is too generic.
+- **`email_send`** rather than `compose_email` or `create_email`: `send` makes clear that the action is irreversible and has external side effects. `compose` suggests a draft workflow (which would be a separate tool set). `create` is too generic.
 
-- **`reply_to_email`** rather than `reply_email` or `respond_to_email`: `reply_to` is the natural English preposition for replying. The `_to_` infix also distinguishes this tool from `send_email` in a model's tool selection reasoning: "reply to an existing thread" versus "send a new message."
+- **`email_reply`** rather than `reply_email` or `respond_to_email`: `reply_to` is the natural English preposition for replying. The `_to_` infix also distinguishes this tool from `email_send` in a model's tool selection reasoning: "reply to an existing thread" versus "send a new message."
 
-- **`search_emails`** (plural noun) rather than `search_email` or `find_emails`: The plural form signals that the result is always a collection, not a single item. This is the only tool with a plural noun, which consistently marks it as "returns multiple results."
+- **`email_search`** (plural noun) rather than `search_email` or `find_emails`: The plural form signals that the result is always a collection, not a single item. This is the only tool with a plural noun, which consistently marks it as "returns multiple results."
 
 ---
 
@@ -120,7 +120,7 @@ Each tool's `inputSchema` is a JSON Schema (Draft 7) object. All tools share the
 
 ---
 
-### 3.2 `read_email`
+### 3.2 `email_read`
 
 ```json
 {
@@ -133,7 +133,7 @@ Each tool's `inputSchema` is a JSON Schema (Draft 7) object. All tools share the
     },
     "message_id": {
       "type": "string",
-      "description": "Provider-native message identifier. For Gmail this is the message ID string returned by the Gmail API (e.g., '18a3c2d7f9b1e4a0'). For Outlook it is the Graph API item ID. For IMAP providers it is the UID as a string. Always obtained from a previous call to list_inbox or search_emails."
+      "description": "Provider-native message identifier. For Gmail this is the message ID string returned by the Gmail API (e.g., '18a3c2d7f9b1e4a0'). For Outlook it is the Graph API item ID. For IMAP providers it is the UID as a string. Always obtained from a previous call to list_inbox or email_search."
     },
     "include_html": {
       "type": "boolean",
@@ -160,7 +160,7 @@ Each tool's `inputSchema` is a JSON Schema (Draft 7) object. All tools share the
 
 ---
 
-### 3.3 `send_email`
+### 3.3 `email_send`
 
 ```json
 {
@@ -253,7 +253,7 @@ Each tool's `inputSchema` is a JSON Schema (Draft 7) object. All tools share the
 
 ---
 
-### 3.4 `reply_to_email`
+### 3.4 `email_reply`
 
 ```json
 {
@@ -303,11 +303,11 @@ Each tool's `inputSchema` is a JSON Schema (Draft 7) object. All tools share the
 }
 ```
 
-**Design notes:** `reply_to_email` does not expose `to`, `cc`, `bcc`, or `subject` as parameters because they are derived from the original message. The `subject` will be prefixed with `Re:` automatically (or left unchanged if it already starts with `Re:`). The `reply_all` flag is a boolean rather than an explicit `to` array to keep the API simple and to delegate the recipient resolution to the provider's native reply logic, which correctly handles list-unsubscribe headers and other edge cases.
+**Design notes:** `email_reply` does not expose `to`, `cc`, `bcc`, or `subject` as parameters because they are derived from the original message. The `subject` will be prefixed with `Re:` automatically (or left unchanged if it already starts with `Re:`). The `reply_all` flag is a boolean rather than an explicit `to` array to keep the API simple and to delegate the recipient resolution to the provider's native reply logic, which correctly handles list-unsubscribe headers and other edge cases.
 
 ---
 
-### 3.5 `search_emails`
+### 3.5 `email_search`
 
 ```json
 {
@@ -390,7 +390,7 @@ Tool results are returned in the MCP `content` array as `text/json` content obje
 | Field | Type | Description |
 |---|---|---|
 | `messages` | array | Ordered list of email summaries, newest first |
-| `messages[].id` | string | Provider-native message ID; use in `read_email` or `reply_to_email` |
+| `messages[].id` | string | Provider-native message ID; use in `email_read` or `email_reply` |
 | `messages[].from` | object | Sender name and email address |
 | `messages[].to` | array | Primary recipients |
 | `messages[].subject` | string | Email subject line |
@@ -406,7 +406,7 @@ Tool results are returned in the MCP `content` array as `text/json` content obje
 
 ---
 
-### 4.2 `read_email` — output
+### 4.2 `email_read` — output
 
 ```json
 {
@@ -454,7 +454,7 @@ Tool results are returned in the MCP `content` array as `text/json` content obje
 
 ---
 
-### 4.3 `send_email` — output
+### 4.3 `email_send` — output
 
 ```json
 {
@@ -482,7 +482,7 @@ Tool results are returned in the MCP `content` array as `text/json` content obje
 
 ---
 
-### 4.4 `reply_to_email` — output
+### 4.4 `email_reply` — output
 
 ```json
 {
@@ -496,11 +496,11 @@ Tool results are returned in the MCP `content` array as `text/json` content obje
 }
 ```
 
-The output schema is the same as `send_email` with one addition: `in_reply_to` carries the original message ID, confirming that the threading headers were set correctly.
+The output schema is the same as `email_send` with one addition: `in_reply_to` carries the original message ID, confirming that the threading headers were set correctly.
 
 ---
 
-### 4.5 `search_emails` — output
+### 4.5 `email_search` — output
 
 ```json
 {
@@ -761,7 +761,7 @@ An agent connecting to MCPEmails for the first time does not know any inbox IDs.
 1. The user copies their inbox UUIDs from the MCPEmails dashboard ("API Access" section) and includes them in the system prompt they give to the agent.
 2. Alternatively, the API key creation flow in the dashboard can export a JSON snippet containing the inbox IDs for the key's permitted inboxes. The agent developer includes this in the agent's configuration.
 
-There is intentionally no `list_inboxes` MCP tool in the initial release. Adding one would expose workspace metadata (inbox email addresses, provider names) through the MCP channel, which expands the blast radius of a compromised API key. Inbox discovery is a dashboard concern, not an agent-time concern.
+There is intentionally no `inbox_list` MCP tool in the initial release. Adding one would expose workspace metadata (inbox email addresses, provider names) through the MCP channel, which expands the blast radius of a compromised API key. Inbox discovery is a dashboard concern, not an agent-time concern.
 
 ### Access control check
 
@@ -807,7 +807,7 @@ MCPEmails tools use both error mechanisms defined by the MCP specification:
 | `rate_limit_exceeded` | MCPEmails per-key rate limit exceeded (100 req/min) | Yes — wait `retry_after` seconds |
 | `provider_error` | Provider API returned an unexpected 5xx error | Yes — exponential backoff |
 
-#### `read_email`
+#### `email_read`
 
 | Error code | Cause | Retryable |
 |---|---|---|
@@ -817,7 +817,7 @@ MCPEmails tools use both error mechanisms defined by the MCP specification:
 | `rate_limit_exceeded` | Per-key rate limit | Yes |
 | `provider_error` | Provider 5xx | Yes |
 
-#### `send_email`
+#### `email_send`
 
 | Error code | Cause | Retryable |
 |---|---|---|
@@ -830,7 +830,7 @@ MCPEmails tools use both error mechanisms defined by the MCP specification:
 | `rate_limit_exceeded` | Per-key rate limit | Yes |
 | `provider_error` | Provider 5xx | Yes — but do NOT retry sends blindly; check for duplicate delivery |
 
-**Important:** `send_email` is not idempotent. If a `provider_error` occurs after the provider has accepted the message (a partial failure), retrying will send a duplicate. Agents must handle this carefully. The MCP error response includes a `delivery_status` field when the error occurs after partial acceptance:
+**Important:** `email_send` is not idempotent. If a `provider_error` occurs after the provider has accepted the message (a partial failure), retrying will send a duplicate. Agents must handle this carefully. The MCP error response includes a `delivery_status` field when the error occurs after partial acceptance:
 
 ```json
 {
@@ -843,7 +843,7 @@ MCPEmails tools use both error mechanisms defined by the MCP specification:
 
 When `delivery_status` is `"unknown"`, the agent should not retry automatically but should alert the user.
 
-#### `reply_to_email`
+#### `email_reply`
 
 | Error code | Cause | Retryable |
 |---|---|---|
@@ -853,9 +853,9 @@ When `delivery_status` is `"unknown"`, the agent should not retry automatically 
 | `auth_failed` | Provider OAuth token invalid | No |
 | `quota_exceeded` | Daily send limit | No |
 | `rate_limit_exceeded` | Per-key rate limit | Yes |
-| `provider_error` | Provider 5xx | Same caution as `send_email` |
+| `provider_error` | Provider 5xx | Same caution as `email_send` |
 
-#### `search_emails`
+#### `email_search`
 
 | Error code | Cause | Retryable |
 |---|---|---|
@@ -1017,9 +1017,9 @@ Add an integration test in `supabase/tests/mcp/<tool-name>.test.ts` that:
 
 **Folder enumeration:** The `folder` parameter is passed to the provider. A caller could probe folder names by iterating values and observing which return `inbox_not_found` versus a valid response. This is accepted as low-risk because the caller must already have a valid API key with inbox access.
 
-### 9.2 `read_email` — security
+### 9.2 `email_read` — security
 
-**Full body exposure:** `read_email` returns the complete plain-text body and, if requested, the HTML body. This is potentially sensitive. The access control model relies entirely on the API key's scope and inbox restrictions. There is no per-message access control; if a key can access an inbox, it can read any message in that inbox.
+**Full body exposure:** `email_read` returns the complete plain-text body and, if requested, the HTML body. This is potentially sensitive. The access control model relies entirely on the API key's scope and inbox restrictions. There is no per-message access control; if a key can access an inbox, it can read any message in that inbox.
 
 **HTML sanitization:** When `include_html: true` is set, the HTML body is sanitized using `isomorphic-dompurify` before being returned. All `<script>`, `<style>`, event handlers (`onclick`, `onload`, etc.), and external resource references (`src` attributes pointing to external URLs, `<link>` tags) are stripped. This prevents stored XSS if the returned HTML is ever rendered in a browser context. The sanitization is applied on the MCPEmails server side; the client receives only sanitized HTML.
 
@@ -1027,7 +1027,7 @@ Add an integration test in `supabase/tests/mcp/<tool-name>.test.ts` that:
 
 **Attachment data:** Attachment data is base64-encoded binary and can be large. The total size limit is 10 MB per call. The server enforces this limit by summing the sizes of all requested attachments before fetching them; if the total exceeds 10 MB, the call fails with `attachment_too_large` before any provider API call is made.
 
-### 9.3 `send_email` — security
+### 9.3 `email_send` — security
 
 Send is the highest-risk tool because it has external, irreversible side effects. Several defensive layers are applied:
 
@@ -1035,23 +1035,23 @@ Send is the highest-risk tool because it has external, irreversible side effects
 
 **No recipient injection from subject or body:** The `to`, `cc`, and `bcc` fields are the only sources of recipients. The server never parses recipient addresses from the `subject` or `body` fields. This prevents a class of attacks where a malicious email body contains headers that could be interpreted as additional recipients by a naively implemented send path.
 
-**Scope enforcement:** `send_email` requires the `send:email` scope. The middleware enforces this before the handler runs. The handler also checks it explicitly as a belt-and-suspenders measure. A key with only `read:email` scope cannot call `send_email` and receives a protocol-level error (`-32602`).
+**Scope enforcement:** `email_send` requires the `send:email` scope. The middleware enforces this before the handler runs. The handler also checks it explicitly as a belt-and-suspenders measure. A key with only `read:email` scope cannot call `email_send` and receives a protocol-level error (`-32602`).
 
-**Quota enforcement:** MCPEmails enforces a daily send quota at the workspace level (configurable by plan: 200 for Free, 2,000 for Pro). This prevents a compromised API key from being used to send mass email. The quota is checked against the `activity_log` for `tool_name = 'send_email'` for the current calendar day (UTC).
+**Quota enforcement:** MCPEmails enforces a daily send quota at the workspace level (configurable by plan: 200 for Free, 2,000 for Pro). This prevents a compromised API key from being used to send mass email. The quota is checked against the `activity_log` for `tool_name = 'email_send'` for the current calendar day (UTC).
 
 **HTML body responsibility:** The `html_body` field is not sanitized before sending. The caller is responsible for the HTML content. This is appropriate because the caller is sending an email to an external recipient — the sanitization concern is on the receiving end (email clients handle this). Adding server-side sanitization would destroy intentional HTML formatting (e.g., bold text, links) in legitimate agent-generated HTML emails.
 
 **No SSRF via recipients:** The recipient validation uses an allowlist of valid email address characters per RFC 5322. It does not make any DNS lookups or HTTP requests based on recipient addresses. There is no SSRF risk from the recipient fields.
 
-### 9.4 `reply_to_email` — security
+### 9.4 `email_reply` — security
 
 **Thread integrity:** The tool fetches the original message's `from`, `to`, `cc`, `In-Reply-To`, and `References` headers from the provider before constructing the reply. This ensures threading headers are correct and that the reply is genuinely addressed to the original sender(s). The caller cannot override the `to` address for a reply-all (it is derived from the original `to` and `cc`).
 
-**Reply-all risk:** `reply_all: true` can send a reply to a large number of recipients. The tool caps total recipients at 50 (matching the `send_email` limit) and returns `invalid_recipient` if the original message had more than 50 combined recipients. This prevents accidental mass-reply to large mailing lists.
+**Reply-all risk:** `reply_all: true` can send a reply to a large number of recipients. The tool caps total recipients at 50 (matching the `email_send` limit) and returns `invalid_recipient` if the original message had more than 50 combined recipients. This prevents accidental mass-reply to large mailing lists.
 
-**Scope:** Same enforcement as `send_email`. `send:email` scope is required.
+**Scope:** Same enforcement as `email_send`. `send:email` scope is required.
 
-### 9.5 `search_emails` — security
+### 9.5 `email_search` — security
 
 **Query injection:** The `query` string is passed to the provider's search API as a parameter value, never interpolated into an API URL path or SQL string. Gmail API, Microsoft Graph, and IMAP SEARCH all accept the query as a named parameter. There is no SQL injection risk because the provider APIs are not SQL databases from MCPEmails' perspective.
 

@@ -683,12 +683,15 @@ export function AuthorizeApp({
                 {/* Inbox checklist (specific mode only) */}
                 {!allInboxes && (
                   inboxes.length > 0 ? (
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: inboxes.length === 1 ? '1fr' : '1fr 1fr',
-                      gap: 8,
-                      marginBottom: 18,
-                    }}>
+                    <div
+                      className="az-inbox-grid"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: inboxes.length === 1 ? '1fr' : '1fr 1fr',
+                        gap: 8,
+                        marginBottom: 18,
+                      }}
+                    >
                       {inboxes.map((ib) => (
                         <InboxToggle
                           key={ib.id}

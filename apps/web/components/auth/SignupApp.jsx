@@ -76,26 +76,25 @@ export function SignupApp() {
     window.location.href = buildOAuthUrl('github');
   }
 
-  function validate() {
-    let valid = true;
-    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
-      setEmailError(t('signup.errorEmailInvalid'));
-      valid = false;
-    } else {
-      setEmailError('');
-    }
-    if (!password || password.length < 8) {
-      setPasswordError(t('signup.errorPasswordLength'));
-      valid = false;
-    } else {
-      setPasswordError('');
-    }
-    return valid;
+  function validateEmail(value) {
+    if (!value || value.trim() === '') return t('login.errorEmailRequired');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim())) return t('signup.errorEmailInvalid');
+    return '';
+  }
+
+  function validatePassword(value) {
+    if (!value || value.trim() === '') return t('login.errorPasswordRequired');
+    if (value.length < 8) return t('signup.errorPasswordLength');
+    return '';
   }
 
   async function handleSubmit(e) {
     e?.preventDefault();
-    if (!validate()) return;
+    const emailErr = validateEmail(email);
+    const passErr = validatePassword(password);
+    setEmailError(emailErr);
+    setPasswordError(passErr);
+    if (emailErr || passErr) return;
 
     setStep('submitting');
     setServerError('');

@@ -3,7 +3,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * Provider-agnostic, normalized email-search translation layer.
  *
- * The MCP `search_emails` tool exposes a single structured `NormalizedSearch`
+ * The MCP `email_search` tool exposes a single structured `NormalizedSearch`
  * shape to the AI agent. This module translates that shape into each backend's
  * native query dialect, so the agent never has to know Gmail operators, KQL,
  * OData, JMAP filters, or IMAP SEARCH syntax.

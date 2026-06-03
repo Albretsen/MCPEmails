@@ -57,6 +57,7 @@
     "accountFallback": "Konto",
     "signOut": "Logg ut",
     "openMenu": "Åpne navigasjonsmenyen",
+    "closeMenu": "Lukk navigasjonsmenyen",
     "workspaceFallback": "arbeidsområde",
     "searchPlaceholder": "Søk i sider, innbokser, medlemmer…",
     "openSearch": "Åpne søk (Command K)"

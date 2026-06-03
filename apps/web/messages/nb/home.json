@@ -50,7 +50,7 @@
       "0": {
         "tag": "Omfang",
         "h": "Seks verktøy. Hele flaten.",
-        "p": "Alle e-postoppgaver agenten din trenger får plass i seks kall: <code>list_inboxes</code>, <code>list_inbox</code>, <code>read_email</code>, <code>search_emails</code>, <code>send_email</code>, <code>reply_to_email</code>. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent. Det er hele integrasjonen."
+        "p": "Alle e-postoppgaver agenten din trenger får plass i seks kall: <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code>. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent. Det er hele integrasjonen."
       },
       "1": {
         "tag": "Lagring",
@@ -60,7 +60,7 @@
       "2": {
         "tag": "Sending",
         "h": "Sending går gjennom leverandøren din.",
-        "p": "Når agenten din kaller <code>send_email</code> eller <code>reply_to_email</code>, sendes meldingen via Gmail API, Microsoft Graph eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
+        "p": "Når agenten din kaller <code>email_send</code> eller <code>email_reply</code>, sendes meldingen via Gmail API, Microsoft Graph eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
       },
       "3": {
         "tag": "Leverandører",
@@ -90,11 +90,11 @@
       },
       "1": {
         "h": "Lim inn URL-en: OAuth eller API-nøkkel",
-        "p": "For en MCP-klient som støtter OAuth 2.0 (claude.ai, Claude Desktop, Cursor og andre), lim inn <code>https://www.mcpemails.com/api/mcp</code>, klikk Koble til, og autoriser. Ingen nøkkel nødvendig. For klienter uten OAuth (Cline, JetBrains, egne skript), generer en begrenset API-nøkkel i dashbordet i stedet."
+        "p": "For en MCP-klient som støtter OAuth 2.0 (claude.ai, Claude Desktop, Cursor og andre), lim inn <code>https://mcpemails.com/api/mcp</code>, klikk Koble til, og autoriser. Ingen nøkkel nødvendig. For klienter uten OAuth (Cline, JetBrains, egne skript), generer en begrenset API-nøkkel i dashbordet i stedet."
       },
       "2": {
         "h": "Agenten din jobber i innboksen",
-        "p": "Agenten kaller verktøy som <code>search_emails()</code> eller <code>reply_to_email()</code>. MCPEmails henter i sanntid fra leverandøren din og returnerer resultatet. Ingenting mellomlagres mellom kall."
+        "p": "Agenten kaller verktøy som <code>email_search()</code> eller <code>email_reply()</code>. MCPEmails henter i sanntid fra leverandøren din og returnerer resultatet. Ingenting mellomlagres mellom kall."
       }
     },
     "tools": {

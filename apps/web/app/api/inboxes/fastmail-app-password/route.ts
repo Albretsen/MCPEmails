@@ -36,11 +36,14 @@ const FASTMAIL_IMAP_PORT = 993;
 
 /**
  * Fastmail-specific override for the AUTH_FAILED message; all other codes fall
- * back to the validator's provider-neutral message.
+ * back to the validator's provider-neutral message. Includes the username hint
+ * for custom-domain accounts whose IMAP login differs from their email address,
+ * keeping parity with the generic provider message.
  */
 const FASTMAIL_AUTH_FAILED_MESSAGE =
-  'Incorrect email or app password. Make sure you are using a Fastmail ' +
-  'app password (not your main Fastmail password).';
+  'The mail server rejected these credentials. Make sure you are using a ' +
+  'Fastmail app password (not your main Fastmail password). Custom-domain ' +
+  'accounts may also require a separate IMAP username.';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // 1. Verify the user is authenticated.
@@ -116,9 +119,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!validation.ok) {
-    const userMessage =
-      validation.code === 'AUTH_FAILED' ? FASTMAIL_AUTH_FAILED_MESSAGE : validation.message;
-    return NextResponse.json({ error: userMessage }, { status: 422 });
+    // AUTH_FAILED → Fastmail-specific message with app-password hint; include
+    // a structured error_code so the client can distinguish a credential
+    // rejection from other 422s (missing fields, network errors, etc.).
+    const isAuthFailed = validation.code === 'AUTH_FAILED';
+    const userMessage = isAuthFailed ? FASTMAIL_AUTH_FAILED_MESSAGE : validation.message;
+    const body: Record<string, string> = { error: userMessage };
+    if (isAuthFailed) body.error_code = 'auth_failed';
+    return NextResponse.json(body, { status: 422 });
   }
 
   // 6. Encrypt the app password: never store plaintext.
