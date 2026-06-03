@@ -51,7 +51,7 @@
       "0": {
         "tag": "Alcance",
         "h": "Seis herramientas básicas. Lo esencial, cubierto.",
-        "p": "Las seis llamadas básicas cubren el trabajo diario — <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code> — y herramientas más avanzadas (carpetas, borradores, programación) están ahí cuando las necesitas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
+        "p": "Unas pocas herramientas cubren el trabajo diario — <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply) — y herramientas más avanzadas (<code>email_organize</code>, <code>folder</code>, <code>draft</code>, <code>schedule</code>) están ahí cuando las necesitas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
       },
       "1": {
         "tag": "Almacenamiento",
@@ -61,7 +61,7 @@
       "2": {
         "tag": "Envío",
         "h": "El envío pasa por tu proveedor.",
-        "p": "Cuando tu agente llama a <code>email_send</code> o <code>email_reply</code>, el mensaje se envía mediante la API de Gmail, Fastmail JMAP o tu propio servidor SMTP. La reputación de tu dominio y la entregabilidad quedan completamente en tus manos. Nunca retransmitimos correo desde nuestro propio dominio."
+        "p": "Cuando tu agente llama a <code>email_compose</code> (para enviar o responder), el mensaje se envía mediante la API de Gmail, Fastmail JMAP o tu propio servidor SMTP. La reputación de tu dominio y la entregabilidad quedan completamente en tus manos. Nunca retransmitimos correo desde nuestro propio dominio."
       },
       "3": {
         "tag": "Proveedores",
@@ -95,16 +95,18 @@
       },
       "2": {
         "h": "Tu agente trabaja la bandeja",
-        "p": "El agente llama a herramientas como <code>email_search()</code> o <code>email_reply()</code>. MCPEmails obtiene en vivo desde tu proveedor y devuelve el resultado. Nada se almacena en caché entre llamadas."
+        "p": "El agente llama a herramientas como <code>email_read()</code> o <code>email_compose()</code>. MCPEmails obtiene en vivo desde tu proveedor y devuelve el resultado. Nada se almacena en caché entre llamadas."
       }
     },
     "tools": {
       "0": "Descubre todas las bandejas conectadas y sus IDs. Llama a esto primero, sin copiar y pegar UUIDs del panel.",
-      "1": "Lista los mensajes recientes con remitente, asunto, fecha y fragmento, hasta 100 por llamada.",
-      "2": "Obtiene un solo mensaje por ID. Devuelve el texto plano analizado y el cuerpo HTML saneado, además de los metadatos de los adjuntos.",
-      "3": "Búsqueda nativa del proveedor: sintaxis de consulta de Gmail, Fastmail JMAP o IMAP SEARCH. Devuelve hasta 100 coincidencias.",
-      "4": "Envía un mensaje nuevo a través de la cuenta conectada. Despachado mediante la API de Gmail, Fastmail JMAP o SMTP: tu dominio, tu entregabilidad.",
-      "5": "Responde dentro del hilo con los encabezados Message-ID y References correctos. Funciona en Gmail, Fastmail y cualquier bandeja IMAP."
+      "1": "Leer correo: lista resúmenes recientes, obtén un mensaje completo por ID, lee hasta 50 por lotes o ejecuta una búsqueda independiente del proveedor — todo mediante el argumento action.",
+      "2": "Organizar correo: mueve, elimina, marca o archiva — uno a uno, en lote o directamente desde una búsqueda.",
+      "3": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail, Fastmail JMAP o SMTP: tu dominio, tu entregabilidad.",
+      "4": "Gestiona carpetas (etiquetas en Gmail): lista, crea, renombra o elimina, y úsalas como destino de movimientos.",
+      "5": "Borradores: lista, crea, actualiza y envía borradores guardados en la carpeta Drafts del proveedor.",
+      "6": "Programa un mensaje para una hora futura, lista los envíos programados pendientes y cancélalos antes de que salgan.",
+      "7": "Encuentra personas por nombre o correo con un escaneo en vivo del correo reciente coincidente. No se almacena nada."
     }
   },
   "quote": {

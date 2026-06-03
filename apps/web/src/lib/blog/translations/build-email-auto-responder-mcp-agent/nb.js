@@ -2,7 +2,7 @@ export default {
   title: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet agent',
   description: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet AI-agent: poll etter ulest e-post, lag utkast og svar trygt med scopes, ratebegrensninger og sikringer.',
   coverAlt: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet agent — MCPEmails',
-  content: `En automatisk e-postsvarer bygget på MCP Emails er en løkke, ikke en webhook. Det finnes ingen server-initierte hendelser, så agenten din **poller** etter ulest e-post på et tidsskjema, leser hver melding, lager et svarutkast og kaller \`reply_to_email\`. Dette innlegget går gjennom hele byggingen: polleløkken, scopene du trenger, hvordan du overlever ratebegrensninger, og sikringene som hindrer en agent i å spamme kontaktene dine med hallusinerte svar.
+  content: `En automatisk e-postsvarer bygget på MCP Emails er en løkke, ikke en webhook. Det finnes ingen server-initierte hendelser, så agenten din **poller** etter ulest e-post på et tidsskjema med \`email_read\` (action \`list\`), leser hver melding med \`email_read\` (action \`read\`), lager et svarutkast og kaller \`email_compose\` (action \`reply\`). Dette innlegget går gjennom hele byggingen: polleløkken, scopene du trenger, hvordan du overlever ratebegrensninger, og sikringene som hindrer en agent i å spamme kontaktene dine med hallusinerte svar.
 
 Dette er den avanserte enden av historien om å [gi AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access). Hvis du bare vil ha triagering og morgensammendrag uten å sende noe, les [Triagering og oppsummering av innboks med en AI-agent](/blog/ai-agent-triage-summarize-inbox) først — det er et tryggere sted å starte. Kom tilbake hit når du faktisk vil at agenten skal trykke send.
 
@@ -20,8 +20,8 @@ En automatisk e-postsvarer kjører nesten alltid som et skript eller en cron-job
 
 I dashbordet går du til **API Keys**, oppretter en nøkkel og gir den scopene du faktisk trenger:
 
-- \`read:email\` — for å polle, liste og lese meldinger.
-- \`send:email\` — for å kalle \`reply_to_email\`.
+- \`read:email\` — for å polle, liste og lese meldinger med \`email_read\`.
+- \`send:email\` — for å kalle \`email_compose\` (action \`reply\`).
 
 Nøkkelen vises bare én gang. Kopier den. Den ser ut som \`mcpe_live_...\` og du sender den med på hver forespørsel:
 
@@ -42,12 +42,13 @@ Gi **bare** de scopene jobben bruker. Hvis en fremtidig versjon av svareren din 
 Her er formen på en fungerende svarer. Jeg har skrevet den som pseudokode over MCP-verktøyene, så det er tydelig hvilke kall som skjer i hvilken rekkefølge. Den nøyaktige oppkoblingen av MCP-klienten avhenger av stacken din, men sekvensen er poenget.
 
 \`\`\`python
-# Tools used: list_inboxes, list_messages, read_email, reply_to_email
+# Tools used: inbox_list, email_read, email_compose
 
-inbox = list_inboxes()[0]            # discover, never hardcode the UUID
+inbox = inbox_list()[0]              # discover, never hardcode the UUID
 
 while True:
-    unread = list_messages(
+    unread = email_read(
+        action="list",
         inbox_id=inbox["inbox_id"],
         unread_only=True,
         limit=20,
@@ -57,7 +58,8 @@ while True:
         if not should_handle(summary):   # allowlist + filters, see below
             continue
 
-        msg = read_email(
+        msg = email_read(
+            action="read",
             inbox_id=inbox["inbox_id"],
             message_id=summary["message_id"],
         )
@@ -77,7 +79,7 @@ while True:
     sleep(60)
 \`\`\`
 
-Tre ting å legge merke til. For det første kaller agenten \`list_inboxes\` for å oppdage \`inbox_id\` i stedet for å lime en UUID inn i koden — det er oppdag-først-mønsteret, og det holder skriptet i gang hvis du kobler til en innboks på nytt. For det andre er \`unread_only: true\` det som gjør dette til en svarer for *ny e-post* i stedet for en maskin som svarer alle på nytt. For det tredje går hver melding gjennom sikringer før noe sendes.
+Tre ting å legge merke til. For det første kaller agenten \`inbox_list\` for å oppdage \`inbox_id\` i stedet for å lime en UUID inn i koden — det er oppdag-først-mønsteret, og det holder skriptet i gang hvis du kobler til en innboks på nytt. For det andre er \`unread_only: true\` det som gjør dette til en svarer for *ny e-post* i stedet for en maskin som svarer alle på nytt. For det tredje går hver melding gjennom sikringer før noe sendes.
 
 ### Markere meldinger som håndtert
 
@@ -89,14 +91,14 @@ Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time
 
 Når du treffer en grense, returnerer serveren en feil du kan prøve på nytt (kode \`-32029\`) med \`data.retry_after\` i sekunder. Respekter den. Sov så lenge, og fortsett deretter.
 
-Her er regelen som betyr mest: **prøv aldri \`send_email\` eller \`reply_to_email\` automatisk på nytt i blinde.** En sending er ikke idempotent. Hvis et send-kall får tidsavbrudd eller returnerer tvetydig, kan et naivt nytt forsøk levere det samme svaret to ganger. Prøv *lesinger* på nytt fritt; behandle *sendinger* som engangskall, og prøv bare på nytt ved en eksplisitt feil du kan prøve på nytt, med backoff og et hardt tak.
+Her er regelen som betyr mest: **prøv aldri en \`email_compose\`-sending eller -respons automatisk på nytt i blinde.** En sending er ikke idempotent. Hvis et send-kall får tidsavbrudd eller returnerer tvetydig, kan et naivt nytt forsøk levere det samme svaret to ganger. Prøv *lesinger* på nytt fritt; behandle *sendinger* som engangskall, og prøv bare på nytt ved en eksplisitt feil du kan prøve på nytt, med backoff og et hardt tak.
 
 \`\`\`python
 def send_with_backoff(**kwargs):
     delay = 2
     for attempt in range(3):
         try:
-            return reply_to_email(**kwargs)
+            return email_compose(action="reply", **kwargs)
         except RateLimited as e:
             sleep(e.retry_after or delay)
             delay *= 2
@@ -121,7 +123,7 @@ Ikke svar alle. Start med en smal tillatelsesliste — et support-alias, et best
 
 ### Hold et menneske i løkken, i hvert fall i starten
 
-Den tryggeste versjonen av dette er egentlig ikke en automatisk svarer i det hele tatt — det er en automatisk *utkast-skriver*. Agenten leser, lager utkast og klargjør svaret, men en person godkjenner sendingen. MCP Emails støtter utkast, så du kan la løkken opprette et utkast i stedet for å kalle \`reply_to_email\`, og deretter sende de gode selv. Kjør i utkastmodus i en uke. Les hva den ville ha sendt. Først da slår du på automatisk sending for dem du stoler på.
+Den tryggeste versjonen av dette er egentlig ikke en automatisk svarer i det hele tatt — det er en automatisk *utkast-skriver*. Agenten leser, lager utkast og klargjør svaret, men en person godkjenner sendingen. MCP Emails støtter utkast, så du kan la løkken kalle \`draft\` (action \`create\`) i stedet for \`email_compose\`, og deretter sende de gode selv. Kjør i utkastmodus i en uke. Les hva den ville ha sendt. Først da slår du på automatisk sending for dem du stoler på.
 
 ### Stopp løkker og selvsvar
 
@@ -139,7 +141,7 @@ Gi utkast-modellen stramme instruksjoner og et lengdetak. For support-svar slår
 Hvis jeg skulle satt dette i drift for en ekte innboks i morgen, ville jeg startet smått og kjedelig:
 
 1. API-nøkkel med \`read:email\` og \`send:email\`, avgrenset til én innboks.
-2. Poll \`list_messages(unread_only: true)\` hvert annet minutt.
+2. Poll \`email_read(action: "list", unread_only: true)\` hvert annet minutt.
 3. Tillatelsesliste med nøyaktig ett support-alias.
 4. Kun utkastmodus — opprett utkast, send ingenting automatisk.
 5. Etter en uke med å lese utkastene, slå på automatisk sending for de åpenbare tilfellene og fortsett å lage utkast for resten.

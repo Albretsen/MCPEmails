@@ -67,12 +67,12 @@ I claude.ai:
 
 Ingen API-nøkkel, ingen konfigurasjonsfil. claude.ai bruker OAuth med PKCE under panseret, og tokenet Claude får er begrenset til nøyaktig det du godkjente. Hvis du er på en klient som ikke kan gjøre OAuth — Cursor, Cline, et cURL-skript — lager du i stedet en avgrenset nøkkel, som jeg dekker i [e-posttilgang for Cursor, Cline og VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Når den er tilkoblet, la Claude kjøre \`list_inboxes\` først. Den returnerer innboksen din og dens \`inbox_id\`, så du trenger aldri å kopiere og lime inn en UUID. Derfra er det de [seks kjerneverktøyene](/docs) — \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\` — pluss noen flere for flagg, mapper, planlegging og kontakter.
+Når den er tilkoblet, la Claude kjøre \`inbox_list\` først. Den returnerer innboksen din og dens \`inbox_id\`, så du trenger aldri å kopiere og lime inn en UUID. Derfra er det [kjerneverktøyene](/docs) — \`email_read\` (liste, lese og søke i meldinger), \`email_compose\` (sende, svare, videresende) og \`email_organize\` — pluss noen flere for mapper, utkast, planlegging og kontakter. Hvert av dem styres med en \`action\`-parameter.
 
 En prompt for å bekrefte at det fungerer:
 
 \`\`\`
-Use list_inboxes to find my iCloud inbox, then summarize my 5 most recent unread messages.
+Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
 ## Den ene tingen IMAP gjør som Gmail og Outlook ikke kan

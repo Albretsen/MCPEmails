@@ -66,27 +66,25 @@ The one place reality intrudes is the consent screen on work/school accounts. If
 
 ## What works once it's connected
 
-Your agent gets the six core tools plus the extras Outlook supports:
+Your agent gets the core consolidated tools plus the extras Outlook supports:
 
-- \`list_inboxes\` — always call this first. It returns your connected mailboxes and their \`inbox_id\` UUIDs so the agent never guesses an ID.
-- \`list_messages\` — newest-first, paginated, with filters like \`unread_only\`.
-- \`read_email\` — parsed plain text, optional sanitized HTML, optional attachments.
-- \`search_emails\` — see the search note below.
-- \`send_email\` — compose with CC/BCC, HTML, and attachments up to 10 MB total.
-- \`reply_to_email\` — replies in-thread with correct threading headers.
+- \`inbox_list\` — always call this first. It returns your connected mailboxes and their \`inbox_id\` UUIDs so the agent never guesses an ID.
+- \`email_read\` — one tool, several actions: \`list\` (newest-first, paginated, with filters like \`unread_only\`), \`read\` (parsed plain text, optional sanitized HTML, optional attachments), and \`search\` (see the search note below).
+- \`email_compose\` — the \`send\` action composes with CC/BCC, HTML, and attachments up to 10 MB total; the \`reply\` and \`forward\` actions thread correctly with the right headers.
+- \`email_organize\` — marking read/unread, flagging, archiving, deleting, and moving, each via its own \`action\`.
 
-Beyond the six, Outlook supports marking read/unread, flagging (Outlook's "flag" maps to the starred/flagged concept), forwarding, and moving between folders. Check the live [docs](/docs) for the current capability list before you build against a specific tool.
+Beyond those, Outlook supports marking read/unread, flagging (Outlook's "flag" maps to the starred/flagged concept), forwarding, and moving between folders. Check the live [docs](/docs) for the current capability list before you build against a specific tool.
 
 ### Search uses Microsoft's \`$search\`
 
-Outlook search isn't Gmail search. Where Gmail takes operators like \`from:\` and \`is:unread\`, \`search_emails\` against an Outlook inbox passes your query to Microsoft Graph's \`$search\`, which does relevance-ranked full-text matching across the mailbox and also accepts KQL. So a query like \`invoice from accounting last week\` works as natural language, and you can get more precise with KQL like \`from:finance@acme.com AND subject:invoice\`. If you write prompts that hardcode Gmail operators, they won't behave the same way on Outlook — tell your agent to search in plain language and let Graph rank.
+Outlook search isn't Gmail search. Where Gmail takes operators like \`from:\` and \`is:unread\`, \`email_read\` with the \`search\` action against an Outlook inbox passes your query to Microsoft Graph's \`$search\`, which does relevance-ranked full-text matching across the mailbox and also accepts KQL. So a query like \`invoice from accounting last week\` works as natural language, and you can get more precise with KQL like \`from:finance@acme.com AND subject:invoice\`. If you write prompts that hardcode Gmail operators, they won't behave the same way on Outlook — tell your agent to search in plain language and let Graph rank.
 
 ## A workflow worth setting up
 
 Here's a triage loop I run against a Microsoft 365 inbox. Once or twice an hour, the agent:
 
-1. Calls \`list_messages\` with \`unread_only: true\`.
-2. Reads anything that looks time-sensitive with \`read_email\`.
+1. Calls \`email_read\` with the \`list\` action and \`unread_only: true\`.
+2. Reads anything that looks time-sensitive with \`email_read\`'s \`read\` action.
 3. Summarizes the batch and drafts replies for the ones I'd obviously answer.
 4. Leaves everything unread until I confirm.
 

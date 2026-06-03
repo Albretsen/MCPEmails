@@ -11,7 +11,7 @@ Une mise au point honnête d’entrée, car elle façonne la moitié de cette li
 
 ## La trousse à outils, d’un seul souffle
 
-Tout ici repose sur six outils essentiels : \`list_inboxes\`, \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\` et \`reply_to_email\`. Il y en a quelques autres pour marquer comme lu, gérer les drapeaux, les dossiers, l’envoi programmé et la recherche de contacts. Le premier appel que votre agent devrait toujours faire est \`list_inboxes\`, pour découvrir les comptes connectés et leurs valeurs \`inbox_id\`, afin de ne jamais coder en dur un UUID dans un prompt.
+Tout ici repose sur une poignée d’outils essentiels : \`inbox_list\`, \`email_read\` et \`email_compose\`. Ces deux derniers regroupent lister, lire et rechercher (\`email_read\`) ainsi qu’envoyer, répondre et transférer (\`email_compose\`) en un seul outil chacun, un paramètre \`action\` choisissant la variante. Il y en a quelques autres : \`email_organize\` pour marquer comme lu, gérer les drapeaux et les dossiers, ainsi que \`folder\`, \`draft\`, \`schedule\` et \`contact_search\`. Le premier appel que votre agent devrait toujours faire est \`inbox_list\`, pour découvrir les comptes connectés et leurs valeurs \`inbox_id\`, afin de ne jamais coder en dur un UUID dans un prompt.
 
 Les prompts ci-dessous sont écrits exactement comme je les taperais à Claude ou Cursor. L’agent détermine lui-même quel outil appeler.
 
@@ -21,7 +21,7 @@ La boîte mail du matin, c’est surtout du bruit avec trois choses importantes 
 
 > Vérifie ma boîte de travail pour les messages non lus des dernières 24 heures. Regroupe-les en « réponse nécessaire aujourd’hui », « pour info » et « newsletters/automatisés ». Pour le premier groupe, donne-moi une ligne sur ce qu’ils veulent.
 
-En coulisse, l’agent appelle \`list_messages\` avec \`unread_only: true\` sur la boîte renvoyée par \`list_inboxes\`, lit avec \`read_email\` les quelques messages qui semblent importants et ignore le reste. Il peut marquer comme lu le bruit évident pour qu’il cesse d’encombrer le compteur. Pour une version plus poussée de cela, le [guide de tri et de résumé](/blog/ai-agent-triage-summarize-inbox) procède outil par outil.
+En coulisse, l’agent appelle \`email_read\` avec l’action list et \`unread_only: true\` sur la boîte renvoyée par \`inbox_list\`, lit avec \`email_read\` (action read) les quelques messages qui semblent importants et ignore le reste. Il peut marquer comme lu le bruit évident pour qu’il cesse d’encombrer le compteur. Pour une version plus poussée de cela, le [guide de tri et de résumé](/blog/ai-agent-triage-summarize-inbox) procède outil par outil.
 
 ### 2. Résumer un long fil de discussion
 
@@ -29,7 +29,7 @@ On vous ajoute à un fil de 40 messages au message 38. Personne ne va tout relir
 
 > Lis le fil dont l’objet est « Q3 vendor migration » et dis-moi où ça a réellement abouti : ce qui a été décidé, qui est responsable de quoi et toute question ouverte à laquelle je dois répondre.
 
-\`search_emails\` trouve le fil (il utilise la syntaxe de recherche native de votre fournisseur, donc les opérateurs Gmail, le KQL d’Outlook et la recherche textuelle IMAP fonctionnent tous), puis \`read_email\` récupère le texte brut analysé de chaque message. \`read_email\` peut aussi renvoyer du HTML assaini et des pièces jointes si vous le demandez, mais pour un résumé le texte brut est plus rapide et moins coûteux.
+\`email_read\` avec l’action search trouve le fil (il utilise la syntaxe de recherche native de votre fournisseur, donc les opérateurs Gmail, le KQL d’Outlook et la recherche textuelle IMAP fonctionnent tous), puis \`email_read\` avec l’action read récupère le texte brut analysé de chaque message. Cette action read peut aussi renvoyer du HTML assaini et des pièces jointes si vous le demandez, mais pour un résumé le texte brut est plus rapide et moins coûteux.
 
 ### 3. Rédiger des réponses dans votre style
 
@@ -37,7 +37,7 @@ C’est dans la rédaction que les agents font leurs preuves. Le modèle écrit 
 
 > Rédige une réponse au dernier message de Dana qui décline la réunion mais propose deux créneaux la semaine prochaine. Reprends mon ton habituel, court et direct.
 
-L’agent utilise \`reply_to_email\`, qui définit pour vous les en-têtes de fil (In-Reply-To et References), de sorte que la réponse atterrisse dans la bonne conversation au lieu d’en démarrer une nouvelle. Les réponses prennent en charge le CC, le BCC, le HTML et les pièces jointes jusqu’à 10 MB au total. Ma règle : laissez l’agent rédiger librement, mais gardez un humain sur le bouton d’envoi pour tout ce qui sort de la maison. Considérez \`send_email\` et \`reply_to_email\` comme les étapes que vous relisez vraiment.
+L’agent utilise \`email_compose\` avec l’action reply, qui définit pour vous les en-têtes de fil (In-Reply-To et References), de sorte que la réponse atterrisse dans la bonne conversation au lieu d’en démarrer une nouvelle. Les réponses prennent en charge le CC, le BCC, le HTML et les pièces jointes jusqu’à 10 MB au total. Ma règle : laissez l’agent rédiger librement, mais gardez un humain sur le bouton d’envoi pour tout ce qui sort de la maison. Considérez \`email_compose\` (que l’action soit send, reply ou forward) comme l’étape que vous relisez vraiment.
 
 ### 4. Retrouver cette pièce jointe précise
 
@@ -45,7 +45,7 @@ Vous savez que quelqu’un a envoyé le contrat signé en mars. Vous ne savez pa
 
 > Trouve l’e-mail le plus récent avec une pièce jointe PDF venant de n’importe qui chez acme.com au sujet du renouvellement, et extrais la pièce jointe.
 
-\`search_emails\` resserre la recherche avec une requête native du fournisseur, puis \`read_email\` avec \`include_attachments\` renvoie le fichier. Comme l’e-mail est récupéré en direct puis abandonné après l’appel, cette pièce jointe ne traîne pas dans un cache par la suite. L’[architecture sans stockage](/blog/why-email-never-stored-matters) est la raison pour laquelle il est sûr d’y pointer un agent.
+\`email_read\` avec l’action search resserre la recherche avec une requête native du fournisseur, puis \`email_read\` avec l’action read et \`include_attachments\` renvoie le fichier. Comme l’e-mail est récupéré en direct puis abandonné après l’appel, cette pièce jointe ne traîne pas dans un cache par la suite. L’[architecture sans stockage](/blog/why-email-never-stored-matters) est la raison pour laquelle il est sûr d’y pointer un agent.
 
 ### 5. Rappels de relance (celui-ci relève de l’interrogation)
 
@@ -53,7 +53,7 @@ Vous savez que quelqu’un a envoyé le contrat signé en mars. Vous ne savez pa
 
 > Chaque jour ouvré à 16h, vérifie si quelqu’un a répondu aux propositions que j’ai envoyées cette semaine. Liste celles encore en attente avec leur date d’envoi initiale.
 
-Aucun événement ne réveille l’agent quand une réponse arrive. À la place, vous l’exécutez selon un calendrier — une tâche cron, la fonction de tâches programmées de votre client, ce qui vous convient — et chaque exécution fait le travail : \`search_emails\` pour les propositions envoyées, puis \`list_messages\` pour voir ce qui est revenu. Si vous voulez qu’un fil resté sans suite se rappelle de lui-même, l’agent peut même rédiger et mettre en file d’attente une relance. La [création d’un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) détaille la boucle d’interrogation, y compris la façon de respecter la valeur \`retry_after\` quand vous atteignez une limite de débit, pour ne pas marteler le serveur.
+Aucun événement ne réveille l’agent quand une réponse arrive. À la place, vous l’exécutez selon un calendrier — une tâche cron, la fonction de tâches programmées de votre client, ce qui vous convient — et chaque exécution fait le travail : \`email_read\` avec l’action search pour les propositions envoyées, puis l’action list pour voir ce qui est revenu. Si vous voulez qu’un fil resté sans suite se rappelle de lui-même, l’agent peut même rédiger et mettre en file d’attente une relance. La [création d’un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) détaille la boucle d’interrogation, y compris la façon de respecter la valeur \`retry_after\` quand vous atteignez une limite de débit, pour ne pas marteler le serveur.
 
 ### 6. Router ou transférer au bon endroit
 
@@ -69,15 +69,15 @@ Terminez la semaine avec un résumé écrit plutôt qu’avec un coup d’œil c
 
 > Vendredi à 17h : résume tout ce que j’ai reçu cette semaine et auquel je n’ai pas répondu, regroupé par expéditeur, avec l’unique action la plus importante parmi l’ensemble. Envoie-le-moi par e-mail.
 
-Cela combine les autres : \`search_emails\` et \`list_messages\` pour rassembler la semaine, \`read_email\` pour ceux qui demandent du détail, puis \`send_email\` pour vous livrer le récapitulatif à vous-même. Comme la relance, c’est une exécution programmée, pas une réaction. C’est vous qui décidez de la cadence.
+Cela combine les autres : \`email_read\` (action search, puis list) pour rassembler la semaine, l’action read du même outil pour ceux qui demandent du détail, puis \`email_compose\` pour vous livrer le récapitulatif à vous-même. Comme la relance, c’est une exécution programmée, pas une réaction. C’est vous qui décidez de la cadence.
 
 ## Ce que ça coûte et où se situent les limites
 
 Les sept fonctionnent sur le [plan Free](/pricing), qui est à 0 $ avec un nombre illimité de boîtes mail et d’appels d’outils. Les plans diffèrent sur le débit en pointe, pas sur ce que les outils peuvent faire. Free autorise 60 requêtes par minute, Solo (12 $/mois) passe à 300, et Team (49 $/mois) monte à 1 000 avec des rôles d’équipe et le SSO. Un récapitulatif hebdomadaire effleure à peine ces plafonds ; une boucle de tri agressive toutes les minutes sur de nombreuses boîtes, c’est là que vous sentiriez la limite de Free et voudriez Solo.
 
-Quand vous atteignez bel et bien une limite, le serveur renvoie une erreur réessayable avec \`data.retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un appel \`send_email\`, car réessayer après un délai d’attente peut faire atterrir deux copies du même message dans la boîte de quelqu’un.
+Quand vous atteignez bel et bien une limite, le serveur renvoie une erreur réessayable avec \`data.retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi \`email_compose\`, car réessayer après un délai d’attente peut faire atterrir deux copies du même message dans la boîte de quelqu’un.
 
 ## Commencez par une seule
 
-N’essayez pas de construire les sept dès le premier jour. Choisissez la passe de tri ou le récapitulatif hebdomadaire, rendez-la banale et fiable, puis ajoutez la suivante. [Connectez une boîte mail](/signup) et faites de \`list_inboxes\` le premier geste de votre agent. La [référence des outils dans la documentation](/docs) donne les paramètres exacts de chacun des appels ci-dessus.`,
+N’essayez pas de construire les sept dès le premier jour. Choisissez la passe de tri ou le récapitulatif hebdomadaire, rendez-la banale et fiable, puis ajoutez la suivante. [Connectez une boîte mail](/signup) et faites de \`inbox_list\` le premier geste de votre agent. La [référence des outils dans la documentation](/docs) donne les paramètres exacts de chacun des appels ci-dessus.`,
 };

@@ -2,7 +2,7 @@ export default {
   title: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP',
   description: 'Créez un répondeur automatique d’e-mails avec un agent IA connecté en MCP : interroger les non lus, rédiger et répondre en toute sécurité avec scopes, limites de débit et garde-fous.',
   coverAlt: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP — MCPEmails',
-  content: `Un répondeur automatique d’e-mails bâti sur MCP Emails est une boucle, pas un webhook. Il n’y a aucun événement initié par le serveur : votre agent **interroge** (poll) les e-mails non lus selon une planification, lit chaque message, rédige une réponse et appelle \`reply_to_email\`. Cet article déroule toute la construction : la boucle d’interrogation, les scopes dont vous avez besoin, comment encaisser les limites de débit, et les garde-fous qui empêchent un agent d’inonder vos contacts de réponses hallucinées.
+  content: `Un répondeur automatique d’e-mails bâti sur MCP Emails est une boucle, pas un webhook. Il n’y a aucun événement initié par le serveur : votre agent **interroge** (poll) les e-mails non lus selon une planification avec \`email_read\` (action \`list\`), lit chaque message avec \`email_read\` (action \`read\`), rédige une réponse et appelle \`email_compose\` (action \`reply\`). Cet article déroule toute la construction : la boucle d’interrogation, les scopes dont vous avez besoin, comment encaisser les limites de débit, et les garde-fous qui empêchent un agent d’inonder vos contacts de réponses hallucinées.
 
 C’est l’extrémité avancée de l’histoire racontée dans [donnez à votre agent IA un accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access). Si vous voulez simplement du tri et des résumés matinaux sans rien envoyer, lisez d’abord [tri et résumé de boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox) — c’est l’endroit le plus sûr pour commencer. Revenez ici quand vous voudrez vraiment que l’agent appuie sur envoyer.
 
@@ -20,8 +20,8 @@ Un répondeur automatique tourne presque toujours comme un script ou une tâche 
 
 Dans le tableau de bord, allez dans **API Keys**, créez une clé, et accordez-lui les scopes dont vous avez réellement besoin :
 
-- \`read:email\` — pour interroger, lister et lire les messages.
-- \`send:email\` — pour appeler \`reply_to_email\`.
+- \`read:email\` — pour interroger, lister et lire les messages avec \`email_read\`.
+- \`send:email\` — pour appeler \`email_compose\` (action \`reply\`).
 
 La clé n’est affichée qu’une seule fois. Copiez-la. Elle ressemble à \`mcpe_live_...\` et vous la transmettez à chaque requête :
 
@@ -42,12 +42,13 @@ N’accordez **que** les scopes utilisés par la tâche. Si une future version d
 Voici la forme d’un répondeur fonctionnel. Je l’ai écrit en pseudo-code sur les outils MCP afin qu’il soit clair quels appels se produisent et dans quel ordre. Le câblage exact du client MCP dépend de votre stack, mais c’est la séquence qui compte.
 
 \`\`\`python
-# Tools used: list_inboxes, list_messages, read_email, reply_to_email
+# Tools used: inbox_list, email_read, email_compose
 
-inbox = list_inboxes()[0]            # discover, never hardcode the UUID
+inbox = inbox_list()[0]              # discover, never hardcode the UUID
 
 while True:
-    unread = list_messages(
+    unread = email_read(
+        action="list",
         inbox_id=inbox["inbox_id"],
         unread_only=True,
         limit=20,
@@ -57,7 +58,8 @@ while True:
         if not should_handle(summary):   # allowlist + filters, see below
             continue
 
-        msg = read_email(
+        msg = email_read(
+            action="read",
             inbox_id=inbox["inbox_id"],
             message_id=summary["message_id"],
         )
@@ -77,7 +79,7 @@ while True:
     sleep(60)
 \`\`\`
 
-Trois choses à remarquer. D’abord, l’agent appelle \`list_inboxes\` pour découvrir l’\`inbox_id\` au lieu de coller un UUID dans le code — c’est le modèle « découverte d’abord », et il garde le script fonctionnel si vous reconnectez une boîte. Ensuite, \`unread_only: true\` est ce qui fait de ceci un répondeur aux *nouveaux e-mails* plutôt qu’une machine à re-répondre à tout le monde. Enfin, chaque message passe par les garde-fous avant tout envoi.
+Trois choses à remarquer. D’abord, l’agent appelle \`inbox_list\` pour découvrir l’\`inbox_id\` au lieu de coller un UUID dans le code — c’est le modèle « découverte d’abord », et il garde le script fonctionnel si vous reconnectez une boîte. Ensuite, \`unread_only: true\` est ce qui fait de ceci un répondeur aux *nouveaux e-mails* plutôt qu’une machine à re-répondre à tout le monde. Enfin, chaque message passe par les garde-fous avant tout envoi.
 
 ### Marquer les messages comme traités
 
@@ -89,14 +91,14 @@ Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et
 
 Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable (code \`-32029\`) portant \`data.retry_after\` en secondes. Respectez-la. Patientez ce temps, puis continuez.
 
-Voici la règle qui compte le plus : **ne réessayez jamais automatiquement et à l’aveugle \`send_email\` ou \`reply_to_email\`.** Un envoi n’est pas idempotent. Si un appel d’envoi expire ou renvoie un résultat ambigu, un réessai naïf peut livrer deux fois la même réponse. Réessayez les *lectures* librement ; traitez les *envois* comme uniques et ne les réessayez que sur une erreur explicitement réessayable, avec backoff et un plafond strict.
+Voici la règle qui compte le plus : **ne réessayez jamais automatiquement et à l’aveugle un envoi ou une réponse \`email_compose\`.** Un envoi n’est pas idempotent. Si un appel d’envoi expire ou renvoie un résultat ambigu, un réessai naïf peut livrer deux fois la même réponse. Réessayez les *lectures* librement ; traitez les *envois* comme uniques et ne les réessayez que sur une erreur explicitement réessayable, avec backoff et un plafond strict.
 
 \`\`\`python
 def send_with_backoff(**kwargs):
     delay = 2
     for attempt in range(3):
         try:
-            return reply_to_email(**kwargs)
+            return email_compose(action="reply", **kwargs)
         except RateLimited as e:
             sleep(e.retry_after or delay)
             delay *= 2
@@ -121,7 +123,7 @@ Ne répondez pas à tout le monde. Commencez par une allowlist étroite — un a
 
 ### Gardez un humain dans la boucle, au moins au début
 
-La version la plus sûre de tout cela n’est pas un répondeur automatique du tout — c’est un *rédacteur* automatique. L’agent lit, rédige et prépare la réponse, mais une personne approuve l’envoi. MCP Emails prend en charge les brouillons, vous pouvez donc faire en sorte que la boucle crée un brouillon au lieu d’appeler \`reply_to_email\`, puis envoyer vous-même les bons. Fonctionnez en mode brouillon pendant une semaine. Lisez ce qu’il aurait envoyé. Ensuite seulement, basculez en envoi automatique ceux auxquels vous faites confiance.
+La version la plus sûre de tout cela n’est pas un répondeur automatique du tout — c’est un *rédacteur* automatique. L’agent lit, rédige et prépare la réponse, mais une personne approuve l’envoi. MCP Emails prend en charge les brouillons, vous pouvez donc faire en sorte que la boucle appelle \`draft\` (action \`create\`) au lieu d’\`email_compose\`, puis envoyer vous-même les bons. Fonctionnez en mode brouillon pendant une semaine. Lisez ce qu’il aurait envoyé. Ensuite seulement, basculez en envoi automatique ceux auxquels vous faites confiance.
 
 ### Stoppez les boucles et les auto-réponses à soi-même
 
@@ -139,7 +141,7 @@ Donnez au modèle de rédaction des instructions serrées et un plafond de longu
 Si je devais déployer ceci pour une vraie boîte de réception demain, je commencerais petit et ennuyeux :
 
 1. Une clé API avec \`read:email\` et \`send:email\`, limitée à une seule boîte.
-2. Interroger \`list_messages(unread_only: true)\` toutes les deux minutes.
+2. Interroger \`email_read(action: "list", unread_only: true)\` toutes les deux minutes.
 3. Mettre exactement un alias de support en allowlist.
 4. Mode brouillon uniquement — créer des brouillons, n’envoyer rien automatiquement.
 5. Après une semaine de lecture des brouillons, activer l’envoi automatique pour les cas évidents et continuer à rédiger le reste.

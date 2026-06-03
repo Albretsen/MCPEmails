@@ -2,7 +2,7 @@ export default {
   title: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP',
   description: 'Crea un autorrespondedor de correo con un agente de IA conectado por MCP: sondea el correo sin leer, redacta y responde con seguridad usando scopes, límites y guardarraíles.',
   coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP — MCPEmails',
-  content: `Un autorrespondedor de correo construido sobre MCP Emails es un bucle, no un webhook. No hay eventos iniciados por el servidor, así que tu agente **sondea** el correo sin leer según una programación, lee cada mensaje, redacta una respuesta y llama a \`reply_to_email\`. Este artículo recorre la construcción completa: el bucle de sondeo, los scopes que necesitas, cómo sobrevivir a los límites de tasa y los guardarraíles que evitan que un agente bombardee a tus contactos con respuestas alucinadas.
+  content: `Un autorrespondedor de correo construido sobre MCP Emails es un bucle, no un webhook. No hay eventos iniciados por el servidor, así que tu agente **sondea** el correo sin leer según una programación con \`email_read\` (acción \`list\`), lee cada mensaje con \`email_read\` (acción \`read\`), redacta una respuesta y llama a \`email_compose\` (acción \`reply\`). Este artículo recorre la construcción completa: el bucle de sondeo, los scopes que necesitas, cómo sobrevivir a los límites de tasa y los guardarraíles que evitan que un agente bombardee a tus contactos con respuestas alucinadas.
 
 Esto es el extremo avanzado de la historia de [dale acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access). Si solo quieres triaje y resúmenes matutinos sin enviar nada, lee antes [triaje y resumen de bandeja con un agente de IA](/blog/ai-agent-triage-summarize-inbox): es el sitio más seguro para empezar. Vuelve aquí cuando de verdad quieras que el agente le dé a enviar.
 
@@ -20,8 +20,8 @@ Un autorrespondedor casi siempre se ejecuta como un script o un cron job, no den
 
 En el dashboard, ve a **API Keys**, crea una key y concédele los scopes que realmente necesitas:
 
-- \`read:email\` — para sondear, listar y leer mensajes.
-- \`send:email\` — para llamar a \`reply_to_email\`.
+- \`read:email\` — para sondear, listar y leer mensajes con \`email_read\`.
+- \`send:email\` — para llamar a \`email_compose\` (acción \`reply\`).
 
 La key se muestra una sola vez. Cópiala. Tiene el aspecto \`mcpe_live_...\` y la pasas en cada petición:
 
@@ -42,12 +42,13 @@ Concede **solo** los scopes que use el trabajo. Si una versión futura de tu res
 Aquí tienes la forma de un respondedor que funciona. Lo he escrito como pseudocódigo sobre las herramientas MCP para que quede claro qué llamadas ocurren y en qué orden. El cableado exacto del cliente MCP depende de tu stack, pero lo importante es la secuencia.
 
 \`\`\`python
-# Tools used: list_inboxes, list_messages, read_email, reply_to_email
+# Tools used: inbox_list, email_read, email_compose
 
-inbox = list_inboxes()[0]            # discover, never hardcode the UUID
+inbox = inbox_list()[0]              # discover, never hardcode the UUID
 
 while True:
-    unread = list_messages(
+    unread = email_read(
+        action="list",
         inbox_id=inbox["inbox_id"],
         unread_only=True,
         limit=20,
@@ -57,7 +58,8 @@ while True:
         if not should_handle(summary):   # allowlist + filters, see below
             continue
 
-        msg = read_email(
+        msg = email_read(
+            action="read",
             inbox_id=inbox["inbox_id"],
             message_id=summary["message_id"],
         )
@@ -77,7 +79,7 @@ while True:
     sleep(60)
 \`\`\`
 
-Fíjate en tres cosas. Primera, el agente llama a \`list_inboxes\` para descubrir el \`inbox_id\` en lugar de pegar un UUID en el código: ese es el patrón de descubrimiento primero, y mantiene el script funcionando si reconectas una bandeja. Segunda, \`unread_only: true\` es lo que convierte esto en un respondedor de *correo nuevo* en vez de una máquina de re-responder-a-todos. Tercera, cada mensaje pasa por los guardarraíles antes de que se envíe nada.
+Fíjate en tres cosas. Primera, el agente llama a \`inbox_list\` para descubrir el \`inbox_id\` en lugar de pegar un UUID en el código: ese es el patrón de descubrimiento primero, y mantiene el script funcionando si reconectas una bandeja. Segunda, \`unread_only: true\` es lo que convierte esto en un respondedor de *correo nuevo* en vez de una máquina de re-responder-a-todos. Tercera, cada mensaje pasa por los guardarraíles antes de que se envíe nada.
 
 ### Marcar mensajes como gestionados
 
@@ -89,14 +91,14 @@ Cada API key está limitada a **100 peticiones por minuto, 1000 por hora y 10 00
 
 Cuando alcanzas un límite, el servidor devuelve un error reintentable (código \`-32029\`) que lleva \`data.retry_after\` en segundos. Hónralo. Duerme ese tiempo y luego continúa.
 
-Aquí está la regla que más importa: **nunca reintentes a ciegas \`send_email\` ni \`reply_to_email\`.** Un envío no es idempotente. Si una llamada de envío agota el tiempo o devuelve un resultado ambiguo, un reintento ingenuo puede entregar la misma respuesta dos veces. Reintenta las *lecturas* sin problema; trata los *envíos* como una sola oportunidad y reintenta solo ante un error reintentable explícito, con backoff y un tope estricto.
+Aquí está la regla que más importa: **nunca reintentes a ciegas un envío o una respuesta de \`email_compose\`.** Un envío no es idempotente. Si una llamada de envío agota el tiempo o devuelve un resultado ambiguo, un reintento ingenuo puede entregar la misma respuesta dos veces. Reintenta las *lecturas* sin problema; trata los *envíos* como una sola oportunidad y reintenta solo ante un error reintentable explícito, con backoff y un tope estricto.
 
 \`\`\`python
 def send_with_backoff(**kwargs):
     delay = 2
     for attempt in range(3):
         try:
-            return reply_to_email(**kwargs)
+            return email_compose(action="reply", **kwargs)
         except RateLimited as e:
             sleep(e.retry_after or delay)
             delay *= 2
@@ -121,7 +123,7 @@ No respondas a todos. Empieza con una lista de permitidos estrecha: un alias de 
 
 ### Mantén a una persona en el bucle, al menos al principio
 
-La versión más segura de esto no es un autorrespondedor en absoluto: es un auto-*redactor*. El agente lee, redacta y prepara la respuesta, pero una persona aprueba el envío. MCP Emails admite borradores, así que puedes hacer que el bucle cree un borrador en lugar de llamar a \`reply_to_email\`, y luego enviar tú mismo los buenos. Ejecútalo en modo borrador durante una semana. Lee lo que habría enviado. Solo entonces pon en envío automático los que te merezcan confianza.
+La versión más segura de esto no es un autorrespondedor en absoluto: es un auto-*redactor*. El agente lee, redacta y prepara la respuesta, pero una persona aprueba el envío. MCP Emails admite borradores, así que puedes hacer que el bucle llame a \`draft\` (acción \`create\`) en lugar de \`email_compose\`, y luego enviar tú mismo los buenos. Ejecútalo en modo borrador durante una semana. Lee lo que habría enviado. Solo entonces pon en envío automático los que te merezcan confianza.
 
 ### Detén bucles y autorrespuestas a ti mismo
 
@@ -139,7 +141,7 @@ Dale al modelo de redacción instrucciones ajustadas y un tope de longitud. Para
 Si fuera a lanzar esto para una bandeja real mañana, empezaría pequeño y aburrido:
 
 1. API key con \`read:email\` y \`send:email\`, acotada a una bandeja.
-2. Sondear \`list_messages(unread_only: true)\` cada dos minutos.
+2. Sondear \`email_read(action: "list", unread_only: true)\` cada dos minutos.
 3. Lista de permitidos con exactamente un alias de soporte.
 4. Solo modo borrador: crea borradores, no envíes nada de forma automática.
 5. Tras una semana leyendo los borradores, activa el envío automático para los casos obvios y sigue redactando el resto.

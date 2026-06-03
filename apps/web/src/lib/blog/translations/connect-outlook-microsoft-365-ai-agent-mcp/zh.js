@@ -59,27 +59,25 @@ https://mcpemails.com/api/mcp
 
 ## 连接好之后能做什么
 
-你的智能体会获得六个核心工具，外加 Outlook 支持的额外工具：
+你的智能体会获得整合后的核心工具，外加 Outlook 支持的额外工具：
 
-- \`list_inboxes\`——一定要先调用这个。它返回你已连接的邮箱及其 \`inbox_id\` UUID，这样智能体就永远不用去猜某个 ID。
-- \`list_messages\`——最新优先、分页，并带有像 \`unread_only\` 这样的筛选条件。
-- \`read_email\`——解析后的纯文本、可选的净化 HTML、可选的附件。
-- \`search_emails\`——见下面关于搜索的说明。
-- \`send_email\`——撰写邮件，支持抄送／密送、HTML 以及总计最多 10 MB 的附件。
-- \`reply_to_email\`——在会话线程内回复，并带有正确的线程头部。
+- \`inbox_list\`——一定要先调用这个。它返回你已连接的邮箱及其 \`inbox_id\` UUID，这样智能体就永远不用去猜某个 ID。
+- \`email_read\`——一个工具，多个 action：\`list\`（最新优先、分页，并带有像 \`unread_only\` 这样的筛选条件）、\`read\`（解析后的纯文本、可选的净化 HTML、可选的附件）以及 \`search\`（见下面关于搜索的说明）。
+- \`email_compose\`——\`send\` 这个 action 用于撰写邮件，支持抄送／密送、HTML 以及总计最多 10 MB 的附件；\`reply\` 和 \`forward\` 这两个 action 会带着正确的头部在会话线程内正确串接。
+- \`email_organize\`——标记已读／未读、加旗标、归档、删除和移动，各自通过自己的 \`action\` 完成。
 
-除了这六个之外，Outlook 还支持标记已读／未读、加旗标（Outlook 的“旗标”对应加星／标记的概念）、转发以及在文件夹之间移动。在你针对某个具体工具进行开发之前，请查看在线[文档](/docs)以获取最新的功能清单。
+除了这些之外，Outlook 还支持标记已读／未读、加旗标（Outlook 的“旗标”对应加星／标记的概念）、转发以及在文件夹之间移动。在你针对某个具体工具进行开发之前，请查看在线[文档](/docs)以获取最新的功能清单。
 
 ### 搜索使用 Microsoft 的 \`$search\`
 
-Outlook 搜索不是 Gmail 搜索。Gmail 接受像 \`from:\` 和 \`is:unread\` 这样的操作符，而对 Outlook 邮箱使用 \`search_emails\` 时，会把你的查询传给 Microsoft Graph 的 \`$search\`，它会在整个邮箱中做按相关性排序的全文匹配，并且也接受 KQL。所以像 \`invoice from accounting last week\` 这样的查询可以当作自然语言使用，而你也可以用 KQL 写得更精确，比如 \`from:finance@acme.com AND subject:invoice\`。如果你写的提示词里硬编码了 Gmail 操作符，它们在 Outlook 上不会有相同的表现——告诉你的智能体用自然语言搜索，让 Graph 去排序。
+Outlook 搜索不是 Gmail 搜索。Gmail 接受像 \`from:\` 和 \`is:unread\` 这样的操作符，而对 Outlook 邮箱使用 \`email_read\` 的 \`search\` action 时，会把你的查询传给 Microsoft Graph 的 \`$search\`，它会在整个邮箱中做按相关性排序的全文匹配，并且也接受 KQL。所以像 \`invoice from accounting last week\` 这样的查询可以当作自然语言使用，而你也可以用 KQL 写得更精确，比如 \`from:finance@acme.com AND subject:invoice\`。如果你写的提示词里硬编码了 Gmail 操作符，它们在 Outlook 上不会有相同的表现——告诉你的智能体用自然语言搜索，让 Graph 去排序。
 
 ## 一个值得搭建的工作流
 
 下面是我对一个 Microsoft 365 邮箱跑的分拣循环。每小时一两次，智能体会：
 
-1. 用 \`unread_only: true\` 调用 \`list_messages\`。
-2. 对任何看起来有时效性的邮件用 \`read_email\` 读取。
+1. 用 \`email_read\` 的 \`list\` action 加上 \`unread_only: true\` 调用。
+2. 对任何看起来有时效性的邮件用 \`email_read\` 的 \`read\` action 读取。
 3. 把这一批做个汇总，并为那些我显然会回复的邮件起草回复。
 4. 在我确认之前，把所有邮件都保持为未读。
 

@@ -87,22 +87,20 @@ Pour les particularités de chaque fournisseur sur iCloud, Fastmail et la longue
 
 ## Premier appel : découvrir, puis agir
 
-Quel que soit le fournisseur choisi, le premier geste de l’agent est toujours le même. Faites-lui appeler \`list_inboxes\` pour découvrir ce qui est connecté et récupérer l’\`inbox_id\` de chaque boîte — l’agent ne copie-colle jamais un UUID. À partir de là, il dispose de six outils principaux (plus quelques autres pour les marqueurs, les dossiers, la planification et les contacts) :
+Quel que soit le fournisseur choisi, le premier geste de l’agent est toujours le même. Faites-lui appeler \`inbox_list\` pour découvrir ce qui est connecté et récupérer l’\`inbox_id\` de chaque boîte — l’agent ne copie-colle jamais un UUID. À partir de là, il s’appuie sur un petit ensemble d’outils consolidés : \`email_read\` (avec un \`action\` de \`list\`, \`read\` ou \`search\`), \`email_compose\` (\`send\`, \`reply\` ou \`forward\`) et \`email_organize\` pour déplacer, marquer et archiver, plus \`folder\`, \`draft\`, \`schedule\` et \`contact_search\` :
 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose",
+    "email_organize"
   ]
 }
 \`\`\`
 
-Un bon test rapide : demandez à votre agent « résume mes trois e-mails non lus les plus récents ». Il exécutera \`list_inboxes\`, puis \`list_messages\` avec \`unread_only: true\`, puis \`read_email\` sur chacun. Si cela fonctionne, votre connexion est active.
+Un bon test rapide : demandez à votre agent « résume mes trois e-mails non lus les plus récents ». Il exécutera \`inbox_list\`, puis \`email_read\` avec \`action: "list"\` et \`unread_only: true\`, puis \`email_read\` avec \`action: "read"\` sur chacun. Si cela fonctionne, votre connexion est active.
 
 Une réserve honnête à poser d’emblée : MCP Emails fonctionne par sondage. Il n’y a pas de webhooks ni d’événements push, un agent réagit donc au nouveau courrier en le vérifiant selon une planification plutôt qu’en recevant une notification. C’est le bon modèle pour la plupart des flux de travail, et c’est ainsi que fonctionnent les modèles de [tri et résumé de la boîte de réception](/blog/ai-agent-triage-summarize-inbox).
 
@@ -112,5 +110,5 @@ Ici, la rapidité ne vient pas de raccourcis sur la sécurité. L’e-mail est r
 
 ## Pour conclure
 
-C’est tout : une connexion de boîte de réception, un endpoint, six outils. Tous les forfaits sont illimités en boîtes de réception, en appels et en clés, et le forfait Free ne coûte rien et ne demande pas de carte — consultez les [tarifs](/pricing) si vous avez besoin de limites de pointe plus élevées ou du SSO. Prêt à l’essayer ? [Commencez gratuitement](/signup), connectez votre boîte de réception et collez l’endpoint dans votre agent.`,
+C’est tout : une connexion de boîte de réception, un endpoint, une poignée d’outils. Tous les forfaits sont illimités en boîtes de réception, en appels et en clés, et le forfait Free ne coûte rien et ne demande pas de carte — consultez les [tarifs](/pricing) si vous avez besoin de limites de pointe plus élevées ou du SSO. Prêt à l’essayer ? [Commencez gratuitement](/signup), connectez votre boîte de réception et collez l’endpoint dans votre agent.`,
 };

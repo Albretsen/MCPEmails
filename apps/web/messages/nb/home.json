@@ -51,7 +51,7 @@
       "0": {
         "tag": "Omfang",
         "h": "Seks kjerneverktøy. Det essensielle, dekket.",
-        "p": "De seks kjernekallene dekker det daglige arbeidet — <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code> — og mer avanserte verktøy (mapper, utkast, planlegging) er der når du trenger dem. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
+        "p": "Noen få verktøy dekker det daglige arbeidet — <code>inbox_list</code>, <code>email_read</code> (list, read, search) og <code>email_compose</code> (send, reply) — og mer avanserte verktøy (<code>email_organize</code>, <code>folder</code>, <code>draft</code>, <code>schedule</code>) er der når du trenger dem. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
       },
       "1": {
         "tag": "Lagring",
@@ -61,7 +61,7 @@
       "2": {
         "tag": "Sending",
         "h": "Sending går gjennom leverandøren din.",
-        "p": "Når agenten din kaller <code>email_send</code> eller <code>email_reply</code>, sendes meldingen via Gmail API, Fastmail JMAP eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
+        "p": "Når agenten din kaller <code>email_compose</code> (for å sende eller svare), sendes meldingen via Gmail API, Fastmail JMAP eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
       },
       "3": {
         "tag": "Leverandører",
@@ -95,16 +95,18 @@
       },
       "2": {
         "h": "Agenten din jobber i innboksen",
-        "p": "Agenten kaller verktøy som <code>email_search()</code> eller <code>email_reply()</code>. MCPEmails henter i sanntid fra leverandøren din og returnerer resultatet. Ingenting mellomlagres mellom kall."
+        "p": "Agenten kaller verktøy som <code>email_read()</code> eller <code>email_compose()</code>. MCPEmails henter i sanntid fra leverandøren din og returnerer resultatet. Ingenting mellomlagres mellom kall."
       }
     },
     "tools": {
       "0": "Oppdag alle tilkoblede innbokser og ID-ene deres. Kall dette først, ingen kopiering av UUID fra dashbordet.",
-      "1": "List opp nylige meldinger med avsender, emne, dato og utdrag, opptil 100 per kall.",
-      "2": "Hent én enkelt melding etter ID. Returnerer ren tekst og renset HTML-innhold, pluss metadata om vedlegg.",
-      "3": "Leverandørnativt søk: Gmail-spørresyntaks, Fastmail JMAP eller IMAP SEARCH. Returnerer opptil 100 treff.",
-      "4": "Send en ny melding via den tilkoblede kontoen. Sendes gjennom Gmail API, Fastmail JMAP eller SMTP: ditt domene, din leveringsdyktighet.",
-      "5": "Svar i tråden med riktige Message-ID- og References-hoder. Fungerer på tvers av Gmail, Fastmail og alle IMAP-innbokser."
+      "1": "Les e-post: list opp nylige sammendrag, hent en hel melding etter ID, batch-les opptil 50, eller kjør et leverandøruavhengig søk — alt via action-argumentet.",
+      "2": "Organiser e-post: flytt, slett, flagg eller arkiver — én om gangen, i bulk eller rett fra et søk.",
+      "3": "Skriv: send en ny melding, svar i tråden eller videresend. Sendes gjennom Gmail API, Fastmail JMAP eller SMTP: ditt domene, din leveringsdyktighet.",
+      "4": "Administrer mapper (etiketter på Gmail): list opp, opprett, gi nytt navn eller slett, og bruk dem som flyttemål.",
+      "5": "Utkast: list opp, opprett, oppdater og send utkast lagret i leverandørens Drafts-mappe.",
+      "6": "Planlegg en melding for et fremtidig tidspunkt, list opp ventende planlagte sendinger, og avbryt dem før de går ut.",
+      "7": "Finn personer etter navn eller e-post med en sanntidsskanning av nylig matchende e-post. Ingenting lagres."
     }
   },
   "quote": {

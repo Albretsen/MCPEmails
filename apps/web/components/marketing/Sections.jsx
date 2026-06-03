@@ -233,7 +233,7 @@ export function HeroPipeDiagram() {
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.7, color: "var(--fg-2)" }}>
           <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>inbox_list</span>()</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logReturns')}</div>
-          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>email_list</span>(inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
+          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>email_read</span>(action=<span style={{ color: "var(--amber-700)" }}>"list"</span> · inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logFetches')}</div>
           <div><span style={{ color: "var(--mint-700)" }}>←</span> {t('hero.pipe.logResult')} · <span style={{ color: "var(--fg-3)" }}>{t('hero.pipe.logNothing')}</span></div>
         </div>
@@ -251,12 +251,12 @@ export function HeroPipeDiagram() {
 /* Variant C: Live MCP terminal showing tool calls firing (developer mockup, untranslated) */
 export function HeroMcpTerminal() {
   const fullLog = React.useMemo(() => [
-    { ts: "14:02:16", arrow: "→", tool: "inbox_list",    args: "",                            ok: "2 inboxes", ms: "84ms"  },
-    { ts: "14:02:18", arrow: "→", tool: "email_list",    args: "inbox_id=3f7a · limit=20",    ok: "20 msgs",   ms: "182ms" },
-    { ts: "14:02:21", arrow: "→", tool: "email_read",    args: "uid=4821",                    ok: "1.2kb",     ms: "97ms"  },
-    { ts: "14:02:23", arrow: "→", tool: "email_search",  args: "from:stripe after:2026-05",   ok: "3 hits",    ms: "238ms" },
-    { ts: "14:02:25", arrow: "→", tool: "email_reply",   args: "uid=4821",                    ok: "queued",    ms: "311ms" },
-    { ts: "14:02:28", arrow: "→", tool: "email_send",    args: "to=eng@team.io",              ok: "sent",      ms: "428ms" },
+    { ts: "14:02:16", arrow: "→", tool: "inbox_list",    args: "",                                ok: "2 inboxes", ms: "84ms"  },
+    { ts: "14:02:18", arrow: "→", tool: "email_read",    args: "action=list · inbox_id=3f7a",     ok: "20 msgs",   ms: "182ms" },
+    { ts: "14:02:21", arrow: "→", tool: "email_read",    args: "action=read · uid=4821",          ok: "1.2kb",     ms: "97ms"  },
+    { ts: "14:02:23", arrow: "→", tool: "email_read",    args: "action=search · from:stripe",     ok: "3 hits",    ms: "238ms" },
+    { ts: "14:02:25", arrow: "→", tool: "email_compose", args: "action=reply · uid=4821",         ok: "queued",    ms: "311ms" },
+    { ts: "14:02:28", arrow: "→", tool: "email_compose", args: "action=send · to=eng@team.io",    ok: "sent",      ms: "428ms" },
   ], []);
   const [shown, setShown] = useState(2);
   React.useEffect(() => {
@@ -387,7 +387,7 @@ export function Features() {
  * A self-consistent, on-brand mockup of the dashboard so prospects can see the
  * product before signing up. Rendered in HTML/CSS (not a screenshot) so it
  * never drifts from the real naming — note "Team" plan and the real tool names
- * (email_list, email_read, email_send).
+ * (email_read, email_compose, email_organize).
  */
 export function DashboardPreview() {
   const t = useTranslations('home');
@@ -405,10 +405,10 @@ export function DashboardPreview() {
     { label: 'Plan', value: 'Team' },
   ];
   const activity = [
-    { tool: 'email_list', inbox: 'work-gmail', time: 'just now' },
-    { tool: 'email_read', inbox: 'work-gmail', time: '12s ago' },
-    { tool: 'email_send', inbox: 'ops-fastmail', time: '1m ago' },
-    { tool: 'email_search', inbox: 'support-imap', time: '3m ago' },
+    { tool: 'email_read', inbox: 'work-gmail', time: 'just now' },
+    { tool: 'email_compose', inbox: 'work-gmail', time: '12s ago' },
+    { tool: 'email_organize', inbox: 'ops-fastmail', time: '1m ago' },
+    { tool: 'email_read', inbox: 'support-imap', time: '3m ago' },
   ];
 
   return (
@@ -521,7 +521,7 @@ export function DashboardPreview() {
 /* ============== HOW IT WORKS ============== */
 export function HowItWorks() {
   const t = useTranslations('home');
-  const toolNames = ['inbox_list', 'email_list', 'email_read', 'email_search', 'email_send', 'email_reply'];
+  const toolNames = ['inbox_list', 'email_read', 'email_organize', 'email_compose', 'folder', 'draft', 'schedule', 'contact_search'];
   return (
     <section className="section how" id="how">
       <div className="container">

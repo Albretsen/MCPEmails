@@ -2,7 +2,7 @@ export default {
   title: '用 MCP 连接的智能体搭建邮件自动回复器',
   description: '用 MCP 连接的 AI 智能体搭建邮件自动回复器：轮询未读邮件、起草并安全回复，配合权限、速率限制与护栏。',
   coverAlt: '用 MCP 连接的智能体搭建邮件自动回复器 — MCPEmails',
-  content: `基于 MCP Emails 搭建的邮件自动回复器是一个循环，而不是 webhook。这里没有服务端主动触发的事件，所以你的智能体按计划**轮询**未读邮件，读取每一封消息，起草回复，然后调用 \`reply_to_email\`。本文带你走完整个搭建过程：轮询循环、你需要的权限、如何熬过速率限制，以及那些能防止智能体用胡编的回复轰炸你联系人的护栏。
+  content: `基于 MCP Emails 搭建的邮件自动回复器是一个循环，而不是 webhook。这里没有服务端主动触发的事件，所以你的智能体按计划用 \`email_read\`（动作 \`list\`）**轮询**未读邮件，用 \`email_read\`（动作 \`read\`）读取每一封消息，起草回复，然后调用 \`email_compose\`（动作 \`reply\`）。本文带你走完整个搭建过程：轮询循环、你需要的权限、如何熬过速率限制，以及那些能防止智能体用胡编的回复轰炸你联系人的护栏。
 
 这是[给你的 AI 智能体邮件访问权限](/blog/how-to-give-your-ai-agent-email-access)这条线索里偏进阶的一端。如果你只想做分拣和晨间摘要、不想发送任何东西，先读[AI 智能体的收件箱分拣与摘要](/blog/ai-agent-triage-summarize-inbox)——那是更安全的起点。等你真的想让智能体按下发送键时，再回到这里。
 
@@ -20,8 +20,8 @@ export default {
 
 在控制台里，进入 **API Keys**，创建一把密钥，并授予它你确实需要的权限：
 
-- \`read:email\`——用于轮询、列出和读取消息。
-- \`send:email\`——用于调用 \`reply_to_email\`。
+- \`read:email\`——用于通过 \`email_read\` 轮询、列出和读取消息。
+- \`send:email\`——用于调用 \`email_compose\`（动作 \`reply\`）。
 
 密钥只显示一次。把它复制下来。它看起来像 \`mcpe_live_...\`，你要在每次请求时带上它：
 
@@ -42,12 +42,13 @@ https://www.mcpemails.com/api/mcp
 下面是一个能跑的回复器的大致样子。我用 MCP 工具上的伪代码写出来，这样能清楚地看出哪些调用按什么顺序发生。具体的 MCP 客户端接线取决于你的技术栈，但顺序才是重点。
 
 \`\`\`python
-# Tools used: list_inboxes, list_messages, read_email, reply_to_email
+# Tools used: inbox_list, email_read, email_compose
 
-inbox = list_inboxes()[0]            # discover, never hardcode the UUID
+inbox = inbox_list()[0]              # discover, never hardcode the UUID
 
 while True:
-    unread = list_messages(
+    unread = email_read(
+        action="list",
         inbox_id=inbox["inbox_id"],
         unread_only=True,
         limit=20,
@@ -57,7 +58,8 @@ while True:
         if not should_handle(summary):   # allowlist + filters, see below
             continue
 
-        msg = read_email(
+        msg = email_read(
+            action="read",
             inbox_id=inbox["inbox_id"],
             message_id=summary["message_id"],
         )
@@ -77,7 +79,7 @@ while True:
     sleep(60)
 \`\`\`
 
-有三点值得留意。第一，智能体调用 \`list_inboxes\` 来发现 \`inbox_id\`，而不是把一个 UUID 粘进代码里——这就是"先发现"的模式，它能让脚本在你重新连接收件箱后依然可用。第二，\`unread_only: true\` 才是让这成为一个*新邮件*回复器、而不是一台对所有人反复回复的机器的关键。第三，每一封消息在发送任何东西之前都要经过护栏。
+有三点值得留意。第一，智能体调用 \`inbox_list\` 来发现 \`inbox_id\`，而不是把一个 UUID 粘进代码里——这就是"先发现"的模式，它能让脚本在你重新连接收件箱后依然可用。第二，\`unread_only: true\` 才是让这成为一个*新邮件*回复器、而不是一台对所有人反复回复的机器的关键。第三，每一封消息在发送任何东西之前都要经过护栏。
 
 ### 把消息标记为已处理
 
@@ -89,7 +91,7 @@ while True:
 
 当你触到限制时，服务器会返回一个可重试的错误（代码 \`-32029\`），其中带有以秒为单位的 \`data.retry_after\`。尊重它。睡那么久，然后继续。
 
-下面这条规则最要紧：**永远不要盲目地自动重试 \`send_email\` 或 \`reply_to_email\`。**发送不是幂等的。如果一次发送调用超时或返回结果含糊，天真的重试可能会把同一封回复发送两次。读取尽管放心重试；把发送当作一次性操作，只在遇到明确的可重试错误时才重试，配合退避和一个硬上限。
+下面这条规则最要紧：**永远不要盲目地自动重试 \`email_compose\` 的发送或回复。**发送不是幂等的。如果一次发送调用超时或返回结果含糊，天真的重试可能会把同一封回复发送两次。读取尽管放心重试；把发送当作一次性操作，只在遇到明确的可重试错误时才重试，配合退避和一个硬上限。
 
 \`\`\`python
 def send_with_backoff(**kwargs):

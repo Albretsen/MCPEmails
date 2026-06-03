@@ -19,7 +19,7 @@ Hold disse fire opp mot hvert alternativ. Forskjellene blir raskt tydelige.
 
 ## Alternativ 1: En hostet MCP-e-postserver
 
-Dette er [Model Context Protocol](https://modelcontextprotocol.io)-tilnærmingen, driftet for deg. Du kobler til innboksen din én gang i et dashbord, limer inn én endepunkt-URL i Claude, og agenten får et ryddig sett med e-postverktøy. Claude kaller dem som ethvert annet verktøy: \`list_inboxes\`, \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\`, pluss noen flere for flagg, mapper, planlegging og kontakter.
+Dette er [Model Context Protocol](https://modelcontextprotocol.io)-tilnærmingen, driftet for deg. Du kobler til innboksen din én gang i et dashbord, limer inn én endepunkt-URL i Claude, og agenten får et ryddig sett med e-postverktøy. Claude kaller dem som ethvert annet verktøy: \`inbox_list\` for å se kontoene dine, \`email_read\` for å liste, lese eller søke i meldinger, \`email_compose\` for å sende, svare eller videresende, pluss \`email_organize\`, \`folder\`, \`draft\`, \`schedule\` og \`contact_search\` for flagg, mapper, utkast, planlegging og kontakter — åtte verktøy til sammen, hvert med en \`action\`-parameter som velger operasjonen.
 
 MCP Emails er den jeg bygger, så ta anbefalingen med det i bakhodet — men det er arkitekturen som gjør at den vinner for de fleste, ikke markedsføringen. Hvert verktøykall treffer leverandøren din live (Gmail API, Microsoft Graph eller IMAP/SMTP), gir meldingen til Claude, og forkaster den. **E-postteksten lagres aldri.** Det eneste som lagres per innboks er et kryptert OAuth-token eller app-passord, AES-256-GCM-kryptert i ro, dekryptert kun inne i en isolert edge-funksjon i det øyeblikket kallet skjer. Vil du ha den lange versjonen av hvorfor det er viktig, les [hvorfor «e-post lagres aldri» er viktig](/blog/why-email-never-stored-matters).
 
@@ -27,7 +27,7 @@ Oppsettet er virkelig kjapt. I claude.ai går du til **Customize → Connectors 
 
 **Bra for:** nesten alle — ikke-tekniske brukere, folk med Gmail og Outlook og IMAP på én gang, alle som bryr seg om at teksten ikke lagres.
 
-**De ærlige avveiningene:** det er en tredjepartstjeneste i autentiseringsbanen din (du kan trekke tilbake tilgangen fra dashbordet med ett klikk, men du stoler på vertens sikkerhetsmodell). Og det finnes ingen webhooks. For å reagere på ny e-post må Claude polle — kalle \`list_messages\` med \`unread_only: true\` etter en tidsplan. Push-varsler finnes ikke i MCP. Ethvert verktøy som hevder å reagere på e-post i sanntid, enten poller under panseret eller lagrer e-posten din.
+**De ærlige avveiningene:** det er en tredjepartstjeneste i autentiseringsbanen din (du kan trekke tilbake tilgangen fra dashbordet med ett klikk, men du stoler på vertens sikkerhetsmodell). Og det finnes ingen webhooks. For å reagere på ny e-post må Claude polle — kalle \`email_read\` med \`action: list\` og \`unread_only: true\` etter en tidsplan. Push-varsler finnes ikke i MCP. Ethvert verktøy som hevder å reagere på e-post i sanntid, enten poller under panseret eller lagrer e-posten din.
 
 Gratisnivået er $0 for alltid med ubegrenset antall innbokser og verktøykall, med tak på 60 forespørsler/minutt. Betalte planer ([priser](/pricing)) hever burst-taket og legger til teamfunksjoner. Kostnad er sjelden den avgjørende faktoren her.
 
@@ -75,7 +75,7 @@ Her er min klare mening.
 
 **Hopp over nettleserutvidelsen** med mindre du lever i Gmail på nett og har lest datapolicyen nøye. **Hopp over native integrasjoner** med mindre din allerede leverer funksjonen og du er en person med én klient og én leverandør.
 
-En siste ting som skiller de seriøse alternativene fra lekene: sending. Med MCP Emails går \`send_email\` og \`reply_to_email\` gjennom din egen leverandør — Gmail API, Microsoft Graph eller din SMTP — slik at domeneomdømmet ditt forblir ditt og tråde-headere settes automatisk. E-post som videresendes fra et annet domene, er et leveringsproblem som bare venter på å skje.
+En siste ting som skiller de seriøse alternativene fra lekene: sending. Med MCP Emails går \`email_compose\` (action send eller reply) gjennom din egen leverandør — Gmail API, Microsoft Graph eller din SMTP — slik at domeneomdømmet ditt forblir ditt og tråde-headere settes automatisk. E-post som videresendes fra et annet domene, er et leveringsproblem som bare venter på å skje.
 
 ## Kom i gang
 

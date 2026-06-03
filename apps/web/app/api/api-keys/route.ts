@@ -37,8 +37,8 @@ import { getActiveApiKeyNames, isApiKeyNameTaken } from '@/lib/api-keys/unique-n
 // flow's VALID_SCOPES so dashboard- and OAuth-issued keys behave identically.
 //
 // search:email is vestigial — no tool requires it (read:email already gates
-// email_search) — but it is retained for parity and backward compatibility
-// with keys/consents already issued with it.
+// email_read's search action) — but it is retained for parity and backward
+// compatibility with keys/consents already issued with it.
 const VALID_SCOPES = [
   'read:email',
   'search:email',

@@ -67,12 +67,12 @@ Fastmail 的 IMAP 主机是 \`imap.fastmail.com\`，SMTP 是 \`smtp.fastmail.com
 
 不用 API key，不用配置文件。claude.ai 在底层使用带 PKCE 的 OAuth，Claude 拿到的令牌恰好被限定在你批准的范围。如果你用的客户端无法做 OAuth——Cursor、Cline、一段 cURL 脚本——那就改为生成一个限定范围的密钥，这一点我在 [Cursor、Cline 和 VS Code 的邮件访问](/blog/email-for-ai-agents-cursor-cline-vscode)里有讲到。
 
-连上之后，先让 Claude 运行 \`list_inboxes\`。它会返回你的邮箱及其 \`inbox_id\`，这样你永远不用手动复制粘贴 UUID。从那里开始就是[六个核心工具](/docs)了——\`list_messages\`、\`read_email\`、\`search_emails\`、\`send_email\`、\`reply_to_email\`——外加几个用于标记、文件夹、定时和联系人的工具。
+连上之后，先让 Claude 运行 \`inbox_list\`。它会返回你的邮箱及其 \`inbox_id\`，这样你永远不用手动复制粘贴 UUID。从那里开始就是[核心工具](/docs)了——\`email_read\`（列出、读取并搜索邮件）、\`email_compose\`（发送、回复、转发）和 \`email_organize\`——外加几个用于文件夹、草稿、定时和联系人的工具。每个都通过一个 \`action\` 参数来调用。
 
 一段用来确认它能跑通的提示词：
 
 \`\`\`
-Use list_inboxes to find my iCloud inbox, then summarize my 5 most recent unread messages.
+Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
 ## IMAP 能做而 Gmail 和 Outlook 做不到的那一件事

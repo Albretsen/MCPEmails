@@ -51,7 +51,7 @@
       "0": {
         "tag": "范围",
         "h": "六个核心工具，覆盖日常所需。",
-        "p": "六个核心调用覆盖日常工作——<code>inbox_list</code>、<code>email_list</code>、<code>email_read</code>、<code>email_search</code>、<code>email_send</code>、<code>email_reply</code>——更高级的工具（文件夹、草稿、定时发送）则随时备用。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。"
+        "p": "少数几个工具即可覆盖日常工作——<code>inbox_list</code>、<code>email_read</code>（list、read、search）和 <code>email_compose</code>（send、reply）——更高级的工具（<code>email_organize</code>、<code>folder</code>、<code>draft</code>、<code>schedule</code>）则随时备用。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。"
       },
       "1": {
         "tag": "存储",
@@ -61,7 +61,7 @@
       "2": {
         "tag": "发送",
         "h": "发送通过你自己的服务商进行。",
-        "p": "当你的智能体调用 <code>email_send</code> 或 <code>email_reply</code> 时，邮件会通过 Gmail API、Fastmail JMAP 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。"
+        "p": "当你的智能体调用 <code>email_compose</code>（发送或回复）时，邮件会通过 Gmail API、Fastmail JMAP 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。"
       },
       "3": {
         "tag": "服务商",
@@ -95,16 +95,18 @@
       },
       "2": {
         "h": "你的智能体处理收件箱",
-        "p": "智能体调用诸如 <code>email_search()</code> 或 <code>email_reply()</code> 之类的工具。MCPEmails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。"
+        "p": "智能体调用诸如 <code>email_read()</code> 或 <code>email_compose()</code> 之类的工具。MCPEmails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。"
       }
     },
     "tools": {
       "0": "发现所有已连接的收件箱及其 ID。先调用此工具，无需从仪表盘复制粘贴 UUID。",
-      "1": "列出最近的邮件，包含发件人、主题、日期和摘要，每次调用最多 100 封。",
-      "2": "按 ID 获取单封邮件。返回解析后的纯文本和清理过的 HTML 正文，以及附件元数据。",
-      "3": "服务商原生搜索：Gmail 查询语法、Fastmail JMAP 或 IMAP SEARCH。最多返回 100 条匹配结果。",
-      "4": "通过已连接的账户发送新邮件。经由 Gmail API、Fastmail JMAP 或 SMTP 发出：你的域名，你的送达率。",
-      "5": "在邮件会话内回复，并附带正确的 Message-ID 和 References 头。适用于 Gmail、Fastmail 及任何 IMAP 收件箱。"
+      "1": "读取邮件：列出最近摘要、按 ID 获取完整邮件、批量读取至多 50 封，或运行与服务商无关的搜索——全部通过 action 参数。",
+      "2": "整理邮件：移动、删除、标记或归档——逐封、批量，或直接从搜索结果操作。",
+      "3": "撰写：发送新邮件、在会话内回复或转发。经由 Gmail API、Fastmail JMAP 或 SMTP 发出：你的域名，你的送达率。",
+      "4": "管理文件夹（在 Gmail 上为标签）：列出、创建、重命名或删除，并将其用作移动目标。",
+      "5": "草稿：列出、创建、更新并发送存储在服务商 Drafts 文件夹中的草稿。",
+      "6": "将邮件安排在未来某个时间发送，列出待发送的定时任务，并在它们发出前取消。",
+      "7": "通过对最近匹配邮件的实时扫描按姓名或邮箱查找联系人。不存储任何内容。"
     }
   },
   "quote": {

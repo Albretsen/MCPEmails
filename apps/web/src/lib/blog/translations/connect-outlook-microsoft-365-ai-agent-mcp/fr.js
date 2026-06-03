@@ -59,27 +59,25 @@ Le seul endroit où la réalité s'impose, c'est l'écran de consentement sur le
 
 ## Ce qui fonctionne une fois connecté
 
-Votre agent obtient les six outils principaux, plus les extras qu'Outlook prend en charge :
+Votre agent obtient les outils principaux consolidés, plus les extras qu'Outlook prend en charge :
 
-- \`list_inboxes\` — appelez toujours celui-ci en premier. Il renvoie vos boîtes connectées et leurs UUID \`inbox_id\`, pour que l'agent ne devine jamais un identifiant.
-- \`list_messages\` — du plus récent au plus ancien, paginé, avec des filtres comme \`unread_only\`.
-- \`read_email\` — texte brut analysé, HTML assaini en option, pièces jointes en option.
-- \`search_emails\` — voir la note sur la recherche ci-dessous.
-- \`send_email\` — composez avec CC/BCC, HTML et pièces jointes jusqu'à 10 MB au total.
-- \`reply_to_email\` — répond dans le fil avec les bons en-têtes de threading.
+- \`inbox_list\` — appelez toujours celui-ci en premier. Il renvoie vos boîtes connectées et leurs UUID \`inbox_id\`, pour que l'agent ne devine jamais un identifiant.
+- \`email_read\` — un seul outil, plusieurs actions : \`list\` (du plus récent au plus ancien, paginé, avec des filtres comme \`unread_only\`), \`read\` (texte brut analysé, HTML assaini en option, pièces jointes en option) et \`search\` (voir la note sur la recherche ci-dessous).
+- \`email_compose\` — l'action \`send\` compose avec CC/BCC, HTML et pièces jointes jusqu'à 10 MB au total ; les actions \`reply\` et \`forward\` s'enchaînent correctement dans le fil avec les bons en-têtes.
+- \`email_organize\` — marquage lu/non lu, indicateurs, archivage, suppression et déplacement, chacun via sa propre \`action\`.
 
-Au-delà des six, Outlook prend en charge le marquage lu/non lu, les indicateurs (le « flag » d'Outlook correspond à la notion d'étoilé/marqué), le transfert et le déplacement entre dossiers. Consultez les [docs](/docs) en ligne pour la liste des capacités actuelles avant de bâtir quoi que ce soit autour d'un outil précis.
+Au-delà de ceux-ci, Outlook prend en charge le marquage lu/non lu, les indicateurs (le « flag » d'Outlook correspond à la notion d'étoilé/marqué), le transfert et le déplacement entre dossiers. Consultez les [docs](/docs) en ligne pour la liste des capacités actuelles avant de bâtir quoi que ce soit autour d'un outil précis.
 
 ### La recherche utilise le \`$search\` de Microsoft
 
-La recherche Outlook n'est pas la recherche Gmail. Là où Gmail accepte des opérateurs comme \`from:\` et \`is:unread\`, \`search_emails\` sur une boîte Outlook transmet votre requête au \`$search\` de Microsoft Graph, qui effectue une correspondance plein texte classée par pertinence dans toute la boîte et accepte aussi le KQL. Ainsi une requête comme \`facture de la comptabilité la semaine dernière\` fonctionne en langage naturel, et vous pouvez être plus précis avec du KQL comme \`from:finance@acme.com AND subject:invoice\`. Si vous écrivez des prompts qui codent en dur des opérateurs Gmail, ils ne se comporteront pas de la même manière sur Outlook — dites à votre agent de chercher en langage clair et laissez Graph classer.
+La recherche Outlook n'est pas la recherche Gmail. Là où Gmail accepte des opérateurs comme \`from:\` et \`is:unread\`, \`email_read\` avec l'action \`search\` sur une boîte Outlook transmet votre requête au \`$search\` de Microsoft Graph, qui effectue une correspondance plein texte classée par pertinence dans toute la boîte et accepte aussi le KQL. Ainsi une requête comme \`facture de la comptabilité la semaine dernière\` fonctionne en langage naturel, et vous pouvez être plus précis avec du KQL comme \`from:finance@acme.com AND subject:invoice\`. Si vous écrivez des prompts qui codent en dur des opérateurs Gmail, ils ne se comporteront pas de la même manière sur Outlook — dites à votre agent de chercher en langage clair et laissez Graph classer.
 
 ## Un workflow qui vaut la peine d'être mis en place
 
 Voici une boucle de tri que je fais tourner sur une boîte Microsoft 365. Une ou deux fois par heure, l'agent :
 
-1. Appelle \`list_messages\` avec \`unread_only: true\`.
-2. Lit tout ce qui semble sensible au temps avec \`read_email\`.
+1. Appelle \`email_read\` avec l'action \`list\` et \`unread_only: true\`.
+2. Lit tout ce qui semble sensible au temps avec l'action \`read\` de \`email_read\`.
 3. Résume le lot et rédige des brouillons de réponse pour ceux auxquels je répondrais à l'évidence.
 4. Laisse tout en non lu jusqu'à ce que je confirme.
 

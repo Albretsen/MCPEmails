@@ -82,16 +82,16 @@ If you get a tool list back, you're connected. A \`-32001\` error means the key 
 
 ## The tools your agent gets
 
-Both paths expose the same surface. Six core tools cover the work:
+Both paths expose the same surface. A handful of consolidated, action-based tools cover the work:
 
-- \`list_inboxes\` — always call this first to discover connected inboxes and their IDs.
-- \`list_messages\` — paginated, newest-first.
-- \`read_email\` — parsed plain text, optional sanitized HTML, attachments.
-- \`search_emails\` — provider-native search (Gmail operators, Outlook KQL, IMAP text).
-- \`send_email\` — compose with CC/BCC, HTML, attachments up to 10 MB.
-- \`reply_to_email\` — sets In-Reply-To and References headers for you so the thread stays intact.
+- \`inbox_list\` — always call this first to discover connected inboxes and their IDs.
+- \`email_read\` (action \`list\`) — paginated, newest-first.
+- \`email_read\` (action \`read\`) — parsed plain text, optional sanitized HTML, attachments.
+- \`email_read\` (action \`search\`) — provider-native search (Gmail operators, Outlook KQL, IMAP text).
+- \`email_compose\` (action \`send\`) — compose with CC/BCC, HTML, attachments up to 10 MB.
+- \`email_compose\` (action \`reply\`) — sets In-Reply-To and References headers for you so the thread stays intact.
 
-There are a few more for flags, folders, scheduled send, and contacts, but those six do the bulk of real work.
+There are more for flags and moves (\`email_organize\`), folders, scheduled send, and contacts, but those few do the bulk of real work.
 
 ## A dev workflow that earns its keep
 
@@ -99,21 +99,21 @@ Here's where it pays off. I keep a read+send key wired into my editor and lean o
 
 Morning triage, typed straight into the chat panel:
 
-> Call list_inboxes, then list unread from my work inbox in the last 12 hours. Group them: needs a reply, FYI, and noise. For the FYI bucket give me one line each.
+> Call inbox_list, then list unread from my work inbox in the last 12 hours. Group them: needs a reply, FYI, and noise. For the FYI bucket give me one line each.
 
-The agent runs \`list_inboxes\`, then \`list_messages\` with \`unread_only\` set, reads the ones that matter, and hands back a sorted digest. When I spot one I want answered, I follow up:
+The agent runs \`inbox_list\`, then \`email_read\` with action \`list\` and \`unread_only\` set, reads the ones that matter, and hands back a sorted digest. When I spot one I want answered, I follow up:
 
 > Reply to the message from the design contractor confirming Thursday at 2pm works, keep it short.
 
-It calls \`reply_to_email\`, threading is handled, and the reply leaves through my own Gmail — so it lands from my address with my domain's reputation, not some relay. For a deeper treatment of triage prompts, see [how to make an AI agent triage and summarize your inbox](/blog/ai-agent-triage-summarize-inbox).
+It calls \`email_compose\` with action \`reply\`, threading is handled, and the reply leaves through my own Gmail — so it lands from my address with my domain's reputation, not some relay. For a deeper treatment of triage prompts, see [how to make an AI agent triage and summarize your inbox](/blog/ai-agent-triage-summarize-inbox).
 
-One honest limitation: there are no webhooks. The server doesn't push you new mail. If you want the agent to react to incoming messages, you poll — \`list_messages\` with \`unread_only: true\` on a schedule. That's a deliberate design choice, and it shapes how you build anything reactive, like an [auto-responder over MCP](/blog/build-email-auto-responder-mcp-agent).
+One honest limitation: there are no webhooks. The server doesn't push you new mail. If you want the agent to react to incoming messages, you poll — \`email_read\` with action \`list\` and \`unread_only: true\` on a schedule. That's a deliberate design choice, and it shapes how you build anything reactive, like an [auto-responder over MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Rate limits for scripted access
 
 If you're driving the server from a cron job or a tight agent loop, mind the limits. Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, on every plan. On top of that there's a per-workspace burst ceiling set by your plan: 60/min on Free, 300/min on Solo ($12/month), 1,000/min on Team ($49/month). See the [pricing page](/pricing) for the full breakdown.
 
-When you hit a limit the server returns a retryable error (code \`-32029\`) with \`data.retry_after\` in seconds. Honor it — back off for that long and try again. And never blind-retry a \`send_email\` on a generic failure; you'll fire duplicates. Check whether it actually sent first.
+When you hit a limit the server returns a retryable error (code \`-32029\`) with \`data.retry_after\` in seconds. Honor it — back off for that long and try again. And never blind-retry an \`email_compose\` send on a generic failure; you'll fire duplicates. Check whether it actually sent first.
 
 ## Wrapping up
 

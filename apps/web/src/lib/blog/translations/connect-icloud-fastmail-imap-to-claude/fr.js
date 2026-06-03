@@ -67,12 +67,12 @@ Dans claude.ai :
 
 Aucune clé API, aucun fichier de configuration. claude.ai utilise OAuth avec PKCE en coulisses, et le jeton que reçoit Claude est limité exactement à ce que vous avez approuvé. Si vous êtes sur un client qui ne gère pas OAuth — Cursor, Cline, un script cURL — vous créez plutôt une clé limitée, ce que je détaille dans [l’accès e-mail pour Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Une fois connecté, demandez d’abord à Claude d’exécuter \`list_inboxes\`. Cela renvoie votre boîte et son \`inbox_id\`, vous n’avez donc jamais à copier-coller un UUID. À partir de là, place aux [six outils principaux](/docs) — \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\` — plus quelques autres pour les drapeaux, les dossiers, la planification et les contacts.
+Une fois connecté, demandez d’abord à Claude d’exécuter \`inbox_list\`. Cela renvoie votre boîte et son \`inbox_id\`, vous n’avez donc jamais à copier-coller un UUID. À partir de là, place aux [outils principaux](/docs) — \`email_read\` (lister, lire et rechercher des messages), \`email_compose\` (envoyer, répondre, transférer) et \`email_organize\` — plus quelques autres pour les dossiers, les brouillons, la planification et les contacts. Chacun s’utilise via un paramètre \`action\`.
 
 Un prompt pour confirmer que tout fonctionne :
 
 \`\`\`
-Use list_inboxes to find my iCloud inbox, then summarize my 5 most recent unread messages.
+Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
 ## La seule chose que l’IMAP fait et que Gmail et Outlook ne peuvent pas
