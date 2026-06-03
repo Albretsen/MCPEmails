@@ -5,7 +5,7 @@ export default {
   coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP — MCPEmails',
   content: `For å gi en AI-agent tilgang til e-post kobler du innboksen din til en MCP-server og peker agenten mot én endepunkt-URL. Agenten får da et lite sett med verktøy for å lese, søke og sende e-post. Det vanskelige er ikke agenten — det er å gjøre dette uten å lekke passordet ditt inn i en prompt, en logg eller et vektorlager. Den siste biten er det denne guiden handler om.
 
-Hvis du bare vil ha den raske veien: koble til en innboks i dashbordet, lim MCP-endepunktet inn i [claude.ai](https://claude.ai), Claude Desktop, Cursor eller din egen agent, og kall \`list_inboxes\` først. Resten av dette innlegget forklarer hva som faktisk skjer, hvorfor sikkerhetsmodellen er viktig, og hvordan du kobler opp hver støttede leverandør.
+Hvis du bare vil ha den raske veien: koble til en innboks i dashbordet, lim MCP-endepunktet inn i [claude.ai](https://claude.ai), Claude Desktop, Cursor eller din egen agent, og kall \`inbox_list\` først. Resten av dette innlegget forklarer hva som faktisk skjer, hvorfor sikkerhetsmodellen er viktig, og hvordan du kobler opp hver støttede leverandør.
 
 ## Hva "e-post over MCP" egentlig betyr
 
@@ -45,25 +45,26 @@ Serveren snakker Streamable HTTP i henhold til MCP 2025-06-18-spesifikasjonen. I
 
 ## Verktøyene agenten din får
 
-Seks kjerneverktøy dekker hele flaten, pluss en håndfull til for flagg, mapper, planlegging og kontakter. Agenten starter alltid med \`list_inboxes\` for å oppdage hva som er koblet til og hente hver innboks' ID — den hardkoder aldri en UUID.
+En håndfull konsoliderte, handlingsbaserte verktøy dekker hele flaten: lese, skrive, organisere, pluss flere for mapper, planlegging og kontakter. Agenten starter alltid med \`inbox_list\` for å oppdage hva som er koblet til og hente hver innboks' ID — den hardkoder aldri en UUID.
 
-- \`list_inboxes\` — oppdag tilkoblede kontoer og hva de kan
-- \`list_messages\` — paginert, nyeste først, per innboks
-- \`read_email\` — parset ren tekst, valgfri renset HTML, valgfrie vedlegg
-- \`search_emails\` — leverandørens egen syntaks (Gmail-operatorer, Outlook KQL, IMAP tekstsøk)
-- \`send_email\` — skriv med CC/BCC, HTML og vedlegg på opptil 10 MB totalt
-- \`reply_to_email\` — det samme, og den setter tråd-headerne (In-Reply-To, References) for deg
+- \`inbox_list\` — oppdag tilkoblede kontoer og hva de kan
+- \`email_read\` (handling \`list\`) — paginert, nyeste først, per innboks
+- \`email_read\` (handling \`read\`) — parset ren tekst, valgfri renset HTML, valgfrie vedlegg
+- \`email_read\` (handling \`search\`) — leverandørens egen syntaks (Gmail-operatorer, Outlook KQL, IMAP tekstsøk)
+- \`email_compose\` (handling \`send\`) — skriv med CC/BCC, HTML og vedlegg på opptil 10 MB totalt
+- \`email_compose\` (handling \`reply\`) — det samme, og den setter tråd-headerne (In-Reply-To, References) for deg
+- \`email_organize\` — flytt, slett, flagg eller arkiver (én handling per kall)
 
-Én ærlig begrensning verdt å nevne med en gang: dette er **polling, ikke push**. Det finnes ingen webhooks. For å reagere på ny e-post må agenten din polle på en tidsplan, for eksempel \`list_messages\` med \`unread_only: true\`. Enhver autosvarer du bygger fungerer på en timer, ikke en umiddelbar utløser. [Bygg-guiden for autosvarer](/blog/build-email-auto-responder-mcp-agent) viser hvordan du gjør dette godt.
+Én ærlig begrensning verdt å nevne med en gang: dette er **polling, ikke push**. Det finnes ingen webhooks. For å reagere på ny e-post må agenten din polle på en tidsplan, for eksempel \`email_read\` (handling \`list\`) med \`unread_only: true\`. Enhver autosvarer du bygger fungerer på en timer, ikke en umiddelbar utløser. [Bygg-guiden for autosvarer](/blog/build-email-auto-responder-mcp-agent) viser hvordan du gjør dette godt.
 
 En morgentriage-kjøring ser slik ut:
 
 \`\`\`json
 {
-  "step1": "list_inboxes  → finds your work Gmail",
-  "step2": "list_messages → last 24h, unread_only",
-  "step3": "read_email    → full body for anything urgent",
-  "step4": "reply_to_email → draft, or just summarize and wait"
+  "step1": "inbox_list                  → finds your work Gmail",
+  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step3": "email_read (action read)    → full body for anything urgent",
+  "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }
 \`\`\`
 
@@ -100,7 +101,7 @@ Uansett kan du trekke tilbake enhver tilkobling fra dashbordet med ett klikk. He
 
 Kort svar: ja, og innlegget [er det trygt å gi en AI-agent e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) legger frem hele saken. Modellen holder scope-begrensede kapabiliteter, ikke passordet ditt; legitimasjon er kryptert; ingenting lagres; sending forblir på leverandøren din; tilgang trekkes tilbake med ett klikk.
 
-Når det gjelder rate-grenser, er hver API-nøkkel begrenset til 100 requests/min, 1 000/time og 10 000/dag på alle planer. Det finnes også et burst-tak per arbeidsområde som skalerer med planen din — 60/min på Free, 300/min på Solo, 1 000/min på Team. Når du treffer en grense returnerer serveren en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder. Respekter den. Og prøv aldri blindt å sende \`send_email\` på nytt automatisk — da sender du duplikater.
+Når det gjelder rate-grenser, er hver API-nøkkel begrenset til 100 requests/min, 1 000/time og 10 000/dag på alle planer. Det finnes også et burst-tak per arbeidsområde som skalerer med planen din — 60/min på Free, 300/min på Solo, 1 000/min på Team. Når du treffer en grense returnerer serveren en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder. Respekter den. Og prøv aldri blindt å sende på nytt automatisk med \`email_compose\` — da sender du duplikater.
 
 ## Priser
 
@@ -114,5 +115,5 @@ Full oversikt på [prissiden](/pricing).
 
 ## Kom i gang
 
-Koble til en innboks, lim endepunktet inn i agenten din, og kall \`list_inboxes\`. Det er hele onboardingen. [Start gratis](/signup) eller skum gjennom [hurtigstarten](/docs#quickstart) — du vil ha en agent som leser ekte e-post på et par minutter.`,
+Koble til en innboks, lim endepunktet inn i agenten din, og kall \`inbox_list\`. Det er hele onboardingen. [Start gratis](/signup) eller skum gjennom [hurtigstarten](/docs#quickstart) — du vil ha en agent som leser ekte e-post på et par minutter.`,
 };

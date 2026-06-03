@@ -5,7 +5,7 @@ export default {
   coverAlt: 'Cómo dar a tu agente de IA acceso al correo por MCP — MCPEmails',
   content: `Para dar a un agente de IA acceso al correo, conectas tu bandeja a un servidor MCP y apuntas tu agente a una única URL de endpoint. El agente obtiene entonces un pequeño conjunto de herramientas para leer, buscar y enviar correo. Lo difícil no es el agente: es hacer esto sin filtrar tu contraseña a un prompt, a un log o a un almacén vectorial. Esa última milla es de lo que trata esta guía.
 
-Si solo quieres el camino rápido: conecta una bandeja en el panel, pega el endpoint de MCP en [claude.ai](https://claude.ai), Claude Desktop, Cursor o tu propio agente, y llama a \`list_inboxes\` primero. El resto de este artículo explica qué ocurre en realidad, por qué importa el modelo de seguridad y cómo conectar cada proveedor compatible.
+Si solo quieres el camino rápido: conecta una bandeja en el panel, pega el endpoint de MCP en [claude.ai](https://claude.ai), Claude Desktop, Cursor o tu propio agente, y llama a \`inbox_list\` primero. El resto de este artículo explica qué ocurre en realidad, por qué importa el modelo de seguridad y cómo conectar cada proveedor compatible.
 
 ## Qué significa de verdad "correo por MCP"
 
@@ -45,25 +45,26 @@ El servidor habla Streamable HTTP según la especificación MCP 2025-06-18. Ning
 
 ## Las herramientas que recibe tu agente
 
-Seis herramientas centrales cubren toda la superficie, más un puñado más para marcas, carpetas, programación y contactos. El agente siempre empieza con \`list_inboxes\` para descubrir qué hay conectado y obtener el ID de cada bandeja: nunca codifica a fuego un UUID.
+Un puñado de herramientas consolidadas y basadas en acciones cubren toda la superficie: leer, redactar, organizar, más otras para carpetas, programación y contactos. El agente siempre empieza con \`inbox_list\` para descubrir qué hay conectado y obtener el ID de cada bandeja: nunca codifica a fuego un UUID.
 
-- \`list_inboxes\` — descubre las cuentas conectadas y sus capacidades
-- \`list_messages\` — paginado, lo más reciente primero, por bandeja
-- \`read_email\` — texto plano parseado, HTML saneado opcional, adjuntos opcionales
-- \`search_emails\` — sintaxis nativa del proveedor (operadores de Gmail, KQL de Outlook, búsqueda de texto IMAP)
-- \`send_email\` — redacta con CC/BCC, HTML y adjuntos de hasta 10 MB en total
-- \`reply_to_email\` — lo mismo, y fija por ti las cabeceras de hilo (In-Reply-To, References)
+- \`inbox_list\` — descubre las cuentas conectadas y sus capacidades
+- \`email_read\` (acción \`list\`) — paginado, lo más reciente primero, por bandeja
+- \`email_read\` (acción \`read\`) — texto plano parseado, HTML saneado opcional, adjuntos opcionales
+- \`email_read\` (acción \`search\`) — sintaxis nativa del proveedor (operadores de Gmail, KQL de Outlook, búsqueda de texto IMAP)
+- \`email_compose\` (acción \`send\`) — redacta con CC/BCC, HTML y adjuntos de hasta 10 MB en total
+- \`email_compose\` (acción \`reply\`) — lo mismo, y fija por ti las cabeceras de hilo (In-Reply-To, References)
+- \`email_organize\` — mover, eliminar, marcar o archivar (una acción por llamada)
 
-Una limitación honesta que conviene dejar clara de entrada: esto es **sondeo, no push**. No hay webhooks. Para reaccionar al correo nuevo, tu agente sondea según una programación, por ejemplo \`list_messages\` con \`unread_only: true\`. Cualquier autorrespondedor que construyas funciona con un temporizador, no con un disparador instantáneo. La [guía para construir un autorrespondedor](/blog/build-email-auto-responder-mcp-agent) muestra cómo hacerlo bien.
+Una limitación honesta que conviene dejar clara de entrada: esto es **sondeo, no push**. No hay webhooks. Para reaccionar al correo nuevo, tu agente sondea según una programación, por ejemplo \`email_read\` (acción \`list\`) con \`unread_only: true\`. Cualquier autorrespondedor que construyas funciona con un temporizador, no con un disparador instantáneo. La [guía para construir un autorrespondedor](/blog/build-email-auto-responder-mcp-agent) muestra cómo hacerlo bien.
 
 Una ejecución de triaje matutino se lee así:
 
 \`\`\`json
 {
-  "step1": "list_inboxes  → finds your work Gmail",
-  "step2": "list_messages → last 24h, unread_only",
-  "step3": "read_email    → full body for anything urgent",
-  "step4": "reply_to_email → draft, or just summarize and wait"
+  "step1": "inbox_list                  → finds your work Gmail",
+  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step3": "email_read (action read)    → full body for anything urgent",
+  "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }
 \`\`\`
 
@@ -100,7 +101,7 @@ Sea como sea, revocas cualquier conexión desde el panel con un solo clic. Coge 
 
 Respuesta corta: sí, y el artículo [¿es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) expone el caso completo. El modelo sostiene capacidades con scope, no tu contraseña; las credenciales están cifradas; nada se almacena; el envío se queda en tu proveedor; el acceso se revoca con un solo clic.
 
-En cuanto a los límites de tasa, cada clave de API está limitada a 100 requests/min, 1.000/hora y 10.000/día en todos los planes. También hay un techo de ráfaga por workspace que escala con tu plan: 60/min en Free, 300/min en Solo, 1.000/min en Team. Cuando alcanzas un límite, el servidor devuelve un error reintentable con un valor \`retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un \`send_email\`: enviarás duplicados.
+En cuanto a los límites de tasa, cada clave de API está limitada a 100 requests/min, 1.000/hora y 10.000/día en todos los planes. También hay un techo de ráfaga por workspace que escala con tu plan: 60/min en Free, 300/min en Solo, 1.000/min en Team. Cuando alcanzas un límite, el servidor devuelve un error reintentable con un valor \`retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío con \`email_compose\`: enviarás duplicados.
 
 ## Precios
 
@@ -114,5 +115,5 @@ Desglose completo en la [página de precios](/pricing).
 
 ## Empieza ya
 
-Conecta una bandeja, pega el endpoint en tu agente y llama a \`list_inboxes\`. Ese es todo el onboarding. [Empieza gratis](/signup) u ojea el [inicio rápido](/docs#quickstart): tendrás un agente leyendo correo real en un par de minutos.`,
+Conecta una bandeja, pega el endpoint en tu agente y llama a \`inbox_list\`. Ese es todo el onboarding. [Empieza gratis](/signup) u ojea el [inicio rápido](/docs#quickstart): tendrás un agente leyendo correo real en un par de minutos.`,
 };

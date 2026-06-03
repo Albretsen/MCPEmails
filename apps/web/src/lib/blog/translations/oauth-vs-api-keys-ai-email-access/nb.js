@@ -52,11 +52,11 @@ Et rått JSON-RPC-kall for å liste innboksene dine ser slik ut:
   "jsonrpc": "2.0",
   "id": 1,
   "method": "tools/call",
-  "params": { "name": "list_inboxes", "arguments": {} }
+  "params": { "name": "inbox_list", "arguments": {} }
 }
 \`\`\`
 
-POST det til \`https://mcpemails.com/api/mcp\` med bearer-headeren, så får du tilbake de tilkoblede innboksene dine og ID-ene deres. Derfra kaller agenten \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\` og \`reply_to_email\` — de seks kjerneverktøyene, pluss noen flere for flagg, mapper, planlegging og kontakter.
+POST det til \`https://mcpemails.com/api/mcp\` med bearer-headeren, så får du tilbake de tilkoblede innboksene dine og ID-ene deres. Derfra kaller agenten \`email_read\` (med \`action\` satt til list, read eller search) og \`email_compose\` (\`action\` send, reply eller forward) — kjerneverktøyene, pluss \`email_organize\`, \`folder\`, \`schedule\` og \`contact_search\` for flagg, mapper, planlegging og kontakter.
 
 Det ene API-nøkler ber deg om som OAuth ikke gjør: behandle nøkkelen som et passord. Det er en langlivet hemmelighet i ren tekst. Legg den i en miljøvariabel, ikke i kildekode du skal pushe til GitHub. Hvis en nøkkel lekker, tilbakekall den fra dashbordet og roter til en ny.
 
@@ -76,7 +76,7 @@ Klienten din er claude.ai, Claude Desktop eller Cursor. Du vil ha null hemmeligh
 
 Klienten din har ingen OAuth-støtte — Cline, JetBrains, OpenAI-stil-verktøykjørerne, eller din egen kode. Du skripter mot endepunktet med cURL eller et lite program. Du trenger en stabil legitimasjon som en hodeløs prosess kan bruke uten at et menneske klikker seg gjennom en samtykkeskjerm. En scopet nøkkel er akkurat riktig her, og det finnes en full gjennomgang for [Cursor-, Cline- og VS Code-klientene](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Én ting til som er sant uansett hva du velger: rategrenser. Hver API-nøkkel er begrenset til 100 requests/minute, 1 000/hour og 10 000/day, og hvert arbeidsområde har et burst-tak per plan (60/min på [Free](/pricing), opptil 1 000/min på Team). Når du treffer en grense gir serveren tilbake en \`retry_after\`-verdi i sekunder. Respekter den, og prøv aldri en \`send_email\` blindt på nytt — du kommer til å sende dobbelt.
+Én ting til som er sant uansett hva du velger: rategrenser. Hver API-nøkkel er begrenset til 100 requests/minute, 1 000/hour og 10 000/day, og hvert arbeidsområde har et burst-tak per plan (60/min på [Free](/pricing), opptil 1 000/min på Team). Når du treffer en grense gir serveren tilbake en \`retry_after\`-verdi i sekunder. Respekter den, og prøv aldri en \`email_compose\`-sending blindt på nytt — du kommer til å sende dobbelt.
 
 ## Konklusjonen
 

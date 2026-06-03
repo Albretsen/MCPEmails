@@ -5,7 +5,7 @@ export default {
   coverAlt: 'Comment donner à votre agent IA un accès à la messagerie via MCP — MCPEmails',
   content: `Pour donner à un agent IA un accès à la messagerie, vous connectez votre boîte mail à un serveur MCP et vous pointez votre agent vers une seule URL de point de terminaison. L'agent dispose alors d'un petit ensemble d'outils pour lire, rechercher et envoyer des e-mails. Le plus difficile, ce n'est pas l'agent — c'est de faire tout cela sans laisser fuiter votre mot de passe dans un prompt, un journal ou une base vectorielle. C'est ce dernier kilomètre qui fait l'objet de ce guide.
 
-Si vous voulez juste la voie rapide : connectez une boîte mail dans le tableau de bord, collez le point de terminaison MCP dans [claude.ai](https://claude.ai), Claude Desktop, Cursor ou votre propre agent, et appelez d'abord \`list_inboxes\`. Le reste de cet article explique ce qui se passe réellement, pourquoi le modèle de sécurité est important et comment câbler chaque fournisseur pris en charge.
+Si vous voulez juste la voie rapide : connectez une boîte mail dans le tableau de bord, collez le point de terminaison MCP dans [claude.ai](https://claude.ai), Claude Desktop, Cursor ou votre propre agent, et appelez d'abord \`inbox_list\`. Le reste de cet article explique ce qui se passe réellement, pourquoi le modèle de sécurité est important et comment câbler chaque fournisseur pris en charge.
 
 ## Ce que signifie vraiment « l'e-mail via MCP »
 
@@ -45,25 +45,26 @@ Le serveur parle Streamable HTTP conformément à la spécification MCP 2025-06-
 
 ## Les outils dont dispose votre agent
 
-Six outils de base couvrent toute la surface, plus une poignée d'autres pour les marqueurs, les dossiers, la planification et les contacts. L'agent commence toujours par \`list_inboxes\` pour découvrir ce qui est connecté et récupérer l'ID de chaque boîte mail — il ne code jamais en dur un UUID.
+Une poignée d'outils consolidés, basés sur des actions, couvrent toute la surface : lire, composer, organiser, plus d'autres pour les dossiers, la planification et les contacts. L'agent commence toujours par \`inbox_list\` pour découvrir ce qui est connecté et récupérer l'ID de chaque boîte mail — il ne code jamais en dur un UUID.
 
-- \`list_inboxes\` — découvrir les comptes connectés et leurs capacités
-- \`list_messages\` — paginé, du plus récent au plus ancien, par boîte mail
-- \`read_email\` — texte brut analysé, HTML assaini en option, pièces jointes en option
-- \`search_emails\` — syntaxe native du fournisseur (opérateurs Gmail, KQL Outlook, recherche texte IMAP)
-- \`send_email\` — composer avec CC/CCI, HTML et pièces jointes jusqu'à 10 MB au total
-- \`reply_to_email\` — pareil, et il définit pour vous les en-têtes de fil de discussion (In-Reply-To, References)
+- \`inbox_list\` — découvrir les comptes connectés et leurs capacités
+- \`email_read\` (action \`list\`) — paginé, du plus récent au plus ancien, par boîte mail
+- \`email_read\` (action \`read\`) — texte brut analysé, HTML assaini en option, pièces jointes en option
+- \`email_read\` (action \`search\`) — syntaxe native du fournisseur (opérateurs Gmail, KQL Outlook, recherche texte IMAP)
+- \`email_compose\` (action \`send\`) — composer avec CC/CCI, HTML et pièces jointes jusqu'à 10 MB au total
+- \`email_compose\` (action \`reply\`) — pareil, et il définit pour vous les en-têtes de fil de discussion (In-Reply-To, References)
+- \`email_organize\` — déplacer, supprimer, marquer ou archiver (une action par appel)
 
-Une limitation honnête qui mérite d'être énoncée d'emblée : il s'agit de **scrutation, pas de notification poussée**. Il n'y a pas de webhooks. Pour réagir aux nouveaux e-mails, votre agent interroge selon un calendrier, par exemple \`list_messages\` avec \`unread_only: true\`. Tout répondeur automatique que vous construisez fonctionne sur une minuterie, pas sur un déclencheur instantané. Le [guide de construction d'un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) montre comment bien le faire.
+Une limitation honnête qui mérite d'être énoncée d'emblée : il s'agit de **scrutation, pas de notification poussée**. Il n'y a pas de webhooks. Pour réagir aux nouveaux e-mails, votre agent interroge selon un calendrier, par exemple \`email_read\` (action \`list\`) avec \`unread_only: true\`. Tout répondeur automatique que vous construisez fonctionne sur une minuterie, pas sur un déclencheur instantané. Le [guide de construction d'un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) montre comment bien le faire.
 
 Une exécution de tri matinal se lit ainsi :
 
 \`\`\`json
 {
-  "step1": "list_inboxes  → finds your work Gmail",
-  "step2": "list_messages → last 24h, unread_only",
-  "step3": "read_email    → full body for anything urgent",
-  "step4": "reply_to_email → draft, or just summarize and wait"
+  "step1": "inbox_list                  → finds your work Gmail",
+  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step3": "email_read (action read)    → full body for anything urgent",
+  "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }
 \`\`\`
 
@@ -100,7 +101,7 @@ Dans les deux cas, vous révoquez n'importe quelle connexion depuis le tableau d
 
 Réponse courte : oui, et l'article [est-il sûr de donner à un agent IA un accès à la messagerie](/blog/is-it-safe-to-give-ai-agent-email-access) expose l'argumentaire complet. Le modèle détient des capacités à scopes définis, pas votre mot de passe ; les identifiants sont chiffrés ; rien n'est stocké ; l'envoi reste sur votre fournisseur ; l'accès se révoque en un clic.
 
-Côté limites de débit, chaque clé API est plafonnée à 100 requests/min, 1 000/hour et 10 000/day sur tous les forfaits. Il existe aussi un plafond de pointe par espace de travail qui évolue avec votre forfait — 60/min sur Free, 300/min sur Solo, 1 000/min sur Team. Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un \`send_email\` — vous enverriez des doublons.
+Côté limites de débit, chaque clé API est plafonnée à 100 requests/min, 1 000/hour et 10 000/day sur tous les forfaits. Il existe aussi un plafond de pointe par espace de travail qui évolue avec votre forfait — 60/min sur Free, 300/min sur Solo, 1 000/min sur Team. Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi via \`email_compose\` — vous enverriez des doublons.
 
 ## Tarifs
 
@@ -114,5 +115,5 @@ Détail complet sur la [page des tarifs](/pricing).
 
 ## Pour commencer
 
-Connectez une boîte mail, collez le point de terminaison dans votre agent et appelez \`list_inboxes\`. C'est tout l'onboarding. [Commencez gratuitement](/signup) ou parcourez le [guide de démarrage rapide](/docs#quickstart) — votre agent lira de vrais e-mails en quelques minutes.`,
+Connectez une boîte mail, collez le point de terminaison dans votre agent et appelez \`inbox_list\`. C'est tout l'onboarding. [Commencez gratuitement](/signup) ou parcourez le [guide de démarrage rapide](/docs#quickstart) — votre agent lira de vrais e-mails en quelques minutes.`,
 };

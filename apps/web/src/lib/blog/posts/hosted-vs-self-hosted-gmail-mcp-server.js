@@ -72,15 +72,15 @@ You sign up, go to **Dashboard → Inboxes → Connect Inbox**, pick Gmail, and 
 
 ### Credentials are encrypted and email is never stored
 
-The OAuth token is the only thing persisted per inbox, and it's encrypted with AES-256-GCM at rest. The key lives as an environment secret, separate from the database, and decryption happens only inside an isolated Edge Function at call time. The email itself is never stored at all — every \`read_email\`, \`search_emails\`, or \`list_messages\` call hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
+The OAuth token is the only thing persisted per inbox, and it's encrypted with AES-256-GCM at rest. The key lives as an environment secret, separate from the database, and decryption happens only inside an isolated Edge Function at call time. The email itself is never stored at all — every \`email_read\` call (whether you're listing, reading, or searching) hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
 
 ### Multi-provider comes free
 
-The same endpoint and the same six core tools — \`list_inboxes\`, \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\`, plus a few more for flags, folders, scheduling, and contacts — work across Gmail, Outlook, iCloud, Fastmail, and any IMAP inbox. Add an Outlook account next week and nothing about your agent changes.
+The same endpoint and the same core tools — \`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` for flags and folders, plus \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\` — work across Gmail, Outlook, iCloud, Fastmail, and any IMAP inbox. Add an Outlook account next week and nothing about your agent changes.
 
 ### Sending stays on your provider
 
-MCP Emails never relays mail from its own domain. \`send_email\` goes out through your Gmail (or Microsoft Graph, or your own SMTP), so your domain reputation and deliverability stay yours. That's the same property you'd get self-hosting, without building it.
+MCP Emails never relays mail from its own domain. \`email_compose\` (with the \`send\` action) goes out through your Gmail (or Microsoft Graph, or your own SMTP), so your domain reputation and deliverability stay yours. That's the same property you'd get self-hosting, without building it.
 
 ### The honest cost: you trust a vendor
 

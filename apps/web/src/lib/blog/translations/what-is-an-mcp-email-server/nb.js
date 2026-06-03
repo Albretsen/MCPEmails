@@ -29,24 +29,21 @@ Dette er kjernen i det, så jeg vil bremse litt ned her.
 
 Hvis du noen gang har satt opp e-post i en e-postklient, har du møtt IMAP og SMTP. Det er protokollene e-post kjører på, og de er ikke vennlige. IMAP tvinger deg til å sjonglere mappetilstand, meldingsflagg, delvise henting og en spørresyntaks som varierer fra server til server. SMTP tvinger deg til å håndbygge MIME-meldinger med riktige headere, ellers havner svaret ditt i feil tråd. Å gi alt det til en språkmodell er en dårlig idé. Modellen vil bomme på kodingen, lekke en legitimasjon inn i en logg, eller fyre av en feilformatert sending.
 
-En MCP-e-postserver erstatter det med **verb**. Agenten ser ikke protokoller. Den ser en kort meny med handlinger. MCP Emails leverer seks kjerneverktøy:
+En MCP-e-postserver erstatter det med **verb**. Agenten ser ikke protokoller. Den ser en kort meny med handlinger. MCP Emails leverer en håndfull konsoliderte verktøy, og disse tre er arbeidshestene i hverdagen:
 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose"
   ]
 }
 \`\`\`
 
-Pluss noen flere for flagg, mapper, planlegging og kontaktsøk. Men disse seks dekker det daglige arbeidet. Agenten starter alltid med \`list_inboxes\` for å finne ut hvilke kontoer som er tilkoblet og deres \`inbox_id\` — den kopierer aldri inn en UUID fra en konfigurasjonsfil. Deretter lister, leser, søker og sender den.
+Hvert verktøy bortsett fra \`inbox_list\` tar en \`action\`: \`email_read\` dekker å liste, lese og søke; \`email_compose\` dekker å sende, svare og videresende. Noen flere verktøy fyller ut resten av flaten (\`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, \`contact_search\`), men disse få kjerneverbene dekker det daglige arbeidet. Agenten starter alltid med \`inbox_list\` for å finne ut hvilke kontoer som er tilkoblet og deres \`inbox_id\` — den kopierer aldri inn en UUID fra en konfigurasjonsfil. Deretter lister, leser, søker og sender den.
 
-Skiftet fra «her er et bibliotek, finn ut av det» til «her er seks verb» er hele poenget. Verb er forutsigbare. De har en fast form, et dokumentert svar og en tilknyttet tillatelse. Det er det som gjør e-post trygt å automatisere i stedet for bare noe man kan demonstrere.
+Skiftet fra «her er et bibliotek, finn ut av det» til «her er tre verb, hvert med en handling» er hele poenget. Verb er forutsigbare. De har en fast form, et dokumentert svar og en tilknyttet tillatelse. Det er det som gjør e-post trygt å automatisere i stedet for bare noe man kan demonstrere.
 
 ## Hvorfor en agent trenger verb, ikke passordet ditt
 
@@ -62,10 +59,10 @@ Evne-ikke-legitimasjon-modellen er også grunnen til at du kan [tilbakekalle en 
 
 En reell interaksjon ser slik ut. Si at du ber Claude om å oppdatere deg på innboksen din:
 
-1. Agenten kaller \`list_inboxes\` og finner jobb-Gmailen din.
-2. Den kaller \`list_messages\` med \`unread_only: true\` for å hente det som er nytt.
-3. For alt som ser viktig ut, kaller den \`read_email\` for å hente hele innholdet.
-4. Den oppsummerer, og hvis du har godkjent sendetilgang, kan den utforme et svar med \`reply_to_email\` — som setter tråd-headerne automatisk slik at svaret havner i riktig samtale.
+1. Agenten kaller \`inbox_list\` og finner jobb-Gmailen din.
+2. Den kaller \`email_read\` med \`action: "list"\` og \`unread_only: true\` for å hente det som er nytt.
+3. For alt som ser viktig ut, kaller den \`email_read\` med \`action: "read"\` for å hente hele innholdet.
+4. Den oppsummerer, og hvis du har godkjent sendetilgang, kan den utforme et svar med \`email_compose\` (\`action: "reply"\`) — som setter tråd-headerne automatisk slik at svaret havner i riktig samtale.
 
 Én ærlig begrensning det er verdt å vite om på forhånd: dette er **polling, ikke push**. Det finnes ingen webhooks. Serveren varsler ikke agenten din når ny e-post kommer inn. For å reagere på ny e-post må agenten sjekke etter en tidsplan. Det er en bevisst avveining, og den former hvordan du ville bygd noe som en [autosvarer](/blog/build-email-auto-responder-mcp-agent) eller en [rutine for innbokstriage](/blog/ai-agent-triage-summarize-inbox).
 

@@ -52,11 +52,11 @@ Una llamada JSON-RPC en crudo para listar tus bandejas tiene este aspecto:
   "jsonrpc": "2.0",
   "id": 1,
   "method": "tools/call",
-  "params": { "name": "list_inboxes", "arguments": {} }
+  "params": { "name": "inbox_list", "arguments": {} }
 }
 \`\`\`
 
-Haz un POST a \`https://mcpemails.com/api/mcp\` con la cabecera de portador y recibes de vuelta tus bandejas conectadas y sus identificadores. A partir de ahí el agente llama a \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\` y \`reply_to_email\`: las seis herramientas básicas, más algunas otras para banderas, carpetas, programación y contactos.
+Haz un POST a \`https://mcpemails.com/api/mcp\` con la cabecera de portador y recibes de vuelta tus bandejas conectadas y sus identificadores. A partir de ahí el agente llama a \`email_read\` (con \`action\` en list, read o search) y \`email_compose\` (\`action\` send, reply o forward): las herramientas básicas, más \`email_organize\`, \`folder\`, \`schedule\` y \`contact_search\` para banderas, carpetas, programación y contactos.
 
 Lo único que las claves de API te piden y OAuth no: trata la clave como una contraseña. Es un secreto de larga duración en texto plano. Ponla en una variable de entorno, no en código que vayas a subir a GitHub. Si una clave se filtra, revócala desde el panel y rota a una nueva.
 
@@ -76,7 +76,7 @@ Tu cliente es claude.ai, Claude Desktop o Cursor. Quieres cero secretos en tu co
 
 Tu cliente no admite OAuth: Cline, JetBrains, los ejecutores de herramientas al estilo de OpenAI o tu propio código. Estás haciendo scripts contra el endpoint con cURL o un programa pequeño. Necesitas una credencial estable que un proceso sin interfaz pueda usar sin que una persona tenga que hacer clic en una pantalla de consentimiento. Una clave con alcance encaja perfecto aquí, y hay un recorrido completo para los [clientes Cursor, Cline y VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Una cosa más que es cierta sin importar cuál elijas: los límites de uso. Cada clave de API está limitada a 100 requests/minute, 1,000/hour y 10,000/day, y cada workspace tiene un techo de ráfaga según el plan (60/min en [Free](/pricing), hasta 1,000/min en Team). Cuando alcanzas un límite, el servidor te devuelve un valor \`retry_after\` en segundos. Respétalo, y nunca reintentes a ciegas un \`send_email\`: enviarías el mensaje dos veces.
+Una cosa más que es cierta sin importar cuál elijas: los límites de uso. Cada clave de API está limitada a 100 requests/minute, 1,000/hour y 10,000/day, y cada workspace tiene un techo de ráfaga según el plan (60/min en [Free](/pricing), hasta 1,000/min en Team). Cuando alcanzas un límite, el servidor te devuelve un valor \`retry_after\` en segundos. Respétalo, y nunca reintentes a ciegas un envío de \`email_compose\`: enviarías el mensaje dos veces.
 
 ## En resumen
 

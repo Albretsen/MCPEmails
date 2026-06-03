@@ -24,12 +24,9 @@ MCP est une façon standard d’exposer des **outils** et des **ressources** à 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose"
   ]
 }
 \`\`\`
@@ -40,12 +37,12 @@ L’agent ne voit jamais de mot de passe. Il voit des verbes. C’est ce simple 
 
 ### La découverte avant l’action
 
-Un bon outil d’email est **sans état du point de vue de l’agent**. L’agent ne devrait pas coder en dur l’UUID d’une boîte mail. Il appelle plutôt \`list_inboxes\` en premier, découvre ce qui est disponible, puis agit :
+Un bon outil d’email est **sans état du point de vue de l’agent**. L’agent ne devrait pas coder en dur l’UUID d’une boîte mail. Il appelle plutôt \`inbox_list\` en premier, découvre ce qui est disponible, puis agit :
 
-- \`list_inboxes\` → renvoie les comptes connectés et leurs capacités
-- \`list_messages\` → paginé, du plus récent au plus ancien, par boîte mail
-- \`read_email\` → le corps analysé, l’expéditeur et les métadonnées d’un message
-- \`send_email\` → rédige et envoie, le fournisseur étant choisi pour vous
+- \`inbox_list\` → renvoie les comptes connectés et leurs capacités
+- \`email_read\` (action \`list\`) → paginé, du plus récent au plus ancien, par boîte mail
+- \`email_read\` (action \`read\`) → le corps analysé, l’expéditeur et les métadonnées d’un message
+- \`email_compose\` (action \`send\`) → rédige et envoie, le fournisseur étant choisi pour vous
 
 Ce modèle « découverte d’abord » fait toute la différence entre une démo et quelque chose à qui vous feriez confiance un mardi après-midi.
 
@@ -53,10 +50,10 @@ Ce modèle « découverte d’abord » fait toute la différence entre une démo
 
 Imaginez que vous vouliez que Claude trie votre boîte de réception du matin. Avec l’email exposé via MCP, la conversation ressemble à ceci :
 
-1. L’agent appelle \`list_inboxes\` et trouve votre Gmail professionnel.
-2. Il appelle \`list_messages\` pour les dernières 24 heures.
-3. Pour tout ce qui semble urgent, il appelle \`read_email\` afin d’obtenir le corps complet.
-4. Il rédige des réponses et appelle \`reply_to_email\` — ou se contente de résumer et attend votre feu vert.
+1. L’agent appelle \`inbox_list\` et trouve votre Gmail professionnel.
+2. Il appelle \`email_read\` (action \`list\`) pour les dernières 24 heures.
+3. Pour tout ce qui semble urgent, il appelle \`email_read\` (action \`read\`) afin d’obtenir le corps complet.
+4. Il rédige des réponses et appelle \`email_compose\` (action \`reply\`) — ou se contente de résumer et attend votre feu vert.
 
 Aucun mot de passe n’a circulé. Aucun code propre à un fournisseur n’a vécu dans votre prompt. L’agent a raisonné sur des verbes et a fait du vrai travail.
 

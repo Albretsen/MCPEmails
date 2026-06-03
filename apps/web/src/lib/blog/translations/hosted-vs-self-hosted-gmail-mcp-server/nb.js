@@ -65,15 +65,15 @@ Du registrerer deg, går til **Dashboard → Inboxes → Connect Inbox**, velger
 
 ### Legitimasjon er kryptert og e-post lagres aldri
 
-OAuth-tokenet er det eneste som lagres per innboks, og det er kryptert med AES-256-GCM i ro. Nøkkelen lever som en miljøhemmelighet, atskilt fra databasen, og dekryptering skjer kun inne i en isolert Edge Function ved kalltidspunkt. Selve e-posten lagres aldri i det hele tatt — hvert \`read_email\`-, \`search_emails\`- eller \`list_messages\`-kall treffer Gmail live, gir resultatet til agenten din og forkaster det. Det er krypteringsarbeidet fra selvhosting-delen, gjort og vedlikeholdt. [Er det trygt å gi en AI-agent tilgang til e-post](/blog/is-it-safe-to-give-ai-agent-email-access) går gjennom hele sikkerhetsmodellen.
+OAuth-tokenet er det eneste som lagres per innboks, og det er kryptert med AES-256-GCM i ro. Nøkkelen lever som en miljøhemmelighet, atskilt fra databasen, og dekryptering skjer kun inne i en isolert Edge Function ved kalltidspunkt. Selve e-posten lagres aldri i det hele tatt — hvert \`email_read\`-kall (enten du lister, leser eller søker) treffer Gmail live, gir resultatet til agenten din og forkaster det. Det er krypteringsarbeidet fra selvhosting-delen, gjort og vedlikeholdt. [Er det trygt å gi en AI-agent tilgang til e-post](/blog/is-it-safe-to-give-ai-agent-email-access) går gjennom hele sikkerhetsmodellen.
 
 ### Multi-leverandør følger med gratis
 
-Det samme endepunktet og de samme seks kjerneverktøyene — \`list_inboxes\`, \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\`, pluss noen flere for flagg, mapper, planlegging og kontakter — fungerer på tvers av Gmail, Outlook, iCloud, Fastmail og enhver IMAP-innboks. Legg til en Outlook-konto neste uke, og ingenting ved agenten din endrer seg.
+Det samme endepunktet og de samme kjerneverktøyene — \`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` for flagg og mapper, pluss \`folder\`, \`draft\`, \`schedule\` og \`contact_search\` — fungerer på tvers av Gmail, Outlook, iCloud, Fastmail og enhver IMAP-innboks. Legg til en Outlook-konto neste uke, og ingenting ved agenten din endrer seg.
 
 ### Sending forblir hos din leverandør
 
-MCP Emails videresender aldri e-post fra sitt eget domene. \`send_email\` går ut gjennom din Gmail (eller Microsoft Graph, eller din egen SMTP), så domenets omdømme og leveringsevne forblir dine. Det er den samme egenskapen du ville fått med selvhosting, uten å bygge den.
+MCP Emails videresender aldri e-post fra sitt eget domene. \`email_compose\` (med \`send\`-handlingen) går ut gjennom din Gmail (eller Microsoft Graph, eller din egen SMTP), så domenets omdømme og leveringsevne forblir dine. Det er den samme egenskapen du ville fått med selvhosting, uten å bygge den.
 
 ### Den ærlige kostnaden: du stoler på en leverandør
 

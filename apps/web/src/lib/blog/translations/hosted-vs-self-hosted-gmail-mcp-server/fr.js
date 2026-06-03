@@ -65,15 +65,15 @@ Vous créez un compte, allez dans **Dashboard → Inboxes → Connect Inbox**, c
 
 ### Les identifiants sont chiffrés et l'e-mail n'est jamais stocké
 
-Le jeton OAuth est la seule chose conservée par boîte de réception, et il est chiffré avec AES-256-GCM au repos. La clé vit comme un secret d'environnement, séparée de la base de données, et le déchiffrement n'a lieu qu'à l'intérieur d'une Edge Function isolée au moment de l'appel. L'e-mail lui-même n'est jamais stocké : chaque appel \`read_email\`, \`search_emails\` ou \`list_messages\` interroge Gmail en direct, transmet le résultat à votre agent et le jette. C'est le travail de chiffrement de la section auto-hébergement, fait et maintenu. [Est-il sûr de donner à un agent IA l'accès à l'e-mail](/blog/is-it-safe-to-give-ai-agent-email-access) détaille tout le modèle de sécurité.
+Le jeton OAuth est la seule chose conservée par boîte de réception, et il est chiffré avec AES-256-GCM au repos. La clé vit comme un secret d'environnement, séparée de la base de données, et le déchiffrement n'a lieu qu'à l'intérieur d'une Edge Function isolée au moment de l'appel. L'e-mail lui-même n'est jamais stocké : chaque appel \`email_read\` (que ce soit pour lister, lire ou rechercher) interroge Gmail en direct, transmet le résultat à votre agent et le jette. C'est le travail de chiffrement de la section auto-hébergement, fait et maintenu. [Est-il sûr de donner à un agent IA l'accès à l'e-mail](/blog/is-it-safe-to-give-ai-agent-email-access) détaille tout le modèle de sécurité.
 
 ### Le multi-fournisseur est offert
 
-Le même point de terminaison et les six mêmes outils principaux — \`list_inboxes\`, \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\`, plus quelques autres pour les drapeaux, les dossiers, la planification et les contacts — fonctionnent avec Gmail, Outlook, iCloud, Fastmail et n'importe quelle boîte IMAP. Ajoutez un compte Outlook la semaine prochaine et rien ne change pour votre agent.
+Le même point de terminaison et les mêmes outils principaux — \`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` pour les drapeaux et les dossiers, plus \`folder\`, \`draft\`, \`schedule\` et \`contact_search\` — fonctionnent avec Gmail, Outlook, iCloud, Fastmail et n'importe quelle boîte IMAP. Ajoutez un compte Outlook la semaine prochaine et rien ne change pour votre agent.
 
 ### L'envoi reste sur votre fournisseur
 
-MCP Emails ne relaie jamais le courrier depuis son propre domaine. \`send_email\` part via votre Gmail (ou Microsoft Graph, ou votre propre SMTP), de sorte que la réputation de votre domaine et votre délivrabilité restent les vôtres. C'est la même propriété que vous obtiendriez en auto-hébergeant, sans avoir à la construire.
+MCP Emails ne relaie jamais le courrier depuis son propre domaine. \`email_compose\` (avec l'action \`send\`) part via votre Gmail (ou Microsoft Graph, ou votre propre SMTP), de sorte que la réputation de votre domaine et votre délivrabilité restent les vôtres. C'est la même propriété que vous obtiendriez en auto-hébergeant, sans avoir à la construire.
 
 ### Le coût honnête : vous faites confiance à un prestataire
 

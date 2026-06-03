@@ -12,7 +12,7 @@ export default {
   featured: true,
   content: `To give an AI agent access to email, you connect your inbox to an MCP server and point your agent at one endpoint URL. The agent then gets a small set of tools for reading, searching, and sending mail. The hard part isn't the agent — it's doing this without leaking your password into a prompt, a log, or a vector store. That last mile is what this guide is about.
 
-If you just want the fast path: connect an inbox in the dashboard, paste the MCP endpoint into [claude.ai](https://claude.ai), Claude Desktop, Cursor, or your own agent, and call \`list_inboxes\` first. The rest of this post explains what's actually happening, why the security model matters, and how to wire up every supported provider.
+If you just want the fast path: connect an inbox in the dashboard, paste the MCP endpoint into [claude.ai](https://claude.ai), Claude Desktop, Cursor, or your own agent, and call \`inbox_list\` first. The rest of this post explains what's actually happening, why the security model matters, and how to wire up every supported provider.
 
 ## What "email over MCP" actually means
 
@@ -52,25 +52,26 @@ The server speaks Streamable HTTP per the MCP 2025-06-18 spec. No SDK to install
 
 ## The tools your agent gets
 
-Six core tools cover the whole surface area, plus a handful more for flags, folders, scheduling, and contacts. The agent always starts with \`list_inboxes\` to discover what's connected and grab each inbox's ID — it never hardcodes a UUID.
+A handful of consolidated, action-based tools cover the whole surface area: reading, composing, organizing, plus more for folders, scheduling, and contacts. The agent always starts with \`inbox_list\` to discover what's connected and grab each inbox's ID — it never hardcodes a UUID.
 
-- \`list_inboxes\` — discover connected accounts and their capabilities
-- \`list_messages\` — paginated, newest-first, per inbox
-- \`read_email\` — parsed plain text, optional sanitized HTML, optional attachments
-- \`search_emails\` — provider-native syntax (Gmail operators, Outlook KQL, IMAP text search)
-- \`send_email\` — compose with CC/BCC, HTML, and attachments up to 10 MB total
-- \`reply_to_email\` — same, and it sets the threading headers (In-Reply-To, References) for you
+- \`inbox_list\` — discover connected accounts and their capabilities
+- \`email_read\` (action \`list\`) — paginated, newest-first, per inbox
+- \`email_read\` (action \`read\`) — parsed plain text, optional sanitized HTML, optional attachments
+- \`email_read\` (action \`search\`) — provider-native syntax (Gmail operators, Outlook KQL, IMAP text search)
+- \`email_compose\` (action \`send\`) — compose with CC/BCC, HTML, and attachments up to 10 MB total
+- \`email_compose\` (action \`reply\`) — same, and it sets the threading headers (In-Reply-To, References) for you
+- \`email_organize\` — move, delete, flag, or archive (one action per call)
 
-One honest limitation worth stating up front: this is **polling, not push**. There are no webhooks. To react to new mail, your agent polls on a schedule, for example \`list_messages\` with \`unread_only: true\`. Any auto-responder you build works on a timer, not an instant trigger. The [auto-responder build guide](/blog/build-email-auto-responder-mcp-agent) shows how to do this well.
+One honest limitation worth stating up front: this is **polling, not push**. There are no webhooks. To react to new mail, your agent polls on a schedule, for example \`email_read\` (action \`list\`) with \`unread_only: true\`. Any auto-responder you build works on a timer, not an instant trigger. The [auto-responder build guide](/blog/build-email-auto-responder-mcp-agent) shows how to do this well.
 
 A morning-triage run reads like this:
 
 \`\`\`json
 {
-  "step1": "list_inboxes  → finds your work Gmail",
-  "step2": "list_messages → last 24h, unread_only",
-  "step3": "read_email    → full body for anything urgent",
-  "step4": "reply_to_email → draft, or just summarize and wait"
+  "step1": "inbox_list                  → finds your work Gmail",
+  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step3": "email_read (action read)    → full body for anything urgent",
+  "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }
 \`\`\`
 
@@ -107,7 +108,7 @@ Either way, you revoke any connection from the dashboard in one click. Grab the 
 
 Short answer: yes, and the [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) post makes the full case. The model holds scoped capabilities, not your password; credentials are encrypted; nothing is stored; sending stays on your provider; access revokes in one click.
 
-On rate limits, each API key is capped at 100 requests/min, 1,000/hour, and 10,000/day on every plan. There's also a per-workspace burst ceiling that scales with your plan — 60/min on Free, 300/min on Solo, 1,000/min on Team. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry a \`send_email\` — you'll send duplicates.
+On rate limits, each API key is capped at 100 requests/min, 1,000/hour, and 10,000/day on every plan. There's also a per-workspace burst ceiling that scales with your plan — 60/min on Free, 300/min on Solo, 1,000/min on Team. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send — you'll send duplicates.
 
 ## Pricing
 
@@ -121,5 +122,5 @@ Full breakdown on the [pricing page](/pricing).
 
 ## Get started
 
-Connect an inbox, paste the endpoint into your agent, and call \`list_inboxes\`. That's the whole onboarding. [Start free](/signup) or skim the [quick-start](/docs#quickstart) — you'll have an agent reading real mail in a couple of minutes.`,
+Connect an inbox, paste the endpoint into your agent, and call \`inbox_list\`. That's the whole onboarding. [Start free](/signup) or skim the [quick-start](/docs#quickstart) — you'll have an agent reading real mail in a couple of minutes.`,
 };

@@ -29,24 +29,21 @@ C’est le cœur du sujet, alors je veux ralentir ici.
 
 Si vous avez déjà configuré une messagerie dans un client de courrier, vous avez croisé IMAP et SMTP. Ce sont les protocoles sur lesquels repose l’e-mail, et ils ne sont pas accueillants. IMAP vous oblige à jongler avec l’état des dossiers, les drapeaux de messages, les récupérations partielles et une syntaxe de requête qui varie d’un serveur à l’autre. SMTP vous force à assembler à la main des messages MIME avec les bons en-têtes, sans quoi votre réponse atterrit dans le mauvais fil. Confier tout cela à un modèle de langage est une mauvaise idée. Le modèle se trompera dans l’encodage, fera fuiter un identifiant dans un journal, ou déclenchera un envoi mal formé.
 
-Un serveur e-mail MCP remplace tout ça par des **verbes**. L’agent ne voit pas les protocoles. Il voit un court menu d’actions. MCP Emails propose six outils principaux :
+Un serveur e-mail MCP remplace tout ça par des **verbes**. L’agent ne voit pas les protocoles. Il voit un court menu d’actions. MCP Emails propose une poignée d’outils consolidés, et ces trois-là sont les chevaux de bataille du quotidien :
 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose"
   ]
 }
 \`\`\`
 
-Plus quelques autres pour les drapeaux, les dossiers, la planification et la recherche de contacts. Mais ces six-là couvrent le travail quotidien. L’agent commence toujours par \`list_inboxes\` pour découvrir quels comptes sont connectés et leur \`inbox_id\` — il ne copie-colle jamais un UUID depuis un fichier de configuration. Ensuite il liste, lit, recherche, envoie.
+Chacun sauf \`inbox_list\` prend une \`action\` : \`email_read\` couvre lister, lire et rechercher ; \`email_compose\` couvre envoyer, répondre et transférer. Quelques outils supplémentaires complètent la surface (\`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, \`contact_search\`), mais ces quelques verbes essentiels couvrent le travail quotidien. L’agent commence toujours par \`inbox_list\` pour découvrir quels comptes sont connectés et leur \`inbox_id\` — il ne copie-colle jamais un UUID depuis un fichier de configuration. Ensuite il liste, lit, recherche, envoie.
 
-Le passage de « voici une bibliothèque, débrouille-toi » à « voici six verbes » est tout l’intérêt. Les verbes sont prévisibles. Ils ont une forme fixe, une réponse documentée et une permission attachée. C’est ce qui rend l’e-mail sûr à automatiser, plutôt que tout juste bon à faire une démo.
+Le passage de « voici une bibliothèque, débrouille-toi » à « voici trois verbes, chacun prenant une action » est tout l’intérêt. Les verbes sont prévisibles. Ils ont une forme fixe, une réponse documentée et une permission attachée. C’est ce qui rend l’e-mail sûr à automatiser, plutôt que tout juste bon à faire une démo.
 
 ## Pourquoi un agent a besoin de verbes, pas de votre mot de passe
 
@@ -62,10 +59,10 @@ Le modèle « capacité plutôt qu’identifiant » est aussi la raison pour laq
 
 Une vraie interaction ressemble à ceci. Imaginons que vous demandiez à Claude de vous faire un point sur votre boîte de réception :
 
-1. L’agent appelle \`list_inboxes\` et trouve votre Gmail professionnel.
-2. Il appelle \`list_messages\` avec \`unread_only: true\` pour voir les nouveautés.
-3. Pour tout ce qui semble important, il appelle \`read_email\` pour récupérer le corps complet.
-4. Il résume, et si vous avez approuvé l’accès en envoi, il peut rédiger une réponse avec \`reply_to_email\` — qui définit automatiquement les en-têtes de fil pour que la réponse atterrisse dans la bonne conversation.
+1. L’agent appelle \`inbox_list\` et trouve votre Gmail professionnel.
+2. Il appelle \`email_read\` avec \`action: "list"\` et \`unread_only: true\` pour voir les nouveautés.
+3. Pour tout ce qui semble important, il appelle \`email_read\` avec \`action: "read"\` pour récupérer le corps complet.
+4. Il résume, et si vous avez approuvé l’accès en envoi, il peut rédiger une réponse avec \`email_compose\` (\`action: "reply"\`) — qui définit automatiquement les en-têtes de fil pour que la réponse atterrisse dans la bonne conversation.
 
 Une limite honnête qu’il vaut mieux connaître d’emblée : il s’agit de **scrutation, pas de notification poussée**. Il n’y a pas de webhooks. Le serveur ne préviendra pas votre agent quand un nouveau courrier arrive. Pour réagir à un nouvel e-mail, l’agent doit vérifier selon un calendrier. C’est un compromis délibéré, et il façonne la manière de construire quelque chose comme un [répondeur automatique](/blog/build-email-auto-responder-mcp-agent) ou une [routine de tri de la boîte de réception](/blog/ai-agent-triage-summarize-inbox).
 
