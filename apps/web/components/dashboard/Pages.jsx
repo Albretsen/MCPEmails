@@ -4734,6 +4734,13 @@ function formatAuditTimestamp(iso) {
  */
 function AuditTable({ entries }) {
   const t = useTranslations('dashboard');
+  // formatAuditTimestamp uses locale/timezone-dependent formatting, which
+  // differs between the server (UTC) and the client (local TZ) and triggers a
+  // React #418 hydration mismatch on the server-pre-rendered first page.
+  // Render timestamps client-only: a stable placeholder during SSR/first paint,
+  // then the real local-time value after mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   if (entries.length === 0) {
     return (
       <div className="empty">
@@ -4811,10 +4818,13 @@ function AuditTable({ entries }) {
               )}
             </td>
 
-            {/* Timestamp */}
+            {/* Timestamp (client-only to avoid TZ-driven hydration mismatch) */}
             <td style={{ whiteSpace: 'nowrap' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-3)' }}>
-                {formatAuditTimestamp(entry.createdAt)}
+              <span
+                suppressHydrationWarning
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-3)' }}
+              >
+                {mounted ? formatAuditTimestamp(entry.createdAt) : '–'}
               </span>
             </td>
 
