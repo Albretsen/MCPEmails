@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /** Shape of a single activity_log row returned by the Supabase select. */
 interface ActivityLogRow {
@@ -57,18 +58,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // 2. Resolve workspace.
-  const { data: member, error: memberError } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .single();
+  // 2. Resolve workspace (cookie-aware; multi-workspace safe).
+  //    A bare `.single()` on workspace_members throws for users in 2+
+  //    workspaces, so use the shared active-workspace resolver instead.
+  const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
 
-  if (memberError || !member) {
+  if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
-
-  const workspaceId = member.workspace_id;
 
   // 3. Parse and validate query params.
   const url = new URL(request.url);
