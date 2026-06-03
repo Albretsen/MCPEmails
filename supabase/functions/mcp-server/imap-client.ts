@@ -845,18 +845,46 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
 }
 
 /**
- * Best-effort preview from a fetched body snippet: decode soft QP, strip HTML
- * tags, collapse whitespace, cap at 200 chars. Returns "" for binary/base64-ish
- * content (a snippet of an encoded part we can't cheaply decode here).
+ * Best-effort preview from a fetched body snippet: decode the part (base64 or
+ * soft QP), strip HTML tags, collapse whitespace, cap at 200 chars. Returns ""
+ * for binary/undecodable content.
  */
 function snippetToPreview(snippet: string): string {
-  let t = snippet
+  // Base64 path: many providers (e.g. Fastmail) transfer-encode text parts as
+  // base64, wrapped at ~76 chars with CRLF. After whitespace-stripping, such a
+  // snippet is essentially the base64 alphabet only. Detect via ratio so prose
+  // (with spaces/punctuation) is not misclassified, then decode.
+  const stripped = snippet.replace(/\s+/g, "");
+  if (stripped.length >= 32) {
+    const b64Chars = (stripped.match(/[A-Za-z0-9+/=]/g) ?? []).length;
+    if (b64Chars / stripped.length >= 0.95) {
+      // Partial fetch (<0.2048>) may cut mid-quantum; trim to a multiple of 4.
+      const b64 = stripped.slice(0, stripped.length - (stripped.length % 4));
+      try {
+        const bin = atob(b64);
+        const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+        const decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+        const text = cleanPreviewText(decoded);
+        // If it still looks binary (lots of control / U+FFFD replacement chars), drop it.
+        const bad = (text.match(/[\x00-\x08\x0E-\x1F�]/g) ?? []).length;
+        if (text && bad / text.length < 0.1) return text;
+        return "";
+      } catch {
+        // Fall through to the plain/QP text path below.
+      }
+    }
+  }
+
+  // Plain / quoted-printable path: decode soft line breaks + =XX hex escapes.
+  const t = snippet
     .replace(/=\r?\n/g, "")
     .replace(/=([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
-  t = t.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  // Guard: a long run with no spaces is almost certainly base64/binary.
-  if (t.length > 80 && !/\s/.test(t.slice(0, 80))) return "";
-  return t.slice(0, 200);
+  return cleanPreviewText(t);
+}
+
+/** Strip HTML tags, collapse whitespace, cap at 200 chars. */
+function cleanPreviewText(s: string): string {
+  return s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
 }
 
 /** Parse an IMAP ENVELOPE token list into structured fields. */
