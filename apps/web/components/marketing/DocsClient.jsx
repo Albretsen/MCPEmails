@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 
@@ -1330,7 +1331,7 @@ export default function DocsClient() {
             <a className="btn btn-primary btn-lg" href="#quickstart">{t('hero.ctaQuickStart')}</a>
             <a className="btn btn-secondary btn-lg" href="#oauth">{t('hero.ctaOAuth')}</a>
             <a className="btn btn-secondary btn-lg" href="#tools">{t('hero.ctaTools')}</a>
-            <a className="btn btn-secondary btn-lg" href="/docs/providers">{t('hero.ctaProviders')}</a>
+            <Link className="btn btn-secondary btn-lg" href="/docs/providers">{t('hero.ctaProviders')}</Link>
           </div>
         </div>
       </section>
@@ -1653,7 +1654,7 @@ export default function DocsClient() {
           </p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href="/signup">{t('cta.primary')}</a>
-            <a className="btn btn-on-dark btn-lg" href="/pricing">{t('cta.secondary')}</a>
+            <Link className="btn btn-on-dark btn-lg" href="/pricing">{t('cta.secondary')}</Link>
           </div>
         </div>
       </section>
