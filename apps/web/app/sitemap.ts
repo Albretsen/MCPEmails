@@ -38,16 +38,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
   );
 
   // Individual blog posts, each with their own hreflang alternates.
-  const postEntries: MetadataRoute.Sitemap = getAllPosts().map((post) => {
-    const path = `/blog/${post.slug}`;
-    return {
-      url: localePath('en', path),
-      lastModified: new Date(post.updatedAt),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-      alternates: { languages: languageAlternates(path) },
-    };
-  });
+  // Posts flagged `noindex` (e.g. previews of not-yet-shipped features) are
+  // kept out of the sitemap so search engines don't surface them.
+  const postEntries: MetadataRoute.Sitemap = getAllPosts()
+    .filter((post) => !post.noindex)
+    .map((post) => {
+      const path = `/blog/${post.slug}`;
+      return {
+        url: localePath('en', path),
+        lastModified: new Date(post.updatedAt),
+        changeFrequency: 'monthly',
+        priority: 0.6,
+        alternates: { languages: languageAlternates(path) },
+      };
+    });
 
   return [...staticEntries, ...postEntries];
 }

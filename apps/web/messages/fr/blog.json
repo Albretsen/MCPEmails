@@ -22,7 +22,7 @@
     "minRead": "{minutes} min de lecture",
     "cta": {
       "title": "Donnez une boîte de réception à votre agent",
-      "sub": "Connectez Gmail, Outlook, Fastmail ou n’importe quel compte IMAP à votre agent IA en quelques minutes.",
+      "sub": "Connectez Gmail, Fastmail ou n’importe quel compte IMAP à votre agent IA en quelques minutes.",
       "primary": "Commencer gratuitement",
       "secondary": "Lire la documentation"
     }

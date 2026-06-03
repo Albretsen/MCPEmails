@@ -22,7 +22,7 @@
     "minRead": "{minutes} 分钟阅读",
     "cta": {
       "title": "为你的智能体接入收件箱",
-      "sub": "几分钟内将 Gmail、Outlook、Fastmail 或任意 IMAP 账户连接到你的 AI 智能体。",
+      "sub": "几分钟内将 Gmail、Fastmail 或任意 IMAP 账户连接到你的 AI 智能体。",
       "primary": "免费开始",
       "secondary": "阅读文档"
     }

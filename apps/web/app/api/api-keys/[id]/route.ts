@@ -89,6 +89,10 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object.' }, { status: 400 });
+  }
+
   const { scopes, inboxIds } = body as { scopes?: unknown; inboxIds?: unknown };
 
   if (!Array.isArray(scopes) || scopes.length === 0) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolvePlanLimits } from '@/lib/stripe/plans';
+import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /**
  * GET /api/usage
@@ -40,17 +41,13 @@ export async function GET(): Promise<NextResponse> {
   }
 
   // ── Workspace ─────────────────────────────────────────────────────────────
-  const { data: member, error: memberError } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .single();
+  // Cookie-aware resolution so users in 2+ workspaces target their active one
+  // (a bare `.single()` on workspace_members throws for multi-workspace users).
+  const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
 
-  if (memberError || !member) {
+  if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
-
-  const workspaceId = member.workspace_id;
 
   // ── Plan ──────────────────────────────────────────────────────────────────
   const { data: workspace, error: workspaceError } = await supabase
