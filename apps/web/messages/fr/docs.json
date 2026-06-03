@@ -62,7 +62,7 @@
     "infoFormat": "Format de réponse : <b>JSON-RPC 2.0</b> — les résultats réussis comportent aussi un objet typé <code>structuredContent</code>",
     "handshakeLabel": "Handshake d'initialisation",
     "pollingHeading": "Interrogation, pas push",
-    "pollingBody": "MCPEmails fonctionne uniquement en requête/réponse : chaque résultat provient d'un appel d'outil effectué par votre agent. <b>Il n'y a ni webhooks, ni notifications push, ni événements initiés par le serveur</b> — un e-mail entrant ne déclenche jamais un appel d'agent de lui-même. Pour réagir aux nouveaux messages, faites <b>interroger</b> votre agent périodiquement, p. ex. en appelant <code>email_list</code> avec <code>unread_only: true</code> à l'intervalle dont votre flux a besoin (attention aux limites de débit ci-dessus)."
+    "pollingBody": "MCPEmails fonctionne uniquement en requête/réponse : chaque résultat provient d'un appel d'outil effectué par votre agent. <b>Il n'y a ni webhooks, ni notifications push, ni événements initiés par le serveur</b> — un e-mail entrant ne déclenche jamais un appel d'agent de lui-même. Pour réagir aux nouveaux messages, faites <b>interroger</b> votre agent périodiquement, p. ex. en appelant <code>email_read</code> avec <code>action: \"list\"</code> et <code>unread_only: true</code> à l'intervalle dont votre flux a besoin (attention aux limites de débit ci-dessus)."
   },
   "oauth": {
     "eyebrow": "Connexion OAuth",
@@ -81,38 +81,8 @@
   },
   "tools": {
     "eyebrow": "Référence des outils",
-    "heading": "28 outils. Toutes les opérations e-mail dont votre agent a besoin.",
-    "sub": "<b>Cibler une boîte est facultatif.</b> Lorsque votre clé n’a qu’une seule boîte, chaque outil par-boîte la résout automatiquement — aucun <code>inbox_id</code> requis. Avec plusieurs boîtes, indiquez <code>inbox_id</code> (l’UUID de <code>inbox_list</code>) ou <code>inbox</code> (l’adresse e-mail de la boîte). Les outils sont regroupés par la portée qui les débloque ; <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) a la portée. Cliquez sur « Afficher l’exemple » pour voir une requête et une réponse complètes.",
-    "scopes": {
-      "read": {
-        "title": "Lecture et recherche",
-        "desc": "Découvrez les boîtes et dossiers, listez et lisez les messages (un par un ou par lots jusqu'à 50) et effectuez des recherches structurées et indépendantes du fournisseur. Lecture seule — ne modifie jamais rien. email_search est aussi débloqué seul par la portée plus restreinte search:email."
-      },
-      "send": {
-        "title": "Envoi et état des messages",
-        "desc": "Envoyez, répondez et transférez, ainsi que des changements d'état non destructifs : marquer les messages lus/non lus, marquer/démarquer et archiver. Les envois sont irréversibles."
-      },
-      "folders": {
-        "title": "Dossiers et organisation",
-        "desc": "Créez, renommez et supprimez des dossiers (libellés sur Gmail), et déplacez des messages — un par un, en masse ou directement depuis une recherche. Les destinations acceptent un alias canonique (inbox, sent, drafts, trash, archive, spam), un nom de dossier/libellé ou un ID natif du fournisseur."
-      },
-      "delete": {
-        "title": "Suppression",
-        "desc": "Mettez à la corbeille ou supprimez définitivement des messages — un à la fois, en masse ou depuis une recherche. Ces actions sont signalées comme destructives à votre client MCP, qui gère la confirmation de l’utilisateur."
-      },
-      "drafts": {
-        "title": "Brouillons",
-        "desc": "Listez, créez, mettez à jour et envoyez des brouillons stockés dans le dossier Brouillons du fournisseur."
-      },
-      "contacts": {
-        "title": "Contacts",
-        "desc": "Trouvez des personnes par nom ou e-mail grâce à une analyse en direct de votre courrier récent correspondant. Rien n'est stocké — chaque recherche lit en direct."
-      },
-      "schedule": {
-        "title": "Envoi programmé",
-        "desc": "Mettez un e-mail en file pour une date future, listez les envois programmés en attente et annulez-les avant leur départ."
-      }
-    },
+    "heading": "8 outils. Toutes les opérations e-mail dont votre agent a besoin.",
+    "sub": "<b>Cibler une boîte est facultatif.</b> Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement — pas besoin d'<code>inbox_id</code>. Avec plusieurs boîtes, passez <code>inbox_id</code> (l'UUID renvoyé par <code>inbox_list</code>) ou <code>inbox</code> (l'adresse e-mail de la boîte). La plupart des outils prennent un argument <code>action</code> qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.",
     "noParams": "Aucun paramètre. Appelez avec un objet d'arguments vide :",
     "showExample": "Afficher l'exemple de requête et réponse",
     "hideExample": "Masquer l'exemple de requête et réponse",
@@ -126,340 +96,148 @@
     "badgeOptional": "optionnel",
     "inbox_list": {
       "title": "Lister les boîtes",
-      "desc": "Renvoie toutes les boîtes auxquelles la clé API ou le jeton OAuth actuel peut accéder. Appelez ceci en premier pour découvrir les valeurs inbox_id, afin de ne jamais copier-coller d'UUID depuis le tableau de bord. Chaque résultat inclut l'adresse e-mail, le fournisseur, une marque de service optionnelle (icloud/yahoo/zoho/yandex/generic/fastmail) et un objet capabilities décrivant les fonctionnalités prises en charge par cette boîte."
-    },
-    "email_list": {
-      "title": "Lister les messages",
-      "desc": "Liste les résumés d'e-mails d'une boîte connectée, du plus récent au plus ancien. Prend en charge la pagination, la sélection de dossier et le filtrage des non lus. Le champ total peut être null lorsque le fournisseur ne peut pas fournir de décompte, ou porter total_is_estimate: true sur Gmail.",
+      "desc": "Renvoie toutes les boîtes auxquelles la clé API ou le jeton OAuth actuel a accès. Appelez-le en premier pour découvrir les valeurs inbox_id, afin de ne jamais copier-coller d'UUID depuis le tableau de bord. Chaque résultat inclut l'adresse e-mail, le fournisseur, une marque de service facultative (icloud/yahoo/zoho/yandex/generic/fastmail) et un objet capabilities décrivant les fonctionnalités prises en charge par cette boîte.",
       "params": {
-        "inbox_id": "UUID de la boîte à lister. Appelez d'abord inbox_list pour découvrir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "limit": "Nombre maximal de résultats à renvoyer. Par défaut 20, max 100.",
-        "offset": "Décalage de pagination basé sur zéro. Par défaut 0.",
-        "folder": "Dossier à lister. Par défaut « INBOX ». Autres valeurs : « SENT », « DRAFTS », « TRASH ».",
-        "unread_only": "Renvoyer uniquement les messages non lus. Par défaut false.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
+        "provider": "Filtre facultatif — ne renvoie que les boîtes servies par ce fournisseur. L'un de : gmail, fastmail, imap. Omettez-le pour lister toutes les boîtes auxquelles la clé a accès.",
+        "include_capabilities": "Si chaque boîte inclut son objet capabilities (les fonctionnalités prises en charge). Par défaut true ; mettez false pour une liste compacte ne contenant que inbox_id, adresse e-mail, nom affiché, fournisseur et marque de service."
       }
     },
     "email_read": {
       "title": "Lire un e-mail",
-      "desc": "Récupérez le contenu complet d'un e-mail unique par ID, y compris le corps en texte brut, le HTML assaini optionnel et les données de pièces jointes optionnelles.",
+      "desc": "Lire, lister et rechercher des messages dans une boîte. Définissez action : 'list' pour des résumés de messages récents (les plus récents d'abord, avec filtrage par dossier/non lus et pagination), 'read' pour le contenu complet d'un message_id (corps texte, HTML assaini facultatif et pièces jointes), 'read_batch' pour récupérer jusqu'à 50 message_ids en un seul appel, ou 'search' pour des filtres structurés et indépendants du fournisseur (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before). En lecture seule — ne modifie jamais rien. L'action 'search' est aussi débloquée seule par la portée plus restreinte search:email.",
       "params": {
-        "inbox_id": "UUID de la boîte contenant l'e-mail. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "message_id": "ID de message du fournisseur depuis email_list ou email_search.",
-        "include_html": "Inclure le corps HTML assaini. Par défaut false.",
-        "include_attachments": "Inclure les données de pièces jointes en base64. Par défaut false.",
-        "mark_as_read": "Marquer le message comme lu après récupération. Par défaut false.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
+        "action": "Quelle opération effectuer : \"list\" (résumés de messages récents), \"read\" (contenu complet d'un message_id), \"read_batch\" (plusieurs message_ids) ou \"search\" (filtres structurés). Détermine quels autres arguments s'appliquent.",
+        "inbox_id": "UUID de la boîte à lire. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour découvrir les ID de boîte.",
+        "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "message_id": "ID de message du fournisseur à lire (action 'read'), issu d'un list ou search précédent.",
+        "message_ids": "ID de message du fournisseur à lire (action 'read_batch'), issus d'un list ou search précédent. Max 50 par appel.",
+        "folder": "Dossier à lister (action 'list'). Par défaut \"INBOX\". Autres valeurs : \"SENT\", \"DRAFTS\", \"TRASH\".",
+        "unread_only": "Ne renvoyer que les messages non lus (action 'list'). Par défaut false.",
+        "limit": "Nombre max de résultats à renvoyer (action 'list' ou 'search'). Par défaut 20, max 100.",
+        "offset": "Décalage de pagination commençant à zéro (action 'list' ou 'search'). Par défaut 0.",
+        "include_html": "Inclure le corps HTML assaini (action 'read'/'read_batch'). Par défaut false.",
+        "include_attachments": "Inclure les données des pièces jointes en base64 (action 'read'/'read_batch'). En 'read_batch', la limite totale de 10 Mo est partagée entre tous les messages de l'appel. Par défaut false.",
+        "mark_as_read": "Marquer le ou les messages comme lus après récupération (action 'read'/'read_batch'). Par défaut false.",
+        "from": "Expéditeur à faire correspondre (action 'search') : adresse e-mail, nom affiché ou fragment (p. ex. \"alice@example.com\" ou \"Alice\").",
+        "to": "Destinataire principal (To) à faire correspondre (action 'search') : adresse e-mail, nom affiché ou fragment.",
+        "cc": "Destinataire en copie (Cc) à faire correspondre (action 'search') : adresse e-mail, nom affiché ou fragment.",
+        "subject": "Texte à faire correspondre dans l'objet (action 'search'). Les expressions de plusieurs mots sont prises telles quelles.",
+        "body": "Texte libre à trouver dans le corps du message (action 'search'). (Sur Gmail, cela correspond à l'ensemble du message, pas seulement au corps.)",
+        "text": "Texte libre à faire correspondre n'importe où dans le message — en-têtes et corps (action 'search').",
+        "unread": "Action 'search' : true = uniquement les messages non lus ; false = uniquement les lus ; omettez pour les deux.",
+        "has_attachment": "Action 'search' : true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré ici).",
+        "flagged": "Action 'search' : true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré ici).",
+        "since": "Date ou date-heure ISO 8601 (action 'search') ; renvoie les messages reçus le/après (>=) cet instant. P. ex. \"2026-06-01\".",
+        "before": "Date ou date-heure ISO 8601 (action 'search') ; renvoie les messages reçus strictement avant (<) cet instant.",
+        "query": "Chaîne de requête native du fournisseur (action 'search', solution de secours). Préférez les champs structurés ci-dessus. Combinée avec eux quand c'est pris en charge ; ignorée sur Fastmail.",
+        "include_folders": "Restreindre une recherche à ces noms de dossier (action 'search'). Par défaut : rechercher dans tous les dossiers."
       }
     },
-    "email_search": {
-      "title": "Rechercher des e-mails",
-      "desc": "Recherche dans une boîte à l'aide de champs structurés et indépendants du fournisseur — from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before — combinés avec ET. Le serveur les traduit dans le dialecte natif de la boîte (opérateurs Gmail, KQL/OData Outlook, filtres JMAP Fastmail ou IMAP SEARCH), vous n'avez donc jamais besoin de connaître la syntaxe du fournisseur. Un champ query facultatif est une échappatoire native. Limitations par fournisseur : IMAP générique ignore has_attachment, Outlook ignore flagged et Fastmail ignore le query natif.",
+    "email_organize": {
+      "title": "Organiser les e-mails",
+      "desc": "Déplacer, supprimer, marquer ou archiver des messages. Définissez action : 'move'/'move_batch' (vers un destination_folder_id), 'delete'/'delete_batch' (Corbeille par défaut, ou permanent), 'flag' (définir lu/non lu/marqué via flag_action sur des message_ids), 'archive' (sortir de la boîte de réception, non destructif), ou 'search_and_move'/'search_and_delete' (appliquer à chaque message correspondant à une recherche structurée — évite les ID de message obsolètes). Chaque action nécessite la portée correspondante : manage:folders pour déplacer, delete:email pour supprimer, send:email pour flag/archive. Les actions delete et search_and_delete sont signalées comme destructives à votre client MCP, qui gère la confirmation de l'utilisateur.",
       "params": {
-        "inbox_id": "UUID de la boîte où rechercher. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "query": "Requête native du fournisseur (échappatoire). Préférez les champs structurés ci-dessus. Combinée avec eux lorsque possible ; ignorée sur Fastmail.",
-        "limit": "Nombre maximal de résultats. Par défaut 20, max 100.",
-        "offset": "Décalage de pagination. Par défaut 0.",
-        "include_folders": "Restreindre la recherche à ces noms de dossiers. Par défaut : rechercher dans tous les dossiers.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
-        "from": "Expéditeur à rechercher : adresse e-mail, nom affiché ou fragment (p. ex. \"alice@example.com\" ou \"Alice\").",
-        "to": "Destinataire principal (À) à rechercher : adresse e-mail, nom affiché ou fragment.",
-        "cc": "Destinataire en copie (Cc) à rechercher : adresse e-mail, nom affiché ou fragment.",
-        "subject": "Texte à rechercher dans l'objet. Les expressions de plusieurs mots sont recherchées telles quelles.",
-        "body": "Texte libre à trouver dans le corps du message. (Sur Gmail, cela recherche dans tout le message, pas seulement le corps.)",
-        "text": "Texte libre à trouver n’importe où dans le message (en-têtes et corps).",
-        "unread": "true = uniquement les messages non lus ; false = uniquement les lus ; omettez pour les deux.",
-        "has_attachment": "true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré).",
-        "flagged": "true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré).",
-        "since": "Date ou date-heure ISO 8601 ; renvoie les messages reçus le ou après (>=) cet instant. P. ex. \"2026-06-01\".",
-        "before": "Date ou date-heure ISO 8601 ; renvoie les messages reçus strictement avant (<) cet instant."
+        "action": "Quelle opération effectuer : \"move\", \"move_batch\", \"delete\", \"delete_batch\", \"flag\", \"archive\", \"search_and_move\" ou \"search_and_delete\". Détermine quels autres arguments s'appliquent et quelle portée est requise.",
+        "inbox_id": "UUID de la boîte qui contient les messages. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "message_id": "ID de message du fournisseur pour une action sur un seul message (move, delete, archive), issu d'un list, read ou search précédent.",
+        "message_ids": "ID de message du fournisseur pour une action par lot (move_batch, delete_batch, flag). Max 500 par appel.",
+        "destination_folder_id": "Dossier de destination (move, move_batch, search_and_move) : un alias canonique (inbox, sent, drafts, trash, archive, spam), un nom de dossier/libellé (p. ex. 'Receipts') ou un ID de dossier natif du fournisseur issu de l'action list de folder. Les noms et alias sont résolus automatiquement.",
+        "flag_action": "Pour l'action 'flag' : la modification à appliquer à chaque message — \"read\" ou \"unread\" pour définir le statut de lecture, ou \"flag\"/\"unflag\" pour ajouter ou retirer une étoile/un indicateur de suivi.",
+        "permanent": "Pour delete/delete_batch/search_and_delete : si true, suppression définitive (contourne la Corbeille ; peut être irréversible) ; si false ou omis, déplacement vers la Corbeille. La suppression définitive est disponible sur IMAP et Fastmail ; Gmail et Outlook ne prennent en charge que la corbeille. Par défaut false.",
+        "from": "Expéditeur à faire correspondre (search_and_move/search_and_delete) : adresse e-mail, nom affiché ou fragment.",
+        "to": "Destinataire principal (To) à faire correspondre (search_and_move/search_and_delete) : adresse e-mail, nom affiché ou fragment.",
+        "cc": "Destinataire en copie (Cc) à faire correspondre (search_and_move/search_and_delete) : adresse e-mail, nom affiché ou fragment.",
+        "subject": "Texte à faire correspondre dans l'objet (search_and_move/search_and_delete).",
+        "body": "Texte libre à trouver dans le corps du message (search_and_move/search_and_delete). (Sur Gmail, cela correspond à l'ensemble du message.)",
+        "text": "Texte libre à faire correspondre n'importe où dans le message — en-têtes et corps (search_and_move/search_and_delete).",
+        "unread": "Actions de recherche : true = uniquement non lus ; false = uniquement lus ; omettez pour les deux.",
+        "has_attachment": "Actions de recherche : true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré ici).",
+        "flagged": "Actions de recherche : true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré ici).",
+        "since": "Date ou date-heure ISO 8601 (actions de recherche) ; correspond aux messages reçus le/après (>=) cet instant.",
+        "before": "Date ou date-heure ISO 8601 (actions de recherche) ; correspond aux messages reçus strictement avant (<) cet instant.",
+        "query": "Chaîne de requête native du fournisseur (actions de recherche, solution de secours). Préférez les champs structurés ci-dessus. Ignorée sur Fastmail.",
+        "include_folders": "Restreindre la recherche à ces noms de dossier (actions de recherche). Par défaut : tous les dossiers.",
+        "limit": "Pour search_and_move/search_and_delete : nombre maximal de correspondances à traiter. Par défaut 500, max 500."
       }
     },
-    "email_send": {
-      "title": "Envoyer un e-mail",
-      "desc": "Envoyez un nouvel e-mail depuis une boîte connectée. Prend en charge le texte brut, un corps HTML optionnel, CC/BCC et les pièces jointes (jusqu'à 10 Mo au total).",
+    "email_compose": {
+      "title": "Rédiger un e-mail",
+      "desc": "Envoyer un nouveau message ou répondre à des messages existants. Définissez action : 'send' pour un nouvel e-mail (to/subject/body, éventuellement cc/bcc/html_body/reply_to/attachments), 'reply' pour répondre à un message_id (les en-têtes de fil sont définis automatiquement ; éventuellement reply_all), ou 'forward' pour transférer un message_id à de nouveaux destinataires (en réattachant éventuellement les fichiers d'origine). Les trois sont irréversibles une fois envoyées.",
       "params": {
-        "inbox_id": "UUID de la boîte d'envoi. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "to": "Adresses e-mail des destinataires. Max 50.",
-        "subject": "Objet de l'e-mail. Max 998 caractères.",
-        "body": "Corps de l'e-mail en texte brut.",
-        "cc": "Destinataires en CC. Par défaut [].",
-        "bcc": "Destinataires en BCC. Par défaut [].",
-        "html_body": "Version HTML du corps (multipart/alternative). L'appelant est responsable du HTML sûr.",
-        "reply_to": "Adresse de l'en-tête Reply-To.",
-        "attachments": "Pièces jointes. Chaque élément : '{' filename, mime_type, data (base64) '}'. Max 20 éléments, 10 Mo au total.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
+        "action": "Quelle opération effectuer : \"send\", \"reply\" ou \"forward\". Détermine quels autres arguments s'appliquent.",
+        "inbox_id": "UUID de la boîte depuis laquelle envoyer. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "message_id": "ID de message du fournisseur du message d'origine (action 'reply' ou 'forward'), issu d'un list, read ou search précédent.",
+        "to": "Adresses e-mail des destinataires (requis pour 'send' et 'forward'). Max 50.",
+        "subject": "Objet de l'e-mail (action 'send'). Max 998 caractères. En reply/forward, il est dérivé de l'original.",
+        "body": "Corps en texte brut. Pour 'reply', c'est votre réponse ; pour 'forward', une note facultative ajoutée au-dessus du message transféré.",
+        "cc": "Destinataires en copie (send, forward). Par défaut [].",
+        "bcc": "Destinataires en copie cachée (send, forward). Par défaut [].",
+        "html_body": "Version HTML du corps (multipart/alternative). L'appelant est responsable d'un HTML sûr.",
+        "reply_to": "Adresse de l'en-tête Reply-To (action 'send').",
+        "reply_all": "Répondre à tous les destinataires d'origine — To + Cc (action 'reply'). Par défaut false.",
+        "include_attachments": "Réattacher les pièces jointes du message d'origine (action 'forward'). Les fichiers dépassant le budget de 10 Mo sont omis. Par défaut false.",
+        "attachments": "Pièces jointes. Chaque élément : '{' filename, mime_type, data (base64) '}'. Max 20 éléments, 10 Mo au total."
       }
     },
-    "email_reply": {
-      "title": "Répondre à un e-mail",
-      "desc": "Envoyez une réponse à un e-mail existant. Les en-têtes de threading (In-Reply-To, References) sont définis automatiquement. Prend en charge la réponse à tous et les pièces jointes.",
+    "folder": {
+      "title": "Dossiers",
+      "desc": "Gérer les dossiers de la boîte (libellés sur Gmail). Définissez action : 'list' (chaque dossier avec son ID natif du fournisseur, son nom affiché, son type et ses nombres de messages — utilisez les ID comme argument folder lors du listage et comme destination de déplacement), 'create' (name), 'rename' (folder_id, new_name) ou 'delete' (folder_id — irréversible ; les messages qu'il contient peuvent être perdus selon le fournisseur). 'list' nécessite read:email ; create/rename/delete nécessitent manage:folders, et delete est signalé comme destructif à votre client MCP.",
       "params": {
-        "inbox_id": "UUID de la boîte qui contient le message d'origine. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "message_id": "ID de message du fournisseur de l'e-mail auquel on répond.",
-        "body": "Corps de la réponse en texte brut.",
-        "html_body": "Version HTML optionnelle de la réponse.",
-        "reply_all": "Répondre à tous les destinataires d'origine (To + Cc). Par défaut false.",
-        "attachments": "Pièces jointes. Même schéma que email_send. Max 20 éléments.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
+        "action": "Quelle opération effectuer : \"list\", \"create\", \"rename\" ou \"delete\". Détermine quels autres arguments s'appliquent et quelle portée est requise.",
+        "inbox_id": "UUID de la boîte dont les dossiers sont gérés. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "name": "Nom du nouveau dossier ou libellé (action 'create'). 1–255 caractères.",
+        "folder_id": "ID de dossier/libellé natif du fournisseur (action 'rename' ou 'delete'), issu de l'action list de folder.",
+        "new_name": "Nouveau nom affiché (action 'rename'). 1–255 caractères."
       }
     },
-    "folder_list": {
-      "title": "Lister les dossiers",
-      "desc": "Listez chaque dossier (ou étiquette, sur Gmail) d'une boîte. Chaque entrée comporte l'ID de dossier natif du fournisseur, le nom d'affichage, le type (dossier ou étiquette) et les compteurs de messages. Utilisez les ID comme argument folder pour email_list et comme destination pour les opérations de déplacement.",
+    "draft": {
+      "title": "Brouillons",
+      "desc": "Gérer les brouillons dans le dossier Drafts de la boîte. Définissez action : 'list' (brouillons enregistrés, chacun avec son draft_id, son objet, ses destinataires et sa date de création), 'create' (subject/body requis, éventuellement to/cc/bcc/html_body), 'update' (draft_id plus les champs à écraser) ou 'send' (draft_id — supprime le brouillon et l'envoie, irréversible). Sur les boîtes basées sur IMAP, un draft_id change à chaque mise à jour, utilisez donc toujours le plus récent ; Gmail et Outlook conservent un draft_id stable.",
       "params": {
-        "inbox_id": "UUID de la boîte dont lister les dossiers. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
+        "action": "Quelle opération effectuer : \"list\", \"create\", \"update\" ou \"send\". Détermine quels autres arguments s'appliquent.",
+        "inbox_id": "UUID de la boîte qui contient les brouillons. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "draft_id": "ID de brouillon du fournisseur (action 'update' ou 'send'), issu de l'action create, update ou list la plus récente. Sur les boîtes IMAP, il change après chaque mise à jour, utilisez donc toujours le plus récent.",
+        "subject": "Objet du brouillon (action 'create'/'update').",
+        "body": "Corps en texte brut du brouillon (action 'create'/'update').",
+        "to": "Adresses des destinataires (action 'create'/'update'). Par défaut [].",
+        "cc": "Destinataires en copie (action 'create'/'update'). Par défaut [].",
+        "bcc": "Destinataires en copie cachée (action 'create'/'update'). Par défaut [].",
+        "html_body": "Corps HTML facultatif (action 'create'/'update').",
+        "limit": "Nombre maximal de brouillons à renvoyer (action 'list'). Par défaut 20, max 50."
       }
     },
-    "email_forward": {
-      "title": "Transférer un e-mail",
-      "desc": "Transférez un message existant à de nouveaux destinataires. Votre note optionnelle est insérée au-dessus d'un bloc d'en-tête de message transféré standard et du corps d'origine. Définissez include_attachments pour rattacher les fichiers d'origine. L'objet est préfixé par « Fwd: » si nécessaire. Irréversible.",
+    "schedule": {
+      "title": "Envoi programmé",
+      "desc": "Programmer un e-mail pour une livraison ultérieure via une file d'attente côté serveur. Définissez action : 'create' (to/subject/body plus un horodatage send_at au format ISO 8601 — les destinataires et le corps sont validés immédiatement, et les envois invalides ne sont pas mis en file), 'list' (envois programmés en attente, les plus proches d'abord, éventuellement filtrés par boîte) ou 'cancel' (scheduled_send_id — seuls les envois encore 'pending' peuvent être annulés). Le distributeur s'exécute chaque minute, la livraison peut donc avoir lieu jusqu'à 60 secondes après send_at.",
       "params": {
-        "inbox_id": "UUID de la boîte qui contient le message d'origine. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "message_id": "ID de message du fournisseur de l'e-mail à transférer, depuis email_list ou email_search.",
-        "to": "Adresses e-mail des destinataires. Max 50.",
-        "cc": "Destinataires en CC. Par défaut [].",
-        "bcc": "Destinataires en BCC. Par défaut [].",
-        "body": "Note optionnelle en texte brut à insérer au-dessus du message transféré.",
-        "html_body": "Version HTML optionnelle de la note (multipart/alternative).",
-        "include_attachments": "Rattacher les pièces jointes du message d'origine. Les fichiers dépassant le budget de 10 Mo sont omis. Par défaut false.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "email_archive": {
-      "title": "Archiver un e-mail",
-      "desc": "Déplace un message hors de la boîte de réception vers les archives. Non destructif — le message est conservé, pas supprimé. Sur Gmail, cela retire l'étiquette INBOX ; sur IMAP/Outlook/Fastmail, cela déplace vers la boîte Archive.",
-      "params": {
-        "inbox_id": "UUID de la boîte contenant le message. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "message_id": "ID de message du fournisseur issu de email_list ou email_search.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "email_flag": {
-      "title": "Marquer les messages",
-      "desc": "Appliquez une action lu/non lu/marquer/démarquer à un ou plusieurs messages en un seul appel. Utilisez l'action 'read' ou 'unread' pour changer le statut de lecture, ou 'flag'/'unflag' pour ajouter ou retirer une étoile/un indicateur de suivi. Passez un ID de message pour mettre à jour un seul message, ou jusqu'à 500 pour en mettre à jour plusieurs d'un coup. Obtenez les ID de message via email_list ou email_search.",
-      "params": {
-        "inbox_id": "UUID de la boîte qui contient les messages. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "message_ids": "ID de messages du fournisseur à mettre à jour. Max 500 par appel.",
-        "action": "Action à appliquer à tous les messages : « read », « unread », « flag » ou « unflag ».",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "folder_create": {
-      "title": "Créer un dossier",
-      "desc": "Crée un nouveau dossier (ou étiquette, sur Gmail) dans une boîte. Renvoie l'ID de dossier/étiquette natif du fournisseur et le nom d'affichage.",
-      "params": {
-        "inbox_id": "UUID de la boîte où créer le dossier/l'étiquette. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "name": "Nom du nouveau dossier ou de la nouvelle étiquette. 1 à 255 caractères.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "folder_rename": {
-      "title": "Renommer un dossier",
-      "desc": "Renomme un dossier ou une étiquette existant. Appelez d'abord folder_list pour obtenir le folder_id.",
-      "params": {
-        "inbox_id": "UUID de la boîte qui possède le dossier/l'étiquette. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "folder_id": "ID de dossier/étiquette natif du fournisseur depuis folder_list.",
-        "new_name": "Nouveau nom d'affichage. 1 à 255 caractères.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "folder_delete": {
-      "title": "Supprimer un dossier",
-      "desc": "Supprime définitivement un dossier (ou libellé, sur Gmail). Irréversible — les messages à l'intérieur peuvent être perdus selon le fournisseur. Cette action est signalée comme destructive à votre client MCP, qui gère la confirmation de l’utilisateur. Appelez d'abord folder_list pour obtenir le folder_id.",
-      "params": {
-        "inbox_id": "UUID de la boîte qui possède le dossier/l'étiquette. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "folder_id": "ID de dossier/étiquette natif du fournisseur depuis folder_list.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "email_move": {
-      "title": "Déplacer un e-mail",
-      "desc": "Déplace un message vers un autre dossier. Sur Gmail, cela ajoute le libellé de destination et retire INBOX (Gmail n'a pas de dossiers séparés). La destination accepte un alias canonique, un nom de dossier/libellé ou un ID natif.",
-      "params": {
-        "inbox_id": "UUID de la boîte qui possède le message. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "message_id": "ID de message du fournisseur depuis email_list, email_read ou email_search.",
-        "destination_folder_id": "Dossier de destination : un alias canonique (inbox, sent, drafts, trash, archive, spam), un nom de dossier/libellé (p. ex. 'Receipts') ou un ID de dossier natif du fournisseur issu de folder_list. Les noms et alias sont résolus automatiquement.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "email_move_batch": {
-      "title": "Déplacement en masse",
-      "desc": "Déplace jusqu'à 500 messages vers un dossier de destination en un appel. Renvoie des décomptes succès/échecs ainsi que des résultats par message. La destination accepte un alias canonique, un nom de dossier/libellé ou un ID natif.",
-      "params": {
-        "inbox_id": "UUID de la boîte qui possède les messages. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "message_ids": "ID de messages du fournisseur à déplacer. Max 500 par appel.",
-        "destination_folder_id": "Dossier de destination : un alias canonique (inbox, sent, drafts, trash, archive, spam), un nom de dossier/libellé (p. ex. 'Receipts') ou un ID de dossier natif du fournisseur issu de folder_list. Les noms et alias sont résolus automatiquement.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "email_search_and_move": {
-      "title": "Rechercher et déplacer",
-      "desc": "Exécute une recherche structurée et déplace chaque correspondance vers un dossier de destination en une seule opération côté serveur — évite les ID de message obsolètes. Utilise les mêmes champs de recherche indépendants du fournisseur que email_search (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), avec les mêmes limitations par fournisseur ; un query natif facultatif sert d'échappatoire. La destination accepte un alias canonique, un nom de dossier/libellé ou un ID natif. Plafonné à 500 correspondances par appel.",
-      "params": {
-        "inbox_id": "UUID de la boîte où rechercher et opérer. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "query": "Requête native du fournisseur (échappatoire). Préférez les champs structurés ci-dessus. Combinée avec eux lorsque possible ; ignorée sur Fastmail.",
-        "destination_folder_id": "Dossier de destination : un alias canonique (inbox, sent, drafts, trash, archive, spam), un nom de dossier/libellé (p. ex. 'Receipts') ou un ID de dossier natif du fournisseur issu de folder_list. Les noms et alias sont résolus automatiquement.",
-        "include_folders": "Restreindre la recherche à ces noms de dossiers. Par défaut : tous les dossiers.",
-        "limit": "Nombre maximal de correspondances à déplacer. Par défaut 500, max 500.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
-        "from": "Expéditeur à rechercher : adresse e-mail, nom affiché ou fragment (p. ex. \"alice@example.com\" ou \"Alice\").",
-        "to": "Destinataire principal (À) à rechercher : adresse e-mail, nom affiché ou fragment.",
-        "cc": "Destinataire en copie (Cc) à rechercher : adresse e-mail, nom affiché ou fragment.",
-        "subject": "Texte à rechercher dans l'objet. Les expressions de plusieurs mots sont recherchées telles quelles.",
-        "body": "Texte libre à trouver dans le corps du message. (Sur Gmail, cela recherche dans tout le message, pas seulement le corps.)",
-        "text": "Texte libre à trouver n’importe où dans le message (en-têtes et corps).",
-        "unread": "true = uniquement les messages non lus ; false = uniquement les lus ; omettez pour les deux.",
-        "has_attachment": "true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré).",
-        "flagged": "true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré).",
-        "since": "Date ou date-heure ISO 8601 ; renvoie les messages reçus le ou après (>=) cet instant. P. ex. \"2026-06-01\".",
-        "before": "Date ou date-heure ISO 8601 ; renvoie les messages reçus strictement avant (<) cet instant."
-      }
-    },
-    "email_delete": {
-      "title": "Supprimer un e-mail",
-      "desc": "Supprime un seul message. Par défaut, il va à la corbeille du fournisseur (plus sûr). Mettez permanent: true pour une suppression définitive (contourne la corbeille ; peut être irréversible). Cette action est signalée comme destructive à votre client MCP, qui gère la confirmation de l’utilisateur. La suppression définitive (expunge) est disponible sur IMAP et Fastmail ; Gmail et Outlook ne prennent en charge que la corbeille.",
-      "params": {
-        "inbox_id": "UUID de la boîte qui possède le message. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "message_id": "ID de message du fournisseur depuis email_list, email_read ou email_search.",
-        "permanent": "Si true, suppression définitive (contourne la corbeille). Si false ou omis, déplacement vers la corbeille. Par défaut false.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "email_delete_batch": {
-      "title": "Suppression en masse",
-      "desc": "Supprime jusqu'à 500 messages en un seul appel. Met à la corbeille par défaut ; utilisez permanent: true pour une suppression définitive. Cette action est signalée comme destructive à votre client MCP, qui gère la confirmation de l’utilisateur. Renvoie des décomptes succès/échecs ainsi que des résultats par message.",
-      "params": {
-        "inbox_id": "UUID de la boîte qui possède les messages. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "message_ids": "ID de messages du fournisseur à supprimer. Max 500 par appel.",
-        "permanent": "Si true, suppression définitive (contourne la corbeille). Si false ou omis, déplacement vers la corbeille. Par défaut false.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "email_search_and_delete": {
-      "title": "Rechercher et supprimer",
-      "desc": "Exécute une recherche structurée et supprime chaque correspondance en une seule opération côté serveur — évite les ID de message obsolètes. Utilise les mêmes champs de recherche indépendants du fournisseur que email_search (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), avec les mêmes limitations par fournisseur ; un query natif facultatif sert d'échappatoire. Met à la corbeille par défaut ; utilisez permanent: true pour une suppression définitive. Cette action est signalée comme destructive à votre client MCP, qui gère la confirmation de l’utilisateur. Plafonné à 500 correspondances par appel.",
-      "params": {
-        "inbox_id": "UUID de la boîte où rechercher et opérer. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "query": "Requête native du fournisseur (échappatoire). Préférez les champs structurés ci-dessus. Combinée avec eux lorsque possible ; ignorée sur Fastmail.",
-        "permanent": "Si true, suppression définitive des correspondances (contourne la corbeille). Si false ou omis, déplacement vers la corbeille. Par défaut false.",
-        "include_folders": "Restreindre la recherche à ces noms de dossiers. Par défaut : tous les dossiers.",
-        "limit": "Nombre maximal de correspondances à supprimer. Par défaut 500, max 500.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
-        "from": "Expéditeur à rechercher : adresse e-mail, nom affiché ou fragment (p. ex. \"alice@example.com\" ou \"Alice\").",
-        "to": "Destinataire principal (À) à rechercher : adresse e-mail, nom affiché ou fragment.",
-        "cc": "Destinataire en copie (Cc) à rechercher : adresse e-mail, nom affiché ou fragment.",
-        "subject": "Texte à rechercher dans l'objet. Les expressions de plusieurs mots sont recherchées telles quelles.",
-        "body": "Texte libre à trouver dans le corps du message. (Sur Gmail, cela recherche dans tout le message, pas seulement le corps.)",
-        "text": "Texte libre à trouver n’importe où dans le message (en-têtes et corps).",
-        "unread": "true = uniquement les messages non lus ; false = uniquement les lus ; omettez pour les deux.",
-        "has_attachment": "true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré).",
-        "flagged": "true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré).",
-        "since": "Date ou date-heure ISO 8601 ; renvoie les messages reçus le ou après (>=) cet instant. P. ex. \"2026-06-01\".",
-        "before": "Date ou date-heure ISO 8601 ; renvoie les messages reçus strictement avant (<) cet instant."
-      }
-    },
-    "draft_list": {
-      "title": "Lister les brouillons",
-      "desc": "Renvoie les brouillons enregistrés dans le dossier Brouillons de la boîte. Chaque résultat inclut le draft_id, l'objet, les destinataires et l'horodatage de création. Utilisez le draft_id avec draft_update ou draft_send.",
-      "params": {
-        "inbox_id": "UUID de la boîte dont lister les brouillons. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "limit": "Nombre maximal de brouillons à renvoyer. Par défaut 20, max 50.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "draft_create": {
-      "title": "Créer un brouillon",
-      "desc": "Enregistre un nouveau brouillon dans le dossier Brouillons de la boîte sans l'envoyer. Renvoie un draft_id pour draft_update ou draft_send. L'objet et le corps sont requis ; les destinataires sont optionnels (les brouillons peuvent être incomplets).",
-      "params": {
-        "inbox_id": "UUID de la boîte où enregistrer le brouillon. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "subject": "Objet du brouillon.",
-        "body": "Corps du brouillon en texte brut.",
-        "to": "Adresses des destinataires optionnelles. Par défaut [].",
-        "cc": "Destinataires en CC optionnels. Par défaut [].",
-        "bcc": "Destinataires en BCC optionnels. Par défaut [].",
-        "html_body": "Corps HTML optionnel.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "draft_update": {
-      "title": "Mettre à jour un brouillon",
-      "desc": "Remplace le contenu d'un brouillon existant. Tous les champs fournis écrasent le brouillon stocké. Appelez draft_list pour obtenir les valeurs draft_id. Sur les boîtes basées sur IMAP (tout sauf Gmail/Outlook), le message sous-jacent est réécrit, donc cela renvoie un NOUVEAU draft_id qui remplace celui que vous avez transmis — adoptez-le pour tout draft_update/draft_send ultérieur et abandonnez l'ancien. Gmail et Outlook conservent un draft_id stable.",
-      "params": {
-        "inbox_id": "UUID de la boîte qui possède le brouillon. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "draft_id": "ID de brouillon du fournisseur du draft_create, draft_update ou draft_list le plus récent. Sur les boîtes IMAP, il change après chaque mise à jour, alors utilisez toujours le plus récent.",
-        "subject": "Objet mis à jour.",
-        "body": "Corps en texte brut mis à jour.",
-        "to": "Liste de destinataires mise à jour. Par défaut [].",
-        "cc": "Liste CC mise à jour. Par défaut [].",
-        "bcc": "Liste BCC mise à jour. Par défaut [].",
-        "html_body": "Corps HTML mis à jour.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "draft_send": {
-      "title": "Envoyer un brouillon",
-      "desc": "Envoie un brouillon précédemment enregistré. Le brouillon est retiré du dossier Brouillons après l'envoi. Irréversible. Transmettez toujours le draft_id le plus récent (de draft_create, du dernier draft_update ou de draft_list) : sur les boîtes basées sur IMAP, l'ID change à chaque mise à jour, et un ID obsolète échoue avec une erreur introuvable.",
-      "params": {
-        "inbox_id": "UUID de la boîte qui contient le brouillon. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "draft_id": "ID de brouillon du fournisseur du draft_create, draft_update ou draft_list le plus récent. Sur les boîtes IMAP, il change après chaque mise à jour, alors utilisez toujours le plus récent.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
+        "action": "Quelle opération effectuer : \"create\", \"list\" ou \"cancel\". Détermine quels autres arguments s'appliquent.",
+        "inbox_id": "UUID de la boîte depuis laquelle envoyer (action 'create') ou par laquelle filtrer (action 'list'). Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "to": "Adresses e-mail des destinataires (action 'create'). Max 50.",
+        "subject": "Objet de l'e-mail (action 'create'). Max 998 caractères.",
+        "body": "Corps en texte brut de l'e-mail (action 'create').",
+        "send_at": "Date-heure ISO 8601 avec fuseau horaire à laquelle envoyer (action 'create'). Doit être dans le futur, p. ex. \"2026-06-02T09:00:00Z\".",
+        "cc": "Destinataires en copie (action 'create'). Par défaut [].",
+        "bcc": "Destinataires en copie cachée (action 'create'). Par défaut [].",
+        "html_body": "Version HTML facultative du corps (action 'create').",
+        "reply_to": "Adresse facultative de l'en-tête Reply-To (action 'create').",
+        "attachments": "Pièces jointes (action 'create'). Même schéma que l'action send. Max 20 éléments, 10 Mo au total.",
+        "scheduled_send_id": "UUID de l'envoi programmé à annuler (action 'cancel').",
+        "limit": "Nombre maximal de résultats (action 'list'). Par défaut 20, max 100."
       }
     },
     "contact_search": {
       "title": "Rechercher des contacts",
-      "desc": "Trouvez des correspondants par nom ou e-mail grâce à une analyse en direct de votre boîte aux lettres — il n'existe aucune liste de contacts stockée. Chaque appel analyse une fenêtre récente de courrier correspondant et renvoie les personnes qui correspondent, triées du contact le plus récent, chacune avec le nom d'affichage, l'e-mail, le nombre de messages correspondants et l'horodatage du dernier contact. Les nombres reflètent les messages correspondants dans cette fenêtre, et non l'ensemble de votre historique, et rien n'est stocké entre les appels.",
+      "desc": "Trouvez des correspondants par nom ou e-mail grâce à une analyse en direct de votre boîte — il n'y a pas de liste de contacts stockée. Chaque appel analyse une fenêtre récente de courrier correspondant et renvoie les personnes qui correspondent, triées par contact le plus récent, chacune avec son nom affiché, son e-mail, le nombre de messages correspondants et l'horodatage du dernier contact. Les nombres reflètent les messages correspondants dans cette fenêtre, pas tout votre historique, et rien n'est stocké entre les appels.",
       "params": {
-        "query": "Fragment de nom ou d'e-mail, comparé sans tenir compte de la casse au nom d'affichage et à l'adresse. Au moins 1 caractère.",
-        "inbox_id": "Facultatif. Restreint l'analyse en direct à une seule boîte. Omettez pour analyser les boîtes accessibles à la clé (un nombre limité).",
-        "limit": "Nombre maximal de contacts à renvoyer. Par défaut 20, max 50.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "schedule_create": {
-      "title": "Programmer un envoi",
-      "desc": "Met un e-mail en file pour être envoyé à une date future. Les destinataires et le corps sont validés immédiatement ; si la validation échoue, l'e-mail n'est pas mis en file. Le distributeur s'exécute chaque minute, donc la livraison effective peut intervenir jusqu'à 60 secondes après send_at. Utilisez schedule_list et schedule_cancel pour gérer les envois en attente.",
-      "params": {
-        "inbox_id": "UUID de la boîte d'envoi. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "to": "Adresses e-mail des destinataires. Max 50.",
-        "subject": "Objet de l'e-mail. Max 998 caractères.",
-        "body": "Corps de l'e-mail en texte brut.",
-        "send_at": "Date-heure ISO 8601 avec fuseau horaire à laquelle envoyer. Doit être dans le futur, p. ex. « 2026-06-02T09:00:00Z ».",
-        "cc": "Destinataires en CC. Par défaut [].",
-        "bcc": "Destinataires en BCC. Par défaut [].",
-        "html_body": "Version HTML optionnelle du corps.",
-        "attachments": "Pièces jointes. Même schéma que email_send. Max 20 éléments, 10 Mo au total.",
-        "reply_to": "Adresse d'en-tête Reply-To optionnelle.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "schedule_list": {
-      "title": "Lister les envois programmés",
-      "desc": "Liste les envois programmés en attente pour l'espace de travail (statut pending ou sending), du plus proche au plus lointain. Filtrez éventuellement par boîte. Utilisez schedule_cancel pour en annuler un avant sa distribution.",
-      "params": {
-        "inbox_id": "Optionnel. Restreindre les résultats aux envois programmés d'une seule boîte.",
-        "limit": "Nombre maximal de résultats. Par défaut 20, max 100.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
-      }
-    },
-    "schedule_cancel": {
-      "title": "Annuler un envoi programmé",
-      "desc": "Annule un envoi programmé en attente afin que le distributeur l'ignore. Seuls les envois encore à l'état « pending » peuvent être annulés — une fois « sending », « sent » ou « error », ils ne le peuvent plus. Utilisez schedule_list pour trouver le scheduled_send_id.",
-      "params": {
-        "scheduled_send_id": "UUID de l'envoi programmé à annuler."
-      }
-    },
-    "email_read_batch": {
-      "title": "Lire des e-mails (lot)",
-      "desc": "Lit jusqu'à 50 messages en un seul appel via leurs ID de fournisseur — idéal pour trier une boîte sans un aller-retour email_read par message. Renvoie un tableau messages (chacun au format de email_read) plus un tableau errors par ID, de sorte qu'un ID erroné ou manquant ne fait jamais échouer tout le lot. Lorsque include_attachments est true, les pièces jointes partagent un budget unique de 10 Mo sur tout l'appel.",
-      "params": {
-        "inbox_id": "UUID de la boîte contenant l'e-mail. Appelez inbox_list pour obtenir les ID de boîtes disponibles. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
-        "message_ids": "ID de message du fournisseur à lire, de email_list ou email_search. Max 50 par appel.",
-        "include_html": "Inclure le corps HTML assaini de chaque message. Par défaut false.",
-        "include_attachments": "Inclure les données de pièces jointes en base64. La limite totale de 10 Mo est partagée entre tous les messages de l’appel. Par défaut false.",
-        "mark_as_read": "Marquer chaque message comme lu après récupération. Par défaut false."
+        "query": "Fragment de nom ou d'e-mail, comparé sans tenir compte de la casse au nom affiché et à l'adresse. Au moins 1 caractère.",
+        "inbox_id": "Facultatif. Restreindre l'analyse en direct à une seule boîte. Omettez-le pour analyser les boîtes auxquelles la clé a accès (un nombre limité).",
+        "inbox": "Adresse e-mail de la boîte à laquelle se restreindre, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "limit": "Nombre maximal de contacts à renvoyer. Par défaut 20, max 50."
       }
     }
   },
@@ -492,7 +270,7 @@
     "planBody": "L'usage est illimité ; il s'agit d'une limite de pointe d'usage équitable par espace de travail (agrégée sur toutes vos clés API). En cas de dépassement, les appels renvoient <code>data.error_code: \"rate_limit_exceeded\"</code> avec <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Passez à une formule supérieure pour un plafond plus élevé.",
     "retryTag": "Réessayer en toute sécurité",
     "retryHeading": "Respectez toujours retry_after ; ne réessayez jamais les envois à l'aveugle",
-    "retryBody": "Pour les erreurs <code>rate_limit_exceeded</code>, attendez <code>data.retry_after</code> secondes avant de réessayer. Utilisez un backoff exponentiel pour <code>provider_error</code>. Ne réessayez pas automatiquement <code>email_send</code> en cas de <code>provider_error</code>, car le message a peut-être déjà été accepté par le fournisseur."
+    "retryBody": "Pour les erreurs <code>rate_limit_exceeded</code>, attendez <code>data.retry_after</code> secondes avant de réessayer. Utilisez un backoff exponentiel pour <code>provider_error</code>. Ne réessayez pas automatiquement les envois <code>email_compose</code> en cas de <code>provider_error</code>, car le message a peut-être déjà été accepté par le fournisseur."
   },
   "cta": {
     "heading": "Prêt à connecter votre boîte de réception ?",
@@ -559,7 +337,7 @@
       "gmail": "<b>Gmail — dossiers vs étiquettes :</b> Gmail utilise un système d'étiquettes plat plutôt que des dossiers hiérarchiques. « Déplacer » est implémenté comme l'ajout/la suppression d'étiquette. La copie native n'est pas disponible via l'API REST Gmail.",
       "permanentDelete": "<b>Suppression définitive :</b> Gmail déplace vers la corbeille lors de la suppression — l'expunge définitif n'est pas exposé par leurs API. Les fournisseurs IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, générique) prennent en charge à la fois la corbeille et l'expunge définitif.",
       "contacts_db": "<b>Recherche de contacts (analyse en direct) :</b> Tous les fournisseurs prennent en charge <code>contact_search</code>, qui trouve les correspondants correspondants grâce à une analyse en direct, basée uniquement sur les en-têtes, d'une fenêtre récente de votre courrier correspondant. Il n'existe aucune table de contacts — rien n'est stocké entre les appels, et les nombres reflètent uniquement les messages correspondants dans la fenêtre analysée.",
-      "scheduling": "<b>Programmation :</b> Prise en charge pour tous les fournisseurs via la file <code>scheduled_sends</code>. Utilisez <code>schedule_create</code>, <code>schedule_list</code> et <code>schedule_cancel</code>."
+      "scheduling": "<b>Programmation :</b> Prise en charge pour tous les fournisseurs via la file <code>scheduled_sends</code>. Utilisez les actions <code>create</code>, <code>list</code> et <code>cancel</code> de l'outil <code>schedule</code>."
     },
     "cta": {
       "heading": "Prêt à connecter votre boîte de réception ?",
