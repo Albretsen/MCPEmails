@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "Legal",
     "title": "Política de privacidad",
-    "lead": "Construimos MCPEmails con la privacidad como primer principio. El contenido de tu correo nunca se almacena en nuestros servidores. Pasa hacia tu agente y desaparece. Esta política explica qué sí recopilamos, y por qué.",
+    "lead": "Construimos MCPEmails con la privacidad como primer principio. El contenido del correo que lee tu agente nunca se almacena en nuestros servidores; pasa hacia tu agente y desaparece. La única excepción es un mensaje que programas para enviar más tarde, que conservamos solo hasta que se entrega. Esta política explica qué sí recopilamos, y por qué.",
     "dates": "Última actualización: {lastUpdated}  ·  Vigente desde: {effectiveDate}"
   },
   "whoWeAre": {
@@ -26,7 +26,7 @@
     "logsTitle": "2.4 Registros de uso y auditoría",
     "logsP": "Para cada llamada a una herramienta MCP que hace tu agente, registramos: el nombre de la herramienta (p. ej. <c>email_read</c>), la clave de API que hizo la llamada, la bandeja a la que se accedió, la marca de tiempo y si la llamada tuvo éxito. <b>No</b> registramos asuntos, cuerpos, destinatarios ni ningún otro contenido de correo en estos registros.",
     "emailContentTitle": "2.5 Contenido del correo: no se almacena",
-    "emailContentP": "Cuando tu agente llama a <c>email_read</c>, <c>email_list</c> o cualquier otra herramienta de correo, obtenemos el contenido solicitado en vivo desde tu proveedor de correo y lo devolvemos a tu agente en la misma respuesta HTTP. El contenido nunca se escribe en disco, se almacena en caché ni se registra. Una vez enviada la respuesta HTTP, no conservamos ninguna copia de ningún cuerpo de correo, asunto, adjunto o dato de contacto.",
+    "emailContentP": "Cuando tu agente llama a <c>email_read</c>, <c>email_list</c> o cualquier otra herramienta de lectura, obtenemos el contenido solicitado en vivo desde tu proveedor de correo y lo devolvemos a tu agente en la misma respuesta HTTP. Ese contenido nunca se escribe en disco, se almacena en caché ni se registra. Una vez enviada la respuesta HTTP, no conservamos ninguna copia de ningún cuerpo de correo, asunto, adjunto o dato de contacto. La única excepción son los envíos programados: cuando pides a tu agente que programe un mensaje para entregarlo en el futuro, almacenamos ese mensaje saliente —sus destinatarios, asunto, cuerpo y cualquier adjunto— en nuestra base de datos hasta que se envía, y conservamos el registro después con fines de auditoría y resolución de problemas. Esto se aplica solo a los mensajes que programas explícitamente; el correo que tu agente lee o envía de inmediato nunca se almacena.",
     "emailContentAgentP": "El contenido de tu correo solo se envía al cliente MCP o agente de IA que <b>tú</b> has conectado y utilizas (por ejemplo, Claude, Cursor u otro cliente MCP que elijas). Cuando invocas una herramienta, MCPEmails transmite el contenido solicitado a ese cliente para que pueda atender tu petición. MCPEmails no envía el contenido de tu correo a ningún proveedor de IA elegido por su cuenta. Una vez que el contenido llega al cliente que has elegido, se rige por la política de privacidad y los términos propios de ese cliente o proveedor de IA, que eres responsable de revisar. MCPEmails actúa únicamente como conducto y no conserva ninguna copia del contenido.",
     "technicalTitle": "2.6 Datos técnicos y operativos",
     "technicalP": "Recopilamos datos operativos estándar del lado del servidor, incluidas direcciones IP (para limitación de tasa y prevención de abuso), marcas de tiempo de peticiones, códigos de estado HTTP y tipos de error. Estos datos se conservan en forma agregada y anonimizada y no se vinculan a cuentas individuales después de 30 días.",
@@ -98,7 +98,7 @@
       },
       {
         "category": "Registros de auditoría de llamadas a herramientas MCP",
-        "period": "90 días (Gratis y Solo); 1 año (Team)",
+        "period": "7 días (Gratis); 90 días (Solo); 1 año (Team)",
         "reason": "Auditoría de seguridad; función del plan"
       },
       {
@@ -112,9 +112,14 @@
         "reason": "Prevención de abuso; disponibilidad"
       },
       {
-        "category": "Contenido del correo",
+        "category": "Contenido del correo (leído o enviado de inmediato)",
         "period": "No se almacena; conservación cero",
         "reason": "Privacidad por diseño"
+      },
+      {
+        "category": "Mensajes de envío programado",
+        "period": "Hasta su envío; el registro se conserva después con fines de auditoría",
+        "reason": "Necesario para entregar los mensajes que programas"
       }
     ],
     "outro": "Cuando eliminas tu cuenta, iniciamos la eliminación de todos los datos personales en un plazo de 30 días. Las estadísticas de uso agregadas y no personales derivadas de tu cuenta pueden conservarse más allá de este período en forma anonimizada."
@@ -138,7 +143,7 @@
     "stripeData": "Correo de facturación, datos de tarjeta de pago (almacenados por Stripe, no por nosotros)",
     "stripeLocation": "EE. UU. (Stripe tiene certificación PCI-DSS)",
     "emailProvidersTitle": "5.2 Proveedores de correo (tus proveedores, no los nuestros)",
-    "emailProvidersP": "Cuando conectas Gmail, Outlook o una cuenta de Fastmail / IMAP, MCPEmails se autentica con ese proveedor usando las credenciales que proporcionas. La propia política de privacidad de tu proveedor de correo rige los datos guardados en tu buzón. MCPEmails accede a tu buzón solo cuando tu agente hace una llamada a una herramienta, y solo para los mensajes o carpetas específicos que la herramienta solicita.",
+    "emailProvidersP": "Cuando conectas Gmail, Fastmail u otra cuenta IMAP, MCPEmails se autentica con ese proveedor usando las credenciales que proporcionas. La propia política de privacidad de tu proveedor de correo rige los datos guardados en tu buzón. MCPEmails accede a tu buzón solo cuando tu agente hace una llamada a una herramienta, y solo para los mensajes o carpetas específicos que la herramienta solicita.",
     "noBrokersTitle": "5.3 Sin intermediarios de datos ni redes publicitarias",
     "noBrokersP": "No compartimos ningún dato con intermediarios de datos, redes publicitarias, plataformas de redes sociales ni empresas de analíticas que construyen perfiles de usuario.",
     "legalDisclosuresTitle": "5.4 Divulgaciones legales",

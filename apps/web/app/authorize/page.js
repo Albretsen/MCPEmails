@@ -34,7 +34,7 @@ const SCOPE_META = {
   'manage:folders':  { icon: 'menu',   title: 'Manage folders & labels',    desc: 'create/rename/delete folders, move messages.', required: false, destructive: false },
   'delete:email':    { icon: 'trash',  title: 'Delete emails',              desc: 'delete and bulk-delete messages.', required: false, destructive: true },
   'manage:drafts':   { icon: 'copy',   title: 'Manage drafts',              desc: 'create, update, list and send drafts.', required: false, destructive: false },
-  'manage:contacts': { icon: 'users',  title: 'Manage contacts',            desc: 'contact_search (search your derived contact list).', required: false, destructive: false },
+  'manage:contacts': { icon: 'users',  title: 'Manage contacts',            desc: 'contact_search (find people via a live scan of your mail; nothing stored).', required: false, destructive: false },
   'schedule:email':  { icon: 'bell',   title: 'Schedule emails',            desc: 'schedule sends and manage scheduled messages.', required: false, destructive: false },
 };
 

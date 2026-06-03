@@ -1653,6 +1653,14 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  // Close on Escape (parity with the ⌘K palette). The backdrop click already
+  // dismisses; this adds keyboard parity. Blocked while a save is in flight.
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape' && !submitting) onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [submitting, onClose]);
+
   const toggleScope = (value) => {
     setSelectedScopes(prev =>
       prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]
@@ -3995,7 +4003,14 @@ function WorkspaceSection({ workspace, onWorkspaceUpdate }) {
 
   return (
     <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
-      <div className="card-h"><div className="title">{t('settings.workspace.title')}</div></div>
+      <div className="card-h">
+        <div>
+          <div className="title">{t('settings.workspace.title')}</div>
+          <div className="sub">
+            {t('settings.workspace.sub', { name: currentName() })}
+          </div>
+        </div>
+      </div>
       <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div className="field">
           <label
@@ -4033,12 +4048,300 @@ function WorkspaceSection({ workspace, onWorkspaceUpdate }) {
   );
 }
 
-export function SettingsPage({ user, workspace, stripePrices, onWorkspaceUpdate }) {
+/* ------------------------------------------------------------------ */
+/* DeleteWorkspaceSection                                              */
+/*                                                                     */
+/* Workspace-scoped danger zone. Soft-deletes ONLY the active          */
+/* workspace and its data (inboxes, API keys, members, invites),       */
+/* leaving the user's account and any other workspaces untouched.      */
+/*                                                                     */
+/* Visibility/behaviour:                                               */
+/*   - Only the workspace OWNER sees this card (admins/members cannot  */
+/*     delete a workspace).                                            */
+/*   - If this is the user's ONLY workspace, deletion is disabled with */
+/*     a note pointing them to "Delete account" — a user must always   */
+/*     have at least one workspace.                                    */
+/*   - Otherwise: clicking opens a confirm dialog that requires typing */
+/*     the workspace name, then DELETE /api/workspaces/[id] and a      */
+/*     redirect to /dashboard (the server resolves a new active ws).   */
+/* ------------------------------------------------------------------ */
+function DeleteWorkspaceSection({ workspace, isOwner, isOnlyWorkspace }) {
   const t = useTranslations('dashboard');
+  const [open, setOpen] = useState(false);
+  const [confirmValue, setConfirmValue] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const wsName = workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? '';
+
+  // Only the owner may delete the workspace.
+  if (!isOwner) return null;
+
+  const nameMatches =
+    confirmValue.trim().toLowerCase() === wsName.trim().toLowerCase();
+
+  function handleOpen() {
+    if (isOnlyWorkspace) return;
+    setConfirmValue('');
+    setError(null);
+    setOpen(true);
+  }
+
+  function handleCancel() {
+    if (deleting) return;
+    setOpen(false);
+    setConfirmValue('');
+    setError(null);
+  }
+
+  async function handleConfirm() {
+    if (!nameMatches || deleting) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspaces/${workspace.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmName: confirmValue.trim() }),
+      });
+      if (!res.ok) {
+        let msg = t('settings.deleteWorkspace.errFailed');
+        try {
+          const data = await res.json();
+          if (typeof data?.error === 'string') msg = data.error;
+        } catch { /* ignore */ }
+        setError(msg);
+        setDeleting(false);
+        return;
+      }
+      // Workspace gone. Reload the dashboard; the server picks a new active ws.
+      window.location.assign('/dashboard');
+    } catch {
+      setError(t('settings.deleteWorkspace.networkError'));
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <>
+      {/* Danger zone card (workspace-scoped) */}
+      <div
+        className="card"
+        style={{
+          maxWidth: 640,
+          marginTop: 14,
+          borderColor: 'rgba(229,72,77,0.25)',
+        }}
+      >
+        <div className="card-h" style={{ borderColor: 'rgba(229,72,77,0.25)' }}>
+          <div>
+            <div className="title" style={{ color: 'var(--red-700)' }}>
+              {t('settings.deleteWorkspace.title')}
+            </div>
+            <div className="sub">
+              {isOnlyWorkspace
+                ? t('settings.deleteWorkspace.onlyWorkspaceNote')
+                : t('settings.deleteWorkspace.sub', { name: wsName })}
+            </div>
+          </div>
+        </div>
+        <div
+          className="card-body"
+          style={{ display: 'flex', justifyContent: 'flex-end' }}
+        >
+          <Btn variant="danger" onClick={handleOpen} disabled={isOnlyWorkspace}>
+            {t('settings.deleteWorkspace.button')}
+          </Btn>
+        </div>
+      </div>
+
+      {/* Confirmation dialog */}
+      {open && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0,0,0,0.45)',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCancel();
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              width: 420,
+              maxWidth: 'calc(100vw - 32px)',
+              background: 'var(--surface)',
+              borderColor: 'rgba(229,72,77,0.35)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+              borderRadius: 12,
+            }}
+          >
+            <div
+              className="card-h"
+              style={{
+                borderColor: 'rgba(229,72,77,0.35)',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 12,
+              }}
+            >
+              <Icon
+                name="alert-triangle"
+                size={18}
+                color="var(--red-600)"
+                style={{ marginTop: 2, flexShrink: 0 }}
+              />
+              <div>
+                <div
+                  className="title"
+                  style={{ color: 'var(--red-700)', fontSize: 15 }}
+                >
+                  {t('settings.deleteWorkspace.dialogTitle', { name: wsName })}
+                </div>
+                <div className="sub" style={{ marginTop: 4 }}>
+                  {t('settings.deleteWorkspace.dialogSub')}
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="card-body"
+              style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+            >
+              <div>
+                <label
+                  htmlFor="delete-workspace-confirm"
+                  style={{
+                    display: 'block',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: 'var(--fg-2)',
+                    marginBottom: 8,
+                  }}
+                >
+                  {t('settings.deleteWorkspace.typePrefix')}{' '}
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 12,
+                      color: 'var(--fg-1)',
+                      background: 'var(--surface-2)',
+                      padding: '1px 5px',
+                      borderRadius: 4,
+                    }}
+                  >
+                    {wsName}
+                  </span>{' '}
+                  {t('settings.deleteWorkspace.typeToConfirm')}
+                </label>
+                <input
+                  id="delete-workspace-confirm"
+                  className="input"
+                  type="text"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={confirmValue}
+                  onChange={(e) => {
+                    setConfirmValue(e.target.value);
+                    setError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && nameMatches) handleConfirm();
+                    if (e.key === 'Escape') handleCancel();
+                  }}
+                  placeholder={wsName}
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                  disabled={deleting}
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
+                  autoFocus
+                />
+              </div>
+
+              {error && (
+                <div
+                  style={{
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 13,
+                    color: 'var(--red-600)',
+                    padding: '8px 12px',
+                    background: 'rgba(229,72,77,0.07)',
+                    borderRadius: 6,
+                    border: '1px solid rgba(229,72,77,0.2)',
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <Btn variant="secondary" onClick={handleCancel} disabled={deleting}>
+                  {t('settings.deleteWorkspace.cancel')}
+                </Btn>
+                <Btn
+                  variant="danger"
+                  onClick={handleConfirm}
+                  disabled={!nameMatches || deleting}
+                >
+                  {deleting
+                    ? t('settings.deleteWorkspace.deleting')
+                    : t('settings.deleteWorkspace.button')}
+                </Btn>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/**
+ * SettingsSectionLabel: a lightweight scope heading used to group the settings
+ * cards into "Account" vs "Workspace" so it's unambiguous which actions affect
+ * the whole account and which affect only the current workspace.
+ */
+function SettingsSectionLabel({ children }) {
+  return (
+    <div
+      style={{
+        fontFamily: 'var(--font-sans)',
+        fontSize: 12,
+        fontWeight: 600,
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase',
+        color: 'var(--fg-3, var(--fg-2))',
+        margin: '28px 0 2px',
+        maxWidth: 640,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, onWorkspaceUpdate }) {
+  const t = useTranslations('dashboard');
+
+  // The active workspace is owned by the user when either the server-resolved
+  // role is "owner" or the workspace's owner flag is set.
+  const isOwner = userRole === 'owner' || workspace?.isOwner === true;
+  // A user always keeps at least one workspace; deleting the only one is blocked
+  // (they delete their account instead).
+  const isOnlyWorkspace = (workspaces?.length ?? 0) <= 1;
 
   return (
     <div className="page">
       <PageHeader title={t('settings.title')} sub={t('settings.sub')} />
+
+      {/* ── Account: settings that affect your whole account ─────────────── */}
+      <SettingsSectionLabel>{t('settings.sections.account')}</SettingsSectionLabel>
 
       {/* Profile section: display name + read-only email */}
       <ProfileSection
@@ -4052,13 +4355,26 @@ export function SettingsPage({ user, workspace, stripePrices, onWorkspaceUpdate 
       {/* Language selector */}
       <LanguageSection />
 
-      {/* Billing section: current plan + upgrade */}
+      {/* Billing section: current plan + upgrade (account-level subscription) */}
       <BillingSection currentPlan={workspace?.plan ?? 'free'} stripePrices={stripePrices} />
+
+      {/* ── Workspace: settings that affect only the current workspace ───── */}
+      <SettingsSectionLabel>{t('settings.sections.workspace')}</SettingsSectionLabel>
 
       {/* Workspace section: rename the workspace display name */}
       <WorkspaceSection workspace={workspace} onWorkspaceUpdate={onWorkspaceUpdate} />
 
-      {/* Delete account: danger zone */}
+      {/* Delete THIS workspace only (owner-only) */}
+      <DeleteWorkspaceSection
+        workspace={workspace}
+        isOwner={isOwner}
+        isOnlyWorkspace={isOnlyWorkspace}
+      />
+
+      {/* ── Danger zone: deletes your entire account ─────────────────────── */}
+      <SettingsSectionLabel>{t('settings.sections.dangerZone')}</SettingsSectionLabel>
+
+      {/* Delete account: removes the account and every workspace you own */}
       <DeleteAccountSection email={user?.email ?? ''} />
     </div>
   );
@@ -4759,7 +5075,16 @@ export function MembersPage({
   const [changingRole, setChangingRole] = useState(null); // userId or null
 
   const canManage = userRole === 'owner' || userRole === 'admin';
-  const canChangeRoles = userRole === 'owner';
+  // Inviting members is a paid capability: Free is single-user (maxMembers: 1),
+  // so once the owner fills the only seat there are no invites. Paid plans are
+  // unlimited (maxMembers === null). Backend enforces this too (checkMemberLimit).
+  const seatLimit = planLimits?.maxMembers ?? null; // null = unlimited
+  const atSeatLimit = seatLimit !== null && members.length >= seatLimit;
+  const canInvite = canManage && !atSeatLimit;
+  // Team roles (Admin/Viewer) are a separate paid capability. When invites ARE
+  // allowed but roles aren't (e.g. Solo), everyone joins as a plain Member.
+  const teamRolesEnabled = planLimits?.teamRolesEnabled ?? false;
+  const canChangeRoles = userRole === 'owner' && teamRolesEnabled;
 
   const handleInviteSubmit = async (e) => {
     e.preventDefault();
@@ -4825,7 +5150,12 @@ export function MembersPage({
             </div>
           </div>
           <div className="card-body">
-            {(
+            {!canInvite && (
+              <div style={{ fontSize: 13.5, color: 'var(--fg-3)' }}>
+                {t('members.inviteUpgradeHint')}
+              </div>
+            )}
+            {canInvite && (
               <form onSubmit={handleInviteSubmit} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <input
                   type="email"
@@ -4846,29 +5176,36 @@ export function MembersPage({
                     outline: 'none',
                   }}
                 />
-                <select
-                  value={inviteRole}
-                  onChange={e => setInviteRole(e.target.value)}
-                  disabled={inviting}
-                  style={{
-                    padding: '8px 12px',
-                    border: '1px solid var(--border-1)',
-                    borderRadius: 8,
-                    fontSize: 13.5,
-                    fontFamily: 'var(--font-sans)',
-                    background: 'var(--bg-input, var(--bg-card))',
-                    color: 'var(--fg-1)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {canChangeRoles && <option value="admin">{t('members.roleAdmin')}</option>}
-                  <option value="member">{t('members.roleMember')}</option>
-                  <option value="viewer">{t('members.roleViewer')}</option>
-                </select>
+                {teamRolesEnabled && (
+                  <select
+                    value={inviteRole}
+                    onChange={e => setInviteRole(e.target.value)}
+                    disabled={inviting}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid var(--border-1)',
+                      borderRadius: 8,
+                      fontSize: 13.5,
+                      fontFamily: 'var(--font-sans)',
+                      background: 'var(--bg-input, var(--bg-card))',
+                      color: 'var(--fg-1)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {canChangeRoles && <option value="admin">{t('members.roleAdmin')}</option>}
+                    <option value="member">{t('members.roleMember')}</option>
+                    <option value="viewer">{t('members.roleViewer')}</option>
+                  </select>
+                )}
                 <Btn variant="primary" type="submit" disabled={inviting || !inviteEmail.trim()}>
                   {inviting ? t('members.sending') : t('members.sendInvite')}
                 </Btn>
               </form>
+            )}
+            {canInvite && !teamRolesEnabled && (
+              <div style={{ marginTop: 8, fontSize: 12.5, color: 'var(--fg-3)' }}>
+                {t('members.rolesLockedHint')}
+              </div>
             )}
             {inviteError && (
               <div style={{ marginTop: 10, fontSize: 13, color: 'var(--red-600, #dc2626)' }}>

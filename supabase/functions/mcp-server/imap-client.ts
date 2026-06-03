@@ -128,9 +128,37 @@ export class ImapClient {
   private readonly decoder = new TextDecoder("latin1");
   private readonly encoder = new TextEncoder();
 
+  /**
+   * Command-serialization chain. The IMAP protocol is strictly request/response
+   * over a single socket, and this client shares ONE read buffer
+   * (buffer/bufStart/bufEnd) and ONE tag stream across every command. Two
+   * overlapping public command calls (e.g. a `Promise.allSettled` fan-out of
+   * STATUS) would interleave writes and race on the shared buffer — stealing
+   * each other's response lines, waiting on the wrong tag, or looping forever.
+   *
+   * `runExclusive` chains every command body onto this promise so the Nth call
+   * only writes after the (N-1)th has fully read its tagged completion. The
+   * chain is best-effort: a failing command does NOT poison the queue (the
+   * `.catch` swallows the settle so the next command still runs).
+   */
+  private commandChain: Promise<unknown> = Promise.resolve();
+
   private constructor(conn: Deno.TlsConn) {
     this.conn = conn;
     this.buffer = new Uint8Array(64 * 1024);
+  }
+
+  /**
+   * Serialize a command body on the single IMAP socket. Each call awaits the
+   * prior one's completion before its `fn` runs, so concurrent callers are
+   * queued rather than racing on the shared read buffer / tag stream. Errors
+   * propagate to *this* caller but never break the chain for the next one.
+   */
+  private runExclusive<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.commandChain.then(fn, fn);
+    // Keep the chain alive regardless of this command's outcome.
+    this.commandChain = run.then(() => {}, () => {});
+    return run;
   }
 
   /**
@@ -230,99 +258,109 @@ export class ImapClient {
   }
 
   /** SELECT a mailbox. Throws if the folder does not exist. */
-  async selectMailbox(mailbox: string): Promise<void> {
-    const tag = this.nextTag();
-    await this.write(`${tag} SELECT ${quoteImap(mailbox)}${CRLF}`);
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") {
-      throw new Error(`Mailbox not found: ${mailbox}`);
-    }
+  selectMailbox(mailbox: string): Promise<void> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} SELECT ${quoteImap(mailbox)}${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`Mailbox not found: ${mailbox}`);
+      }
+    });
   }
 
   /** UID SEARCH; returns matching UIDs (ascending). criteria e.g. "ALL", "UNSEEN". */
-  async uidSearch(criteria: string): Promise<number[]> {
-    const tag = this.nextTag();
-    await this.write(`${tag} UID SEARCH ${criteria}${CRLF}`);
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") {
-      throw new Error(`UID SEARCH failed: ${resp.text}`);
-    }
-    const line = resp.untagged.find((l) => /^\* SEARCH\b/.test(l));
-    if (!line) return [];
-    return line
-      .replace(/^\* SEARCH/, "")
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .map(Number)
-      .filter((n) => Number.isFinite(n));
+  uidSearch(criteria: string): Promise<number[]> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} UID SEARCH ${criteria}${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`UID SEARCH failed: ${resp.text}`);
+      }
+      const line = resp.untagged.find((l) => /^\* SEARCH\b/.test(l));
+      if (!line) return [];
+      return line
+        .replace(/^\* SEARCH/, "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(Number)
+        .filter((n) => Number.isFinite(n));
+    });
   }
 
   /**
    * UID FETCH (FLAGS ENVELOPE BODYSTRUCTURE) for a set of UIDs.
    * Returns one summary per message that parsed successfully.
    */
-  async fetchSummaries(uids: number[]): Promise<ImapMessageSummary[]> {
-    if (uids.length === 0) return [];
-    const tag = this.nextTag();
-    const set = uids.join(",");
-    await this.write(
-      `${tag} UID FETCH ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE BODY.PEEK[1]<0.2048>)${CRLF}`,
-    );
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") {
-      throw new Error(`UID FETCH failed: ${resp.text}`);
-    }
+  fetchSummaries(uids: number[]): Promise<ImapMessageSummary[]> {
+    if (uids.length === 0) return Promise.resolve([]);
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      const set = uids.join(",");
+      await this.write(
+        `${tag} UID FETCH ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE BODY.PEEK[1]<0.2048>)${CRLF}`,
+      );
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`UID FETCH failed: ${resp.text}`);
+      }
 
-    const summaries: ImapMessageSummary[] = [];
-    for (const line of resp.untagged) {
-      if (!/^\* \d+ FETCH /.test(line)) continue;
-      const parsed = parseFetchLine(line);
-      if (parsed) summaries.push(parsed);
-    }
-    return summaries;
+      const summaries: ImapMessageSummary[] = [];
+      for (const line of resp.untagged) {
+        if (!/^\* \d+ FETCH /.test(line)) continue;
+        const parsed = parseFetchLine(line);
+        if (parsed) summaries.push(parsed);
+      }
+      return summaries;
+    });
   }
 
   /**
    * UID FETCH the full raw RFC 822 message plus flags. Returns null if the UID
    * is not present in the FETCH response.
    */
-  async fetchMessageRaw(uid: number): Promise<ImapRawMessage | null> {
-    const tag = this.nextTag();
-    await this.write(`${tag} UID FETCH ${uid} (FLAGS BODY.PEEK[])${CRLF}`);
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") {
-      throw new Error(`UID FETCH failed: ${resp.text}`);
-    }
-    const line = resp.untagged.find((l) => /^\* \d+ FETCH /.test(l));
-    if (!line) return null;
-
-    const open = line.indexOf("(");
-    if (open === -1) return null;
-    const tokens = tokenize(line.slice(open));
-    const attrs = Array.isArray(tokens[0]) ? tokens[0] : tokens;
-
-    let raw = "";
-    let flags: string[] = [];
-    for (let i = 0; i < attrs.length; i++) {
-      const key = attrs[i];
-      if (key === "FLAGS" && Array.isArray(attrs[i + 1])) {
-        flags = (attrs[i + 1] as Token[]).filter((t): t is string => typeof t === "string");
-      } else if (
-        typeof key === "string" && key.startsWith("BODY[") &&
-        typeof attrs[i + 1] === "string"
-      ) {
-        raw = attrs[i + 1] as string;
+  fetchMessageRaw(uid: number): Promise<ImapRawMessage | null> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} UID FETCH ${uid} (FLAGS BODY.PEEK[])${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`UID FETCH failed: ${resp.text}`);
       }
-    }
-    return { raw, flags };
+      const line = resp.untagged.find((l) => /^\* \d+ FETCH /.test(l));
+      if (!line) return null;
+
+      const open = line.indexOf("(");
+      if (open === -1) return null;
+      const tokens = tokenize(line.slice(open));
+      const attrs = Array.isArray(tokens[0]) ? tokens[0] : tokens;
+
+      let raw = "";
+      let flags: string[] = [];
+      for (let i = 0; i < attrs.length; i++) {
+        const key = attrs[i];
+        if (key === "FLAGS" && Array.isArray(attrs[i + 1])) {
+          flags = (attrs[i + 1] as Token[]).filter((t): t is string => typeof t === "string");
+        } else if (
+          typeof key === "string" && key.startsWith("BODY[") &&
+          typeof attrs[i + 1] === "string"
+        ) {
+          raw = attrs[i + 1] as string;
+        }
+      }
+      return { raw, flags };
+    });
   }
 
   /** Mark a message read by setting the \Seen flag. Best-effort. */
-  async markSeen(uid: number): Promise<void> {
-    const tag = this.nextTag();
-    await this.write(`${tag} UID STORE ${uid} +FLAGS (\\Seen)${CRLF}`);
-    await this.readTagged(tag).catch(() => {});
+  markSeen(uid: number): Promise<void> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} UID STORE ${uid} +FLAGS (\\Seen)${CRLF}`);
+      await this.readTagged(tag).catch(() => {});
+    });
   }
 
   /**
@@ -331,21 +369,23 @@ export class ImapClient {
    * does not exist). Uses an IMAP literal: send "{len}", await the "+" prompt,
    * then the raw bytes.
    */
-  async append(mailbox: string, message: string): Promise<boolean> {
-    const tag = this.nextTag();
-    const bytes = this.encoder.encode(message);
-    await this.write(`${tag} APPEND ${quoteImap(mailbox)} (\\Seen) {${bytes.length}}${CRLF}`);
+  append(mailbox: string, message: string): Promise<boolean> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      const bytes = this.encoder.encode(message);
+      await this.write(`${tag} APPEND ${quoteImap(mailbox)} (\\Seen) {${bytes.length}}${CRLF}`);
 
-    const cont = await this.readLine();
-    if (!cont.startsWith("+")) {
-      // Rejected before the literal (e.g. "<tag> NO [TRYCREATE]").
-      return false;
-    }
+      const cont = await this.readLine();
+      if (!cont.startsWith("+")) {
+        // Rejected before the literal (e.g. "<tag> NO [TRYCREATE]").
+        return false;
+      }
 
-    await this.conn.write(bytes);
-    await this.write(CRLF);
-    const resp = await this.readTagged(tag);
-    return resp.status === "OK";
+      await this.conn.write(bytes);
+      await this.write(CRLF);
+      const resp = await this.readTagged(tag);
+      return resp.status === "OK";
+    });
   }
 
   /**
@@ -360,28 +400,30 @@ export class ImapClient {
    * Used by the drafts tools (draft_create / draft_update) so the returned
    * draft_id can be encoded as "<folder>:<uid>".
    */
-  async appendWithFlags(
+  appendWithFlags(
     mailbox: string,
     message: string,
     flags: string[],
   ): Promise<{ ok: boolean; uid?: number }> {
-    const tag = this.nextTag();
-    const bytes = this.encoder.encode(message);
-    const flagStr = flags.length ? ` (${flags.join(" ")})` : "";
-    await this.write(
-      `${tag} APPEND ${quoteImap(mailbox)}${flagStr} {${bytes.length}}${CRLF}`,
-    );
-    const cont = await this.readLine();
-    if (!cont.startsWith("+")) {
-      return { ok: false };
-    }
-    await this.conn.write(bytes);
-    await this.write(CRLF);
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") return { ok: false };
-    // Parse APPENDUID response code: [APPENDUID <uidvalidity> <uid>]
-    const m = resp.text.match(/\[APPENDUID\s+\d+\s+(\d+)\]/i);
-    return { ok: true, uid: m ? parseInt(m[1], 10) : undefined };
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      const bytes = this.encoder.encode(message);
+      const flagStr = flags.length ? ` (${flags.join(" ")})` : "";
+      await this.write(
+        `${tag} APPEND ${quoteImap(mailbox)}${flagStr} {${bytes.length}}${CRLF}`,
+      );
+      const cont = await this.readLine();
+      if (!cont.startsWith("+")) {
+        return { ok: false };
+      }
+      await this.conn.write(bytes);
+      await this.write(CRLF);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") return { ok: false };
+      // Parse APPENDUID response code: [APPENDUID <uidvalidity> <uid>]
+      const m = resp.text.match(/\[APPENDUID\s+\d+\s+(\d+)\]/i);
+      return { ok: true, uid: m ? parseInt(m[1], 10) : undefined };
+    });
   }
 
   // ── Phase-1+ low-level verbs (flags, MOVE, EXPUNGE, folders) ─────────────────
@@ -395,8 +437,17 @@ export class ImapClient {
    * Use IMAP system flags like "\\Seen", "\\Flagged", "\\Deleted".
    * Accepts bulk UID sets (uids are compressed to a compact range string).
    */
-  async uidStore(uids: number[], flags: string[], mode: "add" | "remove"): Promise<void> {
-    if (uids.length === 0) return;
+  uidStore(uids: number[], flags: string[], mode: "add" | "remove"): Promise<void> {
+    if (uids.length === 0) return Promise.resolve();
+    return this.runExclusive(() => this.uidStoreUnlocked(uids, flags, mode));
+  }
+
+  /** Unlocked UID STORE — only call while holding the command lock. */
+  private async uidStoreUnlocked(
+    uids: number[],
+    flags: string[],
+    mode: "add" | "remove",
+  ): Promise<void> {
     const tag = this.nextTag();
     const uidSet = toUidSet(uids);
     const modePrefix = mode === "add" ? "+" : "-";
@@ -412,8 +463,13 @@ export class ImapClient {
    * UID COPY messages to a destination mailbox.
    * Accepts bulk UID sets.
    */
-  async uidCopy(uids: number[], targetMailbox: string): Promise<void> {
-    if (uids.length === 0) return;
+  uidCopy(uids: number[], targetMailbox: string): Promise<void> {
+    if (uids.length === 0) return Promise.resolve();
+    return this.runExclusive(() => this.uidCopyUnlocked(uids, targetMailbox));
+  }
+
+  /** Unlocked UID COPY — only call while holding the command lock. */
+  private async uidCopyUnlocked(uids: number[], targetMailbox: string): Promise<void> {
     const tag = this.nextTag();
     const uidSet = toUidSet(uids);
     await this.write(`${tag} UID COPY ${uidSet} ${quoteImap(targetMailbox)}${CRLF}`);
@@ -427,18 +483,25 @@ export class ImapClient {
    * UID MOVE messages to a destination mailbox (RFC 6851).
    * Falls back to COPY + STORE \\Deleted + UID EXPUNGE on servers that lack MOVE.
    * Accepts bulk UID sets.
+   *
+   * The whole sequence (MOVE, or the COPY→STORE→EXPUNGE fallback) runs inside a
+   * SINGLE exclusive lock so the fallback steps stay atomic relative to other
+   * commands; the steps call the *Unlocked helpers to avoid re-acquiring the
+   * lock (which would deadlock on the chain this call already holds).
    */
-  async uidMove(uids: number[], targetMailbox: string): Promise<void> {
-    if (uids.length === 0) return;
-    const uidSet = toUidSet(uids);
-    const moveTag = this.nextTag();
-    await this.write(`${moveTag} UID MOVE ${uidSet} ${quoteImap(targetMailbox)}${CRLF}`);
-    const moveResp = await this.readTagged(moveTag);
-    if (moveResp.status === "OK") return;
-    // Server doesn't support RFC 6851 MOVE — fall back: COPY → \\Deleted → EXPUNGE.
-    await this.uidCopy(uids, targetMailbox);
-    await this.uidStore(uids, ["\\Deleted"], "add");
-    await this.uidExpunge(uids);
+  uidMove(uids: number[], targetMailbox: string): Promise<void> {
+    if (uids.length === 0) return Promise.resolve();
+    return this.runExclusive(async () => {
+      const uidSet = toUidSet(uids);
+      const moveTag = this.nextTag();
+      await this.write(`${moveTag} UID MOVE ${uidSet} ${quoteImap(targetMailbox)}${CRLF}`);
+      const moveResp = await this.readTagged(moveTag);
+      if (moveResp.status === "OK") return;
+      // Server doesn't support RFC 6851 MOVE — fall back: COPY → \\Deleted → EXPUNGE.
+      await this.uidCopyUnlocked(uids, targetMailbox);
+      await this.uidStoreUnlocked(uids, ["\\Deleted"], "add");
+      await this.uidExpungeUnlocked(uids);
+    });
   }
 
   /**
@@ -446,8 +509,13 @@ export class ImapClient {
    * Falls back to a plain EXPUNGE on servers that don't support the extension.
    * The calling code must have already marked the UIDs \\Deleted before calling this.
    */
-  async uidExpunge(uids: number[]): Promise<void> {
-    if (uids.length === 0) return;
+  uidExpunge(uids: number[]): Promise<void> {
+    if (uids.length === 0) return Promise.resolve();
+    return this.runExclusive(() => this.uidExpungeUnlocked(uids));
+  }
+
+  /** Unlocked UID EXPUNGE — only call while holding the command lock. */
+  private async uidExpungeUnlocked(uids: number[]): Promise<void> {
     const uidSet = toUidSet(uids);
     const tag = this.nextTag();
     await this.write(`${tag} UID EXPUNGE ${uidSet}${CRLF}`);
@@ -464,96 +532,112 @@ export class ImapClient {
    * LIST all mailboxes matching the given pattern (default: all).
    * Returns mailboxes sorted by name.
    */
-  async listMailboxes(pattern = "*"): Promise<ImapMailboxInfo[]> {
-    const tag = this.nextTag();
-    await this.write(`${tag} LIST "" ${quoteImap(pattern)}${CRLF}`);
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") {
-      throw new Error(`LIST failed: ${resp.text}`);
-    }
-    const mailboxes: ImapMailboxInfo[] = [];
-    for (const line of resp.untagged) {
-      // Format: * LIST (\Attr …) "delimiter" mailbox-name-or-quoted
-      const m = /^\* LIST \(([^)]*)\) ("[^"]*"|NIL) (.+)$/.exec(line);
-      if (!m) continue;
-      const flags = m[1].split(/\s+/).filter(Boolean);
-      const delimiter = m[2] === "NIL" ? "/" : m[2].slice(1, -1);
-      let name = m[3].trim();
-      if (name.startsWith('"')) {
-        name = name.slice(1, -1).replace(/\\(.)/g, "$1");
+  listMailboxes(pattern = "*"): Promise<ImapMailboxInfo[]> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} LIST "" ${quoteImap(pattern)}${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`LIST failed: ${resp.text}`);
       }
-      mailboxes.push({ name, delimiter, flags });
-    }
-    mailboxes.sort((a, b) => a.name.localeCompare(b.name));
-    return mailboxes;
+      const mailboxes: ImapMailboxInfo[] = [];
+      for (const line of resp.untagged) {
+        // Format: * LIST (\Attr …) "delimiter" mailbox-name-or-quoted
+        const m = /^\* LIST \(([^)]*)\) ("[^"]*"|NIL) (.+)$/.exec(line);
+        if (!m) continue;
+        const flags = m[1].split(/\s+/).filter(Boolean);
+        const delimiter = m[2] === "NIL" ? "/" : m[2].slice(1, -1);
+        let name = m[3].trim();
+        if (name.startsWith('"')) {
+          name = name.slice(1, -1).replace(/\\(.)/g, "$1");
+        }
+        mailboxes.push({ name, delimiter, flags });
+      }
+      mailboxes.sort((a, b) => a.name.localeCompare(b.name));
+      return mailboxes;
+    });
   }
 
   /**
    * STATUS a single mailbox — returns message/unseen/recent counts and UID info.
    */
-  async mailboxStatus(mailbox: string): Promise<ImapMailboxStatus> {
-    const tag = this.nextTag();
-    await this.write(
-      `${tag} STATUS ${quoteImap(mailbox)} (MESSAGES UNSEEN RECENT UIDNEXT UIDVALIDITY)${CRLF}`,
-    );
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") {
-      throw new Error(`STATUS failed for "${mailbox}": ${resp.text}`);
-    }
-    const line = resp.untagged.find((l) => /^\* STATUS\b/.test(l));
-    const pick = (key: string): number => {
-      if (!line) return 0;
-      const m = new RegExp(`\\b${key}\\b\\s+(\\d+)`).exec(line);
-      return m ? Number(m[1]) : 0;
-    };
-    return {
-      messages: pick("MESSAGES"),
-      unseen: pick("UNSEEN"),
-      recent: pick("RECENT"),
-      uidNext: pick("UIDNEXT"),
-      uidValidity: pick("UIDVALIDITY"),
-    };
+  mailboxStatus(mailbox: string): Promise<ImapMailboxStatus> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(
+        `${tag} STATUS ${quoteImap(mailbox)} (MESSAGES UNSEEN RECENT UIDNEXT UIDVALIDITY)${CRLF}`,
+      );
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`STATUS failed for "${mailbox}": ${resp.text}`);
+      }
+      const line = resp.untagged.find((l) => /^\* STATUS\b/.test(l));
+      const pick = (key: string): number => {
+        if (!line) return 0;
+        const m = new RegExp(`\\b${key}\\b\\s+(\\d+)`).exec(line);
+        return m ? Number(m[1]) : 0;
+      };
+      return {
+        messages: pick("MESSAGES"),
+        unseen: pick("UNSEEN"),
+        recent: pick("RECENT"),
+        uidNext: pick("UIDNEXT"),
+        uidValidity: pick("UIDVALIDITY"),
+      };
+    });
   }
 
   /** CREATE a new mailbox. Throws on server error. */
-  async createMailbox(mailbox: string): Promise<void> {
-    const tag = this.nextTag();
-    await this.write(`${tag} CREATE ${quoteImap(mailbox)}${CRLF}`);
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") {
-      throw new Error(`CREATE failed for "${mailbox}": ${resp.text}`);
-    }
+  createMailbox(mailbox: string): Promise<void> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} CREATE ${quoteImap(mailbox)}${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`CREATE failed for "${mailbox}": ${resp.text}`);
+      }
+    });
   }
 
   /** DELETE a mailbox. Throws on server error. */
-  async deleteMailbox(mailbox: string): Promise<void> {
-    const tag = this.nextTag();
-    await this.write(`${tag} DELETE ${quoteImap(mailbox)}${CRLF}`);
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") {
-      throw new Error(`DELETE failed for "${mailbox}": ${resp.text}`);
-    }
+  deleteMailbox(mailbox: string): Promise<void> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} DELETE ${quoteImap(mailbox)}${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`DELETE failed for "${mailbox}": ${resp.text}`);
+      }
+    });
   }
 
   /** RENAME a mailbox. Throws on server error. */
-  async renameMailbox(from: string, to: string): Promise<void> {
-    const tag = this.nextTag();
-    await this.write(`${tag} RENAME ${quoteImap(from)} ${quoteImap(to)}${CRLF}`);
-    const resp = await this.readTagged(tag);
-    if (resp.status !== "OK") {
-      throw new Error(`RENAME failed from "${from}" to "${to}": ${resp.text}`);
-    }
+  renameMailbox(from: string, to: string): Promise<void> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} RENAME ${quoteImap(from)} ${quoteImap(to)}${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`RENAME failed from "${from}" to "${to}": ${resp.text}`);
+      }
+    });
   }
 
-  /** Send LOGOUT and close the socket. Best-effort; always closes. */
-  async logout(): Promise<void> {
-    try {
-      const tag = this.nextTag();
-      await this.write(`${tag} LOGOUT${CRLF}`);
-      await this.readTagged(tag).catch(() => {});
-    } finally {
-      this.close();
-    }
+  /**
+   * Send LOGOUT and close the socket. Best-effort; always closes.
+   * Serialized like every other command so it can't race a still-in-flight
+   * command on the shared socket; the close() in finally always runs.
+   */
+  logout(): Promise<void> {
+    return this.runExclusive(async () => {
+      try {
+        const tag = this.nextTag();
+        await this.write(`${tag} LOGOUT${CRLF}`);
+        await this.readTagged(tag).catch(() => {});
+      } finally {
+        this.close();
+      }
+    });
   }
 
   private close(): void {

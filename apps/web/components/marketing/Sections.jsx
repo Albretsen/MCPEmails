@@ -38,7 +38,7 @@ export function Nav({ onSignIn, onGetStarted }) {
           <Link href="/#how">{t('nav.how')}</Link>
           <Link href="/#pricing">{t('nav.pricing')}</Link>
           <Link href="/docs">{t('nav.docs')}</Link>
-          <Link href="/blog">Blog</Link>
+          <Link href="/blog">{t('nav.blog')}</Link>
         </nav>
         <div className="nav-grow" />
         <div className="nav-cta">
@@ -69,7 +69,7 @@ export function Nav({ onSignIn, onGetStarted }) {
             <Link href="/#how" onClick={closeMenu}>{t('nav.how')}</Link>
             <Link href="/#pricing" onClick={closeMenu}>{t('nav.pricing')}</Link>
             <Link href="/docs" onClick={closeMenu}>{t('nav.docs')}</Link>
-            <Link href="/blog" onClick={closeMenu}>Blog</Link>
+            <Link href="/blog" onClick={closeMenu}>{t('nav.blog')}</Link>
           </nav>
           <div className="nav-mobile-cta">
             <a className="btn btn-ghost" href="/login" onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
@@ -88,7 +88,7 @@ export function HeroTextBlock({ onGetStarted }) {
   return (
     <div>
       <h1 className="h1" style={{ marginTop: 0 }}>
-        {t('hero.titleLine1')}<br/>{t('hero.titleLine2')} <span className="accent">{t('hero.titleAccent')}</span>
+        {t('hero.titleLine1')} <br/>{t('hero.titleLine2')} <span className="accent">{t('hero.titleAccent')}</span>
       </h1>
       <p className="lead">{t('hero.lead')}</p>
       <div className="hero-cta">
@@ -408,7 +408,7 @@ export function DashboardPreview() {
     { tool: 'email_list', inbox: 'work-gmail', time: 'just now' },
     { tool: 'email_read', inbox: 'work-gmail', time: '12s ago' },
     { tool: 'email_send', inbox: 'ops-fastmail', time: '1m ago' },
-    { tool: 'email_search', inbox: 'support-outlook', time: '3m ago' },
+    { tool: 'email_search', inbox: 'support-imap', time: '3m ago' },
   ];
 
   return (
@@ -625,7 +625,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
         </div>
         <p className="pricing-footnote">
           {t.rich('pricing.footnote', {
-            contact: (chunks) => <a href="mailto:sales@mcpemails.com">{chunks}</a>,
+            contact: (chunks) => <a href="mailto:hello@mcpemails.com">{chunks}</a>,
             comparison: (chunks) => <a href="/pricing">{chunks}</a>,
           })}
         </p>

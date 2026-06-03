@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ImapAuthError, ImapClient, ImapMessageSummary } from "./imap-client.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
@@ -28,6 +29,26 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
 });
+
+// ---------------------------------------------------------------------------
+// Activity-log inbox capture
+//
+// Inbox-bound tools resolve their target inbox inside `resolveInboxArg` — which
+// accepts an explicit inbox_id UUID, an email alias (`inbox`/`inbox_id`), OR
+// auto-resolves the single accessible inbox when neither is given. The tools/call
+// dispatcher cannot know the resolved id just from the raw request arguments
+// (the client may pass an email alias or nothing at all), so it would log
+// inbox_id = null and the dashboard would render "unknown inbox".
+//
+// This async-context store lets resolveInboxArg record the inbox it actually
+// resolved for the in-flight request; the dispatcher reads it back for logging.
+// AsyncLocalStorage keeps each concurrent tools/call isolated even when the
+// edge isolate is reused across requests. If the runtime lacks ALS support the
+// store is simply absent and logging falls back to the raw-argument inbox_id.
+// ---------------------------------------------------------------------------
+
+const activityInboxStore =
+  new AsyncLocalStorage<{ inboxId: string | null }>();
 
 // ---------------------------------------------------------------------------
 // Reconnect / auth-failure helpers
@@ -961,73 +982,6 @@ async function writeActivityLog(params: ActivityLogParams): Promise<void> {
       key_id: params.apiKeyId,
       tool_name: params.toolName,
       status: params.status,
-      error: error.message,
-      error_code: error.code,
-    });
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Contacts derivation — upsertContacts
-// ---------------------------------------------------------------------------
-
-/**
- * Fire-and-forget upsert of contact rows derived from email message headers.
- *
- * Called on every successful email_read, email_search, and email_send.
- * Silently skips invalid addresses and swallows DB errors so a contacts
- * failure never blocks a tool response.
- *
- * Each address that isn't the inbox's own address is upserted into
- * `public.contacts` keyed by (inbox_id, lower(email_address)), incrementing
- * message_count and refreshing last_contacted_at and display_name.
- *
- * Idempotency: ON CONFLICT on the unique index (inbox_id, lower(email_address))
- * ensures duplicate calls for the same address are collapsed into one row.
- *
- * @param inbox   Resolved InboxRow — provides workspace_id and inbox_id.
- * @param entries Raw EmailAddressEntry list from message headers.
- * @param seenAt  ISO 8601 timestamp of the message (for last_contacted_at).
- */
-async function upsertContacts(
-  inbox: InboxRow,
-  entries: EmailAddressEntry[],
-  seenAt: string,
-): Promise<void> {
-  // Normalise and deduplicate; exclude the inbox's own address.
-  const own = (inbox.email_address ?? "").toLowerCase().trim();
-  const seen = new Set<string>();
-  const rows: Record<string, unknown>[] = [];
-
-  for (const entry of entries) {
-    const addr = (entry.email ?? "").toLowerCase().trim();
-    if (!addr || addr === own || seen.has(addr)) continue;
-    seen.add(addr);
-    rows.push({
-      workspace_id: inbox.workspace_id,
-      inbox_id: inbox.id,
-      email_address: addr,
-      display_name: entry.name?.trim() || null,
-      message_count: 1,
-      last_contacted_at: seenAt,
-      updated_at: new Date().toISOString(),
-    });
-  }
-
-  if (rows.length === 0) return;
-
-  // Upsert in a single statement; conflict target is the partial unique index.
-  const { error } = await supabase.from("contacts").upsert(rows, {
-    onConflict: "inbox_id,email_address",
-    ignoreDuplicates: false,
-  });
-
-  if (error) {
-    // Non-fatal — log and continue.
-    console.error("[mcp-server] upsertContacts_failed", {
-      inbox_id: inbox.id,
-      workspace_id: inbox.workspace_id,
-      count: rows.length,
       error: error.message,
       error_code: error.code,
     });
@@ -2209,7 +2163,11 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     title: "Update Draft",
     description:
       "Replace the content of an existing draft. All supplied fields overwrite the stored draft. " +
-      "Use draft_list to obtain draft_id values.",
+      "Use draft_list to obtain draft_id values. " +
+      "IMPORTANT: on IMAP-backed inboxes (anything other than Gmail/Outlook) the underlying message " +
+      "is rewritten, so this call returns a NEW draft_id that REPLACES the one you passed in. You MUST " +
+      "adopt the returned draft_id for any further draft_update/draft_send and discard the old one; " +
+      "reusing the previous id will fail. Gmail and Outlook keep a stable draft_id across updates.",
     requiredScope: "manage:drafts",
     inputSchema: {
       type: "object",
@@ -2218,7 +2176,9 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox: INBOX_PROPERTY,
         draft_id: {
           type: "string",
-          description: "Provider-native draft identifier as returned by draft_create or draft_list.",
+          description: "Provider-native draft identifier as returned by the most recent draft_create, " +
+            "draft_update, or draft_list. On IMAP inboxes this changes after every update, so always " +
+            "use the latest one.",
         },
         to: {
           type: "array",
@@ -2261,7 +2221,9 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     title: "Send Draft",
     description:
       "Send a previously saved draft. The draft is removed from the Drafts folder after sending. " +
-      "This action is irreversible — use carefully.",
+      "This action is irreversible — use carefully. " +
+      "Always pass the MOST RECENT draft_id (from draft_create, the latest draft_update, or draft_list): " +
+      "on IMAP-backed inboxes the id changes on every update, and a stale id will fail with a not-found error.",
     requiredScope: "manage:drafts",
     inputSchema: {
       type: "object",
@@ -2270,7 +2232,9 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         inbox: INBOX_PROPERTY,
         draft_id: {
           type: "string",
-          description: "Provider-native draft identifier as returned by draft_create or draft_list.",
+          description: "Provider-native draft identifier as returned by the most recent draft_create, " +
+            "draft_update, or draft_list. On IMAP inboxes this changes after every update, so always " +
+            "use the latest one.",
         },
       },
       required: ["draft_id"],
@@ -2284,13 +2248,17 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     name: "contact_search",
     title: "Search Contacts",
     description:
-      "Search the derived contact list by name or email address. " +
-      "Contacts are automatically populated from message headers seen during " +
-      "email_read, email_search, and email_send — no manual setup is needed. " +
-      "Returns matching contacts sorted by most-recently-contacted first, " +
-      "each with their display name, email address, message count, and " +
-      "last-contacted timestamp. Optionally restrict to a specific inbox; " +
-      "if inbox_id is omitted, searches across all inboxes in the workspace.",
+      "Find people matching a name or email fragment by scanning your LIVE " +
+      "mailbox — there is no stored contact list. Each call performs a bounded, " +
+      "header-only scan of recent matching mail and tallies the correspondents " +
+      "who match the query, sorted by most-recently-contacted first (display " +
+      "name, email address, matched-message count, and last-contacted " +
+      "timestamp). Honesty about the tradeoff: results reflect a live scan of a " +
+      "RECENT window of matching messages (not your full history), and the " +
+      "message_count reflects only matched messages within that window — not an " +
+      "all-time total. Nothing is stored between calls. Optionally restrict to a " +
+      "specific inbox; if inbox_id is omitted, scans the inboxes the API key can " +
+      "access in the workspace (a bounded number of them).",
     requiredScope: "manage:contacts",
     inputSchema: {
       type: "object",
@@ -2298,18 +2266,20 @@ const TOOL_REGISTRY: ToolDefinition[] = [
         query: {
           type: "string",
           description:
-            "Name or email address fragment to search for. " +
-            "Matched case-insensitively against both display_name and email_address. " +
-            "Must be at least 1 character. Example: 'alice' matches 'Alice Smith' " +
-            "and 'alice@example.com'.",
+            "Name or email address fragment to search for. Matched " +
+            "case-insensitively against both the display name and email " +
+            "address of correspondents found in a live scan of recent matching " +
+            "mail. Must be at least 1 character. Example: 'alice' matches " +
+            "'Alice Smith' and 'alice@example.com'.",
         },
         inbox_id: {
           type: "string",
           format: "uuid",
           description:
-            "Optional. When provided, restricts results to contacts seen " +
-            "from that specific inbox. When omitted, searches across all " +
-            "inboxes the API key is permitted to access within the workspace.",
+            "Optional. When provided, restricts the live scan to that specific " +
+            "inbox. When omitted, scans the inboxes the API key is permitted to " +
+            "access within the workspace (a bounded number of them). Nothing is " +
+            "stored — every call re-scans live mail.",
         },
         limit: {
           type: "integer",
@@ -2843,7 +2813,12 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
   draft_update: {
     type: "object",
     properties: {
-      draft_id: { type: "string" },
+      draft_id: {
+        type: "string",
+        description: "The draft's current identifier. On IMAP-backed inboxes the underlying " +
+          "message is rewritten on update, so this MAY DIFFER from the draft_id you passed in — " +
+          "adopt this value for any further draft_update/draft_send. Gmail/Outlook return the same id.",
+      },
       subject: { type: "string" },
       updated_at: { type: "string" },
     },
@@ -2870,14 +2845,13 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
         items: {
           type: "object",
           properties: {
-            id: { type: "string" },
             inbox_id: { type: "string" },
             email_address: { type: "string" },
             display_name: { type: ["string", "null"] },
             message_count: { type: "integer" },
             last_contacted_at: { type: "string" },
           },
-          required: ["id", "inbox_id", "email_address"],
+          required: ["inbox_id", "email_address"],
           additionalProperties: true,
         },
       },
@@ -3043,9 +3017,10 @@ interface ProviderCapabilities {
   /** Provider-native contacts / address-book API */
   contacts_api: boolean;
   /**
-   * DB-synced contacts derived from message headers (contact_search
-   * tool — Task 15-16).  True for all providers because the
-   * contacts table is populated from email metadata regardless of protocol.
+   * contact_search support (the manage:contacts tool). True for all providers:
+   * contact_search is served by a LIVE, header-only scan of recent matching
+   * mail — there is no contacts table and nothing is persisted. (Field name
+   * kept as-is to avoid churn across the codebase / capability consumers.)
    */
   contacts_db: boolean;
   /** Server-side scheduled send (via scheduled_sends queue — Task 17-18) */
@@ -3081,7 +3056,7 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     forward: true,
     drafts: true,        // Gmail Drafts API
     contacts_api: true,  // Google People API
-    contacts_db: true,   // DB-synced from message headers
+    contacts_db: true,   // live header scan (no DB)
     scheduling: true,    // via scheduled_sends queue
     search_syntax: "gmail",
   },
@@ -3096,7 +3071,7 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     forward: true,       // Graph createForward or MIME send
     drafts: true,        // Graph createDraft / send
     contacts_api: true,  // Graph /contacts
-    contacts_db: true,   // DB-synced from message headers
+    contacts_db: true,   // live header scan (no DB)
     scheduling: true,    // via scheduled_sends queue
     search_syntax: "odata",
   },
@@ -3111,7 +3086,7 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     forward: true,       // Compose + JMAP send
     drafts: true,        // JMAP Email/set $draft keyword
     contacts_api: false, // CardDAV out of scope for v0.1
-    contacts_db: true,   // DB-synced from message headers
+    contacts_db: true,   // live header scan (no DB)
     scheduling: true,    // via scheduled_sends queue
     search_syntax: "jmap",
   },
@@ -3126,7 +3101,7 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     forward: true,       // Compose + SMTP send
     drafts: true,        // IMAP APPEND to Drafts with \Draft flag
     contacts_api: false, // No standard contacts API over IMAP/SMTP
-    contacts_db: true,   // DB-synced from message headers
+    contacts_db: true,   // live header scan (no DB)
     scheduling: true,    // via scheduled_sends queue
     search_syntax: "imap",
   },
@@ -3489,6 +3464,24 @@ async function resolveInbox(
  * specified), or "none" (the key can access no inbox at all).
  */
 async function resolveInboxArg(
+  args: Record<string, unknown>,
+  apiKey: ApiKeyRow,
+): Promise<
+  | { ok: true; inbox: InboxRow }
+  | { ok: false; reason: "not_found" | "ambiguous" | "none" }
+> {
+  const resolved = await resolveInboxArgInner(args, apiKey);
+  // Record the inbox this request actually resolved so the tools/call dispatcher
+  // can log it (the raw arguments alone don't reveal an alias- or auto-resolved
+  // inbox). No-op when called outside an activity-log async context.
+  if (resolved.ok) {
+    const store = activityInboxStore.getStore();
+    if (store) store.inboxId = resolved.inbox.id;
+  }
+  return resolved;
+}
+
+async function resolveInboxArgInner(
   args: Record<string, unknown>,
   apiKey: ApiKeyRow,
 ): Promise<
@@ -4071,39 +4064,60 @@ async function listGmailMessages(
   const accessToken = await withFreshGmailToken(inbox);
   const label = gmailFolderToLabel(folder);
 
-  const fetchCount = Math.min(offset + limit, 100);
-  const params = new URLSearchParams({
-    labelIds: label,
-    maxResults: String(fetchCount),
-  });
-  if (unreadOnly) params.set("q", "is:unread");
+  // Gmail's list endpoint is cursor-based (nextPageToken) and has no numeric
+  // offset parameter. To honor our numeric `offset` API contract, page forward
+  // with nextPageToken, accumulating message refs until we've collected
+  // `offset + limit` of them (or Gmail runs out). Gmail caps maxResults at 500
+  // per page, so deep offsets cost a few sequential calls rather than one.
+  const target = offset + limit;
+  const allRefs: { id: string; threadId: string }[] = [];
+  let pageToken: string | undefined;
+  let nextPageToken: string | undefined;
+  let resultSizeEstimate = 0;
 
-  const listResp = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages?${params}`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
+  do {
+    const params = new URLSearchParams({
+      labelIds: label,
+      // Request only as many as we still need to reach `target`, capped at
+      // Gmail's per-page maximum of 500.
+      maxResults: String(Math.min(target - allRefs.length, 500)),
+    });
+    if (unreadOnly) params.set("q", "is:unread");
+    if (pageToken) params.set("pageToken", pageToken);
 
-  if (!listResp.ok) {
-    if (listResp.status === 401) throw new Error("gmail_auth_failed");
-    const errBody = (await listResp.json()) as {
-      error?: { message?: string };
-    };
-    throw new Error(
-      `Gmail API error: ${errBody.error?.message ?? listResp.statusText}`,
+    const listResp = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages?${params}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
     );
-  }
 
-  const listData = (await listResp.json()) as {
-    messages?: { id: string; threadId: string }[];
-    resultSizeEstimate?: number;
-    nextPageToken?: string;
-  };
+    if (!listResp.ok) {
+      if (listResp.status === 401) throw new Error("gmail_auth_failed");
+      const errBody = (await listResp.json()) as {
+        error?: { message?: string };
+      };
+      throw new Error(
+        `Gmail API error: ${errBody.error?.message ?? listResp.statusText}`,
+      );
+    }
 
-  const allRefs = listData.messages ?? [];
-  // Gmail's resultSizeEstimate is an approximation, not an exact count.
-  const total = listData.resultSizeEstimate ?? allRefs.length;
-  const hasMore =
-    !!listData.nextPageToken || allRefs.length > offset + limit;
+    const listData = (await listResp.json()) as {
+      messages?: { id: string; threadId: string }[];
+      resultSizeEstimate?: number;
+      nextPageToken?: string;
+    };
+
+    allRefs.push(...(listData.messages ?? []));
+    // Gmail's resultSizeEstimate is an approximation, not an exact count.
+    resultSizeEstimate = listData.resultSizeEstimate ?? resultSizeEstimate;
+    nextPageToken = listData.nextPageToken;
+    pageToken = nextPageToken;
+  } while (pageToken && allRefs.length < target);
+
+  const total = resultSizeEstimate || allRefs.length;
+  // More pages remain only if Gmail still has a cursor beyond what we fetched,
+  // or we somehow over-fetched past this page. When Gmail ran out of pages
+  // (no nextPageToken), there is nothing more regardless of the offset.
+  const hasMore = !!nextPageToken || allRefs.length > offset + limit;
 
   const pageRefs = allRefs.slice(offset, offset + limit);
 
@@ -4214,6 +4228,79 @@ function lookupCanonicalAlias(token: string): CanonicalFolderAlias | undefined {
 }
 
 /**
+ * Maps a canonical folder alias (matched by its first token) to the IMAP
+ * SPECIAL-USE attribute flag a mailbox advertises for that role (RFC 6154),
+ * lower-cased for case-insensitive comparison against LIST flags.
+ *
+ * Used to resolve aliases ("archive", "trash", …) against the server's ACTUAL
+ * mailbox layout instead of assuming a fixed English name like "Archive" — the
+ * generic-IMAP move bug where "archive" hard-resolved to a non-existent
+ * "Archive" mailbox. "inbox" has no SPECIAL-USE flag (it is always the reserved
+ * name "INBOX"), so it is intentionally absent.
+ */
+const IMAP_ALIAS_SPECIAL_USE: Record<string, string> = {
+  archive: "\\archive",
+  sent: "\\sent",
+  drafts: "\\drafts",
+  trash: "\\trash",
+  spam: "\\junk",
+};
+
+/**
+ * Resolve a canonical folder alias to a concrete IMAP mailbox name using the
+ * server's real layout. Issues a single LIST and matches in this order:
+ *   1. "inbox" → always the reserved name "INBOX".
+ *   2. SPECIAL-USE flag match (\\Archive, \\Trash, \\Sent, \\Drafts, \\Junk).
+ *   3. Case-insensitive match against the canonical English name (e.g.
+ *      a mailbox literally named "Archive").
+ * Returns null when nothing matches so the caller can fall back to the static
+ * hard-coded name / pass-through (we never auto-create a folder here).
+ */
+async function resolveImapAliasMailbox(
+  inbox: InboxRow,
+  alias: CanonicalFolderAlias,
+): Promise<string | null> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const canonicalToken = alias.aliases[0];
+  if (canonicalToken === "inbox") return "INBOX";
+
+  const wantFlag = IMAP_ALIAS_SPECIAL_USE[canonicalToken];
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: imapAuthUser(inbox),
+      password,
+    });
+    const mailboxes = await client.listMailboxes();
+
+    // (2) SPECIAL-USE flag match.
+    if (wantFlag) {
+      const bySpecialUse = mailboxes.find((mb) =>
+        mb.flags.some((f) => f.toLowerCase() === wantFlag)
+      );
+      if (bySpecialUse) return bySpecialUse.name;
+    }
+
+    // (3) Case-insensitive match against the canonical English name.
+    const wantName = alias.imap.toLowerCase();
+    const byName = mailboxes.find((mb) => mb.name.toLowerCase() === wantName);
+    if (byName) return byName.name;
+
+    return null;
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+/**
  * Maps MCPEmails canonical folder names to Microsoft Graph well-known
  * folder names. Unknown names are passed through as displayName filters.
  * Derives from CANONICAL_FOLDER_ALIASES (single source of truth).
@@ -4227,6 +4314,8 @@ interface OutlookMessage {
   conversationId?: string;
   from?: { emailAddress?: { name?: string; address?: string } };
   toRecipients?: { emailAddress?: { name?: string; address?: string } }[];
+  /** Populated by contact_search's $select; absent on email_list responses. */
+  ccRecipients?: { emailAddress?: { name?: string; address?: string } }[];
   subject?: string;
   receivedDateTime?: string;
   bodyPreview?: string;
@@ -6309,13 +6398,6 @@ async function executeReadEmail(
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
-  // Derive contacts from headers (fire-and-forget; never blocks the response).
-  upsertContacts(
-    inbox,
-    [readResult.from, ...readResult.to, ...readResult.cc],
-    readResult.date,
-  ).catch(() => { /* already logged inside upsertContacts */ });
-
   return {
     result: { ...jsonOk(readResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
@@ -6494,18 +6576,6 @@ async function executeReadEmails(
     }
 
     messages.push(readResult);
-  }
-
-  // ── Contacts (fire-and-forget) ────────────────────────────────────────────
-  if (messages.length > 0) {
-    const entries: EmailAddressEntry[] = [];
-    let latestDate = messages[0].date;
-    for (const m of messages) {
-      entries.push(m.from, ...m.to, ...m.cc);
-      if (m.date > latestDate) latestDate = m.date;
-    }
-    upsertContacts(inbox, entries, latestDate)
-      .catch(() => { /* already logged inside upsertContacts */ });
   }
 
   return {
@@ -9358,13 +9428,6 @@ async function executeSendEmail(
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
-  // Derive contacts from recipients (fire-and-forget; never blocks the response).
-  upsertContacts(
-    inbox,
-    [...sendResult.to, ...sendResult.cc, ...sendResult.bcc],
-    sendResult.sent_at,
-  ).catch(() => { /* already logged inside upsertContacts */ });
-
   return {
     result: { ...jsonOk(sendResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
@@ -10265,19 +10328,6 @@ async function executeSearchEmails(
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
-  // Derive contacts from message summaries (fire-and-forget).
-  // Each summary carries from + to; use the most-recent date seen per message.
-  if (searchResult.messages.length > 0) {
-    const allEntries: EmailAddressEntry[] = [];
-    for (const msg of searchResult.messages) {
-      allEntries.push(msg.from, ...msg.to);
-    }
-    const latestDate = searchResult.messages.reduce<string>((best, msg) =>
-      msg.date > best ? msg.date : best, searchResult.messages[0].date);
-    upsertContacts(inbox, allEntries, latestDate)
-      .catch(() => { /* already logged inside upsertContacts */ });
-  }
-
   return {
     result: { ...jsonOk(searchResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
@@ -10324,7 +10374,18 @@ interface FolderEntry {
 
 /**
  * Lists IMAP mailboxes with per-mailbox STATUS (message counts).
- * Caps STATUS fetches at 50 to prevent timeouts on large accounts.
+ *
+ * STATUS is a separate IMAP round-trip per mailbox, and `ImapClient` runs every
+ * command serialized over a single socket (see its command-chain mutex), so the
+ * count enrichment is inherently sequential. We therefore list EVERY mailbox
+ * (never drop a folder — a dropped folder makes a valid move target look
+ * nonexistent) but only fetch counts for the first IMAP_FOLDER_COUNT_LIMIT of
+ * them; the rest are returned with null counts (explicit "unknown", not a
+ * dropped folder). The STATUS calls run sequentially via the mutex regardless
+ * of how we await them — `Promise.allSettled` just queues them onto the chain —
+ * and each is bounded by the per-command read timeout, so this can neither
+ * corrupt the shared buffer nor hang.
+ *
  * Throws "imap_auth_failed" on credential rejection.
  */
 async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
@@ -10341,18 +10402,21 @@ async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
       password,
     });
     const mailboxes = await client.listMailboxes();
-    const toStatus = mailboxes.slice(0, 50);
+    // Cap only the COUNT enrichment (the expensive sequential STATUS fan-out);
+    // every mailbox is still returned below.
+    const IMAP_FOLDER_COUNT_LIMIT = 25;
+    const enrichCount = Math.min(mailboxes.length, IMAP_FOLDER_COUNT_LIMIT);
     const statuses = await Promise.allSettled(
-      toStatus.map((mb) => client!.mailboxStatus(mb.name)),
+      mailboxes.slice(0, enrichCount).map((mb) => client!.mailboxStatus(mb.name)),
     );
-    return toStatus.map((mb, i) => {
-      const st = statuses[i];
+    return mailboxes.map((mb, i) => {
+      const st = i < enrichCount ? statuses[i] : undefined;
       return {
         id: mb.name,
         name: mb.name,
         type: "folder" as const,
-        total_messages: st.status === "fulfilled" ? st.value.messages : null,
-        unread_messages: st.status === "fulfilled" ? st.value.unseen : null,
+        total_messages: st?.status === "fulfilled" ? st.value.messages : null,
+        unread_messages: st?.status === "fulfilled" ? st.value.unseen : null,
       };
     });
   } catch (err) {
@@ -10563,8 +10627,16 @@ async function resolveFolderId(inbox: InboxRow, nameOrId: string): Promise<strin
       case "fastmail":
         // No static id; fall through and match the mailbox by canonical name.
         break;
-      default: // imap — the common name is the id.
-        return alias.imap;
+      default: {
+        // imap — resolve the alias against the server's REAL layout via IMAP
+        // SPECIAL-USE flags (one LIST). A generic IMAP account may name its
+        // archive/trash/etc differently from the hard-coded English names, so
+        // we can't just return alias.imap verbatim (that caused move-to-archive
+        // to fail with TRYCREATE for a non-existent "Archive"). When nothing on
+        // the server matches, fall back to the static name (provider validates).
+        const resolvedName = await resolveImapAliasMailbox(inbox, alias);
+        return resolvedName ?? alias.imap;
+      }
     }
   }
 
@@ -13858,6 +13930,31 @@ async function executeSearchAndDelete(
 // draft_create / draft_update / draft_list / draft_send — types + helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Provider-aware "draft not found" message.
+ *
+ * On IMAP-backed inboxes (the default/`imap` branch — Gmail/Outlook/Fastmail
+ * have stable resource IDs) a draft is a message with an immutable UID, so
+ * "updating" a draft = APPEND a new message (new UID) + EXPUNGE the old one.
+ * Every successful draft_update therefore mints a NEW draft_id. A caller still
+ * holding the draft_id from before an update will reference a UID that no
+ * longer exists. Rather than a generic error, tell them the id changed and to
+ * call draft_list to get the current one.
+ */
+function draftNotFoundMessage(
+  provider: string,
+  draftId: string,
+  action: "update" | "send",
+): string {
+  const isImap = provider !== "gmail" && provider !== "outlook" && provider !== "fastmail";
+  if (isImap) {
+    return `Draft ${draftId} no longer exists. On this inbox each draft_update rewrites the ` +
+      `draft and returns a NEW draft_id, so an older draft_id becomes stale after an update. ` +
+      `Call draft_list to get the current draft_id, then retry draft_${action} with it.`;
+  }
+  return `Draft ${draftId} not found. Use draft_list to see available draft IDs.`;
+}
+
 /** Common folder names for the Drafts mailbox across IMAP providers, tried in order. */
 const DRAFT_FOLDER_CANDIDATES = ["Drafts", "Draft", "INBOX.Drafts", "INBOX.Draft"];
 
@@ -14093,6 +14190,17 @@ async function imapUpdateDraft(
     // all three target the same mailbox — otherwise (e.g. folder "Draft" vs
     // imapFolderName("Draft")="Drafts") the old draft would be left orphaned.
     // Mirrors imapCreateDraft, which uses the folder name consistently.
+
+    // IMAP "update" = APPEND new + EXPUNGE old, so each update mints a NEW UID
+    // (a new draft_id). If the caller passed a stale draft_id whose UID was
+    // already superseded by a prior update, the old message no longer exists.
+    // Verify it is present BEFORE appending, otherwise we would silently create
+    // a duplicate draft and the EXPUNGE below would no-op. Surface a clean
+    // draft_not_found so the handler can tell the caller to re-fetch the id.
+    await client.selectMailbox(folder);
+    const existing = await client.uidSearch(`UID ${oldUid}`);
+    if (!existing.includes(oldUid)) throw new Error("draft_not_found");
+
     let newUid: number | undefined;
     const res = await client.appendWithFlags(folder, mime, ["\\Draft", "\\Seen"]);
     if (res.ok) {
@@ -15005,7 +15113,7 @@ async function executeUpdateDraft(
     const message = err instanceof Error ? err.message : String(err);
     if (message === "draft_not_found") {
       return {
-        result: { content: [{ type: "text", text: `Draft ${draftId} not found. Use draft_list to see available draft IDs.` }], isError: true },
+        result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId, "update") }], isError: true },
         logStatus: "error", logErrorCode: "draft_not_found",
       };
     }
@@ -15071,7 +15179,7 @@ async function executeSendDraft(
     const message = err instanceof Error ? err.message : String(err);
     if (message === "draft_not_found") {
       return {
-        result: { content: [{ type: "text", text: `Draft ${draftId} not found. Use draft_list to see available draft IDs.` }], isError: true },
+        result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId, "send") }], isError: true },
         logStatus: "error", logErrorCode: "draft_not_found",
       };
     }
@@ -15110,19 +15218,324 @@ async function executeSendDraft(
 
 // ---------------------------------------------------------------------------
 // Contacts tools — Phase 6
+//
+// `contact_search` aggregates correspondents directly from LIVE mail. There is
+// NO stored contacts table: every call performs a bounded, header-only scan of
+// recent matching messages across the target inbox(es) and tallies the people
+// who match the query. This honours the product's "we store no email data"
+// promise — nothing is persisted between calls.
 // ---------------------------------------------------------------------------
 
+/** A single aggregated correspondent within ONE inbox's scan window. */
+interface ContactHit {
+  email_address: string;
+  display_name: string | null;
+  /** Number of matched messages (within the capped window) this address was in. */
+  message_count: number;
+  /** ISO 8601 timestamp of the most recent matched message. */
+  last_contacted_at: string;
+}
+
+/** Max inboxes scanned per call when inbox_id is omitted (bounds fan-out cost). */
+const CONTACT_SEARCH_MAX_INBOXES = 10;
+/** Max messages inspected per inbox (bounds the per-provider scan window). */
+const CONTACT_SEARCH_PER_INBOX_CAP = 80;
+
 /**
- * `contact_search` — search the derived contacts table by name or email.
+ * Fold a single message's address entries into a running ContactHit map.
+ *
+ * Only addresses whose email OR display name contains the (lower-cased) query
+ * are kept — this is the critical client-side filter: a message that matched
+ * "alice" on the server also carries every other participant (e.g. bob), and we
+ * must NOT report those non-matching people. For each kept address we bump the
+ * count once per message, advance last_contacted_at to the newest date seen,
+ * and prefer the most-recent non-empty display name.
+ *
+ * @param acc      Accumulator keyed by lower-cased email address.
+ * @param entries  All address entries seen on this one message (from/to/cc).
+ * @param dateIso  The message's ISO 8601 date.
+ * @param queryLc  The lower-cased search query.
+ */
+function foldContactEntries(
+  acc: Map<string, ContactHit & { _newestDate: string }>,
+  entries: EmailAddressEntry[],
+  dateIso: string,
+  queryLc: string,
+): void {
+  // Dedupe addresses within a single message so one message counts at most once
+  // per correspondent (a person on both To and Cc still counts as one message).
+  const seenThisMessage = new Set<string>();
+  for (const entry of entries) {
+    const email = (entry.email ?? "").trim();
+    if (!email) continue;
+    const key = email.toLowerCase();
+    const name = (entry.name ?? "").trim();
+    // Client-side query filter: keep only people who actually match the query.
+    if (!key.includes(queryLc) && !name.toLowerCase().includes(queryLc)) {
+      continue;
+    }
+    if (seenThisMessage.has(key)) continue;
+    seenThisMessage.add(key);
+
+    const existing = acc.get(key);
+    if (!existing) {
+      acc.set(key, {
+        email_address: email,
+        display_name: name || null,
+        message_count: 1,
+        last_contacted_at: dateIso,
+        _newestDate: dateIso,
+      });
+      continue;
+    }
+    existing.message_count += 1;
+    if (dateIso > existing.last_contacted_at) {
+      existing.last_contacted_at = dateIso;
+    }
+    // Prefer the most-recent non-empty display name seen for this address.
+    if (name && dateIso >= existing._newestDate) {
+      existing.display_name = name;
+      existing._newestDate = dateIso;
+    }
+  }
+}
+
+/** Materialise the fold accumulator into plain ContactHit[] (drops _newestDate). */
+function finalizeContactHits(
+  acc: Map<string, ContactHit & { _newestDate: string }>,
+): ContactHit[] {
+  return Array.from(acc.values()).map(({ _newestDate: _drop, ...hit }) => hit);
+}
+
+/**
+ * Gmail contact aggregator. Searches address headers with
+ * `from:Q OR to:Q OR cc:Q`, fetches up to `cap` matched messages' metadata
+ * headers (From/To/Cc/Date), and folds them through the shared query filter.
+ */
+async function gmailSearchContacts(
+  inbox: InboxRow,
+  query: string,
+  cap: number,
+): Promise<ContactHit[]> {
+  const accessToken = await withFreshGmailToken(inbox);
+  // Gmail's `q` grammar: quote the term and escape embedded quotes/backslashes
+  // so a value like  a" OR is:starred  cannot break out of the quoted operand.
+  const q = `"${query.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  const listParams = new URLSearchParams({
+    q: `from:${q} OR to:${q} OR cc:${q}`,
+    maxResults: String(cap),
+  });
+
+  const listResp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages?${listParams}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!listResp.ok) {
+    if (listResp.status === 401) throw new Error("gmail_auth_failed");
+    const errBody = (await listResp.json()) as { error?: { message?: string } };
+    throw new Error(`Gmail API error: ${errBody.error?.message ?? listResp.statusText}`);
+  }
+  const listData = (await listResp.json()) as {
+    messages?: { id: string }[];
+  };
+  const refs = (listData.messages ?? []).slice(0, cap);
+
+  // Fetch From/To/Cc/Date headers in parallel (no body download).
+  const metas = await Promise.all(
+    refs.map(({ id }) => {
+      const mp = new URLSearchParams({ format: "metadata" });
+      for (const h of ["From", "To", "Cc", "Date"]) mp.append("metadataHeaders", h);
+      return fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?${mp}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      ).then((r) => r.json() as Promise<GmailMessageMeta>);
+    }),
+  );
+
+  const queryLc = query.toLowerCase();
+  const acc = new Map<string, ContactHit & { _newestDate: string }>();
+  for (const msg of metas) {
+    const hdrs: Record<string, string> = {};
+    for (const h of msg.payload?.headers ?? []) hdrs[h.name.toLowerCase()] = h.value;
+    const dateIso = msg.internalDate
+      ? new Date(Number(msg.internalDate)).toISOString()
+      : new Date().toISOString();
+    const entries = [
+      parseEmailAddress(hdrs["from"] ?? ""),
+      ...parseAddressList(hdrs["to"] ?? ""),
+      ...parseAddressList(hdrs["cc"] ?? ""),
+    ];
+    foldContactEntries(acc, entries, dateIso, queryLc);
+  }
+  return finalizeContactHits(acc);
+}
+
+/**
+ * Outlook contact aggregator. Uses Graph `$search="participants:Q"` (which
+ * requires `ConsistencyLevel: eventual`) to find up to `cap` messages, selects
+ * only the address fields, and folds from/toRecipients/ccRecipients.
+ */
+async function outlookSearchContacts(
+  inbox: InboxRow,
+  query: string,
+  cap: number,
+): Promise<ContactHit[]> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  // $search uses a KQL-quoted string; escape backslash + double-quote so the
+  // term cannot break out of the participants:"…" operand.
+  const escaped = query.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const params = new URLSearchParams({
+    $search: `"participants:${escaped}"`,
+    $select: "from,toRecipients,ccRecipients,receivedDateTime",
+    $top: String(cap),
+  });
+
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages?${params}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        ConsistencyLevel: "eventual",
+      },
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    const errBody = (await resp.json()) as { error?: { message?: string } };
+    throw new Error(`Outlook Graph API error: ${errBody.error?.message ?? resp.statusText}`);
+  }
+  const data = (await resp.json()) as { value?: OutlookMessage[] };
+  const rawMessages = (data.value ?? []).slice(0, cap);
+
+  const mapAddr = (
+    r: { emailAddress?: { name?: string; address?: string } },
+  ): EmailAddressEntry => ({
+    name: r.emailAddress?.name ?? "",
+    email: r.emailAddress?.address ?? "",
+  });
+
+  const queryLc = query.toLowerCase();
+  const acc = new Map<string, ContactHit & { _newestDate: string }>();
+  for (const msg of rawMessages) {
+    const dateIso = msg.receivedDateTime ?? new Date().toISOString();
+    const entries: EmailAddressEntry[] = [];
+    if (msg.from) entries.push(mapAddr(msg.from));
+    for (const r of msg.toRecipients ?? []) entries.push(mapAddr(r));
+    for (const r of msg.ccRecipients ?? []) entries.push(mapAddr(r));
+    foldContactEntries(acc, entries, dateIso, queryLc);
+  }
+  return finalizeContactHits(acc);
+}
+
+/**
+ * IMAP contact aggregator. SELECTs INBOX and runs an address-header OR search
+ * (`OR OR FROM "Q" TO "Q" CC "Q"`), takes the newest `cap` UIDs, fetches their
+ * envelope summaries, and folds the from/to addresses through the query filter.
+ *
+ * INBOX-only is acceptable for v1. The query is sanitised (control chars + the
+ * IMAP quoting metacharacters `"`/`\` stripped) before being embedded in the
+ * raw search command, so it cannot break out of the quoted operands or inject
+ * additional IMAP commands via CR/LF.
+ */
+async function imapSearchContacts(
+  inbox: InboxRow,
+  query: string,
+  cap: number,
+): Promise<ContactHit[]> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  // Strip characters that would corrupt the quoted IMAP astring (backslash,
+  // double-quote) or break the command line (CR/LF + other control chars).
+  // deno-lint-ignore no-control-regex
+  const safe = query.replace(/["\\\x00-\x1F\x7F]+/g, " ").trim().slice(0, 200);
+  if (!safe) return [];
+  const password = await decryptStoredToken(inbox.imap_password);
+
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: imapAuthUser(inbox),
+      password,
+    });
+    await client.selectMailbox("INBOX");
+
+    // Address-header OR search: matches messages where Q appears in From, To,
+    // or Cc. RFC 3501 OR is binary, so two ORs chain three FROM/TO/CC terms.
+    const uids = await client.uidSearch(
+      `OR OR FROM "${safe}" TO "${safe}" CC "${safe}"`,
+    );
+    // Newest first, bounded to the per-inbox cap.
+    const pageUids = uids.slice().sort((a, b) => b - a).slice(0, cap);
+    if (pageUids.length === 0) return [];
+
+    const summaries = await client.fetchSummaries(pageUids);
+
+    const queryLc = query.toLowerCase();
+    const acc = new Map<string, ContactHit & { _newestDate: string }>();
+    for (const s of summaries) {
+      // ImapMessageSummary.envelope exposes from[] and to[] address arrays.
+      const entries: EmailAddressEntry[] = [
+        ...s.envelope.from,
+        ...s.envelope.to,
+      ];
+      foldContactEntries(acc, entries, s.envelope.date, queryLc);
+    }
+    return finalizeContactHits(acc);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+/**
+ * Dispatch a single inbox to its provider-specific contact aggregator and tag
+ * every hit with the inbox_id. Fastmail routes through the IMAP path (the live
+ * JMAP code is dead per project notes; service='fastmail' connections store an
+ * app password and run over IMAP), mirroring how the other tools treat it.
+ */
+async function searchContactsForInbox(
+  inbox: InboxRow,
+  query: string,
+  cap: number,
+): Promise<(ContactHit & { inbox_id: string })[]> {
+  let hits: ContactHit[];
+  switch (inbox.provider) {
+    case "gmail":
+      hits = await gmailSearchContacts(inbox, query, cap);
+      break;
+    case "outlook":
+      hits = await outlookSearchContacts(inbox, query, cap);
+      break;
+    case "fastmail":
+    default:
+      hits = await imapSearchContacts(inbox, query, cap);
+      break;
+  }
+  return hits.map((h) => ({ inbox_id: inbox.id, ...h }));
+}
+
+/**
+ * `contact_search` — find correspondents matching a name/email fragment by
+ * scanning LIVE mail. No data is stored.
  *
  * Scope: manage:contacts
  * Required params: query (string)
  * Optional params: inbox_id (UUID), limit (integer 1–50, default 20)
  *
- * Searches both email_address and display_name case-insensitively.
- * When inbox_id is provided the search is scoped to that inbox; otherwise
- * it spans all inboxes the API key can access within the workspace.
- * Results are sorted by last_contacted_at DESC (most-recently-seen first).
+ * When inbox_id is provided the scan is scoped to that inbox; otherwise it
+ * spans up to CONTACT_SEARCH_MAX_INBOXES of the workspace's active, accessible
+ * inboxes. Each inbox is scanned for at most CONTACT_SEARCH_PER_INBOX_CAP recent
+ * matching messages. Per-inbox failures are swallowed (best-effort); if EVERY
+ * inbox errors the tool returns a clean error. Results are merged and sorted by
+ * last_contacted_at DESC, then truncated to `limit`.
+ *
+ * Counts reflect matched messages WITHIN the scan window — not an all-time
+ * history.
  */
 async function executeSearchContacts(
   rawArgs: unknown,
@@ -15154,7 +15567,12 @@ async function executeSearchContacts(
     ? Math.min(50, Math.max(1, Math.floor(args["limit"])))
     : 20;
 
-  // If an inbox_id was supplied, validate it is accessible to this API key.
+  // Resolve the target inbox set. With inbox_id we validate accessibility and
+  // scan just that inbox; without it we enumerate the workspace's active,
+  // accessible inboxes (capped) — mirroring executeListInboxes' query but
+  // selecting the full credentialed row (INBOX_SELECT_COLUMNS) so the provider
+  // aggregators have everything they need.
+  let targets: InboxRow[];
   if (inboxId) {
     const inbox = await resolveInbox(inboxId, apiKey);
     if (!inbox) {
@@ -15163,75 +15581,79 @@ async function executeSearchContacts(
         logStatus: "error", logErrorCode: "inbox_not_found",
       };
     }
+    targets = [inbox];
+  } else {
+    let q = supabase
+      .from("inboxes")
+      .select(INBOX_SELECT_COLUMNS)
+      .eq("workspace_id", apiKey.workspace_id)
+      .is("deleted_at", null)
+      .eq("status", "active")
+      .order("created_at", { ascending: true });
+    if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+      q = q.in("id", apiKey.inbox_ids);
+    }
+    const { data, error } = await q;
+    if (error) {
+      console.error("[mcp-server] contact_search: inbox_enumeration_failed", {
+        workspace_id: apiKey.workspace_id,
+        error: error.message,
+      });
+      return {
+        result: { content: [{ type: "text", text: "contact_search: failed to enumerate inboxes." }], isError: true },
+        logStatus: "error", logErrorCode: "db_error",
+      };
+    }
+    targets = ((data ?? []) as unknown as InboxRow[]).slice(0, CONTACT_SEARCH_MAX_INBOXES);
   }
 
-  // Build the Supabase query.  Both email_address and display_name are searched
-  // with ILIKE so the match is case-insensitive on the DB side.
-  // Filters are applied before transforms (.order, .limit) to stay within
-  // PostgrestFilterBuilder's type surface.
-  //
-  // SECURITY: `query` is user-controlled and is embedded into the `.or()`
-  // PostgREST filter DSL.  Without sanitisation, characters like commas,
-  // parentheses, and double-quotes could add/alter OR branches (filter
-  // injection) or produce malformed-query 500s.  (A dot inside the value is
-  // safe: PostgREST splits column.op.value on the first two dots only, so
-  // remaining dots stay in the value.)  We neutralise the grammar:
-  //   1. Cap length to bound query cost / abuse.
-  //   2. Strip PostgREST DSL grammar characters that delimit/structure filters
-  //      ( , ( ) " \ ) and the PostgREST `*` wildcard.
-  //   3. Escape the LIKE metacharacters % and _ so they match literally.
-  // The result can only ever be the value content of the two ilike branches —
-  // it cannot introduce new conditions or remove the workspace/inbox filters,
-  // which are separate AND conditions outside the .or().
-  const sanitizedQuery = query
-    .slice(0, 200)
-    .replace(/[,()"\\*]/g, "") // remove PostgREST DSL delimiters + wildcard
-    .replace(/[%_]/g, "\\$&"); // escape LIKE metacharacters to match literally
-  const pattern = `%${sanitizedQuery}%`;
-  let dbQuery = supabase
-    .from("contacts")
-    .select("id, inbox_id, email_address, display_name, message_count, last_contacted_at")
-    .eq("workspace_id", apiKey.workspace_id)
-    .is("deleted_at", null)
-    .or(`email_address.ilike.${pattern},display_name.ilike.${pattern}`);
-
-  // Narrow to a specific inbox when one was requested.
-  if (inboxId) {
-    dbQuery = dbQuery.eq("inbox_id", inboxId);
-  } else if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
-    // API key scoped to specific inboxes — honour that restriction.
-    dbQuery = dbQuery.in("inbox_id", apiKey.inbox_ids);
-  }
-
-  const { data, error } = await dbQuery
-    .order("last_contacted_at", { ascending: false })
-    .limit(limit);
-  if (error) {
-    console.error("[mcp-server] contact_search: db_error", {
-      workspace_id: apiKey.workspace_id,
-      error: error.message,
-    });
+  if (targets.length === 0) {
+    // No accessible inbox — return an empty (but successful) result set.
     return {
-      result: { content: [{ type: "text", text: "contact_search: database error while querying contacts." }], isError: true },
-      logStatus: "error", logErrorCode: "db_error",
+      result: jsonOk({ query, contacts: [], total: 0 }, true),
+      logStatus: "success", logErrorCode: null,
     };
   }
 
-  const contacts = (data ?? []).map((row: {
-    id: string;
-    inbox_id: string;
-    email_address: string;
-    display_name: string | null;
-    message_count: number;
-    last_contacted_at: string;
-  }) => ({
-    id: row.id,
-    inbox_id: row.inbox_id,
-    email_address: row.email_address,
-    display_name: row.display_name ?? null,
-    message_count: row.message_count,
-    last_contacted_at: row.last_contacted_at,
-  }));
+  // Scan each target inbox in parallel; tolerate per-inbox failures so one bad
+  // credential / provider hiccup doesn't sink the whole search.
+  const settled = await Promise.allSettled(
+    targets.map((inbox) =>
+      searchContactsForInbox(inbox, query, CONTACT_SEARCH_PER_INBOX_CAP)
+    ),
+  );
+
+  const allHits: (ContactHit & { inbox_id: string })[] = [];
+  let anySucceeded = false;
+  for (let i = 0; i < settled.length; i++) {
+    const r = settled[i];
+    if (r.status === "fulfilled") {
+      anySucceeded = true;
+      allHits.push(...r.value);
+    } else {
+      console.error("[mcp-server] contact_search: inbox_scan_failed", {
+        workspace_id: apiKey.workspace_id,
+        inbox_id: targets[i].id,
+        provider: targets[i].provider,
+        error: r.reason instanceof Error ? r.reason.message : String(r.reason),
+      });
+    }
+  }
+
+  // Only fail outright when EVERY inbox errored — otherwise return partials.
+  if (!anySucceeded) {
+    return {
+      result: { content: [{ type: "text", text: "contact_search: unable to scan any inbox for matching contacts. Please try again in a moment." }], isError: true },
+      logStatus: "error", logErrorCode: "provider_error",
+    };
+  }
+
+  // Merge, sort newest-first, and truncate. (Each inbox aggregates its own
+  // window independently; the same address in two inboxes yields two hits,
+  // distinguished by inbox_id — consistent with the per-inbox model.)
+  const contacts = allHits
+    .sort((a, b) => (a.last_contacted_at < b.last_contacted_at ? 1 : -1))
+    .slice(0, limit);
 
   return {
     result: jsonOk({ query, contacts, total: contacts.length }, true),
@@ -15982,11 +16404,16 @@ async function handleToolsCall(
   // log write itself (which is infrastructure overhead, not tool latency).
   const startMs = Date.now();
 
-  let toolResult: JsonRpcSuccessResponse | JsonRpcErrorResponse;
+  let toolResult!: JsonRpcSuccessResponse | JsonRpcErrorResponse;
   let logStatus: "success" | "error" = "error";
   let logErrorCode: string | null = String(-32601); // Method not found
 
+  // Captures the inbox resolved during dispatch (inside resolveInboxArg) so the
+  // activity log records the real inbox even for alias- or auto-resolved calls.
+  const logCtx: { inboxId: string | null } = { inboxId: null };
+
   try {
+    await activityInboxStore.run(logCtx, async () => {
     // ── Dispatch to the implemented tool handler ───────────────────────────
     if (toolName === "inbox_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
@@ -16169,6 +16596,7 @@ async function handleToolsCall(
       logStatus = "error";
       logErrorCode = String(-32601);
     }
+    });
   } catch (err) {
     // Unhandled exception inside tool dispatch — this should not happen once
     // tools are implemented with proper error handling, but guards against
@@ -16190,13 +16618,18 @@ async function handleToolsCall(
 
   const durationMs = Date.now() - startMs;
 
+  // Prefer the inbox the tool actually resolved (handles email aliases and
+  // single-inbox auto-resolution); fall back to an explicit inbox_id UUID from
+  // the raw request arguments when no tool resolution occurred.
+  const resolvedInboxId = logCtx.inboxId ?? inboxId;
+
   // ── Write activity log ────────────────────────────────────────────────────
   // Awaited intentionally — the audit trail must be complete before the
   // response leaves the Edge Function. A logging failure is non-fatal.
   await writeActivityLog({
     workspaceId: apiKey.workspace_id,
     apiKeyId: apiKey.id,
-    inboxId,
+    inboxId: resolvedInboxId,
     toolName,
     status: logStatus,
     errorCode: logErrorCode,
@@ -16208,7 +16641,7 @@ async function handleToolsCall(
   console.log("[mcp-server] tools/call", {
     key_id: apiKey.id,
     tool_name: toolName,
-    inbox_id: inboxId,
+    inbox_id: resolvedInboxId,
     status: logStatus,
     duration_ms: durationMs,
   });

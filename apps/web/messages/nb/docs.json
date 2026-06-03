@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Dokumentasjon",
-    "description": "Kom i gang med MCPEmails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail-, Outlook- og IMAP-agenter."
+    "description": "Kom i gang med MCPEmails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail- og IMAP-agenter."
   },
   "hero": {
     "eyebrow": "Dokumentasjon",
@@ -21,7 +21,7 @@
       "signup": {
         "label": "Registrer deg og koble til en innboks",
         "heading": "Opprett kontoen din og koble til Gmail",
-        "body": "Registrer deg på mcpemails.com, og gå deretter til Dashboard → Inboxes → Connect Inbox. Velg Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth-flyten eller lim inn et app-passord. Innboksen din er klar på under ett minutt.",
+        "body": "Registrer deg på mcpemails.com, og gå deretter til Dashboard → Inboxes → Connect Inbox. Velg Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth-flyten eller lim inn et app-passord. Innboksen din er klar på under ett minutt.",
         "cta": "Koble til innboksen din →"
       },
       "apikey": {
@@ -106,7 +106,7 @@
       },
       "contacts": {
         "title": "Kontakter",
-        "desc": "Søk i en kontaktliste bygget automatisk fra From-, To- og Reply-To-headerne sett i e-posten din. Ingen manuell oppsett."
+        "desc": "Finn personer etter navn eller e-post med en sanntidsskanning av nylig matchende e-post. Ingenting lagres — hvert søk leser i sanntid."
       },
       "schedule": {
         "title": "Planlagt sending",
@@ -385,10 +385,10 @@
     },
     "draft_update": {
       "title": "Oppdater utkast",
-      "desc": "Erstatt innholdet i et eksisterende utkast. Alle oppgitte felt overskriver det lagrede utkastet. Kall draft_list for å hente draft_id-verdier.",
+      "desc": "Erstatt innholdet i et eksisterende utkast. Alle oppgitte felt overskriver det lagrede utkastet. Kall draft_list for å hente draft_id-verdier. På IMAP-baserte innbokser (alt annet enn Gmail/Outlook) skrives den underliggende meldingen om på nytt, så dette returnerer en NY draft_id som erstatter den du sendte inn — ta den i bruk for videre draft_update/draft_send og forkast den gamle. Gmail og Outlook beholder en stabil draft_id.",
       "params": {
         "inbox_id": "UUID for innboksen som eier utkastet. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "draft_id": "Leverandørens utkast-ID fra draft_create eller draft_list.",
+        "draft_id": "Leverandørens utkast-ID fra den nyeste draft_create, draft_update eller draft_list. På IMAP-innbokser endres den etter hver oppdatering, så bruk alltid den nyeste.",
         "subject": "Oppdatert emnefelt.",
         "body": "Oppdatert kropp i ren tekst.",
         "to": "Oppdatert mottakerliste. Standard [].",
@@ -400,19 +400,19 @@
     },
     "draft_send": {
       "title": "Send utkast",
-      "desc": "Send et tidligere lagret utkast. Utkastet fjernes fra Drafts-mappen etter sending. Kan ikke angres.",
+      "desc": "Send et tidligere lagret utkast. Utkastet fjernes fra Drafts-mappen etter sending. Kan ikke angres. Oppgi alltid den nyeste draft_id (fra draft_create, den siste draft_update eller draft_list): på IMAP-baserte innbokser endres ID-en ved hver oppdatering, og en utdatert ID feiler med en ikke-funnet-feil.",
       "params": {
         "inbox_id": "UUID for innboksen som inneholder utkastet. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "draft_id": "Leverandørens utkast-ID fra draft_create eller draft_list.",
+        "draft_id": "Leverandørens utkast-ID fra den nyeste draft_create, draft_update eller draft_list. På IMAP-innbokser endres den etter hver oppdatering, så bruk alltid den nyeste.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
       }
     },
     "contact_search": {
       "title": "Søk i kontakter",
-      "desc": "Søk i den avledede kontaktlisten etter navn eller e-post. Kontakter bygges automatisk fra headerne sett under lesing, søk og sending — ingen manuell oppsett. Returnerer treff sortert etter sist kontaktet, hvert med visningsnavn, e-post, meldingsantall og sist-kontaktet-tidsstempel.",
+      "desc": "Finn korrespondenter etter navn eller e-post med en sanntidsskanning av postkassen din — det finnes ingen lagret kontaktliste. Hvert kall skanner et nylig vindu av matchende e-post og returnerer personene som matcher, sortert etter sist kontaktet, hver med visningsnavn, e-post, antall matchende meldinger og sist-kontaktet-tidsstempel. Tallene gjenspeiler matchende meldinger i det vinduet, ikke hele historikken din, og ingenting lagres mellom kall.",
       "params": {
         "query": "Navn- eller e-postfragment, matchet uavhengig av store/små bokstaver mot visningsnavn og adresse. Minst 1 tegn.",
-        "inbox_id": "Valgfritt. Begrens resultatene til kontakter sett fra én innboks. Utelat for å søke på tvers av alle innbokser nøkkelen har tilgang til.",
+        "inbox_id": "Valgfritt. Begrens sanntidsskanningen til én innboks. Utelat for å skanne innboksene nøkkelen har tilgang til (et begrenset antall).",
         "limit": "Maks antall kontakter som skal returneres. Standard 20, maks 50.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
       }
@@ -503,7 +503,7 @@
   "providers": {
     "meta": {
       "title": "Leverandørstøtte",
-      "description": "Se hvilke e-postleverandører MCPEmails støtter og hvilke funksjoner som er tilgjengelige per leverandør: Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP."
+      "description": "Se hvilke e-postleverandører MCPEmails støtter og hvilke funksjoner som er tilgjengelige per leverandør: Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP."
     },
     "labels": {
       "generic": "Generic IMAP"
@@ -522,8 +522,7 @@
       "delete": "Slett / papirkurv",
       "permanent_delete": "Permanent sletting (expunge)",
       "drafts": "Utkast (opprett / rediger / send)",
-      "contacts": "Innebygd kontakter-API",
-      "contacts_db": "Kontaktsøk (DB-synkronisert)",
+      "contacts_db": "Kontaktsøk (sanntidsskanning)",
       "scheduling": "Planlagt sending",
       "search_syntax": "Søkesyntaks"
     },
@@ -540,7 +539,7 @@
     "hero": {
       "eyebrow": "Leverandørstøtte",
       "heading": "Hva som fungerer, per leverandør.",
-      "lead": "MCPEmails kobler til Gmail, Outlook, Fastmail og enhver IMAP-innboks (iCloud, Yahoo, Zoho, Yandex, generisk). Ikke alle leverandører eksponerer de samme API-ene — denne tabellen viser nøyaktig hva hver av dem støtter i dag.",
+      "lead": "MCPEmails kobler til Gmail, Fastmail og enhver IMAP-innboks (iCloud, Yahoo, Zoho, Yandex, generisk). Ikke alle leverandører eksponerer de samme API-ene — denne tabellen viser nøyaktig hva hver av dem støtter i dag.",
       "ctaConnect": "Koble til en innboks",
       "ctaBack": "Tilbake til dokumentasjonen"
     },
@@ -558,9 +557,8 @@
     },
     "notes": {
       "gmail": "<b>Gmail — mapper vs. etiketter:</b> Gmail bruker et flatt etikettsystem i stedet for hierarkiske mapper. \"Flytt\" er implementert som legg til / fjern etikett. Native kopiering er ikke tilgjengelig via Gmail REST-API-et.",
-      "permanentDelete": "<b>Permanent sletting:</b> Gmail og Outlook flytter til papirkurven når du sletter — permanent expunge eksponeres ikke av API-ene deres. IMAP-leverandører (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) støtter både papirkurv og hard expunge.",
-      "contacts": "<b>Innebygd kontakter-API:</b> Gmail bruker Google People API; Outlook bruker Microsoft Graph <code>/contacts</code>. Fastmail CardDAV er utenfor omfanget for v0.1.",
-      "contacts_db": "<b>Kontaktsøk (DB):</b> Alle leverandører synkroniserer kontakter fra meldingshoder. Bruk <code>contact_search</code>.",
+      "permanentDelete": "<b>Permanent sletting:</b> Gmail flytter til papirkurven når du sletter — permanent expunge eksponeres ikke av API-ene deres. IMAP-leverandører (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) støtter både papirkurv og hard expunge.",
+      "contacts_db": "<b>Kontaktsøk (sanntidsskanning):</b> Alle leverandører støtter <code>contact_search</code>, som finner matchende korrespondenter med en sanntidsskanning som kun leser headere, av et nylig vindu av matchende e-post. Det finnes ingen kontakttabell — ingenting lagres mellom kall, og tallene gjenspeiler kun matchende meldinger i det skannede vinduet.",
       "scheduling": "<b>Planlegging:</b> Støttet for alle leverandører via <code>scheduled_sends</code>-køen. Bruk <code>schedule_create</code>, <code>schedule_list</code> og <code>schedule_cancel</code>."
     },
     "cta": {

@@ -256,16 +256,23 @@ body { background: var(--bg-page); }
 }
 .modal {
   width: 480px; max-width: 92vw;
+  /* Cap height so a tall modal never clips its title or action buttons off
+     the viewport; the body scrolls internally instead (header/footer pinned). */
+  max-height: 92dvh;
+  display: flex; flex-direction: column;
   background: var(--bg-surface); border-radius: 16px;
   border: 1px solid var(--border-1); box-shadow: var(--shadow-4);
   overflow: hidden;
   animation: pop 200ms var(--ease-out);
 }
-.modal-h { padding: 20px 24px 4px; }
+.modal-h { padding: 20px 24px 4px; flex-shrink: 0; }
 .modal-h h2 { margin: 0; font-family: var(--font-sans); font-size: 20px; font-weight: 600; letter-spacing: -0.01em;}
 .modal-h .sub { margin-top: 6px; font-family: var(--font-sans); font-size: 13.5px; color: var(--fg-3); }
-.modal-body { padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 12px; }
-.modal-foot { padding: 16px 24px; background: var(--ink-25); border-top: 1px solid var(--border-1); display: flex; justify-content: flex-end; gap: 8px; }
+/* When a modal wraps its body in a <form>, the form must carry the flex-fill
+   so the inner .modal-body becomes the bounded scroll container. */
+.modal > form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.modal-body { padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 12px; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.modal-foot { padding: 16px 24px; background: var(--ink-25); border-top: 1px solid var(--border-1); display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pop  { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
 

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Docs",
-    "description": "Démarrez avec MCPEmails en quelques minutes. Guide de démarrage rapide, référence des outils et exemples de réponses pour les agents Gmail, Outlook et IMAP."
+    "description": "Démarrez avec MCPEmails en quelques minutes. Guide de démarrage rapide, référence des outils et exemples de réponses pour les agents Gmail et IMAP."
   },
   "hero": {
     "eyebrow": "Documentation",
@@ -21,7 +21,7 @@
       "signup": {
         "label": "Inscrivez-vous et connectez une boîte",
         "heading": "Créez votre compte et connectez Gmail",
-        "body": "Inscrivez-vous sur mcpemails.com, puis allez dans Tableau de bord → Boîtes → Connecter une boîte. Choisissez Gmail, Outlook, iCloud, Fastmail ou toute boîte IMAP, puis effectuez le flux OAuth ou collez un mot de passe d'application. Votre boîte est prête en moins d'une minute.",
+        "body": "Inscrivez-vous sur mcpemails.com, puis allez dans Tableau de bord → Boîtes → Connecter une boîte. Choisissez Gmail, iCloud, Fastmail ou toute boîte IMAP, puis effectuez le flux OAuth ou collez un mot de passe d'application. Votre boîte est prête en moins d'une minute.",
         "cta": "Connecter votre boîte →"
       },
       "apikey": {
@@ -106,7 +106,7 @@
       },
       "contacts": {
         "title": "Contacts",
-        "desc": "Recherchez dans une liste de contacts construite automatiquement à partir des en-têtes From, To et Reply-To vus dans votre courrier. Aucune configuration manuelle."
+        "desc": "Trouvez des personnes par nom ou e-mail grâce à une analyse en direct de votre courrier récent correspondant. Rien n'est stocké — chaque recherche lit en direct."
       },
       "schedule": {
         "title": "Envoi programmé",
@@ -385,10 +385,10 @@
     },
     "draft_update": {
       "title": "Mettre à jour un brouillon",
-      "desc": "Remplace le contenu d'un brouillon existant. Tous les champs fournis écrasent le brouillon stocké. Appelez draft_list pour obtenir les valeurs draft_id.",
+      "desc": "Remplace le contenu d'un brouillon existant. Tous les champs fournis écrasent le brouillon stocké. Appelez draft_list pour obtenir les valeurs draft_id. Sur les boîtes basées sur IMAP (tout sauf Gmail/Outlook), le message sous-jacent est réécrit, donc cela renvoie un NOUVEAU draft_id qui remplace celui que vous avez transmis — adoptez-le pour tout draft_update/draft_send ultérieur et abandonnez l'ancien. Gmail et Outlook conservent un draft_id stable.",
       "params": {
         "inbox_id": "UUID de la boîte qui possède le brouillon. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "draft_id": "ID de brouillon du fournisseur depuis draft_create ou draft_list.",
+        "draft_id": "ID de brouillon du fournisseur du draft_create, draft_update ou draft_list le plus récent. Sur les boîtes IMAP, il change après chaque mise à jour, alors utilisez toujours le plus récent.",
         "subject": "Objet mis à jour.",
         "body": "Corps en texte brut mis à jour.",
         "to": "Liste de destinataires mise à jour. Par défaut [].",
@@ -400,19 +400,19 @@
     },
     "draft_send": {
       "title": "Envoyer un brouillon",
-      "desc": "Envoie un brouillon précédemment enregistré. Le brouillon est retiré du dossier Brouillons après l'envoi. Irréversible.",
+      "desc": "Envoie un brouillon précédemment enregistré. Le brouillon est retiré du dossier Brouillons après l'envoi. Irréversible. Transmettez toujours le draft_id le plus récent (de draft_create, du dernier draft_update ou de draft_list) : sur les boîtes basées sur IMAP, l'ID change à chaque mise à jour, et un ID obsolète échoue avec une erreur introuvable.",
       "params": {
         "inbox_id": "UUID de la boîte qui contient le brouillon. Facultatif — résolu automatiquement lorsque la clé n’a qu’une seule boîte ; sinon, indiquez ceci ou inbox.",
-        "draft_id": "ID de brouillon du fournisseur depuis draft_create ou draft_list.",
+        "draft_id": "ID de brouillon du fournisseur du draft_create, draft_update ou draft_list le plus récent. Sur les boîtes IMAP, il change après chaque mise à jour, alors utilisez toujours le plus récent.",
         "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
       }
     },
     "contact_search": {
       "title": "Rechercher des contacts",
-      "desc": "Recherche dans la liste de contacts dérivée par nom ou e-mail. Les contacts sont construits automatiquement à partir des en-têtes vus pendant les opérations de lecture, de recherche et d'envoi — aucune configuration manuelle. Renvoie les correspondances triées du contact le plus récent, chacune avec le nom d'affichage, l'e-mail, le nombre de messages et l'horodatage du dernier contact.",
+      "desc": "Trouvez des correspondants par nom ou e-mail grâce à une analyse en direct de votre boîte aux lettres — il n'existe aucune liste de contacts stockée. Chaque appel analyse une fenêtre récente de courrier correspondant et renvoie les personnes qui correspondent, triées du contact le plus récent, chacune avec le nom d'affichage, l'e-mail, le nombre de messages correspondants et l'horodatage du dernier contact. Les nombres reflètent les messages correspondants dans cette fenêtre, et non l'ensemble de votre historique, et rien n'est stocké entre les appels.",
       "params": {
         "query": "Fragment de nom ou d'e-mail, comparé sans tenir compte de la casse au nom d'affichage et à l'adresse. Au moins 1 caractère.",
-        "inbox_id": "Facultatif. Restreint les résultats aux contacts vus depuis une boîte. Omettez pour chercher dans toutes les boîtes accessibles à la clé.",
+        "inbox_id": "Facultatif. Restreint l'analyse en direct à une seule boîte. Omettez pour analyser les boîtes accessibles à la clé (un nombre limité).",
         "limit": "Nombre maximal de contacts à renvoyer. Par défaut 20, max 50.",
         "inbox": "Adresse e-mail de la boîte à utiliser, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni."
       }
@@ -503,7 +503,7 @@
   "providers": {
     "meta": {
       "title": "Fournisseurs pris en charge",
-      "description": "Découvrez quels fournisseurs d'e-mail MCPEmails prend en charge et quelles fonctionnalités sont disponibles par fournisseur : Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex et IMAP générique."
+      "description": "Découvrez quels fournisseurs d'e-mail MCPEmails prend en charge et quelles fonctionnalités sont disponibles par fournisseur : Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex et IMAP générique."
     },
     "labels": {
       "generic": "IMAP générique"
@@ -522,8 +522,7 @@
       "delete": "Supprimer / corbeille",
       "permanent_delete": "Suppression définitive (expunge)",
       "drafts": "Brouillons (créer / modifier / envoyer)",
-      "contacts": "API Contacts native",
-      "contacts_db": "Recherche de contacts (synchronisée avec la BD)",
+      "contacts_db": "Recherche de contacts (analyse en direct)",
       "scheduling": "Envoi programmé",
       "search_syntax": "Syntaxe de recherche"
     },
@@ -540,7 +539,7 @@
     "hero": {
       "eyebrow": "Fournisseurs pris en charge",
       "heading": "Ce qui fonctionne, par fournisseur.",
-      "lead": "MCPEmails connecte Gmail, Outlook, Fastmail et toute boîte IMAP (iCloud, Yahoo, Zoho, Yandex, générique). Tous les fournisseurs n'exposent pas les mêmes API — ce tableau montre exactement ce que chacun prend en charge aujourd'hui.",
+      "lead": "MCPEmails connecte Gmail, Fastmail et toute boîte IMAP (iCloud, Yahoo, Zoho, Yandex, générique). Tous les fournisseurs n'exposent pas les mêmes API — ce tableau montre exactement ce que chacun prend en charge aujourd'hui.",
       "ctaConnect": "Connecter une boîte",
       "ctaBack": "Retour aux docs"
     },
@@ -558,9 +557,8 @@
     },
     "notes": {
       "gmail": "<b>Gmail — dossiers vs étiquettes :</b> Gmail utilise un système d'étiquettes plat plutôt que des dossiers hiérarchiques. « Déplacer » est implémenté comme l'ajout/la suppression d'étiquette. La copie native n'est pas disponible via l'API REST Gmail.",
-      "permanentDelete": "<b>Suppression définitive :</b> Gmail et Outlook déplacent vers la corbeille lors de la suppression — l'expunge définitif n'est pas exposé par leurs API. Les fournisseurs IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, générique) prennent en charge à la fois la corbeille et l'expunge définitif.",
-      "contacts": "<b>API Contacts native :</b> Gmail utilise l'API Google People ; Outlook utilise Microsoft Graph <code>/contacts</code>. Les contacts Fastmail CardDAV sont hors portée pour v0.1.",
-      "contacts_db": "<b>Recherche de contacts (BD) :</b> Tous les fournisseurs synchronisent les contacts depuis les en-têtes des messages. Utilisez <code>contact_search</code>.",
+      "permanentDelete": "<b>Suppression définitive :</b> Gmail déplace vers la corbeille lors de la suppression — l'expunge définitif n'est pas exposé par leurs API. Les fournisseurs IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, générique) prennent en charge à la fois la corbeille et l'expunge définitif.",
+      "contacts_db": "<b>Recherche de contacts (analyse en direct) :</b> Tous les fournisseurs prennent en charge <code>contact_search</code>, qui trouve les correspondants correspondants grâce à une analyse en direct, basée uniquement sur les en-têtes, d'une fenêtre récente de votre courrier correspondant. Il n'existe aucune table de contacts — rien n'est stocké entre les appels, et les nombres reflètent uniquement les messages correspondants dans la fenêtre analysée.",
       "scheduling": "<b>Programmation :</b> Prise en charge pour tous les fournisseurs via la file <code>scheduled_sends</code>. Utilisez <code>schedule_create</code>, <code>schedule_list</code> et <code>schedule_cancel</code>."
     },
     "cta": {

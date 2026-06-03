@@ -2,10 +2,12 @@
  * Stripe plan definitions for MCPEmails.
  *
  * Pricing strategy: the entire product is free and UNLIMITED for everyone,
- * with unlimited inboxes, MCP tool calls, API keys, and team members on every tier.
- * We monetize capabilities and support, never raw usage. The only usage lever
- * that differs between tiers is the per-minute fair-use rate limit
- * (`maxRequestsPerMinute`), which protects the platform from abuse.
+ * with unlimited inboxes, MCP tool calls, and API keys on every tier. We
+ * monetize capabilities and support, never raw usage. Two levers differ
+ * between tiers: the per-minute fair-use rate limit (`maxRequestsPerMinute`),
+ * which protects the platform from abuse, and team collaboration — inviting
+ * members is a paid capability, so Free is single-user (`maxMembers: 1`) while
+ * paid plans are unlimited.
  *
  * Three tiers: Free, Solo, Team. (The "Team" tier keeps the internal id `pro`
  * to avoid a workspaces.plan data migration; only its display name is "Team".)
@@ -111,7 +113,9 @@ export const PLANS: Record<PlanId, Plan> = {
       maxDailyBurstCalls: Infinity,
       maxMonthlyToolCalls: Infinity,
       maxApiKeys: Infinity,
-      maxMembers: Infinity,
+      // Team collaboration is a paid capability: Free is single-user (owner
+      // only). Grandfathered legacy workspaces stay unlimited via resolvePlanLimits.
+      maxMembers: 1,
       billingPortalEnabled: false,
       analyticsEnabled: true,
       maxRequestsPerMinute: 60,
@@ -129,8 +133,8 @@ export const PLANS: Record<PlanId, Plan> = {
       'Unlimited connected inboxes',
       'Unlimited MCP tool calls',
       'Unlimited API keys',
-      'Unlimited team members',
-      'Gmail, Outlook, Fastmail & IMAP',
+      'Single user (owner only)',
+      'Gmail, Fastmail & IMAP',
       'Basic usage analytics (7-day)',
       'Community support',
     ],
@@ -164,7 +168,7 @@ export const PLANS: Record<PlanId, Plan> = {
       'Everything in Free, unlimited',
       '5× higher burst rate limit',
       'Full usage analytics (90-day history)',
-      'Gmail, Outlook, Fastmail & IMAP',
+      'Gmail, Fastmail & IMAP',
       'Email support',
     ],
     highlighted: false,

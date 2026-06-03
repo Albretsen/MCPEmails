@@ -532,7 +532,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} stripePrices={stripePrices} onWorkspaceUpdate={setWorkspace} />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} />}
       </div>
 

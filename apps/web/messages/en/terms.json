@@ -18,14 +18,14 @@
   },
   "serviceDescription": {
     "title": "2. Description of Service",
-    "p1": "MCPEmails provides a software-as-a-service platform that allows you to connect email accounts (Gmail, Microsoft Outlook, Fastmail, and compatible IMAP accounts) and expose those accounts to AI agents via the Model Context Protocol (MCP). The Service includes:",
+    "p1": "MCPEmails provides a software-as-a-service platform that allows you to connect email accounts (Gmail, Fastmail, and compatible IMAP accounts) and expose those accounts to AI agents via the Model Context Protocol (MCP). The Service includes:",
     "list": [
       "A web dashboard for managing connected email accounts, API keys, and usage monitoring.",
       "An MCP-compliant HTTP endpoint that AI agents authenticate against using API keys you generate.",
       "OAuth integration with supported email providers to obtain and manage delegated access to your mailboxes.",
       "A usage and audit log showing which tools your agents have called and when."
     ],
-    "p2": "MCPEmails acts as a protocol bridge. We do not store email content on our servers; we retrieve it live from your email provider at the moment an agent requests it and return it in the same HTTP response. See our <privacy>Privacy Policy</privacy> for a full description of what data we do and do not retain.",
+    "p2": "MCPEmails acts as a protocol bridge. We do not store the email content your agent reads on our servers; we retrieve it live from your email provider at the moment an agent requests it and return it in the same HTTP response. The exception is a message you schedule to send later, which we store only until it is delivered. See our <privacy>Privacy Policy</privacy> for a full description of what data we do and do not retain.",
     "p2b": "Email content is delivered only to the MCP client or AI agent that you have connected and choose to use. Once content reaches that client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCPEmails does not select an AI provider on your behalf and retains no copy of your email content.",
     "p3": "We reserve the right to modify, suspend, or discontinue any part of the Service at any time. Where practicable we will give at least 30 days' notice of material changes to paid users."
   },
@@ -98,7 +98,7 @@
     "h71": "7.1 Service provided \"as is\"",
     "p71": "The Service is provided \"as is\" and \"as available\" without warranties of any kind, either express or implied, including (but not limited to) implied warranties of merchantability, fitness for a particular purpose, non-infringement, and uninterrupted or error-free operation. We do not warrant that the Service will meet your requirements, that email delivery will be reliable or complete, or that defects will be corrected.",
     "h72": "7.2 Third-party services",
-    "p72": "The Service integrates with third-party email providers (Google Gmail, Microsoft Outlook, Fastmail, IMAP servers). We are not responsible for the availability, reliability, or performance of those services, for changes to their APIs or OAuth policies, or for any loss of email access resulting from a third-party provider's actions.",
+    "p72": "The Service integrates with third-party email providers (Google Gmail, Fastmail, IMAP servers). We are not responsible for the availability, reliability, or performance of those services, for changes to their APIs or OAuth policies, or for any loss of email access resulting from a third-party provider's actions.",
     "h73": "7.3 AI agent actions",
     "p73": "MCPEmails is a protocol bridge. We transmit instructions from AI agents to your email providers and return results. We are not responsible for the content of emails sent, forwarded, or replied to by AI agents acting under your API keys, nor for any consequences of autonomous agent actions including accidental email deletion, misdirected messages, or data leakage resulting from agent logic errors.",
     "h74": "7.4 Limitation of liability",

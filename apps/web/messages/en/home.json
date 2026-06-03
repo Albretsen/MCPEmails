@@ -8,6 +8,7 @@
     "how": "How it works",
     "pricing": "Pricing",
     "docs": "Docs",
+    "blog": "Blog",
     "signIn": "Sign in",
     "getStarted": "Get started free"
   },
@@ -15,19 +16,19 @@
     "titleLine1": "Give your AI",
     "titleLine2": "agent an",
     "titleAccent": "inbox.",
-    "lead": "Connect Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and we never store your email.",
+    "lead": "Connect Gmail, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and the mail it reads is never stored.",
     "ctaPrimary": "Connect your inbox",
     "ctaSecondary": "Read the docs",
     "metaUnlimited": "Unlimited, free forever",
     "metaNoCard": "No card required",
-    "metaNeverStored": "Email never stored",
+    "metaNeverStored": "Email fetched live",
     "pipe": {
       "flow": "How a call flows",
       "agent": "AI agent",
       "agentSub": "claude.ai · Desktop · Cursor",
       "serverSub": "/api/mcp endpoint",
       "provider": "Your provider",
-      "providerSub": "Gmail · Outlook · IMAP",
+      "providerSub": "Gmail · iCloud · IMAP",
       "logCalls": "agent calls",
       "logReturns": "returns inbox IDs, no dashboard copy-paste",
       "logFetches": "mcpemails fetches via Gmail API (token rotated)",
@@ -49,23 +50,23 @@
     "items": {
       "0": {
         "tag": "Scope",
-        "h": "Six tools. The whole surface area.",
-        "p": "Every email task your agent needs fits in six calls: <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code>. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. That's the entire integration."
+        "h": "Six core tools. The essentials, covered.",
+        "p": "The six core calls cover the everyday work — <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code> — and more advanced tools (folders, drafts, scheduling) are there when you need them. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
       },
       "1": {
         "tag": "Storage",
         "h": "Email is fetched live. Never stored.",
-        "p": "Every tool call hits your provider in real time: Gmail API, Microsoft Graph, Fastmail JMAP, or IMAP. Message bodies, subjects, and attachments go to the agent and are discarded immediately. We persist one thing per inbox, an encrypted token or app password, so we can make the next call."
+        "p": "Every tool call hits your provider in real time: Gmail API, Fastmail JMAP, or IMAP. Message bodies, subjects, and attachments go to the agent and are discarded immediately. We persist one thing per inbox, an encrypted token or app password, so we can make the next call. The one exception is a message you schedule to send later: we hold it until the send time, then keep a record for your history."
       },
       "2": {
         "tag": "Sending",
         "h": "Sending goes through your provider.",
-        "p": "When your agent calls <code>email_send</code> or <code>email_reply</code>, the message is dispatched via the Gmail API, Microsoft Graph, or your own SMTP server. Your domain reputation and deliverability stay entirely in your hands. We never relay mail from our own domain."
+        "p": "When your agent calls <code>email_send</code> or <code>email_reply</code>, the message is dispatched via the Gmail API, Fastmail JMAP, or your own SMTP server. Your domain reputation and deliverability stay entirely in your hands. We never relay mail from our own domain."
       },
       "3": {
         "tag": "Providers",
-        "h": "Gmail, Outlook, iCloud, Fastmail & any IMAP inbox.",
-        "p": "OAuth 2.0 for Gmail, Outlook, and Fastmail; app-specific passwords for iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Connect multiple inboxes, label them by use case (work-gmail, ops-outlook, support-imap), and scope each API key to the inboxes you want that agent to reach."
+        "h": "Gmail, iCloud, Fastmail & any IMAP inbox.",
+        "p": "OAuth 2.0 for Gmail; app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Connect multiple inboxes, label them by use case (work-gmail, ops-fastmail, support-imap), and scope each API key to the inboxes you want that agent to reach."
       },
       "4": {
         "tag": "Access",
@@ -86,7 +87,7 @@
     "steps": {
       "0": {
         "h": "Connect your inbox",
-        "p": "Sign in and click <b>Connect Inbox</b>. Choose Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete OAuth or paste an app password. Credentials are encrypted; email is never stored."
+        "p": "Sign in and click <b>Connect Inbox</b>. Choose Gmail, iCloud, Fastmail, or any IMAP inbox, then complete OAuth or paste an app password. Credentials are encrypted; the mail your agent reads is never stored."
       },
       "1": {
         "h": "Paste the URL: OAuth or API key",
@@ -101,13 +102,13 @@
       "0": "Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard.",
       "1": "List recent messages with sender, subject, date, and snippet, up to 100 per call.",
       "2": "Fetch a single message by ID. Returns parsed plain-text and sanitized HTML body, plus attachment metadata.",
-      "3": "Provider-native search: Gmail query syntax, Microsoft Graph, JMAP, or IMAP SEARCH. Returns up to 100 matches.",
-      "4": "Send a new message via the connected account. Dispatched through Gmail API, Microsoft Graph, Fastmail JMAP, or SMTP: your domain, your deliverability.",
-      "5": "Reply in-thread with correct Message-ID and References headers. Works across Gmail, Outlook, Fastmail, and any IMAP inbox."
+      "3": "Provider-native search: Gmail query syntax, Fastmail JMAP, or IMAP SEARCH. Returns up to 100 matches.",
+      "4": "Send a new message via the connected account. Dispatched through Gmail API, Fastmail JMAP, or SMTP: your domain, your deliverability.",
+      "5": "Reply in-thread with correct Message-ID and References headers. Works across Gmail, Fastmail, and any IMAP inbox."
     }
   },
   "quote": {
-    "text": "I wanted my agents to work my inbox, but every option meant handing a third party a copy of my email. So I built the pipe I wished existed: connect once, your mail is fetched live and never stored, and you can cut off any agent in a click. That's the product I trust with my own inbox.",
+    "text": "I wanted my agents to work my inbox, but every option meant handing a third party a copy of my email. So I built the pipe I wished existed: connect once, your inbox is fetched live and never stored, and you can cut off any agent in a click. That's the product I trust with my own inbox.",
     "role": "founder, mcpemails"
   },
   "pricing": {
@@ -123,8 +124,8 @@
         "features": [
           "Unlimited connected inboxes",
           "Unlimited MCP tool calls",
-          "Unlimited API keys & team members",
-          "Gmail, Outlook, iCloud, Fastmail & any IMAP",
+          "Unlimited API keys",
+          "Gmail, iCloud, Fastmail & any IMAP",
           "60 requests / minute",
           "Community support"
         ],
@@ -137,7 +138,7 @@
           "Everything in Free, unlimited",
           "300 requests / minute (5× burst)",
           "Full usage analytics (90-day history)",
-          "Gmail, Outlook, iCloud, Fastmail & any IMAP",
+          "Gmail, iCloud, Fastmail & any IMAP",
           "Email support"
         ],
         "cta": "Get Solo"
@@ -156,10 +157,10 @@
         "cta": "Get Team"
       }
     },
-    "footnote": "All plans: email is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <contact>Contact us</contact>. <comparison>See full feature comparison →</comparison>"
+    "footnote": "All plans: the mail your agent reads is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <contact>Contact us</contact>. <comparison>See full feature comparison →</comparison>"
   },
   "footer": {
-    "tagline": "A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing your email.",
+    "tagline": "A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.",
     "productHeading": "Product",
     "resourcesHeading": "Resources",
     "companyHeading": "Company",
@@ -174,7 +175,7 @@
     "linkPrivacy": "Privacy",
     "linkTerms": "Terms",
     "copyright": "© 2026 mcpemails.",
-    "legal": "Email never stored · Credentials encrypted at rest",
+    "legal": "Email fetched live, never stored · Credentials encrypted at rest",
     "contactLabel": "Contact",
     "mcpLabel": "MCP endpoint",
     "copy": "Copy",

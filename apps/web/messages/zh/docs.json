@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "文档",
-    "description": "几分钟内开始使用 MCPEmails。面向 Gmail、Outlook 和 IMAP 智能体的快速入门指南、工具参考和示例响应。"
+    "description": "几分钟内开始使用 MCPEmails。面向 Gmail 和 IMAP 智能体的快速入门指南、工具参考和示例响应。"
   },
   "hero": {
     "eyebrow": "文档",
@@ -21,7 +21,7 @@
       "signup": {
         "label": "注册并连接收件箱",
         "heading": "创建账户并连接 Gmail",
-        "body": "在 mcpemails.com 注册，然后前往 仪表盘 → 收件箱 → 连接收件箱。选择 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 流程或粘贴一个应用密码。你的收件箱在一分钟内即可就绪。",
+        "body": "在 mcpemails.com 注册，然后前往 仪表盘 → 收件箱 → 连接收件箱。选择 Gmail、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 流程或粘贴一个应用密码。你的收件箱在一分钟内即可就绪。",
         "cta": "连接你的收件箱 →"
       },
       "apikey": {
@@ -106,7 +106,7 @@
       },
       "contacts": {
         "title": "联系人",
-        "desc": "搜索一个根据你邮件中出现的 From、To 和 Reply-To 头自动构建的联系人列表。无需手动设置。"
+        "desc": "通过对你近期匹配的邮件进行实时扫描，按姓名或电子邮件查找联系人。不存储任何内容——每次搜索都实时读取。"
       },
       "schedule": {
         "title": "定时发送",
@@ -385,10 +385,10 @@
     },
     "draft_update": {
       "title": "更新草稿",
-      "desc": "替换一封现有草稿的内容。所有提供的字段都会覆盖已存储的草稿。调用 draft_list 以获取 draft_id 值。",
+      "desc": "替换一封现有草稿的内容。所有提供的字段都会覆盖已存储的草稿。调用 draft_list 以获取 draft_id 值。在基于 IMAP 的收件箱（除 Gmail/Outlook 之外的任何收件箱）上，底层邮件会被重写，因此这会返回一个新的 draft_id 来替换你传入的那个——请在后续的 draft_update/draft_send 中采用它并丢弃旧的。Gmail 和 Outlook 会保持稳定的 draft_id。",
       "params": {
         "inbox_id": "拥有该草稿的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "draft_id": "来自 draft_create 或 draft_list 的服务商草稿 ID。",
+        "draft_id": "来自最近一次 draft_create、draft_update 或 draft_list 的服务商草稿 ID。在 IMAP 收件箱上，它在每次更新后都会改变，因此请始终使用最新的那个。",
         "subject": "更新后的主题行。",
         "body": "更新后的纯文本正文。",
         "to": "更新后的收件人列表。默认 []。",
@@ -400,19 +400,19 @@
     },
     "draft_send": {
       "title": "发送草稿",
-      "desc": "发送一封先前保存的草稿。草稿在发送后会从草稿文件夹中移除。不可撤销。",
+      "desc": "发送一封先前保存的草稿。草稿在发送后会从草稿文件夹中移除。不可撤销。请始终传入最新的 draft_id（来自 draft_create、最近一次 draft_update 或 draft_list）：在基于 IMAP 的收件箱上，该 ID 在每次更新时都会改变，使用过时的 ID 会导致未找到错误。",
       "params": {
         "inbox_id": "包含该草稿的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "draft_id": "来自 draft_create 或 draft_list 的服务商草稿 ID。",
+        "draft_id": "来自最近一次 draft_create、draft_update 或 draft_list 的服务商草稿 ID。在 IMAP 收件箱上，它在每次更新后都会改变，因此请始终使用最新的那个。",
         "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
       }
     },
     "contact_search": {
       "title": "搜索联系人",
-      "desc": "按姓名或电子邮件搜索派生出的联系人列表。联系人是在读取、搜索和发送过程中根据出现的邮件头自动构建的——无需手动设置。返回按最近联系排序的匹配项，每一项都包含显示名称、电子邮件、邮件数量和上次联系时间戳。",
+      "desc": "通过对你的邮箱进行实时扫描，按姓名或电子邮件查找联系人——不存在已存储的联系人列表。每次调用都会扫描近期一段匹配邮件的窗口，并返回匹配的联系人，按最近联系排序，每一项都包含显示名称、电子邮件、匹配邮件数量和上次联系时间戳。这些数量反映的是该窗口内匹配的邮件，而非你的完整历史记录，且在两次调用之间不存储任何内容。",
       "params": {
         "query": "姓名或电子邮件片段，以不区分大小写的方式与显示名称和地址匹配。至少 1 个字符。",
-        "inbox_id": "可选。将结果限定为来自某个收件箱的联系人。省略则在该密钥可访问的所有收件箱中搜索。",
+        "inbox_id": "可选。将实时扫描限定为单个收件箱。省略则扫描该密钥可访问的收件箱（数量有限）。",
         "limit": "要返回的最大联系人数。默认 20，最大 50。",
         "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
       }
@@ -503,7 +503,7 @@
   "providers": {
     "meta": {
       "title": "服务商支持",
-      "description": "查看 MCPEmails 支持哪些电子邮件服务商，以及各服务商分别可用哪些功能：Gmail、Outlook、Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP。"
+      "description": "查看 MCPEmails 支持哪些电子邮件服务商，以及各服务商分别可用哪些功能：Gmail、Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP。"
     },
     "labels": {
       "generic": "通用 IMAP"
@@ -522,8 +522,7 @@
       "delete": "删除 / 移至回收站",
       "permanent_delete": "永久删除（彻底清除）",
       "drafts": "草稿（创建 / 编辑 / 发送）",
-      "contacts": "原生联系人 API",
-      "contacts_db": "联系人搜索（数据库同步）",
+      "contacts_db": "联系人搜索（实时扫描）",
       "scheduling": "定时发送",
       "search_syntax": "搜索语法"
     },
@@ -540,7 +539,7 @@
     "hero": {
       "eyebrow": "服务商支持",
       "heading": "各服务商分别支持什么。",
-      "lead": "MCPEmails 连接 Gmail、Outlook、Fastmail 以及任何 IMAP 收件箱（iCloud、Yahoo、Zoho、Yandex、通用）。并非每个服务商都提供相同的 API —— 此表精确展示了每一个服务商目前支持的内容。",
+      "lead": "MCPEmails 连接 Gmail、Fastmail 以及任何 IMAP 收件箱（iCloud、Yahoo、Zoho、Yandex、通用）。并非每个服务商都提供相同的 API —— 此表精确展示了每一个服务商目前支持的内容。",
       "ctaConnect": "连接一个收件箱",
       "ctaBack": "返回文档"
     },
@@ -558,9 +557,8 @@
     },
     "notes": {
       "gmail": "<b>Gmail —— 文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。",
-      "permanentDelete": "<b>永久删除：</b>Gmail 和 Outlook 在你删除时会移至回收站 —— 它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
-      "contacts": "<b>原生联系人 API：</b>Gmail 使用 Google People API；Outlook 使用 Microsoft Graph <code>/contacts</code>。Fastmail CardDAV 和基于 IMAP 的联系人超出 v0.1 范围。",
-      "contacts_db": "<b>联系人搜索（数据库同步）：</b>所有服务商都会在读取、搜索和发送操作中根据出现的 <code>From</code>、<code>To</code> 和 <code>Reply-To</code> 头自动填充一个联系人表。使用 <code>contact_search</code> 进行查询。",
+      "permanentDelete": "<b>永久删除：</b>Gmail 在你删除时会移至回收站 —— 它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
+      "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表——在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
       "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule_create</code>、<code>schedule_list</code> 和 <code>schedule_cancel</code>。投递使用每个服务商现有的发送路径——无需服务商原生的定时 API。"
     },
     "cta": {

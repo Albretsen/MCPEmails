@@ -52,7 +52,7 @@ const TABLE_SECTIONS = [
       { key: 'inboxes',  free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
       { key: 'calls',    free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
       { key: 'keys',     free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
-      { key: 'members',  free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
+      { key: 'members',  free: 'values.ownerOnly', solo: 'values.unlimited', pro: 'values.unlimited' },
       { key: 'burst',    free: 'values.burstFree', solo: 'values.burstSolo', pro: 'values.burstPro' },
     ],
   },
@@ -60,7 +60,6 @@ const TABLE_SECTIONS = [
     key: 'providers',
     rows: [
       { key: 'gmail',       free: true, solo: true, pro: true },
-      { key: 'outlook',     free: true, solo: true, pro: true },
       { key: 'fastmail',    free: true, solo: true, pro: true },
       { key: 'appPassword', free: true, solo: true, pro: true },
       { key: 'imap',        free: true, solo: true, pro: true },
@@ -310,7 +309,7 @@ export default function PricingClient({ stripePrices }) {
           </p>
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
             {t.rich('cardsFootnote.custom', {
-              contact: (chunks) => <a href="mailto:sales@mcpemails.com">{chunks}</a>,
+              contact: (chunks) => <a href="mailto:hello@mcpemails.com">{chunks}</a>,
             })}
           </p>
         </div>

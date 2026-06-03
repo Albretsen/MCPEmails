@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Docs",
-    "description": "Get started with MCPEmails in minutes. Quick-start guide, tool reference, and example responses for Gmail, Outlook, and IMAP agents."
+    "description": "Get started with MCPEmails in minutes. Quick-start guide, tool reference, and example responses for Gmail and IMAP agents."
   },
   "hero": {
     "eyebrow": "Documentation",
@@ -21,7 +21,7 @@
       "signup": {
         "label": "Sign up & connect an inbox",
         "heading": "Create your account and connect Gmail",
-        "body": "Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Pick Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete the OAuth flow or paste an app password. Your inbox is ready in under a minute.",
+        "body": "Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Pick Gmail, iCloud, Fastmail, or any IMAP inbox, then complete the OAuth flow or paste an app password. Your inbox is ready in under a minute.",
         "cta": "Connect your inbox →"
       },
       "apikey": {
@@ -106,7 +106,7 @@
       },
       "contacts": {
         "title": "Contacts",
-        "desc": "Search a contact list built automatically from the From, To, and Reply-To headers seen in your mail. No manual setup."
+        "desc": "Find people by name or email with a live scan of your recent matching mail. Nothing is stored — every search reads live."
       },
       "schedule": {
         "title": "Scheduled send",
@@ -397,11 +397,11 @@
     },
     "draft_update": {
       "title": "Update Draft",
-      "desc": "Replace the content of an existing draft. All supplied fields overwrite the stored draft. Call draft_list to obtain draft_id values.",
+      "desc": "Replace the content of an existing draft. All supplied fields overwrite the stored draft. Call draft_list to obtain draft_id values. On IMAP-backed inboxes (anything other than Gmail/Outlook) the underlying message is rewritten, so this returns a NEW draft_id that replaces the one you passed in — adopt it for any further draft_update/draft_send and discard the old one. Gmail and Outlook keep a stable draft_id.",
       "params": {
         "inbox_id": "UUID of the inbox that owns the draft. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
-        "draft_id": "Provider draft ID from draft_create or draft_list.",
+        "draft_id": "Provider draft ID from the most recent draft_create, draft_update, or draft_list. On IMAP inboxes it changes after every update, so always use the latest one.",
         "subject": "Updated subject line.",
         "body": "Updated plain-text body.",
         "to": "Updated recipient list. Default [].",
@@ -412,19 +412,19 @@
     },
     "draft_send": {
       "title": "Send Draft",
-      "desc": "Send a previously saved draft. The draft is removed from the Drafts folder after sending. Irreversible.",
+      "desc": "Send a previously saved draft. The draft is removed from the Drafts folder after sending. Irreversible. Always pass the most recent draft_id (from draft_create, the latest draft_update, or draft_list): on IMAP-backed inboxes the id changes on every update, and a stale id fails with a not-found error.",
       "params": {
         "inbox_id": "UUID of the inbox that contains the draft. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
-        "draft_id": "Provider draft ID from draft_create or draft_list."
+        "draft_id": "Provider draft ID from the most recent draft_create, draft_update, or draft_list. On IMAP inboxes it changes after every update, so always use the latest one."
       }
     },
     "contact_search": {
       "title": "Search Contacts",
-      "desc": "Search the derived contact list by name or email. Contacts are built automatically from the headers seen during read, search, and send — no manual setup. Returns matches sorted by most-recently-contacted, each with display name, email, message count, and last-contacted timestamp.",
+      "desc": "Find correspondents by name or email with a live scan of your mailbox — there is no stored contact list. Each call scans a recent window of matching mail and returns the people who match, sorted by most-recently-contacted, each with display name, email, matched-message count, and last-contacted timestamp. Counts reflect matched messages in that window, not your full history, and nothing is stored between calls.",
       "params": {
         "query": "Name or email fragment, matched case-insensitively against display name and address. At least 1 character.",
-        "inbox_id": "Optional. Restrict results to contacts seen from one inbox. Omit to search across every inbox the key can access.",
+        "inbox_id": "Optional. Restrict the live scan to one inbox. Omit to scan the inboxes the key can access (a bounded number).",
         "inbox": "Email address of the inbox to restrict to, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
         "limit": "Maximum number of contacts to return. Default 20, max 50."
       }
@@ -503,7 +503,7 @@
   "providers": {
     "meta": {
       "title": "Provider Support",
-      "description": "See which email providers MCPEmails supports and which features are available per provider: Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP."
+      "description": "See which email providers MCPEmails supports and which features are available per provider: Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP."
     },
     "labels": {
       "generic": "Generic IMAP"
@@ -522,8 +522,7 @@
       "delete": "Delete / trash",
       "permanent_delete": "Permanent delete (expunge)",
       "drafts": "Drafts (create / edit / send)",
-      "contacts": "Native contacts API",
-      "contacts_db": "Contact search (DB-synced)",
+      "contacts_db": "Contact search (live scan)",
       "scheduling": "Scheduled send",
       "search_syntax": "Search syntax"
     },
@@ -540,7 +539,7 @@
     "hero": {
       "eyebrow": "Provider support",
       "heading": "What works, per provider.",
-      "lead": "MCPEmails connects Gmail, Outlook, Fastmail, and any IMAP inbox (iCloud, Yahoo, Zoho, Yandex, generic). Not every provider exposes the same APIs — this table shows exactly what each one supports today.",
+      "lead": "MCPEmails connects Gmail, Fastmail, and any IMAP inbox (iCloud, Yahoo, Zoho, Yandex, generic). Not every provider exposes the same APIs — this table shows exactly what each one supports today.",
       "ctaConnect": "Connect an inbox",
       "ctaBack": "Back to docs"
     },
@@ -558,9 +557,8 @@
     },
     "notes": {
       "gmail": "<b>Gmail — folders vs labels:</b> Gmail uses a flat label system rather than hierarchical folders. \"Move\" is implemented as label add/remove. Native copy is not available via the Gmail REST API.",
-      "permanentDelete": "<b>Permanent delete:</b> Gmail and Outlook move to Trash when you delete — permanent expunge is not exposed by their APIs. IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.",
-      "contacts": "<b>Native contacts API:</b> Gmail uses the Google People API; Outlook uses Microsoft Graph <code>/contacts</code>. Fastmail CardDAV and IMAP-based contacts are out of scope for v0.1.",
-      "contacts_db": "<b>Contact search (DB-synced):</b> All providers automatically populate a contacts table from <code>From</code>, <code>To</code>, and <code>Reply-To</code> headers seen during read, search, and send operations. Use <code>contact_search</code> to query it.",
+      "permanentDelete": "<b>Permanent delete:</b> Gmail moves to Trash when you delete — permanent expunge is not exposed by their APIs. IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.",
+      "contacts_db": "<b>Contact search (live scan):</b> All providers support <code>contact_search</code>, which finds matching correspondents with a live, header-only scan of a recent window of your matching mail. There is no contacts table — nothing is stored between calls, and counts reflect only matched messages in the scanned window.",
       "scheduling": "<b>Scheduling:</b> Supported for all providers via a server-side <code>scheduled_sends</code> queue. Use <code>schedule_create</code>, <code>schedule_list</code>, and <code>schedule_cancel</code>. Delivery uses each provider's existing send path — no provider-native scheduling API is required."
     },
     "cta": {
