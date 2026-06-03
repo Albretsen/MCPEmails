@@ -125,7 +125,7 @@
     "badgeRequired": "obligatorio",
     "badgeOptional": "opcional",
     "inbox_list": {
-      "title": "List Inboxes",
+      "title": "Listar bandejas de entrada",
       "desc": "Devuelve todas las bandejas a las que la clave de API o el token de OAuth actuales pueden acceder. Llama a esto primero para descubrir los valores de inbox_id, así nunca copias y pegas UUIDs del panel. Cada resultado incluye la dirección de correo, el proveedor, la marca de servicio opcional (icloud/yahoo/zoho/yandex/generic/fastmail) y un objeto de capacidades que describe qué funciones admite esa bandeja."
     },
     "email_list": {
@@ -141,7 +141,7 @@
       }
     },
     "email_read": {
-      "title": "Read Email",
+      "title": "Leer correo",
       "desc": "Obtiene el contenido completo de un solo correo por ID, incluido el cuerpo en texto plano, HTML saneado opcional y datos de adjuntos opcionales.",
       "params": {
         "inbox_id": "UUID de la bandeja que contiene el correo. Llama a inbox_list para obtener los IDs de bandeja disponibles. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -153,7 +153,7 @@
       }
     },
     "email_search": {
-      "title": "Search Emails",
+      "title": "Buscar correos",
       "desc": "Busca en una bandeja usando campos estructurados e independientes del proveedor — from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before — combinados con AND. El servidor los traduce al dialecto nativo de la bandeja (operadores de Gmail, KQL/OData de Outlook, filtros JMAP de Fastmail o IMAP SEARCH), así que nunca necesitas conocer la sintaxis del proveedor. Un campo query opcional es una vía de escape nativa. Limitaciones por proveedor: IMAP genérico ignora has_attachment, Outlook ignora flagged y Fastmail ignora el query nativo.",
       "params": {
         "inbox_id": "UUID de la bandeja en la que buscar. Llama a inbox_list para obtener los IDs de bandeja disponibles. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -176,7 +176,7 @@
       }
     },
     "email_send": {
-      "title": "Send Email",
+      "title": "Enviar correo",
       "desc": "Envía un correo nuevo desde una bandeja conectada. Admite texto plano, cuerpo HTML opcional, CC/CCO y adjuntos (hasta 10 MB en total).",
       "params": {
         "inbox_id": "UUID de la bandeja desde la que enviar. Llama a inbox_list para obtener los IDs de bandeja disponibles. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -192,7 +192,7 @@
       }
     },
     "email_reply": {
-      "title": "Reply to Email",
+      "title": "Responder correo",
       "desc": "Envía una respuesta a un correo existente. Los encabezados de hilo (In-Reply-To, References) se establecen automáticamente. Admite responder a todos y adjuntos.",
       "params": {
         "inbox_id": "UUID de la bandeja que contiene el mensaje original. Llama a inbox_list para obtener los IDs de bandeja disponibles. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -205,7 +205,7 @@
       }
     },
     "folder_list": {
-      "title": "List Folders",
+      "title": "Listar carpetas",
       "desc": "Lista todas las carpetas (o etiquetas, en Gmail) de una bandeja. Cada entrada tiene el ID de carpeta nativo del proveedor, el nombre visible, el tipo (carpeta o etiqueta) y los recuentos de mensajes. Usa los IDs como argumento folder de email_list y como destino para las operaciones de mover.",
       "params": {
         "inbox_id": "UUID de la bandeja cuyas carpetas listar. Llama a inbox_list para obtener los IDs de bandeja disponibles. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -213,7 +213,7 @@
       }
     },
     "email_forward": {
-      "title": "Forward Email",
+      "title": "Reenviar correo",
       "desc": "Reenvía un mensaje existente a nuevos destinatarios. Tu nota opcional se antepone sobre un bloque de encabezado de mensaje reenviado estándar y el cuerpo original. Activa include_attachments para volver a adjuntar los archivos originales. El asunto se prefija con 'Fwd:' si es necesario. Irreversible.",
       "params": {
         "inbox_id": "UUID de la bandeja que contiene el mensaje original. Llama a inbox_list para obtener los IDs de bandeja disponibles. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -228,7 +228,7 @@
       }
     },
     "email_archive": {
-      "title": "Archive Email",
+      "title": "Archivar correo",
       "desc": "Mueve un mensaje fuera de la bandeja de entrada al archivo. No destructivo: el mensaje se conserva, no se elimina. En Gmail esto quita la etiqueta INBOX; en IMAP/Outlook/Fastmail lo mueve al buzón de Archivo.",
       "params": {
         "inbox_id": "UUID de la bandeja que contiene el mensaje. Llama a inbox_list para obtener los IDs de bandeja disponibles. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -247,7 +247,7 @@
       }
     },
     "folder_create": {
-      "title": "Create Folder",
+      "title": "Crear carpeta",
       "desc": "Crea una nueva carpeta (o etiqueta, en Gmail) en una bandeja. Devuelve el ID de carpeta/etiqueta nativo del proveedor y el nombre visible.",
       "params": {
         "inbox_id": "UUID de la bandeja en la que crear la carpeta/etiqueta. Llama a inbox_list para obtener los IDs de bandeja disponibles. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -256,7 +256,7 @@
       }
     },
     "folder_rename": {
-      "title": "Rename Folder",
+      "title": "Renombrar carpeta",
       "desc": "Renombra una carpeta o etiqueta existente. Llama primero a folder_list para obtener el folder_id.",
       "params": {
         "inbox_id": "UUID de la bandeja propietaria de la carpeta/etiqueta. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -266,7 +266,7 @@
       }
     },
     "folder_delete": {
-      "title": "Delete Folder",
+      "title": "Eliminar carpeta",
       "desc": "Elimina permanentemente una carpeta (o etiqueta, en Gmail). Irreversible — los mensajes dentro pueden perderse según el proveedor. Esta acción se marca como destructiva ante tu cliente MCP, que gestiona la confirmación del usuario. Llama primero a folder_list para obtener el folder_id.",
       "params": {
         "inbox_id": "UUID de la bandeja propietaria de la carpeta/etiqueta. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -275,7 +275,7 @@
       }
     },
     "email_move": {
-      "title": "Move Email",
+      "title": "Mover correo",
       "desc": "Mueve un mensaje a otra carpeta. En Gmail añade la etiqueta de destino y quita INBOX (Gmail no tiene carpetas separadas). El destino acepta un alias canónico, un nombre de carpeta/etiqueta o un ID nativo.",
       "params": {
         "inbox_id": "UUID de la bandeja propietaria del mensaje. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -285,7 +285,7 @@
       }
     },
     "email_move_batch": {
-      "title": "Bulk Move",
+      "title": "Mover en lote",
       "desc": "Mueve hasta 500 mensajes a una carpeta de destino en una llamada. Devuelve recuentos de éxitos/fallos más resultados por mensaje. El destino acepta un alias canónico, un nombre de carpeta/etiqueta o un ID nativo.",
       "params": {
         "inbox_id": "UUID de la bandeja propietaria de los mensajes. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -295,7 +295,7 @@
       }
     },
     "email_search_and_move": {
-      "title": "Search and Move",
+      "title": "Buscar y mover",
       "desc": "Ejecuta una búsqueda estructurada y mueve cada coincidencia a una carpeta de destino en una sola operación del servidor — evita IDs de mensaje obsoletos. Usa los mismos campos de búsqueda independientes del proveedor que email_search (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), con las mismas limitaciones por proveedor; un query nativo opcional sirve de vía de escape. El destino acepta un alias canónico, un nombre de carpeta/etiqueta o un ID nativo. Limitado a 500 coincidencias por llamada.",
       "params": {
         "inbox_id": "UUID de la bandeja en la que buscar y operar. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -318,7 +318,7 @@
       }
     },
     "email_delete": {
-      "title": "Delete Email",
+      "title": "Eliminar correo",
       "desc": "Elimina un solo mensaje. Por defecto va a la papelera del proveedor (más seguro). Pon permanent: true para un borrado definitivo (omite la papelera; puede ser irreversible). Esta acción se marca como destructiva ante tu cliente MCP, que gestiona la confirmación del usuario. El borrado permanente (expunge) está disponible en IMAP y Fastmail; Gmail y Outlook solo admiten papelera.",
       "params": {
         "inbox_id": "UUID de la bandeja propietaria del mensaje. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -328,7 +328,7 @@
       }
     },
     "email_delete_batch": {
-      "title": "Bulk Delete",
+      "title": "Eliminar en lote",
       "desc": "Elimina hasta 500 mensajes en una sola llamada. Por defecto va a la papelera; usa permanent: true para un borrado definitivo. Esta acción se marca como destructiva ante tu cliente MCP, que gestiona la confirmación del usuario. Devuelve recuentos de éxitos/fallos más resultados por mensaje.",
       "params": {
         "inbox_id": "UUID de la bandeja propietaria de los mensajes. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -338,7 +338,7 @@
       }
     },
     "email_search_and_delete": {
-      "title": "Search and Delete",
+      "title": "Buscar y eliminar",
       "desc": "Ejecuta una búsqueda estructurada y elimina cada coincidencia en una sola operación del servidor — evita IDs de mensaje obsoletos. Usa los mismos campos de búsqueda independientes del proveedor que email_search (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), con las mismas limitaciones por proveedor; un query nativo opcional sirve de vía de escape. Por defecto va a la papelera; usa permanent: true para un borrado definitivo. Esta acción se marca como destructiva ante tu cliente MCP, que gestiona la confirmación del usuario. Limitado a 500 coincidencias por llamada.",
       "params": {
         "inbox_id": "UUID de la bandeja en la que buscar y operar. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -361,7 +361,7 @@
       }
     },
     "draft_list": {
-      "title": "List Drafts",
+      "title": "Listar borradores",
       "desc": "Devuelve los borradores guardados en la carpeta de Borradores de la bandeja. Cada resultado incluye el draft_id, el asunto, los destinatarios y la marca de tiempo de creación. Usa el draft_id con draft_update o draft_send.",
       "params": {
         "inbox_id": "UUID de la bandeja cuyos borradores listar. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -370,7 +370,7 @@
       }
     },
     "draft_create": {
-      "title": "Create Draft",
+      "title": "Crear borrador",
       "desc": "Guarda un nuevo borrador en la carpeta de Borradores de la bandeja sin enviarlo. Devuelve un draft_id para draft_update o draft_send. El asunto y el cuerpo son obligatorios; los destinatarios son opcionales (los borradores pueden estar incompletos).",
       "params": {
         "inbox_id": "UUID de la bandeja en la que guardar el borrador. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -384,7 +384,7 @@
       }
     },
     "draft_update": {
-      "title": "Update Draft",
+      "title": "Actualizar borrador",
       "desc": "Reemplaza el contenido de un borrador existente. Todos los campos proporcionados sobrescriben el borrador almacenado. Llama a draft_list para obtener los valores de draft_id. En bandejas basadas en IMAP (cualquiera que no sea Gmail/Outlook) el mensaje subyacente se reescribe, por lo que esto devuelve un NUEVO draft_id que reemplaza el que pasaste — adóptalo para cualquier draft_update/draft_send posterior y descarta el antiguo. Gmail y Outlook mantienen un draft_id estable.",
       "params": {
         "inbox_id": "UUID de la bandeja propietaria del borrador. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -399,7 +399,7 @@
       }
     },
     "draft_send": {
-      "title": "Send Draft",
+      "title": "Enviar borrador",
       "desc": "Envía un borrador guardado previamente. El borrador se elimina de la carpeta de Borradores tras el envío. Irreversible. Pasa siempre el draft_id más reciente (de draft_create, el último draft_update o draft_list): en bandejas basadas en IMAP el ID cambia en cada actualización, y un ID obsoleto falla con un error de no encontrado.",
       "params": {
         "inbox_id": "UUID de la bandeja que contiene el borrador. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -408,7 +408,7 @@
       }
     },
     "contact_search": {
-      "title": "Search Contacts",
+      "title": "Buscar contactos",
       "desc": "Encuentra corresponsales por nombre o correo con un escaneo en vivo de tu buzón — no existe ninguna lista de contactos almacenada. Cada llamada escanea una ventana reciente de correo coincidente y devuelve las personas que coinciden, ordenadas por contacto más reciente, cada una con nombre visible, correo, recuento de mensajes coincidentes y marca de tiempo del último contacto. Los recuentos reflejan los mensajes coincidentes en esa ventana, no tu historial completo, y no se almacena nada entre llamadas.",
       "params": {
         "query": "Fragmento de nombre o correo, comparado sin distinguir mayúsculas con el nombre visible y la dirección. Al menos 1 carácter.",
@@ -418,7 +418,7 @@
       }
     },
     "schedule_create": {
-      "title": "Schedule Send",
+      "title": "Programar envío",
       "desc": "Pone en cola un correo para enviarlo en una fecha futura. Los destinatarios y el cuerpo se validan de inmediato; si la validación falla, no se pone en cola. El despachador se ejecuta cada minuto, así que la entrega real puede demorarse hasta 60 segundos tras send_at. Usa schedule_list y schedule_cancel para gestionar los envíos pendientes.",
       "params": {
         "inbox_id": "UUID de la bandeja desde la que enviar. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
@@ -435,7 +435,7 @@
       }
     },
     "schedule_list": {
-      "title": "List Scheduled Sends",
+      "title": "Listar envíos programados",
       "desc": "Lista los envíos programados pendientes del espacio de trabajo (estado pending o sending), los más próximos primero. Opcionalmente filtra por bandeja. Usa schedule_cancel para cancelar uno antes de que se despache.",
       "params": {
         "inbox_id": "Opcional. Restringe los resultados a los envíos programados de una bandeja.",
@@ -444,7 +444,7 @@
       }
     },
     "schedule_cancel": {
-      "title": "Cancel Scheduled Send",
+      "title": "Cancelar envío programado",
       "desc": "Cancela un envío programado pendiente para que el despachador lo omita. Solo se pueden cancelar los envíos que aún están en estado 'pending'; una vez en 'sending', 'sent' o 'error' ya no se pueden. Usa schedule_list para encontrar el scheduled_send_id.",
       "params": {
         "scheduled_send_id": "UUID del envío programado a cancelar."

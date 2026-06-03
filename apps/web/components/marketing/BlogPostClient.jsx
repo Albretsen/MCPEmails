@@ -200,7 +200,7 @@ export default function BlogPostClient({ post }) {
           <p className="pricing-cta-sub">{t('post.cta.sub')}</p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href="/signup">{t('post.cta.primary')}</a>
-            <a className="btn btn-on-dark btn-lg" href="/docs">{t('post.cta.secondary')}</a>
+            <Link className="btn btn-on-dark btn-lg" href="/docs">{t('post.cta.secondary')}</Link>
           </div>
         </div>
       </section>

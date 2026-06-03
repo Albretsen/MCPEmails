@@ -2,6 +2,7 @@
 
 import { useState, Fragment } from 'react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 
@@ -350,7 +351,7 @@ export default function PricingClient({ stripePrices }) {
           </p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href="/signup">{t('ctaBand.ctaPrimary')}</a>
-            <a className="btn btn-on-dark btn-lg" href="/docs">{t('ctaBand.ctaSecondary')}</a>
+            <Link className="btn btn-on-dark btn-lg" href="/docs">{t('ctaBand.ctaSecondary')}</Link>
           </div>
         </div>
       </section>

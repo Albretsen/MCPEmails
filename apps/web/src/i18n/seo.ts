@@ -26,6 +26,18 @@ export function metaAlternates(locale: string, pathname: string) {
   };
 }
 
+/**
+ * Default social-share image for marketing pages. Served by the
+ * `app/opengraph-image.tsx` route handler (1200x630 brand card). Blog posts
+ * override this with their own cover image.
+ */
+export const OG_IMAGE = {
+  url: `${APP_URL}/opengraph-image`,
+  width: 1200,
+  height: 630,
+  alt: 'mcpemails: Give your AI agent an inbox',
+} as const;
+
 export const OG_LOCALE: Record<string, string> = {
   en: 'en_US',
   nb: 'nb_NO',
