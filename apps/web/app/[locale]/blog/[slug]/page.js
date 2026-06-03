@@ -38,6 +38,9 @@ export async function generateMetadata({ params }) {
     title: post.title,
     description: post.description,
     authors: [{ name: author.name }],
+    // Posts flagged `noindex` (e.g. previews of not-yet-shipped features) stay
+    // reachable but are kept out of search indexes; links are still followed.
+    ...(post.noindex ? { robots: { index: false, follow: true } } : {}),
     alternates: { canonical, languages },
     openGraph: {
       type: 'article',

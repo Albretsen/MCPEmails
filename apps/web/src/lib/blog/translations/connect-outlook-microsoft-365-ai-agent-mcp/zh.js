@@ -3,7 +3,9 @@ export default {
   description:
     '几分钟内通过 MCP 将 Outlook 或 Microsoft 365 连接到你的 AI 智能体。Microsoft 登录 OAuth，底层用 Graph，读取／搜索／发送／回复——无需自建服务器。',
   coverAlt: '通过 MCP 将 Outlook 和 Microsoft 365 连接到 AI 智能体',
-  content: `要把 Outlook 或 Microsoft 365 邮箱连接到你的 AI 智能体，你只需登录 MCP Emails，用 Microsoft OAuth 添加邮箱，然后把智能体指向一个 MCP 端点即可。不用注册应用，不用进 Azure 门户，也不用自建 Graph 服务器。整个过程大约两分钟，你的智能体就能对实时邮箱进行读取、搜索、发送、回复、标记和管理文件夹。
+  content: `> **即将推出。** Outlook 和 Microsoft 365 支持已开发完成，但尚未全面开放。目前你还无法在生产环境中连接 Outlook 邮箱——本指南预览连接器上线后的使用方式。要连接现在即可使用的邮箱，请参阅 [Gmail 和 IMAP](/docs/providers)。
+
+要把 Outlook 或 Microsoft 365 邮箱连接到你的 AI 智能体，你只需登录 MCP Emails，用 Microsoft OAuth 添加邮箱，然后把智能体指向一个 MCP 端点即可。不用注册应用，不用进 Azure 门户，也不用自建 Graph 服务器。整个过程大约两分钟，你的智能体就能对实时邮箱进行读取、搜索、发送、回复、标记和管理文件夹。
 
 大多数“用 AI 处理邮件”的教程都默认你用的是 Gmail，讲完就完了。Outlook 只换来一个耸肩，外加一条指向某个半荒废 GitHub 仓库的链接。如果你的工作离不开 Microsoft 365，那这就完全抓错了重点。这篇文章是以 Outlook 为主的版本：到底什么真正可用、Microsoft 登录怎么流转、底层跑的是什么，以及个人账户和工作账户之间的那些边界情况在哪里。
 
