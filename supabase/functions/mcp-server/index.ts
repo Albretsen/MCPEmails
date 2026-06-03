@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { ImapAuthError, ImapClient, ImapMessageSummary } from "./imap-client.ts";
+import { ImapAuthError, ImapClient, ImapMailboxInfo, ImapMessageSummary } from "./imap-client.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
 import {
@@ -242,10 +242,46 @@ interface InitializeResult {
     name: string;
     version: string;
   };
+  /**
+   * Free-text guidance loaded into the client's context at session start (even
+   * when individual tool schemas are deferred behind tool-search). Used to make
+   * inbox discovery and the action-based tool surface self-explanatory without
+   * relying on any single tool being surfaced by the client's tool index.
+   */
+  instructions?: string;
 }
 
 /** The single protocol version this server supports. */
 const SUPPORTED_PROTOCOL_VERSION = "2025-06-18";
+
+/**
+ * Server instructions surfaced to the client at session start. Kept well under
+ * 2KB (clients truncate there). Critical detail — how to discover an inbox_id
+ * without depending on any one tool being indexed — comes first.
+ */
+const SERVER_INSTRUCTIONS =
+  "MCP Emails lets you read, search, organize, send and schedule email across " +
+  "the user's connected inboxes.\n\n" +
+  "INBOX SELECTION: Most tools target one inbox via `inbox_id` (a UUID) or " +
+  "`inbox` (an email address). If the key has exactly one inbox it is chosen " +
+  "automatically — omit both. If several inboxes exist and you don't know the " +
+  "id, DON'T guess and DON'T treat it as blocked: either call `inbox_list`, or " +
+  "simply call the tool you want with no inbox_id — the response lists every " +
+  "inbox with its inbox_id so you can immediately retry. To answer 'which " +
+  "inboxes do I have?', call `inbox_list`.\n\n" +
+  "TOOL SHAPE: Tools are grouped by resource and take an `action` argument:\n" +
+  "• inbox_list — list the accessible inboxes.\n" +
+  "• email_read — action: list | read | read_batch | search.\n" +
+  "• email_organize — action: move | move_batch | delete | delete_batch | " +
+  "flag | archive | search_and_move | search_and_delete.\n" +
+  "• email_compose — action: send | reply | forward.\n" +
+  "• folder — action: list | create | rename | delete.\n" +
+  "• draft — action: list | create | update | send.\n" +
+  "• schedule — action: create | list | cancel.\n" +
+  "• contact_search — search the address book.\n" +
+  "Pick the tool, then set `action`; each action uses only the relevant " +
+  "arguments. Message ids come from email_read/email_search; folder ids from " +
+  "folder (action:list).";
 
 // ---------------------------------------------------------------------------
 // JSON-RPC error codes
@@ -1195,7 +1231,9 @@ const INBOX_ID_PROPERTY = {
   description:
     "UUID of the inbox to use. Optional when the API key has access to " +
     "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-    "with an email address. Call inbox_list to discover inboxes.",
+    "with an email address. If you don't know the inbox_id and several are " +
+    "accessible, just omit it — the response then lists every inbox with its " +
+    "inbox_id so you can retry (calling inbox_list does the same).",
 } as const;
 
 /** Shared `inbox` property — the email-address alternative to `inbox_id`. */
@@ -1207,15 +1245,18 @@ const INBOX_PROPERTY = {
 } as const;
 
 /** All tools available in MCPEmails, in canonical display order. */
-const TOOL_REGISTRY: ToolDefinition[] = [
+const LEGACY_TOOLS: ToolDefinition[] = [
   // ── read:email scope ────────────────────────────────────────────────────────
 
-  // inbox_list is registered FIRST, intentionally. It is the entry point for
-  // every other tool (all of which require an inbox_id that only this tool can
-  // supply). Some MCP clients build their tool-search index from the head of the
-  // tools/list response and can drop the final entry on a fresh connection; if
-  // this tool is last, a just-connected client cannot discover any inbox_id and
-  // every request fails until the tool list is manually refreshed. Keep it first.
+  // inbox_list is registered FIRST, intentionally — it is the entry point that
+  // supplies the inbox_id every other tool needs. Keep it first.
+  //
+  // NOTE: position alone is not enough. Some clients (e.g. Claude.ai connectors)
+  // build a capped on-demand tool-search index and may never surface inbox_list,
+  // dead-ending discovery. The robust mitigation does NOT depend on this tool
+  // being reachable: when an inbox-bound tool is called without an inbox_id and
+  // several are accessible, inboxResolutionError() lists every inbox (email +
+  // inbox_id) inline, so the agent can self-serve via any tool it CAN reach.
   {
     name: "inbox_list",
     title: "List Inboxes",
@@ -1230,7 +1271,26 @@ const TOOL_REGISTRY: ToolDefinition[] = [
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
-      properties: {},
+      properties: {
+        provider: {
+          type: "string",
+          enum: ["gmail", "outlook", "fastmail", "imap"],
+          description:
+            "Optional filter — return only inboxes (email accounts/mailboxes) " +
+            "served by this provider. One of: gmail, outlook, fastmail, imap. " +
+            "Omit to list every inbox the API key can access.",
+        },
+        include_capabilities: {
+          type: "boolean",
+          default: true,
+          description:
+            "Whether each inbox includes its capabilities object (which inbox " +
+            "features — flags, folders, labels, move, copy, delete, forward, " +
+            "drafts, contacts_api, scheduling — are supported). Defaults to " +
+            "true; set false for a compact inbox list of just inbox_id, email " +
+            "address, display name, provider and service brand.",
+        },
+      },
       additionalProperties: false,
     },
   },
@@ -1244,7 +1304,8 @@ const TOOL_REGISTRY: ToolDefinition[] = [
       "newest first. Supports filtering by folder, unread status, and pagination. " +
       "Use email_read to fetch the full content of a specific message. " +
       "Note: this lists the MESSAGES within one inbox — to discover which inboxes " +
-      "exist and obtain their inbox_id, call inbox_list first.",
+      "exist and obtain their inbox_id, call this tool with no inbox_id (or call " +
+      "inbox_list); the response then lists every inbox and its inbox_id.",
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
@@ -2568,7 +2629,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
             service: { type: ["string", "null"] },
             capabilities: { type: "object", additionalProperties: true },
           },
-          required: ["inbox_id", "email_address", "provider", "capabilities"],
+          required: ["inbox_id", "email_address", "provider"],
           additionalProperties: true,
         },
       },
@@ -2961,10 +3022,10 @@ const TOOL_ANNOTATIONS: Record<
   email_search_and_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
 };
 
-// Attach outputSchema + annotations to every registry entry. Done once at module
+// Attach outputSchema + annotations to every legacy entry. Done once at module
 // load so handleToolsList can emit them directly. openWorldHint is true for all
 // tools (every one reaches an external email provider); title mirrors tool.title.
-for (const tool of TOOL_REGISTRY) {
+for (const tool of LEGACY_TOOLS) {
   const out = TOOL_OUTPUT_SCHEMAS[tool.name];
   if (out) tool.outputSchema = out;
   const ann = TOOL_ANNOTATIONS[tool.name];
@@ -2978,6 +3039,216 @@ for (const tool of TOOL_REGISTRY) {
     };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Tool consolidation (the surface clients actually see)
+//
+// The 28 legacy tools above are collapsed into a small set of resource-oriented
+// tools that take an `action` argument. This keeps the connector under the tool
+// count / token thresholds where clients (e.g. Claude.ai) defer tools behind an
+// on-demand tool-search index — an index that has been observed to omit specific
+// tools (notably the parameterless inbox_list), dead-ending discovery. With a
+// small surface every tool is loaded directly, so nothing depends on search
+// ranking. Each action routes to its untouched legacy handler at dispatch time.
+// ---------------------------------------------------------------------------
+
+const LEGACY_BY_NAME = new Map(LEGACY_TOOLS.map((t) => [t.name, t]));
+
+/** One selectable action on a consolidated tool. */
+interface ConsolidatedAction {
+  /** Legacy tool name whose handler + schema back this action. */
+  legacy: string;
+  /** Scope required to invoke this specific action. */
+  scope: string;
+  /** Optional alternative scopes that also authorize this action. */
+  altScopes?: string[];
+  /**
+   * Rename map applied when merging the legacy input schema into the
+   * consolidated one: { legacyParamName: exposedParamName }. Used to avoid
+   * collisions with the reserved `action` selector (email_flag's own `action`).
+   * Reversed at dispatch before the legacy handler runs.
+   */
+  renames?: Record<string, string>;
+}
+
+interface ConsolidatedSpec {
+  title: string;
+  /** Per-action description lines appended to the tool description. */
+  description: string;
+  annotations: { readOnlyHint: boolean; destructiveHint: boolean; idempotentHint: boolean };
+  actions: Record<string, ConsolidatedAction>;
+}
+
+const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
+  email_read: {
+    title: "Read Email",
+    description:
+      "Read, list and search email in an inbox. Set `action`: 'list' (recent " +
+      "messages, optionally by folder/unread), 'read' (full content of one " +
+      "message_id), 'read_batch' (several message_ids), or 'search' (structured " +
+      "filters: from/to/subject/body/since/before/unread/has_attachment/flagged).",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+    actions: {
+      list: { legacy: "email_list", scope: "read:email" },
+      read: { legacy: "email_read", scope: "read:email" },
+      read_batch: { legacy: "email_read_batch", scope: "read:email" },
+      search: { legacy: "email_search", scope: "read:email", altScopes: ["search:email"] },
+    },
+  },
+  email_organize: {
+    title: "Organize Email",
+    description:
+      "Move, delete, flag or archive messages. Set `action`: 'move'/'move_batch' " +
+      "(to a destination_folder_id), 'delete'/'delete_batch' (trash, or permanent), " +
+      "'flag' (set read/unread/flagged via `flag_action` on message_ids), 'archive', " +
+      "or 'search_and_move'/'search_and_delete' (apply to all messages matching a " +
+      "search). Requires the scope matching the action (manage:folders / delete:email / send:email).",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    actions: {
+      move: { legacy: "email_move", scope: "manage:folders" },
+      move_batch: { legacy: "email_move_batch", scope: "manage:folders" },
+      delete: { legacy: "email_delete", scope: "delete:email" },
+      delete_batch: { legacy: "email_delete_batch", scope: "delete:email" },
+      flag: { legacy: "email_flag", scope: "send:email", renames: { action: "flag_action" } },
+      archive: { legacy: "email_archive", scope: "send:email" },
+      search_and_move: { legacy: "email_search_and_move", scope: "manage:folders" },
+      search_and_delete: { legacy: "email_search_and_delete", scope: "delete:email" },
+    },
+  },
+  email_compose: {
+    title: "Compose Email",
+    description:
+      "Send new mail or respond. Set `action`: 'send' (to/subject/body, optional " +
+      "cc/bcc/html_body/attachments), 'reply' (to a message_id, optional reply_all), " +
+      "or 'forward' (a message_id to new recipients).",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    actions: {
+      send: { legacy: "email_send", scope: "send:email" },
+      reply: { legacy: "email_reply", scope: "send:email" },
+      forward: { legacy: "email_forward", scope: "send:email" },
+    },
+  },
+  folder: {
+    title: "Folders",
+    description:
+      "Manage mailbox folders/labels. Set `action`: 'list' (all folders with ids " +
+      "and counts), 'create' (name), 'rename' (folder_id, new_name), or 'delete' " +
+      "(folder_id — irreversible). 'list' needs read:email; the rest need manage:folders.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    actions: {
+      list: { legacy: "folder_list", scope: "read:email" },
+      create: { legacy: "folder_create", scope: "manage:folders" },
+      rename: { legacy: "folder_rename", scope: "manage:folders" },
+      delete: { legacy: "folder_delete", scope: "manage:folders" },
+    },
+  },
+  draft: {
+    title: "Drafts",
+    description:
+      "Manage draft messages. Set `action`: 'list', 'create' (subject/body, optional " +
+      "to/cc/bcc/html_body), 'update' (draft_id + fields), or 'send' (draft_id). On " +
+      "IMAP inboxes a draft_id changes on every update — always use the latest.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    actions: {
+      list: { legacy: "draft_list", scope: "manage:drafts" },
+      create: { legacy: "draft_create", scope: "manage:drafts" },
+      update: { legacy: "draft_update", scope: "manage:drafts" },
+      send: { legacy: "draft_send", scope: "manage:drafts" },
+    },
+  },
+  schedule: {
+    title: "Scheduled Send",
+    description:
+      "Schedule mail for later delivery. Set `action`: 'create' (to/subject/body + " +
+      "send_at ISO timestamp), 'list' (pending scheduled sends), or 'cancel' " +
+      "(scheduled_send_id).",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    actions: {
+      create: { legacy: "schedule_create", scope: "schedule:email" },
+      list: { legacy: "schedule_list", scope: "schedule:email" },
+      cancel: { legacy: "schedule_cancel", scope: "schedule:email" },
+    },
+  },
+};
+
+/** Fast lookup at dispatch: consolidated tool name → spec. */
+const CONSOLIDATED_BY_NAME = CONSOLIDATED_SPECS;
+
+/**
+ * Build a consolidated tool's input schema by merging the input schemas of its
+ * actions' legacy tools. A required `action` enum selects the operation; every
+ * other property is optional at the schema level (which params are required
+ * depends on the action — the legacy handlers still enforce their own). The
+ * first action to contribute a property wins (shared props like inbox_id are
+ * identical across tools), except keys listed in an action's `renames`.
+ */
+function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefinition {
+  const properties: Record<string, unknown> = {
+    action: {
+      type: "string",
+      enum: Object.keys(spec.actions),
+      description:
+        "Which operation to perform. Determines which other arguments are used.",
+    },
+  };
+  let requiredScope = "";
+  const altScopeSet = new Set<string>();
+  for (const [actionName, action] of Object.entries(spec.actions)) {
+    if (!requiredScope) requiredScope = action.scope;
+    else altScopeSet.add(action.scope);
+    for (const a of action.altScopes ?? []) altScopeSet.add(a);
+
+    const legacy = LEGACY_BY_NAME.get(action.legacy);
+    if (!legacy) continue;
+    const legacyProps =
+      (legacy.inputSchema.properties as Record<string, unknown>) ?? {};
+    for (const [propKey, propVal] of Object.entries(legacyProps)) {
+      const exposedKey = action.renames?.[propKey] ?? propKey;
+      if (exposedKey === "action") continue; // never shadow the selector
+      if (!(exposedKey in properties)) properties[exposedKey] = propVal;
+    }
+    void actionName;
+  }
+  // requiredScope must not also appear in altScopes.
+  altScopeSet.delete(requiredScope);
+
+  return {
+    name,
+    title: spec.title,
+    description: spec.description,
+    requiredScope: requiredScope as ToolDefinition["requiredScope"],
+    ...(altScopeSet.size > 0 ? { altScopes: [...altScopeSet] } : {}),
+    inputSchema: {
+      type: "object",
+      properties,
+      required: ["action"],
+      additionalProperties: false,
+    },
+    annotations: {
+      title: spec.title,
+      readOnlyHint: spec.annotations.readOnlyHint,
+      destructiveHint: spec.annotations.destructiveHint,
+      idempotentHint: spec.annotations.idempotentHint,
+      openWorldHint: true,
+    },
+  };
+}
+
+/**
+ * The tool surface clients actually see: the standalone entry-point tools kept
+ * as-is (inbox_list, contact_search) plus the consolidated resource tools.
+ * inbox_list stays first as the discovery entry point.
+ */
+const TOOL_REGISTRY: ToolDefinition[] = [
+  LEGACY_BY_NAME.get("inbox_list")!,
+  buildConsolidatedTool("email_read", CONSOLIDATED_SPECS.email_read),
+  buildConsolidatedTool("email_organize", CONSOLIDATED_SPECS.email_organize),
+  buildConsolidatedTool("email_compose", CONSOLIDATED_SPECS.email_compose),
+  buildConsolidatedTool("folder", CONSOLIDATED_SPECS.folder),
+  buildConsolidatedTool("draft", CONSOLIDATED_SPECS.draft),
+  buildConsolidatedTool("schedule", CONSOLIDATED_SPECS.schedule),
+  LEGACY_BY_NAME.get("contact_search")!,
+];
 
 // ---------------------------------------------------------------------------
 // Provider capability matrix (single source of truth)
@@ -3364,11 +3635,22 @@ async function encryptForStorage(plaintext: string): Promise<string> {
  * returned. Otherwise all active inboxes in the workspace are returned.
  * Credential columns are never included in the output.
  */
-async function executeListInboxes(apiKey: ApiKeyRow): Promise<{
+async function executeListInboxes(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
   result: { content: { type: string; text: string }[] };
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
+  const args: Record<string, unknown> =
+    typeof rawArgs === "object" && rawArgs !== null && !Array.isArray(rawArgs)
+      ? rawArgs as Record<string, unknown>
+      : {};
+  const providerFilter = typeof args.provider === "string" ? args.provider : null;
+  // include_capabilities defaults to true; only an explicit `false` opts out.
+  const includeCapabilities = args.include_capabilities !== false;
+
   let query = supabase
     .from("inboxes")
     .select("id, email_address, display_name, provider, service, status")
@@ -3379,6 +3661,10 @@ async function executeListInboxes(apiKey: ApiKeyRow): Promise<{
 
   if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
     query = query.in("id", apiKey.inbox_ids);
+  }
+
+  if (providerFilter !== null) {
+    query = query.eq("provider", providerFilter);
   }
 
   const { data, error } = await query;
@@ -3404,7 +3690,9 @@ async function executeListInboxes(apiKey: ApiKeyRow): Promise<{
     display_name: row.display_name ?? row.email_address,
     provider: row.provider,
     service: row.service ?? null,
-    capabilities: getProviderCapabilities(row.provider),
+    ...(includeCapabilities
+      ? { capabilities: getProviderCapabilities(row.provider) }
+      : {}),
   }));
 
   return {
@@ -4279,26 +4567,60 @@ const IMAP_ALIAS_SPECIAL_USE: Record<string, string> = {
 };
 
 /**
- * Resolve a canonical folder alias to a concrete IMAP mailbox name using the
- * server's real layout. Issues a single LIST and matches in this order:
+ * Match a canonical folder alias against an already-fetched IMAP mailbox list.
+ * Pure (no I/O) so it can be shared by callers that own a connection. Matches:
  *   1. "inbox" → always the reserved name "INBOX".
  *   2. SPECIAL-USE flag match (\\Archive, \\Trash, \\Sent, \\Drafts, \\Junk).
  *   3. Case-insensitive match against the canonical English name (e.g.
  *      a mailbox literally named "Archive").
- * Returns null when nothing matches so the caller can fall back to the static
- * hard-coded name / pass-through (we never auto-create a folder here).
+ * Returns null when nothing matches.
+ */
+function matchImapAliasMailbox(
+  mailboxes: ImapMailboxInfo[],
+  alias: CanonicalFolderAlias,
+): string | null {
+  const canonicalToken = alias.aliases[0];
+  if (canonicalToken === "inbox") return "INBOX";
+
+  // (2) SPECIAL-USE flag match.
+  const wantFlag = IMAP_ALIAS_SPECIAL_USE[canonicalToken];
+  if (wantFlag) {
+    const bySpecialUse = mailboxes.find((mb) =>
+      mb.flags.some((f) => f.toLowerCase() === wantFlag)
+    );
+    if (bySpecialUse) return bySpecialUse.name;
+  }
+
+  // (3) Case-insensitive match against the canonical English name.
+  const wantName = alias.imap.toLowerCase();
+  const byName = mailboxes.find((mb) => mb.name.toLowerCase() === wantName);
+  if (byName) return byName.name;
+
+  return null;
+}
+
+/**
+ * Resolve a canonical folder alias to a concrete IMAP mailbox name using the
+ * server's real layout (one LIST + {@link matchImapAliasMailbox}).
+ *
+ * When the server advertises neither the SPECIAL-USE flag nor a mailbox with
+ * the canonical English name, returns null so the caller can fall back — UNLESS
+ * `createIfMissing` is set, in which case the canonical mailbox (e.g. "Archive")
+ * is CREATEd and its name returned. Auto-create exists so archiving works on
+ * generic IMAP accounts that ship without an Archive folder (mirrors
+ * appendToSentFolder auto-filing Sent on send); without it the move dead-ended
+ * with a raw "[TRYCREATE] Mailbox doesn't exist: Archive" leak.
  */
 async function resolveImapAliasMailbox(
   inbox: InboxRow,
   alias: CanonicalFolderAlias,
+  opts: { createIfMissing?: boolean } = {},
 ): Promise<string | null> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
   }
-  const canonicalToken = alias.aliases[0];
-  if (canonicalToken === "inbox") return "INBOX";
+  if (alias.aliases[0] === "inbox") return "INBOX";
 
-  const wantFlag = IMAP_ALIAS_SPECIAL_USE[canonicalToken];
   const password = await decryptStoredToken(inbox.imap_password);
   let client: ImapClient | null = null;
   try {
@@ -4309,20 +4631,13 @@ async function resolveImapAliasMailbox(
       password,
     });
     const mailboxes = await client.listMailboxes();
+    const matched = matchImapAliasMailbox(mailboxes, alias);
+    if (matched) return matched;
 
-    // (2) SPECIAL-USE flag match.
-    if (wantFlag) {
-      const bySpecialUse = mailboxes.find((mb) =>
-        mb.flags.some((f) => f.toLowerCase() === wantFlag)
-      );
-      if (bySpecialUse) return bySpecialUse.name;
+    if (opts.createIfMissing) {
+      await client.createMailbox(alias.imap);
+      return alias.imap;
     }
-
-    // (3) Case-insensitive match against the canonical English name.
-    const wantName = alias.imap.toLowerCase();
-    const byName = mailboxes.find((mb) => mb.name.toLowerCase() === wantName);
-    if (byName) return byName.name;
-
     return null;
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -10664,9 +10979,18 @@ async function resolveFolderId(inbox: InboxRow, nameOrId: string): Promise<strin
         // SPECIAL-USE flags (one LIST). A generic IMAP account may name its
         // archive/trash/etc differently from the hard-coded English names, so
         // we can't just return alias.imap verbatim (that caused move-to-archive
-        // to fail with TRYCREATE for a non-existent "Archive"). When nothing on
-        // the server matches, fall back to the static name (provider validates).
-        const resolvedName = await resolveImapAliasMailbox(inbox, alias);
+        // to fail with TRYCREATE for a non-existent "Archive").
+        //
+        // For "archive" specifically, auto-create the mailbox when missing so
+        // moving into it behaves like email_archive (and never leaks the raw
+        // TRYCREATE line). Other aliases fall back to the static name when
+        // unmatched (the provider validates / the existing error guides).
+        const isArchive = alias.aliases[0] === "archive";
+        const resolvedName = await resolveImapAliasMailbox(
+          inbox,
+          alias,
+          { createIfMissing: isArchive },
+        );
         return resolvedName ?? alias.imap;
       }
     }
@@ -11450,8 +11774,16 @@ async function imapUpdateFlags(
 }
 
 /**
- * Archives a single IMAP message by moving it to the "Archive" mailbox.
- * Falls back gracefully via uidMove's internal COPY+DELETE fallback.
+ * Archives a single IMAP message by moving it to the account's Archive mailbox.
+ *
+ * The destination is resolved against the server's REAL layout (one LIST):
+ * the \\Archive SPECIAL-USE folder if advertised, else a mailbox literally
+ * named "Archive". When the account has neither (common on generic IMAP), a
+ * top-level "Archive" mailbox is CREATEd first — mirroring how the send path
+ * auto-files Sent. This avoids hard-coding "Archive" and the resulting raw
+ * "[TRYCREATE] Mailbox doesn't exist: Archive" leak. The move runs only after
+ * the destination exists, so a failure never destroys the source message
+ * (uidMove COPYs before it STOREs \\Deleted + EXPUNGEs).
  * Throws "imap_auth_failed" on credential rejection.
  */
 async function imapArchiveEmail(
@@ -11464,6 +11796,7 @@ async function imapArchiveEmail(
   const { folder, uid } = decodeImapId(messageId);
   if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
 
+  const archiveAlias = lookupCanonicalAlias("archive")!;
   const password = await decryptStoredToken(inbox.imap_password);
   let client: ImapClient | null = null;
   try {
@@ -11473,10 +11806,17 @@ async function imapArchiveEmail(
       email: imapAuthUser(inbox),
       password,
     });
+    // Resolve (or create) the Archive mailbox before touching the source.
+    const mailboxes = await client.listMailboxes();
+    let target = matchImapAliasMailbox(mailboxes, archiveAlias);
+    if (!target) {
+      target = archiveAlias.imap; // "Archive"
+      await client.createMailbox(target);
+    }
     await client.selectMailbox(imapFolderName(folder));
-    // "Archive" is the conventional name; uidMove falls back internally if MOVE
-    // is unsupported (COPY + \\Deleted + EXPUNGE).
-    await client.uidMove([uid], "Archive");
+    // uidMove falls back internally if MOVE is unsupported (COPY + \\Deleted +
+    // EXPUNGE); the COPY runs before the destructive steps.
+    await client.uidMove([uid], target);
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
     throw err;
@@ -12010,7 +12350,12 @@ async function gmailMoveEmail(
   // source label; if the message is NOT in INBOX this effectively acts as a
   // copy (the destination label is added, but the original label remains). A
   // general source-folder move is impossible here without knowing the source.
-  await gmailModifyLabels(inbox, messageId, [destinationLabelId], ["INBOX"]);
+  const addLabelIds = [destinationLabelId];
+  // Gmail rejects requests that add and remove the same label ("Cannot both add
+  // and remove the same label", HTTP 400). When moving back into the inbox the
+  // destination IS "INBOX", so drop any id that appears in both lists.
+  const removeLabelIds = ["INBOX"].filter((id) => !addLabelIds.includes(id));
+  await gmailModifyLabels(inbox, messageId, addLabelIds, removeLabelIds);
 }
 
 // ── Outlook helpers ───────────────────────────────────────────────────────────
@@ -16228,6 +16573,7 @@ function handleInitialize(
       name: "mcpemails",
       version: "1.0.0",
     },
+    instructions: SERVER_INSTRUCTIONS,
   };
 
   return {
@@ -16384,15 +16730,71 @@ async function handleToolsCall(
     );
   }
 
+  // ── Resolve consolidated action → legacy dispatch target ──────────────────
+  // Consolidated tools (email_read, email_organize, …) carry an `action` arg
+  // selecting which legacy handler runs and which scope it needs. Kept tools
+  // (inbox_list, contact_search) dispatch under their own name and scope.
+  let dispatchName = toolName;
+  let effectiveScope: string = tool.requiredScope;
+  let effectiveAltScopes: string[] | undefined = tool.altScopes;
+  const consolidated = CONSOLIDATED_BY_NAME[toolName];
+  if (consolidated) {
+    const argsObj =
+      rawArgs !== null && typeof rawArgs === "object" && !Array.isArray(rawArgs)
+        ? rawArgs as Record<string, unknown>
+        : {};
+    const action = typeof argsObj["action"] === "string"
+      ? argsObj["action"] as string
+      : null;
+    const actionSpec = action ? consolidated.actions[action] : undefined;
+    if (!actionSpec) {
+      const valid = Object.keys(consolidated.actions).join(", ");
+      await writeActivityLog({
+        workspaceId: apiKey.workspace_id,
+        apiKeyId: apiKey.id,
+        inboxId,
+        toolName,
+        status: "error",
+        errorCode: String(-32602),
+        durationMs: null,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      });
+      return jsonRpcErrorBody(
+        id,
+        -32602,
+        action
+          ? `Unknown action '${action}' for ${toolName}. Valid actions: ${valid}.`
+          : `${toolName} requires an 'action' argument (one of: ${valid}).`,
+        { tool: toolName, valid_actions: Object.keys(consolidated.actions) },
+      );
+    }
+    dispatchName = actionSpec.legacy;
+    effectiveScope = actionSpec.scope;
+    effectiveAltScopes = actionSpec.altScopes;
+    // Reverse schema renames so the legacy handler sees its original param names
+    // (e.g. email_flag reads `action`, exposed as `flag_action` to avoid clashing
+    // with the action selector). Mutating argsObj also mutates rawArgs (same ref),
+    // which is what the dispatch chain passes to the handler.
+    if (actionSpec.renames) {
+      for (const [legacyKey, exposedKey] of Object.entries(actionSpec.renames)) {
+        if (exposedKey in argsObj) argsObj[legacyKey] = argsObj[exposedKey];
+      }
+    }
+  }
+
   // ── Scope check ───────────────────────────────────────────────────────────
   // Run before any I/O or credential loading so unauthorised calls are rejected
-  // with minimal resource consumption. All scope violations are logged.
-  if (!isToolAuthorized(tool, apiKey.scopes)) {
+  // with minimal resource consumption. All scope violations are logged. For a
+  // consolidated tool the scope checked is the resolved action's scope.
+  const scopeAuthorized = apiKey.scopes.includes(effectiveScope) ||
+    (effectiveAltScopes?.some((s) => apiKey.scopes.includes(s)) ?? false);
+  if (!scopeAuthorized) {
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
       inboxId,
-      toolName,
+      toolName: dispatchName,
       status: "error",
       errorCode: String(RPC_INVALID_API_KEY),
       durationMs: null,
@@ -16403,22 +16805,23 @@ async function handleToolsCall(
     console.warn("[mcp-server] tools/call: insufficient_scope", {
       key_id: apiKey.id,
       tool_name: toolName,
-      required_scope: tool.requiredScope,
-      alt_scopes: tool.altScopes ?? [],
+      dispatch_name: dispatchName,
+      required_scope: effectiveScope,
+      alt_scopes: effectiveAltScopes ?? [],
       key_scopes: apiKey.scopes,
     });
 
-    const acceptedScopes = [tool.requiredScope, ...(tool.altScopes ?? [])];
+    const acceptedScopes = [effectiveScope, ...(effectiveAltScopes ?? [])];
     const scopeList = acceptedScopes.length > 1
       ? `one of the '${acceptedScopes.join("', '")}' scopes is`
-      : `the '${tool.requiredScope}' scope is`;
+      : `the '${effectiveScope}' scope is`;
 
     return jsonRpcErrorBody(
       id,
       RPC_INVALID_API_KEY,
       `Insufficient scope: ${scopeList} required to call ${toolName}.`,
       {
-        required_scope: tool.requiredScope,
+        required_scope: effectiveScope,
         accepted_scopes: acceptedScopes,
         key_scopes: apiKey.scopes,
       },
@@ -16447,169 +16850,169 @@ async function handleToolsCall(
   try {
     await activityInboxStore.run(logCtx, async () => {
     // ── Dispatch to the implemented tool handler ───────────────────────────
-    if (toolName === "inbox_list") {
+    if (dispatchName === "inbox_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
-        await executeListInboxes(apiKey);
+        await executeListInboxes(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_list") {
+    } else if (dispatchName === "email_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListInbox(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_read") {
+    } else if (dispatchName === "email_read") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeReadEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_read_batch") {
+    } else if (dispatchName === "email_read_batch") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeReadEmails(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_send") {
+    } else if (dispatchName === "email_send") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSendEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_reply") {
+    } else if (dispatchName === "email_reply") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeReplyToEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_search") {
+    } else if (dispatchName === "email_search") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSearchEmails(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_archive") {
+    } else if (dispatchName === "email_archive") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeArchiveEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "folder_list") {
+    } else if (dispatchName === "folder_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListFolders(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "folder_create") {
+    } else if (dispatchName === "folder_create") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeCreateFolder(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "folder_rename") {
+    } else if (dispatchName === "folder_rename") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeRenameFolder(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "folder_delete") {
+    } else if (dispatchName === "folder_delete") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeDeleteFolder(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_move") {
+    } else if (dispatchName === "email_move") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeMoveEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_delete") {
+    } else if (dispatchName === "email_delete") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeDeleteEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_move_batch") {
+    } else if (dispatchName === "email_move_batch") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeBulkMove(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_delete_batch") {
+    } else if (dispatchName === "email_delete_batch") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeBulkDelete(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_flag") {
+    } else if (dispatchName === "email_flag") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeBulkFlag(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_search_and_move") {
+    } else if (dispatchName === "email_search_and_move") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSearchAndMove(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_search_and_delete") {
+    } else if (dispatchName === "email_search_and_delete") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSearchAndDelete(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "email_forward") {
+    } else if (dispatchName === "email_forward") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeForwardEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "draft_list") {
+    } else if (dispatchName === "draft_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListDrafts(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "draft_create") {
+    } else if (dispatchName === "draft_create") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeCreateDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "draft_update") {
+    } else if (dispatchName === "draft_update") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeUpdateDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "draft_send") {
+    } else if (dispatchName === "draft_send") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSendDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "contact_search") {
+    } else if (dispatchName === "contact_search") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSearchContacts(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "schedule_create") {
+    } else if (dispatchName === "schedule_create") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeScheduleSend(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "schedule_list") {
+    } else if (dispatchName === "schedule_list") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeListScheduled(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
-    } else if (toolName === "schedule_cancel") {
+    } else if (dispatchName === "schedule_cancel") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeCancelScheduled(rawArgs, apiKey);
       logStatus = ls;
@@ -16658,11 +17061,13 @@ async function handleToolsCall(
   // ── Write activity log ────────────────────────────────────────────────────
   // Awaited intentionally — the audit trail must be complete before the
   // response leaves the Edge Function. A logging failure is non-fatal.
+  // Log the resolved (legacy) operation name so per-action analytics survive
+  // consolidation — e.g. an email_compose/forward call logs as "email_forward".
   await writeActivityLog({
     workspaceId: apiKey.workspace_id,
     apiKeyId: apiKey.id,
     inboxId: resolvedInboxId,
-    toolName,
+    toolName: dispatchName,
     status: logStatus,
     errorCode: logErrorCode,
     durationMs,
@@ -16673,6 +17078,7 @@ async function handleToolsCall(
   console.log("[mcp-server] tools/call", {
     key_id: apiKey.id,
     tool_name: toolName,
+    dispatch_name: dispatchName,
     inbox_id: resolvedInboxId,
     status: logStatus,
     duration_ms: durationMs,
