@@ -62,7 +62,7 @@
     "infoFormat": "Responsformat: <b>JSON-RPC 2.0</b> — vellykkede resultater bærer også et typet <code>structuredContent</code>-objekt",
     "handshakeLabel": "Initialize-håndtrykk",
     "pollingHeading": "Polling, ikke push",
-    "pollingBody": "MCPEmails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b> – en innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_list</code> med <code>unread_only: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
+    "pollingBody": "MCPEmails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b> – en innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread_only: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
   },
   "oauth": {
     "eyebrow": "OAuth-tilkobling",
@@ -81,38 +81,8 @@
   },
   "tools": {
     "eyebrow": "Verktøyreferanse",
-    "heading": "28 verktøy. Alle e-postoperasjonene agenten din trenger.",
-    "sub": "<b>Å angi innboks er valgfritt.</b> Når nøkkelen din har nøyaktig én innboks, løser hvert per-innboks-verktøy den automatisk — ingen <code>inbox_id</code> nødvendig. Med flere innbokser oppgir du enten <code>inbox_id</code> (UUID-en fra <code>inbox_list</code>) eller <code>inbox</code> (innboksens e-postadresse). Verktøyene er gruppert etter omfanget som låser dem opp; <code>tools/list</code> returnerer bare verktøyene nøkkelen din (eller OAuth-tokenet) har omfang for. Klikk «Vis eksempel» for å se en full forespørsel og respons.",
-    "scopes": {
-      "read": {
-        "title": "Les og søk",
-        "desc": "Oppdag innbokser og mapper, list og les meldinger (enkeltvis eller i bunker på opptil 50), og kjør strukturerte, leverandøruavhengige søk. Skrivebeskyttet — endrer aldri noe. email_search låses også opp alene av det smalere omfanget search:email."
-      },
-      "send": {
-        "title": "Send og meldingstilstand",
-        "desc": "Send, svar og videresend, pluss ikke-destruktive tilstandsendringer: merk meldinger som lest/ulest, flagg/avflagg og arkiver. Sendinger kan ikke angres."
-      },
-      "folders": {
-        "title": "Mapper og organisering",
-        "desc": "Opprett, gi nytt navn til og slett mapper (etiketter på Gmail), og flytt meldinger — én om gangen, i bulk eller rett fra et søk. Mål godtar et kanonisk alias (inbox, sent, drafts, trash, archive, spam), et mappe-/etikettnavn eller en leverandørspesifikk ID."
-      },
-      "delete": {
-        "title": "Slett",
-        "desc": "Send meldinger til papirkurven eller slett dem permanent — én om gangen, i bulk eller fra et søk. Disse handlingene merkes som destruktive overfor MCP-klienten din, som håndterer brukerbekreftelse."
-      },
-      "drafts": {
-        "title": "Utkast",
-        "desc": "List opp, opprett, oppdater og send utkast lagret i leverandørens Drafts-mappe."
-      },
-      "contacts": {
-        "title": "Kontakter",
-        "desc": "Finn personer etter navn eller e-post med en sanntidsskanning av nylig matchende e-post. Ingenting lagres — hvert søk leser i sanntid."
-      },
-      "schedule": {
-        "title": "Planlagt sending",
-        "desc": "Sett en e-post i kø for et fremtidig tidspunkt, list opp ventende planlagte sendinger, og avbryt dem før de går ut."
-      }
-    },
+    "heading": "8 verktøy. Alle e-postoperasjonene agenten din trenger.",
+    "sub": "<b>Å angi innboks er valgfritt.</b> Når nøkkelen din har nøyaktig én innboks, løser hvert per-innboks-verktøy den automatisk — ingen <code>inbox_id</code> nødvendig. Med flere innbokser oppgir du enten <code>inbox_id</code> (UUID-en fra <code>inbox_list</code>) eller <code>inbox</code> (innboksens e-postadresse). De fleste verktøy tar et <code>action</code>-argument som velger operasjonen; merkene viser hvilke omfang hvert verktøy trenger, og <code>tools/list</code> returnerer bare verktøyene nøkkelen din (eller OAuth-tokenet) har omfang for. Klikk «Vis eksempel» for å se en full forespørsel og respons.",
     "noParams": "Ingen parametere. Kall med et tomt arguments-objekt:",
     "showExample": "Vis eksempel på forespørsel og svar",
     "hideExample": "Skjul eksempel på forespørsel og svar",
@@ -126,340 +96,148 @@
     "badgeOptional": "valgfri",
     "inbox_list": {
       "title": "List innbokser",
-      "desc": "Returnerer alle innbokser som gjeldende API-nøkkel eller OAuth-token har tilgang til. Kall denne først for å oppdage inbox_id-verdier, slik at du aldri kopierer UUID-er fra dashbordet. Hvert resultat inkluderer e-postadressen, leverandøren, valgfritt tjenestemerke (icloud/yahoo/zoho/yandex/generic/fastmail) og et capabilities-objekt som beskriver hvilke funksjoner den innboksen støtter."
-    },
-    "email_list": {
-      "title": "List meldinger",
-      "desc": "List sammendrag av e-poster fra en tilkoblet innboks, nyeste først. Støtter paginering, mappevalg og filtrering på uleste. Feltet total kan være null når leverandøren ikke kan oppgi et antall, eller bære total_is_estimate: true på Gmail.",
+      "desc": "Returnerer alle innbokser som gjeldende API-nøkkel eller OAuth-token har tilgang til. Kall denne først for å oppdage inbox_id-verdier, slik at du aldri kopierer UUID-er fra dashbordet. Hvert resultat inkluderer e-postadressen, leverandøren, valgfritt tjenestemerke (icloud/yahoo/zoho/yandex/generic/fastmail) og et capabilities-objekt som beskriver hvilke funksjoner den innboksen støtter.",
       "params": {
-        "inbox_id": "UUID for innboksen som skal listes. Kall inbox_list først for å oppdage tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "limit": "Maks antall resultater som returneres. Standard 20, maks 100.",
-        "offset": "Nullbasert pagineringsforskyvning. Standard 0.",
-        "folder": "Mappe som skal listes. Standard \"INBOX\". Andre verdier: \"SENT\", \"DRAFTS\", \"TRASH\".",
-        "unread_only": "Returner kun uleste meldinger. Standard false.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
+        "provider": "Valgfritt filter — returner bare innbokser betjent av denne leverandøren. Én av: gmail, fastmail, imap. Utelat for å liste alle innbokser nøkkelen har tilgang til.",
+        "include_capabilities": "Om hver innboks inkluderer capabilities-objektet sitt (hvilke funksjoner den støtter). Standard true; sett false for en kompakt liste med bare inbox_id, e-postadresse, visningsnavn, leverandør og tjenestemerke."
       }
     },
     "email_read": {
       "title": "Les e-post",
-      "desc": "Hent det fulle innholdet i en enkelt e-post etter ID, inkludert tekstkropp, valgfri renset HTML og valgfrie vedleggsdata.",
+      "desc": "Les, list og søk i meldinger i en innboks. Sett action: 'list' for nylige meldingssammendrag (nyeste først, med filtrering på mappe/uleste og paginering), 'read' for det fulle innholdet i én message_id (tekstkropp, valgfri renset HTML og vedlegg), 'read_batch' for å hente opptil 50 message_ids i ett kall, eller 'search' for strukturerte, leverandøruavhengige filtre (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before). Skrivebeskyttet — endrer aldri noe. 'search'-handlingen låses også opp alene av det smalere omfanget search:email.",
       "params": {
-        "inbox_id": "UUID for innboksen som inneholder e-posten. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "message_id": "Leverandørens meldings-ID fra email_list eller email_search.",
-        "include_html": "Inkluder renset HTML-kropp. Standard false.",
-        "include_attachments": "Inkluder base64-vedleggsdata. Standard false.",
-        "mark_as_read": "Merk meldingen som lest etter henting. Standard false.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "email_search": {
-      "title": "Søk i e-post",
-      "desc": "Søk i en innboks med strukturerte, leverandøruavhengige felter — from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before — kombinert med OG. Serveren oversetter dem til innboksens egen dialekt (Gmail-operatorer, Outlook KQL/OData, Fastmail JMAP-filtre eller IMAP SEARCH), så du trenger aldri å kunne leverandørens spørresyntaks. Et valgfritt query-felt er en rå nødutgang. Leverandørbegrensninger: generisk IMAP ignorerer has_attachment, Outlook ignorerer flagged, og Fastmail ignorerer det rå query-feltet.",
-      "params": {
-        "inbox_id": "UUID for innboksen det skal søkes i. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "query": "Rå leverandørspesifikk spørrestreng (nødutgang). Foretrekk de strukturerte feltene over. Kombineres med dem der det støttes; ignoreres på Fastmail.",
-        "limit": "Maks antall resultater. Standard 20, maks 100.",
-        "offset": "Pagineringsforskyvning. Standard 0.",
-        "include_folders": "Begrens søket til disse mappenavnene. Standard: søk i alle mapper.",
+        "action": "Hvilken operasjon som skal utføres: \"list\" (nylige meldingssammendrag), \"read\" (fullt innhold i én message_id), \"read_batch\" (flere message_ids) eller \"search\" (strukturerte filtre). Avgjør hvilke andre argumenter som gjelder.",
+        "inbox_id": "UUID for innboksen det skal leses fra. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å oppdage inbox-ID-er.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
-        "from": "Avsender som skal matches: e-postadresse, visningsnavn eller fragment (f.eks. \"alice@example.com\" eller \"Alice\").",
-        "to": "Hovedmottaker (Til) som skal matches: e-postadresse, visningsnavn eller fragment.",
-        "cc": "Kopimottaker (Cc) som skal matches: e-postadresse, visningsnavn eller fragment.",
-        "subject": "Tekst som skal matches i emnefeltet. Flerordsfraser matches som de er.",
-        "body": "Fritekst som skal finnes i meldingsteksten. (På Gmail matcher dette hele meldingen, ikke bare brødteksten.)",
-        "text": "Fritekst som skal matches hvor som helst i meldingen (topptekster og brødtekst).",
-        "unread": "true = bare uleste meldinger; false = bare leste; utelat for begge.",
-        "has_attachment": "true = bare meldinger med vedlegg. Ikke støttet på generisk IMAP (ignoreres der).",
-        "flagged": "true = bare flaggede/stjernemerkede meldinger. Ikke støttet på Outlook/Graph (ignoreres der).",
-        "since": "ISO 8601-dato eller dato-tid; returnerer meldinger mottatt på/etter (>=) dette tidspunktet. F.eks. \"2026-06-01\".",
-        "before": "ISO 8601-dato eller dato-tid; returnerer meldinger mottatt strengt før (<) dette tidspunktet."
+        "message_id": "Leverandørens meldings-ID som skal leses (action 'read'), fra en tidligere list eller search.",
+        "message_ids": "Leverandørens meldings-ID-er som skal leses (action 'read_batch'), fra en tidligere list eller search. Maks 50 per kall.",
+        "folder": "Mappe som skal listes (action 'list'). Standard \"INBOX\". Andre verdier: \"SENT\", \"DRAFTS\", \"TRASH\".",
+        "unread_only": "Returner kun uleste meldinger (action 'list'). Standard false.",
+        "limit": "Maks antall resultater som returneres (action 'list' eller 'search'). Standard 20, maks 100.",
+        "offset": "Nullbasert pagineringsforskyvning (action 'list' eller 'search'). Standard 0.",
+        "include_html": "Inkluder renset HTML-kropp (action 'read'/'read_batch'). Standard false.",
+        "include_attachments": "Inkluder base64-vedleggsdata (action 'read'/'read_batch'). På 'read_batch' deles 10 MB-grensen på tvers av hele kallet. Standard false.",
+        "mark_as_read": "Merk meldingen(e) som lest etter henting (action 'read'/'read_batch'). Standard false.",
+        "from": "Avsender som skal matches (action 'search'): e-postadresse, visningsnavn eller fragment (f.eks. \"alice@example.com\" eller \"Alice\").",
+        "to": "Primær (To) mottaker som skal matches (action 'search'): e-postadresse, visningsnavn eller fragment.",
+        "cc": "Kopimottaker (Cc) som skal matches (action 'search'): e-postadresse, visningsnavn eller fragment.",
+        "subject": "Tekst som skal matches i emnefeltet (action 'search'). Fraser med flere ord matches som de er.",
+        "body": "Fritekst å finne i meldingskroppen (action 'search'). (På Gmail matcher dette hele meldingen, ikke bare kroppen.)",
+        "text": "Fritekst å matche hvor som helst i meldingen — overskrifter og kropp (action 'search').",
+        "unread": "Action 'search': true = kun uleste meldinger; false = kun leste meldinger; utelat for begge.",
+        "has_attachment": "Action 'search': true = kun meldinger med vedlegg. Ikke støttet på generisk IMAP (ignoreres der).",
+        "flagged": "Action 'search': true = kun flaggede/stjernemerkede meldinger. Ikke støttet på Outlook/Graph (ignoreres der).",
+        "since": "ISO 8601-dato eller -datotid (action 'search'); returner meldinger mottatt på/etter (>=) dette tidspunktet. F.eks. \"2026-06-01\".",
+        "before": "ISO 8601-dato eller -datotid (action 'search'); returner meldinger mottatt strengt før (<) dette tidspunktet.",
+        "query": "Rå leverandørspesifikk spørrestreng (action 'search', nødløsning). Foretrekk de strukturerte feltene over. Kombineres med dem der det støttes; ignoreres på Fastmail.",
+        "include_folders": "Begrens et søk til disse mappenavnene (action 'search'). Standard: søk i alle mapper."
       }
     },
-    "email_send": {
-      "title": "Send e-post",
-      "desc": "Send en ny e-post fra en tilkoblet innboks. Støtter ren tekst, valgfri HTML-kropp, CC/BCC og filvedlegg (opptil 10 MB totalt).",
+    "email_organize": {
+      "title": "Organiser e-post",
+      "desc": "Flytt, slett, flagg eller arkiver meldinger. Sett action: 'move'/'move_batch' (til en destination_folder_id), 'delete'/'delete_batch' (papirkurv som standard, eller permanent), 'flag' (sett lest/ulest/flagget via flag_action på message_ids), 'archive' (flytt ut av innboksen, ikke-destruktivt), eller 'search_and_move'/'search_and_delete' (anvend på hver melding som matcher et strukturert søk — unngår utdaterte meldings-ID-er). Hver handling trenger omfanget som matcher den: manage:folders for flytting, delete:email for sletting, send:email for flag/archive. Handlingene delete og search_and_delete merkes som destruktive overfor MCP-klienten din, som håndterer brukerbekreftelse.",
       "params": {
-        "inbox_id": "UUID for innboksen det skal sendes fra. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "to": "Mottakernes e-postadresser. Maks 50.",
-        "subject": "E-postens emnefelt. Maks 998 tegn.",
-        "body": "E-postkropp i ren tekst.",
-        "cc": "CC-mottakere. Standard [].",
-        "bcc": "BCC-mottakere. Standard [].",
+        "action": "Hvilken operasjon som skal utføres: \"move\", \"move_batch\", \"delete\", \"delete_batch\", \"flag\", \"archive\", \"search_and_move\" eller \"search_and_delete\". Avgjør hvilke andre argumenter som gjelder og hvilket omfang som kreves.",
+        "inbox_id": "UUID for innboksen som eier meldingene. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
+        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
+        "message_id": "Leverandørens meldings-ID for en enkeltmeldings-handling (move, delete, archive), fra en tidligere list, read eller search.",
+        "message_ids": "Leverandørens meldings-ID-er for en bunke-handling (move_batch, delete_batch, flag). Maks 500 per kall.",
+        "destination_folder_id": "Målmappe (move, move_batch, search_and_move): et kanonisk alias (inbox, sent, drafts, trash, archive, spam), et mappe-/etikettnavn (f.eks. 'Receipts') eller en leverandørspesifikk mappe-ID fra folder list-handlingen. Navn og alias løses automatisk.",
+        "flag_action": "For action 'flag': endringen som skal anvendes på hver melding — \"read\" eller \"unread\" for å sette lesestatus, eller \"flag\"/\"unflag\" for å legge til eller fjerne et stjerne-/oppfølgingsflagg.",
+        "permanent": "For delete/delete_batch/search_and_delete: når true, slett hardt (forbi papirkurven; kan ikke angres); når false eller utelatt, flytt til papirkurven. Permanent sletting er tilgjengelig på IMAP og Fastmail; Gmail og Outlook støtter kun papirkurv. Standard false.",
+        "from": "Avsender som skal matches (search_and_move/search_and_delete): e-postadresse, visningsnavn eller fragment.",
+        "to": "Primær (To) mottaker som skal matches (search_and_move/search_and_delete): e-postadresse, visningsnavn eller fragment.",
+        "cc": "Kopimottaker (Cc) som skal matches (search_and_move/search_and_delete): e-postadresse, visningsnavn eller fragment.",
+        "subject": "Tekst som skal matches i emnefeltet (search_and_move/search_and_delete).",
+        "body": "Fritekst å finne i meldingskroppen (search_and_move/search_and_delete). (På Gmail matcher dette hele meldingen.)",
+        "text": "Fritekst å matche hvor som helst i meldingen — overskrifter og kropp (search_and_move/search_and_delete).",
+        "unread": "Søkehandlinger: true = kun uleste; false = kun leste; utelat for begge.",
+        "has_attachment": "Søkehandlinger: true = kun meldinger med vedlegg. Ikke støttet på generisk IMAP (ignoreres der).",
+        "flagged": "Søkehandlinger: true = kun flaggede/stjernemerkede meldinger. Ikke støttet på Outlook/Graph (ignoreres der).",
+        "since": "ISO 8601-dato eller -datotid (søkehandlinger); match meldinger mottatt på/etter (>=) dette tidspunktet.",
+        "before": "ISO 8601-dato eller -datotid (søkehandlinger); match meldinger mottatt strengt før (<) dette tidspunktet.",
+        "query": "Rå leverandørspesifikk spørrestreng (søkehandlinger, nødløsning). Foretrekk de strukturerte feltene over. Ignoreres på Fastmail.",
+        "include_folders": "Begrens søket til disse mappenavnene (søkehandlinger). Standard: alle mapper.",
+        "limit": "For search_and_move/search_and_delete: maks antall treff som skal behandles. Standard 500, maks 500."
+      }
+    },
+    "email_compose": {
+      "title": "Skriv e-post",
+      "desc": "Send ny e-post eller svar på eksisterende meldinger. Sett action: 'send' for en ny e-post (to/subject/body, valgfritt cc/bcc/html_body/reply_to/attachments), 'reply' for å svare på en message_id (trådingsoverskrifter settes automatisk; valgfritt reply_all), eller 'forward' for å videresende en message_id til nye mottakere (valgfritt med de opprinnelige filene). Alle tre kan ikke angres når de er sendt.",
+      "params": {
+        "action": "Hvilken operasjon som skal utføres: \"send\", \"reply\" eller \"forward\". Avgjør hvilke andre argumenter som gjelder.",
+        "inbox_id": "UUID for innboksen det skal sendes fra. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
+        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
+        "message_id": "Leverandørens meldings-ID for den opprinnelige meldingen (action 'reply' eller 'forward'), fra en tidligere list, read eller search.",
+        "to": "Mottakernes e-postadresser (påkrevd for 'send' og 'forward'). Maks 50.",
+        "subject": "Emnefeltet for e-posten (action 'send'). Maks 998 tegn. Ved reply/forward avledes det fra originalen.",
+        "body": "Tekstkropp. For 'reply' er dette svaret ditt; for 'forward' et valgfritt notat som settes inn over den videresendte meldingen.",
+        "cc": "CC-mottakere (send, forward). Standard [].",
+        "bcc": "BCC-mottakere (send, forward). Standard [].",
         "html_body": "HTML-versjon av kroppen (multipart/alternative). Den som kaller, er ansvarlig for trygg HTML.",
-        "reply_to": "Reply-To-headeradresse.",
-        "attachments": "Filvedlegg. Hvert element: '{' filename, mime_type, data (base64) '}'. Maks 20 elementer, 10 MB totalt.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
+        "reply_to": "Reply-To-overskriftsadresse (action 'send').",
+        "reply_all": "Svar til alle opprinnelige mottakere — To + Cc (action 'reply'). Standard false.",
+        "include_attachments": "Legg ved den opprinnelige meldingens vedlegg på nytt (action 'forward'). Filer over 10 MB-budsjettet utelates. Standard false.",
+        "attachments": "Filvedlegg. Hvert element: '{' filename, mime_type, data (base64) '}'. Maks 20 elementer, 10 MB totalt."
       }
     },
-    "email_reply": {
-      "title": "Svar på e-post",
-      "desc": "Send et svar på en eksisterende e-post. Trådheadere (In-Reply-To, References) settes automatisk. Støtter svar-til-alle og vedlegg.",
+    "folder": {
+      "title": "Mapper",
+      "desc": "Administrer postkassemapper (etiketter på Gmail). Sett action: 'list' (alle mapper med leverandørspesifikk ID, visningsnavn, type og meldingsantall — bruk ID-ene som folder-argument når du lister e-post og som flyttemål), 'create' (name), 'rename' (folder_id, new_name) eller 'delete' (folder_id — kan ikke angres; meldinger inni kan gå tapt avhengig av leverandøren). 'list' trenger read:email; create/rename/delete trenger manage:folders, og delete merkes som destruktiv overfor MCP-klienten din.",
       "params": {
-        "inbox_id": "UUID for innboksen som inneholder den opprinnelige meldingen. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "message_id": "Leverandørens meldings-ID for e-posten det svares på.",
-        "body": "Svarkropp i ren tekst.",
-        "html_body": "Valgfri HTML-versjon av svaret.",
-        "reply_all": "Svar til alle opprinnelige mottakere (To + Cc). Standard false.",
-        "attachments": "Filvedlegg. Samme skjema som email_send. Maks 20 elementer.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "folder_list": {
-      "title": "List mapper",
-      "desc": "List opp alle mapper (eller etiketter, på Gmail) i en innboks. Hver oppføring har leverandørens egen mappe-ID, visningsnavn, type (mappe vs. etikett) og meldingsantall. Bruk ID-ene som folder-argument for email_list og som destinasjon for flytteoperasjoner.",
-      "params": {
-        "inbox_id": "UUID for innboksen hvis mapper skal listes. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "email_forward": {
-      "title": "Videresend e-post",
-      "desc": "Videresend en eksisterende melding til nye mottakere. Den valgfrie merknaden din settes inn over en standard blokk med videresendt-melding-header og den opprinnelige kroppen. Sett include_attachments for å feste de opprinnelige filene på nytt. Emnet får prefikset 'Fwd:' om nødvendig. Kan ikke angres.",
-      "params": {
-        "inbox_id": "UUID for innboksen som inneholder den opprinnelige meldingen. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "message_id": "Leverandørens meldings-ID for e-posten som skal videresendes, fra email_list eller email_search.",
-        "to": "Mottakernes e-postadresser. Maks 50.",
-        "cc": "CC-mottakere. Standard [].",
-        "bcc": "BCC-mottakere. Standard [].",
-        "body": "Valgfri merknad i ren tekst som settes inn over den videresendte meldingen.",
-        "html_body": "Valgfri HTML-versjon av merknaden (multipart/alternative).",
-        "include_attachments": "Fest den opprinnelige meldingens vedlegg på nytt. Filer over budsjettet på 10 MB utelates. Standard false.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "email_archive": {
-      "title": "Arkiver e-post",
-      "desc": "Flytt en melding ut av innboksen til arkivet. Ikke-destruktiv — meldingen bevares, ikke slettes. På Gmail fjerner dette INBOX-etiketten; på IMAP/Outlook/Fastmail flyttes den til Archive-postboksen.",
-      "params": {
-        "inbox_id": "UUID for innboksen som inneholder meldingen. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "message_id": "Leverandørens meldings-ID fra email_list eller email_search.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "email_flag": {
-      "title": "Flagg eller merk meldinger",
-      "desc": "Bruk en lest/ulest/flagg/avflagg-handling på én eller flere meldinger i ett enkelt kall. Bruk handlingen 'read' eller 'unread' for å endre lesestatus, eller 'flag'/'unflag' for å legge til eller fjerne en stjerne/oppfølgingsflagg. Send én meldings-ID for å oppdatere én melding, eller opptil 500 for å oppdatere mange på én gang. Hent meldings-IDer fra email_list eller email_search.",
-      "params": {
-        "inbox_id": "UUID for innboksen som eier meldingene. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "message_ids": "Leverandørens meldings-ID-er som skal oppdateres. Maks 500 per kall.",
-        "action": "Handling som skal brukes på alle meldinger: \"read\", \"unread\", \"flag\" eller \"unflag\".",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "folder_create": {
-      "title": "Opprett mappe",
-      "desc": "Opprett en ny mappe (eller etikett, på Gmail) i en innboks. Returnerer leverandørens egen mappe-/etikett-ID og visningsnavn.",
-      "params": {
-        "inbox_id": "UUID for innboksen mappen/etiketten skal opprettes i. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "name": "Navn på den nye mappen eller etiketten. 1–255 tegn.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "folder_rename": {
-      "title": "Gi nytt navn til mappe",
-      "desc": "Gi nytt navn til en eksisterende mappe eller etikett. Kall folder_list først for å hente folder_id.",
-      "params": {
-        "inbox_id": "UUID for innboksen som eier mappen/etiketten. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "folder_id": "Leverandørens egen mappe-/etikett-ID fra folder_list.",
-        "new_name": "Nytt visningsnavn. 1–255 tegn.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "folder_delete": {
-      "title": "Slett mappe",
-      "desc": "Slett en mappe (eller etikett, på Gmail) permanent. Ugjenkallelig — meldinger inni kan gå tapt avhengig av leverandøren. Denne handlingen merkes som destruktiv overfor MCP-klienten din, som håndterer brukerbekreftelse. Kall folder_list først for å hente folder_id.",
-      "params": {
-        "inbox_id": "UUID for innboksen som eier mappen/etiketten. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "folder_id": "Leverandørens egen mappe-/etikett-ID fra folder_list.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "email_move": {
-      "title": "Flytt e-post",
-      "desc": "Flytt en melding til en annen mappe. På Gmail legger dette til målets etikett og fjerner INBOX (Gmail har ikke separate mapper). Målet godtar et kanonisk alias, et mappe-/etikettnavn eller en leverandørspesifikk ID.",
-      "params": {
-        "inbox_id": "UUID for innboksen som eier meldingen. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "message_id": "Leverandørens meldings-ID fra email_list, email_read eller email_search.",
-        "destination_folder_id": "Målmappe: et kanonisk alias (inbox, sent, drafts, trash, archive, spam), et mappe-/etikettnavn (f.eks. 'Receipts'), eller en leverandørspesifikk mappe-ID fra folder_list. Navn og alias løses automatisk.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "email_move_batch": {
-      "title": "Masseflytt",
-      "desc": "Flytt opptil 500 meldinger til en målmappe i ett kall. Returnerer antall vellykkede/mislykkede pluss resultater per melding. Målet godtar et kanonisk alias, et mappe-/etikettnavn eller en leverandørspesifikk ID.",
-      "params": {
-        "inbox_id": "UUID for innboksen som eier meldingene. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "message_ids": "Leverandørens meldings-ID-er som skal flyttes. Maks 500 per kall.",
-        "destination_folder_id": "Målmappe: et kanonisk alias (inbox, sent, drafts, trash, archive, spam), et mappe-/etikettnavn (f.eks. 'Receipts'), eller en leverandørspesifikk mappe-ID fra folder_list. Navn og alias løses automatisk.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "email_search_and_move": {
-      "title": "Søk og flytt",
-      "desc": "Kjør et strukturert søk og flytt hvert treff til en målmappe i én operasjon på serversiden — unngår utdaterte meldings-ID-er. Bruker de samme leverandøruavhengige søkefeltene som email_search (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), med de samme leverandørbegrensningene; et valgfritt rått query er en nødutgang. Målet godtar et kanonisk alias, et mappe-/etikettnavn eller en leverandørspesifikk ID. Begrenset til 500 treff per kall.",
-      "params": {
-        "inbox_id": "UUID for innboksen det skal søkes i og opereres på. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "query": "Rå leverandørspesifikk spørrestreng (nødutgang). Foretrekk de strukturerte feltene over. Kombineres med dem der det støttes; ignoreres på Fastmail.",
-        "destination_folder_id": "Målmappe: et kanonisk alias (inbox, sent, drafts, trash, archive, spam), et mappe-/etikettnavn (f.eks. 'Receipts'), eller en leverandørspesifikk mappe-ID fra folder_list. Navn og alias løses automatisk.",
-        "include_folders": "Begrens søket til disse mappenavnene. Standard: alle mapper.",
-        "limit": "Maks antall treff som skal flyttes. Standard 500, maks 500.",
+        "action": "Hvilken operasjon som skal utføres: \"list\", \"create\", \"rename\" eller \"delete\". Avgjør hvilke andre argumenter som gjelder og hvilket omfang som kreves.",
+        "inbox_id": "UUID for innboksen hvis mapper skal administreres. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
-        "from": "Avsender som skal matches: e-postadresse, visningsnavn eller fragment (f.eks. \"alice@example.com\" eller \"Alice\").",
-        "to": "Hovedmottaker (Til) som skal matches: e-postadresse, visningsnavn eller fragment.",
-        "cc": "Kopimottaker (Cc) som skal matches: e-postadresse, visningsnavn eller fragment.",
-        "subject": "Tekst som skal matches i emnefeltet. Flerordsfraser matches som de er.",
-        "body": "Fritekst som skal finnes i meldingsteksten. (På Gmail matcher dette hele meldingen, ikke bare brødteksten.)",
-        "text": "Fritekst som skal matches hvor som helst i meldingen (topptekster og brødtekst).",
-        "unread": "true = bare uleste meldinger; false = bare leste; utelat for begge.",
-        "has_attachment": "true = bare meldinger med vedlegg. Ikke støttet på generisk IMAP (ignoreres der).",
-        "flagged": "true = bare flaggede/stjernemerkede meldinger. Ikke støttet på Outlook/Graph (ignoreres der).",
-        "since": "ISO 8601-dato eller dato-tid; returnerer meldinger mottatt på/etter (>=) dette tidspunktet. F.eks. \"2026-06-01\".",
-        "before": "ISO 8601-dato eller dato-tid; returnerer meldinger mottatt strengt før (<) dette tidspunktet."
+        "name": "Navn på den nye mappen eller etiketten (action 'create'). 1–255 tegn.",
+        "folder_id": "Leverandørspesifikk mappe-/etikett-ID (action 'rename' eller 'delete'), fra folder list-handlingen.",
+        "new_name": "Nytt visningsnavn (action 'rename'). 1–255 tegn."
       }
     },
-    "email_delete": {
-      "title": "Slett e-post",
-      "desc": "Slett en enkelt melding. Som standard går den til leverandørens papirkurv (tryggere). Sett permanent: true for å hardslette (omgår papirkurven; kan være ugjenkallelig). Denne handlingen merkes som destruktiv overfor MCP-klienten din, som håndterer brukerbekreftelse. Permanent sletting (expunge) er tilgjengelig på IMAP og Fastmail; Gmail og Outlook støtter bare papirkurv.",
+    "draft": {
+      "title": "Utkast",
+      "desc": "Administrer utkast i innboksens Drafts-mappe. Sett action: 'list' (lagrede utkast, hvert med draft_id, emne, mottakere og opprettet-tidspunkt), 'create' (subject/body påkrevd, valgfritt to/cc/bcc/html_body), 'update' (draft_id pluss feltene som skal overskrives) eller 'send' (draft_id — fjerner utkastet og sender det, kan ikke angres). På IMAP-baserte innbokser endres en draft_id ved hver oppdatering, så bruk alltid den nyeste; Gmail og Outlook beholder en stabil draft_id.",
       "params": {
-        "inbox_id": "UUID for innboksen som eier meldingen. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "message_id": "Leverandørens meldings-ID fra email_list, email_read eller email_search.",
-        "permanent": "Når true, slett hardt (omgå papirkurven). Når false eller utelatt, flytt til papirkurven. Standard false.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "email_delete_batch": {
-      "title": "Masseslett",
-      "desc": "Slett opptil 500 meldinger i ett kall. Går til papirkurven som standard; sett permanent: true for hardsletting. Denne handlingen merkes som destruktiv overfor MCP-klienten din, som håndterer brukerbekreftelse. Returnerer antall vellykkede/mislykkede pluss resultater per melding.",
-      "params": {
-        "inbox_id": "UUID for innboksen som eier meldingene. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "message_ids": "Leverandørens meldings-ID-er som skal slettes. Maks 500 per kall.",
-        "permanent": "Når true, slett hardt (omgå papirkurven). Når false eller utelatt, flytt til papirkurven. Standard false.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "email_search_and_delete": {
-      "title": "Søk og slett",
-      "desc": "Kjør et strukturert søk og slett hvert treff i én operasjon på serversiden — unngår utdaterte meldings-ID-er. Bruker de samme leverandøruavhengige søkefeltene som email_search (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), med de samme leverandørbegrensningene; et valgfritt rått query er en nødutgang. Går til papirkurven som standard; bruk permanent: true for permanent sletting. Denne handlingen merkes som destruktiv overfor MCP-klienten din, som håndterer brukerbekreftelse. Begrenset til 500 treff per kall.",
-      "params": {
-        "inbox_id": "UUID for innboksen det skal søkes i og opereres på. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "query": "Rå leverandørspesifikk spørrestreng (nødutgang). Foretrekk de strukturerte feltene over. Kombineres med dem der det støttes; ignoreres på Fastmail.",
-        "permanent": "Når true, slett treff hardt (omgå papirkurven). Når false eller utelatt, flytt til papirkurven. Standard false.",
-        "include_folders": "Begrens søket til disse mappenavnene. Standard: alle mapper.",
-        "limit": "Maks antall treff som skal slettes. Standard 500, maks 500.",
+        "action": "Hvilken operasjon som skal utføres: \"list\", \"create\", \"update\" eller \"send\". Avgjør hvilke andre argumenter som gjelder.",
+        "inbox_id": "UUID for innboksen som eier utkastene. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
-        "from": "Avsender som skal matches: e-postadresse, visningsnavn eller fragment (f.eks. \"alice@example.com\" eller \"Alice\").",
-        "to": "Hovedmottaker (Til) som skal matches: e-postadresse, visningsnavn eller fragment.",
-        "cc": "Kopimottaker (Cc) som skal matches: e-postadresse, visningsnavn eller fragment.",
-        "subject": "Tekst som skal matches i emnefeltet. Flerordsfraser matches som de er.",
-        "body": "Fritekst som skal finnes i meldingsteksten. (På Gmail matcher dette hele meldingen, ikke bare brødteksten.)",
-        "text": "Fritekst som skal matches hvor som helst i meldingen (topptekster og brødtekst).",
-        "unread": "true = bare uleste meldinger; false = bare leste; utelat for begge.",
-        "has_attachment": "true = bare meldinger med vedlegg. Ikke støttet på generisk IMAP (ignoreres der).",
-        "flagged": "true = bare flaggede/stjernemerkede meldinger. Ikke støttet på Outlook/Graph (ignoreres der).",
-        "since": "ISO 8601-dato eller dato-tid; returnerer meldinger mottatt på/etter (>=) dette tidspunktet. F.eks. \"2026-06-01\".",
-        "before": "ISO 8601-dato eller dato-tid; returnerer meldinger mottatt strengt før (<) dette tidspunktet."
+        "draft_id": "Leverandørens utkast-ID (action 'update' eller 'send'), fra den nyeste create-, update- eller list-handlingen. På IMAP-innbokser endres den etter hver oppdatering, så bruk alltid den nyeste.",
+        "subject": "Emnefeltet for utkastet (action 'create'/'update').",
+        "body": "Tekstkropp for utkastet (action 'create'/'update').",
+        "to": "Mottakeradresser (action 'create'/'update'). Standard [].",
+        "cc": "CC-mottakere (action 'create'/'update'). Standard [].",
+        "bcc": "BCC-mottakere (action 'create'/'update'). Standard [].",
+        "html_body": "Valgfri HTML-kropp (action 'create'/'update').",
+        "limit": "Maks antall utkast som returneres (action 'list'). Standard 20, maks 50."
       }
     },
-    "draft_list": {
-      "title": "List utkast",
-      "desc": "Returner utkast lagret i innboksens Drafts-mappe. Hvert resultat inkluderer draft_id, emne, mottakere og opprettet-tidsstempel. Bruk draft_id med draft_update eller draft_send.",
+    "schedule": {
+      "title": "Planlagt sending",
+      "desc": "Planlegg e-post for fremtidig levering via en kø på serversiden. Sett action: 'create' (to/subject/body pluss en send_at ISO 8601-tidsstempel — mottakere og kropp valideres umiddelbart, og ugyldige sendinger settes ikke i kø), 'list' (ventende planlagte sendinger, tidligste først, eventuelt filtrert på innboks) eller 'cancel' (scheduled_send_id — bare sendinger som fremdeles er 'pending' kan avbrytes). Utsenderen kjører hvert minutt, så levering kan skje opptil 60 sekunder etter send_at.",
       "params": {
-        "inbox_id": "UUID for innboksen hvis utkast skal listes. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "limit": "Maks antall utkast som skal returneres. Standard 20, maks 50.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "draft_create": {
-      "title": "Opprett utkast",
-      "desc": "Lagre et nytt utkast i innboksens Drafts-mappe uten å sende det. Returnerer en draft_id for draft_update eller draft_send. Emne og kropp er påkrevd; mottakere er valgfrie (utkast kan være ufullstendige).",
-      "params": {
-        "inbox_id": "UUID for innboksen utkastet skal lagres i. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "subject": "Utkastets emnefelt.",
-        "body": "Utkastets kropp i ren tekst.",
-        "to": "Valgfrie mottakeradresser. Standard [].",
-        "cc": "Valgfrie CC-mottakere. Standard [].",
-        "bcc": "Valgfrie BCC-mottakere. Standard [].",
-        "html_body": "Valgfri HTML-kropp.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "draft_update": {
-      "title": "Oppdater utkast",
-      "desc": "Erstatt innholdet i et eksisterende utkast. Alle oppgitte felt overskriver det lagrede utkastet. Kall draft_list for å hente draft_id-verdier. På IMAP-baserte innbokser (alt annet enn Gmail/Outlook) skrives den underliggende meldingen om på nytt, så dette returnerer en NY draft_id som erstatter den du sendte inn — ta den i bruk for videre draft_update/draft_send og forkast den gamle. Gmail og Outlook beholder en stabil draft_id.",
-      "params": {
-        "inbox_id": "UUID for innboksen som eier utkastet. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "draft_id": "Leverandørens utkast-ID fra den nyeste draft_create, draft_update eller draft_list. På IMAP-innbokser endres den etter hver oppdatering, så bruk alltid den nyeste.",
-        "subject": "Oppdatert emnefelt.",
-        "body": "Oppdatert kropp i ren tekst.",
-        "to": "Oppdatert mottakerliste. Standard [].",
-        "cc": "Oppdatert CC-liste. Standard [].",
-        "bcc": "Oppdatert BCC-liste. Standard [].",
-        "html_body": "Oppdatert HTML-kropp.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "draft_send": {
-      "title": "Send utkast",
-      "desc": "Send et tidligere lagret utkast. Utkastet fjernes fra Drafts-mappen etter sending. Kan ikke angres. Oppgi alltid den nyeste draft_id (fra draft_create, den siste draft_update eller draft_list): på IMAP-baserte innbokser endres ID-en ved hver oppdatering, og en utdatert ID feiler med en ikke-funnet-feil.",
-      "params": {
-        "inbox_id": "UUID for innboksen som inneholder utkastet. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "draft_id": "Leverandørens utkast-ID fra den nyeste draft_create, draft_update eller draft_list. På IMAP-innbokser endres den etter hver oppdatering, så bruk alltid den nyeste.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
+        "action": "Hvilken operasjon som skal utføres: \"create\", \"list\" eller \"cancel\". Avgjør hvilke andre argumenter som gjelder.",
+        "inbox_id": "UUID for innboksen det skal sendes fra (action 'create') eller filtreres på (action 'list'). Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
+        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
+        "to": "Mottakernes e-postadresser (action 'create'). Maks 50.",
+        "subject": "Emnefeltet for e-posten (action 'create'). Maks 998 tegn.",
+        "body": "Tekstkropp for e-posten (action 'create').",
+        "send_at": "ISO 8601-datotid med tidssone for når den skal sendes (action 'create'). Må være i fremtiden, f.eks. \"2026-06-02T09:00:00Z\".",
+        "cc": "CC-mottakere (action 'create'). Standard [].",
+        "bcc": "BCC-mottakere (action 'create'). Standard [].",
+        "html_body": "Valgfri HTML-versjon av kroppen (action 'create').",
+        "reply_to": "Valgfri Reply-To-overskriftsadresse (action 'create').",
+        "attachments": "Filvedlegg (action 'create'). Samme skjema som send-handlingen. Maks 20 elementer, 10 MB totalt.",
+        "scheduled_send_id": "UUID for den planlagte sendingen som skal avbrytes (action 'cancel').",
+        "limit": "Maks antall resultater (action 'list'). Standard 20, maks 100."
       }
     },
     "contact_search": {
       "title": "Søk i kontakter",
-      "desc": "Finn korrespondenter etter navn eller e-post med en sanntidsskanning av postkassen din — det finnes ingen lagret kontaktliste. Hvert kall skanner et nylig vindu av matchende e-post og returnerer personene som matcher, sortert etter sist kontaktet, hver med visningsnavn, e-post, antall matchende meldinger og sist-kontaktet-tidsstempel. Tallene gjenspeiler matchende meldinger i det vinduet, ikke hele historikken din, og ingenting lagres mellom kall.",
+      "desc": "Finn korrespondenter etter navn eller e-post med en sanntidsskanning av postkassen din — det finnes ingen lagret kontaktliste. Hvert kall skanner et nylig vindu med matchende e-post og returnerer personene som matcher, sortert etter sist kontaktet, hver med visningsnavn, e-post, antall matchende meldinger og tidspunkt for siste kontakt. Antallene gjenspeiler matchende meldinger i det vinduet, ikke hele historikken din, og ingenting lagres mellom kall.",
       "params": {
-        "query": "Navn- eller e-postfragment, matchet uavhengig av store/små bokstaver mot visningsnavn og adresse. Minst 1 tegn.",
+        "query": "Navn- eller e-postfragment, matchet ikke-skiller-mellom-store-og-små-bokstaver mot visningsnavn og adresse. Minst 1 tegn.",
         "inbox_id": "Valgfritt. Begrens sanntidsskanningen til én innboks. Utelat for å skanne innboksene nøkkelen har tilgang til (et begrenset antall).",
-        "limit": "Maks antall kontakter som skal returneres. Standard 20, maks 50.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "schedule_create": {
-      "title": "Planlegg sending",
-      "desc": "Sett en e-post i kø for å sendes på et fremtidig tidspunkt. Mottakere og kropp valideres umiddelbart; hvis valideringen feiler, settes den ikke i kø. Utsenderen kjører hvert minutt, så faktisk levering kan skje opptil 60 sekunder etter send_at. Bruk schedule_list og schedule_cancel for å håndtere ventende sendinger.",
-      "params": {
-        "inbox_id": "UUID for innboksen det skal sendes fra. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "to": "Mottakernes e-postadresser. Maks 50.",
-        "subject": "E-postens emnefelt. Maks 998 tegn.",
-        "body": "E-postkropp i ren tekst.",
-        "send_at": "ISO 8601-dato/tid med tidssone som det skal sendes på. Må være i fremtiden, f.eks. \"2026-06-02T09:00:00Z\".",
-        "cc": "CC-mottakere. Standard [].",
-        "bcc": "BCC-mottakere. Standard [].",
-        "html_body": "Valgfri HTML-versjon av kroppen.",
-        "attachments": "Filvedlegg. Samme skjema som email_send. Maks 20 elementer, 10 MB totalt.",
-        "reply_to": "Valgfri Reply-To-headeradresse.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "schedule_list": {
-      "title": "List planlagte sendinger",
-      "desc": "List opp ventende planlagte sendinger for arbeidsområdet (status pending eller sending), tidligste først. Filtrer eventuelt etter innboks. Bruk schedule_cancel for å avbryte en før den sendes.",
-      "params": {
-        "inbox_id": "Valgfri. Begrens resultatene til planlagte sendinger for én innboks.",
-        "limit": "Maks antall resultater. Standard 20, maks 100.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt."
-      }
-    },
-    "schedule_cancel": {
-      "title": "Avbryt planlagt sending",
-      "desc": "Avbryt en ventende planlagt sending slik at utsenderen hopper over den. Bare sendinger som fortsatt er i 'pending'-tilstand kan avbrytes — når de er 'sending', 'sent' eller 'error' kan de ikke det. Bruk schedule_list for å finne scheduled_send_id.",
-      "params": {
-        "scheduled_send_id": "UUID for den planlagte sendingen som skal avbrytes."
-      }
-    },
-    "email_read_batch": {
-      "title": "Les e-poster (samlet)",
-      "desc": "Les opptil 50 meldinger i ett kall via leverandørens meldings-ID-er — ideelt for å sortere en innboks uten ett email_read-kall per melding. Returnerer et messages-array (hvert i samme form som email_read) pluss et errors-array per ID, slik at én feil eller manglende ID aldri får hele bunken til å feile. Når include_attachments er true, deler vedleggene ett samlet budsjett på 10 MB for hele kallet.",
-      "params": {
-        "inbox_id": "UUID for innboksen som inneholder e-posten. Kall inbox_list for å hente tilgjengelige inbox-ID-er. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox.",
-        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
-        "message_ids": "Leverandørens meldings-ID-er som skal leses, fra email_list eller email_search. Maks 50 per kall.",
-        "include_html": "Inkluder den sanerte HTML-brødteksten for hver melding. Standard false.",
-        "include_attachments": "Inkluder vedleggsdata i base64. Den totale grensen på 10 MB deles mellom alle meldingene i kallet. Standard false.",
-        "mark_as_read": "Merk hver melding som lest etter henting. Standard false."
+        "inbox": "E-postadressen til innboksen det skal begrenses til, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
+        "limit": "Maks antall kontakter som returneres. Standard 20, maks 50."
       }
     }
   },
@@ -492,7 +270,7 @@
     "planBody": "Bruken er ubegrenset; dette er en burst-grense for rimelig bruk per arbeidsområde (aggregert på tvers av alle API-nøklene dine). Ved overskridelse returnerer kall <code>data.error_code: \"rate_limit_exceeded\"</code> med <code>data.window: \"per_minute\"</code> og en <code>data.retry_after</code>-nedtelling (sekunder). Oppgrader planen din for et høyere tak.",
     "retryTag": "Trygge nye forsøk",
     "retryHeading": "Respekter alltid retry_after; prøv aldri sendinger på nytt i blinde",
-    "retryBody": "For <code>rate_limit_exceeded</code>-feil, vent <code>data.retry_after</code> sekunder før du prøver på nytt. Bruk eksponentiell backoff for <code>provider_error</code>. Ikke prøv <code>email_send</code> automatisk på nytt ved <code>provider_error</code>, siden meldingen kan ha blitt akseptert av leverandøren allerede."
+    "retryBody": "For <code>rate_limit_exceeded</code>-feil, vent <code>data.retry_after</code> sekunder før du prøver på nytt. Bruk eksponentiell backoff for <code>provider_error</code>. Ikke prøv <code>email_compose</code>-sendinger automatisk på nytt ved <code>provider_error</code>, siden meldingen kan ha blitt akseptert av leverandøren allerede."
   },
   "cta": {
     "heading": "Klar til å koble til innboksen din?",
@@ -559,7 +337,7 @@
       "gmail": "<b>Gmail — mapper vs. etiketter:</b> Gmail bruker et flatt etikettsystem i stedet for hierarkiske mapper. \"Flytt\" er implementert som legg til / fjern etikett. Native kopiering er ikke tilgjengelig via Gmail REST-API-et.",
       "permanentDelete": "<b>Permanent sletting:</b> Gmail flytter til papirkurven når du sletter — permanent expunge eksponeres ikke av API-ene deres. IMAP-leverandører (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) støtter både papirkurv og hard expunge.",
       "contacts_db": "<b>Kontaktsøk (sanntidsskanning):</b> Alle leverandører støtter <code>contact_search</code>, som finner matchende korrespondenter med en sanntidsskanning som kun leser headere, av et nylig vindu av matchende e-post. Det finnes ingen kontakttabell — ingenting lagres mellom kall, og tallene gjenspeiler kun matchende meldinger i det skannede vinduet.",
-      "scheduling": "<b>Planlegging:</b> Støttet for alle leverandører via <code>scheduled_sends</code>-køen. Bruk <code>schedule_create</code>, <code>schedule_list</code> og <code>schedule_cancel</code>."
+      "scheduling": "<b>Planlegging:</b> Støttet for alle leverandører via <code>scheduled_sends</code>-køen. Bruk <code>schedule</code>-verktøyets <code>create</code>-, <code>list</code>- og <code>cancel</code>-handlinger."
     },
     "cta": {
       "heading": "Klar til å koble til innboksen din?",
