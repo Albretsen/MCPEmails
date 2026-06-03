@@ -53,9 +53,34 @@ function isLocalizedRoute(pathname: string): boolean {
   return MARKETING_PATHS.has(path);
 }
 
+/**
+ * CDN cache policy for the public marketing pages. These render the same HTML
+ * for every visitor of a given locale (the only request-dependent input is the
+ * URL locale segment), so they are safe to cache at the edge.
+ *
+ * Without this, Next.js marks them `no-store` — the pages are server-rendered
+ * (the shared root layout reads the locale dynamically and the intl middleware
+ * sets a NEXT_LOCALE cookie), so every crawl and every visit re-runs the
+ * function. Overriding the header lets Vercel's CDN serve cached HTML:
+ *   - s-maxage=3600          → edge caches each locale variant for 1 hour
+ *   - stale-while-revalidate → serve stale instantly for a day while refreshing
+ *   - max-age=0, must-revalidate → browsers always revalidate (HTML stays fresh)
+ */
+const MARKETING_CACHE_CONTROL =
+  'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400, must-revalidate';
+
 export default async function proxy(request: NextRequest) {
   if (isLocalizedRoute(request.nextUrl.pathname)) {
-    return intlMiddleware(request);
+    const response = intlMiddleware(request);
+    response.headers.set('Cache-Control', MARKETING_CACHE_CONTROL);
+    // next-intl sets a NEXT_LOCALE cookie on every response. With
+    // localeDetection disabled the locale is fully URL-determined, so the
+    // cookie is unused here — and Vercel's CDN refuses to cache any response
+    // carrying Set-Cookie, which would silently void the header above. Drop it.
+    // (Marketing routes never run Supabase updateSession, so no auth/session
+    // cookie is at stake.)
+    response.headers.delete('set-cookie');
+    return response;
   }
   return await updateSession(request);
 }

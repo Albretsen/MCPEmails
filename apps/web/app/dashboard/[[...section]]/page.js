@@ -616,6 +616,9 @@ export default async function DashboardPage({ params }) {
     maxMonthlyToolCalls: rawLimits.maxMonthlyToolCalls === Infinity ? null : rawLimits.maxMonthlyToolCalls,
     maxApiKeys: rawLimits.maxApiKeys === Infinity ? null : rawLimits.maxApiKeys,
     maxMembers: rawLimits.maxMembers === Infinity ? null : rawLimits.maxMembers,
+    // Team roles (Admin/Viewer) are a paid capability; members themselves are
+    // unlimited on every tier. The Members UI uses this to gate role selection.
+    teamRolesEnabled: rawLimits.teamRolesEnabled,
   };
 
   // The single Streamable HTTP MCP endpoint clients connect to.
@@ -629,7 +632,13 @@ export default async function DashboardPage({ params }) {
     <DashboardApp
       initialRoute={initialRoute}
       user={{ displayName, email, initials, id: user.id }}
-      workspace={{ id: workspace?.id ?? '', slug: workspaceSlug, plan }}
+      workspace={{
+        id: workspace?.id ?? '',
+        slug: workspaceSlug,
+        plan,
+        displayName: workspace?.display_name ?? workspaceSlug,
+        isOwner: workspace?.owner_id === user.id,
+      }}
       workspaces={workspaces}
       activeWorkspaceId={workspace?.id ?? ''}
       canCreateWorkspace={canCreateWorkspace}

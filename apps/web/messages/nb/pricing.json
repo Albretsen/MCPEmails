@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Priser",
-    "description": "Alle planer, inkludert Gratis, har ubegrenset antall innbokser, kall, API-nøkler og teammedlemmer. Betalte planer gir høyere burst-grenser, teamfunksjoner og kundestøtte. E-post lagres aldri, uansett plan."
+    "description": "Alle planer, inkludert Gratis, har ubegrenset antall innbokser, kall og API-nøkler. Betalte planer gir høyere burst-grenser, teamfunksjoner og kundestøtte. E-posten agenten din leser lagres aldri, uansett plan."
   },
   "hero": {
     "eyebrow": "Priser",
     "titleLine1": "Ubegrenset, gratis.",
     "titleLine2": "Oppgrader for mer kraft.",
-    "lead": "Alle planer, inkludert Gratis, har ubegrenset antall innbokser, kall, API-nøkler og teammedlemmer. Betalte planer gir høyere burst-grenser, teamfunksjoner og kundestøtte. E-post lagres aldri, uansett plan."
+    "lead": "Alle planer, inkludert Gratis, har ubegrenset antall innbokser, kall og API-nøkler. Betalte planer gir høyere burst-grenser, teamfunksjoner og kundestøtte. E-posten agenten din leser lagres aldri, uansett plan."
   },
   "billing": {
     "monthly": "Månedlig",
@@ -27,8 +27,8 @@
       "features": [
         "Ubegrenset antall tilkoblede innbokser",
         "Ubegrenset antall MCP-verktøykall",
-        "Ubegrenset antall API-nøkler og teammedlemmer",
-        "Gmail, Outlook, iCloud, Fastmail og enhver IMAP",
+        "Ubegrenset antall API-nøkler",
+        "Gmail, iCloud, Fastmail og enhver IMAP",
         "60 forespørsler / minutt",
         "Fellesskapsstøtte"
       ]
@@ -41,7 +41,7 @@
         "Alt i Gratis, ubegrenset",
         "300 forespørsler / minutt (5× burst)",
         "Full bruksanalyse (90-dagers historikk)",
-        "Gmail, Outlook, iCloud, Fastmail og enhver IMAP",
+        "Gmail, iCloud, Fastmail og enhver IMAP",
         "E-poststøtte"
       ]
     },
@@ -61,7 +61,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "Alle planer inkluderer: e-post lagres aldri · legitimasjon kryptert i hvile · hosting i EU og USA",
+    "all": "Alle planer inkluderer: e-post hentes i sanntid, lagres aldri · legitimasjon kryptert i hvile · hosting i EU og USA",
     "custom": "Trenger du noe tilpasset? <contact>Kontakt oss</contact>."
   },
   "comparison": {
@@ -86,8 +86,7 @@
         "label": "E-postleverandører",
         "rows": {
           "gmail": "Gmail (OAuth)",
-          "outlook": "Outlook / Microsoft 365 (OAuth)",
-          "fastmail": "Fastmail (OAuth + app-passord)",
+          "fastmail": "Fastmail (app-passord)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (app-passord)",
           "imap": "Enhver IMAP- / SMTP-postkasse"
         }
@@ -108,7 +107,7 @@
       "privacy": {
         "label": "Personvern og sikkerhet",
         "rows": {
-          "neverStored": "E-post lagres aldri",
+          "neverStored": "E-post hentes i sanntid, lagres aldri",
           "encrypted": "Legitimasjon kryptert i hvile",
           "soc2": "SOC 2 Type II-rapport på forespørsel"
         }
@@ -124,6 +123,7 @@
     },
     "values": {
       "unlimited": "Ubegrenset",
+      "ownerOnly": "Bare deg",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
       "burstPro": "1 000 / min",
@@ -138,7 +138,7 @@
     "items": [
       {
         "q": "Finnes det virkelig ingen bruksgrense?",
-        "a": "Riktig. Tilkoblede innbokser, MCP-verktøykall, API-nøkler og teammedlemmer er ubegrenset på alle planer, inkludert Gratis. Den eneste grensen er et fair-use-tak per minutt (60/min på Gratis, 300/min på Solo, 1 000/min på Team) for å beskytte plattformen mot misbruk. Betalte planer gir høyere burst-kapasitet, teamfunksjoner og kundestøtte, aldri mer bruk."
+        "a": "Riktig. Tilkoblede innbokser, MCP-verktøykall, API-nøkler er ubegrenset på alle planer, inkludert Gratis; teammedlemmer er tilgjengelig på betalte planer (Gratis er for én bruker). Den eneste grensen er et fair-use-tak per minutt (60/min på Gratis, 300/min på Solo, 1 000/min på Team) for å beskytte plattformen mot misbruk. Betalte planer gir høyere burst-kapasitet, teamfunksjoner og kundestøtte, aldri mer bruk."
       },
       {
         "q": "Hva regnes som et MCP-kall?",
@@ -146,7 +146,7 @@
       },
       {
         "q": "Lagres e-postinnholdet mitt noe sted?",
-        "a": "Nei. E-postinnhold, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten. Ingenting lagres mellom kall. Det eneste vi lagrer er et kryptert OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler."
+        "a": "E-posten agenten din leser lagres aldri: brødtekst, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten, uten at noe beholdes mellom kall. Vi lagrer ditt krypterte OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler. Det eneste unntaket er en melding du ber oss om å planlegge til senere – den lagrer vi frem til den er sendt, og beholder deretter en oppføring for historikken din."
       },
       {
         "q": "Hva er forskjellen mellom Solo og Team?",
@@ -162,7 +162,7 @@
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
-        "a": "Gmail og Microsoft 365 / Outlook bruker OAuth 2.0. Fastmail støtter både OAuth og app-passord. iCloud, Yahoo, Zoho og Yandex kobles til med et app-spesifikt passord, og enhver annen postkasse fungerer gjennom den generiske IMAP- / SMTP-tilkoblingen."
+        "a": "Gmail bruker OAuth 2.0. Fastmail kobles til med et app-passord. iCloud, Yahoo, Zoho og Yandex kobles til med et app-spesifikt passord, og enhver annen postkasse fungerer gjennom den generiske IMAP- / SMTP-tilkoblingen."
       },
       {
         "q": "Finnes det en refusjonsordning?",

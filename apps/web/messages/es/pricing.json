@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Precios",
-    "description": "Todos los planes, incluido Gratis, tienen bandejas, llamadas, claves de API y miembros de equipo ilimitados. Los planes de pago añaden límites de ráfaga más altos, funciones de equipo y soporte. El correo nunca se almacena, en ningún plan."
+    "description": "Todos los planes, incluido Gratis, tienen bandejas, llamadas y claves de API ilimitados. Los planes de pago añaden límites de ráfaga más altos, funciones de equipo y soporte. El correo que lee tu agente nunca se almacena, en ningún plan."
   },
   "hero": {
     "eyebrow": "Precios",
     "titleLine1": "Ilimitado, gratis.",
     "titleLine2": "Mejora para más potencia.",
-    "lead": "Todos los planes, incluido Gratis, tienen bandejas, llamadas, claves de API y miembros de equipo ilimitados. Los planes de pago añaden límites de ráfaga más altos, funciones de equipo y soporte. El correo nunca se almacena, en ningún plan."
+    "lead": "Todos los planes, incluido Gratis, tienen bandejas, llamadas y claves de API ilimitados. Los planes de pago añaden límites de ráfaga más altos, funciones de equipo y soporte. El correo que lee tu agente nunca se almacena, en ningún plan."
   },
   "billing": {
     "monthly": "Mensual",
@@ -27,8 +27,8 @@
       "features": [
         "Bandejas conectadas ilimitadas",
         "Llamadas a herramientas MCP ilimitadas",
-        "Claves de API y miembros de equipo ilimitados",
-        "Gmail, Outlook, iCloud, Fastmail y cualquier IMAP",
+        "Claves de API ilimitadas",
+        "Gmail, iCloud, Fastmail y cualquier IMAP",
         "60 peticiones / minuto",
         "Soporte de la comunidad"
       ]
@@ -41,7 +41,7 @@
         "Todo lo de Gratis, ilimitado",
         "300 peticiones / minuto (ráfaga 5×)",
         "Analíticas de uso completas (historial de 90 días)",
-        "Gmail, Outlook, iCloud, Fastmail y cualquier IMAP",
+        "Gmail, iCloud, Fastmail y cualquier IMAP",
         "Soporte por correo"
       ]
     },
@@ -61,7 +61,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "Todos los planes incluyen: el correo nunca se almacena · credenciales cifradas en reposo · alojamiento en la UE y EE. UU.",
+    "all": "Todos los planes incluyen: el correo se obtiene en vivo, nunca se almacena · credenciales cifradas en reposo · alojamiento en la UE y EE. UU.",
     "custom": "¿Necesitas algo a medida? <contact>Contáctanos</contact>."
   },
   "comparison": {
@@ -86,8 +86,7 @@
         "label": "Proveedores de correo",
         "rows": {
           "gmail": "Gmail (OAuth)",
-          "outlook": "Outlook / Microsoft 365 (OAuth)",
-          "fastmail": "Fastmail (OAuth + contraseña de aplicación)",
+          "fastmail": "Fastmail (contraseña de aplicación)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (contraseña de aplicación)",
           "imap": "Cualquier buzón IMAP / SMTP"
         }
@@ -108,7 +107,7 @@
       "privacy": {
         "label": "Privacidad y seguridad",
         "rows": {
-          "neverStored": "El correo nunca se almacena",
+          "neverStored": "El correo se obtiene en vivo, nunca se almacena",
           "encrypted": "Credenciales cifradas en reposo",
           "soc2": "Informe SOC 2 Type II bajo petición"
         }
@@ -124,6 +123,7 @@
     },
     "values": {
       "unlimited": "Ilimitado",
+      "ownerOnly": "Solo tú",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
       "burstPro": "1.000 / min",
@@ -138,7 +138,7 @@
     "items": [
       {
         "q": "¿De verdad no hay límite de uso?",
-        "a": "Correcto. Las bandejas conectadas, las llamadas a herramientas MCP, las claves de API y los miembros de equipo son ilimitados en todos los planes, incluido Gratis. El único límite es un tope de uso justo por minuto (60/min en Gratis, 300/min en Solo, 1.000/min en Team) para proteger la plataforma del abuso. Los planes de pago añaden mayor rendimiento de ráfaga, funciones de equipo y soporte, nunca más uso."
+        "a": "Correcto. Las bandejas conectadas, las llamadas a herramientas MCP, las claves de API son ilimitadas en todos los planes, incluido Gratis; los miembros de equipo están disponibles en los planes de pago (Gratis es de un solo usuario). El único límite es un tope de uso justo por minuto (60/min en Gratis, 300/min en Solo, 1.000/min en Team) para proteger la plataforma del abuso. Los planes de pago añaden mayor rendimiento de ráfaga, funciones de equipo y soporte, nunca más uso."
       },
       {
         "q": "¿Qué cuenta como una llamada MCP?",
@@ -146,7 +146,7 @@
       },
       {
         "q": "¿Se almacena en algún sitio el contenido de mi correo?",
-        "a": "No. Los cuerpos de los correos, los asuntos, los adjuntos y el contenido de los hilos se obtienen en vivo desde tu proveedor y se devuelven directamente al agente. Nada se persiste entre llamadas. Los únicos datos que almacenamos son un token de OAuth cifrado o una contraseña de aplicación para poder autenticar peticiones futuras."
+        "a": "El correo que lee tu agente nunca se almacena: los cuerpos, los asuntos, los adjuntos y el contenido de los hilos se obtienen en vivo desde tu proveedor y se devuelven directamente al agente, sin que nada se persista entre llamadas. Almacenamos tu token de OAuth cifrado o tu contraseña de aplicación para poder autenticar peticiones futuras. La única excepción es un mensaje que nos pides programar para más tarde: lo almacenamos hasta que se envía y luego guardamos un registro para tu historial."
       },
       {
         "q": "¿Cuál es la diferencia entre Solo y Team?",
@@ -162,7 +162,7 @@
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
-        "a": "Gmail y Microsoft 365 / Outlook usan OAuth 2.0. Fastmail admite tanto OAuth como contraseñas de aplicación. iCloud, Yahoo, Zoho y Yandex se conectan con una contraseña específica de aplicación, y cualquier otro buzón funciona mediante el conector IMAP / SMTP genérico."
+        "a": "Gmail usa OAuth 2.0. Fastmail se conecta con una contraseña de aplicación. iCloud, Yahoo, Zoho y Yandex se conectan con una contraseña específica de aplicación, y cualquier otro buzón funciona mediante el conector IMAP / SMTP genérico."
       },
       {
         "q": "¿Hay política de reembolso?",

@@ -8,7 +8,7 @@ export async function generateMetadata({ params }) {
   const title = t.has('meta.title') ? t('meta.title') : 'Docs';
   const description = t.has('meta.description')
     ? t('meta.description')
-    : 'Get started with MCPEmails in minutes. Quick-start guide, tool reference, and example responses for Gmail, Outlook, and IMAP agents.';
+    : 'Get started with MCPEmails in minutes. Quick-start guide, tool reference, and example responses for Gmail and IMAP agents.';
   return {
     title,
     description,

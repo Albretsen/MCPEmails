@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "Juridisk",
     "title": "Personvernerklæring",
-    "lead": "Vi bygde MCPEmails med personvern som et grunnleggende prinsipp. E-postinnholdet ditt lagres aldri på serverne våre. Det sendes videre til agenten din og forsvinner. Denne erklæringen forklarer hva vi faktisk samler inn, og hvorfor.",
+    "lead": "Vi bygde MCPEmails med personvern som et grunnleggende prinsipp. E-postinnholdet agenten din leser lagres aldri på serverne våre; det sendes videre til agenten din og forsvinner. Det eneste unntaket er en melding du planlegger å sende senere, som vi kun oppbevarer frem til den er levert. Denne erklæringen forklarer hva vi faktisk samler inn, og hvorfor.",
     "dates": "Sist oppdatert: {lastUpdated}  ·  Gjelder fra: {effectiveDate}"
   },
   "whoWeAre": {
@@ -26,7 +26,7 @@
     "logsTitle": "2.4 Bruks- og revisjonslogger",
     "logsP": "For hvert MCP-verktøykall agenten din gjør, registrerer vi: verktøyets navn (f.eks. <c>email_read</c>), API-nøkkelen som gjorde kallet, innboksen som ble aksessert, tidsstempelet, og om kallet lyktes. Vi registrerer<b> ikke</b> e-postemner, -innhold, -mottakere eller annet e-postinnhold i disse loggene.",
     "emailContentTitle": "2.5 E-postinnhold: ikke lagret",
-    "emailContentP": "Når agenten din kaller <c>email_read</c>, <c>email_list</c> eller et annet e-postverktøy, henter vi det forespurte innholdet direkte fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning.",
+    "emailContentP": "Når agenten din kaller <c>email_read</c>, <c>email_list</c> eller et annet leseverktøy, henter vi det forespurte innholdet i sanntid fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning. Det eneste unntaket er planlagte sendinger: når du ber agenten din om å planlegge en melding for fremtidig levering, lagrer vi den utgående meldingen – mottakere, emne, brødtekst og eventuelle vedlegg – i databasen vår frem til den er sendt, og vi beholder oppføringen etterpå for revisjon og feilsøking. Dette gjelder kun meldinger du uttrykkelig planlegger; e-post agenten din leser eller sender umiddelbart lagres aldri.",
     "emailContentAgentP": "E-postinnholdet ditt sendes kun til MCP-klienten eller AI-agenten som <b>du</b> har koblet til og selv bruker (for eksempel Claude, Cursor eller en annen MCP-klient du velger). Når du aktiverer et verktøy, overfører MCPEmails det forespurte innholdet til denne klienten slik at den kan utføre forespørselen din. MCPEmails sender ikke e-postinnholdet ditt til noen AI-leverandør vi selv velger. Når innholdet når klienten du har valgt, reguleres det av denne klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails fungerer bare som et mellomledd og beholder ingen kopi av innholdet.",
     "technicalTitle": "2.6 Tekniske og driftsmessige data",
     "technicalP": "Vi samler inn standard driftsdata på serversiden, inkludert IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Disse dataene oppbevares i aggregert, anonymisert form og knyttes ikke til individuelle kontoer etter 30 dager.",
@@ -98,7 +98,7 @@
       },
       {
         "category": "MCP-verktøykall revisjonslogger",
-        "period": "90 dager (Free & Solo); 1 år (Team)",
+        "period": "7 dager (Free); 90 dager (Solo); 1 år (Team)",
         "reason": "Sikkerhetsrevisjon; abonnementsfunksjon"
       },
       {
@@ -112,9 +112,14 @@
         "reason": "Forebygging av misbruk; tilgjengelighet"
       },
       {
-        "category": "E-postinnhold",
+        "category": "E-postinnhold (lest eller sendt umiddelbart)",
         "period": "Ikke lagret; null lagring",
         "reason": "Innebygd personvern"
+      },
+      {
+        "category": "Planlagte sendingsmeldinger",
+        "period": "Frem til sendt; oppføring beholdes etterpå for revisjon",
+        "reason": "Nødvendig for å levere meldinger du planlegger"
       }
     ],
     "outro": "Når du sletter kontoen din, igangsetter vi sletting av alle personopplysninger innen 30 dager. Aggregert, ikke-personlig bruksstatistikk avledet fra kontoen din kan oppbevares utover denne perioden i anonymisert form."
@@ -138,7 +143,7 @@
     "stripeData": "Faktureringse-post, betalingskortdata (lagret av Stripe, ikke oss)",
     "stripeLocation": "USA (Stripe er PCI-DSS-sertifisert)",
     "emailProvidersTitle": "5.2 E-postleverandører (dine leverandører, ikke våre)",
-    "emailProvidersP": "Når du kobler til Gmail, Outlook eller en Fastmail-/IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
+    "emailProvidersP": "Når du kobler til Gmail, Fastmail eller en annen IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
     "noBrokersTitle": "5.3 Ingen datameglere eller annonsenettverk",
     "noBrokersP": "Vi deler ingen data med datameglere, annonsenettverk, sosiale medieplattformer eller analyseselskaper som bygger brukerprofiler.",
     "legalDisclosuresTitle": "5.4 Rettslige utleveringer",

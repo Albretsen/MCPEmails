@@ -18,14 +18,14 @@
   },
   "serviceDescription": {
     "title": "2. Beskrivelse av Tjenesten",
-    "p1": "MCPEmails tilbyr en programvare-som-en-tjeneste-plattform som lar deg koble til e-postkontoer (Gmail, Microsoft Outlook, Fastmail og kompatible IMAP-kontoer) og gjøre disse kontoene tilgjengelige for AI-agenter via Model Context Protocol (MCP). Tjenesten omfatter:",
+    "p1": "MCPEmails tilbyr en programvare-som-en-tjeneste-plattform som lar deg koble til e-postkontoer (Gmail, Fastmail og kompatible IMAP-kontoer) og gjøre disse kontoene tilgjengelige for AI-agenter via Model Context Protocol (MCP). Tjenesten omfatter:",
     "list": [
       "Et nettbasert dashbord for å administrere tilkoblede e-postkontoer, API-nøkler og overvåking av bruk.",
       "Et MCP-kompatibelt HTTP-endepunkt som AI-agenter autentiserer seg mot ved hjelp av API-nøkler du genererer.",
       "OAuth-integrasjon med støttede e-postleverandører for å innhente og administrere delegert tilgang til dine postkasser.",
       "En bruks- og revisjonslogg som viser hvilke verktøy agentene dine har kalt og når."
     ],
-    "p2": "MCPEmails fungerer som en protokollbro. Vi lagrer ikke e-postinnhold på våre servere; vi henter det direkte fra din e-postleverandør i det øyeblikket en agent ber om det, og returnerer det i samme HTTP-respons. Se vår <privacy>Personvernerklæring</privacy> for en fullstendig beskrivelse av hvilke data vi beholder og ikke beholder.",
+    "p2": "MCPEmails fungerer som en protokollbro. Vi lagrer ikke e-postinnholdet agenten din leser på våre servere; vi henter det i sanntid fra din e-postleverandør i det øyeblikket en agent ber om det, og returnerer det i samme HTTP-respons. Unntaket er en melding du planlegger å sende senere, som vi kun lagrer frem til den er levert. Se vår <privacy>Personvernerklæring</privacy> for en fullstendig beskrivelse av hvilke data vi beholder og ikke beholder.",
     "p2b": "E-postinnhold leveres kun til MCP-klienten eller AI-agenten som du har koblet til og selv velger å bruke. Når innholdet når denne klienten, reguleres det av klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails velger ikke en AI-leverandør på dine vegne og beholder ingen kopi av e-postinnholdet ditt.",
     "p3": "Vi forbeholder oss retten til å endre, suspendere eller avvikle enhver del av Tjenesten når som helst. Der det er praktisk mulig vil vi gi minst 30 dagers varsel om vesentlige endringer til betalende brukere."
   },
@@ -98,7 +98,7 @@
     "h71": "7.1 Tjenesten leveres «som den er»",
     "p71": "Tjenesten leveres «som den er» og «slik den er tilgjengelig», uten garantier av noe slag, verken uttrykkelige eller underforståtte, inkludert (men ikke begrenset til) underforståtte garantier om salgbarhet, egnethet for et bestemt formål, fravær av krenkelse, og uavbrutt eller feilfri drift. Vi garanterer ikke at Tjenesten vil oppfylle dine krav, at e-postlevering vil være pålitelig eller fullstendig, eller at feil vil bli rettet.",
     "h72": "7.2 Tredjepartstjenester",
-    "p72": "Tjenesten integreres med tredjeparts e-postleverandører (Google Gmail, Microsoft Outlook, Fastmail, IMAP-servere). Vi er ikke ansvarlige for tilgjengeligheten, påliteligheten eller ytelsen til disse tjenestene, for endringer i deres API-er eller OAuth-retningslinjer, eller for tap av e-posttilgang som følge av en tredjepartsleverandørs handlinger.",
+    "p72": "Tjenesten integreres med tredjeparts e-postleverandører (Google Gmail, Fastmail, IMAP-servere). Vi er ikke ansvarlige for tilgjengeligheten, påliteligheten eller ytelsen til disse tjenestene, for endringer i deres API-er eller OAuth-retningslinjer, eller for tap av e-posttilgang som følge av en tredjepartsleverandørs handlinger.",
     "h73": "7.3 Handlinger utført av AI-agenter",
     "p73": "MCPEmails er en protokollbro. Vi overfører instruksjoner fra AI-agenter til dine e-postleverandører og returnerer resultater. Vi er ikke ansvarlige for innholdet i e-poster som sendes, videresendes eller besvares av AI-agenter som opptrer under dine API-nøkler, og heller ikke for konsekvenser av autonome agenthandlinger, inkludert utilsiktet sletting av e-post, feilsendte meldinger eller datalekkasje som følge av logiske feil hos agenten.",
     "h74": "7.4 Ansvarsbegrensning",

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Documentación",
-    "description": "Empieza con MCPEmails en minutos. Guía de inicio rápido, referencia de herramientas y respuestas de ejemplo para agentes de Gmail, Outlook e IMAP."
+    "description": "Empieza con MCPEmails en minutos. Guía de inicio rápido, referencia de herramientas y respuestas de ejemplo para agentes de Gmail e IMAP."
   },
   "hero": {
     "eyebrow": "Documentación",
@@ -21,7 +21,7 @@
       "signup": {
         "label": "Regístrate y conecta una bandeja",
         "heading": "Crea tu cuenta y conecta Gmail",
-        "body": "Regístrate en mcpemails.com, luego ve a Panel → Bandejas → Conectar bandeja. Elige Gmail, Outlook, iCloud, Fastmail o cualquier bandeja IMAP, después completa el flujo de OAuth o pega una contraseña de aplicación. Tu bandeja queda lista en menos de un minuto.",
+        "body": "Regístrate en mcpemails.com, luego ve a Panel → Bandejas → Conectar bandeja. Elige Gmail, iCloud, Fastmail o cualquier bandeja IMAP, después completa el flujo de OAuth o pega una contraseña de aplicación. Tu bandeja queda lista en menos de un minuto.",
         "cta": "Conecta tu bandeja de entrada →"
       },
       "apikey": {
@@ -106,7 +106,7 @@
       },
       "contacts": {
         "title": "Contactos",
-        "desc": "Busca en una lista de contactos creada automáticamente a partir de los encabezados From, To y Reply-To vistos en tu correo. Sin configuración manual."
+        "desc": "Encuentra personas por nombre o correo con un escaneo en vivo de tu correo reciente que coincide. No se almacena nada — cada búsqueda lee en vivo."
       },
       "schedule": {
         "title": "Envío programado",
@@ -385,10 +385,10 @@
     },
     "draft_update": {
       "title": "Update Draft",
-      "desc": "Reemplaza el contenido de un borrador existente. Todos los campos proporcionados sobrescriben el borrador almacenado. Llama a draft_list para obtener los valores de draft_id.",
+      "desc": "Reemplaza el contenido de un borrador existente. Todos los campos proporcionados sobrescriben el borrador almacenado. Llama a draft_list para obtener los valores de draft_id. En bandejas basadas en IMAP (cualquiera que no sea Gmail/Outlook) el mensaje subyacente se reescribe, por lo que esto devuelve un NUEVO draft_id que reemplaza el que pasaste — adóptalo para cualquier draft_update/draft_send posterior y descarta el antiguo. Gmail y Outlook mantienen un draft_id estable.",
       "params": {
         "inbox_id": "UUID de la bandeja propietaria del borrador. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
-        "draft_id": "ID de borrador del proveedor de draft_create o draft_list.",
+        "draft_id": "ID de borrador del proveedor del draft_create, draft_update o draft_list más reciente. En bandejas IMAP cambia después de cada actualización, así que usa siempre el más reciente.",
         "subject": "Línea de asunto actualizada.",
         "body": "Cuerpo en texto plano actualizado.",
         "to": "Lista de destinatarios actualizada. Predeterminado [].",
@@ -400,19 +400,19 @@
     },
     "draft_send": {
       "title": "Send Draft",
-      "desc": "Envía un borrador guardado previamente. El borrador se elimina de la carpeta de Borradores tras el envío. Irreversible.",
+      "desc": "Envía un borrador guardado previamente. El borrador se elimina de la carpeta de Borradores tras el envío. Irreversible. Pasa siempre el draft_id más reciente (de draft_create, el último draft_update o draft_list): en bandejas basadas en IMAP el ID cambia en cada actualización, y un ID obsoleto falla con un error de no encontrado.",
       "params": {
         "inbox_id": "UUID de la bandeja que contiene el borrador. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; de lo contrario pasa esto o inbox.",
-        "draft_id": "ID de borrador del proveedor de draft_create o draft_list.",
+        "draft_id": "ID de borrador del proveedor del draft_create, draft_update o draft_list más reciente. En bandejas IMAP cambia después de cada actualización, así que usa siempre el más reciente.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa cómoda a inbox_id. Opcional; se ignora si se indica inbox_id."
       }
     },
     "contact_search": {
       "title": "Search Contacts",
-      "desc": "Busca en la lista de contactos derivada por nombre o correo. Los contactos se crean automáticamente a partir de los encabezados vistos durante las operaciones de lectura, búsqueda y envío, sin configuración manual. Devuelve las coincidencias ordenadas por contacto más reciente, cada una con nombre visible, correo, recuento de mensajes y marca de tiempo del último contacto.",
+      "desc": "Encuentra corresponsales por nombre o correo con un escaneo en vivo de tu buzón — no existe ninguna lista de contactos almacenada. Cada llamada escanea una ventana reciente de correo coincidente y devuelve las personas que coinciden, ordenadas por contacto más reciente, cada una con nombre visible, correo, recuento de mensajes coincidentes y marca de tiempo del último contacto. Los recuentos reflejan los mensajes coincidentes en esa ventana, no tu historial completo, y no se almacena nada entre llamadas.",
       "params": {
         "query": "Fragmento de nombre o correo, comparado sin distinguir mayúsculas con el nombre visible y la dirección. Al menos 1 carácter.",
-        "inbox_id": "Opcional. Restringe los resultados a contactos vistos desde una bandeja. Omítelo para buscar en todas las bandejas a las que la clave puede acceder.",
+        "inbox_id": "Opcional. Restringe el escaneo en vivo a una sola bandeja. Omítelo para escanear las bandejas a las que la clave puede acceder (un número limitado).",
         "limit": "Número máximo de contactos a devolver. Predeterminado 20, máximo 50.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa cómoda a inbox_id. Opcional; se ignora si se indica inbox_id."
       }
@@ -503,7 +503,7 @@
   "providers": {
     "meta": {
       "title": "Soporte de proveedores",
-      "description": "Mira qué proveedores de correo admite MCPEmails y qué funciones están disponibles por proveedor: Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex e IMAP genérico."
+      "description": "Mira qué proveedores de correo admite MCPEmails y qué funciones están disponibles por proveedor: Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex e IMAP genérico."
     },
     "labels": {
       "generic": "IMAP genérico"
@@ -522,8 +522,7 @@
       "delete": "Eliminar / papelera",
       "permanent_delete": "Eliminación permanente (expunge)",
       "drafts": "Borradores (crear / editar / enviar)",
-      "contacts": "API de contactos nativa",
-      "contacts_db": "Búsqueda de contactos (sincronizada con BD)",
+      "contacts_db": "Búsqueda de contactos (escaneo en vivo)",
       "scheduling": "Envío programado",
       "search_syntax": "Sintaxis de búsqueda"
     },
@@ -540,7 +539,7 @@
     "hero": {
       "eyebrow": "Soporte de proveedores",
       "heading": "Qué funciona, por proveedor.",
-      "lead": "MCPEmails conecta Gmail, Outlook, Fastmail y cualquier bandeja IMAP (iCloud, Yahoo, Zoho, Yandex, genérica). No todos los proveedores exponen las mismas APIs — esta tabla muestra exactamente qué admite hoy cada uno.",
+      "lead": "MCPEmails conecta Gmail, Fastmail y cualquier bandeja IMAP (iCloud, Yahoo, Zoho, Yandex, genérica). No todos los proveedores exponen las mismas APIs — esta tabla muestra exactamente qué admite hoy cada uno.",
       "ctaConnect": "Conectar una bandeja",
       "ctaBack": "Volver a la documentación"
     },
@@ -558,9 +557,8 @@
     },
     "notes": {
       "gmail": "<b>Gmail — carpetas vs etiquetas:</b> Gmail usa un sistema plano de etiquetas en lugar de carpetas jerárquicas. «Mover» se implementa como añadir/quitar etiquetas. La copia nativa no está disponible a través de la API REST de Gmail.",
-      "permanentDelete": "<b>Eliminación permanente:</b> Gmail y Outlook mueven a la Papelera cuando eliminas — el expunge permanente no lo exponen sus APIs. Los proveedores IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, genérico) admiten tanto la papelera como el expunge definitivo.",
-      "contacts": "<b>API de contactos nativa:</b> Gmail usa la API People de Google; Outlook usa Microsoft Graph <code>/contacts</code>. Contactos CardDAV de Fastmail y los basados en IMAP están fuera del alcance de v0.1.",
-      "contacts_db": "<b>Búsqueda de contactos (BD):</b> Todos los proveedores sincronizan contactos desde los encabezados de mensajes. Usa <code>contact_search</code>.",
+      "permanentDelete": "<b>Eliminación permanente:</b> Gmail mueve a la Papelera cuando eliminas — el expunge permanente no lo exponen sus APIs. Los proveedores IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, genérico) admiten tanto la papelera como el expunge definitivo.",
+      "contacts_db": "<b>Búsqueda de contactos (escaneo en vivo):</b> Todos los proveedores admiten <code>contact_search</code>, que encuentra corresponsales coincidentes con un escaneo en vivo, solo de encabezados, de una ventana reciente de tu correo coincidente. No hay ninguna tabla de contactos — no se almacena nada entre llamadas, y los recuentos reflejan solo los mensajes coincidentes en la ventana escaneada.",
       "scheduling": "<b>Programación:</b> Compatible con todos los proveedores a través de la cola <code>scheduled_sends</code>. Usa <code>schedule_create</code>, <code>schedule_list</code> y <code>schedule_cancel</code>."
     },
     "cta": {

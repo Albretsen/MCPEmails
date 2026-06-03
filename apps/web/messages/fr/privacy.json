@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "Mentions légales",
     "title": "Politique de confidentialité",
-    "lead": "Nous avons conçu MCPEmails en faisant de la confidentialité un principe fondamental. Le contenu de vos e-mails n'est jamais stocké sur nos serveurs. Il transite vers votre agent puis disparaît. Cette politique explique ce que nous collectons réellement, et pourquoi.",
+    "lead": "Nous avons conçu MCPEmails en faisant de la confidentialité un principe fondamental. Le contenu des e-mails que votre agent lit n'est jamais stocké sur nos serveurs ; il transite vers votre agent puis disparaît. La seule exception est un message que vous programmez pour un envoi ultérieur, que nous conservons uniquement jusqu'à sa remise. Cette politique explique ce que nous collectons réellement, et pourquoi.",
     "dates": "Dernière mise à jour : {lastUpdated}  ·  Entrée en vigueur : {effectiveDate}"
   },
   "whoWeAre": {
@@ -26,7 +26,7 @@
     "logsTitle": "2.4 Journaux d'utilisation et d'audit",
     "logsP": "Pour chaque appel d'outil MCP effectué par votre agent, nous enregistrons : le nom de l'outil (par ex. <c>email_read</c>), la clé d'API ayant effectué l'appel, la boîte de réception consultée, l'horodatage et la réussite ou non de l'appel. Nous n'enregistrons<b> pas</b> les objets, corps, destinataires ou tout autre contenu d'e-mail dans ces journaux.",
     "emailContentTitle": "2.5 Contenu des e-mails : non stocké",
-    "emailContentP": "Lorsque votre agent appelle <c>email_read</c>, <c>email_list</c> ou tout autre outil de messagerie, nous récupérons le contenu demandé en direct auprès de votre fournisseur de messagerie et le renvoyons à votre agent dans la même réponse HTTP. Le contenu n'est jamais écrit sur disque, mis en cache ni journalisé. Une fois la réponse HTTP envoyée, nous ne conservons aucune copie d'un quelconque corps d'e-mail, objet, pièce jointe ou coordonnée de contact.",
+    "emailContentP": "Lorsque votre agent appelle <c>email_read</c>, <c>email_list</c> ou tout autre outil de lecture, nous récupérons le contenu demandé en direct auprès de votre fournisseur de messagerie et le renvoyons à votre agent dans la même réponse HTTP. Ce contenu n'est jamais écrit sur disque, mis en cache ni journalisé. Une fois la réponse HTTP envoyée, nous ne conservons aucune copie d'un quelconque corps d'e-mail, objet, pièce jointe ou coordonnée de contact. La seule exception concerne les envois programmés : lorsque vous demandez à votre agent de programmer un message pour une remise ultérieure, nous stockons ce message sortant — ses destinataires, son objet, son corps et toute pièce jointe — dans notre base de données jusqu'à son envoi, puis nous en conservons la trace à des fins d'audit et de dépannage. Cela ne s'applique qu'aux messages que vous programmez explicitement ; le courrier que votre agent lit ou envoie immédiatement n'est jamais stocké.",
     "emailContentAgentP": "Le contenu de vos e-mails n'est transmis qu'au client MCP ou à l'agent IA que <b>vous</b> avez connecté et que vous utilisez (par exemple Claude, Cursor ou un autre client MCP de votre choix). Lorsque vous invoquez un outil, MCPEmails transmet le contenu demandé à ce client afin qu'il puisse répondre à votre demande. MCPEmails ne transmet pas le contenu de vos e-mails à un fournisseur d'IA qu'il choisirait lui-même. Une fois le contenu parvenu au client que vous avez choisi, il est régi par la politique de confidentialité et les conditions propres à ce client ou à ce fournisseur d'IA, qu'il vous appartient de consulter. MCPEmails agit uniquement comme intermédiaire et ne conserve aucune copie du contenu.",
     "technicalTitle": "2.6 Données techniques et opérationnelles",
     "technicalP": "Nous collectons des données opérationnelles standard côté serveur, notamment les adresses IP (pour la limitation du débit et la prévention des abus), les horodatages des requêtes, les codes de statut HTTP et les types d'erreurs. Ces données sont conservées sous une forme agrégée et anonymisée et ne sont plus liées à des comptes individuels au-delà de 30 jours.",
@@ -98,7 +98,7 @@
       },
       {
         "category": "Journaux d'audit des appels d'outils MCP",
-        "period": "90 jours (Gratuit et Solo) ; 1 an (Team)",
+        "period": "7 jours (Gratuit) ; 90 jours (Solo) ; 1 an (Team)",
         "reason": "Audit de sécurité ; fonctionnalité du plan"
       },
       {
@@ -112,9 +112,14 @@
         "reason": "Prévention des abus ; disponibilité"
       },
       {
-        "category": "Contenu des e-mails",
+        "category": "Contenu des e-mails (lu ou envoyé immédiatement)",
         "period": "Non stocké ; conservation nulle",
         "reason": "Confidentialité dès la conception"
+      },
+      {
+        "category": "Messages d'envoi programmé",
+        "period": "Jusqu'à l'envoi ; trace conservée ensuite à des fins d'audit",
+        "reason": "Nécessaire pour remettre les messages que vous programmez"
       }
     ],
     "outro": "Lorsque vous supprimez votre compte, nous engageons la suppression de toutes les données personnelles dans un délai de 30 jours. Les statistiques d'utilisation agrégées et non personnelles dérivées de votre compte peuvent être conservées au-delà de cette période sous forme anonymisée."
@@ -138,7 +143,7 @@
     "stripeData": "E-mail de facturation, données de carte de paiement (stockées par Stripe, pas par nous)",
     "stripeLocation": "États-Unis (Stripe est certifié PCI-DSS)",
     "emailProvidersTitle": "5.2 Fournisseurs de messagerie (vos fournisseurs, pas les nôtres)",
-    "emailProvidersP": "Lorsque vous connectez un compte Gmail, Outlook ou Fastmail / IMAP, MCPEmails s'authentifie auprès de ce fournisseur à l'aide des identifiants que vous fournissez. La politique de confidentialité propre à votre fournisseur de messagerie régit les données conservées dans votre boîte aux lettres. MCPEmails accède à votre boîte aux lettres uniquement lorsque votre agent effectue un appel d'outil, et uniquement pour les messages ou dossiers spécifiques que l'outil demande.",
+    "emailProvidersP": "Lorsque vous connectez un compte Gmail, Fastmail ou un autre compte IMAP, MCPEmails s'authentifie auprès de ce fournisseur à l'aide des identifiants que vous fournissez. La politique de confidentialité propre à votre fournisseur de messagerie régit les données conservées dans votre boîte aux lettres. MCPEmails accède à votre boîte aux lettres uniquement lorsque votre agent effectue un appel d'outil, et uniquement pour les messages ou dossiers spécifiques que l'outil demande.",
     "noBrokersTitle": "5.3 Aucun courtier en données ni réseau publicitaire",
     "noBrokersP": "Nous ne partageons aucune donnée avec des courtiers en données, des réseaux publicitaires, des plateformes de réseaux sociaux ou des sociétés d'analyse qui établissent des profils d'utilisateurs.",
     "legalDisclosuresTitle": "5.4 Divulgations légales",

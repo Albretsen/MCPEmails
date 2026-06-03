@@ -8,6 +8,7 @@
     "how": "工作原理",
     "pricing": "价格",
     "docs": "文档",
+    "blog": "博客",
     "signIn": "登录",
     "getStarted": "免费开始使用"
   },
@@ -15,19 +16,19 @@
     "titleLine1": "为你的 AI",
     "titleLine2": "智能体配备一个",
     "titleAccent": "收件箱。",
-    "lead": "一次性连接 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱。把一个 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。OAuth 客户端只需一键即可连接，无需配置 API 密钥。你的智能体实时阅读、搜索和发送邮件，而我们从不存储你的邮件。",
+    "lead": "一次性连接 Gmail、iCloud、Fastmail 或任何 IMAP 收件箱。把一个 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。OAuth 客户端只需一键即可连接，无需配置 API 密钥。你的智能体实时阅读、搜索和发送邮件，而它所读取的邮件从不被存储。",
     "ctaPrimary": "连接你的收件箱",
     "ctaSecondary": "阅读文档",
     "metaUnlimited": "无限量，永久免费",
     "metaNoCard": "无需信用卡",
-    "metaNeverStored": "邮件从不存储",
+    "metaNeverStored": "邮件实时获取",
     "pipe": {
       "flow": "一次调用的流程",
       "agent": "AI 智能体",
       "agentSub": "claude.ai · Desktop · Cursor",
       "serverSub": "/api/mcp 端点",
       "provider": "你的服务商",
-      "providerSub": "Gmail · Outlook · IMAP",
+      "providerSub": "Gmail · iCloud · IMAP",
       "logCalls": "智能体调用",
       "logReturns": "返回收件箱 ID，无需在仪表盘里复制粘贴",
       "logFetches": "mcpemails 通过 Gmail API 获取（令牌已轮换）",
@@ -49,23 +50,23 @@
     "items": {
       "0": {
         "tag": "范围",
-        "h": "六个工具，覆盖全部能力。",
-        "p": "你的智能体所需的每一项邮件任务都能用六次调用完成：<code>inbox_list</code>、<code>email_list</code>、<code>email_read</code>、<code>email_search</code>、<code>email_send</code>、<code>email_reply</code>。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。这就是全部集成。"
+        "h": "六个核心工具，覆盖日常所需。",
+        "p": "六个核心调用覆盖日常工作——<code>inbox_list</code>、<code>email_list</code>、<code>email_read</code>、<code>email_search</code>、<code>email_send</code>、<code>email_reply</code>——更高级的工具（文件夹、草稿、定时发送）则随时备用。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。"
       },
       "1": {
         "tag": "存储",
         "h": "邮件实时获取，从不存储。",
-        "p": "每一次工具调用都会实时访问你的服务商：Gmail API、Microsoft Graph、Fastmail JMAP 或 IMAP。邮件正文、主题和附件会发送给智能体，并随即被丢弃。我们每个收件箱只持久化一样东西，即一个加密的令牌或应用专用密码，以便进行下一次调用。"
+        "p": "每一次工具调用都会实时访问你的服务商：Gmail API、Fastmail JMAP 或 IMAP。邮件正文、主题和附件会发送给智能体，并随即被丢弃。我们每个收件箱只持久化一样东西，即一个加密的令牌或应用专用密码，以便进行下一次调用。唯一的例外是你安排在稍后发送的邮件：我们会保留它直到发送时间，然后为你的历史记录留存一份记录。"
       },
       "2": {
         "tag": "发送",
         "h": "发送通过你自己的服务商进行。",
-        "p": "当你的智能体调用 <code>email_send</code> 或 <code>email_reply</code> 时，邮件会通过 Gmail API、Microsoft Graph 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。"
+        "p": "当你的智能体调用 <code>email_send</code> 或 <code>email_reply</code> 时，邮件会通过 Gmail API、Fastmail JMAP 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。"
       },
       "3": {
         "tag": "服务商",
-        "h": "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP 收件箱。",
-        "p": "Gmail、Outlook 和 Fastmail 使用 OAuth 2.0；iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-outlook、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。"
+        "h": "Gmail、iCloud、Fastmail 及任何 IMAP 收件箱。",
+        "p": "Gmail 使用 OAuth 2.0；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。"
       },
       "4": {
         "tag": "访问",
@@ -86,7 +87,7 @@
     "steps": {
       "0": {
         "h": "连接你的收件箱",
-        "p": "登录并点击<b>连接收件箱</b>。选择 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 或粘贴一个应用密码。凭据会被加密；邮件从不存储。"
+        "p": "登录并点击<b>连接收件箱</b>。选择 Gmail、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 或粘贴一个应用密码。凭据会被加密；你的智能体所读取的邮件从不被存储。"
       },
       "1": {
         "h": "粘贴 URL：OAuth 或 API 密钥",
@@ -101,13 +102,13 @@
       "0": "发现所有已连接的收件箱及其 ID。先调用此工具，无需从仪表盘复制粘贴 UUID。",
       "1": "列出最近的邮件，包含发件人、主题、日期和摘要，每次调用最多 100 封。",
       "2": "按 ID 获取单封邮件。返回解析后的纯文本和清理过的 HTML 正文，以及附件元数据。",
-      "3": "服务商原生搜索：Gmail 查询语法、Microsoft Graph、JMAP 或 IMAP SEARCH。最多返回 100 条匹配结果。",
-      "4": "通过已连接的账户发送新邮件。经由 Gmail API、Microsoft Graph、Fastmail JMAP 或 SMTP 发出：你的域名，你的送达率。",
-      "5": "在邮件会话内回复，并附带正确的 Message-ID 和 References 头。适用于 Gmail、Outlook、Fastmail 及任何 IMAP 收件箱。"
+      "3": "服务商原生搜索：Gmail 查询语法、Fastmail JMAP 或 IMAP SEARCH。最多返回 100 条匹配结果。",
+      "4": "通过已连接的账户发送新邮件。经由 Gmail API、Fastmail JMAP 或 SMTP 发出：你的域名，你的送达率。",
+      "5": "在邮件会话内回复，并附带正确的 Message-ID 和 References 头。适用于 Gmail、Fastmail 及任何 IMAP 收件箱。"
     }
   },
   "quote": {
-    "text": "我希望我的智能体能处理我的收件箱，但每一个方案都意味着把我的邮件副本交给第三方。于是我打造了一直渴望存在的那条管道：连接一次，你的邮件实时获取且从不存储，并且你可以一键切断任何智能体。这就是我敢用自己收件箱去信任的产品。",
+    "text": "我希望我的智能体能处理我的收件箱，但每一个方案都意味着把我的邮件副本交给第三方。于是我打造了一直渴望存在的那条管道：连接一次，你的收件箱实时获取且从不存储，并且你可以一键切断任何智能体。这就是我敢用自己收件箱去信任的产品。",
     "role": "创始人，mcpemails"
   },
   "pricing": {
@@ -123,8 +124,8 @@
         "features": [
           "无限量连接收件箱",
           "无限量 MCP 工具调用",
-          "无限量 API 密钥和团队成员",
-          "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP",
+          "无限量 API 密钥",
+          "Gmail、iCloud、Fastmail 及任何 IMAP",
           "60 次请求 / 分钟",
           "社区支持"
         ],
@@ -137,7 +138,7 @@
           "包含免费版的一切，无限量",
           "300 次请求 / 分钟（5 倍突发）",
           "完整使用分析（90 天历史）",
-          "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP",
+          "Gmail、iCloud、Fastmail 及任何 IMAP",
           "邮件支持"
         ],
         "cta": "获取 Solo"
@@ -156,10 +157,10 @@
         "cta": "获取 Team"
       }
     },
-    "footnote": "所有套餐：邮件实时获取且从不存储。OAuth 令牌静态加密。需要定制方案？<contact>联系我们</contact>。<comparison>查看完整功能对比 →</comparison>"
+    "footnote": "所有套餐：你的智能体所读取的邮件实时获取且从不存储。OAuth 令牌静态加密。需要定制方案？<contact>联系我们</contact>。<comparison>查看完整功能对比 →</comparison>"
   },
   "footer": {
-    "tagline": "一个托管的 MCP 服务器，让 AI 智能体能够读取并发送你收件箱中的邮件，且从不存储你的邮件。",
+    "tagline": "一个托管的 MCP 服务器，让 AI 智能体能够读取并发送你收件箱中的邮件，且从不存储它所读取的邮件。",
     "productHeading": "产品",
     "resourcesHeading": "资源",
     "companyHeading": "公司",
@@ -174,7 +175,7 @@
     "linkPrivacy": "隐私",
     "linkTerms": "条款",
     "copyright": "© 2026 mcpemails.",
-    "legal": "邮件从不存储 · 凭据静态加密",
+    "legal": "邮件实时获取，从不存储 · 凭据静态加密",
     "contactLabel": "联系",
     "mcpLabel": "MCP 端点",
     "copy": "复制",

@@ -18,14 +18,14 @@
   },
   "serviceDescription": {
     "title": "2. Descripción del Servicio",
-    "p1": "MCPEmails proporciona una plataforma de software como servicio que te permite conectar cuentas de correo (Gmail, Microsoft Outlook, Fastmail y cuentas IMAP compatibles) y exponer esas cuentas a agentes de IA mediante el Model Context Protocol (MCP). El Servicio incluye:",
+    "p1": "MCPEmails proporciona una plataforma de software como servicio que te permite conectar cuentas de correo (Gmail, Fastmail y cuentas IMAP compatibles) y exponer esas cuentas a agentes de IA mediante el Model Context Protocol (MCP). El Servicio incluye:",
     "list": [
       "Un panel web para gestionar cuentas de correo conectadas, claves de API y monitoreo de uso.",
       "Un endpoint HTTP compatible con MCP contra el cual los agentes de IA se autentican usando claves de API que generas.",
       "Integración con OAuth con proveedores de correo compatibles para obtener y gestionar el acceso delegado a tus buzones.",
       "Un registro de uso y auditoría que muestra qué herramientas han llamado tus agentes y cuándo."
     ],
-    "p2": "MCPEmails actúa como un puente de protocolo. No almacenamos el contenido del correo en nuestros servidores; lo recuperamos en vivo desde tu proveedor de correo en el momento en que un agente lo solicita y lo devolvemos en la misma respuesta HTTP. Consulta nuestra <privacy>Política de privacidad</privacy> para una descripción completa de qué datos sí conservamos y cuáles no.",
+    "p2": "MCPEmails actúa como un puente de protocolo. No almacenamos en nuestros servidores el contenido del correo que lee tu agente; lo recuperamos en vivo desde tu proveedor de correo en el momento en que un agente lo solicita y lo devolvemos en la misma respuesta HTTP. La excepción es un mensaje que programas para enviar más tarde, que almacenamos solo hasta que se entrega. Consulta nuestra <privacy>Política de privacidad</privacy> para una descripción completa de qué datos sí conservamos y cuáles no.",
     "p2b": "El contenido del correo solo se entrega al cliente MCP o agente de IA que has conectado y eliges utilizar. Una vez que el contenido llega a ese cliente, se rige por la política de privacidad y los términos propios de ese cliente o proveedor de IA, que eres responsable de revisar. MCPEmails no selecciona un proveedor de IA en tu nombre y no conserva ninguna copia del contenido de tu correo.",
     "p3": "Nos reservamos el derecho de modificar, suspender o discontinuar cualquier parte del Servicio en cualquier momento. Cuando sea posible, daremos al menos 30 días de aviso de cambios materiales a los usuarios de pago."
   },
@@ -98,7 +98,7 @@
     "h71": "7.1 Servicio proporcionado \"tal cual\"",
     "p71": "El Servicio se proporciona \"tal cual\" y \"según disponibilidad\" sin garantías de ningún tipo, ya sean expresas o implícitas, incluidas (entre otras) las garantías implícitas de comerciabilidad, idoneidad para un fin particular, no infracción y funcionamiento ininterrumpido o sin errores. No garantizamos que el Servicio cumplirá tus requisitos, que la entrega de correo será confiable o completa, ni que los defectos serán corregidos.",
     "h72": "7.2 Servicios de terceros",
-    "p72": "El Servicio se integra con proveedores de correo externos (Google Gmail, Microsoft Outlook, Fastmail, servidores IMAP). No somos responsables de la disponibilidad, confiabilidad o rendimiento de esos servicios, de los cambios en sus API o políticas de OAuth, ni de ninguna pérdida de acceso al correo resultante de las acciones de un proveedor externo.",
+    "p72": "El Servicio se integra con proveedores de correo externos (Google Gmail, Fastmail, servidores IMAP). No somos responsables de la disponibilidad, confiabilidad o rendimiento de esos servicios, de los cambios en sus API o políticas de OAuth, ni de ninguna pérdida de acceso al correo resultante de las acciones de un proveedor externo.",
     "h73": "7.3 Acciones de los agentes de IA",
     "p73": "MCPEmails es un puente de protocolo. Transmitimos instrucciones de los agentes de IA a tus proveedores de correo y devolvemos resultados. No somos responsables del contenido de los correos enviados, reenviados o respondidos por agentes de IA que actúan bajo tus claves de API, ni de ninguna consecuencia de las acciones autónomas de los agentes, incluida la eliminación accidental de correo, los mensajes mal dirigidos o la fuga de datos resultante de errores de lógica del agente.",
     "h74": "7.4 Limitación de responsabilidad",

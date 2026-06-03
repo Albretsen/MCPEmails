@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Pricing",
-    "description": "Every plan, including Free, has unlimited inboxes, calls, API keys, and team members. Paid plans add higher burst limits, team features, and support. Email is never stored, on any plan."
+    "description": "Every plan, including Free, has unlimited inboxes, calls, and API keys. Paid plans add higher burst limits, team features, and support. The mail your agent reads is never stored, on any plan."
   },
   "hero": {
     "eyebrow": "Pricing",
     "titleLine1": "Unlimited, free.",
     "titleLine2": "Upgrade for more power.",
-    "lead": "Every plan, including Free, has unlimited inboxes, calls, API keys, and team members. Paid plans add higher burst limits, team features, and support. Email is never stored, on any plan."
+    "lead": "Every plan, including Free, has unlimited inboxes, calls, and API keys. Paid plans add higher burst limits, team features, and support. The mail your agent reads is never stored, on any plan."
   },
   "billing": {
     "monthly": "Monthly",
@@ -27,8 +27,8 @@
       "features": [
         "Unlimited connected inboxes",
         "Unlimited MCP tool calls",
-        "Unlimited API keys & team members",
-        "Gmail, Outlook, iCloud, Fastmail & any IMAP",
+        "Unlimited API keys",
+        "Gmail, iCloud, Fastmail & any IMAP",
         "60 requests / minute",
         "Community support"
       ]
@@ -41,7 +41,7 @@
         "Everything in Free, unlimited",
         "300 requests / minute (5× burst)",
         "Full usage analytics (90-day history)",
-        "Gmail, Outlook, iCloud, Fastmail & any IMAP",
+        "Gmail, iCloud, Fastmail & any IMAP",
         "Email support"
       ]
     },
@@ -61,7 +61,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "All plans include: email never stored · credentials encrypted at rest · EU & US hosting",
+    "all": "All plans include: email fetched live, never stored · credentials encrypted at rest · EU & US hosting",
     "custom": "Need something custom? <contact>Contact us</contact>."
   },
   "comparison": {
@@ -86,8 +86,7 @@
         "label": "Email providers",
         "rows": {
           "gmail": "Gmail (OAuth)",
-          "outlook": "Outlook / Microsoft 365 (OAuth)",
-          "fastmail": "Fastmail (OAuth + app password)",
+          "fastmail": "Fastmail (app password)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (app password)",
           "imap": "Any IMAP / SMTP mailbox"
         }
@@ -108,7 +107,7 @@
       "privacy": {
         "label": "Privacy & security",
         "rows": {
-          "neverStored": "Email never stored",
+          "neverStored": "Email fetched live, never stored",
           "encrypted": "Credentials encrypted at rest",
           "soc2": "SOC 2 Type II report on request"
         }
@@ -124,6 +123,7 @@
     },
     "values": {
       "unlimited": "Unlimited",
+      "ownerOnly": "Just you",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
       "burstPro": "1,000 / min",
@@ -138,7 +138,7 @@
     "items": [
       {
         "q": "Is there really no usage limit?",
-        "a": "Correct. Connected inboxes, MCP tool calls, API keys, and team members are unlimited on every plan, including Free. The only limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) to protect the platform from abuse. Paid plans add higher burst throughput, team features, and support, never more usage."
+        "a": "Correct. Connected inboxes, MCP tool calls, and API keys are unlimited on every plan, including Free; team members are available on paid plans (Free is single-user). The only limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) to protect the platform from abuse. Paid plans add higher burst throughput, team features, and support, never more usage."
       },
       {
         "q": "What counts as an MCP call?",
@@ -146,7 +146,7 @@
       },
       {
         "q": "Is my email content stored anywhere?",
-        "a": "No. Email bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent. Nothing is persisted between calls. The only data we store is an encrypted OAuth token or app password so we can authenticate future requests."
+        "a": "The email your agent reads is never stored: bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent, with nothing persisted between calls. We store your encrypted OAuth token or app password so we can authenticate future requests. The one exception is a message you ask us to schedule for later — we store it until it is sent, and keep a record afterwards for your history."
       },
       {
         "q": "What's the difference between Solo and Team?",
@@ -162,7 +162,7 @@
       },
       {
         "q": "What email providers are supported?",
-        "a": "Gmail and Microsoft 365 / Outlook use OAuth 2.0. Fastmail supports both OAuth and app passwords. iCloud, Yahoo, Zoho, and Yandex connect with an app-specific password, and any other mailbox works through the generic IMAP / SMTP connector."
+        "a": "Gmail uses OAuth 2.0. Fastmail connects with an app password. iCloud, Yahoo, Zoho, and Yandex connect with an app-specific password, and any other mailbox works through the generic IMAP / SMTP connector."
       },
       {
         "q": "Is there a refund policy?",

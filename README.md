@@ -1,2 +1,278 @@
 # MCPEmails
-Send and receive emails from any agent.
+
+**Give your AI agent an inbox.** A hosted [Model Context Protocol](https://modelcontextprotocol.io) server that lets Claude, Cursor, or any MCP‑compatible client read, search, send, organize, and schedule email through your existing mailboxes — without ever storing your mail.
+
+> Connect a mailbox once, paste one URL into your agent, and it can work your inbox live. Email is fetched on demand and never retained; credentials are encrypted at rest and decrypted only at call time inside an isolated edge function.
+
+🔗 **[mcpemails.com](https://mcpemails.com)** · 📚 **[Docs](https://mcpemails.com/docs)** · 💳 **[Pricing](https://mcpemails.com/pricing)**
+
+---
+
+## Contents
+
+- [How it works](#how-it-works)
+- [Quick start (connecting an agent)](#quick-start-connecting-an-agent)
+- [Capabilities](#capabilities)
+- [MCP tools](#mcp-tools)
+- [OAuth scopes](#oauth-scopes)
+- [Supported providers](#supported-providers)
+- [Pricing](#pricing)
+- [Architecture](#architecture)
+- [Repository layout](#repository-layout)
+- [Local development](#local-development)
+- [Environment variables](#environment-variables)
+- [Database & migrations](#database--migrations)
+- [Deployment](#deployment)
+- [Internationalization](#internationalization)
+- [Security model](#security-model)
+
+---
+
+## How it works
+
+1. **Connect a mailbox.** Sign in at [mcpemails.com](https://mcpemails.com) and connect Gmail (one‑click OAuth) or any IMAP/SMTP account (app password). Credentials are encrypted with AES‑256‑GCM before they touch the database.
+2. **Get access.** OAuth‑capable clients (claude.ai, Claude Desktop, Cursor) connect in one click via OAuth 2.0 + PKCE. Everything else uses a scoped API key (`mcpe_…`).
+3. **Point your client at the server.** The MCP endpoint is a single URL:
+   ```
+   https://mcpemails.com/api/mcp
+   ```
+4. **Your agent works the inbox.** It calls tools like `inbox_list`, `email_search`, `email_send`, and `schedule_create`. Each request fetches live from your provider — nothing is mirrored or cached server‑side.
+
+Permissions are scoped per key, so you can hand an agent `read:email` only, or grant it send and folder management without ever exposing delete.
+
+## Quick start (connecting an agent)
+
+**Claude Desktop / Cursor (OAuth):** add a remote MCP server pointing at `https://mcpemails.com/api/mcp` and approve the consent screen. Pick the scopes the agent should have.
+
+**API key (any MCP client):** create a key in the dashboard, choose its scopes and (optionally) restrict it to specific inboxes, then send it as a bearer token:
+
+```jsonc
+// Example MCP client config
+{
+  "mcpServers": {
+    "mcpemails": {
+      "url": "https://mcpemails.com/api/mcp",
+      "headers": { "Authorization": "Bearer mcpe_your_key_here" }
+    }
+  }
+}
+```
+
+The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport). Start every session with `inbox_list` — it returns the inboxes the key can reach and their per‑provider capabilities.
+
+## Capabilities
+
+- **Live, never stored** — email is read straight from your provider on each call; no message bodies are persisted.
+- **Multi‑provider** — Gmail via OAuth, plus any IMAP/SMTP mailbox (Fastmail, iCloud, Yahoo, Zoho, Yandex, self‑hosted…) via app password.
+- **No relay** — outbound mail is sent through *your* provider's SMTP/API, from your real address.
+- **Granular scopes** — eight permission scopes, grantable independently per API key and per inbox.
+- **Batch & search‑and‑act** — read, move, delete, or flag up to hundreds of messages in one call, including "search then move/delete" combinators.
+- **Drafts & scheduling** — compose drafts and queue messages for future send (server‑side dispatch).
+- **Provider‑agnostic search** — Gmail syntax, IMAP `SEARCH`, and JMAP are normalized behind one `email_search` interface.
+- **Team‑ready** — workspaces, members, roles, SSO, and an audit log on the Team plan.
+
+## MCP tools
+
+28 tools, grouped by the scope that grants them:
+
+| Scope | Tools |
+| --- | --- |
+| `read:email` | `inbox_list`, `email_list`, `email_read`, `email_read_batch`, `email_search`, `folder_list` |
+| `send:email` | `email_send`, `email_reply`, `email_forward`, `email_archive`, `email_flag` |
+| `manage:folders` | `folder_create`, `folder_rename`, `folder_delete`, `email_move`, `email_move_batch`, `email_search_and_move` |
+| `delete:email` | `email_delete`, `email_delete_batch`, `email_search_and_delete` |
+| `manage:drafts` | `draft_list`, `draft_create`, `draft_update`, `draft_send` |
+| `manage:contacts` | `contact_search` |
+| `schedule:email` | `schedule_create`, `schedule_list`, `schedule_cancel` |
+
+Notes:
+- Tools accept either an explicit `inbox_id` (UUID) or an `inbox` email address; single‑inbox keys auto‑resolve the target.
+- Batch tools cap at 50 (`email_read_batch`) to 500 (move/delete/flag) messages per call.
+- `contact_search` scans recent mail live — there is no stored address book.
+
+## OAuth scopes
+
+| Scope | Grants |
+| --- | --- |
+| `read:email` | List inboxes & folders; list, read, and search messages |
+| `search:email` | Narrower alternative that grants only `email_search` |
+| `send:email` | Send, reply, forward, flag, archive |
+| `manage:folders` | Create/rename/delete folders; move messages |
+| `delete:email` | Trash or permanently expunge messages |
+| `manage:drafts` | Create, edit, and send drafts |
+| `manage:contacts` | Live contact lookup from recent mail |
+| `schedule:email` | Queue messages for future delivery |
+
+## Supported providers
+
+| Provider | Connect via | Read/Search | Send | Folders | Permanent delete | Drafts |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Gmail / Google Workspace** | OAuth 2.0 | ✅ | ✅ | Labels | Trash only | ✅ |
+| **Fastmail** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **iCloud, Yahoo, Zoho, Yandex** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Any IMAP/SMTP mailbox** | App password | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Outlook / Microsoft 365** | OAuth 2.0 | 🚧 built, gated pending verification | | | | |
+
+> Outlook OAuth is implemented end‑to‑end but currently gated behind Microsoft publisher verification; it is hidden from the connect UI until it ships.
+
+## Pricing
+
+The product is **unlimited and free** for individuals — unlimited inboxes, MCP tool calls, and API keys on every tier. The paid tiers monetize team collaboration, higher fair‑use rate limits, longer analytics retention, and support.
+
+| | **Free** | **Solo** | **Team** |
+| --- | --- | --- | --- |
+| Price | $0 | $12/mo · $120/yr | $49/mo · $490/yr |
+| Inboxes / tool calls / API keys | Unlimited | Unlimited | Unlimited |
+| Members | 1 (owner only) | Unlimited | Unlimited |
+| Fair‑use rate limit | 60 req/min | 300 req/min | 1,000 req/min |
+| Analytics retention | 7 days | 90 days | 1 year |
+| Team roles & workspaces | — | — | ✅ |
+| SSO (SAML/OIDC) + audit log | — | — | ✅ |
+| Support | Community | Email | Priority |
+
+Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Inviting members requires a paid plan. The "Team" tier carries the internal id `pro`. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Agent["MCP client<br/>(Claude, Cursor, …)"] -->|"JSON-RPC / OAuth or API key"| Web
+
+    subgraph Vercel["Vercel — Next.js 16"]
+      Web["/api/mcp route<br/>+ marketing site + dashboard"]
+    end
+
+    subgraph Supabase
+      Edge["mcp-server<br/>edge function (Deno)"]
+      DB[("Postgres<br/>RLS + encrypted creds")]
+      Cron["token-refresh<br/>edge functions"]
+    end
+
+    Web -->|proxies| Edge
+    Edge -->|decrypt creds, fetch live| Providers["Email providers<br/>Gmail API · IMAP/SMTP"]
+    Edge --> DB
+    Cron --> DB
+    Web --> Stripe[("Stripe<br/>billing")]
+```
+
+- **`/api/mcp`** is a thin Next.js route handler that proxies to the Supabase edge function `mcp-server` — the real MCP implementation, where credentials are decrypted and provider calls are made.
+- **The Postgres database** stores workspaces, members, inboxes (encrypted tokens/passwords), hashed API keys, OAuth clients, scheduled sends, and an activity log — all guarded by Row‑Level Security.
+- **Cron edge functions** refresh Gmail/Outlook OAuth tokens before expiry.
+
+**Stack:** Next.js 16 (App Router) · React 19 · next‑intl 4 · Supabase (Auth, Postgres, Edge Functions) · Stripe · Resend · TypeScript. Email parsing/sanitization via `mailparser`, `jsdom`, and `isomorphic-dompurify`.
+
+## Repository layout
+
+```
+.
+├── apps/
+│   └── web/                     # Next.js 16 app (marketing, dashboard, /api/mcp proxy)
+│       ├── app/                 # App Router routes ([locale], dashboard, api, auth)
+│       ├── components/          # marketing/ + dashboard/ React components
+│       ├── messages/            # next-intl translations (en, nb, es, fr, zh)
+│       ├── src/lib/             # stripe/, supabase/, blog/, crypto helpers
+│       └── proxy.ts             # middleware: i18n + Supabase session + CDN cache
+├── supabase/
+│   ├── functions/
+│   │   ├── mcp-server/          # the MCP server (tools, auth, scopes)
+│   │   ├── gmail-token-refresh/
+│   │   └── outlook-token-refresh/
+│   └── migrations/              # SQL migrations (schema + RLS)
+└── package.json                 # npm workspaces (apps/*)
+```
+
+## Local development
+
+**Prerequisites:** Node.js 20+, npm, and the [Supabase CLI](https://supabase.com/docs/guides/cli) (for migrations and edge functions).
+
+```bash
+# 1. Install (npm workspaces — run from the repo root)
+npm install
+
+# 2. Configure environment
+cp .env.example apps/web/.env.local
+#   then fill in the values (see below) and generate the two secrets:
+openssl rand -hex 32   # ENCRYPTION_KEY
+openssl rand -hex 32   # CSRF_SECRET
+
+# 3. Run the web app (http://localhost:3000)
+npm run dev
+
+# 4. Production build
+npm run build
+```
+
+> `next.config.js` validates required env vars at build/start and rejects weak `ENCRYPTION_KEY` values, so a misconfigured environment fails fast instead of at runtime.
+
+## Environment variables
+
+Copy [`.env.example`](.env.example) and fill in real values. Required in every environment:
+
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase client (public) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server‑side admin key (bypasses RLS) — **secret** |
+| `NEXT_PUBLIC_APP_URL` | Canonical base URL; drives OAuth redirect URIs |
+| `ENCRYPTION_KEY` | 64‑hex AES‑256‑GCM key for credentials at rest — **secret** |
+| `CSRF_SECRET` | 64‑hex HMAC key for CSRF tokens (distinct from above) — **secret** |
+
+Feature‑dependent:
+
+| Variable(s) | Needed for |
+| --- | --- |
+| `GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET` | Gmail OAuth (`gmail.readonly`, `gmail.send`, `gmail.modify`) |
+| `OUTLOOK_CLIENT_ID` / `OUTLOOK_CLIENT_SECRET` / `OUTLOOK_TENANT_ID` | Outlook OAuth (`Mail.Read`, `Mail.Send`, `Mail.ReadWrite`, `offline_access`) |
+| `NEXT_PUBLIC_OAUTH_VERIFICATION_PENDING` | Shows the unverified‑app warning until Google/Microsoft verification completes |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Billing |
+| `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`pro` = Team) |
+
+> Fastmail and other IMAP providers connect via app password and need no OAuth credentials.
+
+## Database & migrations
+
+Schema and Row‑Level Security policies live in [`supabase/migrations/`](supabase/migrations/). Core tables: `workspaces`, `workspace_members`, `inboxes` (encrypted credentials, soft‑deleted), `api_keys` (hashed, scoped, inbox‑restricted), `oauth_clients`, `scheduled_sends`, `workspace_invites`, and a month‑partitioned `activity_log`.
+
+```bash
+# Apply migrations to the linked project
+npx supabase db push
+
+# Generate TypeScript types from the live schema
+npx supabase gen types typescript --linked > apps/web/src/types/database.ts
+```
+
+> The Supabase CLI is the source of truth for DB changes in this project.
+
+## Deployment
+
+**Web app → Vercel** (project `mcp-emails-web`):
+
+```bash
+vercel --prod --yes
+```
+
+Security headers and function timeouts are defined in `vercel.json`. The marketing routes are served with a CDN‑cacheable `Cache-Control` (set in `proxy.ts`) so crawlers and repeat visitors hit the edge cache; the dashboard, auth, and API routes stay `no-store`.
+
+**MCP server → Supabase edge function:**
+
+```bash
+npx supabase functions deploy mcp-server --project-ref <your-project-ref> --no-verify-jwt
+```
+
+## Internationalization
+
+Built with **next‑intl** (`localePrefix: 'as-needed'`, `localeDetection: false` for stable canonical URLs). English is served at `/`; other locales carry a prefix (`/nb`, `/es`, `/fr`, `/zh`). Translations live under [`apps/web/messages/`](apps/web/messages/).
+
+Supported locales: **English, Norwegian Bokmål, Spanish, French, Chinese (Simplified)**.
+
+## Security model
+
+- **Credentials encrypted at rest** with AES‑256‑GCM; decrypted only inside the edge function at call time.
+- **No message storage** — email bodies are fetched live and never persisted.
+- **API keys are hashed** (only a prefix is stored for display) and scoped per permission and per inbox, with optional expiry.
+- **OAuth 2.0 + PKCE** for client authorization; **Dynamic Client Registration** (RFC 7591) for MCP clients.
+- **Row‑Level Security** isolates every workspace's data at the database layer.
+- **Strict CSP**, HSTS, `X-Frame-Options: DENY`, and related headers on every response.
+
+---
+
+<sub>Send and receive email from any agent. © MCPEmails.</sub>

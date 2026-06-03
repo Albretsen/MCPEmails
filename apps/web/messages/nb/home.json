@@ -8,6 +8,7 @@
     "how": "Slik fungerer det",
     "pricing": "Priser",
     "docs": "Dokumentasjon",
+    "blog": "Blogg",
     "signIn": "Logg inn",
     "getStarted": "Kom i gang gratis"
   },
@@ -15,19 +16,19 @@
     "titleLine1": "Gi AI-agenten",
     "titleLine2": "din en",
     "titleAccent": "innboks.",
-    "lead": "Koble til Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks én gang. Lim inn én MCP-endepunkt-URL i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent. OAuth-klienter kobler til med ett klikk, uten oppsett av API-nøkkel. Agenten din leser, søker og sender e-post i sanntid, og vi lagrer aldri e-posten din.",
+    "lead": "Koble til Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks én gang. Lim inn én MCP-endepunkt-URL i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent. OAuth-klienter kobler til med ett klikk, uten oppsett av API-nøkkel. Agenten din leser, søker og sender e-post i sanntid, og e-posten den leser lagres aldri.",
     "ctaPrimary": "Koble til innboksen din",
     "ctaSecondary": "Les dokumentasjonen",
     "metaUnlimited": "Ubegrenset, gratis for alltid",
     "metaNoCard": "Ingen kort kreves",
-    "metaNeverStored": "E-post lagres aldri",
+    "metaNeverStored": "E-post hentes i sanntid",
     "pipe": {
       "flow": "Slik flyter et kall",
       "agent": "AI-agent",
       "agentSub": "claude.ai · Desktop · Cursor",
       "serverSub": "/api/mcp-endepunkt",
       "provider": "Din leverandør",
-      "providerSub": "Gmail · Outlook · IMAP",
+      "providerSub": "Gmail · iCloud · IMAP",
       "logCalls": "agenten kaller",
       "logReturns": "returnerer innboks-ID-er, ingen kopiering fra dashbordet",
       "logFetches": "mcpemails henter via Gmail API (token rotert)",
@@ -49,23 +50,23 @@
     "items": {
       "0": {
         "tag": "Omfang",
-        "h": "Seks verktøy. Hele flaten.",
-        "p": "Alle e-postoppgaver agenten din trenger får plass i seks kall: <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code>. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent. Det er hele integrasjonen."
+        "h": "Seks kjerneverktøy. Det essensielle, dekket.",
+        "p": "De seks kjernekallene dekker det daglige arbeidet — <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code> — og mer avanserte verktøy (mapper, utkast, planlegging) er der når du trenger dem. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
       },
       "1": {
         "tag": "Lagring",
         "h": "E-post hentes i sanntid. Lagres aldri.",
-        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Microsoft Graph, Fastmail JMAP eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall."
+        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Fastmail JMAP eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Det eneste unntaket er en melding du planlegger å sende senere: vi oppbevarer den frem til sendetidspunktet, og beholder deretter en oppføring for historikken din."
       },
       "2": {
         "tag": "Sending",
         "h": "Sending går gjennom leverandøren din.",
-        "p": "Når agenten din kaller <code>email_send</code> eller <code>email_reply</code>, sendes meldingen via Gmail API, Microsoft Graph eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
+        "p": "Når agenten din kaller <code>email_send</code> eller <code>email_reply</code>, sendes meldingen via Gmail API, Fastmail JMAP eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
       },
       "3": {
         "tag": "Leverandører",
-        "h": "Gmail, Outlook, iCloud, Fastmail og alle IMAP-innbokser.",
-        "p": "OAuth 2.0 for Gmail, Outlook og Fastmail; app-spesifikke passord for iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-outlook, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå."
+        "h": "Gmail, iCloud, Fastmail og alle IMAP-innbokser.",
+        "p": "OAuth 2.0 for Gmail; app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå."
       },
       "4": {
         "tag": "Tilgang",
@@ -86,7 +87,7 @@
     "steps": {
       "0": {
         "h": "Koble til innboksen din",
-        "p": "Logg inn og klikk <b>Koble til innboks</b>. Velg Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth eller lim inn et app-passord. Legitimasjon krypteres; e-post lagres aldri."
+        "p": "Logg inn og klikk <b>Koble til innboks</b>. Velg Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth eller lim inn et app-passord. Legitimasjon krypteres; e-posten agenten din leser lagres aldri."
       },
       "1": {
         "h": "Lim inn URL-en: OAuth eller API-nøkkel",
@@ -101,13 +102,13 @@
       "0": "Oppdag alle tilkoblede innbokser og ID-ene deres. Kall dette først, ingen kopiering av UUID fra dashbordet.",
       "1": "List opp nylige meldinger med avsender, emne, dato og utdrag, opptil 100 per kall.",
       "2": "Hent én enkelt melding etter ID. Returnerer ren tekst og renset HTML-innhold, pluss metadata om vedlegg.",
-      "3": "Leverandørnativt søk: Gmail-spørresyntaks, Microsoft Graph, JMAP eller IMAP SEARCH. Returnerer opptil 100 treff.",
-      "4": "Send en ny melding via den tilkoblede kontoen. Sendes gjennom Gmail API, Microsoft Graph, Fastmail JMAP eller SMTP: ditt domene, din leveringsdyktighet.",
-      "5": "Svar i tråden med riktige Message-ID- og References-hoder. Fungerer på tvers av Gmail, Outlook, Fastmail og alle IMAP-innbokser."
+      "3": "Leverandørnativt søk: Gmail-spørresyntaks, Fastmail JMAP eller IMAP SEARCH. Returnerer opptil 100 treff.",
+      "4": "Send en ny melding via den tilkoblede kontoen. Sendes gjennom Gmail API, Fastmail JMAP eller SMTP: ditt domene, din leveringsdyktighet.",
+      "5": "Svar i tråden med riktige Message-ID- og References-hoder. Fungerer på tvers av Gmail, Fastmail og alle IMAP-innbokser."
     }
   },
   "quote": {
-    "text": "Jeg ville at agentene mine skulle jobbe i innboksen min, men alle alternativer betydde å gi en tredjepart en kopi av e-posten min. Så jeg bygde røret jeg skulle ønske fantes: koble til én gang, e-posten din hentes i sanntid og lagres aldri, og du kan kutte av enhver agent med ett klikk. Det er produktet jeg stoler på med min egen innboks.",
+    "text": "Jeg ville at agentene mine skulle jobbe i innboksen min, men alle alternativer betydde å gi en tredjepart en kopi av e-posten min. Så jeg bygde røret jeg skulle ønske fantes: koble til én gang, innboksen din hentes i sanntid og lagres aldri, og du kan kutte av enhver agent med ett klikk. Det er produktet jeg stoler på med min egen innboks.",
     "role": "grunnlegger, mcpemails"
   },
   "pricing": {
@@ -123,8 +124,8 @@
         "features": [
           "Ubegrenset antall tilkoblede innbokser",
           "Ubegrenset antall MCP-verktøykall",
-          "Ubegrenset antall API-nøkler og teammedlemmer",
-          "Gmail, Outlook, iCloud, Fastmail og alle IMAP",
+          "Ubegrenset antall API-nøkler",
+          "Gmail, iCloud, Fastmail og alle IMAP",
           "60 forespørsler / minutt",
           "Fellesskapsstøtte"
         ],
@@ -137,7 +138,7 @@
           "Alt i Gratis, ubegrenset",
           "300 forespørsler / minutt (5× burst)",
           "Full bruksanalyse (90 dagers historikk)",
-          "Gmail, Outlook, iCloud, Fastmail og alle IMAP",
+          "Gmail, iCloud, Fastmail og alle IMAP",
           "E-poststøtte"
         ],
         "cta": "Velg Solo"
@@ -156,10 +157,10 @@
         "cta": "Velg Team"
       }
     },
-    "footnote": "Alle planer: e-post hentes i sanntid og lagres aldri. OAuth-tokens krypteres ved lagring. Trenger du noe tilpasset? <contact>Kontakt oss</contact>. <comparison>Se full funksjonssammenligning →</comparison>"
+    "footnote": "Alle planer: e-posten agenten din leser hentes i sanntid og lagres aldri. OAuth-tokens krypteres ved lagring. Trenger du noe tilpasset? <contact>Kontakt oss</contact>. <comparison>Se full funksjonssammenligning →</comparison>"
   },
   "footer": {
-    "tagline": "En vertsbasert MCP-server som gir AI-agenter tilgang til å lese og sende fra innboksen din, uten å noen gang lagre e-posten din.",
+    "tagline": "En vertsbasert MCP-server som gir AI-agenter tilgang til å lese og sende fra innboksen din, uten å noen gang lagre e-posten den leser.",
     "productHeading": "Produkt",
     "resourcesHeading": "Ressurser",
     "companyHeading": "Selskap",
@@ -174,7 +175,7 @@
     "linkPrivacy": "Personvern",
     "linkTerms": "Vilkår",
     "copyright": "© 2026 mcpemails.",
-    "legal": "E-post lagres aldri · Legitimasjon kryptert ved lagring",
+    "legal": "E-post hentes i sanntid, lagres aldri · Legitimasjon kryptert ved lagring",
     "contactLabel": "Kontakt",
     "mcpLabel": "MCP-endepunkt",
     "copy": "Kopier",

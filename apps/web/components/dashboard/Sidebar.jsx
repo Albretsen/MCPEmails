@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Icon, Btn, Avatar } from '../Primitives';
+import { Icon, Avatar } from '../Primitives';
 import { createClient } from '@/lib/supabase/client';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
 import { sectionToPath } from './routes';
@@ -344,7 +344,6 @@ export function Topbar({ route, workspace, mcpUrl, onMenuOpen, onOpenSearch, sid
         <span className="search-placeholder">{tr('sidebar.searchPlaceholder')}</span>
         <span className="kbd">⌘K</span>
       </button>
-      <Btn variant="ghost" size="sm" icon="bell">{""}</Btn>
     </header>
   );
 }

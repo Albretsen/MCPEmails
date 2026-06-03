@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Tarifs",
-    "description": "Chaque formule, y compris Gratuit, offre des boîtes, des appels, des clés API et des membres d'équipe illimités. Les formules payantes ajoutent des limites de pointe plus élevées, des fonctionnalités d'équipe et du support. Les e-mails ne sont jamais stockés, quelle que soit la formule."
+    "description": "Chaque formule, y compris Gratuit, offre des boîtes, des appels et des clés API illimités. Les formules payantes ajoutent des limites de pointe plus élevées, des fonctionnalités d'équipe et du support. Le courrier que votre agent lit n'est jamais stocké, quelle que soit la formule."
   },
   "hero": {
     "eyebrow": "Tarifs",
     "titleLine1": "Illimité, gratuit.",
     "titleLine2": "Passez à la vitesse supérieure.",
-    "lead": "Chaque formule, y compris Gratuit, offre des boîtes, des appels, des clés API et des membres d'équipe illimités. Les formules payantes ajoutent des limites de pointe plus élevées, des fonctionnalités d'équipe et du support. Les e-mails ne sont jamais stockés, quelle que soit la formule."
+    "lead": "Chaque formule, y compris Gratuit, offre des boîtes, des appels et des clés API illimités. Les formules payantes ajoutent des limites de pointe plus élevées, des fonctionnalités d'équipe et du support. Le courrier que votre agent lit n'est jamais stocké, quelle que soit la formule."
   },
   "billing": {
     "monthly": "Mensuel",
@@ -27,8 +27,8 @@
       "features": [
         "Boîtes connectées illimitées",
         "Appels d'outils MCP illimités",
-        "Clés API et membres d'équipe illimités",
-        "Gmail, Outlook, iCloud, Fastmail et toute boîte IMAP",
+        "Clés API illimitées",
+        "Gmail, iCloud, Fastmail et toute boîte IMAP",
         "60 requêtes / minute",
         "Support communautaire"
       ]
@@ -41,7 +41,7 @@
         "Tout ce qui est dans Gratuit, en illimité",
         "300 requêtes / minute (5× en pointe)",
         "Analytique d'usage complète (historique de 90 jours)",
-        "Gmail, Outlook, iCloud, Fastmail et toute boîte IMAP",
+        "Gmail, iCloud, Fastmail et toute boîte IMAP",
         "Support par e-mail"
       ]
     },
@@ -61,7 +61,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "Toutes les formules incluent : e-mails jamais stockés · identifiants chiffrés au repos · hébergement UE et US",
+    "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · hébergement UE et US",
     "custom": "Besoin de quelque chose de sur mesure ? <contact>Contactez-nous</contact>."
   },
   "comparison": {
@@ -86,8 +86,7 @@
         "label": "Fournisseurs d'e-mail",
         "rows": {
           "gmail": "Gmail (OAuth)",
-          "outlook": "Outlook / Microsoft 365 (OAuth)",
-          "fastmail": "Fastmail (OAuth + mot de passe d'application)",
+          "fastmail": "Fastmail (mot de passe d'application)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (mot de passe d'application)",
           "imap": "Toute boîte IMAP / SMTP"
         }
@@ -108,7 +107,7 @@
       "privacy": {
         "label": "Confidentialité et sécurité",
         "rows": {
-          "neverStored": "E-mails jamais stockés",
+          "neverStored": "E-mails récupérés en direct, jamais stockés",
           "encrypted": "Identifiants chiffrés au repos",
           "soc2": "Rapport SOC 2 Type II sur demande"
         }
@@ -124,6 +123,7 @@
     },
     "values": {
       "unlimited": "Illimité",
+      "ownerOnly": "Vous seul",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
       "burstPro": "1 000 / min",
@@ -138,7 +138,7 @@
     "items": [
       {
         "q": "N'y a-t-il vraiment aucune limite d'usage ?",
-        "a": "Exact. Les boîtes connectées, les appels d'outils MCP, les clés API et les membres d'équipe sont illimités sur chaque formule, y compris Gratuit. La seule limite est un plafond d'usage équitable par minute (60/min sur Gratuit, 300/min sur Solo, 1 000/min sur Team) afin de protéger la plateforme des abus. Les formules payantes ajoutent un débit de pointe plus élevé, des fonctionnalités d'équipe et du support, jamais plus d'usage."
+        "a": "Exact. Les boîtes connectées, les appels d'outils MCP, les clés API sont illimités sur chaque formule, y compris Gratuit ; les membres d'équipe sont disponibles sur les formules payantes (Gratuit est mono-utilisateur). La seule limite est un plafond d'usage équitable par minute (60/min sur Gratuit, 300/min sur Solo, 1 000/min sur Team) afin de protéger la plateforme des abus. Les formules payantes ajoutent un débit de pointe plus élevé, des fonctionnalités d'équipe et du support, jamais plus d'usage."
       },
       {
         "q": "Qu'est-ce qui compte comme un appel MCP ?",
@@ -146,7 +146,7 @@
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",
-        "a": "Non. Les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent. Rien n'est conservé entre les appels. La seule donnée que nous stockons est un jeton OAuth chiffré ou un mot de passe d'application afin de pouvoir authentifier les requêtes futures."
+        "a": "Le courrier que votre agent lit n'est jamais stocké : les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent, sans rien conserver entre les appels. Nous stockons votre jeton OAuth chiffré ou votre mot de passe d'application afin de pouvoir authentifier les requêtes futures. La seule exception est un message que vous nous demandez de programmer pour plus tard : nous le stockons jusqu'à son envoi, puis en gardons une trace pour votre historique."
       },
       {
         "q": "Quelle est la différence entre Solo et Team ?",
@@ -162,7 +162,7 @@
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
-        "a": "Gmail et Microsoft 365 / Outlook utilisent OAuth 2.0. Fastmail prend en charge à la fois OAuth et les mots de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
+        "a": "Gmail utilise OAuth 2.0. Fastmail se connecte avec un mot de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
       },
       {
         "q": "Existe-t-il une politique de remboursement ?",

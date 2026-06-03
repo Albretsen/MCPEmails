@@ -18,14 +18,14 @@
   },
   "serviceDescription": {
     "title": "2. Description du Service",
-    "p1": "MCPEmails fournit une plateforme de logiciel en tant que service qui vous permet de connecter des comptes de messagerie (Gmail, Microsoft Outlook, Fastmail et comptes IMAP compatibles) et d'exposer ces comptes à des agents IA via le Model Context Protocol (MCP). Le Service comprend :",
+    "p1": "MCPEmails fournit une plateforme de logiciel en tant que service qui vous permet de connecter des comptes de messagerie (Gmail, Fastmail et comptes IMAP compatibles) et d'exposer ces comptes à des agents IA via le Model Context Protocol (MCP). Le Service comprend :",
     "list": [
       "Un tableau de bord web pour gérer les comptes de messagerie connectés, les clés d'API et le suivi de l'utilisation.",
       "Un point de terminaison HTTP conforme à MCP auprès duquel les agents IA s'authentifient à l'aide de clés d'API que vous générez.",
       "Une intégration OAuth avec les fournisseurs de messagerie pris en charge pour obtenir et gérer un accès délégué à vos boîtes aux lettres.",
       "Un journal d'utilisation et d'audit indiquant quels outils vos agents ont appelés et à quel moment."
     ],
-    "p2": "MCPEmails agit comme un pont de protocole. Nous ne stockons pas le contenu des e-mails sur nos serveurs ; nous le récupérons en direct auprès de votre fournisseur de messagerie au moment où un agent le demande et le renvoyons dans la même réponse HTTP. Consultez notre <privacy>Politique de confidentialité</privacy> pour une description complète des données que nous conservons et de celles que nous ne conservons pas.",
+    "p2": "MCPEmails agit comme un pont de protocole. Nous ne stockons pas le contenu des e-mails que votre agent lit sur nos serveurs ; nous le récupérons en direct auprès de votre fournisseur de messagerie au moment où un agent le demande et le renvoyons dans la même réponse HTTP. L'exception est un message que vous programmez pour un envoi ultérieur, que nous stockons uniquement jusqu'à sa remise. Consultez notre <privacy>Politique de confidentialité</privacy> pour une description complète des données que nous conservons et de celles que nous ne conservons pas.",
     "p2b": "Le contenu des e-mails n'est transmis qu'au client MCP ou à l'agent IA que vous avez connecté et que vous choisissez d'utiliser. Une fois le contenu parvenu à ce client, il est régi par la politique de confidentialité et les conditions propres à ce client ou à ce fournisseur d'IA, qu'il vous appartient de consulter. MCPEmails ne sélectionne pas de fournisseur d'IA en votre nom et ne conserve aucune copie du contenu de vos e-mails.",
     "p3": "Nous nous réservons le droit de modifier, suspendre ou interrompre toute partie du Service à tout moment. Dans la mesure du possible, nous donnerons un préavis d'au moins 30 jours en cas de modifications substantielles affectant les utilisateurs payants."
   },
@@ -98,7 +98,7 @@
     "h71": "7.1 Service fourni « en l'état »",
     "p71": "Le Service est fourni « en l'état » et « selon disponibilité », sans garantie d'aucune sorte, expresse ou implicite, y compris (sans s'y limiter) les garanties implicites de qualité marchande, d'adéquation à un usage particulier, d'absence de contrefaçon et de fonctionnement ininterrompu ou exempt d'erreurs. Nous ne garantissons pas que le Service répondra à vos exigences, que la remise des e-mails sera fiable ou complète, ni que les défauts seront corrigés.",
     "h72": "7.2 Services tiers",
-    "p72": "Le Service s'intègre à des fournisseurs de messagerie tiers (Google Gmail, Microsoft Outlook, Fastmail, serveurs IMAP). Nous ne sommes pas responsables de la disponibilité, de la fiabilité ou des performances de ces services, des modifications de leurs API ou politiques OAuth, ni de toute perte d'accès à la messagerie résultant des actions d'un fournisseur tiers.",
+    "p72": "Le Service s'intègre à des fournisseurs de messagerie tiers (Google Gmail, Fastmail, serveurs IMAP). Nous ne sommes pas responsables de la disponibilité, de la fiabilité ou des performances de ces services, des modifications de leurs API ou politiques OAuth, ni de toute perte d'accès à la messagerie résultant des actions d'un fournisseur tiers.",
     "h73": "7.3 Actions des agents IA",
     "p73": "MCPEmails est un pont de protocole. Nous transmettons les instructions des agents IA à vos fournisseurs de messagerie et renvoyons les résultats. Nous ne sommes pas responsables du contenu des e-mails envoyés, transférés ou auxquels il est répondu par des agents IA agissant sous vos clés d'API, ni des conséquences des actions autonomes des agents, y compris la suppression accidentelle d'e-mails, les messages mal dirigés ou les fuites de données résultant d'erreurs de logique des agents.",
     "h74": "7.4 Limitation de responsabilité",

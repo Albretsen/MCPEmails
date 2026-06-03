@@ -17,7 +17,6 @@ const RICH = {
 
 const PROVIDERS = [
   { key: 'gmail',    label: 'Gmail' },
-  { key: 'outlook',  label: 'Outlook' },
   { key: 'fastmail', label: 'Fastmail' },
   // iCloud, Yahoo, Zoho, Yandex, and Generic IMAP all use provider='imap'
   // in the DB and share the same capability set.
@@ -121,16 +120,11 @@ const MATRIX = {
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Contacts ───────────────────────────────────────────────────────────
-  contacts: {
-    label: 'Native contacts API',
-    section: 'Contacts',
-    gmail: true, outlook: true, fastmail: false,
-    icloud: false, yahoo: false, zoho: false, yandex: false, generic: false,
-  },
   contacts_db: {
-    label: 'Contact search (DB-synced)',
+    label: 'Contact search (live scan)',
     section: 'Contacts',
-    // Populated from message headers for every provider (Task 15-16)
+    // contact_search does a live, header-only scan of recent mail for every
+    // provider — nothing is stored between calls.
     gmail: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
@@ -307,9 +301,6 @@ export default function ProvidersClient() {
             </p>
             <p style={{ margin: 0 }}>
               {t.rich('providers.notes.permanentDelete', RICH)}
-            </p>
-            <p style={{ margin: 0 }}>
-              {t.rich('providers.notes.contacts', RICH)}
             </p>
             <p style={{ margin: 0 }}>
               {t.rich('providers.notes.contacts_db', RICH)}
