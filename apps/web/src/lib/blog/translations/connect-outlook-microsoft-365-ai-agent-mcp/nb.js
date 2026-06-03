@@ -3,7 +3,9 @@ export default {
   description:
     'Koble Outlook eller Microsoft 365 til AI-agenten din over MCP på minutter. Microsoft-pålogging med OAuth, Graph under panseret, les/søk/send/svar — uten egen server.',
   coverAlt: 'Kobler Outlook og Microsoft 365 til en AI-agent over MCP',
-  content: `For å koble en Outlook- eller Microsoft 365-postkasse til AI-agenten din logger du inn på MCP Emails, legger til innboksen med Microsoft OAuth, og peker agenten mot ett MCP-endepunkt. Ingen appregistrering, ingen Azure-portal, ingen egen Graph-server. Hele greia tar omtrent to minutter, og agenten din får lese, søke, sende, svare, flagge og håndtere mapper mot den live postkassen.
+  content: `> **Kommer snart.** Støtte for Outlook og Microsoft 365 er bygget, men ennå ikke allment tilgjengelig. Du kan ikke koble til en Outlook-postkasse i produksjon i dag — denne guiden viser hvordan det vil fungere når koblingen lanseres. For postkasser du kan koble til akkurat nå, se [Gmail og IMAP](/docs/providers).
+
+For å koble en Outlook- eller Microsoft 365-postkasse til AI-agenten din logger du inn på MCP Emails, legger til innboksen med Microsoft OAuth, og peker agenten mot ett MCP-endepunkt. Ingen appregistrering, ingen Azure-portal, ingen egen Graph-server. Hele greia tar omtrent to minutter, og agenten din får lese, søke, sende, svare, flagge og håndtere mapper mot den live postkassen.
 
 De fleste «AI for e-post»-guider antar Gmail og stopper der. Outlook får et skuldertrekk og en lenke til et halvveis vedlikeholdt GitHub-repo. Hvis du lever i Microsoft 365 på jobb, er det å gripe det an fra feil ende. Dette innlegget er Outlook-først-versjonen: hva som faktisk fungerer, hvordan Microsoft-påloggingen flyter, hva som kjører under panseret, og hvor kantene mellom personlig og jobbkonto ligger.
 

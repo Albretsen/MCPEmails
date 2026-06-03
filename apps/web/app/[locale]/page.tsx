@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { routing } from '@/i18n/routing';
-import { metaAlternates, localePath, OG_LOCALE } from '@/i18n/seo';
+import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
 
 export async function generateMetadata({
@@ -29,11 +29,13 @@ export async function generateMetadata({
       alternateLocale: routing.locales
         .filter((l) => l !== locale)
         .map((l) => OG_LOCALE[l]),
+      images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: [OG_IMAGE.url],
     },
   };
 }

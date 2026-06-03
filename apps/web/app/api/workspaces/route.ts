@@ -32,6 +32,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object.' }, { status: 400 });
+  }
+
   const { name } = body as Record<string, unknown>;
   if (typeof name !== 'string' || name.trim().length === 0) {
     return NextResponse.json({ error: 'A workspace name is required.' }, { status: 400 });

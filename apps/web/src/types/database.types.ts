@@ -1713,6 +1713,12 @@ export type Database = {
         }[]
       }
       my_workspace_ids: { Args: never; Returns: string[] }
+      revoke_user_session: {
+        Args: { p_session_id: string }
+        Returns: {
+          revoked_session_id: string
+        }[]
+      }
       rate_limit_check: {
         Args: { p_key: string; p_max_count: number; p_window_ms: number }
         Returns: boolean

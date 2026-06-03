@@ -20,24 +20,38 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.75.0
+      - name: Link to production project
+        run: |
+          supabase link \
+            --project-ref "$SUPABASE_PROJECT_ID" \
+            --password "$SUPABASE_DB_PASSWORD"
       - name: Apply pending migrations to production
         run: |
-          supabase db push \
-            --project-ref $SUPABASE_PROJECT_ID \
-            --password $SUPABASE_DB_PASSWORD
+          supabase db push --linked --password "$SUPABASE_DB_PASSWORD"
       - name: Verify all public tables have RLS enabled in production
+        env:
+          # Direct database connection. Host is deterministic from the project
+          # ref (db.<ref>.supabase.co); no region guessing required. If the
+          # runner can't reach the direct host over IPv6, set SUPABASE_DB_URL
+          # (a session-pooler connection string) as a secret and it is used
+          # instead.
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          UNPROTECTED=$(supabase db query \
-            --project-ref $SUPABASE_PROJECT_ID \
-            --password $SUPABASE_DB_PASSWORD \
-            "SELECT c.relname
-             FROM pg_class c
-             JOIN pg_namespace n ON n.oid = c.relnamespace
-             WHERE n.nspname = 'public'
-               AND c.relkind IN ('r','p')
-               AND c.relrowsecurity = false" \
-            --csv 2>/dev/null | tail -n +2)
+          if [ -n "$SUPABASE_DB_URL" ]; then
+            CONN="$SUPABASE_DB_URL"
+          else
+            CONN="host=db.${SUPABASE_PROJECT_ID}.supabase.co port=5432 dbname=postgres user=postgres sslmode=require"
+          fi
+          UNPROTECTED=$(psql "$CONN" \
+            --no-align --tuples-only --quiet \
+            -c "SELECT c.relname
+                FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = 'public'
+                  AND c.relkind IN ('r','p')
+                  AND c.relrowsecurity = false")
           if [ -n "$UNPROTECTED" ]; then
             echo "CRITICAL: Production tables are missing RLS:"
             echo "$UNPROTECTED"
@@ -53,7 +67,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.75.0
       - name: Deploy mcp-server Edge Function
         run: |
           supabase functions deploy mcp-server \
