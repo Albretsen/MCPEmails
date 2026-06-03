@@ -2306,6 +2306,33 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       additionalProperties: false,
     },
   },
+  {
+    name: "draft_delete",
+    title: "Delete Draft",
+    description:
+      "Permanently delete a saved draft without sending it. Use this to clean up " +
+      "drafts created by draft_create that you no longer need. This action is " +
+      "irreversible — the draft is removed from the Drafts folder. " +
+      "Pass the MOST RECENT draft_id (from draft_create, the latest draft_update, " +
+      "or draft_list): on IMAP-backed inboxes the id changes on every update, and " +
+      "a stale id will fail with a not-found error.",
+    requiredScope: "manage:drafts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        draft_id: {
+          type: "string",
+          description: "Provider-native draft identifier as returned by the most recent draft_create, " +
+            "draft_update, or draft_list. On IMAP inboxes this changes after every update, so always " +
+            "use the latest one.",
+        },
+      },
+      required: ["draft_id"],
+      additionalProperties: false,
+    },
+  },
 
   // ── manage:contacts scope ────────────────────────────────────────────────────
 
@@ -2489,18 +2516,30 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "Cancel a pending scheduled email send. Sets the status to 'cancelled' so the " +
       "dispatcher will not send the message. Only messages with status 'pending' can be " +
       "cancelled — messages already in 'sending', 'sent', or 'error' state cannot be " +
-      "cancelled. Use schedule_list to find the scheduled_send_id.",
+      "cancelled. Use schedule_list to find the id. Pass either `id` (as returned by " +
+      "schedule_create / schedule_list) or its alias `scheduled_send_id` — both work.",
     requiredScope: "schedule:email",
     inputSchema: {
       type: "object",
       properties: {
+        id: {
+          type: "string",
+          format: "uuid",
+          description: "UUID of the scheduled send to cancel, as returned by " +
+            "schedule_create and schedule_list. Alias of scheduled_send_id.",
+        },
         scheduled_send_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the scheduled send to cancel.",
+          description: "UUID of the scheduled send to cancel. Alias of `id` — " +
+            "provide either field.",
         },
       },
-      required: ["scheduled_send_id"],
+      // Either `id` or `scheduled_send_id` satisfies the requirement.
+      anyOf: [
+        { required: ["id"] },
+        { required: ["scheduled_send_id"] },
+      ],
       additionalProperties: false,
     },
   },
@@ -2900,6 +2939,15 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["draft_id", "message_id", "sent_at"],
     additionalProperties: true,
   },
+  draft_delete: {
+    type: "object",
+    properties: {
+      draft_id: { type: "string" },
+      deleted: { type: "boolean" },
+    },
+    required: ["draft_id", "deleted"],
+    additionalProperties: false,
+  },
   contact_search: {
     type: "object",
     properties: {
@@ -3020,6 +3068,7 @@ const TOOL_ANNOTATIONS: Record<
   email_delete_batch: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   folder_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   email_search_and_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  draft_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
 };
 
 // Attach outputSchema + annotations to every legacy entry. Done once at module
@@ -3147,13 +3196,15 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     description:
       "Manage draft messages. Set `action`: 'list', 'create' (subject/body, optional " +
       "to/cc/bcc/html_body), 'update' (draft_id + fields), or 'send' (draft_id). On " +
-      "IMAP inboxes a draft_id changes on every update — always use the latest.",
+      "IMAP inboxes a draft_id changes on every update — always use the latest. " +
+      "'delete' permanently removes a draft (draft_id) without sending it.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
       list: { legacy: "draft_list", scope: "manage:drafts" },
       create: { legacy: "draft_create", scope: "manage:drafts" },
       update: { legacy: "draft_update", scope: "manage:drafts" },
       send: { legacy: "draft_send", scope: "manage:drafts" },
+      delete: { legacy: "draft_delete", scope: "manage:drafts" },
     },
   },
   schedule: {
@@ -3161,7 +3212,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     description:
       "Schedule mail for later delivery. Set `action`: 'create' (to/subject/body + " +
       "send_at ISO timestamp), 'list' (pending scheduled sends), or 'cancel' " +
-      "(scheduled_send_id).",
+      "(pass `id` or its alias `scheduled_send_id`).",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
       create: { legacy: "schedule_create", scope: "schedule:email" },
@@ -5005,6 +5056,27 @@ function imapFolderName(folder: string): string {
 }
 
 /**
+ * Decode RFC 2047 MIME encoded-words in an envelope subject. The IMAP ENVELOPE
+ * is returned verbatim by the server (e.g. "=?UTF-8?Q?...?="); `email_read`
+ * decodes its headers via decodeEncodedWords, so the list/search summary path
+ * must do the same for parity (otherwise non-ASCII subjects show as gibberish).
+ */
+function decodeEnvelopeSubject(subject: string): string {
+  return decodeEncodedWords(subject);
+}
+
+/**
+ * Decode RFC 2047 MIME encoded-words in an address display name, preserving the
+ * email. The IMAP ENVELOPE personal-name field arrives encoded the same way as
+ * the Subject header.
+ */
+function decodeEnvelopeAddress(
+  addr: { name: string; email: string },
+): { name: string; email: string } {
+  return { name: decodeEncodedWords(addr.name), email: addr.email };
+}
+
+/**
  * Implements `email_list` for IMAP inboxes connected with an app password.
  *
  * Opens a TLS IMAP session, selects the folder, UID-searches (ALL or UNSEEN),
@@ -5055,9 +5127,9 @@ async function listImapMessages(
       if (!s) continue;
       messages.push({
         id: encodeImapId(folder, s.uid),
-        from: s.envelope.from[0] ?? { name: "", email: "" },
-        to: s.envelope.to,
-        subject: s.envelope.subject,
+        from: decodeEnvelopeAddress(s.envelope.from[0] ?? { name: "", email: "" }),
+        to: s.envelope.to.map(decodeEnvelopeAddress),
+        subject: decodeEnvelopeSubject(s.envelope.subject),
         date: s.envelope.date,
         preview: s.preview,
         is_read: s.flags.includes("\\Seen"),
@@ -5233,9 +5305,9 @@ async function searchImapMessages(
       if (!s) continue;
       messages.push({
         id: encodeImapId(folder, s.uid),
-        from: s.envelope.from[0] ?? { name: "", email: "" },
-        to: s.envelope.to,
-        subject: s.envelope.subject,
+        from: decodeEnvelopeAddress(s.envelope.from[0] ?? { name: "", email: "" }),
+        to: s.envelope.to.map(decodeEnvelopeAddress),
+        subject: decodeEnvelopeSubject(s.envelope.subject),
         date: s.envelope.date,
         preview: s.preview,
         is_read: s.flags.includes("\\Seen"),
@@ -5419,6 +5491,9 @@ async function replyImapMessage(
   const origReferences = getHeader(h, "references") ?? "";
   const origSubject = decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)");
   const replySubject = /^re:/i.test(origSubject.trim()) ? origSubject : `Re: ${origSubject}`;
+  const origFromHeader = decodeEncodedWords(getHeader(h, "from") ?? "");
+  const origDateHeader = getHeader(h, "date") ?? "";
+  const origBodyText = original.text ?? (original.html ? stripHtmlToText(original.html) : "");
 
   const fromAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "from") ?? ""));
   const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
@@ -5458,7 +5533,12 @@ async function replyImapMessage(
       : inbox.email_address,
     to: toStrings,
     subject: replySubject,
-    textBody: params.body,
+    textBody: buildReplyTextBody(
+      params.body,
+      origFromHeader,
+      origDateHeader,
+      origBodyText,
+    ),
     htmlBody: params.htmlBody,
     attachments: params.attachments.map((a) => ({
       filename: a.filename,
@@ -5953,11 +6033,15 @@ async function readGmailMessage(
 
   if (!msgResp.ok) {
     if (msgResp.status === 401) throw new Error("gmail_auth_failed");
-    if (msgResp.status === 404) throw new Error("message_not_found");
-    const errBody = (await msgResp.json()) as { error?: { message?: string } };
-    throw new Error(
-      `Gmail API error: ${errBody.error?.message ?? msgResp.statusText}`,
-    );
+    // 404, or 400 "Invalid id value" (a malformed/stale message id) → both are
+    // permanent "bad id" errors. Map to message_not_found so the handler emits a
+    // clean "call email_list/search" message instead of leaking the Gmail error
+    // body or appending a misleading "try again in a moment" (the id won't fix
+    // itself). Other 4xx/5xx fall through to the sanitized helper.
+    if (msgResp.status === 404 || msgResp.status === 400) {
+      throw new Error("message_not_found");
+    }
+    throw new Error(await gmailErrorMessage("Gmail API error", msgResp));
   }
 
   const msg = (await msgResp.json()) as GmailFullMessage;
@@ -7803,7 +7887,7 @@ async function replyGmailMessage(
 
   // ── Step 1: Fetch original message metadata ───────────────────────────────
   const mp = new URLSearchParams({ format: "metadata" });
-  for (const h of ["From", "To", "Cc", "Subject", "Message-ID", "References"]) {
+  for (const h of ["From", "To", "Cc", "Subject", "Date", "Message-ID", "References"]) {
     mp.append("metadataHeaders", h);
   }
   const origResp = await fetch(
@@ -7828,6 +7912,19 @@ async function replyGmailMessage(
   const origRfc5322MessageId = hdrs["message-id"] ?? "";
   const origReferences = hdrs["references"] ?? "";
   const origSubject = hdrs["subject"] ?? "(no subject)";
+  const origFromHeader = hdrs["from"] ?? "";
+  const origDateHeader = hdrs["date"] ?? "";
+
+  // Fetch the original body so the reply can quote it (parity with forward).
+  // Best-effort: if the body read fails, fall back to no quote rather than
+  // failing the whole reply.
+  let origBodyText = "";
+  try {
+    const origRead = await readGmailMessage(inbox, originalMessageId, false, false, false);
+    origBodyText = origRead.body_text ?? "";
+  } catch {
+    origBodyText = "";
+  }
 
   // Build RFC 5322 References chain: existing refs + original Message-ID.
   const referencesChain = origReferences
@@ -7874,7 +7971,12 @@ async function replyGmailMessage(
       : inbox.email_address,
     to: replyAddresses,
     subject: replySubject,
-    textBody: params.body,
+    textBody: buildReplyTextBody(
+      params.body,
+      origFromHeader,
+      origDateHeader,
+      origBodyText,
+    ),
     htmlBody: params.htmlBody,
     attachments: params.attachments.map((a) => ({
       filename: a.filename,
@@ -7963,6 +8065,8 @@ async function replyOutlookMessage(
     "conversationId",
     "internetMessageId",
     "internetMessageHeaders",
+    "body",
+    "receivedDateTime",
   ].join(",");
 
   const origResp = await fetch(
@@ -7987,12 +8091,25 @@ async function replyOutlookMessage(
     conversationId?: string;
     internetMessageId?: string;
     internetMessageHeaders?: { name: string; value: string }[];
+    body?: { contentType?: string; content?: string };
+    receivedDateTime?: string;
   };
 
   const origSubject = origMsg.subject ?? "(no subject)";
   const replySubject = /^re:/i.test(origSubject.trim())
     ? origSubject
     : `Re: ${origSubject}`;
+  const origFromStr = origMsg.from?.emailAddress
+    ? (origMsg.from.emailAddress.name
+      ? `${origMsg.from.emailAddress.name} <${origMsg.from.emailAddress.address ?? ""}>`
+      : (origMsg.from.emailAddress.address ?? ""))
+    : "";
+  const origDateStr = origMsg.receivedDateTime ?? "";
+  const origBodyText = origMsg.body
+    ? (origMsg.body.contentType?.toLowerCase() === "html"
+      ? stripHtmlToText(origMsg.body.content ?? "")
+      : (origMsg.body.content ?? ""))
+    : "";
 
   const origMsgId = origMsg.internetMessageId ?? "";
   const refsHeader =
@@ -8035,7 +8152,15 @@ async function replyOutlookMessage(
   // ── Step 3: Build and send the reply ─────────────────────────────────────
   const body = params.htmlBody
     ? { contentType: "HTML", content: params.htmlBody }
-    : { contentType: "Text", content: params.body };
+    : {
+      contentType: "Text",
+      content: buildReplyTextBody(
+        params.body,
+        origFromStr,
+        origDateStr,
+        origBodyText,
+      ),
+    };
 
   const message: Record<string, unknown> = {
     subject: replySubject,
@@ -8534,6 +8659,36 @@ function buildForwardedTextBody(
     origBody,
   ].join("\n");
   return intro ? `${intro}\n\n${block}` : block;
+}
+
+/**
+ * Build a reply plain-text body that quotes the original message, mirroring the
+ * convention most mail clients use:
+ *
+ *   <reply text>
+ *
+ *   On <date>, <from> wrote:
+ *   > <original line 1>
+ *   > <original line 2>
+ *
+ * `replyText` is the caller-supplied new body (may be empty). `from`/`date` come
+ * from the original message; `origBody` is its plain-text body (empty string is
+ * tolerated — the attribution line is still emitted for context). Parity with
+ * email_forward, which already quotes via buildForwardedTextBody.
+ */
+function buildReplyTextBody(
+  replyText: string | undefined,
+  from: string,
+  date: string,
+  origBody: string,
+): string {
+  const quoted = origBody
+    .split("\n")
+    .map((line) => (line.length ? `> ${line}` : ">"))
+    .join("\n");
+  const attribution = `On ${date}, ${from} wrote:`;
+  const block = `${attribution}\n${quoted}`;
+  return replyText ? `${replyText}\n\n${block}` : block;
 }
 
 /**
@@ -10655,6 +10810,36 @@ async function executeSearchEmails(
       };
     }
 
+    // Raw `query` escape-hatch rejected by an IMAP-family provider. The `query`
+    // field is passed through to the server's native search syntax (RFC 3501
+    // for IMAP), so a typo or Gmail-style operator surfaces an opaque line like
+    // "UID SEARCH: Unknown argument FROM:X". Translate that into actionable
+    // guidance instead of leaking the raw IMAP error.
+    if (
+      search.raw &&
+      (inbox.provider === "imap" || inbox.provider === "fastmail") &&
+      /UID SEARCH|Unknown argument|SEARCH:/i.test(message)
+    ) {
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              "The `query` field is a raw, provider-native search expression " +
+              "(IMAP RFC 3501 SEARCH syntax for this inbox) and was rejected by " +
+              "the mail server. Prefer the structured search fields instead — " +
+              "from, to, subject, body, text, unread, since, before — which are " +
+              "translated to the correct syntax for every provider. For example, " +
+              'use { "from": "alice", "subject": "report", "unread": true } ' +
+              "rather than a raw `query` string.",
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "invalid_query",
+      };
+    }
+
     console.error("[mcp-server] email_search: provider_error", {
       inbox_id: inboxId,
       provider: inbox.provider,
@@ -11828,6 +12013,32 @@ async function imapArchiveEmail(
 // ── Gmail provider helpers ─────────────────────────────────────────────────
 
 /**
+ * Build a clean, sanitized error message from a non-OK Gmail API response,
+ * WITHOUT leaking the raw upstream JSON body into the tool result. Parses the
+ * standard `{ error: { code, message, status } }` shape and returns just the
+ * human-readable `message` (e.g. "Cannot both add and remove the same label"),
+ * prefixed with `verb`. Falls back to the HTTP status text when the body isn't
+ * the expected shape. Callers translate 401/404/429 to their own sentinels
+ * BEFORE calling this — this is for the remaining (mostly permanent 4xx) cases.
+ * Note: no "try again in a moment" suffix — these are permanent errors.
+ */
+async function gmailErrorMessage(
+  verb: string,
+  resp: Response,
+): Promise<string> {
+  let detail = resp.statusText || `HTTP ${resp.status}`;
+  try {
+    const errBody = (await resp.json()) as {
+      error?: { message?: string };
+    };
+    if (errBody.error?.message) detail = errBody.error.message;
+  } catch {
+    // Non-JSON / empty body — keep the status text, never echo the raw body.
+  }
+  return `${verb}: ${detail}`;
+}
+
+/**
  * Calls the Gmail messages.modify API to add/remove label IDs.
  * Throws "gmail_auth_failed" on 401.
  */
@@ -11856,8 +12067,7 @@ async function gmailModifyLabels(
     // the move/flag handlers return a clean message_not_found result instead of
     // a generic provider_error.
     if (resp.status === 404) throw new Error("message_not_found");
-    const body = await resp.text();
-    throw new Error(`Gmail modify failed: ${body}`);
+    throw new Error(await gmailErrorMessage("Gmail modify failed", resp));
   }
 }
 
@@ -12625,8 +12835,7 @@ async function gmailDeleteEmail(
   if (!resp.ok) {
     if (resp.status === 401) throw new Error("gmail_auth_failed");
     if (resp.status === 404) throw new Error("message_not_found");
-    const body = await resp.text();
-    throw new Error(`Gmail delete failed: ${body}`);
+    throw new Error(await gmailErrorMessage("Gmail delete failed", resp));
   }
 }
 
@@ -14321,7 +14530,7 @@ async function executeSearchAndDelete(
 function draftNotFoundMessage(
   provider: string,
   draftId: string,
-  action: "update" | "send",
+  action: "update" | "send" | "delete",
 ): string {
   const isImap = provider !== "gmail" && provider !== "outlook" && provider !== "fastmail";
   if (isImap) {
@@ -14360,6 +14569,11 @@ interface DraftSendResult {
   draft_id: string;
   message_id: string;
   sent_at: string;
+}
+
+interface DraftDeleteResult {
+  draft_id: string;
+  deleted: true;
 }
 
 interface DraftParams {
@@ -14406,8 +14620,8 @@ async function imapListDrafts(
     }
     return summaries.map((s) => ({
       draft_id: encodeImapId(draftFolder, s.uid),
-      subject: s.envelope.subject || "(no subject)",
-      to: s.envelope.to.map((a) => ({ name: a.name, email: a.email })),
+      subject: decodeEnvelopeSubject(s.envelope.subject || "(no subject)"),
+      to: s.envelope.to.map(decodeEnvelopeAddress),
       cc: [],
       created_at: imapDateToIso(s.envelope.date),
     }));
@@ -14693,6 +14907,46 @@ async function imapSendDraft(
   };
 }
 
+/**
+ * Permanently delete an IMAP draft: mark it \Deleted in the Drafts folder and
+ * EXPUNGE. Mirrors the best-effort delete step in imapSendDraft, but here the
+ * delete IS the operation, so a failure surfaces as an error. A bad/stale
+ * draft_id (no such UID) maps to "draft_not_found".
+ */
+async function imapDeleteDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftDeleteResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(draftId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("draft_not_found");
+  const password = await decryptStoredToken(inbox.imap_password);
+
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: imapAuthUser(inbox),
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    const msg = await client.fetchMessageRaw(uid);
+    if (!msg) throw new Error("draft_not_found");
+    await client.uidStore([uid], ["\\Deleted"], "add");
+    await client.uidExpunge([uid]);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+
+  return { draft_id: draftId, deleted: true };
+}
+
 // ── Gmail draft helpers ───────────────────────────────────────────────────────
 
 async function gmailListDrafts(
@@ -14865,6 +15119,30 @@ async function gmailSendDraft(
   };
 }
 
+/**
+ * Permanently delete a Gmail draft via drafts.delete. 404 → "draft_not_found".
+ */
+async function gmailDeleteDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftDeleteResult> {
+  const token = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    if (resp.status === 404) throw new Error("draft_not_found");
+    if (resp.status === 429) throw new Error("quota_exceeded");
+    throw new Error(await gmailErrorMessage("Gmail drafts.delete error", resp));
+  }
+  return { draft_id: draftId, deleted: true };
+}
+
 // ── Outlook draft helpers ─────────────────────────────────────────────────────
 
 async function outlookListDrafts(
@@ -15020,6 +15298,31 @@ async function outlookSendDraft(
     message_id: draftId,
     sent_at: new Date().toISOString(),
   };
+}
+
+/**
+ * Permanently delete an Outlook draft. Drafts are regular messages, so
+ * DELETE /me/messages/{id} removes it. 404 → "draft_not_found".
+ */
+async function outlookDeleteDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftDeleteResult> {
+  const token = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  if (!resp.ok) {
+    // 403 = insufficient scope; treat like 401 so the user is told to reconnect.
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("draft_not_found");
+    throw new Error(`Outlook delete draft error: ${resp.statusText}`);
+  }
+  return { draft_id: draftId, deleted: true };
 }
 
 // ── Fastmail draft helpers ────────────────────────────────────────────────────
@@ -15275,6 +15578,45 @@ async function fastmailSendDraft(
     message_id: draftId,
     sent_at: new Date().toISOString(),
   };
+}
+
+/**
+ * Permanently delete a Fastmail draft via JMAP Email/set { destroy }.
+ * A destroyed-id that isn't found (notDestroyed) maps to "draft_not_found".
+ */
+async function fastmailDeleteDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftDeleteResult> {
+  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
+  const jmapBody = {
+    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+    methodCalls: [
+      ["Email/set", { accountId, destroy: [draftId] }, "d1"],
+    ],
+  };
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify(jmapBody),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP delete draft error: ${apiResp.statusText}`);
+  }
+  const apiData = (await apiResp.json()) as {
+    methodResponses?: [string, {
+      destroyed?: string[];
+      notDestroyed?: Record<string, { type: string; description?: string }>;
+    }, string][];
+  };
+  const setResp = apiData.methodResponses?.find(([n]) => n === "Email/set")?.[1];
+  if (setResp?.notDestroyed?.[draftId]) {
+    const errObj = setResp.notDestroyed[draftId];
+    if (errObj.type === "notFound") throw new Error("draft_not_found");
+    throw new Error(`Fastmail JMAP delete failed: ${errObj.description ?? errObj.type}`);
+  }
+  return { draft_id: draftId, deleted: true };
 }
 
 // ── Drafts execute functions ──────────────────────────────────────────────────
@@ -15589,6 +15931,77 @@ async function executeSendDraft(
 
   return {
     result: jsonOk(sendResult as unknown as Record<string, unknown>),
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+async function executeDeleteDraft(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "draft_delete: arguments must be an object with inbox_id and draft_id." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+    ? args["draft_id"] : null;
+  if (!draftId) {
+    return {
+      result: { content: [{ type: "text", text: "draft_delete: draft_id is required and must be a non-empty string." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved, "draft_delete");
+  const inbox = resolved.inbox;
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  let deleteResult: DraftDeleteResult;
+  try {
+    switch (inbox.provider) {
+      case "gmail":    deleteResult = await gmailDeleteDraft(inbox, draftId);    break;
+      case "outlook":  deleteResult = await outlookDeleteDraft(inbox, draftId);  break;
+      case "fastmail": deleteResult = await fastmailDeleteDraft(inbox, draftId); break;
+      default:         deleteResult = await imapDeleteDraft(inbox, draftId);     break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message === "draft_not_found") {
+      return {
+        result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId, "delete") }], isError: true },
+        logStatus: "error", logErrorCode: "draft_not_found",
+      };
+    }
+    const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" || message === "imap_auth_failed";
+    if (isAuth) {
+      return authFailedResult(inbox.provider, inbox.id, "access");
+    }
+    if (message === "quota_exceeded") {
+      return {
+        result: { content: [{ type: "text", text: "Your email account has exceeded its quota. Please try again later." }], isError: true },
+        logStatus: "error", logErrorCode: "quota_exceeded",
+      };
+    }
+    console.error("[mcp-server] draft_delete: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+    return {
+      result: { content: [{ type: "text", text: `Failed to delete draft for ${inbox.provider} inbox: ${message}` }], isError: true },
+      logStatus: "error", logErrorCode: "provider_error",
+    };
+  }
+
+  return {
+    result: jsonOk(deleteResult as unknown as Record<string, unknown>),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -16379,10 +16792,15 @@ async function executeCancelScheduled(
   }
   const args = rawArgs as Record<string, unknown>;
 
-  const scheduledSendId = typeof args["scheduled_send_id"] === "string" ? args["scheduled_send_id"] : null;
+  // Accept either `id` (as returned by schedule_create / schedule_list) or its
+  // alias `scheduled_send_id`, so a caller can round-trip the id field directly.
+  const scheduledSendId =
+    (typeof args["scheduled_send_id"] === "string" && args["scheduled_send_id"]) ||
+    (typeof args["id"] === "string" && args["id"]) ||
+    null;
   if (!scheduledSendId) {
     return {
-      result: { content: [{ type: "text", text: "schedule_cancel: scheduled_send_id is required and must be a UUID string." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_cancel: an id is required and must be a UUID string. Provide either `id` or `scheduled_send_id`." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -16991,6 +17409,12 @@ async function handleToolsCall(
     } else if (dispatchName === "draft_send") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeSendDraft(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (dispatchName === "draft_delete") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeDeleteDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };

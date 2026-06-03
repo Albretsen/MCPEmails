@@ -48,9 +48,7 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
     throw new Error("SMTP send: no recipients");
   }
 
-  let conn: Deno.Conn = cfg.security === "tls"
-    ? await Deno.connectTls({ hostname: cfg.host, port: cfg.port })
-    : await Deno.connect({ hostname: cfg.host, port: cfg.port });
+  let conn: Deno.Conn = await connectWithTimeout(cfg);
 
   const session = new SmtpSession(conn);
   try {
@@ -190,6 +188,41 @@ class SmtpSession {
       }
       this.buffer += this.decoder.decode(this.readBuf.subarray(0, n));
     }
+  }
+}
+
+/**
+ * Open the SMTP TCP/TLS connection with a bounded timeout. Deno.connect(Tls)
+ * has no built-in connect timeout, so an unreachable/filtered submission port
+ * would otherwise block until the OS connect timeout (~130s) and blow past the
+ * edge wall-clock limit. Race the connect against SMTP_TIMEOUT_MS (the same
+ * guard used for reads); on timeout, close the socket if it lands late and
+ * surface a clean, no-retry-safe error.
+ */
+async function connectWithTimeout(cfg: SmtpConfig): Promise<Deno.Conn> {
+  const connectPromise = cfg.security === "tls"
+    ? Deno.connectTls({ hostname: cfg.host, port: cfg.port })
+    : Deno.connect({ hostname: cfg.host, port: cfg.port });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () =>
+        reject(
+          new Error(
+            `SMTP connect timeout — ${cfg.host}:${cfg.port} did not respond within ${SMTP_TIMEOUT_MS}ms (submission port unreachable)`,
+          ),
+        ),
+      SMTP_TIMEOUT_MS,
+    );
+  });
+  try {
+    return await Promise.race([connectPromise, timeout]);
+  } catch (err) {
+    // If the connect resolves after the timeout rejected, don't leak the socket.
+    connectPromise.then((c) => c.close()).catch(() => {});
+    throw err;
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
   }
 }
 
