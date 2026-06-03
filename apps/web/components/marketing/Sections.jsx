@@ -93,7 +93,7 @@ export function HeroTextBlock({ onGetStarted }) {
       <p className="lead">{t('hero.lead')}</p>
       <div className="hero-cta">
         <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
-        <MBtn variant="secondary" size="lg" href="/docs">{t('hero.ctaSecondary')}</MBtn>
+        <Link className="btn btn-secondary btn-lg" href="/docs">{t('hero.ctaSecondary')}</Link>
       </div>
       <div className="hero-meta">
         <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaUnlimited')}</span>
@@ -626,7 +626,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
         <p className="pricing-footnote">
           {t.rich('pricing.footnote', {
             contact: (chunks) => <a href="mailto:hello@mcpemails.com">{chunks}</a>,
-            comparison: (chunks) => <a href="/pricing">{chunks}</a>,
+            comparison: (chunks) => <Link href="/pricing">{chunks}</Link>,
           })}
         </p>
       </div>
