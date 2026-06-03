@@ -19,7 +19,7 @@ Pon esos cuatro puntos frente a cada opción. Las diferencias se ven enseguida.
 
 ## Opción 1: un servidor de correo MCP gestionado
 
-Es el enfoque del [Model Context Protocol](https://modelcontextprotocol.io), gestionado por ti. Conectas tu bandeja una vez en un panel, pegas una única URL de endpoint en Claude y el agente obtiene un conjunto limpio de herramientas de correo. Claude las invoca como cualquier otra herramienta: \`list_inboxes\`, \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\`, más unas cuantas para marcas, carpetas, programación y contactos.
+Es el enfoque del [Model Context Protocol](https://modelcontextprotocol.io), gestionado por ti. Conectas tu bandeja una vez en un panel, pegas una única URL de endpoint en Claude y el agente obtiene un conjunto limpio de herramientas de correo. Claude las invoca como cualquier otra herramienta: \`inbox_list\` para ver tus cuentas, \`email_read\` para listar, leer o buscar mensajes, \`email_compose\` para enviar, responder o reenviar, más \`email_organize\`, \`folder\`, \`draft\`, \`schedule\` y \`contact_search\` para marcas, carpetas, borradores, programación y contactos — ocho herramientas en total, cada una eligiendo su operación con un parámetro \`action\`.
 
 MCP Emails es el que yo desarrollo, así que tómate la recomendación con eso en mente, pero lo que lo hace ganar para la mayoría es la arquitectura, no el marketing. Cada llamada a una herramienta consulta tu proveedor en vivo (Gmail API, Microsoft Graph o IMAP/SMTP), entrega el mensaje a Claude y lo descarta. **El cuerpo del correo nunca se almacena.** Lo único que persiste por bandeja es un token de OAuth o una contraseña de aplicación cifrados, con cifrado AES-256-GCM en reposo, descifrados únicamente dentro de una edge function aislada en el momento de la llamada. Si quieres la versión larga de por qué eso importa, lee [por qué importa que "el correo nunca se almacena"](/blog/why-email-never-stored-matters).
 
@@ -27,7 +27,7 @@ La configuración es realmente rápida. En claude.ai vas a **Customize → Conne
 
 **Ideal para:** casi todo el mundo — usuarios no técnicos, gente con Gmail, Outlook e IMAP a la vez, cualquiera a quien le importe que el cuerpo no se almacene.
 
-**Las concesiones honestas:** es un servicio de terceros dentro de tu ruta de autenticación (puedes revocar desde el panel con un clic, pero confías en el modelo de seguridad del proveedor). Y no hay webhooks. Para reaccionar al correo nuevo, Claude tiene que sondear — llamar a \`list_messages\` con \`unread_only: true\` de forma programada. Las notificaciones push no existen en MCP. Cualquier herramienta que afirme reaccionar al correo en tiempo real o está sondeando por debajo o está almacenando tu correo.
+**Las concesiones honestas:** es un servicio de terceros dentro de tu ruta de autenticación (puedes revocar desde el panel con un clic, pero confías en el modelo de seguridad del proveedor). Y no hay webhooks. Para reaccionar al correo nuevo, Claude tiene que sondear — llamar a \`email_read\` con \`action: list\` y \`unread_only: true\` de forma programada. Las notificaciones push no existen en MCP. Cualquier herramienta que afirme reaccionar al correo en tiempo real o está sondeando por debajo o está almacenando tu correo.
 
 El plan gratuito es de 0 $ para siempre, con bandejas y llamadas a herramientas ilimitadas, con un tope de 60 requests/minute. Los planes de pago ([precios](/pricing)) elevan el límite de ráfaga y añaden funciones para equipos. Aquí el coste rara vez es el factor decisivo.
 
@@ -75,7 +75,7 @@ Esta es mi opinión sin pelos en la lengua.
 
 **Sáltate la extensión de navegador** salvo que vivas en Gmail web y hayas leído su política de datos con atención. **Sáltate las integraciones nativas** salvo que la tuya ya incluya la función y seas una persona de un solo cliente y un solo proveedor.
 
-Una cosa más que separa las opciones serias de los juguetes: el envío. Con MCP Emails, \`send_email\` y \`reply_to_email\` pasan por tu propio proveedor — Gmail API, Microsoft Graph o tu SMTP — así que la reputación de tu dominio sigue siendo tuya y las cabeceras de hilado se configuran automáticamente. El correo que se reenvía desde el dominio de otro es un problema de entregabilidad esperando a suceder.
+Una cosa más que separa las opciones serias de los juguetes: el envío. Con MCP Emails, \`email_compose\` (acción send o reply) pasa por tu propio proveedor — Gmail API, Microsoft Graph o tu SMTP — así que la reputación de tu dominio sigue siendo tuya y las cabeceras de hilado se configuran automáticamente. El correo que se reenvía desde el dominio de otro es un problema de entregabilidad esperando a suceder.
 
 ## Empieza ya
 

@@ -75,16 +75,16 @@ Får du en verktøyliste tilbake, er du tilkoblet. En \`-32001\`-feil betyr at n
 
 ## Verktøyene agenten din får
 
-Begge løypene eksponerer den samme flaten. Seks kjerneverktøy dekker arbeidet:
+Begge løypene eksponerer den samme flaten. En håndfull konsoliderte, handlingsbaserte verktøy dekker arbeidet:
 
-- \`list_inboxes\` — kall alltid dette først for å oppdage tilkoblede innbokser og ID-ene deres.
-- \`list_messages\` — paginert, nyeste først.
-- \`read_email\` — parset ren tekst, valgfri renset HTML, vedlegg.
-- \`search_emails\` — leverandørnativt søk (Gmail-operatorer, Outlook KQL, IMAP-tekst).
-- \`send_email\` — sett sammen med CC/BCC, HTML, vedlegg opptil 10 MB.
-- \`reply_to_email\` — setter In-Reply-To- og References-headere for deg slik at tråden holdes intakt.
+- \`inbox_list\` — kall alltid dette først for å oppdage tilkoblede innbokser og ID-ene deres.
+- \`email_read\` (handling \`list\`) — paginert, nyeste først.
+- \`email_read\` (handling \`read\`) — parset ren tekst, valgfri renset HTML, vedlegg.
+- \`email_read\` (handling \`search\`) — leverandørnativt søk (Gmail-operatorer, Outlook KQL, IMAP-tekst).
+- \`email_compose\` (handling \`send\`) — sett sammen med CC/BCC, HTML, vedlegg opptil 10 MB.
+- \`email_compose\` (handling \`reply\`) — setter In-Reply-To- og References-headere for deg slik at tråden holdes intakt.
 
-Det finnes noen flere for flagg, mapper, planlagt sending og kontakter, men de seks gjør brorparten av det reelle arbeidet.
+Det finnes noen flere for flagg og flytting (\`email_organize\`), mapper, planlagt sending og kontakter, men disse få gjør brorparten av det reelle arbeidet.
 
 ## En utviklingsflyt som gjør seg fortjent til plassen
 
@@ -92,21 +92,21 @@ Her er det det lønner seg. Jeg holder en les+send-nøkkel koblet inn i editoren
 
 Morgensortering, skrevet rett inn i chatpanelet:
 
-> Kall list_inboxes, og list så ulest fra arbeidsinnboksen min de siste 12 timene. Grupper dem: trenger svar, FYI og støy. For FYI-bunken, gi meg én linje hver.
+> Kall inbox_list, og list så ulest fra arbeidsinnboksen min de siste 12 timene. Grupper dem: trenger svar, FYI og støy. For FYI-bunken, gi meg én linje hver.
 
-Agenten kjører \`list_inboxes\`, deretter \`list_messages\` med \`unread_only\` satt, leser de som betyr noe, og leverer tilbake et sortert sammendrag. Når jeg ser en jeg vil ha besvart, følger jeg opp:
+Agenten kjører \`inbox_list\`, deretter \`email_read\` med handling \`list\` og \`unread_only\` satt, leser de som betyr noe, og leverer tilbake et sortert sammendrag. Når jeg ser en jeg vil ha besvart, følger jeg opp:
 
 > Svar på meldingen fra designkonsulenten og bekreft at torsdag klokken 14 fungerer, hold det kort.
 
-Den kaller \`reply_to_email\`, trådingen er håndtert, og svaret går ut gjennom min egen Gmail — så det lander fra adressen min med domenets omdømme, ikke et eller annet relé. For en grundigere behandling av sorteringsledetekster, se [hvordan du får en AI-agent til å sortere og oppsummere innboksen din](/blog/ai-agent-triage-summarize-inbox).
+Den kaller \`email_compose\` med handling \`reply\`, trådingen er håndtert, og svaret går ut gjennom min egen Gmail — så det lander fra adressen min med domenets omdømme, ikke et eller annet relé. For en grundigere behandling av sorteringsledetekster, se [hvordan du får en AI-agent til å sortere og oppsummere innboksen din](/blog/ai-agent-triage-summarize-inbox).
 
-En ærlig begrensning: det finnes ingen webhooks. Serveren dytter ikke ny post til deg. Vil du at agenten skal reagere på innkommende meldinger, må du polle — \`list_messages\` med \`unread_only: true\` etter en plan. Det er et bevisst designvalg, og det former hvordan du bygger noe som helst reaktivt, som en [autosvarer over MCP](/blog/build-email-auto-responder-mcp-agent).
+En ærlig begrensning: det finnes ingen webhooks. Serveren dytter ikke ny post til deg. Vil du at agenten skal reagere på innkommende meldinger, må du polle — \`email_read\` med handling \`list\` og \`unread_only: true\` etter en plan. Det er et bevisst designvalg, og det former hvordan du bygger noe som helst reaktivt, som en [autosvarer over MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Ratebegrensninger for skriptet tilgang
 
 Driver du serveren fra en cron-jobb eller en tett agentløkke, ta hensyn til grensene. Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, på alle planer. I tillegg finnes det et burst-tak per arbeidsområde satt av planen din: 60/min på Free, 300/min på Solo ($12/month), 1 000/min på Team ($49/month). Se [prissiden](/pricing) for hele oversikten.
 
-Når du treffer en grense, returnerer serveren en gjentakbar feil (kode \`-32029\`) med \`data.retry_after\` i sekunder. Respekter den — bakk av så lenge og prøv igjen. Og prøv aldri blindt på nytt en \`send_email\` ved en generisk feil; du fyrer av duplikater. Sjekk om den faktisk ble sendt først.
+Når du treffer en grense, returnerer serveren en gjentakbar feil (kode \`-32029\`) med \`data.retry_after\` i sekunder. Respekter den — bakk av så lenge og prøv igjen. Og prøv aldri blindt på nytt en \`email_compose\`-sending ved en generisk feil; du fyrer av duplikater. Sjekk om den faktisk ble sendt først.
 
 ## Oppsummering
 

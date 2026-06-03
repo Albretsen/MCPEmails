@@ -104,22 +104,20 @@ For provider-specific quirks across iCloud, Fastmail, and the long tail of IMAP 
 
 ## First call: discover, then act
 
-Whichever provider you picked, the agent's first move is always the same. Have it call \`list_inboxes\` to discover what's connected and grab each inbox's \`inbox_id\` — the agent never copy-pastes a UUID. From there it has six core tools (plus a few more for flags, folders, scheduling, and contacts):
+Whichever provider you picked, the agent's first move is always the same. Have it call \`inbox_list\` to discover what's connected and grab each inbox's \`inbox_id\` — the agent never copy-pastes a UUID. From there it works through a small set of consolidated tools — \`email_read\` (with an \`action\` of \`list\`, \`read\`, or \`search\`), \`email_compose\` (\`send\`, \`reply\`, or \`forward\`), and \`email_organize\` for moving, flagging, and archiving — plus \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\`:
 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose",
+    "email_organize"
   ]
 }
 \`\`\`
 
-A good smoke test: ask your agent "summarize my three most recent unread emails." It'll run \`list_inboxes\`, then \`list_messages\` with \`unread_only: true\`, then \`read_email\` on each. If that works, your connection is live.
+A good smoke test: ask your agent "summarize my three most recent unread emails." It'll run \`inbox_list\`, then \`email_read\` with \`action: "list"\` and \`unread_only: true\`, then \`email_read\` with \`action: "read"\` on each. If that works, your connection is live.
 
 One honest caveat worth setting up front: MCP Emails is poll-based. There are no webhooks or push events, so an agent reacts to new mail by checking on a schedule rather than getting pinged. That's the right model for most workflows, and it's how the [inbox triage and summarize](/blog/ai-agent-triage-summarize-inbox) patterns work.
 
@@ -129,7 +127,7 @@ Speed here doesn't come from cutting corners on security. Email is fetched live 
 
 ## Wrap-up
 
-That's the whole thing: one inbox connection, one endpoint, six tools. Every plan is unlimited on inboxes, calls, and keys, and the Free tier costs nothing and needs no card — check [pricing](/pricing) if you need higher burst limits or SSO. Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
+That's the whole thing: one inbox connection, one endpoint, a handful of tools. Every plan is unlimited on inboxes, calls, and keys, and the Free tier costs nothing and needs no card — check [pricing](/pricing) if you need higher burst limits or SSO. Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
     es: `Conectas tu correo a un agente de IA en dos pasos: conecta el buzón en el panel de MCP Emails y luego apunta tu agente a una única URL de endpoint. Con un cliente compatible con OAuth como claude.ai, eso es todo. Sin código, sin SDK, y tu correo no se almacena en ningún sitio: cada lectura y cada envío llega a tu proveedor en tiempo real y se descarta en cuanto el agente lo recibe.
 
 Esta es la guía rápida. Elige tu proveedor más abajo, sigue los cuatro o cinco pasos y tendrás a Claude (o Cursor, o un script propio) leyendo y enviando correo real en aproximadamente el tiempo que tardas en leer este párrafo dos veces. Si prefieres la versión más a fondo de "qué es esto y si es seguro", empieza por la [guía completa para dar acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access).
@@ -215,22 +213,20 @@ Para las particularidades de iCloud, Fastmail y la larga lista de servidores IMA
 
 ## Primera llamada: descubre y luego actúa
 
-Sea cual sea el proveedor que elijas, el primer movimiento del agente siempre es el mismo. Haz que llame a \`list_inboxes\` para descubrir qué hay conectado y obtener el \`inbox_id\` de cada buzón: el agente nunca copia y pega un UUID. A partir de ahí dispone de seis herramientas principales (y algunas más para marcas, carpetas, programación y contactos):
+Sea cual sea el proveedor que elijas, el primer movimiento del agente siempre es el mismo. Haz que llame a \`inbox_list\` para descubrir qué hay conectado y obtener el \`inbox_id\` de cada buzón: el agente nunca copia y pega un UUID. A partir de ahí trabaja con un pequeño conjunto de herramientas consolidadas: \`email_read\` (con un \`action\` de \`list\`, \`read\` o \`search\`), \`email_compose\` (\`send\`, \`reply\` o \`forward\`) y \`email_organize\` para mover, marcar y archivar, además de \`folder\`, \`draft\`, \`schedule\` y \`contact_search\`:
 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose",
+    "email_organize"
   ]
 }
 \`\`\`
 
-Una buena prueba rápida: pídele al agente "resume mis tres correos sin leer más recientes". Ejecutará \`list_inboxes\`, luego \`list_messages\` con \`unread_only: true\` y después \`read_email\` en cada uno. Si eso funciona, tu conexión está activa.
+Una buena prueba rápida: pídele al agente "resume mis tres correos sin leer más recientes". Ejecutará \`inbox_list\`, luego \`email_read\` con \`action: "list"\` y \`unread_only: true\` y después \`email_read\` con \`action: "read"\` en cada uno. Si eso funciona, tu conexión está activa.
 
 Una advertencia honesta que conviene dejar clara desde el principio: MCP Emails funciona por sondeo. No hay webhooks ni eventos push, así que un agente reacciona al correo nuevo comprobándolo según una programación, no recibiendo un aviso. Es el modelo adecuado para la mayoría de flujos, y así funcionan los patrones de [clasificación y resumen del buzón](/blog/ai-agent-triage-summarize-inbox).
 
@@ -240,6 +236,6 @@ La rapidez aquí no viene de recortar en seguridad. El correo se obtiene en tiem
 
 ## Para terminar
 
-Eso es todo: una conexión de buzón, un endpoint, seis herramientas. Todos los planes son ilimitados en buzones, llamadas y claves, y el plan Free no cuesta nada ni pide tarjeta; consulta los [precios](/pricing) si necesitas límites de ráfaga más altos o SSO. ¿Listo para probarlo? [Empieza gratis](/signup), conecta tu buzón y pega el endpoint en tu agente.`,
+Eso es todo: una conexión de buzón, un endpoint, un puñado de herramientas. Todos los planes son ilimitados en buzones, llamadas y claves, y el plan Free no cuesta nada ni pide tarjeta; consulta los [precios](/pricing) si necesitas límites de ráfaga más altos o SSO. ¿Listo para probarlo? [Empieza gratis](/signup), conecta tu buzón y pega el endpoint en tu agente.`,
   },
 };

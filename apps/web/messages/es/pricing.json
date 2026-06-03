@@ -142,7 +142,7 @@
       },
       {
         "q": "¿Qué cuenta como una llamada MCP?",
-        "a": "Cada invocación de herramienta JSON-RPC contra tu endpoint /mcp cuenta como una llamada: inbox_list, email_list, email_read, email_search, email_send o email_reply. Las llamadas son ilimitadas; solo cuentan para tu tope de uso justo por minuto."
+        "a": "Cada invocación de herramienta JSON-RPC contra tu endpoint /mcp cuenta como una llamada: inbox_list, email_read, email_compose, email_organize, folder, draft, schedule o contact_search. Las llamadas son ilimitadas; solo cuentan para tu tope de uso justo por minuto."
       },
       {
         "q": "¿Se almacena en algún sitio el contenido de mi correo?",

@@ -26,12 +26,12 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 // SEED_KEYS removed: API keys are now fetched server-side and passed as props.
 
 const SEED_ACTIVITY = [
-  { tool: "email_list",     account: "work-gmail",   time: "just now", ok: true },
+  { tool: "email_read",     account: "work-gmail",   time: "just now", ok: true },
   { tool: "email_read",     account: "work-gmail",   time: "12s ago",  ok: true },
-  { tool: "email_send",     account: "personal",     time: "1m ago",   ok: true },
-  { tool: "email_search",   account: "work-gmail",   time: "3m ago",   ok: true },
-  { tool: "email_list",     account: "ops-fastmail", time: "8m ago",   ok: false },
-  { tool: "email_reply",    account: "personal",     time: "14m ago",  ok: true },
+  { tool: "email_compose",  account: "personal",     time: "1m ago",   ok: true },
+  { tool: "email_read",     account: "work-gmail",   time: "3m ago",   ok: true },
+  { tool: "email_organize", account: "ops-fastmail", time: "8m ago",   ok: false },
+  { tool: "email_compose",  account: "personal",     time: "14m ago",  ok: true },
 ];
 
 function readQuery(searchParams, key) {

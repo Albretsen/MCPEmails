@@ -3,7 +3,7 @@ export default {
   description:
     'Un guide pratique pour le tri de la boîte de réception par un agent IA : des prompts prêts à copier-coller pour lister le courrier non lu, lire l’essentiel, résumer, prioriser et interroger à intervalle régulier.',
   coverAlt: 'Un agent IA trie et résume une boîte de réception via MCP — MCP Emails',
-  content: `Le moyen le plus rapide d’amener un agent IA à trier votre boîte de réception est de lui donner quatre outils dans l’ordre : \`list_inboxes\` pour trouver votre boîte aux lettres, \`list_messages\` avec \`unread_only: true\` pour récupérer les nouveautés, \`read_email\` pour la poignée de messages qui semblent importants, puis une instruction en langage clair pour les résumer et les classer. Voilà toute la boucle. Si vous voulez qu’il rédige ou envoie des réponses, vous ajoutez \`reply_to_email\` à la fin.
+  content: `Le moyen le plus rapide d’amener un agent IA à trier votre boîte de réception est de vous appuyer sur deux outils dans l’ordre : \`inbox_list\` pour trouver votre boîte aux lettres, puis \`email_read\` — avec \`action: list\` et \`unread_only: true\` pour récupérer les nouveautés, puis \`action: read\` pour la poignée de messages qui semblent importants — puis une instruction en langage clair pour les résumer et les classer. Voilà toute la boucle. Si vous voulez qu’il rédige ou envoie des réponses, vous ajoutez \`email_compose\` avec \`action: reply\` à la fin.
 
 Cet article vous donne les prompts exacts que j’utilise, ce à quoi ressemble une bonne sortie, et comment exécuter la même boucle de façon planifiée pour que votre tri matinal soit fait avant même que vous ne vous installiez. Il suppose que votre agent a déjà accès à votre messagerie via [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). Si vous n’avez pas encore connecté de boîte, le [guide de connexion en moins de deux minutes](/blog/connect-email-to-ai-agent-under-2-minutes) vous y amène d’abord.
 
@@ -11,11 +11,11 @@ Cet article vous donne les prompts exacts que j’utilise, ce à quoi ressemble 
 
 Chaque session de tri suit les mêmes cinq étapes. Votre agent détermine l’ordre tout seul une fois que vous décrivez l’objectif, mais il est utile de savoir ce qui se passe sous le capot :
 
-1. \`list_inboxes\` — découvrir les boîtes connectées et leurs UUID \`inbox_id\`. L’agent ne code jamais un UUID en dur ; il en cherche un ici.
-2. \`list_messages\` avec \`unread_only: true\` — récupérer la file des non-lus d’une boîte, du plus récent au plus ancien.
-3. \`read_email\` — ouvrir le corps complet des quelques messages qui méritent une lecture détaillée.
+1. \`inbox_list\` — découvrir les boîtes connectées et leurs UUID \`inbox_id\`. L’agent ne code jamais un UUID en dur ; il en cherche un ici.
+2. \`email_read\` avec \`action: list\` et \`unread_only: true\` — récupérer la file des non-lus d’une boîte, du plus récent au plus ancien.
+3. \`email_read\` avec \`action: read\` — ouvrir le corps complet des quelques messages qui méritent une lecture détaillée.
 4. Résumer et prioriser — du pur raisonnement, aucun appel d’outil. Le modèle regroupe, classe et explique.
-5. \`reply_to_email\` (facultatif) — rédiger ou envoyer pour ceux qui appellent une réponse.
+5. \`email_compose\` avec \`action: reply\` (facultatif) — rédiger ou envoyer pour ceux qui appellent une réponse.
 
 Les étapes 1 à 4 sont en lecture seule. Si vous vous êtes connecté avec [une autorisation OAuth ou une clé API](/blog/oauth-vs-api-keys-ai-email-access) limitée au périmètre \`read:email\`, l’agent est physiquement incapable d’envoyer quoi que ce soit, ce qui est exactement ce que vous voulez pour un résumé automatisé que vous parcourrez plus tard.
 
@@ -25,7 +25,7 @@ Commencez simple. C’est celui que je lance la plupart des jours. Collez-le dan
 
 > Regarde ma boîte de réception principale. Récupère tout ce qui n’est pas lu, puis donne-moi un résumé réparti en trois catégories : à répondre aujourd’hui, pour info / peut attendre, et probablement du bruit. Pour chaque élément des deux premières catégories, donne-moi une ligne : de qui ça vient et ce qu’ils veulent. N’ouvre rien dont je n’ai pas besoin — survole d’abord les objets et les expéditeurs, ne lis le corps que quand l’objet est ambigu.
 
-Remarquez ce que fait ce prompt. Il dit à l’agent de s’appuyer sur les métadonnées de \`list_messages\` (expéditeur, objet, extrait) et de n’appeler \`read_email\` que parcimonieusement. Cela garde la session rapide et reste bien en dessous des limites de débit — 100 requêtes par minute par clé API, et un plafond par espace de travail qui démarre à 60/min sur le plan Free. Une file de 40 messages non lus triée ainsi représente peut-être une douzaine d’appels d’outils, pas quarante.
+Remarquez ce que fait ce prompt. Il dit à l’agent de s’appuyer sur les métadonnées de \`email_read\` (action list) (expéditeur, objet, extrait) et de n’appeler \`email_read\` avec \`action: read\` que parcimonieusement. Cela garde la session rapide et reste bien en dessous des limites de débit — 100 requêtes par minute par clé API, et un plafond par espace de travail qui démarre à 60/min sur le plan Free. Une file de 40 messages non lus triée ainsi représente peut-être une douzaine d’appels d’outils, pas quarante.
 
 Une bonne réponse ressemble à ceci :
 
@@ -64,7 +64,7 @@ La phrase « pas selon le volume sonore de l’expéditeur » a son importance. 
 ...
 \`\`\`
 
-Pour ce prompt, l’agent appellera \`read_email\` huit fois, une fois par élément du top, parce que vous lui avez demandé d’arrêter de deviner. C’est le bon compromis : quelques appels supplémentaires pour des classements sur lesquels vous pouvez agir. Si l’agent atteint effectivement une limite en cours d’exécution, MCP Emails renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes — un client bien élevé attend ce délai et reprend plutôt que de marteler le serveur.
+Pour ce prompt, l’agent appellera \`email_read\` avec \`action: read\` huit fois, une fois par élément du top, parce que vous lui avez demandé d’arrêter de deviner. C’est le bon compromis : quelques appels supplémentaires pour des classements sur lesquels vous pouvez agir. Si l’agent atteint effectivement une limite en cours d’exécution, MCP Emails renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes — un client bien élevé attend ce délai et reprend plutôt que de marteler le serveur.
 
 ## Prompt 3 : un tri qui se termine par une réponse
 
@@ -72,13 +72,13 @@ Le tri prend plus de valeur quand il boucle les choses. Une fois que vous faites
 
 > Même tri que d’habitude. Pour tout ce qui est dans « à répondre aujourd’hui » et que je peux régler en deux phrases, rédige la réponse et montre-la-moi. N’envoie pas encore — je dirai « envoie 1 et 3 » ou je les modifierai. Reprends mon ton habituel : court, direct, sans remplissage corporate.
 
-L’agent exécute la boucle en lecture seule, puis écrit les brouillons en ligne. Quand vous dites « envoie 1 et 3 », il appelle \`reply_to_email\` pour ces deux-là. Les réponses s’insèrent automatiquement dans le fil — MCP Emails définit pour vous les en-têtes \`In-Reply-To\` et \`References\`, de sorte que votre réponse atterrit dans la bonne conversation au lieu d’en démarrer une nouvelle. Le courrier part via votre propre fournisseur (l’API Gmail, Microsoft Graph ou votre SMTP), de sorte que la délivrabilité et la réputation de votre domaine restent les vôtres. Rien n’est relayé depuis un quelconque domaine d’envoi partagé.
+L’agent exécute la boucle en lecture seule, puis écrit les brouillons en ligne. Quand vous dites « envoie 1 et 3 », il appelle \`email_compose\` avec \`action: reply\` pour ces deux-là. Les réponses s’insèrent automatiquement dans le fil — MCP Emails définit pour vous les en-têtes \`In-Reply-To\` et \`References\`, de sorte que votre réponse atterrit dans la bonne conversation au lieu d’en démarrer une nouvelle. Le courrier part via votre propre fournisseur (l’API Gmail, Microsoft Graph ou votre SMTP), de sorte que la délivrabilité et la réputation de votre domaine restent les vôtres. Rien n’est relayé depuis un quelconque domaine d’envoi partagé.
 
 Si vous voulez aller plus loin et vous retirer complètement de la boucle, c’est une autre forme d’automatisation — voyez [construire un répondeur automatique avec un agent MCP](/blog/build-email-auto-responder-mcp-agent) pour les garde-fous que je mettrais en place avant de laisser un agent envoyer sans surveillance.
 
 ## Exécuter le tri de façon planifiée
 
-Voici la limite, en toute honnêteté : MCP fonctionne en **interrogation, pas en notification poussée.** MCP Emails n’a pas de webhooks et n’envoie aucun événement initié par le serveur. Votre agent n’est pas prévenu quand un courrier arrive. Pour faire du tri en continu, quelque chose doit appeler \`list_messages\` avec \`unread_only: true\` sur une minuterie.
+Voici la limite, en toute honnêteté : MCP fonctionne en **interrogation, pas en notification poussée.** MCP Emails n’a pas de webhooks et n’envoie aucun événement initié par le serveur. Votre agent n’est pas prévenu quand un courrier arrive. Pour faire du tri en continu, quelque chose doit appeler \`email_read\` avec \`action: list\` et \`unread_only: true\` sur une minuterie.
 
 En pratique, cela signifie l’une de deux configurations :
 
@@ -91,7 +91,7 @@ Quelle que soit la cadence que vous choisissez, gardez l’interrogation honnêt
 
 ## Quelques détails qui rendent le tri nettement meilleur
 
-- **Nommez la boîte.** Si vous avez connecté plus d’un compte, dites « ma boîte pro » ou « la boîte de support ». L’agent la retrouve à partir des titres de \`list_inboxes\`, et vous lui évitez de trier la mauvaise boîte aux lettres.
+- **Nommez la boîte.** Si vous avez connecté plus d’un compte, dites « ma boîte pro » ou « la boîte de support ». L’agent la retrouve à partir des titres de \`inbox_list\`, et vous lui évitez de trier la mauvaise boîte aux lettres.
 - **Donnez-lui un barème, pas juste « résume ».** « Urgent = quelqu’un est bloqué ou il y a une échéance le jour même » produit des classements bien meilleurs que de laisser l’urgence indéfinie.
 - **Plafonnez les lectures.** « N’ouvre le corps que quand l’objet est ambigu » ou « lis le top 8 » garde les sessions rapides et bon marché. Un « lis tout » sans limite est lent et rarement meilleur.
 - **Restez en lecture seule jusqu’à ce que vous lui fassiez confiance.** Tournez avec un périmètre \`read:email\` pendant une semaine. N’ajoutez \`send:email\` qu’une fois que les brouillons sont systématiquement bons.

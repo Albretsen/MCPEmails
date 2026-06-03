@@ -51,7 +51,7 @@
       "0": {
         "tag": "Scope",
         "h": "Six core tools. The essentials, covered.",
-        "p": "The six core calls cover the everyday work — <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code> — and more advanced tools (folders, drafts, scheduling) are there when you need them. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
+        "p": "A handful of tools cover the everyday work — <code>inbox_list</code>, <code>email_read</code> (list, read, search) and <code>email_compose</code> (send, reply) — and more advanced tools (<code>email_organize</code>, <code>folder</code>, <code>draft</code>, <code>schedule</code>) are there when you need them. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
       },
       "1": {
         "tag": "Storage",
@@ -61,7 +61,7 @@
       "2": {
         "tag": "Sending",
         "h": "Sending goes through your provider.",
-        "p": "When your agent calls <code>email_send</code> or <code>email_reply</code>, the message is dispatched via the Gmail API, Fastmail JMAP, or your own SMTP server. Your domain reputation and deliverability stay entirely in your hands. We never relay mail from our own domain."
+        "p": "When your agent calls <code>email_compose</code> (to send or reply), the message is dispatched via the Gmail API, Fastmail JMAP, or your own SMTP server. Your domain reputation and deliverability stay entirely in your hands. We never relay mail from our own domain."
       },
       "3": {
         "tag": "Providers",
@@ -95,16 +95,18 @@
       },
       "2": {
         "h": "Your agent works the inbox",
-        "p": "The agent calls tools like <code>email_search()</code> or <code>email_reply()</code>. MCPEmails fetches live from your provider and returns the result. Nothing is cached between calls."
+        "p": "The agent calls tools like <code>email_read()</code> or <code>email_compose()</code>. MCPEmails fetches live from your provider and returns the result. Nothing is cached between calls."
       }
     },
     "tools": {
       "0": "Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard.",
-      "1": "List recent messages with sender, subject, date, and snippet, up to 100 per call.",
-      "2": "Fetch a single message by ID. Returns parsed plain-text and sanitized HTML body, plus attachment metadata.",
-      "3": "Provider-native search: Gmail query syntax, Fastmail JMAP, or IMAP SEARCH. Returns up to 100 matches.",
-      "4": "Send a new message via the connected account. Dispatched through Gmail API, Fastmail JMAP, or SMTP: your domain, your deliverability.",
-      "5": "Reply in-thread with correct Message-ID and References headers. Works across Gmail, Fastmail, and any IMAP inbox."
+      "1": "Read mail: list recent summaries, fetch a full message by ID, batch-read up to 50, or run a provider-agnostic search — all via the action argument.",
+      "2": "Organize mail: move, delete, flag, or archive — one at a time, in bulk, or straight from a search.",
+      "3": "Compose: send a new message, reply in-thread, or forward. Dispatched through Gmail API, Fastmail JMAP, or SMTP: your domain, your deliverability.",
+      "4": "Manage folders (labels on Gmail): list, create, rename, or delete, and use them as move destinations.",
+      "5": "Drafts: list, create, update, and send drafts stored in the provider's Drafts folder.",
+      "6": "Schedule a message for a future time, list pending scheduled sends, and cancel them before they go out.",
+      "7": "Find people by name or email with a live scan of recent matching mail. Nothing is stored."
     }
   },
   "quote": {

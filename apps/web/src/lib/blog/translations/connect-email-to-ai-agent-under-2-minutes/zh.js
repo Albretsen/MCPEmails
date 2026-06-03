@@ -87,22 +87,20 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 
 ## 第一次调用：先发现，再行动
 
-不管你选了哪个服务商，智能体的第一步永远一样。让它调用 \`list_inboxes\` 来发现有哪些邮箱已连接，并取得每个邮箱的 \`inbox_id\`——智能体从不去复制粘贴 UUID。从这里开始，它有六个核心工具（外加几个用于标记、文件夹、定时和联系人的工具）：
+不管你选了哪个服务商，智能体的第一步永远一样。让它调用 \`inbox_list\` 来发现有哪些邮箱已连接，并取得每个邮箱的 \`inbox_id\`——智能体从不去复制粘贴 UUID。从这里开始，它使用一小组整合后的工具：\`email_read\`（\`action\` 取 \`list\`、\`read\` 或 \`search\`）、\`email_compose\`（\`send\`、\`reply\` 或 \`forward\`），以及用于移动、标记和归档的 \`email_organize\`，再加上 \`folder\`、\`draft\`、\`schedule\` 和 \`contact_search\`：
 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose",
+    "email_organize"
   ]
 }
 \`\`\`
 
-一个不错的冒烟测试：让你的智能体“总结我最近的三封未读邮件”。它会先运行 \`list_inboxes\`，然后带上 \`unread_only: true\` 运行 \`list_messages\`，再对每一封运行 \`read_email\`。如果这能跑通，你的连接就已经生效了。
+一个不错的冒烟测试：让你的智能体“总结我最近的三封未读邮件”。它会先运行 \`inbox_list\`，然后带上 \`action: "list"\` 和 \`unread_only: true\` 运行 \`email_read\`，再对每一封带上 \`action: "read"\` 运行 \`email_read\`。如果这能跑通，你的连接就已经生效了。
 
 有一个值得先讲明白的实话提醒：MCP Emails 是基于轮询的。没有 webhook，也没有推送事件，所以智能体是按计划定期检查来对新邮件做出反应，而不是被实时通知。对大多数工作流来说这才是正确的模型，[收件箱分类与摘要](/blog/ai-agent-triage-summarize-inbox)的那些模式也正是这么工作的。
 
@@ -112,5 +110,5 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 
 ## 总结
 
-整件事就这么简单：一次邮箱连接、一个 endpoint、六个工具。每一种套餐对邮箱、调用次数和密钥都是无限量，而 Free 套餐分文不取、无需绑卡——如果你需要更高的突发限额或 SSO，去看看[价格](/pricing)。准备好试一试了吗？[免费开始](/signup)，连接你的邮箱，把 endpoint 粘贴进你的智能体。`,
+整件事就这么简单：一次邮箱连接、一个 endpoint、寥寥数个工具。每一种套餐对邮箱、调用次数和密钥都是无限量，而 Free 套餐分文不取、无需绑卡——如果你需要更高的突发限额或 SSO，去看看[价格](/pricing)。准备好试一试了吗？[免费开始](/signup)，连接你的邮箱，把 endpoint 粘贴进你的智能体。`,
 };

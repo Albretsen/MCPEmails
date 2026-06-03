@@ -62,7 +62,7 @@
     "infoFormat": "响应格式：<b>JSON-RPC 2.0</b>——成功的结果还会携带一个带类型的 <code>structuredContent</code> 对象",
     "handshakeLabel": "初始化握手",
     "pollingHeading": "轮询，而非推送",
-    "pollingBody": "MCPEmails 仅采用请求/响应模式：每个结果都来自你的智能体发起的工具调用。<b>没有 webhook、推送通知或由服务器发起的事件</b>——收到新邮件本身绝不会触发智能体调用。要对新邮件作出响应，请让你的智能体按计划<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_list</code> 并设置 <code>unread_only: true</code>（注意上面的速率限制）。"
+    "pollingBody": "MCPEmails 仅采用请求/响应模式：每个结果都来自你的智能体发起的工具调用。<b>没有 webhook、推送通知或由服务器发起的事件</b>——收到新邮件本身绝不会触发智能体调用。要对新邮件作出响应，请让你的智能体按计划<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread_only: true</code>（注意上面的速率限制）。"
   },
   "oauth": {
     "eyebrow": "OAuth 连接",
@@ -81,38 +81,8 @@
   },
   "tools": {
     "eyebrow": "工具参考",
-    "heading": "28 个工具。满足你智能体所需的每一项邮件操作。",
-    "sub": "<b>指定收件箱是可选的。</b>当你的密钥恰好只有一个收件箱时，每个按收件箱的工具都会自动解析它——无需 <code>inbox_id</code>。若有多个收件箱，请传入 <code>inbox_id</code>（来自 <code>inbox_list</code> 的 UUID）或 <code>inbox</code>（收件箱的电子邮件地址）。工具按解锁它们的权限范围分组；<code>tools/list</code> 仅返回你的密钥（或 OAuth 令牌）拥有范围的工具。点击「显示示例」查看完整的请求与响应。",
-    "scopes": {
-      "read": {
-        "title": "读取与搜索",
-        "desc": "发现收件箱和文件夹，列出并读取邮件（逐封或每批最多 50 封），并运行结构化的、与提供商无关的搜索。只读——绝不更改任何内容。email_search 也可由更窄的 search:email 范围单独解锁。"
-      },
-      "send": {
-        "title": "发送与邮件状态",
-        "desc": "发送、回复和转发，以及非破坏性的状态更改：将邮件标记为已读/未读、加标记/取消标记和归档。发送不可撤销。"
-      },
-      "folders": {
-        "title": "文件夹与整理",
-        "desc": "创建、重命名和删除文件夹（在 Gmail 上为标签），并移动邮件——逐封、批量，或直接基于搜索结果。目标可接受规范别名（inbox、sent、drafts、trash、archive、spam）、文件夹/标签名称，或提供商原生 ID。"
-      },
-      "delete": {
-        "title": "删除",
-        "desc": "将邮件移至回收站或永久彻底清除——逐封、批量，或基于搜索结果。这些操作会被标记为破坏性操作并告知你的 MCP 客户端，由客户端处理用户确认。"
-      },
-      "drafts": {
-        "title": "草稿",
-        "desc": "列出、创建、更新和发送存放在服务商草稿文件夹中的草稿。"
-      },
-      "contacts": {
-        "title": "联系人",
-        "desc": "通过对你近期匹配的邮件进行实时扫描，按姓名或电子邮件查找联系人。不存储任何内容——每次搜索都实时读取。"
-      },
-      "schedule": {
-        "title": "定时发送",
-        "desc": "将一封邮件排入队列以在未来某个时间发送，列出待发送的定时发送，并在它们发出前取消。"
-      }
-    },
+    "heading": "8 个工具。满足你智能体所需的每一项邮件操作。",
+    "sub": "<b>指定收件箱是可选的。</b>当你的密钥只有一个收件箱时，每个按收件箱的工具都会自动解析它——无需 <code>inbox_id</code>。有多个收件箱时，传入 <code>inbox_id</code>（来自 <code>inbox_list</code> 的 UUID）或 <code>inbox</code>（收件箱的邮箱地址）。大多数工具接受一个 <code>action</code> 参数来选择操作；徽章显示每个工具所需的权限范围，而 <code>tools/list</code> 只返回你的密钥（或 OAuth 令牌）有权限的工具。点击“显示示例”查看完整的请求与响应。",
     "noParams": "无参数。使用空的参数对象进行调用：",
     "showExample": "显示示例请求与响应",
     "hideExample": "隐藏示例请求与响应",
@@ -126,340 +96,148 @@
     "badgeOptional": "可选",
     "inbox_list": {
       "title": "列出收件箱",
-      "desc": "返回当前 API 密钥或 OAuth 令牌可访问的所有收件箱。先调用此工具以发现 inbox_id 值，从而无需从仪表盘复制粘贴 UUID。每个结果都包含电子邮件地址、服务商、可选的服务品牌（icloud/yahoo/zoho/yandex/generic/fastmail），以及一个描述该收件箱支持哪些功能的 capabilities 对象。"
-    },
-    "email_list": {
-      "title": "列出邮件",
-      "desc": "列出已连接收件箱的邮件摘要，最新在前。支持分页、文件夹选择和未读筛选。当提供商无法提供计数时，total 字段可能为 null；在 Gmail 上可能带有 total_is_estimate: true。",
+      "desc": "返回当前 API 密钥或 OAuth 令牌可访问的所有收件箱。先调用它来发现 inbox_id 值，这样你就无需从仪表板复制粘贴 UUID。每个结果都包含邮箱地址、提供商、可选的服务品牌（icloud/yahoo/zoho/yandex/generic/fastmail），以及描述该收件箱支持哪些功能的 capabilities 对象。",
       "params": {
-        "inbox_id": "要列出的收件箱的 UUID。先调用 inbox_list 以发现可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "limit": "返回的最大结果数。默认 20，最大 100。",
-        "offset": "从零开始的分页偏移量。默认 0。",
-        "folder": "要列出的文件夹。默认为 \"INBOX\"。其他取值：\"SENT\"、\"DRAFTS\"、\"TRASH\"。",
-        "unread_only": "仅返回未读邮件。默认 false。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
+        "provider": "可选筛选——只返回由该提供商提供服务的收件箱。可选值之一：gmail、fastmail、imap。省略则列出密钥可访问的所有收件箱。",
+        "include_capabilities": "每个收件箱是否包含其 capabilities 对象（支持哪些功能）。默认 true；设为 false 可得到仅含 inbox_id、邮箱地址、显示名称、提供商和服务品牌的精简列表。"
       }
     },
     "email_read": {
       "title": "读取邮件",
-      "desc": "按 ID 获取单封邮件的完整内容，包括纯文本正文、可选的清理过的 HTML，以及可选的附件数据。",
+      "desc": "在收件箱中读取、列出和搜索邮件。设置 action：'list' 获取最近邮件摘要（最新优先，可按文件夹/未读筛选并分页），'read' 获取单个 message_id 的完整内容（纯文本正文、可选的净化后 HTML 和附件），'read_batch' 在一次调用中获取最多 50 个 message_ids，或 'search' 进行结构化、与提供商无关的筛选（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before）。只读——从不更改任何内容。'search' 操作也可由更窄的 search:email 权限单独解锁。",
       "params": {
-        "inbox_id": "包含该邮件的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "message_id": "来自 email_list 或 email_search 的服务商邮件 ID。",
-        "include_html": "包含清理过的 HTML 正文。默认 false。",
-        "include_attachments": "包含 base64 附件数据。默认 false。",
-        "mark_as_read": "获取后将邮件标记为已读。默认 false。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
+        "action": "要执行的操作：\"list\"（最近邮件摘要）、\"read\"（单个 message_id 的完整内容）、\"read_batch\"（多个 message_ids）或 \"search\"（结构化筛选）。决定其他哪些参数适用。",
+        "inbox_id": "要读取的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以发现收件箱 ID。",
+        "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
+        "message_id": "要读取的提供商邮件 ID（action 'read'），来自先前的 list 或 search。",
+        "message_ids": "要读取的提供商邮件 ID（action 'read_batch'），来自先前的 list 或 search。每次调用最多 50 个。",
+        "folder": "要列出的文件夹（action 'list'）。默认 \"INBOX\"。其他值：\"SENT\"、\"DRAFTS\"、\"TRASH\"。",
+        "unread_only": "仅返回未读邮件（action 'list'）。默认 false。",
+        "limit": "要返回的最大结果数（action 'list' 或 'search'）。默认 20，最大 100。",
+        "offset": "从零开始的分页偏移量（action 'list' 或 'search'）。默认 0。",
+        "include_html": "包含净化后的 HTML 正文（action 'read'/'read_batch'）。默认 false。",
+        "include_attachments": "包含 base64 附件数据（action 'read'/'read_batch'）。在 'read_batch' 中，10 MB 总额度在调用内所有邮件间共享。默认 false。",
+        "mark_as_read": "获取后将邮件标记为已读（action 'read'/'read_batch'）。默认 false。",
+        "from": "要匹配的发件人（action 'search'）：邮箱地址、显示名称或片段（例如 \"alice@example.com\" 或 \"Alice\"）。",
+        "to": "要匹配的主收件人（To）（action 'search'）：邮箱地址、显示名称或片段。",
+        "cc": "要匹配的抄送人（Cc）（action 'search'）：邮箱地址、显示名称或片段。",
+        "subject": "要在主题行中匹配的文本（action 'search'）。多词短语按原样匹配。",
+        "body": "要在邮件正文中查找的自由文本（action 'search'）。（在 Gmail 上，这会匹配整封邮件，而不仅是正文。）",
+        "text": "要在邮件任意位置匹配的自由文本——标头和正文（action 'search'）。",
+        "unread": "action 'search'：true = 仅未读邮件；false = 仅已读邮件；省略则两者皆可。",
+        "has_attachment": "action 'search'：true = 仅含附件的邮件。通用 IMAP 不支持（在那里被忽略）。",
+        "flagged": "action 'search'：true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在那里被忽略）。",
+        "since": "ISO 8601 日期或日期时间（action 'search'）；返回在该时刻当时或之后（>=）收到的邮件。例如 \"2026-06-01\"。",
+        "before": "ISO 8601 日期或日期时间（action 'search'）；返回严格早于（<）该时刻收到的邮件。",
+        "query": "提供商原生查询字符串（action 'search'，应急手段）。优先使用上面的结构化字段。在受支持处与它们组合使用；在 Fastmail 上被忽略。",
+        "include_folders": "将搜索限制在这些文件夹名称内（action 'search'）。默认：搜索所有文件夹。"
       }
     },
-    "email_search": {
-      "title": "搜索邮件",
-      "desc": "使用结构化、与提供商无关的字段搜索收件箱——from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before——以 AND 组合。服务器会将它们翻译成收件箱的原生方言（Gmail 运算符、Outlook KQL/OData、Fastmail JMAP 过滤器或 IMAP SEARCH），因此你无需了解提供商的查询语法。可选的 query 字段是原生应急通道。各提供商的限制：通用 IMAP 忽略 has_attachment，Outlook 忽略 flagged，Fastmail 忽略原生 query。",
+    "email_organize": {
+      "title": "整理邮件",
+      "desc": "移动、删除、标记或归档邮件。设置 action：'move'/'move_batch'（移动到某个 destination_folder_id）、'delete'/'delete_batch'（默认进回收站，或永久删除）、'flag'（通过 message_ids 上的 flag_action 设置已读/未读/标记）、'archive'（移出收件箱，非破坏性），或 'search_and_move'/'search_and_delete'（应用于匹配某个结构化搜索的每封邮件——避免过期的邮件 ID）。每个操作都需要与之匹配的权限：移动需要 manage:folders，删除需要 delete:email，flag/archive 需要 send:email。delete 和 search_and_delete 操作会向你的 MCP 客户端标记为破坏性操作，由客户端处理用户确认。",
       "params": {
-        "inbox_id": "要搜索的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "query": "原始的提供商原生查询字符串（应急通道）。请优先使用上面的结构化字段。在支持的情况下会与它们组合；在 Fastmail 上被忽略。",
-        "limit": "最大结果数。默认 20，最大 100。",
-        "offset": "分页偏移量。默认 0。",
-        "include_folders": "将搜索限定在这些文件夹名称内。默认：搜索所有文件夹。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。",
-        "from": "要匹配的发件人：电子邮件地址、显示名称或片段（例如 \"alice@example.com\" 或 \"Alice\"）。",
-        "to": "要匹配的主收件人（收件人）：电子邮件地址、显示名称或片段。",
-        "cc": "要匹配的抄送收件人（Cc）：电子邮件地址、显示名称或片段。",
-        "subject": "要在主题行中匹配的文本。多词短语按原样匹配。",
-        "body": "要在邮件正文中查找的自由文本。（在 Gmail 上，这会匹配整封邮件，而非仅正文。）",
-        "text": "要在邮件任意位置（头部和正文）匹配的自由文本。",
-        "unread": "true = 仅未读邮件；false = 仅已读邮件；省略则两者皆可。",
-        "has_attachment": "true = 仅含附件的邮件。通用 IMAP 不支持（在此被忽略）。",
-        "flagged": "true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在此被忽略）。",
-        "since": "ISO 8601 日期或日期时间；返回在该时刻当时或之后（>=）收到的邮件。例如 \"2026-06-01\"。",
-        "before": "ISO 8601 日期或日期时间；返回严格在该时刻之前（<）收到的邮件。"
+        "action": "要执行的操作：\"move\"、\"move_batch\"、\"delete\"、\"delete_batch\"、\"flag\"、\"archive\"、\"search_and_move\" 或 \"search_and_delete\"。决定其他哪些参数适用以及需要哪种权限。",
+        "inbox_id": "拥有这些邮件的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
+        "message_id": "单封邮件操作（move、delete、archive）的提供商邮件 ID，来自先前的 list、read 或 search。",
+        "message_ids": "批量操作（move_batch、delete_batch、flag）的提供商邮件 ID。每次调用最多 500 个。",
+        "destination_folder_id": "目标文件夹（move、move_batch、search_and_move）：规范别名（inbox、sent、drafts、trash、archive、spam）、文件夹/标签名称（例如 'Receipts'），或来自 folder 的 list 操作的提供商原生文件夹 ID。名称和别名会自动解析。",
+        "flag_action": "对于 action 'flag'：要应用到每封邮件的更改——\"read\" 或 \"unread\" 设置已读状态，或 \"flag\"/\"unflag\" 添加或移除星标/跟进标记。",
+        "permanent": "对于 delete/delete_batch/search_and_delete：为 true 时永久删除（绕过回收站；可能不可逆）；为 false 或省略时移至回收站。永久删除在 IMAP 和 Fastmail 上可用；Gmail 和 Outlook 仅支持回收站。默认 false。",
+        "from": "要匹配的发件人（search_and_move/search_and_delete）：邮箱地址、显示名称或片段。",
+        "to": "要匹配的主收件人（To）（search_and_move/search_and_delete）：邮箱地址、显示名称或片段。",
+        "cc": "要匹配的抄送人（Cc）（search_and_move/search_and_delete）：邮箱地址、显示名称或片段。",
+        "subject": "要在主题行中匹配的文本（search_and_move/search_and_delete）。",
+        "body": "要在邮件正文中查找的自由文本（search_and_move/search_and_delete）。（在 Gmail 上，这会匹配整封邮件。）",
+        "text": "要在邮件任意位置匹配的自由文本——标头和正文（search_and_move/search_and_delete）。",
+        "unread": "搜索操作：true = 仅未读；false = 仅已读；省略则两者皆可。",
+        "has_attachment": "搜索操作：true = 仅含附件的邮件。通用 IMAP 不支持（在那里被忽略）。",
+        "flagged": "搜索操作：true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在那里被忽略）。",
+        "since": "ISO 8601 日期或日期时间（搜索操作）；匹配在该时刻当时或之后（>=）收到的邮件。",
+        "before": "ISO 8601 日期或日期时间（搜索操作）；匹配严格早于（<）该时刻收到的邮件。",
+        "query": "提供商原生查询字符串（搜索操作，应急手段）。优先使用上面的结构化字段。在 Fastmail 上被忽略。",
+        "include_folders": "将搜索限制在这些文件夹名称内（搜索操作）。默认：所有文件夹。",
+        "limit": "对于 search_and_move/search_and_delete：要处理的最大匹配数。默认 500，最大 500。"
       }
     },
-    "email_send": {
-      "title": "发送邮件",
-      "desc": "从已连接的收件箱发送一封新邮件。支持纯文本、可选 HTML 正文、抄送/密送以及文件附件（总计最多 10 MB）。",
+    "email_compose": {
+      "title": "撰写邮件",
+      "desc": "发送新邮件或回复现有邮件。设置 action：'send' 发送新邮件（to/subject/body，可选 cc/bcc/html_body/reply_to/attachments）、'reply' 回复某个 message_id（线程标头自动设置；可选 reply_all），或 'forward' 将某个 message_id 转发给新收件人（可选择重新附加原始文件）。三者一经发送均不可撤销。",
       "params": {
-        "inbox_id": "用于发送的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "to": "收件人电子邮件地址。最多 50 个。",
-        "subject": "邮件主题行。最多 998 个字符。",
-        "body": "纯文本邮件正文。",
-        "cc": "抄送收件人。默认 []。",
-        "bcc": "密送收件人。默认 []。",
+        "action": "要执行的操作：\"send\"、\"reply\" 或 \"forward\"。决定其他哪些参数适用。",
+        "inbox_id": "要从中发送的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
+        "message_id": "原始邮件的提供商邮件 ID（action 'reply' 或 'forward'），来自先前的 list、read 或 search。",
+        "to": "收件人邮箱地址（'send' 和 'forward' 必填）。最多 50 个。",
+        "subject": "邮件主题行（action 'send'）。最多 998 个字符。在 reply/forward 时由原邮件派生。",
+        "body": "纯文本正文。对于 'reply' 是你的回复内容；对于 'forward' 是置于转发邮件上方的可选备注。",
+        "cc": "抄送收件人（send、forward）。默认 []。",
+        "bcc": "密送收件人（send、forward）。默认 []。",
         "html_body": "正文的 HTML 版本（multipart/alternative）。调用方负责确保 HTML 安全。",
-        "reply_to": "Reply-To 头地址。",
-        "attachments": "文件附件。每一项：'{' filename, mime_type, data (base64) '}'。最多 20 项，总计 10 MB。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
+        "reply_to": "Reply-To 标头地址（action 'send'）。",
+        "reply_all": "回复所有原始收件人——To + Cc（action 'reply'）。默认 false。",
+        "include_attachments": "重新附加原始邮件的附件（action 'forward'）。超出 10 MB 额度的文件将被省略。默认 false。",
+        "attachments": "文件附件。每项：'{' filename、mime_type、data（base64）'}'。最多 20 项，共 10 MB。"
       }
     },
-    "email_reply": {
-      "title": "回复邮件",
-      "desc": "对一封现有邮件发送回复。会话头（In-Reply-To、References）会自动设置。支持全部回复和附件。",
+    "folder": {
+      "title": "文件夹",
+      "desc": "管理邮箱文件夹（在 Gmail 上为标签）。设置 action：'list'（每个文件夹及其提供商原生 ID、显示名称、类型和邮件计数——列出邮件时将这些 ID 用作 folder 参数，并用作移动目标）、'create'（name）、'rename'（folder_id、new_name），或 'delete'（folder_id——不可逆；其中的邮件可能因提供商而丢失）。'list' 需要 read:email；create/rename/delete 需要 manage:folders，且 delete 会向你的 MCP 客户端标记为破坏性操作。",
       "params": {
-        "inbox_id": "包含原始邮件的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "message_id": "被回复邮件的服务商邮件 ID。",
-        "body": "纯文本回复正文。",
-        "html_body": "可选的回复 HTML 版本。",
-        "reply_all": "回复全部原始收件人（To + Cc）。默认 false。",
-        "attachments": "文件附件。与 email_send 模式相同。最多 20 项。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
+        "action": "要执行的操作：\"list\"、\"create\"、\"rename\" 或 \"delete\"。决定其他哪些参数适用以及需要哪种权限。",
+        "inbox_id": "要管理其文件夹的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
+        "name": "新文件夹或标签的名称（action 'create'）。1–255 个字符。",
+        "folder_id": "提供商原生的文件夹/标签 ID（action 'rename' 或 'delete'），来自 folder 的 list 操作。",
+        "new_name": "新的显示名称（action 'rename'）。1–255 个字符。"
       }
     },
-    "folder_list": {
-      "title": "列出文件夹",
-      "desc": "列出收件箱中的每一个文件夹（在 Gmail 上为标签）。每一项都包含服务商原生的文件夹 ID、显示名称、类型（文件夹还是标签）以及邮件数量。将这些 ID 用作 email_list 的 folder 参数，以及移动操作的目标。",
+    "draft": {
+      "title": "草稿",
+      "desc": "管理收件箱 Drafts 文件夹中的草稿。设置 action：'list'（已保存的草稿，每个都含 draft_id、主题、收件人和创建时间）、'create'（subject/body 必填，可选 to/cc/bcc/html_body）、'update'（draft_id 加上要覆盖的字段），或 'send'（draft_id——移除草稿并发送，不可逆）。在基于 IMAP 的收件箱上，draft_id 在每次更新后都会改变，因此始终使用最新的；Gmail 和 Outlook 保持 draft_id 稳定。",
       "params": {
-        "inbox_id": "要列出其文件夹的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
+        "action": "要执行的操作：\"list\"、\"create\"、\"update\" 或 \"send\"。决定其他哪些参数适用。",
+        "inbox_id": "拥有这些草稿的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
+        "draft_id": "提供商草稿 ID（action 'update' 或 'send'），来自最近的 create、update 或 list 操作。在 IMAP 收件箱上，它在每次更新后都会改变，因此始终使用最新的。",
+        "subject": "草稿主题行（action 'create'/'update'）。",
+        "body": "草稿的纯文本正文（action 'create'/'update'）。",
+        "to": "收件人地址（action 'create'/'update'）。默认 []。",
+        "cc": "抄送收件人（action 'create'/'update'）。默认 []。",
+        "bcc": "密送收件人（action 'create'/'update'）。默认 []。",
+        "html_body": "可选的 HTML 正文（action 'create'/'update'）。",
+        "limit": "要返回的最大草稿数（action 'list'）。默认 20，最大 50。"
       }
     },
-    "email_forward": {
-      "title": "转发邮件",
-      "desc": "将一封现有邮件转发给新的收件人。你的可选附言会添加在一个标准的转发邮件头块和原始正文之上。设置 include_attachments 可重新附上原始文件。如有需要，主题会加上 'Fwd:' 前缀。不可撤销。",
+    "schedule": {
+      "title": "定时发送",
+      "desc": "通过服务器端队列安排邮件在未来发送。设置 action：'create'（to/subject/body 加上 ISO 8601 格式的 send_at 时间戳——收件人和正文会立即校验，无效的发送不会入队）、'list'（待发送的定时任务，最近的优先，可按收件箱筛选），或 'cancel'（scheduled_send_id——只能取消仍为 'pending' 的发送）。调度器每分钟运行一次，因此实际投递可能在 send_at 之后最多 60 秒。",
       "params": {
-        "inbox_id": "存放原始邮件的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "message_id": "要转发邮件的服务商邮件 ID，来自 email_list 或 email_search。",
-        "to": "收件人电子邮件地址。最多 50 个。",
-        "cc": "抄送收件人。默认 []。",
-        "bcc": "密送收件人。默认 []。",
-        "body": "可选的纯文本附言，添加在转发邮件之上。",
-        "html_body": "可选的附言 HTML 版本（multipart/alternative）。",
-        "include_attachments": "重新附上原始邮件的附件。超出 10 MB 预算的文件会被省略。默认 false。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "email_archive": {
-      "title": "归档邮件",
-      "desc": "将一封邮件移出收件箱并归档。非破坏性操作——邮件会被保留，而非删除。在 Gmail 上这会移除 INBOX 标签；在 IMAP/Outlook/Fastmail 上则会移至 Archive 邮箱。",
-      "params": {
-        "inbox_id": "包含该邮件的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "message_id": "来自 email_list 或 email_search 的服务商邮件 ID。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "email_flag": {
-      "title": "标记邮件",
-      "desc": "在一次调用中对一封或多封邮件应用一个 read/unread/flag/unflag 操作。使用 'read' 或 'unread' 操作来更改已读状态，或使用 'flag'/'unflag' 来添加或移除星标/跟进标记。传入一个邮件 ID 可更新单封邮件，或最多 500 个可一次性更新多封。可从 email_list 或 email_search 获取邮件 ID。",
-      "params": {
-        "inbox_id": "拥有这些邮件的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "message_ids": "要更新的服务商邮件 ID。每次调用最多 500 个。",
-        "action": "应用于所有邮件的操作：\"read\"、\"unread\"、\"flag\" 或 \"unflag\"。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "folder_create": {
-      "title": "创建文件夹",
-      "desc": "在收件箱中创建一个新文件夹（在 Gmail 上为标签）。返回服务商原生的文件夹/标签 ID 和显示名称。",
-      "params": {
-        "inbox_id": "要在其中创建文件夹/标签的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "name": "新文件夹或标签的名称。1–255 个字符。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "folder_rename": {
-      "title": "重命名文件夹",
-      "desc": "重命名一个现有的文件夹或标签。先调用 folder_list 以获取 folder_id。",
-      "params": {
-        "inbox_id": "拥有该文件夹/标签的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "folder_id": "来自 folder_list 的服务商原生文件夹/标签 ID。",
-        "new_name": "新的显示名称。1–255 个字符。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "folder_delete": {
-      "title": "删除文件夹",
-      "desc": "永久删除一个文件夹（在 Gmail 上为标签）。不可逆——其中的邮件可能会丢失，具体取决于提供商。此操作会被标记为破坏性操作并告知你的 MCP 客户端，由客户端处理用户确认。请先调用 folder_list 以获取 folder_id。",
-      "params": {
-        "inbox_id": "拥有该文件夹/标签的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "folder_id": "来自 folder_list 的服务商原生文件夹/标签 ID。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "email_move": {
-      "title": "移动邮件",
-      "desc": "将邮件移至另一个文件夹。在 Gmail 上，这会添加目标标签并移除 INBOX（Gmail 没有单独的文件夹）。目标可接受规范别名、文件夹/标签名称或原生 ID。",
-      "params": {
-        "inbox_id": "拥有该邮件的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "message_id": "来自 email_list、email_read 或 email_search 的服务商邮件 ID。",
-        "destination_folder_id": "目标文件夹：可为规范别名（inbox、sent、drafts、trash、archive、spam）、文件夹/标签名称（例如 'Receipts'），或来自 folder_list 的提供商原生文件夹 ID。名称和别名会自动解析。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "email_move_batch": {
-      "title": "批量移动",
-      "desc": "在一次调用中将最多 500 封邮件移至目标文件夹。返回成功/失败计数以及每封邮件的结果。目标可接受规范别名、文件夹/标签名称或原生 ID。",
-      "params": {
-        "inbox_id": "拥有这些邮件的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "message_ids": "要移动的服务商邮件 ID。每次调用最多 500 个。",
-        "destination_folder_id": "目标文件夹：可为规范别名（inbox、sent、drafts、trash、archive、spam）、文件夹/标签名称（例如 'Receipts'），或来自 folder_list 的提供商原生文件夹 ID。名称和别名会自动解析。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "email_search_and_move": {
-      "title": "搜索并移动",
-      "desc": "运行一次结构化搜索，并在一次服务器端操作中将每个匹配项移至目标文件夹——避免过期的邮件 ID。使用与 email_search 相同的、与提供商无关的搜索字段（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before），具有相同的各提供商限制；可选的原生 query 作为应急通道。目标可接受规范别名、文件夹/标签名称或原生 ID。每次调用上限为 500 个匹配项。",
-      "params": {
-        "inbox_id": "要搜索并操作的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "query": "原始的提供商原生查询字符串（应急通道）。请优先使用上面的结构化字段。在支持的情况下会与它们组合；在 Fastmail 上被忽略。",
-        "destination_folder_id": "目标文件夹：可为规范别名（inbox、sent、drafts、trash、archive、spam）、文件夹/标签名称（例如 'Receipts'），或来自 folder_list 的提供商原生文件夹 ID。名称和别名会自动解析。",
-        "include_folders": "将搜索限定在这些文件夹名称内。默认：所有文件夹。",
-        "limit": "要移动的最大匹配数。默认 500，最大 500。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。",
-        "from": "要匹配的发件人：电子邮件地址、显示名称或片段（例如 \"alice@example.com\" 或 \"Alice\"）。",
-        "to": "要匹配的主收件人（收件人）：电子邮件地址、显示名称或片段。",
-        "cc": "要匹配的抄送收件人（Cc）：电子邮件地址、显示名称或片段。",
-        "subject": "要在主题行中匹配的文本。多词短语按原样匹配。",
-        "body": "要在邮件正文中查找的自由文本。（在 Gmail 上，这会匹配整封邮件，而非仅正文。）",
-        "text": "要在邮件任意位置（头部和正文）匹配的自由文本。",
-        "unread": "true = 仅未读邮件；false = 仅已读邮件；省略则两者皆可。",
-        "has_attachment": "true = 仅含附件的邮件。通用 IMAP 不支持（在此被忽略）。",
-        "flagged": "true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在此被忽略）。",
-        "since": "ISO 8601 日期或日期时间；返回在该时刻当时或之后（>=）收到的邮件。例如 \"2026-06-01\"。",
-        "before": "ISO 8601 日期或日期时间；返回严格在该时刻之前（<）收到的邮件。"
-      }
-    },
-    "email_delete": {
-      "title": "删除邮件",
-      "desc": "删除单封邮件。默认会移至提供商的回收站（更安全）。设置 permanent: true 可硬删除（绕过回收站；可能不可逆）。此操作会被标记为破坏性操作并告知你的 MCP 客户端，由客户端处理用户确认。永久彻底清除（expunge）在 IMAP 和 Fastmail 上可用；Gmail 和 Outlook 仅支持回收站。",
-      "params": {
-        "inbox_id": "拥有该邮件的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "message_id": "来自 email_list、email_read 或 email_search 的服务商邮件 ID。",
-        "permanent": "为 true 时进行硬删除（绕过回收站）。为 false 或省略时移至回收站。默认 false。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "email_delete_batch": {
-      "title": "批量删除",
-      "desc": "在一次调用中删除最多 500 封邮件。默认移至回收站；设置 permanent: true 可硬删除。此操作会被标记为破坏性操作并告知你的 MCP 客户端，由客户端处理用户确认。返回成功/失败计数以及每封邮件的结果。",
-      "params": {
-        "inbox_id": "拥有这些邮件的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "message_ids": "要删除的服务商邮件 ID。每次调用最多 500 个。",
-        "permanent": "为 true 时进行硬删除（绕过回收站）。为 false 或省略时移至回收站。默认 false。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "email_search_and_delete": {
-      "title": "搜索并删除",
-      "desc": "运行一次结构化搜索，并在一次服务器端操作中删除每个匹配项——避免过期的邮件 ID。使用与 email_search 相同的、与提供商无关的搜索字段（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before），具有相同的各提供商限制；可选的原生 query 作为应急通道。默认移至回收站；设置 permanent: true 可彻底删除。此操作会被标记为破坏性操作并告知你的 MCP 客户端，由客户端处理用户确认。每次调用上限为 500 个匹配项。",
-      "params": {
-        "inbox_id": "要搜索并操作的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "query": "原始的提供商原生查询字符串（应急通道）。请优先使用上面的结构化字段。在支持的情况下会与它们组合；在 Fastmail 上被忽略。",
-        "permanent": "为 true 时硬删除匹配项（绕过回收站）。为 false 或省略时移至回收站。默认 false。",
-        "include_folders": "将搜索限定在这些文件夹名称内。默认：所有文件夹。",
-        "limit": "要删除的最大匹配数。默认 500，最大 500。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。",
-        "from": "要匹配的发件人：电子邮件地址、显示名称或片段（例如 \"alice@example.com\" 或 \"Alice\"）。",
-        "to": "要匹配的主收件人（收件人）：电子邮件地址、显示名称或片段。",
-        "cc": "要匹配的抄送收件人（Cc）：电子邮件地址、显示名称或片段。",
-        "subject": "要在主题行中匹配的文本。多词短语按原样匹配。",
-        "body": "要在邮件正文中查找的自由文本。（在 Gmail 上，这会匹配整封邮件，而非仅正文。）",
-        "text": "要在邮件任意位置（头部和正文）匹配的自由文本。",
-        "unread": "true = 仅未读邮件；false = 仅已读邮件；省略则两者皆可。",
-        "has_attachment": "true = 仅含附件的邮件。通用 IMAP 不支持（在此被忽略）。",
-        "flagged": "true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在此被忽略）。",
-        "since": "ISO 8601 日期或日期时间；返回在该时刻当时或之后（>=）收到的邮件。例如 \"2026-06-01\"。",
-        "before": "ISO 8601 日期或日期时间；返回严格在该时刻之前（<）收到的邮件。"
-      }
-    },
-    "draft_list": {
-      "title": "列出草稿",
-      "desc": "返回保存在收件箱草稿文件夹中的草稿。每个结果都包含 draft_id、主题、收件人和创建时间戳。将 draft_id 与 draft_update 或 draft_send 配合使用。",
-      "params": {
-        "inbox_id": "要列出其草稿的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "limit": "要返回的最大草稿数。默认 20，最大 50。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "draft_create": {
-      "title": "创建草稿",
-      "desc": "在收件箱的草稿文件夹中保存一封新草稿而不发送。返回一个供 draft_update 或 draft_send 使用的 draft_id。主题和正文是必需的；收件人是可选的（草稿可以是不完整的）。",
-      "params": {
-        "inbox_id": "用于保存草稿的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "subject": "草稿主题行。",
-        "body": "草稿的纯文本正文。",
-        "to": "可选的收件人地址。默认 []。",
-        "cc": "可选的抄送收件人。默认 []。",
-        "bcc": "可选的密送收件人。默认 []。",
-        "html_body": "可选的 HTML 正文。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "draft_update": {
-      "title": "更新草稿",
-      "desc": "替换一封现有草稿的内容。所有提供的字段都会覆盖已存储的草稿。调用 draft_list 以获取 draft_id 值。在基于 IMAP 的收件箱（除 Gmail/Outlook 之外的任何收件箱）上，底层邮件会被重写，因此这会返回一个新的 draft_id 来替换你传入的那个——请在后续的 draft_update/draft_send 中采用它并丢弃旧的。Gmail 和 Outlook 会保持稳定的 draft_id。",
-      "params": {
-        "inbox_id": "拥有该草稿的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "draft_id": "来自最近一次 draft_create、draft_update 或 draft_list 的服务商草稿 ID。在 IMAP 收件箱上，它在每次更新后都会改变，因此请始终使用最新的那个。",
-        "subject": "更新后的主题行。",
-        "body": "更新后的纯文本正文。",
-        "to": "更新后的收件人列表。默认 []。",
-        "cc": "更新后的抄送列表。默认 []。",
-        "bcc": "更新后的密送列表。默认 []。",
-        "html_body": "更新后的 HTML 正文。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "draft_send": {
-      "title": "发送草稿",
-      "desc": "发送一封先前保存的草稿。草稿在发送后会从草稿文件夹中移除。不可撤销。请始终传入最新的 draft_id（来自 draft_create、最近一次 draft_update 或 draft_list）：在基于 IMAP 的收件箱上，该 ID 在每次更新时都会改变，使用过时的 ID 会导致未找到错误。",
-      "params": {
-        "inbox_id": "包含该草稿的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "draft_id": "来自最近一次 draft_create、draft_update 或 draft_list 的服务商草稿 ID。在 IMAP 收件箱上，它在每次更新后都会改变，因此请始终使用最新的那个。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
+        "action": "要执行的操作：\"create\"、\"list\" 或 \"cancel\"。决定其他哪些参数适用。",
+        "inbox_id": "要从中发送（action 'create'）或用于筛选（action 'list'）的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
+        "to": "收件人邮箱地址（action 'create'）。最多 50 个。",
+        "subject": "邮件主题行（action 'create'）。最多 998 个字符。",
+        "body": "邮件的纯文本正文（action 'create'）。",
+        "send_at": "带时区的 ISO 8601 日期时间，指定发送时刻（action 'create'）。必须是将来时间，例如 \"2026-06-02T09:00:00Z\"。",
+        "cc": "抄送收件人（action 'create'）。默认 []。",
+        "bcc": "密送收件人（action 'create'）。默认 []。",
+        "html_body": "正文的可选 HTML 版本（action 'create'）。",
+        "reply_to": "可选的 Reply-To 标头地址（action 'create'）。",
+        "attachments": "文件附件（action 'create'）。与 send 操作的结构相同。最多 20 项，共 10 MB。",
+        "scheduled_send_id": "要取消的定时发送的 UUID（action 'cancel'）。",
+        "limit": "最大结果数（action 'list'）。默认 20，最大 100。"
       }
     },
     "contact_search": {
       "title": "搜索联系人",
-      "desc": "通过对你的邮箱进行实时扫描，按姓名或电子邮件查找联系人——不存在已存储的联系人列表。每次调用都会扫描近期一段匹配邮件的窗口，并返回匹配的联系人，按最近联系排序，每一项都包含显示名称、电子邮件、匹配邮件数量和上次联系时间戳。这些数量反映的是该窗口内匹配的邮件，而非你的完整历史记录，且在两次调用之间不存储任何内容。",
+      "desc": "通过对你邮箱的实时扫描按姓名或邮箱查找通信人——没有存储的联系人列表。每次调用都会扫描最近的一段匹配邮件窗口，并返回匹配的人员，按最近联系排序，每个都含显示名称、邮箱、匹配邮件数量和最后联系时间戳。计数反映该窗口内的匹配邮件，而非你的完整历史，且调用之间不存储任何内容。",
       "params": {
-        "query": "姓名或电子邮件片段，以不区分大小写的方式与显示名称和地址匹配。至少 1 个字符。",
-        "inbox_id": "可选。将实时扫描限定为单个收件箱。省略则扫描该密钥可访问的收件箱（数量有限）。",
-        "limit": "要返回的最大联系人数。默认 20，最大 50。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "schedule_create": {
-      "title": "定时发送",
-      "desc": "将一封邮件排入队列以在未来某个时间发送。收件人和正文会被立即校验；若校验失败则不会排队。调度器每分钟运行一次，因此实际投递可能在 send_at 之后最多 60 秒。使用 schedule_list 和 schedule_cancel 来管理待发送的项。",
-      "params": {
-        "inbox_id": "用于发送的收件箱的 UUID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "to": "收件人电子邮件地址。最多 50 个。",
-        "subject": "邮件主题行。最多 998 个字符。",
-        "body": "纯文本邮件正文。",
-        "send_at": "带时区的 ISO 8601 日期时间，表示发送时刻。必须在未来，例如 \"2026-06-02T09:00:00Z\"。",
-        "cc": "抄送收件人。默认 []。",
-        "bcc": "密送收件人。默认 []。",
-        "html_body": "正文的可选 HTML 版本。",
-        "attachments": "文件附件。与 email_send 模式相同。最多 20 项，总计 10 MB。",
-        "reply_to": "可选的 Reply-To 头地址。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "schedule_list": {
-      "title": "列出定时发送",
-      "desc": "列出工作区中待发送的定时发送（状态为 pending 或 sending），最早的在前。可选择按收件箱筛选。使用 schedule_cancel 在某项发出前取消它。",
-      "params": {
-        "inbox_id": "可选。将结果限定为某一个收件箱的定时发送。",
-        "limit": "最大结果数。默认 20，最大 100。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。"
-      }
-    },
-    "schedule_cancel": {
-      "title": "取消定时发送",
-      "desc": "取消一项待发送的定时发送，使调度器跳过它。只有仍处于 'pending' 状态的发送才能被取消——一旦进入 'sending'、'sent' 或 'error' 状态便无法取消。使用 schedule_list 来查找 scheduled_send_id。",
-      "params": {
-        "scheduled_send_id": "要取消的定时发送的 UUID。"
-      }
-    },
-    "email_read_batch": {
-      "title": "读取邮件（批量）",
-      "desc": "通过提供商的邮件 ID 在一次调用中读取最多 50 封邮件——非常适合在不为每封邮件单独调用 email_read 的情况下整理收件箱。返回一个 messages 数组（每项与 email_read 形状相同）以及一个按 ID 的 errors 数组，因此单个错误或缺失的 ID 绝不会使整批失败。当 include_attachments 为 true 时，附件数据在整次调用中共享单一的 10 MB 预算。",
-      "params": {
-        "inbox_id": "包含该邮件的收件箱的 UUID。调用 inbox_list 以获取可用的收件箱 ID。 可选——当密钥恰好只有一个收件箱时会自动解析；否则请传入此项或 inbox。",
-        "inbox": "要使用的收件箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；如果已提供 inbox_id 则忽略。",
-        "message_ids": "要读取的提供商邮件 ID，来自 email_list 或 email_search。每次调用最多 50 个。",
-        "include_html": "为每封邮件包含经过净化的 HTML 正文。默认 false。",
-        "include_attachments": "包含 base64 编码的附件数据。10 MB 总大小限制在该次调用的所有邮件之间共享。默认 false。",
-        "mark_as_read": "获取后将每封邮件标记为已读。默认 false。"
+        "query": "姓名或邮箱片段，对显示名称和地址进行不区分大小写的匹配。至少 1 个字符。",
+        "inbox_id": "可选。将实时扫描限制在一个收件箱。省略则扫描密钥可访问的收件箱（数量有限）。",
+        "inbox": "要限制到的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
+        "limit": "要返回的最大联系人数。默认 20，最大 50。"
       }
     }
   },
@@ -492,7 +270,7 @@
     "planBody": "用量是无限量的；这是一个每工作区的合理使用突发限制（在你所有 API 密钥间汇总）。超出时，调用会返回 <code>data.error_code: \"rate_limit_exceeded\"</code>，并附带 <code>data.window: \"per_minute\"</code> 和一个 <code>data.retry_after</code> 倒计时（秒）。升级你的套餐可获得更高的上限。",
     "retryTag": "安全重试",
     "retryHeading": "始终遵守 retry_after；切勿盲目重试发送",
-    "retryBody": "对于 <code>rate_limit_exceeded</code> 错误，请在重试前等待 <code>data.retry_after</code> 秒。对于 <code>provider_error</code> 请使用指数退避。请勿在 <code>provider_error</code> 时自动重试 <code>email_send</code>，因为该邮件可能已被服务商接受。"
+    "retryBody": "对于 <code>rate_limit_exceeded</code> 错误，请在重试前等待 <code>data.retry_after</code> 秒。对于 <code>provider_error</code> 请使用指数退避。请勿在 <code>provider_error</code> 时自动重试 <code>email_compose</code> 发送，因为该邮件可能已被服务商接受。"
   },
   "cta": {
     "heading": "准备好连接你的收件箱了吗？",
@@ -559,7 +337,7 @@
       "gmail": "<b>Gmail —— 文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。",
       "permanentDelete": "<b>永久删除：</b>Gmail 在你删除时会移至回收站 —— 它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
       "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表——在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
-      "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule_create</code>、<code>schedule_list</code> 和 <code>schedule_cancel</code>。投递使用每个服务商现有的发送路径——无需服务商原生的定时 API。"
+      "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径——无需服务商原生的定时 API。"
     },
     "cta": {
       "heading": "准备好连接你的收件箱了吗？",

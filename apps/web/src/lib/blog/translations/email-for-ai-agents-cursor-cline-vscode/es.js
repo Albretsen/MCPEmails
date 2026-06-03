@@ -75,16 +75,16 @@ Si te devuelve una lista de herramientas, estás conectado. Un error \`-32001\` 
 
 ## Las herramientas que recibe tu agente
 
-Ambas vías exponen la misma superficie. Seis herramientas principales cubren el trabajo:
+Ambas vías exponen la misma superficie. Un puñado de herramientas consolidadas, basadas en acciones, cubren el trabajo:
 
-- \`list_inboxes\` — llama siempre a esta primero para descubrir las bandejas de entrada conectadas y sus IDs.
-- \`list_messages\` — paginada, primero las más recientes.
-- \`read_email\` — texto plano analizado, HTML saneado opcional, adjuntos.
-- \`search_emails\` — búsqueda nativa del proveedor (operadores de Gmail, KQL de Outlook, texto IMAP).
-- \`send_email\` — redacta con CC/BCC, HTML y adjuntos de hasta 10 MB.
-- \`reply_to_email\` — ajusta por ti las cabeceras In-Reply-To y References para que el hilo se mantenga intacto.
+- \`inbox_list\` — llama siempre a esta primero para descubrir las bandejas de entrada conectadas y sus IDs.
+- \`email_read\` (acción \`list\`) — paginada, primero las más recientes.
+- \`email_read\` (acción \`read\`) — texto plano analizado, HTML saneado opcional, adjuntos.
+- \`email_read\` (acción \`search\`) — búsqueda nativa del proveedor (operadores de Gmail, KQL de Outlook, texto IMAP).
+- \`email_compose\` (acción \`send\`) — redacta con CC/BCC, HTML y adjuntos de hasta 10 MB.
+- \`email_compose\` (acción \`reply\`) — ajusta por ti las cabeceras In-Reply-To y References para que el hilo se mantenga intacto.
 
-Hay algunas más para etiquetas, carpetas, envío programado y contactos, pero esas seis hacen el grueso del trabajo real.
+Hay algunas más para etiquetas y movimientos (\`email_organize\`), carpetas, envío programado y contactos, pero esas pocas hacen el grueso del trabajo real.
 
 ## Un flujo de trabajo de desarrollo que merece la pena
 
@@ -92,21 +92,21 @@ Aquí es donde sale rentable. Mantengo una clave de lectura y envío conectada a
 
 Clasificación matutina, escrita directamente en el panel de chat:
 
-> Llama a list_inboxes y luego lista los no leídos de mi bandeja de entrada de trabajo de las últimas 12 horas. Agrúpalos: necesita respuesta, para tu información y ruido. En el grupo de para tu información dame una línea por cada uno.
+> Llama a inbox_list y luego lista los no leídos de mi bandeja de entrada de trabajo de las últimas 12 horas. Agrúpalos: necesita respuesta, para tu información y ruido. En el grupo de para tu información dame una línea por cada uno.
 
-El agente ejecuta \`list_inboxes\`, luego \`list_messages\` con \`unread_only\` activado, lee los que importan y devuelve un resumen ordenado. Cuando veo uno que quiero responder, le digo:
+El agente ejecuta \`inbox_list\`, luego \`email_read\` con la acción \`list\` y \`unread_only\` activado, lee los que importan y devuelve un resumen ordenado. Cuando veo uno que quiero responder, le digo:
 
 > Responde al mensaje del contratista de diseño confirmando que el jueves a las 14:00 va bien, que sea breve.
 
-Llama a \`reply_to_email\`, el hilado se gestiona solo y la respuesta sale a través de mi propio Gmail, así que llega desde mi dirección y con la reputación de mi dominio, no la de algún relay. Para un tratamiento más a fondo de los prompts de clasificación, mira [cómo hacer que un agente de IA clasifique y resuma tu bandeja de entrada](/blog/ai-agent-triage-summarize-inbox).
+Llama a \`email_compose\` con la acción \`reply\`, el hilado se gestiona solo y la respuesta sale a través de mi propio Gmail, así que llega desde mi dirección y con la reputación de mi dominio, no la de algún relay. Para un tratamiento más a fondo de los prompts de clasificación, mira [cómo hacer que un agente de IA clasifique y resuma tu bandeja de entrada](/blog/ai-agent-triage-summarize-inbox).
 
-Una limitación honesta: no hay webhooks. El servidor no te envía el correo nuevo. Si quieres que el agente reaccione a los mensajes entrantes, haces polling: \`list_messages\` con \`unread_only: true\` de forma periódica. Es una decisión de diseño deliberada, y condiciona cómo construyes cualquier cosa reactiva, como un [autocontestador sobre MCP](/blog/build-email-auto-responder-mcp-agent).
+Una limitación honesta: no hay webhooks. El servidor no te envía el correo nuevo. Si quieres que el agente reaccione a los mensajes entrantes, haces polling: \`email_read\` con la acción \`list\` y \`unread_only: true\` de forma periódica. Es una decisión de diseño deliberada, y condiciona cómo construyes cualquier cosa reactiva, como un [autocontestador sobre MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Límites de tasa para el acceso por scripts
 
 Si manejas el servidor desde un trabajo de cron o un bucle de agente apretado, ten en cuenta los límites. Cada API key está limitada a **100 peticiones por minuto, 1.000 por hora y 10.000 por día**, en todos los planes. Por encima de eso hay un techo de ráfaga por espacio de trabajo que fija tu plan: 60/min en Free, 300/min en Solo ($12/month) y 1.000/min en Team ($49/month). Consulta la [página de precios](/pricing) para el desglose completo.
 
-Cuando alcanzas un límite, el servidor devuelve un error que se puede reintentar (código \`-32029\`) con \`data.retry_after\` en segundos. Respétalo: espera ese tiempo y vuelve a intentarlo. Y nunca reintentes a ciegas un \`send_email\` ante un fallo genérico; dispararás duplicados. Comprueba primero si de verdad se envió.
+Cuando alcanzas un límite, el servidor devuelve un error que se puede reintentar (código \`-32029\`) con \`data.retry_after\` en segundos. Respétalo: espera ese tiempo y vuelve a intentarlo. Y nunca reintentes a ciegas un envío de \`email_compose\` ante un fallo genérico; dispararás duplicados. Comprueba primero si de verdad se envió.
 
 ## Para terminar
 

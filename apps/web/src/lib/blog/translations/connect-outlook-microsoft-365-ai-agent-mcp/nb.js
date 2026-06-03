@@ -59,27 +59,25 @@ Det ene stedet virkeligheten trenger seg på er samtykkeskjermen på jobb-/skole
 
 ## Hva som fungerer når det er tilkoblet
 
-Agenten din får de seks kjerneverktøyene pluss det ekstra Outlook støtter:
+Agenten din får de konsoliderte kjerneverktøyene pluss det ekstra Outlook støtter:
 
-- \`list_inboxes\` — kall alltid dette først. Det returnerer de tilkoblede postkassene dine og deres \`inbox_id\`-UUID-er, slik at agenten aldri gjetter en ID.
-- \`list_messages\` — nyeste først, paginert, med filtre som \`unread_only\`.
-- \`read_email\` — tolket ren tekst, valgfri renset HTML, valgfrie vedlegg.
-- \`search_emails\` — se søkenotatet nedenfor.
-- \`send_email\` — skriv med CC/BCC, HTML og vedlegg på opptil 10 MB totalt.
-- \`reply_to_email\` — svarer i tråden med korrekte trådhoder.
+- \`inbox_list\` — kall alltid dette først. Det returnerer de tilkoblede postkassene dine og deres \`inbox_id\`-UUID-er, slik at agenten aldri gjetter en ID.
+- \`email_read\` — ett verktøy, flere handlinger: \`list\` (nyeste først, paginert, med filtre som \`unread_only\`), \`read\` (tolket ren tekst, valgfri renset HTML, valgfrie vedlegg) og \`search\` (se søkenotatet nedenfor).
+- \`email_compose\` — \`send\`-handlingen skriver med CC/BCC, HTML og vedlegg på opptil 10 MB totalt; \`reply\`- og \`forward\`-handlingene trådes riktig med de korrekte hodene.
+- \`email_organize\` — merke som lest/ulest, flagge, arkivere, slette og flytte, hver via sin egen \`action\`.
 
-Utover de seks støtter Outlook å merke som lest/ulest, flagge (Outlooks «flagg» tilsvarer det stjernemerkede/flaggede konseptet), videresende og flytte mellom mapper. Sjekk de live [dokumentene](/docs) for den gjeldende listen over funksjoner før du bygger mot et bestemt verktøy.
+Utover disse støtter Outlook å merke som lest/ulest, flagge (Outlooks «flagg» tilsvarer det stjernemerkede/flaggede konseptet), videresende og flytte mellom mapper. Sjekk de live [dokumentene](/docs) for den gjeldende listen over funksjoner før du bygger mot et bestemt verktøy.
 
 ### Søk bruker Microsofts \`$search\`
 
-Outlook-søk er ikke Gmail-søk. Der Gmail tar operatorer som \`from:\` og \`is:unread\`, sender \`search_emails\` mot en Outlook-innboks spørringen din til Microsoft Graphs \`$search\`, som gjør relevansrangert fulltekstmatching på tvers av postkassen og også godtar KQL. Så en spørring som \`invoice from accounting last week\` fungerer som naturlig språk, og du kan bli mer presis med KQL som \`from:finance@acme.com AND subject:invoice\`. Hvis du skriver prompter som hardkoder Gmail-operatorer, oppfører de seg ikke likt på Outlook — be agenten din om å søke i klart språk og la Graph rangere.
+Outlook-søk er ikke Gmail-søk. Der Gmail tar operatorer som \`from:\` og \`is:unread\`, sender \`email_read\` med \`search\`-handlingen mot en Outlook-innboks spørringen din til Microsoft Graphs \`$search\`, som gjør relevansrangert fulltekstmatching på tvers av postkassen og også godtar KQL. Så en spørring som \`invoice from accounting last week\` fungerer som naturlig språk, og du kan bli mer presis med KQL som \`from:finance@acme.com AND subject:invoice\`. Hvis du skriver prompter som hardkoder Gmail-operatorer, oppfører de seg ikke likt på Outlook — be agenten din om å søke i klart språk og la Graph rangere.
 
 ## En arbeidsflyt verdt å sette opp
 
 Her er en triage-løkke jeg kjører mot en Microsoft 365-innboks. En eller to ganger i timen gjør agenten:
 
-1. Kaller \`list_messages\` med \`unread_only: true\`.
-2. Leser alt som ser tidssensitivt ut med \`read_email\`.
+1. Kaller \`email_read\` med \`list\`-handlingen og \`unread_only: true\`.
+2. Leser alt som ser tidssensitivt ut med \`read\`-handlingen til \`email_read\`.
 3. Oppsummerer bunken og skriver utkast til svar på de jeg åpenbart ville besvart.
 4. Lar alt stå ulest til jeg bekrefter.
 

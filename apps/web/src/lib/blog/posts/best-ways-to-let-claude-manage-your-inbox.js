@@ -26,7 +26,7 @@ Hold those four against each option. The differences get obvious fast.
 
 ## Option 1: A hosted MCP email server
 
-This is the [Model Context Protocol](https://modelcontextprotocol.io) approach, run for you. You connect your inbox once in a dashboard, paste one endpoint URL into Claude, and the agent gets a clean set of email tools. Claude calls them like any other tool: \`list_inboxes\`, \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\`, plus a handful more for flags, folders, scheduling, and contacts.
+This is the [Model Context Protocol](https://modelcontextprotocol.io) approach, run for you. You connect your inbox once in a dashboard, paste one endpoint URL into Claude, and the agent gets a clean set of email tools. Claude calls them like any other tool: \`inbox_list\` to see your accounts, \`email_read\` to list, read, or search messages, \`email_compose\` to send, reply, or forward, plus \`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\` for flags, folders, drafts, scheduling, and contacts — eight tools in all, each picking its operation with an \`action\` parameter.
 
 MCP Emails is the one I build, so take the recommendation with that in mind — but the architecture is the reason it wins for most people, not the marketing. Every tool call hits your provider live (Gmail API, Microsoft Graph, or IMAP/SMTP), hands the message to Claude, and discards it. **The email body is never stored.** The only thing persisted per inbox is an encrypted OAuth token or app password, AES-256-GCM encrypted at rest, decrypted only inside an isolated edge function at call time. If you want the long version of why that matters, read [why "email is never stored" matters](/blog/why-email-never-stored-matters).
 
@@ -34,7 +34,7 @@ Setup is genuinely quick. In claude.ai you go to **Customize → Connectors → 
 
 **Good for:** almost everyone — non-technical users, people with Gmail and Outlook and IMAP all at once, anyone who cares that the body isn't stored.
 
-**The honest trade-offs:** it's a third-party service in your auth path (you can revoke from the dashboard in one click, but you're trusting the host's security model). And there are no webhooks. To react to new mail, Claude has to poll — call \`list_messages\` with \`unread_only: true\` on a schedule. Push notifications don't exist in MCP. Any tool that claims real-time email reactions is either polling under the hood or storing your mail.
+**The honest trade-offs:** it's a third-party service in your auth path (you can revoke from the dashboard in one click, but you're trusting the host's security model). And there are no webhooks. To react to new mail, Claude has to poll — call \`email_read\` with \`action: list\` and \`unread_only: true\` on a schedule. Push notifications don't exist in MCP. Any tool that claims real-time email reactions is either polling under the hood or storing your mail.
 
 Free tier is $0 forever with unlimited inboxes and tool calls, capped at 60 requests/minute. Paid plans ([pricing](/pricing)) raise the burst ceiling and add team features. Cost is rarely the deciding factor here.
 
@@ -82,7 +82,7 @@ Here's my opinionated take.
 
 **Skip the browser extension** unless you live in Gmail web and have read its data policy carefully. **Skip native integrations** unless yours already ships the feature and you're a single-client, single-provider person.
 
-One more thing that separates the serious options from the toys: sending. With MCP Emails, \`send_email\` and \`reply_to_email\` go through your own provider — Gmail API, Microsoft Graph, or your SMTP — so your domain reputation stays yours and threading headers are set automatically. Mail that relays from someone else's domain is a deliverability problem waiting to happen.
+One more thing that separates the serious options from the toys: sending. With MCP Emails, \`email_compose\` (action send or reply) goes through your own provider — Gmail API, Microsoft Graph, or your SMTP — so your domain reputation stays yours and threading headers are set automatically. Mail that relays from someone else's domain is a deliverability problem waiting to happen.
 
 ## Get started
 

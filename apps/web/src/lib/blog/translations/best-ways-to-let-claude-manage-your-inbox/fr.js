@@ -19,7 +19,7 @@ Confrontez ces quatre points à chaque option. Les différences deviennent vite 
 
 ## Option 1 : un serveur e-mail MCP hébergé
 
-C’est l’approche [Model Context Protocol](https://modelcontextprotocol.io), gérée pour vous. Vous connectez votre boîte mail une fois dans un tableau de bord, vous collez une seule URL de point de terminaison dans Claude, et l’agent obtient un jeu propre d’outils e-mail. Claude les appelle comme n’importe quel autre outil : \`list_inboxes\`, \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\`, plus une poignée d’autres pour les drapeaux, les dossiers, la planification et les contacts.
+C’est l’approche [Model Context Protocol](https://modelcontextprotocol.io), gérée pour vous. Vous connectez votre boîte mail une fois dans un tableau de bord, vous collez une seule URL de point de terminaison dans Claude, et l’agent obtient un jeu propre d’outils e-mail. Claude les appelle comme n’importe quel autre outil : \`inbox_list\` pour voir vos comptes, \`email_read\` pour lister, lire ou rechercher des messages, \`email_compose\` pour envoyer, répondre ou transférer, plus \`email_organize\`, \`folder\`, \`draft\`, \`schedule\` et \`contact_search\` pour les drapeaux, les dossiers, les brouillons, la planification et les contacts — huit outils en tout, chacun choisissant son opération via un paramètre \`action\`.
 
 MCP Emails est celui que je développe, alors prenez la recommandation en gardant cela à l’esprit — mais c’est l’architecture qui le rend gagnant pour la plupart des gens, pas le marketing. Chaque appel d’outil interroge votre fournisseur en direct (API Gmail, Microsoft Graph, ou IMAP/SMTP), transmet le message à Claude, puis le jette. **Le corps de l’e-mail n’est jamais stocké.** La seule chose conservée par boîte mail est un jeton OAuth chiffré ou un mot de passe d’application, chiffré au repos en AES-256-GCM, déchiffré uniquement à l’intérieur d’une edge function isolée au moment de l’appel. Si vous voulez la version longue de pourquoi cela compte, lisez [pourquoi « l’e-mail n’est jamais stocké » compte](/blog/why-email-never-stored-matters).
 
@@ -27,7 +27,7 @@ La configuration est vraiment rapide. Dans claude.ai, vous allez dans **Customiz
 
 **Idéal pour :** presque tout le monde — les utilisateurs non techniques, les personnes qui ont Gmail, Outlook et IMAP à la fois, quiconque tient à ce que le corps des messages ne soit pas stocké.
 
-**Les compromis honnêtes :** c’est un service tiers dans votre chemin d’authentification (vous pouvez révoquer depuis le tableau de bord en un clic, mais vous faites confiance au modèle de sécurité de l’hébergeur). Et il n’y a pas de webhooks. Pour réagir aux nouveaux messages, Claude doit interroger en continu — appeler \`list_messages\` avec \`unread_only: true\` selon un calendrier. Les notifications push n’existent pas dans MCP. Tout outil qui prétend réagir aux e-mails en temps réel fait soit de l’interrogation sous le capot, soit stocke vos messages.
+**Les compromis honnêtes :** c’est un service tiers dans votre chemin d’authentification (vous pouvez révoquer depuis le tableau de bord en un clic, mais vous faites confiance au modèle de sécurité de l’hébergeur). Et il n’y a pas de webhooks. Pour réagir aux nouveaux messages, Claude doit interroger en continu — appeler \`email_read\` avec \`action: list\` et \`unread_only: true\` selon un calendrier. Les notifications push n’existent pas dans MCP. Tout outil qui prétend réagir aux e-mails en temps réel fait soit de l’interrogation sous le capot, soit stocke vos messages.
 
 Le palier gratuit est à 0 $ pour toujours, avec un nombre illimité de boîtes mail et d’appels d’outils, plafonné à 60 requêtes/minute. Les forfaits payants ([tarifs](/pricing)) relèvent le plafond de pointe et ajoutent des fonctionnalités d’équipe. Le coût est rarement le facteur décisif ici.
 
@@ -75,7 +75,7 @@ Voici mon avis tranché.
 
 **Laissez tomber l’extension de navigateur** sauf si vous vivez dans Gmail web et avez lu attentivement sa politique de données. **Laissez tomber les intégrations natives** sauf si la vôtre propose déjà la fonctionnalité et que vous êtes du genre client unique, fournisseur unique.
 
-Une dernière chose qui sépare les options sérieuses des gadgets : l’envoi. Avec MCP Emails, \`send_email\` et \`reply_to_email\` passent par votre propre fournisseur — API Gmail, Microsoft Graph ou votre SMTP — donc la réputation de votre domaine reste la vôtre et les en-têtes de fil sont définis automatiquement. Le courrier relayé depuis le domaine de quelqu’un d’autre est un problème de délivrabilité en puissance.
+Une dernière chose qui sépare les options sérieuses des gadgets : l’envoi. Avec MCP Emails, \`email_compose\` (action send ou reply) passe par votre propre fournisseur — API Gmail, Microsoft Graph ou votre SMTP — donc la réputation de votre domaine reste la vôtre et les en-têtes de fil sont définis automatiquement. Le courrier relayé depuis le domaine de quelqu’un d’autre est un problème de délivrabilité en puissance.
 
 ## Pour commencer
 

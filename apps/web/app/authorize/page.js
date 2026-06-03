@@ -28,9 +28,9 @@ const VALID_SCOPES = new Set([
 ]);
 
 const SCOPE_META = {
-  'read:email':      { icon: 'inbox',  title: 'Read your inbox',           desc: 'inbox_list, email_list, email_read, email_search, folder_list.', required: false, destructive: false },
-  'search:email':    { icon: 'search', title: 'Search your emails',        desc: 'email_search (advanced search across your messages).', required: false, destructive: false },
-  'send:email':      { icon: 'mail',   title: 'Send email on your behalf',  desc: 'email_send, email_reply, email_forward, email_flag, email_archive.', required: false, destructive: false },
+  'read:email':      { icon: 'inbox',  title: 'Read your inbox',           desc: 'inbox_list, email_read (list/read/search), folder (list).', required: false, destructive: false },
+  'search:email':    { icon: 'search', title: 'Search your emails',        desc: 'email_read with action search (advanced search across your messages).', required: false, destructive: false },
+  'send:email':      { icon: 'mail',   title: 'Send email on your behalf',  desc: 'email_compose (send/reply/forward), email_organize (flag, archive).', required: false, destructive: false },
   'manage:folders':  { icon: 'menu',   title: 'Manage folders & labels',    desc: 'create/rename/delete folders, move messages.', required: false, destructive: false },
   'delete:email':    { icon: 'trash',  title: 'Delete emails',              desc: 'delete and bulk-delete messages.', required: false, destructive: true },
   'manage:drafts':   { icon: 'copy',   title: 'Manage drafts',              desc: 'create, update, list and send drafts.', required: false, destructive: false },

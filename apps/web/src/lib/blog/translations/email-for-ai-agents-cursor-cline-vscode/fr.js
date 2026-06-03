@@ -75,16 +75,16 @@ Si vous récupérez une liste d’outils, vous êtes connecté. Une erreur \`-32
 
 ## Les outils dont dispose votre agent
 
-Les deux chemins exposent la même surface. Six outils principaux couvrent le travail :
+Les deux chemins exposent la même surface. Une poignée d’outils consolidés, basés sur des actions, couvrent le travail :
 
-- \`list_inboxes\` — appelez toujours celui-ci en premier pour découvrir les boîtes de réception connectées et leurs ID.
-- \`list_messages\` — paginé, du plus récent au plus ancien.
-- \`read_email\` — texte brut analysé, HTML assaini en option, pièces jointes.
-- \`search_emails\` — recherche native du fournisseur (opérateurs Gmail, KQL Outlook, texte IMAP).
-- \`send_email\` — composez avec CC/BCC, HTML, pièces jointes jusqu’à 10 MB.
-- \`reply_to_email\` — définit pour vous les en-têtes In-Reply-To et References pour que le fil reste intact.
+- \`inbox_list\` — appelez toujours celui-ci en premier pour découvrir les boîtes de réception connectées et leurs ID.
+- \`email_read\` (action \`list\`) — paginé, du plus récent au plus ancien.
+- \`email_read\` (action \`read\`) — texte brut analysé, HTML assaini en option, pièces jointes.
+- \`email_read\` (action \`search\`) — recherche native du fournisseur (opérateurs Gmail, KQL Outlook, texte IMAP).
+- \`email_compose\` (action \`send\`) — composez avec CC/BCC, HTML, pièces jointes jusqu’à 10 MB.
+- \`email_compose\` (action \`reply\`) — définit pour vous les en-têtes In-Reply-To et References pour que le fil reste intact.
 
-Il y en a quelques autres pour les drapeaux, les dossiers, l’envoi programmé et les contacts, mais ces six-là font l’essentiel du vrai travail.
+Il y en a quelques autres pour les drapeaux et les déplacements (\`email_organize\`), les dossiers, l’envoi programmé et les contacts, mais ces quelques-uns font l’essentiel du vrai travail.
 
 ## Un workflow de dev qui gagne sa place
 
@@ -92,21 +92,21 @@ C’est ici que ça paie. Je garde une clé lecture+envoi câblée dans mon édi
 
 Tri matinal, tapé directement dans le panneau de chat :
 
-> Appelle list_inboxes, puis liste les non lus de ma boîte pro des 12 dernières heures. Range-les : à répondre, pour info, et bruit. Pour le groupe « pour info », donne-moi une ligne chacun.
+> Appelle inbox_list, puis liste les non lus de ma boîte pro des 12 dernières heures. Range-les : à répondre, pour info, et bruit. Pour le groupe « pour info », donne-moi une ligne chacun.
 
-L’agent exécute \`list_inboxes\`, puis \`list_messages\` avec \`unread_only\` activé, lit ceux qui comptent et me rend un récapitulatif trié. Quand j’en repère un auquel je veux répondre, j’enchaîne :
+L’agent exécute \`inbox_list\`, puis \`email_read\` avec l’action \`list\` et \`unread_only\` activé, lit ceux qui comptent et me rend un récapitulatif trié. Quand j’en repère un auquel je veux répondre, j’enchaîne :
 
 > Réponds au message du prestataire en design pour confirmer que jeudi 14h convient, fais court.
 
-Il appelle \`reply_to_email\`, le fil est géré, et la réponse part via mon propre Gmail — elle arrive donc depuis mon adresse avec la réputation de mon domaine, pas un relais quelconque. Pour un traitement plus poussé des prompts de tri, voyez [comment faire trier et résumer votre boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox).
+Il appelle \`email_compose\` avec l’action \`reply\`, le fil est géré, et la réponse part via mon propre Gmail — elle arrive donc depuis mon adresse avec la réputation de mon domaine, pas un relais quelconque. Pour un traitement plus poussé des prompts de tri, voyez [comment faire trier et résumer votre boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox).
 
-Une limitation honnête : il n’y a pas de webhooks. Le serveur ne vous pousse pas de nouveau courrier. Si vous voulez que l’agent réagisse aux messages entrants, vous interrogez le serveur — \`list_messages\` avec \`unread_only: true\` selon un planning. C’est un choix de conception délibéré, et il façonne la manière dont vous construisez tout ce qui est réactif, comme un [répondeur automatique via MCP](/blog/build-email-auto-responder-mcp-agent).
+Une limitation honnête : il n’y a pas de webhooks. Le serveur ne vous pousse pas de nouveau courrier. Si vous voulez que l’agent réagisse aux messages entrants, vous interrogez le serveur — \`email_read\` avec l’action \`list\` et \`unread_only: true\` selon un planning. C’est un choix de conception délibéré, et il façonne la manière dont vous construisez tout ce qui est réactif, comme un [répondeur automatique via MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Limites de débit pour l’accès scripté
 
 Si vous pilotez le serveur depuis une tâche cron ou une boucle d’agent serrée, faites attention aux limites. Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et 10 000 par jour**, sur tous les forfaits. À cela s’ajoute un plafond de pic par espace de travail fixé par votre forfait : 60/min sur Free, 300/min sur Solo (12 $/mois), 1 000/min sur Team (49 $/mois). Voyez la [page des tarifs](/pricing) pour le détail complet.
 
-Quand vous atteignez une limite, le serveur renvoie une erreur réessayable (code \`-32029\`) avec \`data.retry_after\` en secondes. Respectez-la — patientez d’autant et réessayez. Et ne réessayez jamais à l’aveugle un \`send_email\` sur un échec générique ; vous enverriez des doublons. Vérifiez d’abord s’il est réellement parti.
+Quand vous atteignez une limite, le serveur renvoie une erreur réessayable (code \`-32029\`) avec \`data.retry_after\` en secondes. Respectez-la — patientez d’autant et réessayez. Et ne réessayez jamais à l’aveugle un envoi de \`email_compose\` sur un échec générique ; vous enverriez des doublons. Vérifiez d’abord s’il est réellement parti.
 
 ## Pour conclure
 

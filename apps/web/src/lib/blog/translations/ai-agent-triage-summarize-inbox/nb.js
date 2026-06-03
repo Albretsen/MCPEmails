@@ -3,7 +3,7 @@ export default {
   description:
     'En praktisk veiledning for innbokssortering med AI-agent: ferdige prompter som lister ulest e-post, leser det som betyr noe, oppsummerer og prioriterer, og poller på fast plan.',
   coverAlt: 'AI-agent sorterer og oppsummerer en innboks over MCP — MCP Emails',
-  content: `Den raskeste måten å få en AI-agent til å sortere innboksen din på er å gi den fire verktøy i rekkefølge: \`list_inboxes\` for å finne postkassen din, \`list_messages\` med \`unread_only: true\` for å hente det nye, \`read_email\` for de få som ser viktige ut, og deretter en instruksjon på vanlig norsk om å oppsummere og rangere dem. Det er hele løkka. Vil du at den skal skrive utkast til eller sende svar, legger du til \`reply_to_email\` til slutt.
+  content: `Den raskeste måten å få en AI-agent til å sortere innboksen din på er å lene deg på to verktøy i rekkefølge: \`inbox_list\` for å finne postkassen din, og så \`email_read\` — med \`action: list\` og \`unread_only: true\` for å hente det nye, deretter \`action: read\` for de få som ser viktige ut — og så en instruksjon på vanlig norsk om å oppsummere og rangere dem. Det er hele løkka. Vil du at den skal skrive utkast til eller sende svar, legger du til \`email_compose\` med \`action: reply\` til slutt.
 
 Dette innlegget gir deg de eksakte promptene jeg bruker, hvordan god output ser ut, og hvordan du kjører den samme løkka på fast plan slik at morgensorteringen er gjort før du setter deg ned. Det forutsetter at agenten din allerede har e-posttilgang via [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). Har du ikke koblet til en innboks ennå, tar [koble-til-guiden på under to minutter](/blog/connect-email-to-ai-agent-under-2-minutes) deg dit først.
 
@@ -11,11 +11,11 @@ Dette innlegget gir deg de eksakte promptene jeg bruker, hvordan god output ser 
 
 Hver sorteringsøkt er de samme fem stegene. Agenten finner ut rekkefølgen selv når du beskriver målet, men det hjelper å vite hva som skjer under panseret:
 
-1. \`list_inboxes\` — finn tilkoblede innbokser og deres \`inbox_id\`-UUID-er. Agenten hardkoder aldri en UUID; den slår den opp her.
-2. \`list_messages\` med \`unread_only: true\` — hent den uleste køen for én innboks, nyeste først.
-3. \`read_email\` — åpne hele meldingsteksten for de få meldingene som er verdt å lese i detalj.
+1. \`inbox_list\` — finn tilkoblede innbokser og deres \`inbox_id\`-UUID-er. Agenten hardkoder aldri en UUID; den slår den opp her.
+2. \`email_read\` med \`action: list\` og \`unread_only: true\` — hent den uleste køen for én innboks, nyeste først.
+3. \`email_read\` med \`action: read\` — åpne hele meldingsteksten for de få meldingene som er verdt å lese i detalj.
 4. Oppsummer og prioriter — ren resonnering, ingen verktøykall. Modellen grupperer, rangerer og forklarer.
-5. \`reply_to_email\` (valgfritt) — skriv utkast eller send for dem som trenger et svar.
+5. \`email_compose\` med \`action: reply\` (valgfritt) — skriv utkast eller send for dem som trenger et svar.
 
 Steg 1 til 4 er skrivebeskyttet. Hvis du koblet til med en [OAuth-tildeling eller API-nøkkel](/blog/oauth-vs-api-keys-ai-email-access) med \`read:email\`-omfang, kan agenten fysisk ikke sende noe som helst, noe som er akkurat det du vil ha for en automatisk oppsummering du skummer gjennom senere.
 
@@ -25,7 +25,7 @@ Start enkelt. Dette er den jeg kjører de fleste dager. Lim den inn i Claude (el
 
 > Se på hovedinnboksen min. Hent alt som er ulest, og gi meg så en oppsummering gruppert i tre bøtter: må besvares i dag, til orientering / kan vente, og sannsynligvis støy. For hvert element i de to første bøttene, gi meg én linje: hvem det er fra og hva de vil ha. Ikke åpne noe jeg ikke trenger — skum emnefelt og avsendere først, les bare meldingsteksten når emnet er tvetydig.
 
-Legg merke til hva den prompten gjør. Den ber agenten lene seg på metadataene fra \`list_messages\` (avsender, emne, utdrag) og kalle \`read_email\` sparsomt. Det holder økta rask og godt under fartsgrensene — 100 forespørsler per minutt per API-nøkkel, og et tak per arbeidsområde som starter på 60/min på Free-planen. En ulest kø på 40 meldinger sortert på denne måten er kanskje et dusin verktøykall, ikke førti.
+Legg merke til hva den prompten gjør. Den ber agenten lene seg på metadataene fra \`email_read\` (action list) (avsender, emne, utdrag) og kalle \`email_read\` med \`action: read\` sparsomt. Det holder økta rask og godt under fartsgrensene — 100 forespørsler per minutt per API-nøkkel, og et tak per arbeidsområde som starter på 60/min på Free-planen. En ulest kø på 40 meldinger sortert på denne måten er kanskje et dusin verktøykall, ikke førti.
 
 Et godt svar ser slik ut:
 
@@ -64,7 +64,7 @@ Linja «ikke etter hvor høylytt avsenderen er» betyr noe. Uten den overvekter 
 ...
 \`\`\`
 
-For denne prompten kaller agenten \`read_email\` åtte ganger, én gang per toppelement, fordi du ba den slutte å gjette. Det er den riktige avveiingen: noen ekstra kall for rangeringer du kan handle på. Hvis agenten faktisk treffer en grense midt i kjøringen, returnerer MCP Emails en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder — en veloppdragen klient venter så lenge og fortsetter, i stedet for å hamre løs på serveren.
+For denne prompten kaller agenten \`email_read\` med \`action: read\` åtte ganger, én gang per toppelement, fordi du ba den slutte å gjette. Det er den riktige avveiingen: noen ekstra kall for rangeringer du kan handle på. Hvis agenten faktisk treffer en grense midt i kjøringen, returnerer MCP Emails en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder — en veloppdragen klient venter så lenge og fortsetter, i stedet for å hamre løs på serveren.
 
 ## Prompt 3: sortering som ender i et svar
 
@@ -72,13 +72,13 @@ Sortering er mer verdifull når den lukker løkker. Når du først stoler på op
 
 > Samme sortering som vanlig. For alt under «må besvares i dag» som jeg kan svare på med to setninger, skriv utkastet til svaret og vis det til meg. Ikke send ennå — jeg sier «send 1 og 3» eller redigerer dem. Treff min vanlige tone: kort, direkte, ingen byråkratspråk.
 
-Agenten kjører den skrivebeskyttede løkka og skriver så utkast direkte i samtalen. Når du sier «send 1 og 3», kaller den \`reply_to_email\` for de to. Svar tråder automatisk — MCP Emails setter \`In-Reply-To\`- og \`References\`-overskriftene for deg, så svaret ditt lander i riktig samtale i stedet for å starte en ny. E-posten går ut gjennom din egen leverandør (Gmail API, Microsoft Graph eller din SMTP), så leveringsdyktighet og domeneomdømmet ditt forblir dine. Ingenting relayes fra et delt avsenderdomene.
+Agenten kjører den skrivebeskyttede løkka og skriver så utkast direkte i samtalen. Når du sier «send 1 og 3», kaller den \`email_compose\` med \`action: reply\` for de to. Svar tråder automatisk — MCP Emails setter \`In-Reply-To\`- og \`References\`-overskriftene for deg, så svaret ditt lander i riktig samtale i stedet for å starte en ny. E-posten går ut gjennom din egen leverandør (Gmail API, Microsoft Graph eller din SMTP), så leveringsdyktighet og domeneomdømmet ditt forblir dine. Ingenting relayes fra et delt avsenderdomene.
 
 Vil du ta neste steg og fjerne deg selv fra løkka helt, er det en annen form for automatisering — se [å bygge en e-post-autosvarer med en MCP-agent](/blog/build-email-auto-responder-mcp-agent) for sikkerhetstiltakene jeg ville lagt på den før jeg lot en agent sende uten tilsyn.
 
 ## Kjøre sortering på fast plan
 
-Her er den ærlige begrensningen: MCP er **poll, ikke push.** MCP Emails har ingen webhooks og sender ingen serverinitierte hendelser. Agenten din får ikke et pling når post kommer. For å gjøre løpende sortering må noe kalle \`list_messages\` med \`unread_only: true\` på en timer.
+Her er den ærlige begrensningen: MCP er **poll, ikke push.** MCP Emails har ingen webhooks og sender ingen serverinitierte hendelser. Agenten din får ikke et pling når post kommer. For å gjøre løpende sortering må noe kalle \`email_read\` med \`action: list\` og \`unread_only: true\` på en timer.
 
 I praksis betyr det ett av to oppsett:
 
@@ -91,7 +91,7 @@ Uansett hvilken takt du velger, hold pollingen ærlig: hyppigere polling betyr i
 
 ## Noen ting som gjør sorteringen merkbart bedre
 
-- **Navngi innboksen.** Hvis du har koblet til mer enn én konto, si «jobbinnboksen min» eller «support-innboksen». Agenten finner den fra titlene i \`list_inboxes\`, og du unngår at den sorterer feil postkasse.
+- **Navngi innboksen.** Hvis du har koblet til mer enn én konto, si «jobbinnboksen min» eller «support-innboksen». Agenten finner den fra titlene i \`inbox_list\`, og du unngår at den sorterer feil postkasse.
 - **Gi den en rubrikk, ikke bare «oppsummer».** «Presserende = noen er blokkert eller det er en frist samme dag» gir dramatisk bedre rangeringer enn å la presserende være udefinert.
 - **Sett tak på lesingen.** «Åpne bare meldingsteksten når emnet er tvetydig» eller «les de 8 øverste» holder øktene raske og billige. Ubegrenset «les alt» er tregt og sjelden bedre.
 - **Hold deg skrivebeskyttet til du stoler på den.** Kjør med et \`read:email\`-omfang i en uke. Legg til \`send:email\` først når utkastene er gjennomgående gode.

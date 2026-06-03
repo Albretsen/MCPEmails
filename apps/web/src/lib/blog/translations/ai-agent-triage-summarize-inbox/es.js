@@ -3,7 +3,7 @@ export default {
   description:
     'Guía práctica para clasificar la bandeja de entrada con un agente de IA: prompts listos para copiar que listan el correo no leído, leen lo importante, resumen y priorizan, y consultan según un horario.',
   coverAlt: 'Un agente de IA clasifica y resume una bandeja de entrada a través de MCP — MCP Emails',
-  content: `La forma más rápida de que un agente de IA clasifique tu bandeja de entrada es darle cuatro herramientas en orden: \`list_inboxes\` para encontrar tu buzón, \`list_messages\` con \`unread_only: true\` para sacar lo nuevo, \`read_email\` para los pocos que parezcan importantes, y luego una instrucción en lenguaje natural para que los resuma y los ordene por prioridad. Ese es todo el bucle. Si quieres que redacte o envíe respuestas, añades \`reply_to_email\` al final.
+  content: `La forma más rápida de que un agente de IA clasifique tu bandeja de entrada es apoyarte en dos herramientas en orden: \`inbox_list\` para encontrar tu buzón, y luego \`email_read\` — con \`action: list\` y \`unread_only: true\` para sacar lo nuevo, y después \`action: read\` para los pocos que parezcan importantes — y luego una instrucción en lenguaje natural para que los resuma y los ordene por prioridad. Ese es todo el bucle. Si quieres que redacte o envíe respuestas, añades \`email_compose\` con \`action: reply\` al final.
 
 Este artículo te da los prompts exactos que uso, qué aspecto tiene un buen resultado y cómo ejecutar el mismo bucle según un horario para que tu clasificación matinal ocurra antes de que te sientes. Da por hecho que tu agente ya tiene acceso al correo a través de [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). Si todavía no has conectado una bandeja de entrada, la [guía de conexión en menos de dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes) te pone al día primero.
 
@@ -11,11 +11,11 @@ Este artículo te da los prompts exactos que uso, qué aspecto tiene un buen res
 
 Cada sesión de clasificación son los mismos cinco pasos. Tu agente decide el orden por su cuenta en cuanto le describes el objetivo, pero ayuda saber qué pasa por debajo:
 
-1. \`list_inboxes\` — descubre las bandejas conectadas y sus UUID de \`inbox_id\`. El agente nunca pone un UUID a fuego; lo busca aquí.
-2. \`list_messages\` con \`unread_only: true\` — saca la cola de no leídos de una bandeja, los más recientes primero.
-3. \`read_email\` — abre el cuerpo completo de los pocos mensajes que merece la pena leer en detalle.
+1. \`inbox_list\` — descubre las bandejas conectadas y sus UUID de \`inbox_id\`. El agente nunca pone un UUID a fuego; lo busca aquí.
+2. \`email_read\` con \`action: list\` y \`unread_only: true\` — saca la cola de no leídos de una bandeja, los más recientes primero.
+3. \`email_read\` con \`action: read\` — abre el cuerpo completo de los pocos mensajes que merece la pena leer en detalle.
 4. Resumir y priorizar — puro razonamiento, sin llamada a herramienta. El modelo agrupa, ordena y explica.
-5. \`reply_to_email\` (opcional) — redacta o envía para los que necesitan respuesta.
+5. \`email_compose\` con \`action: reply\` (opcional) — redacta o envía para los que necesitan respuesta.
 
 Los pasos del 1 al 4 son de solo lectura. Si conectaste con una [concesión OAuth o clave de API](/blog/oauth-vs-api-keys-ai-email-access) con alcance \`read:email\`, el agente físicamente no puede enviar nada, que es justo lo que quieres para un resumen automatizado que repasarás más tarde.
 
@@ -25,7 +25,7 @@ Empieza sencillo. Este es el que ejecuto casi todos los días. Pégalo en Claude
 
 > Mira mi bandeja de entrada principal. Saca todo lo no leído y dame un resumen agrupado en tres categorías: necesita respuesta hoy, para tu información / puede esperar, y probablemente ruido. Para cada elemento de las dos primeras categorías, dame una línea: de quién viene y qué quiere. No abras nada que no necesite — repasa primero los asuntos y los remitentes, y lee el cuerpo solo cuando el asunto sea ambiguo.
 
-Fíjate en lo que hace ese prompt. Le dice al agente que se apoye en los metadatos de \`list_messages\` (remitente, asunto, fragmento) y que llame a \`read_email\` con moderación. Eso mantiene la sesión rápida y se queda muy por debajo de los límites de tasa — 100 solicitudes por minuto por clave de API, y un techo por espacio de trabajo que empieza en 60/min en el plan Free. Una cola de 40 mensajes no leídos clasificada así son quizá una docena de llamadas a herramientas, no cuarenta.
+Fíjate en lo que hace ese prompt. Le dice al agente que se apoye en los metadatos de \`email_read\` (action list) (remitente, asunto, fragmento) y que llame a \`email_read\` con \`action: read\` con moderación. Eso mantiene la sesión rápida y se queda muy por debajo de los límites de tasa — 100 solicitudes por minuto por clave de API, y un techo por espacio de trabajo que empieza en 60/min en el plan Free. Una cola de 40 mensajes no leídos clasificada así son quizá una docena de llamadas a herramientas, no cuarenta.
 
 Una buena respuesta tiene este aspecto:
 
@@ -64,7 +64,7 @@ La frase "no según lo escandaloso que sea el remitente" importa. Sin ella, los 
 ...
 \`\`\`
 
-Para este prompt el agente llamará a \`read_email\` ocho veces, una por cada elemento del top, porque le pediste que dejara de adivinar. Es el compromiso correcto: unas pocas llamadas extra a cambio de un orden sobre el que puedes actuar. Si el agente sí choca con un límite a mitad de ejecución, MCP Emails devuelve un error reintentable con un valor \`retry_after\` en segundos — un cliente que se porta bien espera ese tiempo y retoma en lugar de aporrear el servidor.
+Para este prompt el agente llamará a \`email_read\` con \`action: read\` ocho veces, una por cada elemento del top, porque le pediste que dejara de adivinar. Es el compromiso correcto: unas pocas llamadas extra a cambio de un orden sobre el que puedes actuar. Si el agente sí choca con un límite a mitad de ejecución, MCP Emails devuelve un error reintentable con un valor \`retry_after\` en segundos — un cliente que se porta bien espera ese tiempo y retoma en lugar de aporrear el servidor.
 
 ## Prompt 3: clasificación que termina en una respuesta
 
@@ -72,13 +72,13 @@ La clasificación vale más cuando cierra asuntos. En cuanto te fíes de los res
 
 > La misma clasificación de siempre. Para cualquier cosa de "necesita respuesta hoy" que pueda responder en dos frases, redacta la respuesta y enséñamela. No la envíes todavía — yo diré "envía la 1 y la 3" o las editaré. Imita mi tono habitual: corto, directo, sin relleno corporativo.
 
-El agente ejecuta el bucle de solo lectura y luego escribe los borradores en línea. Cuando dices "envía la 1 y la 3", llama a \`reply_to_email\` para esas dos. Las respuestas se encadenan automáticamente — MCP Emails pone por ti las cabeceras \`In-Reply-To\` y \`References\`, así que tu respuesta aterriza en la conversación correcta en vez de empezar una nueva. El correo sale a través de tu propio proveedor (API de Gmail, Microsoft Graph o tu SMTP), de modo que la entregabilidad y la reputación de tu dominio siguen siendo tuyas. Nada se reenvía desde un dominio de envío compartido.
+El agente ejecuta el bucle de solo lectura y luego escribe los borradores en línea. Cuando dices "envía la 1 y la 3", llama a \`email_compose\` con \`action: reply\` para esas dos. Las respuestas se encadenan automáticamente — MCP Emails pone por ti las cabeceras \`In-Reply-To\` y \`References\`, así que tu respuesta aterriza en la conversación correcta en vez de empezar una nueva. El correo sale a través de tu propio proveedor (API de Gmail, Microsoft Graph o tu SMTP), de modo que la entregabilidad y la reputación de tu dominio siguen siendo tuyas. Nada se reenvía desde un dominio de envío compartido.
 
 Si quieres dar el siguiente paso y salirte del bucle por completo, eso es otra forma de automatización — consulta [cómo construir un autorespondedor de correo con un agente MCP](/blog/build-email-auto-responder-mcp-agent) para ver las salvaguardas que yo le pondría antes de dejar que un agente envíe sin supervisión.
 
 ## Ejecutar la clasificación según un horario
 
-Aquí está la limitación honesta: MCP es **consulta, no inserción.** MCP Emails no tiene webhooks ni envía eventos iniciados por el servidor. Tu agente no recibe un aviso cuando llega correo. Para hacer clasificación continua, algo tiene que llamar a \`list_messages\` con \`unread_only: true\` con un temporizador.
+Aquí está la limitación honesta: MCP es **consulta, no inserción.** MCP Emails no tiene webhooks ni envía eventos iniciados por el servidor. Tu agente no recibe un aviso cuando llega correo. Para hacer clasificación continua, algo tiene que llamar a \`email_read\` con \`action: list\` y \`unread_only: true\` con un temporizador.
 
 En la práctica eso significa una de dos configuraciones:
 
@@ -91,7 +91,7 @@ Sea cual sea la cadencia que elijas, mantén la consulta honesta: consultar con 
 
 ## Algunas cosas que hacen la clasificación notablemente mejor
 
-- **Nombra la bandeja.** Si has conectado más de una cuenta, di "mi bandeja del trabajo" o "la bandeja de soporte". El agente la resuelve a partir de los títulos de \`list_inboxes\`, y así evitas que clasifique el buzón equivocado.
+- **Nombra la bandeja.** Si has conectado más de una cuenta, di "mi bandeja del trabajo" o "la bandeja de soporte". El agente la resuelve a partir de los títulos de \`inbox_list\`, y así evitas que clasifique el buzón equivocado.
 - **Dale una rúbrica, no solo "resume".** "Urgente = alguien está bloqueado o hay una fecha límite para el mismo día" produce un orden muchísimo mejor que dejar la urgencia sin definir.
 - **Limita las lecturas.** "Abre el cuerpo solo cuando el asunto sea ambiguo" o "lee los 8 primeros" mantiene las sesiones rápidas y baratas. Un "léelo todo" sin límites es lento y rara vez mejor.
 - **Quédate en solo lectura hasta que te fíes.** Funciona con un alcance \`read:email\` durante una semana. Añade \`send:email\` solo cuando los borradores sean buenos de forma constante.

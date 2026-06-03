@@ -59,27 +59,25 @@ El único punto donde se cuela la realidad es la pantalla de consentimiento en l
 
 ## Qué funciona una vez conectado
 
-Tu agente obtiene las seis herramientas básicas más los extras que admite Outlook:
+Tu agente obtiene las herramientas básicas consolidadas más los extras que admite Outlook:
 
-- \`list_inboxes\` — llámala siempre primero. Devuelve tus buzones conectados y sus UUID \`inbox_id\` para que el agente nunca adivine un ID.
-- \`list_messages\` — los más recientes primero, paginado, con filtros como \`unread_only\`.
-- \`read_email\` — texto plano parseado, HTML saneado opcional, adjuntos opcionales.
-- \`search_emails\` — consulta la nota sobre búsqueda más abajo.
-- \`send_email\` — redacta con CC/CCO, HTML y adjuntos de hasta 10 MB en total.
-- \`reply_to_email\` — responde dentro del hilo con las cabeceras de enhebrado correctas.
+- \`inbox_list\` — llámala siempre primero. Devuelve tus buzones conectados y sus UUID \`inbox_id\` para que el agente nunca adivine un ID.
+- \`email_read\` — una sola herramienta con varias acciones: \`list\` (los más recientes primero, paginado, con filtros como \`unread_only\`), \`read\` (texto plano parseado, HTML saneado opcional, adjuntos opcionales) y \`search\` (consulta la nota sobre búsqueda más abajo).
+- \`email_compose\` — la acción \`send\` redacta con CC/CCO, HTML y adjuntos de hasta 10 MB en total; las acciones \`reply\` y \`forward\` mantienen el hilo con las cabeceras correctas.
+- \`email_organize\` — marcar como leído/no leído, marcar con bandera, archivar, eliminar y mover, cada una mediante su propia \`action\`.
 
-Más allá de las seis, Outlook admite marcar como leído/no leído, marcar con bandera (la "flag" de Outlook se corresponde con el concepto de destacado/marcado), reenviar y mover entre carpetas. Consulta la [documentación](/docs) en vivo para ver la lista de capacidades actual antes de construir sobre una herramienta concreta.
+Más allá de esas, Outlook admite marcar como leído/no leído, marcar con bandera (la "flag" de Outlook se corresponde con el concepto de destacado/marcado), reenviar y mover entre carpetas. Consulta la [documentación](/docs) en vivo para ver la lista de capacidades actual antes de construir sobre una herramienta concreta.
 
 ### La búsqueda usa el \`$search\` de Microsoft
 
-La búsqueda de Outlook no es la búsqueda de Gmail. Donde Gmail acepta operadores como \`from:\` e \`is:unread\`, \`search_emails\` contra una bandeja de Outlook pasa tu consulta al \`$search\` de Microsoft Graph, que hace coincidencias de texto completo ordenadas por relevancia en todo el buzón y además acepta KQL. Así, una consulta como \`invoice from accounting last week\` funciona como lenguaje natural, y puedes afinar más con KQL como \`from:finance@acme.com AND subject:invoice\`. Si escribes prompts que fijan operadores de Gmail, no se comportarán igual en Outlook: dile a tu agente que busque en lenguaje llano y deja que Graph ordene.
+La búsqueda de Outlook no es la búsqueda de Gmail. Donde Gmail acepta operadores como \`from:\` e \`is:unread\`, \`email_read\` con la acción \`search\` contra una bandeja de Outlook pasa tu consulta al \`$search\` de Microsoft Graph, que hace coincidencias de texto completo ordenadas por relevancia en todo el buzón y además acepta KQL. Así, una consulta como \`invoice from accounting last week\` funciona como lenguaje natural, y puedes afinar más con KQL como \`from:finance@acme.com AND subject:invoice\`. Si escribes prompts que fijan operadores de Gmail, no se comportarán igual en Outlook: dile a tu agente que busque en lenguaje llano y deja que Graph ordene.
 
 ## Un flujo que vale la pena montar
 
 Este es un bucle de triaje que ejecuto contra una bandeja de Microsoft 365. Una o dos veces por hora, el agente:
 
-1. Llama a \`list_messages\` con \`unread_only: true\`.
-2. Lee con \`read_email\` cualquier cosa que parezca urgente.
+1. Llama a \`email_read\` con la acción \`list\` y \`unread_only: true\`.
+2. Lee con la acción \`read\` de \`email_read\` cualquier cosa que parezca urgente.
 3. Resume el lote y redacta borradores de respuesta para los que yo respondería sin dudar.
 4. Deja todo como no leído hasta que yo confirme.
 

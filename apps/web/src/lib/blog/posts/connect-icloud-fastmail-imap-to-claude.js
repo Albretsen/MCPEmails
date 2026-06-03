@@ -74,12 +74,12 @@ In claude.ai:
 
 No API key, no config file. claude.ai uses OAuth with PKCE under the hood, and the token Claude gets is scoped to exactly what you approved. If you're on a client that can't do OAuth — Cursor, Cline, a cURL script — you mint a scoped key instead, which I cover in [email access for Cursor, Cline, and VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Once it's connected, have Claude run \`list_inboxes\` first. It returns your inbox and its \`inbox_id\`, so you never copy-paste a UUID. From there it's the [six core tools](/docs) — \`list_messages\`, \`read_email\`, \`search_emails\`, \`send_email\`, \`reply_to_email\` — plus a few more for flags, folders, scheduling, and contacts.
+Once it's connected, have Claude run \`inbox_list\` first. It returns your inbox and its \`inbox_id\`, so you never copy-paste a UUID. From there it's the [core tools](/docs) — \`email_read\` (list, read, and search messages), \`email_compose\` (send, reply, forward), and \`email_organize\` — plus a few more for folders, drafts, scheduling, and contacts. Each runs through an \`action\` parameter.
 
 A prompt to confirm it works:
 
 \`\`\`
-Use list_inboxes to find my iCloud inbox, then summarize my 5 most recent unread messages.
+Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
 ## The one thing IMAP does that Gmail and Outlook can't

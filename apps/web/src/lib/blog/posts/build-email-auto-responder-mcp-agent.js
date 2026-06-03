@@ -9,7 +9,7 @@ export default {
   updatedAt: '2026-06-01T10:00:00.000Z',
   tags: ['Workflows', 'Tutorial', 'MCP', 'AI agents'],
   featured: false,
-  content: `An email auto-responder built on MCP Emails is a loop, not a webhook. There are no server-initiated events, so your agent **polls** for unread mail on a schedule, reads each message, drafts a reply, and calls \`reply_to_email\`. This post walks the full build: the polling loop, the scopes you need, how to survive rate limits, and the guardrails that keep an agent from blasting your contacts with hallucinated replies.
+  content: `An email auto-responder built on MCP Emails is a loop, not a webhook. There are no server-initiated events, so your agent **polls** for unread mail on a schedule with \`email_read\` (action \`list\`), reads each message with \`email_read\` (action \`read\`), drafts a reply, and calls \`email_compose\` (action \`reply\`). This post walks the full build: the polling loop, the scopes you need, how to survive rate limits, and the guardrails that keep an agent from blasting your contacts with hallucinated replies.
 
 This is the advanced end of the [give your AI agent email access](/blog/how-to-give-your-ai-agent-email-access) story. If you just want triage and morning summaries without sending anything, read [AI agent inbox triage and summarize](/blog/ai-agent-triage-summarize-inbox) first — it's the safer place to start. Come back here when you actually want the agent to hit send.
 
@@ -27,8 +27,8 @@ An auto-responder almost always runs as a script or a cron job, not inside a cha
 
 In the dashboard, go to **API Keys**, create a key, and grant it the scopes you actually need:
 
-- \`read:email\` — to poll, list, and read messages.
-- \`send:email\` — to call \`reply_to_email\`.
+- \`read:email\` — to poll, list, and read messages with \`email_read\`.
+- \`send:email\` — to call \`email_compose\` (action \`reply\`).
 
 The key is shown once. Copy it. It looks like \`mcpe_live_...\` and you pass it on every request:
 
@@ -49,12 +49,13 @@ Grant **only** the scopes the job uses. If a future version of your responder ne
 Here's the shape of a working responder. I've written it as pseudo-code over the MCP tools so it's clear what calls happen in what order. The exact MCP client wiring depends on your stack, but the sequence is the point.
 
 \`\`\`python
-# Tools used: list_inboxes, list_messages, read_email, reply_to_email
+# Tools used: inbox_list, email_read, email_compose
 
-inbox = list_inboxes()[0]            # discover, never hardcode the UUID
+inbox = inbox_list()[0]              # discover, never hardcode the UUID
 
 while True:
-    unread = list_messages(
+    unread = email_read(
+        action="list",
         inbox_id=inbox["inbox_id"],
         unread_only=True,
         limit=20,
@@ -64,7 +65,8 @@ while True:
         if not should_handle(summary):   # allowlist + filters, see below
             continue
 
-        msg = read_email(
+        msg = email_read(
+            action="read",
             inbox_id=inbox["inbox_id"],
             message_id=summary["message_id"],
         )
@@ -84,7 +86,7 @@ while True:
     sleep(60)
 \`\`\`
 
-Three things to notice. First, the agent calls \`list_inboxes\` to discover the \`inbox_id\` rather than pasting a UUID into the code — that's the discovery-first pattern, and it keeps the script working if you reconnect an inbox. Second, \`unread_only: true\` is what makes this a *new mail* responder instead of a re-reply-to-everything machine. Third, every message passes through guardrails before anything sends.
+Three things to notice. First, the agent calls \`inbox_list\` to discover the \`inbox_id\` rather than pasting a UUID into the code — that's the discovery-first pattern, and it keeps the script working if you reconnect an inbox. Second, \`unread_only: true\` is what makes this a *new mail* responder instead of a re-reply-to-everything machine. Third, every message passes through guardrails before anything sends.
 
 ### Marking messages handled
 
@@ -96,14 +98,14 @@ Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000
 
 When you hit a limit, the server returns a retryable error (code \`-32029\`) carrying \`data.retry_after\` in seconds. Honor it. Sleep for that long, then continue.
 
-Here's the rule that matters most: **never blindly auto-retry \`send_email\` or \`reply_to_email\`.** A send is not idempotent. If a send call times out or returns ambiguously, a naive retry can deliver the same reply twice. Retry *reads* freely; treat *sends* as one-shot and only retry on an explicit retryable error, with backoff and a hard cap.
+Here's the rule that matters most: **never blindly auto-retry an \`email_compose\` send or reply.** A send is not idempotent. If a send call times out or returns ambiguously, a naive retry can deliver the same reply twice. Retry *reads* freely; treat *sends* as one-shot and only retry on an explicit retryable error, with backoff and a hard cap.
 
 \`\`\`python
 def send_with_backoff(**kwargs):
     delay = 2
     for attempt in range(3):
         try:
-            return reply_to_email(**kwargs)
+            return email_compose(action="reply", **kwargs)
         except RateLimited as e:
             sleep(e.retry_after or delay)
             delay *= 2
@@ -128,7 +130,7 @@ Don't reply to everyone. Start with a narrow allowlist — a support alias, a sp
 
 ### Keep a human in the loop, at least at first
 
-The safest version of this isn't an auto-responder at all — it's an auto-*drafter*. The agent reads, drafts, and stages the reply, but a person approves the send. MCP Emails supports drafts, so you can have the loop create a draft instead of calling \`reply_to_email\`, then send the good ones yourself. Run in draft mode for a week. Read what it would have sent. Only then flip the ones you trust to auto-send.
+The safest version of this isn't an auto-responder at all — it's an auto-*drafter*. The agent reads, drafts, and stages the reply, but a person approves the send. MCP Emails supports drafts, so you can have the loop call \`draft\` (action \`create\`) instead of \`email_compose\`, then send the good ones yourself. Run in draft mode for a week. Read what it would have sent. Only then flip the ones you trust to auto-send.
 
 ### Stop loops and self-replies
 
@@ -146,7 +148,7 @@ Give the drafting model tight instructions and a length cap. For support replies
 If I were shipping this for a real inbox tomorrow, I'd start small and boring:
 
 1. API key with \`read:email\` and \`send:email\`, scoped to one inbox.
-2. Poll \`list_messages(unread_only: true)\` every two minutes.
+2. Poll \`email_read(action: "list", unread_only: true)\` every two minutes.
 3. Allowlist exactly one support alias.
 4. Draft mode only — create drafts, send nothing automatically.
 5. After a week of reading the drafts, enable auto-send for the obvious cases and keep drafting the rest.

@@ -51,7 +51,7 @@
       "0": {
         "tag": "Périmètre",
         "h": "Six outils essentiels. L'essentiel, couvert.",
-        "p": "Les six appels essentiels couvrent le travail quotidien — <code>inbox_list</code>, <code>email_list</code>, <code>email_read</code>, <code>email_search</code>, <code>email_send</code>, <code>email_reply</code> — et des outils plus avancés (dossiers, brouillons, programmation) sont là quand vous en avez besoin. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
+        "p": "Quelques outils couvrent le travail quotidien — <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply) — et des outils plus avancés (<code>email_organize</code>, <code>folder</code>, <code>draft</code>, <code>schedule</code>) sont là quand vous en avez besoin. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
       },
       "1": {
         "tag": "Stockage",
@@ -61,7 +61,7 @@
       "2": {
         "tag": "Envoi",
         "h": "L'envoi passe par votre fournisseur.",
-        "p": "Lorsque votre agent appelle <code>email_send</code> ou <code>email_reply</code>, le message est expédié via l'API Gmail, Fastmail JMAP ou votre propre serveur SMTP. La réputation de votre domaine et votre délivrabilité restent entièrement entre vos mains. Nous ne relayons jamais de courrier depuis notre propre domaine."
+        "p": "Lorsque votre agent appelle <code>email_compose</code> (pour envoyer ou répondre), le message est expédié via l'API Gmail, Fastmail JMAP ou votre propre serveur SMTP. La réputation de votre domaine et votre délivrabilité restent entièrement entre vos mains. Nous ne relayons jamais de courrier depuis notre propre domaine."
       },
       "3": {
         "tag": "Fournisseurs",
@@ -95,16 +95,18 @@
       },
       "2": {
         "h": "Votre agent travaille la boîte de réception",
-        "p": "L'agent appelle des outils comme <code>email_search()</code> ou <code>email_reply()</code>. MCPEmails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
+        "p": "L'agent appelle des outils comme <code>email_read()</code> ou <code>email_compose()</code>. MCPEmails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
       }
     },
     "tools": {
       "0": "Découvrez toutes les boîtes connectées et leurs ID. Appelez ceci en premier, sans copier-coller d'UUID depuis le tableau de bord.",
-      "1": "Listez les messages récents avec l'expéditeur, l'objet, la date et un extrait, jusqu'à 100 par appel.",
-      "2": "Récupérez un message unique par ID. Renvoie le corps en texte brut analysé et le HTML assaini, ainsi que les métadonnées des pièces jointes.",
-      "3": "Recherche native du fournisseur : syntaxe de requête Gmail, Fastmail JMAP ou IMAP SEARCH. Renvoie jusqu'à 100 résultats.",
-      "4": "Envoyez un nouveau message via le compte connecté. Expédié par l'API Gmail, Fastmail JMAP ou SMTP : votre domaine, votre délivrabilité.",
-      "5": "Répondez dans le fil avec les en-têtes Message-ID et References corrects. Fonctionne avec Gmail, Fastmail et toute boîte IMAP."
+      "1": "Lire le courrier : listez les résumés récents, récupérez un message complet par ID, lisez jusqu'à 50 par lot ou lancez une recherche indépendante du fournisseur — le tout via l'argument action.",
+      "2": "Organiser le courrier : déplacez, supprimez, marquez ou archivez — un à la fois, en masse ou directement depuis une recherche.",
+      "3": "Rédiger : envoyez un nouveau message, répondez dans le fil ou transférez. Expédié par l'API Gmail, Fastmail JMAP ou SMTP : votre domaine, votre délivrabilité.",
+      "4": "Gérez les dossiers (libellés sur Gmail) : listez, créez, renommez ou supprimez, et utilisez-les comme destinations de déplacement.",
+      "5": "Brouillons : listez, créez, mettez à jour et envoyez les brouillons stockés dans le dossier Drafts du fournisseur.",
+      "6": "Programmez un message pour plus tard, listez les envois programmés en attente et annulez-les avant leur départ.",
+      "7": "Trouvez des personnes par nom ou e-mail grâce à une analyse en direct du courrier récent correspondant. Rien n'est stocké."
     }
   },
   "quote": {

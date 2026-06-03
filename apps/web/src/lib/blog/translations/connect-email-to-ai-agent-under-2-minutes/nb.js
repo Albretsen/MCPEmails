@@ -87,22 +87,20 @@ For leverandørspesifikke særegenheter på tvers av iCloud, Fastmail og den lan
 
 ## Første kall: oppdag, og handle deretter
 
-Uansett hvilken leverandør du valgte, er agentens første trekk alltid det samme. Få den til å kalle \`list_inboxes\` for å oppdage hva som er tilkoblet og hente hver innboks' \`inbox_id\` — agenten kopierer aldri en UUID manuelt. Derfra har den seks kjerneverktøy (pluss noen flere for flagg, mapper, planlegging og kontakter):
+Uansett hvilken leverandør du valgte, er agentens første trekk alltid det samme. Få den til å kalle \`inbox_list\` for å oppdage hva som er tilkoblet og hente hver innboks' \`inbox_id\` — agenten kopierer aldri en UUID manuelt. Derfra jobber den gjennom et lite sett konsoliderte verktøy: \`email_read\` (med en \`action\` på \`list\`, \`read\` eller \`search\`), \`email_compose\` (\`send\`, \`reply\` eller \`forward\`) og \`email_organize\` for å flytte, flagge og arkivere, pluss \`folder\`, \`draft\`, \`schedule\` og \`contact_search\`:
 
 \`\`\`json
 {
   "tools": [
-    "list_inboxes",
-    "list_messages",
-    "read_email",
-    "search_emails",
-    "send_email",
-    "reply_to_email"
+    "inbox_list",
+    "email_read",
+    "email_compose",
+    "email_organize"
   ]
 }
 \`\`\`
 
-En god røyktest: be agenten din om å "oppsummere mine tre nyeste uleste e-poster." Den kjører \`list_inboxes\`, deretter \`list_messages\` med \`unread_only: true\`, og så \`read_email\` på hver av dem. Hvis det fungerer, er koblingen din i drift.
+En god røyktest: be agenten din om å "oppsummere mine tre nyeste uleste e-poster." Den kjører \`inbox_list\`, deretter \`email_read\` med \`action: "list"\` og \`unread_only: true\`, og så \`email_read\` med \`action: "read"\` på hver av dem. Hvis det fungerer, er koblingen din i drift.
 
 Ett ærlig forbehold det er verdt å avklare med en gang: MCP Emails er pollebasert. Det finnes ingen webhooks eller push-hendelser, så en agent reagerer på ny e-post ved å sjekke etter en tidsplan i stedet for å bli varslet. Det er riktig modell for de fleste arbeidsflyter, og det er slik mønstrene for [innbokstriagering og oppsummering](/blog/ai-agent-triage-summarize-inbox) fungerer.
 
@@ -112,5 +110,5 @@ Farten her kommer ikke av å ta snarveier på sikkerhet. E-post hentes live ved 
 
 ## Oppsummering
 
-Det er hele greia: én innbokskobling, ett endepunkt, seks verktøy. Hver plan er ubegrenset på innbokser, kall og nøkler, og Free-nivået koster ingenting og krever ikke kort — sjekk [priser](/pricing) hvis du trenger høyere burst-grenser eller SSO. Klar til å prøve? [Start gratis](/signup), koble til innboksen din, og lim endepunktet inn i agenten din.`,
+Det er hele greia: én innbokskobling, ett endepunkt, en håndfull verktøy. Hver plan er ubegrenset på innbokser, kall og nøkler, og Free-nivået koster ingenting og krever ikke kort — sjekk [priser](/pricing) hvis du trenger høyere burst-grenser eller SSO. Klar til å prøve? [Start gratis](/signup), koble til innboksen din, og lim endepunktet inn i agenten din.`,
 };
