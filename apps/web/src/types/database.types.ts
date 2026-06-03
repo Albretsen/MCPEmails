@@ -1559,6 +1559,71 @@ export type Database = {
           },
         ]
       }
+      stripe_webhook_events: {
+        Row: {
+          event_created: string | null
+          event_id: string
+          event_type: string | null
+          processed_at: string
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          event_created?: string | null
+          event_id: string
+          event_type?: string | null
+          processed_at?: string
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          event_created?: string | null
+          event_id?: string
+          event_type?: string | null
+          processed_at?: string
+          stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      user_billing: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          plan: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          plan?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          plan?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_billing_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspaces: {
         Row: {
           created_at: string

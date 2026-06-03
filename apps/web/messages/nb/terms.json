@@ -26,6 +26,7 @@
       "En bruks- og revisjonslogg som viser hvilke verktøy agentene dine har kalt og når."
     ],
     "p2": "MCPEmails fungerer som en protokollbro. Vi lagrer ikke e-postinnhold på våre servere; vi henter det direkte fra din e-postleverandør i det øyeblikket en agent ber om det, og returnerer det i samme HTTP-respons. Se vår <privacy>Personvernerklæring</privacy> for en fullstendig beskrivelse av hvilke data vi beholder og ikke beholder.",
+    "p2b": "E-postinnhold leveres kun til MCP-klienten eller AI-agenten som du har koblet til og selv velger å bruke. Når innholdet når denne klienten, reguleres det av klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails velger ikke en AI-leverandør på dine vegne og beholder ingen kopi av e-postinnholdet ditt.",
     "p3": "Vi forbeholder oss retten til å endre, suspendere eller avvikle enhver del av Tjenesten når som helst. Der det er praktisk mulig vil vi gi minst 30 dagers varsel om vesentlige endringer til betalende brukere."
   },
   "accountRegistration": {

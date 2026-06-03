@@ -80,6 +80,32 @@ function authFailedResult(
   };
 }
 
+/**
+ * Builds a spec-compliant successful tool-result `content` payload.
+ *
+ * Returns both the backwards-compatible serialized-JSON TextContent block AND
+ * the `structuredContent` object (MCP 2025-06-18). `structuredContent` MUST be
+ * a JSON object per spec, so callers wrap arrays/primitives before passing in.
+ *
+ * Usage:
+ *   return {
+ *     result: { ...jsonOk(payload), isError: false },
+ *     logStatus: "success", logErrorCode: null,
+ *   };
+ */
+function jsonOk(
+  obj: Record<string, unknown>,
+  pretty = false,
+): { content: { type: string; text: string }[]; structuredContent: Record<string, unknown> } {
+  return {
+    content: [{
+      type: "text",
+      text: pretty ? JSON.stringify(obj, null, 2) : JSON.stringify(obj),
+    }],
+    structuredContent: obj,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -1122,11 +1148,53 @@ interface ToolDefinition {
     | "schedule:email";
   /** JSON Schema (Draft 7) for argument validation */
   inputSchema: Record<string, unknown>;
+  /**
+   * Optional JSON Schema (Draft 7) describing the structure of a successful
+   * tool result's `structuredContent` object. Emitted in tools/list so MCP
+   * clients can validate / type the structured output.
+   */
+  outputSchema?: Record<string, unknown>;
+  /**
+   * Optional MCP ToolAnnotations behaviour hints (title, readOnlyHint,
+   * destructiveHint, idempotentHint, openWorldHint). Emitted in tools/list.
+   */
+  annotations?: {
+    title?: string;
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+    openWorldHint?: boolean;
+  };
 }
 
 /** All tools available in MCPEmails, in canonical display order. */
 const TOOL_REGISTRY: ToolDefinition[] = [
   // ── read:email scope ────────────────────────────────────────────────────────
+
+  // list_inboxes is registered FIRST, intentionally. It is the entry point for
+  // every other tool (all of which require an inbox_id that only this tool can
+  // supply). Some MCP clients build their tool-search index from the head of the
+  // tools/list response and can drop the final entry on a fresh connection; if
+  // this tool is last, a just-connected client cannot discover any inbox_id and
+  // every request fails until the tool list is manually refreshed. Keep it first.
+  {
+    name: "list_inboxes",
+    title: "List Inboxes",
+    description:
+      "List inboxes. Returns all email inboxes (mailboxes/accounts) the current " +
+      "API key is permitted to access. Call this FIRST to discover the inbox_id " +
+      "values that every other tool requires. Each result includes the inbox UUID, " +
+      "email address, display name, provider, optional service brand " +
+      "(icloud/yahoo/zoho/yandex/generic), and a capabilities object describing " +
+      "which features (flags, folders, labels, move, copy, delete, forward, drafts, " +
+      "contacts_api, scheduling) are supported for that inbox.",
+    requiredScope: "read:email",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+  },
 
   {
     name: "list_messages",
@@ -2580,27 +2648,502 @@ const TOOL_REGISTRY: ToolDefinition[] = [
       additionalProperties: false,
     },
   },
+];
 
-  // ── No scope beyond read:email ───────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Output schemas + annotations (MCP 2025-06-18)
+//
+// outputSchema describes the `structuredContent` object a successful tool
+// result carries (see the jsonOk helper). annotations carry the MCP
+// ToolAnnotations behaviour hints. Both are attached to the registry entries
+// below and emitted in tools/list. Adding them here (rather than inline above)
+// keeps each tool's argument definition readable and the metadata in one place.
+// ---------------------------------------------------------------------------
 
-  {
-    name: "list_inboxes",
-    title: "List Inboxes",
-    description:
-      "Returns all email inboxes the current API key is permitted to access. " +
-      "Call this first to discover inbox_id values required by the other tools. " +
-      "Each result includes the inbox UUID, email address, display name, provider, " +
-      "optional service brand (icloud/yahoo/zoho/yandex/generic), and a capabilities " +
-      "object describing which features (flags, folders, labels, move, copy, delete, " +
-      "forward, drafts, contacts_api, scheduling) are supported for that inbox.",
-    requiredScope: "read:email",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      additionalProperties: false,
+/** JSON-Schema fragment for an {name,email} address entry. */
+const ADDRESS_ENTRY_SCHEMA = {
+  type: "object",
+  properties: {
+    name: { type: "string" },
+    email: { type: "string" },
+  },
+  required: ["name", "email"],
+  additionalProperties: false,
+} as const;
+
+/** JSON-Schema fragment for a message summary (list_messages). */
+const EMAIL_SUMMARY_SCHEMA = {
+  type: "object",
+  properties: {
+    id: { type: "string" },
+    from: ADDRESS_ENTRY_SCHEMA,
+    to: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+    subject: { type: "string" },
+    date: { type: "string", description: "ISO 8601 UTC timestamp." },
+    preview: { type: "string" },
+    is_read: { type: "boolean" },
+    has_attachments: { type: "boolean" },
+    folder: { type: "string" },
+    thread_id: { type: "string" },
+  },
+  additionalProperties: true,
+} as const;
+
+/** JSON-Schema fragment for a search result summary (search_emails). */
+const SEARCH_EMAIL_SUMMARY_SCHEMA = {
+  type: "object",
+  properties: {
+    ...EMAIL_SUMMARY_SCHEMA.properties,
+    relevance_score: { type: ["number", "null"] },
+  },
+  additionalProperties: true,
+} as const;
+
+/** Output schema for tools returning `{ success, message_id, operation, inbox_id }`. */
+const FLAG_RESULT_SCHEMA = {
+  type: "object",
+  properties: {
+    success: { type: "boolean" },
+    message_id: { type: "string" },
+    operation: { type: "string" },
+    inbox_id: { type: "string" },
+  },
+  required: ["success", "message_id", "operation", "inbox_id"],
+  additionalProperties: true,
+} as const;
+
+/** Output schema for the bulk / search-and-X tools (formatBulkResult shape). */
+const BULK_RESULT_SCHEMA = {
+  type: "object",
+  properties: {
+    succeeded: { type: "integer" },
+    failed: { type: "integer" },
+    operation: { type: "string" },
+    inbox_id: { type: "string" },
+    results: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          message_id: { type: "string" },
+          success: { type: "boolean" },
+          error: { type: "string" },
+        },
+        required: ["message_id", "success"],
+        additionalProperties: true,
+      },
     },
   },
-];
+  required: ["succeeded", "failed", "operation", "inbox_id", "results"],
+  additionalProperties: true,
+} as const;
+
+/** Output schema for send / reply / forward / draft-send results. */
+const SENT_MESSAGE_SCHEMA = {
+  type: "object",
+  properties: {
+    message_id: { type: "string" },
+    thread_id: { type: "string" },
+    sent_at: { type: "string", description: "ISO 8601 UTC timestamp." },
+    to: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+    subject: { type: "string" },
+    status: { type: "string" },
+  },
+  required: ["message_id", "sent_at"],
+  additionalProperties: true,
+} as const;
+
+/**
+ * Per-tool output schemas, keyed by tool name. Each describes the
+ * `structuredContent` object the tool's success path returns.
+ */
+const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
+  list_inboxes: {
+    type: "object",
+    properties: {
+      inboxes: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            inbox_id: { type: "string" },
+            email_address: { type: "string" },
+            display_name: { type: "string" },
+            provider: { type: "string" },
+            service: { type: ["string", "null"] },
+            capabilities: { type: "object", additionalProperties: true },
+          },
+          required: ["inbox_id", "email_address", "provider", "capabilities"],
+          additionalProperties: true,
+        },
+      },
+    },
+    required: ["inboxes"],
+    additionalProperties: false,
+  },
+  list_messages: {
+    type: "object",
+    properties: {
+      messages: { type: "array", items: EMAIL_SUMMARY_SCHEMA },
+      total: { type: "integer" },
+      has_more: { type: "boolean" },
+      next_offset: { type: "integer" },
+    },
+    required: ["messages", "total", "has_more", "next_offset"],
+    additionalProperties: false,
+  },
+  read_email: {
+    type: "object",
+    properties: {
+      id: { type: "string" },
+      thread_id: { type: "string" },
+      from: ADDRESS_ENTRY_SCHEMA,
+      to: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+      cc: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+      bcc: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+      reply_to: { type: ["object", "null"], additionalProperties: true },
+      subject: { type: "string" },
+      date: { type: "string", description: "ISO 8601 UTC timestamp." },
+      body_text: { type: ["string", "null"] },
+      body_html: { type: ["string", "null"] },
+      attachments: { type: "array", items: { type: "object", additionalProperties: true } },
+      is_read: { type: "boolean" },
+      labels: { type: "array", items: { type: "string" } },
+      in_reply_to: { type: ["string", "null"] },
+      references: { type: "array", items: { type: "string" } },
+    },
+    required: ["id", "thread_id", "from", "subject", "date"],
+    additionalProperties: true,
+  },
+  search_emails: {
+    type: "object",
+    properties: {
+      messages: { type: "array", items: SEARCH_EMAIL_SUMMARY_SCHEMA },
+      total: { type: "integer" },
+      has_more: { type: "boolean" },
+      next_offset: { type: "integer" },
+      query_normalized: { type: "string" },
+    },
+    required: ["messages", "total", "has_more", "next_offset"],
+    additionalProperties: false,
+  },
+  list_folders: {
+    type: "object",
+    properties: {
+      inbox_id: { type: "string" },
+      folders: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            name: { type: "string" },
+            type: { type: "string", enum: ["folder", "label"] },
+            total_messages: { type: ["integer", "null"] },
+            unread_messages: { type: ["integer", "null"] },
+          },
+          required: ["id", "name", "type"],
+          additionalProperties: true,
+        },
+      },
+    },
+    required: ["inbox_id", "folders"],
+    additionalProperties: false,
+  },
+  create_folder: {
+    type: "object",
+    properties: {
+      inbox_id: { type: "string" },
+      created: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+        additionalProperties: true,
+      },
+    },
+    required: ["inbox_id", "created"],
+    additionalProperties: false,
+  },
+  rename_folder: {
+    type: "object",
+    properties: {
+      inbox_id: { type: "string" },
+      folder_id: { type: "string" },
+      new_name: { type: "string" },
+      status: { type: "string" },
+    },
+    required: ["inbox_id", "folder_id", "new_name", "status"],
+    additionalProperties: false,
+  },
+  delete_folder: {
+    type: "object",
+    properties: {
+      inbox_id: { type: "string" },
+      folder_id: { type: "string" },
+      status: { type: "string" },
+    },
+    required: ["inbox_id", "folder_id", "status"],
+    additionalProperties: false,
+  },
+  move_email: {
+    type: "object",
+    properties: {
+      success: { type: "boolean" },
+      message_id: { type: "string" },
+      operation: { type: "string" },
+      inbox_id: { type: "string" },
+      destination_folder_id: { type: "string" },
+    },
+    required: ["success", "message_id", "operation", "inbox_id", "destination_folder_id"],
+    additionalProperties: false,
+  },
+  copy_email: {
+    type: "object",
+    properties: {
+      success: { type: "boolean" },
+      message_id: { type: "string" },
+      operation: { type: "string" },
+      inbox_id: { type: "string" },
+      destination_folder_id: { type: "string" },
+    },
+    required: ["success", "message_id", "operation", "inbox_id", "destination_folder_id"],
+    additionalProperties: false,
+  },
+  delete_email: {
+    type: "object",
+    properties: {
+      success: { type: "boolean" },
+      message_id: { type: "string" },
+      operation: { type: "string" },
+      inbox_id: { type: "string" },
+      permanent: { type: "boolean" },
+    },
+    required: ["success", "message_id", "operation", "inbox_id", "permanent"],
+    additionalProperties: false,
+  },
+  bulk_move: BULK_RESULT_SCHEMA,
+  bulk_delete: BULK_RESULT_SCHEMA,
+  bulk_flag: BULK_RESULT_SCHEMA,
+  search_and_move: BULK_RESULT_SCHEMA,
+  search_and_delete: BULK_RESULT_SCHEMA,
+  send_email: SENT_MESSAGE_SCHEMA,
+  reply_to_email: SENT_MESSAGE_SCHEMA,
+  forward_email: SENT_MESSAGE_SCHEMA,
+  mark_read: FLAG_RESULT_SCHEMA,
+  mark_unread: FLAG_RESULT_SCHEMA,
+  flag_email: FLAG_RESULT_SCHEMA,
+  unflag_email: FLAG_RESULT_SCHEMA,
+  archive_email: FLAG_RESULT_SCHEMA,
+  list_drafts: {
+    type: "object",
+    properties: {
+      inbox_id: { type: "string" },
+      drafts: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            draft_id: { type: "string" },
+            subject: { type: "string" },
+            to: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+            cc: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+            created_at: { type: "string" },
+          },
+          required: ["draft_id", "subject"],
+          additionalProperties: true,
+        },
+      },
+    },
+    required: ["inbox_id", "drafts"],
+    additionalProperties: false,
+  },
+  create_draft: {
+    type: "object",
+    properties: {
+      draft_id: { type: "string" },
+      subject: { type: "string" },
+      to: { type: "array", items: ADDRESS_ENTRY_SCHEMA },
+      created_at: { type: "string" },
+    },
+    required: ["draft_id", "subject", "created_at"],
+    additionalProperties: true,
+  },
+  update_draft: {
+    type: "object",
+    properties: {
+      draft_id: { type: "string" },
+      subject: { type: "string" },
+      updated_at: { type: "string" },
+    },
+    required: ["draft_id", "subject", "updated_at"],
+    additionalProperties: true,
+  },
+  send_draft: {
+    type: "object",
+    properties: {
+      draft_id: { type: "string" },
+      message_id: { type: "string" },
+      sent_at: { type: "string" },
+    },
+    required: ["draft_id", "message_id", "sent_at"],
+    additionalProperties: true,
+  },
+  search_contacts: {
+    type: "object",
+    properties: {
+      query: { type: "string" },
+      total: { type: "integer" },
+      contacts: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            inbox_id: { type: "string" },
+            email_address: { type: "string" },
+            display_name: { type: ["string", "null"] },
+            message_count: { type: "integer" },
+            last_contacted_at: { type: "string" },
+          },
+          required: ["id", "inbox_id", "email_address"],
+          additionalProperties: true,
+        },
+      },
+    },
+    required: ["query", "contacts", "total"],
+    additionalProperties: false,
+  },
+  get_contact: {
+    type: "object",
+    properties: {
+      found: { type: "boolean" },
+      inbox_id: { type: "string" },
+      email_address: { type: "string" },
+      contact: { type: "object", additionalProperties: true },
+    },
+    required: ["found"],
+    additionalProperties: true,
+  },
+  schedule_send: {
+    type: "object",
+    properties: {
+      scheduled: { type: "boolean" },
+      id: { type: "string" },
+      inbox_id: { type: "string" },
+      to: { type: "array", items: { type: "string" } },
+      subject: { type: "string" },
+      send_at: { type: "string" },
+      status: { type: "string" },
+      created_at: { type: "string" },
+    },
+    required: ["scheduled", "id", "inbox_id", "send_at", "status"],
+    additionalProperties: false,
+  },
+  list_scheduled: {
+    type: "object",
+    properties: {
+      total: { type: "integer" },
+      scheduled_sends: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            inbox_id: { type: "string" },
+            send_at: { type: "string" },
+            status: { type: "string" },
+            created_at: { type: "string" },
+            to: { type: "array", items: { type: "string" } },
+            subject: { type: "string" },
+          },
+          required: ["id", "inbox_id", "send_at", "status"],
+          additionalProperties: true,
+        },
+      },
+    },
+    required: ["scheduled_sends", "total"],
+    additionalProperties: false,
+  },
+  cancel_scheduled: {
+    type: "object",
+    properties: {
+      cancelled: { type: "boolean" },
+      id: { type: "string" },
+      inbox_id: { type: "string" },
+      send_at: { type: "string" },
+      previous_status: { type: "string" },
+    },
+    required: ["cancelled", "id", "inbox_id", "send_at", "previous_status"],
+    additionalProperties: false,
+  },
+};
+
+/**
+ * Per-tool behaviour hints (MCP ToolAnnotations). `openWorldHint` is true for
+ * every tool because they all reach out to external email providers. `title`
+ * is filled from each tool's existing `title` when attached below.
+ */
+const TOOL_ANNOTATIONS: Record<
+  string,
+  { readOnlyHint: boolean; destructiveHint: boolean; idempotentHint: boolean }
+> = {
+  // Read-only tools.
+  list_inboxes: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  list_messages: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  read_email: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  search_emails: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  list_folders: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  list_drafts: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  list_scheduled: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  search_contacts: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  get_contact: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  // Non-destructive mutations — non-idempotent (each call produces a new effect).
+  send_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  reply_to_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  forward_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  send_draft: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  schedule_send: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  create_folder: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  rename_folder: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  // Non-destructive mutations — idempotent by default per spec ToolAnnotations.
+  move_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  copy_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  bulk_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  search_and_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  create_draft: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  update_draft: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  cancel_scheduled: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  // Idempotent state toggles.
+  mark_read: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  mark_unread: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  flag_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  unflag_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  archive_email: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  bulk_flag: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  // Destructive tools.
+  delete_email: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  bulk_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  delete_folder: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  search_and_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+};
+
+// Attach outputSchema + annotations to every registry entry. Done once at module
+// load so handleToolsList can emit them directly. openWorldHint is true for all
+// tools (every one reaches an external email provider); title mirrors tool.title.
+for (const tool of TOOL_REGISTRY) {
+  const out = TOOL_OUTPUT_SCHEMAS[tool.name];
+  if (out) tool.outputSchema = out;
+  const ann = TOOL_ANNOTATIONS[tool.name];
+  if (ann) {
+    tool.annotations = {
+      title: tool.title,
+      readOnlyHint: ann.readOnlyHint,
+      destructiveHint: ann.destructiveHint,
+      idempotentHint: ann.idempotentHint,
+      openWorldHint: true,
+    };
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Provider capability matrix (single source of truth)
@@ -3069,12 +3612,7 @@ async function executeListInboxes(apiKey: ApiKeyRow): Promise<{
   }));
 
   return {
-    result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({ inboxes }, null, 2),
-      }],
-    },
+    result: jsonOk({ inboxes }, true),
     logStatus: "success",
     logErrorCode: null,
   };
@@ -3119,6 +3657,129 @@ async function resolveInbox(
   if (inbox.status !== "active") return null;
 
   return inbox;
+}
+
+/**
+ * Resolve an inbox for a tool call from the `inbox_id` / `inbox` arguments,
+ * with two ergonomic conveniences:
+ *   1. Auto-resolve: when the API key can access exactly one inbox and neither
+ *      argument is given, that inbox is selected automatically.
+ *   2. Email alias: an email address may be passed via `inbox` (or via
+ *      `inbox_id` when it isn't a UUID) instead of the opaque UUID.
+ *
+ * Returns `{ ok: true, inbox }` on success, or `{ ok: false, reason }` where
+ * reason is "not_found" (no match), "ambiguous" (>1 accessible inbox and none
+ * specified), or "none" (the key can access no inbox at all).
+ */
+async function resolveInboxArg(
+  args: Record<string, unknown>,
+  apiKey: ApiKeyRow,
+): Promise<
+  | { ok: true; inbox: InboxRow }
+  | { ok: false; reason: "not_found" | "ambiguous" | "none" }
+> {
+  const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  const rawInboxId = typeof args["inbox_id"] === "string"
+    ? (args["inbox_id"] as string).trim()
+    : "";
+  const rawInbox = typeof args["inbox"] === "string"
+    ? (args["inbox"] as string).trim()
+    : "";
+
+  // Resolve an active, accessible inbox by its email address (case-insensitive,
+  // unique within a workspace), honouring the key's inbox_ids allowlist.
+  const resolveByEmail = async (
+    email: string,
+  ): Promise<{ ok: true; inbox: InboxRow } | { ok: false; reason: "not_found" }> => {
+    let query = supabase
+      .from("inboxes")
+      .select(INBOX_SELECT_COLUMNS)
+      .eq("workspace_id", apiKey.workspace_id)
+      .is("deleted_at", null)
+      .eq("status", "active")
+      .ilike("email_address", email);
+
+    if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+      query = query.in("id", apiKey.inbox_ids);
+    }
+
+    const { data, error } = await query.limit(1).maybeSingle();
+    if (error || !data) return { ok: false, reason: "not_found" };
+    return { ok: true, inbox: data as unknown as InboxRow };
+  };
+
+  if (rawInboxId) {
+    if (UUID_RE.test(rawInboxId)) {
+      const inbox = await resolveInbox(rawInboxId, apiKey);
+      return inbox ? { ok: true, inbox } : { ok: false, reason: "not_found" };
+    }
+    if (rawInboxId.includes("@")) {
+      return await resolveByEmail(rawInboxId);
+    }
+    return { ok: false, reason: "not_found" };
+  }
+
+  if (rawInbox) {
+    return await resolveByEmail(rawInbox);
+  }
+
+  // Neither provided — auto-resolve only when exactly one inbox is accessible.
+  let query = supabase
+    .from("inboxes")
+    .select(INBOX_SELECT_COLUMNS)
+    .eq("workspace_id", apiKey.workspace_id)
+    .is("deleted_at", null)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+    query = query.in("id", apiKey.inbox_ids);
+  }
+
+  const { data, error } = await query;
+  if (error) return { ok: false, reason: "none" };
+
+  const rows = (data ?? []) as unknown as InboxRow[];
+  if (rows.length === 1) return { ok: true, inbox: rows[0] };
+  if (rows.length === 0) return { ok: false, reason: "none" };
+  return { ok: false, reason: "ambiguous" };
+}
+
+/**
+ * Standard, agent-actionable error result for a failed inbox resolution.
+ * Messages tell the calling agent exactly what to do next (call list_inboxes
+ * / pass inbox_id / ask the user to connect an inbox) — never "check the
+ * dashboard".
+ */
+function inboxResolutionError(
+  reason: "not_found" | "ambiguous" | "none",
+  _toolName: string,
+): ToolErrorResult {
+  let text: string;
+  switch (reason) {
+    case "not_found":
+      text =
+        "No inbox matches the given inbox_id/inbox. Call list_inboxes to see " +
+        "the available inboxes (each with its inbox_id and email address).";
+      break;
+    case "ambiguous":
+      text =
+        "Multiple inboxes are accessible, so inbox_id (or inbox) is required. " +
+        "Call list_inboxes to choose one, then pass its inbox_id.";
+      break;
+    case "none":
+      text =
+        "No inbox is connected for this API key. The user must connect an " +
+        "inbox in MCP Emails before this tool can be used.";
+      break;
+  }
+  return {
+    result: { content: [{ type: "text", text }], isError: true },
+    logStatus: "error",
+    logErrorCode: "inbox_not_found",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -4253,7 +4914,12 @@ async function searchImapMessages(
     });
     await client.selectMailbox(imapFolderName(folder));
 
-    const quoted = `"${query.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+    // SECURITY: strip CR/LF and other control chars from the free-text query
+    // before interpolating it into the raw `UID SEARCH TEXT "..."` command
+    // line — otherwise CRLF would break out and inject arbitrary IMAP commands.
+    // deno-lint-ignore no-control-regex
+    const safeQuery = query.replace(/[\x00-\x1F\x7F]+/g, " ");
+    const quoted = `"${safeQuery.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
     const allUids = await client.uidSearch(`TEXT ${quoted}`);
     const total = allUids.length;
 
@@ -4565,22 +5231,6 @@ async function executeListInbox(
   }
 
   const args = rawArgs as Record<string, unknown>;
-  const inboxId =
-    typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-
-  if (!inboxId) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: "list_messages: inbox_id is required and must be a UUID string.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
 
   const limit = Math.min(
     Math.max(
@@ -4598,22 +5248,10 @@ async function executeListInbox(
   const unreadOnly = args["unread_only"] === true;
 
   // ── Inbox resolution + access control ─────────────────────────────────────
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Inbox ${inboxId} not found or not accessible to this API key. ` +
-            "Verify the inbox UUID in the MCPEmails dashboard.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "list_messages");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   // ── Provider dispatch ─────────────────────────────────────────────────────
   let listResult: ListInboxResult;
@@ -4703,10 +5341,7 @@ async function executeListInbox(
 
   // ── Success ───────────────────────────────────────────────────────────────
   return {
-    result: {
-      content: [{ type: "text", text: JSON.stringify(listResult) }],
-      isError: false,
-    },
+    result: { ...jsonOk(listResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -5655,22 +6290,6 @@ async function executeReadEmail(
 
   const args = rawArgs as Record<string, unknown>;
 
-  const inboxId =
-    typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: "read_email: inbox_id is required and must be a UUID string.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
-
   const messageId =
     typeof args["message_id"] === "string" ? args["message_id"].trim() : null;
   if (!messageId) {
@@ -5692,22 +6311,10 @@ async function executeReadEmail(
   const markAsRead = args["mark_as_read"] === true;
 
   // ── Inbox resolution + access control ─────────────────────────────────────
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Inbox ${inboxId} not found or not accessible to this API key. ` +
-            "Verify the inbox UUID in the MCPEmails dashboard.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "read_email");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   // ── Provider dispatch ─────────────────────────────────────────────────────
   let readResult: ReadEmailResult;
@@ -5822,10 +6429,7 @@ async function executeReadEmail(
   ).catch(() => { /* already logged inside upsertContacts */ });
 
   return {
-    result: {
-      content: [{ type: "text", text: JSON.stringify(readResult) }],
-      isError: false,
-    },
+    result: { ...jsonOk(readResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -5878,10 +6482,18 @@ function encodeTextAsBase64Lines(text: string): string {
  * ASCII-only values are returned unchanged.
  */
 function encodeMimeHeaderValue(value: string): string {
-  if (/^[\x00-\x7F]*$/.test(value)) {
-    return value;
+  // SECURITY: strip CR/LF (and other control chars) BEFORE the ASCII
+  // fast-path. CR and LF are ASCII, so without this an attacker-controlled
+  // value containing CRLF would be injected verbatim into MIME headers
+  // (header injection → hidden Bcc:, header/body splitting). Collapse any
+  // run of control characters into a single space.
+  // deno-lint-ignore no-control-regex
+  const sanitized = value.replace(/[\x00-\x1F\x7F]+/g, " ");
+  // deno-lint-ignore no-control-regex
+  if (/^[\x00-\x7F]*$/.test(sanitized)) {
+    return sanitized;
   }
-  const bytes = new TextEncoder().encode(value);
+  const bytes = new TextEncoder().encode(sanitized);
   const binaryStr = Array.from(bytes)
     .map((b) => String.fromCharCode(b))
     .join("");
@@ -6049,7 +6661,9 @@ function buildMimeMessage(params: MimeMessageParams): string {
       lines.push("");
       lines.push(`--${boundary}`);
       lines.push(
-        `Content-Type: ${att.mimeType}; name="${encodeMimeHeaderValue(att.filename)}"`,
+        // SECURITY: att.mimeType previously interpolated raw — route it through
+        // encodeMimeHeaderValue so CR/LF/control chars can't inject headers.
+        `Content-Type: ${encodeMimeHeaderValue(att.mimeType)}; name="${encodeMimeHeaderValue(att.filename)}"`,
       );
       lines.push(
         `Content-Disposition: attachment; filename="${encodeMimeHeaderValue(att.filename)}"`,
@@ -7769,23 +8383,6 @@ async function executeForwardEmail(
 
   const args = rawArgs as Record<string, unknown>;
 
-  // inbox_id (required)
-  const inboxId =
-    typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: "forward_email: inbox_id is required and must be a UUID string.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
-
   // message_id (required)
   const messageId =
     typeof args["message_id"] === "string" && args["message_id"].length > 0
@@ -7897,22 +8494,10 @@ async function executeForwardEmail(
   }
 
   // ── Inbox resolution + access control ────────────────────────────────────
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Inbox ${inboxId} not found or not accessible to this API key. ` +
-            "Verify the inbox UUID in the MCPEmails dashboard.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "forward_email");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   // ── Provider dispatch ─────────────────────────────────────────────────────
   const fwdParams: ForwardEmailParams = {
@@ -8025,9 +8610,7 @@ async function executeForwardEmail(
   }
 
   return {
-    result: {
-      content: [{ type: "text", text: JSON.stringify(fwdResult) }],
-    },
+    result: jsonOk(fwdResult as unknown as Record<string, unknown>),
     logStatus: "success",
     logErrorCode: null,
   };
@@ -8082,23 +8665,6 @@ async function executeReplyToEmail(
   }
 
   const args = rawArgs as Record<string, unknown>;
-
-  // inbox_id (required)
-  const inboxId =
-    typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: "reply_to_email: inbox_id is required and must be a UUID string.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
 
   // message_id (required)
   const messageId =
@@ -8237,22 +8803,10 @@ async function executeReplyToEmail(
   }
 
   // ── Inbox resolution + access control ────────────────────────────────────
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Inbox ${inboxId} not found or not accessible to this API key. ` +
-            "Verify the inbox UUID in the MCPEmails dashboard.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "reply_to_email");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   // ── Provider dispatch ─────────────────────────────────────────────────────
   const replyParams: ReplyToEmailParams = { body, htmlBody, replyAll, attachments };
@@ -8373,12 +8927,7 @@ async function executeReplyToEmail(
   }
 
   return {
-    result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify(replyResult),
-      }],
-    },
+    result: jsonOk(replyResult as unknown as Record<string, unknown>),
     logStatus: "success",
     logErrorCode: null,
   };
@@ -8435,22 +8984,6 @@ async function executeSendEmail(
   }
 
   const args = rawArgs as Record<string, unknown>;
-
-  // inbox_id (required)
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: "send_email: inbox_id is required and must be a UUID string.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
 
   // to (required, non-empty array, max 50)
   const toRaw = args["to"];
@@ -8639,22 +9172,10 @@ async function executeSendEmail(
   }
 
   // ── Inbox resolution + access control ─────────────────────────────────────
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Inbox ${inboxId} not found or not accessible to this API key. ` +
-            "Verify the inbox UUID in the MCPEmails dashboard.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "send_email");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   // ── Provider dispatch ─────────────────────────────────────────────────────
   const sendParams: SendEmailParams = {
@@ -8762,10 +9283,7 @@ async function executeSendEmail(
   ).catch(() => { /* already logged inside upsertContacts */ });
 
   return {
-    result: {
-      content: [{ type: "text", text: JSON.stringify(sendResult) }],
-      isError: false,
-    },
+    result: { ...jsonOk(sendResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -9317,22 +9835,6 @@ async function executeSearchEmails(
 
   const args = rawArgs as Record<string, unknown>;
 
-  // inbox_id (required)
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: "search_emails: inbox_id is required and must be a UUID string.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
-
   // query (required, non-empty)
   const query = typeof args["query"] === "string" ? args["query"].trim() : "";
   if (!query) {
@@ -9368,22 +9870,10 @@ async function executeSearchEmails(
     : [];
 
   // ── Inbox resolution + access control ─────────────────────────────────────
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Inbox ${inboxId} not found or not accessible to this API key. ` +
-            "Verify the inbox UUID in the MCPEmails dashboard.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "search_emails");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   // ── Provider dispatch with 30-second timeout ──────────────────────────────
   const timeoutPromise = new Promise<never>((_, reject) =>
@@ -9529,10 +10019,7 @@ async function executeSearchEmails(
   }
 
   return {
-    result: {
-      content: [{ type: "text", text: JSON.stringify(searchResult) }],
-      isError: false,
-    },
+    result: { ...jsonOk(searchResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -9796,37 +10283,11 @@ async function executeListFolders(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: "list_folders: inbox_id is required and must be a UUID string.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Inbox ${inboxId} not found or not accessible to this API key. ` +
-            "Verify the inbox UUID in the MCPEmails dashboard.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "list_folders");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   // ── Capability gate ────────────────────────────────────────────────────────
   const caps = getProviderCapabilities(inbox.provider);
@@ -9881,13 +10342,7 @@ async function executeListFolders(
 
   // ── activity_log written by handleToolsCall ────────────────────────────────
   return {
-    result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({ inbox_id: inbox.id, folders }, null, 2),
-      }],
-      isError: false,
-    },
+    result: { ...jsonOk({ inbox_id: inbox.id, folders }, true), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -10240,19 +10695,6 @@ async function resolveFolderArgs(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      error: {
-        result: {
-          content: [{ type: "text", text: `${toolName}: inbox_id is required and must be a UUID string.` }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "-32602",
-      },
-    };
-  }
   if (requireFolderId) {
     const folderId = typeof args["folder_id"] === "string" ? args["folder_id"] : null;
     if (!folderId) {
@@ -10268,25 +10710,11 @@ async function resolveFolderArgs(
       };
     }
   }
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      error: {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Inbox ${inboxId} not found or not accessible to this API key. ` +
-              "Verify the inbox UUID in the MCPEmails dashboard.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "inbox_not_found",
-      },
-    };
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) {
+    return { error: inboxResolutionError(resolved.reason, toolName) };
   }
-  return { inbox, args };
+  return { inbox: resolved.inbox, args };
 }
 
 /** Shared auth/provider error handler for folder management tools. */
@@ -10392,13 +10820,7 @@ async function executeCreateFolder(
   }
 
   return {
-    result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({ inbox_id: inbox.id, created }, null, 2),
-      }],
-      isError: false,
-    },
+    result: { ...jsonOk({ inbox_id: inbox.id, created }, true), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -10465,15 +10887,12 @@ async function executeRenameFolder(
 
   return {
     result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          inbox_id: inbox.id,
-          folder_id: folderId,
-          new_name: newName,
-          status: "renamed",
-        }, null, 2),
-      }],
+      ...jsonOk({
+        inbox_id: inbox.id,
+        folder_id: folderId,
+        new_name: newName,
+        status: "renamed",
+      }, true),
       isError: false,
     },
     logStatus: "success",
@@ -10536,14 +10955,11 @@ async function executeDeleteFolder(
 
   return {
     result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          inbox_id: inbox.id,
-          folder_id: folderId,
-          status: "deleted",
-        }, null, 2),
-      }],
+      ...jsonOk({
+        inbox_id: inbox.id,
+        folder_id: folderId,
+        status: "deleted",
+      }, true),
       isError: false,
     },
     logStatus: "success",
@@ -10953,23 +11369,6 @@ async function resolveFlagArgs(
   }
 
   const args = rawArgs as Record<string, unknown>;
-  const inboxId =
-    typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      error: {
-        result: {
-          content: [{
-            type: "text",
-            text: `${toolName}: inbox_id is required and must be a UUID string.`,
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "-32602",
-      },
-    };
-  }
 
   const messageId =
     typeof args["message_id"] === "string" ? args["message_id"].trim() : null;
@@ -10989,24 +11388,11 @@ async function resolveFlagArgs(
     };
   }
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      error: {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Inbox ${inboxId} not found or not accessible to this API key. ` +
-              "Verify the inbox UUID in the MCPEmails dashboard.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "inbox_not_found",
-      },
-    };
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) {
+    return { error: inboxResolutionError(resolved.reason, toolName) };
   }
+  const inbox = resolved.inbox;
 
   return { inbox, messageId };
 }
@@ -11118,7 +11504,7 @@ async function executeMarkRead(
     inbox_id: inbox.id,
   };
   return {
-    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -11166,7 +11552,7 @@ async function executeMarkUnread(
     inbox_id: inbox.id,
   };
   return {
-    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -11216,7 +11602,7 @@ async function executeFlagEmail(
     inbox_id: inbox.id,
   };
   return {
-    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -11266,7 +11652,7 @@ async function executeUnflagEmail(
     inbox_id: inbox.id,
   };
   return {
-    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -11315,7 +11701,7 @@ async function executeArchiveEmail(
     inbox_id: inbox.id,
   };
   return {
-    result: { content: [{ type: "text", text: JSON.stringify(flagResult) }], isError: false },
+    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -11654,16 +12040,13 @@ async function executeMoveEmail(
 
   return {
     result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          success: true,
-          message_id: messageId,
-          operation: "move_email",
-          inbox_id: inbox.id,
-          destination_folder_id: destinationFolderId,
-        }),
-      }],
+      ...jsonOk({
+        success: true,
+        message_id: messageId,
+        operation: "move_email",
+        inbox_id: inbox.id,
+        destination_folder_id: destinationFolderId,
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -11732,16 +12115,13 @@ async function executeCopyEmail(
 
   return {
     result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          success: true,
-          message_id: messageId,
-          operation: "copy_email",
-          inbox_id: inbox.id,
-          destination_folder_id: destinationFolderId,
-        }),
-      }],
+      ...jsonOk({
+        success: true,
+        message_id: messageId,
+        operation: "copy_email",
+        inbox_id: inbox.id,
+        destination_folder_id: destinationFolderId,
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -12035,16 +12415,13 @@ async function executeDeleteEmail(
 
   return {
     result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          success: true,
-          message_id: messageId,
-          operation: "delete_email",
-          inbox_id: inbox.id,
-          permanent,
-        }),
-      }],
+      ...jsonOk({
+        success: true,
+        message_id: messageId,
+        operation: "delete_email",
+        inbox_id: inbox.id,
+        permanent,
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -12101,23 +12478,6 @@ async function resolveBulkArgs(
 
   const args = rawArgs as Record<string, unknown>;
 
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      error: {
-        result: {
-          content: [{
-            type: "text",
-            text: `${toolName}: inbox_id is required and must be a UUID string.`,
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "-32602",
-      },
-    };
-  }
-
   const rawIds = args["message_ids"];
   if (
     !Array.isArray(rawIds) ||
@@ -12141,24 +12501,11 @@ async function resolveBulkArgs(
 
   const messageIds = (rawIds as string[]).map((id) => id.trim());
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      error: {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              `Inbox ${inboxId} not found or not accessible to this API key. ` +
-              "Verify the inbox UUID in the MCPEmails dashboard.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "inbox_not_found",
-      },
-    };
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) {
+    return { error: inboxResolutionError(resolved.reason, toolName) };
   }
+  const inbox = resolved.inbox;
 
   return { inbox, messageIds };
 }
@@ -12184,19 +12531,14 @@ function formatBulkResult(
     ...failed.map(({ id, error }) => ({ message_id: id, success: false, error })),
   ];
   return {
-    result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          succeeded: succeeded.length,
-          failed: failed.length,
-          operation,
-          inbox_id: inboxId,
-          ...extra,
-          results,
-        }),
-      }],
-    },
+    result: jsonOk({
+      succeeded: succeeded.length,
+      failed: failed.length,
+      operation,
+      inbox_id: inboxId,
+      ...extra,
+      results,
+    }),
     logStatus: succeeded.length > 0 || failed.length === 0 ? "success" : "error",
     logErrorCode: null,
   };
@@ -13147,18 +13489,6 @@ async function executeSearchAndMove(
 
   const args = rawArgs as Record<string, unknown>;
 
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: {
-        content: [{ type: "text", text: "search_and_move: inbox_id is required and must be a UUID string." }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
-
   const query = typeof args["query"] === "string" ? args["query"].trim() : "";
   if (!query) {
     return {
@@ -13199,22 +13529,10 @@ async function executeSearchAndMove(
         .filter((f): f is string => typeof f === "string" && f.length > 0)
     : [];
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Inbox ${inboxId} not found or not accessible to this API key. ` +
-            "Verify the inbox UUID in the MCPEmails dashboard.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "search_and_move");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
@@ -13287,20 +13605,15 @@ async function executeSearchAndMove(
 
   if (messageIds.length === 0) {
     return {
-      result: {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            succeeded: 0,
-            failed: 0,
-            operation: "search_and_move",
-            inbox_id: inboxId,
-            destination_folder_id: destinationFolderId,
-            query,
-            results: [],
-          }),
-        }],
-      },
+      result: jsonOk({
+        succeeded: 0,
+        failed: 0,
+        operation: "search_and_move",
+        inbox_id: inboxId,
+        destination_folder_id: destinationFolderId,
+        query,
+        results: [],
+      }),
       logStatus: "success",
       logErrorCode: null,
     };
@@ -13385,18 +13698,6 @@ async function executeSearchAndDelete(
   const guard = requireConfirm(args);
   if (guard) return guard;
 
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: {
-        content: [{ type: "text", text: "search_and_delete: inbox_id is required and must be a UUID string." }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
-
   const query = typeof args["query"] === "string" ? args["query"].trim() : "";
   if (!query) {
     return {
@@ -13419,22 +13720,10 @@ async function executeSearchAndDelete(
         .filter((f): f is string => typeof f === "string" && f.length > 0)
     : [];
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `Inbox ${inboxId} not found or not accessible to this API key. ` +
-            "Verify the inbox UUID in the MCPEmails dashboard.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "search_and_delete");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
@@ -13507,20 +13796,15 @@ async function executeSearchAndDelete(
 
   if (messageIds.length === 0) {
     return {
-      result: {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            succeeded: 0,
-            failed: 0,
-            operation: "search_and_delete",
-            inbox_id: inboxId,
-            permanent,
-            query,
-            results: [],
-          }),
-        }],
-      },
+      result: jsonOk({
+        succeeded: 0,
+        failed: 0,
+        operation: "search_and_delete",
+        inbox_id: inboxId,
+        permanent,
+        query,
+        results: [],
+      }),
       logStatus: "success",
       logErrorCode: null,
     };
@@ -14524,24 +14808,14 @@ async function executeListDrafts(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: { content: [{ type: "text", text: "list_drafts: inbox_id is required and must be a UUID string." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
   const limit = typeof args["limit"] === "number"
     ? Math.min(50, Math.max(1, Math.floor(args["limit"])))
     : 20;
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key. Verify the inbox UUID in the MCPEmails dashboard.` }], isError: true },
-      logStatus: "error", logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "list_drafts");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
@@ -14569,7 +14843,7 @@ async function executeListDrafts(
   }
 
   return {
-    result: { content: [{ type: "text", text: JSON.stringify({ inbox_id: inbox.id, drafts }, null, 2) }] },
+    result: jsonOk({ inbox_id: inbox.id, drafts }, true),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -14589,13 +14863,6 @@ async function executeCreateDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: { content: [{ type: "text", text: "create_draft: inbox_id is required and must be a UUID string." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
   const subject = typeof args["subject"] === "string" && args["subject"].length > 0
     ? args["subject"] : null;
   if (!subject) {
@@ -14626,13 +14893,10 @@ async function executeCreateDraft(
     }
   }
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key. Verify the inbox UUID in the MCPEmails dashboard.` }], isError: true },
-      logStatus: "error", logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "create_draft");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
@@ -14661,7 +14925,7 @@ async function executeCreateDraft(
   }
 
   return {
-    result: { content: [{ type: "text", text: JSON.stringify(draftResult) }] },
+    result: jsonOk(draftResult as unknown as Record<string, unknown>),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -14681,13 +14945,6 @@ async function executeUpdateDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: { content: [{ type: "text", text: "update_draft: inbox_id is required and must be a UUID string." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
   const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
     ? args["draft_id"] : null;
   if (!draftId) {
@@ -14726,13 +14983,10 @@ async function executeUpdateDraft(
     }
   }
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key. Verify the inbox UUID in the MCPEmails dashboard.` }], isError: true },
-      logStatus: "error", logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "update_draft");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
@@ -14767,7 +15021,7 @@ async function executeUpdateDraft(
   }
 
   return {
-    result: { content: [{ type: "text", text: JSON.stringify(updateResult) }] },
+    result: jsonOk(updateResult as unknown as Record<string, unknown>),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -14787,13 +15041,6 @@ async function executeSendDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: { content: [{ type: "text", text: "send_draft: inbox_id is required and must be a UUID string." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
   const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
     ? args["draft_id"] : null;
   if (!draftId) {
@@ -14803,13 +15050,10 @@ async function executeSendDraft(
     };
   }
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key. Verify the inbox UUID in the MCPEmails dashboard.` }], isError: true },
-      logStatus: "error", logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "send_draft");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
@@ -14858,7 +15102,7 @@ async function executeSendDraft(
   }
 
   return {
-    result: { content: [{ type: "text", text: JSON.stringify(sendResult) }] },
+    result: jsonOk(sendResult as unknown as Record<string, unknown>),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -14989,7 +15233,7 @@ async function executeSearchContacts(
   }));
 
   return {
-    result: { content: [{ type: "text", text: JSON.stringify({ query, contacts, total: contacts.length }, null, 2) }] },
+    result: jsonOk({ query, contacts, total: contacts.length }, true),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -15021,12 +15265,6 @@ async function executeGetContact(
   const args = rawArgs as Record<string, unknown>;
 
   const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: { content: [{ type: "text", text: "get_contact: inbox_id is required and must be a UUID string." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
 
   const rawEmail = typeof args["email_address"] === "string" ? args["email_address"].trim() : null;
   if (!rawEmail) {
@@ -15037,25 +15275,45 @@ async function executeGetContact(
   }
   const emailAddress = rawEmail.toLowerCase();
 
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
-      logStatus: "error", logErrorCode: "inbox_not_found",
-    };
+  // If an inbox_id was supplied, validate it is accessible to this API key and
+  // scope the lookup to that inbox. When omitted, search across ALL inboxes the
+  // key can access (mirrors search_contacts' workspace-wide scoping).
+  let scopedInboxId: string | null = null;
+  if (inboxId) {
+    const inbox = await resolveInbox(inboxId, apiKey);
+    if (!inbox) {
+      return {
+        result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
+        logStatus: "error", logErrorCode: "inbox_not_found",
+      };
+    }
+    scopedInboxId = inbox.id;
   }
 
-  const { data, error } = await supabase
+  let contactQuery = supabase
     .from("contacts")
     .select("id, inbox_id, email_address, display_name, message_count, last_contacted_at, created_at, updated_at")
-    .eq("inbox_id", inbox.id)
+    .eq("workspace_id", apiKey.workspace_id)
     .eq("email_address", emailAddress)
-    .is("deleted_at", null)
-    .maybeSingle();
+    .is("deleted_at", null);
+
+  if (scopedInboxId) {
+    contactQuery = contactQuery.eq("inbox_id", scopedInboxId);
+  } else if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
+    // API key scoped to specific inboxes — honour that restriction.
+    contactQuery = contactQuery.in("inbox_id", apiKey.inbox_ids);
+  }
+
+  // maybeSingle would 500 if the same address exists across multiple inboxes;
+  // order + limit(1) returns the most recently contacted match instead.
+  const { data: rows, error } = await contactQuery
+    .order("last_contacted_at", { ascending: false })
+    .limit(1);
+  const data = rows && rows.length > 0 ? rows[0] : null;
 
   if (error) {
     console.error("[mcp-server] get_contact: db_error", {
-      inbox_id: inbox.id,
+      inbox_id: scopedInboxId,
       email_address: emailAddress,
       error: error.message,
     });
@@ -15067,7 +15325,7 @@ async function executeGetContact(
 
   if (!data) {
     return {
-      result: { content: [{ type: "text", text: JSON.stringify({ found: false, inbox_id: inbox.id, email_address: emailAddress }) }] },
+      result: jsonOk({ found: false, inbox_id: scopedInboxId, email_address: emailAddress }),
       logStatus: "success", logErrorCode: null,
     };
   }
@@ -15084,7 +15342,7 @@ async function executeGetContact(
   };
 
   return {
-    result: { content: [{ type: "text", text: JSON.stringify({ found: true, contact }, null, 2) }] },
+    result: jsonOk({ found: true, contact }, true),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -15120,15 +15378,6 @@ async function executeScheduleSend(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-
-  // inbox_id (required)
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
-  if (!inboxId) {
-    return {
-      result: { content: [{ type: "text", text: "schedule_send: inbox_id is required and must be a UUID string." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
 
   // to (required, non-empty array, max 50)
   const toRaw = args["to"];
@@ -15259,13 +15508,10 @@ async function executeScheduleSend(
   }
 
   // ── Inbox resolution + access control ─────────────────────────────────────
-  const inbox = await resolveInbox(inboxId, apiKey);
-  if (!inbox) {
-    return {
-      result: { content: [{ type: "text", text: `Inbox ${inboxId} not found or not accessible to this API key.` }], isError: true },
-      logStatus: "error", logErrorCode: "inbox_not_found",
-    };
-  }
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved.reason, "schedule_send");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
 
   // ── Capability check ───────────────────────────────────────────────────────
   const caps = getProviderCapabilities(inbox.provider);
@@ -15306,21 +15552,16 @@ async function executeScheduleSend(
 
   const created = row as { id: string; inbox_id: string; send_at: string; status: string; created_at: string };
   return {
-    result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          scheduled: true,
-          id: created.id,
-          inbox_id: created.inbox_id,
-          to,
-          subject,
-          send_at: created.send_at,
-          status: created.status,
-          created_at: created.created_at,
-        }, null, 2),
-      }],
-    },
+    result: jsonOk({
+      scheduled: true,
+      id: created.id,
+      inbox_id: created.inbox_id,
+      to,
+      subject,
+      send_at: created.send_at,
+      status: created.status,
+      created_at: created.created_at,
+    }, true),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -15415,9 +15656,7 @@ async function executeListScheduled(
   }));
 
   return {
-    result: {
-      content: [{ type: "text", text: JSON.stringify({ scheduled_sends: rows, total: rows.length }, null, 2) }],
-    },
+    result: jsonOk({ scheduled_sends: rows, total: rows.length }, true),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -15531,18 +15770,13 @@ async function executeCancelScheduled(
   }
 
   return {
-    result: {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          cancelled: true,
-          id: row.id,
-          inbox_id: row.inbox_id,
-          send_at: row.send_at,
-          previous_status: "pending",
-        }, null, 2),
-      }],
-    },
+    result: jsonOk({
+      cancelled: true,
+      id: row.id,
+      inbox_id: row.inbox_id,
+      send_at: row.send_at,
+      previous_status: "pending",
+    }, true),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -15689,6 +15923,9 @@ function handleToolsList(
       title: tool.title,
       description: tool.description,
       inputSchema: tool.inputSchema,
+      // Only include the optional spec fields when present, to keep output clean.
+      ...(tool.outputSchema ? { outputSchema: tool.outputSchema } : {}),
+      ...(tool.annotations ? { annotations: tool.annotations } : {}),
     }));
 
   console.log("[mcp-server] tools/list", {

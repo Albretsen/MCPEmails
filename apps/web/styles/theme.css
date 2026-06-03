@@ -339,8 +339,77 @@ html[data-theme="dark"] .auth-shell::before {
   background: var(--cobalt-50); color: var(--cobalt-700);
   display: flex; align-items: center; justify-content: center;
 }
-.az-perm .ph { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--fg-1); }
+.az-perm .ph { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--fg-1); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .az-perm .pd { font-family: var(--font-sans); font-size: 13px; color: var(--fg-3); margin-top: 2px; line-height: 1.5; }
+
+/* Destructive scope flag (delete:email) */
+.az-perm .pico.destructive { background: var(--red-100); color: var(--red-700); }
+.az-perm.is-destructive { background: var(--red-100); }
+.az-perm-warn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--red-700); background: var(--red-100);
+  border-radius: 999px; padding: 2px 7px;
+}
+
+/* Access-level preset cards (radiogroup) */
+.az-presets {
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;
+}
+.az-preset {
+  display: flex; align-items: flex-start; gap: 12px;
+  border: 1px solid var(--border-1); border-radius: 12px;
+  padding: 12px 14px; cursor: pointer;
+  background: var(--bg-surface);
+  transition: border-color 120ms var(--ease-out), background 120ms var(--ease-out), box-shadow 120ms var(--ease-out);
+}
+.az-preset:hover:not(.is-disabled) { border-color: var(--border-2); }
+.az-preset.is-selected { border-color: var(--brand); background: var(--cobalt-50); box-shadow: 0 0 0 1px var(--brand) inset; }
+.az-preset:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--border-focus); }
+.az-preset.is-disabled { opacity: 0.5; cursor: not-allowed; }
+.az-preset-ico {
+  flex: none; width: 32px; height: 32px; border-radius: 8px;
+  background: var(--cobalt-50); color: var(--cobalt-700);
+  display: flex; align-items: center; justify-content: center;
+}
+.az-preset.is-selected .az-preset-ico { background: var(--bg-surface); }
+.az-preset-main { flex: 1; min-width: 0; }
+.az-preset-title-row { display: flex; align-items: center; gap: 8px; }
+.az-preset-title { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--fg-1); }
+.az-preset-desc { font-family: var(--font-sans); font-size: 12px; color: var(--fg-3); margin-top: 2px; line-height: 1.5; }
+.az-preset-badge {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--mint-700); background: var(--mint-50);
+  border-radius: 999px; padding: 2px 7px;
+}
+.az-preset-radio {
+  flex: none; width: 18px; height: 18px; border-radius: 999px;
+  border: 2px solid var(--border-2); margin-top: 2px;
+  position: relative; transition: border-color 120ms var(--ease-out);
+}
+.az-preset.is-selected .az-preset-radio { border-color: var(--brand); }
+.az-preset.is-selected .az-preset-radio::after {
+  content: ""; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px; height: 8px; border-radius: 999px; background: var(--brand);
+}
+
+/* Customize affordance */
+.az-customize-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer; padding: 4px 0;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  color: var(--brand); margin-bottom: 8px;
+}
+.az-customize-toggle:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--border-focus); border-radius: 6px; }
+.az-customize-toggle .az-chev { transition: transform 120ms var(--ease-out); }
+.az-customize-toggle .az-chev-open { transform: rotate(90deg); transition: transform 120ms var(--ease-out); }
+
+@media (max-width: 520px) {
+  .az-preset { padding: 11px 12px; }
+}
 .az-pickrow {
   border: 1px solid var(--border-1); border-radius: 10px; padding: 14px 16px;
   display: flex; align-items: center; gap: 12px; margin-bottom: 18px;

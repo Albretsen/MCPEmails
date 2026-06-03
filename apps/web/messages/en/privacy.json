@@ -27,6 +27,7 @@
     "logsP": "For every MCP tool call your agent makes, we record: the tool name (e.g. <c>read_email</c>), the API key that made the call, the inbox that was accessed, the timestamp, and whether the call succeeded. We do<b> not</b> record email subjects, bodies, recipients, or any other email content in these logs.",
     "emailContentTitle": "2.5 Email content: not stored",
     "emailContentP": "When your agent calls <c>read_email</c>, <c>list_messages</c>, or any other email tool, we fetch the requested content live from your email provider and return it to your agent in the same HTTP response. The content is never written to disk, cached, or logged. Once the HTTP response is sent, we hold no copy of any email body, subject, attachment, or contact detail.",
+    "emailContentAgentP": "Your email content is only ever sent to the MCP client or AI agent that <b>you</b> have connected and are operating (for example Claude, Cursor, or another MCP client of your choosing). When you invoke a tool, MCPEmails transmits the requested content to that client so it can fulfil your request. MCPEmails does not send your email content to any AI provider of its own choosing. Once the content reaches your chosen client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCPEmails acts only as a conduit and retains no copy of the content.",
     "technicalTitle": "2.6 Technical and operational data",
     "technicalP": "We collect standard server-side operational data including IP addresses (for rate limiting and abuse prevention), request timestamps, HTTP status codes, and error types. This data is retained in aggregated, anonymised form and is not linked to individual accounts after 30 days.",
     "cookiesTitle": "2.7 Cookies and local storage",
@@ -57,6 +58,7 @@
     "googleP2": "When you connect a Gmail account, you grant MCPEmails the following Gmail scopes. We request each scope solely to provide the features you invoke through your AI agent, and we use them only on your behalf:",
     "googleScopeReadonly": "<c>gmail.readonly</c>: list messages and read message contents so your agent can search, read, and summarise email at your request.",
     "googleScopeSend": "<c>gmail.send</c>: compose and send messages that your agent creates at your request.",
+    "googleScopeModify": "<c>gmail.modify</c>: organise your mail at your direction, including applying and removing labels, marking messages read or unread, archiving messages, moving messages between folders, and moving messages to trash.",
     "googleLimitedIntro": "Consistent with the Limited Use requirements, MCPEmails:",
     "googleLimitedList": [
       "uses Google user data only to provide and improve the user-facing features described above;",

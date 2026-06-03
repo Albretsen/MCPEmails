@@ -149,6 +149,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const approvedScopes = requestedScopes.filter((s) => oauthClient.scopes_allowed.includes(s));
 
+  // At least one scope must be granted — a connection with no scopes can call
+  // zero tools, so it is never a useful grant. (The consent UI also disables the
+  // Allow button in this case; this is the server-side backstop.)
+  if (approvedScopes.length === 0) {
+    return NextResponse.json(
+      { error: 'Select at least one permission to grant.' },
+      { status: 400 },
+    );
+  }
+
   // ── Workspace resolution ──────────────────────────────────────────────────
   // Use the active workspace (cookie-aware) so the key is minted for the
   // workspace the user is actually viewing, not an arbitrary first one.

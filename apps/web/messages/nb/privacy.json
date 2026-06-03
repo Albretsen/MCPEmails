@@ -27,6 +27,7 @@
     "logsP": "For hvert MCP-verktøykall agenten din gjør, registrerer vi: verktøyets navn (f.eks. <c>read_email</c>), API-nøkkelen som gjorde kallet, innboksen som ble aksessert, tidsstempelet, og om kallet lyktes. Vi registrerer<b> ikke</b> e-postemner, -innhold, -mottakere eller annet e-postinnhold i disse loggene.",
     "emailContentTitle": "2.5 E-postinnhold: ikke lagret",
     "emailContentP": "Når agenten din kaller <c>read_email</c>, <c>list_messages</c> eller et annet e-postverktøy, henter vi det forespurte innholdet direkte fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning.",
+    "emailContentAgentP": "E-postinnholdet ditt sendes kun til MCP-klienten eller AI-agenten som <b>du</b> har koblet til og selv bruker (for eksempel Claude, Cursor eller en annen MCP-klient du velger). Når du aktiverer et verktøy, overfører MCPEmails det forespurte innholdet til denne klienten slik at den kan utføre forespørselen din. MCPEmails sender ikke e-postinnholdet ditt til noen AI-leverandør vi selv velger. Når innholdet når klienten du har valgt, reguleres det av denne klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails fungerer bare som et mellomledd og beholder ingen kopi av innholdet.",
     "technicalTitle": "2.6 Tekniske og driftsmessige data",
     "technicalP": "Vi samler inn standard driftsdata på serversiden, inkludert IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Disse dataene oppbevares i aggregert, anonymisert form og knyttes ikke til individuelle kontoer etter 30 dager.",
     "cookiesTitle": "2.7 Informasjonskapsler og lokal lagring",
@@ -57,6 +58,7 @@
     "googleP2": "Når du kobler til en Gmail-konto, gir du MCPEmails følgende Gmail-omfang. Vi ber om hvert omfang utelukkende for å levere funksjonene du aktiverer gjennom AI-agenten din, og vi bruker dem bare på dine vegne:",
     "googleScopeReadonly": "<c>gmail.readonly</c>: liste opp meldinger og lese meldingsinnhold slik at agenten din kan søke i, lese og oppsummere e-post på din forespørsel.",
     "googleScopeSend": "<c>gmail.send</c>: skrive og sende meldinger som agenten din oppretter på din forespørsel.",
+    "googleScopeModify": "<c>gmail.modify</c>: organisere e-posten din etter dine instruksjoner, inkludert å legge til og fjerne etiketter, merke meldinger som lest eller ulest, arkivere meldinger, flytte meldinger mellom mapper og flytte meldinger til papirkurven.",
     "googleLimitedIntro": "I samsvar med kravene til Begrenset bruk vil MCPEmails:",
     "googleLimitedList": [
       "kun bruke Google-brukerdata til å levere og forbedre de brukervendte funksjonene beskrevet ovenfor;",

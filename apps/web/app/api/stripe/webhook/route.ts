@@ -2,30 +2,39 @@
  * POST /api/stripe/webhook
  *
  * Stripe webhook handler. Listens for billing events and syncs subscription
- * state to the `workspaces.plan` column in Supabase.
+ * state to the USER's `user_billing` row, then projects the resulting plan onto
+ * EVERY workspace that user owns (`workspaces.plan`).
+ *
+ * The subscription is tied to the USER (the owner), not a single workspace. The
+ * owner is resolved from the Stripe customer (via metadata.user_id, or the
+ * `user_billing.stripe_customer_id` mapping). See
+ * supabase/migrations/20260606000000_user_level_billing.sql.
  *
  * Handled events:
- *   checkout.session.completed        : customer completed a checkout; activate plan
- *   customer.subscription.updated     : subscription changed (upgrade/downgrade/renewal)
- *   customer.subscription.deleted     : subscription cancelled; revert to free
+ *   checkout.session.completed        : checkout finished; activate plan
+ *   customer.subscription.created     : sub created (e.g. outside Checkout)
+ *   customer.subscription.updated     : sub changed (upgrade/downgrade/renew/status)
+ *   customer.subscription.deleted     : sub fully cancelled; revert to free
+ *
+ * Dunning grace period (Change 3):
+ *   `past_due` and `unpaid` are treated as STILL ENTITLED — Stripe is retrying
+ *   the card and we must not yank a paying customer. Downgrade to free only on
+ *   `customer.subscription.deleted`, or when the status reaches a terminal
+ *   cancelled state (`canceled` / `incomplete_expired`). The raw status is
+ *   persisted so a "payment failed" banner can be shown later.
+ *
+ * Idempotency + out-of-order protection (Change 4):
+ *   Every event id is recorded in `stripe_webhook_events`
+ *   (INSERT ... ON CONFLICT DO NOTHING). A duplicate event is skipped. We also
+ *   ignore an event whose Stripe `created` time predates the newest event we
+ *   already processed for that customer, so a redelivered stale event can never
+ *   clobber a newer correct state.
  *
  * Security:
- *   Every request is verified against STRIPE_WEBHOOK_SECRET using the raw
- *   request body. Requests that fail signature verification are rejected with 400.
- *   This handler uses the service-role Supabase client (bypasses RLS) because it
- *   runs in a server-side webhook context with no authenticated user session.
- *
- * Idempotency:
- *   Stripe may deliver the same event more than once. All DB updates are
- *   idempotent: setting `plan` to the same value is a no-op.
- *
- * Deployment:
- *   `maxDuration` is exported below (30 s) to allow time for Stripe API calls
- *   and Supabase writes. This is the App Router equivalent of vercel.json
- *   function config and takes effect on both Vercel and local dev.
+ *   Every request is verified against STRIPE_WEBHOOK_SECRET using the raw body.
+ *   This handler uses the service-role Supabase client (bypasses RLS).
  *
  * References:
- *   Documents/Architecture/deployment-architecture.md §3 (env vars)
  *   src/lib/stripe/plans.ts  (plan catalogue, getPlanByStripePriceId)
  *   src/lib/stripe/client.ts (stripe SDK instance)
  */
@@ -49,6 +58,14 @@ export const maxDuration = 30;
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
+/** Subscription statuses that should keep the user ENTITLED to their paid plan. */
+const ENTITLED_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set([
+  'active',
+  'trialing',
+  'past_due', // dunning: Stripe is retrying the card — keep access.
+  'unpaid',   // dunning: still within Stripe's retry window — keep access.
+]);
+
 // ---------------------------------------------------------------------------
 // POST handler
 // ---------------------------------------------------------------------------
@@ -71,8 +88,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Read raw body: required for signature verification.
-  // Using arrayBuffer so the bytes are not decoded before Stripe inspects them.
   let rawBody: Buffer;
   try {
     const buffer = await request.arrayBuffer();
@@ -96,7 +111,60 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // ── 2. Route to event handler ─────────────────────────────────────────────
+  // ── 2. Idempotency: skip events we have already processed ──────────────────
+  const supabase = createServiceRoleClient();
+  const customerIdForEvent = extractCustomerId(event);
+
+  const { data: ledgerRow, error: ledgerError } = await supabase
+    .from('stripe_webhook_events')
+    .insert({
+      event_id: event.id,
+      event_type: event.type,
+      event_created: new Date(event.created * 1000).toISOString(),
+      stripe_customer_id: customerIdForEvent,
+    })
+    .select('event_id')
+    .maybeSingle();
+
+  if (ledgerError) {
+    // 23505 = unique_violation → duplicate event id → already processed. Ack.
+    if ((ledgerError as { code?: string }).code === '23505') {
+      console.log(`[stripe-webhook] duplicate event ${event.id} skipped.`);
+      return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+    }
+    console.error('[stripe-webhook] ledger insert failed:', ledgerError.message);
+    // Return 500 so Stripe retries; we'd rather retry than silently drop.
+    return NextResponse.json({ error: 'Ledger write failed.' }, { status: 500 });
+  }
+
+  if (!ledgerRow) {
+    // No row returned despite no error → treat as already-processed. Ack.
+    console.log(`[stripe-webhook] event ${event.id} already in ledger; skipped.`);
+    return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+  }
+
+  // ── 3. Out-of-order guard ──────────────────────────────────────────────────
+  // Ignore this event if a NEWER event for the same customer was already
+  // processed (Stripe redelivery of a stale event must not clobber newer state).
+  if (customerIdForEvent) {
+    const { data: newer } = await supabase
+      .from('stripe_webhook_events')
+      .select('event_id')
+      .eq('stripe_customer_id', customerIdForEvent)
+      .neq('event_id', event.id)
+      .gt('event_created', new Date(event.created * 1000).toISOString())
+      .limit(1)
+      .maybeSingle();
+
+    if (newer) {
+      console.log(
+        `[stripe-webhook] event ${event.id} is stale for customer ${customerIdForEvent}; skipping plan change.`,
+      );
+      return NextResponse.json({ received: true, stale: true }, { status: 200 });
+    }
+  }
+
+  // ── 4. Route to event handler ─────────────────────────────────────────────
   try {
     switch (event.type) {
       case 'checkout.session.completed':
@@ -105,8 +173,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
         break;
 
+      case 'customer.subscription.created':
       case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(
+        await handleSubscriptionUpserted(
           event.data.object as Stripe.Subscription,
         );
         break;
@@ -119,13 +188,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       default:
         // Unhandled event types are acknowledged but not processed.
-        // Stripe will not retry on 200, so this is safe.
         break;
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[stripe-webhook] Error handling event ${event.type}:`, message);
-    // Return 500 so Stripe retries the event.
+    // The event is already in the ledger; deleting it would let Stripe's retry
+    // re-process. Remove the ledger row so the retry is not skipped as a dup.
+    await supabase.from('stripe_webhook_events').delete().eq('event_id', event.id);
     return NextResponse.json(
       { error: 'Internal server error processing webhook.' },
       { status: 500 },
@@ -142,38 +212,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 /**
  * checkout.session.completed
  *
- * Fired after a customer successfully completes a Stripe Checkout session.
- * The session metadata contains `workspace_id` and `plan_id` which were
- * embedded when the checkout session was created in /api/stripe/checkout.
- *
- * This is the primary event for activating a new subscription. We update the
- * workspace's plan immediately rather than waiting for
- * `customer.subscription.updated` to avoid a race condition between the
- * checkout redirect and the plan taking effect in the dashboard.
+ * Fired after a customer completes Stripe Checkout. Metadata carries `user_id`
+ * and `plan_id` (set in /api/stripe/checkout). We activate the plan immediately
+ * (rather than waiting for subscription.created) to avoid a redirect race.
  */
 async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session,
 ): Promise<void> {
-  // Only process subscription checkouts.
-  if (session.mode !== 'subscription') {
-    return;
-  }
+  if (session.mode !== 'subscription') return;
 
-  const workspaceId = session.metadata?.workspace_id;
+  const userId = session.metadata?.user_id ?? null;
   const planId = session.metadata?.plan_id as PlanId | undefined;
 
-  if (!workspaceId || !planId) {
+  if (!planId || (planId !== 'solo' && planId !== 'pro')) {
     console.error(
-      '[stripe-webhook] checkout.session.completed missing workspace_id or plan_id in metadata:',
-      session.id,
-    );
-    return;
-  }
-
-  // Validate that planId is a known paid plan.
-  if (planId !== 'solo' && planId !== 'pro') {
-    console.error(
-      `[stripe-webhook] checkout.session.completed unknown planId "${planId}" for session ${session.id}`,
+      `[stripe-webhook] checkout.session.completed bad/missing plan_id "${planId}" (session ${session.id})`,
     );
     return;
   }
@@ -183,27 +236,29 @@ async function handleCheckoutSessionCompleted(
       ? session.customer
       : session.customer?.id ?? null;
 
-  await syncWorkspacePlan({
-    workspaceId,
+  const subscriptionId =
+    typeof session.subscription === 'string'
+      ? session.subscription
+      : session.subscription?.id ?? null;
+
+  await applyUserPlan({
+    userId,
+    customerId,
+    subscriptionId,
     newPlan: planId,
-    stripeCustomerId: customerId,
+    subscriptionStatus: 'active',
     source: 'checkout.session.completed',
   });
 }
 
 /**
- * customer.subscription.updated
+ * customer.subscription.created / customer.subscription.updated
  *
- * Fired whenever a subscription is updated: plan change, renewal, trial end,
- * quantity change, or status change (e.g. past_due → active).
- *
- * We look up the workspace by stripe_customer_id, derive the plan from the
- * first line item's price ID, and sync the plan column.
- *
- * Subscriptions with status other than 'active' or 'trialing' are treated as
- * inactive: the workspace is downgraded to free.
+ * Resolve the plan from the first line item's price ID. Apply the dunning grace
+ * period: entitled statuses keep the paid plan; terminal cancelled states
+ * downgrade to free.
  */
-async function handleSubscriptionUpdated(
+async function handleSubscriptionUpserted(
   subscription: Stripe.Subscription,
 ): Promise<void> {
   const customerId =
@@ -211,29 +266,29 @@ async function handleSubscriptionUpdated(
       ? subscription.customer
       : subscription.customer.id;
 
-  const workspaceId = subscription.metadata?.workspace_id ?? null;
+  const userId = subscription.metadata?.user_id ?? null;
+  const status = subscription.status;
 
-  // Determine whether the subscription is in a billable state.
-  const isActive =
-    subscription.status === 'active' || subscription.status === 'trialing';
-
-  if (!isActive) {
-    // Subscription is past_due, unpaid, cancelled, or paused: downgrade.
-    await syncWorkspacePlan({
+  // Persist status always (so a banner can read it), even when downgrading.
+  if (!ENTITLED_STATUSES.has(status)) {
+    // Not entitled (canceled / incomplete / incomplete_expired / paused):
+    // downgrade to free but keep the raw status for visibility.
+    await applyUserPlan({
+      userId,
       customerId,
-      workspaceId: workspaceId ?? undefined,
+      subscriptionId: subscription.id,
       newPlan: 'free',
-      stripeCustomerId: customerId,
-      source: `customer.subscription.updated (status=${subscription.status})`,
+      subscriptionStatus: status,
+      source: `customer.subscription.updated (status=${status})`,
     });
     return;
   }
 
-  // Resolve plan from the first line item's price ID.
+  // Entitled — resolve which paid plan from the price ID.
   const priceId = subscription.items.data[0]?.price?.id;
   if (!priceId) {
     console.error(
-      '[stripe-webhook] customer.subscription.updated has no price ID on first item:',
+      '[stripe-webhook] subscription has no price ID on first item:',
       subscription.id,
     );
     return;
@@ -242,25 +297,27 @@ async function handleSubscriptionUpdated(
   const resolved = getPlanByStripePriceId(priceId);
   if (!resolved) {
     console.error(
-      `[stripe-webhook] customer.subscription.updated: price ID "${priceId}" does not map to a known plan. Subscription: ${subscription.id}`,
+      `[stripe-webhook] price ID "${priceId}" does not map to a known plan (sub ${subscription.id})`,
     );
     return;
   }
 
-  await syncWorkspacePlan({
+  await applyUserPlan({
+    userId,
     customerId,
-    workspaceId: workspaceId ?? undefined,
+    subscriptionId: subscription.id,
     newPlan: resolved.plan.id,
-    stripeCustomerId: customerId,
-    source: 'customer.subscription.updated',
+    subscriptionStatus: status,
+    currentPeriodEnd: subscription.items.data[0]?.current_period_end ?? null,
+    source: 'customer.subscription.upserted',
   });
 }
 
 /**
  * customer.subscription.deleted
  *
- * Fired when a subscription is fully cancelled (immediately or at period end).
- * Downgrade the workspace to the free plan.
+ * The subscription is fully cancelled. Downgrade ALL of the user's workspaces
+ * to free.
  */
 async function handleSubscriptionDeleted(
   subscription: Stripe.Subscription,
@@ -270,113 +327,139 @@ async function handleSubscriptionDeleted(
       ? subscription.customer
       : subscription.customer.id;
 
-  const workspaceId = subscription.metadata?.workspace_id ?? null;
+  const userId = subscription.metadata?.user_id ?? null;
 
-  await syncWorkspacePlan({
+  await applyUserPlan({
+    userId,
     customerId,
-    workspaceId: workspaceId ?? undefined,
+    subscriptionId: subscription.id,
     newPlan: 'free',
-    stripeCustomerId: customerId,
+    subscriptionStatus: 'canceled',
     source: 'customer.subscription.deleted',
   });
 }
 
 // ---------------------------------------------------------------------------
-// Shared helper
+// Helpers
 // ---------------------------------------------------------------------------
 
-interface SyncWorkspacePlanOptions {
-  /** Direct workspace ID: used when available (faster, avoids customer lookup). */
-  workspaceId?: string;
-  /** Stripe customer ID: used to find the workspace when workspaceId is absent. */
-  customerId?: string;
-  /** Deprecated alias kept for internal call sites; treated the same as customerId. */
-  stripeCustomerId?: string | null;
-  /** The plan to set on the workspace. */
+/** Best-effort extraction of the Stripe customer id from any event object. */
+function extractCustomerId(event: Stripe.Event): string | null {
+  const obj = event.data.object as { customer?: string | { id: string } | null };
+  const c = obj?.customer;
+  if (!c) return null;
+  return typeof c === 'string' ? c : c.id ?? null;
+}
+
+interface ApplyUserPlanOptions {
+  /** The owner user id, when known from event metadata. */
+  userId: string | null;
+  /** The Stripe customer id (fallback for resolving the owner). */
+  customerId: string | null;
+  /** The Stripe subscription id, if any. */
+  subscriptionId?: string | null;
+  /** Plan to grant the user: 'free' | 'solo' | 'pro'. */
   newPlan: PlanId | 'free';
+  /** Raw Stripe subscription status to persist (for dunning banners). */
+  subscriptionStatus?: string | null;
+  /** Unix seconds of current period end, if known. */
+  currentPeriodEnd?: number | null;
   /** Human-readable label for log messages. */
   source: string;
 }
 
 /**
- * Update `workspaces.plan` for the workspace identified by either workspaceId
- * or customerId (via stripe_customer_id lookup).
- *
- * Also ensures stripe_customer_id is persisted on the workspace row if it
- * was not set yet (handles the race where the checkout completes before the
- * customer write from the checkout route commits).
+ * Single source of truth update:
+ *   1. Resolve the owner (user_id from metadata, else user_billing by customer).
+ *   2. Upsert `user_billing` (plan + status + customer + subscription).
+ *   3. Project the plan onto EVERY non-deleted workspace owned by that user.
  */
-async function syncWorkspacePlan(options: SyncWorkspacePlanOptions): Promise<void> {
+async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   const {
-    workspaceId,
+    userId,
     customerId,
-    stripeCustomerId,
+    subscriptionId,
     newPlan,
+    subscriptionStatus,
+    currentPeriodEnd,
     source,
   } = options;
 
-  const effectiveCustomerId = stripeCustomerId ?? customerId ?? null;
   const supabase = createServiceRoleClient();
 
-  // ── Resolve workspace row ─────────────────────────────────────────────────
-  let resolvedWorkspaceId: string | null = workspaceId ?? null;
+  // ── Resolve owner ──────────────────────────────────────────────────────────
+  let resolvedUserId: string | null = userId;
 
-  if (!resolvedWorkspaceId && effectiveCustomerId) {
-    // Look up by stripe_customer_id.
+  if (!resolvedUserId && customerId) {
     const { data, error } = await supabase
-      .from('workspaces')
-      .select('id')
-      .eq('stripe_customer_id', effectiveCustomerId)
-      .is('deleted_at', null)
+      .from('user_billing')
+      .select('user_id')
+      .eq('stripe_customer_id', customerId)
       .maybeSingle();
-
     if (error) {
       throw new Error(
-        `[stripe-webhook] Failed to look up workspace for customer ${effectiveCustomerId}: ${error.message}`,
+        `[stripe-webhook] ${source}: failed to resolve user for customer ${customerId}: ${error.message}`,
       );
     }
-
-    resolvedWorkspaceId = data?.id ?? null;
+    resolvedUserId = data?.user_id ?? null;
   }
 
-  if (!resolvedWorkspaceId) {
+  if (!resolvedUserId) {
     console.error(
-      `[stripe-webhook] ${source}: could not resolve workspace. customerId=${effectiveCustomerId ?? 'none'}`,
+      `[stripe-webhook] ${source}: could not resolve owner. customerId=${customerId ?? 'none'}`,
     );
     return;
   }
 
-  // ── Build update payload ──────────────────────────────────────────────────
-  type WorkspaceUpdate = {
+  // ── Upsert user_billing (single source of truth) ──────────────────────────
+  const billingUpdate: {
+    user_id: string;
     plan: string;
     updated_at: string;
     stripe_customer_id?: string;
-  };
-
-  const updatePayload: WorkspaceUpdate = {
+    stripe_subscription_id?: string | null;
+    subscription_status?: string | null;
+    current_period_end?: string;
+  } = {
+    user_id: resolvedUserId,
     plan: newPlan,
     updated_at: new Date().toISOString(),
   };
-
-  // Persist the customer ID if we have one and it might not be set yet.
-  if (effectiveCustomerId) {
-    updatePayload.stripe_customer_id = effectiveCustomerId;
+  if (customerId) billingUpdate.stripe_customer_id = customerId;
+  if (subscriptionId !== undefined) billingUpdate.stripe_subscription_id = subscriptionId;
+  if (subscriptionStatus !== undefined) billingUpdate.subscription_status = subscriptionStatus;
+  if (currentPeriodEnd != null) {
+    billingUpdate.current_period_end = new Date(currentPeriodEnd * 1000).toISOString();
   }
 
-  // ── Apply update ──────────────────────────────────────────────────────────
-  const { error: updateError } = await supabase
+  const { error: billingError } = await supabase
+    .from('user_billing')
+    .upsert(billingUpdate, { onConflict: 'user_id' });
+
+  if (billingError) {
+    throw new Error(
+      `[stripe-webhook] ${source}: failed to upsert user_billing for ${resolvedUserId}: ${billingError.message}`,
+    );
+  }
+
+  // ── Project plan onto ALL workspaces the user owns ────────────────────────
+  const { error: wsError } = await supabase
     .from('workspaces')
-    .update(updatePayload)
-    .eq('id', resolvedWorkspaceId)
+    .update({
+      plan: newPlan,
+      stripe_customer_id: customerId ?? undefined,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('owner_id', resolvedUserId)
     .is('deleted_at', null);
 
-  if (updateError) {
+  if (wsError) {
     throw new Error(
-      `[stripe-webhook] ${source}: failed to update workspace ${resolvedWorkspaceId} to plan "${newPlan}": ${updateError.message}`,
+      `[stripe-webhook] ${source}: failed to project plan "${newPlan}" onto workspaces of ${resolvedUserId}: ${wsError.message}`,
     );
   }
 
   console.log(
-    `[stripe-webhook] ${source}: workspace ${resolvedWorkspaceId} → plan "${newPlan}"`,
+    `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${newPlan}" (status=${subscriptionStatus ?? 'n/a'}); propagated to all owned workspaces`,
   );
 }
