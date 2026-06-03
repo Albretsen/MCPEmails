@@ -450,3 +450,211 @@ html[data-theme="dark"] .auth-shell::before {
 
 /* Auth back arrow: use left-pointing chevron via SVG */
 .auth-back svg { transform: rotate(180deg); }
+
+/* ── Auth pages: mobile responsive ────────────────────────────────────────── */
+/*
+ * Breakpoints mirror the rest of the app (767 / 640).
+ * ALL selectors below are auth-scoped (.auth-*, .az-*, .app-password-*).
+ * No shared tokens, color variables, or global resets are altered here.
+ */
+
+@media (max-width: 767px) {
+  /* Shell: allow card to breathe on tablets */
+  .auth-wrap,
+  .az-wrap {
+    padding: 40px 20px 60px;
+  }
+
+  /* Auth card: slightly tighter internal padding */
+  .auth-card {
+    padding: 24px 20px;
+  }
+
+  /* Back link: reduce gap below it */
+  .auth-back {
+    margin-bottom: 28px;
+  }
+
+  /* Ensure submit button meets ≥44px tap target */
+  .auth-submit {
+    height: 44px;
+  }
+
+  /* Social provider buttons: full height tap target */
+  .auth-prov-btn {
+    height: 44px;
+  }
+
+  /* ── Authorize / consent page ─────────────────────────────────────── */
+
+  /* Head: reduce side padding so logos don't crowd */
+  .az-head {
+    padding: 20px 20px 18px;
+  }
+
+  /* Body: reduced side padding */
+  .az-body {
+    padding: 18px 20px;
+  }
+
+  /* Footer: reduced side padding; let grow text wrap */
+  .az-foot {
+    padding: 14px 20px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Footer grow text spans full width when buttons wrap */
+  .az-foot .grow {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  /* Inbox pick row: let the select fill available width */
+  .az-pickrow {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+  .az-pickrow select.input {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* Success section padding */
+  .az-success {
+    padding: 32px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Shell: minimal top/bottom breathing room on small phones */
+  .auth-wrap,
+  .az-wrap {
+    padding: 24px 16px 48px;
+    /* Prevent the card from ever overflowing the viewport horizontally */
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  /* Auth card: tight but readable padding */
+  .auth-card {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  /* Heading in auth card: slightly smaller on tiny screens */
+  .auth-card h1 {
+    font-size: 21px;
+  }
+
+  /* Back link: very compact */
+  .auth-back {
+    margin-bottom: 20px;
+  }
+
+  /* Brand logo: less space below */
+  .auth-brand img {
+    margin-bottom: 20px;
+  }
+
+  /* Step pips: wrap gracefully */
+  .step-pip {
+    flex-wrap: wrap;
+  }
+
+  /* ── Authorize / consent page ─────────────────────────────────────── */
+
+  /* Card: no border-radius on tiny screens to gain edge-to-edge feel */
+  .az-card {
+    border-radius: 12px;
+  }
+
+  /* Head: minimal padding, keep logos visible */
+  .az-head {
+    padding: 16px 16px 14px;
+    gap: 10px;
+  }
+
+  /* Connection arc: shrink on narrow screens so logos don't overlap */
+  .az-head .arc {
+    flex: 1;
+    min-width: 20px;
+  }
+
+  /* Body */
+  .az-body {
+    padding: 16px 16px;
+  }
+
+  /* Body heading */
+  .az-body h1 {
+    font-size: 19px;
+  }
+
+  /* Preset cards: tighter padding on narrow phones */
+  .az-preset {
+    padding: 10px 12px;
+  }
+
+  /* Permission rows: stack icon + text when needed */
+  .az-perm {
+    padding: 12px 12px;
+    gap: 10px;
+  }
+
+  /* Scope toggle: move switch below text on very small widths */
+  .az-perm .ph {
+    font-size: 13px;
+  }
+  .az-perm .pd {
+    font-size: 12px;
+  }
+
+  /* Foot: vertical stack of buttons */
+  .az-foot {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .az-foot .grow {
+    order: -1;
+    flex-basis: auto;
+    text-align: center;
+  }
+  /* Buttons in footer go full width */
+  .az-foot .btn {
+    width: 100%;
+    justify-content: center;
+    height: 44px;
+  }
+
+  /* Success state */
+  .az-success {
+    padding: 28px 16px;
+  }
+  .az-success .term {
+    max-width: 100%;
+    font-size: 11px;
+  }
+
+  /* Microcopy below the az card */
+  .auth-microcopy {
+    margin-top: 16px;
+    font-size: 11px;
+  }
+
+  /* Inbox grid: always single column on small phones */
+  .az-inbox-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* App-password page: tighter padding (classes live in dashboard.css but
+     the page is an auth flow — we only adjust the outer page wrapper here) */
+  .app-password-page {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 32px;
+  }
+}

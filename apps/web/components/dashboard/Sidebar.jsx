@@ -73,7 +73,17 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
 
   async function handleSignOut() {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    // Use scope:'local' to clear only the local session tokens without waiting
+    // for Supabase's server-side refresh-token revocation (which can return 503).
+    // The client-side session is always cleared regardless of network/server errors,
+    // so the user is always logged out on this device even if the server call fails.
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // Server-side revocation failed (e.g. 503). The local tokens have already
+      // been cleared by supabase-js before the network call, so we continue.
+    }
+    // Always redirect home — no usable session remains in the browser.
     router.push('/');
   }
 
@@ -108,7 +118,11 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
         aria-hidden="true"
       />
 
-      <aside className={'sidebar' + (isOpen ? ' sidebar-open' : '')}>
+      <aside
+        id="dashboard-sidebar"
+        className={'sidebar' + (isOpen ? ' sidebar-open' : '')}
+        aria-label="Dashboard navigation"
+      >
         <div className="brand">
           <img src="/logo-wordmark.svg" alt="mcpemails" />
         </div>
@@ -289,7 +303,7 @@ function TopbarMcpLink({ url }) {
   );
 }
 
-export function Topbar({ route, workspace, mcpUrl, onMenuOpen, onOpenSearch }) {
+export function Topbar({ route, workspace, mcpUrl, onMenuOpen, onOpenSearch, sidebarOpen }) {
   const tr = useTranslations('dashboardChrome');
   const labels = {
     overview: tr('sidebar.navOverview'),
@@ -306,13 +320,15 @@ export function Topbar({ route, workspace, mcpUrl, onMenuOpen, onOpenSearch }) {
       <button
         className="menu-btn"
         onClick={onMenuOpen}
-        aria-label={tr('sidebar.openMenu')}
+        aria-label={sidebarOpen ? tr('sidebar.closeMenu') : tr('sidebar.openMenu')}
+        aria-expanded={sidebarOpen ? 'true' : 'false'}
+        aria-controls="dashboard-sidebar"
       >
         <Icon name="menu" size={20} color="currentColor" />
       </button>
 
       <div className="crumbs">
-        <span>{workspace?.slug ?? tr('sidebar.workspaceFallback')}</span>
+        <span>{workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? tr('sidebar.workspaceFallback')}</span>
         <span className="sep">/</span>
         <span className="here">{labels[route]}</span>
       </div>

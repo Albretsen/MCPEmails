@@ -74,7 +74,8 @@ export function LoginApp() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
     if (error) {
-      setServerError(t('login.errorIncorrect'));
+      const isBanned = error.code === 'user_banned' || /banned/i.test(error.message ?? '');
+      setServerError(isBanned ? t('login.errorAccountClosed') : t('login.errorIncorrect'));
       setStep('error');
     } else {
       window.location.href = getRedirectDestination();

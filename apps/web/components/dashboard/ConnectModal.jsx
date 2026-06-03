@@ -546,7 +546,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                       {tr('connect.usernameHint')}
                     </span>
                   </div>
-                  <div className="field" style={{ display: 'flex', gap: 10 }}>
+                  <div className="field host-port-row">
                     <div style={{ flex: 1 }}>
                       <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>
                       <input
@@ -558,7 +558,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                         onChange={e => setForm(prev => ({ ...prev, imapHost: e.target.value }))}
                       />
                     </div>
-                    <div style={{ width: 96 }}>
+                    <div className="port-field">
                       <label htmlFor="cm-imap-port">{tr('connect.imapPortLabel')}</label>
                       <input
                         id="cm-imap-port"
@@ -569,7 +569,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                       />
                     </div>
                   </div>
-                  <div className="field" style={{ display: 'flex', gap: 10 }}>
+                  <div className="field host-port-row">
                     <div style={{ flex: 1 }}>
                       <label htmlFor="cm-smtp-host">{tr('connect.smtpHostLabel')}</label>
                       <input
@@ -581,7 +581,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                         onChange={e => setForm(prev => ({ ...prev, smtpHost: e.target.value }))}
                       />
                     </div>
-                    <div style={{ width: 96 }}>
+                    <div className="port-field">
                       <label htmlFor="cm-smtp-port">{tr('connect.smtpPortLabel')}</label>
                       <input
                         id="cm-smtp-port"

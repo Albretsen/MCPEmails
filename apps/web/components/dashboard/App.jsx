@@ -26,12 +26,12 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 // SEED_KEYS removed: API keys are now fetched server-side and passed as props.
 
 const SEED_ACTIVITY = [
-  { tool: "list_messages",     account: "work-gmail",   time: "just now", ok: true },
-  { tool: "read_email",     account: "work-gmail",   time: "12s ago",  ok: true },
-  { tool: "send_email",     account: "personal",     time: "1m ago",   ok: true },
-  { tool: "search_emails",  account: "work-gmail",   time: "3m ago",   ok: true },
-  { tool: "list_messages",     account: "ops-fastmail", time: "8m ago",   ok: false },
-  { tool: "reply_to_email", account: "personal",     time: "14m ago",  ok: true },
+  { tool: "email_list",     account: "work-gmail",   time: "just now", ok: true },
+  { tool: "email_read",     account: "work-gmail",   time: "12s ago",  ok: true },
+  { tool: "email_send",     account: "personal",     time: "1m ago",   ok: true },
+  { tool: "email_search",   account: "work-gmail",   time: "3m ago",   ok: true },
+  { tool: "email_list",     account: "ops-fastmail", time: "8m ago",   ok: false },
+  { tool: "email_reply",    account: "personal",     time: "14m ago",  ok: true },
 ];
 
 function readQuery(searchParams, key) {
@@ -58,7 +58,7 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
   const searchParams = useSearchParams();
   const tr = useTranslations('dashboardChrome');
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -95,6 +95,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace, workspaces
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
+  // Make workspace stateful so that a rename (PATCH /api/workspaces/[id])
+  // is immediately reflected in the sidebar name + breadcrumb without a page reload.
+  const [workspace, setWorkspace] = useState(serverWorkspace ?? null);
+
   // Initialise from server-fetched data; fallback to empty array so the
   // empty-state UI renders correctly on first run or when fetch fails.
   const [inboxes, setInboxes] = useState(serverInboxes ?? []);
@@ -106,11 +110,16 @@ function DashboardInner({ initialRoute = 'overview', user, workspace, workspaces
   const [showCommand, setShowCommand] = useState(false);
 
   // Global ⌘K / Ctrl+K opens the command palette from anywhere in the dashboard.
+  // Escape also closes the mobile sidebar drawer when it is open.
   useEffect(() => {
     const onKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
         setShowCommand(v => !v);
+        return;
+      }
+      if (e.key === 'Escape') {
+        setSidebarOpen(false);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -512,7 +521,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace, workspaces
         onClose={() => setSidebarOpen(false)}
       />
       <div className="main-col">
-        <Topbar route={route} workspace={workspace} mcpUrl={mcpUrl} onMenuOpen={() => setSidebarOpen(true)} onOpenSearch={() => setShowCommand(true)} />
+        <Topbar route={route} workspace={workspace} mcpUrl={mcpUrl} onMenuOpen={() => setSidebarOpen(true)} onOpenSearch={() => setShowCommand(true)} sidebarOpen={sidebarOpen} />
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
           <FirstRunBanner onConnect={() => setShowConnect(true)} />
@@ -523,7 +532,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace, workspaces
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} stripePrices={stripePrices} />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} stripePrices={stripePrices} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} />}
       </div>
 

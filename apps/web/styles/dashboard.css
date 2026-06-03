@@ -944,6 +944,35 @@ body { background: var(--bg-page); }
   min-width: 580px;
 }
 
+/* === Form inputs: always full-width ===================================== */
+/**
+ * All .input elements fill the container by default so forms work on mobile
+ * without needing per-site width overrides. Selects get the same treatment.
+ */
+.input {
+  width: 100%;
+  box-sizing: border-box;
+}
+select.input {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* === Host/port row in ConnectModal (generic IMAP) ======================= */
+/**
+ * On wide screens the host field and the port field sit side-by-side.
+ * On ≤479px they stack vertically so neither overflows the modal.
+ */
+.host-port-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+.host-port-row .port-field {
+  width: 96px;
+  flex-shrink: 0;
+}
+
 /* === Overview two-column layout ========================================= */
 .overview-grid {
   display: grid;
@@ -1011,9 +1040,11 @@ body { background: var(--bg-page); }
 
 /* ── Mobile: ≤767px ───────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Shell: sidebar is now a fixed drawer; main takes full width */
+  /* Shell: sidebar is now a fixed drawer; main takes full width.
+     Remove the desktop min-height so the shell doesn't force scroll on small screens. */
   .shell {
     grid-template-columns: 1fr;
+    min-height: 0;
   }
 
   /* Sidebar: off-canvas drawer, slides in from the left */
@@ -1116,5 +1147,133 @@ body { background: var(--bg-page); }
   /* Ensure modal uses full available width on tiny screens */
   .modal {
     max-width: 96vw;
+  }
+
+  /* Host/port fields: stack vertically on very small screens */
+  .host-port-row {
+    flex-direction: column;
+  }
+  .host-port-row .port-field {
+    width: 100%;
+  }
+}
+
+/* =========================================================================
+   MODAL + COMMAND PALETTE: mobile-safe scroll behaviour
+   ========================================================================= */
+
+/**
+ * Modals: on small screens the body may exceed the viewport height (e.g.
+ * ConnectModal step 2 with many fields, or the client guide). We cap the
+ * modal height and make the body independently scrollable.
+ */
+@media (max-width: 767px) {
+  /* Scrim: align to top on small screens to allow body scroll without being
+     clipped. Still centred horizontally. */
+  .scrim {
+    align-items: flex-start;
+    padding: 24px 16px env(safe-area-inset-bottom, 16px);
+    overflow-y: auto;
+  }
+
+  /* Modal: let it grow to content but cap at 92dvh so footer stays on screen */
+  .modal {
+    max-height: 92dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Modal body: scrollable when content overflows */
+  .modal-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    /* Ensure padding is inside the scroll area, not cut off */
+    padding-bottom: 16px;
+  }
+
+  /* Modal header/footer: don't scroll with the body */
+  .modal-h {
+    flex-shrink: 0;
+  }
+  .modal-foot {
+    flex-shrink: 0;
+  }
+
+  /* Provider grid: 2 columns on mobile so chips aren't tiny */
+  .provider-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Command palette: tighten top padding on mobile so input is reachable */
+  .cmdk-scrim {
+    padding: 16px 12px env(safe-area-inset-bottom, 12px);
+  }
+
+  /* Command palette: limit height relative to viewport */
+  .cmdk {
+    max-height: 80dvh;
+  }
+
+  /* MCP link in topbar: hide URL text on very narrow screens, keep copy icon */
+  .topbar .mcp-link .mcp-link-url {
+    display: none;
+  }
+  .topbar .mcp-link {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 10px;
+  }
+
+  /* Page title: slightly smaller on mobile */
+  .page-title {
+    font-size: 22px;
+  }
+
+  /* FirstRunBanner: stack content vertically on mobile */
+  .firstrun-banner-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ── Topbar MCP link: show URL text from 640px and up ─────────────────── */
+@media (min-width: 640px) and (max-width: 767px) {
+  .topbar .mcp-link .mcp-link-url {
+    display: block;
+    max-width: 120px;
+  }
+}
+
+/* ── Settings page: email field + action button stacks on small screens ── */
+@media (max-width: 479px) {
+  /* Settings email row: stack input + change-button vertically */
+  .settings-email-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .settings-email-row .input {
+    flex: none;
+    width: 100%;
+  }
+
+  /* Billing plan grid: single column on very small screens */
+  .billing-plans-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================================================
+   SECURITY / AUDIT LOG PAGE: make the activity log scrollable on mobile
+   ========================================================================= */
+@media (max-width: 767px) {
+  /* Audit log rows: let long tool names wrap */
+  .act-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .act-row .time {
+    margin-left: 0;
   }
 }

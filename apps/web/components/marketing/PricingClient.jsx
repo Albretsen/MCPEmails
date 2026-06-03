@@ -70,12 +70,12 @@ const TABLE_SECTIONS = [
     key: 'mcpTools',
     // MCP tool names are not translated; render the raw names verbatim.
     rows: [
-      { name: 'list_inboxes',    free: true, solo: true, pro: true },
-      { name: 'list_messages',      free: true, solo: true, pro: true },
-      { name: 'read_email',      free: true, solo: true, pro: true },
-      { name: 'search_emails',   free: true, solo: true, pro: true },
-      { name: 'send_email',      free: true, solo: true, pro: true },
-      { name: 'reply_to_email',  free: true, solo: true, pro: true },
+      { name: 'inbox_list',     free: true, solo: true, pro: true },
+      { name: 'email_list',     free: true, solo: true, pro: true },
+      { name: 'email_read',     free: true, solo: true, pro: true },
+      { name: 'email_search',   free: true, solo: true, pro: true },
+      { name: 'email_send',     free: true, solo: true, pro: true },
+      { name: 'email_reply',    free: true, solo: true, pro: true },
     ],
   },
   {

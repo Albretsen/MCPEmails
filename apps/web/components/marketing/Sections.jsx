@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { MBtn, MIcon } from '../MarketingPrimitives';
@@ -14,11 +14,26 @@ const RICH = {
 
 export function Nav({ onSignIn, onGetStarted }) {
   const t = useTranslations('home');
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const menuId = 'mobile-nav-menu';
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [mobileOpen]);
+
+  const closeMenu = useCallback(() => setMobileOpen(false), []);
+
   return (
     <header className="nav">
       <div className="container nav-row">
-        <Link className="brand" href="/"><img src="/logo-wordmark.svg" alt="mcpemails" /></Link>
-        <nav className="nav-links">
+        <Link className="brand" href="/" onClick={closeMenu}><img src="/logo-wordmark.svg" alt="mcpemails" /></Link>
+        <nav className="nav-links" aria-label="Primary navigation">
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
           <Link href="/#pricing">{t('nav.pricing')}</Link>
@@ -30,7 +45,38 @@ export function Nav({ onSignIn, onGetStarted }) {
           <a className="btn btn-ghost" onClick={onSignIn} href="/login">{t('nav.signIn')}</a>
           <a className="btn btn-primary" onClick={onGetStarted} href="/signup">{t('nav.getStarted')}</a>
         </div>
+
+        {/* Hamburger button — visible only on mobile (≤767px via CSS) */}
+        <button
+          className="nav-hamburger"
+          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={mobileOpen}
+          aria-controls={menuId}
+          onClick={() => setMobileOpen(o => !o)}
+        >
+          {/* Three-line / X icon drawn with CSS */}
+          <span className={'nav-hamburger-icon' + (mobileOpen ? ' open' : '')} aria-hidden="true">
+            <span /><span /><span />
+          </span>
+        </button>
       </div>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="nav-mobile-menu" id={menuId} role="dialog" aria-label="Navigation menu">
+          <nav aria-label="Mobile navigation">
+            <Link href="/#features" onClick={closeMenu}>{t('nav.features')}</Link>
+            <Link href="/#how" onClick={closeMenu}>{t('nav.how')}</Link>
+            <Link href="/#pricing" onClick={closeMenu}>{t('nav.pricing')}</Link>
+            <Link href="/docs" onClick={closeMenu}>{t('nav.docs')}</Link>
+            <Link href="/blog" onClick={closeMenu}>Blog</Link>
+          </nav>
+          <div className="nav-mobile-cta">
+            <a className="btn btn-ghost" href="/login" onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
+            <a className="btn btn-primary" href="/signup" onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -62,7 +108,7 @@ export function HeroTextBlock({ onGetStarted }) {
 export function HeroEndpointCard() {
   const [client, setClient] = useState("oauth");
   const [copied, setCopied] = useState(false);
-  const url = "https://www.mcpemails.com/api/mcp";
+  const url = "https://mcpemails.com/api/mcp";
   const copyUrl = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) navigator.clipboard.writeText(url);
     setCopied(true); setTimeout(() => setCopied(false), 1500);
@@ -71,11 +117,11 @@ export function HeroEndpointCard() {
     oauth: `# OAuth-capable clients (claude.ai, Claude Desktop, Cursor…)
 # Paste the URL, click Connect, authorize. No API key needed.
 
-https://www.mcpemails.com/api/mcp`,
+https://mcpemails.com/api/mcp`,
     claude: `{
   "mcpServers": {
     "mcpemails": {
-      "url": "https://www.mcpemails.com/api/mcp",
+      "url": "https://mcpemails.com/api/mcp",
       "auth": { "type": "bearer", "token": "mcpe_live_••••" }
     }
   }
@@ -84,14 +130,14 @@ https://www.mcpemails.com/api/mcp`,
   "mcp": {
     "servers": {
       "mcpemails": {
-        "url": "https://www.mcpemails.com/api/mcp",
+        "url": "https://mcpemails.com/api/mcp",
         "bearer": "mcpe_live_••••"
       }
     }
   }
 }`,
     n8n: `# n8n MCP node
-URL:    https://www.mcpemails.com/api/mcp
+URL:    https://mcpemails.com/api/mcp
 Auth:   Bearer
 Token:  mcpe_live_••••`,
   };
@@ -109,7 +155,7 @@ Token:  mcpe_live_••••`,
         <span className="endpoint-pill"><span className="d"/>3 inboxes connected</span>
       </div>
       <div className="endpoint-url">
-        <span className="scheme">https://</span><span className="host">www.mcpemails.com</span><span className="path-seg">/api/mcp</span>
+        <span className="scheme">https://</span><span className="host">mcpemails.com</span><span className="path-seg">/api/mcp</span>
         <button className="copy-btn" onClick={copyUrl} aria-label="Copy URL">
           {copied
             ? <><MIcon name="check" size={13} color="var(--mint-700)"/> Copied</>
@@ -182,12 +228,12 @@ export function HeroPipeDiagram() {
         <div className="code-bar" style={{ paddingTop: 0, paddingBottom: 8, marginBottom: 10, borderBottom: "1px solid var(--border-1)" }}>
           <div className="dots"><span/><span/><span/></div>
           <span className="path">live · t+12ms</span>
-          <span className="pill"><span className="d"/>list_inboxes()</span>
+          <span className="pill"><span className="d"/>inbox_list()</span>
         </div>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.7, color: "var(--fg-2)" }}>
-          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>list_inboxes</span>()</div>
+          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>inbox_list</span>()</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logReturns')}</div>
-          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>list_messages</span>(inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
+          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>email_list</span>(inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logFetches')}</div>
           <div><span style={{ color: "var(--mint-700)" }}>←</span> {t('hero.pipe.logResult')} · <span style={{ color: "var(--fg-3)" }}>{t('hero.pipe.logNothing')}</span></div>
         </div>
@@ -205,12 +251,12 @@ export function HeroPipeDiagram() {
 /* Variant C: Live MCP terminal showing tool calls firing (developer mockup, untranslated) */
 export function HeroMcpTerminal() {
   const fullLog = React.useMemo(() => [
-    { ts: "14:02:16", arrow: "→", tool: "list_inboxes",   args: "",                            ok: "2 inboxes", ms: "84ms"  },
-    { ts: "14:02:18", arrow: "→", tool: "list_messages",     args: "inbox_id=3f7a · limit=20",    ok: "20 msgs",   ms: "182ms" },
-    { ts: "14:02:21", arrow: "→", tool: "read_email",     args: "uid=4821",                    ok: "1.2kb",     ms: "97ms"  },
-    { ts: "14:02:23", arrow: "→", tool: "search_emails",  args: "from:stripe after:2026-05",   ok: "3 hits",    ms: "238ms" },
-    { ts: "14:02:25", arrow: "→", tool: "reply_to_email", args: "uid=4821",                    ok: "queued",    ms: "311ms" },
-    { ts: "14:02:28", arrow: "→", tool: "send_email",     args: "to=eng@team.io",              ok: "sent",      ms: "428ms" },
+    { ts: "14:02:16", arrow: "→", tool: "inbox_list",    args: "",                            ok: "2 inboxes", ms: "84ms"  },
+    { ts: "14:02:18", arrow: "→", tool: "email_list",    args: "inbox_id=3f7a · limit=20",    ok: "20 msgs",   ms: "182ms" },
+    { ts: "14:02:21", arrow: "→", tool: "email_read",    args: "uid=4821",                    ok: "1.2kb",     ms: "97ms"  },
+    { ts: "14:02:23", arrow: "→", tool: "email_search",  args: "from:stripe after:2026-05",   ok: "3 hits",    ms: "238ms" },
+    { ts: "14:02:25", arrow: "→", tool: "email_reply",   args: "uid=4821",                    ok: "queued",    ms: "311ms" },
+    { ts: "14:02:28", arrow: "→", tool: "email_send",    args: "to=eng@team.io",              ok: "sent",      ms: "428ms" },
   ], []);
   const [shown, setShown] = useState(2);
   React.useEffect(() => {
@@ -341,7 +387,7 @@ export function Features() {
  * A self-consistent, on-brand mockup of the dashboard so prospects can see the
  * product before signing up. Rendered in HTML/CSS (not a screenshot) so it
  * never drifts from the real naming — note "Team" plan and the real tool names
- * (list_messages, read_email, send_email).
+ * (email_list, email_read, email_send).
  */
 export function DashboardPreview() {
   const t = useTranslations('home');
@@ -359,10 +405,10 @@ export function DashboardPreview() {
     { label: 'Plan', value: 'Team' },
   ];
   const activity = [
-    { tool: 'list_messages', inbox: 'work-gmail', time: 'just now' },
-    { tool: 'read_email', inbox: 'work-gmail', time: '12s ago' },
-    { tool: 'send_email', inbox: 'ops-fastmail', time: '1m ago' },
-    { tool: 'search_emails', inbox: 'support-outlook', time: '3m ago' },
+    { tool: 'email_list', inbox: 'work-gmail', time: 'just now' },
+    { tool: 'email_read', inbox: 'work-gmail', time: '12s ago' },
+    { tool: 'email_send', inbox: 'ops-fastmail', time: '1m ago' },
+    { tool: 'email_search', inbox: 'support-outlook', time: '3m ago' },
   ];
 
   return (
@@ -475,7 +521,7 @@ export function DashboardPreview() {
 /* ============== HOW IT WORKS ============== */
 export function HowItWorks() {
   const t = useTranslations('home');
-  const toolNames = ['list_inboxes', 'list_messages', 'read_email', 'search_emails', 'send_email', 'reply_to_email'];
+  const toolNames = ['inbox_list', 'email_list', 'email_read', 'email_search', 'email_send', 'email_reply'];
   return (
     <section className="section how" id="how">
       <div className="container">

@@ -57,6 +57,7 @@
     "accountFallback": "Cuenta",
     "signOut": "Cerrar sesión",
     "openMenu": "Abrir menú de navegación",
+    "closeMenu": "Cerrar menú de navegación",
     "workspaceFallback": "espacio de trabajo",
     "searchPlaceholder": "Buscar páginas, bandejas de entrada, miembros…",
     "openSearch": "Abrir búsqueda (Command K)"

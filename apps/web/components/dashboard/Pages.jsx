@@ -3921,7 +3921,119 @@ function LanguageSection() {
   );
 }
 
-export function SettingsPage({ user, workspace, stripePrices }) {
+/**
+ * WorkspaceSection: controlled rename form for the active workspace.
+ *
+ * Updates display_name (not slug — slugs are used in MCP endpoint URLs and
+ * changing them would break existing client configs). The label says
+ * "Workspace name" and the field is pre-filled with the current display_name.
+ * On success the parent's onWorkspaceUpdate callback is called so the sidebar
+ * and breadcrumb (which read workspace.displayName) reflect the new name.
+ */
+function WorkspaceSection({ workspace, onWorkspaceUpdate }) {
+  const t = useTranslations('dashboard');
+  const { toast } = useToast();
+
+  function currentName() {
+    return workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? '';
+  }
+
+  const [name, setName] = useState(() => currentName());
+  // Track the last-saved name so isDirty stays correct after a successful save.
+  const [savedName, setSavedName] = useState(() => currentName());
+  const [saving, setSaving] = useState(false);
+
+  // Re-sync when the active workspace changes (workspace switch or external update).
+  useEffect(() => {
+    const n = currentName();
+    setName(n);
+    setSavedName(n);
+  }, [workspace?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isDirty = name.trim() !== savedName.trim();
+
+  function handleCancel() {
+    setName(savedName);
+  }
+
+  async function handleSave() {
+    if (saving || !isDirty) return;
+    const trimmed = name.trim();
+    if (!trimmed) {
+      toast({ message: 'Workspace name cannot be empty.', variant: 'error' });
+      return;
+    }
+    if (trimmed.length > 60) {
+      toast({ message: 'Workspace name must be 60 characters or fewer.', variant: 'error' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/workspaces/${workspace.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: trimmed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast({ message: data.error ?? 'Failed to update workspace name.', variant: 'error' });
+        return;
+      }
+      // Update saved baseline so isDirty resets correctly.
+      setSavedName(trimmed);
+      // Propagate the new name up so sidebar + breadcrumb update instantly.
+      if (onWorkspaceUpdate) {
+        onWorkspaceUpdate({ ...workspace, displayName: trimmed, display_name: trimmed });
+      }
+      toast({ message: 'Workspace name updated.', variant: 'success' });
+    } catch {
+      toast({ message: 'Network error. Please try again.', variant: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
+      <div className="card-h"><div className="title">{t('settings.workspace.title')}</div></div>
+      <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="field">
+          <label
+            htmlFor="settings-workspace-name"
+            style={{
+              display: 'block',
+              fontFamily: 'var(--font-sans)',
+              fontSize: 13,
+              fontWeight: 500,
+              color: 'var(--fg-2)',
+              marginBottom: 6,
+            }}
+          >
+            {t('settings.workspace.name')}
+          </label>
+          <input
+            id="settings-workspace-name"
+            className="input"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            disabled={saving}
+            style={{ width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <Btn variant="secondary" onClick={handleCancel} disabled={saving || !isDirty}>
+            {t('settings.workspace.cancel')}
+          </Btn>
+          <Btn variant="primary" onClick={handleSave} disabled={saving || !isDirty}>
+            {saving ? 'Saving…' : t('settings.workspace.saveChanges')}
+          </Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SettingsPage({ user, workspace, stripePrices, onWorkspaceUpdate }) {
   const t = useTranslations('dashboard');
 
   return (
@@ -3943,37 +4055,8 @@ export function SettingsPage({ user, workspace, stripePrices }) {
       {/* Billing section: current plan + upgrade */}
       <BillingSection currentPlan={workspace?.plan ?? 'free'} stripePrices={stripePrices} />
 
-      {/* Workspace section */}
-      <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
-        <div className="card-h"><div className="title">{t('settings.workspace.title')}</div></div>
-        <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div className="field">
-            <label
-              htmlFor="settings-workspace-name"
-              style={{
-                display: 'block',
-                fontFamily: 'var(--font-sans)',
-                fontSize: 13,
-                fontWeight: 500,
-                color: 'var(--fg-2)',
-                marginBottom: 6,
-              }}
-            >
-              {t('settings.workspace.name')}
-            </label>
-            <input
-              id="settings-workspace-name"
-              className="input"
-              defaultValue={workspace?.slug ?? ''}
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
-          </div>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <Btn variant="secondary">{t('settings.workspace.cancel')}</Btn>
-            <Btn variant="primary">{t('settings.workspace.saveChanges')}</Btn>
-          </div>
-        </div>
-      </div>
+      {/* Workspace section: rename the workspace display name */}
+      <WorkspaceSection workspace={workspace} onWorkspaceUpdate={onWorkspaceUpdate} />
 
       {/* Delete account: danger zone */}
       <DeleteAccountSection email={user?.email ?? ''} />
@@ -4028,6 +4111,8 @@ function ActiveSessionsSection() {
   const [sessions, setSessions] = useState(null);   // null = loading
   const [fetchErr, setFetchErr] = useState(null);
   const [signingOut, setSigningOut] = useState(false);
+  // Tracks which individual session IDs are currently being revoked.
+  const [revokingIds, setRevokingIds] = useState(new Set());
   const { toast } = useToast();
 
   // Fetch sessions on first render
@@ -4079,6 +4164,31 @@ function ActiveSessionsSection() {
       toast({ message: t('security.networkError'), variant: 'error' });
     } finally {
       setSigningOut(false);
+    }
+  };
+
+  // Per-row revoke: calls DELETE /api/security/sessions with the session id.
+  const handleRevokeSession = async (sessionId) => {
+    if (revokingIds.has(sessionId)) return;
+    setRevokingIds(prev => new Set([...prev, sessionId]));
+    try {
+      const res = await fetch('/api/security/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (!res.ok) {
+        let msg = 'Failed to revoke session.';
+        try { const d = await res.json(); if (typeof d?.error === 'string') msg = d.error; } catch { /* ignore */ }
+        toast({ message: msg, variant: 'error' });
+        return;
+      }
+      setSessions(prev => (prev ?? []).filter(s => s.id !== sessionId));
+      toast({ message: 'Session revoked.', variant: 'success' });
+    } catch {
+      toast({ message: t('security.networkError'), variant: 'error' });
+    } finally {
+      setRevokingIds(prev => { const n = new Set(prev); n.delete(sessionId); return n; });
     }
   };
 
@@ -4225,12 +4335,22 @@ function ActiveSessionsSection() {
                   </span>
                 </td>
 
-                {/* Status badge */}
+                {/* Status badge + per-row Revoke for non-current sessions */}
                 <td>
                   {session.isCurrent ? (
                     <Badge tone="live" dot="live">{t('security.thisDevice')}</Badge>
                   ) : (
-                    <Badge tone="neutral">{t('security.active')}</Badge>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Badge tone="neutral">{t('security.active')}</Badge>
+                      <Btn
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleRevokeSession(session.id)}
+                        disabled={revokingIds.has(session.id) || signingOut}
+                      >
+                        {revokingIds.has(session.id) ? 'Revoking…' : 'Revoke'}
+                      </Btn>
+                    </div>
                   )}
                 </td>
               </tr>

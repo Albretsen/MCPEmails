@@ -743,9 +743,7 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   .container { padding: 0 var(--space-4); }
 
   /* === Nav === */
-  .nav-links { display: none; }
-  /* Keep only the primary CTA; hide ghost sign-in to save space */
-  .nav-cta .btn-ghost { display: none; }
+  /* nav-links, nav-cta hidden and nav-hamburger shown via the hamburger block below */
   .nav-row { height: 56px; gap: var(--space-2); }
 
   /* === Hero === */
@@ -869,4 +867,157 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 /* === Dashboard preview mockup: collapse the sidebar on small screens === */
 @media (max-width: 640px) {
   .dash-preview-aside { display: none !important; }
+}
+
+/* ============================================================
+   === Hamburger / Mobile nav
+   ============================================================ */
+
+/* The button itself — hidden on desktop, shown on mobile */
+.nav-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  /* Tappable area ≥ 44px guaranteed by explicit width/height */
+}
+
+/* Three-bar icon */
+.nav-hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 22px;
+}
+.nav-hamburger-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--fg-1);
+  border-radius: 999px;
+  transition: transform 200ms var(--ease-out), opacity 200ms var(--ease-out);
+}
+/* X state */
+.nav-hamburger-icon.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.nav-hamburger-icon.open span:nth-child(2) {
+  opacity: 0;
+}
+.nav-hamburger-icon.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Mobile drawer */
+.nav-mobile-menu {
+  display: none; /* shown via media query below */
+  flex-direction: column;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.98);
+  border-top: 1px solid var(--border-1);
+  padding: 12px 0 16px;
+}
+.nav-mobile-menu nav {
+  display: flex;
+  flex-direction: column;
+}
+.nav-mobile-menu nav a {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--fg-1);
+  text-decoration: none;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-1);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.nav-mobile-menu nav a:last-child {
+  border-bottom: none;
+}
+.nav-mobile-menu nav a:hover { background: var(--ink-50); color: var(--fg-1); text-decoration: none; }
+.nav-mobile-cta {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px 4px;
+  align-items: center;
+}
+.nav-mobile-cta .btn {
+  flex: 1;
+  justify-content: center;
+  height: 44px;
+  font-size: 15px;
+}
+
+@media (max-width: 767px) {
+  /* Show hamburger, hide desktop nav + cta */
+  .nav-hamburger { display: flex; }
+  .nav-links { display: none !important; }
+  .nav-grow { display: none; }
+  .nav-cta { display: none !important; }
+
+  /* Show mobile drawer when rendered */
+  .nav-mobile-menu { display: flex; }
+
+  /* Ensure footer copy fields don't overflow on very small screens */
+  .footer .footer-copy-field {
+    max-width: calc(100vw - 80px);
+  }
+
+  /* Docs endpoint URL: prevent overflow on narrow screens */
+  .docs-url {
+    font-size: 13px;
+    word-break: break-all;
+  }
+
+  /* Pricing comparison table: ensure it scrolls horizontally */
+  .comparison-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Blog post: remove max-width constraint so it fills the container */
+  .blog-content { max-width: 100%; }
+
+  /* Docs params table: allow horizontal scroll */
+  .docs-params-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Docs code blocks: allow horizontal scroll */
+  .docs-pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* MCP terminal: constrain and scroll */
+  .mcp-terminal { overflow-x: hidden; }
+
+  /* Pipe diagram: stack vertically on mobile (it's hidden already but
+     guard against very small screens if it appears) */
+  .pipe-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  /* Pricing page: plan cards already single column via .price-grid rule above;
+     add spacing below billing toggle */
+  .billing-toggle { flex-wrap: wrap; }
+
+  /* Prevent long monospace strings from breaking layout */
+  code, pre { word-break: break-word; }
+  .docs-pre code { word-break: normal; } /* code blocks keep internal wrapping */
+
+  /* Tool nav: wrap chips tighter */
+  .docs-tool-nav { gap: 6px; }
+  .docs-tool-nav-item { padding: 5px 10px; }
+
+  /* Quote: reduce font further for very narrow screens */
+  .quote .text { font-size: clamp(20px, 6vw, 28px); }
+
+  /* Section h2: already clamped; ensure sub text stays readable */
+  .section .sub { font-size: 15px; }
+
+  /* Pricing CTA btns: full-width stacking */
+  .pricing-cta-btns .btn { width: 100%; text-align: center; }
 }

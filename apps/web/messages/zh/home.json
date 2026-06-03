@@ -50,7 +50,7 @@
       "0": {
         "tag": "范围",
         "h": "六个工具，覆盖全部能力。",
-        "p": "你的智能体所需的每一项邮件任务都能用六次调用完成：<code>list_inboxes</code>、<code>list_inbox</code>、<code>read_email</code>、<code>search_emails</code>、<code>send_email</code>、<code>reply_to_email</code>。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。这就是全部集成。"
+        "p": "你的智能体所需的每一项邮件任务都能用六次调用完成：<code>inbox_list</code>、<code>email_list</code>、<code>email_read</code>、<code>email_search</code>、<code>email_send</code>、<code>email_reply</code>。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。这就是全部集成。"
       },
       "1": {
         "tag": "存储",
@@ -60,7 +60,7 @@
       "2": {
         "tag": "发送",
         "h": "发送通过你自己的服务商进行。",
-        "p": "当你的智能体调用 <code>send_email</code> 或 <code>reply_to_email</code> 时，邮件会通过 Gmail API、Microsoft Graph 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。"
+        "p": "当你的智能体调用 <code>email_send</code> 或 <code>email_reply</code> 时，邮件会通过 Gmail API、Microsoft Graph 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。"
       },
       "3": {
         "tag": "服务商",
@@ -90,11 +90,11 @@
       },
       "1": {
         "h": "粘贴 URL：OAuth 或 API 密钥",
-        "p": "对于支持 OAuth 2.0 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等），粘贴 <code>https://www.mcpemails.com/api/mcp</code>，点击连接并授权。无需密钥。对于不支持 OAuth 的客户端（Cline、JetBrains、自定义脚本），改为在仪表盘里生成一个限定范围的 API 密钥。"
+        "p": "对于支持 OAuth 2.0 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等），粘贴 <code>https://mcpemails.com/api/mcp</code>，点击连接并授权。无需密钥。对于不支持 OAuth 的客户端（Cline、JetBrains、自定义脚本），改为在仪表盘里生成一个限定范围的 API 密钥。"
       },
       "2": {
         "h": "你的智能体处理收件箱",
-        "p": "智能体调用诸如 <code>search_emails()</code> 或 <code>reply_to_email()</code> 之类的工具。MCPEmails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。"
+        "p": "智能体调用诸如 <code>email_search()</code> 或 <code>email_reply()</code> 之类的工具。MCPEmails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。"
       }
     },
     "tools": {

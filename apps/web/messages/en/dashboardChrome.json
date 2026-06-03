@@ -57,6 +57,7 @@
     "accountFallback": "Account",
     "signOut": "Sign out",
     "openMenu": "Open navigation menu",
+    "closeMenu": "Close navigation menu",
     "workspaceFallback": "workspace",
     "searchPlaceholder": "Search pages, inboxes, members…",
     "openSearch": "Open search (Command K)"

@@ -142,7 +142,7 @@
       },
       {
         "q": "What counts as an MCP call?",
-        "a": "Each JSON-RPC tool invocation against your /mcp endpoint counts as one call: list_inboxes, list_inbox, read_email, search_emails, send_email, or reply_to_email. Calls are unlimited; they only count toward your per-minute fair-use ceiling."
+        "a": "Each JSON-RPC tool invocation against your /mcp endpoint counts as one call: inbox_list, email_list, email_read, email_search, email_send, or email_reply. Calls are unlimited; they only count toward your per-minute fair-use ceiling."
       },
       {
         "q": "Is my email content stored anywhere?",

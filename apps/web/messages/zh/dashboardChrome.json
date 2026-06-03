@@ -57,6 +57,7 @@
     "accountFallback": "账户",
     "signOut": "退出登录",
     "openMenu": "打开导航菜单",
+    "closeMenu": "关闭导航菜单",
     "workspaceFallback": "工作区",
     "searchPlaceholder": "搜索页面、收件箱、成员…",
     "openSearch": "打开搜索（Command K）"
