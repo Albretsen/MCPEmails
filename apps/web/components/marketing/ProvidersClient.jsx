@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 
 // Rich-text tag handlers shared across this page (inline code + bold).
@@ -231,7 +232,7 @@ export default function ProvidersClient() {
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <a className="btn btn-primary btn-lg" href="/signup">{t('providers.hero.ctaConnect')}</a>
-            <a className="btn btn-secondary btn-lg" href="/docs">{t('providers.hero.ctaBack')}</a>
+            <Link className="btn btn-secondary btn-lg" href="/docs">{t('providers.hero.ctaBack')}</Link>
           </div>
         </div>
       </section>
@@ -321,7 +322,7 @@ export default function ProvidersClient() {
           </p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href="/signup">{t('providers.cta.primary')}</a>
-            <a className="btn btn-on-dark btn-lg" href="/docs">{t('providers.cta.secondary')}</a>
+            <Link className="btn btn-on-dark btn-lg" href="/docs">{t('providers.cta.secondary')}</Link>
           </div>
         </div>
       </section>

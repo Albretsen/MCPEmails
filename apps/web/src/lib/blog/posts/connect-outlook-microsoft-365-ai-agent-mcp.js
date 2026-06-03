@@ -10,7 +10,15 @@ export default {
   updatedAt: '2026-06-01T20:00:00.000Z',
   tags: ['Outlook', 'Tutorial', 'MCP', 'AI agents'],
   featured: false,
-  content: `To connect an Outlook or Microsoft 365 mailbox to your AI agent, you sign in to MCP Emails, add the inbox with Microsoft OAuth, and point your agent at one MCP endpoint. No app registration, no Azure portal, no custom Graph server. The whole thing takes about two minutes, and your agent gets read, search, send, reply, flags, and folders against the live mailbox.
+  // Outlook / Microsoft 365 is built but not yet generally available ("coming
+  // soon"). Keep this post reachable for early readers but out of search
+  // indexes and the sitemap until the connector ships, so we don't promise a
+  // live connect flow we can't yet deliver. See the disclaimer at the top of
+  // the content below.
+  noindex: true,
+  content: `> **Coming soon.** Outlook and Microsoft 365 support is built but not yet generally available. You can't connect an Outlook mailbox in production today — this guide previews how it will work once the connector ships. For inboxes you can connect right now, see [Gmail and IMAP](/docs/providers).
+
+To connect an Outlook or Microsoft 365 mailbox to your AI agent, you sign in to MCP Emails, add the inbox with Microsoft OAuth, and point your agent at one MCP endpoint. No app registration, no Azure portal, no custom Graph server. The whole thing takes about two minutes, and your agent gets read, search, send, reply, flags, and folders against the live mailbox.
 
 Most "AI for email" guides assume Gmail and stop there. Outlook gets a shrug and a link to some half-maintained GitHub repo. If you live in Microsoft 365 for work, that's the wrong end of the stick. This post is the Outlook-first version: what actually works, how the Microsoft sign-in flows, what runs underneath, and where the personal-vs-work-account edges are.
 

@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
-import { metaAlternates, localePath, OG_LOCALE } from '@/i18n/seo';
+import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import PricingClient from '../../../components/marketing/PricingClient';
 
 export async function generateMetadata({ params }) {
@@ -20,11 +20,13 @@ export async function generateMetadata({ params }) {
       title: `${title} · mcpemails`,
       description,
       locale: OG_LOCALE[locale],
+      images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${title} · mcpemails`,
       description,
+      images: [OG_IMAGE.url],
     },
   };
 }
