@@ -269,15 +269,23 @@ export function resolvePlanLimits(
 // ---------------------------------------------------------------------------
 // Helper: resolve a Stripe price ID to its plan and interval.
 // Used in the webhook handler to map incoming subscription events to plans.
+//
+// Returns null for an unknown, archived, or unconfigured price (rather than
+// throwing) so the webhook can log-and-continue without crashing. The empty /
+// non-string guard prevents a falsy `priceId` from spuriously matching a plan
+// whose own price-id env var is unset (and therefore also null).
 // ---------------------------------------------------------------------------
 export function getPlanByStripePriceId(
-  priceId: string,
+  priceId: string | null | undefined,
 ): { plan: Plan; interval: BillingInterval } | null {
+  if (!priceId || typeof priceId !== 'string') {
+    return null;
+  }
   for (const plan of Object.values(PLANS)) {
-    if (plan.stripePriceIdMonthly === priceId) {
+    if (plan.stripePriceIdMonthly && plan.stripePriceIdMonthly === priceId) {
       return { plan, interval: 'month' };
     }
-    if (plan.stripePriceIdYearly === priceId) {
+    if (plan.stripePriceIdYearly && plan.stripePriceIdYearly === priceId) {
       return { plan, interval: 'year' };
     }
   }
