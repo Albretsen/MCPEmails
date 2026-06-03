@@ -3,7 +3,9 @@ export default {
   description:
     'Connectez Outlook ou Microsoft 365 à votre agent IA via MCP en quelques minutes. OAuth de connexion Microsoft, Graph en coulisses, lire/chercher/envoyer/répondre — sans serveur sur mesure.',
   coverAlt: 'Connecter Outlook et Microsoft 365 à un agent IA via MCP',
-  content: `Pour connecter une boîte Outlook ou Microsoft 365 à votre agent IA, vous vous connectez à MCP Emails, ajoutez la boîte avec l'OAuth Microsoft et pointez votre agent vers un seul endpoint MCP. Aucune inscription d'application, aucun portail Azure, aucun serveur Graph sur mesure. L'ensemble prend environ deux minutes, et votre agent obtient la lecture, la recherche, l'envoi, la réponse, les indicateurs et les dossiers sur la boîte en temps réel.
+  content: `> **Bientôt disponible.** La prise en charge d'Outlook et de Microsoft 365 est développée mais pas encore disponible pour tous. Vous ne pouvez pas connecter une boîte Outlook en production aujourd'hui — ce guide présente le fonctionnement à venir une fois le connecteur lancé. Pour les boîtes que vous pouvez connecter dès maintenant, voir [Gmail et IMAP](/docs/providers).
+
+Pour connecter une boîte Outlook ou Microsoft 365 à votre agent IA, vous vous connectez à MCP Emails, ajoutez la boîte avec l'OAuth Microsoft et pointez votre agent vers un seul endpoint MCP. Aucune inscription d'application, aucun portail Azure, aucun serveur Graph sur mesure. L'ensemble prend environ deux minutes, et votre agent obtient la lecture, la recherche, l'envoi, la réponse, les indicateurs et les dossiers sur la boîte en temps réel.
 
 La plupart des guides « l'IA pour l'e-mail » supposent Gmail et s'arrêtent là. Outlook a droit à un haussement d'épaules et à un lien vers un dépôt GitHub à moitié maintenu. Si vous vivez dans Microsoft 365 au travail, c'est prendre le problème par le mauvais bout. Cet article est la version Outlook d'abord : ce qui fonctionne vraiment, comment se déroule la connexion Microsoft, ce qui tourne en dessous et où se situent les limites entre comptes personnels et professionnels.
 

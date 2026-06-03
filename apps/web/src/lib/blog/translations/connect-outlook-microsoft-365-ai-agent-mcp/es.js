@@ -3,7 +3,9 @@ export default {
   description:
     'Conecta Outlook o Microsoft 365 a tu agente de IA por MCP en minutos. OAuth de Microsoft, Graph por debajo, leer/buscar/enviar/responder — sin servidor propio.',
   coverAlt: 'Conexión de Outlook y Microsoft 365 a un agente de IA mediante MCP',
-  content: `Para conectar un buzón de Outlook o Microsoft 365 a tu agente de IA, inicias sesión en MCP Emails, añades la bandeja con OAuth de Microsoft y apuntas tu agente a un único endpoint MCP. Sin registro de aplicaciones, sin portal de Azure, sin servidor de Graph propio. Todo el proceso lleva unos dos minutos, y tu agente obtiene lectura, búsqueda, envío, respuesta, marcas y carpetas sobre el buzón en vivo.
+  content: `> **Próximamente.** La compatibilidad con Outlook y Microsoft 365 está desarrollada pero aún no disponible para todos. Hoy no puedes conectar un buzón de Outlook en producción — esta guía adelanta cómo funcionará cuando se lance el conector. Para los buzones que sí puedes conectar ahora mismo, consulta [Gmail e IMAP](/docs/providers).
+
+Para conectar un buzón de Outlook o Microsoft 365 a tu agente de IA, inicias sesión en MCP Emails, añades la bandeja con OAuth de Microsoft y apuntas tu agente a un único endpoint MCP. Sin registro de aplicaciones, sin portal de Azure, sin servidor de Graph propio. Todo el proceso lleva unos dos minutos, y tu agente obtiene lectura, búsqueda, envío, respuesta, marcas y carpetas sobre el buzón en vivo.
 
 La mayoría de las guías de "IA para el correo" dan por hecho Gmail y se quedan ahí. A Outlook le dedican un encogimiento de hombros y un enlace a algún repositorio de GitHub medio abandonado. Si trabajas dentro de Microsoft 365, ese es el enfoque equivocado. Este artículo es la versión centrada en Outlook: lo que de verdad funciona, cómo fluye el inicio de sesión de Microsoft, qué corre por debajo y dónde están los bordes entre cuentas personales y de trabajo.
 

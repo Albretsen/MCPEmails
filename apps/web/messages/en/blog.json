@@ -22,7 +22,7 @@
     "minRead": "{minutes} min read",
     "cta": {
       "title": "Give your agent an inbox",
-      "sub": "Connect Gmail, Outlook, Fastmail, or any IMAP account to your AI agent in minutes.",
+      "sub": "Connect Gmail, Fastmail, or any IMAP account to your AI agent in minutes.",
       "primary": "Get started free",
       "secondary": "Read the docs"
     }
