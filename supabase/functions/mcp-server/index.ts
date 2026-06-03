@@ -76,7 +76,11 @@ function reconnectUrl(provider: string, inboxId: string): string {
 }
 
 interface ToolErrorResult {
-  result: { content: { type: string; text: string }[]; isError: boolean };
+  result: {
+    content: { type: string; text: string }[];
+    isError: boolean;
+    structuredContent?: Record<string, unknown>;
+  };
   logStatus: "error";
   logErrorCode: string;
 }
@@ -3468,7 +3472,7 @@ async function resolveInboxArg(
   apiKey: ApiKeyRow,
 ): Promise<
   | { ok: true; inbox: InboxRow }
-  | { ok: false; reason: "not_found" | "ambiguous" | "none" }
+  | { ok: false; reason: "not_found" | "ambiguous" | "none"; inboxes?: InboxRow[] }
 > {
   const resolved = await resolveInboxArgInner(args, apiKey);
   // Record the inbox this request actually resolved so the tools/call dispatcher
@@ -3486,7 +3490,7 @@ async function resolveInboxArgInner(
   apiKey: ApiKeyRow,
 ): Promise<
   | { ok: true; inbox: InboxRow }
-  | { ok: false; reason: "not_found" | "ambiguous" | "none" }
+  | { ok: false; reason: "not_found" | "ambiguous" | "none"; inboxes?: InboxRow[] }
 > {
   const UUID_RE =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -3554,7 +3558,10 @@ async function resolveInboxArgInner(
   const rows = (data ?? []) as unknown as InboxRow[];
   if (rows.length === 1) return { ok: true, inbox: rows[0] };
   if (rows.length === 0) return { ok: false, reason: "none" };
-  return { ok: false, reason: "ambiguous" };
+  // Carry the accessible inboxes back so the error can name them inline, sparing
+  // the caller a separate inbox_list round-trip (which some MCP clients fail to
+  // surface on demand — see inboxResolutionError).
+  return { ok: false, reason: "ambiguous", inboxes: rows };
 }
 
 /**
@@ -3564,29 +3571,54 @@ async function resolveInboxArgInner(
  * dashboard".
  */
 function inboxResolutionError(
-  reason: "not_found" | "ambiguous" | "none",
+  failure: {
+    reason: "not_found" | "ambiguous" | "none";
+    inboxes?: InboxRow[];
+  },
   _toolName: string,
 ): ToolErrorResult {
   let text: string;
-  switch (reason) {
+  let structuredContent: Record<string, unknown> | undefined;
+  switch (failure.reason) {
     case "not_found":
       text =
         "No inbox matches the given inbox_id/inbox. Call inbox_list to see " +
         "the available inboxes (each with its inbox_id and email address).";
       break;
-    case "ambiguous":
+    case "ambiguous": {
+      // Name the accessible inboxes inline so the agent can immediately retry
+      // with an inbox_id — without having to discover and call inbox_list. That
+      // separate tool is not always surfaced by a client's on-demand tool index,
+      // which otherwise dead-ends every inbox-bound call (the "catch-22").
+      const inboxes = (failure.inboxes ?? []).map((ib) => ({
+        inbox_id: ib.id,
+        email_address: ib.email_address,
+        display_name: ib.display_name ?? null,
+        provider: ib.provider,
+      }));
+      const lines = inboxes
+        .map((ib) => `  • ${ib.email_address} — inbox_id: ${ib.inbox_id}`)
+        .join("\n");
       text =
         "Multiple inboxes are accessible, so inbox_id (or inbox) is required. " +
-        "Call inbox_list to choose one, then pass its inbox_id.";
+        "Retry this same tool with one of the inbox_id values below — you do " +
+        "not need to call any other tool first:\n" + lines;
+      structuredContent = { inboxes };
       break;
+    }
     case "none":
       text =
         "No inbox is connected for this API key. The user must connect an " +
         "inbox in MCP Emails before this tool can be used.";
       break;
   }
+  const result: ToolErrorResult["result"] = {
+    content: [{ type: "text", text }],
+    isError: true,
+  };
+  if (structuredContent) result.structuredContent = structuredContent;
   return {
-    result: { content: [{ type: "text", text }], isError: true },
+    result,
     logStatus: "error",
     logErrorCode: "inbox_not_found",
   };
@@ -5202,7 +5234,7 @@ async function executeListInbox(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_list");
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_list");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -6318,7 +6350,7 @@ async function executeReadEmail(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_read");
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_read");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -6494,7 +6526,7 @@ async function executeReadEmails(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_read_batch");
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_read_batch");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -8648,7 +8680,7 @@ async function executeForwardEmail(
 
   // ── Inbox resolution + access control ────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_forward");
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_forward");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -8957,7 +8989,7 @@ async function executeReplyToEmail(
 
   // ── Inbox resolution + access control ────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_reply");
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_reply");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -9326,7 +9358,7 @@ async function executeSendEmail(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_send");
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_send");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -10194,7 +10226,7 @@ async function executeSearchEmails(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_search");
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_search");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -10701,7 +10733,7 @@ async function executeListFolders(
   const args = rawArgs as Record<string, unknown>;
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "folder_list");
+  if (!resolved.ok) return inboxResolutionError(resolved, "folder_list");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -11128,7 +11160,7 @@ async function resolveFolderArgs(
   }
   const resolved = await resolveInboxArg(args, apiKey);
   if (!resolved.ok) {
-    return { error: inboxResolutionError(resolved.reason, toolName) };
+    return { error: inboxResolutionError(resolved, toolName) };
   }
   return { inbox: resolved.inbox, args };
 }
@@ -11802,7 +11834,7 @@ async function resolveFlagArgs(
 
   const resolved = await resolveInboxArg(args, apiKey);
   if (!resolved.ok) {
-    return { error: inboxResolutionError(resolved.reason, toolName) };
+    return { error: inboxResolutionError(resolved, toolName) };
   }
   const inbox = resolved.inbox;
 
@@ -12554,7 +12586,7 @@ async function resolveBulkArgs(
 
   const resolved = await resolveInboxArg(args, apiKey);
   if (!resolved.ok) {
-    return { error: inboxResolutionError(resolved.reason, toolName) };
+    return { error: inboxResolutionError(resolved, toolName) };
   }
   const inbox = resolved.inbox;
 
@@ -13592,7 +13624,7 @@ async function executeSearchAndMove(
     : [];
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_search_and_move");
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_search_and_move");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -13794,7 +13826,7 @@ async function executeSearchAndDelete(
     : [];
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "email_search_and_delete");
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_search_and_delete");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -14922,7 +14954,7 @@ async function executeListDrafts(
     : 20;
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "draft_list");
+  if (!resolved.ok) return inboxResolutionError(resolved, "draft_list");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -15003,7 +15035,7 @@ async function executeCreateDraft(
   }
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "draft_create");
+  if (!resolved.ok) return inboxResolutionError(resolved, "draft_create");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -15093,7 +15125,7 @@ async function executeUpdateDraft(
   }
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "draft_update");
+  if (!resolved.ok) return inboxResolutionError(resolved, "draft_update");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -15160,7 +15192,7 @@ async function executeSendDraft(
   }
 
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "draft_send");
+  if (!resolved.ok) return inboxResolutionError(resolved, "draft_send");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
@@ -15823,7 +15855,7 @@ async function executeScheduleSend(
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
-  if (!resolved.ok) return inboxResolutionError(resolved.reason, "schedule_create");
+  if (!resolved.ok) return inboxResolutionError(resolved, "schedule_create");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 

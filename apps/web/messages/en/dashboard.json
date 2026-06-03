@@ -218,6 +218,8 @@
       "keyName": "Key name",
       "keyNamePlaceholder": "e.g. Claude Desktop, My Agent",
       "permissions": "Permissions",
+      "selectAll": "Select all",
+      "clearAll": "Clear all",
       "errNameRequired": "Name is required.",
       "errNameTooLong": "Name must be 128 characters or fewer.",
       "errNameDuplicate": "A key with this name already exists. Choose a distinct name so keys stay distinguishable in the audit log.",

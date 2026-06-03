@@ -218,6 +218,8 @@
       "keyName": "Nøkkelnavn",
       "keyNamePlaceholder": "f.eks. Claude Desktop, Min agent",
       "permissions": "Tillatelser",
+      "selectAll": "Velg alle",
+      "clearAll": "Fjern alle",
       "errNameRequired": "Navn er påkrevd.",
       "errNameTooLong": "Navnet kan ikke være lengre enn 128 tegn.",
       "errNameDuplicate": "En nøkkel med dette navnet finnes allerede. Velg et eget navn så nøklene er lette å skille fra hverandre i revisjonsloggen.",

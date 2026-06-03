@@ -218,6 +218,8 @@
       "keyName": "Nombre de la clave",
       "keyNamePlaceholder": "p. ej. Claude Desktop, Mi agente",
       "permissions": "Permisos",
+      "selectAll": "Seleccionar todo",
+      "clearAll": "Borrar todo",
       "errNameRequired": "El nombre es obligatorio.",
       "errNameTooLong": "El nombre debe tener 128 caracteres o menos.",
       "errNameDuplicate": "Ya existe una clave con este nombre. Elige un nombre distinto para que las claves se puedan diferenciar en el registro de auditoría.",
