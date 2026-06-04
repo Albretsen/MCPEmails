@@ -272,8 +272,8 @@ const SERVER_INSTRUCTIONS =
   "TOOL SHAPE: Tools are grouped by resource and take an `action` argument:\n" +
   "• inbox_list — list the accessible inboxes.\n" +
   "• email_read — action: list | read | read_batch | search.\n" +
-  "• email_organize — action: move | move_batch | delete | delete_batch | " +
-  "flag | archive | search_and_move | search_and_delete.\n" +
+  "• email_organize — action: move | move_batch | flag | archive | search_and_move.\n" +
+  "• email_delete — action: delete | delete_batch | search_and_delete (destructive — your client may ask you to confirm).\n" +
   "• email_compose — action: send | reply | forward.\n" +
   "• folder — action: list | create | rename | delete.\n" +
   "• draft — action: list | create | update | send.\n" +
@@ -2348,9 +2348,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "timestamp). Honesty about the tradeoff: results reflect a live scan of a " +
       "RECENT window of matching messages (not your full history), and the " +
       "message_count reflects only matched messages within that window — not an " +
-      "all-time total. Nothing is stored between calls. Optionally restrict to a " +
-      "specific inbox; if inbox_id is omitted, scans the inboxes the API key can " +
-      "access in the workspace (a bounded number of them).",
+      "all-time total. Nothing is stored between calls. For general or " +
+      "cross-inbox questions (e.g. 'who have I emailed most with X?'), OMIT " +
+      "inbox_id so ALL accessible inboxes are scanned; only set inbox_id when " +
+      "the user explicitly limits the search to one specific inbox.",
     requiredScope: "manage:contacts",
     inputSchema: {
       type: "object",
@@ -2369,9 +2370,12 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           format: "uuid",
           description:
             "Optional. When provided, restricts the live scan to that specific " +
-            "inbox. When omitted, scans the inboxes the API key is permitted to " +
-            "access within the workspace (a bounded number of them). Nothing is " +
-            "stored — every call re-scans live mail.",
+            "inbox. Omit this for general or cross-inbox questions (e.g. 'who " +
+            "have I emailed most with X?') so ALL accessible inboxes are " +
+            "scanned — only set inbox_id when the user explicitly limits the " +
+            "search to one specific inbox. Do not carry over an inbox_id from a " +
+            "previous unrelated turn. Nothing is stored — every call re-scans " +
+            "live mail.",
         },
         limit: {
           type: "integer",
@@ -3147,20 +3151,33 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
   email_organize: {
     title: "Organize Email",
     description:
-      "Move, delete, flag or archive messages. Set `action`: 'move'/'move_batch' " +
-      "(to a destination_folder_id), 'delete'/'delete_batch' (trash, or permanent), " +
-      "'flag' (set read/unread/flagged via `flag_action` on message_ids), 'archive', " +
-      "or 'search_and_move'/'search_and_delete' (apply to all messages matching a " +
-      "search). Requires the scope matching the action (manage:folders / delete:email / send:email).",
+      "Move, flag or archive messages. Set `action`: 'move'/'move_batch' " +
+      "(to a destination_folder_id), 'flag' (set read/unread/flagged via " +
+      "`flag_action` on message_ids), 'archive', or 'search_and_move' (apply to " +
+      "all messages matching a search). Requires the scope matching the action " +
+      "(manage:folders / send:email). To delete messages, use the email_delete tool.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
       move: { legacy: "email_move", scope: "manage:folders" },
       move_batch: { legacy: "email_move_batch", scope: "manage:folders" },
-      delete: { legacy: "email_delete", scope: "delete:email" },
-      delete_batch: { legacy: "email_delete_batch", scope: "delete:email" },
       flag: { legacy: "email_flag", scope: "send:email", renames: { action: "flag_action" } },
       archive: { legacy: "email_archive", scope: "send:email" },
       search_and_move: { legacy: "email_search_and_move", scope: "manage:folders" },
+    },
+  },
+  email_delete: {
+    title: "Delete Email",
+    description:
+      "Delete messages. This is flagged as a DESTRUCTIVE action so your MCP " +
+      "client can prompt you to confirm before it runs. Set `action`: 'delete' " +
+      "(one message_id), 'delete_batch' (several message_ids), or " +
+      "'search_and_delete' (delete every message matching a search). By default " +
+      "deleted mail goes to Trash and can be recovered; pass `permanent: true` " +
+      "to delete it irreversibly. Requires the delete:email scope.",
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+    actions: {
+      delete: { legacy: "email_delete", scope: "delete:email" },
+      delete_batch: { legacy: "email_delete_batch", scope: "delete:email" },
       search_and_delete: { legacy: "email_search_and_delete", scope: "delete:email" },
     },
   },
@@ -3294,6 +3311,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   LEGACY_BY_NAME.get("inbox_list")!,
   buildConsolidatedTool("email_read", CONSOLIDATED_SPECS.email_read),
   buildConsolidatedTool("email_organize", CONSOLIDATED_SPECS.email_organize),
+  buildConsolidatedTool("email_delete", CONSOLIDATED_SPECS.email_delete),
   buildConsolidatedTool("email_compose", CONSOLIDATED_SPECS.email_compose),
   buildConsolidatedTool("folder", CONSOLIDATED_SPECS.folder),
   buildConsolidatedTool("draft", CONSOLIDATED_SPECS.draft),
@@ -4526,7 +4544,37 @@ async function listGmailMessages(
     pageToken = nextPageToken;
   } while (pageToken && allRefs.length < target);
 
-  const total = resultSizeEstimate || allRefs.length;
+  // Default to Gmail's approximate resultSizeEstimate. Gmail exposes EXACT
+  // per-label counts via labels.get (messagesTotal / messagesUnread), so when
+  // we're listing a single label (the common case) prefer that for an exact
+  // total. Only the list-by-label path runs through here; the free-form search
+  // path (email_search) intentionally keeps the estimate. Degrade gracefully:
+  // any failure falls back to the estimate and never throws.
+  let total = resultSizeEstimate || allRefs.length;
+  let totalIsEstimate = true;
+  try {
+    if (label && !label.includes(" ")) {
+      const labelResp = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/labels/${encodeURIComponent(label)}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      if (labelResp.ok) {
+        const labelData = (await labelResp.json()) as {
+          messagesTotal?: number;
+          messagesUnread?: number;
+        };
+        const exact = unreadOnly
+          ? labelData.messagesUnread
+          : labelData.messagesTotal;
+        if (typeof exact === "number" && Number.isFinite(exact)) {
+          total = exact;
+          totalIsEstimate = false;
+        }
+      }
+    }
+  } catch {
+    // Keep the estimate-based total; this enhancement must never break listing.
+  }
   // More pages remain only if Gmail still has a cursor beyond what we fetched,
   // or we somehow over-fetched past this page. When Gmail ran out of pages
   // (no nextPageToken), there is nothing more regardless of the offset.
@@ -4538,7 +4586,7 @@ async function listGmailMessages(
     return {
       messages: [],
       total,
-      total_is_estimate: true,
+      total_is_estimate: totalIsEstimate,
       has_more: hasMore,
       next_offset: offset + limit,
     };
@@ -4584,7 +4632,7 @@ async function listGmailMessages(
   return {
     messages,
     total,
-    total_is_estimate: true,
+    total_is_estimate: totalIsEstimate,
     has_more: hasMore,
     next_offset: offset + limit,
   };
@@ -5339,16 +5387,36 @@ async function searchImapMessages(
     const allUids = await client.uidSearch(criteria);
     const total = allUids.length;
 
-    const ordered = allUids.slice().sort((a, b) => b - a);
-    const pageUids = ordered.slice(offset, offset + limit);
+    // IMAP UID SEARCH returns matches in ascending UID order, and UID is only a
+    // rough proxy for arrival order — re-filed/migrated/redelivered messages can
+    // carry a UID that doesn't match their Date header. Sorting by UID alone
+    // (the old behaviour) could push a genuinely recent message past the page
+    // window and surface an older same-subject match instead. To return true
+    // newest-first results, fetch envelopes and sort by the actual message date
+    // before paginating. Bound the work to the highest-UID CANDIDATE_CAP matches
+    // (UID-desc is a good first-pass recency filter) so a huge match set doesn't
+    // fetch unbounded envelopes; within that pool ordering is exact by date.
+    const CANDIDATE_CAP = Math.max(offset + limit, 200);
+    const candidateUids = allUids
+      .slice()
+      .sort((a, b) => b - a)
+      .slice(0, CANDIDATE_CAP);
 
-    const summaries = await client.fetchSummaries(pageUids);
-    const byUid = new Map(summaries.map((s) => [s.uid, s]));
+    const summaries = await client.fetchSummaries(candidateUids);
+    // Sort by envelope date descending; messages with an unparseable/absent date
+    // sort last, tie-broken by UID descending (newest arrival first).
+    const sorted = summaries.slice().sort((a, b) => {
+      const da = Date.parse(a.envelope.date ?? "");
+      const db = Date.parse(b.envelope.date ?? "");
+      const va = Number.isFinite(da) ? da : -Infinity;
+      const vb = Number.isFinite(db) ? db : -Infinity;
+      if (vb !== va) return vb - va;
+      return b.uid - a.uid;
+    });
+    const pageSummaries = sorted.slice(offset, offset + limit);
 
     const messages: SearchEmailSummary[] = [];
-    for (const uid of pageUids) {
-      const s = byUid.get(uid);
-      if (!s) continue;
+    for (const s of pageSummaries) {
       messages.push({
         id: encodeImapId(folder, s.uid),
         from: decodeEnvelopeAddress(s.envelope.from[0] ?? { name: "", email: "" }),
@@ -10246,7 +10314,18 @@ async function searchOutlookMessages(
 
   const rawMessages = data.value ?? [];
   const hasMore = !!data["@odata.nextLink"];
-  const pageMessages = rawMessages.slice(offset, offset + limit);
+  // Graph's $search returns results in relevance order (and $orderby cannot be
+  // combined with $search), so a recent message can rank below an older keyword
+  // match. Sort the fetched window by received date descending before slicing
+  // the page so results are newest-first, matching the other providers.
+  const orderedMessages = rawMessages.slice().sort((a, b) => {
+    const da = Date.parse(a.receivedDateTime ?? "");
+    const db = Date.parse(b.receivedDateTime ?? "");
+    const va = Number.isFinite(da) ? da : -Infinity;
+    const vb = Number.isFinite(db) ? db : -Infinity;
+    return vb - va;
+  });
+  const pageMessages = orderedMessages.slice(offset, offset + limit);
   // With $filter we requested $count=true and Graph returns an exact total via
   // @odata.count. With $search, Graph rejects $count, so total stays null
   // (unknown) rather than fabricated.
@@ -16880,14 +16959,6 @@ async function executeScheduleSend(
   if (sendAtMs <= Date.now()) {
     return {
       result: { content: [{ type: "text", text: "schedule_create: send_at must be in the future." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
-  // Cap how far ahead a send may be scheduled to prevent queue bloat / abuse.
-  const MAX_SCHEDULE_HORIZON_MS = 365 * 24 * 60 * 60 * 1000; // one year
-  if (sendAtMs > Date.now() + MAX_SCHEDULE_HORIZON_MS) {
-    return {
-      result: { content: [{ type: "text", text: "schedule_create: send_at must be within 365 days from now." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }

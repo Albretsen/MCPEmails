@@ -142,7 +142,7 @@
       },
       {
         "q": "Qu'est-ce qui compte comme un appel MCP ?",
-        "a": "Chaque invocation d'outil JSON-RPC sur votre point de terminaison /mcp compte pour un appel : inbox_list, email_read, email_compose, email_organize, folder, draft, schedule ou contact_search. Les appels sont illimités ; ils ne comptent que pour votre plafond d'usage équitable par minute."
+        "a": "Chaque invocation d'outil JSON-RPC sur votre point de terminaison /mcp compte pour un appel : inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule ou contact_search. Les appels sont illimités ; ils ne comptent que pour votre plafond d'usage équitable par minute."
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",

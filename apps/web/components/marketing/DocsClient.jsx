@@ -233,7 +233,7 @@ const TOOLS = [
   },
   {
     name: 'email_organize',
-    scopes: ['manage:folders', 'delete:email', 'send:email'],
+    scopes: ['manage:folders', 'send:email'],
     params: [
       { name: 'action',               type: 'enum',          required: true },
       { name: 'inbox_id',             type: 'string (uuid)', required: false },
@@ -242,7 +242,6 @@ const TOOLS = [
       { name: 'message_ids',          type: 'array[string]', required: false },
       { name: 'destination_folder_id',type: 'string',        required: false },
       { name: 'flag_action',          type: 'enum',          required: false },
-      { name: 'permanent',            type: 'boolean',       required: false },
       { name: 'from',                 type: 'string',        required: false },
       { name: 'to',                   type: 'string',        required: false },
       { name: 'cc',                   type: 'string',        required: false },
@@ -277,6 +276,52 @@ const TOOLS = [
   "operation": "email_move",
   "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
   "destination_folder_id": "Archive"
+}`,
+    },
+  },
+  {
+    name: 'email_delete',
+    scopes: ['delete:email'],
+    params: [
+      { name: 'action',          type: 'enum',          required: true },
+      { name: 'inbox_id',        type: 'string (uuid)', required: false },
+      { name: 'inbox',           type: 'string',        required: false },
+      { name: 'message_id',      type: 'string',        required: false },
+      { name: 'message_ids',     type: 'array[string]', required: false },
+      { name: 'permanent',       type: 'boolean',       required: false },
+      { name: 'from',            type: 'string',        required: false },
+      { name: 'to',              type: 'string',        required: false },
+      { name: 'cc',              type: 'string',        required: false },
+      { name: 'subject',         type: 'string',        required: false },
+      { name: 'body',            type: 'string',        required: false },
+      { name: 'text',            type: 'string',        required: false },
+      { name: 'unread',          type: 'boolean',       required: false },
+      { name: 'has_attachment',  type: 'boolean',       required: false },
+      { name: 'flagged',         type: 'boolean',       required: false },
+      { name: 'since',           type: 'string (ISO date)', required: false },
+      { name: 'before',          type: 'string (ISO date)', required: false },
+      { name: 'query',           type: 'string',        required: false },
+      { name: 'include_folders', type: 'array',         required: false },
+      { name: 'limit',           type: 'integer',       required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 20, "method": "tools/call",
+  "params": {
+    "name": "email_delete",
+    "arguments": {
+      "action": "delete",
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "message_id": "4412"
+    }
+  }
+}`,
+      response: `{
+  "success": true,
+  "message_id": "4412",
+  "operation": "email_delete",
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "permanent": false
 }`,
     },
   },
