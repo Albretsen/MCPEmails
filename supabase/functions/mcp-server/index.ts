@@ -4391,6 +4391,16 @@ function parseAddressList(header: string): EmailAddressEntry[] {
   return results;
 }
 
+/**
+ * Render an EmailAddressEntry back into an RFC 5322 address string suitable for
+ * a DraftParams recipient array ("Name <email>" or bare "email"). Each entry is
+ * one array element, so a display name containing commas is safe — the draft
+ * builders parse per-element with parseEmailAddress, not parseAddressList.
+ */
+function formatAddressEntry(a: EmailAddressEntry): string {
+  return a.name ? `${a.name} <${a.email}>` : a.email;
+}
+
 /** Collapses whitespace and trims the input to ≤200 characters. */
 function normalizePreview(text: string): string {
   return text.replace(/\s+/g, " ").trim().slice(0, 200);
@@ -14640,6 +14650,20 @@ interface DraftParams {
   htmlBody?: string;
 }
 
+/**
+ * Existing-draft fields recovered for a partial draft_update so omitted
+ * properties can be preserved instead of blanked. Recipients are RFC 5322
+ * address strings (see formatAddressEntry), ready to drop into DraftParams.
+ * Unlike DraftSummary (a list-row projection that omits bcc and, for IMAP, cc),
+ * this is a full single-draft fetch so to/cc/bcc are all recoverable.
+ */
+interface DraftContent {
+  subject: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+}
+
 // ── IMAP draft helpers ────────────────────────────────────────────────────────
 
 async function imapListDrafts(
@@ -14680,6 +14704,49 @@ async function imapListDrafts(
       cc: [],
       created_at: imapDateToIso(s.envelope.date),
     }));
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+/**
+ * Fetch a single IMAP draft's full headers (subject + to/cc/bcc) by parsing its
+ * raw MIME. The list summary only carries `to` (cc is hard-coded empty, bcc is
+ * absent), so a partial draft_update needs this fuller read to restore omitted
+ * recipients. Returns null when the draft can't be found. Mirrors the
+ * raw-fetch path used by imapSendDraft.
+ */
+async function imapGetDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftContent | null> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(draftId);
+  if (!Number.isFinite(uid) || uid <= 0) return null;
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: imapAuthUser(inbox),
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    const msg = await client.fetchMessageRaw(uid);
+    if (!msg) return null;
+    const h = parseEmail(msg.raw).headers;
+    return {
+      subject: decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)"),
+      to: parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? "")).map(formatAddressEntry),
+      cc: parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? "")).map(formatAddressEntry),
+      bcc: parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? "")).map(formatAddressEntry),
+    };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
     throw err;
@@ -15056,6 +15123,42 @@ async function gmailListDrafts(
   return summaries;
 }
 
+/**
+ * Fetch a single Gmail draft's subject + to/cc/bcc headers. Used to preserve
+ * fields omitted from a partial draft_update (Gmail's update is a full-replace
+ * PUT, so an omitted recipient field would otherwise blank the draft). Returns
+ * null when the draft can't be read. (Note: gmailUpdateDraft does not currently
+ * emit a Bcc header, so Gmail drafts never carry bcc to begin with — bcc here is
+ * recovered for completeness but is effectively always empty.)
+ */
+async function gmailGetDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftContent | null> {
+  const token = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}` +
+    `?format=metadata&metadataHeaders=Subject&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Bcc`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    return null;
+  }
+  const data = (await resp.json()) as {
+    message?: { payload?: { headers?: { name: string; value: string }[] } };
+  };
+  const hdr = data.message?.payload?.headers ?? [];
+  const header = (name: string) =>
+    hdr.find((h) => h.name.toLowerCase() === name)?.value ?? "";
+  return {
+    subject: header("subject") || "(no subject)",
+    to: parseAddressList(header("to")).map(formatAddressEntry),
+    cc: parseAddressList(header("cc")).map(formatAddressEntry),
+    bcc: parseAddressList(header("bcc")).map(formatAddressEntry),
+  };
+}
+
 async function gmailCreateDraft(
   inbox: InboxRow,
   params: DraftParams,
@@ -15237,6 +15340,44 @@ async function outlookListDrafts(
     })),
     created_at: m.createdDateTime ?? new Date().toISOString(),
   }));
+}
+
+/**
+ * Fetch a single Outlook draft's subject + to/cc/bcc recipients. Outlook's
+ * update is already a partial PATCH (omitted recipient fields are preserved),
+ * but executeUpdateDraft merges uniformly across providers, so this supplies the
+ * existing values when a field is omitted. Returns null when the draft can't be
+ * read.
+ */
+async function outlookGetDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftContent | null> {
+  const token = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}` +
+    `?$select=subject,toRecipients,ccRecipients,bccRecipients`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    return null;
+  }
+  const data = (await resp.json()) as {
+    subject?: string;
+    toRecipients?: { emailAddress: { address: string; name?: string } }[];
+    ccRecipients?: { emailAddress: { address: string; name?: string } }[];
+    bccRecipients?: { emailAddress: { address: string; name?: string } }[];
+  };
+  const map = (arr?: { emailAddress: { address: string; name?: string } }[]) =>
+    (arr ?? []).map((r) =>
+      formatAddressEntry({ name: r.emailAddress.name ?? "", email: r.emailAddress.address }));
+  return {
+    subject: data.subject ?? "(no subject)",
+    to: map(data.toRecipients),
+    cc: map(data.ccRecipients),
+    bcc: map(data.bccRecipients),
+  };
 }
 
 async function outlookCreateDraft(
@@ -15456,6 +15597,61 @@ async function fastmailListDrafts(
     cc: (e.cc ?? []).map((a) => ({ name: a.name ?? "", email: a.email })),
     created_at: e.receivedAt ?? new Date().toISOString(),
   }));
+}
+
+/**
+ * Fetch a single Fastmail draft's subject + to/cc/bcc via JMAP Email/get.
+ * Fastmail's update (Email/set) is a partial patch — omitted recipient fields
+ * are preserved — but executeUpdateDraft merges uniformly across providers, so
+ * this supplies the existing values when a field is omitted. Returns null when
+ * the draft can't be read.
+ */
+async function fastmailGetDraft(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftContent | null> {
+  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
+  const jmapBody = {
+    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+    methodCalls: [
+      ["Email/get", {
+        accountId,
+        ids: [draftId],
+        properties: ["id", "subject", "to", "cc", "bcc"],
+      }, "g1"],
+    ],
+  };
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify(jmapBody),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    return null;
+  }
+  const apiData = (await apiResp.json()) as {
+    methodResponses?: [string, {
+      list?: {
+        id: string;
+        subject?: string;
+        to?: { name?: string; email: string }[];
+        cc?: { name?: string; email: string }[];
+        bcc?: { name?: string; email: string }[];
+      }[];
+    }, string][];
+  };
+  const e = apiData.methodResponses
+    ?.find(([name]) => name === "Email/get")?.[1]?.list?.[0];
+  if (!e) return null;
+  const map = (arr?: { name?: string; email: string }[]) =>
+    (arr ?? []).map((a) => formatAddressEntry({ name: a.name ?? "", email: a.email }));
+  return {
+    subject: e.subject ?? "(no subject)",
+    to: map(e.to),
+    cc: map(e.cc),
+    bcc: map(e.bcc),
+  };
 }
 
 async function fastmailCreateDraft(
@@ -15841,6 +16037,10 @@ async function executeUpdateDraft(
   // omitted we resolve the existing subject below, after the inbox is resolved.
   const subjectProvided = typeof args["subject"] === "string";
   const subject = subjectProvided ? (args["subject"] as string) : null;
+  // `body` is REQUIRED on every update — there is nothing to preserve because the
+  // caller must always supply the full body. `html_body` is optional; omitting it
+  // sends a plain-text body, which is the intended behaviour (a body is always
+  // provided in full, so neither needs the merge-from-existing treatment below).
   const body = typeof args["body"] === "string" && args["body"].length > 0
     ? args["body"] : null;
   if (!body) {
@@ -15849,9 +16049,18 @@ async function executeUpdateDraft(
       logStatus: "error", logErrorCode: "-32602",
     };
   }
-  const to: string[] = Array.isArray(args["to"]) ? (args["to"] as string[]) : [];
-  const cc: string[] = Array.isArray(args["cc"]) ? (args["cc"] as string[]) : [];
-  const bcc: string[] = Array.isArray(args["bcc"]) ? (args["bcc"] as string[]) : [];
+  // `to`/`cc`/`bcc` are OPTIONAL on update, mirroring `subject`: omit a field to
+  // keep the draft's current recipients, or pass an explicit (possibly empty)
+  // array to set/clear it. Array.isArray distinguishes "omitted" (preserve) from
+  // an explicit `[]` (clear). Omitted fields are restored from the existing draft
+  // below, after the inbox is resolved — without this, full-replace providers
+  // (Gmail/IMAP) would blank the draft's recipients when only the body changes.
+  const toProvided = Array.isArray(args["to"]);
+  const ccProvided = Array.isArray(args["cc"]);
+  const bccProvided = Array.isArray(args["bcc"]);
+  const to: string[] = toProvided ? (args["to"] as string[]) : [];
+  const cc: string[] = ccProvided ? (args["cc"] as string[]) : [];
+  const bcc: string[] = bccProvided ? (args["bcc"] as string[]) : [];
   const htmlBody = typeof args["html_body"] === "string" ? args["html_body"] : undefined;
 
   for (const addr of [...to, ...cc, ...bcc]) {
@@ -15871,27 +16080,41 @@ async function executeUpdateDraft(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
 
-  // When subject was omitted, preserve the draft's existing subject rather than
-  // blanking it (provider updates are full-replace). Look it up from the draft
-  // list; if the draft can't be found there, fall back to an empty subject.
+  // When any of subject/to/cc/bcc was omitted, preserve the draft's existing
+  // value rather than blanking it (Gmail/IMAP updates are full-replace; Outlook/
+  // Fastmail are partial patches that already preserve, but merging uniformly is
+  // harmless and keeps one code path). Fetch the current draft ONCE and fill the
+  // omitted fields. Non-fatal: if the fetch fails we proceed with the provided
+  // values (empty subject / empty recipients), and the provider update will
+  // surface draft_not_found on its own if the id is bad.
   let effectiveSubject = subject ?? "";
-  if (!subjectProvided) {
+  let effectiveTo = to;
+  let effectiveCc = cc;
+  let effectiveBcc = bcc;
+  if (!subjectProvided || !toProvided || !ccProvided || !bccProvided) {
     try {
-      let existing: DraftSummary[];
+      let existing: DraftContent | null;
       switch (inbox.provider) {
-        case "gmail":    existing = await gmailListDrafts(inbox, 50);    break;
-        case "outlook":  existing = await outlookListDrafts(inbox, 50);  break;
-        case "fastmail": existing = await fastmailListDrafts(inbox, 50); break;
-        default:         existing = await imapListDrafts(inbox, 50);     break;
+        case "gmail":    existing = await gmailGetDraft(inbox, draftId);    break;
+        case "outlook":  existing = await outlookGetDraft(inbox, draftId);  break;
+        case "fastmail": existing = await fastmailGetDraft(inbox, draftId); break;
+        default:         existing = await imapGetDraft(inbox, draftId);     break;
       }
-      const match = existing.find((d) => d.draft_id === draftId);
-      if (match) effectiveSubject = match.subject;
+      if (existing) {
+        if (!subjectProvided) effectiveSubject = existing.subject;
+        if (!toProvided) effectiveTo = existing.to;
+        if (!ccProvided) effectiveCc = existing.cc;
+        if (!bccProvided) effectiveBcc = existing.bcc;
+      }
     } catch {
-      // Non-fatal: if we can't read the current subject, proceed with empty.
+      // Non-fatal: if we can't read the current draft, proceed with what we have.
     }
   }
 
-  const draftParams: DraftParams = { to, cc, bcc, subject: effectiveSubject, body, htmlBody };
+  const draftParams: DraftParams = {
+    to: effectiveTo, cc: effectiveCc, bcc: effectiveBcc,
+    subject: effectiveSubject, body, htmlBody,
+  };
   let updateResult: DraftUpdateResult;
   try {
     switch (inbox.provider) {
