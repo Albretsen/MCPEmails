@@ -142,7 +142,7 @@
       },
       {
         "q": "Hva regnes som et MCP-kall?",
-        "a": "Hvert JSON-RPC-verktøykall mot /mcp-endepunktet ditt regnes som ett kall: inbox_list, email_read, email_compose, email_organize, folder, draft, schedule eller contact_search. Kall er ubegrenset; de teller kun mot fair-use-taket ditt per minutt."
+        "a": "Hvert JSON-RPC-verktøykall mot /mcp-endepunktet ditt regnes som ett kall: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule eller contact_search. Kall er ubegrenset; de teller kun mot fair-use-taket ditt per minutt."
       },
       {
         "q": "Lagres e-postinnholdet mitt noe sted?",
