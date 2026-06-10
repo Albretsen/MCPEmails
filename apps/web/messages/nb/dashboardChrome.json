@@ -126,7 +126,11 @@
     "verificationWarningReview": "mcpemails.com er for tiden under Googles verifisering og CASA-sikkerhetsvurdering. Dette er forventet mens vurderingen pågår.",
     "verificationWarningGoogleScreen": "Google viser et skjermbilde med «Google har ikke verifisert denne appen». For å fortsette, klikk «Avansert» og deretter «Gå til mcpemails.com (usikkert)».",
     "verificationWarningOutlookScreen": "Microsoft kan vise en samtykkeadvarsel om «uverifisert utgiver». Se gjennom tillatelsene og klikk «Godta» for å fortsette.",
-    "verificationWarningReauth": "Mens vurderingen pågår, utløper tilgangen omtrent hver 7. dag, så du må koble til denne innboksen på nytt med jevne mellomrom."
+    "verificationWarningReauth": "Mens vurderingen pågår, utløper tilgangen omtrent hver 7. dag, så du må koble til denne innboksen på nytt med jevne mellomrom.",
+    "discardTitle": "Forkaste endringene?",
+    "discardBody": "Du har skrevet inn opplysninger som ennå ikke er lagret. Hvis du lukker nå, går de tapt.",
+    "keepEditing": "Fortsett å redigere",
+    "discardConfirm": "Forkast"
   },
   "commandPalette": {
     "pageOverview": "Oversikt",

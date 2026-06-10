@@ -126,7 +126,11 @@
     "verificationWarningReview": "mcpemails.com est actuellement en cours de vérification Google et d'évaluation de sécurité CASA. C'est normal pendant la durée de l'examen.",
     "verificationWarningGoogleScreen": "Google affichera un écran « Google n'a pas validé cette application ». Pour continuer, cliquez sur « Paramètres avancés », puis sur « Accéder à mcpemails.com (non sécurisé) ».",
     "verificationWarningOutlookScreen": "Microsoft peut afficher un avertissement de consentement « éditeur non vérifié ». Vérifiez les autorisations et cliquez sur « Accepter » pour continuer.",
-    "verificationWarningReauth": "Pendant l'examen, l'accès de la connexion expire environ tous les 7 jours ; vous devrez donc reconnecter cette boîte de réception périodiquement."
+    "verificationWarningReauth": "Pendant l'examen, l'accès de la connexion expire environ tous les 7 jours ; vous devrez donc reconnecter cette boîte de réception périodiquement.",
+    "discardTitle": "Abandonner les modifications ?",
+    "discardBody": "Vous avez saisi des informations qui n'ont pas encore été enregistrées. Si vous fermez maintenant, elles seront perdues.",
+    "keepEditing": "Continuer la modification",
+    "discardConfirm": "Abandonner"
   },
   "commandPalette": {
     "pageOverview": "Aperçu",

@@ -126,7 +126,11 @@
     "verificationWarningReview": "mcpemails.com is currently in Google's verification and CASA security-assessment review. This is expected while the review completes.",
     "verificationWarningGoogleScreen": "Google will show a “Google hasn’t verified this app” screen. To continue, click “Advanced”, then “Go to mcpemails.com (unsafe)”.",
     "verificationWarningOutlookScreen": "Microsoft may show an “unverified publisher” consent warning. Review the permissions and click “Accept” to continue.",
-    "verificationWarningReauth": "While in review, the connection's access expires roughly every 7 days, so you'll need to reconnect this inbox periodically."
+    "verificationWarningReauth": "While in review, the connection's access expires roughly every 7 days, so you'll need to reconnect this inbox periodically.",
+    "discardTitle": "Discard your changes?",
+    "discardBody": "You've entered details that haven't been saved yet. If you close now, they'll be lost.",
+    "keepEditing": "Keep editing",
+    "discardConfirm": "Discard"
   },
   "commandPalette": {
     "pageOverview": "Overview",

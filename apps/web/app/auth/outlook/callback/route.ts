@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeOutlookCode } from '@/lib/email-providers/outlook';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
@@ -133,7 +134,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   //    - Reconnection (including after an error or revocation) updates the
   //      same row, preserving the inbox UUID and its activity_log references.
   //    - deleted_at is cleared so a previously disconnected inbox comes back.
-  const { error: upsertError } = await supabase.from('inboxes').upsert(
+  //    The write uses the service-role client (as the Gmail callback does):
+  //    reconnecting a soft-deleted address makes ON CONFLICT DO UPDATE target a
+  //    deleted_at-set row, which the user RLS UPDATE policy (USING deleted_at IS
+  //    NULL) rejects. The workspace was already authorised via oauthState.
+  const serviceClient = createServiceRoleClient();
+  const { error: upsertError } = await serviceClient.from('inboxes').upsert(
     {
       workspace_id: oauthState.workspace_id,
       provider: 'outlook',

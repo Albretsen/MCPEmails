@@ -126,7 +126,11 @@
     "verificationWarningReview": "mcpemails.com 目前正在进行 Google 验证和 CASA 安全评估审核。在审核完成前，这是正常现象。",
     "verificationWarningGoogleScreen": "Google 会显示“Google 尚未验证此应用”的页面。要继续，请点击“高级”，然后点击“转到 mcpemails.com（不安全）”。",
     "verificationWarningOutlookScreen": "Microsoft 可能会显示“未验证发布者”的同意警告。请查看权限并点击“接受”以继续。",
-    "verificationWarningReauth": "在审核期间，连接的访问权限大约每 7 天就会过期，因此你需要定期重新连接此邮箱。"
+    "verificationWarningReauth": "在审核期间，连接的访问权限大约每 7 天就会过期，因此你需要定期重新连接此邮箱。",
+    "discardTitle": "放弃更改？",
+    "discardBody": "您输入的信息尚未保存。如果现在关闭，这些信息将会丢失。",
+    "keepEditing": "继续编辑",
+    "discardConfirm": "放弃"
   },
   "commandPalette": {
     "pageOverview": "概览",

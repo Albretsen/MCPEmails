@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
@@ -117,8 +118,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // 6. Encrypt the password: never store plaintext.
   const encryptedPassword = encryptToken(appPassword);
 
-  // 7. Upsert.
-  const { error: upsertError } = await supabase.from('inboxes').upsert(
+  // 7. Upsert with the service-role client (bypasses RLS).
+  //    Reconnecting a previously-disconnected address conflicts with the
+  //    soft-deleted row on the (workspace_id, email_address) unique index, and
+  //    the resulting ON CONFLICT DO UPDATE targets a row with deleted_at set —
+  //    which the user RLS policy (USING deleted_at IS NULL) forbids, surfacing
+  //    as "new row violates row-level security policy". The workspace was
+  //    already authorised above, so the scoped admin write is safe.
+  const db = createServiceRoleClient();
+  const { error: upsertError } = await db.from('inboxes').upsert(
     {
       workspace_id: workspaceId,
       provider: 'imap',
