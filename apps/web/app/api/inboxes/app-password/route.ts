@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
@@ -158,7 +159,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // 7. Upsert. provider = 'imap' (transport), service = brand (UX/serve hint).
   //    smtp_tls is always true; the edge function infers implicit-TLS vs
   //    STARTTLS from smtp_port (587 → STARTTLS, otherwise implicit TLS).
-  const { error: upsertError } = await supabase.from('inboxes').upsert(
+  //    Use the service-role client: reconnecting a previously-disconnected
+  //    address conflicts with its soft-deleted row, and the ON CONFLICT DO
+  //    UPDATE would target a deleted_at-set row that the user RLS UPDATE policy
+  //    (USING deleted_at IS NULL) rejects ("new row violates row-level security
+  //    policy"). The workspace was already authorised, so the write is safe.
+  const db = createServiceRoleClient();
+  const { error: upsertError } = await db.from('inboxes').upsert(
     {
       workspace_id: workspaceId,
       provider: 'imap',

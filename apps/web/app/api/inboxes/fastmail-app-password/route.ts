@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
@@ -133,9 +134,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const encryptedPassword = encryptToken(appPassword);
 
   // 7. Upsert the inbox row.
-  //    Conflict target: workspace_id + email_address (partial index WHERE deleted_at IS NULL).
-  //    This ensures reconnection reuses the same UUID, keeping activity_log references intact.
-  const { error: upsertError } = await supabase.from('inboxes').upsert(
+  //    Conflict target: workspace_id + email_address. Reconnection reuses the
+  //    same UUID, keeping activity_log references intact.
+  //    Use the service-role client: when reconnecting a previously-disconnected
+  //    address the conflict resolves to its soft-deleted row, and the ON
+  //    CONFLICT DO UPDATE would touch a deleted_at-set row that the user RLS
+  //    UPDATE policy (USING deleted_at IS NULL) rejects ("new row violates
+  //    row-level security policy"). The workspace was already authorised above.
+  const db = createServiceRoleClient();
+  const { error: upsertError } = await db.from('inboxes').upsert(
     {
       workspace_id: workspaceId,
       // Fastmail app passwords grant IMAP/SMTP, not JMAP. Store as a branded

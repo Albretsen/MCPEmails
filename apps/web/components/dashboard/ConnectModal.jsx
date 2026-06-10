@@ -97,6 +97,10 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   const [yandexLogin, setYandexLogin] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  // When the user clicks outside the modal (the scrim) after typing
+  // credentials, show a discard confirmation instead of closing outright so
+  // an accidental click doesn't wipe what they entered.
+  const [confirmingClose, setConfirmingClose] = useState(false);
 
   // ── Provider categories ─────────────────────────────────────────────────────
 
@@ -228,10 +232,39 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
     setFormError(null);
   };
 
+  /**
+   * True when the credentials step holds user-entered data that would be lost
+   * on close. Ports have defaults and provider selection is trivially
+   * re-chosen, so only the typed identity/secret fields count as "dirty".
+   */
+  const hasUnsavedInput = () =>
+    step === 2 &&
+    !submitting &&
+    Boolean(
+      form.email.trim() ||
+        form.username.trim() ||
+        form.password ||
+        form.imapHost.trim() ||
+        form.smtpHost.trim() ||
+        yandexLogin.trim()
+    );
+
+  /**
+   * Close guard for the scrim (outside click). If the user has unsaved input,
+   * surface a discard confirmation rather than closing immediately.
+   */
+  const handleScrimClose = () => {
+    if (hasUnsavedInput()) {
+      setConfirmingClose(true);
+      return;
+    }
+    onClose();
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="scrim" onClick={onClose}>
+    <div className="scrim" onClick={handleScrimClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 468 }}>
 
         {/* Header */}
@@ -691,6 +724,38 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
         </div>
 
       </div>
+
+      {/* Discard confirmation — shown when an outside click would otherwise
+          wipe entered credentials. Its own scrim stops propagation so the
+          backdrop click doesn't re-trigger the parent close guard. */}
+      {confirmingClose && (
+        <div
+          className="scrim"
+          onClick={e => { e.stopPropagation(); setConfirmingClose(false); }}
+        >
+          <div
+            className="modal"
+            onClick={e => e.stopPropagation()}
+            style={{ width: 380 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cm-discard-title"
+          >
+            <div className="modal-h">
+              <h2 id="cm-discard-title" style={{ margin: 0 }}>{tr('connect.discardTitle')}</h2>
+              <div className="sub" style={{ marginTop: 4 }}>{tr('connect.discardBody')}</div>
+            </div>
+            <div className="modal-foot">
+              <Btn variant="secondary" onClick={() => setConfirmingClose(false)}>
+                {tr('connect.keepEditing')}
+              </Btn>
+              <Btn variant="danger" onClick={() => { setConfirmingClose(false); onClose(); }}>
+                {tr('connect.discardConfirm')}
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
