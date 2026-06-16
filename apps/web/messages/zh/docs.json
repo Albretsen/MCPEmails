@@ -104,13 +104,15 @@
     },
     "email_read": {
       "title": "读取邮件",
-      "desc": "在收件箱中读取、列出和搜索邮件。设置 action：'list' 获取最近邮件摘要（最新优先，可按文件夹/未读筛选并分页），'read' 获取单个 message_id 的完整内容（纯文本正文、可选的净化后 HTML 和附件），'read_batch' 在一次调用中获取最多 50 个 message_ids，或 'search' 进行结构化、与提供商无关的筛选（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before）。只读——从不更改任何内容。'search' 操作也可由更窄的 search:email 权限单独解锁。",
+      "desc": "在收件箱中读取、列出和搜索邮件。设置 action：'list' 获取最近邮件摘要（最新优先，可按文件夹/未读筛选并分页），'read' 获取单个 message_id 的完整内容（纯文本正文、可选的净化后 HTML 和附件），'read_batch' 在一次调用中获取最多 50 个 message_ids，'search' 进行结构化、与提供商无关的筛选（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before），或 'attachment' 将单个附件（按 attachment_index 或 filename）下载为 base64 数据——最大 25 MB。只读——从不更改任何内容。'search' 操作也可由更窄的 search:email 权限单独解锁。",
       "params": {
-        "action": "要执行的操作：\"list\"（最近邮件摘要）、\"read\"（单个 message_id 的完整内容）、\"read_batch\"（多个 message_ids）或 \"search\"（结构化筛选）。决定其他哪些参数适用。",
+        "action": "要执行的操作：\"list\"（最近邮件摘要）、\"read\"（单个 message_id 的完整内容）、\"read_batch\"（多个 message_ids）、\"search\"（结构化筛选）或 \"attachment\"（将单个附件下载为 base64）。决定其他哪些参数适用。",
         "inbox_id": "要读取的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以发现收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
-        "message_id": "要读取的提供商邮件 ID（action 'read'），来自先前的 list 或 search。",
+        "message_id": "要读取的提供商邮件 ID（action 'read' 或 'attachment'），来自先前的 list 或 search。",
         "message_ids": "要读取的提供商邮件 ID（action 'read_batch'），来自先前的 list 或 search。每次调用最多 50 个。",
+        "attachment_index": "要下载的附件的 0 基索引（action 'attachment'），与 'read' 返回的附件列表顺序一致。优先于 filename。当邮件恰好只有一个附件时两者均可省略。",
+        "filename": "要下载的附件名称（action 'attachment'），不区分大小写的精确匹配。若已提供 attachment_index 则忽略。",
         "folder": "要列出的文件夹（action 'list'）。默认 \"INBOX\"。其他值：\"SENT\"、\"DRAFTS\"、\"TRASH\"。",
         "unread_only": "仅返回未读邮件（action 'list'）。默认 false。",
         "limit": "要返回的最大结果数（action 'list' 或 'search'）。默认 20，最大 100。",

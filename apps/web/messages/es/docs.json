@@ -104,13 +104,15 @@
     },
     "email_read": {
       "title": "Leer correo",
-      "desc": "Lee, lista y busca mensajes en una bandeja. Define action: 'list' para resúmenes de mensajes recientes (más nuevos primero, con filtro por carpeta/no leídos y paginación), 'read' para el contenido completo de un message_id (cuerpo de texto, HTML saneado opcional y adjuntos), 'read_batch' para obtener hasta 50 message_ids en una sola llamada, o 'search' para filtros estructurados e independientes del proveedor (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before). Solo lectura — nunca cambia nada. La acción 'search' también se desbloquea por sí sola con el permiso más limitado search:email.",
+      "desc": "Lee, lista y busca mensajes en una bandeja. Define action: 'list' para resúmenes de mensajes recientes (más nuevos primero, con filtro por carpeta/no leídos y paginación), 'read' para el contenido completo de un message_id (cuerpo de texto, HTML saneado opcional y adjuntos), 'read_batch' para obtener hasta 50 message_ids en una sola llamada, 'search' para filtros estructurados e independientes del proveedor (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), o 'attachment' para descargar un único adjunto (por attachment_index o filename) como datos base64 — hasta 25 MB. Solo lectura — nunca cambia nada. La acción 'search' también se desbloquea por sí sola con el permiso más limitado search:email.",
       "params": {
-        "action": "Qué operación realizar: \"list\" (resúmenes de mensajes recientes), \"read\" (contenido completo de un message_id), \"read_batch\" (varios message_ids) o \"search\" (filtros estructurados). Determina qué otros argumentos se aplican.",
+        "action": "Qué operación realizar: \"list\" (resúmenes de mensajes recientes), \"read\" (contenido completo de un message_id), \"read_batch\" (varios message_ids), \"search\" (filtros estructurados) o \"attachment\" (descargar un adjunto como base64). Determina qué otros argumentos se aplican.",
         "inbox_id": "UUID de la bandeja desde la que leer. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para descubrir los IDs de bandeja.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
-        "message_id": "ID de mensaje del proveedor a leer (action 'read'), de un list o search previo.",
+        "message_id": "ID de mensaje del proveedor a leer (action 'read' o 'attachment'), de un list o search previo.",
         "message_ids": "IDs de mensaje del proveedor a leer (action 'read_batch'), de un list o search previo. Máx. 50 por llamada.",
+        "attachment_index": "Índice (base 0) del adjunto a descargar (action 'attachment'), según el orden de la lista de adjuntos de 'read'. Tiene prioridad sobre filename. Omite ambos cuando el mensaje tiene exactamente un adjunto.",
+        "filename": "Nombre del adjunto a descargar (action 'attachment'), coincidencia exacta sin distinción de mayúsculas y minúsculas. Se ignora si se indica attachment_index.",
         "folder": "Carpeta a listar (action 'list'). Por defecto \"INBOX\". Otros valores: \"SENT\", \"DRAFTS\", \"TRASH\".",
         "unread_only": "Devolver solo mensajes no leídos (action 'list'). Por defecto false.",
         "limit": "Máximo de resultados a devolver (action 'list' o 'search'). Por defecto 20, máx. 100.",

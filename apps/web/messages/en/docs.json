@@ -104,13 +104,15 @@
     },
     "email_read": {
       "title": "Read Email",
-      "desc": "Read, list, and search messages in an inbox. Set action: 'list' for recent message summaries (newest first, with folder/unread filtering and pagination), 'read' for the full content of one message_id (text body, optional sanitized HTML and attachments), 'read_batch' to fetch up to 50 message_ids in one call, or 'search' for structured, provider-agnostic filters (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before). Read-only — never changes anything. The 'search' action is also unlocked on its own by the narrower search:email scope.",
+      "desc": "Read, list, and search messages in an inbox. Set action: 'list' for recent message summaries (newest first, with folder/unread filtering and pagination), 'read' for the full content of one message_id (text body, optional sanitized HTML and attachments), 'read_batch' to fetch up to 50 message_ids in one call, 'search' for structured, provider-agnostic filters (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), or 'attachment' to download a single attachment (by attachment_index or filename), returned in the MCP-native content block for its type (image/audio/embedded resource) — up to 25 MB. Read-only — never changes anything. The 'search' action is also unlocked on its own by the narrower search:email scope.",
       "params": {
-        "action": "Which operation to perform: \"list\" (recent message summaries), \"read\" (full content of one message_id), \"read_batch\" (several message_ids), or \"search\" (structured filters). Determines which other arguments apply.",
+        "action": "Which operation to perform: \"list\" (recent message summaries), \"read\" (full content of one message_id), \"read_batch\" (several message_ids), \"search\" (structured filters), or \"attachment\" (download one attachment as base64). Determines which other arguments apply.",
         "inbox_id": "UUID of the inbox to read from. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to discover inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
-        "message_id": "Provider message ID to read (action 'read'), from a prior list or search.",
+        "message_id": "Provider message ID to read (action 'read' or 'attachment'), from a prior list or search.",
         "message_ids": "Provider message IDs to read (action 'read_batch'), from a prior list or search. Max 50 per call.",
+        "attachment_index": "0-based index of the attachment to download (action 'attachment'), matching the order in 'read'’s attachments list. Takes precedence over filename. Omit both when the message has exactly one attachment.",
+        "filename": "Name of the attachment to download (action 'attachment'), case-insensitive exact match. Ignored if attachment_index is given.",
         "folder": "Folder to list (action 'list'). Default \"INBOX\". Other values: \"SENT\", \"DRAFTS\", \"TRASH\".",
         "unread_only": "Return only unread messages (action 'list'). Default false.",
         "limit": "Max results to return (action 'list' or 'search'). Default 20, max 100.",
