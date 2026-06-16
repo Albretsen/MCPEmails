@@ -1383,9 +1383,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "boolean",
           default: false,
           description:
-            "When true, each attachment is included in the response as a base64-encoded " +
-            "data field. Attachments increase response size significantly; request only " +
-            "when the agent needs to process attachment content. Total size limit: 10 MB.",
+            "When true, EVERY attachment is included in the response as a base64-encoded " +
+            "data field, sharing a single 10 MB budget. This can be wasteful when a " +
+            "message has several large files but you only need one. Attachment metadata " +
+            "(filename, mime_type, size_bytes, attachment_index) is ALWAYS returned " +
+            "regardless of this flag — so prefer leaving this false, inspect the list, " +
+            "then download just the file you need with email_read (action: attachment) " +
+            "by its attachment_index. Set true only to pull every attachment at once.",
         },
         mark_as_read: {
           type: "boolean",
@@ -5326,6 +5330,7 @@ async function readImapMessage(
   includeHtml: boolean,
   includeAttachments: boolean,
   markAsRead: boolean,
+  attachmentBudgetBytes: number = ATTACHMENT_DATA_BUDGET,
 ): Promise<ReadEmailResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -5365,11 +5370,13 @@ async function readImapMessage(
       await client.markSeen(uid);
     }
 
+    // IMAP parses the whole message locally, so the budget is applied per
+    // attachment (defaults to 10 MB; raised by the single-file download path).
     const attachments: ReadEmailAttachmentMeta[] = parsed.attachments.map((a) => ({
       filename: a.filename,
       mime_type: a.mimeType,
       size_bytes: a.size,
-      data: includeAttachments && a.size <= ATTACHMENT_DATA_BUDGET
+      data: includeAttachments && a.size <= attachmentBudgetBytes
         ? bytesToBase64(a.content)
         : null,
     }));
@@ -6010,6 +6017,15 @@ function sanitizeEmailHtml(html: string): string {
 // ---------------------------------------------------------------------------
 
 interface ReadEmailAttachmentMeta {
+  /**
+   * Zero-based position of this attachment in the message. Stamped centrally by
+   * readOneMessage so it is always present in tool output. Pass it as
+   * `attachment_index` to email_read (action: attachment) to download just this
+   * one file instead of pulling every attachment with include_attachments.
+   * Optional on the type only because the per-provider readers build the array
+   * before the index is assigned.
+   */
+  attachment_index?: number;
   /** Sanitised filename. */
   filename: string;
   /** MIME type string. */
@@ -6019,7 +6035,9 @@ interface ReadEmailAttachmentMeta {
   /**
    * Base64-encoded binary content.
    * Only populated when `include_attachments: true` was requested and
-   * the attachment's byte count is within the 10 MB per-call budget.
+   * the attachment's byte count is within the 10 MB per-call budget. When null,
+   * download the file on its own via email_read (action: attachment) using
+   * `attachment_index` — this avoids fetching the other attachments.
    */
   data: string | null;
 }
@@ -6042,8 +6060,12 @@ interface ReadEmailResult {
    */
   body_html: string | null;
   /**
-   * Attachment list. Empty unless `include_attachments: true`.
-   * Each attachment's `data` field is base64-encoded binary.
+   * Attachment metadata, always listed when the message has attachments
+   * (regardless of `include_attachments`). Each entry carries an
+   * `attachment_index`, `filename`, `mime_type` and `size_bytes`; the base64
+   * `data` field is populated only when `include_attachments: true` and the
+   * file fits the per-call budget. To get one file's bytes without downloading
+   * the rest, call email_read (action: attachment) with its `attachment_index`.
    */
   attachments: ReadEmailAttachmentMeta[];
   /** True when the message is marked read (may reflect `mark_as_read` effect). */
@@ -6195,6 +6217,7 @@ async function readGmailMessage(
   includeHtml: boolean,
   includeAttachments: boolean,
   markAsRead: boolean,
+  attachmentBudgetBytes: number = ATTACHMENT_DATA_BUDGET,
 ): Promise<ReadEmailResult> {
   const accessToken = await withFreshGmailToken(inbox);
 
@@ -6229,9 +6252,10 @@ async function readGmailMessage(
   const { textPlain, textHtml, attachments: attachmentRefs } =
     walkGmailPayload(msg.payload ?? {});
 
-  // Step 4: Fetch attachment content if requested.
-  const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB total budget
-  let budgetRemaining = MAX_ATTACHMENT_BYTES;
+  // Step 4: Fetch attachment content if requested. Budget defaults to 10 MB for
+  // a whole-message read; the single-file download path raises it so one file
+  // up to its own cap can be fetched.
+  let budgetRemaining = attachmentBudgetBytes;
 
   const attachments: ReadEmailAttachmentMeta[] = await Promise.all(
     attachmentRefs.map(async (ref) => {
@@ -6367,6 +6391,7 @@ async function readOutlookMessage(
   includeHtml: boolean,
   includeAttachments: boolean,
   markAsRead: boolean,
+  attachmentBudgetBytes: number = ATTACHMENT_DATA_BUDGET,
 ): Promise<ReadEmailResult> {
   const accessToken = await withFreshOutlookToken(inbox);
 
@@ -6441,9 +6466,9 @@ async function readOutlookMessage(
     bodyText = bodyContent;
   }
 
-  // Fetch attachments if requested.
-  const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
-  let budgetRemaining = MAX_ATTACHMENT_BYTES;
+  // Fetch attachments if requested. Budget defaults to 10 MB; the single-file
+  // download path raises it so one larger file can be fetched on its own.
+  let budgetRemaining = attachmentBudgetBytes;
   const attachments: ReadEmailAttachmentMeta[] = [];
 
   if (msg.hasAttachments) {
@@ -6559,6 +6584,7 @@ async function readFastmailMessage(
   includeHtml: boolean,
   includeAttachments: boolean,
   markAsRead: boolean,
+  attachmentBudgetBytes: number = ATTACHMENT_DATA_BUDGET,
 ): Promise<ReadEmailResult> {
   // Build auth header.
   const authHeader = await buildFastmailAuthHeader(inbox);
@@ -6579,6 +6605,12 @@ async function readFastmailMessage(
 
   const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
   const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
+  // JMAP blob download endpoint template. Placeholders {accountId}/{blobId}/
+  // {type}/{name} are substituted per attachment when fetching content. The
+  // Fastmail default host is used only if the session omits downloadUrl.
+  const downloadUrl =
+    (session as { downloadUrl?: string }).downloadUrl ??
+    "https://www.fastmailusercontent.com/jmap/download/{accountId}/{blobId}/{name}?type={type}";
 
   if (!accountId) {
     throw new Error(
@@ -6731,21 +6763,61 @@ async function readFastmailMessage(
 
   // Build attachment metadata.
   // JMAP attachments with `disposition: "attachment"` or a non-null `name`.
-  // We don't fetch blob content here (would require a separate JMAP Blob/get
-  // call), so data is always null even when include_attachments is true.
-  // This is an accepted limitation for Fastmail until blob fetching is added.
-  const attachments: ReadEmailAttachmentMeta[] = (email.attachments ?? [])
-    .filter(
-      (p) =>
-        p.disposition === "attachment" ||
-        (p.name && p.name.length > 0 && p.disposition !== "inline"),
-    )
-    .map((p) => ({
-      filename: p.name ?? "attachment",
-      mime_type: p.type ?? "application/octet-stream",
-      size_bytes: p.size ?? 0,
-      data: null, // Blob fetch not implemented yet
-    }));
+  // When include_attachments is requested we download each blob from the JMAP
+  // downloadUrl endpoint (the symmetric counterpart of the uploadUrl used by
+  // compose), base64-encode it, and share a single 10 MB budget across the
+  // message — matching the Gmail/IMAP readers. Metadata is always returned even
+  // when bytes are not fetched, so callers can pick one file to download via
+  // email_read (action: attachment).
+  const attachmentParts = (email.attachments ?? []).filter(
+    (p) =>
+      p.disposition === "attachment" ||
+      (p.name && p.name.length > 0 && p.disposition !== "inline"),
+  );
+
+  // Budget defaults to 10 MB for a whole-message read; the single-file download
+  // path raises it so one larger file can be fetched on its own.
+  let attachmentBudgetRemaining = attachmentBudgetBytes;
+
+  const attachments: ReadEmailAttachmentMeta[] = [];
+  for (const p of attachmentParts) {
+    const sizeBytes = p.size ?? 0;
+    const filename = p.name ?? "attachment";
+    const mimeType = p.type ?? "application/octet-stream";
+    let data: string | null = null;
+
+    if (
+      includeAttachments &&
+      p.blobId &&
+      sizeBytes <= attachmentBudgetRemaining
+    ) {
+      try {
+        const blobUrl = downloadUrl
+          .replace("{accountId}", encodeURIComponent(accountId))
+          .replace("{blobId}", encodeURIComponent(p.blobId))
+          .replace("{name}", encodeURIComponent(filename))
+          .replace("{type}", encodeURIComponent(mimeType));
+        const blobResp = await fetch(blobUrl, {
+          headers: { Authorization: authHeader },
+        });
+        if (blobResp.ok) {
+          const bytes = new Uint8Array(await blobResp.arrayBuffer());
+          data = bytesToBase64(bytes);
+          attachmentBudgetRemaining -= sizeBytes;
+        }
+      } catch {
+        // Leave data null on transient download failure; the caller can retry
+        // via email_read (action: attachment), which surfaces a clear error.
+      }
+    }
+
+    attachments.push({
+      filename,
+      mime_type: mimeType,
+      size_bytes: sizeBytes,
+      data,
+    });
+  }
 
   // Step 3: Mark as read if requested.
   if (markAsRead && !(email.keywords?.["$seen"])) {
@@ -6824,51 +6896,77 @@ interface ReadEmailArgs {
  * one place. Throws provider sentinels ("gmail_auth_failed", "message_not_found",
  * etc.) on failure; callers translate those into tool errors / per-ID errors.
  */
-function readOneMessage(
+async function readOneMessage(
   inbox: InboxRow,
   messageId: string,
   opts: {
     include_html: boolean;
     include_attachments: boolean;
     mark_as_read: boolean;
+    /**
+     * Max bytes to download for attachment content. Defaults to the 10 MB
+     * whole-message budget; the single-file download path (email_attachment)
+     * raises it so one file up to its own cap can be fetched on its own.
+     */
+    attachment_max_bytes?: number;
   },
 ): Promise<ReadEmailResult> {
+  const attachmentBudgetBytes = opts.attachment_max_bytes ?? ATTACHMENT_DATA_BUDGET;
+  let result: ReadEmailResult;
   switch (inbox.provider) {
     case "gmail":
-      return readGmailMessage(
+      result = await readGmailMessage(
         inbox,
         messageId,
         opts.include_html,
         opts.include_attachments,
         opts.mark_as_read,
+        attachmentBudgetBytes,
       );
+      break;
     case "outlook":
-      return readOutlookMessage(
+      result = await readOutlookMessage(
         inbox,
         messageId,
         opts.include_html,
         opts.include_attachments,
         opts.mark_as_read,
+        attachmentBudgetBytes,
       );
+      break;
     case "fastmail":
-      return readFastmailMessage(
+      result = await readFastmailMessage(
         inbox,
         messageId,
         opts.include_html,
         opts.include_attachments,
         opts.mark_as_read,
+        attachmentBudgetBytes,
       );
+      break;
     case "imap":
-      return readImapMessage(
+      result = await readImapMessage(
         inbox,
         messageId,
         opts.include_html,
         opts.include_attachments,
         opts.mark_as_read,
+        attachmentBudgetBytes,
       );
+      break;
     default:
-      return Promise.reject(new Error("unsupported_provider"));
+      throw new Error("unsupported_provider");
   }
+
+  // Stamp a stable zero-based index onto each attachment so callers can select
+  // exactly one for single-file download via email_read (action: attachment).
+  // Centralised here so every provider reader gets consistent indices.
+  result.attachments = result.attachments.map((a, i) => ({
+    ...a,
+    attachment_index: i,
+  }));
+
+  return result;
 }
 
 async function executeReadEmail(
@@ -7108,6 +7206,9 @@ async function executeReadAttachment(
       include_html: false,
       include_attachments: true,
       mark_as_read: false,
+      // Raise the per-call budget to the single-file cap so a large individual
+      // attachment downloads here even though a whole-message read caps at 10 MB.
+      attachment_max_bytes: SINGLE_ATTACHMENT_MAX_BYTES,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
