@@ -88,6 +88,8 @@
     "errorNetwork": "Error de red. Comprueba tu conexión e inténtalo de nuevo.",
     "titleLimitReached": "Límite de bandejas de entrada alcanzado",
     "titleConnectProvider": "Conectar {provider}",
+    "titleReconnectProvider": "Reconectar {provider}",
+    "reconnectHint": "Reconectando esta bandeja: la dirección y el servidor están bloqueados. Solo vuelve a introducir tu contraseña de aplicación para restaurar el acceso.",
     "titleConnectInbox": "Conectar una bandeja de entrada",
     "subLimitReached": "Tu plan {plan} solo admite un número limitado de bandejas de entrada.",
     "subChooseProvider": "Elige un proveedor. Las credenciales se cifran antes de almacenarse y nunca se comparten.",

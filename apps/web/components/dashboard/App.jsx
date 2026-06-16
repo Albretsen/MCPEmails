@@ -107,6 +107,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const [members, setMembers] = useState(serverMembers ?? []);
   const [pendingInvites, setPendingInvites] = useState(serverPendingInvites ?? []);
   const [showConnect, setShowConnect] = useState(false);
+  // When set, the ConnectModal opens in reconnect mode for this existing inbox
+  // (identity pre-filled and locked; only the password is re-entered).
+  const [reconnectInbox, setReconnectInbox] = useState(null);
   const [showCommand, setShowCommand] = useState(false);
 
   // Global ⌘K / Ctrl+K opens the command palette from anywhere in the dashboard.
@@ -318,7 +321,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       outlook: '/auth/outlook',
     };
     if (inbox.hasImap) {
-      window.location.href = '/auth/fastmail/app-password';
+      // Re-open the SAME connect form this inbox was created with, pre-filled and
+      // identity-locked. Previously this navigated EVERY IMAP inbox to the
+      // Fastmail app-password page regardless of its real provider/host, which
+      // both showed the wrong form and left an empty login field for the browser
+      // to autofill with another account's saved login (the wrong-mailbox bug).
+      setReconnectInbox(inbox);
+      setShowConnect(true);
     } else {
       window.location.href = oauthRoutes[inbox.provider] ?? '/auth/gmail';
     }
@@ -391,7 +400,18 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const onConnect = ({ label, provider, address }) => {
     // Optimistic update: the real row will appear on next page load via router.refresh().
     const next = { id: String(Date.now()), label, address: address || label, provider, status: "active", calls: 0 };
-    setInboxes(xs => [...xs, next]);
+    // On a reconnect the row already exists — update it in place (clear the error,
+    // mark active) instead of appending a duplicate. Match on the address.
+    setInboxes(xs => {
+      const idx = xs.findIndex(x => x.address && address && x.address.toLowerCase() === address.toLowerCase());
+      if (idx !== -1) {
+        const copy = xs.slice();
+        copy[idx] = { ...copy[idx], status: "active", lastError: null };
+        return copy;
+      }
+      return [...xs, next];
+    });
+    setReconnectInbox(null);
     setShowConnect(false);
     toast({ message: tr('app.inboxConnectedSuccess', { label }), variant: 'success' });
     if (firstrun) {
@@ -536,7 +556,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "security" && <SecurityPage auditLog={auditLog} />}
       </div>
 
-      {showConnect && <ConnectModal onClose={() => setShowConnect(false)} onConnect={onConnect} atInboxLimit={planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes} plan={workspace?.plan ?? 'free'} />}
+      {showConnect && <ConnectModal reconnect={reconnectInbox} onClose={() => { setShowConnect(false); setReconnectInbox(null); }} onConnect={onConnect} atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes} plan={workspace?.plan ?? 'free'} />}
 
       <CommandPalette
         open={showCommand}

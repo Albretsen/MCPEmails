@@ -88,6 +88,8 @@
     "errorNetwork": "Network error. Please check your connection and try again.",
     "titleLimitReached": "Inbox limit reached",
     "titleConnectProvider": "Connect {provider}",
+    "titleReconnectProvider": "Reconnect {provider}",
+    "reconnectHint": "Reconnecting this inbox — the address and server are locked. Just re-enter your app password to restore access.",
     "titleConnectInbox": "Connect an inbox",
     "subLimitReached": "Your {plan} plan only supports a limited number of inboxes.",
     "subChooseProvider": "Choose a provider. Credentials are encrypted before storage and never shared.",

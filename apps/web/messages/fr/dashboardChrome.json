@@ -88,6 +88,8 @@
     "errorNetwork": "Erreur réseau. Veuillez vérifier votre connexion et réessayer.",
     "titleLimitReached": "Limite de boîtes atteinte",
     "titleConnectProvider": "Connecter {provider}",
+    "titleReconnectProvider": "Reconnecter {provider}",
+    "reconnectHint": "Reconnexion de cette boîte : l'adresse et le serveur sont verrouillés. Saisissez à nouveau votre mot de passe d'application pour rétablir l'accès.",
     "titleConnectInbox": "Connecter une boîte",
     "subLimitReached": "Votre formule {plan} ne prend en charge qu'un nombre limité de boîtes.",
     "subChooseProvider": "Choisissez un fournisseur. Les identifiants sont chiffrés avant stockage et jamais partagés.",

@@ -5,6 +5,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
+import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import {
   IMAP_PRESETS,
   isBrandedImapService,
@@ -153,10 +154,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(body, { status: 422 });
   }
 
-  // 6. Encrypt the app password: never store plaintext.
+  // 6. Defense-in-depth: reject if another active inbox in this workspace
+  //    already uses the same IMAP server + same effective login (imap_username
+  //    || email_address) but a DIFFERENT address. Guards against the
+  //    bonussok1 incident, where an autofilled login pointed a new address at
+  //    an existing mailbox. Runs AFTER validation (so we only block real
+  //    credentials) and BEFORE the upsert. Uses the service-role `db` (created
+  //    here, also reused for the upsert) so the read sees every workspace row.
+  const db = createServiceRoleClient();
+  const conflict = await findConflictingInbox(db, workspaceId, {
+    host: imapHost,
+    effectiveLogin: loginUsername || email,
+    email,
+  });
+  if (conflict.conflict) {
+    return NextResponse.json(
+      {
+        error: `This mailbox login is already connected as ${conflict.address}. ` +
+          `Each email address needs its own IMAP login — check the username field (it may have been autofilled with another account's login).`,
+        error_code: 'login_already_connected',
+      },
+      { status: 422 },
+    );
+  }
+
+  // 7. Encrypt the app password: never store plaintext.
   const encryptedPassword = encryptToken(appPassword);
 
-  // 7. Upsert. provider = 'imap' (transport), service = brand (UX/serve hint).
+  // 8. Upsert. provider = 'imap' (transport), service = brand (UX/serve hint).
   //    smtp_tls is always true; the edge function infers implicit-TLS vs
   //    STARTTLS from smtp_port (587 → STARTTLS, otherwise implicit TLS).
   //    Use the service-role client: reconnecting a previously-disconnected
@@ -164,7 +189,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //    UPDATE would target a deleted_at-set row that the user RLS UPDATE policy
   //    (USING deleted_at IS NULL) rejects ("new row violates row-level security
   //    policy"). The workspace was already authorised, so the write is safe.
-  const db = createServiceRoleClient();
   const { error: upsertError } = await db.from('inboxes').upsert(
     {
       workspace_id: workspaceId,
