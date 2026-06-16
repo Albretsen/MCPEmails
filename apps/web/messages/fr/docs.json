@@ -104,13 +104,15 @@
     },
     "email_read": {
       "title": "Lire un e-mail",
-      "desc": "Lire, lister et rechercher des messages dans une boîte. Définissez action : 'list' pour des résumés de messages récents (les plus récents d'abord, avec filtrage par dossier/non lus et pagination), 'read' pour le contenu complet d'un message_id (corps texte, HTML assaini facultatif et pièces jointes), 'read_batch' pour récupérer jusqu'à 50 message_ids en un seul appel, ou 'search' pour des filtres structurés et indépendants du fournisseur (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before). En lecture seule — ne modifie jamais rien. L'action 'search' est aussi débloquée seule par la portée plus restreinte search:email.",
+      "desc": "Lire, lister et rechercher des messages dans une boîte. Définissez action : 'list' pour des résumés de messages récents (les plus récents d'abord, avec filtrage par dossier/non lus et pagination), 'read' pour le contenu complet d'un message_id (corps texte, HTML assaini facultatif et pièces jointes), 'read_batch' pour récupérer jusqu'à 50 message_ids en un seul appel, 'search' pour des filtres structurés et indépendants du fournisseur (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), ou 'attachment' pour télécharger une seule pièce jointe (par attachment_index ou filename) en données base64 — jusqu'à 25 Mo. En lecture seule — ne modifie jamais rien. L'action 'search' est aussi débloquée seule par la portée plus restreinte search:email.",
       "params": {
-        "action": "Quelle opération effectuer : \"list\" (résumés de messages récents), \"read\" (contenu complet d'un message_id), \"read_batch\" (plusieurs message_ids) ou \"search\" (filtres structurés). Détermine quels autres arguments s'appliquent.",
+        "action": "Quelle opération effectuer : \"list\" (résumés de messages récents), \"read\" (contenu complet d'un message_id), \"read_batch\" (plusieurs message_ids), \"search\" (filtres structurés) ou \"attachment\" (télécharger une pièce jointe en base64). Détermine quels autres arguments s'appliquent.",
         "inbox_id": "UUID de la boîte à lire. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour découvrir les ID de boîte.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
-        "message_id": "ID de message du fournisseur à lire (action 'read'), issu d'un list ou search précédent.",
+        "message_id": "ID de message du fournisseur à lire (action 'read' ou 'attachment'), issu d'un list ou search précédent.",
         "message_ids": "ID de message du fournisseur à lire (action 'read_batch'), issus d'un list ou search précédent. Max 50 par appel.",
+        "attachment_index": "Index (base 0) de la pièce jointe à télécharger (action 'attachment'), correspondant à l'ordre de la liste des pièces jointes de 'read'. Prioritaire sur filename. Omettez les deux lorsque le message ne comporte qu'une seule pièce jointe.",
+        "filename": "Nom de la pièce jointe à télécharger (action 'attachment'), correspondance exacte insensible à la casse. Ignoré si attachment_index est fourni.",
         "folder": "Dossier à lister (action 'list'). Par défaut \"INBOX\". Autres valeurs : \"SENT\", \"DRAFTS\", \"TRASH\".",
         "unread_only": "Ne renvoyer que les messages non lus (action 'list'). Par défaut false.",
         "limit": "Nombre max de résultats à renvoyer (action 'list' ou 'search'). Par défaut 20, max 100.",

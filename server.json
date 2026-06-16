@@ -1,0 +1,14 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.mcpemails/emails",
+  "title": "MCP Emails",
+  "description": "Email for AI agents: read, search, send, organize, and schedule across your inboxes.",
+  "version": "1.0.0",
+  "websiteUrl": "https://mcpemails.com",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcpemails.com/api/mcp"
+    }
+  ]
+}

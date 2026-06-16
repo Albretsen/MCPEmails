@@ -271,7 +271,7 @@ const SERVER_INSTRUCTIONS =
   "inboxes do I have?', call `inbox_list`.\n\n" +
   "TOOL SHAPE: Tools are grouped by resource and take an `action` argument:\n" +
   "• inbox_list — list the accessible inboxes.\n" +
-  "• email_read — action: list | read | read_batch | search.\n" +
+  "• email_read — action: list | read | read_batch | search | attachment.\n" +
   "• email_organize — action: move | move_batch | flag | archive | search_and_move.\n" +
   "• email_delete — action: delete | delete_batch | search_and_delete (destructive — your client may ask you to confirm).\n" +
   "• email_compose — action: send | reply | forward.\n" +
@@ -1451,6 +1451,54 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
       },
       required: ["message_ids"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "email_attachment",
+    title: "Download Attachment",
+    description:
+      "Download a single attachment from an email. The file is returned in the " +
+      "MCP-native content block for its type — `image` for images, `audio` for " +
+      "audio, otherwise an embedded `resource` (decoded text for text/*, else a " +
+      "base64 `blob`) — so clients can preview or save it directly. Metadata " +
+      "(filename, mime_type, size_bytes, attachment_index) is also returned as " +
+      "structuredContent. Select the attachment by `attachment_index` (0-based, " +
+      "matching the order in email_read's `attachments` list) or by `filename`. " +
+      "When the message has exactly one attachment you may omit both. Use this " +
+      "instead of email_read with include_attachments when you only need one file. " +
+      "A single attachment may be up to 25 MB; larger files are reported with " +
+      "their size but no data.",
+    requiredScope: "read:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        message_id: {
+          type: "string",
+          description:
+            "Opaque provider-native message identifier, obtained from a previous " +
+            "call to email_read (action: list/read/search).",
+        },
+        attachment_index: {
+          type: "integer",
+          minimum: 0,
+          description:
+            "0-based index of the attachment to download, matching the order of " +
+            "the `attachments` array returned by email_read (action: read). " +
+            "Takes precedence over `filename` when both are supplied.",
+        },
+        filename: {
+          type: "string",
+          description:
+            "Name of the attachment to download (case-insensitive exact match). " +
+            "Use when you know the filename but not its position. Ignored if " +
+            "`attachment_index` is given.",
+        },
+      },
+      required: ["message_id"],
       additionalProperties: false,
     },
   },
@@ -3138,14 +3186,17 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     description:
       "Read, list and search email in an inbox. Set `action`: 'list' (recent " +
       "messages, optionally by folder/unread), 'read' (full content of one " +
-      "message_id), 'read_batch' (several message_ids), or 'search' (structured " +
-      "filters: from/to/subject/body/since/before/unread/has_attachment/flagged).",
+      "message_id), 'read_batch' (several message_ids), 'search' (structured " +
+      "filters: from/to/subject/body/since/before/unread/has_attachment/flagged), " +
+      "or 'attachment' (download one attachment by attachment_index or filename, " +
+      "returned as base64 `data`).",
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     actions: {
       list: { legacy: "email_list", scope: "read:email" },
       read: { legacy: "email_read", scope: "read:email" },
       read_batch: { legacy: "email_read_batch", scope: "read:email" },
       search: { legacy: "email_search", scope: "read:email", altScopes: ["search:email"] },
+      attachment: { legacy: "email_attachment", scope: "read:email" },
     },
   },
   email_organize: {
@@ -5131,6 +5182,14 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
+/** Decode a standard (not URL-safe) base64 string to a UTF-8 string. */
+function base64ToUtf8(b64: string): string {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+}
+
 /** Per-attachment inclusion budget (bytes). Larger attachments return data: null. */
 const ATTACHMENT_DATA_BUDGET = 10 * 1024 * 1024;
 
@@ -6945,6 +7004,312 @@ async function executeReadEmail(
   // ── Success ───────────────────────────────────────────────────────────────
   return {
     result: { ...jsonOk(readResult as unknown as Record<string, unknown>), isError: false },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// email_attachment — download a single attachment
+// ---------------------------------------------------------------------------
+
+/**
+ * Per-attachment download cap for email_attachment. Larger than the 10 MB
+ * whole-message include_attachments budget because a dedicated download fetches
+ * exactly one file, so a bigger ceiling is safe.
+ */
+const SINGLE_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024;
+
+/**
+ * Executes the `email_attachment` tool end-to-end.
+ *
+ * Reads the target message with attachment content, selects ONE attachment by
+ * `attachment_index` (preferred) or `filename`, and returns it as base64 `data`.
+ * When the message has a single attachment, both selectors may be omitted.
+ *
+ * Reuses the per-provider readers (readOneMessage with include_attachments) so
+ * attachment fetching/decoding lives in one place. Never throws — all failures
+ * are returned as structured tool errors.
+ */
+async function executeReadAttachment(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: {
+    content: Record<string, unknown>[];
+    structuredContent?: Record<string, unknown>;
+    isError?: boolean;
+  };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const toolError = (text: string, code: string) => ({
+    result: { content: [{ type: "text", text }], isError: true },
+    logStatus: "error" as const,
+    logErrorCode: code,
+  });
+
+  // ── Input validation ──────────────────────────────────────────────────────
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return toolError(
+      "email_attachment: arguments must be an object with message_id and an inbox.",
+      "-32602",
+    );
+  }
+
+  const args = rawArgs as Record<string, unknown>;
+
+  const messageId =
+    typeof args["message_id"] === "string" ? args["message_id"].trim() : null;
+  if (!messageId) {
+    return toolError(
+      "email_attachment: message_id is required and must be a non-empty string.",
+      "-32602",
+    );
+  }
+
+  // Attachment selectors. attachment_index wins when both are supplied.
+  let attachmentIndex: number | null = null;
+  if (args["attachment_index"] !== undefined && args["attachment_index"] !== null) {
+    const raw = args["attachment_index"];
+    const n = typeof raw === "number" ? raw : Number(raw);
+    if (!Number.isInteger(n) || n < 0) {
+      return toolError(
+        "email_attachment: attachment_index must be a non-negative integer.",
+        "-32602",
+      );
+    }
+    attachmentIndex = n;
+  }
+  const filename =
+    typeof args["filename"] === "string" && args["filename"].trim() !== ""
+      ? args["filename"].trim()
+      : null;
+
+  // ── Inbox resolution + access control ─────────────────────────────────────
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved, "email_attachment");
+  const inbox = resolved.inbox;
+  const inboxId = inbox.id;
+
+  const supportedProviders = ["gmail", "outlook", "fastmail", "imap"];
+  if (!supportedProviders.includes(inbox.provider)) {
+    return toolError(
+      `Provider '${inbox.provider}' is not yet supported by email_attachment. ` +
+        "Supported providers: gmail, outlook, fastmail, imap.",
+      "provider_error",
+    );
+  }
+
+  // ── Read the message with attachment content ──────────────────────────────
+  let readResult: ReadEmailResult;
+  try {
+    readResult = await readOneMessage(inbox, messageId, {
+      include_html: false,
+      include_attachments: true,
+      mark_as_read: false,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message === "message_not_found") {
+      return toolError(
+        `Message ${messageId} not found in inbox ${inboxId}. The message may have ` +
+          "been deleted or the ID is stale — call email_read (action: list/search) " +
+          "to get current message IDs.",
+        "message_not_found",
+      );
+    }
+    if (
+      message === "gmail_auth_failed" ||
+      message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" ||
+      message === "imap_auth_failed"
+    ) {
+      return authFailedResult(inbox.provider, inbox.id, "access");
+    }
+    console.error("[mcp-server] email_attachment: provider_error", {
+      inbox_id: inboxId,
+      provider: inbox.provider,
+      message_id: messageId,
+      error: message,
+    });
+    return toolError(
+      `Provider error while reading email: ${message}. Please try again in a moment.`,
+      "provider_error",
+    );
+  }
+
+  const attachments = readResult.attachments;
+
+  // Compact metadata used in disambiguation / error messages.
+  const manifest = attachments.map((a, i) => ({
+    index: i,
+    filename: a.filename,
+    mime_type: a.mime_type,
+    size_bytes: a.size_bytes,
+  }));
+
+  if (attachments.length === 0) {
+    return toolError(
+      JSON.stringify({
+        error: "no_attachments",
+        message: `Message ${messageId} has no attachments.`,
+      }),
+      "no_attachments",
+    );
+  }
+
+  // ── Select the target attachment ──────────────────────────────────────────
+  let selectedIndex: number;
+  if (attachmentIndex !== null) {
+    if (attachmentIndex >= attachments.length) {
+      return toolError(
+        JSON.stringify({
+          error: "attachment_index_out_of_range",
+          requested_index: attachmentIndex,
+          total_attachments: attachments.length,
+          attachments: manifest,
+          message:
+            `attachment_index ${attachmentIndex} is out of range; this message has ` +
+            `${attachments.length} attachment(s) (indices 0–${attachments.length - 1}).`,
+        }),
+        "-32602",
+      );
+    }
+    selectedIndex = attachmentIndex;
+  } else if (filename !== null) {
+    const lower = filename.toLowerCase();
+    const idx = attachments.findIndex((a) => a.filename.toLowerCase() === lower);
+    if (idx === -1) {
+      return toolError(
+        JSON.stringify({
+          error: "attachment_not_found",
+          requested_filename: filename,
+          attachments: manifest,
+          message:
+            `No attachment named '${filename}' on message ${messageId}. ` +
+            "See `attachments` for the available filenames.",
+        }),
+        "attachment_not_found",
+      );
+    }
+    selectedIndex = idx;
+  } else if (attachments.length === 1) {
+    selectedIndex = 0;
+  } else {
+    return toolError(
+      JSON.stringify({
+        error: "attachment_selector_required",
+        total_attachments: attachments.length,
+        attachments: manifest,
+        message:
+          `Message ${messageId} has ${attachments.length} attachments. Specify ` +
+          "`attachment_index` or `filename` to choose one.",
+      }),
+      "-32602",
+    );
+  }
+
+  const selected = attachments[selectedIndex];
+
+  // ── Enforce the single-attachment size cap ────────────────────────────────
+  if (selected.size_bytes > SINGLE_ATTACHMENT_MAX_BYTES) {
+    return toolError(
+      JSON.stringify({
+        error: "attachment_too_large",
+        index: selectedIndex,
+        filename: selected.filename,
+        mime_type: selected.mime_type,
+        size_bytes: selected.size_bytes,
+        max_bytes: SINGLE_ATTACHMENT_MAX_BYTES,
+        message:
+          `Attachment '${selected.filename}' is ${selected.size_bytes} bytes, which ` +
+          `exceeds the ${SINGLE_ATTACHMENT_MAX_BYTES}-byte download limit.`,
+      }),
+      "attachment_too_large",
+    );
+  }
+
+  if (selected.data === null) {
+    // Provider returned metadata but no bytes (fetch failed or JMAP returns
+    // metadata only without a separate blob download path here).
+    return toolError(
+      JSON.stringify({
+        error: "attachment_unavailable",
+        index: selectedIndex,
+        filename: selected.filename,
+        mime_type: selected.mime_type,
+        size_bytes: selected.size_bytes,
+        message:
+          `Attachment content for '${selected.filename}' could not be retrieved ` +
+          "from the provider. Try again in a moment.",
+      }),
+      "attachment_unavailable",
+    );
+  }
+
+  // ── Success ───────────────────────────────────────────────────────────────
+  // Return the bytes through the MCP-idiomatic typed content block so clients
+  // can render/save the file instead of treating a base64 blob as model text:
+  //   image/*  → ImageContent      audio/*  → AudioContent
+  //   text/*   → EmbeddedResource (decoded `text`)
+  //   else     → EmbeddedResource (`blob`, base64)
+  // The bytes live ONLY in this block (not duplicated into structuredContent),
+  // which carries lightweight metadata the model can reason about cheaply.
+  const meta = {
+    message_id: messageId,
+    inbox_id: inboxId,
+    attachment_index: selectedIndex,
+    total_attachments: attachments.length,
+    filename: selected.filename,
+    mime_type: selected.mime_type,
+    size_bytes: selected.size_bytes,
+  };
+
+  const mt = selected.mime_type.toLowerCase();
+  // Synthetic, informative URI identifying this attachment (any scheme is valid
+  // per the MCP resource spec; clients use it as an opaque identifier).
+  const uri =
+    `mcpemails://inbox/${inboxId}/message/${encodeURIComponent(messageId)}` +
+    `/attachment/${selectedIndex}/${encodeURIComponent(selected.filename)}`;
+
+  let payloadBlock: Record<string, unknown>;
+  if (mt.startsWith("image/")) {
+    payloadBlock = { type: "image", data: selected.data, mimeType: selected.mime_type };
+  } else if (mt.startsWith("audio/")) {
+    payloadBlock = { type: "audio", data: selected.data, mimeType: selected.mime_type };
+  } else if (mt.startsWith("text/")) {
+    payloadBlock = {
+      type: "resource",
+      resource: {
+        uri,
+        name: selected.filename,
+        mimeType: selected.mime_type,
+        text: base64ToUtf8(selected.data),
+      },
+    };
+  } else {
+    payloadBlock = {
+      type: "resource",
+      resource: {
+        uri,
+        name: selected.filename,
+        mimeType: selected.mime_type,
+        blob: selected.data,
+      },
+    };
+  }
+
+  return {
+    result: {
+      content: [
+        payloadBlock,
+        // Backwards-compat text block mirroring structuredContent (metadata only).
+        { type: "text", text: JSON.stringify(meta) },
+      ],
+      structuredContent: meta,
+      isError: false,
+    },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -17661,6 +18026,12 @@ async function handleToolsCall(
     } else if (dispatchName === "email_read_batch") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeReadEmails(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (dispatchName === "email_attachment") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeReadAttachment(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
