@@ -77,24 +77,38 @@ const OAUTH_ROUTES = {
  * @param {boolean} atInboxLimit  - True when the workspace is at its inbox cap.
  * @param {string}  plan          - The workspace's current plan slug (e.g. "free").
  */
-export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 'free' }) {
+export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 'free', reconnect = null }) {
   const tr = useTranslations('dashboardChrome');
-  const [provider, setProvider] = useState('gmail');
-  const [step, setStep] = useState(1);
-  const [form, setForm] = useState({
-    email: '',
-    username: '',
+  // Reconnect mode: re-open the form this inbox was created with, identity
+  // pre-filled and locked, so only the password is re-entered. Map the stored
+  // service back to a modal provider: 'generic' (or a missing service) → the
+  // generic IMAP form; a branded service (fastmail/icloud/yahoo/zoho/yandex) →
+  // that provider. This is what stops a generic IMAP inbox from being sent to
+  // the Fastmail form, and stops the browser autofilling another saved login
+  // into a blank field.
+  const isReconnect = reconnect != null;
+  const reconnectProvider = isReconnect
+    ? (reconnect.service && reconnect.service !== 'generic' ? reconnect.service : 'generic')
+    : null;
+  const [provider, setProvider] = useState(reconnectProvider ?? 'gmail');
+  const [step, setStep] = useState(isReconnect ? 2 : 1);
+  const [form, setForm] = useState(() => ({
+    email: reconnect?.address ?? '',
+    username: reconnect?.username ?? '',
     password: '',
-    imapHost: '',
-    imapPort: GENERIC_IMAP_DEFAULTS.imapPort,
-    smtpHost: '',
-    smtpPort: GENERIC_IMAP_DEFAULTS.smtpPort,
-  });
+    imapHost: reconnect?.imapHost ?? '',
+    imapPort: reconnect?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort,
+    smtpHost: reconnect?.smtpHost ?? '',
+    smtpPort: reconnect?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort,
+  }));
   const [zohoRegion, setZohoRegion] = useState(DEFAULT_ZOHO_REGION);
   const [zohoAccountType, setZohoAccountType] = useState(DEFAULT_ZOHO_ACCOUNT_TYPE);
   // Optional login override for Yandex 360 custom-domain accounts whose IMAP
   // login differs from the email address. Blank → authenticate with the email.
-  const [yandexLogin, setYandexLogin] = useState('');
+  // On a reconnect of a Yandex inbox, seed it with the stored login.
+  const [yandexLogin, setYandexLogin] = useState(
+    isReconnect && reconnectProvider === 'yandex' ? (reconnect.username ?? '') : ''
+  );
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   // When the user clicks outside the modal (the scrim) after typing
@@ -274,9 +288,11 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
               <h2 style={{ margin: 0 }}>
                 {atInboxLimit
                   ? tr('connect.titleLimitReached')
-                  : step === 2
-                    ? tr('connect.titleConnectProvider', { provider: providerLabel() })
-                    : tr('connect.titleConnectInbox')}
+                  : isReconnect
+                    ? tr('connect.titleReconnectProvider', { provider: providerLabel() })
+                    : step === 2
+                      ? tr('connect.titleConnectProvider', { provider: providerLabel() })
+                      : tr('connect.titleConnectInbox')}
               </h2>
               <div className="sub" style={{ marginTop: 4 }}>
                 {atInboxLimit
@@ -492,6 +508,25 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
           {/* ─── Step 2: Credentials form ───────────────────────────────────── */}
           {!atInboxLimit && step === 2 && (
             <>
+              {isReconnect && (
+                <div
+                  role="note"
+                  style={{
+                    marginBottom: 4,
+                    padding: '10px 12px',
+                    background: 'var(--brand-soft)',
+                    border: '1px solid rgba(37,71,229,0.18)',
+                    borderRadius: 8,
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 12.5,
+                    color: 'var(--fg-2)',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {tr('connect.reconnectHint')}
+                </div>
+              )}
+
               {provider === 'zoho' && (
                 <div className="field">
                   <label htmlFor="cm-zoho-account-type">Account type</label>
@@ -540,7 +575,11 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   value={form.email}
                   onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
                   autoComplete="email"
-                  autoFocus
+                  // Reconnect: the address is the row's identity — never change it,
+                  // and lock it so the browser can't autofill another saved login.
+                  readOnly={isReconnect}
+                  aria-readonly={isReconnect || undefined}
+                  autoFocus={!isReconnect}
                 />
               </div>
 
@@ -555,6 +594,8 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     value={yandexLogin}
                     onChange={e => setYandexLogin(e.target.value)}
                     autoComplete="username"
+                    readOnly={isReconnect}
+                    aria-readonly={isReconnect || undefined}
                   />
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                     Yandex 360 custom-domain accounts may sign in with a login that differs from the email address. Leave blank to use the email.
@@ -574,6 +615,11 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                       value={form.username}
                       onChange={e => setForm(prev => ({ ...prev, username: e.target.value }))}
                       autoComplete="username"
+                      // Locked on reconnect: this was the root cause of the
+                      // wrong-mailbox bug — a blank username field autofilled with
+                      // another account's saved login. Identity stays fixed.
+                      readOnly={isReconnect}
+                      aria-readonly={isReconnect || undefined}
                     />
                     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                       {tr('connect.usernameHint')}
@@ -589,6 +635,8 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                         placeholder="imap.example.com"
                         value={form.imapHost}
                         onChange={e => setForm(prev => ({ ...prev, imapHost: e.target.value }))}
+                        readOnly={isReconnect}
+                        aria-readonly={isReconnect || undefined}
                       />
                     </div>
                     <div className="port-field">
@@ -599,6 +647,8 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                         type="number"
                         value={form.imapPort}
                         onChange={e => setForm(prev => ({ ...prev, imapPort: e.target.value }))}
+                        readOnly={isReconnect}
+                        aria-readonly={isReconnect || undefined}
                       />
                     </div>
                   </div>
@@ -612,6 +662,8 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                         placeholder="smtp.example.com"
                         value={form.smtpHost}
                         onChange={e => setForm(prev => ({ ...prev, smtpHost: e.target.value }))}
+                        readOnly={isReconnect}
+                        aria-readonly={isReconnect || undefined}
                       />
                     </div>
                     <div className="port-field">
@@ -622,6 +674,8 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                         type="number"
                         value={form.smtpPort}
                         onChange={e => setForm(prev => ({ ...prev, smtpPort: e.target.value }))}
+                        readOnly={isReconnect}
+                        aria-readonly={isReconnect || undefined}
                       />
                     </div>
                   </div>
@@ -639,6 +693,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
                   onKeyDown={e => { if (e.key === 'Enter' && !submitting) handleAppPasswordSubmit(); }}
                   autoComplete="current-password"
+                  autoFocus={isReconnect}
                 />
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                   {tr('connect.passwordHint')}
@@ -710,7 +765,11 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
           {/* Normal flow: credentials */}
           {!atInboxLimit && step === 2 && (
             <>
-              <Btn variant="ghost" onClick={handleBackToProviders}>{tr('connect.back')}</Btn>
+              {/* Reconnect mode has no provider-selection step to return to, so the
+                  secondary action cancels instead of going "back". */}
+              <Btn variant="ghost" onClick={isReconnect ? onClose : handleBackToProviders}>
+                {isReconnect ? tr('connect.cancel') : tr('connect.back')}
+              </Btn>
               <Btn
                 variant="primary"
                 icon={submitting ? undefined : 'shield'}

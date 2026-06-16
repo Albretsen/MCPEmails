@@ -105,7 +105,7 @@ async function fetchInboxes(supabase, workspaceId) {
   const [{ data: rows, error }, { data: logRows }] = await Promise.all([
     supabase
       .from('inboxes')
-      .select('id, display_name, email_address, provider, service, status, last_error, imap_host, created_at')
+      .select('id, display_name, email_address, provider, service, status, last_error, imap_host, imap_port, smtp_host, smtp_port, imap_username, created_at')
       .eq('workspace_id', workspaceId)
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
@@ -155,9 +155,22 @@ async function fetchInboxes(supabase, workspaceId) {
     status: row.status,
     // Human-readable error shown on errored inboxes; null when healthy.
     lastError: row.last_error ?? null,
-    // True when this inbox uses the Fastmail IMAP app-password path (not OAuth).
-    // Safe to expose: imap_host is not a secret (always 'imap.fastmail.com').
+    // True when this inbox uses an IMAP app-password path (not OAuth).
     hasImap: !!row.imap_host,
+    // IMAP service brand ('generic' for the plain IMAP connector, or
+    // 'fastmail'/'icloud'/'yahoo'/'zoho'/'yandex'). Used by the reconnect flow
+    // to re-open the SAME connect form this inbox was created with.
+    service: row.service ?? null,
+    // Connection identity, surfaced so the reconnect form can pre-fill and LOCK
+    // these fields — preventing the browser from autofilling another account's
+    // saved login into a blank field (the wrong-mailbox bug). Not secret; the
+    // password is never exposed. imap_username is the SASL login (may differ
+    // from the address, e.g. domeneshop).
+    imapHost: row.imap_host ?? null,
+    imapPort: row.imap_port ?? null,
+    smtpHost: row.smtp_host ?? null,
+    smtpPort: row.smtp_port ?? null,
+    username: row.imap_username ?? null,
     calls: callsByInbox[row.id] ?? 0,
     // When the inbox connection was first created.
     createdAt: row.created_at,

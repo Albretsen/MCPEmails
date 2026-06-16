@@ -88,6 +88,8 @@
     "errorNetwork": "Nettverksfeil. Sjekk tilkoblingen din og prøv igjen.",
     "titleLimitReached": "Innboksgrense nådd",
     "titleConnectProvider": "Koble til {provider}",
+    "titleReconnectProvider": "Koble til {provider} på nytt",
+    "reconnectHint": "Kobler til denne innboksen på nytt – adressen og serveren er låst. Skriv inn app-passordet på nytt for å gjenopprette tilgangen.",
     "titleConnectInbox": "Koble til en innboks",
     "subLimitReached": "{plan}-abonnementet ditt støtter bare et begrenset antall innbokser.",
     "subChooseProvider": "Velg en leverandør. Legitimasjon krypteres før lagring og deles aldri.",

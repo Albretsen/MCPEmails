@@ -88,6 +88,8 @@
     "errorNetwork": "网络错误。请检查您的连接并重试。",
     "titleLimitReached": "收件箱数量已达上限",
     "titleConnectProvider": "连接 {provider}",
+    "titleReconnectProvider": "重新连接 {provider}",
+    "reconnectHint": "正在重新连接此收件箱：地址和服务器已锁定。只需重新输入应用专用密码即可恢复访问。",
     "titleConnectInbox": "连接收件箱",
     "subLimitReached": "您的 {plan} 套餐仅支持有限数量的收件箱。",
     "subChooseProvider": "选择一个提供商。凭据在存储前会被加密，且绝不会被共享。",
