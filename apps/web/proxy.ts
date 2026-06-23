@@ -32,6 +32,7 @@ const MARKETING_PATHS = new Set([
   '/privacy',
   '/terms',
   '/native-connectors-vs-mcp',
+  '/for/founders',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {

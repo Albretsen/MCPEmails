@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "title": "E-post for gründere: svar kundene fra Claude",
+    "description": "Gründere bruker mcpemails til å sortere og svare på kunde-e-post rett fra Claude eller en hvilken som helst AI. Les, skriv utkast i din egen stemme, send og planlegg på tvers av alle innbokser. Ubegrenset og gratis å komme i gang."
+  },
+  "hero": {
+    "eyebrow": "Laget for gründere",
+    "titleLine1": "Svar hver eneste kunde",
+    "titleLine2": "rett fra din AI",
+    "lead": "Du er supportavdelingen, salgsavdelingen og gründeren. mcpemails kobler innboksen din til Claude, så du kan sortere, skrive svarutkast i din egen stemme, sende og planlegge oppfølginger uten å forlate samtalen. Vår mest aktive bruker gjør akkurat dette, hver eneste dag.",
+    "ctaPrimary": "Koble til innboksen gratis",
+    "ctaSecondary": "Se hvordan det fungerer"
+  },
+  "pains": {
+    "eyebrow": "Hvorfor gründere velger det",
+    "title": "Support skal ikke spise opp hele dagen din",
+    "sub": "Kunde-e-post er jobben du ikke kan droppe, og jobben som ødelegger fokuset ditt. Overlat innboksen til din AI og få timene tilbake.",
+    "items": {
+      "speed": {
+        "tag": "Fart",
+        "h": "Svar på minutter, ikke ved midnatt",
+        "p": "Be Claude om å <b>lese de ubesvarte kundetrådene og skrive svarutkast</b>. Du gjennomgår og sender. En hel formiddag med support blir til en fem minutters gjennomgang, så både potensielle og betalende kunder får svar samme dag."
+      },
+      "voice": {
+        "tag": "Din stemme",
+        "h": "Det høres ut som deg, ikke en bot",
+        "p": "Pek Claude mot et tidligere svar og si <b>match tonen min</b>. Den skriver slik du skriver: vennlig, direkte, i tråd med merkevaren. Du slutter å kopiere og lime inn ferdigtekster, og slutter å høres ut som en helpdesk."
+      },
+      "context": {
+        "tag": "Kontekst",
+        "h": "Mist aldri tråden",
+        "p": "Claude kan <b>søke gjennom hver tidligere samtale med en kunde</b> før den svarer, så et svar vet allerede hva de kjøpte, hva som gikk galt sist, og hva du lovet. Ikke mer graving i innboksen for å huske."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "En dag i innboksen din",
+    "title": "Ekte ledetekster gründere skriver",
+    "sub": "Ingen ny app å lære. Du bare snakker med Claude, og den handler i din ekte innboks.",
+    "prompts": [
+      "Vis meg ubesvarte e-poster fra kunder de siste 3 dagene, nyeste først.",
+      "Skriv et svarutkast til Marias refusjonsforespørsel. Match tonen i mitt forrige svar til henne.",
+      "Dette er et funksjonsønske. Svar med takk, og arkiver det deretter under Feedback-etiketten.",
+      "Søk i innboksen min etter alt fra acme.com, og oppsummer hvor avtalen står.",
+      "Planlegg denne oppfølgingen til å sendes mandag kl. 08:00, så den lander først på morgenen.",
+      "Arkiver alle nyhetsbrev og varsler, så bare ekte mennesker er igjen i innboksen min."
+    ]
+  },
+  "does": {
+    "eyebrow": "Hva det faktisk gjør",
+    "title": "En ekte innboks, ikke et skrivebeskyttet glimt",
+    "sub": "Ni handlingsbaserte verktøy agenten din kan bruke fra start til slutt.",
+    "items": {
+      "read": { "h": "Les og søk", "p": "List opp, les og søk på tvers av mapper og hver tilkoblet innboks, hentet i sanntid." },
+      "send": { "h": "Send og svar", "p": "Send, svar og videresend direkte. Agenten fullfører e-posten, ikke bare et utkast." },
+      "schedule": { "h": "Planlegg", "p": "Sett en sending i kø til senere, så oppfølginger går ut til rett tidspunkt i kundens dag." },
+      "organize": { "h": "Organiser", "p": "Flytt, flagg, arkiver og merk, så sorteringen skjer mens du leser, ikke etterpå." }
+    }
+  },
+  "proof": {
+    "quote": "Gründeren som bruker mcpemails mest åpner Claude hver morgen, tømmer kundekøen, og er ferdig før kaffen. Det er hele poenget.",
+    "label": "Vår mest aktive arbeidsflyt, på én linje"
+  },
+  "providers": {
+    "eyebrow": "Hvilken som helst innboks, hvilken som helst AI",
+    "title": "Koble til innboksen du allerede driver support fra",
+    "sub": "Gmail via Google-innlogging, resten via et app-passord. Den samme innboksen fungerer så i Claude, Cursor, VS Code, ChatGPT og en hvilken som helst MCP-klient, så du er aldri låst til én app.",
+    "ctaGmail": "Koble til Gmail",
+    "ctaFastmail": "Koble til Fastmail",
+    "ctaIcloud": "Koble til iCloud"
+  },
+  "faq": {
+    "eyebrow": "Spørsmål fra gründere",
+    "title": "Det gründere lurer på før de kobler til",
+    "sub": "De praktiske innvendingene, besvart rett på sak.",
+    "items": [
+      {
+        "q": "Jeg er solo-gründer som gjør min egen support. Er dette overkill?",
+        "a": "Det er det motsatte. Jo færre folk du har, jo mer gjør en supportkø vondt. mcpemails gjør det å svare kunder om til en rask daglig gjennomgang i Claude i stedet for en time med kontekstbytting, og det er gratis å komme i gang uten kort."
+      },
+      {
+        "q": "Kommer svarene til å høres generiske ut?",
+        "a": "Bare hvis du lar dem. Be Claude om å matche tonen i et tidligere svar, eller lim inn noen av dine egne e-poster, så skriver den i din stemme. Du gjennomgår alltid før noe sendes, så ingenting går ut som ikke høres ut som deg."
+      },
+      {
+        "q": "Sender den faktisk, eller bare skriver utkast?",
+        "a": "Den sender, svarer, videresender og planlegger på ekte. Du kan holde den til kun utkast mens du bygger tillit, og deretter la den sende når du er komfortabel. Uansett gjør agenten jobben i din ekte innboks."
+      },
+      {
+        "q": "Lagres kunde-e-posten min noe sted?",
+        "a": "Nei. E-post hentes i sanntid fra leverandøren din hver gang og lagres aldri på våre servere. Bare et kryptert token eller app-passord beholdes, så fremtidige forespørsler kan autentisere, og du kan trekke tilbake tilgangen med ett klikk."
+      },
+      {
+        "q": "Hva koster det mens jeg fortsatt er liten?",
+        "a": "Gratis, med ubegrenset antall innbokser og ubegrenset antall verktøykall og ingen daglige grenser. Betalte nivåer legger til teamfunksjoner og support, men en solo-gründer som svarer kunder trenger aldri å betale for å gjøre det."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Få kveldene dine tilbake",
+    "sub": "Koble til innboksen på minutter og la Claude tømme kundekøen sammen med deg. Ubegrenset og gratis å komme i gang, ingen kort kreves.",
+    "ctaPrimary": "Koble til innboksen gratis",
+    "ctaSecondary": "Les dokumentasjonen"
+  }
+}

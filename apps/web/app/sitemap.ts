@@ -20,6 +20,7 @@ const MARKETING_PAGES: {
   { path: '/docs', changeFrequency: 'weekly', priority: 0.8 },
   { path: '/docs/providers', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/native-connectors-vs-mcp', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/for/founders', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/connect/gmail', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/connect/fastmail', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/connect/icloud', changeFrequency: 'monthly', priority: 0.7 },
