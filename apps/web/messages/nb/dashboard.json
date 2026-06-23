@@ -250,6 +250,12 @@
       "sub": "Dette er eneste gang nøkkelen din vises. Kopier den nå.",
       "createdJustNow": "· opprettet akkurat nå",
       "urlLabel": "Eller lim denne URL-en rett inn i MCP-klienten din (ingen OAuth nødvendig)",
+      "nextTitle": "Neste: koble den til i Claude",
+      "nextStep1": "I claude.ai eller Claude Desktop, åpne Innstillinger → Koblinger → Legg til egendefinert kobling.",
+      "nextStep2": "Lim inn URL-en over. OAuth-klienter kobler til med ett klikk.",
+      "nextStep3": "Spør deretter Claude:",
+      "nextPrompt": "Oppsummer mine uleste e-poster fra i dag.",
+      "nextGuide": "Trinn-for-trinn-guide",
       "warning": "Lagre denne nøkkelen et trygt sted. Den kan ikke vises igjen. Hvis du mister den, opphev denne nøkkelen og opprett en ny.",
       "acknowledge": "Jeg har kopiert API-nøkkelen min og forstår at den ikke kan vises igjen.",
       "done": "Ferdig"
