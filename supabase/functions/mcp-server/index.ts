@@ -896,6 +896,85 @@ async function checkRateLimit(
 }
 
 /**
+ * Sliding-window limits for the cheap methods — everything except
+ * `tools/call` (`initialize`, `tools/list`, `ping`, and any unknown method
+ * that falls through to the "Method not found" branch).
+ *
+ * None of these write to `activity_log`, so the activity_log-based
+ * `checkRateLimit()` above cannot see them: a client looping any of them could
+ * otherwise hammer the endpoint unbounded (observed in prod: one key looping a
+ * `ping`-sized request at ~2 req/s, ~168k requests/day, with zero 429s). These
+ * limits are generous for any legitimate client — a normal session calls
+ * `initialize` once, `tools/list` a handful of times, and pings occasionally —
+ * while capping a runaway loop to cheap 429s.
+ *
+ * Counted atomically per key via the `rate_limit_check` RPC against
+ * `rate_limit_buckets`, independent of `activity_log`.
+ */
+const DISCOVERY_RATE_LIMITS: {
+  label: string;
+  bucket: string;
+  max: number;
+  windowMs: number;
+}[] = [
+  { label: "per_minute", bucket: "min", max: 30, windowMs: 60_000 },
+  { label: "per_hour", bucket: "hr", max: 200, windowMs: 3_600_000 },
+];
+
+/**
+ * Check per-key discovery-method rate limits (see DISCOVERY_RATE_LIMITS).
+ *
+ * Each window is an atomic UPSERT-and-count via the `rate_limit_check` RPC, so
+ * concurrent isolates cannot race past the ceiling. The narrowest window is
+ * checked first. Fail-open on a DB error — a transient RPC failure must never
+ * block a legitimate client's handshake.
+ *
+ * `rate_limit_check` returns only a boolean (within-limit), not the residual
+ * window, so `retryAfterSeconds` is the conservative full window width. A
+ * well-behaved client honours Retry-After and backs off; that is good enough
+ * to break a loop without an extra round-trip to read the bucket's age.
+ */
+async function checkDiscoveryRateLimit(
+  apiKeyId: string,
+): Promise<RateLimitResult> {
+  for (const w of DISCOVERY_RATE_LIMITS) {
+    const { data, error } = await supabase.rpc("rate_limit_check", {
+      p_key: `mcp:discovery:${w.bucket}:${apiKeyId}`,
+      p_max_count: w.max,
+      p_window_ms: w.windowMs,
+    });
+
+    if (error) {
+      // Fail open: skip this window on a DB/RPC error and check the rest.
+      console.error("[mcp-server] discovery_rate_limit_db_error", {
+        window: w.label,
+        key_id: apiKeyId,
+        error: error.message,
+      });
+      continue;
+    }
+
+    if (data === false) {
+      return {
+        allowed: false,
+        windowLabel: w.label,
+        limit: w.max,
+        used: w.max,
+        retryAfterSeconds: Math.ceil(w.windowMs / 1_000),
+      };
+    }
+  }
+
+  return {
+    allowed: true,
+    windowLabel: "none",
+    limit: 0,
+    used: 0,
+    retryAfterSeconds: 0,
+  };
+}
+
+/**
  * Build an HTTP 429 response with a JSON-RPC 2.0 error body.
  *
  * Headers:
@@ -1097,6 +1176,14 @@ async function routeMethod(
 
     case "tools/call":
       return await handleToolsCall(req, id, apiKey, ctx);
+
+    case "ping":
+      // MCP utility ping: the receiver MUST respond promptly with an empty
+      // result. Previously this fell through to "Method not found" (-32601),
+      // which buggy clients interpret as a dead connection and retry in a tight
+      // loop — observed in prod as a ~2 req/s ping storm from one client.
+      // https://modelcontextprotocol.io/specification/.../utilities/ping
+      return { jsonrpc: "2.0", id, result: {} };
 
     default:
       return jsonRpcErrorBody(
@@ -18813,10 +18900,39 @@ async function handleRequest(req: Request): Promise<Response> {
 
   const { apiKey } = authResult;
 
+  // ── Cheap-method rate limit ───────────────────────────────────────────────
+  // Every method EXCEPT `tools/call` is cheap and never writes to activity_log,
+  // so the activity_log-based checkRateLimit() below cannot see it. That covers
+  // `initialize`, `tools/list`, and any other/unknown method (`ping`,
+  // `resources/list`, the "Method not found" default branch — all of which
+  // still return HTTP 200). Without this guard a client looping any such method
+  // hammers the endpoint unbounded (observed in prod: one key looping a
+  // 42-byte `ping`-sized request at ~2 req/s, ~168k requests/day, zero 429s).
+  // Guard them with a dedicated per-key sliding-window limiter (rate_limit_check
+  // RPC), independent of activity_log. Fail-open on DB errors. `tools/call` is
+  // throttled by the activity_log limiter below and is not double-counted here.
+  // `ping` is exempt: it is a near-zero no-op (returns `{}`) and MUST succeed
+  // promptly per the MCP spec. Rate-limiting it to a 429 makes buggy clients
+  // treat the connection as dead and retry harder, amplifying load rather than
+  // shedding it. tools/call has its own activity_log limiter.
+  if (rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping") {
+    const cheapMethodResult = await checkDiscoveryRateLimit(apiKey.id);
+    if (!cheapMethodResult.allowed) {
+      console.warn("[mcp-server] cheap_method_rate_limit_exceeded", {
+        key_id: apiKey.id,
+        method: rpcRequest.method,
+        window: cheapMethodResult.windowLabel,
+        limit: cheapMethodResult.limit,
+        retry_after_seconds: cheapMethodResult.retryAfterSeconds,
+      });
+      return buildRateLimitResponse(requestId, cheapMethodResult);
+    }
+  }
+
   // ── Per-key rate limit check ──────────────────────────────────────────────
-  // Runs after authentication and before routing to any tool handler.
-  // `initialize` and `tools/list` are counted against the rate limit like any
-  // other call — they consume the same Edge Function slot and DB resources.
+  // Runs after authentication and before routing to any tool handler. This
+  // limiter counts completed `tools/call` rows in activity_log; the cheap
+  // discovery methods are throttled separately above.
   // Fail-open: if the DB is unavailable, checkRateLimit returns allowed=true.
   const rateLimitResult = await checkRateLimit(apiKey.id);
   if (!rateLimitResult.allowed) {
