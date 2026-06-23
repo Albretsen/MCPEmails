@@ -161,6 +161,37 @@
     },
     "footnote": "Toutes les formules : le courrier que votre agent lit est récupéré en direct et jamais stocké. Jetons OAuth chiffrés au repos. Besoin de quelque chose de sur mesure ? <contact>Contactez-nous</contact>. <comparison>Voir le comparatif complet des fonctionnalités →</comparison>"
   },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Vos questions, nos réponses",
+    "sub": "Tout ce qu'il faut savoir avant de connecter votre première boîte de réception.",
+    "items": [
+      {
+        "q": "Avec quels clients IA fonctionne-t-il ?",
+        "a": "Avec n'importe quel client compatible MCP. Nous sommes un serveur MCP standard (streamable-http) avec OAuth 2.1, DCR et PKCE : la même boîte de réception fonctionne donc dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat et bien d'autres. Collez une seule URL de point de terminaison et vous êtes connecté — aucune reconfiguration pour chaque application."
+      },
+      {
+        "q": "Quels fournisseurs d'e-mail puis-je connecter ?",
+        "a": "Gmail via OAuth (en un clic), Fastmail, iCloud, Yahoo, Zoho et Yandex avec un mot de passe d'application, et toute autre boîte via une connexion IMAP / SMTP générique. Connectez autant de boîtes que vous le souhaitez et étiquetez-les par cas d'usage."
+      },
+      {
+        "q": "Mes e-mails sont-ils stockés quelque part ?",
+        "a": "Non. Le courrier que votre agent lit est récupéré en direct depuis votre fournisseur à chaque requête et n'est jamais stocké sur nos serveurs. La seule exception est un message que vous programmez explicitement pour un envoi ultérieur : il est conservé chiffré jusqu'à son départ."
+      },
+      {
+        "q": "Est-ce vraiment gratuit ?",
+        "a": "Oui. L'offre gratuite vous donne des boîtes connectées illimitées, des appels d'outils MCP illimités et des clés API illimitées — aucun plafond quotidien, aucune carte requise. La seule limite est un plafond d'usage équitable par minute, destiné à protéger la plateforme. Les formules payantes ajoutent des membres d'équipe, des limites de pointe plus élevées et du support, jamais plus d'usage."
+      },
+      {
+        "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",
+        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception — déplacer, marquer, archiver et supprimer. Neuf outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
+      },
+      {
+        "q": "Comment connecter une boîte de réception ?",
+        "a": "Créez un compte gratuit, connectez votre boîte (un clic pour Gmail, ou collez un mot de passe d'application pour les autres), puis déposez https://mcpemails.com/api/mcp dans votre client IA et autorisez. Votre agent dispose de la boîte en quelques minutes."
+      }
+    ]
+  },
   "footer": {
     "tagline": "Un serveur MCP hébergé qui donne aux agents IA un accès en lecture et en envoi à votre boîte de réception, sans jamais stocker le courrier qu'il lit.",
     "productHeading": "Produit",
