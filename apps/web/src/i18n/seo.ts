@@ -99,3 +99,100 @@ export function homeJsonLd(
     ],
   };
 }
+
+/**
+ * Structured-data graph for a provider connect landing page
+ * (/connect/<provider>). Emits a `HowTo` built from the real on-page setup
+ * steps (eligible for how-to rich results and read by AI assistants answering
+ * "how do I connect <provider> to Claude"), plus a `WebPage` + `BreadcrumbList`
+ * for site structure. Everything mirrors visible page content — no invented
+ * claims. Steps come straight from the `connect.<provider>.steps` bundle.
+ */
+export function connectJsonLd(
+  locale: string,
+  {
+    path,
+    title,
+    description,
+    howToName,
+    steps,
+  }: {
+    path: string;
+    title: string;
+    description: string;
+    howToName: string;
+    steps: { h: string; p: string }[];
+  }
+) {
+  const url = localePath(locale, path);
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'HowTo',
+        name: howToName,
+        description,
+        step: steps.map((s, i) => ({
+          '@type': 'HowToStep',
+          position: i + 1,
+          name: s.h,
+          text: s.p,
+        })),
+      },
+      {
+        '@type': 'WebPage',
+        '@id': url,
+        url,
+        name: title,
+        description,
+        inLanguage: locale,
+        isPartOf: { '@id': `${APP_URL}/#website` },
+        breadcrumb: { '@id': `${url}#breadcrumb` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${url}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 2, name: title },
+        ],
+      },
+    ],
+  };
+}
+
+/**
+ * Structured-data graph for a standalone marketing page (e.g. the
+ * native-connectors-vs-mcp comparison): a `WebPage` + `BreadcrumbList` tying it
+ * into the site graph. Lean and literally true — no Article/author signals we
+ * can't back up.
+ */
+export function pageJsonLd(
+  locale: string,
+  { path, title, description }: { path: string; title: string; description: string }
+) {
+  const url = localePath(locale, path);
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': url,
+        url,
+        name: title,
+        description,
+        inLanguage: locale,
+        isPartOf: { '@id': `${APP_URL}/#website` },
+        breadcrumb: { '@id': `${url}#breadcrumb` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${url}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 2, name: title },
+        ],
+      },
+    ],
+  };
+}

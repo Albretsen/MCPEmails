@@ -22,11 +22,11 @@
   "plans": {
     "free": {
       "name": "Gratis",
-      "desc": "Alt, ubegrenset. For alle som bygger med MCP-agenter.",
+      "desc": "Alt, ubegrenset. Ingen daglige tak. For alle som bygger med MCP-agenter.",
       "cta": "Start gratis",
       "features": [
         "Ubegrenset antall tilkoblede innbokser",
-        "Ubegrenset antall MCP-verktøykall",
+        "Ingen daglige grenser — ubegrenset antall MCP-verktøykall",
         "Ubegrenset antall API-nøkler",
         "Gmail, iCloud, Fastmail og enhver IMAP",
         "60 forespørsler / minutt",
@@ -48,7 +48,7 @@
     "pro": {
       "name": "Team",
       "badge": "Mest populær",
-      "desc": "For bedrifter og team som trenger roller, SSO og revisjonslogg.",
+      "desc": "For team og byråer som administrerer flere klientinnbokser i ett delt arbeidsområde, med roller, SSO og revisjonslogg.",
       "cta": "Få Team",
       "features": [
         "Alt i Solo, ubegrenset",
@@ -138,11 +138,11 @@
     "items": [
       {
         "q": "Finnes det virkelig ingen bruksgrense?",
-        "a": "Riktig. Tilkoblede innbokser, MCP-verktøykall, API-nøkler er ubegrenset på alle planer, inkludert Gratis; teammedlemmer er tilgjengelig på betalte planer (Gratis er for én bruker). Den eneste grensen er et fair-use-tak per minutt (60/min på Gratis, 300/min på Solo, 1 000/min på Team) for å beskytte plattformen mot misbruk. Betalte planer gir høyere burst-kapasitet, teamfunksjoner og kundestøtte, aldri mer bruk."
+        "a": "Riktig. Det finnes ingen daglige tak og ingen månedlige kalltak. Tilkoblede innbokser, MCP-verktøykall, API-nøkler er ubegrenset på alle planer, inkludert Gratis; teammedlemmer er tilgjengelig på betalte planer (Gratis er for én bruker). Den eneste grensen er et fair-use-tak per minutt (60/min på Gratis, 300/min på Solo, 1 000/min på Team) for å beskytte plattformen mot misbruk. Betalte planer gir høyere burst-kapasitet, teamfunksjoner og kundestøtte, aldri mer bruk."
       },
       {
         "q": "Hva regnes som et MCP-kall?",
-        "a": "Hvert JSON-RPC-verktøykall mot /mcp-endepunktet ditt regnes som ett kall: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule eller contact_search. Kall er ubegrenset; de teller kun mot fair-use-taket ditt per minutt."
+        "a": "Hvert JSON-RPC-verktøykall mot /mcp-endepunktet ditt regnes som ett kall: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule eller contact_search. Kall er ubegrenset; de teller kun mot fair-use-taket ditt per minutt. Vi er en standard MCP-server, så det samme endepunktet fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og enhver MCP-kompatibel klient."
       },
       {
         "q": "Lagres e-postinnholdet mitt noe sted?",

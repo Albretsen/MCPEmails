@@ -22,11 +22,11 @@
   "plans": {
     "free": {
       "name": "免费",
-      "desc": "一切功能，无限量。献给所有用 MCP 智能体进行构建的人。",
+      "desc": "一切功能，无限量。无每日上限。献给所有用 MCP 智能体进行构建的人。",
       "cta": "免费开始",
       "features": [
         "无限量连接收件箱",
-        "无限量 MCP 工具调用",
+        "无每日上限——无限量 MCP 工具调用",
         "无限量 API 密钥",
         "Gmail、iCloud、Fastmail 及任何 IMAP",
         "60 次请求 / 分钟",
@@ -48,7 +48,7 @@
     "pro": {
       "name": "Team",
       "badge": "最受欢迎",
-      "desc": "面向需要角色、SSO 和审计日志的企业和团队。",
+      "desc": "面向在一个共享工作区中管理多个客户收件箱的团队和代理机构，配有角色、SSO 和审计日志。",
       "cta": "获取 Team",
       "features": [
         "包含 Solo 的一切，无限量",
@@ -138,11 +138,11 @@
     "items": [
       {
         "q": "真的没有用量限制吗？",
-        "a": "没错。连接的收件箱、MCP 工具调用、API 密钥在每个套餐（包括免费版）中都是无限量的；团队成员可在付费套餐中使用（免费版为单用户）。唯一的限制是每分钟的合理使用上限（免费版 60/分钟，Solo 300/分钟，Team 1,000/分钟），用于保护平台免受滥用。付费套餐额外提供更高的突发吞吐量、团队功能和支持，而不是更多用量。"
+        "a": "没错。没有每日上限，也没有每月调用上限。连接的收件箱、MCP 工具调用、API 密钥在每个套餐（包括免费版）中都是无限量的；团队成员可在付费套餐中使用（免费版为单用户）。唯一的限制是每分钟的合理使用上限（免费版 60/分钟，Solo 300/分钟，Team 1,000/分钟），用于保护平台免受滥用。付费套餐额外提供更高的突发吞吐量、团队功能和支持，而不是更多用量。"
       },
       {
         "q": "什么算作一次 MCP 调用？",
-        "a": "对你的 /mcp 端点发起的每一次 JSON-RPC 工具调用都算作一次调用：inbox_list、email_read、email_compose、email_organize、email_delete、folder、draft、schedule 或 contact_search。调用是无限量的；它们只计入你每分钟的合理使用上限。"
+        "a": "对你的 /mcp 端点发起的每一次 JSON-RPC 工具调用都算作一次调用：inbox_list、email_read、email_compose、email_organize、email_delete、folder、draft、schedule 或 contact_search。调用是无限量的；它们只计入你每分钟的合理使用上限。我们是标准 MCP 服务器，因此同一个端点可与 Claude、Cursor、VS Code、ChatGPT、Windsurf、n8n、Make 以及任何兼容 MCP 的客户端配合使用。"
       },
       {
         "q": "我的邮件内容会被存储在任何地方吗？",

@@ -1,0 +1,102 @@
+{
+  "fastmail": {
+    "meta": {
+      "title": "Koble Fastmail til Claude (og enhver AI)",
+      "description": "Koble Fastmail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Fastmail-en din — innbokser og verktøykall gratis."
+    },
+    "hero": {
+      "eyebrow": "Fastmail + AI",
+      "titleLine1": "Koble Fastmail til Claude —",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Fastmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord — og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Fastmail gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "Ubegrenset med innbokser og verktøykall",
+      "meta1": "App-passord — ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri"
+    },
+    "method": {
+      "title": "Slik kobler Fastmail seg til: et app-passord",
+      "body": "Fastmail kobles til via IMAP/SMTP med et <b>Fastmail-app-passord</b> — generer ett i Fastmail under Innstillinger → Personvern og sikkerhet → App-passord, lim det inn i mcpemails, og du er tilkoblet. Ingen OAuth-dans, ingen nettleser-popuper."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Fastmail-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy — ikke bare utkast. Agenten fullfører jobben inne i Fastmail.",
+      "ctaPrimary": "Koble til Fastmail gratis"
+    },
+    "capabilities": [
+      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Fastmail, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
+      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Fastmail i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails — uten kort. Gratisplanen gir deg ubegrenset med innbokser og verktøykall." },
+      { "h": "Generer et Fastmail-app-passord", "p": "I Fastmail går du til Innstillinger → Personvern og sikkerhet → App-passord og oppretter ett for e-post (IMAP/SMTP)." },
+      { "h": "Lim det inn i mcpemails", "p": "Legg til Fastmail-adressen din og app-passordet for å koble til innboksen trygt." },
+      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Fastmail-innboks",
+      "sub": "Koble til Fastmail på minutter — ubegrenset med innbokser og verktøykall på gratisplanen, uten kort.",
+      "ctaPrimary": "Koble til Fastmail gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "icloud": {
+    "meta": {
+      "title": "Koble iCloud Mail til Claude (og enhver AI)",
+      "description": "Koble iCloud Mail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-spesifikt Apple-passord. La AI lese, sende, planlegge og organisere iCloud-e-posten din — gratis."
+    },
+    "hero": {
+      "eyebrow": "iCloud Mail + AI",
+      "titleLine1": "Koble iCloud Mail til Claude —",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte iCloud-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et app-spesifikt Apple-passord — og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til iCloud gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "Ubegrenset med innbokser og verktøykall",
+      "meta1": "App-spesifikt passord — ingen OAuth",
+      "meta2": "E-post hentes direkte, lagres aldri"
+    },
+    "method": {
+      "title": "Slik kobler iCloud seg til: et app-spesifikt passord",
+      "body": "iCloud Mail kobles til via IMAP/SMTP med et <b>app-spesifikt Apple-passord</b>. Generer ett på appleid.apple.com under Pålogging og sikkerhet → App-spesifikke passord (tofaktorautentisering kreves), og lim det så inn i mcpemails sammen med iCloud-adressen din."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En iCloud-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy — ikke bare utkast. Agenten fullfører jobben inne i iCloud Mail.",
+      "ctaPrimary": "Koble til iCloud gratis"
+    },
+    "capabilities": [
+      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper — finn en kvittering, oppsummer en tråd, eller hent det nyeste fra en avsender." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra iCloud, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
+      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til iCloud i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails — uten kort. Gratisplanen gir deg ubegrenset med innbokser og verktøykall." },
+      { "h": "Generer et app-spesifikt passord", "p": "På appleid.apple.com går du til Pålogging og sikkerhet → App-spesifikke passord og oppretter ett (tofaktorautentisering må være på)." },
+      { "h": "Lim det inn i mcpemails", "p": "Legg til iCloud-adressen din og det app-spesifikke passordet for å koble til innboksen trygt." },
+      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en iCloud-innboks",
+      "sub": "Koble til iCloud Mail på minutter — ubegrenset med innbokser og verktøykall på gratisplanen, uten kort.",
+      "ctaPrimary": "Koble til iCloud gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  }
+}
