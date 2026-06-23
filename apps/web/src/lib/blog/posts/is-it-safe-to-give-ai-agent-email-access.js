@@ -5,8 +5,8 @@ export default {
   cover: '/blog/cover-is-it-safe-to-give-ai-agent-email-access.svg',
   coverAlt: 'Is it safe to give an AI agent email access — risks and safeguards explained — MCP Emails',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T17:00:00.000Z',
-  updatedAt: '2026-06-01T17:00:00.000Z',
+  publishedAt: "2026-06-07T09:00:00.000Z",
+  updatedAt: "2026-06-21T09:00:00.000Z",
   tags: ['Security', 'Privacy', 'AI agents', 'Email'],
   featured: false,
   content: `Short answer: it can be, but the safety lives in the architecture, not the marketing. Giving an AI agent email access is safe when the service fetches your mail live instead of copying it, encrypts your credentials properly, runs on minimal scopes, and lets you cut access in one click. It's risky when any of those four things is missing. The trick is knowing which questions to ask before you connect an inbox.

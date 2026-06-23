@@ -6,8 +6,8 @@ export default {
   cover: '/blog/cover-why-email-never-stored-matters.svg',
   coverAlt: 'Email fetched live and discarded versus a second copy stored in a vendor database',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T16:00:00.000Z',
-  updatedAt: '2026-06-01T16:00:00.000Z',
+  publishedAt: "2026-06-22T09:00:00.000Z",
+  updatedAt: "2026-06-22T09:00:00.000Z",
   tags: ['Security', 'Privacy', 'Email'],
   featured: false,
   content: `When you connect an AI agent to your inbox, the single most important question is where your email ends up. With MCP Emails the answer is: nowhere. Every tool call fetches your mail live from Gmail, Microsoft Graph, or your IMAP server, hands it to the agent, and throws it away. The only thing we keep is an encrypted token so the next call can happen.

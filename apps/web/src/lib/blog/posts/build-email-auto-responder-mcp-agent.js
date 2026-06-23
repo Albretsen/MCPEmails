@@ -5,8 +5,8 @@ export default {
   cover: '/blog/cover-build-email-auto-responder-mcp-agent.svg',
   coverAlt: 'Building an email auto-responder with an MCP-connected agent — MCPEmails',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T10:00:00.000Z',
-  updatedAt: '2026-06-01T10:00:00.000Z',
+  publishedAt: "2026-05-03T09:00:00.000Z",
+  updatedAt: "2026-05-03T09:00:00.000Z",
   tags: ['Workflows', 'Tutorial', 'MCP', 'AI agents'],
   featured: false,
   content: `An email auto-responder built on MCP Emails is a loop, not a webhook. There are no server-initiated events, so your agent **polls** for unread mail on a schedule with \`email_read\` (action \`list\`), reads each message with \`email_read\` (action \`read\`), drafts a reply, and calls \`email_compose\` (action \`reply\`). This post walks the full build: the polling loop, the scopes you need, how to survive rate limits, and the guardrails that keep an agent from blasting your contacts with hallucinated replies.

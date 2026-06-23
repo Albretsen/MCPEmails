@@ -5,8 +5,8 @@ export default {
   cover: '/blog/cover-best-ways-to-let-claude-manage-your-inbox.svg',
   coverAlt: 'The best ways to let Claude manage your inbox in 2026 — MCPEmails',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T13:00:00.000Z',
-  updatedAt: '2026-06-01T13:00:00.000Z',
+  publishedAt: "2026-04-28T09:00:00.000Z",
+  updatedAt: "2026-04-28T09:00:00.000Z",
   tags: ['Claude', 'Workflows', 'Email', 'Comparison'],
   featured: false,
   content: `If you want Claude to actually read, triage, and reply to your email, you have five real options in 2026: a hosted MCP email server, a DIY MCP server you run yourself, copy-pasting threads into the chat, a browser extension, or a native client integration. For most people a hosted MCP server is the right call, because it works in seconds and never stores your mail. The rest each have a niche, and a couple are worse than they look.

@@ -6,8 +6,8 @@ export default {
   cover: '/blog/cover-connect-icloud-fastmail-imap-to-claude.svg',
   coverAlt: 'Connect iCloud, Fastmail, and any IMAP inbox to Claude over MCP',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T18:00:00.000Z',
-  updatedAt: '2026-06-01T18:00:00.000Z',
+  publishedAt: "2026-05-13T09:00:00.000Z",
+  updatedAt: "2026-05-13T09:00:00.000Z",
   tags: ['iCloud', 'Fastmail', 'IMAP', 'Tutorial'],
   featured: false,
   content: `Connecting iCloud, Fastmail, or any IMAP mailbox to Claude takes one thing Gmail and Outlook don't need: an **app-specific password**. You generate it inside your email provider, paste it into MCP Emails once, and Claude can read, search, and send through that inbox. No OAuth dance, no SMTP server settings to memorize.

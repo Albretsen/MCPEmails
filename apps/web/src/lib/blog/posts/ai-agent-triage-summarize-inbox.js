@@ -6,8 +6,8 @@ export default {
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
   coverAlt: 'AI agent triaging and summarizing an inbox over MCP — MCP Emails',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T11:00:00.000Z',
-  updatedAt: '2026-06-01T11:00:00.000Z',
+  publishedAt: "2026-04-23T09:00:00.000Z",
+  updatedAt: "2026-04-23T09:00:00.000Z",
   tags: ['Workflows', 'Claude', 'Tutorial', 'AI agents'],
   featured: false,
   content: `The fastest way to get an AI agent to triage your inbox is to lean on two tools in order: \`inbox_list\` to find your mailbox, then \`email_read\` — with \`action: list\` and \`unread_only: true\` to pull what's new, then \`action: read\` for the handful that look important — and then a plain-English instruction to summarize and rank them. That's the whole loop. If you want it to draft or send responses, you add \`email_compose\` with \`action: reply\` at the end.

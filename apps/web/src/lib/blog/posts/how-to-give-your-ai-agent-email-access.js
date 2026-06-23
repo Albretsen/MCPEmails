@@ -6,8 +6,8 @@ export default {
   cover: '/blog/cover-how-to-give-your-ai-agent-email-access.svg',
   coverAlt: 'How to give your AI agent access to email over MCP — MCPEmails',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T23:00:00.000Z',
-  updatedAt: '2026-06-01T23:00:00.000Z',
+  publishedAt: "2026-06-02T09:00:00.000Z",
+  updatedAt: "2026-06-02T09:00:00.000Z",
   tags: ['MCP', 'AI agents', 'Email', 'Tutorial'],
   featured: true,
   content: `To give an AI agent access to email, you connect your inbox to an MCP server and point your agent at one endpoint URL. The agent then gets a small set of tools for reading, searching, and sending mail. The hard part isn't the agent — it's doing this without leaking your password into a prompt, a log, or a vector store. That last mile is what this guide is about.
