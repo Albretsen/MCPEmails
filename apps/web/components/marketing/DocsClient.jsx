@@ -342,6 +342,7 @@ const TOOLS = [
       { name: 'reply_to',            type: 'string',        required: false },
       { name: 'reply_all',           type: 'boolean',       required: false },
       { name: 'include_attachments', type: 'boolean',       required: false },
+      { name: 'include_signature',   type: 'boolean',       required: false },
       { name: 'attachments',         type: 'array',         required: false },
     ],
     example: {
@@ -415,6 +416,7 @@ const TOOLS = [
       { name: 'cc',       type: 'array[string]', required: false },
       { name: 'bcc',      type: 'array[string]', required: false },
       { name: 'html_body',type: 'string',        required: false },
+      { name: 'include_signature', type: 'boolean', required: false },
       { name: 'limit',    type: 'integer',       required: false },
     ],
     example: {
@@ -511,6 +513,42 @@ const TOOLS = [
       "last_contacted_at": "2026-05-24T10:30:00Z"
     }
   ]
+}`,
+    },
+  },
+  {
+    name: 'signature',
+    scopes: ['read:email', 'send:email'],
+    params: [
+      { name: 'action',               type: 'enum',          required: true },
+      { name: 'inbox_id',             type: 'string (uuid)', required: false },
+      { name: 'inbox',                type: 'string',        required: false },
+      { name: 'signature_text',       type: 'string',        required: false },
+      { name: 'signature_html',       type: 'string',        required: false },
+      { name: 'signature_enabled',    type: 'boolean',       required: false },
+      { name: 'signature_reply_mode', type: 'enum',          required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 33, "method": "tools/call",
+  "params": {
+    "name": "signature",
+    "arguments": {
+      "action": "set",
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "signature_text": "Bob Chen\\nHead of Sales · Acme Inc.",
+      "signature_reply_mode": "first_only"
+    }
+  }
+}`,
+      response: `{
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+  "signature_enabled": true,
+  "signature_reply_mode": "first_only",
+  "signature_source": "manual",
+  "signature_text": "Bob Chen\\nHead of Sales · Acme Inc.",
+  "signature_html": null,
+  "signature_updated_at": "2026-06-23T11:20:00Z"
 }`,
     },
   },

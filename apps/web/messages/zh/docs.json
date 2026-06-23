@@ -81,7 +81,7 @@
   },
   "tools": {
     "eyebrow": "工具参考",
-    "heading": "9 个工具。满足你智能体所需的每一项邮件操作。",
+    "heading": "10 个工具。满足你智能体所需的每一项邮件操作。",
     "sub": "<b>指定收件箱是可选的。</b>当你的密钥只有一个收件箱时，每个按收件箱的工具都会自动解析它——无需 <code>inbox_id</code>。有多个收件箱时，传入 <code>inbox_id</code>（来自 <code>inbox_list</code> 的 UUID）或 <code>inbox</code>（收件箱的邮箱地址）。大多数工具接受一个 <code>action</code> 参数来选择操作；徽章显示每个工具所需的权限范围，而 <code>tools/list</code> 只返回你的密钥（或 OAuth 令牌）有权限的工具。点击“显示示例”查看完整的请求与响应。",
     "noParams": "无参数。使用空的参数对象进行调用：",
     "showExample": "显示示例请求与响应",
@@ -190,7 +190,7 @@
     },
     "email_compose": {
       "title": "撰写邮件",
-      "desc": "发送新邮件或回复现有邮件。设置 action：'send' 发送新邮件（to/subject/body，可选 cc/bcc/html_body/reply_to/attachments）、'reply' 回复某个 message_id（线程标头自动设置；可选 reply_all），或 'forward' 将某个 message_id 转发给新收件人（可选择重新附加原始文件）。三者一经发送均不可撤销。",
+      "desc": "发送新邮件或回复现有邮件。设置 action：'send' 发送新邮件（to/subject/body，可选 cc/bcc/html_body/reply_to/attachments）、'reply' 回复某个 message_id（线程标头自动设置；可选 reply_all），或 'forward' 将某个 message_id 转发给新收件人（可选择重新附加原始文件）。收件箱的签名会自动追加——在回复和转发时，它位于你的文本之后、引用块之前，由签名的回复模式控制；传入 include_signature: false 可在单封简短邮件中抑制它。三者一经发送均不可撤销。",
       "params": {
         "action": "要执行的操作：\"send\"、\"reply\" 或 \"forward\"。决定其他哪些参数适用。",
         "inbox_id": "要从中发送的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
@@ -205,6 +205,7 @@
         "reply_to": "Reply-To 标头地址（action 'send'）。",
         "reply_all": "回复所有原始收件人——To + Cc（action 'reply'）。默认 false。",
         "include_attachments": "重新附加原始邮件的附件（action 'forward'）。超出 10 MB 额度的文件将被省略。默认 false。",
+        "include_signature": "是否将收件箱已配置的签名追加到这封邮件。默认 true；设为 false 可发送这一封不带签名的邮件。",
         "attachments": "文件附件。每项：'{' filename、mime_type、data（base64）'}'。最多 20 项，共 10 MB。"
       }
     },
@@ -222,7 +223,7 @@
     },
     "draft": {
       "title": "草稿",
-      "desc": "管理收件箱 Drafts 文件夹中的草稿。设置 action：'list'（已保存的草稿，每个都含 draft_id、主题、收件人和创建时间）、'create'（subject/body 必填，可选 to/cc/bcc/html_body）、'update'（draft_id 加上要覆盖的字段），或 'send'（draft_id——移除草稿并发送，不可逆）。在基于 IMAP 的收件箱上，draft_id 在每次更新后都会改变，因此始终使用最新的；Gmail 和 Outlook 保持 draft_id 稳定。",
+      "desc": "管理收件箱 Drafts 文件夹中的草稿。设置 action：'list'（已保存的草稿，每个都含 draft_id、主题、收件人和创建时间）、'create'（subject/body 必填，可选 to/cc/bcc/html_body）、'update'（draft_id 加上要覆盖的字段），或 'send'（draft_id——移除草稿并发送，不可逆）。收件箱的签名会在草稿创建或更新时嵌入，因此它已经存在于 Drafts 文件夹中，发送时不会再次追加；传入 include_signature: false 可创建不带签名的草稿。在基于 IMAP 的收件箱上，draft_id 在每次更新后都会改变，因此始终使用最新的；Gmail 和 Outlook 保持 draft_id 稳定。",
       "params": {
         "action": "要执行的操作：\"list\"、\"create\"、\"update\" 或 \"send\"。决定其他哪些参数适用。",
         "inbox_id": "拥有这些草稿的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
@@ -234,6 +235,7 @@
         "cc": "抄送收件人（action 'create'/'update'）。默认 []。",
         "bcc": "密送收件人（action 'create'/'update'）。默认 []。",
         "html_body": "可选的 HTML 正文（action 'create'/'update'）。",
+        "include_signature": "是否在草稿中嵌入收件箱已配置的签名（action 'create'/'update'）。默认 true；设为 false 可保存不带签名的草稿。",
         "limit": "要返回的最大草稿数（action 'list'）。默认 20，最大 50。"
       }
     },
@@ -265,6 +267,19 @@
         "inbox_id": "可选。将实时扫描限制在一个收件箱。省略则扫描密钥可访问的收件箱（数量有限）。",
         "inbox": "要限制到的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "limit": "要返回的最大联系人数。默认 20，最大 50。"
+      }
+    },
+    "signature": {
+      "title": "签名",
+      "desc": "读取或配置收件箱的电子邮件签名，该签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加。设置 action：'get'（返回当前签名的文本和 HTML、是否启用、回复/转发模式，以及其来源——'manual'、'gmail_import' 或 null），或 'set'（写入 signature_text 和/或 signature_html，以及可选的 signature_enabled 和 signature_reply_mode）。设置签名会将其来源标记为 'manual'，这将永久覆盖该收件箱的 Gmail 自动导入。'get' 需要 read:email；'set' 需要 send:email。",
+      "params": {
+        "action": "要执行的操作：\"get\"（读取当前签名）或 \"set\"（写入签名）。决定其他哪些参数适用以及需要哪种权限。",
+        "inbox_id": "要读取或设置其签名的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
+        "signature_text": "纯文本签名正文（action 'set'）。省略则保持不变；传入空字符串可清除它。若仅提供文本，发送时会自动派生出 HTML 版本。",
+        "signature_html": "可选的富文本 HTML 签名正文（action 'set'）。省略则保持不变；传入空字符串可清除它。",
+        "signature_enabled": "签名是否追加到外发邮件（action 'set'）。默认 true；设为 false 可在不删除文本的情况下停止追加。",
+        "signature_reply_mode": "何时在回复和转发中包含签名（action 'set'）：\"always\"（每次回复/转发）、\"first_only\"（默认——仅线程中的第一封邮件，避免重复署名）或 \"never\"。"
       }
     }
   },
@@ -329,6 +344,7 @@
       "drafts": "草稿（创建 / 编辑 / 发送）",
       "contacts_db": "联系人搜索（实时扫描）",
       "scheduling": "定时发送",
+      "signatures": "签名（发送时自动应用）",
       "search_syntax": "搜索语法"
     },
     "sections": {
@@ -339,6 +355,7 @@
       "Drafts": "草稿",
       "Contacts": "联系人",
       "Scheduling": "定时",
+      "Signatures": "签名",
       "Search": "搜索"
     },
     "hero": {
@@ -364,7 +381,8 @@
       "gmail": "<b>Gmail —— 文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。",
       "permanentDelete": "<b>永久删除：</b>Gmail 在你删除时会移至回收站 —— 它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
       "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表——在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
-      "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径——无需服务商原生的定时 API。"
+      "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径——无需服务商原生的定时 API。",
+      "signatures": "<b>签名：</b>每个收件箱的签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加——这适用于<b>所有</b>服务商。在仪表盘的收件箱编辑器或 <code>signature</code> MCP 工具中设置，并使用 <code>signature_reply_mode</code> 控制其是否出现在回复和转发中。按单次调用，在 <code>email_compose</code> 或 <code>draft</code> 上传入 <code>include_signature: false</code> 可跳过它。"
     },
     "cta": {
       "heading": "准备好连接你的收件箱了吗？",

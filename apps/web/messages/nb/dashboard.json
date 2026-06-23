@@ -168,7 +168,19 @@
       "connectedOn": "Tilkoblet",
       "lastCall": "Siste vellykkede kall",
       "lastCallNone": "Ingen vellykkede kall de siste 30 dagene",
-      "disconnect": "Koble fra"
+      "disconnect": "Koble fra",
+      "signature": {
+        "title": "E-postsignatur",
+        "enabled": "På",
+        "importedHint": "Importert fra Gmail-signaturen din. Rediger og lagre for å overstyre den.",
+        "placeholder": "f.eks. Jane Doe\nAcme Inc.\njane@acme.com",
+        "replyModeLabel": "På svar og videresendinger:",
+        "replyModeAlways": "Legg alltid til",
+        "replyModeFirstOnly": "Bare første svar",
+        "replyModeNever": "Aldri legg til",
+        "save": "Lagre signatur",
+        "saving": "Lagrer…"
+      }
     }
   },
   "apiKeys": {

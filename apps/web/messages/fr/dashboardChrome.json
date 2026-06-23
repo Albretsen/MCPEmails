@@ -11,6 +11,8 @@
     "joinedWorkspace": "Vous avez rejoint l'espace de travail. Bienvenue !",
     "inboxDisconnected": "Boîte déconnectée.",
     "inboxDisconnectFailed": "Échec de la déconnexion de la boîte.",
+    "signatureSaved": "Signature enregistrée.",
+    "signatureSaveFailed": "Échec de l'enregistrement de la signature.",
     "connectionCheckFailed": "La vérification de la connexion a échoué.",
     "connectionCheckFailedRetry": "La vérification de la connexion a échoué. Veuillez réessayer.",
     "connectionHealthy": "La connexion est saine.",
