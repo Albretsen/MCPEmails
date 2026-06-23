@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "title": "L'e-mail pour les fondateurs : répondez à vos clients depuis Claude",
+    "description": "Les fondateurs utilisent mcpemails pour trier et répondre aux e-mails clients directement depuis Claude ou n'importe quelle IA. Lisez, rédigez avec votre propre ton, envoyez et planifiez sur toutes vos boîtes de réception. Illimité et gratuit pour démarrer."
+  },
+  "hero": {
+    "eyebrow": "Conçu pour les fondateurs",
+    "titleLine1": "Répondez à chaque client",
+    "titleLine2": "depuis votre IA",
+    "lead": "Vous êtes à la fois l'équipe support, l'équipe commerciale et le fondateur. mcpemails connecte votre boîte de réception à Claude pour que vous puissiez trier, rédiger des réponses avec votre propre voix, envoyer et planifier des relances sans quitter la conversation. Notre utilisateur le plus actif fait exactement cela, chaque jour.",
+    "ctaPrimary": "Connectez votre boîte gratuitement",
+    "ctaSecondary": "Voir comment ça marche"
+  },
+  "pains": {
+    "eyebrow": "Pourquoi les fondateurs le choisissent",
+    "title": "Le support ne devrait pas dévorer votre journée",
+    "sub": "L'e-mail client, c'est le travail qu'on ne peut pas laisser tomber et celui qui casse votre concentration. Confiez la boîte de réception à votre IA et récupérez vos heures.",
+    "items": {
+      "speed": {
+        "tag": "Rapidité",
+        "h": "Répondez en quelques minutes, pas à minuit",
+        "p": "Demandez à Claude de <b>lire les fils clients sans réponse et de rédiger les réponses</b>. Vous relisez et envoyez. Une matinée de support devient un passage de cinq minutes, pour que prospects et clients payants aient une réponse le jour même."
+      },
+      "voice": {
+        "tag": "Votre voix",
+        "h": "Ça vous ressemble, pas à un robot",
+        "p": "Indiquez à Claude une réponse passée et dites-lui de <b>reprendre mon ton</b>. Il écrit comme vous écrivez : chaleureux, direct, fidèle à votre marque. Fini le copier-coller de macros toutes faites, fini l'air d'un service d'assistance."
+      },
+      "context": {
+        "tag": "Contexte",
+        "h": "Ne perdez jamais le fil",
+        "p": "Claude peut <b>chercher dans toutes vos conversations passées avec un client</b> avant de répondre, pour qu'une réponse sache déjà ce qu'il a acheté, ce qui a cassé la dernière fois et ce que vous avez promis. Plus besoin de fouiller votre boîte pour vous souvenir."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "Une journée dans votre boîte",
+    "title": "De vraies requêtes que tapent les fondateurs",
+    "sub": "Aucune nouvelle application à apprendre. Vous parlez simplement à Claude, et il agit dans votre vraie boîte de réception.",
+    "prompts": [
+      "Montre-moi les e-mails clients sans réponse des 3 derniers jours, du plus récent au plus ancien.",
+      "Rédige une réponse à la demande de remboursement de Maria. Reprends le ton de ma dernière réponse à son intention.",
+      "C'est une demande de fonctionnalité. Réponds en les remerciant, puis classe-la sous le libellé Retours.",
+      "Cherche dans ma boîte tout ce qui vient de acme.com, puis résume où en est l'affaire.",
+      "Planifie l'envoi de cette relance lundi à 8h pour qu'elle arrive en tout début de journée.",
+      "Archive chaque newsletter et notification pour qu'il ne reste que de vraies personnes dans ma boîte."
+    ]
+  },
+  "does": {
+    "eyebrow": "Ce qu'il fait vraiment",
+    "title": "Une vraie boîte de réception, pas un simple aperçu en lecture seule",
+    "sub": "Neuf outils orientés action que votre agent peut utiliser de bout en bout.",
+    "items": {
+      "read": { "h": "Lire et chercher", "p": "Listez, lisez et cherchez à travers les dossiers et chaque boîte connectée, récupérés en direct." },
+      "send": { "h": "Envoyer et répondre", "p": "Envoyez, répondez et transférez directement. L'agent termine l'e-mail, pas seulement un brouillon." },
+      "schedule": { "h": "Planifier", "p": "Mettez un envoi en file pour plus tard, pour que les relances partent au bon moment dans la journée du client." },
+      "organize": { "h": "Organiser", "p": "Déplacez, marquez, archivez et libellez pour que le tri se fasse pendant que vous lisez, pas après." }
+    }
+  },
+  "proof": {
+    "quote": "Le fondateur qui utilise mcpemails le plus ouvre Claude chaque matin, vide la file des clients et a fini avant son café. C'est tout l'argumentaire.",
+    "label": "Notre workflow le plus actif, en une ligne"
+  },
+  "providers": {
+    "eyebrow": "N'importe quelle boîte, n'importe quelle IA",
+    "title": "Connectez la boîte depuis laquelle vous gérez déjà votre support",
+    "sub": "Gmail via la connexion Google, le reste via un mot de passe d'application. La même boîte fonctionne ensuite dans Claude, Cursor, VS Code, ChatGPT et tout client MCP, pour que vous ne soyez jamais enfermé dans une seule application.",
+    "ctaGmail": "Connecter Gmail",
+    "ctaFastmail": "Connecter Fastmail",
+    "ctaIcloud": "Connecter iCloud"
+  },
+  "faq": {
+    "eyebrow": "Questions de fondateurs",
+    "title": "Ce que les fondateurs demandent avant de se connecter",
+    "sub": "Les objections concrètes, traitées sans détour.",
+    "items": [
+      {
+        "q": "Je suis un fondateur solo qui gère son propre support. N'est-ce pas surdimensionné ?",
+        "a": "C'est tout le contraire. Moins vous êtes nombreux, plus un retard de support fait mal. mcpemails transforme les réponses aux clients en un passage quotidien rapide dans Claude au lieu d'une heure de changements de contexte, et c'est gratuit pour démarrer, sans carte bancaire."
+      },
+      {
+        "q": "Les réponses auront-elles l'air génériques ?",
+        "a": "Seulement si vous le laissez faire. Demandez à Claude de reprendre le ton d'une réponse passée, ou collez quelques-uns de vos propres e-mails, et il écrira avec votre voix. Vous relisez toujours avant tout envoi, donc rien ne part qui ne vous ressemble pas."
+      },
+      {
+        "q": "Est-ce qu'il envoie vraiment, ou il ne fait que rédiger ?",
+        "a": "Il envoie, répond, transfère et planifie pour de vrai. Vous pouvez le garder en mode brouillon seul le temps de bâtir la confiance, puis le laisser envoyer une fois à l'aise. Dans tous les cas, l'agent fait le travail dans votre vraie boîte de réception."
+      },
+      {
+        "q": "Mes e-mails clients sont-ils stockés quelque part ?",
+        "a": "Non. Les e-mails sont récupérés en direct depuis votre fournisseur à chaque fois et ne sont jamais stockés sur nos serveurs. Seul un jeton chiffré ou un mot de passe d'application est conservé pour que les requêtes futures puissent s'authentifier, et vous pouvez révoquer l'accès en un clic."
+      },
+      {
+        "q": "Combien ça coûte tant que je suis encore petit ?",
+        "a": "Gratuit, avec des boîtes de réception illimitées, des appels d'outils illimités et aucun plafond quotidien. Les formules payantes ajoutent des fonctionnalités d'équipe et du support, mais un fondateur solo qui répond à ses clients n'a jamais à payer pour le faire."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Récupérez vos soirées",
+    "sub": "Connectez votre boîte de réception en quelques minutes et laissez Claude vider la file des clients avec vous. Illimité et gratuit pour démarrer, sans carte bancaire.",
+    "ctaPrimary": "Connectez votre boîte gratuitement",
+    "ctaSecondary": "Lire la documentation"
+  }
+}

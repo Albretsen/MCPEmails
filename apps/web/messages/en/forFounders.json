@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "title": "Email for founders: answer customers from Claude",
+    "description": "Founders use mcpemails to triage and answer customer email straight from Claude or any AI. Read, draft in your voice, send, and schedule across every inbox. Unlimited and free to start."
+  },
+  "hero": {
+    "eyebrow": "Built for founders",
+    "titleLine1": "Answer every customer",
+    "titleLine2": "from inside your AI",
+    "lead": "You are the support team, the sales team, and the founder. mcpemails connects your inbox to Claude so you can triage, draft replies in your own voice, send, and schedule follow-ups without leaving the conversation. Our most active user does exactly this, every single day.",
+    "ctaPrimary": "Connect your inbox free",
+    "ctaSecondary": "See how it works"
+  },
+  "pains": {
+    "eyebrow": "Why founders pick it",
+    "title": "Support shouldn't eat your day",
+    "sub": "Customer email is the work you can't drop and the work that breaks your focus. Hand the inbox to your AI and get the hours back.",
+    "items": {
+      "speed": {
+        "tag": "Speed",
+        "h": "Reply in minutes, not at midnight",
+        "p": "Ask Claude to <b>read the unanswered customer threads and draft replies</b>. You review and send. A morning of support becomes a five-minute pass, so prospects and paying customers get answers the same day."
+      },
+      "voice": {
+        "tag": "Your voice",
+        "h": "It sounds like you, not a bot",
+        "p": "Point Claude at a past reply and say <b>match my tone</b>. It writes the way you write: warm, direct, on-brand. You stop copy-pasting canned macros and stop sounding like a help desk."
+      },
+      "context": {
+        "tag": "Context",
+        "h": "Never lose the thread",
+        "p": "Claude can <b>search every past conversation with a customer</b> before it answers, so a reply already knows what they bought, what broke last time, and what you promised. No more digging through your inbox to remember."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "A day in your inbox",
+    "title": "Real prompts founders type",
+    "sub": "No new app to learn. You just talk to Claude, and it acts inside your real inbox.",
+    "prompts": [
+      "Show me unanswered emails from customers in the last 3 days, newest first.",
+      "Draft a reply to Maria's refund request. Match the tone of my last reply to her.",
+      "This is a feature request. Reply thanking them, then file it under the Feedback label.",
+      "Search my inbox for everything from acme.com, then summarize where the deal stands.",
+      "Schedule this follow-up to send Monday at 8am so it lands first thing.",
+      "Archive every newsletter and notification so only real people are left in my inbox."
+    ]
+  },
+  "does": {
+    "eyebrow": "What it actually does",
+    "title": "A real inbox, not a read-only peek",
+    "sub": "Nine action-based tools your agent can use end to end.",
+    "items": {
+      "read": { "h": "Read & search", "p": "List, read, and search across folders and every connected inbox, fetched live." },
+      "send": { "h": "Send & reply", "p": "Send, reply, and forward directly. The agent finishes the email, not just a draft." },
+      "schedule": { "h": "Schedule", "p": "Queue a send for later so follow-ups go out at the right moment in the customer's day." },
+      "organize": { "h": "Organize", "p": "Move, flag, archive, and label so triage happens while you read, not after." }
+    }
+  },
+  "proof": {
+    "quote": "The founder who uses mcpemails the most opens Claude every morning, clears the customer queue, and is done before coffee. That is the whole pitch.",
+    "label": "Our most active workflow, in one line"
+  },
+  "providers": {
+    "eyebrow": "Any inbox, any AI",
+    "title": "Connect the inbox you already run support from",
+    "sub": "Gmail over Google sign-in, the rest over an app password. The same inbox then works in Claude, Cursor, VS Code, ChatGPT, and any MCP client, so you are never locked to one app.",
+    "ctaGmail": "Connect Gmail",
+    "ctaFastmail": "Connect Fastmail",
+    "ctaIcloud": "Connect iCloud"
+  },
+  "faq": {
+    "eyebrow": "Founder questions",
+    "title": "What founders ask before connecting",
+    "sub": "The practical objections, answered straight.",
+    "items": [
+      {
+        "q": "I am a solo founder doing my own support. Is this overkill?",
+        "a": "It is the opposite. The fewer people you have, the more a support backlog hurts. mcpemails turns answering customers into a quick daily pass in Claude instead of an hour of context-switching, and it is free to start with no card."
+      },
+      {
+        "q": "Will the replies sound generic?",
+        "a": "Only if you let them. Tell Claude to match the tone of a past reply, or paste a few of your own emails, and it writes in your voice. You always review before anything sends, so nothing goes out that doesn't sound like you."
+      },
+      {
+        "q": "Does it actually send, or just draft?",
+        "a": "It sends, replies, forwards, and schedules for real. You can keep it draft-only while you build trust, then let it send once you are comfortable. Either way the agent does the work inside your real inbox."
+      },
+      {
+        "q": "Is my customer email stored anywhere?",
+        "a": "No. Mail is fetched live from your provider each time and never stored on our servers. Only an encrypted token or app password is kept so future requests can authenticate, and you can revoke access in one click."
+      },
+      {
+        "q": "What does it cost while I am still small?",
+        "a": "Free, with unlimited inboxes and unlimited tool calls and no daily caps. Paid tiers add team features and support, but a solo founder answering customers never has to pay to do it."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Get your evenings back",
+    "sub": "Connect your inbox in minutes and let Claude clear the customer queue with you. Unlimited and free to start, no card required.",
+    "ctaPrimary": "Connect your inbox free",
+    "ctaSecondary": "Read the docs"
+  }
+}

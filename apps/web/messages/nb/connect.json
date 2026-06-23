@@ -151,5 +151,155 @@
       "ctaPrimary": "Koble til iCloud gratis",
       "ctaSecondary": "Les dokumentasjonen"
     }
+  },
+  "yahoo": {
+    "meta": {
+      "title": "Koble Yahoo Mail til Claude (og enhver AI)",
+      "description": "Koble Yahoo Mail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Yahoo Mail. Innbokser og verktøykall er gratis."
+    },
+    "hero": {
+      "eyebrow": "Yahoo Mail + AI",
+      "titleLine1": "Koble Yahoo Mail til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Yahoo-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Yahoo gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "Ubegrenset med innbokser og verktøykall",
+      "meta1": "App-passord, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri"
+    },
+    "method": {
+      "title": "Slik kobler Yahoo seg til: et app-passord",
+      "body": "Yahoo Mail kobles til via IMAP/SMTP med et <b>Yahoo-app-passord</b>. Slå på tostegsbekreftelse, generer et app-passord under Yahoo-kontosikkerhet, og lim det så inn i mcpemails sammen med Yahoo-adressen din. Ingen OAuth-dans, ingen nettleser-popuper."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Yahoo-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Yahoo Mail.",
+      "ctaPrimary": "Koble til Yahoo gratis"
+    },
+    "capabilities": [
+      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yahoo, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
+      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Yahoo i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails, uten kort. Gratisplanen gir deg ubegrenset med innbokser og verktøykall." },
+      { "h": "Generer et Yahoo-app-passord", "p": "Slå på tostegsbekreftelse, og generer så et app-passord under Yahoo-kontosikkerhet." },
+      { "h": "Lim det inn i mcpemails", "p": "Legg til Yahoo-adressen din og app-passordet for å koble til innboksen trygt." },
+      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Yahoo-innboks",
+      "sub": "Koble til Yahoo Mail på minutter. Ubegrenset med innbokser og verktøykall på gratisplanen, uten kort.",
+      "ctaPrimary": "Koble til Yahoo gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "zoho": {
+    "meta": {
+      "title": "Koble Zoho Mail til Claude (og enhver AI)",
+      "description": "Koble Zoho Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere Zoho Mail. Innbokser og verktøykall er gratis."
+    },
+    "hero": {
+      "eyebrow": "Zoho Mail + AI",
+      "titleLine1": "Koble Zoho Mail til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Zoho-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og et app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Zoho gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "Ubegrenset med innbokser og verktøykall",
+      "meta1": "App-passord, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri"
+    },
+    "method": {
+      "title": "Slik kobler Zoho seg til: IMAP og et app-passord",
+      "body": "Zoho Mail kobles til via IMAP/SMTP. Aktiver IMAP-tilgang i Zoho først (det er av som standard), generer et app-spesifikt passord hvis du bruker tofaktorautentisering, og lim det så inn i mcpemails sammen med Zoho-adressen din. mcpemails støtter alle Zoho-datasenterregioner."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Zoho-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Zoho Mail.",
+      "ctaPrimary": "Koble til Zoho gratis"
+    },
+    "capabilities": [
+      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Zoho, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
+      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Zoho i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails, uten kort. Gratisplanen gir deg ubegrenset med innbokser og verktøykall." },
+      { "h": "Aktiver IMAP og generer et app-passord", "p": "I Zoho Mail slår du på IMAP-tilgang (Innstillinger, E-postkontoer, IMAP-tilgang). Hvis du bruker tofaktorautentisering, genererer du et app-spesifikt passord i Zoho-kontoen din under Sikkerhet." },
+      { "h": "Lim det inn i mcpemails", "p": "Legg til Zoho-adressen din og passordet, og velg Zoho-regionen din hvis du blir spurt, for å koble til innboksen trygt." },
+      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Zoho-innboks",
+      "sub": "Koble til Zoho Mail på minutter. Ubegrenset med innbokser og verktøykall på gratisplanen, uten kort.",
+      "ctaPrimary": "Koble til Zoho gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "yandex": {
+    "meta": {
+      "title": "Koble Yandex Mail til Claude (og enhver AI)",
+      "description": "Koble Yandex Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere Yandex Mail. Innbokser og verktøykall er gratis."
+    },
+    "hero": {
+      "eyebrow": "Yandex Mail + AI",
+      "titleLine1": "Koble Yandex Mail til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Yandex-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og et app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Yandex gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "Ubegrenset med innbokser og verktøykall",
+      "meta1": "App-passord, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri"
+    },
+    "method": {
+      "title": "Slik kobler Yandex seg til: IMAP og et app-passord",
+      "body": "Yandex Mail kobles til via IMAP/SMTP. I Yandex Mail-innstillingene aktiverer du IMAP og slår på app-passord og OAuth-tokener, oppretter så et app-passord i Yandex ID under Sikkerhet, og limer det inn i mcpemails sammen med Yandex-adressen din."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Yandex-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Yandex Mail.",
+      "ctaPrimary": "Koble til Yandex gratis"
+    },
+    "capabilities": [
+      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yandex, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
+      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Yandex i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails, uten kort. Gratisplanen gir deg ubegrenset med innbokser og verktøykall." },
+      { "h": "Aktiver IMAP og opprett et app-passord", "p": "I Yandex Mail-innstillingene aktiverer du IMAP og slår på app-passord og OAuth-tokener. Opprett så et app-passord i Yandex ID under Sikkerhet." },
+      { "h": "Lim det inn i mcpemails", "p": "Legg til Yandex-adressen din og app-passordet for å koble til innboksen trygt." },
+      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Yandex-innboks",
+      "sub": "Koble til Yandex Mail på minutter. Ubegrenset med innbokser og verktøykall på gratisplanen, uten kort.",
+      "ctaPrimary": "Koble til Yandex gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
   }
 }

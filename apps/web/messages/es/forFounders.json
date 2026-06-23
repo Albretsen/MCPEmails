@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "title": "Email para fundadores: responde a tus clientes desde Claude",
+    "description": "Los fundadores usan mcpemails para clasificar y responder el correo de clientes directamente desde Claude o cualquier IA. Lee, redacta con tu propia voz, envía y programa en todas tus bandejas. Ilimitado y gratis para empezar."
+  },
+  "hero": {
+    "eyebrow": "Hecho para fundadores",
+    "titleLine1": "Responde a cada cliente",
+    "titleLine2": "desde dentro de tu IA",
+    "lead": "Tú eres el equipo de soporte, el equipo de ventas y el fundador. mcpemails conecta tu bandeja de entrada con Claude para que puedas clasificar, redactar respuestas con tu propia voz, enviar y programar seguimientos sin salir de la conversación. Nuestro usuario más activo hace exactamente esto, cada día.",
+    "ctaPrimary": "Conecta tu bandeja gratis",
+    "ctaSecondary": "Mira cómo funciona"
+  },
+  "pains": {
+    "eyebrow": "Por qué lo eligen los fundadores",
+    "title": "El soporte no debería comerse tu día",
+    "sub": "El correo de clientes es el trabajo que no puedes dejar de lado y el que rompe tu concentración. Pásale la bandeja a tu IA y recupera esas horas.",
+    "items": {
+      "speed": {
+        "tag": "Rapidez",
+        "h": "Responde en minutos, no a medianoche",
+        "p": "Pídele a Claude que <b>lea los hilos de clientes sin responder y redacte las respuestas</b>. Tú revisas y envías. Una mañana de soporte se convierte en una revisión de cinco minutos, así que prospectos y clientes de pago reciben respuesta el mismo día."
+      },
+      "voice": {
+        "tag": "Tu voz",
+        "h": "Suena como tú, no como un bot",
+        "p": "Señálale a Claude una respuesta anterior y dile <b>imita mi tono</b>. Escribe como tú escribes: cercano, directo, fiel a tu marca. Dejas de copiar y pegar plantillas enlatadas y de sonar como una mesa de ayuda."
+      },
+      "context": {
+        "tag": "Contexto",
+        "h": "Nunca pierdas el hilo",
+        "p": "Claude puede <b>buscar cada conversación pasada con un cliente</b> antes de responder, así que la respuesta ya sabe qué compraron, qué falló la última vez y qué les prometiste. Se acabó hurgar en tu bandeja para recordar."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "Un día en tu bandeja",
+    "title": "Instrucciones reales que escriben los fundadores",
+    "sub": "No hay una app nueva que aprender. Solo hablas con Claude, y actúa dentro de tu bandeja real.",
+    "prompts": [
+      "Muéstrame los correos de clientes sin responder de los últimos 3 días, del más reciente al más antiguo.",
+      "Redacta una respuesta a la solicitud de reembolso de María. Imita el tono de mi última respuesta a ella.",
+      "Esto es una petición de funcionalidad. Responde agradeciéndoles y luego archívalo con la etiqueta Comentarios.",
+      "Busca en mi bandeja todo lo de acme.com y luego resume en qué punto está el trato.",
+      "Programa este seguimiento para que se envíe el lunes a las 8am y llegue a primera hora.",
+      "Archiva cada boletín y notificación para que solo queden personas reales en mi bandeja."
+    ]
+  },
+  "does": {
+    "eyebrow": "Lo que hace de verdad",
+    "title": "Una bandeja real, no un vistazo de solo lectura",
+    "sub": "Nueve herramientas basadas en acciones que tu agente puede usar de principio a fin.",
+    "items": {
+      "read": { "h": "Leer y buscar", "p": "Lista, lee y busca entre carpetas y todas las bandejas conectadas, obtenido en vivo." },
+      "send": { "h": "Enviar y responder", "p": "Envía, responde y reenvía directamente. El agente termina el correo, no solo un borrador." },
+      "schedule": { "h": "Programar", "p": "Pon un envío en cola para más tarde, así los seguimientos salen en el momento justo del día del cliente." },
+      "organize": { "h": "Organizar", "p": "Mueve, marca, archiva y etiqueta para que la clasificación ocurra mientras lees, no después." }
+    }
+  },
+  "proof": {
+    "quote": "El fundador que más usa mcpemails abre Claude cada mañana, vacía la cola de clientes y termina antes del café. Ese es todo el argumento.",
+    "label": "Nuestro flujo más activo, en una línea"
+  },
+  "providers": {
+    "eyebrow": "Cualquier bandeja, cualquier IA",
+    "title": "Conecta la bandeja desde la que ya das soporte",
+    "sub": "Gmail con el inicio de sesión de Google, el resto con una contraseña de aplicación. Esa misma bandeja funciona luego en Claude, Cursor, VS Code, ChatGPT y cualquier cliente MCP, así que nunca quedas atado a una sola app.",
+    "ctaGmail": "Conectar Gmail",
+    "ctaFastmail": "Conectar Fastmail",
+    "ctaIcloud": "Conectar iCloud"
+  },
+  "faq": {
+    "eyebrow": "Preguntas de fundadores",
+    "title": "Lo que preguntan los fundadores antes de conectar",
+    "sub": "Las objeciones prácticas, respondidas sin rodeos.",
+    "items": [
+      {
+        "q": "Soy un fundador en solitario haciendo mi propio soporte. ¿No es demasiado?",
+        "a": "Es justo lo contrario. Cuantas menos personas seas, más te duele un atasco de soporte. mcpemails convierte responder a clientes en una revisión rápida diaria en Claude en lugar de una hora cambiando de contexto, y es gratis para empezar sin tarjeta."
+      },
+      {
+        "q": "¿Sonarán genéricas las respuestas?",
+        "a": "Solo si lo permites. Dile a Claude que imite el tono de una respuesta anterior, o pega algunos de tus propios correos, y escribirá con tu voz. Siempre revisas antes de que se envíe nada, así que no sale nada que no suene a ti."
+      },
+      {
+        "q": "¿Envía de verdad o solo redacta?",
+        "a": "Envía, responde, reenvía y programa de verdad. Puedes mantenerlo en modo solo borrador mientras ganas confianza, y luego dejar que envíe cuando te sientas cómodo. En cualquier caso, el agente hace el trabajo dentro de tu bandeja real."
+      },
+      {
+        "q": "¿Se almacena en algún sitio el correo de mis clientes?",
+        "a": "No. El correo se obtiene en vivo de tu proveedor cada vez y nunca se almacena en nuestros servidores. Solo se guarda un token cifrado o una contraseña de aplicación para que las solicitudes futuras puedan autenticarse, y puedes revocar el acceso con un clic."
+      },
+      {
+        "q": "¿Cuánto cuesta mientras sigo siendo pequeño?",
+        "a": "Gratis, con bandejas ilimitadas, llamadas a herramientas ilimitadas y sin límites diarios. Los planes de pago añaden funciones de equipo y soporte, pero un fundador en solitario que responde a clientes nunca tiene que pagar para hacerlo."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Recupera tus tardes",
+    "sub": "Conecta tu bandeja en minutos y deja que Claude vacíe la cola de clientes contigo. Ilimitado y gratis para empezar, sin tarjeta.",
+    "ctaPrimary": "Conecta tu bandeja gratis",
+    "ctaSecondary": "Lee la documentación"
+  }
+}
