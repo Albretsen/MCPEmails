@@ -57,6 +57,33 @@
     "ctaPrimary": "Connecter une boîte gratuitement",
     "ctaSecondary": "Lire la documentation"
   },
+  "faq": {
+    "eyebrow": "Questions fréquentes",
+    "title": "Connecteurs natifs vs MCP, on répond",
+    "sub": "Les objections que l'on entend avant de quitter un connecteur intégré.",
+    "items": [
+      {
+        "q": "Claude ou ChatGPT ne peuvent-ils pas déjà lire mon Gmail avec un connecteur intégré ?",
+        "a": "Parfois, pour un seul fournisseur et souvent en lecture seule ou en brouillon seulement. mcpemails connecte Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et n'importe quelle boîte IMAP, et effectue de vraies actions : envoyer, répondre, transférer, planifier, déplacer, marquer, archiver et supprimer. La même boîte fonctionne ensuite dans tous les clients MCP, pas seulement dans l'app d'un seul fournisseur."
+      },
+      {
+        "q": "Quelles boîtes les connecteurs intégrés laissent-ils de côté en général ?",
+        "a": "La plupart des connecteurs natifs atteignent Gmail et parfois Outlook. Ils ne peuvent généralement pas toucher Fastmail, iCloud, Yahoo, Zoho, Yandex ni un serveur IMAP/SMTP auto-hébergé. mcpemails les connecte tous."
+      },
+      {
+        "q": "Les connecteurs natifs envoient-ils vraiment les e-mails, ou se contentent-ils de les rédiger ?",
+        "a": "Beaucoup s'arrêtent à la création d'un brouillon que vous devez encore ouvrir et envoyer vous-même. mcpemails envoie, répond, transfère et planifie directement, si bien que l'agent termine le travail dans votre boîte."
+      },
+      {
+        "q": "Si je configure ceci pour Claude, est-ce que ça marche aussi dans Cursor ou ChatGPT ?",
+        "a": "Oui. mcpemails est un serveur MCP streamable-http standard avec OAuth 2.1, DCR et PKCE, donc une seule configuration fonctionne dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et n'importe quel client MCP. Le connecteur intégré d'un fournisseur ne fonctionne que dans l'app de ce fournisseur."
+      },
+      {
+        "q": "Est-ce confidentiel si un tiers connecte ma boîte mail ?",
+        "a": "Les e-mails que votre agent lit sont récupérés en direct auprès de votre fournisseur et ne sont jamais stockés sur nos serveurs. Seul un jeton OAuth chiffré ou un mot de passe d'application est conservé pour authentifier les requêtes futures, et vous pouvez révoquer l'accès en un clic."
+      }
+    ]
+  },
   "links": {
     "compare": "Comparer",
     "connectHeading": "Connecter",

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
@@ -9,6 +10,22 @@ const RICH = {
   code: (chunks) => <code className="t-code-inline">{chunks}</code>,
   b: (chunks) => <strong>{chunks}</strong>,
 };
+
+/* Accordion FAQ item, mirroring the /pricing + home faq-* markup. */
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={'faq-item' + (open ? ' open' : '')}>
+      <button className="faq-q" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <span>{q}</span>
+        <span className="faq-chevron">
+          <MIcon name="arrow" size={14} color="var(--fg-3)" />
+        </span>
+      </button>
+      {open && <div className="faq-a">{a}</div>}
+    </div>
+  );
+}
 
 /* Comparison-table rows. Each cell is either a boolean (check/dash) or a
    message key resolved against the `compare` bundle. Feature labels resolve
@@ -118,6 +135,24 @@ export default function CompareClient() {
           </p>
         </div>
       </section>
+
+      {/* FAQ */}
+      {Array.isArray(t.raw('faq.items')) && t.raw('faq.items').length > 0 && (
+        <section className="section" id="faq" style={{ background: 'var(--bg-page)' }}>
+          <div className="container">
+            <div className="section-head" style={{ marginBottom: 32 }}>
+              <div className="eye-label">{t('faq.eyebrow')}</div>
+              <h2 style={{ fontSize: 36 }}>{t('faq.title')}</h2>
+              <p className="sub">{t('faq.sub')}</p>
+            </div>
+            <div className="faq-list">
+              {t.raw('faq.items').map((item) => (
+                <FaqItem key={item.q} q={item.q} a={item.a} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA band */}
       <section className="pricing-cta-band">

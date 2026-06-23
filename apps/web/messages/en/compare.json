@@ -57,6 +57,33 @@
     "ctaPrimary": "Connect an inbox free",
     "ctaSecondary": "Read the docs"
   },
+  "faq": {
+    "eyebrow": "Common questions",
+    "title": "Native connectors vs MCP, answered",
+    "sub": "The objections people raise before switching from a built-in connector.",
+    "items": [
+      {
+        "q": "Can't Claude or ChatGPT already read my Gmail with a built-in connector?",
+        "a": "Sometimes, for one provider and often read-only or draft-only. mcpemails connects Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any IMAP mailbox, and it takes real actions: send, reply, forward, schedule, move, flag, archive, and delete. The same inbox then works in every MCP client, not just one vendor's app."
+      },
+      {
+        "q": "Which mailboxes do built-in connectors usually miss?",
+        "a": "Most native connectors reach Gmail and sometimes Outlook. They typically can't touch Fastmail, iCloud, Yahoo, Zoho, Yandex, or a self-hosted IMAP/SMTP server. mcpemails connects all of them."
+      },
+      {
+        "q": "Do native connectors actually send email, or just draft it?",
+        "a": "Many stop at creating a draft you still have to open and send yourself. mcpemails sends, replies, forwards, and schedules directly, so the agent finishes the task inside your inbox."
+      },
+      {
+        "q": "If I set this up for Claude, does it work in Cursor or ChatGPT too?",
+        "a": "Yes. mcpemails is a standard streamable-http MCP server with OAuth 2.1, DCR, and PKCE, so one setup works across Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP client. A vendor's built-in connector only works inside that vendor's app."
+      },
+      {
+        "q": "Is it private if a third party connects my inbox?",
+        "a": "The mail your agent reads is fetched live from your provider and never stored on our servers. Only an encrypted OAuth token or app password is kept so future requests can authenticate, and you can revoke access in one click."
+      }
+    ]
+  },
   "links": {
     "compare": "Compare",
     "connectHeading": "Connect",

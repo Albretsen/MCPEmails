@@ -57,6 +57,33 @@
     "ctaPrimary": "Koble til en innboks gratis",
     "ctaSecondary": "Les dokumentasjonen"
   },
+  "faq": {
+    "eyebrow": "Vanlige spørsmål",
+    "title": "Innebygde koblinger vs MCP, besvart",
+    "sub": "Innvendingene folk kommer med før de bytter fra en innebygd kobling.",
+    "items": [
+      {
+        "q": "Kan ikke Claude eller ChatGPT allerede lese Gmailen min med en innebygd kobling?",
+        "a": "Av og til, for én leverandør og ofte bare med lese- eller utkasttilgang. mcpemails kobler til Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og hvilken som helst IMAP-postkasse, og utfører ekte handlinger: send, svar, videresend, planlegg, flytt, flagg, arkiver og slett. Samme innboks virker da i alle MCP-klienter, ikke bare i én leverandørs app."
+      },
+      {
+        "q": "Hvilke postkasser går innebygde koblinger vanligvis glipp av?",
+        "a": "De fleste innebygde koblinger når Gmail og av og til Outlook. De kan vanligvis ikke røre Fastmail, iCloud, Yahoo, Zoho, Yandex eller en selvhostet IMAP-/SMTP-server. mcpemails kobler til alle sammen."
+      },
+      {
+        "q": "Sender innebygde koblinger faktisk e-post, eller lager de bare utkast?",
+        "a": "Mange stopper ved å lage et utkast som du fortsatt må åpne og sende selv. mcpemails sender, svarer, videresender og planlegger direkte, slik at agenten fullfører jobben inne i innboksen din."
+      },
+      {
+        "q": "Hvis jeg setter dette opp for Claude, virker det da også i Cursor eller ChatGPT?",
+        "a": "Ja. mcpemails er en standard streamable-http MCP-server med OAuth 2.1, DCR og PKCE, så ett oppsett virker på tvers av Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og hvilken som helst MCP-klient. En leverandørs innebygde kobling virker bare inne i den leverandørens app."
+      },
+      {
+        "q": "Er det privat at en tredjepart kobler til innboksen min?",
+        "a": "E-posten agenten din leser hentes direkte fra leverandøren din og lagres aldri på serverne våre. Bare en kryptert OAuth-token eller et app-passord beholdes, slik at fremtidige forespørsler kan autentiseres, og du kan trekke tilbake tilgangen med ett klikk."
+      }
+    ]
+  },
   "links": {
     "compare": "Sammenlign",
     "connectHeading": "Koble til",
