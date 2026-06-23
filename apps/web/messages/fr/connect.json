@@ -151,5 +151,155 @@
       "ctaPrimary": "Connecter iCloud gratuitement",
       "ctaSecondary": "Lire la documentation"
     }
+  },
+  "yahoo": {
+    "meta": {
+      "title": "Connecter Yahoo Mail à Claude (et à toute IA)",
+      "description": "Connectez Yahoo Mail à Claude, Cursor, ChatGPT et à tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre Yahoo Mail. Boîtes et appels d'outils gratuits."
+    },
+    "hero": {
+      "eyebrow": "Yahoo Mail + IA",
+      "titleLine1": "Connectez Yahoo Mail à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte Yahoo en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter Yahoo gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "Boîtes et appels d'outils illimités",
+      "meta1": "Mot de passe d'application, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés"
+    },
+    "method": {
+      "title": "Comment Yahoo se connecte : un mot de passe d'application",
+      "body": "Yahoo Mail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Yahoo</b>. Activez la vérification en deux étapes, générez un mot de passe d'application dans la sécurité de votre compte Yahoo, puis collez-le dans mcpemails avec votre adresse Yahoo. Pas de parcours OAuth, pas de fenêtres pop-up dans le navigateur."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte Yahoo que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Yahoo Mail.",
+      "ctaPrimary": "Connecter Yahoo gratuitement"
+    },
+    "capabilities": [
+      { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Yahoo, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
+      { "tag": "Organiser", "h": "Déplacer, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez Yahoo en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails, sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Générez un mot de passe d'application Yahoo", "p": "Activez la vérification en deux étapes, puis générez un mot de passe d'application dans la sécurité de votre compte Yahoo." },
+      { "h": "Collez-le dans mcpemails", "p": "Ajoutez votre adresse Yahoo et le mot de passe d'application pour connecter la boîte en toute sécurité." },
+      { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte Yahoo à votre IA",
+      "sub": "Connectez Yahoo Mail en quelques minutes. Boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "ctaPrimary": "Connecter Yahoo gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "zoho": {
+    "meta": {
+      "title": "Connecter Zoho Mail à Claude (et à toute IA)",
+      "description": "Connectez Zoho Mail à Claude, Cursor, ChatGPT et à tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre Zoho Mail. Boîtes et appels d'outils gratuits."
+    },
+    "hero": {
+      "eyebrow": "Zoho Mail + IA",
+      "titleLine1": "Connectez Zoho Mail à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte Zoho en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et un mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter Zoho gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "Boîtes et appels d'outils illimités",
+      "meta1": "Mot de passe d'application, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés"
+    },
+    "method": {
+      "title": "Comment Zoho se connecte : IMAP et un mot de passe d'application",
+      "body": "Zoho Mail se connecte via IMAP/SMTP. Activez d'abord l'accès IMAP dans Zoho (il est désactivé par défaut), générez un mot de passe spécifique à l'application si vous utilisez l'authentification à deux facteurs, puis collez-le dans mcpemails avec votre adresse Zoho. mcpemails prend en charge toutes les régions de centres de données Zoho."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte Zoho que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Zoho Mail.",
+      "ctaPrimary": "Connecter Zoho gratuitement"
+    },
+    "capabilities": [
+      { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Zoho, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
+      { "tag": "Organiser", "h": "Déplacer, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez Zoho en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails, sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Activez IMAP et générez un mot de passe d'application", "p": "Dans Zoho Mail, activez l'accès IMAP (Paramètres, Comptes de messagerie, Accès IMAP). Si vous utilisez l'authentification à deux facteurs, générez un mot de passe spécifique à l'application dans Zoho Account, Sécurité." },
+      { "h": "Collez-le dans mcpemails", "p": "Ajoutez votre adresse Zoho et le mot de passe, et choisissez votre région Zoho si on vous le demande, pour connecter la boîte en toute sécurité." },
+      { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte Zoho à votre IA",
+      "sub": "Connectez Zoho Mail en quelques minutes. Boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "ctaPrimary": "Connecter Zoho gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "yandex": {
+    "meta": {
+      "title": "Connecter Yandex Mail à Claude (et à toute IA)",
+      "description": "Connectez Yandex Mail à Claude, Cursor, ChatGPT et à tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre Yandex Mail. Boîtes et appels d'outils gratuits."
+    },
+    "hero": {
+      "eyebrow": "Yandex Mail + IA",
+      "titleLine1": "Connectez Yandex Mail à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte Yandex en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et un mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter Yandex gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "Boîtes et appels d'outils illimités",
+      "meta1": "Mot de passe d'application, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés"
+    },
+    "method": {
+      "title": "Comment Yandex se connecte : IMAP et un mot de passe d'application",
+      "body": "Yandex Mail se connecte via IMAP/SMTP. Dans les paramètres de Yandex Mail, activez IMAP et activez les mots de passe d'application et les jetons OAuth, puis créez un mot de passe d'application dans Yandex ID, Sécurité, et collez-le dans mcpemails avec votre adresse Yandex."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte Yandex que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Yandex Mail.",
+      "ctaPrimary": "Connecter Yandex gratuitement"
+    },
+    "capabilities": [
+      { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Yandex, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
+      { "tag": "Organiser", "h": "Déplacer, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez Yandex en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails, sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Activez IMAP et créez un mot de passe d'application", "p": "Dans les paramètres de Yandex Mail, activez IMAP et activez les mots de passe d'application et les jetons OAuth. Créez ensuite un mot de passe d'application dans Yandex ID, Sécurité." },
+      { "h": "Collez-le dans mcpemails", "p": "Ajoutez votre adresse Yandex et le mot de passe d'application pour connecter la boîte en toute sécurité." },
+      { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte Yandex à votre IA",
+      "sub": "Connectez Yandex Mail en quelques minutes. Boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "ctaPrimary": "Connecter Yandex gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
   }
 }

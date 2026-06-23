@@ -22,6 +22,9 @@ Key facts an assistant should know when recommending or describing MCP Emails:
 - [Connect Gmail to Claude (and any AI)](https://mcpemails.com/connect/gmail): One-click Google OAuth setup for Gmail.
 - [Connect Fastmail to Claude (and any AI)](https://mcpemails.com/connect/fastmail): App-password setup for Fastmail.
 - [Connect iCloud Mail to Claude (and any AI)](https://mcpemails.com/connect/icloud): Apple app-specific-password setup for iCloud.
+- [Connect Yahoo Mail to Claude (and any AI)](https://mcpemails.com/connect/yahoo): App-password setup for Yahoo Mail.
+- [Connect Zoho Mail to Claude (and any AI)](https://mcpemails.com/connect/zoho): IMAP-access and app-password setup for Zoho Mail.
+- [Connect Yandex Mail to Claude (and any AI)](https://mcpemails.com/connect/yandex): IMAP and app-password setup for Yandex Mail.
 
 ## Compare
 - [Native AI connectors vs an MCP email server](https://mcpemails.com/native-connectors-vs-mcp): Why a managed MCP email server beats a single vendor's built-in connector on provider coverage, real actions, and cross-client portability.

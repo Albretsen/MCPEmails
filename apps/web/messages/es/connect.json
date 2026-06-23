@@ -151,5 +151,155 @@
       "ctaPrimary": "Conecta iCloud gratis",
       "ctaSecondary": "Lee la documentación"
     }
+  },
+  "yahoo": {
+    "meta": {
+      "title": "Conecta Yahoo Mail a Claude (y a cualquier IA)",
+      "description": "Conecta Yahoo Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Yahoo Mail. Las bandejas y las llamadas a herramientas son gratis."
+    },
+    "hero": {
+      "eyebrow": "Yahoo Mail + IA",
+      "titleLine1": "Conecta Yahoo Mail a Claude,",
+      "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+      "lead": "Dale a tu agente de IA una bandeja Yahoo real en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+      "ctaPrimary": "Conecta Yahoo gratis",
+      "ctaSecondary": "Lee la documentación",
+      "meta0": "Bandejas y llamadas ilimitadas",
+      "meta1": "Contraseña de aplicación, sin configurar OAuth",
+      "meta2": "El correo se obtiene en vivo, nunca se almacena"
+    },
+    "method": {
+      "title": "Cómo se conecta Yahoo: una contraseña de aplicación",
+      "body": "Yahoo Mail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Yahoo</b>. Activa la verificación en dos pasos, genera una contraseña de aplicación en Seguridad de la cuenta de Yahoo y pégala en mcpemails junto con tu dirección de Yahoo. Sin trámite de OAuth ni ventanas emergentes."
+    },
+    "caps": {
+      "eyebrow": "Lo que tu IA puede hacer",
+      "title": "Una bandeja Yahoo que tu agente puede usar de verdad",
+      "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de Yahoo Mail.",
+      "ctaPrimary": "Conecta Yahoo gratis"
+    },
+    "capabilities": [
+      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yahoo, no como un borrador que terminas a mano." },
+      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
+      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+    ],
+    "how": {
+      "eyebrow": "Configuración",
+      "title": "Conecta Yahoo en cuatro pasos",
+      "sub": "Del registro al primer correo con IA en un par de minutos."
+    },
+    "steps": [
+      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito te da bandejas y llamadas a herramientas ilimitadas." },
+      { "h": "Genera una contraseña de aplicación de Yahoo", "p": "Activa la verificación en dos pasos y luego genera una contraseña de aplicación en Seguridad de la cuenta de Yahoo." },
+      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de Yahoo y la contraseña de aplicación para conectar la bandeja de forma segura." },
+      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+    ],
+    "ctaBand": {
+      "title": "Dale a tu IA una bandeja Yahoo",
+      "sub": "Conecta Yahoo Mail en minutos. Bandejas y llamadas a herramientas ilimitadas en el plan gratuito, sin tarjeta.",
+      "ctaPrimary": "Conecta Yahoo gratis",
+      "ctaSecondary": "Lee la documentación"
+    }
+  },
+  "zoho": {
+    "meta": {
+      "title": "Conecta Zoho Mail a Claude (y a cualquier IA)",
+      "description": "Conecta Zoho Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Zoho Mail. Las bandejas y las llamadas a herramientas son gratis."
+    },
+    "hero": {
+      "eyebrow": "Zoho Mail + IA",
+      "titleLine1": "Conecta Zoho Mail a Claude,",
+      "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+      "lead": "Dale a tu agente de IA una bandeja Zoho real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y una contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+      "ctaPrimary": "Conecta Zoho gratis",
+      "ctaSecondary": "Lee la documentación",
+      "meta0": "Bandejas y llamadas ilimitadas",
+      "meta1": "Contraseña de aplicación, sin configurar OAuth",
+      "meta2": "El correo se obtiene en vivo, nunca se almacena"
+    },
+    "method": {
+      "title": "Cómo se conecta Zoho: IMAP y una contraseña de aplicación",
+      "body": "Zoho Mail se conecta por IMAP/SMTP. Primero activa el acceso IMAP en Zoho (está desactivado por defecto), genera una contraseña específica de aplicación si usas autenticación de dos factores y luego pégala en mcpemails junto con tu dirección de Zoho. mcpemails admite todas las regiones de centros de datos de Zoho."
+    },
+    "caps": {
+      "eyebrow": "Lo que tu IA puede hacer",
+      "title": "Una bandeja Zoho que tu agente puede usar de verdad",
+      "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de Zoho Mail.",
+      "ctaPrimary": "Conecta Zoho gratis"
+    },
+    "capabilities": [
+      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Zoho, no como un borrador que terminas a mano." },
+      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
+      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+    ],
+    "how": {
+      "eyebrow": "Configuración",
+      "title": "Conecta Zoho en cuatro pasos",
+      "sub": "Del registro al primer correo con IA en un par de minutos."
+    },
+    "steps": [
+      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito te da bandejas y llamadas a herramientas ilimitadas." },
+      { "h": "Activa IMAP y genera una contraseña de aplicación", "p": "En Zoho Mail, activa el acceso IMAP (Configuración, Cuentas de correo, Acceso IMAP). Si usas autenticación de dos factores, genera una contraseña específica de aplicación en Cuenta de Zoho, Seguridad." },
+      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de Zoho y la contraseña, y elige tu región de Zoho si se te pide, para conectar la bandeja de forma segura." },
+      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+    ],
+    "ctaBand": {
+      "title": "Dale a tu IA una bandeja Zoho",
+      "sub": "Conecta Zoho Mail en minutos. Bandejas y llamadas a herramientas ilimitadas en el plan gratuito, sin tarjeta.",
+      "ctaPrimary": "Conecta Zoho gratis",
+      "ctaSecondary": "Lee la documentación"
+    }
+  },
+  "yandex": {
+    "meta": {
+      "title": "Conecta Yandex Mail a Claude (y a cualquier IA)",
+      "description": "Conecta Yandex Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Yandex Mail. Las bandejas y las llamadas a herramientas son gratis."
+    },
+    "hero": {
+      "eyebrow": "Yandex Mail + IA",
+      "titleLine1": "Conecta Yandex Mail a Claude,",
+      "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+      "lead": "Dale a tu agente de IA una bandeja Yandex real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y una contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+      "ctaPrimary": "Conecta Yandex gratis",
+      "ctaSecondary": "Lee la documentación",
+      "meta0": "Bandejas y llamadas ilimitadas",
+      "meta1": "Contraseña de aplicación, sin configurar OAuth",
+      "meta2": "El correo se obtiene en vivo, nunca se almacena"
+    },
+    "method": {
+      "title": "Cómo se conecta Yandex: IMAP y una contraseña de aplicación",
+      "body": "Yandex Mail se conecta por IMAP/SMTP. En la configuración de Yandex Mail, activa IMAP y habilita las contraseñas de aplicación y los tokens OAuth, luego crea una contraseña de aplicación en Yandex ID, Seguridad, y pégala en mcpemails junto con tu dirección de Yandex."
+    },
+    "caps": {
+      "eyebrow": "Lo que tu IA puede hacer",
+      "title": "Una bandeja Yandex que tu agente puede usar de verdad",
+      "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de Yandex Mail.",
+      "ctaPrimary": "Conecta Yandex gratis"
+    },
+    "capabilities": [
+      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yandex, no como un borrador que terminas a mano." },
+      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
+      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+    ],
+    "how": {
+      "eyebrow": "Configuración",
+      "title": "Conecta Yandex en cuatro pasos",
+      "sub": "Del registro al primer correo con IA en un par de minutos."
+    },
+    "steps": [
+      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito te da bandejas y llamadas a herramientas ilimitadas." },
+      { "h": "Activa IMAP y crea una contraseña de aplicación", "p": "En la configuración de Yandex Mail, activa IMAP y habilita las contraseñas de aplicación y los tokens OAuth. Luego crea una contraseña de aplicación en Yandex ID, Seguridad." },
+      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de Yandex y la contraseña de aplicación para conectar la bandeja de forma segura." },
+      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+    ],
+    "ctaBand": {
+      "title": "Dale a tu IA una bandeja Yandex",
+      "sub": "Conecta Yandex Mail en minutos. Bandejas y llamadas a herramientas ilimitadas en el plan gratuito, sin tarjeta.",
+      "ctaPrimary": "Conecta Yandex gratis",
+      "ctaSecondary": "Lee la documentación"
+    }
   }
 }
