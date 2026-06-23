@@ -38,6 +38,21 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 const WWW_AUTHENTICATE =
   `Bearer realm="MCP Emails", resource_metadata="${APP_URL}/.well-known/oauth-protected-resource"`;
 
+// CORS — allow browser-based MCP clients (e.g. claude.ai) to call this endpoint
+// cross-origin. Auth is via the Authorization header (no cookies), so a wildcard
+// origin is safe. WWW-Authenticate is exposed so clients can read the OAuth
+// discovery pointer on a 401; MCP session/protocol headers are allowed/exposed.
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type, MCP-Protocol-Version',
+  'Access-Control-Expose-Headers': 'WWW-Authenticate, MCP-Protocol-Version, Mcp-Session-Id',
+} as const;
+
+export function OPTIONS(): NextResponse {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // An explicit Authorization header (e.g. an OAuth access token) always wins.
   // Otherwise, accept the API key from the ?key= (or ?api_key=) query parameter
@@ -60,6 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       {
         status: 401,
         headers: {
+          ...CORS_HEADERS,
           'Content-Type': 'application/json',
           'WWW-Authenticate': WWW_AUTHENTICATE,
         },
@@ -80,6 +96,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   const responseHeaders: Record<string, string> = {
+    ...CORS_HEADERS,
     'Content-Type': upstream.headers.get('content-type') ?? 'application/json',
   };
 
