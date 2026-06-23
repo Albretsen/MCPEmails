@@ -250,6 +250,12 @@
       "sub": "这是唯一一次显示你的密钥的机会。请立即复制。",
       "createdJustNow": "· 刚刚创建",
       "urlLabel": "或将此 URL 直接粘贴到你的 MCP 客户端中（无需 OAuth）",
+      "nextTitle": "下一步：在 Claude 中连接",
+      "nextStep1": "在 claude.ai 或 Claude Desktop 中，打开设置 → 连接器 → 添加自定义连接器。",
+      "nextStep2": "粘贴上面的 URL。OAuth 客户端一键连接。",
+      "nextStep3": "然后直接问 Claude：",
+      "nextPrompt": "总结我今天未读的邮件。",
+      "nextGuide": "分步指南",
       "warning": "请将此密钥妥善保存。它无法再次显示。如果丢失，请撤销此密钥并创建一个新的。",
       "acknowledge": "我已复制我的 API 密钥，并了解它无法再次显示。",
       "done": "完成"
