@@ -2089,6 +2089,50 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
             </div>
           ) : null}
 
+          {/* Next-step payoff: the moment of highest intent. Tell the user
+              exactly how to connect in Claude and what to ask first, so the key
+              they just created turns into a real tool call instead of a dead
+              copy. */}
+          <div style={{
+            marginBottom: 20, padding: '12px 14px',
+            background: 'var(--mint-50)', border: '1px solid rgba(48,164,108,0.22)',
+            borderRadius: 10,
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+              fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)',
+            }}>
+              <Icon name="zap" size={14} color="var(--mint-600)" />
+              {t('apiKeys.revealModal.nextTitle')}
+            </div>
+            <ol style={{
+              margin: '0 0 10px', paddingLeft: 18,
+              fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.6,
+            }}>
+              <li>{t('apiKeys.revealModal.nextStep1')}</li>
+              <li>{t('apiKeys.revealModal.nextStep2')}</li>
+              <li>
+                {t('apiKeys.revealModal.nextStep3')}{' '}
+                <span style={{
+                  fontStyle: 'italic', color: 'var(--fg-1)',
+                }}>&ldquo;{t('apiKeys.revealModal.nextPrompt')}&rdquo;</span>
+              </li>
+            </ol>
+            <a
+              href="https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600,
+                color: 'var(--brand)', textDecoration: 'none',
+              }}
+            >
+              {t('apiKeys.revealModal.nextGuide')}
+              <Icon name="chevron" size={12} color="var(--brand)" />
+            </a>
+          </div>
+
           {/* Warning */}
           <div style={{
             display: 'flex', gap: 8, alignItems: 'flex-start',

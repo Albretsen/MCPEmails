@@ -250,6 +250,12 @@
       "sub": "This is the only time your key will be shown. Copy it now.",
       "createdJustNow": "· created just now",
       "urlLabel": "Or paste this URL straight into your MCP client (no OAuth needed)",
+      "nextTitle": "Next: connect it in Claude",
+      "nextStep1": "In claude.ai or Claude Desktop, open Settings → Connectors → Add custom connector.",
+      "nextStep2": "Paste the URL above. OAuth clients connect in one click.",
+      "nextStep3": "Then just ask Claude:",
+      "nextPrompt": "Summarize my unread email from today.",
+      "nextGuide": "Step-by-step guide",
       "warning": "Store this key somewhere safe. It cannot be shown again. If you lose it, revoke this key and create a new one.",
       "acknowledge": "I have copied my API key and understand it cannot be shown again.",
       "done": "Done"
