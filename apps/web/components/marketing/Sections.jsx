@@ -637,6 +637,50 @@ export function Pricing({ onGetStarted, stripePrices }) {
   );
 }
 
+/* ============== FAQ ============== */
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={'faq-item' + (open ? ' open' : '')}>
+      <button className="faq-q" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <span>{q}</span>
+        <span className="faq-chevron">
+          <MIcon name="arrow" size={14} color="var(--fg-3)" />
+        </span>
+      </button>
+      {open && <div className="faq-a">{a}</div>}
+    </div>
+  );
+}
+
+/**
+ * Home FAQ. Acquisition-intent questions (which AI clients / providers, is it
+ * stored, is it free, how to connect) answered for first-time visitors. The
+ * same copy is emitted as FAQPage JSON-LD in app/[locale]/page.tsx, so it must
+ * stay in sync with `home.faq.items`.
+ */
+export function Faq() {
+  const t = useTranslations('home');
+  const items = t.raw('faq.items');
+  if (!Array.isArray(items) || items.length === 0) return null;
+  return (
+    <section className="section" id="faq" style={{ background: 'var(--bg-page)' }}>
+      <div className="container">
+        <div className="section-head">
+          <div className="eye-label">{t('faq.eyebrow')}</div>
+          <h2>{t('faq.title')}</h2>
+          <p className="sub">{t('faq.sub')}</p>
+        </div>
+        <div className="faq-list">
+          {items.map((item) => (
+            <FaqItem key={item.q} q={item.q} a={item.a} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ============== LANGUAGE SWITCHER ============== */
 /**
  * Minimal locale switcher. Only the home page is localized for now, so each
