@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "title": "Connecteurs natifs vs e-mail MCP",
+    "description": "Pourquoi un serveur d'e-mail MCP géré surpasse les connecteurs natifs des IA : plus de fournisseurs, de vraies actions d'envoi, de planification et d'organisation, et une seule configuration valable sur tous les clients MCP."
+  },
+  "hero": {
+    "eyebrow": "Connecteurs natifs vs MCP",
+    "titleLine1": "Les connecteurs IA intégrés s'arrêtent",
+    "titleLine2": "là où commence votre boîte mail",
+    "lead": "Les connecteurs d'e-mail natifs des IA couvrent un ou deux fournisseurs et se contentent le plus souvent de créer des brouillons. Un serveur d'e-mail MCP géré connecte n'importe quelle boîte, effectue de vraies actions et vous suit sur tous les clients IA.",
+    "ctaPrimary": "Connecter une boîte gratuitement",
+    "ctaSecondary": "Lire la documentation"
+  },
+  "axes": {
+    "eyebrow": "Trois différences honnêtes",
+    "title": "Là où un serveur MCP géré l'emporte",
+    "sub": "Sans détour. Voici les écarts concrets entre un connecteur intégré d'un seul fournisseur et un serveur d'e-mail MCP.",
+    "items": {
+      "coverage": {
+        "tag": "Couverture",
+        "h": "Chaque boîte, pas seulement Gmail",
+        "p": "Les connecteurs intégrés n'atteignent en général qu'une seule boîte — Gmail, parfois Outlook. Ils ne peuvent pas toucher <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via OAuth, le reste via un mot de passe d'application ou simplement IMAP."
+      },
+      "actions": {
+        "tag": "Vraies actions",
+        "h": "Envoyer et planifier, pas seulement des brouillons",
+        "p": "Beaucoup de connecteurs natifs s'arrêtent à la <b>création d'un brouillon</b> que vous devez encore ouvrir et envoyer. Nos neuf outils basés sur des actions <b>envoient, répondent, transfèrent, planifient, déplacent, marquent, archivent et suppriment</b> directement — l'agent termine le travail dans la boîte."
+      },
+      "portable": {
+        "tag": "Portable",
+        "h": "Une config, toutes les IA",
+        "p": "Le connecteur intégré d'un fournisseur ne fonctionne que dans l'app de ce fournisseur. Notre serveur parle le MCP streamable-http standard avec <b>OAuth 2.1 / DCR / PKCE</b>, si bien que la même boîte fonctionne dans <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> et plus — sans tout refaire pour chaque app."
+      }
+    }
+  },
+  "table": {
+    "eyebrow": "Côte à côte",
+    "title": "Connecteurs natifs vs MCP Emails",
+    "featureCol": "Capacité",
+    "nativeCol": "Connecteurs natifs",
+    "mcpCol": "MCP Emails",
+    "rows": {
+      "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
+      "imap": "N'importe quelle boîte IMAP / SMTP",
+      "send": "Envoyer et répondre directement (pas que des brouillons)",
+      "schedule": "Planifier des envois pour plus tard",
+      "organize": "Déplacer, marquer, archiver, supprimer",
+      "multiAi": "Fonctionne dans Claude, Cursor, ChatGPT, n8n…",
+      "oauth": "Gmail via OAuth",
+      "storage": "E-mails récupérés en direct, jamais stockés"
+    },
+    "footnote": "Les capacités des connecteurs natifs des IA varient selon le fournisseur ; les écarts ci-dessus reflètent le schéma courant d'un seul fournisseur limité aux brouillons."
+  },
+  "ctaBand": {
+    "title": "Offrez une vraie boîte mail à votre IA",
+    "sub": "Connectez n'importe quelle boîte en quelques minutes — boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+    "ctaPrimary": "Connecter une boîte gratuitement",
+    "ctaSecondary": "Lire la documentation"
+  },
+  "links": {
+    "compare": "Comparer",
+    "connectHeading": "Connecter",
+    "connectFastmail": "Connecter Fastmail",
+    "connectIcloud": "Connecter iCloud",
+    "vsNative": "vs connecteurs natifs"
+  }
+}

@@ -14,6 +14,7 @@ const RICH = {
 
 export function Nav({ onSignIn, onGetStarted }) {
   const t = useTranslations('home');
+  const tc = useTranslations('compare');
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuId = 'mobile-nav-menu';
 
@@ -37,6 +38,7 @@ export function Nav({ onSignIn, onGetStarted }) {
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
           <Link href="/#pricing">{t('nav.pricing')}</Link>
+          <Link href="/native-connectors-vs-mcp">{tc('links.compare')}</Link>
           <Link href="/docs">{t('nav.docs')}</Link>
           <Link href="/blog">{t('nav.blog')}</Link>
         </nav>
@@ -68,6 +70,7 @@ export function Nav({ onSignIn, onGetStarted }) {
             <Link href="/#features" onClick={closeMenu}>{t('nav.features')}</Link>
             <Link href="/#how" onClick={closeMenu}>{t('nav.how')}</Link>
             <Link href="/#pricing" onClick={closeMenu}>{t('nav.pricing')}</Link>
+            <Link href="/native-connectors-vs-mcp" onClick={closeMenu}>{tc('links.compare')}</Link>
             <Link href="/docs" onClick={closeMenu}>{t('nav.docs')}</Link>
             <Link href="/blog" onClick={closeMenu}>{t('nav.blog')}</Link>
           </nav>
@@ -709,6 +712,7 @@ function FooterCopy({ icon, label, value, href }) {
 
 export function Footer() {
   const t = useTranslations('home');
+  const tc = useTranslations('compare');
   return (
     <footer className="footer">
       <div className="container">
@@ -736,6 +740,12 @@ export function Footer() {
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
             <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
             <Link href="/blog">Blog</Link>
+          </div>
+          <div>
+            <h5>{tc('links.connectHeading')}</h5>
+            <Link href="/connect/fastmail">{tc('links.connectFastmail')}</Link>
+            <Link href="/connect/icloud">{tc('links.connectIcloud')}</Link>
+            <Link href="/native-connectors-vs-mcp">{tc('links.vsNative')}</Link>
           </div>
           <div>
             <h5>{t('footer.companyHeading')}</h5>
