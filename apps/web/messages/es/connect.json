@@ -1,0 +1,102 @@
+{
+  "fastmail": {
+    "meta": {
+      "title": "Conecta Fastmail a Claude (y a cualquier IA)",
+      "description": "Conecta Fastmail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Fastmail — bandejas y llamadas gratis."
+    },
+    "hero": {
+      "eyebrow": "Fastmail + IA",
+      "titleLine1": "Conecta Fastmail a Claude —",
+      "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+      "lead": "Dale a tu agente de IA una bandeja Fastmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación — y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+      "ctaPrimary": "Conecta Fastmail gratis",
+      "ctaSecondary": "Lee la documentación",
+      "meta0": "Bandejas y llamadas ilimitadas",
+      "meta1": "Contraseña de aplicación — sin OAuth",
+      "meta2": "El correo se obtiene en vivo, nunca se almacena"
+    },
+    "method": {
+      "title": "Cómo se conecta Fastmail: una contraseña de aplicación",
+      "body": "Fastmail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Fastmail</b> — genera una en Fastmail en Configuración → Privacidad y seguridad → Contraseñas de aplicación, pégala en mcpemails y listo. Sin trámite de OAuth ni ventanas emergentes."
+    },
+    "caps": {
+      "eyebrow": "Lo que tu IA puede hacer",
+      "title": "Una bandeja Fastmail que tu agente puede usar de verdad",
+      "sub": "Nueve herramientas MCP basadas en acciones — no solo borradores. Tu agente termina el trabajo dentro de Fastmail.",
+      "ctaPrimary": "Conecta Fastmail gratis"
+    },
+    "capabilities": [
+      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas — encuentra esa factura, resume un hilo o saca lo último de un remitente." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Fastmail, no como un borrador que terminas a mano." },
+      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
+      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+    ],
+    "how": {
+      "eyebrow": "Configuración",
+      "title": "Conecta Fastmail en cuatro pasos",
+      "sub": "Del registro al primer correo con IA en un par de minutos."
+    },
+    "steps": [
+      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails — sin tarjeta. El plan gratuito te da bandejas y llamadas a herramientas ilimitadas." },
+      { "h": "Genera una contraseña de aplicación de Fastmail", "p": "En Fastmail, ve a Configuración → Privacidad y seguridad → Contraseñas de aplicación y crea una para correo (IMAP/SMTP)." },
+      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de Fastmail y la contraseña de aplicación para conectar la bandeja de forma segura." },
+      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+    ],
+    "ctaBand": {
+      "title": "Dale a tu IA una bandeja Fastmail",
+      "sub": "Conecta Fastmail en minutos — bandejas y llamadas a herramientas ilimitadas en el plan gratuito, sin tarjeta.",
+      "ctaPrimary": "Conecta Fastmail gratis",
+      "ctaSecondary": "Lee la documentación"
+    }
+  },
+  "icloud": {
+    "meta": {
+      "title": "Conecta iCloud Mail a Claude (y a cualquier IA)",
+      "description": "Conecta iCloud Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña específica de aplicación de Apple. Deja que la IA lea, envíe, programe y organice tu correo de iCloud — gratis."
+    },
+    "hero": {
+      "eyebrow": "iCloud Mail + IA",
+      "titleLine1": "Conecta iCloud Mail a Claude —",
+      "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+      "lead": "Dale a tu agente de IA una bandeja iCloud real en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña específica de aplicación de Apple — y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+      "ctaPrimary": "Conecta iCloud gratis",
+      "ctaSecondary": "Lee la documentación",
+      "meta0": "Bandejas y llamadas ilimitadas",
+      "meta1": "Contraseña específica de aplicación — sin OAuth",
+      "meta2": "El correo se obtiene en vivo, nunca se almacena"
+    },
+    "method": {
+      "title": "Cómo se conecta iCloud: una contraseña específica de aplicación",
+      "body": "iCloud Mail se conecta por IMAP/SMTP con una <b>contraseña específica de aplicación de Apple</b>. Genera una en appleid.apple.com en Inicio de sesión y seguridad → Contraseñas específicas de aplicación (requiere autenticación de dos factores) y pégala en mcpemails junto con tu dirección de iCloud."
+    },
+    "caps": {
+      "eyebrow": "Lo que tu IA puede hacer",
+      "title": "Una bandeja iCloud que tu agente puede usar de verdad",
+      "sub": "Nueve herramientas MCP basadas en acciones — no solo borradores. Tu agente termina el trabajo dentro de iCloud Mail.",
+      "ctaPrimary": "Conecta iCloud gratis"
+    },
+    "capabilities": [
+      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas — encuentra un recibo, resume un hilo o saca lo último de un remitente." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde iCloud, no como un borrador que terminas a mano." },
+      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
+      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+    ],
+    "how": {
+      "eyebrow": "Configuración",
+      "title": "Conecta iCloud en cuatro pasos",
+      "sub": "Del registro al primer correo con IA en un par de minutos."
+    },
+    "steps": [
+      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails — sin tarjeta. El plan gratuito te da bandejas y llamadas a herramientas ilimitadas." },
+      { "h": "Genera una contraseña específica de aplicación", "p": "En appleid.apple.com, ve a Inicio de sesión y seguridad → Contraseñas específicas de aplicación y crea una (la autenticación de dos factores debe estar activada)." },
+      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de iCloud y la contraseña específica de aplicación para conectar la bandeja de forma segura." },
+      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+    ],
+    "ctaBand": {
+      "title": "Dale a tu IA una bandeja iCloud",
+      "sub": "Conecta iCloud Mail en minutos — bandejas y llamadas a herramientas ilimitadas en el plan gratuito, sin tarjeta.",
+      "ctaPrimary": "Conecta iCloud gratis",
+      "ctaSecondary": "Lee la documentación"
+    }
+  }
+}

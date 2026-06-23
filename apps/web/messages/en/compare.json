@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "title": "Native connectors vs MCP email",
+    "description": "Why a managed MCP email server beats AI-native built-in connectors: more providers, real send/schedule/organize actions, and one setup that works across every MCP client."
+  },
+  "hero": {
+    "eyebrow": "Native connectors vs MCP",
+    "titleLine1": "Built-in AI connectors stop",
+    "titleLine2": "where your inbox starts",
+    "lead": "AI-native email connectors cover one or two providers and mostly draft. A managed MCP email server connects any inbox, takes real actions, and travels with you to every AI client.",
+    "ctaPrimary": "Connect an inbox free",
+    "ctaSecondary": "Read the docs"
+  },
+  "axes": {
+    "eyebrow": "Three honest differences",
+    "title": "Where a managed MCP server wins",
+    "sub": "No hand-waving. These are the concrete gaps between a single-vendor built-in connector and an MCP email server.",
+    "items": {
+      "coverage": {
+        "tag": "Coverage",
+        "h": "Every inbox, not just Gmail",
+        "p": "Built-in connectors typically reach one mailbox — Gmail, sometimes Outlook. They can't touch <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over OAuth, the rest over an app password or plain IMAP."
+      },
+      "actions": {
+        "tag": "Real actions",
+        "h": "Send and schedule, not just draft",
+        "p": "Many native connectors stop at <b>creating a draft</b> you still have to open and send. Our nine action-based tools <b>send, reply, forward, schedule, move, flag, archive, and delete</b> directly — the agent finishes the job inside the inbox."
+      },
+      "portable": {
+        "tag": "Portable",
+        "h": "One setup, every AI",
+        "p": "A vendor's built-in connector only works inside that vendor's app. Our server speaks standard streamable-http MCP with <b>OAuth 2.1 / DCR / PKCE</b>, so the same inbox works in <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code>, and more — no per-app rebuild."
+      }
+    }
+  },
+  "table": {
+    "eyebrow": "Side by side",
+    "title": "Native connectors vs MCP Emails",
+    "featureCol": "Capability",
+    "nativeCol": "Native connectors",
+    "mcpCol": "MCP Emails",
+    "rows": {
+      "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
+      "imap": "Any IMAP / SMTP mailbox",
+      "send": "Send & reply directly (not just drafts)",
+      "schedule": "Schedule sends for later",
+      "organize": "Move, flag, archive, delete",
+      "multiAi": "Works across Claude, Cursor, ChatGPT, n8n…",
+      "oauth": "Gmail over OAuth",
+      "storage": "Email fetched live, never stored"
+    },
+    "footnote": "Capabilities of typical AI-native connectors vary by vendor; the gaps above reflect the common one-provider, draft-only pattern."
+  },
+  "ctaBand": {
+    "title": "Give your AI a real inbox",
+    "sub": "Connect any mailbox in minutes — unlimited inboxes and tool calls on the free plan, no card required.",
+    "ctaPrimary": "Connect an inbox free",
+    "ctaSecondary": "Read the docs"
+  },
+  "links": {
+    "compare": "Compare",
+    "connectHeading": "Connect",
+    "connectFastmail": "Connect Fastmail",
+    "connectIcloud": "Connect iCloud",
+    "vsNative": "vs native connectors"
+  }
+}

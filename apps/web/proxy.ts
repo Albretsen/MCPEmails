@@ -31,6 +31,7 @@ const MARKETING_PATHS = new Set([
   '/blog',
   '/privacy',
   '/terms',
+  '/native-connectors-vs-mcp',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {
@@ -50,6 +51,8 @@ function isLocalizedRoute(pathname: string): boolean {
   if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
   // Blog has dynamic post slugs (/blog/<slug>) on top of the index.
   if (path === '/blog' || path.startsWith('/blog/')) return true;
+  // Provider landing pages are a dynamic segment (/connect/<provider>).
+  if (path === '/connect' || path.startsWith('/connect/')) return true;
   return MARKETING_PATHS.has(path);
 }
 

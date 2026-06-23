@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "title": "原生连接器 vs MCP 邮件",
+    "description": "为什么托管式 MCP 邮件服务器胜过 AI 内置连接器：支持更多邮箱、可真正发送/定时/整理，且一次配置即可在任意 MCP 客户端中使用。"
+  },
+  "hero": {
+    "eyebrow": "原生连接器 vs MCP",
+    "titleLine1": "内置 AI 连接器止步之处",
+    "titleLine2": "正是你的收件箱起点",
+    "lead": "AI 原生邮件连接器只覆盖一两家服务商，而且大多只能生成草稿。托管式 MCP 邮件服务器可连接任意邮箱、执行真实操作，并随你在所有 AI 客户端中通用。",
+    "ctaPrimary": "免费连接一个邮箱",
+    "ctaSecondary": "阅读文档"
+  },
+  "axes": {
+    "eyebrow": "三点真实差异",
+    "title": "托管式 MCP 服务器的优势所在",
+    "sub": "绝不含糊。以下是单一厂商内置连接器与 MCP 邮件服务器之间的具体差距。",
+    "items": {
+      "coverage": {
+        "tag": "覆盖范围",
+        "h": "任意邮箱，不止 Gmail",
+        "p": "内置连接器通常只能连接一个邮箱——Gmail，有时还有 Outlook。它们无法接入 <b>Fastmail、iCloud、Yahoo、Zoho、Yandex</b> 或任何其他 <b>IMAP/SMTP</b> 账户。我们全部支持：Gmail 通过 OAuth 连接，其余通过应用专用密码或普通 IMAP 连接。"
+      },
+      "actions": {
+        "tag": "真实操作",
+        "h": "可发送和定时，而非只生成草稿",
+        "p": "许多原生连接器只能<b>生成草稿</b>，你仍需自行打开并发送。我们的九个基于动作的工具可直接<b>发送、回复、转发、定时、移动、标记、归档和删除</b>——AI 在收件箱内即可完成整件事。"
+      },
+      "portable": {
+        "tag": "可迁移",
+        "h": "一次配置，任意 AI 通用",
+        "p": "某厂商的内置连接器只能在该厂商的应用内使用。我们的服务器采用标准 streamable-http MCP，并支持 <b>OAuth 2.1 / DCR / PKCE</b>，因此同一个邮箱可在 <code>Claude</code>、<code>Cursor</code>、<code>VS Code</code>、<code>ChatGPT</code>、<code>n8n</code> 等中通用——无需为每个应用重新搭建。"
+      }
+    }
+  },
+  "table": {
+    "eyebrow": "并排对比",
+    "title": "原生连接器 vs MCP Emails",
+    "featureCol": "能力",
+    "nativeCol": "原生连接器",
+    "mcpCol": "MCP Emails",
+    "rows": {
+      "providers": "Fastmail、iCloud、Yahoo、Zoho、Yandex",
+      "imap": "任意 IMAP / SMTP 邮箱",
+      "send": "直接发送与回复（不止草稿）",
+      "schedule": "定时发送",
+      "organize": "移动、标记、归档、删除",
+      "multiAi": "可在 Claude、Cursor、ChatGPT、n8n 等中使用",
+      "oauth": "Gmail 通过 OAuth",
+      "storage": "邮件实时获取，绝不存储"
+    },
+    "footnote": "典型 AI 原生连接器的能力因厂商而异；上述差距反映的是常见的「单一服务商、仅草稿」模式。"
+  },
+  "ctaBand": {
+    "title": "给你的 AI 一个真正的收件箱",
+    "sub": "几分钟即可连接任意邮箱——免费套餐提供无限邮箱与无限工具调用，无需信用卡。",
+    "ctaPrimary": "免费连接一个邮箱",
+    "ctaSecondary": "阅读文档"
+  },
+  "links": {
+    "compare": "对比",
+    "connectHeading": "连接",
+    "connectFastmail": "连接 Fastmail",
+    "connectIcloud": "连接 iCloud",
+    "vsNative": "对比原生连接器"
+  }
+}
