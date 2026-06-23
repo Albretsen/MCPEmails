@@ -161,6 +161,37 @@
     },
     "footnote": "Todos los planes: el correo que lee tu agente se obtiene en vivo y nunca se almacena. Tokens de OAuth cifrados en reposo. ¿Necesitas algo a medida? <contact>Contáctanos</contact>. <comparison>Ver la comparación completa de funciones →</comparison>"
   },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Preguntas, respondidas",
+    "sub": "Todo lo que necesitas saber antes de conectar tu primera bandeja de entrada.",
+    "items": [
+      {
+        "q": "¿Con qué clientes de IA funciona?",
+        "a": "Con cualquier cliente compatible con MCP. Somos un servidor MCP estándar streamable-http con OAuth 2.1, DCR y PKCE, así que la misma bandeja de entrada funciona en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat y más. Pega una sola URL de endpoint y ya estás conectado — sin tener que reconstruir nada para cada app."
+      },
+      {
+        "q": "¿Qué proveedores de correo puedo conectar?",
+        "a": "Gmail mediante OAuth (con un clic), Fastmail, iCloud, Yahoo, Zoho y Yandex con una contraseña de aplicación, y cualquier otra bandeja mediante una conexión IMAP/SMTP genérica. Conecta tantas bandejas como quieras y etiquétalas por caso de uso."
+      },
+      {
+        "q": "¿Se almacena mi correo en algún sitio?",
+        "a": "No. El correo que lee tu agente se obtiene en vivo de tu proveedor en cada petición y nunca se almacena en nuestros servidores. La única excepción es un mensaje que programes explícitamente para enviar más tarde, que se guarda cifrado hasta que sale."
+      },
+      {
+        "q": "¿Es realmente gratis?",
+        "a": "Sí. El plan Gratis te da bandejas conectadas ilimitadas, llamadas a herramientas MCP ilimitadas y claves de API ilimitadas — sin límites diarios y sin tarjeta. El único límite es un tope de uso justo por minuto para proteger la plataforma. Los planes de pago añaden miembros de equipo, límites de ráfaga más altos y soporte, nunca más uso."
+      },
+      {
+        "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",
+        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja — mover, marcar, archivar y eliminar. Nueve herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
+      },
+      {
+        "q": "¿Cómo conecto una bandeja de entrada?",
+        "a": "Crea una cuenta gratuita, conecta tu bandeja (con un clic para Gmail, o pega una contraseña de aplicación para las demás) y luego pega https://mcpemails.com/api/mcp en tu cliente de IA y autoriza. Tu agente tendrá la bandeja en un par de minutos."
+      }
+    ]
+  },
   "footer": {
     "tagline": "Un servidor MCP alojado que da a los agentes de IA acceso de lectura y envío a tu bandeja de entrada, sin almacenar nunca el correo que lee.",
     "productHeading": "Producto",

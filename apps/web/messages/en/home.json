@@ -161,6 +161,37 @@
     },
     "footnote": "All plans: the mail your agent reads is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <contact>Contact us</contact>. <comparison>See full feature comparison →</comparison>"
   },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Questions, answered",
+    "sub": "Everything you need to know before connecting your first inbox.",
+    "items": [
+      {
+        "q": "Which AI clients does it work with?",
+        "a": "Any MCP-compatible client. We're a standard streamable-http MCP server with OAuth 2.1, DCR and PKCE, so the same inbox works in Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat and more. Paste one endpoint URL and you're connected — no per-app rebuild."
+      },
+      {
+        "q": "Which email providers can I connect?",
+        "a": "Gmail over OAuth (one click), Fastmail, iCloud, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox over a generic IMAP/SMTP connection. Connect as many inboxes as you like and label them by use case."
+      },
+      {
+        "q": "Is my email stored anywhere?",
+        "a": "No. The mail your agent reads is fetched live from your provider on each request and never stored on our servers. The only exception is a message you explicitly schedule to send later, which is held encrypted until it goes out."
+      },
+      {
+        "q": "Is it really free?",
+        "a": "Yes. The free plan gives you unlimited connected inboxes, unlimited MCP tool calls and unlimited API keys — no daily caps, no card required. The only limit is a per-minute fair-use ceiling to protect the platform. Paid plans add team members, higher burst limits and support, never more usage."
+      },
+      {
+        "q": "What can the AI actually do with my inbox?",
+        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox — move, flag, archive and delete. Nine action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
+      },
+      {
+        "q": "How do I connect an inbox?",
+        "a": "Create a free account, connect your mailbox (one click for Gmail, or paste an app password for the others), then drop https://mcpemails.com/api/mcp into your AI client and authorize. Your agent has the inbox in a couple of minutes."
+      }
+    ]
+  },
   "footer": {
     "tagline": "A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.",
     "productHeading": "Product",
