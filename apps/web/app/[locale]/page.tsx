@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { routing } from '@/i18n/routing';
-import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
 
 export async function generateMetadata({
@@ -48,5 +48,20 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
   const stripePrices = await fetchStripePrices();
-  return <HomeClient stripePrices={stripePrices} />;
+
+  const t = await getTranslations({ locale, namespace: 'home.meta' });
+  const jsonLd = homeJsonLd(locale, {
+    name: t('title'),
+    description: t('description'),
+  });
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <HomeClient stripePrices={stripePrices} />
+    </>
+  );
 }

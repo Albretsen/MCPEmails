@@ -45,3 +45,57 @@ export const OG_LOCALE: Record<string, string> = {
   fr: 'fr_FR',
   zh: 'zh_CN',
 };
+
+/**
+ * Structured-data graph for the home page (Organization + WebSite +
+ * SoftwareApplication). This is the product's primary acquisition surface:
+ * AI assistants and search engines read it to describe and recommend
+ * mcpemails. Everything here must be literally true — no aggregateRating or
+ * other invented signals. The free Offer mirrors the real "unlimited, free"
+ * tier; richer pricing lives in the FAQPage schema on /pricing.
+ */
+export function homeJsonLd(
+  locale: string,
+  { name, description }: { name: string; description: string }
+) {
+  const home = localePath(locale, '');
+  const orgId = `${APP_URL}/#organization`;
+  const siteId = `${APP_URL}/#website`;
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': orgId,
+        name: 'mcpemails',
+        url: APP_URL,
+        logo: `${APP_URL}/favicon.svg`,
+        sameAs: ['https://twitter.com/mcpemails'],
+      },
+      {
+        '@type': 'WebSite',
+        '@id': siteId,
+        name: 'mcpemails',
+        url: APP_URL,
+        inLanguage: locale,
+        publisher: { '@id': orgId },
+      },
+      {
+        '@type': 'SoftwareApplication',
+        name: 'mcpemails',
+        url: home,
+        description,
+        applicationCategory: 'BusinessApplication',
+        applicationSubCategory: 'Email',
+        operatingSystem: 'Web',
+        publisher: { '@id': orgId },
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD',
+          description: 'Unlimited, free forever. No card required.',
+        },
+      },
+    ],
+  };
+}

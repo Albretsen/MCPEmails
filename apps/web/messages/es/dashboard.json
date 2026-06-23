@@ -250,6 +250,12 @@
       "sub": "Esta es la única vez que se mostrará tu clave. Cópiala ahora.",
       "createdJustNow": "· creada justo ahora",
       "urlLabel": "O pega esta URL directamente en tu cliente MCP (sin OAuth)",
+      "nextTitle": "Siguiente: conéctalo en Claude",
+      "nextStep1": "En claude.ai o Claude Desktop, abre Ajustes → Conectores → Añadir conector personalizado.",
+      "nextStep2": "Pega la URL de arriba. Los clientes con OAuth se conectan con un clic.",
+      "nextStep3": "Luego solo pide a Claude:",
+      "nextPrompt": "Resume mis correos sin leer de hoy.",
+      "nextGuide": "Guía paso a paso",
       "warning": "Guarda esta clave en un lugar seguro. No se puede mostrar de nuevo. Si la pierdes, revoca esta clave y crea una nueva.",
       "acknowledge": "He copiado mi clave de API y entiendo que no se puede mostrar de nuevo.",
       "done": "Listo"
