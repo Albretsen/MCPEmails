@@ -16,16 +16,16 @@
     "titleLine1": "Give your AI",
     "titleLine2": "agent an",
     "titleAccent": "inbox.",
-    "lead": "Connect Gmail, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and the mail it reads is never stored.",
+    "lead": "Connect Gmail, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, or any MCP client. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and the mail it reads is never stored.",
     "ctaPrimary": "Connect your inbox",
     "ctaSecondary": "Read the docs",
-    "metaUnlimited": "Unlimited, free forever",
+    "metaUnlimited": "Unlimited free, no daily caps",
     "metaNoCard": "No card required",
     "metaNeverStored": "Email fetched live",
     "pipe": {
       "flow": "How a call flows",
       "agent": "AI agent",
-      "agentSub": "claude.ai · Desktop · Cursor",
+      "agentSub": "Claude · Cursor · VS Code · ChatGPT · any MCP client",
       "serverSub": "/api/mcp endpoint",
       "provider": "Your provider",
       "providerSub": "Gmail · iCloud · IMAP",
@@ -66,12 +66,12 @@
       "3": {
         "tag": "Providers",
         "h": "Gmail, iCloud, Fastmail & any IMAP inbox.",
-        "p": "OAuth 2.0 for Gmail; app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Connect multiple inboxes, label them by use case (work-gmail, ops-fastmail, support-imap), and scope each API key to the inboxes you want that agent to reach."
+        "p": "OAuth 2.0 for Gmail; app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Connect multiple inboxes, label them by use case (work-gmail, ops-fastmail, support-imap), and scope each API key to the inboxes you want that agent to reach. Teams and agencies can manage every client inbox in one shared workspace with roles and an audit log."
       },
       "4": {
         "tag": "Access",
         "h": "OAuth 2.0 for agents. One click to revoke.",
-        "p": "Any MCP client that supports OAuth (claude.ai, Claude Desktop, Cursor, and others) connects automatically via authorization code + PKCE. No API key setup. API keys are there for clients without OAuth and for scripted access. Either way, you revoke any connection from the dashboard in one click."
+        "p": "We're standard MCP (streamable-http) with OAuth 2.1, DCR & PKCE — no vendor lock-in. Works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI, and any MCP-compatible client. OAuth clients connect automatically via authorization code + PKCE; a scoped API key covers clients without OAuth and scripted access. Revoke any connection from the dashboard in one click."
       },
       "5": {
         "tag": "Security",
@@ -122,10 +122,10 @@
     "tiers": {
       "free": {
         "name": "Free",
-        "desc": "Everything, unlimited. For everyone building with MCP agents.",
+        "desc": "Everything, unlimited. No daily caps. For everyone building with MCP agents.",
         "features": [
           "Unlimited connected inboxes",
-          "Unlimited MCP tool calls",
+          "No daily limits — unlimited MCP tool calls",
           "Unlimited API keys",
           "Gmail, iCloud, Fastmail & any IMAP",
           "60 requests / minute",
@@ -147,7 +147,7 @@
       },
       "team": {
         "name": "Team",
-        "desc": "For businesses and teams that need roles, SSO, and audit logs.",
+        "desc": "For teams and agencies managing multiple client inboxes in one shared workspace, with roles, SSO, and audit logs.",
         "features": [
           "Everything in Solo, unlimited",
           "1,000 requests / minute",

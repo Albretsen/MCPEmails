@@ -16,16 +16,16 @@
     "titleLine1": "Offrez une",
     "titleLine2": "boîte de réception à",
     "titleAccent": "votre agent IA.",
-    "lead": "Connectez Gmail, iCloud, Fastmail ou n'importe quelle boîte IMAP une seule fois. Collez une URL de point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP. Les clients OAuth se connectent en un clic, sans configuration de clé API. Votre agent lit, recherche et envoie du courrier en direct, et le courrier qu'il lit n'est jamais stocké.",
+    "lead": "Connectez Gmail, iCloud, Fastmail ou n'importe quelle boîte IMAP une seule fois. Collez une URL de point de terminaison MCP dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make ou n'importe quel client MCP. Les clients OAuth se connectent en un clic, sans configuration de clé API. Votre agent lit, recherche et envoie du courrier en direct, et le courrier qu'il lit n'est jamais stocké.",
     "ctaPrimary": "Connecter votre boîte de réception",
     "ctaSecondary": "Lire la documentation",
-    "metaUnlimited": "Illimité, gratuit pour toujours",
+    "metaUnlimited": "Gratuit illimité, aucun plafond quotidien",
     "metaNoCard": "Aucune carte requise",
     "metaNeverStored": "E-mails récupérés en direct",
     "pipe": {
       "flow": "Le déroulement d'un appel",
       "agent": "Agent IA",
-      "agentSub": "claude.ai · Desktop · Cursor",
+      "agentSub": "Claude · Cursor · VS Code · ChatGPT · tout client MCP",
       "serverSub": "point de terminaison /api/mcp",
       "provider": "Votre fournisseur",
       "providerSub": "Gmail · iCloud · IMAP",
@@ -66,12 +66,12 @@
       "3": {
         "tag": "Fournisseurs",
         "h": "Gmail, iCloud, Fastmail et toute boîte IMAP.",
-        "p": "OAuth 2.0 pour Gmail ; mots de passe d'application pour Fastmail, iCloud, Yahoo, Zoho et Yandex ; un connecteur IMAP / SMTP générique pour tout le reste. Connectez plusieurs boîtes, étiquetez-les par cas d'usage (work-gmail, ops-fastmail, support-imap) et limitez chaque clé API aux boîtes que vous souhaitez rendre accessibles à cet agent."
+        "p": "OAuth 2.0 pour Gmail ; mots de passe d'application pour Fastmail, iCloud, Yahoo, Zoho et Yandex ; un connecteur IMAP / SMTP générique pour tout le reste. Connectez plusieurs boîtes, étiquetez-les par cas d'usage (work-gmail, ops-fastmail, support-imap) et limitez chaque clé API aux boîtes que vous souhaitez rendre accessibles à cet agent. Les équipes et les agences peuvent gérer toutes les boîtes de leurs clients dans un espace de travail partagé, avec rôles et journal d'audit."
       },
       "4": {
         "tag": "Accès",
         "h": "OAuth 2.0 pour les agents. Révocation en un clic.",
-        "p": "Tout client MCP qui prend en charge OAuth (claude.ai, Claude Desktop, Cursor et autres) se connecte automatiquement via le code d'autorisation + PKCE. Aucune configuration de clé API. Les clés API sont là pour les clients sans OAuth et pour l'accès par script. Dans tous les cas, vous révoquez n'importe quelle connexion depuis le tableau de bord en un clic."
+        "p": "Nous sommes du MCP standard (streamable-http) avec OAuth 2.1, DCR et PKCE — sans dépendance à un fournisseur. Compatible avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI et tout client compatible MCP. Les clients OAuth se connectent automatiquement via le code d'autorisation + PKCE ; une clé API limitée couvre les clients sans OAuth et l'accès par script. Révoquez n'importe quelle connexion depuis le tableau de bord en un clic."
       },
       "5": {
         "tag": "Sécurité",
@@ -122,10 +122,10 @@
     "tiers": {
       "free": {
         "name": "Gratuit",
-        "desc": "Tout, en illimité. Pour quiconque construit avec des agents MCP.",
+        "desc": "Tout, en illimité. Aucun plafond quotidien. Pour quiconque construit avec des agents MCP.",
         "features": [
           "Boîtes connectées illimitées",
-          "Appels d'outils MCP illimités",
+          "Aucune limite quotidienne — appels d'outils MCP illimités",
           "Clés API illimitées",
           "Gmail, iCloud, Fastmail et toute boîte IMAP",
           "60 requêtes / minute",
@@ -147,7 +147,7 @@
       },
       "team": {
         "name": "Team",
-        "desc": "Pour les entreprises et les équipes qui ont besoin de rôles, de SSO et de journaux d'audit.",
+        "desc": "Pour les équipes et les agences qui gèrent plusieurs boîtes de clients dans un espace de travail partagé, avec rôles, SSO et journaux d'audit.",
         "features": [
           "Tout ce qui est dans Solo, en illimité",
           "1 000 requêtes / minute",

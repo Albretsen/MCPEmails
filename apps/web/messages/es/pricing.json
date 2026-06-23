@@ -22,11 +22,11 @@
   "plans": {
     "free": {
       "name": "Gratis",
-      "desc": "Todo, ilimitado. Para todos los que construyen con agentes MCP.",
+      "desc": "Todo, ilimitado. Sin límites diarios. Para todos los que construyen con agentes MCP.",
       "cta": "Empieza gratis",
       "features": [
         "Bandejas conectadas ilimitadas",
-        "Llamadas a herramientas MCP ilimitadas",
+        "Sin límites diarios — llamadas a herramientas MCP ilimitadas",
         "Claves de API ilimitadas",
         "Gmail, iCloud, Fastmail y cualquier IMAP",
         "60 peticiones / minuto",
@@ -48,7 +48,7 @@
     "pro": {
       "name": "Team",
       "badge": "Más popular",
-      "desc": "Para empresas y equipos que necesitan roles, SSO y registros de auditoría.",
+      "desc": "Para equipos y agencias que gestionan varias bandejas de clientes en un espacio de trabajo compartido, con roles, SSO y registros de auditoría.",
       "cta": "Obtener Team",
       "features": [
         "Todo lo de Solo, ilimitado",
@@ -138,11 +138,11 @@
     "items": [
       {
         "q": "¿De verdad no hay límite de uso?",
-        "a": "Correcto. Las bandejas conectadas, las llamadas a herramientas MCP, las claves de API son ilimitadas en todos los planes, incluido Gratis; los miembros de equipo están disponibles en los planes de pago (Gratis es de un solo usuario). El único límite es un tope de uso justo por minuto (60/min en Gratis, 300/min en Solo, 1.000/min en Team) para proteger la plataforma del abuso. Los planes de pago añaden mayor rendimiento de ráfaga, funciones de equipo y soporte, nunca más uso."
+        "a": "Correcto. No hay límites diarios ni topes mensuales de llamadas. Las bandejas conectadas, las llamadas a herramientas MCP, las claves de API son ilimitadas en todos los planes, incluido Gratis; los miembros de equipo están disponibles en los planes de pago (Gratis es de un solo usuario). El único límite es un tope de uso justo por minuto (60/min en Gratis, 300/min en Solo, 1.000/min en Team) para proteger la plataforma del abuso. Los planes de pago añaden mayor rendimiento de ráfaga, funciones de equipo y soporte, nunca más uso."
       },
       {
         "q": "¿Qué cuenta como una llamada MCP?",
-        "a": "Cada invocación de herramienta JSON-RPC contra tu endpoint /mcp cuenta como una llamada: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule o contact_search. Las llamadas son ilimitadas; solo cuentan para tu tope de uso justo por minuto."
+        "a": "Cada invocación de herramienta JSON-RPC contra tu endpoint /mcp cuenta como una llamada: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule o contact_search. Las llamadas son ilimitadas; solo cuentan para tu tope de uso justo por minuto. Somos un servidor MCP estándar, así que el mismo endpoint funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente compatible con MCP."
       },
       {
         "q": "¿Se almacena en algún sitio el contenido de mi correo?",
