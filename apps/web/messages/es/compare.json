@@ -57,6 +57,33 @@
     "ctaPrimary": "Conecta una bandeja gratis",
     "ctaSecondary": "Lee la documentación"
   },
+  "faq": {
+    "eyebrow": "Preguntas frecuentes",
+    "title": "Conectores nativos vs MCP, respondido",
+    "sub": "Las objeciones que surgen antes de cambiar de un conector integrado.",
+    "items": [
+      {
+        "q": "¿No puede Claude o ChatGPT leer ya mi Gmail con un conector integrado?",
+        "a": "A veces, para un solo proveedor y a menudo solo de lectura o solo borradores. mcpemails conecta Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier buzón IMAP, y realiza acciones reales: enviar, responder, reenviar, programar, mover, marcar, archivar y eliminar. Esa misma bandeja funciona luego en cualquier cliente MCP, no solo en la app de un proveedor."
+      },
+      {
+        "q": "¿Qué buzones suelen quedar fuera de los conectores integrados?",
+        "a": "La mayoría de los conectores nativos alcanzan Gmail y a veces Outlook. Por lo general no pueden tocar Fastmail, iCloud, Yahoo, Zoho, Yandex ni un servidor IMAP/SMTP autoalojado. mcpemails los conecta todos."
+      },
+      {
+        "q": "¿Los conectores nativos envían correo de verdad o solo lo dejan en borrador?",
+        "a": "Muchos se detienen en crear un borrador que aún tienes que abrir y enviar tú. mcpemails envía, responde, reenvía y programa directamente, así el agente termina la tarea dentro de tu bandeja."
+      },
+      {
+        "q": "Si lo configuro para Claude, ¿funciona también en Cursor o ChatGPT?",
+        "a": "Sí. mcpemails es un servidor MCP streamable-http estándar con OAuth 2.1, DCR y PKCE, así que una sola configuración funciona en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente MCP. El conector integrado de un proveedor solo funciona dentro de la app de ese proveedor."
+      },
+      {
+        "q": "¿Es privado si un tercero conecta mi bandeja?",
+        "a": "El correo que lee tu agente se obtiene en vivo de tu proveedor y nunca se almacena en nuestros servidores. Solo se conserva un token OAuth cifrado o una contraseña de aplicación para que las futuras solicitudes puedan autenticarse, y puedes revocar el acceso con un clic."
+      }
+    ]
+  },
   "links": {
     "compare": "Comparar",
     "connectHeading": "Conectar",

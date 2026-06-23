@@ -57,6 +57,33 @@
     "ctaPrimary": "免费连接一个邮箱",
     "ctaSecondary": "阅读文档"
   },
+  "faq": {
+    "eyebrow": "常见问题",
+    "title": "原生连接器 vs MCP，逐一解答",
+    "sub": "人们在从内置连接器切换之前提出的疑虑。",
+    "items": [
+      {
+        "q": "Claude 或 ChatGPT 不是已经能用内置连接器读取我的 Gmail 吗？",
+        "a": "有时可以，但只针对单一服务商，而且往往只能读取或只能生成草稿。mcpemails 可连接 Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任意 IMAP 邮箱，并执行真实操作：发送、回复、转发、定时、移动、标记、归档和删除。同一个收件箱随后即可在每一个 MCP 客户端中使用，而不局限于某一家厂商的应用。"
+      },
+      {
+        "q": "内置连接器通常遗漏哪些邮箱？",
+        "a": "大多数原生连接器只能接入 Gmail，有时还有 Outlook。它们通常无法接触 Fastmail、iCloud、Yahoo、Zoho、Yandex，或自托管的 IMAP/SMTP 服务器。mcpemails 全部支持连接。"
+      },
+      {
+        "q": "原生连接器是真的能发送邮件，还是只能生成草稿？",
+        "a": "许多连接器止步于创建一份草稿，你仍需自行打开并发送。mcpemails 可直接发送、回复、转发和定时，因此 AI 能在你的收件箱内完成整件事。"
+      },
+      {
+        "q": "如果我为 Claude 配置了它，在 Cursor 或 ChatGPT 中也能用吗？",
+        "a": "可以。mcpemails 是标准的 streamable-http MCP 服务器，支持 OAuth 2.1、DCR 和 PKCE，因此一次配置即可在 Claude、Cursor、VS Code、ChatGPT、Windsurf、n8n、Make 以及任意 MCP 客户端中通用。而某厂商的内置连接器只能在该厂商的应用内使用。"
+      },
+      {
+        "q": "由第三方连接我的收件箱，能保证隐私吗？",
+        "a": "AI 读取的邮件是从你的服务商实时获取的，绝不存储在我们的服务器上。我们仅保留一个加密的 OAuth 令牌或应用专用密码，以便后续请求完成认证，而你随时可以一键撤销访问权限。"
+      }
+    ]
+  },
   "links": {
     "compare": "对比",
     "connectHeading": "连接",
