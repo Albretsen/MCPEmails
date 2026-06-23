@@ -56,22 +56,26 @@ import t43 from './how-to-give-your-ai-agent-email-access/es';
 import t44 from './how-to-give-your-ai-agent-email-access/fr';
 import t45 from './how-to-give-your-ai-agent-email-access/nb';
 import t46 from './how-to-give-your-ai-agent-email-access/zh';
-import t47 from './is-it-safe-to-give-ai-agent-email-access/es';
-import t48 from './is-it-safe-to-give-ai-agent-email-access/fr';
-import t49 from './is-it-safe-to-give-ai-agent-email-access/nb';
-import t50 from './is-it-safe-to-give-ai-agent-email-access/zh';
-import t51 from './oauth-vs-api-keys-ai-email-access/es';
-import t52 from './oauth-vs-api-keys-ai-email-access/fr';
-import t53 from './oauth-vs-api-keys-ai-email-access/nb';
-import t54 from './oauth-vs-api-keys-ai-email-access/zh';
-import t55 from './what-is-an-mcp-email-server/es';
-import t56 from './what-is-an-mcp-email-server/fr';
-import t57 from './what-is-an-mcp-email-server/nb';
-import t58 from './what-is-an-mcp-email-server/zh';
-import t59 from './why-email-never-stored-matters/es';
-import t60 from './why-email-never-stored-matters/fr';
-import t61 from './why-email-never-stored-matters/nb';
-import t62 from './why-email-never-stored-matters/zh';
+import t47 from './inbox-zero-with-ai-claude/es';
+import t48 from './inbox-zero-with-ai-claude/fr';
+import t49 from './inbox-zero-with-ai-claude/nb';
+import t50 from './inbox-zero-with-ai-claude/zh';
+import t51 from './is-it-safe-to-give-ai-agent-email-access/es';
+import t52 from './is-it-safe-to-give-ai-agent-email-access/fr';
+import t53 from './is-it-safe-to-give-ai-agent-email-access/nb';
+import t54 from './is-it-safe-to-give-ai-agent-email-access/zh';
+import t55 from './oauth-vs-api-keys-ai-email-access/es';
+import t56 from './oauth-vs-api-keys-ai-email-access/fr';
+import t57 from './oauth-vs-api-keys-ai-email-access/nb';
+import t58 from './oauth-vs-api-keys-ai-email-access/zh';
+import t59 from './what-is-an-mcp-email-server/es';
+import t60 from './what-is-an-mcp-email-server/fr';
+import t61 from './what-is-an-mcp-email-server/nb';
+import t62 from './what-is-an-mcp-email-server/zh';
+import t63 from './why-email-never-stored-matters/es';
+import t64 from './why-email-never-stored-matters/fr';
+import t65 from './why-email-never-stored-matters/nb';
+import t66 from './why-email-never-stored-matters/zh';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
@@ -86,10 +90,11 @@ const TRANSLATIONS = {
   'give-your-ai-agent-an-inbox': { es: t35, fr: t36, nb: t37, zh: t38 },
   'hosted-vs-self-hosted-gmail-mcp-server': { es: t39, fr: t40, nb: t41, zh: t42 },
   'how-to-give-your-ai-agent-email-access': { es: t43, fr: t44, nb: t45, zh: t46 },
-  'is-it-safe-to-give-ai-agent-email-access': { es: t47, fr: t48, nb: t49, zh: t50 },
-  'oauth-vs-api-keys-ai-email-access': { es: t51, fr: t52, nb: t53, zh: t54 },
-  'what-is-an-mcp-email-server': { es: t55, fr: t56, nb: t57, zh: t58 },
-  'why-email-never-stored-matters': { es: t59, fr: t60, nb: t61, zh: t62 },
+  'inbox-zero-with-ai-claude': { es: t47, fr: t48, nb: t49, zh: t50 },
+  'is-it-safe-to-give-ai-agent-email-access': { es: t51, fr: t52, nb: t53, zh: t54 },
+  'oauth-vs-api-keys-ai-email-access': { es: t55, fr: t56, nb: t57, zh: t58 },
+  'what-is-an-mcp-email-server': { es: t59, fr: t60, nb: t61, zh: t62 },
+  'why-email-never-stored-matters': { es: t63, fr: t64, nb: t65, zh: t66 },
 };
 
 export default TRANSLATIONS;
