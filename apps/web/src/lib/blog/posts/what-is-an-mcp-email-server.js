@@ -6,8 +6,8 @@ export default {
   cover: '/blog/cover-what-is-an-mcp-email-server.svg',
   coverAlt: 'What is an MCP email server — a plain-English explanation from MCPEmails',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T22:00:00.000Z',
-  updatedAt: '2026-06-01T22:00:00.000Z',
+  publishedAt: "2026-06-17T09:00:00.000Z",
+  updatedAt: "2026-06-21T09:00:00.000Z",
   tags: ['MCP', 'AI agents', 'Email'],
   featured: false,
   content: `An MCP email server is a small service that gives an AI agent like Claude or Cursor live read-and-send access to a real inbox, using the Model Context Protocol. Instead of handing your agent an email password and an IMAP library, it hands the agent a short list of actions: list my messages, read this one, search for that, send a reply. The agent calls those actions like any other tool, and the server does the messy provider work behind the scenes.

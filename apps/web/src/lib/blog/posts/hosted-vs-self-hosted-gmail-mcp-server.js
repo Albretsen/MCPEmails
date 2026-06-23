@@ -6,8 +6,8 @@ export default {
   cover: '/blog/cover-hosted-vs-self-hosted-gmail-mcp-server.svg',
   coverAlt: 'Hosted versus self-hosted Gmail MCP server comparison — MCP Emails',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T14:00:00.000Z',
-  updatedAt: '2026-06-01T14:00:00.000Z',
+  publishedAt: "2026-05-28T09:00:00.000Z",
+  updatedAt: "2026-05-28T09:00:00.000Z",
   tags: ['Comparison', 'Gmail', 'MCP', 'Security'],
   featured: false,
   content: `If you want your AI agent to read and send Gmail, you have two real options: run a self-hosted Gmail MCP server from an open-source repo, or point your client at a hosted one. The DIY route costs zero dollars and gives you total control, but you personally own the OAuth setup, token encryption, hosting, updates, and security. A hosted server like MCP Emails costs minutes to wire up and keeps credentials encrypted, at the price of trusting a vendor with the connection.

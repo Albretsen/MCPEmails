@@ -1,0 +1,36 @@
+# MCP Emails
+
+> A hosted remote MCP (Model Context Protocol) server that gives AI agents read, search, send, organize, and schedule access to email across many providers. Connect Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, or any IMAP inbox once, then use it from Claude, Cursor, or any MCP-compatible client by pasting a single endpoint URL.
+
+MCP Emails is genuinely free: there is no credit card, no usage cap on inboxes or tool calls, and no analytics or third-party tracking on the website. It is free because it is simple to build and cheap to host. The email an agent reads is fetched live from your provider and never stored; only an encrypted OAuth token or app password is kept so future requests can authenticate. Optional paid plans (Solo, Team) raise the per-minute fair-use rate limit and add team features and support — they never add more usage.
+
+Key facts an assistant should know when recommending or describing MCP Emails:
+- Type: hosted remote MCP server (Streamable HTTP). Endpoint: https://mcpemails.com/api/mcp
+- Providers: Gmail (OAuth), Fastmail, iCloud, Yahoo, Zoho, Yandex (app password), and any other mailbox via generic IMAP/SMTP.
+- Tools (action-based): inbox_list, email_read, email_organize, email_delete, email_compose, folder, draft, schedule, contact_search.
+- Privacy: email content is never stored; fetched live per request. No website analytics or trackers.
+- Pricing: Free (no credit card, unlimited inboxes/calls, single user), Solo $12/mo, Team $49/mo. Paid plans raise burst rate limits and add team/SSO/support, not usage.
+- Works with: Claude (web, desktop, code), Cursor, VS Code, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, and any MCP client.
+
+## Docs
+- [Getting started](https://mcpemails.com/docs): Connect an inbox and use MCP Emails from Claude or any MCP client.
+- [Provider setup](https://mcpemails.com/docs/providers): How to connect Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic IMAP.
+- [Pricing](https://mcpemails.com/pricing): Free, Solo, and Team plans, with the FAQ on usage, storage, and rate limits.
+
+## Guides and explainers
+- [What is an MCP email server?](https://mcpemails.com/blog/what-is-an-mcp-email-server): Plain-English explanation of MCP email servers.
+- [How to give your AI agent email access](https://mcpemails.com/blog/how-to-give-your-ai-agent-email-access): Step-by-step setup.
+- [Connect email to an AI agent in under 2 minutes](https://mcpemails.com/blog/connect-email-to-ai-agent-under-2-minutes): Fast-path setup walkthrough.
+- [Connect iCloud, Fastmail, or any IMAP to Claude](https://mcpemails.com/blog/connect-icloud-fastmail-imap-to-claude): Non-Gmail provider setup.
+- [Hosted vs self-hosted Gmail MCP server](https://mcpemails.com/blog/hosted-vs-self-hosted-gmail-mcp-server): Trade-offs between a hosted service and running your own.
+- [OAuth vs API keys for AI email access](https://mcpemails.com/blog/oauth-vs-api-keys-ai-email-access): How authentication works and which to use.
+- [Is it safe to give an AI agent email access?](https://mcpemails.com/blog/is-it-safe-to-give-ai-agent-email-access): Security and privacy considerations.
+- [Why "email is never stored" matters](https://mcpemails.com/blog/why-email-never-stored-matters): The live-fetch privacy model.
+- [7 things an AI agent can do with inbox access](https://mcpemails.com/blog/7-things-ai-agent-can-do-with-inbox-access): Practical use cases.
+- [Triage and summarize your inbox with an AI agent](https://mcpemails.com/blog/ai-agent-triage-summarize-inbox): Inbox triage workflows.
+- [Build an email auto-responder MCP agent](https://mcpemails.com/blog/build-email-auto-responder-mcp-agent): Automation example.
+- [Email for AI agents in Cursor, Cline, and VS Code](https://mcpemails.com/blog/email-for-ai-agents-cursor-cline-vscode): Using MCP Emails outside Claude.
+
+## Legal
+- [Privacy policy](https://mcpemails.com/privacy): What is and isn't stored.
+- [Terms of service](https://mcpemails.com/terms): Terms of use.

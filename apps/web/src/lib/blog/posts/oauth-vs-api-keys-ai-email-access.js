@@ -5,8 +5,8 @@ export default {
   cover: '/blog/cover-oauth-vs-api-keys-ai-email-access.svg',
   coverAlt: 'OAuth versus API keys for connecting AI agents to email — MCPEmails',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T15:00:00.000Z',
-  updatedAt: '2026-06-01T15:00:00.000Z',
+  publishedAt: "2026-06-12T09:00:00.000Z",
+  updatedAt: "2026-06-21T09:00:00.000Z",
   tags: ['OAuth', 'Security', 'MCP', 'Tutorial'],
   featured: false,
   content: `When you connect an AI agent to your email through MCP Emails, you authenticate one of two ways: OAuth or an API key. The short answer is OAuth if your client supports it (claude.ai, Claude Desktop, Cursor), and a scoped API key if it doesn't (Cline, JetBrains, scripts, cURL). Both hit the same endpoint and expose the same tools. The difference is who manages the secret and how easily you can pull the plug.

@@ -14,8 +14,8 @@ export default {
     es: 'Conecta tu correo a un agente de IA en menos de 2 minutos: Gmail, Outlook, iCloud, Fastmail e IMAP con MCP',
   },
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T21:00:00.000Z',
-  updatedAt: '2026-06-01T21:00:00.000Z',
+  publishedAt: "2026-05-08T09:00:00.000Z",
+  updatedAt: "2026-05-08T09:00:00.000Z",
   tags: ['Tutorial', 'Gmail', 'Outlook', 'IMAP'],
   featured: false,
   content: {

@@ -35,5 +35,31 @@ export default async function PricingPage({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const stripePrices = await fetchStripePrices();
-  return <PricingClient stripePrices={stripePrices} />;
+
+  // FAQPage structured data — built from the same FAQ copy that's rendered
+  // visibly below, so the schema matches on-page content (a requirement for
+  // FAQ rich results and for AI assistants quoting the answers).
+  const t = await getTranslations({ locale, namespace: 'pricing' });
+  const faqItems = Array.isArray(t.raw('faq.items')) ? t.raw('faq.items') : [];
+  const faqLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a },
+    })),
+  };
+
+  return (
+    <>
+      {faqLd.mainEntity.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+        />
+      )}
+      <PricingClient stripePrices={stripePrices} />
+    </>
+  );
 }

@@ -6,8 +6,8 @@ export default {
   cover: '/blog/cover-connect-outlook-microsoft-365-ai-agent-mcp.svg',
   coverAlt: 'Connecting Outlook and Microsoft 365 to an AI agent over MCP',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T20:00:00.000Z',
-  updatedAt: '2026-06-01T20:00:00.000Z',
+  publishedAt: "2026-05-18T09:00:00.000Z",
+  updatedAt: "2026-05-18T09:00:00.000Z",
   tags: ['Outlook', 'Tutorial', 'MCP', 'AI agents'],
   featured: false,
   // Outlook / Microsoft 365 is built but not yet generally available ("coming

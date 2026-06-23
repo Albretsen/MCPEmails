@@ -6,8 +6,8 @@ export default {
   cover: '/blog/cover-7-things-ai-agent-can-do-with-inbox-access.svg',
   coverAlt: 'Seven things your AI agent can do with inbox access over MCP — MCPEmails',
   authorId: 'asgeir',
-  publishedAt: '2026-06-01T12:00:00.000Z',
-  updatedAt: '2026-06-01T12:00:00.000Z',
+  publishedAt: "2026-04-18T09:00:00.000Z",
+  updatedAt: "2026-04-18T09:00:00.000Z",
   tags: ['Workflows', 'AI agents', 'Email'],
   featured: false,
   content: `Once your agent can read and send real email, the demo-ware stops and the actual work starts. Here are seven things you can have it do today: triage the unread pile, summarize a long thread, draft replies in your voice, dig up that one attachment, chase down follow-ups, route mail to the right place, and ship you a weekly digest.
