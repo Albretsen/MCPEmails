@@ -161,6 +161,37 @@
     },
     "footnote": "Alle planer: e-posten agenten din leser hentes i sanntid og lagres aldri. OAuth-tokens krypteres ved lagring. Trenger du noe tilpasset? <contact>Kontakt oss</contact>. <comparison>Se full funksjonssammenligning →</comparison>"
   },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Svar på det du lurer på",
+    "sub": "Alt du trenger å vite før du kobler til den første innboksen din.",
+    "items": [
+      {
+        "q": "Hvilke AI-klienter fungerer det med?",
+        "a": "Alle MCP-kompatible klienter. Vi er en standard streamable-http MCP-server med OAuth 2.1, DCR og PKCE, så den samme innboksen fungerer i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat og flere. Lim inn én endepunkt-URL, så er du tilkoblet — ingen ombygging per app."
+      },
+      {
+        "q": "Hvilke e-postleverandører kan jeg koble til?",
+        "a": "Gmail via OAuth (ett klikk), Fastmail, iCloud, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen innboks via en generisk IMAP-/SMTP-kobling. Koble til så mange innbokser du vil, og merk dem etter bruksområde."
+      },
+      {
+        "q": "Lagres e-posten min noe sted?",
+        "a": "Nei. E-posten agenten din leser hentes i sanntid fra leverandøren din ved hvert kall, og lagres aldri på serverne våre. Det eneste unntaket er en melding du selv planlegger å sende senere, som oppbevares kryptert frem til sendetidspunktet."
+      },
+      {
+        "q": "Er det virkelig gratis?",
+        "a": "Ja. Gratisplanen gir deg ubegrenset antall tilkoblede innbokser, ubegrenset antall MCP-verktøykall og ubegrenset antall API-nøkler — ingen daglige tak, ingen kort kreves. Den eneste grensen er et rimelig tak per minutt for å beskytte plattformen. Betalte planer legger til teammedlemmer, høyere burst-grenser og support, aldri mer bruk."
+      },
+      {
+        "q": "Hva kan AI-en faktisk gjøre med innboksen min?",
+        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen — flytte, flagge, arkivere og slette. Ni action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
+      },
+      {
+        "q": "Hvordan kobler jeg til en innboks?",
+        "a": "Opprett en gratis konto, koble til innboksen din (ett klikk for Gmail, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
+      }
+    ]
+  },
   "footer": {
     "tagline": "En vertsbasert MCP-server som gir AI-agenter tilgang til å lese og sende fra innboksen din, uten å noen gang lagre e-posten den leser.",
     "productHeading": "Produkt",
