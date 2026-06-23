@@ -59,6 +59,13 @@ export function SignupApp() {
     return callbackUrl.toString();
   }
 
+  // Where a freshly-signed-up user lands once they have a session. Honor an
+  // invite/`?redirect=` target if present; otherwise drop them into the
+  // first-run connect flow (`firstrun=1` auto-opens the Connect Inbox modal).
+  function getRedirectDestination() {
+    return getSafeRedirect() ?? '/dashboard?firstrun=1';
+  }
+
   function buildOAuthUrl(provider) {
     const url = new URL(`/auth/${provider}`, window.location.origin);
     const redirect = getSafeRedirect();
@@ -100,7 +107,7 @@ export function SignupApp() {
     setServerError('');
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: { emailRedirectTo: buildCallbackUrl() },
@@ -109,7 +116,14 @@ export function SignupApp() {
     if (error) {
       setServerError(error.message ?? t('signup.errorGeneric'));
       setStep('error');
+    } else if (data?.session) {
+      // Email confirmation is disabled, so signUp returns an active session.
+      // Skip the "check your email" wall and send the user straight into the
+      // first-run connect flow — the moment of highest intent for activation.
+      window.location.href = getRedirectDestination();
     } else {
+      // Confirmation is still required (e.g. the project setting was
+      // re-enabled): fall back to the check-your-email screen.
       setStep('sent');
     }
   }
