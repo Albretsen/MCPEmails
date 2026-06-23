@@ -16,16 +16,16 @@
     "titleLine1": "为你的 AI",
     "titleLine2": "智能体配备一个",
     "titleAccent": "收件箱。",
-    "lead": "一次性连接 Gmail、iCloud、Fastmail 或任何 IMAP 收件箱。把一个 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。OAuth 客户端只需一键即可连接，无需配置 API 密钥。你的智能体实时阅读、搜索和发送邮件，而它所读取的邮件从不被存储。",
+    "lead": "一次性连接 Gmail、iCloud、Fastmail 或任何 IMAP 收件箱。把一个 MCP 端点 URL 粘贴到 Claude、Cursor、VS Code、ChatGPT、Windsurf、n8n、Make 或任何 MCP 客户端中。OAuth 客户端只需一键即可连接，无需配置 API 密钥。你的智能体实时阅读、搜索和发送邮件，而它所读取的邮件从不被存储。",
     "ctaPrimary": "连接你的收件箱",
     "ctaSecondary": "阅读文档",
-    "metaUnlimited": "无限量，永久免费",
+    "metaUnlimited": "免费无限量，无每日上限",
     "metaNoCard": "无需信用卡",
     "metaNeverStored": "邮件实时获取",
     "pipe": {
       "flow": "一次调用的流程",
       "agent": "AI 智能体",
-      "agentSub": "claude.ai · Desktop · Cursor",
+      "agentSub": "Claude · Cursor · VS Code · ChatGPT · 任何 MCP 客户端",
       "serverSub": "/api/mcp 端点",
       "provider": "你的服务商",
       "providerSub": "Gmail · iCloud · IMAP",
@@ -66,12 +66,12 @@
       "3": {
         "tag": "服务商",
         "h": "Gmail、iCloud、Fastmail 及任何 IMAP 收件箱。",
-        "p": "Gmail 使用 OAuth 2.0；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。"
+        "p": "Gmail 使用 OAuth 2.0；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。团队和代理机构可以在一个共享工作区中管理所有客户的收件箱，并配有角色和审计日志。"
       },
       "4": {
         "tag": "访问",
         "h": "为智能体提供 OAuth 2.0，一键撤销。",
-        "p": "任何支持 OAuth 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等）都会通过授权码 + PKCE 自动连接。无需配置 API 密钥。API 密钥则面向不支持 OAuth 的客户端和脚本化访问。无论哪种方式，你都可以在仪表盘里一键撤销任何连接。"
+        "p": "我们采用标准 MCP（streamable-http），支持 OAuth 2.1、DCR 和 PKCE——不锁定任何厂商。可与 Claude、Cursor、VS Code、ChatGPT、Windsurf、n8n、Make、LibreChat、OpenWebUI 以及任何兼容 MCP 的客户端配合使用。OAuth 客户端通过授权码 + PKCE 自动连接；一个限定范围的 API 密钥则覆盖不支持 OAuth 的客户端和脚本化访问。你可以在仪表盘里一键撤销任何连接。"
       },
       "5": {
         "tag": "安全",
@@ -122,10 +122,10 @@
     "tiers": {
       "free": {
         "name": "免费",
-        "desc": "一切功能，无限量。献给所有用 MCP 智能体进行构建的人。",
+        "desc": "一切功能，无限量。无每日上限。献给所有用 MCP 智能体进行构建的人。",
         "features": [
           "无限量连接收件箱",
-          "无限量 MCP 工具调用",
+          "无每日上限——无限量 MCP 工具调用",
           "无限量 API 密钥",
           "Gmail、iCloud、Fastmail 及任何 IMAP",
           "60 次请求 / 分钟",
@@ -147,7 +147,7 @@
       },
       "team": {
         "name": "Team",
-        "desc": "面向需要角色、SSO 和审计日志的企业和团队。",
+        "desc": "面向在一个共享工作区中管理多个客户收件箱的团队和代理机构，配有角色、SSO 和审计日志。",
         "features": [
           "包含 Solo 的一切，无限量",
           "1,000 次请求 / 分钟",

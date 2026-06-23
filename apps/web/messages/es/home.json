@@ -16,16 +16,16 @@
     "titleLine1": "Dale a tu agente",
     "titleLine2": "de IA una",
     "titleAccent": "bandeja de entrada.",
-    "lead": "Conecta Gmail, iCloud, Fastmail o cualquier bandeja IMAP una sola vez. Pega una URL de endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP. Los clientes OAuth se conectan con un clic, sin configurar claves de API. Tu agente lee, busca y envía correo en vivo, y el correo que lee nunca se almacena.",
+    "lead": "Conecta Gmail, iCloud, Fastmail o cualquier bandeja IMAP una sola vez. Pega una URL de endpoint MCP en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make o cualquier cliente MCP. Los clientes OAuth se conectan con un clic, sin configurar claves de API. Tu agente lee, busca y envía correo en vivo, y el correo que lee nunca se almacena.",
     "ctaPrimary": "Conecta tu bandeja de entrada",
     "ctaSecondary": "Lee la documentación",
-    "metaUnlimited": "Ilimitado, gratis para siempre",
+    "metaUnlimited": "Gratis ilimitado, sin límites diarios",
     "metaNoCard": "Sin tarjeta",
     "metaNeverStored": "El correo se obtiene en vivo",
     "pipe": {
       "flow": "Cómo fluye una llamada",
       "agent": "Agente de IA",
-      "agentSub": "claude.ai · Desktop · Cursor",
+      "agentSub": "Claude · Cursor · VS Code · ChatGPT · cualquier cliente MCP",
       "serverSub": "endpoint /api/mcp",
       "provider": "Tu proveedor",
       "providerSub": "Gmail · iCloud · IMAP",
@@ -66,12 +66,12 @@
       "3": {
         "tag": "Proveedores",
         "h": "Gmail, iCloud, Fastmail y cualquier bandeja IMAP.",
-        "p": "OAuth 2.0 para Gmail; contraseñas específicas de aplicación para Fastmail, iCloud, Yahoo, Zoho y Yandex; un conector IMAP / SMTP genérico para todo lo demás. Conecta varias bandejas, etiquétalas por caso de uso (work-gmail, ops-fastmail, support-imap) y limita cada clave de API a las bandejas que quieras que ese agente alcance."
+        "p": "OAuth 2.0 para Gmail; contraseñas específicas de aplicación para Fastmail, iCloud, Yahoo, Zoho y Yandex; un conector IMAP / SMTP genérico para todo lo demás. Conecta varias bandejas, etiquétalas por caso de uso (work-gmail, ops-fastmail, support-imap) y limita cada clave de API a las bandejas que quieras que ese agente alcance. Los equipos y agencias pueden gestionar todas las bandejas de sus clientes en un espacio de trabajo compartido con roles y registro de auditoría."
       },
       "4": {
         "tag": "Acceso",
         "h": "OAuth 2.0 para agentes. Un clic para revocar.",
-        "p": "Cualquier cliente MCP que admita OAuth (claude.ai, Claude Desktop, Cursor y otros) se conecta automáticamente mediante código de autorización + PKCE. Sin configurar claves de API. Las claves de API existen para clientes sin OAuth y para acceso por scripts. En cualquier caso, revocas cualquier conexión desde el panel con un clic."
+        "p": "Somos MCP estándar (streamable-http) con OAuth 2.1, DCR y PKCE — sin dependencia de un proveedor. Funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI y cualquier cliente compatible con MCP. Los clientes OAuth se conectan automáticamente mediante código de autorización + PKCE; una clave de API limitada cubre los clientes sin OAuth y el acceso por scripts. Revoca cualquier conexión desde el panel con un clic."
       },
       "5": {
         "tag": "Seguridad",
@@ -122,10 +122,10 @@
     "tiers": {
       "free": {
         "name": "Gratis",
-        "desc": "Todo, ilimitado. Para todos los que construyen con agentes MCP.",
+        "desc": "Todo, ilimitado. Sin límites diarios. Para todos los que construyen con agentes MCP.",
         "features": [
           "Bandejas conectadas ilimitadas",
-          "Llamadas a herramientas MCP ilimitadas",
+          "Sin límites diarios — llamadas a herramientas MCP ilimitadas",
           "Claves de API ilimitadas",
           "Gmail, iCloud, Fastmail y cualquier IMAP",
           "60 peticiones / minuto",
@@ -147,7 +147,7 @@
       },
       "team": {
         "name": "Team",
-        "desc": "Para empresas y equipos que necesitan roles, SSO y registros de auditoría.",
+        "desc": "Para equipos y agencias que gestionan varias bandejas de clientes en un espacio de trabajo compartido, con roles, SSO y registros de auditoría.",
         "features": [
           "Todo lo de Solo, ilimitado",
           "1.000 peticiones / minuto",

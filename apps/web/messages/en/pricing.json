@@ -22,11 +22,11 @@
   "plans": {
     "free": {
       "name": "Free",
-      "desc": "Everything, unlimited. For everyone building with MCP agents.",
+      "desc": "Everything, unlimited. No daily caps. For everyone building with MCP agents.",
       "cta": "Start free",
       "features": [
         "Unlimited connected inboxes",
-        "Unlimited MCP tool calls",
+        "No daily limits — unlimited MCP tool calls",
         "Unlimited API keys",
         "Gmail, iCloud, Fastmail & any IMAP",
         "60 requests / minute",
@@ -48,7 +48,7 @@
     "pro": {
       "name": "Team",
       "badge": "Most popular",
-      "desc": "For businesses and teams that need roles, SSO, and audit logs.",
+      "desc": "For teams and agencies managing multiple client inboxes in one shared workspace, with roles, SSO, and audit logs.",
       "cta": "Get Team",
       "features": [
         "Everything in Solo, unlimited",
@@ -138,11 +138,11 @@
     "items": [
       {
         "q": "Is there really no usage limit?",
-        "a": "Correct. Connected inboxes, MCP tool calls, and API keys are unlimited on every plan, including Free; team members are available on paid plans (Free is single-user). The only limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) to protect the platform from abuse. Paid plans add higher burst throughput, team features, and support, never more usage."
+        "a": "Correct. There are no daily caps and no monthly call caps. Connected inboxes, MCP tool calls, and API keys are unlimited on every plan, including Free; team members are available on paid plans (Free is single-user). The only limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) to protect the platform from abuse. Paid plans add higher burst throughput, team features, and support, never more usage."
       },
       {
         "q": "What counts as an MCP call?",
-        "a": "Each JSON-RPC tool invocation against your /mcp endpoint counts as one call: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule, or contact_search. Calls are unlimited; they only count toward your per-minute fair-use ceiling."
+        "a": "Each JSON-RPC tool invocation against your /mcp endpoint counts as one call: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule, or contact_search. Calls are unlimited; they only count toward your per-minute fair-use ceiling. We're a standard MCP server, so the same endpoint works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP-compatible client."
       },
       {
         "q": "Is my email content stored anywhere?",

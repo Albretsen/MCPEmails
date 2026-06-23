@@ -22,11 +22,11 @@
   "plans": {
     "free": {
       "name": "Gratuit",
-      "desc": "Tout, en illimité. Pour quiconque construit avec des agents MCP.",
+      "desc": "Tout, en illimité. Aucun plafond quotidien. Pour quiconque construit avec des agents MCP.",
       "cta": "Commencer gratuitement",
       "features": [
         "Boîtes connectées illimitées",
-        "Appels d'outils MCP illimités",
+        "Aucune limite quotidienne — appels d'outils MCP illimités",
         "Clés API illimitées",
         "Gmail, iCloud, Fastmail et toute boîte IMAP",
         "60 requêtes / minute",
@@ -48,7 +48,7 @@
     "pro": {
       "name": "Team",
       "badge": "Le plus populaire",
-      "desc": "Pour les entreprises et les équipes qui ont besoin de rôles, de SSO et de journaux d'audit.",
+      "desc": "Pour les équipes et les agences qui gèrent plusieurs boîtes de clients dans un espace de travail partagé, avec rôles, SSO et journaux d'audit.",
       "cta": "Choisir Team",
       "features": [
         "Tout ce qui est dans Solo, en illimité",
@@ -138,11 +138,11 @@
     "items": [
       {
         "q": "N'y a-t-il vraiment aucune limite d'usage ?",
-        "a": "Exact. Les boîtes connectées, les appels d'outils MCP, les clés API sont illimités sur chaque formule, y compris Gratuit ; les membres d'équipe sont disponibles sur les formules payantes (Gratuit est mono-utilisateur). La seule limite est un plafond d'usage équitable par minute (60/min sur Gratuit, 300/min sur Solo, 1 000/min sur Team) afin de protéger la plateforme des abus. Les formules payantes ajoutent un débit de pointe plus élevé, des fonctionnalités d'équipe et du support, jamais plus d'usage."
+        "a": "Exact. Il n'y a aucun plafond quotidien ni plafond mensuel d'appels. Les boîtes connectées, les appels d'outils MCP, les clés API sont illimités sur chaque formule, y compris Gratuit ; les membres d'équipe sont disponibles sur les formules payantes (Gratuit est mono-utilisateur). La seule limite est un plafond d'usage équitable par minute (60/min sur Gratuit, 300/min sur Solo, 1 000/min sur Team) afin de protéger la plateforme des abus. Les formules payantes ajoutent un débit de pointe plus élevé, des fonctionnalités d'équipe et du support, jamais plus d'usage."
       },
       {
         "q": "Qu'est-ce qui compte comme un appel MCP ?",
-        "a": "Chaque invocation d'outil JSON-RPC sur votre point de terminaison /mcp compte pour un appel : inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule ou contact_search. Les appels sont illimités ; ils ne comptent que pour votre plafond d'usage équitable par minute."
+        "a": "Chaque invocation d'outil JSON-RPC sur votre point de terminaison /mcp compte pour un appel : inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule ou contact_search. Les appels sont illimités ; ils ne comptent que pour votre plafond d'usage équitable par minute. Nous sommes un serveur MCP standard, donc le même point de terminaison fonctionne avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et tout client compatible MCP."
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",
