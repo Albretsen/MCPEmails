@@ -17661,13 +17661,21 @@ async function executeScheduleSend(
   if (attachments.length > 0) payload["attachments"] = attachments;
   if (replyTo !== undefined) payload["reply_to"] = replyTo;
 
+  // ── Encrypt payload at rest (AES-256-GCM) ──────────────────────────────────
+  // The payload can contain recipients, message body and attachment bytes, so
+  // it is encrypted before storage. Stored as a small jsonb wrapper so the
+  // column stays jsonb; payload_encrypted=true marks the new format. Legacy
+  // plaintext rows (payload_encrypted=false) are still read by the dispatcher.
+  const ciphertext = await encryptForStorage(JSON.stringify(payload));
+
   // ── Insert into scheduled_sends ────────────────────────────────────────────
   const { data: row, error: insertErr } = await supabase
     .from("scheduled_sends")
     .insert({
       workspace_id: apiKey.workspace_id,
       inbox_id: inbox.id,
-      payload,
+      payload: { v: 1, data: ciphertext },
+      payload_encrypted: true,
       send_at: sendAt,
       status: "pending",
     })
@@ -17747,7 +17755,7 @@ async function executeListScheduled(
   // Build query — workspace-scoped, pending/sending only.
   let dbQuery = supabase
     .from("scheduled_sends")
-    .select("id, inbox_id, payload, send_at, status, created_at")
+    .select("id, inbox_id, payload, payload_encrypted, send_at, status, created_at")
     .eq("workspace_id", apiKey.workspace_id)
     .in("status", ["pending", "sending"]);
 
@@ -17773,22 +17781,27 @@ async function executeListScheduled(
     };
   }
 
-  const rows = (data ?? []).map((row: {
+  const rows = await Promise.all((data ?? []).map(async (row: {
     id: string;
     inbox_id: string;
     payload: Record<string, unknown>;
+    payload_encrypted?: boolean | null;
     send_at: string;
     status: string;
     created_at: string;
-  }) => ({
-    id: row.id,
-    inbox_id: row.inbox_id,
-    send_at: row.send_at,
-    status: row.status,
-    created_at: row.created_at,
-    // Payload summary: expose to + subject without the full body/attachments.
-    to: Array.isArray(row.payload["to"]) ? row.payload["to"] : [],
-    subject: typeof row.payload["subject"] === "string" ? row.payload["subject"] : "",
+  }) => {
+    // Dual-mode: decrypts encrypted rows, passes legacy plaintext through.
+    const payload = await resolveScheduledPayload(row);
+    return {
+      id: row.id,
+      inbox_id: row.inbox_id,
+      send_at: row.send_at,
+      status: row.status,
+      created_at: row.created_at,
+      // Payload summary: expose to + subject without the full body/attachments.
+      to: Array.isArray(payload["to"]) ? payload["to"] : [],
+      subject: typeof payload["subject"] === "string" ? payload["subject"] : "",
+    };
   }));
 
   return {
@@ -18588,6 +18601,34 @@ const MAX_DISPATCH_BATCH = 50;
 // queryable, accepting that the operator must verify/resend manually if needed.
 const STALE_SENDING_MS = 15 * 60 * 1000;
 
+/**
+ * Resolve a scheduled_sends `payload` column into the plaintext payload object,
+ * transparently handling both formats:
+ *   • encrypted (payload_encrypted=true): payload is { v, data: ciphertext };
+ *     decrypt `data` and JSON.parse it.
+ *   • legacy plaintext (payload_encrypted=false / null): payload is the object.
+ * Always returns a plain object so callers can apply the existing defensive
+ * type checks unchanged.
+ */
+async function resolveScheduledPayload(row: {
+  payload: unknown;
+  payload_encrypted?: boolean | null;
+}): Promise<Record<string, unknown>> {
+  if (row.payload_encrypted) {
+    const wrapper = (row.payload ?? {}) as Record<string, unknown>;
+    const json = await decryptStoredToken(String(wrapper["data"] ?? ""));
+    const parsed = JSON.parse(json);
+    return (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+      ? (parsed as Record<string, unknown>)
+      : {};
+  }
+  // Legacy plaintext row.
+  const legacy = row.payload ?? {};
+  return (legacy && typeof legacy === "object" && !Array.isArray(legacy))
+    ? (legacy as Record<string, unknown>)
+    : {};
+}
+
 async function handleScheduledDispatch(): Promise<Response> {
   const now = new Date().toISOString();
 
@@ -18615,7 +18656,7 @@ async function handleScheduledDispatch(): Promise<Response> {
   // oldest-due messages are dispatched first.
   const { data: rows, error: fetchErr } = await supabase
     .from("scheduled_sends")
-    .select("id, inbox_id, payload")
+    .select("id, inbox_id, payload, payload_encrypted")
     .eq("status", "pending")
     .lte("send_at", now)
     .order("send_at", { ascending: true })
@@ -18678,7 +18719,8 @@ async function handleScheduledDispatch(): Promise<Response> {
       }
 
       // ── Build SendEmailParams from stored payload ───────────────────────
-      const payload = (row.payload ?? {}) as Record<string, unknown>;
+      // Dual-mode: decrypts encrypted rows, passes legacy plaintext through.
+      const payload = await resolveScheduledPayload(row);
       const sendParams: SendEmailParams = {
         to: Array.isArray(payload["to"]) ? (payload["to"] as string[]) : [],
         cc: Array.isArray(payload["cc"]) ? (payload["cc"] as string[]) : [],

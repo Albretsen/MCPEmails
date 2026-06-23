@@ -1,0 +1,102 @@
+{
+  "fastmail": {
+    "meta": {
+      "title": "将 Fastmail 连接到 Claude（及任意 AI）",
+      "description": "用应用专用密码将 Fastmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Fastmail——邮箱与工具调用免费。"
+    },
+    "hero": {
+      "eyebrow": "Fastmail + AI",
+      "titleLine1": "将 Fastmail 连接到 Claude——",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Fastmail 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件——同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 Fastmail",
+      "ctaSecondary": "阅读文档",
+      "meta0": "无限邮箱与工具调用",
+      "meta1": "应用专用密码——无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储"
+    },
+    "method": {
+      "title": "Fastmail 如何连接：应用专用密码",
+      "body": "Fastmail 通过 IMAP/SMTP 使用<b>Fastmail 应用专用密码</b>连接——在 Fastmail 的「设置 → 隐私与安全 → 应用专用密码」中生成一个，粘贴到 mcpemails 即可连接。无需 OAuth 流程，也没有浏览器弹窗。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 Fastmail 收件箱",
+      "sub": "九个基于动作的 MCP 工具——不止草稿。代理在 Fastmail 内即可完成整件事。",
+      "ctaPrimary": "免费连接 Fastmail"
+    },
+    "capabilities": [
+      { "tag": "读取", "h": "读取与搜索邮件", "p": "跨文件夹列出、读取和搜索——找到那张发票、总结一个会话，或拉取某发件人的最新邮件。" },
+      { "tag": "发送", "h": "发送、回复与转发", "p": "撰写并发送真实邮件、在会话中回复并转发——直接从 Fastmail 完成，而不是留下需要你手动发送的草稿。" },
+      { "tag": "定时", "h": "定时稍后发送", "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。" },
+      { "tag": "整理", "h": "移动、标记、归档、删除", "p": "保持收件箱整洁——将邮件归入文件夹、标记重点、归档其余，或按需删除。" }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 Fastmail",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      { "h": "创建免费账户", "p": "注册 mcpemails——无需信用卡。免费套餐提供无限邮箱与工具调用。" },
+      { "h": "生成 Fastmail 应用专用密码", "p": "在 Fastmail 中进入「设置 → 隐私与安全 → 应用专用密码」，为邮件（IMAP/SMTP）创建一个。" },
+      { "h": "粘贴到 mcpemails", "p": "填入你的 Fastmail 地址和应用专用密码，安全连接收件箱。" },
+      { "h": "将 MCP URL 粘贴到你的 AI", "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。" }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 Fastmail 收件箱",
+      "sub": "几分钟连接 Fastmail——免费套餐提供无限邮箱与工具调用，无需信用卡。",
+      "ctaPrimary": "免费连接 Fastmail",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "icloud": {
+    "meta": {
+      "title": "将 iCloud 邮件连接到 Claude（及任意 AI）",
+      "description": "用 Apple App 专用密码将 iCloud 邮件连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 iCloud 邮件——免费。"
+    },
+    "hero": {
+      "eyebrow": "iCloud 邮件 + AI",
+      "titleLine1": "将 iCloud 邮件连接到 Claude——",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 iCloud 收件箱。用一个 Apple App 专用密码即可读取、搜索、发送、回复、定时与整理邮件——同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 iCloud",
+      "ctaSecondary": "阅读文档",
+      "meta0": "无限邮箱与工具调用",
+      "meta1": "App 专用密码——无需 OAuth",
+      "meta2": "邮件实时获取，绝不存储"
+    },
+    "method": {
+      "title": "iCloud 如何连接：App 专用密码",
+      "body": "iCloud 邮件通过 IMAP/SMTP 使用 <b>Apple App 专用密码</b>连接。在 appleid.apple.com 的「登录与安全 → App 专用密码」中生成一个（需开启双重认证），再连同你的 iCloud 地址一起粘贴到 mcpemails。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 iCloud 收件箱",
+      "sub": "九个基于动作的 MCP 工具——不止草稿。代理在 iCloud 邮件内即可完成整件事。",
+      "ctaPrimary": "免费连接 iCloud"
+    },
+    "capabilities": [
+      { "tag": "读取", "h": "读取与搜索邮件", "p": "跨文件夹列出、读取和搜索——找到一张收据、总结一个会话，或拉取某发件人的最新邮件。" },
+      { "tag": "发送", "h": "发送、回复与转发", "p": "撰写并发送真实邮件、在会话中回复并转发——直接从 iCloud 完成，而不是留下需要你手动发送的草稿。" },
+      { "tag": "定时", "h": "定时稍后发送", "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。" },
+      { "tag": "整理", "h": "移动、标记、归档、删除", "p": "保持收件箱整洁——将邮件归入文件夹、标记重点、归档其余，或按需删除。" }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 iCloud",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      { "h": "创建免费账户", "p": "注册 mcpemails——无需信用卡。免费套餐提供无限邮箱与工具调用。" },
+      { "h": "生成 App 专用密码", "p": "在 appleid.apple.com 进入「登录与安全 → App 专用密码」，创建一个（必须开启双重认证）。" },
+      { "h": "粘贴到 mcpemails", "p": "填入你的 iCloud 地址和 App 专用密码，安全连接收件箱。" },
+      { "h": "将 MCP URL 粘贴到你的 AI", "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。" }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 iCloud 收件箱",
+      "sub": "几分钟连接 iCloud 邮件——免费套餐提供无限邮箱与工具调用，无需信用卡。",
+      "ctaPrimary": "免费连接 iCloud",
+      "ctaSecondary": "阅读文档"
+    }
+  }
+}

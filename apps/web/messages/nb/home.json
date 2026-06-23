@@ -16,16 +16,16 @@
     "titleLine1": "Gi AI-agenten",
     "titleLine2": "din en",
     "titleAccent": "innboks.",
-    "lead": "Koble til Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks én gang. Lim inn én MCP-endepunkt-URL i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent. OAuth-klienter kobler til med ett klikk, uten oppsett av API-nøkkel. Agenten din leser, søker og sender e-post i sanntid, og e-posten den leser lagres aldri.",
+    "lead": "Koble til Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks én gang. Lim inn én MCP-endepunkt-URL i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make eller en hvilken som helst MCP-klient. OAuth-klienter kobler til med ett klikk, uten oppsett av API-nøkkel. Agenten din leser, søker og sender e-post i sanntid, og e-posten den leser lagres aldri.",
     "ctaPrimary": "Koble til innboksen din",
     "ctaSecondary": "Les dokumentasjonen",
-    "metaUnlimited": "Ubegrenset, gratis for alltid",
+    "metaUnlimited": "Ubegrenset gratis, ingen daglige tak",
     "metaNoCard": "Ingen kort kreves",
     "metaNeverStored": "E-post hentes i sanntid",
     "pipe": {
       "flow": "Slik flyter et kall",
       "agent": "AI-agent",
-      "agentSub": "claude.ai · Desktop · Cursor",
+      "agentSub": "Claude · Cursor · VS Code · ChatGPT · enhver MCP-klient",
       "serverSub": "/api/mcp-endepunkt",
       "provider": "Din leverandør",
       "providerSub": "Gmail · iCloud · IMAP",
@@ -66,12 +66,12 @@
       "3": {
         "tag": "Leverandører",
         "h": "Gmail, iCloud, Fastmail og alle IMAP-innbokser.",
-        "p": "OAuth 2.0 for Gmail; app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå."
+        "p": "OAuth 2.0 for Gmail; app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg."
       },
       "4": {
         "tag": "Tilgang",
         "h": "OAuth 2.0 for agenter. Ett klikk for å trekke tilbake.",
-        "p": "Enhver MCP-klient som støtter OAuth (claude.ai, Claude Desktop, Cursor og andre) kobler til automatisk via authorization code + PKCE. Ingen oppsett av API-nøkkel. API-nøkler finnes for klienter uten OAuth og for skriptet tilgang. Uansett kan du trekke tilbake enhver tilkobling fra dashbordet med ett klikk."
+        "p": "Vi er standard MCP (streamable-http) med OAuth 2.1, DCR og PKCE — ingen leverandørlåsing. Fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI og enhver MCP-kompatibel klient. OAuth-klienter kobler til automatisk via authorization code + PKCE; en begrenset API-nøkkel dekker klienter uten OAuth og skriptet tilgang. Trekk tilbake enhver tilkobling fra dashbordet med ett klikk."
       },
       "5": {
         "tag": "Sikkerhet",
@@ -122,10 +122,10 @@
     "tiers": {
       "free": {
         "name": "Gratis",
-        "desc": "Alt, ubegrenset. For alle som bygger med MCP-agenter.",
+        "desc": "Alt, ubegrenset. Ingen daglige tak. For alle som bygger med MCP-agenter.",
         "features": [
           "Ubegrenset antall tilkoblede innbokser",
-          "Ubegrenset antall MCP-verktøykall",
+          "Ingen daglige grenser — ubegrenset antall MCP-verktøykall",
           "Ubegrenset antall API-nøkler",
           "Gmail, iCloud, Fastmail og alle IMAP",
           "60 forespørsler / minutt",
@@ -147,7 +147,7 @@
       },
       "team": {
         "name": "Team",
-        "desc": "For bedrifter og team som trenger roller, SSO og revisjonslogg.",
+        "desc": "For team og byråer som administrerer flere klientinnbokser i ett delt arbeidsområde, med roller, SSO og revisjonslogg.",
         "features": [
           "Alt i Solo, ubegrenset",
           "1 000 forespørsler / minutt",
