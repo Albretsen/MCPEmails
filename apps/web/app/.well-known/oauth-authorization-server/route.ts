@@ -15,6 +15,18 @@
  *
  * No authentication required. Cached for 1 hour.
  */
+// CORS — discovery documents must be readable cross-origin by browser-based
+// MCP clients during the OAuth flow. Unauthenticated, no cookies → wildcard.
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+} as const;
+
+export function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+
 export async function GET() {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 
@@ -43,6 +55,7 @@ export async function GET() {
     },
     {
       headers: {
+        ...CORS_HEADERS,
         'Cache-Control': 'max-age=3600',
       },
     }
