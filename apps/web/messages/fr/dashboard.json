@@ -168,7 +168,19 @@
       "connectedOn": "Connectée le",
       "lastCall": "Dernier appel réussi",
       "lastCallNone": "Aucun appel réussi au cours des 30 derniers jours",
-      "disconnect": "Déconnecter"
+      "disconnect": "Déconnecter",
+      "signature": {
+        "title": "Signature e-mail",
+        "enabled": "Activée",
+        "importedHint": "Importée depuis votre signature Gmail. Modifiez et enregistrez pour la remplacer.",
+        "placeholder": "ex. Jane Doe\nAcme Inc.\njane@acme.com",
+        "replyModeLabel": "Sur les réponses et transferts :",
+        "replyModeAlways": "Toujours ajouter",
+        "replyModeFirstOnly": "Première réponse seulement",
+        "replyModeNever": "Ne jamais ajouter",
+        "save": "Enregistrer la signature",
+        "saving": "Enregistrement…"
+      }
     }
   },
   "apiKeys": {

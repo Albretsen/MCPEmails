@@ -306,6 +306,49 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   };
 
   /**
+   * Saves a per-inbox signature via PATCH /api/inboxes/[id] (Phase 3). Returns
+   * a Promise so the editor can show in-flight/error state and stay open on
+   * failure. On success: merges the server-confirmed signature fields into local
+   * state (so the modal reflects source = 'manual' and the saved values) and
+   * shows a success toast. On failure: shows an error toast and re-throws.
+   */
+  const onSaveSignature = async (id, patch) => {
+    let data = {};
+    try {
+      const res = await fetch(`/api/inboxes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      try { data = await res.json(); } catch { /* ignore JSON parse failure */ }
+      if (!res.ok) {
+        const message = typeof data?.error === 'string' ? data.error : tr('app.signatureSaveFailed');
+        toast({ message, variant: 'error' });
+        throw new Error(message);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message) throw err;
+      const message = tr('app.signatureSaveFailed');
+      toast({ message, variant: 'error' });
+      throw new Error(message);
+    }
+    const sig = data.signature ?? {};
+    setInboxes(xs => xs.map(x => (
+      x.id === id
+        ? {
+            ...x,
+            signatureText: sig.signature_text ?? null,
+            signatureHtml: sig.signature_html ?? null,
+            signatureEnabled: sig.signature_enabled ?? true,
+            signatureReplyMode: sig.signature_reply_mode ?? 'first_only',
+            signatureSource: sig.signature_source ?? 'manual',
+          }
+        : x
+    )));
+    toast({ message: tr('app.signatureSaved'), variant: 'success' });
+  };
+
+  /**
    * Restarts the OAuth (or app-password) flow for an errored inbox.
    *
    * For OAuth inboxes: navigate to the provider's server-side initiation
@@ -548,7 +591,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
 
         {route === "overview" && <OverviewPage inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}

@@ -882,7 +882,7 @@ function UsageChart30({ dailyCounts }) {
 }
 
 /* ---------------- Inboxes ---------------- */
-export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck }) {
+export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck, onSaveSignature }) {
   const t = useTranslations('dashboard');
   // Count errored inboxes to conditionally show a page-level warning banner.
   const erroredCount = inboxes.filter(ib => ib.status === "error").length;
@@ -1126,6 +1126,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
           onReconnect={(ib) => { setDetailInbox(null); onReconnect(ib); }}
           onCheck={(ib) => handleCheck(ib)}
           onDisconnect={(ib) => { setDetailInbox(null); handleDisconnectRequest(ib); }}
+          onSaveSignature={onSaveSignature}
         />
       )}
 
@@ -1241,7 +1242,144 @@ function DisconnectDialog({ inbox, disconnecting, onConfirm, onCancel }) {
  * when it was connected, the last successful MCP call, and the most recent
  * error — plus the actions to fix it (reconnect / check / disconnect).
  */
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect }) {
+/**
+ * Per-inbox signature editor (Phase 3). Edits the plain-text signature, the
+ * enabled toggle, and the reply-mode selector. Saving any field stamps the
+ * signature as a manual edit server-side (signature_source = 'manual'), which
+ * pins it against the Gmail auto-import.
+ *
+ * The textarea seeds from signatureText; when only a Gmail-imported HTML value
+ * exists (signatureHtml set, signatureText null) we surface an "imported from
+ * Gmail" hint and seed the textarea from a light strip of that HTML so the user
+ * starts from the imported content. We persist plain text only — the send path
+ * derives the HTML half — so saving clears the stored HTML.
+ */
+function htmlToPlainSeed(html) {
+  if (!html) return '';
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|tr|li)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function SignatureEditor({ inbox, onSave, t }) {
+  const wasImported = inbox.signatureSource === 'gmail_import';
+  const initialText =
+    inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '');
+
+  const [text, setText] = useState(initialText);
+  const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
+  const [replyMode, setReplyMode] = useState(inbox.signatureReplyMode ?? 'first_only');
+  const [saving, setSaving] = useState(false);
+
+  // Re-seed when switching to a different inbox's modal.
+  useEffect(() => {
+    setText(inbox.signatureText ?? (inbox.signatureSource === 'gmail_import' ? htmlToPlainSeed(inbox.signatureHtml) : ''));
+    setEnabled(inbox.signatureEnabled ?? true);
+    setReplyMode(inbox.signatureReplyMode ?? 'first_only');
+  }, [inbox.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dirty =
+    text !== initialText ||
+    enabled !== (inbox.signatureEnabled ?? true) ||
+    replyMode !== (inbox.signatureReplyMode ?? 'first_only');
+
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSave(inbox.id, {
+        signature_text: text,
+        signature_enabled: enabled,
+        signature_reply_mode: replyMode,
+      });
+    } catch {
+      // App.jsx already showed an error toast; keep the form as-is for retry.
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const label = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)' };
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+          {t('inboxes.detail.signature.title')}
+        </h3>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', ...label }}>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={() => setEnabled(v => !v)}
+            disabled={saving}
+            style={{ accentColor: 'var(--brand)' }}
+          />
+          {t('inboxes.detail.signature.enabled')}
+        </label>
+      </div>
+
+      {wasImported && (
+        <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
+          {t('inboxes.detail.signature.importedHint')}
+        </div>
+      )}
+
+      <textarea
+        className="input"
+        value={text}
+        onChange={e => setText(e.target.value)}
+        disabled={saving || !enabled}
+        rows={5}
+        maxLength={10000}
+        placeholder={t('inboxes.detail.signature.placeholder')}
+        style={{
+          width: '100%',
+          boxSizing: 'border-box',
+          height: 'auto',
+          minHeight: 96,
+          padding: '10px 12px',
+          resize: 'vertical',
+          lineHeight: 1.5,
+          opacity: enabled ? 1 : 0.6,
+        }}
+      />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+        <span style={label}>{t('inboxes.detail.signature.replyModeLabel')}</span>
+        <select
+          className="input"
+          value={replyMode}
+          onChange={e => setReplyMode(e.target.value)}
+          disabled={saving}
+          style={{ height: 32, padding: '0 8px', flex: '0 0 auto' }}
+        >
+          <option value="always">{t('inboxes.detail.signature.replyModeAlways')}</option>
+          <option value="first_only">{t('inboxes.detail.signature.replyModeFirstOnly')}</option>
+          <option value="never">{t('inboxes.detail.signature.replyModeNever')}</option>
+        </select>
+        <div style={{ flex: 1 }} />
+        <Btn
+          variant="primary"
+          size="sm"
+          disabled={saving || !dirty}
+          onClick={handleSave}
+        >
+          {saving ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -1327,6 +1465,15 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
               lineHeight: 1.5,
             }}>
               {inbox.lastError}
+            </div>
+          )}
+
+          {/* Per-inbox signature editor (Phase 3). Hidden for inboxes pending
+              first connection, where there is no useful signature target yet. */}
+          {onSaveSignature && inbox.status !== 'pending' && (
+            <div style={{ paddingTop: 4, marginBottom: 16, borderTop: '1px solid var(--border-1)' }}>
+              <div style={{ height: 12 }} />
+              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} />
             </div>
           )}
 
