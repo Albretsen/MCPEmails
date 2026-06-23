@@ -5,9 +5,9 @@ import { routing } from '@/i18n/routing';
 import ConnectProviderClient from '../../../../components/marketing/ConnectProviderClient';
 
 // Providers with a dedicated landing page. Each maps to a sub-object in the
-// `connect` message namespace (connect.<provider>.*). Only providers we truly
-// support via app password are listed here.
-const PROVIDERS = ['fastmail', 'icloud'];
+// `connect` message namespace (connect.<provider>.*). Gmail connects via Google
+// OAuth; the rest via an app-specific password.
+const PROVIDERS = ['gmail', 'fastmail', 'icloud'];
 
 export function generateStaticParams() {
   return routing.locales.flatMap((locale) =>

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
+import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 
 const RICH = {
   code: (chunks) => <code className="t-code-inline">{chunks}</code>,
@@ -12,8 +13,9 @@ const RICH = {
 
 /**
  * Provider-specific, conversion-focused landing page. `provider` selects the
- * sub-object inside the `connect` message namespace (e.g. `connect.fastmail.*`).
- * All providers on this page connect via an app password (Fastmail, iCloud).
+ * sub-object inside the `connect` message namespace (e.g. `connect.gmail.*`).
+ * Gmail connects via Google OAuth (with a verification-in-progress note while
+ * Google review is pending); Fastmail and iCloud connect via an app password.
  *
  * @param {{ provider: string }} props
  */
@@ -22,6 +24,10 @@ export default function ConnectProviderClient({ provider }) {
 
   const capabilities = t.raw('capabilities');
   const steps = t.raw('steps');
+  // Gmail OAuth shows Google's "unverified app" screen + ~7-day reauth until
+  // Google verification completes. Disclose it honestly, gated by the same env
+  // flag as the in-app ConnectModal so it auto-hides once verification lands.
+  const showGmailVerification = provider === 'gmail' && OAUTH_VERIFICATION_PENDING;
 
   return (
     <div>
@@ -69,6 +75,34 @@ export default function ConnectProviderClient({ provider }) {
               </p>
             </div>
           </div>
+
+          {showGmailVerification && (
+            <div
+              role="note"
+              style={{
+                marginTop: 16,
+                maxWidth: 720,
+                margin: '16px auto 0',
+                padding: '14px 16px',
+                background: 'var(--amber-100)',
+                border: '1px solid rgba(240,165,62,0.35)',
+                borderRadius: 10,
+                display: 'flex',
+                gap: 12,
+                alignItems: 'flex-start',
+              }}
+            >
+              <MIcon name="alert-triangle" size={18} color="var(--amber-700)" />
+              <div>
+                <h4 style={{ margin: '0 0 4px', fontSize: 14, color: 'var(--amber-700)' }}>
+                  {t('verificationNote.title')}
+                </h4>
+                <p style={{ margin: 0, color: 'var(--fg-2)', fontSize: 13.5, lineHeight: 1.6 }}>
+                  {t.rich('verificationNote.body', RICH)}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
