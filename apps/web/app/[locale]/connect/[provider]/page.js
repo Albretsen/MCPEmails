@@ -7,7 +7,7 @@ import ConnectProviderClient from '../../../../components/marketing/ConnectProvi
 // Providers with a dedicated landing page. Each maps to a sub-object in the
 // `connect` message namespace (connect.<provider>.*). Gmail connects via Google
 // OAuth; the rest via an app-specific password.
-const PROVIDERS = ['gmail', 'fastmail', 'icloud'];
+const PROVIDERS = ['gmail', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex'];
 
 export function generateStaticParams() {
   return routing.locales.flatMap((locale) =>
