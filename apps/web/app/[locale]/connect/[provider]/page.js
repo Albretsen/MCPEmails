@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, connectJsonLd } from '@/i18n/seo';
 import { routing } from '@/i18n/routing';
 import ConnectProviderClient from '../../../../components/marketing/ConnectProviderClient';
 
@@ -49,5 +49,24 @@ export default async function ConnectProviderPage({ params }) {
   const { locale, provider } = await params;
   if (!PROVIDERS.includes(provider)) notFound();
   setRequestLocale(locale);
-  return <ConnectProviderClient provider={provider} />;
+
+  const t = await getTranslations({ locale, namespace: `connect.${provider}` });
+  const steps = t.raw('steps');
+  const jsonLd = connectJsonLd(locale, {
+    path: `/connect/${provider}`,
+    title: t.has('meta.title') ? t('meta.title') : 'Connect your inbox',
+    description: t.has('meta.description') ? t('meta.description') : '',
+    howToName: t.has('how.title') ? t('how.title') : 'Connect your inbox',
+    steps: Array.isArray(steps) ? steps : [],
+  });
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ConnectProviderClient provider={provider} />
+    </>
+  );
 }
