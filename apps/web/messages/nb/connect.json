@@ -1,4 +1,57 @@
 {
+  "gmail": {
+    "meta": {
+      "title": "Koble Gmail til Claude (og enhver AI)",
+      "description": "Koble Gmail til Claude, Cursor, ChatGPT og enhver MCP-klient med ett klikk via Google OAuth. La AI lese, sende, planlegge og organisere Gmail-en din — innbokser og verktøykall gratis."
+    },
+    "hero": {
+      "eyebrow": "Gmail + AI",
+      "titleLine1": "Koble Gmail til Claude —",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Gmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett klikks Google-pålogging — og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Gmail gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "Ubegrenset med innbokser og verktøykall",
+      "meta1": "Google-pålogging med ett klikk (OAuth)",
+      "meta2": "E-post hentes direkte, lagres aldri"
+    },
+    "method": {
+      "title": "Slik kobler Gmail seg til: Google OAuth med ett klikk",
+      "body": "Gmail kobles til med <b>Google OAuth</b> — logg inn med Google, godkjenn lese- og sendetilgang, og du er tilkoblet. Ingen app-passord, ingen IMAP-innstillinger å grave fram. Trekk tilbake tilgangen når som helst fra Google-kontoen din eller mcpemails-dashbordet."
+    },
+    "verificationNote": {
+      "title": "Merk mens Google-verifiseringen pågår",
+      "body": "mcpemails er for øyeblikket under Googles verifisering og CASA-sikkerhetsgjennomgang. Inntil den fullføres, viser Google et «Google har ikke verifisert denne appen»-skjermbilde — klikk <b>Avansert</b>, deretter <b>Gå til mcpemails.com</b> for å fortsette — og tilkoblingen må kobles til på nytt omtrent hver 7. dag. Begge forsvinner når verifiseringen er på plass."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Gmail-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy — ikke bare utkast. Agenten fullfører jobben inne i Gmail.",
+      "ctaPrimary": "Koble til Gmail gratis"
+    },
+    "capabilities": [
+      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av etiketter — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Gmail, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
+      { "tag": "Organiser", "h": "Merk, arkiver og slett", "p": "Hold innboksen ryddig — legg på etiketter, arkiver det som er håndtert, og slett på forespørsel." }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Gmail i tre steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails — uten kort. Gratisplanen gir deg ubegrenset med innbokser og verktøykall." },
+      { "h": "Logg inn med Google", "p": "Klikk Koble til Gmail, logg inn med Google-kontoen din, og godkjenn lese- og sendetilgang. Ingen app-passord eller IMAP-oppsett." },
+      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Gmail-innboks",
+      "sub": "Koble til Gmail på minutter — ubegrenset med innbokser og verktøykall på gratisplanen, uten kort.",
+      "ctaPrimary": "Koble til Gmail gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
   "fastmail": {
     "meta": {
       "title": "Koble Fastmail til Claude (og enhver AI)",

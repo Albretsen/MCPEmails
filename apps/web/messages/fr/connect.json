@@ -1,4 +1,57 @@
 {
+  "gmail": {
+    "meta": {
+      "title": "Connecter Gmail à Claude (et à toute IA)",
+      "description": "Connectez Gmail à Claude, Cursor, ChatGPT et à tout client MCP en un clic avec Google OAuth. Laissez l'IA lire, envoyer, planifier et organiser votre Gmail — boîtes et appels d'outils gratuits."
+    },
+    "hero": {
+      "eyebrow": "Gmail + IA",
+      "titleLine1": "Connectez Gmail à Claude —",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte Gmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec une connexion Google en un clic — et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter Gmail gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "Boîtes et appels d'outils illimités",
+      "meta1": "Connexion Google en un clic (OAuth)",
+      "meta2": "E-mails récupérés en direct, jamais stockés"
+    },
+    "method": {
+      "title": "Comment Gmail se connecte : Google OAuth en un clic",
+      "body": "Gmail se connecte via <b>Google OAuth</b> — connectez-vous avec Google, approuvez l'accès en lecture et en envoi, et c'est connecté. Pas de mot de passe d'application, pas de paramètres IMAP à dénicher. Révoquez l'accès à tout moment depuis votre compte Google ou le tableau de bord mcpemails."
+    },
+    "verificationNote": {
+      "title": "À savoir pendant la vérification Google en cours",
+      "body": "mcpemails est actuellement en cours de vérification Google et d'examen de sécurité CASA. Tant que ce n'est pas terminé, Google affiche un écran « Google n'a pas validé cette application » — cliquez sur <b>Paramètres avancés</b>, puis sur <b>Accéder à mcpemails.com</b> pour continuer — et la connexion doit être renouvelée environ tous les 7 jours. Les deux disparaîtront une fois la vérification aboutie."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte Gmail que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions — pas seulement des brouillons. Votre agent termine le travail dans Gmail.",
+      "ctaPrimary": "Connecter Gmail gratuitement"
+    },
+    "capabilities": [
+      { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les libellés — trouvez cette facture, résumez un fil ou récupérez le dernier message d'un expéditeur." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez — directement depuis Gmail, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
+      { "tag": "Organiser", "h": "Étiqueter, archiver et supprimer", "p": "Gardez la boîte rangée — appliquez des libellés, archivez ce qui est traité et supprimez à la demande." }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez Gmail en trois étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails — sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Connectez-vous avec Google", "p": "Cliquez sur Connecter Gmail, connectez-vous avec votre compte Google et approuvez l'accès en lecture et en envoi. Pas de mot de passe d'application ni de configuration IMAP." },
+      { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte Gmail à votre IA",
+      "sub": "Connectez Gmail en quelques minutes — boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "ctaPrimary": "Connecter Gmail gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
   "fastmail": {
     "meta": {
       "title": "Connecter Fastmail à Claude (et à toute IA)",

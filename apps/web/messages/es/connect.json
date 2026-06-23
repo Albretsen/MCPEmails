@@ -1,4 +1,57 @@
 {
+  "gmail": {
+    "meta": {
+      "title": "Conecta Gmail a Claude (y a cualquier IA)",
+      "description": "Conecta Gmail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con un clic mediante Google OAuth. Deja que la IA lea, envíe, programe y organice tu Gmail — bandejas y llamadas gratis."
+    },
+    "hero": {
+      "eyebrow": "Gmail + IA",
+      "titleLine1": "Conecta Gmail a Claude —",
+      "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+      "lead": "Dale a tu agente de IA una bandeja Gmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con el inicio de sesión de Google con un clic — y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+      "ctaPrimary": "Conecta Gmail gratis",
+      "ctaSecondary": "Lee la documentación",
+      "meta0": "Bandejas y llamadas ilimitadas",
+      "meta1": "Inicio de sesión de Google con un clic (OAuth)",
+      "meta2": "El correo se obtiene en vivo, nunca se almacena"
+    },
+    "method": {
+      "title": "Cómo se conecta Gmail: Google OAuth con un clic",
+      "body": "Gmail se conecta con <b>Google OAuth</b> — inicia sesión con Google, aprueba el acceso de lectura y envío, y quedas conectado. Sin contraseña de aplicación ni ajustes IMAP que rastrear. Revoca el acceso cuando quieras desde tu cuenta de Google o el panel de mcpemails."
+    },
+    "verificationNote": {
+      "title": "Aviso mientras la verificación de Google está en curso",
+      "body": "mcpemails está actualmente en el proceso de verificación y revisión de seguridad CASA de Google. Hasta que se complete, Google muestra una pantalla de “Google no ha verificado esta aplicación” — haz clic en <b>Configuración avanzada</b> y luego en <b>Ir a mcpemails.com</b> para continuar — y la conexión hay que volver a conectarla aproximadamente cada 7 días. Ambas cosas desaparecen una vez que se completa la verificación."
+    },
+    "caps": {
+      "eyebrow": "Lo que tu IA puede hacer",
+      "title": "Una bandeja Gmail que tu agente puede usar de verdad",
+      "sub": "Nueve herramientas MCP basadas en acciones — no solo borradores. Tu agente termina el trabajo dentro de Gmail.",
+      "ctaPrimary": "Conecta Gmail gratis"
+    },
+    "capabilities": [
+      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre etiquetas — encuentra esa factura, resume un hilo o saca lo último de un remitente." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Gmail, no como un borrador que terminas a mano." },
+      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
+      { "tag": "Organizar", "h": "Etiquetar, archivar y eliminar", "p": "Mantén la bandeja ordenada — aplica etiquetas, archiva lo ya resuelto y elimina cuando se pida." }
+    ],
+    "how": {
+      "eyebrow": "Configuración",
+      "title": "Conecta Gmail en tres pasos",
+      "sub": "Del registro al primer correo con IA en un par de minutos."
+    },
+    "steps": [
+      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails — sin tarjeta. El plan gratuito te da bandejas y llamadas a herramientas ilimitadas." },
+      { "h": "Inicia sesión con Google", "p": "Haz clic en Conectar Gmail, inicia sesión con tu cuenta de Google y aprueba el acceso de lectura y envío. Sin contraseña de aplicación ni configuración IMAP." },
+      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+    ],
+    "ctaBand": {
+      "title": "Dale a tu IA una bandeja Gmail",
+      "sub": "Conecta Gmail en minutos — bandejas y llamadas a herramientas ilimitadas en el plan gratuito, sin tarjeta.",
+      "ctaPrimary": "Conecta Gmail gratis",
+      "ctaSecondary": "Lee la documentación"
+    }
+  },
   "fastmail": {
     "meta": {
       "title": "Conecta Fastmail a Claude (y a cualquier IA)",
