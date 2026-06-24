@@ -793,6 +793,7 @@ export function Footer() {
           </div>
           <div>
             <h5>{t('footer.companyHeading')}</h5>
+            <Link href="/security">{t('footer.linkSecurity')}</Link>
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
           </div>

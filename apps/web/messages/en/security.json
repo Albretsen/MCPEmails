@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "title": "Security & Trust",
+    "description": "How MCPEmails protects your email: fetched live and never stored, credentials encrypted at rest, scoped and revocable access, and public code you can read or self-host."
+  },
+  "hero": {
+    "eyebrow": "Security & trust",
+    "title": "You shouldn't have to take my word for it",
+    "lead": "MCPEmails connects an AI agent to your inbox, so it has to earn real trust. This is the honest version: what the service touches, what it keeps, what it can never do, and how you can verify all of it yourself."
+  },
+  "tldr": {
+    "title": "1. The short version",
+    "intro": "If you read nothing else on this page:",
+    "points": [
+      "Your email is fetched live on each request and dropped the moment the response is sent. We keep no copy of any message body, subject, attachment, or contact.",
+      "We store exactly one sensitive thing per inbox: an access token or app password, encrypted with AES-256-GCM, so we can make the next call you ask for.",
+      "We never train any AI model on your email, and we never send your email to a model of our own choosing. Your agent is the only thing that reads it, under your control.",
+      "Every connection is scoped to the single inbox you connected, and you can revoke it at any time from Google, Microsoft, or your provider's settings.",
+      "The code that runs the service is public. You can read it, audit it, or self-host the whole thing."
+    ]
+  },
+  "access": {
+    "title": "2. What we access vs. what we store",
+    "intro": "The gap between access and storage is the whole design. In the moment, the agent can read a lot, live. Almost none of it is ever written down.",
+    "thData": "Data",
+    "thAccessed": "Accessed",
+    "thStored": "Stored",
+    "rows": [
+      {
+        "data": "Email bodies, subjects, attachments",
+        "accessed": "Live, only when your agent makes a read or search call",
+        "stored": "Never written to disk, cache, or logs"
+      },
+      {
+        "data": "Contacts / address book",
+        "accessed": "Scanned live from recent mail when asked",
+        "stored": "Never. There is no stored address book"
+      },
+      {
+        "data": "OAuth token or app password",
+        "accessed": "Decrypted only inside an isolated function at call time",
+        "stored": "Yes, encrypted at rest with AES-256-GCM; key held separately"
+      },
+      {
+        "data": "API keys you create",
+        "accessed": "Compared as a hash on every request",
+        "stored": "Only a SHA-256 hash; the raw key is shown once and is never recoverable"
+      },
+      {
+        "data": "Messages you schedule for later",
+        "accessed": "Held until the send time, then dispatched",
+        "stored": "Yes, encrypted at rest until sent, then kept as your history"
+      },
+      {
+        "data": "Tool-call activity (metadata)",
+        "accessed": "Recorded for your own audit log",
+        "stored": "Tool name, inbox, timestamp, and status only. No email content"
+      }
+    ],
+    "outro": "The one deliberate exception is a message you ask the agent to schedule for later. We have to hold it until the send time, so we store it encrypted in the meantime, then keep a record afterwards for your history."
+  },
+  "verify": {
+    "title": "3. You don't have to trust me, you can check",
+    "p1": "\"A random person vibe-coded this\" is a fair worry for any hosted tool that touches your email. The right answer is not a bigger promise. It is removing the need to take me at my word.",
+    "points": [
+      "<b>Read the code.</b> The server that runs MCPEmails is public on GitHub. You can see exactly what it keeps (an encrypted token) and what it doesn't (your mail).",
+      "<b>Self-host it.</b> If you would rather not use the hosted service at all, you can run the same code on your own infrastructure with your own keys.",
+      "<b>Use a scoped, revocable connection.</b> You connect with OAuth or an app password that grants only mail access, and you can revoke it in one click from your provider, with no involvement from me.",
+      "<b>Watch what it does.</b> Every tool call your agent makes is recorded in an activity log you can read, so you can see precisely what was accessed and when."
+    ],
+    "outro": "And if a native connector already covers your provider and does what you need, use it. This exists for the providers and multi-inbox combinations they don't cover."
+  },
+  "injection": {
+    "title": "4. The real risk: prompt injection",
+    "p1": "The honest threat here is not me reading your mail. It is a hostile email trying to hijack the agent: instructions hidden inside a message that try to make your AI forward, delete, or leak something. This is a real, unsolved problem for every email agent. I won't claim it's solved. I can show how it's contained:",
+    "points": [
+      "<b>One inbox, one token.</b> A connection can only ever touch the single inbox you connected it to. A scoped token cannot reach your other inboxes, or anyone else's.",
+      "<b>Destructive actions are separated and flagged.</b> Sending and deleting are their own tools, marked destructive, so your AI client asks for confirmation before they fire.",
+      "<b>Least privilege.</b> Connections request mail read and compose access, not account-wide control. Even a fully compromised token is bounded by the scope you granted.",
+      "<b>Rate limited.</b> Every key is rate limited, so a runaway or hijacked agent cannot fan out thousands of actions unnoticed."
+    ],
+    "outro": "Not solved. Contained: the irreversible actions are gated, and the blast radius is kept to one inbox."
+  },
+  "credentials": {
+    "title": "5. How your credentials are protected",
+    "intro": "Your tokens are the only sensitive thing we hold, so they get the strongest protection we can give them:",
+    "measures": [
+      "All data in transit is encrypted using TLS 1.2 or higher. Connections that do not support TLS are rejected.",
+      "OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is held separately from the encrypted data and is never co-located with it.",
+      "API keys are hashed with SHA-256 before storage. The raw key cannot be recovered from the hash.",
+      "Database access is protected by Row-Level Security policies that stop one workspace from reaching another's data, even if a query is written wrong.",
+      "Administrative access to production infrastructure requires multi-factor authentication and is logged."
+    ]
+  },
+  "google": {
+    "title": "6. Google and provider verification",
+    "p1": "Gmail access uses Google's restricted scopes, the tier Google scrutinises most closely. We are completing Google's restricted-scope OAuth verification and its annual CASA security assessment, carried out by an independent, Google-approved assessor. Once it is complete, you will no longer see Google's \"unverified app\" warning when you connect.",
+    "p2": "MCPEmails' use and transfer of information received from Google APIs to any other app adheres to the <link>Google API Services User Data Policy</link>, including the Limited Use requirements.",
+    "p3": "For Fastmail, iCloud, Yahoo, Zoho, Yandex, and other IMAP providers, you connect with a provider-issued app password that you can revoke at any time, with no broad OAuth scopes for us to over-request."
+  },
+  "subprocessors": {
+    "title": "7. Subprocessors",
+    "intro": "We keep the list of companies that touch any data short, and each is bound by a data processing agreement. Note what is absent: no AI provider is on this list. MCPEmails does not send your email to any model of its own. Your agent does that, under your control and its provider's data policy.",
+    "thProvider": "Provider",
+    "thPurpose": "Purpose",
+    "thLocation": "Location",
+    "rows": [
+      {
+        "provider": "Supabase",
+        "purpose": "Database, auth, edge functions",
+        "location": "EU (Frankfurt) or US (Virginia); you choose at signup"
+      },
+      {
+        "provider": "Vercel",
+        "purpose": "Website and dashboard hosting",
+        "location": "Global edge, nearest region to user"
+      },
+      {
+        "provider": "Stripe",
+        "purpose": "Payment processing (billing only, no email data)",
+        "location": "US; PCI-DSS certified"
+      }
+    ]
+  },
+  "report": {
+    "title": "8. Reporting a vulnerability",
+    "p1": "If you find a security issue, please report it. I would much rather hear it from you than read about it later.",
+    "points": [
+      "Email <securityEmail></securityEmail> with details and steps to reproduce.",
+      "A machine-readable contact is published at <securitytxt>/.well-known/security.txt</securitytxt>.",
+      "I aim to acknowledge reports within 24 hours and to fix confirmed critical issues within 72 hours."
+    ],
+    "safeHarbor": "<b>Safe harbour.</b> If you make a good-faith effort to follow this policy, do not access or modify other users' data, and give me a reasonable chance to fix the issue before disclosing it, I will not pursue or support legal action against you for your research."
+  },
+  "cta": {
+    "title": "Questions about any of this?",
+    "sub": "Ask me anything. I'm the only person running this, and I answer every message.",
+    "contactBtn": "Email security@",
+    "privacyBtn": "Read the privacy policy"
+  }
+}

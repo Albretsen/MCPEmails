@@ -213,7 +213,8 @@
     "mcpLabel": "Point de terminaison MCP",
     "copy": "Copier",
     "copied": "Copié",
-    "copyAria": "Copier {label}"
+    "copyAria": "Copier {label}",
+    "linkSecurity": "Sécurité"
   },
   "languageSwitcher": {
     "label": "Langue",
