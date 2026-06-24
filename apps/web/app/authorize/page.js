@@ -124,7 +124,14 @@ export default async function AuthorizePage({ searchParams }) {
     ['client_id','redirect_uri','scope','state','code_challenge','code_challenge_method'].forEach(k => {
       if (params[k]) qs.set(k, params[k]);
     });
-    redirect(`/login?redirect=/authorize?${qs.toString()}`);
+    // Encode the whole return path as ONE value. Without this, the nested query
+    // string (redirect_uri, scope, state, code_challenge…) leaks into /login's
+    // own params and `redirect` truncates at the first `&`, so the user returns
+    // to /authorize missing code_challenge etc. and the OAuth flow dies with a
+    // "Missing code_challenge" error. This is the common path for a logged-out
+    // user connecting a client (Cursor/VS Code/Glama) before they have a session.
+    const returnTo = `/authorize?${qs.toString()}`;
+    redirect(`/login?redirect=${encodeURIComponent(returnTo)}`);
   }
 
   // ── 7. Fetch the active workspace and its inboxes ─────────────────────────
