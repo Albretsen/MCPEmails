@@ -213,7 +213,8 @@
     "mcpLabel": "MCP-endepunkt",
     "copy": "Kopier",
     "copied": "Kopiert",
-    "copyAria": "Kopier {label}"
+    "copyAria": "Kopier {label}",
+    "linkSecurity": "Sikkerhet"
   },
   "languageSwitcher": {
     "label": "Språk",

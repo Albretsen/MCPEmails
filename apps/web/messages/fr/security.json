@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "title": "Sécurité et confiance",
+    "description": "Comment MCPEmails protège vos e-mails : récupérés en direct et jamais stockés, identifiants chiffrés au repos, accès limité et révocable, et un code public que vous pouvez lire ou héberger vous-même."
+  },
+  "hero": {
+    "eyebrow": "Sécurité et confiance",
+    "title": "Vous ne devriez pas avoir à me croire sur parole",
+    "lead": "MCPEmails connecte un agent IA à votre boîte de réception, il doit donc gagner une véritable confiance. Voici la version honnête : ce que le service touche, ce qu'il conserve, ce qu'il ne pourra jamais faire, et comment vous pouvez tout vérifier par vous-même."
+  },
+  "tldr": {
+    "title": "1. La version courte",
+    "intro": "Si vous ne lisez rien d'autre sur cette page :",
+    "points": [
+      "Vos e-mails sont récupérés en direct à chaque requête et supprimés dès que la réponse est envoyée. Nous ne conservons aucune copie d'un quelconque corps de message, objet, pièce jointe ou contact.",
+      "Nous stockons exactement une seule chose sensible par boîte de réception : un jeton d'accès ou un mot de passe d'application, chiffré avec AES-256-GCM, afin de pouvoir effectuer le prochain appel que vous demandez.",
+      "Nous n'entraînons jamais aucun modèle d'IA sur vos e-mails, et nous n'envoyons jamais vos e-mails à un modèle de notre choix. Votre agent est la seule chose qui les lit, sous votre contrôle.",
+      "Chaque connexion est limitée à la seule boîte de réception que vous avez connectée, et vous pouvez la révoquer à tout moment depuis les paramètres de Google, de Microsoft ou de votre fournisseur.",
+      "Le code qui fait tourner le service est public. Vous pouvez le lire, l'auditer ou héberger l'ensemble vous-même."
+    ]
+  },
+  "access": {
+    "title": "2. Ce à quoi nous accédons vs. ce que nous stockons",
+    "intro": "L'écart entre l'accès et le stockage, c'est toute la conception. Sur l'instant, l'agent peut lire beaucoup de choses, en direct. Presque rien n'est jamais écrit.",
+    "thData": "Donnée",
+    "thAccessed": "Consultée",
+    "thStored": "Stockée",
+    "rows": [
+      {
+        "data": "Corps, objets et pièces jointes des e-mails",
+        "accessed": "En direct, uniquement lorsque votre agent effectue un appel de lecture ou de recherche",
+        "stored": "Jamais écrit sur disque, en cache ou dans les journaux"
+      },
+      {
+        "data": "Contacts / carnet d'adresses",
+        "accessed": "Analysés en direct à partir des messages récents, sur demande",
+        "stored": "Jamais. Il n'existe aucun carnet d'adresses stocké"
+      },
+      {
+        "data": "Jeton OAuth ou mot de passe d'application",
+        "accessed": "Déchiffré uniquement à l'intérieur d'une fonction isolée, au moment de l'appel",
+        "stored": "Oui, chiffré au repos avec AES-256-GCM ; la clé est conservée séparément"
+      },
+      {
+        "data": "Clés d'API que vous créez",
+        "accessed": "Comparées sous forme de hachage à chaque requête",
+        "stored": "Uniquement un hachage SHA-256 ; la clé brute est affichée une seule fois et n'est jamais récupérable"
+      },
+      {
+        "data": "Messages que vous programmez pour plus tard",
+        "accessed": "Conservés jusqu'à l'heure d'envoi, puis expédiés",
+        "stored": "Oui, chiffrés au repos jusqu'à l'envoi, puis conservés dans votre historique"
+      },
+      {
+        "data": "Activité des appels d'outils (métadonnées)",
+        "accessed": "Enregistrée pour votre propre journal d'audit",
+        "stored": "Nom de l'outil, boîte de réception, horodatage et statut uniquement. Aucun contenu d'e-mail"
+      }
+    ],
+    "outro": "La seule exception délibérée est un message que vous demandez à l'agent de programmer pour plus tard. Nous devons le conserver jusqu'à l'heure d'envoi, nous le stockons donc chiffré entre-temps, puis nous en gardons une trace ensuite pour votre historique."
+  },
+  "verify": {
+    "title": "3. Vous n'avez pas à me faire confiance, vous pouvez vérifier",
+    "p1": "« Une personne quelconque a bricolé ça » est une inquiétude légitime pour tout outil hébergé qui touche à vos e-mails. La bonne réponse n'est pas une promesse plus grande. C'est de supprimer le besoin de me croire sur parole.",
+    "points": [
+      "<b>Lisez le code.</b> Le serveur qui fait tourner MCPEmails est public sur GitHub. Vous pouvez voir exactement ce qu'il conserve (un jeton chiffré) et ce qu'il ne conserve pas (vos e-mails).",
+      "<b>Hébergez-le vous-même.</b> Si vous préférez ne pas utiliser du tout le service hébergé, vous pouvez exécuter le même code sur votre propre infrastructure, avec vos propres clés.",
+      "<b>Utilisez une connexion limitée et révocable.</b> Vous vous connectez avec OAuth ou un mot de passe d'application qui n'accorde qu'un accès au courrier, et vous pouvez le révoquer en un clic depuis votre fournisseur, sans aucune intervention de ma part.",
+      "<b>Surveillez ce qu'il fait.</b> Chaque appel d'outil effectué par votre agent est enregistré dans un journal d'activité que vous pouvez consulter, pour voir précisément ce qui a été consulté et quand."
+    ],
+    "outro": "Et si un connecteur natif couvre déjà votre fournisseur et fait ce dont vous avez besoin, utilisez-le. Ceci existe pour les fournisseurs et les combinaisons multi-boîtes qu'ils ne couvrent pas."
+  },
+  "injection": {
+    "title": "4. Le vrai risque : l'injection de requête",
+    "p1": "La menace honnête ici, ce n'est pas que je lise vos e-mails. C'est un e-mail hostile qui tente de détourner l'agent : des instructions cachées dans un message qui essaient de faire transférer, supprimer ou divulguer quelque chose par votre IA. C'est un problème réel et non résolu pour tout agent de messagerie. Je ne prétendrai pas qu'il est résolu. Je peux montrer comment il est contenu :",
+    "points": [
+      "<b>Une boîte de réception, un jeton.</b> Une connexion ne peut jamais toucher que la seule boîte de réception à laquelle vous l'avez connectée. Un jeton limité ne peut pas atteindre vos autres boîtes de réception, ni celles de quiconque.",
+      "<b>Les actions destructrices sont séparées et signalées.</b> L'envoi et la suppression sont leurs propres outils, marqués comme destructifs, de sorte que votre client IA demande une confirmation avant de les déclencher.",
+      "<b>Moindre privilège.</b> Les connexions demandent un accès en lecture et en rédaction du courrier, pas un contrôle sur l'ensemble du compte. Même un jeton entièrement compromis est borné par la portée que vous avez accordée.",
+      "<b>Débit limité.</b> Chaque clé a un débit limité, de sorte qu'un agent emballé ou détourné ne peut pas déclencher des milliers d'actions sans que cela se remarque."
+    ],
+    "outro": "Pas résolu. Contenu : les actions irréversibles sont verrouillées, et le rayon d'impact est limité à une seule boîte de réception."
+  },
+  "credentials": {
+    "title": "5. Comment vos identifiants sont protégés",
+    "intro": "Vos jetons sont la seule chose sensible que nous détenons, ils bénéficient donc de la protection la plus forte que nous puissions leur offrir :",
+    "measures": [
+      "Toutes les données en transit sont chiffrées avec TLS 1.2 ou supérieur. Les connexions qui ne prennent pas en charge TLS sont rejetées.",
+      "Les jetons OAuth et les identifiants IMAP sont chiffrés au repos avec AES-256-GCM. La clé de chiffrement est conservée séparément des données chiffrées et n'est jamais située au même endroit qu'elles.",
+      "Les clés d'API sont hachées avec SHA-256 avant le stockage. La clé brute ne peut pas être récupérée à partir du hachage.",
+      "L'accès à la base de données est protégé par des politiques de Row-Level Security qui empêchent un espace de travail d'atteindre les données d'un autre, même si une requête est mal écrite.",
+      "L'accès administratif à l'infrastructure de production nécessite une authentification multifacteur et est journalisé."
+    ]
+  },
+  "google": {
+    "title": "6. Vérification Google et fournisseurs",
+    "p1": "L'accès à Gmail utilise les portées restreintes de Google, le niveau que Google examine le plus minutieusement. Nous achevons la vérification OAuth à portées restreintes de Google ainsi que son évaluation de sécurité annuelle CASA, réalisée par un évaluateur indépendant agréé par Google. Une fois celle-ci terminée, vous ne verrez plus l'avertissement « application non vérifiée » de Google lorsque vous vous connectez.",
+    "p2": "L'utilisation et le transfert par MCPEmails des informations reçues des API de Google vers toute autre application respectent la <link>Google API Services User Data Policy</link>, y compris les exigences Limited Use.",
+    "p3": "Pour Fastmail, iCloud, Yahoo, Zoho, Yandex et les autres fournisseurs IMAP, vous vous connectez avec un mot de passe d'application délivré par le fournisseur, que vous pouvez révoquer à tout moment, sans aucune portée OAuth large que nous pourrions demander à l'excès."
+  },
+  "subprocessors": {
+    "title": "7. Sous-traitants",
+    "intro": "Nous gardons courte la liste des entreprises qui touchent à des données, et chacune est liée par un accord de traitement des données. Notez ce qui est absent : aucun fournisseur d'IA ne figure sur cette liste. MCPEmails n'envoie vos e-mails à aucun modèle de son choix. C'est votre agent qui le fait, sous votre contrôle et selon la politique de données de son fournisseur.",
+    "thProvider": "Fournisseur",
+    "thPurpose": "Finalité",
+    "thLocation": "Emplacement",
+    "rows": [
+      {
+        "provider": "Supabase",
+        "purpose": "Base de données, authentification, fonctions edge",
+        "location": "UE (Francfort) ou États-Unis (Virginie) ; vous choisissez à l'inscription"
+      },
+      {
+        "provider": "Vercel",
+        "purpose": "Hébergement du site web et du tableau de bord",
+        "location": "Edge mondial, région la plus proche de l'utilisateur"
+      },
+      {
+        "provider": "Stripe",
+        "purpose": "Traitement des paiements (facturation uniquement, aucune donnée d'e-mail)",
+        "location": "États-Unis ; certifié PCI-DSS"
+      }
+    ]
+  },
+  "report": {
+    "title": "8. Signaler une vulnérabilité",
+    "p1": "Si vous trouvez un problème de sécurité, signalez-le. Je préfère de loin l'apprendre de votre part plutôt que de le découvrir plus tard.",
+    "points": [
+      "Écrivez à <securityEmail></securityEmail> avec les détails et les étapes pour reproduire.",
+      "Un contact lisible par machine est publié à l'adresse <securitytxt>/.well-known/security.txt</securitytxt>.",
+      "Je m'efforce d'accuser réception des signalements sous 24 heures et de corriger les problèmes critiques confirmés sous 72 heures."
+    ],
+    "safeHarbor": "<b>Sphère de sécurité.</b> Si vous faites un effort de bonne foi pour respecter cette politique, n'accédez pas aux données d'autres utilisateurs et ne les modifiez pas, et me laissez une chance raisonnable de corriger le problème avant de le divulguer, je n'engagerai ni ne soutiendrai aucune action en justice contre vous pour vos recherches."
+  },
+  "cta": {
+    "title": "Des questions sur tout cela ?",
+    "sub": "Demandez-moi ce que vous voulez. Je suis la seule personne aux commandes, et je réponds à chaque message.",
+    "contactBtn": "Écrire à security@",
+    "privacyBtn": "Lire la politique de confidentialité"
+  }
+}

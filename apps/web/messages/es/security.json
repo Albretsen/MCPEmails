@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "title": "Seguridad y confianza",
+    "description": "Cómo MCPEmails protege tu correo: se obtiene en vivo y nunca se almacena, las credenciales se cifran en reposo, el acceso es limitado y revocable, y el código es público para que lo leas o lo autoalojes."
+  },
+  "hero": {
+    "eyebrow": "Seguridad y confianza",
+    "title": "No deberías tener que creer en mi palabra",
+    "lead": "MCPEmails conecta un agente de IA a tu bandeja de entrada, así que tiene que ganarse una confianza real. Esta es la versión honesta: qué toca el servicio, qué conserva, qué nunca puede hacer y cómo puedes verificarlo todo tú mismo."
+  },
+  "tldr": {
+    "title": "1. La versión corta",
+    "intro": "Si no lees nada más en esta página:",
+    "points": [
+      "Tu correo se obtiene en vivo en cada solicitud y se descarta en el momento en que se envía la respuesta. No guardamos ninguna copia del cuerpo de un mensaje, asunto, archivo adjunto ni contacto.",
+      "Almacenamos exactamente una cosa sensible por bandeja de entrada: un token de acceso o una contraseña de aplicación, cifrada con AES-256-GCM, para poder hacer la siguiente llamada que pidas.",
+      "Nunca entrenamos ningún modelo de IA con tu correo, y nunca enviamos tu correo a un modelo de nuestra elección. Tu agente es lo único que lo lee, bajo tu control.",
+      "Cada conexión está limitada a la única bandeja de entrada que conectaste, y puedes revocarla en cualquier momento desde Google, Microsoft o los ajustes de tu proveedor.",
+      "El código que ejecuta el servicio es público. Puedes leerlo, auditarlo o autoalojar todo el sistema."
+    ]
+  },
+  "access": {
+    "title": "2. A qué accedemos frente a qué almacenamos",
+    "intro": "La diferencia entre acceso y almacenamiento es todo el diseño. En el momento, el agente puede leer mucho, en vivo. Casi nada de ello se registra jamás.",
+    "thData": "Datos",
+    "thAccessed": "Se accede",
+    "thStored": "Se almacena",
+    "rows": [
+      {
+        "data": "Cuerpos de correo, asuntos, archivos adjuntos",
+        "accessed": "En vivo, solo cuando tu agente hace una llamada de lectura o búsqueda",
+        "stored": "Nunca se escribe en disco, caché ni registros"
+      },
+      {
+        "data": "Contactos / libreta de direcciones",
+        "accessed": "Se escanea en vivo desde el correo reciente cuando se solicita",
+        "stored": "Nunca. No hay una libreta de direcciones almacenada"
+      },
+      {
+        "data": "Token de OAuth o contraseña de aplicación",
+        "accessed": "Se descifra solo dentro de una función aislada en el momento de la llamada",
+        "stored": "Sí, cifrado en reposo con AES-256-GCM; la clave se guarda por separado"
+      },
+      {
+        "data": "API keys que creas",
+        "accessed": "Se compara como un hash en cada solicitud",
+        "stored": "Solo un hash SHA-256; la clave en bruto se muestra una vez y nunca es recuperable"
+      },
+      {
+        "data": "Mensajes que programas para más tarde",
+        "accessed": "Se conservan hasta la hora de envío y luego se despachan",
+        "stored": "Sí, cifrado en reposo hasta enviarse, luego se conserva como tu historial"
+      },
+      {
+        "data": "Actividad de llamadas a herramientas (metadatos)",
+        "accessed": "Se registra para tu propio registro de auditoría",
+        "stored": "Solo nombre de la herramienta, bandeja, marca de tiempo y estado. Ningún contenido de correo"
+      }
+    ],
+    "outro": "La única excepción deliberada es un mensaje que pides al agente que programe para más tarde. Tenemos que conservarlo hasta la hora de envío, así que lo almacenamos cifrado mientras tanto y luego guardamos un registro para tu historial."
+  },
+  "verify": {
+    "title": "3. No tienes que confiar en mí, puedes comprobarlo",
+    "p1": "\"Una persona cualquiera improvisó esto con código\" es una preocupación legítima ante cualquier herramienta alojada que toque tu correo. La respuesta correcta no es una promesa mayor. Es eliminar la necesidad de creer en mi palabra.",
+    "points": [
+      "<b>Lee el código.</b> El servidor que ejecuta MCPEmails es público en GitHub. Puedes ver exactamente qué conserva (un token cifrado) y qué no (tu correo).",
+      "<b>Autoalójalo.</b> Si prefieres no usar el servicio alojado en absoluto, puedes ejecutar el mismo código en tu propia infraestructura con tus propias claves.",
+      "<b>Usa una conexión limitada y revocable.</b> Te conectas con OAuth o una contraseña de aplicación que concede únicamente acceso al correo, y puedes revocarla con un clic desde tu proveedor, sin intervención alguna de mi parte.",
+      "<b>Observa lo que hace.</b> Cada llamada a una herramienta que hace tu agente queda registrada en un registro de actividad que puedes leer, para que veas con precisión a qué se accedió y cuándo."
+    ],
+    "outro": "Y si un conector nativo ya cubre tu proveedor y hace lo que necesitas, úsalo. Esto existe para los proveedores y las combinaciones de varias bandejas de entrada que ellos no cubren."
+  },
+  "injection": {
+    "title": "4. El riesgo real: la inyección de prompts",
+    "p1": "La amenaza honesta aquí no soy yo leyendo tu correo. Es un correo hostil que intenta secuestrar al agente: instrucciones ocultas dentro de un mensaje que intentan hacer que tu IA reenvíe, elimine o filtre algo. Este es un problema real y sin resolver para todos los agentes de correo. No afirmaré que está resuelto. Puedo mostrar cómo se contiene:",
+    "points": [
+      "<b>Una bandeja, un token.</b> Una conexión solo puede tocar la única bandeja de entrada a la que la conectaste. Un token limitado no puede alcanzar tus otras bandejas, ni las de nadie más.",
+      "<b>Las acciones destructivas están separadas y marcadas.</b> Enviar y eliminar son herramientas propias, marcadas como destructivas, para que tu cliente de IA pida confirmación antes de ejecutarlas.",
+      "<b>Privilegio mínimo.</b> Las conexiones solicitan acceso de lectura y composición de correo, no control de toda la cuenta. Incluso un token totalmente comprometido está limitado por el alcance que concediste.",
+      "<b>Con límite de tasa.</b> Cada clave tiene un límite de tasa, así que un agente descontrolado o secuestrado no puede desplegar miles de acciones sin que se note."
+    ],
+    "outro": "No resuelto. Contenido: las acciones irreversibles están protegidas y el radio de impacto se mantiene en una sola bandeja de entrada."
+  },
+  "credentials": {
+    "title": "5. Cómo se protegen tus credenciales",
+    "intro": "Tus tokens son lo único sensible que conservamos, así que reciben la protección más fuerte que podemos darles:",
+    "measures": [
+      "Todos los datos en tránsito se cifran usando TLS 1.2 o superior. Las conexiones que no admiten TLS se rechazan.",
+      "Los tokens de OAuth y las credenciales de IMAP se cifran en reposo usando AES-256-GCM. La clave de cifrado se guarda por separado de los datos cifrados y nunca se ubica junto a ellos.",
+      "Las API keys se cifran con hash SHA-256 antes de almacenarse. La clave en bruto no se puede recuperar a partir del hash.",
+      "El acceso a la base de datos está protegido por políticas de Row-Level Security que impiden que un espacio de trabajo alcance los datos de otro, incluso si una consulta está mal escrita.",
+      "El acceso administrativo a la infraestructura de producción requiere autenticación de varios factores y queda registrado."
+    ]
+  },
+  "google": {
+    "title": "6. Verificación de Google y de proveedores",
+    "p1": "El acceso a Gmail usa los scopes restringidos de Google, el nivel que Google examina con mayor rigor. Estamos completando la verificación de OAuth de scope restringido de Google y su evaluación anual de seguridad CASA, realizada por un evaluador independiente aprobado por Google. Una vez completada, ya no verás la advertencia de \"aplicación no verificada\" de Google al conectarte.",
+    "p2": "El uso y la transferencia por parte de MCPEmails de la información recibida de las API de Google a cualquier otra aplicación se ajustan a la <link>Google API Services User Data Policy</link>, incluidos los requisitos de Limited Use.",
+    "p3": "Para Fastmail, iCloud, Yahoo, Zoho, Yandex y otros proveedores de IMAP, te conectas con una contraseña de aplicación emitida por el proveedor que puedes revocar en cualquier momento, sin amplios scopes de OAuth que nosotros podamos sobrepedir."
+  },
+  "subprocessors": {
+    "title": "7. Subprocesadores",
+    "intro": "Mantenemos corta la lista de empresas que tocan algún dato, y cada una está vinculada por un acuerdo de tratamiento de datos. Fíjate en lo que falta: ningún proveedor de IA está en esta lista. MCPEmails no envía tu correo a ningún modelo propio. Tu agente hace eso, bajo tu control y la política de datos de su proveedor.",
+    "thProvider": "Proveedor",
+    "thPurpose": "Propósito",
+    "thLocation": "Ubicación",
+    "rows": [
+      {
+        "provider": "Supabase",
+        "purpose": "Base de datos, autenticación, funciones edge",
+        "location": "UE (Fráncfort) o EE. UU. (Virginia); tú eliges al registrarte"
+      },
+      {
+        "provider": "Vercel",
+        "purpose": "Alojamiento del sitio web y del panel",
+        "location": "Edge global, la región más cercana al usuario"
+      },
+      {
+        "provider": "Stripe",
+        "purpose": "Procesamiento de pagos (solo facturación, sin datos de correo)",
+        "location": "EE. UU.; certificado PCI-DSS"
+      }
+    ]
+  },
+  "report": {
+    "title": "8. Informar de una vulnerabilidad",
+    "p1": "Si encuentras un problema de seguridad, por favor infórmalo. Prefiero mucho más oírlo de ti que enterarme más tarde.",
+    "points": [
+      "Escribe a <securityEmail></securityEmail> con los detalles y los pasos para reproducirlo.",
+      "Se publica un contacto legible por máquina en <securitytxt>/.well-known/security.txt</securitytxt>.",
+      "Mi objetivo es acusar recibo de los informes en un plazo de 24 horas y corregir los problemas críticos confirmados en un plazo de 72 horas."
+    ],
+    "safeHarbor": "<b>Puerto seguro.</b> Si haces un esfuerzo de buena fe por seguir esta política, no accedes ni modificas datos de otros usuarios y me das una oportunidad razonable de corregir el problema antes de divulgarlo, no emprenderé ni apoyaré acciones legales contra ti por tu investigación."
+  },
+  "cta": {
+    "title": "¿Tienes preguntas sobre algo de esto?",
+    "sub": "Pregúntame lo que quieras. Soy la única persona que lleva esto, y respondo cada mensaje.",
+    "contactBtn": "Escribir a security@",
+    "privacyBtn": "Leer la política de privacidad"
+  }
+}

@@ -213,7 +213,8 @@
     "mcpLabel": "MCP endpoint",
     "copy": "Copy",
     "copied": "Copied",
-    "copyAria": "Copy {label}"
+    "copyAria": "Copy {label}",
+    "linkSecurity": "Security"
   },
   "languageSwitcher": {
     "label": "Language",

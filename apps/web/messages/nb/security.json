@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "title": "Sikkerhet og tillit",
+    "description": "Slik beskytter MCPEmails e-posten din: hentet i sanntid og aldri lagret, legitimasjon kryptert i hvile, avgrenset og tilbakekallbar tilgang, og åpen kildekode du kan lese eller drifte selv."
+  },
+  "hero": {
+    "eyebrow": "Sikkerhet og tillit",
+    "title": "Du burde ikke trenge å bare ta meg på ordet",
+    "lead": "MCPEmails kobler en KI-agent til innboksen din, så den må fortjene reell tillit. Dette er den ærlige versjonen: hva tjenesten berører, hva den beholder, hva den aldri kan gjøre, og hvordan du kan verifisere alt selv."
+  },
+  "tldr": {
+    "title": "1. Den korte versjonen",
+    "intro": "Hvis du ikke leser noe annet på denne siden:",
+    "points": [
+      "E-posten din hentes i sanntid ved hver forespørsel og forkastes i det øyeblikket svaret er sendt. Vi beholder ingen kopi av noen meldingstekst, emnefelt, vedlegg eller kontakt.",
+      "Vi lagrer nøyaktig én sensitiv ting per innboks: et tilgangstoken eller app-passord, kryptert med AES-256-GCM, slik at vi kan utføre det neste kallet du ber om.",
+      "Vi trener aldri noen KI-modell på e-posten din, og vi sender aldri e-posten din til en modell vi selv velger. Agenten din er det eneste som leser den, under din kontroll.",
+      "Hver tilkobling er avgrenset til den enkelte innboksen du koblet til, og du kan når som helst tilbakekalle den fra innstillingene hos Google, Microsoft eller leverandøren din.",
+      "Koden som driver tjenesten er åpen. Du kan lese den, revidere den eller drifte hele greia selv."
+    ]
+  },
+  "access": {
+    "title": "2. Hva vi har tilgang til vs. hva vi lagrer",
+    "intro": "Gapet mellom tilgang og lagring er hele designet. I øyeblikket kan agenten lese mye, i sanntid. Nesten ingenting av det skrives noensinne ned.",
+    "thData": "Data",
+    "thAccessed": "Tilgang",
+    "thStored": "Lagret",
+    "rows": [
+      {
+        "data": "Meldingstekster, emnefelt, vedlegg",
+        "accessed": "I sanntid, kun når agenten din gjør et lese- eller søkekall",
+        "stored": "Skrives aldri til disk, hurtigbuffer eller logger"
+      },
+      {
+        "data": "Kontakter / adressebok",
+        "accessed": "Skannes i sanntid fra nylig e-post når det blir bedt om",
+        "stored": "Aldri. Det finnes ingen lagret adressebok"
+      },
+      {
+        "data": "OAuth-token eller app-passord",
+        "accessed": "Dekrypteres kun inne i en isolert funksjon ved kalltidspunktet",
+        "stored": "Ja, kryptert i hvile med AES-256-GCM; nøkkelen holdes adskilt"
+      },
+      {
+        "data": "API-nøkler du oppretter",
+        "accessed": "Sammenlignes som en hash ved hver forespørsel",
+        "stored": "Kun en SHA-256-hash; den rå nøkkelen vises én gang og kan aldri gjenopprettes"
+      },
+      {
+        "data": "Meldinger du planlegger for senere",
+        "accessed": "Holdes til sendetidspunktet, deretter sendt",
+        "stored": "Ja, kryptert i hvile til den er sendt, deretter beholdt som din historikk"
+      },
+      {
+        "data": "Verktøykall-aktivitet (metadata)",
+        "accessed": "Registreres for din egen revisjonslogg",
+        "stored": "Kun verktøynavn, innboks, tidsstempel og status. Ikke noe e-postinnhold"
+      }
+    ],
+    "outro": "Det ene bevisste unntaket er en melding du ber agenten planlegge for senere. Vi må holde på den til sendetidspunktet, så vi lagrer den kryptert i mellomtiden, og beholder deretter en oppføring etterpå for historikken din."
+  },
+  "verify": {
+    "title": "3. Du trenger ikke å stole på meg, du kan sjekke",
+    "p1": "\"En tilfeldig person vibe-kodet dette\" er en rimelig bekymring for ethvert driftet verktøy som berører e-posten din. Det riktige svaret er ikke et større løfte. Det er å fjerne behovet for å ta meg på ordet.",
+    "points": [
+      "<b>Les koden.</b> Serveren som driver MCPEmails er åpen på GitHub. Du kan se nøyaktig hva den beholder (et kryptert token) og hva den ikke beholder (e-posten din).",
+      "<b>Drift den selv.</b> Hvis du heller ikke vil bruke den driftede tjenesten i det hele tatt, kan du kjøre den samme koden på din egen infrastruktur med dine egne nøkler.",
+      "<b>Bruk en avgrenset, tilbakekallbar tilkobling.</b> Du kobler til med OAuth eller et app-passord som kun gir tilgang til e-post, og du kan tilbakekalle den med ett klikk hos leverandøren din, uten at jeg er involvert.",
+      "<b>Se hva den gjør.</b> Hvert verktøykall agenten din gjør registreres i en aktivitetslogg du kan lese, så du ser nøyaktig hva som ble lest og når."
+    ],
+    "outro": "Og hvis en innebygd koblings-integrasjon allerede dekker leverandøren din og gjør det du trenger, bruk den. Dette finnes for leverandørene og kombinasjonene med flere innbokser som de ikke dekker."
+  },
+  "injection": {
+    "title": "4. Den reelle risikoen: prompt-injeksjon",
+    "p1": "Den ærlige trusselen her er ikke at jeg leser e-posten din. Det er en fiendtlig e-post som forsøker å kapre agenten: instruksjoner skjult inne i en melding som forsøker å få KI-en din til å videresende, slette eller lekke noe. Dette er et reelt, uløst problem for enhver e-postagent. Jeg vil ikke påstå at det er løst. Jeg kan vise hvordan det begrenses:",
+    "points": [
+      "<b>Én innboks, ett token.</b> En tilkobling kan kun noensinne berøre den enkelte innboksen du koblet den til. Et avgrenset token kan ikke nå dine andre innbokser, eller noen andres.",
+      "<b>Destruktive handlinger er adskilt og merket.</b> Sending og sletting er egne verktøy, merket som destruktive, så KI-klienten din ber om bekreftelse før de utløses.",
+      "<b>Minst mulig privilegier.</b> Tilkoblinger ber om tilgang til å lese og skrive e-post, ikke kontoomfattende kontroll. Selv et fullstendig kompromittert token er begrenset av omfanget du innvilget.",
+      "<b>Hastighetsbegrenset.</b> Hver nøkkel er hastighetsbegrenset, så en løpsk eller kapret agent kan ikke utløse tusenvis av handlinger ubemerket."
+    ],
+    "outro": "Ikke løst. Begrenset: de irreversible handlingene er sikret, og skadeomfanget holdes til én innboks."
+  },
+  "credentials": {
+    "title": "5. Slik beskyttes legitimasjonen din",
+    "intro": "Tokenene dine er det eneste sensitive vi holder på, så de får den sterkeste beskyttelsen vi kan gi dem:",
+    "measures": [
+      "All data under overføring krypteres med TLS 1.2 eller høyere. Tilkoblinger som ikke støtter TLS avvises.",
+      "OAuth-tokener og IMAP-legitimasjon krypteres i hvile med AES-256-GCM. Krypteringsnøkkelen holdes adskilt fra de krypterte dataene og plasseres aldri sammen med dem.",
+      "API-nøkler hashes med SHA-256 før lagring. Den rå nøkkelen kan ikke gjenopprettes fra hashen.",
+      "Databasetilgang beskyttes av Row-Level Security-policyer som hindrer ett arbeidsområde fra å nå et annets data, selv om en spørring er skrevet feil.",
+      "Administrativ tilgang til produksjonsinfrastruktur krever flerfaktorautentisering og logges."
+    ]
+  },
+  "google": {
+    "title": "6. Google- og leverandørverifisering",
+    "p1": "Tilgang til Gmail bruker Googles begrensede omfang (restricted scopes), nivået Google gransker tettest. Vi fullfører Googles OAuth-verifisering for begrenset omfang og den årlige CASA-sikkerhetsvurderingen, utført av en uavhengig, Google-godkjent vurderer. Når den er ferdig, vil du ikke lenger se Googles \"uverifisert app\"-advarsel når du kobler til.",
+    "p2": "MCPEmails' bruk og overføring av informasjon mottatt fra Google APIs til enhver annen app følger <link>Google API Services User Data Policy</link>, inkludert kravene om Limited Use.",
+    "p3": "For Fastmail, iCloud, Yahoo, Zoho, Yandex og andre IMAP-leverandører kobler du til med et app-passord utstedt av leverandøren som du kan tilbakekalle når som helst, uten brede OAuth-omfang for oss å be om for mye av."
+  },
+  "subprocessors": {
+    "title": "7. Underleverandører",
+    "intro": "Vi holder listen over selskaper som berører data kort, og hvert er bundet av en databehandleravtale. Legg merke til hva som mangler: ingen KI-leverandør står på denne listen. MCPEmails sender ikke e-posten din til noen egen modell. Agenten din gjør det, under din kontroll og leverandørens datapolicy.",
+    "thProvider": "Leverandør",
+    "thPurpose": "Formål",
+    "thLocation": "Plassering",
+    "rows": [
+      {
+        "provider": "Supabase",
+        "purpose": "Database, autentisering, edge-funksjoner",
+        "location": "EU (Frankfurt) eller USA (Virginia); du velger ved registrering"
+      },
+      {
+        "provider": "Vercel",
+        "purpose": "Hosting av nettsted og dashbord",
+        "location": "Globalt edge-nettverk, nærmeste region til bruker"
+      },
+      {
+        "provider": "Stripe",
+        "purpose": "Betalingsbehandling (kun fakturering, ingen e-postdata)",
+        "location": "USA; PCI-DSS-sertifisert"
+      }
+    ]
+  },
+  "report": {
+    "title": "8. Rapportere en sårbarhet",
+    "p1": "Hvis du finner et sikkerhetsproblem, vennligst rapporter det. Jeg vil mye heller høre det fra deg enn å lese om det senere.",
+    "points": [
+      "Send e-post til <securityEmail></securityEmail> med detaljer og trinn for å reprodusere.",
+      "En maskinlesbar kontakt er publisert på <securitytxt>/.well-known/security.txt</securitytxt>.",
+      "Jeg tilstreber å bekrefte rapporter innen 24 timer og å rette bekreftede kritiske problemer innen 72 timer."
+    ],
+    "safeHarbor": "<b>Trygg havn.</b> Hvis du gjør en redelig innsats for å følge denne policyen, ikke leser eller endrer andre brukeres data, og gir meg en rimelig sjanse til å rette problemet før du offentliggjør det, vil jeg ikke forfølge eller støtte rettslige skritt mot deg for forskningen din."
+  },
+  "cta": {
+    "title": "Spørsmål om noe av dette?",
+    "sub": "Spør meg om hva som helst. Jeg er den eneste som driver dette, og jeg svarer på hver melding.",
+    "contactBtn": "Send e-post til security@",
+    "privacyBtn": "Les personvernerklæringen"
+  }
+}
