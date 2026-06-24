@@ -11,6 +11,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.49.0",
+    "@vercel/analytics": "^2.0.1",
     "he": "^1.2.0",
     "isomorphic-dompurify": "^2.15.0",
     "jsdom": "^26.0.0",
