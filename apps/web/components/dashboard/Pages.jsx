@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { track } from '@vercel/analytics';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
 import { useAppLocale } from '../i18n/AppLocaleProvider';
 import { routing } from '@/i18n/routing';
@@ -2139,6 +2140,13 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
   const [copied, setCopied] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const [visible, setVisible] = useState(false);
+
+  // Activation funnel: an API key was just created and shown. This is the
+  // step immediately before "connect it in Claude", so it pinpoints where
+  // users drop between having a key and connecting an inbox.
+  useEffect(() => {
+    track('api_key_revealed');
+  }, []);
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(rawKey).catch(() => {});

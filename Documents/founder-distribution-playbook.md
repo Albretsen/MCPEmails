@@ -23,11 +23,22 @@ This is the cheapest, highest-intent distribution we have and it is mostly one-t
 Start with the canonical record, then claim the directories that read from it:
 
 1. **Official MCP Registry** publish a correct `server.json` under a name we have proven we own. A growing number of clients and directories read from this feed, so getting it right makes the rest of the ecosystem pull our data automatically.
-2. **Glama** (glama.ai/mcp/servers) largest registry, ~37k+ servers mid-2026. Claim and verify ownership to move out of the anonymous-crawl pile.
+2. **Glama** (glama.ai/mcp/servers) largest registry, ~47k+ servers mid-2026. Claim and verify ownership to move out of the anonymous-crawl pile.
 3. **Smithery** (smithery.ai) clean app-store interface, strong search, hosted remote servers. We are a remote streamable-http server, which fits their hosted-remote listing well.
 4. **PulseMCP** (pulsemcp.com/servers) hand-reviewed daily. Filter by remote + official-provider; submit for the official-provider badge.
 5. **mcp.so** large community-submitted index. Submit directly.
 6. **Awesome-MCP-servers GitHub lists** a PR adding mcpemails under an Email/Productivity heading is free, durable backlink and discovery.
+
+### VERIFIED LISTING STATUS (2026-06-24)
+
+Checked each directory directly via API, not web search. Current state:
+
+- **Official MCP Registry, LISTED.** `com.mcpemails/emails`, status `active`, published 2026-06-10 (`curl https://registry.modelcontextprotocol.io/v0/servers?search=mcpemails`). The repo `server.json` was just enriched (commit b4917cb): added a `repository` link to the public GitHub repo + repo id, tightened the description, bumped to 1.0.1. **OWNER ACTION (~5 min):** republish so the new metadata (esp. the repository link, which Glama/PulseMCP use to index and rank) propagates: `mcp-publisher login dns --domain mcpemails.com` (add the printed TXT record to DNS) then `mcp-publisher publish` from repo root.
+- **PulseMCP, LISTED** (pulsemcp.com/servers/mcpemails, ranked ~#12,810, ~384 lifetime visitors). Thin: no logo, no tool breakdown. Auto-ingested from the registry. The republish above improves it.
+- **Smithery, LISTED** as `bjellanda/mcpemails`. **OWNER ACTION:** log in and claim/enrich (logo + the "unlimited free, no daily caps" differentiator vs mailmcp.io's 20/day cap).
+- **Glama, NOT LISTED** (its "mcpemails" search hit is an unrelated repo, `meyannis/mcpemail`). Glama indexes from GitHub repos + the registry. Now that `server.json` carries a `repository` link and the repo is public, re-submit at glama.ai (the "Add server" / claim flow). **OWNER ACTION (~3 min)**, needs a Glama login. This is the single biggest missing surface (largest registry).
+- **mcp.so, NOT LISTED.** **OWNER ACTION (~3 min):** submit at mcp.so/submit with the endpoint `https://mcpemails.com/api/mcp` and the description above.
+- **awesome-mcp-servers (punkpeye/awesome-mcp-servers, ~60k stars), NOT LISTED.** A one-line PR under an "Email / Communication" heading is a durable backlink. PR is drafted and ready to fire (see Tier-1 appendix below); held for owner sign-off since it posts publicly under the Albretsen GitHub identity.
 
 > Note: the official **Claude Connectors Directory** is not available to us. It is first-party only and we are a third-party aggregator, so that submission is closed (resolved, do not re-attempt). Glama, Smithery, PulseMCP, and mcp.so are the directories that do accept us.
 
@@ -135,4 +146,45 @@ Here is the exact routine 👇 (and yes, the replies sound like me, not a bot)
 3. Line up Show HN + Product Hunt for the same morning.
 4. Start replying (not posting) in r/SaaS and X build-in-public threads to build standing before any link drops.
 
-Measure against the baseline in memory (`project_growth_active_users_pass`): total_users=14 on 2026-06-23. Watch signups_7d and the inbox-connected activation rate after each wave.
+Measure against the baseline in memory (`project_growth_active_users_pass`): total_users=14 on 2026-06-23 (15 on 2026-06-24). Watch signups_7d and the inbox-connected activation rate after each wave.
+
+---
+
+## Appendix: ready-to-fire actions (staged 2026-06-24)
+
+### A. Turn on the funnel measurement (DO THIS FIRST, keystone)
+
+Web analytics is now wired in code (branch `feat/funnel-analytics`): the `<Analytics/>` component plus `track('signup_completed')` and `track('api_key_revealed')` events. The site had **zero** analytics before, so every growth call was blind. Two owner steps to make it live:
+
+1. Deploy the branch: merge `feat/funnel-analytics` (or `vercel --prod` from a clean tree on it). Low-risk additive change, build is green, verified mounting on /signup.
+2. Vercel dashboard → project `mcp-emails-web` → Analytics tab → **Enable Web Analytics** (one click). Until this toggle is on, the script no-ops and no data is collected.
+
+Then within a few days you can finally answer the question that decides every other lever: **is the problem traffic (few arrivals) or conversion (arrivals bounce)?** The custom events expose the signup → key → connect-inbox drop-off precisely.
+
+### B. awesome-mcp-servers PR (drafted, needs owner sign-off to post publicly)
+
+Target: `punkpeye/awesome-mcp-servers` (~60k stars), `💬 Communication` section, alphabetical by repo name. Exact line:
+
+```
+- [Albretsen/MCPEmails](https://github.com/Albretsen/MCPEmails) 📇 ☁️ - Managed email for AI agents: read, search, send, organize, draft and schedule across Gmail, iCloud, Fastmail and any IMAP/SMTP inbox from Claude or any MCP client.
+```
+
+Fire it (gh is already authed as Albretsen):
+
+```
+gh repo fork punkpeye/awesome-mcp-servers --clone --remote
+# add the line under the Communication heading, alphabetically
+gh pr create --repo punkpeye/awesome-mcp-servers --title "Add MCP Emails (managed email for AI agents)" --body "Adds mcpemails.com, a managed remote MCP server for email (Gmail, iCloud, Fastmail, IMAP/SMTP). Remote streamable-http + OAuth, free tier. Listed in the official MCP Registry as com.mcpemails/emails."
+```
+
+Held rather than auto-fired because it posts publicly under the Albretsen identity. Same caution applies to all Tier-2 community posts.
+
+### C. server.json republish (propagates the repository link to Glama/PulseMCP)
+
+`server.json` now has a `repository` link + repo id (commit b4917cb, version 1.0.1). Republish so directories that read the registry pick it up:
+
+```
+# from repo root
+mcp-publisher login dns --domain mcpemails.com   # add the printed TXT record to DNS, then re-run
+mcp-publisher publish
+```
