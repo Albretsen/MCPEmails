@@ -12,14 +12,22 @@ export async function storeStateNonce(sessionId: string, state: string): Promise
   const expiresAt = new Date(Date.now() + TTL_MS).toISOString();
 
   const service = createServiceRoleClient();
+  // Upsert (re-arm) rather than insert. Some MCP clients send a CONSTANT state
+  // value across attempts (e.g. Glama sends the resource URL as `state`), and
+  // users legitimately re-visit /authorize (reload, reconnect). A plain insert
+  // hits the UNIQUE (session_id, state_hash) constraint on the second visit and
+  // throws, which surfaces as a 500 on the consent page and blocks the whole
+  // OAuth flow. Single-use is enforced at CONSUME time (consumed_at), not here,
+  // so re-arming on a fresh authorization visit is safe: each visit refreshes
+  // the TTL and clears any prior consumed_at, starting a new single-use cycle.
   const { error } = await service
     .from('oauth_state_nonces')
-    .insert({ session_id: sessionId, state_hash: stateHash, expires_at: expiresAt });
+    .upsert(
+      { session_id: sessionId, state_hash: stateHash, expires_at: expiresAt, consumed_at: null },
+      { onConflict: 'session_id,state_hash' },
+    );
 
   if (error) {
-    // A unique-constraint violation means this state value was already stored
-    // for this session. Treat it as an error: OAuth state must be single-use
-    // and must not be refreshable by re-visiting /authorize with the same URL.
     throw new Error(`Failed to store state nonce: ${error.message}`);
   }
 }
