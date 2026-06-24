@@ -76,6 +76,10 @@ import t63 from './why-email-never-stored-matters/es';
 import t64 from './why-email-never-stored-matters/fr';
 import t65 from './why-email-never-stored-matters/nb';
 import t66 from './why-email-never-stored-matters/zh';
+import t67 from './email-signatures-for-claude/es';
+import t68 from './email-signatures-for-claude/fr';
+import t69 from './email-signatures-for-claude/nb';
+import t70 from './email-signatures-for-claude/zh';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
@@ -87,6 +91,7 @@ const TRANSLATIONS = {
   'connect-icloud-fastmail-imap-to-claude': { es: t23, fr: t24, nb: t25, zh: t26 },
   'connect-outlook-microsoft-365-ai-agent-mcp': { es: t27, fr: t28, nb: t29, zh: t30 },
   'email-for-ai-agents-cursor-cline-vscode': { es: t31, fr: t32, nb: t33, zh: t34 },
+  'email-signatures-for-claude': { es: t67, fr: t68, nb: t69, zh: t70 },
   'give-your-ai-agent-an-inbox': { es: t35, fr: t36, nb: t37, zh: t38 },
   'hosted-vs-self-hosted-gmail-mcp-server': { es: t39, fr: t40, nb: t41, zh: t42 },
   'how-to-give-your-ai-agent-email-access': { es: t43, fr: t44, nb: t45, zh: t46 },

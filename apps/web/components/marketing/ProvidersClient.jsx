@@ -137,6 +137,15 @@ const MATRIX = {
     gmail: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
+  // ── Signatures ─────────────────────────────────────────────────────────
+  signatures: {
+    label: 'Signatures (auto-applied on send)',
+    section: 'Signatures',
+    // The signature is appended server-side on every send/reply/forward/draft/
+    // scheduled message — works the same on every provider.
+    gmail: true, outlook: true, fastmail: true,
+    icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
+  },
   // ── Search syntax ──────────────────────────────────────────────────────
   search_syntax: {
     label: 'Search syntax',
@@ -308,6 +317,9 @@ export default function ProvidersClient() {
             </p>
             <p style={{ margin: 0 }}>
               {t.rich('providers.notes.scheduling', RICH)}
+            </p>
+            <p style={{ margin: 0 }}>
+              {t.rich('providers.notes.signatures', RICH)}
             </p>
           </div>
         </div>

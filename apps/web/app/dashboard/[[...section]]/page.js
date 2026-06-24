@@ -105,7 +105,7 @@ async function fetchInboxes(supabase, workspaceId) {
   const [{ data: rows, error }, { data: logRows }] = await Promise.all([
     supabase
       .from('inboxes')
-      .select('id, display_name, email_address, provider, service, status, last_error, imap_host, imap_port, smtp_host, smtp_port, imap_username, created_at')
+      .select('id, display_name, email_address, provider, service, status, last_error, imap_host, imap_port, smtp_host, smtp_port, imap_username, created_at, signature_text, signature_html, signature_enabled, signature_reply_mode, signature_source')
       .eq('workspace_id', workspaceId)
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
@@ -176,6 +176,15 @@ async function fetchInboxes(supabase, workspaceId) {
     createdAt: row.created_at,
     // Most recent successful MCP call (within the 30-day window), or null.
     lastCallAt: lastCallByInbox[row.id] ?? null,
+    // Per-inbox signature (Phase 3). The dashboard editor edits the plain-text
+    // form; signatureHtml is surfaced only to detect a Gmail-imported value to
+    // seed the textarea from when no plain text exists. Source tells the UI
+    // whether to show the "imported from Gmail" hint.
+    signatureText: row.signature_text ?? null,
+    signatureHtml: row.signature_html ?? null,
+    signatureEnabled: row.signature_enabled ?? true,
+    signatureReplyMode: row.signature_reply_mode ?? 'first_only',
+    signatureSource: row.signature_source ?? null,
   }));
 }
 

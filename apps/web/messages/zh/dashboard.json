@@ -168,7 +168,19 @@
       "connectedOn": "连接于",
       "lastCall": "最近一次成功调用",
       "lastCallNone": "过去 30 天内没有成功调用",
-      "disconnect": "断开连接"
+      "disconnect": "断开连接",
+      "signature": {
+        "title": "邮件签名",
+        "enabled": "已启用",
+        "importedHint": "已从你的 Gmail 签名导入。编辑并保存即可覆盖。",
+        "placeholder": "例如 Jane Doe\nAcme Inc.\njane@acme.com",
+        "replyModeLabel": "回复和转发时：",
+        "replyModeAlways": "始终添加",
+        "replyModeFirstOnly": "仅首次回复",
+        "replyModeNever": "从不添加",
+        "save": "保存签名",
+        "saving": "保存中…"
+      }
     }
   },
   "apiKeys": {

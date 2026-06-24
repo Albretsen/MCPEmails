@@ -11,6 +11,8 @@
     "joinedWorkspace": "Du har blitt med i arbeidsområdet. Velkommen!",
     "inboxDisconnected": "Innboks koblet fra.",
     "inboxDisconnectFailed": "Kunne ikke koble fra innboksen.",
+    "signatureSaved": "Signatur lagret.",
+    "signatureSaveFailed": "Kunne ikke lagre signaturen.",
     "connectionCheckFailed": "Tilkoblingssjekken mislyktes.",
     "connectionCheckFailedRetry": "Tilkoblingssjekken mislyktes. Prøv igjen.",
     "connectionHealthy": "Tilkoblingen er i orden.",

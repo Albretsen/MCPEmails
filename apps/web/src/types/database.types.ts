@@ -1077,6 +1077,12 @@ export type Database = {
           oauth_token_expires_at: string | null
           provider: string
           service: string | null
+          signature_enabled: boolean
+          signature_html: string | null
+          signature_reply_mode: string
+          signature_source: string | null
+          signature_text: string | null
+          signature_updated_at: string | null
           smtp_host: string | null
           smtp_port: number | null
           smtp_tls: boolean
@@ -1103,6 +1109,12 @@ export type Database = {
           oauth_token_expires_at?: string | null
           provider: string
           service?: string | null
+          signature_enabled?: boolean
+          signature_html?: string | null
+          signature_reply_mode?: string
+          signature_source?: string | null
+          signature_text?: string | null
+          signature_updated_at?: string | null
           smtp_host?: string | null
           smtp_port?: number | null
           smtp_tls?: boolean
@@ -1129,6 +1141,12 @@ export type Database = {
           oauth_token_expires_at?: string | null
           provider?: string
           service?: string | null
+          signature_enabled?: boolean
+          signature_html?: string | null
+          signature_reply_mode?: string
+          signature_source?: string | null
+          signature_text?: string | null
+          signature_updated_at?: string | null
           smtp_host?: string | null
           smtp_port?: number | null
           smtp_tls?: boolean

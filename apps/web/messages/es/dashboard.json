@@ -168,7 +168,19 @@
       "connectedOn": "Conectada el",
       "lastCall": "Última llamada correcta",
       "lastCallNone": "Sin llamadas correctas en los últimos 30 días",
-      "disconnect": "Desconectar"
+      "disconnect": "Desconectar",
+      "signature": {
+        "title": "Firma de correo",
+        "enabled": "Activada",
+        "importedHint": "Importada de tu firma de Gmail. Edítala y guárdala para reemplazarla.",
+        "placeholder": "p. ej. Jane Doe\nAcme Inc.\njane@acme.com",
+        "replyModeLabel": "En respuestas y reenvíos:",
+        "replyModeAlways": "Añadir siempre",
+        "replyModeFirstOnly": "Solo en la primera respuesta",
+        "replyModeNever": "No añadir nunca",
+        "save": "Guardar firma",
+        "saving": "Guardando…"
+      }
     }
   },
   "apiKeys": {

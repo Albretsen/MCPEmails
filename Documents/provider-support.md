@@ -220,6 +220,7 @@ and the web page at `/docs/providers`. Keep all three in sync.
 | Native contacts API | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Contact search (DB-synced) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Scheduled send | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Signatures (auto-applied on send) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Search syntax | Gmail | OData | JMAP | IMAP | IMAP | IMAP | IMAP | IMAP |
 
 **Notes:**
@@ -227,6 +228,7 @@ and the web page at `/docs/providers`. Keep all three in sync.
 - Gmail and Outlook support trash-only delete; IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.
 - Contact search is powered by the `contacts` DB table, populated from message headers across all providers. Native API contacts (Gmail People API, Graph `/contacts`) are additional for Gmail/Outlook.
 - Scheduled send is delivered via the server-side `scheduled_sends` queue for all providers — no provider-native scheduling API is required.
+- **Signatures** are per-inbox (stored on the `inboxes` row) and appended server-side on every send, reply, forward, draft create/update, and scheduled send — so they work on **all** providers. On replies/forwards the signature sits after the new text and before the quoted block; `signature_reply_mode` (`always` / `first_only` (default) / `never`) controls this. The per-call `include_signature` flag on the `email_compose` and `draft` MCP tools suppresses it for a single call (default true). Signatures are managed in the dashboard per-inbox editor (body + enabled toggle + reply mode) and via the `signature` MCP tool (`action: get` → `read:email`, `action: set` → `send:email`).
 
 ---
 

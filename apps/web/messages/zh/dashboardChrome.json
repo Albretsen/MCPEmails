@@ -11,6 +11,8 @@
     "joinedWorkspace": "您已加入工作区。欢迎！",
     "inboxDisconnected": "收件箱已断开连接。",
     "inboxDisconnectFailed": "断开收件箱连接失败。",
+    "signatureSaved": "签名已保存。",
+    "signatureSaveFailed": "保存签名失败。",
     "connectionCheckFailed": "连接检查失败。",
     "connectionCheckFailedRetry": "连接检查失败，请重试。",
     "connectionHealthy": "连接状态正常。",
