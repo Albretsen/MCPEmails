@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Email signatures for Claude — set a per-inbox signature once and Claude signs every message it sends">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#13233f"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4c6ef5"/>
+      <stop offset="1" stop-color="#22b8cf"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g opacity="0.08" stroke="#fff" stroke-width="1">
+    <path d="M0 158 H1200 M0 316 H1200 M0 474 H1200 M200 0 V630 M400 0 V630 M600 0 V630 M800 0 V630 M1000 0 V630"/>
+  </g>
+  <g transform="translate(96,150)">
+    <rect x="0" y="0" width="120" height="120" rx="26" fill="url(#accent)"/>
+    <path d="M24 90 C40 60 56 60 64 74 C72 88 84 64 96 56" fill="none" stroke="#0b1220" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M30 96 H92" stroke="#0b1220" stroke-width="5" stroke-linecap="round" opacity="0.5"/>
+  </g>
+  <text x="96" y="360" font-family="Inter, system-ui, sans-serif" font-size="68" font-weight="800" fill="#fff">Signed like you</text>
+  <text x="96" y="442" font-family="Inter, system-ui, sans-serif" font-size="68" font-weight="800" fill="url(#accent)">would sign it</text>
+  <text x="96" y="512" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="500" fill="#9fb3d1">Per-inbox signatures on every message Claude sends</text>
+  <text x="96" y="566" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="600" fill="#22b8cf">mcpemails.com/blog</text>
+</svg>

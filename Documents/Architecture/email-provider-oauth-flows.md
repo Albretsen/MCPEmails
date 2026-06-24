@@ -37,9 +37,11 @@ Gmail access requires Google OAuth 2.0 scopes from the Google API. MCPEmails req
 
 `gmail.modify` is a superset of `gmail.readonly`; both are listed explicitly in the authorization request because Google's consent screen renders each scope separately and users should see exactly what they are granting. `gmail.send` is a distinct, higher-risk scope that Google shows with a separate warning. If MCPEmails later drops send support, this scope should be removed from the authorization request and existing grants re-evaluated.
 
-`gmail.readonly` + `gmail.modify` + `gmail.send` do not cover calendar or contacts; no cross-product scopes are requested. This is consistent with the scope minimization principle described in `Documents/MCP/security-best-practices.md` — tokens obtained by a compromised API key should have the minimum lateral reach possible.
+> **Deferred: signature auto-import.** A signature auto-import feature (Phase 2 of the Email Signatures plan) would read the account's existing Gmail signature via `GET users/me/settings/sendAs/{email}`, which needs the `gmail.settings.basic` **sensitive** scope plus a re-submission of the OAuth consent screen for verification. This is **not currently requested**: the scope was backed out of the request and the import call is commented out (`maybeImportGmailSignature`) until verification is approved. Manual per-inbox signatures still ship and work on all providers.
 
-All three scopes are classified as **restricted scopes** by Google and require app verification before they can be used in production with more than 100 test users. The production Google Cloud project must complete Google's OAuth verification process before public launch.
+These scopes do not cover calendar or contacts; no cross-product scopes are requested. This is consistent with the scope minimization principle described in `Documents/MCP/security-best-practices.md` — tokens obtained by a compromised API key should have the minimum lateral reach possible.
+
+`gmail.readonly`, `gmail.send`, and `gmail.modify` are classified as **restricted scopes** by Google. All require app verification before they can be used in production with more than 100 test users. The production Google Cloud project must complete Google's OAuth verification process before public launch.
 
 ### Authorization URL Construction
 

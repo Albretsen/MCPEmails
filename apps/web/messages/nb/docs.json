@@ -81,7 +81,7 @@
   },
   "tools": {
     "eyebrow": "Verktøyreferanse",
-    "heading": "9 verktøy. Alle e-postoperasjonene agenten din trenger.",
+    "heading": "10 verktøy. Alle e-postoperasjonene agenten din trenger.",
     "sub": "<b>Å angi innboks er valgfritt.</b> Når nøkkelen din har nøyaktig én innboks, løser hvert per-innboks-verktøy den automatisk — ingen <code>inbox_id</code> nødvendig. Med flere innbokser oppgir du enten <code>inbox_id</code> (UUID-en fra <code>inbox_list</code>) eller <code>inbox</code> (innboksens e-postadresse). De fleste verktøy tar et <code>action</code>-argument som velger operasjonen; merkene viser hvilke omfang hvert verktøy trenger, og <code>tools/list</code> returnerer bare verktøyene nøkkelen din (eller OAuth-tokenet) har omfang for. Klikk «Vis eksempel» for å se en full forespørsel og respons.",
     "noParams": "Ingen parametere. Kall med et tomt arguments-objekt:",
     "showExample": "Vis eksempel på forespørsel og svar",
@@ -190,7 +190,7 @@
     },
     "email_compose": {
       "title": "Skriv e-post",
-      "desc": "Send ny e-post eller svar på eksisterende meldinger. Sett action: 'send' for en ny e-post (to/subject/body, valgfritt cc/bcc/html_body/reply_to/attachments), 'reply' for å svare på en message_id (trådingsoverskrifter settes automatisk; valgfritt reply_all), eller 'forward' for å videresende en message_id til nye mottakere (valgfritt med de opprinnelige filene). Alle tre kan ikke angres når de er sendt.",
+      "desc": "Send ny e-post eller svar på eksisterende meldinger. Sett action: 'send' for en ny e-post (to/subject/body, valgfritt cc/bcc/html_body/reply_to/attachments), 'reply' for å svare på en message_id (trådingsoverskrifter settes automatisk; valgfritt reply_all), eller 'forward' for å videresende en message_id til nye mottakere (valgfritt med de opprinnelige filene). Innboksens signatur legges til automatisk — ved svar og videresending plasseres den etter teksten din og før det siterte blokken, styrt av signaturens svarmodus; oppgi include_signature: false for å undertrykke den for én enkelt kort melding. Alle tre kan ikke angres når de er sendt.",
       "params": {
         "action": "Hvilken operasjon som skal utføres: \"send\", \"reply\" eller \"forward\". Avgjør hvilke andre argumenter som gjelder.",
         "inbox_id": "UUID for innboksen det skal sendes fra. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
@@ -205,6 +205,7 @@
         "reply_to": "Reply-To-overskriftsadresse (action 'send').",
         "reply_all": "Svar til alle opprinnelige mottakere — To + Cc (action 'reply'). Standard false.",
         "include_attachments": "Legg ved den opprinnelige meldingens vedlegg på nytt (action 'forward'). Filer over 10 MB-budsjettet utelates. Standard false.",
+        "include_signature": "Om innboksens konfigurerte signatur skal legges til denne meldingen. Standard true; sett false for å sende denne ene meldingen uten signaturen.",
         "attachments": "Filvedlegg. Hvert element: '{' filename, mime_type, data (base64) '}'. Maks 20 elementer, 10 MB totalt."
       }
     },
@@ -222,7 +223,7 @@
     },
     "draft": {
       "title": "Utkast",
-      "desc": "Administrer utkast i innboksens Drafts-mappe. Sett action: 'list' (lagrede utkast, hvert med draft_id, emne, mottakere og opprettet-tidspunkt), 'create' (subject/body påkrevd, valgfritt to/cc/bcc/html_body), 'update' (draft_id pluss feltene som skal overskrives) eller 'send' (draft_id — fjerner utkastet og sender det, kan ikke angres). På IMAP-baserte innbokser endres en draft_id ved hver oppdatering, så bruk alltid den nyeste; Gmail og Outlook beholder en stabil draft_id.",
+      "desc": "Administrer utkast i innboksens Drafts-mappe. Sett action: 'list' (lagrede utkast, hvert med draft_id, emne, mottakere og opprettet-tidspunkt), 'create' (subject/body påkrevd, valgfritt to/cc/bcc/html_body), 'update' (draft_id pluss feltene som skal overskrives) eller 'send' (draft_id — fjerner utkastet og sender det, kan ikke angres). Innboksens signatur bygges inn når utkastet opprettes eller oppdateres, så den er allerede til stede i Drafts-mappen og legges ikke til på nytt ved sending; oppgi include_signature: false for å opprette et utkast uten den. På IMAP-baserte innbokser endres en draft_id ved hver oppdatering, så bruk alltid den nyeste; Gmail og Outlook beholder en stabil draft_id.",
       "params": {
         "action": "Hvilken operasjon som skal utføres: \"list\", \"create\", \"update\" eller \"send\". Avgjør hvilke andre argumenter som gjelder.",
         "inbox_id": "UUID for innboksen som eier utkastene. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
@@ -234,6 +235,7 @@
         "cc": "CC-mottakere (action 'create'/'update'). Standard [].",
         "bcc": "BCC-mottakere (action 'create'/'update'). Standard [].",
         "html_body": "Valgfri HTML-kropp (action 'create'/'update').",
+        "include_signature": "Om innboksens konfigurerte signatur skal bygges inn i utkastet (action 'create'/'update'). Standard true; sett false for å lagre et utkast uten signaturen.",
         "limit": "Maks antall utkast som returneres (action 'list'). Standard 20, maks 50."
       }
     },
@@ -265,6 +267,19 @@
         "inbox_id": "Valgfritt. Begrens sanntidsskanningen til én innboks. Utelat for å skanne innboksene nøkkelen har tilgang til (et begrenset antall).",
         "inbox": "E-postadressen til innboksen det skal begrenses til, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
         "limit": "Maks antall kontakter som returneres. Standard 20, maks 50."
+      }
+    },
+    "signature": {
+      "title": "Signatur",
+      "desc": "Les eller konfigurer innboksens e-postsignatur, som legges til på serversiden ved hver sending, svar, videresending, utkast og planlagt melding. Sett action: 'get' (returnerer gjeldende signaturtekst og HTML, om den er aktivert, svar-/videresendingsmodusen og kilden — 'manual', 'gmail_import' eller null) eller 'set' (skriv signature_text og/eller signature_html, og eventuelt signature_enabled og signature_reply_mode). Å sette en signatur merker kilden som 'manual', som permanent overstyrer Gmail-auto-import for den innboksen. 'get' trenger read:email; 'set' trenger send:email.",
+      "params": {
+        "action": "Hvilken operasjon som skal utføres: \"get\" (les gjeldende signatur) eller \"set\" (skriv den). Avgjør hvilke andre argumenter som gjelder og hvilket omfang som kreves.",
+        "inbox_id": "UUID for innboksen hvis signatur skal leses eller settes. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
+        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
+        "signature_text": "Tekstkropp for signaturen (action 'set'). Utelat for å la den være uendret; oppgi en tom streng for å fjerne den. Hvis bare tekst oppgis, avledes en HTML-versjon automatisk ved sending.",
+        "signature_html": "Valgfri rik HTML-kropp for signaturen (action 'set'). Utelat for å la den være uendret; oppgi en tom streng for å fjerne den.",
+        "signature_enabled": "Om signaturen legges til utgående e-post (action 'set'). Standard true; sett false for å slutte å legge den til uten å slette teksten.",
+        "signature_reply_mode": "Når signaturen skal inkluderes ved svar og videresending (action 'set'): \"always\" (hvert svar/videresending), \"first_only\" (standard — bare den første meldingen i en tråd, for å unngå dobbel signering) eller \"never\"."
       }
     }
   },
@@ -329,6 +344,7 @@
       "drafts": "Utkast (opprett / rediger / send)",
       "contacts_db": "Kontaktsøk (sanntidsskanning)",
       "scheduling": "Planlagt sending",
+      "signatures": "Signaturer (legges til automatisk ved sending)",
       "search_syntax": "Søkesyntaks"
     },
     "sections": {
@@ -339,6 +355,7 @@
       "Drafts": "Utkast",
       "Contacts": "Kontakter",
       "Scheduling": "Planlegging",
+      "Signatures": "Signaturer",
       "Search": "Søk"
     },
     "hero": {
@@ -364,7 +381,8 @@
       "gmail": "<b>Gmail — mapper vs. etiketter:</b> Gmail bruker et flatt etikettsystem i stedet for hierarkiske mapper. \"Flytt\" er implementert som legg til / fjern etikett. Native kopiering er ikke tilgjengelig via Gmail REST-API-et.",
       "permanentDelete": "<b>Permanent sletting:</b> Gmail flytter til papirkurven når du sletter — permanent expunge eksponeres ikke av API-ene deres. IMAP-leverandører (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) støtter både papirkurv og hard expunge.",
       "contacts_db": "<b>Kontaktsøk (sanntidsskanning):</b> Alle leverandører støtter <code>contact_search</code>, som finner matchende korrespondenter med en sanntidsskanning som kun leser headere, av et nylig vindu av matchende e-post. Det finnes ingen kontakttabell — ingenting lagres mellom kall, og tallene gjenspeiler kun matchende meldinger i det skannede vinduet.",
-      "scheduling": "<b>Planlegging:</b> Støttet for alle leverandører via <code>scheduled_sends</code>-køen. Bruk <code>schedule</code>-verktøyets <code>create</code>-, <code>list</code>- og <code>cancel</code>-handlinger."
+      "scheduling": "<b>Planlegging:</b> Støttet for alle leverandører via <code>scheduled_sends</code>-køen. Bruk <code>schedule</code>-verktøyets <code>create</code>-, <code>list</code>- og <code>cancel</code>-handlinger.",
+      "signatures": "<b>Signaturer:</b> En signatur per innboks legges til på serversiden ved hver sending, svar, videresending, utkast og planlagt melding — dette fungerer på <b>alle</b> leverandører. Sett den fra dashbordets innboks-editor eller <code>signature</code>-MCP-verktøyet, og bruk <code>signature_reply_mode</code> for å styre om den vises på svar og videresendinger. Per kall, oppgi <code>include_signature: false</code> på <code>email_compose</code> eller <code>draft</code> for å hoppe over den."
     },
     "cta": {
       "heading": "Klar til å koble til innboksen din?",

@@ -11,6 +11,8 @@
     "joinedWorkspace": "You've joined the workspace. Welcome!",
     "inboxDisconnected": "Inbox disconnected.",
     "inboxDisconnectFailed": "Failed to disconnect inbox.",
+    "signatureSaved": "Signature saved.",
+    "signatureSaveFailed": "Failed to save signature.",
     "connectionCheckFailed": "Connection check failed.",
     "connectionCheckFailedRetry": "Connection check failed. Please try again.",
     "connectionHealthy": "Connection is healthy.",

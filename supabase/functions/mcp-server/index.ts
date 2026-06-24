@@ -278,6 +278,7 @@ const SERVER_INSTRUCTIONS =
   "• folder — action: list | create | rename | delete.\n" +
   "• draft — action: list | create | update | send.\n" +
   "• schedule — action: create | list | cancel.\n" +
+  "• signature — action: get | set (read or configure the inbox's auto-appended signature).\n" +
   "• contact_search — search the address book.\n" +
   "Pick the tool, then set `action`; each action uses only the relevant " +
   "arguments. Message ids come from email_read/email_search; folder ids from " +
@@ -1331,6 +1332,20 @@ const INBOX_PROPERTY = {
     "inbox_id. Optional; ignored if inbox_id is given.",
 } as const;
 
+/**
+ * Shared `include_signature` property. The inbox's configured signature is
+ * appended automatically by default; pass `false` to suppress it for this one
+ * call (e.g. a terse one-line reply where a signature would be noise).
+ */
+const INCLUDE_SIGNATURE_PROPERTY = {
+  type: "boolean",
+  default: true,
+  description:
+    "Whether to append this inbox's configured email signature to the " +
+    "message. Defaults to true. Set to false to send without the signature — " +
+    "useful for terse one-line replies or when you've written your own sign-off.",
+} as const;
+
 /** All tools available in MCPEmails, in canonical display order. */
 const LEGACY_TOOLS: ToolDefinition[] = [
   // ── read:email scope ────────────────────────────────────────────────────────
@@ -2119,6 +2134,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             "Optional Reply-To header address. When the recipient clicks 'Reply', their " +
             "email client will address the reply to this address rather than the sender.",
         },
+        include_signature: INCLUDE_SIGNATURE_PROPERTY,
       },
       required: ["to", "subject", "body"],
       additionalProperties: false,
@@ -2186,6 +2202,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           maxItems: 20,
           description: "Optional attachments to include with the reply.",
         },
+        include_signature: INCLUDE_SIGNATURE_PROPERTY,
       },
       required: ["message_id", "body"],
       additionalProperties: false,
@@ -2255,6 +2272,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             "Attachments that exceed the 10 MB per-call budget are silently omitted. " +
             "Defaults to false.",
         },
+        include_signature: INCLUDE_SIGNATURE_PROPERTY,
       },
       required: ["message_id", "to"],
       additionalProperties: false,
@@ -2357,6 +2375,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           description: "Optional HTML body of the draft.",
         },
+        include_signature: INCLUDE_SIGNATURE_PROPERTY,
       },
       required: ["subject", "body"],
       additionalProperties: false,
@@ -2415,6 +2434,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           description: "Updated HTML body.",
         },
+        include_signature: INCLUDE_SIGNATURE_PROPERTY,
       },
       required: ["draft_id", "body"],
       additionalProperties: false,
@@ -2684,6 +2704,81 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         { required: ["id"] },
         { required: ["scheduled_send_id"] },
       ],
+      additionalProperties: false,
+    },
+  },
+
+  // ── signature (read:email for get / send:email for set) ──────────────────────
+
+  {
+    name: "signature_get",
+    title: "Get Signature",
+    description:
+      "Read the email signature configured for an inbox. Returns the signature " +
+      "HTML and plain text, whether it is enabled, the reply/forward mode " +
+      "('always' | 'first_only' | 'never'), and its source ('manual', " +
+      "'gmail_import', or null when none is set). The signature is appended " +
+      "server-side on send/reply/forward/draft/scheduled messages.",
+    requiredScope: "read:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+      },
+      required: [],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "signature_set",
+    title: "Set Signature",
+    description:
+      "Set or update the email signature for an inbox. Provide the signature as " +
+      "`signature_text` (plain text) and/or `signature_html` (rich HTML) — pass " +
+      "either or both; the missing half is derived automatically on send. Pass an " +
+      "empty string for both to clear the signature. Optionally set " +
+      "`signature_enabled` (default true; set false to stop appending without " +
+      "deleting the text) and `signature_reply_mode` ('always' = sign every " +
+      "reply/forward, 'first_only' = only the first message in a thread, 'never' = " +
+      "never sign replies/forwards). Setting a signature marks its source as " +
+      "'manual', which permanently overrides Gmail auto-import for that inbox.",
+    requiredScope: "send:email",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        signature_text: {
+          type: "string",
+          maxLength: 10000,
+          description:
+            "Plain-text signature body. Omit to leave unchanged; pass an empty " +
+            "string to clear it.",
+        },
+        signature_html: {
+          type: "string",
+          maxLength: 50000,
+          description:
+            "Optional HTML signature body. Omit to leave unchanged; pass an empty " +
+            "string to clear it. If only text is provided, an HTML version is " +
+            "derived automatically on send.",
+        },
+        signature_enabled: {
+          type: "boolean",
+          description:
+            "Whether the signature is appended to outgoing mail. Defaults to true.",
+        },
+        signature_reply_mode: {
+          type: "string",
+          enum: ["always", "first_only", "never"],
+          description:
+            "When to include the signature on replies/forwards: 'always', " +
+            "'first_only' (default), or 'never'.",
+        },
+      },
+      required: [],
       additionalProperties: false,
     },
   },
@@ -3329,7 +3424,9 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     description:
       "Send new mail or respond. Set `action`: 'send' (to/subject/body, optional " +
       "cc/bcc/html_body/attachments), 'reply' (to a message_id, optional reply_all), " +
-      "or 'forward' (a message_id to new recipients).",
+      "or 'forward' (a message_id to new recipients). The inbox's configured " +
+      "signature is appended automatically (for replies/forwards it goes above the " +
+      "quoted text); pass include_signature: false to suppress it for terse replies.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
       send: { legacy: "email_send", scope: "send:email" },
@@ -3357,7 +3454,10 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "Manage draft messages. Set `action`: 'list', 'create' (subject/body, optional " +
       "to/cc/bcc/html_body), 'update' (draft_id + fields), or 'send' (draft_id). On " +
       "IMAP inboxes a draft_id changes on every update — always use the latest. " +
-      "'delete' permanently removes a draft (draft_id) without sending it.",
+      "'delete' permanently removes a draft (draft_id) without sending it. The inbox " +
+      "signature is embedded into the draft on create/update (pass " +
+      "include_signature: false to skip); 'send' transmits the stored body as-is and " +
+      "never re-appends, so the signature is never doubled.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
       list: { legacy: "draft_list", scope: "manage:drafts" },
@@ -3378,6 +3478,21 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       create: { legacy: "schedule_create", scope: "schedule:email" },
       list: { legacy: "schedule_list", scope: "schedule:email" },
       cancel: { legacy: "schedule_cancel", scope: "schedule:email" },
+    },
+  },
+  signature: {
+    title: "Signature",
+    description:
+      "Read or set the inbox's email signature (appended server-side on " +
+      "send/reply/forward/draft/scheduled mail). Set `action`: 'get' (returns the " +
+      "current signature_html/text, enabled flag, reply_mode and source) or 'set' " +
+      "(write signature_text and/or signature_html, optionally signature_enabled " +
+      "and signature_reply_mode). Setting marks the signature source as 'manual', " +
+      "which overrides Gmail auto-import. 'get' needs read:email; 'set' needs send:email.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    actions: {
+      get: { legacy: "signature_get", scope: "read:email" },
+      set: { legacy: "signature_set", scope: "send:email" },
     },
   },
 };
@@ -3459,6 +3574,7 @@ const TOOL_REGISTRY: ToolDefinition[] = [
   buildConsolidatedTool("folder", CONSOLIDATED_SPECS.folder),
   buildConsolidatedTool("draft", CONSOLIDATED_SPECS.draft),
   buildConsolidatedTool("schedule", CONSOLIDATED_SPECS.schedule),
+  buildConsolidatedTool("signature", CONSOLIDATED_SPECS.signature),
   LEGACY_BY_NAME.get("contact_search")!,
 ];
 
@@ -3749,13 +3865,26 @@ interface InboxRow {
   smtp_port: number | null;
   smtp_tls: boolean;
   status: string;
+  /** Optional HTML signature appended server-side on send. Plaintext (not secret). */
+  signature_html: string | null;
+  /** Optional plain-text signature appended server-side on send. Plaintext (not secret). */
+  signature_text: string | null;
+  /** When false, no signature is appended for this inbox. */
+  signature_enabled: boolean;
+  /** Reply/forward behaviour: 'always' | 'first_only' | 'never'. (Used in Phase 1.) */
+  signature_reply_mode: string;
+  /** Origin of the stored signature: 'manual' | 'gmail_import' | null. */
+  signature_source: string | null;
+  signature_updated_at: string | null;
 }
 
 const INBOX_SELECT_COLUMNS =
   "id, workspace_id, provider, email_address, display_name, " +
   "oauth_access_token, oauth_refresh_token, oauth_token_expires_at, " +
   "imap_host, imap_port, imap_tls, imap_username, imap_password, " +
-  "smtp_host, smtp_port, smtp_tls, status";
+  "smtp_host, smtp_port, smtp_tls, status, " +
+  "signature_html, signature_text, signature_enabled, " +
+  "signature_reply_mode, signature_source, signature_updated_at";
 
 /**
  * The SASL login username for IMAP/SMTP auth. Most providers authenticate with
@@ -4013,6 +4142,18 @@ async function resolveInboxArg(
   if (resolved.ok) {
     const store = activityInboxStore.getStore();
     if (store) store.inboxId = resolved.inbox.id;
+
+    // Best-effort, one-time Gmail signature seed (Phase 2). This is the single
+    // invocation point for every inbox-bound tool (covers UUID, email-alias,
+    // and auto-resolve paths). The gate inside returns instantly with no
+    // network call for non-Gmail inboxes and for any inbox that already has a
+    // signature/source, so the only Gmail API request happens on the first
+    // touch of a freshly connected Gmail inbox. It mutates the resolved row in
+    // place so a following send/reply/forward/draft signs with the imported
+    // value immediately; any failure is swallowed and never blocks the call.
+    // DEFERRED (signatures Phase 2): Gmail signature auto-import is disabled until
+    // the gmail.settings.basic scope is verified. See Documents/signatures-dev-plan.md.
+    // await maybeImportGmailSignature(resolved.inbox);
   }
   return resolved;
 }
@@ -4259,6 +4400,110 @@ async function withFreshGmailToken(inbox: InboxRow): Promise<string> {
   })();
 
   return tokens.access_token;
+}
+
+/**
+ * Best-effort, one-time import of a Gmail inbox's existing signature.
+ *
+ * Gmail is the only provider that exposes the user's configured signature via
+ * an API (`GET users/me/settings/sendAs/{email}`, requires the
+ * `gmail.settings.basic` read scope added in Phase 2). This seeds the per-inbox
+ * signature columns so Gmail inboxes are signed with zero manual setup.
+ *
+ * Rules (kept deliberately simple):
+ *   - Only runs for Gmail inboxes whose signature is unimported AND empty —
+ *     `signature_source` is null AND both `signature_html`/`signature_text` are
+ *     blank. This means it fires at most once per inbox (after a successful
+ *     import the columns are non-empty, so it never runs again), and it NEVER
+ *     overwrites a manual edit (`signature_source = 'manual'`) or a prior
+ *     `gmail_import` that produced content.
+ *   - The returned `signature` field is HTML. We store it verbatim in
+ *     `signature_html`, derive `signature_text` via the same `stripHtmlToText`
+ *     that `composeSignatureBlocks` uses, and stamp
+ *     `signature_source = 'gmail_import'`.
+ *   - BEST-EFFORT: a missing scope (403 / insufficient permission), a sendAs
+ *     entry with no signature, an empty signature, a token refresh failure, or
+ *     any other error is logged and swallowed. This must NEVER block the
+ *     surrounding read/send.
+ *
+ * Mutates the passed `inbox` row in place on success so the caller's subsequent
+ * (synchronous) `composeSignatureBlocks`/`applySignature` immediately sees the
+ * imported signature on the very first send/reply/forward/draft.
+ */
+async function maybeImportGmailSignature(inbox: InboxRow): Promise<void> {
+  // Gate: only Gmail, only when nothing has been imported or set yet.
+  if (inbox.provider !== "gmail") return;
+  if (inbox.signature_source !== null) return;
+  if (
+    (inbox.signature_html ?? "").trim() ||
+    (inbox.signature_text ?? "").trim()
+  ) {
+    return;
+  }
+
+  try {
+    const accessToken = await withFreshGmailToken(inbox);
+    const resp = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/settings/sendAs/${
+        encodeURIComponent(inbox.email_address)
+      }`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+
+    if (!resp.ok) {
+      // 403 = the gmail.settings.basic scope was not granted (existing users who
+      // connected before Phase 2 and haven't reconnected). Degrade silently.
+      console.warn("[mcp-server] gmail_signature_import_skipped", {
+        inbox_id: inbox.id,
+        status: resp.status,
+      });
+      return;
+    }
+
+    const data = (await resp.json()) as { signature?: string };
+    const signatureHtml = (data.signature ?? "").trim();
+    if (!signatureHtml) {
+      // No signature configured in Gmail — nothing to import. Leave the columns
+      // (and signature_source) untouched so a later manual set still works.
+      return;
+    }
+
+    const signatureText = stripHtmlToText(signatureHtml);
+
+    const { error } = await supabase
+      .from("inboxes")
+      .update({
+        signature_html: signatureHtml,
+        signature_text: signatureText,
+        signature_source: "gmail_import",
+        signature_updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", inbox.id)
+      // Concurrency guard: only seed if still unimported, so a racing manual
+      // set or parallel send can't be clobbered.
+      .is("signature_source", null);
+
+    if (error) {
+      console.warn("[mcp-server] gmail_signature_import_persist_failed", {
+        inbox_id: inbox.id,
+        error: error.message,
+      });
+      return;
+    }
+
+    // Reflect the import on the in-memory row so the immediate send signs.
+    inbox.signature_html = signatureHtml;
+    inbox.signature_text = signatureText;
+    inbox.signature_source = "gmail_import";
+    inbox.signature_updated_at = new Date().toISOString();
+  } catch (e) {
+    // Never block the caller — log and move on.
+    console.warn("[mcp-server] gmail_signature_import_failed", {
+      inbox_id: inbox.id,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 
 /**
@@ -5747,6 +5992,11 @@ async function replyImapMessage(
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
   }
+  // Place the signature into the new reply text BEFORE the original is quoted
+  // below (buildReplyTextBody appends the quote after params.body).
+  applyReplyForwardSignature(params, inbox, {
+    include_signature: params.include_signature,
+  });
   const { folder, uid } = decodeImapId(originalMessageId);
   if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
   const password = await decryptStoredToken(inbox.imap_password);
@@ -7911,6 +8161,206 @@ interface MimeMessageParams {
   references?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Email signatures — central, pure helpers (single injection point)
+// ---------------------------------------------------------------------------
+//
+// No mail backend (Gmail messages.send, Graph sendMail, JMAP Email/send, SMTP)
+// appends a signature — the signature you normally see is added by the client
+// UI. These helpers append a per-inbox signature server-side so programmatic
+// mail looks like mail the user sends. Signature storage lives on the inboxes
+// row (signature_html / signature_text / signature_enabled / ...).
+//
+// PURE: no DB or network I/O. Reply/forward placement (signature before the
+// quoted block, honouring signature_reply_mode) is handled separately — these
+// helpers only cover the plain "new message" case.
+
+/** Minimal HTML-escape for deriving an HTML signature from plain text. */
+function escapeSignatureHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Resolve the signature for an inbox into a normalized `{ text, html }` pair.
+ *
+ * Returns `null` when no signature should be appended (disabled, or both
+ * stored fields empty). When only one half is stored, the other is derived:
+ *   - missing text  ← stripHtmlToText(signature_html)
+ *   - missing html  ← escaped signature_text with newlines as <br>
+ *
+ * The returned `html` is the inner signature markup only — callers wrap it in
+ * the `<div class="mcpemails-signature">…</div>` container.
+ */
+function composeSignatureBlocks(
+  inbox: InboxRow,
+): { text: string; html: string } | null {
+  if (inbox.signature_enabled === false) return null;
+
+  const storedText = (inbox.signature_text ?? "").trim();
+  const storedHtml = (inbox.signature_html ?? "").trim();
+  if (!storedText && !storedHtml) return null;
+
+  const text = storedText || stripHtmlToText(storedHtml);
+  const html = storedHtml || escapeSignatureHtml(storedText).replace(/\n/g, "<br>\n");
+
+  // Guard against a signature that strips down to nothing (e.g. html was only
+  // markup with no text content and no text counterpart was stored).
+  if (!text.trim() && !html.trim()) return null;
+
+  return { text, html };
+}
+
+/** Options controlling signature application on a send. */
+interface ApplySignatureOptions {
+  /**
+   * Per-call override (Phase 1 wires this from the tool input). When explicitly
+   * `false`, the signature is never applied. `undefined`/`true` → apply.
+   */
+  include_signature?: boolean;
+}
+
+/**
+ * Apply the inbox signature to a NEW-MESSAGE body params object in place,
+ * before `buildMimeMessage()` serializes it. Mutates and returns `params`.
+ *
+ * Rules:
+ *   - No-op when `include_signature` is explicitly false, the signature is
+ *     disabled, or both stored fields are empty.
+ *   - Plain text: append `\n\n-- \n` + signature text (RFC 3676 delimiter:
+ *     dash-dash-space-newline).
+ *   - HTML: append the signature wrapped in
+ *     `<div class="mcpemails-signature">…</div>`.
+ *   - If only `textBody` was supplied but the inbox has any signature, an
+ *     `htmlBody` is synthesized from the (escaped) plain body + rich signature
+ *     so HTML clients render the rich sig — mirroring the multipart/alternative
+ *     pair that buildMimeMessage emits whenever htmlBody is present.
+ *
+ * PURE: reads only the passed objects; performs no I/O.
+ */
+function applySignature<T extends { textBody: string; htmlBody?: string }>(
+  params: T,
+  inbox: InboxRow,
+  opts: ApplySignatureOptions = {},
+): T {
+  if (opts.include_signature === false) return params;
+
+  const sig = composeSignatureBlocks(inbox);
+  if (!sig) return params;
+
+  const sigTextBlock = `\n\n-- \n${sig.text}`;
+  const sigHtmlBlock = `\n<div class="mcpemails-signature">${sig.html}</div>`;
+
+  if (params.htmlBody && params.htmlBody.trim()) {
+    // Caller already supplied rich HTML — append to both parts so the
+    // multipart/alternative pair stays consistent.
+    params.htmlBody = `${params.htmlBody}${sigHtmlBlock}`;
+    params.textBody = `${params.textBody}${sigTextBlock}`;
+  } else {
+    // Text-only send. Synthesize the HTML part from the ORIGINAL body (before
+    // appending the text delimiter) so the signature appears exactly once in
+    // each part, then sign the text part.
+    const bodyHtml = escapeSignatureHtml(params.textBody).replace(/\n/g, "<br>\n");
+    params.htmlBody = `${bodyHtml}${sigHtmlBlock}`;
+    params.textBody = `${params.textBody}${sigTextBlock}`;
+  }
+
+  return params;
+}
+
+/**
+ * Markers that indicate the new reply/forward body ALREADY contains a quoted
+ * block or a previously-appended signature. Used by the `first_only` reply mode
+ * to avoid double-signing when Claude iterates on a thread (each turn passes the
+ * previous turn's output back in as `body`).
+ *
+ * Detects:
+ *   - our own plain-text signature delimiter (`\n-- \n`)
+ *   - our own HTML signature container
+ *   - the attribution / quote lines that buildReplyTextBody / the forward
+ *     header block emit ("On … wrote:", "> " quote prefix, the forwarded-message
+ *     separator)
+ */
+function bodyAlreadyHasQuoteOrSignature(text: string, html?: string): boolean {
+  if (/\n-- \n/.test(text)) return true;
+  if (/^\s*On .+ wrote:\s*$/m.test(text)) return true;
+  if (/^>\s?/m.test(text)) return true;
+  if (/-{3,}\s*Forwarded message\s*-{3,}/i.test(text)) return true;
+  if (html && /class="mcpemails-signature"/.test(html)) return true;
+  return false;
+}
+
+/**
+ * Options for reply/forward signature placement.
+ */
+interface ReplySignatureOptions {
+  /** Per-call override (Task 6). Explicit `false` suppresses the signature. */
+  include_signature?: boolean;
+}
+
+/**
+ * Insert the inbox signature into a reply/forward's NEW body, AFTER the user's
+ * new text and BEFORE the quoted/forwarded block is appended downstream.
+ *
+ * This mutates the caller-supplied new-text fields (`body` / `htmlBody`) in
+ * place. Because every reply/forward path quotes the original AFTER this new
+ * text (either via buildReplyTextBody / the forward header block, or — for
+ * Fastmail JMAP — by leaving the quote out entirely), appending the signature
+ * to the new text here always lands it before the quote. Single source of
+ * signature strings: composeSignatureBlocks().
+ *
+ * Honours `signature_reply_mode`:
+ *   - `never`      → no-op
+ *   - `always`     → always append
+ *   - `first_only` → append only when the new body has no existing quote or
+ *                    signature marker yet (so iterating a thread doesn't stack
+ *                    signatures)
+ *
+ * The `include_signature === false` per-call override also forces a no-op.
+ */
+function applyReplyForwardSignature<
+  T extends { body?: string; htmlBody?: string },
+>(
+  params: T,
+  inbox: InboxRow,
+  opts: ReplySignatureOptions = {},
+): T {
+  if (opts.include_signature === false) return params;
+
+  const mode = inbox.signature_reply_mode ?? "first_only";
+  if (mode === "never") return params;
+
+  const sig = composeSignatureBlocks(inbox);
+  if (!sig) return params;
+
+  const currentBody = params.body ?? "";
+  if (
+    mode === "first_only" &&
+    bodyAlreadyHasQuoteOrSignature(currentBody, params.htmlBody)
+  ) {
+    return params;
+  }
+
+  const sigTextBlock = `\n\n-- \n${sig.text}`;
+  const sigHtmlBlock = `\n<div class="mcpemails-signature">${sig.html}</div>`;
+
+  // For a forward with no intro the signature becomes the only new text; the
+  // leading blank lines are still fine ahead of the forwarded-message block.
+  params.body = `${currentBody}${sigTextBlock}`;
+  // Only sign the HTML part when the caller supplied one — reply/forward paths
+  // send htmlBody raw (no HTML quoting), so a missing htmlBody means the message
+  // is text-only and the text signature above already covers it.
+  if (params.htmlBody && params.htmlBody.trim()) {
+    params.htmlBody = `${params.htmlBody}${sigHtmlBlock}`;
+  }
+
+  return params;
+}
+
 /**
  * Build an RFC 5322 / MIME message string from the given parameters.
  *
@@ -8616,6 +9066,11 @@ interface ReplyToEmailParams {
   replyAll: boolean;
   /** Attachments to include with the reply (same shape as email_send). */
   attachments: Array<{ filename: string; mime_type: string; data: string }>;
+  /**
+   * Per-call signature override (Task 6). When explicitly `false`, the inbox
+   * signature is not appended even if reply-mode would otherwise add it.
+   */
+  include_signature?: boolean;
 }
 
 interface ReplyToEmailResult {
@@ -8657,6 +9112,11 @@ async function replyGmailMessage(
   originalMessageId: string,
   params: ReplyToEmailParams,
 ): Promise<ReplyToEmailResult> {
+  // Sign the new reply text before the original is quoted (buildReplyTextBody
+  // appends the quote after params.body).
+  applyReplyForwardSignature(params, inbox, {
+    include_signature: params.include_signature,
+  });
   const accessToken = await withFreshGmailToken(inbox);
 
   // ── Step 1: Fetch original message metadata ───────────────────────────────
@@ -8828,6 +9288,11 @@ async function replyOutlookMessage(
   originalMessageId: string,
   params: ReplyToEmailParams,
 ): Promise<ReplyToEmailResult> {
+  // Sign the new reply text before the original is quoted (buildReplyTextBody
+  // appends the quote after params.body; the HTML path sends params.htmlBody raw).
+  applyReplyForwardSignature(params, inbox, {
+    include_signature: params.include_signature,
+  });
   const accessToken = await withFreshOutlookToken(inbox);
 
   // ── Step 1: Fetch original message ────────────────────────────────────────
@@ -9026,6 +9491,12 @@ async function replyFastmailMessage(
   originalMessageId: string,
   params: ReplyToEmailParams,
 ): Promise<ReplyToEmailResult> {
+  // Sign the new reply text. Fastmail sends params.body / params.htmlBody as the
+  // message parts without re-quoting the original, so appending the signature
+  // here places it after the user's text (single source: composeSignatureBlocks).
+  applyReplyForwardSignature(params, inbox, {
+    include_signature: params.include_signature,
+  });
   // ── Build auth header ─────────────────────────────────────────────────────
   const authHeader = await buildFastmailAuthHeader(inbox);
 
@@ -9378,6 +9849,11 @@ interface ForwardEmailParams {
   htmlBody?: string;
   /** When true, include original message attachments in the forward. */
   includeAttachments: boolean;
+  /**
+   * Per-call signature override (Task 6). When explicitly `false`, the inbox
+   * signature is not appended to the forward intro even if reply-mode would.
+   */
+  include_signature?: boolean;
 }
 
 interface ForwardEmailResult {
@@ -9489,6 +9965,11 @@ async function forwardImapMessage(
   originalMessageId: string,
   params: ForwardEmailParams,
 ): Promise<ForwardEmailResult> {
+  // Sign the forward intro before the original is appended below
+  // (buildForwardedTextBody places the forwarded block after params.body).
+  applyReplyForwardSignature(params, inbox, {
+    include_signature: params.include_signature,
+  });
   const original = await readImapMessage(
     inbox,
     originalMessageId,
@@ -9562,6 +10043,11 @@ async function forwardGmailMessage(
   originalMessageId: string,
   params: ForwardEmailParams,
 ): Promise<ForwardEmailResult> {
+  // Sign the forward intro before the original is appended below
+  // (buildForwardedTextBody places the forwarded block after params.body).
+  applyReplyForwardSignature(params, inbox, {
+    include_signature: params.include_signature,
+  });
   const original = await readGmailMessage(
     inbox,
     originalMessageId,
@@ -9635,6 +10121,11 @@ async function forwardOutlookMessage(
   originalMessageId: string,
   params: ForwardEmailParams,
 ): Promise<ForwardEmailResult> {
+  // Sign the forward intro before the original is appended below
+  // (buildForwardedTextBody places the forwarded block after params.body).
+  applyReplyForwardSignature(params, inbox, {
+    include_signature: params.include_signature,
+  });
   const original = await readOutlookMessage(
     inbox,
     originalMessageId,
@@ -9708,6 +10199,11 @@ async function forwardFastmailMessage(
   originalMessageId: string,
   params: ForwardEmailParams,
 ): Promise<ForwardEmailResult> {
+  // Sign the forward intro before the original is appended below
+  // (buildForwardedTextBody places the forwarded block after params.body).
+  applyReplyForwardSignature(params, inbox, {
+    include_signature: params.include_signature,
+  });
   const original = await readFastmailMessage(
     inbox,
     originalMessageId,
@@ -9882,6 +10378,10 @@ async function executeForwardEmail(
   // include_attachments (optional, default false)
   const includeAttachments = args["include_attachments"] === true;
 
+  // include_signature (optional, default true) — explicit false suppresses the
+  // inbox signature on this forward's intro.
+  const includeSignature = args["include_signature"] === false ? false : undefined;
+
   // ── RFC 5322 email address validation ─────────────────────────────────────
   const addrChecks: Array<{ field: string; addr: unknown }> = [
     ...to.map((addr) => ({ field: "to", addr })),
@@ -9936,6 +10436,7 @@ async function executeForwardEmail(
     body,
     htmlBody,
     includeAttachments,
+    include_signature: includeSignature,
   };
 
   let fwdResult: ForwardEmailResult;
@@ -10140,6 +10641,10 @@ async function executeReplyToEmail(
   // reply_all (optional, default false)
   const replyAll = args["reply_all"] === true;
 
+  // include_signature (optional, default true) — explicit false suppresses the
+  // inbox signature for this reply (e.g. terse one-line replies).
+  const includeSignature = args["include_signature"] === false ? false : undefined;
+
   // attachments (optional, default [])
   const attachmentsRaw = args["attachments"];
   const attachments: Array<{ filename: string; mime_type: string; data: string }> = [];
@@ -10238,7 +10743,13 @@ async function executeReplyToEmail(
   const inboxId = inbox.id;
 
   // ── Provider dispatch ─────────────────────────────────────────────────────
-  const replyParams: ReplyToEmailParams = { body, htmlBody, replyAll, attachments };
+  const replyParams: ReplyToEmailParams = {
+    body,
+    htmlBody,
+    replyAll,
+    attachments,
+    include_signature: includeSignature,
+  };
 
   let replyResult: ReplyToEmailResult;
   try {
@@ -10617,6 +11128,14 @@ async function executeSendEmail(
     attachments,
     replyTo,
   };
+
+  // Append the per-inbox signature to this new message before it is serialized
+  // by buildMimeMessage(). Single injection point for all four providers;
+  // reply/forward placement is handled separately (their own execute fns).
+  // include_signature: false (per-call override) suppresses it; omitting the
+  // flag preserves the Phase 0 default of always signing.
+  const includeSignature = args["include_signature"] === false ? false : undefined;
+  applySignature(sendParams, inbox, { include_signature: includeSignature });
 
   let sendResult: SendEmailResult;
   try {
@@ -16719,7 +17238,26 @@ async function executeCreateDraft(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
 
-  const draftParams: DraftParams = { to, cc, bcc, subject, body, htmlBody };
+  // Embed the inbox signature into the draft body so the stored draft (visible
+  // in the provider's Drafts folder) already contains it. draft_send must NOT
+  // re-append (see executeSendDraft) or the signature would double. Drafts are
+  // new-message-shaped, so reuse applySignature (single source of signature
+  // strings). include_signature: false suppresses it for this draft.
+  const includeSignature = args["include_signature"] === false ? false : undefined;
+  const signed = applySignature(
+    { textBody: body, htmlBody },
+    inbox,
+    { include_signature: includeSignature },
+  );
+
+  const draftParams: DraftParams = {
+    to,
+    cc,
+    bcc,
+    subject,
+    body: signed.textBody,
+    htmlBody: signed.htmlBody,
+  };
   let draftResult: DraftCreateResult;
   try {
     switch (inbox.provider) {
@@ -16850,9 +17388,20 @@ async function executeUpdateDraft(
     }
   }
 
+  // Re-embed the inbox signature on update. draft_update always supplies the
+  // full body, so we sign the new body just like draft_create (single source:
+  // applySignature). draft_send sends the stored body as-is and never re-appends
+  // (see executeSendDraft). include_signature: false suppresses it.
+  const includeSignature = args["include_signature"] === false ? false : undefined;
+  const signed = applySignature(
+    { textBody: body, htmlBody },
+    inbox,
+    { include_signature: includeSignature },
+  );
+
   const draftParams: DraftParams = {
     to: effectiveTo, cc: effectiveCc, bcc: effectiveBcc,
-    subject: effectiveSubject, body, htmlBody,
+    subject: effectiveSubject, body: signed.textBody, htmlBody: signed.htmlBody,
   };
   let updateResult: DraftUpdateResult;
   try {
@@ -16920,6 +17469,10 @@ async function executeSendDraft(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
 
+  // SIGNATURE RULE: draft_send sends the STORED draft body verbatim and never
+  // re-applies the signature here. The signature was already embedded at
+  // draft_create / draft_update time (see those functions), so re-appending
+  // would double it. Do NOT call applySignature in this path.
   let sendResult: DraftSendResult;
   try {
     switch (inbox.provider) {
@@ -17936,6 +18489,180 @@ async function executeCancelScheduled(
 }
 
 // ---------------------------------------------------------------------------
+// Signature tools — Phase 3
+//
+// `signature_get` / `signature_set` let the agent read and configure the
+// per-inbox signature that the send paths append (see composeSignatureBlocks /
+// applySignature). Setting marks `signature_source = 'manual'`, which the
+// Gmail auto-import gate (maybeImportGmailSignature) treats as a permanent
+// user override. Both resolve the target inbox via resolveInboxArg, exactly
+// like every other inbox-bound tool.
+// ---------------------------------------------------------------------------
+
+/**
+ * `signature_get` — return the inbox's configured signature.
+ *
+ * Scope: read:email. Read-only; returns signature_html/text, the enabled flag,
+ * reply_mode, source, and updated_at for the resolved inbox.
+ */
+async function executeGetSignature(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "signature_get: arguments must be an object." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved, "signature_get");
+  const inbox = resolved.inbox;
+
+  return {
+    result: jsonOk({
+      inbox_id: inbox.id,
+      email_address: inbox.email_address,
+      signature_html: inbox.signature_html,
+      signature_text: inbox.signature_text,
+      signature_enabled: inbox.signature_enabled,
+      signature_reply_mode: inbox.signature_reply_mode,
+      signature_source: inbox.signature_source,
+      signature_updated_at: inbox.signature_updated_at,
+    }, true),
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+/**
+ * `signature_set` — write the inbox's signature and stamp it as a manual edit.
+ *
+ * Scope: send:email. Writes whichever of signature_text / signature_html the
+ * caller supplied (the send path derives the missing half), plus optional
+ * signature_enabled and signature_reply_mode. Always sets
+ * signature_source = 'manual' and signature_updated_at = now() so a later
+ * Gmail import never overwrites the user's choice.
+ */
+async function executeSetSignature(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return {
+      result: { content: [{ type: "text", text: "signature_set: arguments must be an object." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+  const args = rawArgs as Record<string, unknown>;
+
+  // Collect the writable fields. A field omitted entirely is left unchanged; an
+  // explicitly-provided value (including an empty string, to clear) is written.
+  const update: Record<string, unknown> = {};
+
+  if ("signature_text" in args) {
+    if (typeof args["signature_text"] !== "string" || args["signature_text"].length > 10000) {
+      return {
+        result: { content: [{ type: "text", text: "signature_set: signature_text must be a string of at most 10000 characters." }], isError: true },
+        logStatus: "error", logErrorCode: "-32602",
+      };
+    }
+    update["signature_text"] = args["signature_text"];
+  }
+
+  if ("signature_html" in args) {
+    if (typeof args["signature_html"] !== "string" || args["signature_html"].length > 50000) {
+      return {
+        result: { content: [{ type: "text", text: "signature_set: signature_html must be a string of at most 50000 characters." }], isError: true },
+        logStatus: "error", logErrorCode: "-32602",
+      };
+    }
+    update["signature_html"] = args["signature_html"];
+  }
+
+  if ("signature_enabled" in args) {
+    if (typeof args["signature_enabled"] !== "boolean") {
+      return {
+        result: { content: [{ type: "text", text: "signature_set: signature_enabled must be a boolean." }], isError: true },
+        logStatus: "error", logErrorCode: "-32602",
+      };
+    }
+    update["signature_enabled"] = args["signature_enabled"];
+  }
+
+  if ("signature_reply_mode" in args) {
+    const mode = args["signature_reply_mode"];
+    if (mode !== "always" && mode !== "first_only" && mode !== "never") {
+      return {
+        result: { content: [{ type: "text", text: "signature_set: signature_reply_mode must be one of 'always', 'first_only', 'never'." }], isError: true },
+        logStatus: "error", logErrorCode: "-32602",
+      };
+    }
+    update["signature_reply_mode"] = mode;
+  }
+
+  if (Object.keys(update).length === 0) {
+    return {
+      result: { content: [{ type: "text", text: "signature_set: provide at least one of signature_text, signature_html, signature_enabled, signature_reply_mode." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  const resolved = await resolveInboxArg(args, apiKey);
+  if (!resolved.ok) return inboxResolutionError(resolved, "signature_set");
+  const inbox = resolved.inbox;
+
+  // Any manual write pins the signature as user-owned so Gmail auto-import
+  // (maybeImportGmailSignature) never overwrites it on a later send.
+  const now = new Date().toISOString();
+  update["signature_source"] = "manual";
+  update["signature_updated_at"] = now;
+
+  const { error: updateErr } = await supabase
+    .from("inboxes")
+    .update(update)
+    .eq("id", inbox.id)
+    .eq("workspace_id", apiKey.workspace_id);
+
+  if (updateErr) {
+    console.error("[mcp-server] signature_set: db_error", {
+      inbox_id: inbox.id,
+      error: updateErr.message,
+    });
+    return {
+      result: { content: [{ type: "text", text: "signature_set: database error while saving the signature." }], isError: true },
+      logStatus: "error", logErrorCode: "db_error",
+    };
+  }
+
+  // Reflect the new state in the response so the caller sees the resolved row.
+  const merged = { ...inbox, ...update } as InboxRow;
+  return {
+    result: jsonOk({
+      saved: true,
+      inbox_id: inbox.id,
+      email_address: inbox.email_address,
+      signature_html: merged.signature_html,
+      signature_text: merged.signature_text,
+      signature_enabled: merged.signature_enabled,
+      signature_reply_mode: merged.signature_reply_mode,
+      signature_source: "manual",
+      signature_updated_at: now,
+    }, true),
+    logStatus: "success", logErrorCode: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Method handlers
 // ---------------------------------------------------------------------------
 
@@ -18493,6 +19220,18 @@ async function handleToolsCall(
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
+    } else if (dispatchName === "signature_get") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeGetSignature(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (dispatchName === "signature_set") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeSetSignature(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
     } else {
       // Tool is registered in TOOL_REGISTRY but not yet implemented.
       // Returns a structured error so MCP clients receive a valid JSON-RPC
@@ -18745,6 +19484,11 @@ async function handleScheduledDispatch(): Promise<Response> {
             ? payload["reply_to"]
             : undefined,
       };
+
+      // Apply the signature at SEND/DRAIN time (not enqueue time) so signature
+      // edits made after scheduling take effect. Same single helper as the
+      // interactive send path.
+      applySignature(sendParams, inbox);
 
       // ── Per-provider send (mirrors executeSendEmail dispatch) ──────────
       let sendResult: SendEmailResult;

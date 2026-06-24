@@ -81,7 +81,7 @@
   },
   "tools": {
     "eyebrow": "Referencia de herramientas",
-    "heading": "9 herramientas. Todas las operaciones de correo que tu agente necesita.",
+    "heading": "10 herramientas. Todas las operaciones de correo que tu agente necesita.",
     "sub": "<b>Indicar una bandeja es opcional.</b> Cuando tu clave tiene exactamente una bandeja, cada herramienta por bandeja la resuelve automáticamente — no hace falta <code>inbox_id</code>. Con varias bandejas, pasa <code>inbox_id</code> (el UUID de <code>inbox_list</code>) o <code>inbox</code> (la dirección de la bandeja). La mayoría de las herramientas toman un argumento <code>action</code> que selecciona la operación; las insignias muestran los permisos que necesita cada una, y <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token OAuth) tiene permiso. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
     "noParams": "Sin parámetros. Llama con un objeto de argumentos vacío:",
     "showExample": "Mostrar petición y respuesta de ejemplo",
@@ -190,7 +190,7 @@
     },
     "email_compose": {
       "title": "Redactar correo",
-      "desc": "Envía correo nuevo o responde a mensajes existentes. Define action: 'send' para un correo nuevo (to/subject/body, opcionalmente cc/bcc/html_body/reply_to/attachments), 'reply' para responder a un message_id (las cabeceras de hilo se establecen automáticamente; opcionalmente reply_all), o 'forward' para reenviar un message_id a nuevos destinatarios (opcionalmente readjuntando los archivos originales). Las tres son irreversibles una vez enviadas.",
+      "desc": "Envía correo nuevo o responde a mensajes existentes. Define action: 'send' para un correo nuevo (to/subject/body, opcionalmente cc/bcc/html_body/reply_to/attachments), 'reply' para responder a un message_id (las cabeceras de hilo se establecen automáticamente; opcionalmente reply_all), o 'forward' para reenviar un message_id a nuevos destinatarios (opcionalmente readjuntando los archivos originales). La firma de la bandeja se añade automáticamente — en respuestas y reenvíos va después de tu texto y antes del bloque citado, regida por el modo de respuesta de la firma; pasa include_signature: false para suprimirla en un único mensaje escueto. Las tres son irreversibles una vez enviadas.",
       "params": {
         "action": "Qué operación realizar: \"send\", \"reply\" o \"forward\". Determina qué otros argumentos se aplican.",
         "inbox_id": "UUID de la bandeja desde la que enviar. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
@@ -205,6 +205,7 @@
         "reply_to": "Dirección de la cabecera Reply-To (action 'send').",
         "reply_all": "Responder a todos los destinatarios originales — To + Cc (action 'reply'). Por defecto false.",
         "include_attachments": "Readjuntar los adjuntos del mensaje original (action 'forward'). Los archivos que superen el presupuesto de 10 MB se omiten. Por defecto false.",
+        "include_signature": "Si añadir la firma configurada de la bandeja a este mensaje. Por defecto true; ponlo en false para enviar este único mensaje sin la firma.",
         "attachments": "Archivos adjuntos. Cada elemento: '{' filename, mime_type, data (base64) '}'. Máx. 20 elementos, 10 MB en total."
       }
     },
@@ -222,7 +223,7 @@
     },
     "draft": {
       "title": "Borradores",
-      "desc": "Gestiona los borradores en la carpeta Drafts de la bandeja. Define action: 'list' (borradores guardados, cada uno con su draft_id, asunto, destinatarios y fecha de creación), 'create' (subject/body obligatorios, opcionalmente to/cc/bcc/html_body), 'update' (draft_id más los campos a sobrescribir) o 'send' (draft_id — elimina el borrador y lo envía, irreversible). En bandejas basadas en IMAP un draft_id cambia en cada actualización, así que usa siempre el más reciente; Gmail y Outlook mantienen un draft_id estable.",
+      "desc": "Gestiona los borradores en la carpeta Drafts de la bandeja. Define action: 'list' (borradores guardados, cada uno con su draft_id, asunto, destinatarios y fecha de creación), 'create' (subject/body obligatorios, opcionalmente to/cc/bcc/html_body), 'update' (draft_id más los campos a sobrescribir) o 'send' (draft_id — elimina el borrador y lo envía, irreversible). La firma de la bandeja se incrusta cuando el borrador se crea o se actualiza, así que ya está presente en la carpeta Drafts y no se vuelve a añadir al enviar; pasa include_signature: false para crear un borrador sin ella. En bandejas basadas en IMAP un draft_id cambia en cada actualización, así que usa siempre el más reciente; Gmail y Outlook mantienen un draft_id estable.",
       "params": {
         "action": "Qué operación realizar: \"list\", \"create\", \"update\" o \"send\". Determina qué otros argumentos se aplican.",
         "inbox_id": "UUID de la bandeja que contiene los borradores. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
@@ -234,6 +235,7 @@
         "cc": "Destinatarios en copia (action 'create'/'update'). Por defecto [].",
         "bcc": "Destinatarios en copia oculta (action 'create'/'update'). Por defecto [].",
         "html_body": "Cuerpo HTML opcional (action 'create'/'update').",
+        "include_signature": "Si incrustar la firma configurada de la bandeja en el borrador (action 'create'/'update'). Por defecto true; ponlo en false para guardar un borrador sin la firma.",
         "limit": "Número máximo de borradores a devolver (action 'list'). Por defecto 20, máx. 50."
       }
     },
@@ -265,6 +267,19 @@
         "inbox_id": "Opcional. Restringe el escaneo en vivo a una bandeja. Omítelo para escanear las bandejas a las que la clave tiene acceso (un número acotado).",
         "inbox": "Dirección de correo de la bandeja a la que restringir, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "limit": "Número máximo de contactos a devolver. Por defecto 20, máx. 50."
+      }
+    },
+    "signature": {
+      "title": "Firma",
+      "desc": "Lee o configura la firma de correo de la bandeja, que se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado. Define action: 'get' (devuelve el texto y el HTML actuales de la firma, si está habilitada, el modo de respuesta/reenvío y su origen — 'manual', 'gmail_import' o null) o 'set' (escribe signature_text o signature_html, y opcionalmente signature_enabled y signature_reply_mode). Establecer una firma marca su origen como 'manual', lo que anula de forma permanente la importación automática de Gmail para esa bandeja. 'get' necesita read:email; 'set' necesita send:email.",
+      "params": {
+        "action": "Qué operación realizar: \"get\" (leer la firma actual) o \"set\" (escribirla). Determina qué otros argumentos se aplican y qué permiso se requiere.",
+        "inbox_id": "UUID de la bandeja cuya firma se va a leer o establecer. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
+        "signature_text": "Cuerpo de la firma en texto plano (action 'set'). Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo. Si solo se indica el texto, al enviar se deriva automáticamente una versión HTML.",
+        "signature_html": "Cuerpo opcional de la firma en HTML enriquecido (action 'set'). Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo.",
+        "signature_enabled": "Si la firma se añade al correo saliente (action 'set'). Por defecto true; ponlo en false para dejar de añadirla sin borrar el texto.",
+        "signature_reply_mode": "Cuándo incluir la firma en respuestas y reenvíos (action 'set'): \"always\" (cada respuesta/reenvío), \"first_only\" (por defecto — solo el primer mensaje de un hilo, evitando firmar por duplicado) o \"never\"."
       }
     }
   },
@@ -329,6 +344,7 @@
       "drafts": "Borradores (crear / editar / enviar)",
       "contacts_db": "Búsqueda de contactos (escaneo en vivo)",
       "scheduling": "Envío programado",
+      "signatures": "Firmas (aplicadas automáticamente al enviar)",
       "search_syntax": "Sintaxis de búsqueda"
     },
     "sections": {
@@ -339,6 +355,7 @@
       "Drafts": "Borradores",
       "Contacts": "Contactos",
       "Scheduling": "Programación",
+      "Signatures": "Firmas",
       "Search": "Búsqueda"
     },
     "hero": {
@@ -364,7 +381,8 @@
       "gmail": "<b>Gmail — carpetas vs etiquetas:</b> Gmail usa un sistema plano de etiquetas en lugar de carpetas jerárquicas. «Mover» se implementa como añadir/quitar etiquetas. La copia nativa no está disponible a través de la API REST de Gmail.",
       "permanentDelete": "<b>Eliminación permanente:</b> Gmail mueve a la Papelera cuando eliminas — el expunge permanente no lo exponen sus APIs. Los proveedores IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, genérico) admiten tanto la papelera como el expunge definitivo.",
       "contacts_db": "<b>Búsqueda de contactos (escaneo en vivo):</b> Todos los proveedores admiten <code>contact_search</code>, que encuentra corresponsales coincidentes con un escaneo en vivo, solo de encabezados, de una ventana reciente de tu correo coincidente. No hay ninguna tabla de contactos — no se almacena nada entre llamadas, y los recuentos reflejan solo los mensajes coincidentes en la ventana escaneada.",
-      "scheduling": "<b>Programación:</b> Compatible con todos los proveedores a través de la cola <code>scheduled_sends</code>. Usa las acciones <code>create</code>, <code>list</code> y <code>cancel</code> de la herramienta <code>schedule</code>."
+      "scheduling": "<b>Programación:</b> Compatible con todos los proveedores a través de la cola <code>scheduled_sends</code>. Usa las acciones <code>create</code>, <code>list</code> y <code>cancel</code> de la herramienta <code>schedule</code>.",
+      "signatures": "<b>Firmas:</b> Una firma por bandeja se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado — esto funciona en <b>todos</b> los proveedores. Configúrala desde el editor por bandeja del panel o la herramienta MCP <code>signature</code>, y usa <code>signature_reply_mode</code> para controlar si aparece en respuestas y reenvíos. Por llamada, pasa <code>include_signature: false</code> en <code>email_compose</code> o <code>draft</code> para omitirla."
     },
     "cta": {
       "heading": "¿Listo para conectar tu bandeja de entrada?",

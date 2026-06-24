@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { decryptToken } from '@/lib/crypto';
+import type { Database } from '@/types/database.types';
+
+type InboxUpdate = Database['public']['Tables']['inboxes']['Update'];
 
 /**
  * DELETE /api/inboxes/[id]
@@ -157,4 +160,146 @@ export async function DELETE(
   }
 
   return NextResponse.json({ success: true });
+}
+
+/**
+ * PATCH /api/inboxes/[id]
+ *
+ * Updates the per-inbox email signature (Phase 3, dashboard editor). The send
+ * paths in the MCP server append this signature on every send/reply/forward/
+ * draft/scheduled message (see composeSignatureBlocks / applySignature).
+ *
+ * Authorization mirrors DELETE exactly:
+ *  1. Authenticate the user.
+ *  2. Fetch the inbox via the RLS-scoped client. The inboxes SELECT policy
+ *     guarantees the row is in a workspace the user belongs to and is not
+ *     soft-deleted, so a returned row is proof of authorization.
+ *  3. Write via the service-role client, scoped to id AND workspace_id as
+ *     defence-in-depth (the same two-key scoping DELETE uses).
+ *
+ * The dashboard edits the plain-text signature only; we write `signature_text`
+ * and leave `signature_html` to be derived by the send path
+ * (composeSignatureBlocks fills the missing half). Saving any edit stamps
+ * `signature_source = 'manual'` and `signature_updated_at = now()`, which pins
+ * the value so the Gmail auto-import gate never overwrites it.
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  const { id: inboxId } = await params;
+
+  if (!inboxId || typeof inboxId !== 'string' || inboxId.length > 100) {
+    return NextResponse.json({ error: 'Invalid inbox ID.' }, { status: 400 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
+  }
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
+  }
+  const input = body as Record<string, unknown>;
+
+  // Validate and collect the writable signature fields. A field omitted entirely
+  // is left unchanged; an explicitly-provided value (including an empty string,
+  // to clear the signature) is written.
+  const update: InboxUpdate = {};
+
+  if ('signature_text' in input) {
+    if (typeof input.signature_text !== 'string' || input.signature_text.length > 10000) {
+      return NextResponse.json(
+        { error: 'signature_text must be a string of at most 10000 characters.' },
+        { status: 400 }
+      );
+    }
+    update.signature_text = input.signature_text;
+    // The dashboard edits text only; clear any imported HTML so the send path
+    // derives a fresh HTML signature from the new text rather than mixing the
+    // user's edit with a stale imported HTML block.
+    update.signature_html = null;
+  }
+
+  if ('signature_enabled' in input) {
+    if (typeof input.signature_enabled !== 'boolean') {
+      return NextResponse.json(
+        { error: 'signature_enabled must be a boolean.' },
+        { status: 400 }
+      );
+    }
+    update.signature_enabled = input.signature_enabled;
+  }
+
+  if ('signature_reply_mode' in input) {
+    const mode = input.signature_reply_mode;
+    if (mode !== 'always' && mode !== 'first_only' && mode !== 'never') {
+      return NextResponse.json(
+        { error: "signature_reply_mode must be one of 'always', 'first_only', 'never'." },
+        { status: 400 }
+      );
+    }
+    update.signature_reply_mode = mode;
+  }
+
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json(
+      { error: 'Provide at least one of signature_text, signature_enabled, signature_reply_mode.' },
+      { status: 400 }
+    );
+  }
+
+  const supabase = await createClient();
+
+  // 1. Authenticate the requesting user.
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
+  // 2. Fetch the inbox via the RLS-scoped client. A returned row authorizes the
+  //    edit (the SELECT policy enforces workspace membership + not deleted).
+  const { data: inbox, error: fetchError } = await supabase
+    .from('inboxes')
+    .select('id, workspace_id')
+    .eq('id', inboxId)
+    .is('deleted_at', null)
+    .single();
+
+  if (fetchError || !inbox) {
+    return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
+  }
+
+  const workspaceId = inbox.workspace_id;
+
+  // 3. Any edit pins the signature as user-owned so Gmail auto-import never
+  //    overwrites it on a later send.
+  const now = new Date().toISOString();
+  update.signature_source = 'manual';
+  update.signature_updated_at = now;
+  update.updated_at = now;
+
+  const service = createServiceRoleClient();
+  const { data: saved, error: updateError } = await service
+    .from('inboxes')
+    .update(update)
+    .eq('id', inboxId)
+    .eq('workspace_id', workspaceId)
+    .select(
+      'signature_text, signature_html, signature_enabled, signature_reply_mode, signature_source, signature_updated_at'
+    )
+    .single();
+
+  if (updateError || !saved) {
+    console.error('[update-inbox-signature] Failed to save signature:', updateError?.message);
+    return NextResponse.json({ error: 'Failed to save signature.' }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true, signature: saved });
 }

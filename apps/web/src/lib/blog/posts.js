@@ -27,6 +27,7 @@ import pillarEmailAccess from './posts/how-to-give-your-ai-agent-email-access';
 import whatIsMcpEmailServer from './posts/what-is-an-mcp-email-server';
 import connectUnder2Minutes from './posts/connect-email-to-ai-agent-under-2-minutes';
 import connectGmailToClaude from './posts/connect-gmail-to-claude';
+import emailSignaturesForClaude from './posts/email-signatures-for-claude';
 import inboxZeroWithAi from './posts/inbox-zero-with-ai-claude';
 import connectOutlook365 from './posts/connect-outlook-microsoft-365-ai-agent-mcp';
 import emailForCursorCline from './posts/email-for-ai-agents-cursor-cline-vscode';
@@ -49,6 +50,7 @@ const MODULE_POSTS = [
   whatIsMcpEmailServer,
   connectUnder2Minutes,
   connectGmailToClaude,
+  emailSignaturesForClaude,
   inboxZeroWithAi,
   connectOutlook365,
   emailForCursorCline,
@@ -161,6 +163,7 @@ Give your agent verbs, not passwords — and let it get to work.`,
 const RELEVANCE_ORDER = [
   'connect-email-to-ai-agent-under-2-minutes',
   'connect-gmail-to-claude',
+  'email-signatures-for-claude',
   'inbox-zero-with-ai-claude',
   'how-to-give-your-ai-agent-email-access',
   'is-it-safe-to-give-ai-agent-email-access',

@@ -81,7 +81,7 @@
   },
   "tools": {
     "eyebrow": "Référence des outils",
-    "heading": "9 outils. Toutes les opérations e-mail dont votre agent a besoin.",
+    "heading": "10 outils. Toutes les opérations e-mail dont votre agent a besoin.",
     "sub": "<b>Cibler une boîte est facultatif.</b> Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement — pas besoin d’<code>inbox_id</code>. Avec plusieurs boîtes, passez <code>inbox_id</code> (l'UUID renvoyé par <code>inbox_list</code>) ou <code>inbox</code> (l'adresse e-mail de la boîte). La plupart des outils prennent un argument <code>action</code> qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.",
     "noParams": "Aucun paramètre. Appelez avec un objet d'arguments vide :",
     "showExample": "Afficher l'exemple de requête et réponse",
@@ -190,7 +190,7 @@
     },
     "email_compose": {
       "title": "Rédiger un e-mail",
-      "desc": "Envoyer un nouveau message ou répondre à des messages existants. Définissez action : 'send' pour un nouvel e-mail (to/subject/body, éventuellement cc/bcc/html_body/reply_to/attachments), 'reply' pour répondre à un message_id (les en-têtes de fil sont définis automatiquement ; éventuellement reply_all), ou 'forward' pour transférer un message_id à de nouveaux destinataires (en réattachant éventuellement les fichiers d'origine). Les trois sont irréversibles une fois envoyées.",
+      "desc": "Envoyer un nouveau message ou répondre à des messages existants. Définissez action : 'send' pour un nouvel e-mail (to/subject/body, éventuellement cc/bcc/html_body/reply_to/attachments), 'reply' pour répondre à un message_id (les en-têtes de fil sont définis automatiquement ; éventuellement reply_all), ou 'forward' pour transférer un message_id à de nouveaux destinataires (en réattachant éventuellement les fichiers d'origine). La signature de la boîte est ajoutée automatiquement — sur les réponses et les transferts, elle se place après votre texte et avant le bloc cité, selon le mode de réponse de la signature ; passez include_signature: false pour la supprimer sur un message court ponctuel. Les trois sont irréversibles une fois envoyées.",
       "params": {
         "action": "Quelle opération effectuer : \"send\", \"reply\" ou \"forward\". Détermine quels autres arguments s'appliquent.",
         "inbox_id": "UUID de la boîte depuis laquelle envoyer. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
@@ -205,6 +205,7 @@
         "reply_to": "Adresse de l'en-tête Reply-To (action 'send').",
         "reply_all": "Répondre à tous les destinataires d'origine — To + Cc (action 'reply'). Par défaut false.",
         "include_attachments": "Réattacher les pièces jointes du message d'origine (action 'forward'). Les fichiers dépassant le budget de 10 Mo sont omis. Par défaut false.",
+        "include_signature": "Indique s'il faut ajouter la signature configurée de la boîte à ce message. Par défaut true ; mettez false pour envoyer ce seul message sans la signature.",
         "attachments": "Pièces jointes. Chaque élément : '{' filename, mime_type, data (base64) '}'. Max 20 éléments, 10 Mo au total."
       }
     },
@@ -222,7 +223,7 @@
     },
     "draft": {
       "title": "Brouillons",
-      "desc": "Gérer les brouillons dans le dossier Drafts de la boîte. Définissez action : 'list' (brouillons enregistrés, chacun avec son draft_id, son objet, ses destinataires et sa date de création), 'create' (subject/body requis, éventuellement to/cc/bcc/html_body), 'update' (draft_id plus les champs à écraser) ou 'send' (draft_id — supprime le brouillon et l'envoie, irréversible). Sur les boîtes basées sur IMAP, un draft_id change à chaque mise à jour, utilisez donc toujours le plus récent ; Gmail et Outlook conservent un draft_id stable.",
+      "desc": "Gérer les brouillons dans le dossier Drafts de la boîte. Définissez action : 'list' (brouillons enregistrés, chacun avec son draft_id, son objet, ses destinataires et sa date de création), 'create' (subject/body requis, éventuellement to/cc/bcc/html_body), 'update' (draft_id plus les champs à écraser) ou 'send' (draft_id — supprime le brouillon et l'envoie, irréversible). La signature de la boîte est intégrée à la création ou à la mise à jour du brouillon, elle est donc déjà présente dans le dossier Drafts et n'est pas réajoutée à l'envoi ; passez include_signature: false pour créer un brouillon sans elle. Sur les boîtes basées sur IMAP, un draft_id change à chaque mise à jour, utilisez donc toujours le plus récent ; Gmail et Outlook conservent un draft_id stable.",
       "params": {
         "action": "Quelle opération effectuer : \"list\", \"create\", \"update\" ou \"send\". Détermine quels autres arguments s'appliquent.",
         "inbox_id": "UUID de la boîte qui contient les brouillons. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
@@ -234,6 +235,7 @@
         "cc": "Destinataires en copie (action 'create'/'update'). Par défaut [].",
         "bcc": "Destinataires en copie cachée (action 'create'/'update'). Par défaut [].",
         "html_body": "Corps HTML facultatif (action 'create'/'update').",
+        "include_signature": "Indique s'il faut intégrer la signature configurée de la boîte au brouillon (action 'create'/'update'). Par défaut true ; mettez false pour enregistrer un brouillon sans la signature.",
         "limit": "Nombre maximal de brouillons à renvoyer (action 'list'). Par défaut 20, max 50."
       }
     },
@@ -265,6 +267,19 @@
         "inbox_id": "Facultatif. Restreindre l'analyse en direct à une seule boîte. Omettez-le pour analyser les boîtes auxquelles la clé a accès (un nombre limité).",
         "inbox": "Adresse e-mail de la boîte à laquelle se restreindre, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "limit": "Nombre maximal de contacts à renvoyer. Par défaut 20, max 50."
+      }
+    },
+    "signature": {
+      "title": "Signature",
+      "desc": "Lire ou configurer la signature e-mail de la boîte, qui est ajoutée côté serveur à chaque envoi, réponse, transfert, brouillon et message programmé. Définissez action : 'get' (renvoie le texte et le HTML de la signature actuelle, si elle est activée, le mode de réponse/transfert et sa source — 'manual', 'gmail_import' ou null) ou 'set' (écrire signature_text et/ou signature_html, et éventuellement signature_enabled et signature_reply_mode). Définir une signature marque sa source comme 'manual', ce qui remplace définitivement l'import automatique de Gmail pour cette boîte. 'get' nécessite read:email ; 'set' nécessite send:email.",
+      "params": {
+        "action": "Quelle opération effectuer : \"get\" (lire la signature actuelle) ou \"set\" (l'écrire). Détermine quels autres arguments s'appliquent et quelle portée est requise.",
+        "inbox_id": "UUID de la boîte dont la signature est lue ou définie. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "signature_text": "Corps de signature en texte brut (action 'set'). Omettez-le pour ne rien changer ; passez une chaîne vide pour l'effacer. Si seul le texte est fourni, une version HTML est dérivée automatiquement à l'envoi.",
+        "signature_html": "Corps de signature en HTML enrichi facultatif (action 'set'). Omettez-le pour ne rien changer ; passez une chaîne vide pour l'effacer.",
+        "signature_enabled": "Indique si la signature est ajoutée au courrier sortant (action 'set'). Par défaut true ; mettez false pour cesser de l'ajouter sans supprimer le texte.",
+        "signature_reply_mode": "Quand inclure la signature dans les réponses et les transferts (action 'set') : \"always\" (chaque réponse/transfert), \"first_only\" (par défaut — uniquement le premier message d'un fil, pour éviter la double signature) ou \"never\"."
       }
     }
   },
@@ -329,6 +344,7 @@
       "drafts": "Brouillons (créer / modifier / envoyer)",
       "contacts_db": "Recherche de contacts (analyse en direct)",
       "scheduling": "Envoi programmé",
+      "signatures": "Signatures (appliquées automatiquement à l'envoi)",
       "search_syntax": "Syntaxe de recherche"
     },
     "sections": {
@@ -339,6 +355,7 @@
       "Drafts": "Brouillons",
       "Contacts": "Contacts",
       "Scheduling": "Programmation",
+      "Signatures": "Signatures",
       "Search": "Recherche"
     },
     "hero": {
@@ -364,7 +381,8 @@
       "gmail": "<b>Gmail — dossiers vs étiquettes :</b> Gmail utilise un système d'étiquettes plat plutôt que des dossiers hiérarchiques. « Déplacer » est implémenté comme l'ajout/la suppression d'étiquette. La copie native n'est pas disponible via l'API REST Gmail.",
       "permanentDelete": "<b>Suppression définitive :</b> Gmail déplace vers la corbeille lors de la suppression — l'expunge définitif n'est pas exposé par leurs API. Les fournisseurs IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, générique) prennent en charge à la fois la corbeille et l'expunge définitif.",
       "contacts_db": "<b>Recherche de contacts (analyse en direct) :</b> Tous les fournisseurs prennent en charge <code>contact_search</code>, qui trouve les correspondants correspondants grâce à une analyse en direct, basée uniquement sur les en-têtes, d'une fenêtre récente de votre courrier correspondant. Il n'existe aucune table de contacts — rien n'est stocké entre les appels, et les nombres reflètent uniquement les messages correspondants dans la fenêtre analysée.",
-      "scheduling": "<b>Programmation :</b> Prise en charge pour tous les fournisseurs via la file <code>scheduled_sends</code>. Utilisez les actions <code>create</code>, <code>list</code> et <code>cancel</code> de l'outil <code>schedule</code>."
+      "scheduling": "<b>Programmation :</b> Prise en charge pour tous les fournisseurs via la file <code>scheduled_sends</code>. Utilisez les actions <code>create</code>, <code>list</code> et <code>cancel</code> de l'outil <code>schedule</code>.",
+      "signatures": "<b>Signatures :</b> Une signature par boîte est ajoutée côté serveur à chaque envoi, réponse, transfert, brouillon et message programmé — cela fonctionne sur <b>tous</b> les fournisseurs. Définissez-la depuis l'éditeur par boîte du tableau de bord ou l'outil MCP <code>signature</code>, et utilisez <code>signature_reply_mode</code> pour contrôler son affichage sur les réponses et les transferts. Par appel, passez <code>include_signature: false</code> sur <code>email_compose</code> ou <code>draft</code> pour l'ignorer."
     },
     "cta": {
       "heading": "Prêt à connecter votre boîte de réception ?",
