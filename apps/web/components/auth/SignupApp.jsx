@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { track } from '@vercel/analytics';
 import { createClient } from '@/lib/supabase/client';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
@@ -120,6 +121,7 @@ export function SignupApp() {
       // Email confirmation is disabled, so signUp returns an active session.
       // Skip the "check your email" wall and send the user straight into the
       // first-run connect flow — the moment of highest intent for activation.
+      track('signup_completed', { method: 'password' });
       window.location.href = getRedirectDestination();
     } else {
       // Confirmation is still required (e.g. the project setting was
