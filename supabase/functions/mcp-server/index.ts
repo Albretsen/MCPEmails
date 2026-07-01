@@ -3463,7 +3463,12 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       list: { legacy: "draft_list", scope: "manage:drafts" },
       create: { legacy: "draft_create", scope: "manage:drafts" },
       update: { legacy: "draft_update", scope: "manage:drafts" },
-      send: { legacy: "draft_send", scope: "manage:drafts" },
+      // SECURITY: 'send' transmits mail, so it is gated by send:email — NOT
+      // manage:drafts. Otherwise a key with only manage:drafts could create a
+      // draft and send it, bypassing the send:email consent that email_compose
+      // enforces (scope-confusion privilege escalation). Do NOT add manage:drafts
+      // as an altScope here: altScopes are OR'd, which would reopen the bypass.
+      send: { legacy: "draft_send", scope: "send:email" },
       delete: { legacy: "draft_delete", scope: "manage:drafts" },
     },
   },
@@ -17458,6 +17463,22 @@ async function executeSendDraft(
     return {
       result: { content: [{ type: "text", text: "draft_send: draft_id is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  // ── Scope check (belt-and-suspenders) ────────────────────────────────────
+  // Sending a draft transmits mail and therefore requires send:email, exactly
+  // like email_send / email_reply / email_forward. The dispatch-layer scope
+  // gate already enforces this, but repeat it here so the check survives any
+  // future refactor of the action→scope mapping. manage:drafts alone must NOT
+  // be able to send.
+  if (!apiKey.scopes.includes("send:email")) {
+    return {
+      result: {
+        content: [{ type: "text", text: "draft_send: the 'send:email' scope is required to send a draft." }],
+        isError: true,
+      },
+      logStatus: "error", logErrorCode: "scope_denied",
     };
   }
 
