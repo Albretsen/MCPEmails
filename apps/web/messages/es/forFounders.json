@@ -54,7 +54,7 @@
       "read": { "h": "Leer y buscar", "p": "Lista, lee y busca entre carpetas y todas las bandejas conectadas, obtenido en vivo." },
       "send": { "h": "Enviar y responder", "p": "Envía, responde y reenvía directamente. El agente termina el correo, no solo un borrador." },
       "schedule": { "h": "Programar", "p": "Pon un envío en cola para más tarde, así los seguimientos salen en el momento justo del día del cliente." },
-      "organize": { "h": "Organizar", "p": "Mueve, marca, archiva y etiqueta para que la clasificación ocurra mientras lees, no después." }
+      "organize": { "h": "Organizar", "p": "Mueve, copia, marca, archiva y etiqueta para que la clasificación ocurra mientras lees, no después." }
     }
   },
   "proof": {

@@ -24,7 +24,7 @@
       "actions": {
         "tag": "Vraies actions",
         "h": "Envoyer et planifier, pas seulement des brouillons",
-        "p": "Beaucoup de connecteurs natifs s'arrêtent à la <b>création d'un brouillon</b> que vous devez encore ouvrir et envoyer. Nos neuf outils basés sur des actions <b>envoient, répondent, transfèrent, planifient, déplacent, marquent, archivent et suppriment</b> directement — l'agent termine le travail dans la boîte."
+        "p": "Beaucoup de connecteurs natifs s'arrêtent à la <b>création d'un brouillon</b> que vous devez encore ouvrir et envoyer. Nos neuf outils basés sur des actions <b>envoient, répondent, transfèrent, planifient, déplacent, copient, marquent, archivent et suppriment</b> directement — l'agent termine le travail dans la boîte."
       },
       "portable": {
         "tag": "Portable",
@@ -44,7 +44,7 @@
       "imap": "N'importe quelle boîte IMAP / SMTP",
       "send": "Envoyer et répondre directement (pas que des brouillons)",
       "schedule": "Planifier des envois pour plus tard",
-      "organize": "Déplacer, marquer, archiver, supprimer",
+      "organize": "Déplacer, copier, marquer, archiver, supprimer",
       "multiAi": "Fonctionne dans Claude, Cursor, ChatGPT, n8n…",
       "oauth": "Gmail via OAuth",
       "storage": "E-mails récupérés en direct, jamais stockés"
@@ -64,7 +64,7 @@
     "items": [
       {
         "q": "Claude ou ChatGPT ne peuvent-ils pas déjà lire mon Gmail avec un connecteur intégré ?",
-        "a": "Parfois, pour un seul fournisseur et souvent en lecture seule ou en brouillon seulement. mcpemails connecte Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et n'importe quelle boîte IMAP, et effectue de vraies actions : envoyer, répondre, transférer, planifier, déplacer, marquer, archiver et supprimer. La même boîte fonctionne ensuite dans tous les clients MCP, pas seulement dans l'app d'un seul fournisseur."
+        "a": "Parfois, pour un seul fournisseur et souvent en lecture seule ou en brouillon seulement. mcpemails connecte Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et n'importe quelle boîte IMAP, et effectue de vraies actions : envoyer, répondre, transférer, planifier, déplacer, copier, marquer, archiver et supprimer. La même boîte fonctionne ensuite dans tous les clients MCP, pas seulement dans l'app d'un seul fournisseur."
       },
       {
         "q": "Quelles boîtes les connecteurs intégrés laissent-ils de côté en général ?",

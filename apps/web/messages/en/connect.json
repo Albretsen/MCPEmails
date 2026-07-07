@@ -82,7 +82,7 @@
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders — find that invoice, summarize a thread, or pull the latest from a sender." },
       { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward — directly from Fastmail, not as a draft you finish by hand." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, flag, archive, delete", "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request." }
+      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -132,7 +132,7 @@
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders — find a receipt, summarize a thread, or pull the latest from a sender." },
       { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward — directly from iCloud, not as a draft you finish by hand." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, flag, archive, delete", "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request." }
+      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -182,7 +182,7 @@
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender." },
       { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Yahoo, not as a draft you finish by hand." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
+      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -232,7 +232,7 @@
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender." },
       { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Zoho, not as a draft you finish by hand." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
+      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -282,7 +282,7 @@
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender." },
       { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Yandex, not as a draft you finish by hand." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
+      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],
     "how": {
       "eyebrow": "Setup",

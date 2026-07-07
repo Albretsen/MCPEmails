@@ -54,7 +54,7 @@
       "read": { "h": "Lire et chercher", "p": "Listez, lisez et cherchez à travers les dossiers et chaque boîte connectée, récupérés en direct." },
       "send": { "h": "Envoyer et répondre", "p": "Envoyez, répondez et transférez directement. L'agent termine l'e-mail, pas seulement un brouillon." },
       "schedule": { "h": "Planifier", "p": "Mettez un envoi en file pour plus tard, pour que les relances partent au bon moment dans la journée du client." },
-      "organize": { "h": "Organiser", "p": "Déplacez, marquez, archivez et libellez pour que le tri se fasse pendant que vous lisez, pas après." }
+      "organize": { "h": "Organiser", "p": "Déplacez, copiez, marquez, archivez et libellez pour que le tri se fasse pendant que vous lisez, pas après." }
     }
   },
   "proof": {

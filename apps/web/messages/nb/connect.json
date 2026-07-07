@@ -82,7 +82,7 @@
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
       { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Fastmail, ikke som et utkast du fullfører for hånd." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -132,7 +132,7 @@
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper — finn en kvittering, oppsummer en tråd, eller hent det nyeste fra en avsender." },
       { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra iCloud, ikke som et utkast du fullfører for hånd." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -182,7 +182,7 @@
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
       { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yahoo, ikke som et utkast du fullfører for hånd." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -232,7 +232,7 @@
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
       { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Zoho, ikke som et utkast du fullfører for hånd." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -282,7 +282,7 @@
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
       { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yandex, ikke som et utkast du fullfører for hånd." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],
     "how": {
       "eyebrow": "Oppsett",

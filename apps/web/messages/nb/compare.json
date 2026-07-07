@@ -24,7 +24,7 @@
       "actions": {
         "tag": "Ekte handlinger",
         "h": "Send og planlegg, ikke bare utkast",
-        "p": "Mange innebygde koblinger stopper ved å <b>lage et utkast</b> som du fortsatt må åpne og sende. Våre ni handlingsbaserte verktøy <b>sender, svarer, videresender, planlegger, flytter, flagger, arkiverer og sletter</b> direkte — agenten fullfører jobben inne i innboksen."
+        "p": "Mange innebygde koblinger stopper ved å <b>lage et utkast</b> som du fortsatt må åpne og sende. Våre ni handlingsbaserte verktøy <b>sender, svarer, videresender, planlegger, flytter, kopierer, flagger, arkiverer og sletter</b> direkte — agenten fullfører jobben inne i innboksen."
       },
       "portable": {
         "tag": "Flyttbar",
@@ -44,7 +44,7 @@
       "imap": "Hvilken som helst IMAP-/SMTP-postkasse",
       "send": "Send og svar direkte (ikke bare utkast)",
       "schedule": "Planlegg sendinger til senere",
-      "organize": "Flytt, flagg, arkiver, slett",
+      "organize": "Flytt, kopier, flagg, arkiver, slett",
       "multiAi": "Virker i Claude, Cursor, ChatGPT, n8n …",
       "oauth": "Gmail via OAuth",
       "storage": "E-post hentes direkte, lagres aldri"
@@ -64,7 +64,7 @@
     "items": [
       {
         "q": "Kan ikke Claude eller ChatGPT allerede lese Gmailen min med en innebygd kobling?",
-        "a": "Av og til, for én leverandør og ofte bare med lese- eller utkasttilgang. mcpemails kobler til Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og hvilken som helst IMAP-postkasse, og utfører ekte handlinger: send, svar, videresend, planlegg, flytt, flagg, arkiver og slett. Samme innboks virker da i alle MCP-klienter, ikke bare i én leverandørs app."
+        "a": "Av og til, for én leverandør og ofte bare med lese- eller utkasttilgang. mcpemails kobler til Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og hvilken som helst IMAP-postkasse, og utfører ekte handlinger: send, svar, videresend, planlegg, flytt, kopier, flagg, arkiver og slett. Samme innboks virker da i alle MCP-klienter, ikke bare i én leverandørs app."
       },
       {
         "q": "Hvilke postkasser går innebygde koblinger vanligvis glipp av?",

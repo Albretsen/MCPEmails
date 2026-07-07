@@ -54,7 +54,7 @@
       "read": { "h": "Les og søk", "p": "List opp, les og søk på tvers av mapper og hver tilkoblet innboks, hentet i sanntid." },
       "send": { "h": "Send og svar", "p": "Send, svar og videresend direkte. Agenten fullfører e-posten, ikke bare et utkast." },
       "schedule": { "h": "Planlegg", "p": "Sett en sending i kø til senere, så oppfølginger går ut til rett tidspunkt i kundens dag." },
-      "organize": { "h": "Organiser", "p": "Flytt, flagg, arkiver og merk, så sorteringen skjer mens du leser, ikke etterpå." }
+      "organize": { "h": "Organiser", "p": "Flytt, kopier, flagg, arkiver og merk, så sorteringen skjer mens du leser, ikke etterpå." }
     }
   },
   "proof": {

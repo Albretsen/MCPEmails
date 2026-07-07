@@ -82,7 +82,7 @@
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers — trouvez cette facture, résumez un fil ou récupérez le dernier message d'un expéditeur." },
       { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez — directement depuis Fastmail, pas sous forme de brouillon à finir à la main." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
-      { "tag": "Organiser", "h": "Déplacer, marquer, archiver, supprimer", "p": "Gardez la boîte rangée — classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
+      { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée — classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
     "how": {
       "eyebrow": "Configuration",
@@ -132,7 +132,7 @@
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers — trouvez un reçu, résumez un fil ou récupérez le dernier message d'un expéditeur." },
       { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez — directement depuis iCloud, pas sous forme de brouillon à finir à la main." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
-      { "tag": "Organiser", "h": "Déplacer, marquer, archiver, supprimer", "p": "Gardez la boîte rangée — classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
+      { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée — classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
     "how": {
       "eyebrow": "Configuration",
@@ -182,7 +182,7 @@
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur." },
       { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Yahoo, pas sous forme de brouillon à finir à la main." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
-      { "tag": "Organiser", "h": "Déplacer, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
+      { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
     "how": {
       "eyebrow": "Configuration",
@@ -232,7 +232,7 @@
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur." },
       { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Zoho, pas sous forme de brouillon à finir à la main." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
-      { "tag": "Organiser", "h": "Déplacer, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
+      { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
     "how": {
       "eyebrow": "Configuration",
@@ -282,7 +282,7 @@
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur." },
       { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Yandex, pas sous forme de brouillon à finir à la main." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
-      { "tag": "Organiser", "h": "Déplacer, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
+      { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
     "how": {
       "eyebrow": "Configuration",
