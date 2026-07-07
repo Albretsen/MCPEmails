@@ -101,7 +101,7 @@
     "tools": {
       "0": "Descubre todas las bandejas conectadas y sus IDs. Llama a esto primero, sin copiar y pegar UUIDs del panel.",
       "1": "Leer correo: lista resúmenes recientes, obtén un mensaje completo por ID, lee hasta 50 por lotes o ejecuta una búsqueda independiente del proveedor — todo mediante el argumento action.",
-      "2": "Organizar correo: mueve, elimina, marca o archiva — uno a uno, en lote o directamente desde una búsqueda.",
+      "2": "Organizar correo: mueve, copia, elimina, marca o archiva — uno a uno, en lote o directamente desde una búsqueda.",
       "3": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail, Fastmail JMAP o SMTP: tu dominio, tu entregabilidad.",
       "4": "Gestiona carpetas (etiquetas en Gmail): lista, crea, renombra o elimina, y úsalas como destino de movimientos.",
       "5": "Borradores: lista, crea, actualiza y envía borradores guardados en la carpeta Drafts del proveedor.",
@@ -184,7 +184,7 @@
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",
-        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja — mover, marcar, archivar y eliminar. Nueve herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
+        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja — mover, copiar, marcar, archivar y eliminar. Nueve herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
       },
       {
         "q": "¿Cómo conecto una bandeja de entrada?",

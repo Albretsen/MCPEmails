@@ -24,7 +24,7 @@
       "actions": {
         "tag": "Acciones reales",
         "h": "Envía y programa, no solo borradores",
-        "p": "Muchos conectores nativos se detienen en <b>crear un borrador</b> que aún tienes que abrir y enviar. Nuestras nueve herramientas basadas en acciones <b>envían, responden, reenvían, programan, mueven, marcan, archivan y eliminan</b> directamente — el agente termina el trabajo dentro de la bandeja."
+        "p": "Muchos conectores nativos se detienen en <b>crear un borrador</b> que aún tienes que abrir y enviar. Nuestras nueve herramientas basadas en acciones <b>envían, responden, reenvían, programan, mueven, copian, marcan, archivan y eliminan</b> directamente — el agente termina el trabajo dentro de la bandeja."
       },
       "portable": {
         "tag": "Portátil",
@@ -44,7 +44,7 @@
       "imap": "Cualquier buzón IMAP / SMTP",
       "send": "Enviar y responder directamente (no solo borradores)",
       "schedule": "Programar envíos para más tarde",
-      "organize": "Mover, marcar, archivar, eliminar",
+      "organize": "Mover, copiar, marcar, archivar, eliminar",
       "multiAi": "Funciona en Claude, Cursor, ChatGPT, n8n…",
       "oauth": "Gmail por OAuth",
       "storage": "El correo se obtiene en vivo, nunca se almacena"
@@ -64,7 +64,7 @@
     "items": [
       {
         "q": "¿No puede Claude o ChatGPT leer ya mi Gmail con un conector integrado?",
-        "a": "A veces, para un solo proveedor y a menudo solo de lectura o solo borradores. mcpemails conecta Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier buzón IMAP, y realiza acciones reales: enviar, responder, reenviar, programar, mover, marcar, archivar y eliminar. Esa misma bandeja funciona luego en cualquier cliente MCP, no solo en la app de un proveedor."
+        "a": "A veces, para un solo proveedor y a menudo solo de lectura o solo borradores. mcpemails conecta Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier buzón IMAP, y realiza acciones reales: enviar, responder, reenviar, programar, mover, copiar, marcar, archivar y eliminar. Esa misma bandeja funciona luego en cualquier cliente MCP, no solo en la app de un proveedor."
       },
       {
         "q": "¿Qué buzones suelen quedar fuera de los conectores integrados?",

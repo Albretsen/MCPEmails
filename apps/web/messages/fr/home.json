@@ -101,7 +101,7 @@
     "tools": {
       "0": "Découvrez toutes les boîtes connectées et leurs ID. Appelez ceci en premier, sans copier-coller d'UUID depuis le tableau de bord.",
       "1": "Lire le courrier : listez les résumés récents, récupérez un message complet par ID, lisez jusqu'à 50 par lot ou lancez une recherche indépendante du fournisseur — le tout via l'argument action.",
-      "2": "Organiser le courrier : déplacez, supprimez, marquez ou archivez — un à la fois, en masse ou directement depuis une recherche.",
+      "2": "Organiser le courrier : déplacez, copiez, supprimez, marquez ou archivez — un à la fois, en masse ou directement depuis une recherche.",
       "3": "Rédiger : envoyez un nouveau message, répondez dans le fil ou transférez. Expédié par l'API Gmail, Fastmail JMAP ou SMTP : votre domaine, votre délivrabilité.",
       "4": "Gérez les dossiers (libellés sur Gmail) : listez, créez, renommez ou supprimez, et utilisez-les comme destinations de déplacement.",
       "5": "Brouillons : listez, créez, mettez à jour et envoyez les brouillons stockés dans le dossier Drafts du fournisseur.",
@@ -184,7 +184,7 @@
       },
       {
         "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",
-        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception — déplacer, marquer, archiver et supprimer. Neuf outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
+        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception — déplacer, copier, marquer, archiver et supprimer. Neuf outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
       },
       {
         "q": "Comment connecter une boîte de réception ?",

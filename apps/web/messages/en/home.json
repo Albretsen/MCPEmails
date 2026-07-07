@@ -101,7 +101,7 @@
     "tools": {
       "0": "Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard.",
       "1": "Read mail: list recent summaries, fetch a full message by ID, batch-read up to 50, or run a provider-agnostic search — all via the action argument.",
-      "2": "Organize mail: move, delete, flag, or archive — one at a time, in bulk, or straight from a search.",
+      "2": "Organize mail: move, copy, delete, flag, or archive — one at a time, in bulk, or straight from a search.",
       "3": "Compose: send a new message, reply in-thread, or forward. Dispatched through Gmail API, Fastmail JMAP, or SMTP: your domain, your deliverability.",
       "4": "Manage folders (labels on Gmail): list, create, rename, or delete, and use them as move destinations.",
       "5": "Drafts: list, create, update, and send drafts stored in the provider's Drafts folder.",
@@ -184,7 +184,7 @@
       },
       {
         "q": "What can the AI actually do with my inbox?",
-        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox — move, flag, archive and delete. Nine action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
+        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox — move, copy, flag, archive and delete. Nine action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
       },
       {
         "q": "How do I connect an inbox?",

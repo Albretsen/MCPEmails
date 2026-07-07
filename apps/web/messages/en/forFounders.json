@@ -54,7 +54,7 @@
       "read": { "h": "Read & search", "p": "List, read, and search across folders and every connected inbox, fetched live." },
       "send": { "h": "Send & reply", "p": "Send, reply, and forward directly. The agent finishes the email, not just a draft." },
       "schedule": { "h": "Schedule", "p": "Queue a send for later so follow-ups go out at the right moment in the customer's day." },
-      "organize": { "h": "Organize", "p": "Move, flag, archive, and label so triage happens while you read, not after." }
+      "organize": { "h": "Organize", "p": "Move, copy, flag, archive, and label so triage happens while you read, not after." }
     }
   },
   "proof": {

@@ -82,7 +82,7 @@
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas — encuentra esa factura, resume un hilo o saca lo último de un remitente." },
       { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Fastmail, no como un borrador que terminas a mano." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -132,7 +132,7 @@
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas — encuentra un recibo, resume un hilo o saca lo último de un remitente." },
       { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde iCloud, no como un borrador que terminas a mano." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -182,7 +182,7 @@
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
       { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yahoo, no como un borrador que terminas a mano." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -232,7 +232,7 @@
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
       { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Zoho, no como un borrador que terminas a mano." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -282,7 +282,7 @@
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
       { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yandex, no como un borrador que terminas a mano." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],
     "how": {
       "eyebrow": "Configuración",

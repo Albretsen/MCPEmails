@@ -272,7 +272,7 @@ const SERVER_INSTRUCTIONS =
   "TOOL SHAPE: Tools are grouped by resource and take an `action` argument:\n" +
   "• inbox_list — list the accessible inboxes.\n" +
   "• email_read — action: list | read | read_batch | search | attachment.\n" +
-  "• email_organize — action: move | move_batch | flag | archive | search_and_move.\n" +
+  "• email_organize — action: move | move_batch | copy | copy_batch | flag | archive | search_and_move.\n" +
   "• email_delete — action: delete | delete_batch | search_and_delete (destructive — your client may ask you to confirm).\n" +
   "• email_compose — action: send | reply | forward.\n" +
   "• folder — action: list | create | rename | delete.\n" +
@@ -1797,6 +1797,37 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     },
   },
 
+  {
+    name: "email_copy",
+    title: "Copy Email",
+    description:
+      "Copy an email message into another folder, leaving the original in place. " +
+      "Unlike move, the source message is not removed. Supported on IMAP, Outlook " +
+      "and Fastmail inboxes (Gmail's label model has no native copy).",
+    requiredScope: "manage:folders",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        message_id: {
+          type: "string",
+          description:
+            "Provider-native message ID as returned by email_list, email_read, or email_search.",
+        },
+        destination_folder_id: {
+          type: "string",
+          description:
+            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
+            "Names and aliases are resolved automatically.",
+        },
+      },
+      required: ["message_id", "destination_folder_id"],
+      additionalProperties: false,
+    },
+  },
+
   // ── delete:email scope ─────────────────────────────────────────────────────
 
   {
@@ -1853,6 +1884,41 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           maxItems: 500,
           description:
             "Provider-native message IDs to move (from email_list, email_read, or email_search). " +
+            "Maximum 500 IDs per call.",
+        },
+        destination_folder_id: {
+          type: "string",
+          description:
+            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
+            "Names and aliases are resolved automatically.",
+        },
+      },
+      required: ["message_ids", "destination_folder_id"],
+      additionalProperties: false,
+    },
+  },
+
+  {
+    name: "email_copy_batch",
+    title: "Bulk Copy",
+    description:
+      "Copy up to 500 email messages into a destination folder in one call, " +
+      "leaving the originals in place. Supported on IMAP, Outlook and Fastmail " +
+      "inboxes (not Gmail). Returns succeeded/failed counts and per-message results.",
+    requiredScope: "manage:folders",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        message_ids: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 1,
+          maxItems: 500,
+          description:
+            "Provider-native message IDs to copy (from email_list, email_read, or email_search). " +
             "Maximum 500 IDs per call.",
         },
         destination_folder_id: {
@@ -3098,6 +3164,18 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["success", "message_id", "operation", "inbox_id", "destination_folder_id"],
     additionalProperties: false,
   },
+  email_copy: {
+    type: "object",
+    properties: {
+      success: { type: "boolean" },
+      message_id: { type: "string" },
+      operation: { type: "string" },
+      inbox_id: { type: "string" },
+      destination_folder_id: { type: "string" },
+    },
+    required: ["success", "message_id", "operation", "inbox_id", "destination_folder_id"],
+    additionalProperties: false,
+  },
   email_delete: {
     type: "object",
     properties: {
@@ -3111,6 +3189,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     additionalProperties: false,
   },
   email_move_batch: BULK_RESULT_SCHEMA,
+  email_copy_batch: BULK_RESULT_SCHEMA,
   email_delete_batch: BULK_RESULT_SCHEMA,
   email_flag: BULK_RESULT_SCHEMA,
   email_search_and_move: BULK_RESULT_SCHEMA,
@@ -3295,6 +3374,8 @@ const TOOL_ANNOTATIONS: Record<
   // Non-destructive mutations — idempotent by default per spec ToolAnnotations.
   email_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   email_move_batch: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  email_copy: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  email_copy_batch: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   email_search_and_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   draft_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   draft_update: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
@@ -3389,15 +3470,19 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
   email_organize: {
     title: "Organize Email",
     description:
-      "Move, flag or archive messages. Set `action`: 'move'/'move_batch' " +
-      "(to a destination_folder_id), 'flag' (set read/unread/flagged via " +
-      "`flag_action` on message_ids), 'archive', or 'search_and_move' (apply to " +
-      "all messages matching a search). Requires the scope matching the action " +
-      "(manage:folders / send:email). To delete messages, use the email_delete tool.",
+      "Move, copy, flag or archive messages. Set `action`: 'move'/'move_batch' " +
+      "(relocate to a destination_folder_id), 'copy'/'copy_batch' (duplicate into " +
+      "a destination_folder_id, leaving the original in place; IMAP/Outlook/Fastmail " +
+      "only), 'flag' (set read/unread/flagged via `flag_action` on message_ids), " +
+      "'archive', or 'search_and_move' (apply to all messages matching a search). " +
+      "Requires the scope matching the action (manage:folders / send:email). " +
+      "To delete messages, use the email_delete tool.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
       move: { legacy: "email_move", scope: "manage:folders" },
       move_batch: { legacy: "email_move_batch", scope: "manage:folders" },
+      copy: { legacy: "email_copy", scope: "manage:folders" },
+      copy_batch: { legacy: "email_copy_batch", scope: "manage:folders" },
       flag: { legacy: "email_flag", scope: "send:email", renames: { action: "flag_action" } },
       archive: { legacy: "email_archive", scope: "send:email" },
       search_and_move: { legacy: "email_search_and_move", scope: "manage:folders" },
@@ -14079,6 +14164,218 @@ async function executeMoveEmail(
   };
 }
 
+// ---------------------------------------------------------------------------
+// email_copy — provider helpers + handlers
+// ---------------------------------------------------------------------------
+// Copy duplicates a message into a destination folder while leaving the source
+// message untouched (unlike move, which removes the original). Gated on
+// caps.copy, which is true for IMAP/Outlook/Fastmail and false for Gmail (the
+// flat-label model has no native duplicate).
+
+/**
+ * IMAP copy: UID COPY the message into the destination mailbox, source untouched.
+ * Throws "imap_auth_failed" on credential rejection.
+ */
+async function imapCopyEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationFolderId: string,
+): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(messageId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      email: imapAuthUser(inbox),
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    await client.uidCopy([uid], destinationFolderId);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+/**
+ * Outlook copy: Graph messages/{id}/copy — creates a copy in the destination
+ * folder, leaving the original in place. Throws "outlook_auth_failed" on 401/403.
+ */
+async function outlookCopyEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationFolderId: string,
+): Promise<void> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/copy`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ destinationId: destinationFolderId }),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("message_not_found");
+    const body = await resp.text();
+    throw new Error(`Graph copy failed: ${body}`);
+  }
+}
+
+/**
+ * Fastmail copy: JMAP Email/set patch that ADDS the destination mailbox to the
+ * message's mailboxIds without removing existing memberships, so the message
+ * appears in both the source and the destination folder.
+ */
+async function fastmailCopyEmail(
+  inbox: InboxRow,
+  messageId: string,
+  destinationFolderId: string,
+): Promise<void> {
+  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [
+        [
+          "Email/set",
+          {
+            accountId,
+            update: {
+              // Patch syntax: add one mailbox membership, leave the rest intact.
+              [messageId]: { [`mailboxIds/${destinationFolderId}`]: true },
+            },
+          },
+          "a",
+        ],
+      ],
+    }),
+  });
+  if (!apiResp.ok) {
+    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
+    throw new Error(`Fastmail JMAP Email/set failed: ${apiResp.statusText}`);
+  }
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
+  const notUpdated = (setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated;
+  if (notUpdated?.[messageId]) throw new Error("message_not_found");
+}
+
+/**
+ * `email_copy` handler — copies a message into the specified folder, leaving the
+ * original in place.
+ *
+ * Scope: manage:folders
+ * Capability gate: caps.copy (false for Gmail → unsupportedFeatureError)
+ */
+async function executeCopyEmail(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveFlagArgs(rawArgs, "email_copy", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageId } = resolved;
+
+  // ── Validate destination_folder_id ──────────────────────────────────────
+  const args = rawArgs as Record<string, unknown>;
+  const destinationFolderId =
+    typeof args["destination_folder_id"] === "string"
+      ? args["destination_folder_id"].trim()
+      : "";
+  if (!destinationFolderId) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "email_copy: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  // ── Capability gate ──────────────────────────────────────────────────────
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.copy) return unsupportedFeatureError("copy", inbox.provider);
+
+  // ── Resolve destination (alias / name / id) → provider-native id ──────────
+  let resolvedDest: string;
+  try {
+    resolvedDest = await resolveFolderId(inbox, destinationFolderId);
+  } catch (_err) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "email_copy: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  // ── Per-provider dispatch ────────────────────────────────────────────────
+  try {
+    switch (inbox.provider) {
+      case "outlook":
+        await outlookCopyEmail(inbox, messageId, resolvedDest);
+        break;
+      case "fastmail":
+        await fastmailCopyEmail(inbox, messageId, resolvedDest);
+        break;
+      default: // imap and all service variants
+        await imapCopyEmail(inbox, messageId, resolvedDest);
+        break;
+    }
+  } catch (err) {
+    return handleFlagError(err, "email_copy", inbox.id, inbox.provider, messageId);
+  }
+
+  return {
+    result: {
+      ...jsonOk({
+        success: true,
+        message_id: messageId,
+        operation: "email_copy",
+        inbox_id: inbox.id,
+        destination_folder_id: destinationFolderId,
+      }),
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
 // ── email_delete provider helpers ──────────────────────────────────────────
 
 /**
@@ -14556,6 +14853,66 @@ async function imapBulkMove(
   return { succeeded, failed };
 }
 
+/**
+ * Groups IMAP message IDs by source folder and runs a bulk UID COPY per group,
+ * leaving the source messages in place.
+ */
+async function imapBulkCopy(
+  inbox: InboxRow,
+  messageIds: string[],
+  destinationFolderId: string,
+): Promise<BulkOpResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
+  }
+
+  const groups = new Map<string, { uid: number; messageId: string }[]>();
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const { folder, uid } = decodeImapId(messageId);
+    if (!Number.isFinite(uid) || uid <= 0) {
+      failed.push({ id: messageId, error: "invalid_message_id" });
+      continue;
+    }
+    const g = groups.get(folder);
+    if (g) g.push({ uid, messageId });
+    else groups.set(folder, [{ uid, messageId }]);
+  }
+
+  const succeeded: string[] = [];
+
+  let password: string;
+  try {
+    password = await decryptStoredToken(inbox.imap_password);
+  } catch {
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
+  }
+
+  for (const [folder, items] of groups) {
+    let client: ImapClient | null = null;
+    try {
+      client = await ImapClient.connect({
+        host: inbox.imap_host,
+        port: inbox.imap_port,
+        email: imapAuthUser(inbox),
+        password,
+      });
+      await client.selectMailbox(imapFolderName(folder));
+      await client.uidCopy(items.map((i) => i.uid), destinationFolderId);
+      for (const item of items) succeeded.push(item.messageId);
+    } catch (err) {
+      const msg = err instanceof ImapAuthError
+        ? "imap_auth_failed"
+        : err instanceof Error ? err.message : String(err);
+      for (const item of items) failed.push({ id: item.messageId, error: msg });
+    } finally {
+      if (client) await client.logout().catch(() => {});
+    }
+  }
+
+  return { succeeded, failed };
+}
+
 /** Groups IMAP message IDs by source folder and runs bulk delete per group. */
 async function imapBulkDelete(
   inbox: InboxRow,
@@ -14873,6 +15230,38 @@ async function outlookBulkMove(
   return { succeeded, failed };
 }
 
+/** Outlook bulk copy: per-message Graph messages/{id}/copy, source left in place. */
+async function outlookBulkCopy(
+  inbox: InboxRow,
+  messageIds: string[],
+  destinationFolderId: string,
+): Promise<BulkOpResult> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const succeeded: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+  for (const messageId of messageIds) {
+    const r = await fetch(
+      `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/copy`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ destinationId: destinationFolderId }),
+      },
+    );
+    if (r.ok) {
+      succeeded.push(messageId);
+    } else {
+      failed.push({
+        id: messageId,
+        error: r.status === 401
+          ? "outlook_auth_failed"
+          : r.status === 404 ? "message_not_found" : `Outlook copy failed: ${r.status}`,
+      });
+    }
+  }
+  return { succeeded, failed };
+}
+
 /** Outlook bulk delete: per-message Graph calls (move to Deleted Items or permanentDelete). */
 async function outlookBulkDelete(
   inbox: InboxRow,
@@ -14968,6 +15357,51 @@ async function fastmailBulkMove(
   const updateMap: Record<string, unknown> = {};
   for (const id of messageIds) {
     updateMap[id] = { mailboxIds: { [destinationFolderId]: true } };
+  }
+
+  const apiResp = await fetch(apiUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls: [["Email/set", { accountId, update: updateMap }, "a"]],
+    }),
+  });
+  if (!apiResp.ok) {
+    const err = apiResp.status === 401
+      ? "fastmail_auth_failed"
+      : `Fastmail JMAP Email/set failed: ${apiResp.statusText}`;
+    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
+  }
+
+  const data = (await apiResp.json()) as {
+    methodResponses?: [string, Record<string, unknown>, string][];
+  };
+  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
+  const notUpdated =
+    ((setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated) ?? {};
+  const succeeded = messageIds.filter((id) => !notUpdated[id]);
+  const failed = messageIds
+    .filter((id) => !!notUpdated[id])
+    .map((id) => ({ id, error: "fastmail_update_failed" }));
+  return { succeeded, failed };
+}
+
+/**
+ * Fastmail bulk copy: single JMAP Email/set that patches each message to ADD the
+ * destination mailbox membership without removing existing ones (message ends up
+ * in both source and destination).
+ */
+async function fastmailBulkCopy(
+  inbox: InboxRow,
+  messageIds: string[],
+  destinationFolderId: string,
+): Promise<BulkOpResult> {
+  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
+
+  const updateMap: Record<string, unknown> = {};
+  for (const id of messageIds) {
+    updateMap[id] = { [`mailboxIds/${destinationFolderId}`]: true };
   }
 
   const apiResp = await fetch(apiUrl, {
@@ -15252,6 +15686,110 @@ async function executeBulkMove(
     bulkResult.succeeded,
     bulkResult.failed,
     "email_move_batch",
+    inbox.id,
+    { destination_folder_id: destinationFolderId },
+  );
+}
+
+/**
+ * `email_copy_batch` handler — copies multiple messages into a destination folder,
+ * leaving the originals in place.
+ *
+ * Scope: manage:folders
+ * Capability gate: caps.copy (false for Gmail → unsupportedFeatureError)
+ * Cap: MAX_BULK_IDS (500)
+ */
+async function executeBulkCopy(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const resolved = await resolveBulkArgs(rawArgs, "email_copy_batch", apiKey);
+  if (resolved.error) return resolved.error;
+  const { inbox, messageIds } = resolved;
+
+  if (messageIds.length > MAX_BULK_IDS) return bulkCapError(messageIds.length);
+
+  const args = rawArgs as Record<string, unknown>;
+  const destinationFolderId =
+    typeof args["destination_folder_id"] === "string"
+      ? args["destination_folder_id"].trim()
+      : "";
+  if (!destinationFolderId) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "email_copy_batch: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const caps = getProviderCapabilities(inbox.provider);
+  if (!caps.copy) return unsupportedFeatureError("copy", inbox.provider);
+
+  // ── Resolve destination (alias / name / id) → provider-native id ──────────
+  let resolvedDest: string;
+  try {
+    resolvedDest = await resolveFolderId(inbox, destinationFolderId);
+  } catch (_err) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "email_copy_batch: destination_folder_id is required and must be a non-empty string.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  let bulkResult: BulkOpResult;
+  try {
+    switch (inbox.provider) {
+      case "outlook":
+        bulkResult = await outlookBulkCopy(inbox, messageIds, resolvedDest);
+        break;
+      case "fastmail":
+        bulkResult = await fastmailBulkCopy(inbox, messageIds, resolvedDest);
+        break;
+      default: // imap and all IMAP service variants
+        bulkResult = await imapBulkCopy(inbox, messageIds, resolvedDest);
+        break;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_copy_batch: provider_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: `Provider error during email_copy_batch: ${message}. Please try again in a moment.`,
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "provider_error",
+    };
+  }
+
+  return formatBulkResult(
+    bulkResult.succeeded,
+    bulkResult.failed,
+    "email_copy_batch",
     inbox.id,
     { destination_folder_id: destinationFolderId },
   );
@@ -19145,6 +19683,12 @@ async function handleToolsCall(
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
+    } else if (dispatchName === "email_copy") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeCopyEmail(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_delete") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeDeleteEmail(rawArgs, apiKey);
@@ -19154,6 +19698,12 @@ async function handleToolsCall(
     } else if (dispatchName === "email_move_batch") {
       const { result, logStatus: ls, logErrorCode: lec } =
         await executeBulkMove(rawArgs, apiKey);
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (dispatchName === "email_copy_batch") {
+      const { result, logStatus: ls, logErrorCode: lec } =
+        await executeBulkCopy(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };

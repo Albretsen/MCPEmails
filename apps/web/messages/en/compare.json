@@ -24,7 +24,7 @@
       "actions": {
         "tag": "Real actions",
         "h": "Send and schedule, not just draft",
-        "p": "Many native connectors stop at <b>creating a draft</b> you still have to open and send. Our nine action-based tools <b>send, reply, forward, schedule, move, flag, archive, and delete</b> directly — the agent finishes the job inside the inbox."
+        "p": "Many native connectors stop at <b>creating a draft</b> you still have to open and send. Our nine action-based tools <b>send, reply, forward, schedule, move, copy, flag, archive, and delete</b> directly — the agent finishes the job inside the inbox."
       },
       "portable": {
         "tag": "Portable",
@@ -44,7 +44,7 @@
       "imap": "Any IMAP / SMTP mailbox",
       "send": "Send & reply directly (not just drafts)",
       "schedule": "Schedule sends for later",
-      "organize": "Move, flag, archive, delete",
+      "organize": "Move, copy, flag, archive, delete",
       "multiAi": "Works across Claude, Cursor, ChatGPT, n8n…",
       "oauth": "Gmail over OAuth",
       "storage": "Email fetched live, never stored"
@@ -64,7 +64,7 @@
     "items": [
       {
         "q": "Can't Claude or ChatGPT already read my Gmail with a built-in connector?",
-        "a": "Sometimes, for one provider and often read-only or draft-only. mcpemails connects Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any IMAP mailbox, and it takes real actions: send, reply, forward, schedule, move, flag, archive, and delete. The same inbox then works in every MCP client, not just one vendor's app."
+        "a": "Sometimes, for one provider and often read-only or draft-only. mcpemails connects Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any IMAP mailbox, and it takes real actions: send, reply, forward, schedule, move, copy, flag, archive, and delete. The same inbox then works in every MCP client, not just one vendor's app."
       },
       {
         "q": "Which mailboxes do built-in connectors usually miss?",
