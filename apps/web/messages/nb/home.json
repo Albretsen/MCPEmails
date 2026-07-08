@@ -10,7 +10,8 @@
     "docs": "Dokumentasjon",
     "blog": "Blogg",
     "signIn": "Logg inn",
-    "getStarted": "Kom i gang gratis"
+    "getStarted": "Kom i gang gratis",
+    "selfHost": "Selvhosting"
   },
   "hero": {
     "titleLine1": "Gi AI-agenten",
@@ -189,6 +190,10 @@
       {
         "q": "Hvordan kobler jeg til en innboks?",
         "a": "Opprett en gratis konto, koble til innboksen din (ett klikk for Gmail, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
+      },
+      {
+        "q": "Kan jeg selvhoste den?",
+        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0, og den hostede tjenesten kjører den samme serveren som du kan kjøre selv. En docker-compose-stack får hele MCP-serveren og alle verktøyene i gang mot din egen database på omtrent fem minutter, for hvilken som helst IMAP- eller SMTP-postkasse. Gmail- og Outlook-ettklikks-OAuth og dashboardet forblir på den hostede planen."
       }
     ]
   },
@@ -214,7 +219,8 @@
     "copy": "Kopier",
     "copied": "Kopiert",
     "copyAria": "Kopier {label}",
-    "linkSecurity": "Sikkerhet"
+    "linkSecurity": "Sikkerhet",
+    "linkSelfHost": "Selvhosting"
   },
   "languageSwitcher": {
     "label": "Språk",

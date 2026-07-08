@@ -167,6 +167,10 @@
       {
         "q": "Finnes det en refusjonsordning?",
         "a": "Hvis du er misfornøyd innen 30 dager etter din første betalte faktura, kontakt oss for full refusjon, uten spørsmål."
+      },
+      {
+        "q": "Kan jeg selvhoste den i stedet for å betale?",
+        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0 og gratis å selvhoste. En docker-compose-stack kjører den samme MCP-serveren, med legitimasjonen til postkassen din kryptert under en nøkkel bare du har. Selvhosting dekker IMAP- og SMTP-postkasser; Gmail- og Outlook-ettklikks-OAuth, dashboardet, teamfunksjoner og support forblir på de betalte planene."
       }
     ]
   },

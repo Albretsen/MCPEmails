@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "title": "Kjør MCP Emails selv",
+    "description": "Kjør den samme MCP-e-postserveren som driver mcpemails.com på din egen maskin. Åpen kildekode under AGPL-3.0, legitimasjon kryptert med en nøkkel bare du har, e-post hentet i sanntid og aldri lagret."
+  },
+  "hero": {
+    "eyebrow": "Åpen kildekode, AGPL-3.0",
+    "title": "Kjør MCP Emails selv.",
+    "lead": "Den samme MCP-serveren som driver mcpemails.com, på din egen maskin, mot din egen database. Legitimasjonen til postkassen din forlater aldri infrastruktur du kontrollerer. Den krypteres med en nøkkel bare du har, og dekrypteres kun i din egen container, i det øyeblikket et verktøykall trenger den."
+  },
+  "proof": {
+    "title": "Alt sammen i én kommando",
+    "caption": "Fire små containere (Postgres, PostgREST, nginx, Deno-serveren). Ingen konto, ingen nøkler hos oss, ingen telemetri. Den kjører <c>supabase/functions/mcp-server</c> uendret: nøyaktig den koden som ligger bak det hostede produktet.",
+    "ctaGuide": "Les selvhosting-guiden",
+    "ctaSource": "Se kildekoden"
+  },
+  "sovereignty": {
+    "title": "Innboksen din forlater aldri maskinen din.",
+    "body": "Koble til Fastmail, iCloud, Yahoo, Zoho, Yandex, eller hvilken som helst IMAP/SMTP-postkasse med et app-passord. E-post hentes i sanntid og lagres aldri. Legitimasjon krypteres i ro med AES-256-GCM ved hjelp av en nøkkel du selv genererer og beholder. Det finnes ingenting som ringer hjem."
+  },
+  "compare": {
+    "title": "Selvhosting vs. hostet",
+    "intro": "Hele MCP-serveren og alle ti verktøyene finnes i begge. Selvhosting bytter administrert bekvemmelighet mot full kontroll.",
+    "thFeature": "",
+    "thSelf": "Selvhostet",
+    "thHosted": "Hostet",
+    "rows": [
+      {
+        "feature": "Pris",
+        "self": "Gratis, du kjører den",
+        "hosted": "Gratis, $12 eller $49"
+      },
+      {
+        "feature": "MCP-serveren og alle 10 verktøyene",
+        "self": "Ja",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "IMAP / SMTP-innbokser (app-passord)",
+        "self": "Ja",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "E-post hentet i sanntid, aldri lagret",
+        "self": "Ja",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "Legitimasjon kryptert i ro",
+        "self": "Ja, din nøkkel",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "Gmail / Outlook ettklikks-OAuth",
+        "self": "Ikke inkludert",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "Nettdashboard (tilkobling, nøkler, aktivitet)",
+        "self": "CLI i stedet",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "Utsender for planlagt sending",
+        "self": "Bruk din egen cron",
+        "hosted": "Administrert"
+      },
+      {
+        "feature": "Automatiske oppdateringer, sikkerhetskopier, oppetid",
+        "self": "Du",
+        "hosted": "Administrert"
+      },
+      {
+        "feature": "Teamarbeidsområder, roller, SSO, revisjonslogg",
+        "self": "Ikke inkludert",
+        "hosted": "Team-plan"
+      },
+      {
+        "feature": "Support",
+        "self": "Fellesskap og GitHub",
+        "hosted": "E-post og prioritet"
+      },
+      {
+        "feature": "Oppsett",
+        "self": "Omtrent 5 minutter",
+        "hosted": "Omtrent 2 minutter"
+      }
+    ]
+  },
+  "security": {
+    "title": "Gi en AI tilgang til innboksen din, trygt",
+    "intro": "Bekymringen er berettiget. Slik avgrenser designet den, enten du selvhoster eller ikke.",
+    "points": [
+      "<b>Minst mulig privilegier ved design.</b> Hver API-nøkkel har et avgrenset omfang: gi bare lesetilgang, eller sending uten sletting. Destruktive handlinger krever et eksplisitt slette-omfang.",
+      "<b>Prompt injection er avgrenset, ikke bortforklart.</b> En fiendtlig e-post kan prøve å instruere agenten. Omfang per nøkkel begrenser skadeomfanget: en nøkkel som ikke kan sende, kan ikke lures til å sende.",
+      "<b>Legitimasjon er kryptert i ro</b> med AES-256-GCM. Når du selvhoster, er krypteringsnøkkelen din og ingen andres.",
+      "<b>Verifiser, ikke stol blindt.</b> Koden er offentlig under AGPL-3.0, og den hostede versjonen kjører den uendret. Les den, og bestem deg deretter."
+    ]
+  },
+  "commitment": {
+    "title": "Selvhosting er en reell forpliktelse.",
+    "body": "Du kjører IMAP/SMTP-konfigurasjonen, oppdateringene og sikkerheten selv, og support er kun via fellesskapet. Gmail- og Outlook-ettklikks-OAuth og nettdashboardet forblir på det hostede produktet, fordi de trenger OAuth-hemmeligheter og et sesjonslag som en installasjon med én operatør ikke har. Hvis du heller vil slippe å drifte infrastruktur, er den hostede planen to minutter unna og gratis å starte med.",
+    "cta": "Bruk den hostede versjonen"
+  },
+  "cta": {
+    "title": "Kjør den selv, eller la oss kjøre den.",
+    "sub": "Samme server uansett. Du bestemmer hvem som holder nøklene.",
+    "primary": "Les selvhosting-guiden",
+    "secondary": "Bruk den hostede versjonen"
+  }
+}

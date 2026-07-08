@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "title": "Self-host MCP Emails",
+    "description": "Run the same MCP email server that powers mcpemails.com on your own machine. Open source under AGPL-3.0, credentials encrypted with a key only you hold, email fetched live and never stored."
+  },
+  "hero": {
+    "eyebrow": "Open source, AGPL-3.0",
+    "title": "Run MCP Emails yourself.",
+    "lead": "The same MCP server that powers mcpemails.com, on your own machine, against your own database. Your mailbox credentials never leave infrastructure you control. They are encrypted with a key only you hold and decrypted only in your container, at the moment a tool call needs them."
+  },
+  "proof": {
+    "title": "The whole thing in one command",
+    "caption": "Four small containers (Postgres, PostgREST, nginx, the Deno server). No account, no keys held by us, no telemetry. It runs <c>supabase/functions/mcp-server</c> unmodified: the exact code behind the hosted product.",
+    "ctaGuide": "Read the self-host guide",
+    "ctaSource": "View the source"
+  },
+  "sovereignty": {
+    "title": "Your inbox never leaves your box.",
+    "body": "Connect Fastmail, iCloud, Yahoo, Zoho, Yandex, or any IMAP/SMTP mailbox with an app password. Email is fetched live and never stored. Credentials are encrypted at rest with AES-256-GCM using a key you generate and keep. There is nothing to phone home to."
+  },
+  "compare": {
+    "title": "Self-host vs hosted",
+    "intro": "The full MCP server and all ten tools are in both. Self-hosting trades managed convenience for total control.",
+    "thFeature": "",
+    "thSelf": "Self-host",
+    "thHosted": "Hosted",
+    "rows": [
+      { "feature": "Price", "self": "Free, you run it", "hosted": "Free, $12, or $49" },
+      { "feature": "The MCP server and all 10 tools", "self": "Yes", "hosted": "Yes" },
+      { "feature": "IMAP / SMTP inboxes (app password)", "self": "Yes", "hosted": "Yes" },
+      { "feature": "Email fetched live, never stored", "self": "Yes", "hosted": "Yes" },
+      { "feature": "Credentials encrypted at rest", "self": "Yes, your key", "hosted": "Yes" },
+      { "feature": "Gmail / Outlook one-click OAuth", "self": "Not included", "hosted": "Yes" },
+      { "feature": "Web dashboard (connect, keys, activity)", "self": "CLI instead", "hosted": "Yes" },
+      { "feature": "Scheduled-send dispatcher", "self": "Bring your own cron", "hosted": "Managed" },
+      { "feature": "Automatic updates, backups, uptime", "self": "You", "hosted": "Managed" },
+      { "feature": "Team workspaces, roles, SSO, audit log", "self": "Not included", "hosted": "Team plan" },
+      { "feature": "Support", "self": "Community and GitHub", "hosted": "Email and priority" },
+      { "feature": "Setup", "self": "About 5 minutes", "hosted": "About 2 minutes" }
+    ]
+  },
+  "security": {
+    "title": "Giving an AI your inbox, safely",
+    "intro": "The concern is legitimate. Here is how the design bounds it, self-hosted or not.",
+    "points": [
+      "<b>Least-privilege by design.</b> Every API key is scoped: grant read only, or send without delete. Destructive actions require an explicit delete scope.",
+      "<b>Prompt injection is bounded, not hand-waved.</b> A hostile email can try to instruct the agent. Per-key scopes cap the blast radius: a key that cannot send cannot be tricked into sending.",
+      "<b>Credentials are encrypted at rest</b> with AES-256-GCM. When you self-host, the encryption key is yours and no one else's.",
+      "<b>Verify, don't trust.</b> The code is public under AGPL-3.0, and the hosted version runs it unmodified. Read it, then decide."
+    ]
+  },
+  "commitment": {
+    "title": "Self-hosting is a real commitment.",
+    "body": "You run the IMAP/SMTP configuration, updates, and security yourself, and support is community-only. Gmail and Outlook one-click OAuth and the web dashboard stay on the hosted product, because they need OAuth secrets and a session layer a single-operator install does not. If you would rather not run infrastructure, the hosted plan is two minutes and free to start.",
+    "cta": "Use the hosted version"
+  },
+  "cta": {
+    "title": "Run it yourself, or let us run it.",
+    "sub": "Same server either way. Your call on who holds the keys.",
+    "primary": "Read the self-host guide",
+    "secondary": "Use the hosted version"
+  }
+}

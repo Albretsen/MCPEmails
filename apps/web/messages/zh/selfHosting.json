@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "title": "自托管 MCP Emails",
+    "description": "在你自己的机器上运行驱动 mcpemails.com 的同一个 MCP 邮件服务器。采用 AGPL-3.0 开源，凭据用只有你持有的密钥加密，邮件实时获取、绝不存储。"
+  },
+  "hero": {
+    "eyebrow": "开源，AGPL-3.0",
+    "title": "自己运行 MCP Emails。",
+    "lead": "驱动 mcpemails.com 的同一个 MCP 服务器，运行在你自己的机器上，对接你自己的数据库。你的邮箱凭据绝不会离开你所掌控的基础设施。它们用只有你持有的密钥加密，仅在工具调用需要时才在你的容器内解密。"
+  },
+  "proof": {
+    "title": "一条命令搞定全部",
+    "caption": "四个小容器（Postgres、PostgREST、nginx、Deno 服务器）。无需账户，我们不持有任何密钥，无遥测。它原样运行 <c>supabase/functions/mcp-server</c>：与托管产品背后完全相同的代码。",
+    "ctaGuide": "阅读自托管指南",
+    "ctaSource": "查看源代码"
+  },
+  "sovereignty": {
+    "title": "你的收件箱绝不离开你的机器。",
+    "body": "用应用专用密码连接 Fastmail、iCloud、Yahoo、Zoho、Yandex 或任意 IMAP/SMTP 邮箱。邮件实时获取，绝不存储。凭据使用你自行生成并保管的密钥，以 AES-256-GCM 静态加密。没有任何东西会向外回传。"
+  },
+  "compare": {
+    "title": "自托管 vs 托管",
+    "intro": "完整的 MCP 服务器和全部十个工具在两者中都有。自托管以放弃托管的便利换取完全的掌控。",
+    "thFeature": "",
+    "thSelf": "自托管",
+    "thHosted": "托管",
+    "rows": [
+      {
+        "feature": "价格",
+        "self": "免费，自行运行",
+        "hosted": "免费、$12 或 $49"
+      },
+      {
+        "feature": "MCP 服务器和全部 10 个工具",
+        "self": "有",
+        "hosted": "有"
+      },
+      {
+        "feature": "IMAP / SMTP 邮箱（应用专用密码）",
+        "self": "有",
+        "hosted": "有"
+      },
+      {
+        "feature": "邮件实时获取，绝不存储",
+        "self": "是",
+        "hosted": "是"
+      },
+      {
+        "feature": "凭据静态加密",
+        "self": "是，用你的密钥",
+        "hosted": "是"
+      },
+      {
+        "feature": "Gmail / Outlook 一键 OAuth",
+        "self": "不含",
+        "hosted": "有"
+      },
+      {
+        "feature": "网页控制台（连接、密钥、活动）",
+        "self": "改用 CLI",
+        "hosted": "有"
+      },
+      {
+        "feature": "定时发送调度器",
+        "self": "自备 cron",
+        "hosted": "已托管"
+      },
+      {
+        "feature": "自动更新、备份、正常运行",
+        "self": "由你负责",
+        "hosted": "已托管"
+      },
+      {
+        "feature": "团队工作区、角色、SSO、审计日志",
+        "self": "不含",
+        "hosted": "Team 套餐"
+      },
+      {
+        "feature": "支持",
+        "self": "社区和 GitHub",
+        "hosted": "邮件和优先支持"
+      },
+      {
+        "feature": "配置",
+        "self": "约 5 分钟",
+        "hosted": "约 2 分钟"
+      }
+    ]
+  },
+  "security": {
+    "title": "安全地把收件箱交给 AI",
+    "intro": "这种担忧是合理的。无论是否自托管，以下是设计如何为其设定边界。",
+    "points": [
+      "<b>以最小权限为设计原则。</b>每个 API 密钥都有权限范围：可只授予读取，或授予发送但不含删除。破坏性操作需要显式的删除权限。",
+      "<b>提示注入受到边界约束，而非空谈。</b>一封恶意邮件可以试图指挥智能体。逐密钥的权限范围限定了影响半径：无法发送的密钥不会被诱骗去发送。",
+      "<b>凭据以 AES-256-GCM 静态加密。</b>当你自托管时，加密密钥属于你且仅属于你。",
+      "<b>验证，而非信任。</b>代码在 AGPL-3.0 下公开，托管版本原样运行它。读一读，再做决定。"
+    ]
+  },
+  "commitment": {
+    "title": "自托管是一项实实在在的投入。",
+    "body": "IMAP/SMTP 配置、更新和安全都由你自己负责，且仅有社区支持。Gmail 和 Outlook 一键 OAuth 以及网页控制台仍保留在托管产品中，因为它们需要 OAuth 密钥和会话层，而单人运维的安装无法提供。如果你不想自行运维基础设施，托管套餐两分钟即可上手，且免费开始。",
+    "cta": "使用托管版本"
+  },
+  "cta": {
+    "title": "自己运行，或交给我们运行。",
+    "sub": "无论哪种方式，都是同一个服务器。谁持有密钥，由你决定。",
+    "primary": "阅读自托管指南",
+    "secondary": "使用托管版本"
+  }
+}

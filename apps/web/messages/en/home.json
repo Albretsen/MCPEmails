@@ -10,7 +10,8 @@
     "docs": "Docs",
     "blog": "Blog",
     "signIn": "Sign in",
-    "getStarted": "Get started free"
+    "getStarted": "Get started free",
+    "selfHost": "Self-host"
   },
   "hero": {
     "titleLine1": "Give your AI",
@@ -189,6 +190,10 @@
       {
         "q": "How do I connect an inbox?",
         "a": "Create a free account, connect your mailbox (one click for Gmail, or paste an app password for the others), then drop https://mcpemails.com/api/mcp into your AI client and authorize. Your agent has the inbox in a couple of minutes."
+      },
+      {
+        "q": "Can I self-host it?",
+        "a": "Yes. MCP Emails is open source under AGPL-3.0, and the hosted service runs the same server you can run yourself. A docker-compose stack gets the full MCP server and all its tools running against your own database in about five minutes, for any IMAP or SMTP mailbox. Gmail and Outlook one-click OAuth and the dashboard stay on the hosted plan."
       }
     ]
   },
@@ -214,7 +219,8 @@
     "copy": "Copy",
     "copied": "Copied",
     "copyAria": "Copy {label}",
-    "linkSecurity": "Security"
+    "linkSecurity": "Security",
+    "linkSelfHost": "Self-hosting"
   },
   "languageSwitcher": {
     "label": "Language",

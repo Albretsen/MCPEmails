@@ -10,7 +10,8 @@
     "docs": "Documentación",
     "blog": "Blog",
     "signIn": "Iniciar sesión",
-    "getStarted": "Empieza gratis"
+    "getStarted": "Empieza gratis",
+    "selfHost": "Auto-alojar"
   },
   "hero": {
     "titleLine1": "Dale a tu agente",
@@ -189,6 +190,10 @@
       {
         "q": "¿Cómo conecto una bandeja de entrada?",
         "a": "Crea una cuenta gratuita, conecta tu bandeja (con un clic para Gmail, o pega una contraseña de aplicación para las demás) y luego pega https://mcpemails.com/api/mcp en tu cliente de IA y autoriza. Tu agente tendrá la bandeja en un par de minutos."
+      },
+      {
+        "q": "¿Puedo auto-alojarlo?",
+        "a": "Sí. MCP Emails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta el mismo servidor que tú puedes ejecutar. Un stack de docker-compose pone en marcha el servidor MCP completo y todas sus herramientas contra tu propia base de datos en unos cinco minutos, para cualquier buzón IMAP o SMTP. El OAuth de un clic para Gmail y Outlook y el panel permanecen en el plan alojado."
       }
     ]
   },
@@ -214,7 +219,8 @@
     "copy": "Copiar",
     "copied": "Copiado",
     "copyAria": "Copiar {label}",
-    "linkSecurity": "Seguridad"
+    "linkSecurity": "Seguridad",
+    "linkSelfHost": "Auto-alojamiento"
   },
   "languageSwitcher": {
     "label": "Idioma",
