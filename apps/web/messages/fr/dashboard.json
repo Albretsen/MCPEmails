@@ -179,7 +179,12 @@
         "replyModeFirstOnly": "Première réponse seulement",
         "replyModeNever": "Ne jamais ajouter",
         "save": "Enregistrer la signature",
-        "saving": "Enregistrement…"
+        "saving": "Enregistrement…",
+        "tooLarge": "La signature est trop volumineuse. Raccourcissez-la ou utilisez une image plus petite.",
+        "previewTitle": "Aperçu",
+        "previewReplyQuote": "Le lun, quelqu'un <quelquun@exemple.com> a écrit :",
+        "previewTooLarge": "La signature est trop volumineuse pour afficher un aperçu.",
+        "imageNote": "Certains clients de messagerie (p. ex. Gmail) peuvent masquer les images jusqu'à ce que le destinataire clique sur « afficher les images ». C'est normal pour les signatures comportant des images hébergées."
       }
     }
   },

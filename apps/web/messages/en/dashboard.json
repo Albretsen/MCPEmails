@@ -179,7 +179,12 @@
         "replyModeFirstOnly": "First reply only",
         "replyModeNever": "Never add",
         "save": "Save signature",
-        "saving": "Saving…"
+        "saving": "Saving…",
+        "tooLarge": "Signature is too large. Please shorten it or use a smaller image.",
+        "previewTitle": "Preview",
+        "previewReplyQuote": "On Mon, someone <someone@example.com> wrote:",
+        "previewTooLarge": "Signature is too large to preview.",
+        "imageNote": "Some email clients (e.g. Gmail) may hide images until the recipient clicks \"display images\". This is normal for signatures with hosted images."
       }
     }
   },

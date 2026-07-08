@@ -179,7 +179,12 @@
         "replyModeFirstOnly": "Bare første svar",
         "replyModeNever": "Aldri legg til",
         "save": "Lagre signatur",
-        "saving": "Lagrer…"
+        "saving": "Lagrer…",
+        "tooLarge": "Signaturen er for stor. Forkort den eller bruk et mindre bilde.",
+        "previewTitle": "Forhåndsvisning",
+        "previewReplyQuote": "Man. skrev noen <noen@eksempel.com>:",
+        "previewTooLarge": "Signaturen er for stor til å forhåndsvises.",
+        "imageNote": "Enkelte e-postklienter (f.eks. Gmail) kan skjule bilder til mottakeren klikker «vis bilder». Dette er normalt for signaturer med bilder som ligger på nett."
       }
     }
   },

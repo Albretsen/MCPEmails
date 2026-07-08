@@ -306,11 +306,19 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   };
 
   /**
-   * Saves a per-inbox signature via PATCH /api/inboxes/[id] (Phase 3). Returns
-   * a Promise so the editor can show in-flight/error state and stay open on
-   * failure. On success: merges the server-confirmed signature fields into local
-   * state (so the modal reflects source = 'manual' and the saved values) and
-   * shows a success toast. On failure: shows an error toast and re-throws.
+   * Saves a per-inbox signature via PATCH /api/inboxes/[id]. Returns a Promise
+   * so the editor can show in-flight/error state and stay open on failure.
+   *
+   * `patch` now carries `signature_html` (already sanitized client-side by the
+   * rich editor) alongside `signature_text`, `signature_enabled`, and
+   * `signature_reply_mode`; the whole object is forwarded to the PATCH route.
+   * NOTE: until Phase 3 lands, the route ignores `signature_html` and returns
+   * it as null in `data.signature`, so this handler stays forward-compatible —
+   * it reads back whatever the server persisted and re-syncs local state to it.
+   *
+   * On success: merges the server-confirmed signature fields into local state
+   * (so the modal reflects source = 'manual' and the saved values) and shows a
+   * success toast. On failure: shows an error toast and re-throws.
    */
   const onSaveSignature = async (id, patch) => {
     let data = {};

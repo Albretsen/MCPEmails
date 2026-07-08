@@ -209,6 +209,8 @@ export async function PATCH(
   // to clear the signature) is written.
   const update: InboxUpdate = {};
 
+  const htmlProvided = 'signature_html' in input;
+
   if ('signature_text' in input) {
     if (typeof input.signature_text !== 'string' || input.signature_text.length > 10000) {
       return NextResponse.json(
@@ -217,10 +219,56 @@ export async function PATCH(
       );
     }
     update.signature_text = input.signature_text;
-    // The dashboard edits text only; clear any imported HTML so the send path
-    // derives a fresh HTML signature from the new text rather than mixing the
-    // user's edit with a stale imported HTML block.
-    update.signature_html = null;
+    // Text-only edit (no `signature_html` key present): clear any imported HTML
+    // so the send path derives a fresh HTML signature from the new text rather
+    // than mixing the user's edit with a stale imported HTML block. When the
+    // rich editor also sends `signature_html`, that branch below owns the HTML
+    // column and we must NOT clobber it here.
+    if (!htmlProvided) {
+      update.signature_html = null;
+    }
+  }
+
+  // `signature_html` from the rich editor. Three cases:
+  //  - key absent            → leave/clear per the text rules above (handled).
+  //  - key present, non-empty → sanitize (server is the authority) and store.
+  //  - key present, ''        → a deliberate "clear my HTML signature"; store ''.
+  //    (sanitizeSignatureHtml returns '' for '' without throwing, so this falls
+  //     through the same path.)
+  // We do NOT derive plain text from the HTML here: the edge send path's
+  // stripHtmlToText fills signature_text from html at send time when text is
+  // empty, so we simply persist whatever the client sent for each column.
+  if (htmlProvided) {
+    if (typeof input.signature_html !== 'string') {
+      return NextResponse.json(
+        { error: 'signature_html must be a string.' },
+        { status: 400 }
+      );
+    }
+    // The sanitizer is imported dynamically (not at module top-level) because it
+    // pulls in isomorphic-dompurify → jsdom, whose ESM-only transitive deps break
+    // Next's build-time page-data collection if evaluated eagerly. Loading it
+    // inside the handler defers it to request time on the Node runtime.
+    const { sanitizeSignatureHtml, SIGNATURE_HTML_MAX_LENGTH } = await import(
+      '@/lib/sanitizeSignatureHtml'
+    );
+    // Defensive pre-check: reject an oversized payload before sanitizing.
+    if (input.signature_html.length > SIGNATURE_HTML_MAX_LENGTH) {
+      return NextResponse.json({ error: 'Signature is too large.' }, { status: 400 });
+    }
+    let cleanHtml: string;
+    try {
+      cleanHtml = sanitizeSignatureHtml(input.signature_html);
+    } catch {
+      // The only throw path here is the >100KB guard (input is a validated
+      // string); surface it as a 400 and write nothing.
+      return NextResponse.json({ error: 'Signature is too large.' }, { status: 400 });
+    }
+    // Defensive post-check in case sanitized output still exceeds the limit.
+    if (cleanHtml.length > SIGNATURE_HTML_MAX_LENGTH) {
+      return NextResponse.json({ error: 'Signature is too large.' }, { status: 400 });
+    }
+    update.signature_html = cleanHtml;
   }
 
   if ('signature_enabled' in input) {
@@ -246,7 +294,7 @@ export async function PATCH(
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json(
-      { error: 'Provide at least one of signature_text, signature_enabled, signature_reply_mode.' },
+      { error: 'Provide at least one of signature_text, signature_html, signature_enabled, signature_reply_mode.' },
       { status: 400 }
     );
   }

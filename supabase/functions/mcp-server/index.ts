@@ -6459,6 +6459,84 @@ function sanitizeEmailHtml(html: string): string {
   return result;
 }
 
+/**
+ * Sanitize per-inbox SIGNATURE HTML (defense-in-depth for the MCP `signature`
+ * tool path and the send-time injection). Mirrors sanitizeEmailHtml's regex
+ * structure but is signature-tuned:
+ *
+ *   - Strips script/style/iframe/object/embed/form/svg blocks, base/meta/link,
+ *     all on*= event handlers, and javascript: URLs.
+ *   - UNLIKE sanitizeEmailHtml, it PRESERVES external `https:` image `src`
+ *     (hosted logos are the whole point of rich signatures), while still
+ *     removing non-https img src (http:, data:, ftp:) as an XSS / plaintext
+ *     leak guard.
+ *
+ * The authoritative signature sanitizer is the web app's DOMPurify-based
+ * sanitizeSignatureHtml (apps/web/src/lib/sanitizeSignatureHtml.js) run on
+ * save; this Deno pass is a belt-and-suspenders layer so anything written via
+ * the MCP tool or already sitting in the DB is scrubbed before it ships in
+ * outgoing mail. Idempotent: re-running on already-clean HTML is a no-op.
+ *
+ * PURE: no I/O.
+ */
+function sanitizeSignatureHtml(html: string): string {
+  if (!html) return html;
+  let result = html;
+
+  // Remove dangerous block elements and their full content.
+  for (const tag of [
+    "script",
+    "style",
+    "link",
+    "meta",
+    "iframe",
+    "object",
+    "embed",
+    "base",
+    "form",
+    "noscript",
+    "svg",
+    "math",
+  ]) {
+    // Paired open+content+close: <tag ...>...</tag>
+    result = result.replace(
+      new RegExp(`<${tag}[\\s\\S]*?</${tag}>`, "gi"),
+      "",
+    );
+    // Self-closing variants: <tag ... />
+    result = result.replace(new RegExp(`<${tag}[^>]*/>`, "gi"), "");
+    // Orphaned opening/standalone tags:
+    result = result.replace(new RegExp(`<${tag}[^>]*>`, "gi"), "");
+  }
+
+  // Remove all event-handler attributes: onclick="...", onload='...', onerror=x
+  result = result.replace(
+    /\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi,
+    "",
+  );
+
+  // Remove href/src="javascript:..." (any quoting).
+  result = result.replace(
+    /\s+(?:href|src)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]+)/gi,
+    "",
+  );
+
+  // Drop non-https image sources. https: img src is intentionally KEPT (hosted
+  // logos); http:, data:, ftp: and other schemes are removed.
+  result = result.replace(
+    /\s+src\s*=\s*(?:"(?:http|ftp|data):[^"]*"|'(?:http|ftp|data):[^']*'|(?:http|ftp|data):[^\s>]+)/gi,
+    "",
+  );
+
+  // Remove interactive form elements.
+  result = result.replace(
+    /<(input|button|textarea|select)[^>]*(?:\/?>|>[\s\S]*?<\/\1>)/gi,
+    "",
+  );
+
+  return result;
+}
+
 // ---------------------------------------------------------------------------
 // email_read — shared output types
 // ---------------------------------------------------------------------------
@@ -8296,7 +8374,13 @@ function composeSignatureBlocks(
   if (!storedText && !storedHtml) return null;
 
   const text = storedText || stripHtmlToText(storedHtml);
-  const html = storedHtml || escapeSignatureHtml(storedText).replace(/\n/g, "<br>\n");
+  // Belt-and-suspenders: scrub the stored HTML at send-time injection (covers
+  // rows written before the tool-side sanitizer, or via any other write path)
+  // before it is wrapped in the mcpemails-signature div. Idempotent on
+  // already-clean HTML; https images and formatting survive.
+  const html = storedHtml
+    ? sanitizeSignatureHtml(storedHtml)
+    : escapeSignatureHtml(storedText).replace(/\n/g, "<br>\n");
 
   // Guard against a signature that strips down to nothing (e.g. html was only
   // markup with no text content and no text counterpart was stored).
@@ -19145,7 +19229,9 @@ async function executeSetSignature(
         logStatus: "error", logErrorCode: "-32602",
       };
     }
-    update["signature_html"] = args["signature_html"];
+    // Sanitize before persisting (defense in depth alongside the web app's
+    // DOMPurify pass). Keeps https images + formatting, strips scripts/handlers.
+    update["signature_html"] = sanitizeSignatureHtml(args["signature_html"] as string);
   }
 
   if ("signature_enabled" in args) {

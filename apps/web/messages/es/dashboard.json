@@ -179,7 +179,12 @@
         "replyModeFirstOnly": "Solo en la primera respuesta",
         "replyModeNever": "No añadir nunca",
         "save": "Guardar firma",
-        "saving": "Guardando…"
+        "saving": "Guardando…",
+        "tooLarge": "La firma es demasiado grande. Acórtala o usa una imagen más pequeña.",
+        "previewTitle": "Vista previa",
+        "previewReplyQuote": "El lun, alguien <alguien@ejemplo.com> escribió:",
+        "previewTooLarge": "La firma es demasiado grande para mostrar la vista previa.",
+        "imageNote": "Algunos clientes de correo (p. ej. Gmail) pueden ocultar las imágenes hasta que el destinatario haga clic en \"mostrar imágenes\". Esto es normal en las firmas con imágenes alojadas."
       }
     }
   },
