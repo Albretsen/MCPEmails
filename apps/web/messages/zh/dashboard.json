@@ -179,7 +179,12 @@
         "replyModeFirstOnly": "仅首次回复",
         "replyModeNever": "从不添加",
         "save": "保存签名",
-        "saving": "保存中…"
+        "saving": "保存中…",
+        "tooLarge": "签名过大。请缩短内容或使用更小的图片。",
+        "previewTitle": "预览",
+        "previewReplyQuote": "某人 <someone@example.com> 于周一写道：",
+        "previewTooLarge": "签名过大，无法预览。",
+        "imageNote": "某些邮件客户端（如 Gmail）可能会隐藏图片，直到收件人点击“显示图片”。对于使用托管图片的签名，这是正常现象。"
       }
     }
   },

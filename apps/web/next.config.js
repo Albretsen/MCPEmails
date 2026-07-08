@@ -123,6 +123,16 @@ const nextConfig = {
   },
 
   // ---------------------------------------------------------------------------
+  // Server-only external packages
+  // ---------------------------------------------------------------------------
+  // isomorphic-dompurify pulls in jsdom, whose transitive deps ship as ESM
+  // (@csstools/css-calc, etc.). Bundling them for the Node server turns their
+  // `import` into a broken `require()` of an .mjs during page-data collection
+  // (ERR_REQUIRE_ESM). Marking them external leaves them as runtime Node
+  // imports so the sanitizer (used by the signature PATCH route) loads cleanly.
+  serverExternalPackages: ['isomorphic-dompurify', 'jsdom'],
+
+  // ---------------------------------------------------------------------------
   // Image optimisation
   // ---------------------------------------------------------------------------
   // Allow Next.js to optimise images served from Supabase Storage.

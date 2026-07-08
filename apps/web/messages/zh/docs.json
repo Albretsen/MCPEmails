@@ -271,13 +271,13 @@
     },
     "signature": {
       "title": "签名",
-      "desc": "读取或配置收件箱的电子邮件签名，该签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加。设置 action：'get'（返回当前签名的文本和 HTML、是否启用、回复/转发模式，以及其来源——'manual'、'gmail_import' 或 null），或 'set'（写入 signature_text 和/或 signature_html，以及可选的 signature_enabled 和 signature_reply_mode）。设置签名会将其来源标记为 'manual'，这将永久覆盖该收件箱的 Gmail 自动导入。'get' 需要 read:email；'set' 需要 send:email。",
+      "desc": "读取或配置收件箱的电子邮件签名，该签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加。设置 action：'get'（返回当前签名的文本和 HTML、是否启用、回复/转发模式，以及其来源——'manual'、'gmail_import' 或 null），或 'set'（写入 signature_text 和/或 signature_html，以及可选的 signature_enabled 和 signature_reply_mode）。签名支持富文本 HTML：粗体、斜体、标题、列表、颜色、对齐、链接，以及以 https URL 引用的托管徽标/图片，因此代理可以通过传入 signature_html 设置完整格式化的签名。仪表盘中也提供相同的富文本编辑器。设置签名会将其来源标记为 'manual'，这将永久覆盖该收件箱的 Gmail 自动导入。'get' 需要 read:email；'set' 需要 send:email。",
       "params": {
         "action": "要执行的操作：\"get\"（读取当前签名）或 \"set\"（写入签名）。决定其他哪些参数适用以及需要哪种权限。",
         "inbox_id": "要读取或设置其签名的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "signature_text": "纯文本签名正文（action 'set'）。省略则保持不变；传入空字符串可清除它。若仅提供文本，发送时会自动派生出 HTML 版本。",
-        "signature_html": "可选的富文本 HTML 签名正文（action 'set'）。省略则保持不变；传入空字符串可清除它。",
+        "signature_html": "可选的富文本 HTML 签名正文（action 'set'）。支持格式（粗体、斜体、下划线、标题、列表、颜色、对齐、链接）以及通过 src 为 https URL 的 <img> 标签引用的托管图片（不支持 base64 或 CID）；保存时会进行净化。省略则保持不变；传入空字符串可清除它。",
         "signature_enabled": "签名是否追加到外发邮件（action 'set'）。默认 true；设为 false 可在不删除文本的情况下停止追加。",
         "signature_reply_mode": "何时在回复和转发中包含签名（action 'set'）：\"always\"（每次回复/转发）、\"first_only\"（默认——仅线程中的第一封邮件，避免重复署名）或 \"never\"。"
       }
@@ -382,7 +382,7 @@
       "permanentDelete": "<b>永久删除：</b>Gmail 在你删除时会移至回收站 —— 它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
       "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表——在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
       "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径——无需服务商原生的定时 API。",
-      "signatures": "<b>签名：</b>每个收件箱的签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加——这适用于<b>所有</b>服务商。在仪表盘的收件箱编辑器或 <code>signature</code> MCP 工具中设置，并使用 <code>signature_reply_mode</code> 控制其是否出现在回复和转发中。按单次调用，在 <code>email_compose</code> 或 <code>draft</code> 上传入 <code>include_signature: false</code> 可跳过它。"
+      "signatures": "<b>签名：</b>每个收件箱的签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加——这适用于<b>所有</b>服务商。签名支持富文本 HTML 格式（粗体、斜体、标题、列表、颜色、对齐、链接）以及托管的徽标/图片；可在仪表盘的富文本编辑器或 <code>signature</code> MCP 工具（接受 <code>signature_html</code>）中设置。图片以托管的 https URL 引用，可在所有服务商中显示，不过某些客户端（如 Gmail）可能会先隐藏图片，直到收件人点击“显示图片”——对于任何含托管图片的签名，这都是正常现象。使用 <code>signature_reply_mode</code> 控制其是否出现在回复和转发中。按单次调用，在 <code>email_compose</code> 或 <code>draft</code> 上传入 <code>include_signature: false</code> 可跳过它。"
     },
     "cta": {
       "heading": "准备好连接你的收件箱了吗？",

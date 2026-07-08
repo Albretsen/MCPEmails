@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { track } from '@vercel/analytics';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
@@ -8,6 +8,8 @@ import { useAppLocale } from '../i18n/AppLocaleProvider';
 import { routing } from '@/i18n/routing';
 import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
+import SignatureRichEditor from './SignatureRichEditor';
+import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
@@ -1269,33 +1271,122 @@ function htmlToPlainSeed(html) {
     .trim();
 }
 
+/**
+ * Live preview of the signature, rendered exactly as it will appear in an
+ * outgoing email. `html` is already sanitized (it comes from the editor's
+ * getHTML() / sanitizeSignatureHtml output), so it is safe for
+ * dangerouslySetInnerHTML — we never render raw editor markup. When the editor
+ * content exceeds the sanitizer's 100KB cap, `tooBig` is set and we show a
+ * graceful fallback instead of the body.
+ *
+ * The "in a reply" affordance shows the signature above a faux quoted line so
+ * the user sees placement. Below it, a note reminds the user that some clients
+ * (e.g. Gmail) image-block hosted images by default.
+ */
+function SignaturePreview({ html, tooBig, t }) {
+  return (
+    <div className="sig-preview" aria-live="polite">
+      <div className="sig-preview-label">{t('inboxes.detail.signature.previewTitle')}</div>
+      <div className="sig-preview-surface">
+        {tooBig ? (
+          <div className="sig-preview-empty">
+            {t('inboxes.detail.signature.previewTooLarge')}
+          </div>
+        ) : (
+          <>
+            <div
+              className="sig-preview-body"
+              // Safe: `html` is sanitizer output (getHTML()/sanitizeSignatureHtml).
+              dangerouslySetInnerHTML={{ __html: html || '' }}
+            />
+            <div className="sig-preview-quote" aria-hidden>
+              {t('inboxes.detail.signature.previewReplyQuote')}
+            </div>
+          </>
+        )}
+      </div>
+      <div className="sig-preview-note">
+        {t('inboxes.detail.signature.imageNote')}
+      </div>
+    </div>
+  );
+}
+
 function SignatureEditor({ inbox, onSave, t }) {
   const wasImported = inbox.signatureSource === 'gmail_import';
-  const initialText =
-    inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '');
 
-  const [text, setText] = useState(initialText);
   const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
   const [replyMode, setReplyMode] = useState(inbox.signatureReplyMode ?? 'first_only');
   const [saving, setSaving] = useState(false);
+  const [sizeError, setSizeError] = useState('');
+  // Live preview: sanitized HTML rendered exactly as it will appear in mail.
+  // `previewTooBig` flips when getHTML()/sanitize throws the >100KB cap so we
+  // show a graceful message instead of crashing the panel.
+  const [previewHtml, setPreviewHtml] = useState('');
+  const [previewTooBig, setPreviewTooBig] = useState(false);
+  const editorRef = useRef(null);
 
-  // Re-seed when switching to a different inbox's modal.
+  // Pull the current editor HTML through the sanitizer and sync preview state.
+  // Called on the editor's onChange (every keystroke / image insert) and once
+  // after the editor mounts, so the preview always reflects the live content.
+  const syncPreview = () => {
+    if (!editorRef.current) return;
+    try {
+      const html = editorRef.current.getHTML(); // already sanitized; may throw >100KB
+      setPreviewTooBig(false);
+      setPreviewHtml(html);
+    } catch {
+      setPreviewTooBig(true);
+      setPreviewHtml('');
+    }
+  };
+
+  // Re-seed toggle/reply-mode when switching to a different inbox's modal. The
+  // rich editor itself is remounted (via its `key`) so it reloads that inbox's
+  // stored signature; we only reset the surrounding controls here. Seed the
+  // preview from the stored HTML (sanitized) so it shows the current signature
+  // before the first edit — TipTap's onChange only fires on subsequent updates,
+  // not the initial content load.
   useEffect(() => {
-    setText(inbox.signatureText ?? (inbox.signatureSource === 'gmail_import' ? htmlToPlainSeed(inbox.signatureHtml) : ''));
     setEnabled(inbox.signatureEnabled ?? true);
     setReplyMode(inbox.signatureReplyMode ?? 'first_only');
+    setSizeError('');
+    setPreviewTooBig(false);
+    try {
+      const seed = (inbox.signatureHtml && inbox.signatureHtml.trim())
+        ? sanitizeSignatureHtml(inbox.signatureHtml)
+        : '';
+      setPreviewHtml(seed);
+    } catch {
+      setPreviewTooBig(true);
+      setPreviewHtml('');
+    }
+    // TipTap initializes asynchronously and its onChange doesn't fire on the
+    // initial content load, so once the editor is ready pull its real HTML
+    // (covers text-seeded signatures where no stored HTML exists).
+    const timer = setTimeout(syncPreview, 0);
+    return () => clearTimeout(timer);
   }, [inbox.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const dirty =
-    text !== initialText ||
-    enabled !== (inbox.signatureEnabled ?? true) ||
-    replyMode !== (inbox.signatureReplyMode ?? 'first_only');
 
   const handleSave = async () => {
     if (saving) return;
+    setSizeError('');
+
+    let html = '';
+    let text = '';
+    try {
+      // getHTML() returns already-sanitized HTML and re-throws the >100KB cap.
+      html = editorRef.current ? editorRef.current.getHTML() : '';
+      text = editorRef.current ? editorRef.current.getText() : '';
+    } catch {
+      setSizeError(t('inboxes.detail.signature.tooLarge'));
+      return;
+    }
+
     setSaving(true);
     try {
       await onSave(inbox.id, {
+        signature_html: html,
         signature_text: text,
         signature_enabled: enabled,
         signature_reply_mode: replyMode,
@@ -1333,25 +1424,31 @@ function SignatureEditor({ inbox, onSave, t }) {
         </div>
       )}
 
-      <textarea
-        className="input"
-        value={text}
-        onChange={e => setText(e.target.value)}
-        disabled={saving || !enabled}
-        rows={5}
-        maxLength={10000}
-        placeholder={t('inboxes.detail.signature.placeholder')}
-        style={{
-          width: '100%',
-          boxSizing: 'border-box',
-          height: 'auto',
-          minHeight: 96,
-          padding: '10px 12px',
-          resize: 'vertical',
-          lineHeight: 1.5,
-          opacity: enabled ? 1 : 0.6,
-        }}
-      />
+      <div style={{ opacity: enabled ? 1 : 0.6, pointerEvents: enabled ? 'auto' : 'none' }}>
+        <SignatureRichEditor
+          key={inbox.id}
+          ref={editorRef}
+          inboxId={inbox.id}
+          initialHtml={inbox.signatureHtml || ''}
+          initialText={
+            inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '')
+          }
+          disabled={saving || !enabled}
+          onChange={syncPreview}
+        />
+
+        <SignaturePreview
+          html={previewHtml}
+          tooBig={previewTooBig}
+          t={t}
+        />
+      </div>
+
+      {sizeError && (
+        <div style={{ ...label, marginTop: 8, color: 'var(--red-500)' }} role="alert">
+          {sizeError}
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
         <span style={label}>{t('inboxes.detail.signature.replyModeLabel')}</span>
@@ -1370,7 +1467,7 @@ function SignatureEditor({ inbox, onSave, t }) {
         <Btn
           variant="primary"
           size="sm"
-          disabled={saving || !dirty}
+          disabled={saving}
           onClick={handleSave}
         >
           {saving ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
