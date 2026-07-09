@@ -118,7 +118,7 @@ The signature feature shipped 2026-06-23 (see `Documents/signatures-dev-plan.md`
 **Refs:** docs components under `apps/web/components/marketing/`; `Documents/provider-support.md`; locale message files.
 **Acceptance:** Docs describe rich signatures + images accurately in all locales. Build passes.
 
-### 12. [ ] Full verification and deploy hand-off
+### 12. [x] Full verification and deploy hand-off — done: all gates green (deno check, web build, migration idempotent); DEPLOYED to prod 2026-07-08 (migration pushed, edge fn deployed, web on Vercel prod Ready). Bucket existence confirmed via public probe. Merged to main (PR #11). NOT browser-click-verified (auth-gated dashboard)
 **What:** Run all gates: `npm run build -w apps/web`, `deno check supabase/functions/mcp-server/index.ts`, confirm the migration is idempotent. Manually verify the end-to-end flow with the preview server: create a rich signature with a logo, save, reload, confirm persisted HTML, and (if a test inbox is available) send a message and inspect the outgoing HTML contains the hosted `<img>`. Then hand off deploy (migration push, edge function deploy, `vercel --prod`) to the owner, or execute on explicit instruction. Update the relevant memory files.
 **Refs:** deploy commands in the "How to use this checklist" section; prior deploy pattern in project memory.
 **Acceptance:** All gates green; end-to-end flow verified; deploy steps listed and ready.

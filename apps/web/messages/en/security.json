@@ -64,7 +64,7 @@
     "p1": "\"A random person vibe-coded this\" is a fair worry for any hosted tool that touches your email. The right answer is not a bigger promise. It is removing the need to take me at my word.",
     "points": [
       "<b>Read the code.</b> The server that runs MCPEmails is public on GitHub. You can see exactly what it keeps (an encrypted token) and what it doesn't (your mail).",
-      "<b>Self-host it.</b> If you would rather not use the hosted service at all, you can run the same code on your own infrastructure with your own keys.",
+      "<selfhost><b>Self-host it.</b></selfhost> If you would rather not use the hosted service at all, you can run the same code on your own infrastructure with your own keys: a one-command Docker stack lives in <selfhost>self-host/</selfhost>.",
       "<b>Use a scoped, revocable connection.</b> You connect with OAuth or an app password that grants only mail access, and you can revoke it in one click from your provider, with no involvement from me.",
       "<b>Watch what it does.</b> Every tool call your agent makes is recorded in an activity log you can read, so you can see precisely what was accessed and when."
     ],
@@ -137,5 +137,11 @@
     "sub": "Ask me anything. I'm the only person running this, and I answer every message.",
     "contactBtn": "Email security@",
     "privacyBtn": "Read the privacy policy"
+  },
+  "selfhost": {
+    "title": "Run it yourself, trust no one (including us)",
+    "p1": "MCP Emails is open source under AGPL-3.0, and the hosted service runs the exact same MCP server you can self-host. That means \"email is fetched live and never stored\" is something you can verify by running it and watching the network, not something you have to take on faith.",
+    "p2": "Self-hosting is IMAP/SMTP-first: connect any mailbox with an app password, and your credentials are encrypted under a key only you hold. One command brings the whole stack up on your own machine.",
+    "cta": "Read the self-hosting guide"
   }
 }

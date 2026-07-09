@@ -35,6 +35,8 @@ export async function generateMetadata({ params }) {
 const SECURITY_EMAIL = 'security@mcpemails.com';
 const PRIVACY_EMAIL = 'privacy@mcpemails.com';
 const REPO_URL = 'https://github.com/Albretsen/MCPEmails';
+const SELFHOST_URL = 'https://github.com/Albretsen/MCPEmails/tree/main/self-host';
+const LICENSE_URL = 'https://github.com/Albretsen/MCPEmails/blob/main/LICENSE';
 const GOOGLE_POLICY_URL = 'https://developers.google.com/terms/api-services-user-data-policy';
 
 /* ─── Page ───────────────────────────────────────────────────── */
@@ -116,6 +118,9 @@ export default async function SecurityPage({ params }) {
                       repo: (c) => (
                         <a href={REPO_URL} target="_blank" rel="noopener noreferrer">{c}</a>
                       ),
+                      selfhost: (c) => (
+                        <a href={SELFHOST_URL} target="_blank" rel="noopener noreferrer">{c}</a>
+                      ),
                     })}
                   </li>
                 ))}
@@ -132,6 +137,17 @@ export default async function SecurityPage({ params }) {
                     <a href={REPO_URL} target="_blank" rel="noopener noreferrer">{c}</a>
                   ),
                 })}
+              </p>
+            </LegalSection>
+
+            {/* 3b - Run it yourself */}
+            <LegalSection id="run-it-yourself" title={t('selfhost.title')}>
+              <p>{t('selfhost.p1')}</p>
+              <p>{t('selfhost.p2')}</p>
+              <p style={{ margin: 0 }}>
+                <a href="/self-hosting">{t('selfhost.cta')}</a>
+                {' · '}
+                <a href={LICENSE_URL} target="_blank" rel="noopener noreferrer">AGPL-3.0</a>
               </p>
             </LegalSection>
 

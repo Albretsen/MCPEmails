@@ -167,6 +167,10 @@
       {
         "q": "Is there a refund policy?",
         "a": "If you're unsatisfied within 30 days of your first paid invoice, contact us for a full refund, no questions asked."
+      },
+      {
+        "q": "Can I self-host it instead of paying?",
+        "a": "Yes. MCP Emails is open source under AGPL-3.0 and free to self-host. A docker-compose stack runs the same MCP server, with your mailbox credentials encrypted under a key only you hold. Self-host covers IMAP and SMTP mailboxes; Gmail and Outlook one-click OAuth, the dashboard, team features, and support stay on the paid plans."
       }
     ]
   },

@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "title": "Auto-aloja MCP Emails",
+    "description": "Ejecuta el mismo servidor de correo MCP que impulsa mcpemails.com en tu propia máquina. Código abierto bajo AGPL-3.0, credenciales cifradas con una clave que solo tú posees, correo obtenido en vivo y nunca almacenado."
+  },
+  "hero": {
+    "eyebrow": "Código abierto, AGPL-3.0",
+    "title": "Ejecuta MCP Emails tú mismo.",
+    "lead": "El mismo servidor MCP que impulsa mcpemails.com, en tu propia máquina, contra tu propia base de datos. Las credenciales de tu buzón nunca salen de una infraestructura que tú controlas. Se cifran con una clave que solo tú posees y se descifran únicamente en tu contenedor, en el momento en que una llamada a una herramienta las necesita."
+  },
+  "proof": {
+    "title": "Todo en un solo comando",
+    "caption": "Cuatro contenedores pequeños (Postgres, PostgREST, nginx y el servidor Deno). Sin cuenta, sin claves en nuestro poder, sin telemetría. Ejecuta <c>supabase/functions/mcp-server</c> sin modificar: el mismo código exacto que hay detrás del producto alojado.",
+    "ctaGuide": "Lee la guía de auto-alojamiento",
+    "ctaSource": "Ver el código fuente"
+  },
+  "sovereignty": {
+    "title": "Tu bandeja de entrada nunca sale de tu equipo.",
+    "body": "Conecta Fastmail, iCloud, Yahoo, Zoho, Yandex o cualquier buzón IMAP/SMTP con una contraseña de aplicación. El correo se obtiene en vivo y nunca se almacena. Las credenciales se cifran en reposo con AES-256-GCM usando una clave que tú generas y conservas. No hay nada que llame a casa."
+  },
+  "compare": {
+    "title": "Auto-alojado frente a alojado",
+    "intro": "El servidor MCP completo y las diez herramientas están en ambos. Auto-alojar cambia la comodidad gestionada por control total.",
+    "thFeature": "",
+    "thSelf": "Auto-alojado",
+    "thHosted": "Alojado",
+    "rows": [
+      {
+        "feature": "Precio",
+        "self": "Gratis, tú lo ejecutas",
+        "hosted": "Gratis, $12 o $49"
+      },
+      {
+        "feature": "El servidor MCP y las 10 herramientas",
+        "self": "Sí",
+        "hosted": "Sí"
+      },
+      {
+        "feature": "Buzones IMAP / SMTP (contraseña de aplicación)",
+        "self": "Sí",
+        "hosted": "Sí"
+      },
+      {
+        "feature": "Correo obtenido en vivo, nunca almacenado",
+        "self": "Sí",
+        "hosted": "Sí"
+      },
+      {
+        "feature": "Credenciales cifradas en reposo",
+        "self": "Sí, con tu clave",
+        "hosted": "Sí"
+      },
+      {
+        "feature": "OAuth de un clic para Gmail / Outlook",
+        "self": "No incluido",
+        "hosted": "Sí"
+      },
+      {
+        "feature": "Panel web (conexión, claves, actividad)",
+        "self": "CLI en su lugar",
+        "hosted": "Sí"
+      },
+      {
+        "feature": "Despachador de envíos programados",
+        "self": "Usa tu propio cron",
+        "hosted": "Gestionado"
+      },
+      {
+        "feature": "Actualizaciones automáticas, copias de seguridad, disponibilidad",
+        "self": "Tú",
+        "hosted": "Gestionado"
+      },
+      {
+        "feature": "Espacios de equipo, roles, SSO, registro de auditoría",
+        "self": "No incluido",
+        "hosted": "Plan Team"
+      },
+      {
+        "feature": "Soporte",
+        "self": "Comunidad y GitHub",
+        "hosted": "Correo y prioridad"
+      },
+      {
+        "feature": "Configuración",
+        "self": "Unos 5 minutos",
+        "hosted": "Unos 2 minutos"
+      }
+    ]
+  },
+  "security": {
+    "title": "Darle tu bandeja de entrada a una IA, de forma segura",
+    "intro": "La preocupación es legítima. Así es como el diseño la acota, tanto si te auto-alojas como si no.",
+    "points": [
+      "<b>Privilegio mínimo por diseño.</b> Cada clave de API tiene un alcance definido: concede solo lectura, o envío sin borrado. Las acciones destructivas requieren un alcance de borrado explícito.",
+      "<b>La inyección de prompts está acotada, no minimizada con palabrería.</b> Un correo hostil puede intentar dar instrucciones al agente. Los alcances por clave limitan el radio de impacto: una clave que no puede enviar no puede ser engañada para enviar.",
+      "<b>Las credenciales se cifran en reposo</b> con AES-256-GCM. Cuando te auto-alojas, la clave de cifrado es tuya y de nadie más.",
+      "<b>Verifica, no confíes.</b> El código es público bajo AGPL-3.0, y la versión alojada lo ejecuta sin modificar. Léelo y luego decide."
+    ]
+  },
+  "commitment": {
+    "title": "Auto-alojar es un compromiso real.",
+    "body": "Tú te encargas de la configuración de IMAP/SMTP, las actualizaciones y la seguridad, y el soporte es solo comunitario. El OAuth de un clic para Gmail y Outlook y el panel web permanecen en el producto alojado, porque necesitan secretos de OAuth y una capa de sesión que una instalación de un solo operador no tiene. Si prefieres no gestionar infraestructura, el plan alojado toma dos minutos y es gratis para empezar.",
+    "cta": "Usa la versión alojada"
+  },
+  "cta": {
+    "title": "Ejecútalo tú mismo, o deja que nosotros lo hagamos.",
+    "sub": "El mismo servidor en cualquier caso. Tú decides quién tiene las claves.",
+    "primary": "Lee la guía de auto-alojamiento",
+    "secondary": "Usa la versión alojada"
+  }
+}

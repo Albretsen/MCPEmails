@@ -64,7 +64,7 @@
     "p1": "\"En tilfeldig person vibe-kodet dette\" er en rimelig bekymring for ethvert driftet verktøy som berører e-posten din. Det riktige svaret er ikke et større løfte. Det er å fjerne behovet for å ta meg på ordet.",
     "points": [
       "<b>Les koden.</b> Serveren som driver MCPEmails er åpen på GitHub. Du kan se nøyaktig hva den beholder (et kryptert token) og hva den ikke beholder (e-posten din).",
-      "<b>Drift den selv.</b> Hvis du heller ikke vil bruke den driftede tjenesten i det hele tatt, kan du kjøre den samme koden på din egen infrastruktur med dine egne nøkler.",
+      "<selfhost><b>Drift den selv.</b></selfhost> Hvis du heller ikke vil bruke den driftede tjenesten i det hele tatt, kan du kjøre den samme koden på din egen infrastruktur med dine egne nøkler: en Docker-oppsett med én kommando ligger i <selfhost>self-host/</selfhost>.",
       "<b>Bruk en avgrenset, tilbakekallbar tilkobling.</b> Du kobler til med OAuth eller et app-passord som kun gir tilgang til e-post, og du kan tilbakekalle den med ett klikk hos leverandøren din, uten at jeg er involvert.",
       "<b>Se hva den gjør.</b> Hvert verktøykall agenten din gjør registreres i en aktivitetslogg du kan lese, så du ser nøyaktig hva som ble lest og når."
     ],
@@ -137,5 +137,11 @@
     "sub": "Spør meg om hva som helst. Jeg er den eneste som driver dette, og jeg svarer på hver melding.",
     "contactBtn": "Send e-post til security@",
     "privacyBtn": "Les personvernerklæringen"
+  },
+  "selfhost": {
+    "title": "Kjør den selv, stol på ingen (heller ikke oss)",
+    "p1": "MCP Emails er åpen kildekode under AGPL-3.0, og den hostede tjenesten kjører nøyaktig den samme MCP-serveren som du kan selvhoste. Det betyr at \"e-post hentes i sanntid og lagres aldri\" er noe du kan verifisere ved å kjøre den og se på nettverkstrafikken, ikke noe du må ta på tro.",
+    "p2": "Selvhosting er IMAP/SMTP-først: koble til hvilken som helst postkasse med et app-passord, og legitimasjonen din krypteres under en nøkkel bare du har. Én kommando starter hele stacken på din egen maskin.",
+    "cta": "Les selvhosting-guiden"
   }
 }

@@ -167,6 +167,10 @@
       {
         "q": "¿Hay política de reembolso?",
         "a": "Si no estás satisfecho dentro de los 30 días de tu primera factura de pago, contáctanos para un reembolso completo, sin preguntas."
+      },
+      {
+        "q": "¿Puedo auto-alojarlo en lugar de pagar?",
+        "a": "Sí. MCP Emails es código abierto bajo AGPL-3.0 y gratis para auto-alojar. Un stack de docker-compose ejecuta el mismo servidor MCP, con las credenciales de tu buzón cifradas bajo una clave que solo tú posees. El auto-alojamiento cubre buzones IMAP y SMTP; el OAuth de un clic para Gmail y Outlook, el panel, las funciones de equipo y el soporte permanecen en los planes de pago."
       }
     ]
   },

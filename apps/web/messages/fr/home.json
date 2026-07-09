@@ -10,7 +10,8 @@
     "docs": "Docs",
     "blog": "Blog",
     "signIn": "Se connecter",
-    "getStarted": "Commencer gratuitement"
+    "getStarted": "Commencer gratuitement",
+    "selfHost": "Auto-hébergement"
   },
   "hero": {
     "titleLine1": "Offrez une",
@@ -189,6 +190,10 @@
       {
         "q": "Comment connecter une boîte de réception ?",
         "a": "Créez un compte gratuit, connectez votre boîte (un clic pour Gmail, ou collez un mot de passe d'application pour les autres), puis déposez https://mcpemails.com/api/mcp dans votre client IA et autorisez. Votre agent dispose de la boîte en quelques minutes."
+      },
+      {
+        "q": "Puis-je l'héberger moi-même ?",
+        "a": "Oui. MCP Emails est open source sous AGPL-3.0, et le service hébergé exécute le même serveur que vous pouvez exécuter vous-même. Une stack docker-compose met en route le serveur MCP complet et tous ses outils sur votre propre base de données en environ cinq minutes, pour n'importe quelle boîte mail IMAP ou SMTP. L'OAuth en un clic pour Gmail et Outlook ainsi que le tableau de bord restent sur le forfait hébergé."
       }
     ]
   },
@@ -214,7 +219,8 @@
     "copy": "Copier",
     "copied": "Copié",
     "copyAria": "Copier {label}",
-    "linkSecurity": "Sécurité"
+    "linkSecurity": "Sécurité",
+    "linkSelfHost": "Auto-hébergement"
   },
   "languageSwitcher": {
     "label": "Langue",

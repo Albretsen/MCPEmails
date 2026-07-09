@@ -167,6 +167,10 @@
       {
         "q": "Existe-t-il une politique de remboursement ?",
         "a": "Si vous n'êtes pas satisfait dans les 30 jours suivant votre première facture payée, contactez-nous pour un remboursement intégral, sans poser de questions."
+      },
+      {
+        "q": "Puis-je l'héberger moi-même plutôt que de payer ?",
+        "a": "Oui. MCP Emails est open source sous AGPL-3.0 et gratuit à héberger soi-même. Une stack docker-compose exécute le même serveur MCP, avec les identifiants de votre boîte mail chiffrés sous une clé que vous seul détenez. L'auto-hébergement couvre les boîtes mail IMAP et SMTP ; l'OAuth en un clic pour Gmail et Outlook, le tableau de bord, les fonctionnalités d'équipe et le support restent sur les forfaits payants."
       }
     ]
   },

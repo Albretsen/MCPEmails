@@ -1,0 +1,110 @@
+# ============================================================
+# MCP Emails, self-host stack
+# ============================================================
+# Four small services, no Supabase/Stripe/Next.js:
+#
+#   db        Postgres 16, schema applied on first boot
+#   postgrest PostgREST, the REST layer supabase-js speaks to
+#   gateway   nginx, exposes PostgREST under /rest/v1/
+#   mcp-server the Deno MCP server (the same code as mcpemails.com)
+#
+# Optional (profile "scheduler"):
+#   dispatcher polls POST /dispatch every minute to flush scheduled sends
+#
+# Tools (profile "tools", run on demand via `docker compose run`):
+#   cli       the provisioning CLI (inboxes, API keys)
+#
+# All secrets come from .env (generate it with `make setup`).
+# ============================================================
+
+name: mcpemails-selfhost
+
+services:
+  db:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      AUTHENTICATOR_PASSWORD: ${AUTHENTICATOR_PASSWORD:?set AUTHENTICATOR_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Not published to the host by default, the DB stays on the internal
+    # network. Uncomment to inspect with psql from the host.
+    # ports:
+    #   - "5432:5432"
+
+  postgrest:
+    image: postgrest/postgrest:v12.2.3
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${AUTHENTICATOR_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  gateway:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - postgrest
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: self-host/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - gateway
+    environment:
+      SUPABASE_URL: http://gateway
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_JWT:?set SERVICE_ROLE_JWT in .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
+      APP_URL: ${APP_URL:-http://localhost:8787}
+      DISPATCH_SECRET: ${DISPATCH_SECRET:-}
+    ports:
+      - "${MCP_PORT:-8787}:8000"
+
+  dispatcher:
+    image: curlimages/curl:8.11.1
+    restart: unless-stopped
+    profiles: ["scheduler"]
+    depends_on:
+      - mcp-server
+    environment:
+      DISPATCH_SECRET: ${DISPATCH_SECRET:-}
+    # Flush due scheduled sends once a minute. Replaces the hosted product's
+    # pg_cron + pg_net + Vault dispatcher with a tiny external poll.
+    # Single-line script: a folded (>) block would keep newlines on the
+    # more-indented curl args and split the command in the shell.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - 'while true; do curl -fsS -X POST -H "X-Dispatch-Secret: $${DISPATCH_SECRET}" http://mcp-server:8000/dispatch >/dev/null 2>&1 || true; sleep 60; done'
+
+  cli:
+    build:
+      context: ..
+      dockerfile: self-host/Dockerfile
+    profiles: ["tools"]
+    environment:
+      SUPABASE_URL: http://gateway
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_JWT:-}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+    entrypoint: ["deno", "run", "--allow-net", "--allow-env", "cli/mcpe.ts"]
+
+volumes:
+  pgdata:
