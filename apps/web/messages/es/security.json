@@ -64,7 +64,7 @@
     "p1": "\"Una persona cualquiera improvisó esto con código\" es una preocupación legítima ante cualquier herramienta alojada que toque tu correo. La respuesta correcta no es una promesa mayor. Es eliminar la necesidad de creer en mi palabra.",
     "points": [
       "<b>Lee el código.</b> El servidor que ejecuta MCPEmails es público en GitHub. Puedes ver exactamente qué conserva (un token cifrado) y qué no (tu correo).",
-      "<b>Autoalójalo.</b> Si prefieres no usar el servicio alojado en absoluto, puedes ejecutar el mismo código en tu propia infraestructura con tus propias claves.",
+      "<selfhost><b>Autoalójalo.</b></selfhost> Si prefieres no usar el servicio alojado en absoluto, puedes ejecutar el mismo código en tu propia infraestructura con tus propias claves: hay un stack de Docker de un solo comando en <selfhost>self-host/</selfhost>.",
       "<b>Usa una conexión limitada y revocable.</b> Te conectas con OAuth o una contraseña de aplicación que concede únicamente acceso al correo, y puedes revocarla con un clic desde tu proveedor, sin intervención alguna de mi parte.",
       "<b>Observa lo que hace.</b> Cada llamada a una herramienta que hace tu agente queda registrada en un registro de actividad que puedes leer, para que veas con precisión a qué se accedió y cuándo."
     ],
@@ -137,5 +137,11 @@
     "sub": "Pregúntame lo que quieras. Soy la única persona que lleva esto, y respondo cada mensaje.",
     "contactBtn": "Escribir a security@",
     "privacyBtn": "Leer la política de privacidad"
+  },
+  "selfhost": {
+    "title": "Ejecútalo tú mismo, no confíes en nadie (nosotros incluidos)",
+    "p1": "MCP Emails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta exactamente el mismo servidor MCP que tú puedes auto-alojar. Eso significa que \"el correo se obtiene en vivo y nunca se almacena\" es algo que puedes verificar ejecutándolo y observando la red, no algo que tengas que aceptar por fe.",
+    "p2": "El auto-alojamiento prioriza IMAP/SMTP: conecta cualquier buzón con una contraseña de aplicación, y tus credenciales se cifran bajo una clave que solo tú posees. Un solo comando levanta todo el stack en tu propia máquina.",
+    "cta": "Lee la guía de auto-alojamiento"
   }
 }

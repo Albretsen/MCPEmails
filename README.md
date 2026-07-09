@@ -23,6 +23,7 @@
 - [Environment variables](#environment-variables)
 - [Database & migrations](#database--migrations)
 - [Deployment](#deployment)
+- [Self-hosting](#self-hosting)
 - [Internationalization](#internationalization)
 - [Security model](#security-model)
 
@@ -258,6 +259,26 @@ Security headers and function timeouts are defined in `vercel.json`. The marketi
 npx supabase functions deploy mcp-server --project-ref <your-project-ref> --no-verify-jwt
 ```
 
+## Self-hosting
+
+Don't want to trust the hosted service with your mail? Run the **same MCP server** on your own
+machine. [`self-host/`](self-host/) ships a containerized stack (Postgres + PostgREST + the Deno
+server, no Supabase/Stripe/dashboard), so your credentials are encrypted with a key only you hold
+and decrypted only inside your own container.
+
+```bash
+cd self-host
+make setup      # generate secrets (.env)
+make up         # build + start the stack
+export IMAP_PASSWORD='your-app-password'
+make provision EMAIL=you@example.com IMAP_HOST=imap.fastmail.com SMTP_HOST=smtp.fastmail.com SERVICE=fastmail
+make key NAME="my agent"   # mint an mcpe_ key, then point your client at http://localhost:8787
+```
+
+It is IMAP/SMTP-first (Fastmail, iCloud, Yahoo, Zoho, Yandex, generic) via app password; Gmail/Outlook
+OAuth and the web dashboard remain hosted-only. The container runs `supabase/functions/mcp-server/`
+unmodified; see [`self-host/README.md`](self-host/README.md) for the full guide.
+
 ## Internationalization
 
 Built with **next‑intl** (`localePrefix: 'as-needed'`, `localeDetection: false` for stable canonical URLs). English is served at `/`; other locales carry a prefix (`/nb`, `/es`, `/fr`, `/zh`). Translations live under [`apps/web/messages/`](apps/web/messages/).
@@ -273,6 +294,10 @@ Supported locales: **English, Norwegian Bokmål, Spanish, French, Chinese (Simpl
 - **Row‑Level Security** isolates every workspace's data at the database layer.
 - **Strict CSP**, HSTS, `X-Frame-Options: DENY`, and related headers on every response.
 
+## License
+
+MCP Emails is open source under the [GNU Affero General Public License v3.0](LICENSE) (AGPL‑3.0). The hosted service at [mcpemails.com](https://mcpemails.com) runs the same server you can [self-host](self-host/), so you can read the code, verify it, and run it yourself. See [`/security`](https://mcpemails.com/security) for the trust model.
+
 ---
 
-<sub>Send and receive email from any agent. © MCPEmails.</sub>
+<sub>Send and receive email from any agent. © MCPEmails, AGPL‑3.0.</sub>

@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "title": "Héberger MCP Emails vous-même",
+    "description": "Exécutez le même serveur d'e-mails MCP qui propulse mcpemails.com sur votre propre machine. Open source sous AGPL-3.0, identifiants chiffrés avec une clé que vous seul détenez, e-mails récupérés en direct et jamais stockés."
+  },
+  "hero": {
+    "eyebrow": "Open source, AGPL-3.0",
+    "title": "Exécutez MCP Emails vous-même.",
+    "lead": "Le même serveur MCP qui propulse mcpemails.com, sur votre propre machine, avec votre propre base de données. Les identifiants de votre boîte mail ne quittent jamais une infrastructure que vous contrôlez. Ils sont chiffrés avec une clé que vous seul détenez et déchiffrés uniquement dans votre conteneur, au moment précis où un appel d'outil en a besoin."
+  },
+  "proof": {
+    "title": "Le tout en une seule commande",
+    "caption": "Quatre petits conteneurs (Postgres, PostgREST, nginx, le serveur Deno). Aucun compte, aucune clé détenue par nous, aucune télémétrie. Il exécute <c>supabase/functions/mcp-server</c> sans modification : exactement le code derrière le produit hébergé.",
+    "ctaGuide": "Lire le guide d'auto-hébergement",
+    "ctaSource": "Voir le code source"
+  },
+  "sovereignty": {
+    "title": "Votre boîte mail ne quitte jamais votre machine.",
+    "body": "Connectez Fastmail, iCloud, Yahoo, Zoho, Yandex ou n'importe quelle boîte mail IMAP/SMTP avec un mot de passe d'application. Les e-mails sont récupérés en direct et jamais stockés. Les identifiants sont chiffrés au repos avec AES-256-GCM à l'aide d'une clé que vous générez et conservez. Il n'y a rien qui puisse communiquer avec l'extérieur."
+  },
+  "compare": {
+    "title": "Auto-hébergé ou hébergé",
+    "intro": "Le serveur MCP complet et ses dix outils sont présents dans les deux cas. L'auto-hébergement échange le confort du service géré contre un contrôle total.",
+    "thFeature": "",
+    "thSelf": "Auto-hébergé",
+    "thHosted": "Hébergé",
+    "rows": [
+      {
+        "feature": "Prix",
+        "self": "Gratuit, à vous de l'exécuter",
+        "hosted": "Gratuit, $12 ou $49"
+      },
+      {
+        "feature": "Le serveur MCP et ses 10 outils",
+        "self": "Oui",
+        "hosted": "Oui"
+      },
+      {
+        "feature": "Boîtes IMAP / SMTP (mot de passe d'application)",
+        "self": "Oui",
+        "hosted": "Oui"
+      },
+      {
+        "feature": "E-mails récupérés en direct, jamais stockés",
+        "self": "Oui",
+        "hosted": "Oui"
+      },
+      {
+        "feature": "Identifiants chiffrés au repos",
+        "self": "Oui, votre clé",
+        "hosted": "Oui"
+      },
+      {
+        "feature": "OAuth en un clic pour Gmail / Outlook",
+        "self": "Non inclus",
+        "hosted": "Oui"
+      },
+      {
+        "feature": "Tableau de bord web (connexion, clés, activité)",
+        "self": "CLI à la place",
+        "hosted": "Oui"
+      },
+      {
+        "feature": "Répartiteur d'envois programmés",
+        "self": "Votre propre cron",
+        "hosted": "Géré"
+      },
+      {
+        "feature": "Mises à jour automatiques, sauvegardes, disponibilité",
+        "self": "À vous",
+        "hosted": "Géré"
+      },
+      {
+        "feature": "Espaces d'équipe, rôles, SSO, journal d'audit",
+        "self": "Non inclus",
+        "hosted": "Forfait Team"
+      },
+      {
+        "feature": "Support",
+        "self": "Communauté et GitHub",
+        "hosted": "E-mail et priorité"
+      },
+      {
+        "feature": "Installation",
+        "self": "Environ 5 minutes",
+        "hosted": "Environ 2 minutes"
+      }
+    ]
+  },
+  "security": {
+    "title": "Confier votre boîte mail à une IA, en toute sécurité",
+    "intro": "La préoccupation est légitime. Voici comment la conception en limite la portée, que vous soyez auto-hébergé ou non.",
+    "points": [
+      "<b>Moindre privilège par conception.</b> Chaque clé d'API a une portée définie : accordez la lecture seule, ou l'envoi sans la suppression. Les actions destructrices nécessitent une portée de suppression explicite.",
+      "<b>L'injection de prompt est encadrée, pas balayée d'un revers de main.</b> Un e-mail hostile peut tenter de donner des instructions à l'agent. Les portées par clé limitent le rayon d'impact : une clé qui ne peut pas envoyer ne peut pas être piégée pour envoyer.",
+      "<b>Les identifiants sont chiffrés au repos</b> avec AES-256-GCM. Lorsque vous vous auto-hébergez, la clé de chiffrement est la vôtre et celle de personne d'autre.",
+      "<b>Vérifiez, ne faites pas confiance.</b> Le code est public sous AGPL-3.0, et la version hébergée l'exécute sans modification. Lisez-le, puis décidez."
+    ]
+  },
+  "commitment": {
+    "title": "L'auto-hébergement est un véritable engagement.",
+    "body": "Vous gérez vous-même la configuration IMAP/SMTP, les mises à jour et la sécurité, et le support est assuré uniquement par la communauté. L'OAuth en un clic pour Gmail et Outlook ainsi que le tableau de bord web restent sur le produit hébergé, car ils nécessitent des secrets OAuth et une couche de session qu'une installation à opérateur unique ne possède pas. Si vous préférez ne pas gérer d'infrastructure, le forfait hébergé prend deux minutes et est gratuit pour démarrer.",
+    "cta": "Utiliser la version hébergée"
+  },
+  "cta": {
+    "title": "Exécutez-le vous-même, ou laissez-nous le faire.",
+    "sub": "Le même serveur dans les deux cas. À vous de décider qui détient les clés.",
+    "primary": "Lire le guide d'auto-hébergement",
+    "secondary": "Utiliser la version hébergée"
+  }
+}

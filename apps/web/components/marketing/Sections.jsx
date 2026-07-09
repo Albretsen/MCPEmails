@@ -40,6 +40,7 @@ export function Nav({ onSignIn, onGetStarted }) {
           <Link href="/#pricing">{t('nav.pricing')}</Link>
           <Link href="/native-connectors-vs-mcp">{tc('links.compare')}</Link>
           <Link href="/docs">{t('nav.docs')}</Link>
+          <Link href="/self-hosting">{t('nav.selfHost')}</Link>
           <Link href="/blog">{t('nav.blog')}</Link>
         </nav>
         <div className="nav-grow" />
@@ -72,6 +73,7 @@ export function Nav({ onSignIn, onGetStarted }) {
             <Link href="/#pricing" onClick={closeMenu}>{t('nav.pricing')}</Link>
             <Link href="/native-connectors-vs-mcp" onClick={closeMenu}>{tc('links.compare')}</Link>
             <Link href="/docs" onClick={closeMenu}>{t('nav.docs')}</Link>
+            <Link href="/self-hosting" onClick={closeMenu}>{t('nav.selfHost')}</Link>
             <Link href="/blog" onClick={closeMenu}>{t('nav.blog')}</Link>
           </nav>
           <div className="nav-mobile-cta">
@@ -776,6 +778,7 @@ export function Footer() {
             <Link href="/#how">{t('footer.linkHow')}</Link>
             <Link href="/#pricing">{t('footer.linkPricing')}</Link>
             <Link href="/docs">{t('footer.linkDocs')}</Link>
+            <Link href="/self-hosting">{t('footer.linkSelfHost')}</Link>
           </div>
           <div>
             <h5>{t('footer.resourcesHeading')}</h5>

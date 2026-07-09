@@ -64,7 +64,7 @@
     "p1": "« Une personne quelconque a bricolé ça » est une inquiétude légitime pour tout outil hébergé qui touche à vos e-mails. La bonne réponse n'est pas une promesse plus grande. C'est de supprimer le besoin de me croire sur parole.",
     "points": [
       "<b>Lisez le code.</b> Le serveur qui fait tourner MCPEmails est public sur GitHub. Vous pouvez voir exactement ce qu'il conserve (un jeton chiffré) et ce qu'il ne conserve pas (vos e-mails).",
-      "<b>Hébergez-le vous-même.</b> Si vous préférez ne pas utiliser du tout le service hébergé, vous pouvez exécuter le même code sur votre propre infrastructure, avec vos propres clés.",
+      "<selfhost><b>Hébergez-le vous-même.</b></selfhost> Si vous préférez ne pas utiliser du tout le service hébergé, vous pouvez exécuter le même code sur votre propre infrastructure, avec vos propres clés : une pile Docker en une seule commande se trouve dans <selfhost>self-host/</selfhost>.",
       "<b>Utilisez une connexion limitée et révocable.</b> Vous vous connectez avec OAuth ou un mot de passe d'application qui n'accorde qu'un accès au courrier, et vous pouvez le révoquer en un clic depuis votre fournisseur, sans aucune intervention de ma part.",
       "<b>Surveillez ce qu'il fait.</b> Chaque appel d'outil effectué par votre agent est enregistré dans un journal d'activité que vous pouvez consulter, pour voir précisément ce qui a été consulté et quand."
     ],
@@ -137,5 +137,11 @@
     "sub": "Demandez-moi ce que vous voulez. Je suis la seule personne aux commandes, et je réponds à chaque message.",
     "contactBtn": "Écrire à security@",
     "privacyBtn": "Lire la politique de confidentialité"
+  },
+  "selfhost": {
+    "title": "Exécutez-le vous-même, ne faites confiance à personne (pas même à nous)",
+    "p1": "MCP Emails est open source sous AGPL-3.0, et le service hébergé exécute exactement le même serveur MCP que vous pouvez auto-héberger. Cela signifie que « les e-mails sont récupérés en direct et jamais stockés » est quelque chose que vous pouvez vérifier en l'exécutant et en observant le réseau, et non quelque chose que vous devez croire sur parole.",
+    "p2": "L'auto-hébergement privilégie IMAP/SMTP : connectez n'importe quelle boîte mail avec un mot de passe d'application, et vos identifiants sont chiffrés sous une clé que vous seul détenez. Une seule commande met en route toute la stack sur votre propre machine.",
+    "cta": "Lire le guide d'auto-hébergement"
   }
 }

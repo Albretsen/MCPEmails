@@ -142,7 +142,9 @@ const MATRIX = {
     label: 'Signatures (auto-applied on send)',
     section: 'Signatures',
     // The signature is appended server-side on every send/reply/forward/draft/
-    // scheduled message — works the same on every provider.
+    // scheduled message — works the same on every provider. Supports rich HTML
+    // formatting and a hosted logo/image (https URLs; some clients image-block
+    // by default). See providers.notes.signatures for the rendered copy.
     gmail: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
