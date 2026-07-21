@@ -1301,6 +1301,38 @@ select.input {
   opacity: 0.6;
 }
 
+.sig-mode-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  background: var(--bg-sunken);
+}
+.sig-mode-tab {
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--fg-3);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.sig-mode-tab:hover:not(:disabled) {
+  color: var(--fg-1);
+}
+.sig-mode-tab.is-active {
+  background: var(--bg-surface);
+  color: var(--fg-1);
+  border-color: var(--border-1);
+  border-bottom-color: var(--bg-surface);
+}
+.sig-mode-tab:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .sig-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -1309,6 +1341,31 @@ select.input {
   padding: 6px 8px;
   border-bottom: 1px solid var(--border-1);
   background: var(--bg-sunken);
+}
+
+.sig-html-source {
+  background: var(--bg-surface);
+}
+.sig-html-textarea {
+  width: 100%;
+  min-height: 160px;
+  max-height: 320px;
+  padding: 10px 12px;
+  border: none;
+  resize: vertical;
+  background: transparent;
+  color: var(--fg-1);
+  font-family: var(--font-mono, monospace);
+  font-size: 12.5px;
+  line-height: 1.5;
+  outline: none;
+}
+.sig-editor-hint {
+  padding: 6px 12px;
+  border-top: 1px solid var(--border-1);
+  color: var(--fg-3);
+  font-family: var(--font-sans);
+  font-size: 12px;
 }
 
 .sig-tb-btn {
