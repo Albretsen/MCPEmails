@@ -5858,8 +5858,11 @@ async function readImapMessage(
 
 /**
  * Implements `email_search` for IMAP inboxes using IMAP SEARCH TEXT (matches
- * headers + body). Searches the first folder in includeFolders (default INBOX);
- * IMAP SEARCH is single-mailbox. Newest UIDs first; no relevance score.
+ * headers + body). IMAP SEARCH is single-mailbox, so when includeFolders is
+ * empty this fans out across every selectable mailbox on the account (per the
+ * tool's documented "empty array searches all folders" default) instead of
+ * silently scanning INBOX alone. Newest first across the merged set; no
+ * relevance score.
  */
 async function searchImapMessages(
   inbox: InboxRow,
@@ -5871,7 +5874,6 @@ async function searchImapMessages(
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
   }
-  const folder = includeFolders[0] ?? "INBOX";
   const password = await decryptStoredToken(inbox.imap_password);
 
   let client: ImapClient | null = null;
@@ -5882,7 +5884,30 @@ async function searchImapMessages(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
+
+    // `folders` holds names ready to pass straight to selectMailbox. Explicit
+    // includeFolders entries are user/agent-supplied tokens (e.g. "sent",
+    // "archive") and still need imapFolderName's canonical-alias mapping;
+    // auto-discovered names come verbatim from LIST and are already real
+    // mailbox names, so mapping them again would corrupt ones that happen to
+    // collide with an alias token (e.g. a server's real "Spam" mailbox getting
+    // remapped to the alias's generic "Junk", which doesn't exist there).
+    let folders: string[];
+    if (includeFolders.length > 0) {
+      folders = includeFolders.map(imapFolderName);
+    } else {
+      const mailboxes = await client.listMailboxes();
+      // \Noselect mailboxes (pure hierarchy nodes) can't be SELECTed/SEARCHed.
+      const selectable = mailboxes.filter(
+        (mb) => !mb.flags.some((f) => f.toLowerCase() === "\\noselect"),
+      );
+      // Cap the number of mailboxes fanned out to bound worst-case latency on
+      // accounts with an unusually large folder tree; mirrors the count-enrichment
+      // cap in imapListFolders. Every folder is still reachable via include_folders.
+      const IMAP_SEARCH_FOLDER_CAP = 25;
+      folders = selectable.slice(0, IMAP_SEARCH_FOLDER_CAP).map((mb) => mb.name);
+      if (folders.length === 0) folders = ["INBOX"];
+    }
 
     // Translate the normalized search into RFC 3501 SEARCH criteria. The
     // translator quotes/escapes string operands; "ALL" is a valid match-all.
@@ -5892,8 +5917,6 @@ async function searchImapMessages(
     // inject arbitrary IMAP commands.
     // deno-lint-ignore no-control-regex
     const criteria = toImapSearch(search).replace(/[\x00-\x1F\x7F]+/g, " ");
-    const allUids = await client.uidSearch(criteria);
-    const total = allUids.length;
 
     // IMAP UID SEARCH returns matches in ascending UID order, and UID is only a
     // rough proxy for arrival order — re-filed/migrated/redelivered messages can
@@ -5902,48 +5925,56 @@ async function searchImapMessages(
     // window and surface an older same-subject match instead. To return true
     // newest-first results, fetch envelopes and sort by the actual message date
     // before paginating. Bound the work to the highest-UID CANDIDATE_CAP matches
-    // (UID-desc is a good first-pass recency filter) so a huge match set doesn't
-    // fetch unbounded envelopes; within that pool ordering is exact by date.
+    // per folder (UID-desc is a good first-pass recency filter) so a huge match
+    // set doesn't fetch unbounded envelopes; within that pool ordering is exact
+    // by date.
     const CANDIDATE_CAP = Math.max(offset + limit, 200);
-    const candidateUids = allUids
-      .slice()
-      .sort((a, b) => b - a)
-      .slice(0, CANDIDATE_CAP);
 
-    const summaries = await client.fetchSummaries(candidateUids);
+    let total = 0;
+    const candidates: Array<{ folder: string; summary: ImapMessageSummary }> = [];
+    for (const folder of folders) {
+      await client.selectMailbox(folder);
+      const allUids = await client.uidSearch(criteria);
+      total += allUids.length;
+      const candidateUids = allUids
+        .slice()
+        .sort((a, b) => b - a)
+        .slice(0, CANDIDATE_CAP);
+      const summaries = await client.fetchSummaries(candidateUids);
+      for (const summary of summaries) candidates.push({ folder, summary });
+    }
+
     // Sort by envelope date descending; messages with an unparseable/absent date
     // sort last, tie-broken by UID descending (newest arrival first).
-    const sorted = summaries.slice().sort((a, b) => {
-      const da = Date.parse(a.envelope.date ?? "");
-      const db = Date.parse(b.envelope.date ?? "");
+    const sorted = candidates.slice().sort((a, b) => {
+      const da = Date.parse(a.summary.envelope.date ?? "");
+      const db = Date.parse(b.summary.envelope.date ?? "");
       const va = Number.isFinite(da) ? da : -Infinity;
       const vb = Number.isFinite(db) ? db : -Infinity;
       if (vb !== va) return vb - va;
-      return b.uid - a.uid;
+      return b.summary.uid - a.summary.uid;
     });
-    const pageSummaries = sorted.slice(offset, offset + limit);
+    const page = sorted.slice(offset, offset + limit);
 
-    const messages: SearchEmailSummary[] = [];
-    for (const s of pageSummaries) {
-      messages.push({
-        id: encodeImapId(folder, s.uid),
-        from: decodeEnvelopeAddress(s.envelope.from[0] ?? { name: "", email: "" }),
-        to: s.envelope.to.map(decodeEnvelopeAddress),
-        subject: decodeEnvelopeSubject(s.envelope.subject),
-        date: s.envelope.date,
-        preview: s.preview,
-        is_read: s.flags.includes("\\Seen"),
-        has_attachments: s.hasAttachments,
-        folder,
-        thread_id: String(s.uid),
-        relevance_score: null,
-      });
-    }
+    const messages: SearchEmailSummary[] = page.map(({ folder, summary: s }) => ({
+      id: encodeImapId(folder, s.uid),
+      from: decodeEnvelopeAddress(s.envelope.from[0] ?? { name: "", email: "" }),
+      to: s.envelope.to.map(decodeEnvelopeAddress),
+      subject: decodeEnvelopeSubject(s.envelope.subject),
+      date: s.envelope.date,
+      preview: s.preview,
+      is_read: s.flags.includes("\\Seen"),
+      has_attachments: s.hasAttachments,
+      folder,
+      thread_id: String(s.uid),
+      relevance_score: null,
+    }));
 
     return {
       messages,
       total,
-      // IMAP UID SEARCH returns the full matching set, so total is exact.
+      // IMAP UID SEARCH returns the full matching set for every folder scanned,
+      // so total is exact (not just the CANDIDATE_CAP-bounded envelope pool).
       total_is_estimate: false,
       has_more: offset + limit < total,
       next_offset: offset + limit,
