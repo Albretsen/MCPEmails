@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { decryptToken } from '@/lib/crypto';
+import {
+  sanitizeSignatureHtml,
+  SIGNATURE_HTML_MAX_LENGTH,
+} from '@/lib/sanitizeSignatureHtmlServer';
 import type { Database } from '@/types/database.types';
 
 type InboxUpdate = Database['public']['Tables']['inboxes']['Update'];
@@ -245,13 +249,12 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    // The sanitizer is imported dynamically (not at module top-level) because it
-    // pulls in isomorphic-dompurify → jsdom, whose ESM-only transitive deps break
-    // Next's build-time page-data collection if evaluated eagerly. Loading it
-    // inside the handler defers it to request time on the Node runtime.
-    const { sanitizeSignatureHtml, SIGNATURE_HTML_MAX_LENGTH } = await import(
-      '@/lib/sanitizeSignatureHtml'
-    );
+    // Server-side gate uses the dependency-free regex sanitizer, NOT the
+    // DOMPurify one: isomorphic-dompurify needs jsdom, whose ESM-only
+    // transitive deps crash with ERR_REQUIRE_ESM under the Vercel Node
+    // runtime (this 500'd every signature save in production). The stored
+    // HTML is re-sanitized by DOMPurify in the browser before preview render
+    // and by the edge function again at send time.
     // Defensive pre-check: reject an oversized payload before sanitizing.
     if (input.signature_html.length > SIGNATURE_HTML_MAX_LENGTH) {
       return NextResponse.json({ error: 'Signature is too large.' }, { status: 400 });
