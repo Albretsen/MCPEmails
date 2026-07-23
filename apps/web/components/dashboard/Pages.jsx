@@ -1457,7 +1457,7 @@ function SignatureEditor({ inbox, onSave, t }) {
           value={replyMode}
           onChange={e => setReplyMode(e.target.value)}
           disabled={saving}
-          style={{ height: 32, padding: '0 8px', flex: '0 0 auto' }}
+          style={{ height: 32, padding: '0 8px', flex: '0 0 auto', width: 'auto' }}
         >
           <option value="always">{t('inboxes.detail.signature.replyModeAlways')}</option>
           <option value="first_only">{t('inboxes.detail.signature.replyModeFirstOnly')}</option>
