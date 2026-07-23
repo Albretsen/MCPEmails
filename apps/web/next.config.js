@@ -126,11 +126,16 @@ const nextConfig = {
   // Server-only external packages
   // ---------------------------------------------------------------------------
   // isomorphic-dompurify pulls in jsdom, whose transitive deps ship as ESM
-  // (@csstools/css-calc, etc.). Bundling them for the Node server turns their
-  // `import` into a broken `require()` of an .mjs during page-data collection
-  // (ERR_REQUIRE_ESM). Marking them external leaves them as runtime Node
-  // imports so the sanitizer (used by the signature PATCH route) loads cleanly.
-  serverExternalPackages: ['isomorphic-dompurify', 'jsdom'],
+  // (@csstools/css-calc, etc.). isomorphic-dompurify/jsdom used to be listed
+  // here to dodge an ERR_REQUIRE_ESM crash during build-time page-data
+  // collection. That marks them as raw Node `require()` targets at runtime
+  // instead of letting the bundler transform them, which breaks the exact
+  // same way (ERR_REQUIRE_ESM), just moved from build time to every request
+  // (confirmed in production: every signature_html save 500'd). The sanitizer
+  // is already loaded via `await import(...)` inside the PATCH handler
+  // (apps/web/app/api/inboxes/[id]/route.ts), which alone defers evaluation
+  // past build-time page-data collection, so externalizing isn't needed.
+  serverExternalPackages: [],
 
   // ---------------------------------------------------------------------------
   // Image optimisation
