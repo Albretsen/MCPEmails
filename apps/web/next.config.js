@@ -125,16 +125,17 @@ const nextConfig = {
   // ---------------------------------------------------------------------------
   // Server-only external packages
   // ---------------------------------------------------------------------------
-  // isomorphic-dompurify pulls in jsdom, whose transitive deps ship as ESM
-  // (@csstools/css-calc, etc.). isomorphic-dompurify/jsdom used to be listed
-  // here to dodge an ERR_REQUIRE_ESM crash during build-time page-data
-  // collection. That marks them as raw Node `require()` targets at runtime
-  // instead of letting the bundler transform them, which breaks the exact
-  // same way (ERR_REQUIRE_ESM), just moved from build time to every request
-  // (confirmed in production: every signature_html save 500'd). The sanitizer
-  // is already loaded via `await import(...)` inside the PATCH handler
-  // (apps/web/app/api/inboxes/[id]/route.ts), which alone defers evaluation
-  // past build-time page-data collection, so externalizing isn't needed.
+  // Deliberately empty. isomorphic-dompurify/jsdom used to be listed here, but
+  // externalizing makes the server require() them raw at runtime, and jsdom's
+  // ESM-only transitive deps (@csstools/css-calc via @asamuzakjp/css-color)
+  // then crash with ERR_REQUIRE_ESM on every request. Listing them here does
+  // not even help, because Next's BUILT-IN default externals list already
+  // contains jsdom, so it stays external either way. The real fix: no server
+  // code imports isomorphic-dompurify at all anymore. Route handlers use the
+  // dependency-free src/lib/sanitizeSignatureHtmlServer.js; the DOMPurify
+  // module (src/lib/sanitizeSignatureHtml.js) is only imported by client
+  // components, where it uses the native browser DOM. Do not re-import it in
+  // any Node route handler; it cannot load under the Vercel runtime.
   serverExternalPackages: [],
 
   // ---------------------------------------------------------------------------
