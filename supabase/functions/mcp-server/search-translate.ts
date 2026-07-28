@@ -254,42 +254,6 @@ export function toGmailQuery(s: NormalizedSearch): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// JMAP  →  Email/query FilterCondition | FilterOperator
-//   Empty NormalizedSearch → {} (no filter ⇒ match all).
-//   Single condition → bare FilterCondition object.
-//   Multiple → { operator: "AND", conditions: [...] } (RFC 8620 §5.5).
-//   `unread:true` → notKeyword "$seen"; `unread:false` → hasKeyword "$seen".
-//   `flagged:true` → hasKeyword "$flagged".
-//   `raw` is ignored (JMAP has no free-form query-string escape hatch).
-//   Docs: https://datatracker.ietf.org/doc/html/rfc8621 (§4.4.1)
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function toJmapFilter(s: NormalizedSearch): Record<string, unknown> {
-  const conditions: Record<string, unknown>[] = [];
-  const push = (c: Record<string, unknown>) => conditions.push(c);
-
-  if (s.from) push({ from: s.from });
-  if (s.to) push({ to: s.to });
-  if (s.cc) push({ cc: s.cc });
-  if (s.subject) push({ subject: s.subject });
-  if (s.body) push({ body: s.body });
-  if (s.text) push({ text: s.text });
-
-  if (s.unread === true) push({ notKeyword: "$seen" });
-  else if (s.unread === false) push({ hasKeyword: "$seen" });
-
-  if (s.flagged === true) push({ hasKeyword: "$flagged" });
-  if (s.has_attachment === true) push({ hasAttachment: true });
-
-  if (s.since) push({ after: formatUtcDateTime(s.since) });
-  if (s.before) push({ before: formatUtcDateTime(s.before) });
-
-  if (conditions.length === 0) return {};
-  if (conditions.length === 1) return conditions[0];
-  return { operator: "AND", conditions };
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // IMAP  →  RFC 3501 SEARCH criteria string (caller prepends "UID SEARCH").
 //   Empty NormalizedSearch → "ALL".
 //   has_attachment is unsupported and dropped (no RFC 3501 predicate).
