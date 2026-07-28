@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MIcon } from '../MarketingPrimitives';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
+import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 
 // ─── Theme toggle ─────────────────────────────────────────────────────────────
 
@@ -466,6 +467,10 @@ export function AuthorizeApp({
       // The server will redirect to redirect_uri?code=...&state=... in its
       // response. We follow that redirect here.
       const { redirect_to } = await res.json();
+      trackProductEvent('mcp_connection_authorized', {
+        client: ['claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast', 'warp', 'curl'].includes(client.client_id) ? client.client_id : 'unknown',
+        scope_profile: scopeProfile(selectedScopes.map((scope) => scope.scope)),
+      });
       if (redirect_to) {
         window.location.href = redirect_to;
       } else {

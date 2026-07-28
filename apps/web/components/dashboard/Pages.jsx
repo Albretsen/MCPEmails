@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { track } from '@vercel/analytics';
+import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
 import { useAppLocale } from '../i18n/AppLocaleProvider';
 import { routing } from '@/i18n/routing';
@@ -53,11 +53,12 @@ function PageHeader({ title, sub, action }) {
  * (and config snippets) trivial to copy. `multiline` allows code blocks to wrap
  * and preserve whitespace.
  */
-function CopyField({ value, label, multiline = false }) {
+function CopyField({ value, label, multiline = false, onCopy }) {
   const t = useTranslations('dashboard');
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard?.writeText(value).then(() => {
+      onCopy?.();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }).catch(() => {});
@@ -353,7 +354,7 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
 
         {/* Body */}
         <div className="modal-body">
-          <CopyField value={mcpUrl} label={t('clients.mcpServerUrl')} />
+          <CopyField value={mcpUrl} label={t('clients.mcpServerUrl')} onCopy={() => trackProductEvent('mcp_connection_started', { client: client.k === 'api' ? 'curl' : client.k })} />
 
           <ol style={{ margin: '4px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {steps.map((s, i) => (
@@ -376,7 +377,7 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
             </div>
           ) : null}
 
-          {config ? <CopyField value={config} label={t('clients.configuration')} multiline /> : null}
+          {config ? <CopyField value={config} label={t('clients.configuration')} multiline onCopy={() => trackProductEvent('mcp_connection_started', { client: client.k === 'api' ? 'curl' : client.k })} /> : null}
 
           {client.needsKey ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--brand-soft)', border: '1px solid rgba(37,71,229,0.15)', borderRadius: 8 }}>
@@ -492,7 +493,7 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
               {MCP_CLIENTS.map((c) => (
                 <button
                   key={c.k}
-                  onClick={() => setActiveClient(c)}
+                  onClick={() => { trackProductEvent('mcp_connection_started', { client: c.k === 'api' ? 'curl' : c.k }); setActiveClient(c); }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
                     background: 'var(--bg-surface)', border: '1px solid var(--border-1)',
@@ -2232,7 +2233,7 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
  *   keyName  human-readable name for context
  *   onDone   called when the user clicks "Done" after acknowledging
  */
-function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
+function KeyRevealModal({ rawKey, keyName, mcpUrl, scopes, onDone }) {
   const t = useTranslations('dashboard');
   const [copied, setCopied] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -2242,8 +2243,8 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, onDone }) {
   // step immediately before "connect it in Claude", so it pinpoints where
   // users drop between having a key and connecting an inbox.
   useEffect(() => {
-    track('api_key_revealed');
-  }, []);
+    trackProductEvent('api_key_revealed', { scope_profile: scopeProfile(scopes) });
+  }, [scopes]);
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(rawKey).catch(() => {});
@@ -2692,6 +2693,7 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
         <KeyRevealModal
           rawKey={revealData.rawKey}
           keyName={revealData.name}
+          scopes={revealData.scopes ?? []}
           mcpUrl={mcpUrl}
           onDone={handleRevealDone}
         />

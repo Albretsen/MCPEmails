@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { track } from '@vercel/analytics';
+import { trackProductEvent } from '@/lib/analytics.mjs';
 import { createClient } from '@/lib/supabase/client';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
@@ -69,17 +69,21 @@ export function SignupApp() {
 
   function buildOAuthUrl(provider) {
     const url = new URL(`/auth/${provider}`, window.location.origin);
-    const redirect = getSafeRedirect();
-    if (redirect) url.searchParams.set('next', redirect);
+    const redirect = getSafeRedirect() ?? '/dashboard?firstrun=1';
+    const destination = new URL(redirect, window.location.origin);
+    destination.searchParams.set('signup_method', provider);
+    url.searchParams.set('next', `${destination.pathname}${destination.search}`);
     return url.toString();
   }
 
   function handleGoogleSignIn() {
+    trackProductEvent('signup_started', { method: 'google' });
     setSocialLoading('google');
     window.location.href = buildOAuthUrl('google');
   }
 
   function handleGitHubSignIn() {
+    trackProductEvent('signup_started', { method: 'github' });
     setSocialLoading('github');
     window.location.href = buildOAuthUrl('github');
   }
@@ -106,6 +110,7 @@ export function SignupApp() {
 
     setStep('submitting');
     setServerError('');
+    trackProductEvent('signup_started', { method: 'password' });
 
     const supabase = createClient();
     const { data, error } = await supabase.auth.signUp({
@@ -121,7 +126,7 @@ export function SignupApp() {
       // Email confirmation is disabled, so signUp returns an active session.
       // Skip the "check your email" wall and send the user straight into the
       // first-run connect flow — the moment of highest intent for activation.
-      track('signup_completed', { method: 'password' });
+      trackProductEvent('signup_completed', { method: 'password' });
       window.location.href = getRedirectDestination();
     } else {
       // Confirmation is still required (e.g. the project setting was

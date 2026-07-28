@@ -1107,6 +1107,22 @@ async function writeActivityLog(params: ActivityLogParams): Promise<void> {
   }
 }
 
+/** Records only the first successful, read-capable tool call per workspace.
+ * It is an aggregate funnel marker, never analytics request data. */
+function analyticsClient(userAgent: string | null): string {
+  const ua = (userAgent ?? "").toLowerCase();
+  for (const [needle, client] of [["claude", "claude"], ["chatgpt", "chatgpt"], ["cursor", "cursor"], ["vscode", "vscode"], ["cline", "cline"], ["windsurf", "windsurf"], ["gemini", "gemini"], ["zed", "zed"], ["jetbrains", "jetbrains"], ["raycast", "raycast"], ["warp", "warp"], ["curl", "curl"]]) if (ua.includes(needle)) return client;
+  return "unknown";
+}
+
+async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxId: string | null, toolName: string, userAgent: string | null): Promise<void> {
+  if (!["inbox_list", "email_read"].includes(toolName)) return;
+  const { data: inbox } = inboxId ? await supabase.from("inboxes").select("provider, service").eq("id", inboxId).maybeSingle() : { data: null };
+  const provider = inbox?.service && inbox.service !== "generic" ? inbox.service : inbox?.provider ?? "unknown";
+  const { data: oauthToken } = await supabase.from("oauth_refresh_tokens").select("api_key_id").eq("api_key_id", apiKeyId).maybeSingle();
+  await supabase.from("workspaces").update({ analytics_first_tool_name: toolName, analytics_first_tool_provider: provider, analytics_first_tool_client: analyticsClient(userAgent), analytics_first_tool_path: oauthToken ? "oauth" : "api_key" }).eq("id", workspaceId).is("analytics_first_tool_name", null);
+}
+
 // ---------------------------------------------------------------------------
 // Envelope validation
 // ---------------------------------------------------------------------------
@@ -17169,6 +17185,7 @@ async function handleToolsCall(
     ipAddress: ctx.ipAddress,
     userAgent: ctx.userAgent,
   });
+  if (logStatus === "success") await markFirstProductUse(apiKey.workspace_id, apiKey.id, resolvedInboxId, dispatchName, ctx.userAgent);
 
   console.log("[mcp-server] tools/call", {
     key_id: apiKey.id,

@@ -304,6 +304,48 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .tool .name { font-family: var(--font-mono); font-size: 14px; color: var(--cobalt-700); font-weight: 500; }
 .tool .desc { font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3); margin-top: 4px; line-height: 1.45; }
 
+/* === Examples (real prompts) === */
+.example-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px;
+}
+.example-card {
+  background: var(--bg-surface); border: 1px solid var(--border-1);
+  border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;
+  transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+.example-card:hover { border-color: var(--border-2); box-shadow: var(--shadow-2); }
+.example-user {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 18px 18px 16px;
+}
+.example-user-mark {
+  flex: none; font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  color: var(--mint-600); background: var(--bg-sunken); border-radius: 6px;
+  padding: 2px 6px; margin-top: 2px;
+}
+.example-user p {
+  margin: 0; font-family: var(--font-sans); font-size: 15px; font-weight: 500;
+  line-height: 1.5; color: var(--fg-1);
+}
+.example-reply {
+  margin-top: auto;
+  border-top: 1px solid var(--border-1);
+  background: var(--bg-page);
+  padding: 14px 18px 16px;
+}
+.example-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.example-tool-chip {
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 500;
+  color: var(--brand); background: var(--brand-soft);
+  border: 1px solid rgba(37,71,229,0.14);
+  padding: 3px 8px; border-radius: 999px;
+}
+.example-outcome {
+  margin: 0; display: flex; align-items: flex-start; gap: 7px;
+  font-family: var(--font-sans); font-size: 13.5px; line-height: 1.5; color: var(--fg-2);
+}
+.example-outcome svg { flex: none; margin-top: 2px; }
+
 /* === Pricing === */
 .price-grid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
@@ -729,6 +771,7 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 @media (max-width: 1023px) {
   .hero-grid { gap: 32px; }
   .tools { grid-template-columns: repeat(3, 1fr); }
+  .example-grid { grid-template-columns: repeat(2, 1fr); }
   .price-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-grid { grid-template-columns: 1fr 1fr 1fr; }
   .footer .brand-cell { grid-column: 1 / -1; }
@@ -793,6 +836,7 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   .how-steps { grid-template-columns: 1fr; gap: 10px; }
   /* 2-column tool grid on narrow screens */
   .tools { grid-template-columns: 1fr 1fr; }
+  .example-grid { grid-template-columns: 1fr; }
 
   /* === Quote === */
   .quote .container {

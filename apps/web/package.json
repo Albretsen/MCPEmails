@@ -6,7 +6,8 @@
     "dev": "node -e \"try{const{pid}=JSON.parse(require('fs').readFileSync('.next/dev/lock','utf8'));process.kill(pid,'SIGKILL')}catch(e){}\"; next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:analytics": "node --test src/lib/analytics.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

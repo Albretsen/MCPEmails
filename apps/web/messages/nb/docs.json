@@ -58,7 +58,7 @@
     "bodyMethods": "Send en JSON-RPC 2.0-forespørselskropp. Støttede metoder: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.",
     "infoTransport": "Transport: <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Autentisering: <b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "Hastighetsgrenser: <b>100 req/min · 1 000/t · 10 000/dag</b> per nøkkel",
+    "infoRateLimits": "Hastighetsgrenser: <b>100 req/min · 1 000/t · 10 000/dag</b> per nøkkel, pluss arbeidsområdets tak for planen din",
     "infoFormat": "Responsformat: <b>JSON-RPC 2.0</b> — vellykkede resultater bærer også et typet <code>structuredContent</code>-objekt",
     "handshakeLabel": "Initialize-håndtrykk",
     "pollingHeading": "Polling, ikke push",

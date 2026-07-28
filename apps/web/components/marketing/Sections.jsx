@@ -559,6 +559,83 @@ export function HowItWorks() {
   );
 }
 
+/* ============== EXAMPLES ============== */
+/**
+ * Concrete, mass-appeal prompts a person could hand their AI assistant once
+ * connected — everyday inbox chores, not developer jargon. The prompts/
+ * outcomes are untranslated (like the terminal/endpoint hero mockups above)
+ * since the literal tool-call fragments are part of the visual rather than
+ * prose to localize; the section head text is translated as usual.
+ */
+const EXAMPLES = [
+  {
+    prompt: "What was the wifi password Alex sent me last week?",
+    tools: ["email_read"],
+    outcome: "Found it — pulled straight from Alex’s message on Tuesday.",
+  },
+  {
+    prompt: "Unsubscribe me from every newsletter I haven’t opened in 3 months",
+    tools: ["email_read", "email_organize"],
+    outcome: "Archived 14 newsletters you haven’t touched since April.",
+  },
+  {
+    prompt: "Reply to the landlord and say rent’s coming Friday",
+    tools: ["email_compose"],
+    outcome: "Sent — Priya knows rent lands Friday.",
+  },
+  {
+    prompt: "Move every receipt from this month into a Receipts folder",
+    tools: ["email_organize"],
+    outcome: "Moved 23 receipts into Receipts/2026.",
+  },
+  {
+    prompt: "Send this at 8am Monday, not now",
+    tools: ["schedule"],
+    outcome: "Scheduled for Mon 8:00 AM — nothing goes out before then.",
+  },
+  {
+    prompt: "What did the doctor’s office say about my appointment?",
+    tools: ["email_read"],
+    outcome: "Confirmed for Thursday at 2:15 PM.",
+  },
+];
+
+export function Examples() {
+  const t = useTranslations('home');
+  return (
+    <section className="section examples" id="examples">
+      <div className="container">
+        <div className="section-head">
+          <div className="eye-label">{t('examples.eyebrow')}</div>
+          <h2>{t('examples.titleLine1')}<br/>{t('examples.titleLine2')}</h2>
+          <p className="sub">{t('examples.sub')}</p>
+        </div>
+        <div className="example-grid">
+          {EXAMPLES.map((ex, i) => (
+            <div className="example-card" key={i}>
+              <div className="example-user">
+                <span className="example-user-mark">{'>_'}</span>
+                <p>{ex.prompt}</p>
+              </div>
+              <div className="example-reply">
+                <div className="example-tools">
+                  {ex.tools.map((tool) => (
+                    <span className="example-tool-chip" key={tool}>{tool}()</span>
+                  ))}
+                </div>
+                <p className="example-outcome">
+                  <MIcon name="check" size={13} color="var(--mint-600)" />
+                  <span>{ex.outcome}</span>
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ============== QUOTE ============== */
 export function Quote() {
   const t = useTranslations('home');

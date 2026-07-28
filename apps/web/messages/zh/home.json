@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · 将 Gmail、Outlook 与 IMAP 连接到 Claude",
-    "description": "让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Outlook、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。"
+    "title": "mcpemails · 将 Gmail、iCloud 与 IMAP 连接到 Claude",
+    "description": "让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Fastmail、iCloud 和 IMAP 邮件。Outlook 正在开发中。免费，不存储任何邮件。"
   },
   "nav": {
     "features": "功能",
@@ -51,8 +51,8 @@
     "items": {
       "0": {
         "tag": "范围",
-        "h": "六个核心工具，覆盖日常所需。",
-        "p": "少数几个工具即可覆盖日常工作——<code>inbox_list</code>、<code>email_read</code>（list、read、search）和 <code>email_compose</code>（send、reply）——更高级的工具（<code>email_organize</code>、<code>folder</code>、<code>draft</code>、<code>schedule</code>）则随时备用。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。"
+        "h": "十个专注工具，覆盖日常所需。",
+        "p": "工具覆盖日常工作——<code>inbox_list</code>、<code>email_read</code>（list、read、search）和 <code>email_compose</code>（send、reply）——另有专门用于整理、删除、文件夹、草稿、定时发送、联系人和签名的工具。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。"
       },
       "1": {
         "tag": "存储",
@@ -167,6 +167,7 @@
     "title": "常见问题，逐一解答",
     "sub": "连接第一个收件箱前，你需要了解的一切。",
     "items": [
+      { "q": "你们使用分析工具吗？", "a": "我们使用保护隐私且无 Cookie 的产品分析来了解网站和设置表现。我们绝不会收集邮件内容、地址、API 密钥、OAuth 令牌或 MCP 请求数据。" },
       {
         "q": "它支持哪些 AI 客户端？",
         "a": "任何兼容 MCP 的客户端。我们是一个标准的 streamable-http MCP 服务器，支持 OAuth 2.1、DCR 和 PKCE，因此同一个收件箱可在 Claude、Cursor、VS Code、ChatGPT、Windsurf、n8n、Make、LibreChat 等中使用。粘贴一个端点 URL 即可连接——无需为每个应用重新搭建。"

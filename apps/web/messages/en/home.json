@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Connect Gmail, Outlook & IMAP to Claude",
-    "description": "Give Claude, Cursor, or any MCP client real access to your inbox: read, send, search, and organize email in Gmail, Outlook, Fastmail, iCloud, and IMAP. Free, nothing stored."
+    "title": "mcpemails · Connect Gmail, iCloud & IMAP to Claude",
+    "description": "Give Claude, Cursor, or any MCP client real access to your inbox: read, send, search, and organize email in Gmail, Fastmail, iCloud, and IMAP. Outlook is in progress. Free, nothing stored."
   },
   "nav": {
     "features": "Features",
@@ -51,8 +51,8 @@
     "items": {
       "0": {
         "tag": "Scope",
-        "h": "Six core tools. The essentials, covered.",
-        "p": "A handful of tools cover the everyday work — <code>inbox_list</code>, <code>email_read</code> (list, read, search) and <code>email_compose</code> (send, reply) — and more advanced tools (<code>email_organize</code>, <code>folder</code>, <code>draft</code>, <code>schedule</code>) are there when you need them. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
+        "h": "Ten focused tools. The essentials, covered.",
+        "p": "Tools cover the everyday work — <code>inbox_list</code>, <code>email_read</code> (list, read, search) and <code>email_compose</code> (send, reply) — plus focused tools for organizing, deleting, folders, drafts, scheduling, contacts, and signatures. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
       },
       "1": {
         "tag": "Storage",
@@ -109,6 +109,12 @@
       "6": "Schedule a message for a future time, list pending scheduled sends, and cancel them before they go out.",
       "7": "Find people by name or email with a live scan of recent matching mail. Nothing is stored."
     }
+  },
+  "examples": {
+    "eyebrow": "Real prompts",
+    "titleLine1": "Just ask.",
+    "titleLine2": "It reads, writes, and files.",
+    "sub": "No dashboards to learn. Tell your AI assistant what you want in plain English, and it uses mcpemails to get it done."
   },
   "quote": {
     "text": "I wanted my agents to work my inbox, but every option meant handing a third party a copy of my email. So I built the pipe I wished existed: connect once, your inbox is fetched live and never stored, and you can cut off any agent in a click. That's the product I trust with my own inbox.",
@@ -167,6 +173,7 @@
     "title": "Questions, answered",
     "sub": "Everything you need to know before connecting your first inbox.",
     "items": [
+      { "q": "Do you use analytics?", "a": "We use privacy-preserving, cookieless product analytics to understand site and setup performance. We never collect email content, addresses, API keys, OAuth tokens, or MCP request data." },
       {
         "q": "Which AI clients does it work with?",
         "a": "Any MCP-compatible client. We're a standard streamable-http MCP server with OAuth 2.1, DCR and PKCE, so the same inbox works in Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat and more. Paste one endpoint URL and you're connected — no per-app rebuild."

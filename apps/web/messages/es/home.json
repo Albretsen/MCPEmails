@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Conecta Gmail, Outlook e IMAP a Claude",
-    "description": "Dale a Claude, Cursor o cualquier cliente MCP acceso real a tu bandeja: lee, envía, busca y organiza correo en Gmail, Outlook, Fastmail, iCloud e IMAP. Gratis, sin almacenar nada."
+    "title": "mcpemails · Conecta Gmail, iCloud e IMAP a Claude",
+    "description": "Dale a Claude, Cursor o cualquier cliente MCP acceso real a tu bandeja: lee, envía, busca y organiza correo en Gmail, Fastmail, iCloud e IMAP. Outlook está en desarrollo. Gratis, sin almacenar nada."
   },
   "nav": {
     "features": "Características",
@@ -51,8 +51,8 @@
     "items": {
       "0": {
         "tag": "Alcance",
-        "h": "Seis herramientas básicas. Lo esencial, cubierto.",
-        "p": "Unas pocas herramientas cubren el trabajo diario — <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply) — y herramientas más avanzadas (<code>email_organize</code>, <code>folder</code>, <code>draft</code>, <code>schedule</code>) están ahí cuando las necesitas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
+        "h": "Diez herramientas enfocadas. Lo esencial, cubierto.",
+        "p": "Las herramientas cubren el trabajo diario — <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply) — además de herramientas específicas para organizar, eliminar, carpetas, borradores, programación, contactos y firmas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
       },
       "1": {
         "tag": "Almacenamiento",
@@ -167,6 +167,7 @@
     "title": "Preguntas, respondidas",
     "sub": "Todo lo que necesitas saber antes de conectar tu primera bandeja de entrada.",
     "items": [
+      { "q": "¿Usan analítica?", "a": "Usamos analítica de producto sin cookies y respetuosa con la privacidad para comprender el sitio y la configuración. Nunca recopilamos contenido de correo, direcciones, claves API, tokens OAuth ni datos de solicitudes MCP." },
       {
         "q": "¿Con qué clientes de IA funciona?",
         "a": "Con cualquier cliente compatible con MCP. Somos un servidor MCP estándar streamable-http con OAuth 2.1, DCR y PKCE, así que la misma bandeja de entrada funciona en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat y más. Pega una sola URL de endpoint y ya estás conectado — sin tener que reconstruir nada para cada app."

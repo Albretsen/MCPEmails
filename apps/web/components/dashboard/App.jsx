@@ -11,6 +11,7 @@ import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityP
 import { ConnectModal } from './ConnectModal';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
+import { trackProductEvent } from '@/lib/analytics.mjs';
 
 /* App.jsx: dashboard root. Owns state, route, modals.
    firstrun param auto-opens the connect modal.
@@ -58,7 +59,7 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null }) {
   const searchParams = useSearchParams();
   const tr = useTranslations('dashboardChrome');
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -112,6 +113,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const [reconnectInbox, setReconnectInbox] = useState(null);
   const [showCommand, setShowCommand] = useState(false);
 
+  useEffect(() => {
+    if (!firstToolEvent) return;
+    trackProductEvent('first_mcp_tool_call', firstToolEvent);
+    trackProductEvent('activation_completed', { activation_path: firstToolEvent.activation_path });
+    fetch('/api/analytics/first-tool-reported', { method: 'POST' }).catch(() => {});
+  }, [firstToolEvent]);
+
   // Global ⌘K / Ctrl+K opens the command palette from anywhere in the dashboard.
   // Escape also closes the mobile sidebar drawer when it is open.
   useEffect(() => {
@@ -157,8 +165,17 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   useEffect(() => {
     const connectedParam = readQuery(searchParams, 'connected');
     const errorParam = readQuery(searchParams, 'error');
+    const signupMethod = readQuery(searchParams, 'signup_method');
+
+    if (signupMethod === 'google' || signupMethod === 'github') {
+      trackProductEvent('signup_completed', { method: signupMethod });
+    }
 
     if (connectedParam) {
+      trackProductEvent('inbox_connected', {
+        provider: connectedParam === 'generic' ? 'imap' : connectedParam,
+        connection_method: ['gmail', 'outlook'].includes(connectedParam) ? 'oauth' : 'app_password',
+      });
       const label = connectedParam.charAt(0).toUpperCase() + connectedParam.slice(1);
       toast({ message: tr('app.connectedSuccess', { provider: label }), variant: 'success' });
       setRouteState('inboxes');
@@ -181,11 +198,12 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       setRouteState('inboxes');
     }
 
-    if (connectedParam || errorParam) {
+    if (connectedParam || errorParam || signupMethod) {
       try {
         const url = new URL(window.location.href);
         url.searchParams.delete('connected');
         url.searchParams.delete('error');
+        url.searchParams.delete('signup_method');
         // Every branch above activates the inboxes section; reflect that in the
         // URL (OAuth callbacks land on the bare /dashboard) so a refresh stays.
         url.pathname = sectionToPath('inboxes');
@@ -449,6 +467,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   };
 
   const onConnect = ({ label, provider, address }) => {
+    trackProductEvent('inbox_connected', { provider, connection_method: 'app_password' });
     // Optimistic update: the real row will appear on next page load via router.refresh().
     const next = { id: String(Date.now()), label, address: address || label, provider, status: "active", calls: 0 };
     // On a reconnect the row already exists — update it in place (clear the error,

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Connectez Gmail, Outlook et IMAP à Claude",
-    "description": "Donnez à Claude, Cursor ou tout client MCP un accès réel à votre boîte : lisez, envoyez, recherchez et organisez Gmail, Outlook, Fastmail, iCloud et IMAP. Gratuit, sans stockage."
+    "title": "mcpemails · Connectez Gmail, iCloud et IMAP à Claude",
+    "description": "Donnez à Claude, Cursor ou tout client MCP un accès réel à votre boîte : lisez, envoyez, recherchez et organisez Gmail, Fastmail, iCloud et IMAP. Outlook est en cours de développement. Gratuit, sans stockage."
   },
   "nav": {
     "features": "Fonctionnalités",
@@ -51,8 +51,8 @@
     "items": {
       "0": {
         "tag": "Périmètre",
-        "h": "Six outils essentiels. L'essentiel, couvert.",
-        "p": "Quelques outils couvrent le travail quotidien — <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply) — et des outils plus avancés (<code>email_organize</code>, <code>folder</code>, <code>draft</code>, <code>schedule</code>) sont là quand vous en avez besoin. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
+        "h": "Dix outils ciblés. L'essentiel, couvert.",
+        "p": "Les outils couvrent le travail quotidien — <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply) — ainsi que des outils ciblés pour organiser, supprimer, gérer les dossiers, les brouillons, la planification, les contacts et les signatures. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
       },
       "1": {
         "tag": "Stockage",
@@ -167,6 +167,7 @@
     "title": "Vos questions, nos réponses",
     "sub": "Tout ce qu'il faut savoir avant de connecter votre première boîte de réception.",
     "items": [
+      { "q": "Utilisez-vous des outils d’analyse ?", "a": "Nous utilisons une analytique produit respectueuse de la vie privée et sans cookie pour comprendre le site et la configuration. Nous ne collectons jamais le contenu ou les adresses des e-mails, les clés API, les jetons OAuth ou les données de requêtes MCP." },
       {
         "q": "Avec quels clients IA fonctionne-t-il ?",
         "a": "Avec n'importe quel client compatible MCP. Nous sommes un serveur MCP standard (streamable-http) avec OAuth 2.1, DCR et PKCE : la même boîte de réception fonctionne donc dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat et bien d'autres. Collez une seule URL de point de terminaison et vous êtes connecté — aucune reconfiguration pour chaque application."
