@@ -1,8 +1,8 @@
 export default {
   slug: 'email-signatures-for-claude',
-  title: 'Email Signatures: Claude Now Signs Mail Like You Would',
+  title: 'Email Signatures for Claude: Auto-Signed, Every Time',
   description:
-    'Set a per-inbox signature once and Claude adds it automatically to every email it sends — new messages, replies, forwards, drafts, and scheduled sends. Works on Gmail, Outlook, Fastmail, iCloud, and any IMAP account.',
+    'Set a signature once per inbox, and Claude signs every email it sends automatically, on Gmail, Outlook, Fastmail, iCloud, and any IMAP account.',
   cover: '/blog/cover-email-signatures-for-claude.svg',
   coverAlt:
     'Email signatures for Claude — set a per-inbox signature once and Claude signs every message it sends, on every provider',

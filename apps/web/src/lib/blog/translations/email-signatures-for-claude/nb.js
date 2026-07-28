@@ -1,7 +1,7 @@
 export default {
-  title: 'E-postsignaturer: Claude signerer nå e-post slik du ville gjort',
+  title: 'E-postsignaturer for Claude: signert automatisk, hver gang',
   description:
-    'Angi en signatur per innboks én gang, så legger Claude den automatisk til i hver e-post den sender: nye meldinger, svar, videresendinger, utkast og planlagte sendinger. Fungerer med Gmail, Outlook, Fastmail, iCloud og alle IMAP-kontoer.',
+    'Sett signaturen din én gang per innboks, så signerer Claude automatisk hver e-post den sender, i Gmail, Outlook, Fastmail, iCloud og alle IMAP-kontoer.',
   coverAlt:
     'E-postsignaturer for Claude: angi en signatur per innboks én gang, så signerer Claude hver melding den sender, hos alle leverandører',
   content: `Når Claude sender en e-post for deg, bør den se ut som om du sendte den. Det inkluderer avslutningen: navnet ditt, tittelen din, firmalinjen din, den lenken til bestillingssiden din. Frem til nå måtte du enten skrive signaturen din inn i hver melding, eller godta e-post som sluttet litt brått. I dag endres det: **MCP Emails legger nå signaturen din automatisk til i hver melding Claude sender.**

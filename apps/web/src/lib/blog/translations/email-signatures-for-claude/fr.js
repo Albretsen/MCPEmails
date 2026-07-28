@@ -1,7 +1,7 @@
 export default {
-  title: 'Signatures e-mail : Claude signe désormais comme vous le feriez',
+  title: 'Signatures e-mail : Claude signe chaque envoi automatiquement',
   description:
-    'Définissez une signature par boîte une seule fois et Claude l\'ajoute automatiquement à chaque e-mail qu\'il envoie : nouveaux messages, réponses, transferts, brouillons et envois programmés. Fonctionne sur Gmail, Outlook, Fastmail, iCloud et tout compte IMAP.',
+    'Définissez votre signature une fois par boîte et Claude l\'ajoute automatiquement à chaque e-mail envoyé, sur Gmail, Outlook, Fastmail, iCloud et tout compte IMAP.',
   coverAlt:
     'Signatures e-mail pour Claude : définissez une signature par boîte une seule fois et Claude signe chaque message qu\'il envoie, sur tous les fournisseurs',
   content: `Quand Claude envoie un e-mail à votre place, il devrait avoir l'air d'avoir été envoyé par vous. Cela inclut la formule de fin : votre nom, votre fonction, la ligne de votre entreprise, ce lien vers votre page de réservation. Jusqu'à présent, soit vous tapiez votre signature dans chaque prompt, soit vous acceptiez des e-mails qui se terminaient un peu abruptement. Aujourd'hui, cela change : **MCP Emails applique désormais votre signature automatiquement à chaque message que Claude envoie.**

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Dale una bandeja de entrada a tu agente de IA.",
-    "description": "Conecta tus cuentas de correo a Claude, Cursor o cualquier cliente compatible con MCP. Lee, envía, busca y responde correos mediante el Model Context Protocol."
+    "title": "mcpemails · Conecta Gmail, Outlook e IMAP a Claude",
+    "description": "Dale a Claude, Cursor o cualquier cliente MCP acceso real a tu bandeja: lee, envía, busca y organiza correo en Gmail, Outlook, Fastmail, iCloud e IMAP. Gratis, sin almacenar nada."
   },
   "nav": {
     "features": "Características",
