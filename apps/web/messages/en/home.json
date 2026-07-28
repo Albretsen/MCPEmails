@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Give your AI agent an inbox.",
-    "description": "Connect your email accounts to Claude, Cursor, or any MCP-compatible client. Read, send, search, and reply to email via the Model Context Protocol."
+    "title": "mcpemails · Connect Gmail, Outlook & IMAP to Claude",
+    "description": "Give Claude, Cursor, or any MCP client real access to your inbox: read, send, search, and organize email in Gmail, Outlook, Fastmail, iCloud, and IMAP. Free, nothing stored."
   },
   "nav": {
     "features": "Features",

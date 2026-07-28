@@ -1,7 +1,7 @@
 export default {
-  title: 'Firmas de correo: Claude ahora firma como lo harías tú',
+  title: 'Firmas de correo para Claude: se añaden solas, siempre',
   description:
-    'Configura una firma por bandeja una vez y Claude la añade automáticamente a cada correo que envía: mensajes nuevos, respuestas, reenvíos, borradores y envíos programados. Funciona en Gmail, Outlook, Fastmail, iCloud y cualquier cuenta IMAP.',
+    'Configura tu firma una vez por bandeja y Claude la añade sola a cada correo que envía, en Gmail, Outlook, Fastmail, iCloud y cualquier cuenta IMAP.',
   coverAlt:
     'Firmas de correo para Claude: configura una firma por bandeja una vez y Claude firma cada mensaje que envía, en todos los proveedores',
   content: `Cuando Claude envía un correo por ti, debería parecer que lo enviaste tú. Eso incluye la despedida: tu nombre, tu cargo, la línea de tu empresa, ese enlace a tu página de reservas. Hasta ahora, o bien escribías tu firma en cada prompt, o aceptabas correos que terminaban de forma un poco abrupta. Hoy eso cambia: **MCP Emails ahora aplica tu firma automáticamente a cada mensaje que Claude envía.**
