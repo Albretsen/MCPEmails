@@ -6,6 +6,7 @@ import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
+import { captureError } from '@/lib/errors/capture';
 
 /**
  * POST /api/inboxes/imap
@@ -113,6 +114,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // etc.). Network/TLS errors keep their own messages without error_code.
     const body: Record<string, string> = { error: validation.message };
     if (validation.code === 'AUTH_FAILED') body.error_code = 'auth_failed';
+    // A wrong password is expected, user-driven, and not worth recording. The
+    // other codes (bad host, connection refused/timeout, TLS/protocol errors)
+    // indicate either a real product/infra issue or a config mistake we could
+    // proactively warn users about, so they're worth tracking frequency of —
+    // this table previously had zero writes anywhere in the codebase.
+    if (validation.code !== 'AUTH_FAILED') {
+      await captureError(new Error(validation.message), {
+        severity: 'low',
+        route: 'api/inboxes/imap',
+        reason: validation.code,
+        workspaceId,
+      });
+    }
     return NextResponse.json(body, { status: 422 });
   }
 
@@ -181,6 +195,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (upsertError) {
     console.error('[imap] Upsert failed:', upsertError.message);
+    await captureError(new Error(upsertError.message), {
+      severity: 'high',
+      route: 'api/inboxes/imap',
+      reason: 'inbox_upsert_failed',
+      workspaceId,
+    });
     return NextResponse.json({ error: 'Failed to save inbox. Please try again.' }, { status: 500 });
   }
 
