@@ -18,7 +18,9 @@ export const AUTHORS = {
     avatar: '/blog/author-asgeir.svg',
     bio: 'Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.',
     url: 'https://mcpemails.com/blog',
-    twitter: '@mcpemails',
+    // No `twitter` handle: @mcpemails does not exist on X, so the
+    // author-card link is intentionally omitted rather than pointing at a
+    // 404 profile. Add it back once a real account exists.
   },
 };
 

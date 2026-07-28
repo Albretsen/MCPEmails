@@ -24,9 +24,9 @@ export const metadata = {
     // convention); no explicit images entry needed here.
   },
   twitter: {
+    // No `site`/`creator` handle: @mcpemails does not exist on X. Add it
+    // back here if/when a real account is created.
     card: 'summary_large_image',
-    site: '@mcpemails',
-    creator: '@mcpemails',
     title: 'mcpemails · Give your AI agent an inbox.',
     description: 'Connect your email accounts to Claude, Cursor, or any MCP-compatible client.',
   },
