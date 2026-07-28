@@ -1972,7 +1972,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     title: "Flag or Mark Messages",
     description:
       "Apply a read/unread/flag/unflag action to one or more messages in a single call. Use action 'read' or 'unread' to change read status, or 'flag'/'unflag' to add or remove a star/follow-up flag. Pass one message ID to update a single message, or up to 500 to update many at once. Get message IDs from email_list or email_search.",
-    requiredScope: "send:email",
+    // BUGFIX (2026-07-28): was "send:email" — flagging/marking read-state does not
+    // send mail. That mis-scoping caused a 80% live error rate (-32001 Insufficient
+    // scope) for any key granted manage:folders without also granting send:email,
+    // which is a reasonable/common combination for an "organize only" key. Matches
+    // the scope already required by the sibling move/copy/search_and_move actions
+    // in the same email_organize tool.
+    requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
@@ -2352,7 +2358,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     description:
       "Move a message out of the Inbox to the archive location. Non-destructive — the " +
       "message is preserved, not deleted. On Gmail this removes the INBOX label.",
-    requiredScope: "send:email",
+    // BUGFIX (2026-07-28): was "send:email" — archiving is a folder/label move, not
+    // sending mail. Same mis-scoping bug as email_flag (see its comment above).
+    requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
@@ -3474,7 +3482,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "a destination_folder_id, leaving the original in place; IMAP/Outlook/Fastmail " +
       "only), 'flag' (set read/unread/flagged via `flag_action` on message_ids), " +
       "'archive', or 'search_and_move' (apply to all messages matching a search). " +
-      "Requires the scope matching the action (manage:folders / send:email). " +
+      "Requires the manage:folders scope. " +
       "To delete messages, use the email_delete tool.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
@@ -3482,8 +3490,10 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       move_batch: { legacy: "email_move_batch", scope: "manage:folders" },
       copy: { legacy: "email_copy", scope: "manage:folders" },
       copy_batch: { legacy: "email_copy_batch", scope: "manage:folders" },
-      flag: { legacy: "email_flag", scope: "send:email", renames: { action: "flag_action" } },
-      archive: { legacy: "email_archive", scope: "send:email" },
+      // BUGFIX (2026-07-28): flag/archive were mis-scoped to "send:email" — see the
+      // requiredScope comment on the email_flag/email_archive legacy tool defs above.
+      flag: { legacy: "email_flag", scope: "manage:folders", renames: { action: "flag_action" } },
+      archive: { legacy: "email_archive", scope: "manage:folders" },
       search_and_move: { legacy: "email_search_and_move", scope: "manage:folders" },
     },
   },
@@ -4327,11 +4337,20 @@ function inboxResolutionError(
 ): ToolErrorResult {
   let text: string;
   let structuredContent: Record<string, unknown> | undefined;
+  // BUGFIX (2026-07-28): all three reasons used to share the "inbox_not_found"
+  // error_code, even though only "not_found" actually means that. "ambiguous"
+  // (multiple inboxes exist, caller omitted inbox_id — expected on a first
+  // call, and already handled gracefully by listing the inboxes inline) and
+  // "none" (no inbox connected at all — an account setup issue, not a bad
+  // argument) are different failure modes that this conflation made
+  // indistinguishable in the activity log / error-rate analytics.
+  let errorCode: string;
   switch (failure.reason) {
     case "not_found":
       text =
         "No inbox matches the given inbox_id/inbox. Call inbox_list to see " +
         "the available inboxes (each with its inbox_id and email address).";
+      errorCode = "inbox_not_found";
       break;
     case "ambiguous": {
       // Name the accessible inboxes inline so the agent can immediately retry
@@ -4352,12 +4371,14 @@ function inboxResolutionError(
         "Retry this same tool with one of the inbox_id values below — you do " +
         "not need to call any other tool first:\n" + lines;
       structuredContent = { inboxes };
+      errorCode = "inbox_ambiguous";
       break;
     }
     case "none":
       text =
         "No inbox is connected for this API key. The user must connect an " +
         "inbox in MCP Emails before this tool can be used.";
+      errorCode = "no_inbox_connected";
       break;
   }
   const result: ToolErrorResult["result"] = {
@@ -4368,7 +4389,7 @@ function inboxResolutionError(
   return {
     result,
     logStatus: "error",
-    logErrorCode: "inbox_not_found",
+    logErrorCode: errorCode,
   };
 }
 
@@ -11351,6 +11372,29 @@ function folderProviderError(
       logErrorCode: "folder_not_found",
     };
   }
+  // BUGFIX (2026-07-28): folder_create against an already-existing IMAP
+  // mailbox surfaces as a CREATE "[ALREADYEXISTS]" response. This was
+  // previously lumped in with genuine provider/network failures under the
+  // generic "provider_error" code (and a console.error, as if it were
+  // unexpected), even though it's a normal, well-understood outcome — an
+  // agent trying to idempotently "ensure this folder exists" will hit it
+  // routinely. Give it its own error_code and a message that tells the
+  // caller they can proceed (the folder already exists, e.g. via folder_list)
+  // instead of implying something went wrong.
+  if (/already\s*exists/i.test(message) || /\[ALREADYEXISTS\]/i.test(message)) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "A folder with that name already exists. Call folder_list to " +
+            "get its id — no need to create it again.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "folder_already_exists",
+    };
+  }
   console.error(`[mcp-server] ${toolName}: provider_error`, { provider, error: message });
   return {
     result: {
@@ -12092,17 +12136,29 @@ async function executeMoveEmail(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): destinationFolderId is already validated non-empty
+    // above, so resolveFolderId can only throw here on a genuine provider/network
+    // failure (e.g. LIST/labels.list erroring) — not on bad input. Previously this
+    // was misreported as a -32602 "destination_folder_id is required" client error,
+    // hiding the real cause and misdirecting the caller into "fixing" a param that
+    // was never wrong.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_move: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_move: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
@@ -12258,17 +12314,25 @@ async function executeCopyEmail(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
+    // only throw here on a genuine provider/network failure, not bad input.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_copy: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_copy: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
@@ -12588,6 +12652,20 @@ function formatBulkResult(
     ...succeeded.map((id) => ({ message_id: id, success: true })),
     ...failed.map(({ id, error }) => ({ message_id: id, success: false, error })),
   ];
+  const isTotalFailure = succeeded.length === 0 && failed.length > 0;
+  // BUGFIX (2026-07-28): a bulk op where every item failed logged
+  // logErrorCode: null — status "error" with no code, unlike every other
+  // error path in this file which always sets a code. That left total-failure
+  // bulk operations (move_batch/copy_batch/delete_batch/flag/search_and_move/
+  // search_and_delete) unattributable in the activity log. Surface the
+  // per-item error when every failure shares the same one (the common case —
+  // e.g. every message hit "imap_auth_failed" or "message_not_found");
+  // otherwise fall back to "provider_error" rather than null.
+  let logErrorCode: string | null = null;
+  if (isTotalFailure) {
+    const distinctErrors = new Set(failed.map((f) => f.error));
+    logErrorCode = distinctErrors.size === 1 ? failed[0].error : "provider_error";
+  }
   return {
     result: jsonOk({
       succeeded: succeeded.length,
@@ -12597,8 +12675,8 @@ function formatBulkResult(
       ...extra,
       results,
     }),
-    logStatus: succeeded.length > 0 || failed.length === 0 ? "success" : "error",
-    logErrorCode: null,
+    logStatus: isTotalFailure ? "error" : "success",
+    logErrorCode,
   };
 }
 
@@ -13202,17 +13280,25 @@ async function executeBulkMove(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
+    // only throw here on a genuine provider/network failure, not bad input.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_move_batch: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_move_batch: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
@@ -13306,17 +13392,25 @@ async function executeBulkCopy(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
+    // only throw here on a genuine provider/network failure, not bad input.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_copy_batch: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_copy_batch: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
@@ -13608,17 +13702,25 @@ async function executeSearchAndMove(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
+    // only throw here on a genuine provider/network failure, not bad input.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_search_and_move: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_search_and_move: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
@@ -13953,9 +14055,6 @@ function draftNotFoundMessage(
   return `Draft ${draftId} not found. Use draft_list to see available draft IDs.`;
 }
 
-/** Common folder names for the Drafts mailbox across IMAP providers, tried in order. */
-const DRAFT_FOLDER_CANDIDATES = ["Drafts", "Draft", "INBOX.Drafts", "INBOX.Draft"];
-
 interface DraftSummary {
   draft_id: string;
   subject: string;
@@ -14030,19 +14129,23 @@ async function imapListDrafts(
       password,
     });
     let summaries: ImapMessageSummary[] = [];
-    let draftFolder = DRAFT_FOLDER_CANDIDATES[0];
-    for (const folder of DRAFT_FOLDER_CANDIDATES) {
-      try {
-        await client.selectMailbox(folder);
-        draftFolder = folder;
-        const uids = await client.uidSearch("ALL");
-        if (uids.length === 0) break;
+    // BUGFIX (2026-07-28): use the same SPECIAL-USE/canonical-name resolution
+    // as imapCreateDraft instead of the hardcoded DRAFT_FOLDER_CANDIDATES
+    // guess list, so listing finds the same mailbox creation actually wrote
+    // to on accounts with a non-default Drafts folder name.
+    const draftsAlias = lookupCanonicalAlias("drafts")!;
+    const mailboxes = await client.listMailboxes();
+    let draftFolder = matchImapAliasMailbox(mailboxes, draftsAlias) ?? draftsAlias.imap;
+    try {
+      await client.selectMailbox(draftFolder);
+      const uids = await client.uidSearch("ALL");
+      if (uids.length > 0) {
         const page = uids.slice(-limit).reverse();
         summaries = await client.fetchSummaries(page);
-        break;
-      } catch {
-        // Try next candidate folder.
       }
+    } catch {
+      // No Drafts mailbox on this account (and nothing to create for a list
+      // call) — fall through and return an empty list.
     }
     return summaries.map((s) => ({
       draft_id: encodeImapId(draftFolder, s.uid),
@@ -14173,16 +14276,30 @@ async function imapCreateDraft(
       password,
     });
 
-    let draftFolder = DRAFT_FOLDER_CANDIDATES[0];
-    let uid: number | undefined;
-    for (const folder of DRAFT_FOLDER_CANDIDATES) {
-      const res = await client.appendWithFlags(folder, mime, ["\\Draft", "\\Seen"]);
-      if (res.ok) {
-        draftFolder = folder;
-        uid = res.uid;
-        break;
-      }
+    // BUGFIX (2026-07-28): resolve the real Drafts mailbox via SPECIAL-USE /
+    // canonical-name matching (the same mechanism resolveFolderId uses for
+    // "archive", including auto-create) instead of blindly APPENDing to 4
+    // hardcoded English folder names (DRAFT_FOLDER_CANDIDATES). On a generic
+    // IMAP account whose Drafts mailbox uses a different hierarchy delimiter,
+    // a localized name, or any name outside that list, every one of those 4
+    // APPENDs failed, and the code then fell through to SELECT the first
+    // candidate ("Drafts") to search for the just-appended message — except
+    // nothing had actually been appended anywhere, so the SELECT itself threw
+    // "Mailbox not found: Drafts" and every draft_create call on that account
+    // failed (100% reproducible, logged as error_code "provider_error").
+    const draftsAlias = lookupCanonicalAlias("drafts")!;
+    const mailboxes = await client.listMailboxes();
+    let draftFolder = matchImapAliasMailbox(mailboxes, draftsAlias);
+    if (!draftFolder) {
+      await client.createMailbox(draftsAlias.imap);
+      draftFolder = draftsAlias.imap;
     }
+
+    const res = await client.appendWithFlags(draftFolder, mime, ["\\Draft", "\\Seen"]);
+    if (!res.ok) {
+      throw new Error(`Could not save draft to "${draftFolder}"`);
+    }
+    let uid = res.uid;
     if (uid === undefined) {
       // APPENDUID not supported — find UID by Message-ID header search.
       await client.selectMailbox(draftFolder);
