@@ -263,6 +263,20 @@ export function toGmailQuery(s: NormalizedSearch): string {
 //   Docs: https://datatracker.ietf.org/doc/html/rfc3501#section-6.4.4
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * RFC 3501 §6.4.4 SEARCH keys that may legitimately open a raw escape-hatch
+ * query (e.g. "OR FROM a FROM b", "HEADER X-Spam yes", "NOT DELETED"). Used
+ * by {@link toImapSearch} to distinguish an actual IMAP SEARCH expression from
+ * plain free text — see the BUGFIX note below.
+ */
+const IMAP_SEARCH_KEYWORDS = new Set([
+  "ALL", "ANSWERED", "BCC", "BEFORE", "BODY", "CC", "DELETED", "DRAFT",
+  "FLAGGED", "FROM", "HEADER", "KEYWORD", "LARGER", "NEW", "NOT", "OLD", "ON",
+  "OR", "RECENT", "SEEN", "SENTBEFORE", "SENTON", "SENTSINCE", "SINCE",
+  "SMALLER", "SUBJECT", "TEXT", "TO", "UID", "UNANSWERED", "UNDELETED",
+  "UNDRAFT", "UNFLAGGED", "UNKEYWORD", "UNSEEN",
+]);
+
 export function toImapSearch(s: NormalizedSearch): string {
   const parts: string[] = [];
 
@@ -282,7 +296,28 @@ export function toImapSearch(s: NormalizedSearch): string {
   if (s.since) parts.push(`SINCE ${formatImapDate(s.since)}`);
   if (s.before) parts.push(`BEFORE ${formatImapDate(s.before)}`);
 
-  if (s.raw && s.raw.trim() !== "") parts.push(s.raw.trim());
+  // BUGFIX (2026-07-28): `raw` is documented as a provider-native escape hatch
+  // ("prefer the structured fields above"), but in practice AI callers
+  // frequently pass a plain free-text phrase in `query` (e.g. "invoice from
+  // acme") expecting a general search rather than literal RFC 3501 SEARCH
+  // syntax. Spliced in verbatim, that reliably produced a server-rejected
+  // command ("Unknown argument invoice…"), surfaced as `invalid_query` — this
+  // was the single largest email_search error bucket (65/65 from one caller
+  // in 30 days, 100% attributable to this path). If the raw string's first
+  // token isn't a recognized SEARCH key, treat the whole thing as free text
+  // (TEXT) instead of splicing it in unquoted — this makes the common
+  // "query as a search phrase" usage work instead of erroring, while leaving
+  // genuine IMAP-syntax escape-hatch queries (e.g. "OR FROM a FROM b")
+  // untouched.
+  const raw = s.raw?.trim();
+  if (raw) {
+    const firstToken = raw.split(/\s+/, 1)[0]?.toUpperCase() ?? "";
+    if (IMAP_SEARCH_KEYWORDS.has(firstToken)) {
+      parts.push(raw);
+    } else {
+      parts.push(`TEXT ${quoteImap(raw)}`);
+    }
+  }
 
   return parts.length === 0 ? "ALL" : parts.join(" ");
 }
