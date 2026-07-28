@@ -11,7 +11,6 @@ import {
   toGmailQuery,
   toGraphSearch,
   toImapSearch,
-  toJmapFilter,
 } from "./search-translate.ts";
 
 // ---------------------------------------------------------------------------
@@ -3700,7 +3699,7 @@ interface ProviderCapabilities {
    * Whether the provider supports soft-delete to Trash, hard expunge, or both.
    *   'trash'   — only move-to-Trash is safe (Gmail, Outlook)
    *   'expunge' — only hard expunge (rare)
-   *   'both'    — Trash or permanent delete selectable (IMAP, Fastmail)
+   *   'both'    — Trash or permanent delete selectable (IMAP)
    */
   trash_vs_expunge: "trash" | "expunge" | "both";
   /** Forwarding messages (synthesising a forwarded MIME body + send) */
@@ -3722,20 +3721,21 @@ interface ProviderCapabilities {
    * Query syntax accepted by email_search for this provider.
    *   'gmail'  — Gmail query language (from:, subject:, after:, …)
    *   'odata'  — Microsoft OData $filter
-   *   'jmap'   — JMAP FilterCondition
    *   'imap'   — IMAP SEARCH criteria
    */
-  search_syntax: "gmail" | "odata" | "jmap" | "imap";
+  search_syntax: "gmail" | "odata" | "imap";
 }
 
 /**
  * Authoritative capability map.
  *
  * Key = `inbox.provider` value as stored in the DB:
- *   'gmail' | 'outlook' | 'fastmail' | 'imap'
+ *   'gmail' | 'outlook' | 'imap'
  *
  * The 'imap' entry covers every service variant (icloud, yahoo, zoho,
- * yandex, generic) — they all run through the same Deno IMAP/SMTP client.
+ * yandex, generic, fastmail) — they all run through the same Deno IMAP/SMTP
+ * client. (Fastmail app-password inboxes are stored as provider='imap',
+ * service='fastmail'; provider='fastmail' itself is unused dead data.)
  */
 const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
   gmail: {
@@ -3767,21 +3767,6 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     contacts_db: true,   // live header scan (no DB)
     scheduling: true,    // via scheduled_sends queue
     search_syntax: "odata",
-  },
-  fastmail: {
-    flags: true,         // JMAP Email/set keywords
-    folders: true,       // JMAP Mailbox/get
-    labels: false,
-    move: true,          // JMAP Email/set mailboxIds
-    copy: true,          // JMAP Email/copy
-    delete: true,
-    trash_vs_expunge: "both",
-    forward: true,       // Compose + JMAP send
-    drafts: true,        // JMAP Email/set $draft keyword
-    contacts_api: false, // CardDAV out of scope for v0.1
-    contacts_db: true,   // live header scan (no DB)
-    scheduling: true,    // via scheduled_sends queue
-    search_syntax: "jmap",
   },
   imap: {
     flags: true,         // IMAP UID STORE \Seen \Flagged
@@ -4698,119 +4683,6 @@ async function withFreshOutlookToken(inbox: InboxRow): Promise<string> {
   return tokens.access_token;
 }
 
-// ---------------------------------------------------------------------------
-// Fastmail token refresh + JMAP auth header
-// ---------------------------------------------------------------------------
-
-const FASTMAIL_TOKEN_ENDPOINT = "https://www.fastmail.com/oauth/token";
-
-/**
- * Returns a fresh Fastmail OAuth access token, refreshing via the stored
- * refresh token when the current one is within REFRESH_THRESHOLD_MS of expiry.
- * Fastmail access tokens last ~1 year, so the refresh path rarely runs, but it
- * keeps long-lived OAuth inboxes working after expiry or early revocation.
- */
-async function withFreshFastmailToken(inbox: InboxRow): Promise<string> {
-  if (!inbox.oauth_access_token || !inbox.oauth_refresh_token) {
-    throw new Error(
-      `Fastmail inbox ${inbox.id} is missing OAuth tokens — user must reconnect.`,
-    );
-  }
-
-  const now = Date.now();
-  const expiresAt = inbox.oauth_token_expires_at
-    ? new Date(inbox.oauth_token_expires_at).getTime()
-    : 0;
-
-  if (expiresAt > now + REFRESH_THRESHOLD_MS) {
-    return await decryptStoredToken(inbox.oauth_access_token);
-  }
-
-  const refreshToken = await decryptStoredToken(inbox.oauth_refresh_token);
-  const clientId = Deno.env.get("FASTMAIL_CLIENT_ID");
-  const clientSecret = Deno.env.get("FASTMAIL_CLIENT_SECRET");
-
-  if (!clientId || !clientSecret) {
-    throw new Error(
-      "FASTMAIL_CLIENT_ID or FASTMAIL_CLIENT_SECRET is not configured in Edge Function secrets.",
-    );
-  }
-
-  const resp = await fetch(FASTMAIL_TOKEN_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }),
-  });
-
-  if (!resp.ok) {
-    // Fastmail signals refresh-token invalidation with a 4xx — mark the inbox
-    // for reconnection rather than retrying.
-    if (resp.status === 400 || resp.status === 401) {
-      supabase
-        .from("inboxes")
-        .update({
-          status: "error",
-          last_error: "Fastmail refresh token revoked — user must reconnect.",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", inbox.id)
-        .then(() => {});
-      throw new Error("fastmail_auth_failed");
-    }
-    throw new Error(`Fastmail token refresh failed: ${resp.statusText}`);
-  }
-
-  const tokens = (await resp.json()) as {
-    access_token: string;
-    expires_in?: number;
-  };
-
-  (async () => {
-    try {
-      const encrypted = await encryptForStorage(tokens.access_token);
-      const newExpiry = new Date(
-        Date.now() + (tokens.expires_in ?? 365 * 24 * 60 * 60) * 1_000,
-      ).toISOString();
-      await supabase
-        .from("inboxes")
-        .update({
-          oauth_access_token: encrypted,
-          oauth_token_expires_at: newExpiry,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", inbox.id);
-    } catch (e) {
-      console.warn("[mcp-server] fastmail_token_persist_failed", {
-        inbox_id: inbox.id,
-        error: e instanceof Error ? e.message : String(e),
-      });
-    }
-  })();
-
-  return tokens.access_token;
-}
-
-/**
- * Builds the JMAP Authorization header for a Fastmail inbox: a (refreshed)
- * Bearer token for OAuth inboxes, or HTTP Basic for app-password inboxes.
- */
-async function buildFastmailAuthHeader(inbox: InboxRow): Promise<string> {
-  if (inbox.oauth_access_token) {
-    return `Bearer ${await withFreshFastmailToken(inbox)}`;
-  }
-  if (inbox.imap_password) {
-    const password = await decryptStoredToken(inbox.imap_password);
-    return `Basic ${btoa(`${inbox.email_address}:${password}`)}`;
-  }
-  throw new Error(
-    `Fastmail inbox ${inbox.id} has no usable credentials — user must reconnect.`,
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Email summary types (shared across email_list and email_search tools)
@@ -5145,19 +5017,17 @@ interface CanonicalFolderAlias {
   gmail: string | null;
   /** Microsoft Graph well-known folder name. */
   outlook: string;
-  /** Fastmail JMAP mailbox role (resolved to a mailbox id at runtime). */
-  fastmail: string;
   /** Common IMAP mailbox name (the name is the id). */
   imap: string;
 }
 
 const CANONICAL_FOLDER_ALIASES: CanonicalFolderAlias[] = [
-  { aliases: ["inbox"], gmail: "INBOX", outlook: "inbox", fastmail: "inbox", imap: "INBOX" },
-  { aliases: ["sent"], gmail: "SENT", outlook: "sentitems", fastmail: "sent", imap: "Sent" },
-  { aliases: ["drafts", "draft"], gmail: "DRAFT", outlook: "drafts", fastmail: "drafts", imap: "Drafts" },
-  { aliases: ["trash", "deleted"], gmail: "TRASH", outlook: "deleteditems", fastmail: "trash", imap: "Trash" },
-  { aliases: ["archive"], gmail: null, outlook: "archive", fastmail: "archive", imap: "Archive" },
-  { aliases: ["spam", "junk"], gmail: "SPAM", outlook: "junkemail", fastmail: "junk", imap: "Junk" },
+  { aliases: ["inbox"], gmail: "INBOX", outlook: "inbox", imap: "INBOX" },
+  { aliases: ["sent"], gmail: "SENT", outlook: "sentitems", imap: "Sent" },
+  { aliases: ["drafts", "draft"], gmail: "DRAFT", outlook: "drafts", imap: "Drafts" },
+  { aliases: ["trash", "deleted"], gmail: "TRASH", outlook: "deleteditems", imap: "Trash" },
+  { aliases: ["archive"], gmail: null, outlook: "archive", imap: "Archive" },
+  { aliases: ["spam", "junk"], gmail: "SPAM", outlook: "junkemail", imap: "Junk" },
 ];
 
 /** Case-insensitive lookup of a canonical alias entry by any of its tokens. */
@@ -5368,205 +5238,6 @@ async function listOutlookMessages(
   return { messages, total, total_is_estimate: false, has_more: hasMore, next_offset: offset + limit };
 }
 
-// ---------------------------------------------------------------------------
-// Fastmail provider — email_list (JMAP)
-// ---------------------------------------------------------------------------
-
-/**
- * Implements `email_list` for Fastmail using JMAP (RFC 8620/8621).
- *
- * JMAP is Fastmail's native HTTP protocol and is preferred over raw IMAP in
- * Edge Function contexts because it is purely HTTP-based. Fastmail supports
- * both Bearer token auth (OAuth connections) and HTTP Basic auth (app-password
- * connections where `imap_password` holds an encrypted app-specific password).
- *
- * Flow:
- *   1. GET  /jmap/session → discover accountId and apiUrl.
- *   2. POST to apiUrl     → Mailbox/query + Email/query + Email/get in one batch.
- *      The three method calls are linked via JMAP result references so only one
- *      HTTP round-trip is needed after session discovery.
- */
-async function listFastmailMessages(
-  inbox: InboxRow,
-  folder: string,
-  limit: number,
-  offset: number,
-  unreadOnly: boolean,
-): Promise<ListInboxResult> {
-  // Build auth header based on connection type.
-  const authHeader = await buildFastmailAuthHeader(inbox);
-
-  // Step 1: Discover JMAP session.
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-
-  const accountId =
-    session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl =
-    session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-
-  if (!accountId) {
-    throw new Error(
-      "Fastmail JMAP: could not determine accountId from session.",
-    );
-  }
-
-  // Map folder name to a JMAP mailbox role (for standard folders) or a
-  // display-name filter (for custom labels).
-  const JMAP_ROLE_MAP: Record<string, string> = {
-    INBOX: "inbox",
-    SENT: "sent",
-    DRAFTS: "drafts",
-    DRAFT: "drafts",
-    TRASH: "trash",
-    SPAM: "junk",
-    JUNK: "junk",
-    ARCHIVE: "archive",
-  };
-  const mailboxRole = JMAP_ROLE_MAP[folder.toUpperCase()];
-
-  // Step 2: Single JMAP batch with three linked method calls.
-  const jmapBody = {
-    using: [
-      "urn:ietf:params:jmap:core",
-      "urn:ietf:params:jmap:mail",
-    ],
-    methodCalls: [
-      // a) Find the mailbox ID matching the requested folder.
-      [
-        "Mailbox/query",
-        {
-          accountId,
-          filter: mailboxRole ? { role: mailboxRole } : { name: folder },
-          limit: 1,
-        },
-        "a",
-      ],
-      // b) Query email IDs in that mailbox, newest first.
-      [
-        "Email/query",
-        {
-          accountId,
-          filter: {
-            ...(unreadOnly ? { notKeyword: "$seen" } : {}),
-            "#inMailbox": {
-              resultOf: "a",
-              name: "Mailbox/query",
-              path: "/ids/0",
-            },
-          },
-          sort: [{ property: "receivedAt", isAscending: false }],
-          position: offset,
-          limit,
-          calculateTotal: true,
-        },
-        "b",
-      ],
-      // c) Fetch email metadata for the page of IDs from step b.
-      [
-        "Email/get",
-        {
-          accountId,
-          "#ids": {
-            resultOf: "b",
-            name: "Email/query",
-            path: "/ids",
-          },
-          properties: [
-            "id",
-            "threadId",
-            "subject",
-            "from",
-            "to",
-            "receivedAt",
-            "preview",
-            "keywords",
-            "hasAttachment",
-          ],
-        },
-        "c",
-      ],
-    ],
-  };
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(jmapBody),
-  });
-
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP error: ${apiResp.statusText}`);
-  }
-
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-
-  const responses = apiData.methodResponses ?? [];
-  const queryResp = responses.find(([n]) => n === "Email/query");
-  const getResp = responses.find(([n]) => n === "Email/get");
-
-  if (!queryResp || !getResp) {
-    throw new Error(
-      "Fastmail JMAP returned unexpected response structure.",
-    );
-  }
-
-  const queryResult = queryResp[1] as { total?: number };
-  const getResult = getResp[1] as {
-    list?: {
-      id: string;
-      threadId?: string;
-      subject?: string;
-      from?: { name?: string; email?: string }[];
-      to?: { name?: string; email?: string }[];
-      receivedAt?: string;
-      preview?: string;
-      keywords?: Record<string, boolean>;
-      hasAttachment?: boolean;
-    }[];
-  };
-
-  const total = queryResult.total ?? 0;
-  const emailList = getResult.list ?? [];
-  const hasMore = offset + limit < total;
-
-  const messages: EmailSummary[] = emailList.map((email) => ({
-    id: email.id,
-    from: email.from?.[0]
-      ? { name: email.from[0].name ?? "", email: email.from[0].email ?? "" }
-      : { name: "", email: "" },
-    to: (email.to ?? []).map((r) => ({
-      name: r.name ?? "",
-      email: r.email ?? "",
-    })),
-    subject: email.subject ?? "(no subject)",
-    date: email.receivedAt ?? new Date().toISOString(),
-    preview: normalizePreview(email.preview ?? ""),
-    is_read: !!(email.keywords?.["$seen"]),
-    has_attachments: email.hasAttachment ?? false,
-    folder,
-    thread_id: email.threadId ?? email.id,
-  }));
-
-  // JMAP Email/query returns an exact total — never an estimate.
-  return { messages, total, total_is_estimate: false, has_more: hasMore, next_offset: offset + limit };
-}
 
 // ---------------------------------------------------------------------------
 // Generic IMAP provider — shared helpers (iCloud, Yahoo, Zoho, Yandex, generic)
@@ -6306,15 +5977,6 @@ async function executeListInbox(
         break;
       case "outlook":
         listResult = await listOutlookMessages(
-          inbox,
-          folder,
-          limit,
-          offset,
-          unreadOnly,
-        );
-        break;
-      case "fastmail":
-        listResult = await listFastmailMessages(
           inbox,
           folder,
           limit,
@@ -7152,319 +6814,6 @@ async function readOutlookMessage(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Fastmail provider — email_read (JMAP)
-// ---------------------------------------------------------------------------
-
-/**
- * Implements `email_read` for Fastmail using JMAP (RFC 8621).
- *
- * Flow:
- *   1. GET /jmap/session → discover accountId and apiUrl
- *   2. POST to apiUrl → Email/get with textBody, htmlBody, bodyValues, attachments
- *   3. If mark_as_read: Email/set { keywords: { "$seen": true } }
- *   4. Assemble ReadEmailResult
- */
-async function readFastmailMessage(
-  inbox: InboxRow,
-  messageId: string,
-  includeHtml: boolean,
-  includeAttachments: boolean,
-  markAsRead: boolean,
-  attachmentBudgetBytes: number = ATTACHMENT_DATA_BUDGET,
-  selectOnlyIndex?: number,
-): Promise<ReadEmailResult> {
-  // Build auth header.
-  const authHeader = await buildFastmailAuthHeader(inbox);
-
-  // Step 1: Discover session.
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  // JMAP blob download endpoint template. Placeholders {accountId}/{blobId}/
-  // {type}/{name} are substituted per attachment when fetching content. The
-  // Fastmail default host is used only if the session omits downloadUrl.
-  const downloadUrl =
-    (session as { downloadUrl?: string }).downloadUrl ??
-    "https://www.fastmailusercontent.com/jmap/download/{accountId}/{blobId}/{name}?type={type}";
-
-  if (!accountId) {
-    throw new Error(
-      "Fastmail JMAP: could not determine accountId from session.",
-    );
-  }
-
-  // Step 2: Fetch the full message via JMAP Email/get.
-  // JMAP bodyValues contains the actual body content keyed by part ID.
-  // We request both textBody and htmlBody part lists, then resolve them
-  // using bodyValues.
-  const jmapBody = {
-    using: [
-      "urn:ietf:params:jmap:core",
-      "urn:ietf:params:jmap:mail",
-    ],
-    methodCalls: [
-      [
-        "Email/get",
-        {
-          accountId,
-          ids: [messageId],
-          properties: [
-            "id",
-            "threadId",
-            "mailboxIds",
-            "keywords",
-            "from",
-            "to",
-            "cc",
-            "bcc",
-            "replyTo",
-            "subject",
-            "receivedAt",
-            "textBody",
-            "htmlBody",
-            "bodyValues",
-            "attachments",
-            "messageId",
-            "inReplyTo",
-            "references",
-            "headers",
-          ],
-          fetchTextBodyValues: true,
-          fetchHTMLBodyValues: true,
-          fetchAllBodyValues: false,
-          maxBodyValueBytes: 5 * 1024 * 1024, // 5 MB per body part
-        },
-        "a",
-      ],
-    ],
-  };
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(jmapBody),
-  });
-
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP error: ${apiResp.statusText}`);
-  }
-
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-
-  const responses = apiData.methodResponses ?? [];
-  const getResp = responses.find(([name]) => name === "Email/get");
-
-  if (!getResp) {
-    throw new Error("Fastmail JMAP returned unexpected response structure.");
-  }
-
-  interface JmapEmailAddress {
-    name?: string;
-    email?: string;
-  }
-
-  interface JmapBodyPart {
-    partId?: string;
-    blobId?: string;
-    size?: number;
-    name?: string;
-    type?: string;
-    charset?: string;
-    disposition?: string;
-    cid?: string;
-  }
-
-  interface JmapBodyValue {
-    value?: string;
-    isEncodingProblem?: boolean;
-    isTruncated?: boolean;
-  }
-
-  interface JmapEmail {
-    id?: string;
-    threadId?: string;
-    keywords?: Record<string, boolean>;
-    from?: JmapEmailAddress[];
-    to?: JmapEmailAddress[];
-    cc?: JmapEmailAddress[];
-    bcc?: JmapEmailAddress[];
-    replyTo?: JmapEmailAddress[];
-    subject?: string;
-    receivedAt?: string;
-    textBody?: JmapBodyPart[];
-    htmlBody?: JmapBodyPart[];
-    bodyValues?: Record<string, JmapBodyValue>;
-    attachments?: JmapBodyPart[];
-    messageId?: string[];
-    inReplyTo?: string[];
-    references?: string[];
-  }
-
-  const getResult = getResp[1] as { list?: JmapEmail[]; notFound?: string[] };
-
-  if ((getResult.notFound ?? []).includes(messageId)) {
-    throw new Error("message_not_found");
-  }
-
-  const email = (getResult.list ?? [])[0];
-  if (!email) {
-    throw new Error("message_not_found");
-  }
-
-  // Extract body text and HTML from bodyValues.
-  const bodyValues = email.bodyValues ?? {};
-
-  let bodyText: string | null = null;
-  for (const part of email.textBody ?? []) {
-    if (part.partId && bodyValues[part.partId]?.value) {
-      bodyText = bodyValues[part.partId].value ?? null;
-      break;
-    }
-  }
-
-  let bodyHtml: string | null = null;
-  for (const part of email.htmlBody ?? []) {
-    if (part.partId && bodyValues[part.partId]?.value) {
-      bodyHtml = bodyValues[part.partId].value ?? null;
-      break;
-    }
-  }
-
-  // Build attachment metadata.
-  // JMAP attachments with `disposition: "attachment"` or a non-null `name`.
-  // When include_attachments is requested we download each blob from the JMAP
-  // downloadUrl endpoint (the symmetric counterpart of the uploadUrl used by
-  // compose), base64-encode it, and share a single 10 MB budget across the
-  // message — matching the Gmail/IMAP readers. Metadata is always returned even
-  // when bytes are not fetched, so callers can pick one file to download via
-  // email_read (action: attachment).
-  const attachmentParts = (email.attachments ?? []).filter(
-    (p) =>
-      p.disposition === "attachment" ||
-      (p.name && p.name.length > 0 && p.disposition !== "inline"),
-  );
-
-  // Budget defaults to 10 MB for a whole-message read; the single-file download
-  // path raises it so one larger file can be fetched on its own.
-  let attachmentBudgetRemaining = attachmentBudgetBytes;
-
-  const attachments: ReadEmailAttachmentMeta[] = [];
-  for (const p of attachmentParts) {
-    const outIndex = attachments.length;
-    const sizeBytes = p.size ?? 0;
-    const filename = p.name ?? "attachment";
-    const mimeType = p.type ?? "application/octet-stream";
-    // Bulk path clamps the per-file ceiling to 2 MB (large files fetched
-    // individually); the single-file path allows up to its 25 MB cap.
-    const perFileCap = selectOnlyIndex === undefined
-      ? Math.min(attachmentBudgetRemaining, BULK_ATTACHMENT_MAX_BYTES)
-      : attachmentBudgetRemaining;
-    let data: string | null = null;
-
-    if (
-      includeAttachments &&
-      (selectOnlyIndex === undefined || outIndex === selectOnlyIndex) &&
-      p.blobId &&
-      sizeBytes <= perFileCap
-    ) {
-      try {
-        const blobUrl = downloadUrl
-          .replace("{accountId}", encodeURIComponent(accountId))
-          .replace("{blobId}", encodeURIComponent(p.blobId))
-          .replace("{name}", encodeURIComponent(filename))
-          .replace("{type}", encodeURIComponent(mimeType));
-        const blobResp = await fetch(blobUrl, {
-          headers: { Authorization: authHeader },
-        });
-        if (blobResp.ok) {
-          const bytes = new Uint8Array(await blobResp.arrayBuffer());
-          data = bytesToBase64(bytes);
-          attachmentBudgetRemaining -= sizeBytes;
-        }
-      } catch {
-        // Leave data null on transient download failure; the caller can retry
-        // via email_read (action: attachment), which surfaces a clear error.
-      }
-    }
-
-    attachments.push({
-      filename,
-      mime_type: mimeType,
-      size_bytes: sizeBytes,
-      data,
-    });
-  }
-
-  // Step 3: Mark as read if requested.
-  if (markAsRead && !(email.keywords?.["$seen"])) {
-    // Fire-and-forget JMAP Email/set.
-    fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-        methodCalls: [
-          [
-            "Email/set",
-            {
-              accountId,
-              update: {
-                [messageId]: { "keywords/$seen": true },
-              },
-            },
-            "b",
-          ],
-        ],
-      }),
-    }).catch(() => {});
-  }
-
-  const mapAddr = (a: JmapEmailAddress): EmailAddressEntry => ({
-    name: a.name ?? "",
-    email: a.email ?? "",
-  });
-
-  return {
-    id: email.id ?? messageId,
-    thread_id: email.threadId ?? messageId,
-    from: email.from?.[0] ? mapAddr(email.from[0]) : { name: "", email: "" },
-    to: (email.to ?? []).map(mapAddr),
-    cc: (email.cc ?? []).map(mapAddr),
-    bcc: (email.bcc ?? []).map(mapAddr),
-    reply_to: email.replyTo?.[0] ? mapAddr(email.replyTo[0]) : null,
-    subject: email.subject ?? "(no subject)",
-    date: email.receivedAt ?? new Date().toISOString(),
-    body_text: bodyText ?? (bodyHtml ? stripHtmlToText(bodyHtml) : null),
-    body_html: includeHtml && bodyHtml ? sanitizeEmailHtml(bodyHtml) : null,
-    attachments,
-    is_read: markAsRead ? true : !!(email.keywords?.["$seen"]),
-    labels: [], // Fastmail uses mailboxIds, not labels — omitted for simplicity
-    in_reply_to: email.inReplyTo?.[0] ?? null,
-    references: email.references ?? [],
-  };
-}
 
 // ---------------------------------------------------------------------------
 // email_read — top-level handler
@@ -7531,17 +6880,6 @@ async function readOneMessage(
       break;
     case "outlook":
       result = await readOutlookMessage(
-        inbox,
-        messageId,
-        opts.include_html,
-        opts.include_attachments,
-        opts.mark_as_read,
-        attachmentBudgetBytes,
-        selectOnlyIndex,
-      );
-      break;
-    case "fastmail":
-      result = await readFastmailMessage(
         inbox,
         messageId,
         opts.include_html,
@@ -8954,301 +8292,6 @@ async function sendOutlookMessage(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Fastmail provider — mailbox role resolution
-// ---------------------------------------------------------------------------
-
-/**
- * Resolves the Drafts and Sent mailbox ids for a Fastmail account.
- *
- * JMAP (RFC 8621) requires every Email to belong to at least one Mailbox, so an
- * outgoing message must be created inside a real mailbox (Drafts) before it can
- * be submitted. `mailboxIds` keys cannot be JMAP result back-references, so the
- * ids have to be resolved in a separate request before the send batch.
- */
-async function resolveFastmailRoleMailboxes(
-  apiUrl: string,
-  authHeader: string,
-  accountId: string,
-): Promise<{ draftsId?: string; sentId?: string }> {
-  const resp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        ["Mailbox/query", { accountId, filter: { role: "drafts" }, limit: 1 }, "drafts"],
-        ["Mailbox/query", { accountId, filter: { role: "sent" }, limit: 1 }, "sent"],
-      ],
-    }),
-  });
-  if (!resp.ok) {
-    if (resp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP Mailbox/query error: ${resp.statusText}`);
-  }
-  const data = (await resp.json()) as {
-    methodResponses?: [string, { ids?: string[] }, string][];
-  };
-  const responses = data.methodResponses ?? [];
-  const draftsId = responses.find(([, , callId]) => callId === "drafts")?.[1]?.ids?.[0];
-  const sentId = responses.find(([, , callId]) => callId === "sent")?.[1]?.ids?.[0];
-  return { draftsId, sentId };
-}
-
-// ---------------------------------------------------------------------------
-// Fastmail provider — email_send (JMAP)
-// ---------------------------------------------------------------------------
-
-/**
- * Sends an email via Fastmail's JMAP API using a two-step batch:
- *
- *   1. Email/set (create draft) — creates the email object in the sent mailbox.
- *   2. EmailSubmission/set (submit) — triggers delivery via SMTP submission.
- *
- * Attachments require uploading blobs to the JMAP upload endpoint before the
- * Email/set call. Each attachment is uploaded individually, and the resulting
- * blobId is referenced in the email body.
- *
- * The `urn:ietf:params:jmap:submission` capability is required for EmailSubmission.
- * Fastmail supports this capability on all standard accounts.
- */
-async function sendFastmailMessage(
-  inbox: InboxRow,
-  params: SendEmailParams,
-): Promise<SendEmailResult> {
-  // Build auth header
-  const authHeader = await buildFastmailAuthHeader(inbox);
-
-  // Step 1: Discover JMAP session
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-    uploadUrl?: string;
-  };
-
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  const uploadUrl = (session.uploadUrl ?? "https://api.fastmail.com/jmap/upload/{accountId}/")
-    .replace("{accountId}", encodeURIComponent(accountId ?? ""));
-
-  if (!accountId) {
-    throw new Error("Fastmail JMAP: could not determine accountId from session.");
-  }
-
-  // Step 2: Upload any attachments to get blobIds
-  const jmapAttachments: unknown[] = [];
-  for (const att of params.attachments) {
-    const attBytes = Uint8Array.from(
-      atob(att.data.replace(/\s/g, "")),
-      (c) => c.charCodeAt(0),
-    );
-    const uploadResp = await fetch(uploadUrl, {
-      method: "POST",
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": att.mime_type,
-      },
-      body: attBytes,
-    });
-    if (!uploadResp.ok) {
-      throw new Error(
-        `Fastmail attachment upload failed for '${att.filename}': ${uploadResp.statusText}`,
-      );
-    }
-    const uploadResult = (await uploadResp.json()) as { blobId?: string };
-    if (!uploadResult.blobId) {
-      throw new Error(
-        `Fastmail did not return a blobId for attachment '${att.filename}'.`,
-      );
-    }
-    jmapAttachments.push({
-      blobId: uploadResult.blobId,
-      name: att.filename,
-      type: att.mime_type,
-      disposition: "attachment",
-    });
-  }
-
-  // Resolve the Drafts/Sent mailboxes — JMAP requires the email to live in a
-  // mailbox before it can be submitted.
-  const { draftsId, sentId } = await resolveFastmailRoleMailboxes(
-    apiUrl,
-    authHeader,
-    accountId,
-  );
-  const placementId = draftsId ?? sentId;
-  if (!placementId) {
-    throw new Error(
-      "Fastmail JMAP: could not resolve a Drafts or Sent mailbox to place the outgoing message.",
-    );
-  }
-
-  // Step 3: Build the JMAP email object
-  const fromAddress = inbox.display_name
-    ? { name: inbox.display_name, email: inbox.email_address }
-    : { email: inbox.email_address };
-
-  const mapAddr = (e: string) => {
-    const parsed = parseEmailAddress(e);
-    return parsed.name ? { name: parsed.name, email: parsed.email } : { email: parsed.email };
-  };
-
-  const bodyValues: Record<string, unknown> = {};
-  const textBodyParts: unknown[] = [];
-  const htmlBodyParts: unknown[] = [];
-
-  bodyValues["textPart"] = { value: params.textBody, charset: "utf-8" };
-  textBodyParts.push({ partId: "textPart", type: "text/plain" });
-
-  if (params.htmlBody) {
-    bodyValues["htmlPart"] = { value: params.htmlBody, charset: "utf-8" };
-    htmlBodyParts.push({ partId: "htmlPart", type: "text/html" });
-  }
-
-  const emailCreate: Record<string, unknown> = {
-    mailboxIds: { [placementId]: true },
-    from: [fromAddress],
-    to: params.to.map(mapAddr),
-    ...(params.cc.length ? { cc: params.cc.map(mapAddr) } : {}),
-    ...(params.bcc.length ? { bcc: params.bcc.map(mapAddr) } : {}),
-    subject: params.subject,
-    bodyValues,
-    textBody: textBodyParts,
-    ...(params.htmlBody ? { htmlBody: htmlBodyParts } : {}),
-    ...(jmapAttachments.length ? { attachments: jmapAttachments } : {}),
-    keywords: { "$draft": true },
-  };
-
-  if (params.replyTo) {
-    emailCreate.replyTo = [mapAddr(params.replyTo)];
-  }
-
-  // All RCPT TO addresses (to + cc + bcc)
-  const allRcptTo = [...params.to, ...params.cc, ...params.bcc].map((e) => ({
-    email: parseEmailAddress(e).email,
-  }));
-
-  // Step 4: JMAP batch — Email/set (create) + EmailSubmission/set (send).
-  // On successful submission, clear the $draft flag and move the message out of
-  // Drafts into Sent so it doesn't linger as an unsent draft.
-  const submissionSet: Record<string, unknown> = {
-    accountId,
-    create: {
-      sub1: {
-        emailId: "#draft",
-        envelope: {
-          mailFrom: { email: inbox.email_address },
-          rcptTo: allRcptTo,
-        },
-      },
-    },
-  };
-  if (sentId) {
-    const patch: Record<string, unknown> = {
-      "keywords/$draft": null,
-      "keywords/$seen": true,
-    };
-    if (placementId !== sentId) {
-      patch[`mailboxIds/${placementId}`] = null;
-      patch[`mailboxIds/${sentId}`] = true;
-    }
-    submissionSet.onSuccessUpdateEmail = { "#sub1": patch };
-  }
-
-  const jmapBody = {
-    using: [
-      "urn:ietf:params:jmap:core",
-      "urn:ietf:params:jmap:mail",
-      "urn:ietf:params:jmap:submission",
-    ],
-    methodCalls: [
-      [
-        "Email/set",
-        {
-          accountId,
-          create: { draft: emailCreate },
-        },
-        "e1",
-      ],
-      ["EmailSubmission/set", submissionSet, "s1"],
-    ],
-  };
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(jmapBody),
-  });
-
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP send error: ${apiResp.statusText}`);
-  }
-
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-
-  const responses = apiData.methodResponses ?? [];
-  const emailSetResp = responses.find(([n]) => n === "Email/set");
-  const submissionResp = responses.find(([n]) => n === "EmailSubmission/set");
-
-  if (!emailSetResp || !submissionResp) {
-    throw new Error("Fastmail JMAP returned unexpected response structure for send.");
-  }
-
-  const emailSetResult = emailSetResp[1] as {
-    created?: Record<string, { id: string; threadId?: string }>;
-    notCreated?: Record<string, { type: string; description?: string }>;
-  };
-
-  const submissionResult = submissionResp[1] as {
-    created?: Record<string, { id: string }>;
-    notCreated?: Record<string, { type: string; description?: string }>;
-  };
-
-  if (emailSetResult.notCreated?.["draft"]) {
-    const err = emailSetResult.notCreated["draft"];
-    throw new Error(
-      `Fastmail email creation failed (${err.type}): ${err.description ?? "unknown error"}`,
-    );
-  }
-
-  if (submissionResult.notCreated?.["sub1"]) {
-    const err = submissionResult.notCreated["sub1"];
-    throw new Error(
-      `Fastmail email submission failed (${err.type}): ${err.description ?? "unknown error"}`,
-    );
-  }
-
-  const createdEmail = emailSetResult.created?.["draft"];
-  const sentAt = new Date().toISOString();
-
-  return {
-    message_id: createdEmail?.id ?? crypto.randomUUID(),
-    thread_id: createdEmail?.threadId ?? createdEmail?.id ?? crypto.randomUUID(),
-    sent_at: sentAt,
-    to: params.to.map((e) => parseEmailAddress(e)),
-    cc: params.cc.map((e) => parseEmailAddress(e)),
-    bcc: params.bcc.map((e) => parseEmailAddress(e)),
-    subject: params.subject,
-    status: "sent",
-  };
-}
 
 // ---------------------------------------------------------------------------
 // email_reply — types
@@ -9675,367 +8718,6 @@ async function replyOutlookMessage(
   };
 }
 
-// ---------------------------------------------------------------------------
-// email_reply — Fastmail provider (JMAP)
-// ---------------------------------------------------------------------------
-
-/**
- * Sends a reply to an existing Fastmail message via JMAP.
- *
- * Flow:
- *   1. GET /jmap/session to discover accountId and apiUrl.
- *   2. Email/get to fetch the original email's messageId header, references,
- *      subject, from, to, cc.
- *   3. Upload any attachments to get blobIds.
- *   4. Email/set + EmailSubmission/set in a single JMAP batch to create and
- *      submit the reply. The `inReplyTo` and `references` JMAP fields are set
- *      to maintain thread continuity per RFC 8621.
- */
-async function replyFastmailMessage(
-  inbox: InboxRow,
-  originalMessageId: string,
-  params: ReplyToEmailParams,
-): Promise<ReplyToEmailResult> {
-  // Sign the new reply text. Fastmail sends params.body / params.htmlBody as the
-  // message parts without re-quoting the original, so appending the signature
-  // here places it after the user's text (single source: composeSignatureBlocks).
-  applyReplyForwardSignature(params, inbox, {
-    include_signature: params.include_signature,
-  });
-  // ── Build auth header ─────────────────────────────────────────────────────
-  const authHeader = await buildFastmailAuthHeader(inbox);
-
-  // ── Step 1: Discover JMAP session ─────────────────────────────────────────
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-    uploadUrl?: string;
-  };
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  const uploadUrl = (
-    session.uploadUrl ?? "https://api.fastmail.com/jmap/upload/{accountId}/"
-  ).replace("{accountId}", encodeURIComponent(accountId ?? ""));
-
-  if (!accountId) {
-    throw new Error(
-      "Fastmail JMAP: could not determine accountId from session.",
-    );
-  }
-
-  // ── Step 2: Fetch original email metadata ─────────────────────────────────
-  const fetchBody = {
-    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-    methodCalls: [
-      [
-        "Email/get",
-        {
-          accountId,
-          ids: [originalMessageId],
-          properties: [
-            "id",
-            "threadId",
-            "messageId",
-            "references",
-            "subject",
-            "from",
-            "to",
-            "cc",
-          ],
-        },
-        "f1",
-      ],
-    ],
-  };
-
-  const fetchResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(fetchBody),
-  });
-  if (!fetchResp.ok) {
-    if (fetchResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP error fetching original: ${fetchResp.statusText}`);
-  }
-
-  const fetchData = (await fetchResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-
-  const emailGetResp = fetchData.methodResponses?.find(([n]) => n === "Email/get");
-  const emailGetResult = (emailGetResp?.[1] ?? null) as {
-    list?: Array<{
-      id: string;
-      threadId?: string;
-      messageId?: string[];
-      references?: string[];
-      subject?: string;
-      from?: { name?: string; email?: string }[];
-      to?: { name?: string; email?: string }[];
-      cc?: { name?: string; email?: string }[];
-    }>;
-    notFound?: string[];
-  } | null;
-
-  const origEmail = emailGetResult?.list?.[0];
-  if (
-    !origEmail ||
-    (emailGetResult?.notFound ?? []).includes(originalMessageId)
-  ) {
-    throw new Error("message_not_found");
-  }
-
-  const origRfc5322MessageIds = origEmail.messageId ?? [];
-  const origRfc5322MessageId = origRfc5322MessageIds[0] ?? "";
-  const origReferencesList = origEmail.references ?? [];
-  const origSubject = origEmail.subject ?? "(no subject)";
-  const replySubject = /^re:/i.test(origSubject.trim())
-    ? origSubject
-    : `Re: ${origSubject}`;
-
-  // JMAP references = existing references + original messageId
-  const newReferences = origRfc5322MessageId
-    ? [...origReferencesList, origRfc5322MessageId]
-    : origReferencesList;
-
-  // ── Step 3: Resolve reply recipients ─────────────────────────────────────
-  type JmapAddr = { name?: string; email?: string };
-  let toAddresses: { name: string; email: string }[];
-
-  if (params.replyAll) {
-    const fromAddr = origEmail.from?.[0];
-    const allTo = origEmail.to ?? [];
-    const allCc = origEmail.cc ?? [];
-    const everyone: JmapAddr[] = [
-      ...(fromAddr ? [fromAddr] : []),
-      ...allTo,
-      ...allCc,
-    ].filter((a) => a.email && a.email !== inbox.email_address);
-    toAddresses = everyone.slice(0, 50).map((a) => ({
-      name: a.name ?? "",
-      email: a.email ?? "",
-    }));
-  } else {
-    const fromAddr = origEmail.from?.[0];
-    toAddresses = fromAddr?.email
-      ? [{ name: fromAddr.name ?? "", email: fromAddr.email }]
-      : [];
-  }
-
-  if (toAddresses.length === 0) {
-    throw new Error(
-      "email_reply: could not determine reply recipients from original message.",
-    );
-  }
-
-  // ── Step 4: Upload attachments ────────────────────────────────────────────
-  const jmapAttachments: unknown[] = [];
-  for (const att of params.attachments) {
-    const attBytes = Uint8Array.from(
-      atob(att.data.replace(/\s/g, "")),
-      (c) => c.charCodeAt(0),
-    );
-    const uploadResp = await fetch(uploadUrl, {
-      method: "POST",
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": att.mime_type,
-      },
-      body: attBytes,
-    });
-    if (!uploadResp.ok) {
-      throw new Error(
-        `Fastmail attachment upload failed for '${att.filename}': ${uploadResp.statusText}`,
-      );
-    }
-    const uploadResult = (await uploadResp.json()) as { blobId?: string };
-    if (!uploadResult.blobId) {
-      throw new Error(
-        `Fastmail did not return a blobId for attachment '${att.filename}'.`,
-      );
-    }
-    jmapAttachments.push({
-      blobId: uploadResult.blobId,
-      name: att.filename,
-      type: att.mime_type,
-      disposition: "attachment",
-    });
-  }
-
-  // ── Step 5: Build and submit the reply ───────────────────────────────────
-  // Resolve the Drafts/Sent mailboxes — JMAP requires the email to live in a
-  // mailbox before it can be submitted.
-  const { draftsId, sentId } = await resolveFastmailRoleMailboxes(
-    apiUrl,
-    authHeader,
-    accountId,
-  );
-  const placementId = draftsId ?? sentId;
-  if (!placementId) {
-    throw new Error(
-      "Fastmail JMAP: could not resolve a Drafts or Sent mailbox to place the reply.",
-    );
-  }
-
-  const fromAddress = inbox.display_name
-    ? { name: inbox.display_name, email: inbox.email_address }
-    : { email: inbox.email_address };
-
-  const bodyValues: Record<string, unknown> = {};
-  const textBodyParts: unknown[] = [];
-  const htmlBodyParts: unknown[] = [];
-
-  bodyValues["textPart"] = { value: params.body, charset: "utf-8" };
-  textBodyParts.push({ partId: "textPart", type: "text/plain" });
-
-  if (params.htmlBody) {
-    bodyValues["htmlPart"] = { value: params.htmlBody, charset: "utf-8" };
-    htmlBodyParts.push({ partId: "htmlPart", type: "text/html" });
-  }
-
-  const emailCreate: Record<string, unknown> = {
-    mailboxIds: { [placementId]: true },
-    from: [fromAddress],
-    to: toAddresses.map((a) =>
-      a.name ? { name: a.name, email: a.email } : { email: a.email }
-    ),
-    subject: replySubject,
-    bodyValues,
-    textBody: textBodyParts,
-    ...(params.htmlBody ? { htmlBody: htmlBodyParts } : {}),
-    ...(jmapAttachments.length ? { attachments: jmapAttachments } : {}),
-    // JMAP RFC 8621 threading fields
-    ...(origRfc5322MessageId
-      ? { inReplyTo: [origRfc5322MessageId] }
-      : {}),
-    ...(newReferences.length ? { references: newReferences } : {}),
-    keywords: { "$draft": true },
-  };
-
-  const allRcptTo = toAddresses.map((a) => ({ email: a.email }));
-
-  // On successful submission, clear the $draft flag and move the reply out of
-  // Drafts into Sent so it doesn't linger as an unsent draft.
-  const submissionSet: Record<string, unknown> = {
-    accountId,
-    create: {
-      sub1: {
-        emailId: "#draft",
-        envelope: {
-          mailFrom: { email: inbox.email_address },
-          rcptTo: allRcptTo,
-        },
-      },
-    },
-  };
-  if (sentId) {
-    const patch: Record<string, unknown> = {
-      "keywords/$draft": null,
-      "keywords/$seen": true,
-    };
-    if (placementId !== sentId) {
-      patch[`mailboxIds/${placementId}`] = null;
-      patch[`mailboxIds/${sentId}`] = true;
-    }
-    submissionSet.onSuccessUpdateEmail = { "#sub1": patch };
-  }
-
-  const jmapBody = {
-    using: [
-      "urn:ietf:params:jmap:core",
-      "urn:ietf:params:jmap:mail",
-      "urn:ietf:params:jmap:submission",
-    ],
-    methodCalls: [
-      [
-        "Email/set",
-        {
-          accountId,
-          create: { draft: emailCreate },
-        },
-        "e1",
-      ],
-      ["EmailSubmission/set", submissionSet, "s1"],
-    ],
-  };
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(jmapBody),
-  });
-
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP reply error: ${apiResp.statusText}`);
-  }
-
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-
-  const responses = apiData.methodResponses ?? [];
-  const emailSetResp = responses.find(([n]) => n === "Email/set");
-  const submissionResp = responses.find(([n]) => n === "EmailSubmission/set");
-
-  if (!emailSetResp || !submissionResp) {
-    throw new Error(
-      "Fastmail JMAP returned unexpected response structure for reply.",
-    );
-  }
-
-  const emailSetResult = emailSetResp[1] as {
-    created?: Record<string, { id: string; threadId?: string }>;
-    notCreated?: Record<string, { type: string; description?: string }>;
-  };
-  const submissionResult = submissionResp[1] as {
-    created?: Record<string, { id: string }>;
-    notCreated?: Record<string, { type: string; description?: string }>;
-  };
-
-  if (emailSetResult.notCreated?.["draft"]) {
-    const err = emailSetResult.notCreated["draft"];
-    throw new Error(
-      `Fastmail reply creation failed (${err.type}): ${err.description ?? "unknown error"}`,
-    );
-  }
-  if (submissionResult.notCreated?.["sub1"]) {
-    const err = submissionResult.notCreated["sub1"];
-    throw new Error(
-      `Fastmail reply submission failed (${err.type}): ${err.description ?? "unknown error"}`,
-    );
-  }
-
-  const createdEmail = emailSetResult.created?.["draft"];
-  const sentAt = new Date().toISOString();
-
-  return {
-    message_id: createdEmail?.id ?? crypto.randomUUID(),
-    thread_id:
-      createdEmail?.threadId ??
-      origEmail.threadId ??
-      createdEmail?.id ??
-      crypto.randomUUID(),
-    sent_at: sentAt,
-    in_reply_to: originalMessageId,
-    to: toAddresses.map((a) => ({ name: a.name, email: a.email })),
-    subject: replySubject,
-    status: "sent",
-  };
-}
 
 // ---------------------------------------------------------------------------
 // email_forward — types
@@ -10387,83 +9069,6 @@ async function forwardOutlookMessage(
   };
 }
 
-// ---------------------------------------------------------------------------
-// email_forward — Fastmail provider (JMAP)
-// ---------------------------------------------------------------------------
-
-/**
- * Forwards an email via Fastmail JMAP.
- *
- * Flow:
- *   1. Read the original message via `readFastmailMessage` (with attachments if requested).
- *   2. Build the forwarded plain-text body with the standard header block.
- *   3. Send via `sendFastmailMessage` using the composed body and collected attachments.
- */
-async function forwardFastmailMessage(
-  inbox: InboxRow,
-  originalMessageId: string,
-  params: ForwardEmailParams,
-): Promise<ForwardEmailResult> {
-  // Sign the forward intro before the original is appended below
-  // (buildForwardedTextBody places the forwarded block after params.body).
-  applyReplyForwardSignature(params, inbox, {
-    include_signature: params.include_signature,
-  });
-  const original = await readFastmailMessage(
-    inbox,
-    originalMessageId,
-    false,
-    params.includeAttachments,
-    false,
-  );
-
-  const fwdSubject = makeForwardSubject(original.subject);
-  const origFromStr = original.from.name
-    ? `${original.from.name} <${original.from.email}>`
-    : original.from.email;
-  const origToStr = original.to
-    .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
-    .join(", ");
-
-  const textBody = buildForwardedTextBody(
-    params.body,
-    origFromStr,
-    original.date,
-    original.subject,
-    origToStr,
-    original.body_text ?? "",
-  );
-
-  const attachments = params.includeAttachments
-    ? original.attachments
-        .filter((a) => a.data !== null)
-        .map((a) => ({
-          filename: a.filename,
-          mime_type: a.mime_type,
-          data: a.data as string,
-        }))
-    : [];
-
-  const sendResult = await sendFastmailMessage(inbox, {
-    to: params.to,
-    cc: params.cc,
-    bcc: params.bcc,
-    subject: fwdSubject,
-    textBody,
-    htmlBody: params.htmlBody,
-    attachments,
-  });
-
-  return {
-    message_id: sendResult.message_id,
-    thread_id: sendResult.thread_id,
-    sent_at: sendResult.sent_at,
-    forwarded_from: originalMessageId,
-    to: sendResult.to,
-    subject: fwdSubject,
-    status: "sent",
-  };
-}
 
 // ---------------------------------------------------------------------------
 // email_forward — top-level handler
@@ -10653,9 +9258,6 @@ async function executeForwardEmail(
       case "outlook":
         fwdResult = await forwardOutlookMessage(inbox, messageId, fwdParams);
         break;
-      case "fastmail":
-        fwdResult = await forwardFastmailMessage(inbox, messageId, fwdParams);
-        break;
       case "imap":
         fwdResult = await forwardImapMessage(inbox, messageId, fwdParams);
         break;
@@ -10760,7 +9362,7 @@ async function executeForwardEmail(
  *
  * Validates and normalises arguments, resolves the inbox, checks scope,
  * fetches the original message to derive threading headers and recipients,
- * and dispatches to the correct provider (Gmail / Outlook / Fastmail JMAP).
+ * and dispatches to the correct provider (Gmail / Outlook / IMAP).
  *
  * Never throws — all errors are captured as structured ToolErrors.
  *
@@ -10965,9 +9567,6 @@ async function executeReplyToEmail(
       case "outlook":
         replyResult = await replyOutlookMessage(inbox, messageId, replyParams);
         break;
-      case "fastmail":
-        replyResult = await replyFastmailMessage(inbox, messageId, replyParams);
-        break;
       case "imap":
         replyResult = await replyImapMessage(inbox, messageId, replyParams);
         break;
@@ -11090,7 +9689,7 @@ const SEND_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
  *
  * Validates and normalises all arguments, checks email address syntax,
  * enforces attachment size limits, resolves the inbox, dispatches to the
- * correct provider (Gmail API / Microsoft Graph / Fastmail JMAP), and
+ * correct provider (Gmail API / Microsoft Graph / IMAP+SMTP), and
  * returns a structured SendEmailResult.
  *
  * Never throws — all errors are captured as structured ToolErrors with an
@@ -11350,9 +9949,6 @@ async function executeSendEmail(
         break;
       case "outlook":
         sendResult = await sendOutlookMessage(inbox, sendParams);
-        break;
-      case "fastmail":
-        sendResult = await sendFastmailMessage(inbox, sendParams);
         break;
       case "imap":
         sendResult = await sendImapMessage(inbox, sendParams);
@@ -11747,262 +10343,6 @@ async function searchOutlookMessages(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Fastmail provider — email_search (JMAP)
-// ---------------------------------------------------------------------------
-
-/**
- * Implements `email_search` for Fastmail using JMAP (RFC 8620/8621).
- *
- * JMAP's `Email/query` accepts a `filter` object with a `text` field that
- * performs a provider-native full-text search across subject, from, to, cc,
- * bcc, body, and attachment text simultaneously. Fastmail's search engine is
- * mature and handles the query as a whitespace-tokenised set of keywords.
- *
- * When `include_folders` is non-empty, additional mailbox ID filters are
- * resolved in a preliminary `Mailbox/query` call and passed as `inMailbox`
- * constraints. When empty, the search is inbox-wide.
- *
- * Auth: Bearer token (OAuth) or Basic (app-password), same as listFastmailMessages.
- */
-async function searchFastmailMessages(
-  inbox: InboxRow,
-  search: NormalizedSearch,
-  limit: number,
-  offset: number,
-  includeFolders: string[],
-): Promise<SearchEmailsResult> {
-  // Build auth header.
-  const authHeader = await buildFastmailAuthHeader(inbox);
-
-  // Step 1: Discover JMAP session.
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-
-  if (!accountId) {
-    throw new Error("Fastmail JMAP: could not determine accountId from session.");
-  }
-
-  // JMAP role map (same as listFastmailMessages).
-  const JMAP_ROLE_MAP: Record<string, string> = {
-    INBOX: "inbox",
-    SENT: "sent",
-    DRAFTS: "drafts",
-    DRAFT: "drafts",
-    TRASH: "trash",
-    SPAM: "junk",
-    JUNK: "junk",
-    ARCHIVE: "archive",
-  };
-
-  // Build the Email/query filter from the normalized search criteria.
-  // toJmapFilter returns either {} (no criteria), a single FilterCondition, or
-  // a { operator:"AND", conditions:[…] } FilterOperator. `raw` is ignored for
-  // JMAP (no free-form query-string escape hatch).
-  const translatedFilter = toJmapFilter(search);
-
-  // Step 2: If include_folders is non-empty, resolve the first folder to a
-  // mailbox ID and capture it as an `inMailbox` constraint.
-  // We use only the first folder: JMAP's `inMailbox` takes a single ID, and
-  // multi-folder union search would require `inMailboxOtherThan` plus a separate
-  // query-merge, which is outside the scope of this tool.
-  let mailboxConstraint: Record<string, unknown> | null = null;
-  let resolvedFolder: string | null = null;
-  if (includeFolders.length > 0) {
-    resolvedFolder = includeFolders[0];
-    const mailboxRole = JMAP_ROLE_MAP[resolvedFolder.toUpperCase()];
-
-    const mailboxQueryBody = {
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        [
-          "Mailbox/query",
-          {
-            accountId,
-            filter: mailboxRole
-              ? { role: mailboxRole }
-              : { name: resolvedFolder },
-            limit: 1,
-          },
-          "m",
-        ],
-      ],
-    };
-
-    const mbResp = await fetch(apiUrl, {
-      method: "POST",
-      headers: { Authorization: authHeader, "Content-Type": "application/json" },
-      body: JSON.stringify(mailboxQueryBody),
-    });
-
-    if (mbResp.ok) {
-      const mbData = (await mbResp.json()) as {
-        methodResponses?: [string, Record<string, unknown>, string][];
-      };
-      const mbResult = mbData.methodResponses?.find(([n]) => n === "Mailbox/query");
-      const mbIds = (mbResult?.[1] as { ids?: string[] } | undefined)?.ids ?? [];
-      if (mbIds.length > 0) {
-        mailboxConstraint = { inMailbox: mbIds[0] };
-      }
-    }
-    // If mailbox resolution fails, fall through to full-inbox search.
-  }
-
-  // AND-combine the translated filter with the mailbox constraint:
-  //  - both present → { operator:"AND", conditions:[…translated…, mailbox] }
-  //    (flatten when the translated filter is itself an AND operator)
-  //  - only translated criteria → use them directly
-  //  - only a mailbox constraint → use it directly
-  //  - neither → omit the filter entirely (match all)
-  const hasTranslated = Object.keys(translatedFilter).length > 0;
-  let emailFilter: Record<string, unknown> | undefined;
-  if (hasTranslated && mailboxConstraint) {
-    const isAndOp = translatedFilter["operator"] === "AND" &&
-      Array.isArray(translatedFilter["conditions"]);
-    const baseConditions = isAndOp
-      ? (translatedFilter["conditions"] as Record<string, unknown>[])
-      : [translatedFilter];
-    emailFilter = {
-      operator: "AND",
-      conditions: [...baseConditions, mailboxConstraint],
-    };
-  } else if (hasTranslated) {
-    emailFilter = translatedFilter;
-  } else if (mailboxConstraint) {
-    emailFilter = mailboxConstraint;
-  } else {
-    emailFilter = undefined;
-  }
-
-  // Step 3: Run Email/query with text filter, then Email/get for metadata.
-  const jmapBody = {
-    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-    methodCalls: [
-      [
-        "Email/query",
-        {
-          accountId,
-          // Omit `filter` (undefined) for a match-all query.
-          ...(emailFilter ? { filter: emailFilter } : {}),
-          sort: [{ property: "receivedAt", isAscending: false }],
-          position: offset,
-          limit,
-          calculateTotal: true,
-        },
-        "q",
-      ],
-      [
-        "Email/get",
-        {
-          accountId,
-          "#ids": {
-            resultOf: "q",
-            name: "Email/query",
-            path: "/ids",
-          },
-          properties: [
-            "id",
-            "threadId",
-            "subject",
-            "from",
-            "to",
-            "receivedAt",
-            "preview",
-            "keywords",
-            "hasAttachment",
-          ],
-        },
-        "g",
-      ],
-    ],
-  };
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify(jmapBody),
-  });
-
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP error: ${apiResp.statusText}`);
-  }
-
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-
-  const responses = apiData.methodResponses ?? [];
-  const queryResp = responses.find(([n]) => n === "Email/query");
-  const getResp = responses.find(([n]) => n === "Email/get");
-
-  if (!queryResp || !getResp) {
-    throw new Error("Fastmail JMAP returned unexpected response structure.");
-  }
-
-  const queryResult = queryResp[1] as { total?: number };
-  const getResult = getResp[1] as {
-    list?: {
-      id: string;
-      threadId?: string;
-      subject?: string;
-      from?: { name?: string; email?: string }[];
-      to?: { name?: string; email?: string }[];
-      receivedAt?: string;
-      preview?: string;
-      keywords?: Record<string, boolean>;
-      hasAttachment?: boolean;
-    }[];
-  };
-
-  const total = queryResult.total ?? 0;
-  const emailList = getResult.list ?? [];
-  const hasMore = offset + limit < total;
-  const folder = resolvedFolder ?? "INBOX";
-
-  const messages: SearchEmailSummary[] = emailList.map((email) => ({
-    id: email.id,
-    from: email.from?.[0]
-      ? { name: email.from[0].name ?? "", email: email.from[0].email ?? "" }
-      : { name: "", email: "" },
-    to: (email.to ?? []).map((r) => ({
-      name: r.name ?? "",
-      email: r.email ?? "",
-    })),
-    subject: email.subject ?? "(no subject)",
-    date: email.receivedAt ?? new Date().toISOString(),
-    preview: normalizePreview(email.preview ?? ""),
-    is_read: !!(email.keywords?.["$seen"]),
-    has_attachments: email.hasAttachment ?? false,
-    folder,
-    thread_id: email.threadId ?? email.id,
-    relevance_score: null,
-  }));
-
-  return {
-    messages,
-    total,
-    // JMAP calculateTotal:true yields an exact total.
-    total_is_estimate: false,
-    has_more: hasMore,
-    next_offset: offset + limit,
-    // Echo the JMAP filter we actually sent (or "all" when unfiltered).
-    query_normalized: emailFilter ? JSON.stringify(emailFilter) : "all",
-  };
-}
 
 // ---------------------------------------------------------------------------
 // email_search — top-level handler
@@ -12229,15 +10569,6 @@ async function executeSearchEmails(
         break;
       case "outlook":
         searchPromise = searchOutlookMessages(
-          inbox,
-          search,
-          limit,
-          offset,
-          includeFolders,
-        );
-        break;
-      case "fastmail":
-        searchPromise = searchFastmailMessages(
           inbox,
           search,
           limit,
@@ -12555,65 +10886,6 @@ async function outlookListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
   }));
 }
 
-/**
- * Lists Fastmail mailboxes via JMAP Mailbox/get (includes message counts).
- * Throws "fastmail_auth_failed" on 401.
- */
-async function fastmailListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
-  const authHeader = await buildFastmailAuthHeader(inbox);
-
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        ["Mailbox/get", { accountId, ids: null }, "a"],
-      ],
-    }),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP mailbox error: ${apiResp.statusText}`);
-  }
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const mailboxGetResp = data.methodResponses?.find(([n]) => n === "Mailbox/get");
-  interface JmapMailboxDetail {
-    id: string;
-    name: string;
-    totalEmails?: number;
-    unreadEmails?: number;
-  }
-  const list =
-    (mailboxGetResp?.[1] as { list?: JmapMailboxDetail[] } | undefined)?.list ?? [];
-  return list.map((m) => ({
-    id: m.id,
-    name: m.name,
-    type: "folder" as const,
-    total_messages: m.totalEmails ?? null,
-    unread_messages: m.unreadEmails ?? null,
-  }));
-}
 
 /** Dispatches to the provider folder lister for the given inbox. */
 function listFoldersForProvider(inbox: InboxRow): Promise<FolderEntry[]> {
@@ -12622,8 +10894,6 @@ function listFoldersForProvider(inbox: InboxRow): Promise<FolderEntry[]> {
       return gmailListFolders(inbox);
     case "outlook":
       return outlookListFolders(inbox);
-    case "fastmail":
-      return fastmailListFolders(inbox);
     default: // imap and all IMAP service variants
       return imapListFolders(inbox);
   }
@@ -12665,9 +10935,6 @@ async function resolveFolderId(inbox: InboxRow, nameOrId: string): Promise<strin
         break;
       case "outlook":
         return alias.outlook;
-      case "fastmail":
-        // No static id; fall through and match the mailbox by canonical name.
-        break;
       default: {
         // imap — resolve the alias against the server's REAL layout via IMAP
         // SPECIAL-USE flags (one LIST). A generic IMAP account may name its
@@ -12770,9 +11037,6 @@ async function executeListFolders(
         break;
       case "outlook":
         folders = await outlookListFolders(inbox);
-        break;
-      case "fastmail":
-        folders = await fastmailListFolders(inbox);
         break;
       default: // "imap" and all IMAP service variants
         folders = await imapListFolders(inbox);
@@ -12886,49 +11150,6 @@ async function outlookCreateFolder(inbox: InboxRow, name: string): Promise<{ id:
   return { id: data.id, name: data.displayName };
 }
 
-async function fastmailCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
-  const authHeader = await buildFastmailAuthHeader(inbox);
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        ["Mailbox/set", { accountId, create: { new1: { name } } }, "a"],
-      ],
-    }),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP Mailbox/set create failed: ${apiResp.statusText}`);
-  }
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const setResp = data.methodResponses?.find(([n]) => n === "Mailbox/set");
-  const created = (setResp?.[1] as { created?: Record<string, { id: string }> } | undefined)?.created;
-  const newId = created?.["new1"]?.id;
-  if (!newId) throw new Error("Fastmail JMAP: create did not return an ID.");
-  return { id: newId, name };
-}
 
 // ── folder_rename helpers ──────────────────────────────────────────────────
 
@@ -12995,47 +11216,6 @@ async function outlookRenameFolder(inbox: InboxRow, folderId: string, newName: s
   }
 }
 
-async function fastmailRenameFolder(inbox: InboxRow, folderId: string, newName: string): Promise<void> {
-  const authHeader = await buildFastmailAuthHeader(inbox);
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        ["Mailbox/set", { accountId, update: { [folderId]: { name: newName } } }, "a"],
-      ],
-    }),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP Mailbox/set update failed: ${apiResp.statusText}`);
-  }
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const setResp = data.methodResponses?.find(([n]) => n === "Mailbox/set");
-  const notUpdated = (setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated;
-  if (notUpdated?.[folderId]) throw new Error("folder_not_found");
-}
 
 // ── folder_delete helpers ──────────────────────────────────────────────────
 
@@ -13094,47 +11274,6 @@ async function outlookDeleteFolder(inbox: InboxRow, folderId: string): Promise<v
   }
 }
 
-async function fastmailDeleteFolder(inbox: InboxRow, folderId: string): Promise<void> {
-  const authHeader = await buildFastmailAuthHeader(inbox);
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        ["Mailbox/set", { accountId, destroy: [folderId] }, "a"],
-      ],
-    }),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP Mailbox/set destroy failed: ${apiResp.statusText}`);
-  }
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const setResp = data.methodResponses?.find(([n]) => n === "Mailbox/set");
-  const notDestroyed = (setResp?.[1] as { notDestroyed?: Record<string, unknown> } | undefined)?.notDestroyed;
-  if (notDestroyed?.[folderId]) throw new Error("folder_not_found");
-}
 
 // ── Shared arg validation helper ───────────────────────────────────────────
 
@@ -13274,9 +11413,6 @@ async function executeCreateFolder(
       case "outlook":
         created = await outlookCreateFolder(inbox, name);
         break;
-      case "fastmail":
-        created = await fastmailCreateFolder(inbox, name);
-        break;
       default: // imap and all service variants
         created = await imapCreateFolder(inbox, name);
         break;
@@ -13340,9 +11476,6 @@ async function executeRenameFolder(
       case "outlook":
         await outlookRenameFolder(inbox, folderId, newName);
         break;
-      case "fastmail":
-        await fastmailRenameFolder(inbox, folderId, newName);
-        break;
       default: // imap and all service variants
         await imapRenameFolder(inbox, folderId, newName);
         break;
@@ -13403,9 +11536,6 @@ async function executeDeleteFolder(
         break;
       case "outlook":
         await outlookDeleteFolder(inbox, folderId);
-        break;
-      case "fastmail":
-        await fastmailDeleteFolder(inbox, folderId);
         break;
       default: // imap and all service variants
         await imapDeleteFolder(inbox, folderId);
@@ -13641,195 +11771,6 @@ async function outlookArchiveEmail(
   }
 }
 
-// ── Fastmail (JMAP) provider helpers ──────────────────────────────────────
-
-/**
- * Sets or removes JMAP email keywords on a single message.
- * - `addKeywords`: map of keyword → true (e.g. { "$seen": true })
- * - `removeKeywords`: map of keyword → null (e.g. { "$seen": null })
- * Throws "fastmail_auth_failed" on 401.
- */
-async function fastmailSetKeywords(
-  inbox: InboxRow,
-  messageId: string,
-  addKeywords: Record<string, true>,
-  removeKeywords: Record<string, null>,
-): Promise<void> {
-  const authHeader = await buildFastmailAuthHeader(inbox);
-
-  // Discover session.
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
-
-  const updatePatch: Record<string, unknown> = {};
-  for (const k of Object.keys(addKeywords)) {
-    updatePatch[`keywords/${k}`] = true;
-  }
-  for (const k of Object.keys(removeKeywords)) {
-    updatePatch[`keywords/${k}`] = null;
-  }
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        [
-          "Email/set",
-          {
-            accountId,
-            update: { [messageId]: updatePatch },
-          },
-          "a",
-        ],
-      ],
-    }),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP error: ${apiResp.statusText}`);
-  }
-}
-
-/**
- * Archives a single Fastmail message via JMAP Email/set.
- * Looks up the archive mailbox by role then updates mailboxIds.
- * Throws "fastmail_auth_failed" on 401.
- */
-async function fastmailArchiveEmail(
-  inbox: InboxRow,
-  messageId: string,
-): Promise<void> {
-  const authHeader = await buildFastmailAuthHeader(inbox);
-
-  // Discover session.
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
-
-  // One round-trip: Mailbox/get + Email/set. The Mailbox/get response is
-  // needed to find the archive mailbox id before we can set mailboxIds.
-  // We first fetch mailboxes, then archive the message.
-  const mailboxResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        ["Mailbox/get", { accountId, ids: null }, "a"],
-      ],
-    }),
-  });
-  if (!mailboxResp.ok) {
-    if (mailboxResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP mailbox error: ${mailboxResp.statusText}`);
-  }
-  const mailboxData = (await mailboxResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const mailboxGetResp = mailboxData.methodResponses?.find(([n]) => n === "Mailbox/get");
-  interface JmapMailbox {
-    id: string;
-    role?: string;
-    name?: string;
-  }
-  const mailboxList = (mailboxGetResp?.[1] as { list?: JmapMailbox[] } | undefined)?.list ?? [];
-  const archiveMailbox = mailboxList.find(
-    (m) => m.role === "archive" || m.name?.toLowerCase() === "archive",
-  );
-  if (!archiveMailbox) {
-    throw new Error("Fastmail archive mailbox not found — cannot archive message.");
-  }
-
-  // Now fetch the current message to know its current mailboxIds (so we can
-  // replace only the inbox entry rather than wiping all mailboxes).
-  const msgFetchResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        [
-          "Email/get",
-          { accountId, ids: [messageId], properties: ["mailboxIds"] },
-          "a",
-        ],
-      ],
-    }),
-  });
-  if (!msgFetchResp.ok) {
-    if (msgFetchResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP fetch error: ${msgFetchResp.statusText}`);
-  }
-  const msgData = (await msgFetchResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const emailGetResp = msgData.methodResponses?.find(([n]) => n === "Email/get");
-  const emailList = (emailGetResp?.[1] as { list?: { mailboxIds?: Record<string, boolean> }[] } | undefined)?.list ?? [];
-  const currentMailboxIds = emailList[0]?.mailboxIds ?? {};
-
-  // Build patch: null all current mailboxes, then add archive.
-  const mailboxPatch: Record<string, boolean | null> = {};
-  for (const mboxId of Object.keys(currentMailboxIds)) {
-    mailboxPatch[`mailboxIds/${mboxId}`] = null;
-  }
-  mailboxPatch[`mailboxIds/${archiveMailbox.id}`] = true;
-
-  const archiveResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        [
-          "Email/set",
-          { accountId, update: { [messageId]: mailboxPatch } },
-          "a",
-        ],
-      ],
-    }),
-  });
-  if (!archiveResp.ok) {
-    if (archiveResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP archive failed: ${archiveResp.statusText}`);
-  }
-}
 
 // ── Shared execute helper ──────────────────────────────────────────────────
 
@@ -13991,9 +11932,6 @@ async function executeArchiveEmail(
       case "outlook":
         await outlookArchiveEmail(inbox, messageId);
         break;
-      case "fastmail":
-        await fastmailArchiveEmail(inbox, messageId);
-        break;
       default:
         await imapArchiveEmail(inbox, messageId);
         break;
@@ -14105,81 +12043,6 @@ async function outlookMoveEmail(
   }
 }
 
-// ── Fastmail helpers ──────────────────────────────────────────────────────────
-
-/**
- * Resolves the Fastmail JMAP session (accountId + apiUrl).
- * Throws "fastmail_auth_failed" on 401.
- */
-async function resolveFastmailSession(inbox: InboxRow): Promise<{
-  authHeader: string;
-  accountId: string;
-  apiUrl: string;
-}> {
-  const authHeader = await buildFastmailAuthHeader(inbox);
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
-  return { authHeader, accountId, apiUrl };
-}
-
-/**
- * Fastmail "move": Email/set to update mailboxIds.
- * Replaces existing mailbox membership with the destination folder.
- */
-async function fastmailMoveEmail(
-  inbox: InboxRow,
-  messageId: string,
-  destinationFolderId: string,
-): Promise<void> {
-  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        [
-          "Email/set",
-          {
-            accountId,
-            update: {
-              [messageId]: {
-                mailboxIds: { [destinationFolderId]: true },
-              },
-            },
-          },
-          "a",
-        ],
-      ],
-    }),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP Email/set failed: ${apiResp.statusText}`);
-  }
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
-  const notUpdated = (setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated;
-  if (notUpdated?.[messageId]) throw new Error("message_not_found");
-}
 
 // ── Handlers ─────────────────────────────────────────────────────────────────
 
@@ -14251,9 +12114,6 @@ async function executeMoveEmail(
         break;
       case "outlook":
         await outlookMoveEmail(inbox, messageId, resolvedDest);
-        break;
-      case "fastmail":
-        await fastmailMoveEmail(inbox, messageId, resolvedDest);
         break;
       default: // imap and all service variants
         await imapMoveEmail(inbox, messageId, resolvedDest);
@@ -14350,52 +12210,6 @@ async function outlookCopyEmail(
   }
 }
 
-/**
- * Fastmail copy: JMAP Email/set patch that ADDS the destination mailbox to the
- * message's mailboxIds without removing existing memberships, so the message
- * appears in both the source and the destination folder.
- */
-async function fastmailCopyEmail(
-  inbox: InboxRow,
-  messageId: string,
-  destinationFolderId: string,
-): Promise<void> {
-  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        [
-          "Email/set",
-          {
-            accountId,
-            update: {
-              // Patch syntax: add one mailbox membership, leave the rest intact.
-              [messageId]: { [`mailboxIds/${destinationFolderId}`]: true },
-            },
-          },
-          "a",
-        ],
-      ],
-    }),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP Email/set failed: ${apiResp.statusText}`);
-  }
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
-  const notUpdated = (setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated;
-  if (notUpdated?.[messageId]) throw new Error("message_not_found");
-}
 
 /**
  * `email_copy` handler — copies a message into the specified folder, leaving the
@@ -14463,9 +12277,6 @@ async function executeCopyEmail(
     switch (inbox.provider) {
       case "outlook":
         await outlookCopyEmail(inbox, messageId, resolvedDest);
-        break;
-      case "fastmail":
-        await fastmailCopyEmail(inbox, messageId, resolvedDest);
         break;
       default: // imap and all service variants
         await imapCopyEmail(inbox, messageId, resolvedDest);
@@ -14603,121 +12414,6 @@ async function outlookDeleteEmail(
   }
 }
 
-/**
- * Fastmail delete: move to Trash mailbox (soft) or Email/set destroy (permanent).
- * Throws "fastmail_auth_failed" on 401.
- */
-async function fastmailDeleteEmail(
-  inbox: InboxRow,
-  messageId: string,
-  permanent: boolean,
-): Promise<void> {
-  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
-
-  if (permanent) {
-    // Hard-delete via Email/set destroy
-    const apiResp = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-        methodCalls: [
-          [
-            "Email/set",
-            { accountId, destroy: [messageId] },
-            "a",
-          ],
-        ],
-      }),
-    });
-    if (!apiResp.ok) {
-      if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-      throw new Error(`Fastmail JMAP Email/set destroy failed: ${apiResp.statusText}`);
-    }
-    const data = (await apiResp.json()) as {
-      methodResponses?: [string, Record<string, unknown>, string][];
-    };
-    const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
-    const notDestroyed =
-      (setResp?.[1] as { notDestroyed?: Record<string, unknown> } | undefined)?.notDestroyed;
-    if (notDestroyed?.[messageId]) throw new Error("message_not_found");
-  } else {
-    // Soft-delete: find the Trash mailbox ID then update mailboxIds
-    const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-      headers: { Authorization: authHeader },
-    });
-    if (!sessionResp.ok) throw new Error("fastmail_auth_failed");
-
-    const trashResp = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-        methodCalls: [
-          [
-            "Mailbox/query",
-            { accountId, filter: { role: "trash" }, limit: 1 },
-            "a",
-          ],
-          [
-            "Mailbox/get",
-            { accountId, "#ids": { resultOf: "a", name: "Mailbox/query", path: "/ids" } },
-            "b",
-          ],
-        ],
-      }),
-    });
-    if (!trashResp.ok) {
-      if (trashResp.status === 401) throw new Error("fastmail_auth_failed");
-      throw new Error(`Fastmail JMAP Mailbox/query failed: ${trashResp.statusText}`);
-    }
-    const trashData = (await trashResp.json()) as {
-      methodResponses?: [string, Record<string, unknown>, string][];
-    };
-    const mbGet = trashData.methodResponses?.find(([n]) => n === "Mailbox/get");
-    const trashMailboxes = (mbGet?.[1] as { list?: { id: string }[] } | undefined)?.list ?? [];
-    const trashId = trashMailboxes[0]?.id;
-    if (!trashId) throw new Error("Fastmail: could not locate Trash mailbox.");
-
-    const moveResp = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-        methodCalls: [
-          [
-            "Email/set",
-            {
-              accountId,
-              update: { [messageId]: { mailboxIds: { [trashId]: true } } },
-            },
-            "a",
-          ],
-        ],
-      }),
-    });
-    if (!moveResp.ok) {
-      if (moveResp.status === 401) throw new Error("fastmail_auth_failed");
-      throw new Error(`Fastmail JMAP Email/set failed: ${moveResp.statusText}`);
-    }
-    const moveData = (await moveResp.json()) as {
-      methodResponses?: [string, Record<string, unknown>, string][];
-    };
-    const setResp = moveData.methodResponses?.find(([n]) => n === "Email/set");
-    const notUpdated =
-      (setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated;
-    if (notUpdated?.[messageId]) throw new Error("message_not_found");
-  }
-}
 
 // ── email_delete top-level handler ────────────────────────────────────────────
 
@@ -14766,9 +12462,6 @@ async function executeDeleteEmail(
         break;
       case "outlook":
         await outlookDeleteEmail(inbox, messageId, permanent);
-        break;
-      case "fastmail":
-        await fastmailDeleteEmail(inbox, messageId, permanent);
         break;
       default: // imap and all IMAP service variants
         await imapDeleteEmail(inbox, messageId, permanent);
@@ -15459,244 +13152,6 @@ async function outlookBulkFlag(
   return { succeeded, failed };
 }
 
-// ── Fastmail bulk helpers ─────────────────────────────────────────────────────
-
-/** Fastmail bulk move: single JMAP Email/set update with all mailboxIds at once. */
-async function fastmailBulkMove(
-  inbox: InboxRow,
-  messageIds: string[],
-  destinationFolderId: string,
-): Promise<BulkOpResult> {
-  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
-
-  const updateMap: Record<string, unknown> = {};
-  for (const id of messageIds) {
-    updateMap[id] = { mailboxIds: { [destinationFolderId]: true } };
-  }
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [["Email/set", { accountId, update: updateMap }, "a"]],
-    }),
-  });
-  if (!apiResp.ok) {
-    const err = apiResp.status === 401
-      ? "fastmail_auth_failed"
-      : `Fastmail JMAP Email/set failed: ${apiResp.statusText}`;
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
-  }
-
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
-  const notUpdated =
-    ((setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated) ?? {};
-  const succeeded = messageIds.filter((id) => !notUpdated[id]);
-  const failed = messageIds
-    .filter((id) => !!notUpdated[id])
-    .map((id) => ({ id, error: "fastmail_update_failed" }));
-  return { succeeded, failed };
-}
-
-/**
- * Fastmail bulk copy: single JMAP Email/set that patches each message to ADD the
- * destination mailbox membership without removing existing ones (message ends up
- * in both source and destination).
- */
-async function fastmailBulkCopy(
-  inbox: InboxRow,
-  messageIds: string[],
-  destinationFolderId: string,
-): Promise<BulkOpResult> {
-  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
-
-  const updateMap: Record<string, unknown> = {};
-  for (const id of messageIds) {
-    updateMap[id] = { [`mailboxIds/${destinationFolderId}`]: true };
-  }
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [["Email/set", { accountId, update: updateMap }, "a"]],
-    }),
-  });
-  if (!apiResp.ok) {
-    const err = apiResp.status === 401
-      ? "fastmail_auth_failed"
-      : `Fastmail JMAP Email/set failed: ${apiResp.statusText}`;
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
-  }
-
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
-  const notUpdated =
-    ((setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated) ?? {};
-  const succeeded = messageIds.filter((id) => !notUpdated[id]);
-  const failed = messageIds
-    .filter((id) => !!notUpdated[id])
-    .map((id) => ({ id, error: "fastmail_update_failed" }));
-  return { succeeded, failed };
-}
-
-/** Fastmail bulk delete: JMAP Email/set destroy (permanent) or Trash mailboxId update (soft). */
-async function fastmailBulkDelete(
-  inbox: InboxRow,
-  messageIds: string[],
-  permanent: boolean,
-): Promise<BulkOpResult> {
-  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
-
-  if (permanent) {
-    const apiResp = await fetch(apiUrl, {
-      method: "POST",
-      headers: { Authorization: authHeader, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-        methodCalls: [["Email/set", { accountId, destroy: messageIds }, "a"]],
-      }),
-    });
-    if (!apiResp.ok) {
-      const err = apiResp.status === 401
-        ? "fastmail_auth_failed"
-        : `Fastmail JMAP Email/set destroy failed: ${apiResp.statusText}`;
-      return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
-    }
-    const data = (await apiResp.json()) as {
-      methodResponses?: [string, Record<string, unknown>, string][];
-    };
-    const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
-    const notDestroyed =
-      ((setResp?.[1] as { notDestroyed?: Record<string, unknown> } | undefined)?.notDestroyed) ?? {};
-    const succeeded = messageIds.filter((id) => !notDestroyed[id]);
-    const failed = messageIds
-      .filter((id) => !!notDestroyed[id])
-      .map((id) => ({ id, error: "fastmail_destroy_failed" }));
-    return { succeeded, failed };
-  }
-
-  // Soft-delete: resolve Trash mailbox role, then update all messages' mailboxIds.
-  const trashResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [
-        ["Mailbox/query", { accountId, filter: { role: "trash" }, limit: 1 }, "a"],
-        ["Mailbox/get", { accountId, "#ids": { resultOf: "a", name: "Mailbox/query", path: "/ids" } }, "b"],
-      ],
-    }),
-  });
-  if (!trashResp.ok) {
-    const err = trashResp.status === 401
-      ? "fastmail_auth_failed"
-      : `Fastmail JMAP Mailbox/query failed: ${trashResp.statusText}`;
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
-  }
-  const trashData = (await trashResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const mbGet = trashData.methodResponses?.find(([n]) => n === "Mailbox/get");
-  const trashMailboxes =
-    ((mbGet?.[1] as { list?: { id: string }[] } | undefined)?.list) ?? [];
-  const trashId = trashMailboxes[0]?.id;
-  if (!trashId) {
-    return {
-      succeeded: [],
-      failed: messageIds.map((id) => ({ id, error: "fastmail_trash_mailbox_not_found" })),
-    };
-  }
-
-  const updateMap: Record<string, unknown> = {};
-  for (const id of messageIds) {
-    updateMap[id] = { mailboxIds: { [trashId]: true } };
-  }
-  const moveResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [["Email/set", { accountId, update: updateMap }, "a"]],
-    }),
-  });
-  if (!moveResp.ok) {
-    const err = moveResp.status === 401
-      ? "fastmail_auth_failed"
-      : `Fastmail JMAP Email/set failed: ${moveResp.statusText}`;
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
-  }
-  const moveData = (await moveResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const setResp2 = moveData.methodResponses?.find(([n]) => n === "Email/set");
-  const notUpdated =
-    ((setResp2?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated) ?? {};
-  const succeeded2 = messageIds.filter((id) => !notUpdated[id]);
-  const failed2 = messageIds
-    .filter((id) => !!notUpdated[id])
-    .map((id) => ({ id, error: "fastmail_trash_failed" }));
-  return { succeeded: succeeded2, failed: failed2 };
-}
-
-/** Fastmail bulk flag: single JMAP Email/set update for all messages. */
-async function fastmailBulkFlag(
-  inbox: InboxRow,
-  messageIds: string[],
-  action: string,
-): Promise<BulkOpResult> {
-  const { authHeader, accountId, apiUrl } = await resolveFastmailSession(inbox);
-
-  const updateMap: Record<string, unknown> = {};
-  for (const id of messageIds) {
-    const patch: Record<string, unknown> = {};
-    switch (action) {
-      case "read":   patch["keywords/$seen"]    = true;  break;
-      case "unread": patch["keywords/$seen"]    = null;  break;
-      case "flag":   patch["keywords/$flagged"] = true;  break;
-      case "unflag": patch["keywords/$flagged"] = null;  break;
-      default:
-        return {
-          succeeded: [],
-          failed: messageIds.map((mid) => ({ id: mid, error: "invalid_action" })),
-        };
-    }
-    updateMap[id] = patch;
-  }
-
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [["Email/set", { accountId, update: updateMap }, "a"]],
-    }),
-  });
-  if (!apiResp.ok) {
-    const err = apiResp.status === 401
-      ? "fastmail_auth_failed"
-      : `Fastmail JMAP Email/set failed: ${apiResp.statusText}`;
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: err })) };
-  }
-  const data = (await apiResp.json()) as {
-    methodResponses?: [string, Record<string, unknown>, string][];
-  };
-  const setResp = data.methodResponses?.find(([n]) => n === "Email/set");
-  const notUpdated =
-    ((setResp?.[1] as { notUpdated?: Record<string, unknown> } | undefined)?.notUpdated) ?? {};
-  const succeeded = messageIds.filter((id) => !notUpdated[id]);
-  const failed = messageIds
-    .filter((id) => !!notUpdated[id])
-    .map((id) => ({ id, error: "fastmail_update_failed" }));
-  return { succeeded, failed };
-}
 
 // ── Bulk execute functions ────────────────────────────────────────────────────
 
@@ -15769,9 +13224,6 @@ async function executeBulkMove(
         break;
       case "outlook":
         bulkResult = await outlookBulkMove(inbox, messageIds, resolvedDest);
-        break;
-      case "fastmail":
-        bulkResult = await fastmailBulkMove(inbox, messageIds, resolvedDest);
         break;
       default: // imap and all IMAP service variants
         bulkResult = await imapBulkMove(inbox, messageIds, resolvedDest);
@@ -15874,9 +13326,6 @@ async function executeBulkCopy(
       case "outlook":
         bulkResult = await outlookBulkCopy(inbox, messageIds, resolvedDest);
         break;
-      case "fastmail":
-        bulkResult = await fastmailBulkCopy(inbox, messageIds, resolvedDest);
-        break;
       default: // imap and all IMAP service variants
         bulkResult = await imapBulkCopy(inbox, messageIds, resolvedDest);
         break;
@@ -15955,9 +13404,6 @@ async function executeBulkDelete(
         break;
       case "outlook":
         bulkResult = await outlookBulkDelete(inbox, messageIds, permanent);
-        break;
-      case "fastmail":
-        bulkResult = await fastmailBulkDelete(inbox, messageIds, permanent);
         break;
       default: // imap and all IMAP service variants
         bulkResult = await imapBulkDelete(inbox, messageIds, permanent);
@@ -16040,9 +13486,6 @@ async function executeBulkFlag(
         break;
       case "outlook":
         bulkResult = await outlookBulkFlag(inbox, messageIds, action);
-        break;
-      case "fastmail":
-        bulkResult = await fastmailBulkFlag(inbox, messageIds, action);
         break;
       default: // imap and all IMAP service variants
         bulkResult = await imapBulkFlag(inbox, messageIds, action);
@@ -16194,9 +13637,6 @@ async function executeSearchAndMove(
       case "outlook":
         searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
         break;
-      case "fastmail":
-        searchPromise = searchFastmailMessages(inbox, search, limit, 0, includeFolders);
-        break;
       case "imap":
         searchPromise = searchImapMessages(inbox, search, limit, 0, includeFolders);
         break;
@@ -16270,9 +13710,6 @@ async function executeSearchAndMove(
         break;
       case "outlook":
         bulkResult = await outlookBulkMove(inbox, messageIds, resolvedDest);
-        break;
-      case "fastmail":
-        bulkResult = await fastmailBulkMove(inbox, messageIds, resolvedDest);
         break;
       default: // imap
         bulkResult = await imapBulkMove(inbox, messageIds, resolvedDest);
@@ -16383,9 +13820,6 @@ async function executeSearchAndDelete(
       case "outlook":
         searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
         break;
-      case "fastmail":
-        searchPromise = searchFastmailMessages(inbox, search, limit, 0, includeFolders);
-        break;
       case "imap":
         searchPromise = searchImapMessages(inbox, search, limit, 0, includeFolders);
         break;
@@ -16459,9 +13893,6 @@ async function executeSearchAndDelete(
         break;
       case "outlook":
         bulkResult = await outlookBulkDelete(inbox, messageIds, permanent);
-        break;
-      case "fastmail":
-        bulkResult = await fastmailBulkDelete(inbox, messageIds, permanent);
         break;
       default: // imap
         bulkResult = await imapBulkDelete(inbox, messageIds, permanent);
@@ -17437,354 +14868,6 @@ async function outlookDeleteDraft(
   return { draft_id: draftId, deleted: true };
 }
 
-// ── Fastmail draft helpers ────────────────────────────────────────────────────
-
-/** Shared session discovery for Fastmail JMAP draft operations. */
-async function getFastmailSession(inbox: InboxRow): Promise<{
-  accountId: string;
-  apiUrl: string;
-  authHeader: string;
-}> {
-  const authHeader = await buildFastmailAuthHeader(inbox);
-  const sessionResp = await fetch("https://api.fastmail.com/jmap/session", {
-    headers: { Authorization: authHeader },
-  });
-  if (!sessionResp.ok) {
-    if (sessionResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail session error: ${sessionResp.statusText}`);
-  }
-  const session = (await sessionResp.json()) as {
-    primaryAccounts?: Record<string, string>;
-    apiUrl?: string;
-  };
-  const accountId = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
-  const apiUrl = session.apiUrl ?? "https://api.fastmail.com/jmap/api/";
-  if (!accountId) throw new Error("Fastmail JMAP: could not determine accountId.");
-  return { accountId, apiUrl, authHeader };
-}
-
-async function fastmailListDrafts(
-  inbox: InboxRow,
-  limit: number,
-): Promise<DraftSummary[]> {
-  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
-  const jmapBody = {
-    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-    methodCalls: [
-      ["Email/query", {
-        accountId,
-        filter: { hasKeyword: "$draft" },
-        sort: [{ property: "receivedAt", isAscending: false }],
-        limit,
-      }, "q1"],
-      ["Email/get", {
-        accountId,
-        "#ids": { resultOf: "q1", name: "Email/query", path: "/ids" },
-        properties: ["id", "subject", "to", "cc", "receivedAt"],
-      }, "g1"],
-    ],
-  };
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify(jmapBody),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP list drafts error: ${apiResp.statusText}`);
-  }
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, {
-      list?: {
-        id: string;
-        subject?: string;
-        to?: { name?: string; email: string }[];
-        cc?: { name?: string; email: string }[];
-        receivedAt?: string;
-      }[];
-    }, string][];
-  };
-  const emails = apiData.methodResponses
-    ?.find(([name]) => name === "Email/get")?.[1]?.list ?? [];
-  return emails.map((e) => ({
-    draft_id: e.id,
-    subject: e.subject ?? "(no subject)",
-    to: (e.to ?? []).map((a) => ({ name: a.name ?? "", email: a.email })),
-    cc: (e.cc ?? []).map((a) => ({ name: a.name ?? "", email: a.email })),
-    created_at: e.receivedAt ?? new Date().toISOString(),
-  }));
-}
-
-/**
- * Fetch a single Fastmail draft's subject + to/cc/bcc via JMAP Email/get.
- * Fastmail's update (Email/set) is a partial patch — omitted recipient fields
- * are preserved — but executeUpdateDraft merges uniformly across providers, so
- * this supplies the existing values when a field is omitted. Returns null when
- * the draft can't be read.
- */
-async function fastmailGetDraft(
-  inbox: InboxRow,
-  draftId: string,
-): Promise<DraftContent | null> {
-  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
-  const jmapBody = {
-    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-    methodCalls: [
-      ["Email/get", {
-        accountId,
-        ids: [draftId],
-        properties: ["id", "subject", "to", "cc", "bcc"],
-      }, "g1"],
-    ],
-  };
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify(jmapBody),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    return null;
-  }
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, {
-      list?: {
-        id: string;
-        subject?: string;
-        to?: { name?: string; email: string }[];
-        cc?: { name?: string; email: string }[];
-        bcc?: { name?: string; email: string }[];
-      }[];
-    }, string][];
-  };
-  const e = apiData.methodResponses
-    ?.find(([name]) => name === "Email/get")?.[1]?.list?.[0];
-  if (!e) return null;
-  const map = (arr?: { name?: string; email: string }[]) =>
-    (arr ?? []).map((a) => formatAddressEntry({ name: a.name ?? "", email: a.email }));
-  return {
-    subject: e.subject ?? "(no subject)",
-    to: map(e.to),
-    cc: map(e.cc),
-    bcc: map(e.bcc),
-  };
-}
-
-async function fastmailCreateDraft(
-  inbox: InboxRow,
-  params: DraftParams,
-): Promise<DraftCreateResult> {
-  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
-  const { draftsId } = await resolveFastmailRoleMailboxes(apiUrl, authHeader, accountId);
-  if (!draftsId) throw new Error("Fastmail JMAP: could not resolve Drafts mailbox.");
-
-  const fromAddress = inbox.display_name
-    ? { name: inbox.display_name, email: inbox.email_address }
-    : { email: inbox.email_address };
-  const mapAddr = (e: string) => {
-    const p = parseEmailAddress(e);
-    return p.name ? { name: p.name, email: p.email } : { email: p.email };
-  };
-
-  const bodyValues: Record<string, unknown> = {
-    textPart: { value: params.body, charset: "utf-8" },
-  };
-  if (params.htmlBody) bodyValues["htmlPart"] = { value: params.htmlBody, charset: "utf-8" };
-
-  const emailCreate: Record<string, unknown> = {
-    mailboxIds: { [draftsId]: true },
-    from: [fromAddress],
-    ...(params.to.length ? { to: params.to.map(mapAddr) } : {}),
-    ...(params.cc.length ? { cc: params.cc.map(mapAddr) } : {}),
-    ...(params.bcc.length ? { bcc: params.bcc.map(mapAddr) } : {}),
-    subject: params.subject,
-    bodyValues,
-    textBody: [{ partId: "textPart", type: "text/plain" }],
-    ...(params.htmlBody ? { htmlBody: [{ partId: "htmlPart", type: "text/html" }] } : {}),
-    keywords: { "$draft": true },
-  };
-
-  const jmapBody = {
-    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-    methodCalls: [["Email/set", { accountId, create: { draft: emailCreate } }, "e1"]],
-  };
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify(jmapBody),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP create draft error: ${apiResp.statusText}`);
-  }
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, { created?: Record<string, { id?: string }> }, string][];
-  };
-  const created = apiData.methodResponses?.find(([n]) => n === "Email/set")?.[1]?.created;
-  const draftId = created?.["draft"]?.id;
-  if (!draftId) throw new Error("Fastmail JMAP: draft creation returned no id.");
-  return {
-    draft_id: draftId,
-    subject: params.subject,
-    to: params.to.map((e) => parseEmailAddress(e)),
-    created_at: new Date().toISOString(),
-  };
-}
-
-async function fastmailUpdateDraft(
-  inbox: InboxRow,
-  draftId: string,
-  params: DraftParams,
-): Promise<DraftUpdateResult> {
-  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
-  const mapAddr = (e: string) => {
-    const p = parseEmailAddress(e);
-    return p.name ? { name: p.name, email: p.email } : { email: p.email };
-  };
-
-  const bodyValues: Record<string, unknown> = {
-    textPart: { value: params.body, charset: "utf-8" },
-  };
-  if (params.htmlBody) bodyValues["htmlPart"] = { value: params.htmlBody, charset: "utf-8" };
-
-  const update: Record<string, unknown> = {
-    subject: params.subject,
-    bodyValues,
-    textBody: [{ partId: "textPart", type: "text/plain" }],
-    ...(params.htmlBody ? { htmlBody: [{ partId: "htmlPart", type: "text/html" }] } : {}),
-    ...(params.to.length ? { to: params.to.map(mapAddr) } : {}),
-    ...(params.cc.length ? { cc: params.cc.map(mapAddr) } : {}),
-    ...(params.bcc.length ? { bcc: params.bcc.map(mapAddr) } : {}),
-  };
-
-  const jmapBody = {
-    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-    methodCalls: [["Email/set", { accountId, update: { [draftId]: update } }, "e1"]],
-  };
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify(jmapBody),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP update draft error: ${apiResp.statusText}`);
-  }
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, {
-      notUpdated?: Record<string, { type: string; description?: string }>;
-    }, string][];
-  };
-  const notUpdated = apiData.methodResponses?.find(([n]) => n === "Email/set")?.[1]?.notUpdated;
-  if (notUpdated?.[draftId]) {
-    const errObj = notUpdated[draftId];
-    if (errObj.type === "notFound") throw new Error("draft_not_found");
-    throw new Error(`Fastmail JMAP update draft failed: ${errObj.description ?? errObj.type}`);
-  }
-  return {
-    draft_id: draftId,
-    subject: params.subject,
-    updated_at: new Date().toISOString(),
-  };
-}
-
-async function fastmailSendDraft(
-  inbox: InboxRow,
-  draftId: string,
-): Promise<DraftSendResult> {
-  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
-  const { sentId } = await resolveFastmailRoleMailboxes(apiUrl, authHeader, accountId);
-
-  const successUpdate: Record<string, unknown> = {
-    "keywords/$draft": null,
-    "keywords/$seen": true,
-  };
-  if (sentId) successUpdate[`mailboxIds/${sentId}`] = true;
-
-  const submissionSet: Record<string, unknown> = {
-    accountId,
-    create: {
-      sub1: {
-        emailId: draftId,
-        envelope: { mailFrom: { email: inbox.email_address } },
-      },
-    },
-    onSuccessUpdateEmail: { sub1: successUpdate },
-  };
-
-  const jmapBody = {
-    using: [
-      "urn:ietf:params:jmap:core",
-      "urn:ietf:params:jmap:mail",
-      "urn:ietf:params:jmap:submission",
-    ],
-    methodCalls: [["EmailSubmission/set", submissionSet, "s1"]],
-  };
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify(jmapBody),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP send draft error: ${apiResp.statusText}`);
-  }
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, {
-      notCreated?: Record<string, { type: string; description?: string }>;
-    }, string][];
-  };
-  const subResp = apiData.methodResponses?.find(([n]) => n === "EmailSubmission/set")?.[1];
-  if (subResp?.notCreated?.["sub1"]) {
-    const errObj = subResp.notCreated["sub1"];
-    if (errObj.type === "emailNotFound") throw new Error("draft_not_found");
-    throw new Error(`Fastmail JMAP submission failed: ${errObj.description ?? errObj.type}`);
-  }
-  return {
-    draft_id: draftId,
-    message_id: draftId,
-    sent_at: new Date().toISOString(),
-  };
-}
-
-/**
- * Permanently delete a Fastmail draft via JMAP Email/set { destroy }.
- * A destroyed-id that isn't found (notDestroyed) maps to "draft_not_found".
- */
-async function fastmailDeleteDraft(
-  inbox: InboxRow,
-  draftId: string,
-): Promise<DraftDeleteResult> {
-  const { accountId, apiUrl, authHeader } = await getFastmailSession(inbox);
-  const jmapBody = {
-    using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-    methodCalls: [
-      ["Email/set", { accountId, destroy: [draftId] }, "d1"],
-    ],
-  };
-  const apiResp = await fetch(apiUrl, {
-    method: "POST",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify(jmapBody),
-  });
-  if (!apiResp.ok) {
-    if (apiResp.status === 401) throw new Error("fastmail_auth_failed");
-    throw new Error(`Fastmail JMAP delete draft error: ${apiResp.statusText}`);
-  }
-  const apiData = (await apiResp.json()) as {
-    methodResponses?: [string, {
-      destroyed?: string[];
-      notDestroyed?: Record<string, { type: string; description?: string }>;
-    }, string][];
-  };
-  const setResp = apiData.methodResponses?.find(([n]) => n === "Email/set")?.[1];
-  if (setResp?.notDestroyed?.[draftId]) {
-    const errObj = setResp.notDestroyed[draftId];
-    if (errObj.type === "notFound") throw new Error("draft_not_found");
-    throw new Error(`Fastmail JMAP delete failed: ${errObj.description ?? errObj.type}`);
-  }
-  return { draft_id: draftId, deleted: true };
-}
 
 // ── Drafts execute functions ──────────────────────────────────────────────────
 
@@ -17820,7 +14903,6 @@ async function executeListDrafts(
     switch (inbox.provider) {
       case "gmail":    drafts = await gmailListDrafts(inbox, limit);    break;
       case "outlook":  drafts = await outlookListDrafts(inbox, limit);  break;
-      case "fastmail": drafts = await fastmailListDrafts(inbox, limit); break;
       default:         drafts = await imapListDrafts(inbox, limit);     break;
     }
   } catch (err) {
@@ -17921,7 +15003,6 @@ async function executeCreateDraft(
     switch (inbox.provider) {
       case "gmail":    draftResult = await gmailCreateDraft(inbox, draftParams);    break;
       case "outlook":  draftResult = await outlookCreateDraft(inbox, draftParams);  break;
-      case "fastmail": draftResult = await fastmailCreateDraft(inbox, draftParams); break;
       default:         draftResult = await imapCreateDraft(inbox, draftParams);     break;
     }
   } catch (err) {
@@ -18032,7 +15113,6 @@ async function executeUpdateDraft(
       switch (inbox.provider) {
         case "gmail":    existing = await gmailGetDraft(inbox, draftId);    break;
         case "outlook":  existing = await outlookGetDraft(inbox, draftId);  break;
-        case "fastmail": existing = await fastmailGetDraft(inbox, draftId); break;
         default:         existing = await imapGetDraft(inbox, draftId);     break;
       }
       if (existing) {
@@ -18066,7 +15146,6 @@ async function executeUpdateDraft(
     switch (inbox.provider) {
       case "gmail":    updateResult = await gmailUpdateDraft(inbox, draftId, draftParams);    break;
       case "outlook":  updateResult = await outlookUpdateDraft(inbox, draftId, draftParams);  break;
-      case "fastmail": updateResult = await fastmailUpdateDraft(inbox, draftId, draftParams); break;
       default:         updateResult = await imapUpdateDraft(inbox, draftId, draftParams);     break;
     }
   } catch (err) {
@@ -18152,7 +15231,6 @@ async function executeSendDraft(
     switch (inbox.provider) {
       case "gmail":    sendResult = await gmailSendDraft(inbox, draftId);    break;
       case "outlook":  sendResult = await outlookSendDraft(inbox, draftId);  break;
-      case "fastmail": sendResult = await fastmailSendDraft(inbox, draftId); break;
       default:         sendResult = await imapSendDraft(inbox, draftId);     break;
     }
   } catch (err) {
@@ -18232,7 +15310,6 @@ async function executeDeleteDraft(
     switch (inbox.provider) {
       case "gmail":    deleteResult = await gmailDeleteDraft(inbox, draftId);    break;
       case "outlook":  deleteResult = await outlookDeleteDraft(inbox, draftId);  break;
-      case "fastmail": deleteResult = await fastmailDeleteDraft(inbox, draftId); break;
       default:         deleteResult = await imapDeleteDraft(inbox, draftId);     break;
     }
   } catch (err) {
@@ -18568,7 +15645,6 @@ async function searchContactsForInbox(
     case "outlook":
       hits = await outlookSearchContacts(inbox, query, cap);
       break;
-    case "fastmail":
     default:
       hits = await imapSearchContacts(inbox, query, cap);
       break;
@@ -20003,7 +17079,7 @@ async function handleToolsCall(
 //
 // Picks up to MAX_DISPATCH_BATCH pending scheduled_sends rows with
 // send_at <= now(), sends each via the existing per-provider send path
-// (sendGmailMessage / sendOutlookMessage / sendFastmailMessage / sendImapMessage),
+// (sendGmailMessage / sendOutlookMessage / sendImapMessage),
 // and transitions status to 'sent' or 'error'.
 //
 // Status lifecycle enforced here:
@@ -20186,9 +17262,6 @@ async function handleScheduledDispatch(): Promise<Response> {
           break;
         case "outlook":
           sendResult = await sendOutlookMessage(inbox, sendParams);
-          break;
-        case "fastmail":
-          sendResult = await sendFastmailMessage(inbox, sendParams);
           break;
         case "imap":
           sendResult = await sendImapMessage(inbox, sendParams);
