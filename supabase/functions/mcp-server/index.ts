@@ -13233,6 +13233,29 @@ function folderProviderError(
       logErrorCode: "folder_not_found",
     };
   }
+  // BUGFIX (2026-07-28): folder_create against an already-existing IMAP
+  // mailbox surfaces as a CREATE "[ALREADYEXISTS]" response. This was
+  // previously lumped in with genuine provider/network failures under the
+  // generic "provider_error" code (and a console.error, as if it were
+  // unexpected), even though it's a normal, well-understood outcome — an
+  // agent trying to idempotently "ensure this folder exists" will hit it
+  // routinely. Give it its own error_code and a message that tells the
+  // caller they can proceed (the folder already exists, e.g. via folder_list)
+  // instead of implying something went wrong.
+  if (/already\s*exists/i.test(message) || /\[ALREADYEXISTS\]/i.test(message)) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "A folder with that name already exists. Call folder_list to " +
+            "get its id — no need to create it again.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "folder_already_exists",
+    };
+  }
   console.error(`[mcp-server] ${toolName}: provider_error`, { provider, error: message });
   return {
     result: {
