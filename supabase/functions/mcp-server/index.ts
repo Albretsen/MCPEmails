@@ -1973,7 +1973,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     title: "Flag or Mark Messages",
     description:
       "Apply a read/unread/flag/unflag action to one or more messages in a single call. Use action 'read' or 'unread' to change read status, or 'flag'/'unflag' to add or remove a star/follow-up flag. Pass one message ID to update a single message, or up to 500 to update many at once. Get message IDs from email_list or email_search.",
-    requiredScope: "send:email",
+    // BUGFIX (2026-07-28): was "send:email" — flagging/marking read-state does not
+    // send mail. That mis-scoping caused a 80% live error rate (-32001 Insufficient
+    // scope) for any key granted manage:folders without also granting send:email,
+    // which is a reasonable/common combination for an "organize only" key. Matches
+    // the scope already required by the sibling move/copy/search_and_move actions
+    // in the same email_organize tool.
+    requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
@@ -2353,7 +2359,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     description:
       "Move a message out of the Inbox to the archive location. Non-destructive — the " +
       "message is preserved, not deleted. On Gmail this removes the INBOX label.",
-    requiredScope: "send:email",
+    // BUGFIX (2026-07-28): was "send:email" — archiving is a folder/label move, not
+    // sending mail. Same mis-scoping bug as email_flag (see its comment above).
+    requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
       properties: {
@@ -3475,7 +3483,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "a destination_folder_id, leaving the original in place; IMAP/Outlook/Fastmail " +
       "only), 'flag' (set read/unread/flagged via `flag_action` on message_ids), " +
       "'archive', or 'search_and_move' (apply to all messages matching a search). " +
-      "Requires the scope matching the action (manage:folders / send:email). " +
+      "Requires the manage:folders scope. " +
       "To delete messages, use the email_delete tool.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
@@ -3483,8 +3491,10 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       move_batch: { legacy: "email_move_batch", scope: "manage:folders" },
       copy: { legacy: "email_copy", scope: "manage:folders" },
       copy_batch: { legacy: "email_copy_batch", scope: "manage:folders" },
-      flag: { legacy: "email_flag", scope: "send:email", renames: { action: "flag_action" } },
-      archive: { legacy: "email_archive", scope: "send:email" },
+      // BUGFIX (2026-07-28): flag/archive were mis-scoped to "send:email" — see the
+      // requiredScope comment on the email_flag/email_archive legacy tool defs above.
+      flag: { legacy: "email_flag", scope: "manage:folders", renames: { action: "flag_action" } },
+      archive: { legacy: "email_archive", scope: "manage:folders" },
       search_and_move: { legacy: "email_search_and_move", scope: "manage:folders" },
     },
   },

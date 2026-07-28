@@ -233,7 +233,7 @@ const TOOLS = [
   },
   {
     name: 'email_organize',
-    scopes: ['manage:folders', 'send:email'],
+    scopes: ['manage:folders'],
     params: [
       { name: 'action',               type: 'enum',          required: true },
       { name: 'inbox_id',             type: 'string (uuid)', required: false },
