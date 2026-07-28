@@ -1,7 +1,7 @@
 export default {
-  title: '邮件签名：Claude 现在能像你本人一样签名',
+  title: 'Claude 邮件签名：自动签署，每次发送都生效',
   description:
-    '只需为每个收件箱设置一次签名，Claude 就会自动为它发送的每一封邮件加上签名：新邮件、回复、转发、草稿和定时发送。支持 Gmail、Outlook、Fastmail、iCloud 以及任意 IMAP 账户。',
+    '为每个收件箱设置一次签名，Claude 就会自动为它发送的每封邮件签名，支持 Gmail、Outlook、Fastmail、iCloud 及任意 IMAP 账户。',
   coverAlt:
     'Claude 的邮件签名：为每个收件箱设置一次签名，Claude 就会在所有服务商上为它发送的每条消息签名',
   content: `当 Claude 替你发邮件时，它应该看起来就像是你本人发的。这也包括落款：你的姓名、你的头衔、你的公司信息、那个指向你预约页面的链接。在此之前，你要么得在每条指令里手写签名，要么只能接受结尾略显突兀的邮件。今天这一切改变了：**MCP Emails 现在会自动为 Claude 发送的每条消息加上你的签名。**

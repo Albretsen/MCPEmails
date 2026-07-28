@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Gi AI-agenten din en innboks.",
-    "description": "Koble e-postkontoene dine til Claude, Cursor eller en hvilken som helst MCP-kompatibel klient. Les, send, søk og svar på e-post via Model Context Protocol."
+    "title": "mcpemails · Koble Gmail, Outlook og IMAP til Claude",
+    "description": "Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Outlook, Fastmail, iCloud og IMAP. Gratis, ingen lagring."
   },
   "nav": {
     "features": "Funksjoner",

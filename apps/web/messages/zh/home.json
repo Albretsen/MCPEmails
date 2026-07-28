@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · 为你的 AI 智能体配备一个收件箱。",
-    "description": "将你的电子邮件账户连接到 Claude、Cursor 或任何兼容 MCP 的客户端。通过 Model Context Protocol 阅读、发送、搜索和回复邮件。"
+    "title": "mcpemails · 将 Gmail、Outlook 与 IMAP 连接到 Claude",
+    "description": "让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Outlook、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。"
   },
   "nav": {
     "features": "功能",

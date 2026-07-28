@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Offrez une boîte de réception à votre agent IA.",
-    "description": "Connectez vos comptes e-mail à Claude, Cursor ou tout client compatible MCP. Lisez, envoyez, recherchez et répondez à vos e-mails via le Model Context Protocol."
+    "title": "mcpemails · Connectez Gmail, Outlook et IMAP à Claude",
+    "description": "Donnez à Claude, Cursor ou tout client MCP un accès réel à votre boîte : lisez, envoyez, recherchez et organisez Gmail, Outlook, Fastmail, iCloud et IMAP. Gratuit, sans stockage."
   },
   "nav": {
     "features": "Fonctionnalités",
