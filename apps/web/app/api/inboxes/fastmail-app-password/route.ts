@@ -6,6 +6,7 @@ import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
+import { captureError } from '@/lib/errors/capture';
 
 /**
  * POST /api/inboxes/fastmail-app-password
@@ -128,6 +129,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const userMessage = isAuthFailed ? FASTMAIL_AUTH_FAILED_MESSAGE : validation.message;
     const body: Record<string, string> = { error: userMessage };
     if (isAuthFailed) body.error_code = 'auth_failed';
+    // A wrong password is expected/user-driven and not worth recording; the
+    // other codes indicate a real infra/config issue worth tracking frequency
+    // of — this table previously had zero writes anywhere in the codebase.
+    if (!isAuthFailed) {
+      await captureError(new Error(validation.message), {
+        severity: 'low',
+        route: 'api/inboxes/fastmail-app-password',
+        reason: validation.code,
+        workspaceId,
+      });
+    }
     return NextResponse.json(body, { status: 422 });
   }
 
@@ -202,6 +214,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (upsertError) {
     console.error('[fastmail-app-password] Upsert failed:', upsertError.message);
+    await captureError(new Error(upsertError.message), {
+      severity: 'high',
+      route: 'api/inboxes/fastmail-app-password',
+      reason: 'inbox_upsert_failed',
+      workspaceId,
+    });
     return NextResponse.json(
       { error: 'Failed to save inbox. Please try again.' },
       { status: 500 }
