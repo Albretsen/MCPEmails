@@ -37,7 +37,7 @@
    ```
    https://mcpemails.com/api/mcp
    ```
-4. **Your agent works the inbox.** It calls tools like `inbox_list`, `email_search`, `email_send`, and `schedule_create`. Each request fetches live from your provider — nothing is mirrored or cached server‑side.
+4. **Your agent works the inbox.** It calls tools like `inbox_list`, `email_read` (`action: "search"`), `email_compose` (`action: "send"`), and `schedule` (`action: "create"`). Each request fetches live from your provider — nothing is mirrored or cached server‑side.
 
 Permissions are scoped per key, so you can hand an agent `read:email` only, or grant it send and folder management without ever exposing delete.
 
@@ -69,38 +69,43 @@ The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport
 - **Granular scopes** — eight permission scopes, grantable independently per API key and per inbox.
 - **Batch & search‑and‑act** — read, move, delete, or flag up to hundreds of messages in one call, including "search then move/delete" combinators.
 - **Drafts & scheduling** — compose drafts and queue messages for future send (server‑side dispatch).
-- **Provider‑agnostic search** — Gmail syntax, IMAP `SEARCH`, and JMAP are normalized behind one `email_search` interface.
+- **Provider‑agnostic search** — Gmail syntax, IMAP `SEARCH`, and JMAP are normalized behind one `email_read` (`action: "search"`) interface.
 - **Team‑ready** — workspaces, members, roles, SSO, and an audit log on the Team plan.
 
 ## MCP tools
 
-28 tools, grouped by the scope that grants them:
+10 tools. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
 
-| Scope | Tools |
-| --- | --- |
-| `read:email` | `inbox_list`, `email_list`, `email_read`, `email_read_batch`, `email_search`, `folder_list` |
-| `send:email` | `email_send`, `email_reply`, `email_forward`, `email_archive`, `email_flag` |
-| `manage:folders` | `folder_create`, `folder_rename`, `folder_delete`, `email_move`, `email_move_batch`, `email_search_and_move` |
-| `delete:email` | `email_delete`, `email_delete_batch`, `email_search_and_delete` |
-| `manage:drafts` | `draft_list`, `draft_create`, `draft_update`, `draft_send` |
-| `manage:contacts` | `contact_search` |
-| `schedule:email` | `schedule_create`, `schedule_list`, `schedule_cancel` |
+| Tool | Actions | Scope(s) |
+| --- | --- | --- |
+| `inbox_list` | *(single action)* | `read:email` |
+| `email_read` | `list`, `read`, `read_batch`, `search`, `attachment` | `read:email` (`search` also accepts `search:email`) |
+| `email_organize` | `move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`, `search_and_move` | `manage:folders` (move/copy/search_and_move), `send:email` (flag/archive) |
+| `email_delete` | `delete`, `delete_batch`, `search_and_delete` | `delete:email` |
+| `email_compose` | `send`, `reply`, `forward` | `send:email` |
+| `folder` | `list`, `create`, `rename`, `delete` | `read:email` (list), `manage:folders` (create/rename/delete) |
+| `draft` | `list`, `create`, `update`, `send`, `delete` | `manage:drafts` (list/create/update/delete), `send:email` (send) |
+| `schedule` | `create`, `list`, `cancel` | `schedule:email` |
+| `signature` | `get`, `set` | `read:email` (get), `send:email` (set) |
+| `contact_search` | *(single action)* | `manage:contacts` |
 
 Notes:
 - Tools accept either an explicit `inbox_id` (UUID) or an `inbox` email address; single‑inbox keys auto‑resolve the target.
-- Batch tools cap at 50 (`email_read_batch`) to 500 (move/delete/flag) messages per call.
+- Batch actions cap at 50 (`email_read`'s `read_batch`) to 500 (move/delete/flag) messages per call.
 - `contact_search` scans recent mail live — there is no stored address book.
+- `draft`'s `send` action requires `send:email`, not `manage:drafts` — so a key that can only manage drafts can't use them to bypass the send‑mail consent.
+- `tools/list` only returns the tools your key (or OAuth token) is actually scoped for.
 
 ## OAuth scopes
 
 | Scope | Grants |
 | --- | --- |
 | `read:email` | List inboxes & folders; list, read, and search messages |
-| `search:email` | Narrower alternative that grants only `email_search` |
-| `send:email` | Send, reply, forward, flag, archive |
-| `manage:folders` | Create/rename/delete folders; move messages |
+| `search:email` | Narrower alternative that grants only `email_read`'s `search` action |
+| `send:email` | Send, reply, forward, flag, archive; also required to send a draft |
+| `manage:folders` | Create/rename/delete folders; move/copy messages |
 | `delete:email` | Trash or permanently expunge messages |
-| `manage:drafts` | Create, edit, and send drafts |
+| `manage:drafts` | Create, edit, and delete drafts (sending one also requires `send:email`) |
 | `manage:contacts` | Live contact lookup from recent mail |
 | `schedule:email` | Queue messages for future delivery |
 
