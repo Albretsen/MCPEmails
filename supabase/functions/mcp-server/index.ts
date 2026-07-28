@@ -4352,11 +4352,20 @@ function inboxResolutionError(
 ): ToolErrorResult {
   let text: string;
   let structuredContent: Record<string, unknown> | undefined;
+  // BUGFIX (2026-07-28): all three reasons used to share the "inbox_not_found"
+  // error_code, even though only "not_found" actually means that. "ambiguous"
+  // (multiple inboxes exist, caller omitted inbox_id — expected on a first
+  // call, and already handled gracefully by listing the inboxes inline) and
+  // "none" (no inbox connected at all — an account setup issue, not a bad
+  // argument) are different failure modes that this conflation made
+  // indistinguishable in the activity log / error-rate analytics.
+  let errorCode: string;
   switch (failure.reason) {
     case "not_found":
       text =
         "No inbox matches the given inbox_id/inbox. Call inbox_list to see " +
         "the available inboxes (each with its inbox_id and email address).";
+      errorCode = "inbox_not_found";
       break;
     case "ambiguous": {
       // Name the accessible inboxes inline so the agent can immediately retry
@@ -4377,12 +4386,14 @@ function inboxResolutionError(
         "Retry this same tool with one of the inbox_id values below — you do " +
         "not need to call any other tool first:\n" + lines;
       structuredContent = { inboxes };
+      errorCode = "inbox_ambiguous";
       break;
     }
     case "none":
       text =
         "No inbox is connected for this API key. The user must connect an " +
         "inbox in MCP Emails before this tool can be used.";
+      errorCode = "no_inbox_connected";
       break;
   }
   const result: ToolErrorResult["result"] = {
@@ -4393,7 +4404,7 @@ function inboxResolutionError(
   return {
     result,
     logStatus: "error",
-    logErrorCode: "inbox_not_found",
+    logErrorCode: errorCode,
   };
 }
 
