@@ -70,7 +70,8 @@ export function homeJsonLd(
         name: 'mcpemails',
         url: APP_URL,
         logo: `${APP_URL}/favicon.svg`,
-        sameAs: ['https://twitter.com/mcpemails'],
+        // No `sameAs` entry: @mcpemails does not exist on X. Add the real
+        // profile URL here once one exists.
       },
       {
         '@type': 'WebSite',
