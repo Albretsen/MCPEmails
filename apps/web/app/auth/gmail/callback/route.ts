@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeGmailCode } from '@/lib/email-providers/gmail';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { captureError } from '@/lib/errors/capture';
 
 /**
  * GET /auth/gmail/callback
@@ -107,6 +108,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     tokens = await exchangeGmailCode(code, expectedRedirectUri);
   } catch (err) {
     console.error('[gmail/callback] token exchange failed:', err);
+    // Recorded so the activation-funnel drop-off at this step is measurable
+    // (this table previously had zero writes anywhere in the codebase).
+    await captureError(err, {
+      severity: 'medium',
+      route: 'auth/gmail/callback',
+      reason: 'token_exchange_failed',
+      workspaceId: oauthState.workspace_id,
+      userId: user.id,
+    });
     return redirectWithError('token_exchange_failed');
   }
 
@@ -168,6 +178,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   if (upsertError) {
     console.error('[gmail/callback] inbox upsert failed:', upsertError);
+    await captureError(new Error(upsertError.message), {
+      severity: 'high',
+      route: 'auth/gmail/callback',
+      reason: 'inbox_upsert_failed',
+      workspaceId: oauthState.workspace_id,
+      userId: user.id,
+    });
     return redirectWithError('save_failed');
   }
 
