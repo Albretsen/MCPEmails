@@ -1,6 +1,6 @@
 {
-  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "$schema": "https://glama.ai/mcp/schemas/connector.json",
   "maintainers": [
-    "Albretsen"
+    { "email": "bjellanda@gmail.com" }
   ]
 }
