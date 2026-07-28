@@ -14959,6 +14959,20 @@ function formatBulkResult(
     ...succeeded.map((id) => ({ message_id: id, success: true })),
     ...failed.map(({ id, error }) => ({ message_id: id, success: false, error })),
   ];
+  const isTotalFailure = succeeded.length === 0 && failed.length > 0;
+  // BUGFIX (2026-07-28): a bulk op where every item failed logged
+  // logErrorCode: null — status "error" with no code, unlike every other
+  // error path in this file which always sets a code. That left total-failure
+  // bulk operations (move_batch/copy_batch/delete_batch/flag/search_and_move/
+  // search_and_delete) unattributable in the activity log. Surface the
+  // per-item error when every failure shares the same one (the common case —
+  // e.g. every message hit "imap_auth_failed" or "message_not_found");
+  // otherwise fall back to "provider_error" rather than null.
+  let logErrorCode: string | null = null;
+  if (isTotalFailure) {
+    const distinctErrors = new Set(failed.map((f) => f.error));
+    logErrorCode = distinctErrors.size === 1 ? failed[0].error : "provider_error";
+  }
   return {
     result: jsonOk({
       succeeded: succeeded.length,
@@ -14968,8 +14982,8 @@ function formatBulkResult(
       ...extra,
       results,
     }),
-    logStatus: succeeded.length > 0 || failed.length === 0 ? "success" : "error",
-    logErrorCode: null,
+    logStatus: isTotalFailure ? "error" : "success",
+    logErrorCode,
   };
 }
 
