@@ -31,7 +31,9 @@
     "technicalTitle": "2.6 Tekniske og driftsmessige data",
     "technicalP": "Vi samler inn standard driftsdata på serversiden, inkludert IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Disse dataene oppbevares i aggregert, anonymisert form og knyttes ikke til individuelle kontoer etter 30 dager.",
     "cookiesTitle": "2.7 Informasjonskapsler og lokal lagring",
-    "cookiesP": "Dashbordet setter én førsteparts øktinformasjonskapsel utstedt av Supabase Auth for å holde deg innlogget. Vi bruker ikke sporingsinformasjonskapsler, reklameinformasjonskapsler eller tredjeparts informasjonskapsler. Vi lagrer én enkelt temapreferanse (<c>mcpe-theme</c>) i nettleserens lokale lagring."
+    "cookiesP": "Dashbordet setter én førsteparts øktinformasjonskapsel utstedt av Supabase Auth for å holde deg innlogget. Vi bruker ikke sporingsinformasjonskapsler, reklameinformasjonskapsler eller tredjeparts informasjonskapsler. Vi lagrer én enkelt temapreferanse (<c>mcpe-theme</c>) i nettleserens lokale lagring.",
+    "productAnalyticsTitle": "2.8 Produktanalyse",
+    "productAnalyticsP": "Vi bruker Vercel Web Analytics til personvernvennlig, informasjonskapsel-fri produktanalyse. Vi måler sidebesøk og et lite oppsettsløp med kun aggregerte kategorier. Vi samler aldri inn e-postinnhold, adresser, API-nøkler, OAuth-tokener, bruker- eller arbeidsområde-ID-er, MCP-forespørsler eller postkassedata. Se <link>Vercels analysedokumentasjon</link>. Siden oppsettet er uten informasjonskapsler og ikke bruker ikke-nødvendige identifikatorer, kreves ingen samtykkebanner etter vår valgte policy."
   },
   "howWeUseData": {
     "title": "3. Hvordan vi bruker dataene dine",

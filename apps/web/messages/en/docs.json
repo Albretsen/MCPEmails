@@ -58,7 +58,7 @@
     "bodyMethods": "Send a JSON-RPC 2.0 request body. Supported methods: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.",
     "infoTransport": "Transport: <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Auth: <b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "Rate limits: <b>100 req/min · 1,000/hr · 10,000/day</b> per key",
+    "infoRateLimits": "Rate limits: <b>100 req/min · 1,000/hr · 10,000/day</b> per key, plus your plan's workspace ceiling",
     "infoFormat": "Response format: <b>JSON-RPC 2.0</b> — successful results also carry a typed <code>structuredContent</code> object",
     "handshakeLabel": "Initialize handshake",
     "pollingHeading": "Polling, not push",

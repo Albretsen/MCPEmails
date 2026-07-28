@@ -113,6 +113,8 @@ export default async function PrivacyPage({ params }) {
 
               <h4>{t('dataWeCollect.cookiesTitle')}</h4>
               <p>{t.rich('dataWeCollect.cookiesP', richTags)}</p>
+              <h4>{t('dataWeCollect.productAnalyticsTitle')}</h4>
+              <p>{t.rich('dataWeCollect.productAnalyticsP', { ...richTags, link: (chunks) => <a href="https://vercel.com/docs/analytics" target="_blank" rel="noopener noreferrer">{chunks}</a> })}</p>
             </LegalSection>
 
             {/* 3 - How we use data */}

@@ -31,7 +31,9 @@
     "technicalTitle": "2.6 Datos técnicos y operativos",
     "technicalP": "Recopilamos datos operativos estándar del lado del servidor, incluidas direcciones IP (para limitación de tasa y prevención de abuso), marcas de tiempo de peticiones, códigos de estado HTTP y tipos de error. Estos datos se conservan en forma agregada y anonimizada y no se vinculan a cuentas individuales después de 30 días.",
     "cookiesTitle": "2.7 Cookies y almacenamiento local",
-    "cookiesP": "El panel establece una cookie de sesión propia emitida por Supabase Auth para mantenerte con la sesión iniciada. No usamos cookies de seguimiento, cookies de publicidad ni cookies de terceros. Almacenamos una única preferencia de tema (<c>mcpe-theme</c>) en el almacenamiento local de tu navegador."
+    "cookiesP": "El panel establece una cookie de sesión propia emitida por Supabase Auth para mantenerte con la sesión iniciada. No usamos cookies de seguimiento, cookies de publicidad ni cookies de terceros. Almacenamos una única preferencia de tema (<c>mcpe-theme</c>) en el almacenamiento local de tu navegador.",
+    "productAnalyticsTitle": "2.8 Analítica de producto",
+    "productAnalyticsP": "Usamos Vercel Web Analytics para analítica de producto sin cookies y respetuosa con la privacidad. Medimos visitas y un pequeño embudo de configuración con categorías agregadas. Nunca enviamos contenido de correo, direcciones, claves API, tokens OAuth, identificadores de usuario o espacio de trabajo, solicitudes MCP ni datos del buzón. Consulta la <link>documentación de analítica de Vercel</link>. Como esta configuración no usa cookies ni identificadores no esenciales, no se requiere un banner de consentimiento según nuestra política elegida."
   },
   "howWeUseData": {
     "title": "3. Cómo usamos tus datos",

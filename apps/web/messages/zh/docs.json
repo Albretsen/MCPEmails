@@ -58,7 +58,7 @@
     "bodyMethods": "发送一个 JSON-RPC 2.0 请求体。支持的方法：<code>initialize</code>、<code>tools/list</code>、<code>tools/call</code>。",
     "infoTransport": "传输：<b>Streamable HTTP</b>（MCP 2025-06-18）",
     "infoAuth": "认证：<b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "速率限制：每个密钥 <b>100 次/分钟 · 1,000 次/小时 · 10,000 次/天</b>",
+    "infoRateLimits": "速率限制：每个密钥 <b>100 次/分钟 · 1,000 次/小时 · 10,000 次/天</b>，另加你套餐的工作区上限",
     "infoFormat": "响应格式：<b>JSON-RPC 2.0</b>——成功的结果还会携带一个带类型的 <code>structuredContent</code> 对象",
     "handshakeLabel": "初始化握手",
     "pollingHeading": "轮询，而非推送",

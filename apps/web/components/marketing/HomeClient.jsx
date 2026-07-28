@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import {
-  Nav, Hero, Trusted, Features, DashboardPreview, HowItWorks, Quote, Pricing, Faq, Footer
+  Nav, Hero, Trusted, Features, DashboardPreview, HowItWorks, Examples, Quote, Pricing, Faq, Footer
 } from './Sections';
 
 const TWEAK_DEFAULTS = {
@@ -45,6 +45,7 @@ export default function HomeClient({ stripePrices }) {
       <Features />
       <DashboardPreview />
       <HowItWorks />
+      <Examples />
       <Quote />
       <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} />
       <Faq />

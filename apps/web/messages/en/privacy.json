@@ -31,7 +31,9 @@
     "technicalTitle": "2.6 Technical and operational data",
     "technicalP": "We collect standard server-side operational data including IP addresses (for rate limiting and abuse prevention), request timestamps, HTTP status codes, and error types. This data is retained in aggregated, anonymised form and is not linked to individual accounts after 30 days.",
     "cookiesTitle": "2.7 Cookies and local storage",
-    "cookiesP": "The dashboard sets one first-party session cookie issued by Supabase Auth to keep you signed in. We do not use tracking cookies, advertising cookies, or any third-party cookies. We store a single theme preference (<c>mcpe-theme</c>) in your browser's local storage."
+    "cookiesP": "The dashboard sets one first-party session cookie issued by Supabase Auth to keep you signed in. We do not use tracking cookies, advertising cookies, or any third-party cookies. We store a single theme preference (<c>mcpe-theme</c>) in your browser's local storage.",
+    "productAnalyticsTitle": "2.8 Product analytics",
+    "productAnalyticsP": "We use Vercel Web Analytics for privacy-preserving, cookieless product analytics. We measure page visits and a small setup funnel (signup, inbox connection, MCP connection, and first successful tool use) with only documented aggregate categories such as provider, client, connection method, and access profile. We never send email content, addresses, API keys, OAuth tokens, workspace or user IDs, MCP request data, prompts, or mailbox metadata. Vercel's retention and processing details are available at <link>vercel.com/docs/analytics</link>. Because this configuration is cookieless and uses no non-essential identifier, no consent banner is required under our selected policy."
   },
   "howWeUseData": {
     "title": "3. How We Use Your Data",

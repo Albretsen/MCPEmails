@@ -31,7 +31,9 @@
     "technicalTitle": "2.6 Données techniques et opérationnelles",
     "technicalP": "Nous collectons des données opérationnelles standard côté serveur, notamment les adresses IP (pour la limitation du débit et la prévention des abus), les horodatages des requêtes, les codes de statut HTTP et les types d'erreurs. Ces données sont conservées sous une forme agrégée et anonymisée et ne sont plus liées à des comptes individuels au-delà de 30 jours.",
     "cookiesTitle": "2.7 Cookies et stockage local",
-    "cookiesP": "Le tableau de bord dépose un cookie de session propriétaire émis par Supabase Auth pour vous maintenir connecté. Nous n'utilisons pas de cookies de suivi, de cookies publicitaires ni aucun cookie tiers. Nous stockons une unique préférence de thème (<c>mcpe-theme</c>) dans le stockage local de votre navigateur."
+    "cookiesP": "Le tableau de bord dépose un cookie de session propriétaire émis par Supabase Auth pour vous maintenir connecté. Nous n'utilisons pas de cookies de suivi, de cookies publicitaires ni aucun cookie tiers. Nous stockons une unique préférence de thème (<c>mcpe-theme</c>) dans le stockage local de votre navigateur.",
+    "productAnalyticsTitle": "2.8 Analytique produit",
+    "productAnalyticsP": "Nous utilisons Vercel Web Analytics pour une analytique produit respectueuse de la vie privée et sans cookie. Nous mesurons les visites et un petit parcours de configuration avec des catégories agrégées uniquement. Nous n'envoyons jamais le contenu ou les adresses des e-mails, les clés API, les jetons OAuth, les identifiants utilisateur ou d'espace de travail, les requêtes MCP ou les données de boîte mail. Consultez la <link>documentation Vercel Analytics</link>. Cette configuration n'utilisant ni cookie ni identifiant non essentiel, aucune bannière de consentement n'est requise selon notre politique choisie."
   },
   "howWeUseData": {
     "title": "3. Comment nous utilisons vos données",

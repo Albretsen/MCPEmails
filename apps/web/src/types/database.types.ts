@@ -1644,6 +1644,11 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          analytics_first_tool_client: string | null
+          analytics_first_tool_name: string | null
+          analytics_first_tool_path: string | null
+          analytics_first_tool_provider: string | null
+          analytics_first_tool_reported_at: string | null
           created_at: string
           deleted_at: string | null
           display_name: string
@@ -1656,6 +1661,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          analytics_first_tool_client?: string | null
+          analytics_first_tool_name?: string | null
+          analytics_first_tool_path?: string | null
+          analytics_first_tool_provider?: string | null
+          analytics_first_tool_reported_at?: string | null
           created_at?: string
           deleted_at?: string | null
           display_name: string
@@ -1668,6 +1678,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          analytics_first_tool_client?: string | null
+          analytics_first_tool_name?: string | null
+          analytics_first_tool_path?: string | null
+          analytics_first_tool_provider?: string | null
+          analytics_first_tool_reported_at?: string | null
           created_at?: string
           deleted_at?: string | null
           display_name?: string

@@ -560,7 +560,7 @@ export default async function DashboardPage({ params }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, grandfathered')
+      .select('id, slug, display_name, plan, owner_id, grandfathered, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
   ]);
@@ -676,6 +676,7 @@ export default async function DashboardPage({ params }) {
       auditLog={auditLog}
       members={members}
       pendingInvites={pendingInvites}
+      firstToolEvent={workspace?.analytics_first_tool_name && !workspace?.analytics_first_tool_reported_at ? { tool_name: workspace.analytics_first_tool_name, provider: workspace.analytics_first_tool_provider ?? 'unknown', client: workspace.analytics_first_tool_client ?? 'unknown', activation_path: workspace.analytics_first_tool_path ?? 'api_key' } : null}
     />
   );
 }

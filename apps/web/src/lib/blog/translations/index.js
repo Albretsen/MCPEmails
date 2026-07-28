@@ -80,6 +80,10 @@ import t67 from './email-signatures-for-claude/es';
 import t68 from './email-signatures-for-claude/fr';
 import t69 from './email-signatures-for-claude/nb';
 import t70 from './email-signatures-for-claude/zh';
+import t71 from './connect-claude-to-email/es';
+import t72 from './connect-claude-to-email/fr';
+import t73 from './connect-claude-to-email/nb';
+import t74 from './connect-claude-to-email/zh';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
@@ -88,6 +92,7 @@ const TRANSLATIONS = {
   'build-email-auto-responder-mcp-agent': { es: t12, fr: t13, nb: t14, zh: t15 },
   'connect-email-to-ai-agent-under-2-minutes': { fr: t16, nb: t17, zh: t18 },
   'connect-gmail-to-claude': { es: t19, fr: t20, nb: t21, zh: t22 },
+  'connect-claude-to-email': { es: t71, fr: t72, nb: t73, zh: t74 },
   'connect-icloud-fastmail-imap-to-claude': { es: t23, fr: t24, nb: t25, zh: t26 },
   'connect-outlook-microsoft-365-ai-agent-mcp': { es: t27, fr: t28, nb: t29, zh: t30 },
   'email-for-ai-agents-cursor-cline-vscode': { es: t31, fr: t32, nb: t33, zh: t34 },

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
+import { trackProductEvent } from '@/lib/analytics.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import {
   IMAP_PRESETS,
@@ -130,6 +131,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   // ── Step 1: provider selected ──────────────────────────────────────────────
 
   const handleConnect = () => {
+    trackProductEvent('inbox_connect_started', { provider: provider === 'generic' ? 'imap' : provider });
     if (usesAppPassword) {
       setStep(2);
       return;

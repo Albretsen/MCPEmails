@@ -31,7 +31,9 @@
     "technicalTitle": "2.6 技术与运营数据",
     "technicalP": "我们收集标准的服务器端运营数据，包括 IP 地址（用于速率限制和防滥用）、请求时间戳、HTTP 状态码和错误类型。此数据以聚合、匿名化的形式保留，并在 30 天后不再与个人账户关联。",
     "cookiesTitle": "2.7 Cookie 与本地存储",
-    "cookiesP": "仪表盘会设置一个由 Supabase Auth 签发的第一方会话 Cookie，以保持你的登录状态。我们不使用跟踪 Cookie、广告 Cookie 或任何第三方 Cookie。我们会在你浏览器的本地存储中保存一个主题偏好设置（<c>mcpe-theme</c>）。"
+    "cookiesP": "仪表盘会设置一个由 Supabase Auth 签发的第一方会话 Cookie，以保持你的登录状态。我们不使用跟踪 Cookie、广告 Cookie 或任何第三方 Cookie。我们会在你浏览器的本地存储中保存一个主题偏好设置（<c>mcpe-theme</c>）。",
+    "productAnalyticsTitle": "2.8 产品分析",
+    "productAnalyticsP": "我们使用 Vercel Web Analytics 进行保护隐私且无 Cookie 的产品分析。我们仅以汇总类别衡量页面访问和简短的设置漏斗。我们绝不会发送邮件内容、地址、API 密钥、OAuth 令牌、用户或工作区 ID、MCP 请求或邮箱数据。请参阅 <link>Vercel Analytics 文档</link>。该配置不使用 Cookie 或非必要标识符，因此按我们选择的政策无需同意横幅。"
   },
   "howWeUseData": {
     "title": "3. 我们如何使用你的数据",
