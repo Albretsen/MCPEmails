@@ -16587,9 +16587,6 @@ function draftNotFoundMessage(
   return `Draft ${draftId} not found. Use draft_list to see available draft IDs.`;
 }
 
-/** Common folder names for the Drafts mailbox across IMAP providers, tried in order. */
-const DRAFT_FOLDER_CANDIDATES = ["Drafts", "Draft", "INBOX.Drafts", "INBOX.Draft"];
-
 interface DraftSummary {
   draft_id: string;
   subject: string;
@@ -16664,19 +16661,23 @@ async function imapListDrafts(
       password,
     });
     let summaries: ImapMessageSummary[] = [];
-    let draftFolder = DRAFT_FOLDER_CANDIDATES[0];
-    for (const folder of DRAFT_FOLDER_CANDIDATES) {
-      try {
-        await client.selectMailbox(folder);
-        draftFolder = folder;
-        const uids = await client.uidSearch("ALL");
-        if (uids.length === 0) break;
+    // BUGFIX (2026-07-28): use the same SPECIAL-USE/canonical-name resolution
+    // as imapCreateDraft instead of the hardcoded DRAFT_FOLDER_CANDIDATES
+    // guess list, so listing finds the same mailbox creation actually wrote
+    // to on accounts with a non-default Drafts folder name.
+    const draftsAlias = lookupCanonicalAlias("drafts")!;
+    const mailboxes = await client.listMailboxes();
+    let draftFolder = matchImapAliasMailbox(mailboxes, draftsAlias) ?? draftsAlias.imap;
+    try {
+      await client.selectMailbox(draftFolder);
+      const uids = await client.uidSearch("ALL");
+      if (uids.length > 0) {
         const page = uids.slice(-limit).reverse();
         summaries = await client.fetchSummaries(page);
-        break;
-      } catch {
-        // Try next candidate folder.
       }
+    } catch {
+      // No Drafts mailbox on this account (and nothing to create for a list
+      // call) — fall through and return an empty list.
     }
     return summaries.map((s) => ({
       draft_id: encodeImapId(draftFolder, s.uid),
@@ -16807,16 +16808,30 @@ async function imapCreateDraft(
       password,
     });
 
-    let draftFolder = DRAFT_FOLDER_CANDIDATES[0];
-    let uid: number | undefined;
-    for (const folder of DRAFT_FOLDER_CANDIDATES) {
-      const res = await client.appendWithFlags(folder, mime, ["\\Draft", "\\Seen"]);
-      if (res.ok) {
-        draftFolder = folder;
-        uid = res.uid;
-        break;
-      }
+    // BUGFIX (2026-07-28): resolve the real Drafts mailbox via SPECIAL-USE /
+    // canonical-name matching (the same mechanism resolveFolderId uses for
+    // "archive", including auto-create) instead of blindly APPENDing to 4
+    // hardcoded English folder names (DRAFT_FOLDER_CANDIDATES). On a generic
+    // IMAP account whose Drafts mailbox uses a different hierarchy delimiter,
+    // a localized name, or any name outside that list, every one of those 4
+    // APPENDs failed, and the code then fell through to SELECT the first
+    // candidate ("Drafts") to search for the just-appended message — except
+    // nothing had actually been appended anywhere, so the SELECT itself threw
+    // "Mailbox not found: Drafts" and every draft_create call on that account
+    // failed (100% reproducible, logged as error_code "provider_error").
+    const draftsAlias = lookupCanonicalAlias("drafts")!;
+    const mailboxes = await client.listMailboxes();
+    let draftFolder = matchImapAliasMailbox(mailboxes, draftsAlias);
+    if (!draftFolder) {
+      await client.createMailbox(draftsAlias.imap);
+      draftFolder = draftsAlias.imap;
     }
+
+    const res = await client.appendWithFlags(draftFolder, mime, ["\\Draft", "\\Seen"]);
+    if (!res.ok) {
+      throw new Error(`Could not save draft to "${draftFolder}"`);
+    }
+    let uid = res.uid;
     if (uid === undefined) {
       // APPENDUID not supported — find UID by Message-ID header search.
       await client.selectMailbox(draftFolder);
