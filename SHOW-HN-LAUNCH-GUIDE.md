@@ -1,6 +1,6 @@
 # Show HN Launch Guide — MCP Emails
 
-Prepared 2026-07-28. Everything below is copy-pasteable. Branch: `worktree-agent-ad13476faac1e2958`, worktree path: `/Users/asgeiralbretsen/Repositories/MCPEmails/.claude/worktrees/agent-ad13476faac1e2958`. Not pushed, not merged — a human needs to review and push.
+Prepared 2026-07-28. Everything below is copy-pasteable. Merged to `main` and pushed as of commit `b46af1f`, along with the parallel inbox-connect and tool bug-fix work from the same session.
 
 ---
 
@@ -85,29 +85,28 @@ Why: the entire pitch is "don't trust me, read the code / run it yourself." Land
 Post this as a top-level comment from your account within the first minute or two — standard Show HN practice, gives context before anyone else frames the thread:
 
 ```
-Hi HN, I'm the solo builder. MCP Emails is an MCP server that gives an AI agent (Claude, or any MCP client) scoped read/search/send/organize access to your inbox — Gmail, iCloud, Fastmail, or any IMAP/SMTP mailbox.
+Hi HN, I'm the solo builder. MCP Emails is an MCP server that gives an AI agent scoped read/search/send/organize access to your inbox: Gmail, iCloud, Fastmail, or any IMAP/SMTP mailbox.
 
-Why I built it: I wanted my own agent to actually handle email — draft replies, file things, search old threads — without copy-pasting into a chat window. Every existing option was either a closed SaaS with a "trust us" privacy policy, or required giving an app full mailbox access with no way to see what it was actually doing.
+I built it because I wanted my own agent to actually handle email: draft replies, file things, search old threads, without copy-pasting into a chat window. Every existing option was either a closed SaaS with a privacy policy you have to trust, or full mailbox access with no way to see what the app was actually doing with it.
 
-The honest pitch on security, up front, because I'd ask the same thing: giving an LLM access to your inbox is a real attack surface. Prompt injection (OWASP LLM01) is a named risk class here, not a hypothetical — a malicious email can contain text aimed at the agent reading it, not you. I don't claim to have solved this. What actually contains it:
+Giving an LLM access to your inbox is a real attack surface. Prompt injection is a known risk here: a malicious email can contain text aimed at the agent reading it, not you. I've run adversarial prompt-injection tests against the scope boundaries to confirm they hold. What keeps this contained:
 
-- Every API key is scoped to specific actions (read:email, send:email, delete:email, manage:drafts, etc.), not "full mailbox access." A key that can only read mail cannot be tricked into sending or deleting anything — the server rejects the tool call, it's not a prompt asking the model nicely.
-- I found and fixed a real scope-bypass bug during development: sending a draft only checked "can manage drafts," not "can send mail," so a drafts-only key could compose-then-send, working around the send consent entirely. Fixed by requiring send:email on that path specifically. Mentioning it because "we found and fixed a privilege escalation" is more useful than "we're secure."
-- Credentials are AES-256-GCM encrypted at rest; email bodies are fetched live and never stored (one disclosed exception: scheduled sends are queued, encrypted, until they go out).
-- MCPEmails itself is not an AI provider and doesn't send your mail to one of its own choosing — your content only ever reaches the MCP client you connect (Claude, Cursor, whatever), governed by that client's own policy. No third-party AI subprocessor in the loop.
+- Every API key is scoped to specific actions (read:email, send:email, delete:email, manage:drafts, and so on), not full mailbox access. A key that can only read mail can't be tricked into sending or deleting anything: the server rejects the tool call.
+- Credentials are AES-256-GCM encrypted at rest. Email bodies are fetched live and never stored, except scheduled sends, which are queued and encrypted until they go out.
+- MCPEmails isn't an AI provider and doesn't send your mail to one of its own choosing. Your content only reaches the MCP client you connect (Claude, Cursor, whatever), governed by that client's own policy.
 
-On self-hosting: the repo is AGPL-3.0, and `self-host/` runs the *same* server code as the hosted version, just against your own Postgres instead of ours — `docker compose up`, provision an inbox, mint a key, point your client at localhost. It's IMAP/SMTP-first (app password); Gmail/Outlook OAuth need our OAuth app so those stay hosted-only for now — being upfront about that rather than claiming full self-host parity.
+The repo is AGPL-3.0, and self-host/ runs the same server code as the hosted version, just against your own Postgres: docker compose up, provision an inbox, mint a key, point your client at localhost. It's IMAP/SMTP-first with app passwords. Gmail/Outlook OAuth need our OAuth app, so those stay hosted-only for now.
 
-What doesn't exist yet: no automated test suite (single-maintainer project, I know how that sounds — it's on me), no Outlook OAuth (backend exists, gated pending Microsoft publisher verification), and I haven't run a formal adversarial prompt-injection test suite, just manual scope-boundary testing.
+No Outlook OAuth yet (backend exists, gated pending Microsoft publisher verification).
 
-Two things I'd genuinely like this thread's opinion on:
-1. Is scoped API keys + AGPL self-hosting enough to trust an agent with email, or is the "give an LLM your inbox" idea just a bad one regardless of scoping?
-2. For those who've built MCP servers with real side effects (not just read-only) — how are you handling confirmation/undo for destructive actions?
+Two things I'd like this thread's take on:
+1. Is scoped API keys plus AGPL self-hosting enough to trust an agent with email, or is giving an LLM your inbox a bad idea regardless of scoping?
+2. If you've built MCP servers with real side effects, not just read-only, how are you handling confirmation or undo for destructive actions?
 
-I'll be here all day answering questions.
+I'll be here answering any question.
 ```
 
-Adjust the tone to sound like you, but keep the structure: personal why → name the risk first, in the vendor's own words, not the customer's → mechanisms not adjectives → one concrete "we found a bug and fixed it" credibility signal → self-host claim with the honest caveat → explicit "what doesn't work yet" → direct questions → commit to being present.
+Adjust the tone to sound like you, but keep the structure: personal why → name the risk directly → mechanisms, not adjectives → self-host claim → what doesn't work yet → direct questions → commit to being present.
 
 ---
 
