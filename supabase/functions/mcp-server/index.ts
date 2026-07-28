@@ -14239,17 +14239,29 @@ async function executeMoveEmail(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): destinationFolderId is already validated non-empty
+    // above, so resolveFolderId can only throw here on a genuine provider/network
+    // failure (e.g. LIST/labels.list erroring) — not on bad input. Previously this
+    // was misreported as a -32602 "destination_folder_id is required" client error,
+    // hiding the real cause and misdirecting the caller into "fixing" a param that
+    // was never wrong.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_move: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_move: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
@@ -14454,17 +14466,25 @@ async function executeCopyEmail(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
+    // only throw here on a genuine provider/network failure, not bad input.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_copy: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_copy: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
@@ -15757,17 +15777,25 @@ async function executeBulkMove(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
+    // only throw here on a genuine provider/network failure, not bad input.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_move_batch: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_move_batch: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
@@ -15864,17 +15892,25 @@ async function executeBulkCopy(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
+    // only throw here on a genuine provider/network failure, not bad input.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_copy_batch: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_copy_batch: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
@@ -16175,17 +16211,25 @@ async function executeSearchAndMove(
   let resolvedDest: string;
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (_err) {
+  } catch (err) {
+    // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
+    // only throw here on a genuine provider/network failure, not bad input.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[mcp-server] email_search_and_move: resolve_destination_error", {
+      inbox_id: inbox.id,
+      provider: inbox.provider,
+      error: message,
+    });
     return {
       result: {
         content: [{
           type: "text",
-          text: "email_search_and_move: destination_folder_id is required and must be a non-empty string.",
+          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
         }],
         isError: true,
       },
       logStatus: "error",
-      logErrorCode: "-32602",
+      logErrorCode: "provider_error",
     };
   }
 
