@@ -106,3 +106,9 @@ api_url = "http://127.0.0.1"
 [storage]
 enabled = true
 file_size_limit = "50MiB"
+
+# The MCP endpoint authenticates its own mcpe_ OAuth/API-key bearer tokens.
+# Supabase JWT gateway verification must remain disabled or it rejects every
+# MCP request before the function's application-level validator can run.
+[functions.mcp-server]
+verify_jwt = false
