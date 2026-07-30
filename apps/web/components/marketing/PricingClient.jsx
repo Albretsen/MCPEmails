@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, Fragment } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
+import { createClient } from '@/lib/supabase/client';
+import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
 // NOTE: the "Team" tier keeps the internal key `pro` so live Stripe prices
@@ -134,7 +136,7 @@ function BillingToggle({ annual, onChange }) {
 /**
  * @param {{ annual: boolean, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
  */
-function PlanCards({ annual, stripePrices }) {
+function PlanCards({ annual, stripePrices, user }) {
   const t = useTranslations('pricing');
   return (
     <div className="price-grid">
@@ -186,13 +188,23 @@ function PlanCards({ annual, stripePrices }) {
                 <li key={f}><MIcon name="check" size={14} color="var(--mint-600)" />{f}</li>
               ))}
             </ul>
-            <a
-              className={'btn btn-lg ' + (plan.ctaPrimary ? 'btn-primary' : 'btn-secondary')}
-              href={plan.ctaHref}
-              style={{ textAlign: 'center', justifyContent: 'center' }}
-            >
-              {t(`plans.${plan.key}.cta`)}
-            </a>
+            {plan.key === 'free' ? (
+              <a
+                className={'btn btn-lg ' + (plan.ctaPrimary ? 'btn-primary' : 'btn-secondary')}
+                href={user ? '/dashboard' : plan.ctaHref}
+                style={{ textAlign: 'center', justifyContent: 'center' }}
+              >
+                {t(`plans.${plan.key}.cta`)}
+              </a>
+            ) : (
+              <a
+                className={'btn btn-lg ' + (plan.ctaPrimary ? 'btn-primary' : 'btn-secondary')}
+                href={pricingUpgradeHref(plan.key, annual, Boolean(user))}
+                style={{ textAlign: 'center', justifyContent: 'center' }}
+              >
+                {t(`plans.${plan.key}.cta`)}
+              </a>
+            )}
           </div>
         );
       })}
@@ -282,12 +294,25 @@ function FaqItem({ q, a }) {
  */
 export default function PricingClient({ stripePrices }) {
   const [annual, setAnnual] = useState(false);
+  const [user, setUser] = useState(null);
   const t = useTranslations('pricing');
   const faqItems = t.raw('faq.items');
 
+  // Marketing pages are CDN-cached and therefore cannot render session state
+  // on the server. Resolve it client-side so signed-in visitors still see a
+  // clear account affordance without making the public page private.
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <div>
-      <Nav />
+      <Nav user={user} />
 
       {/* Hero */}
       <section className="pricing-page-hero">
@@ -306,7 +331,7 @@ export default function PricingClient({ stripePrices }) {
       {/* Plan cards */}
       <section className="pricing-page-cards">
         <div className="container">
-          <PlanCards annual={annual} stripePrices={stripePrices} />
+          <PlanCards annual={annual} stripePrices={stripePrices} user={user} />
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             {t('cardsFootnote.all')}
           </p>

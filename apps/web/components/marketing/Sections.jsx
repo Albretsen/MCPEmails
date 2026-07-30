@@ -12,7 +12,7 @@ const RICH = {
   b: (chunks) => <strong>{chunks}</strong>,
 };
 
-export function Nav({ onSignIn, onGetStarted }) {
+export function Nav({ onSignIn, onGetStarted, user }) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -45,8 +45,17 @@ export function Nav({ onSignIn, onGetStarted }) {
         </nav>
         <div className="nav-grow" />
         <div className="nav-cta">
-          <a className="btn btn-ghost" onClick={onSignIn} href="/login">{t('nav.signIn')}</a>
-          <a className="btn btn-primary" onClick={onGetStarted} href="/signup">{t('nav.getStarted')}</a>
+          {user ? (
+            <>
+              <span className="nav-signed-in" title={user.email}>{user.email}</span>
+              <a className="btn btn-primary" href="/dashboard">{t('nav.dashboard')}</a>
+            </>
+          ) : (
+            <>
+              <a className="btn btn-ghost" onClick={onSignIn} href="/login">{t('nav.signIn')}</a>
+              <a className="btn btn-primary" onClick={onGetStarted} href="/signup">{t('nav.getStarted')}</a>
+            </>
+          )}
         </div>
 
         {/* Hamburger button — visible only on mobile (≤767px via CSS) */}
@@ -77,8 +86,14 @@ export function Nav({ onSignIn, onGetStarted }) {
             <Link href="/blog" onClick={closeMenu}>{t('nav.blog')}</Link>
           </nav>
           <div className="nav-mobile-cta">
-            <a className="btn btn-ghost" href="/login" onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
-            <a className="btn btn-primary" href="/signup" onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
+            {user ? (
+              <a className="btn btn-primary" href="/dashboard" onClick={closeMenu}>{t('nav.dashboard')}</a>
+            ) : (
+              <>
+                <a className="btn btn-ghost" href="/login" onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
+                <a className="btn btn-primary" href="/signup" onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
+              </>
+            )}
           </div>
         </div>
       )}

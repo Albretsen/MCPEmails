@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:analytics": "node --test src/lib/analytics.test.mjs"
+    "test:analytics": "node --test src/lib/analytics.test.mjs",
+    "test:billing": "node --test src/lib/billing/upgrade-intent.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

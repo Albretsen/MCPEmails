@@ -52,7 +52,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     // Preserve the original path so the callback can redirect back after sign-in.
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
-    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname + request.nextUrl.search);
     return NextResponse.redirect(redirectUrl);
   }
 

@@ -12,6 +12,7 @@ import { ConnectModal } from './ConnectModal';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
 import { trackProductEvent } from '@/lib/analytics.mjs';
+import { parseUpgradeIntent } from '@/lib/billing/upgrade-intent.mjs';
 
 /* App.jsx: dashboard root. Owns state, route, modals.
    firstrun param auto-opens the connect modal.
@@ -64,6 +65,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const tr = useTranslations('dashboardChrome');
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
+  const upgradePlan = readQuery(searchParams, 'upgrade');
+  const upgradeInterval = readQuery(searchParams, 'interval');
+  const upgradeIntent = parseUpgradeIntent(upgradePlan, upgradeInterval);
   const { toast } = useToast();
 
   // Initial section comes from the URL (resolved server-side by the catch-all
@@ -622,7 +626,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} onWorkspaceUpdate={setWorkspace} />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} />}
       </div>
 
