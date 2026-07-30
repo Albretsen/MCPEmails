@@ -3754,11 +3754,12 @@ const BILLING_PLANS = [
  * Props:
  *   currentPlan: 'free' | 'pro' | 'enterprise' from workspaces.plan
  */
-function BillingSection({ currentPlan, stripePrices }) {
+function BillingSection({ currentPlan, stripePrices, upgradeIntent }) {
   const t = useTranslations('dashboard');
   const [interval, setInterval] = useState('month');
   const [upgrading, setUpgrading] = useState(null); // planId while loading
   const [openingPortal, setOpeningPortal] = useState(false);
+  const automaticUpgradeStarted = useRef(false);
   const [usage, setUsage] = useState(null); // fetched from /api/usage
   const { toast } = useToast();
 
@@ -3799,14 +3800,14 @@ function BillingSection({ currentPlan, stripePrices }) {
     }
   };
 
-  const handleUpgrade = async (planId) => {
+  const handleUpgrade = async (planId, checkoutInterval = interval) => {
     if (upgrading) return;
     setUpgrading(planId);
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, interval }),
+        body: JSON.stringify({ planId, interval: checkoutInterval }),
       });
 
       const data = await res.json();
@@ -3834,6 +3835,19 @@ function BillingSection({ currentPlan, stripePrices }) {
   };
 
   const isOnPaidPlan = currentPlan === 'solo' || currentPlan === 'pro' || currentPlan === 'enterprise';
+
+  // A paid-plan CTA on the pricing page is a direct request to begin Stripe
+  // Checkout. The URL carries only a validated plan and interval; remove it
+  // once consumed so refresh/back cannot accidentally initiate it again.
+  useEffect(() => {
+    if (!upgradeIntent || automaticUpgradeStarted.current) return;
+    automaticUpgradeStarted.current = true;
+    setInterval(upgradeIntent.interval);
+    window.history.replaceState(window.history.state, '', '/dashboard/settings');
+    handleUpgrade(upgradeIntent.planId, upgradeIntent.interval);
+  // Intent is parsed and validated by DashboardApp. This effect must run once.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upgradeIntent]);
 
   // Display label for the current plan. "free" is translated; paid plan names
   // (Solo / Team / Enterprise) are brand-style names kept as-is (capitalized).
@@ -4649,7 +4663,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, onWorkspaceUpdate }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -4679,7 +4693,7 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
       <LanguageSection />
 
       {/* Billing section: current plan + upgrade (account-level subscription) */}
-      <BillingSection currentPlan={workspace?.plan ?? 'free'} stripePrices={stripePrices} />
+      <BillingSection currentPlan={workspace?.plan ?? 'free'} stripePrices={stripePrices} upgradeIntent={upgradeIntent} />
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}
       <SettingsSectionLabel>{t('settings.sections.workspace')}</SettingsSectionLabel>

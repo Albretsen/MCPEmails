@@ -17,9 +17,20 @@ export function LoginApp() {
   const [serverError, setServerError] = useState('');
   const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
 
+  function getSafeRedirect() {
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    return redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.startsWith('/\\')
+      ? redirect
+      : null;
+  }
+
+  function signupHref() {
+    const redirect = getSafeRedirect();
+    return redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : '/signup';
+  }
+
   function buildOAuthUrl(provider) {
-    const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect');
+    const redirect = getSafeRedirect();
     const url = new URL(`/auth/${provider}`, window.location.origin);
     if (redirect && redirect.startsWith('/')) {
       url.searchParams.set('next', redirect);
@@ -28,8 +39,7 @@ export function LoginApp() {
   }
 
   function buildCallbackUrl() {
-    const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect');
+    const redirect = getSafeRedirect();
     const callbackUrl = new URL('/auth/callback', window.location.origin);
     if (redirect && redirect.startsWith('/')) {
       callbackUrl.searchParams.set('next', redirect);
@@ -38,9 +48,7 @@ export function LoginApp() {
   }
 
   function getRedirectDestination() {
-    const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect');
-    return redirect && redirect.startsWith('/') ? redirect : '/dashboard';
+    return getSafeRedirect() ?? '/dashboard';
   }
 
   function handleGoogleSignIn() {
@@ -257,7 +265,7 @@ export function LoginApp() {
               </button>
             </div>
             <div className="auth-footer">
-              {t('login.noAccountPrefix')}<a href="/signup">{t('login.createWorkspace')}</a>
+              {t('login.noAccountPrefix')}<a href={signupHref()}>{t('login.createWorkspace')}</a>
             </div>
           </div>
         )}
@@ -294,7 +302,7 @@ export function LoginApp() {
               </button>
             </div>
             <div className="auth-footer">
-              {t('login.noAccountPrefix')}<a href="/signup">{t('login.createWorkspace')}</a>
+              {t('login.noAccountPrefix')}<a href={signupHref()}>{t('login.createWorkspace')}</a>
             </div>
           </div>
         )}

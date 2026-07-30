@@ -182,7 +182,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
                   <span className="ws-meta"><span className="ws-name">{tr('sidebar.newWorkspace')}</span></span>
                 </button>
               ) : (
-                <a href="/pricing" className="ws-menu-item ws-menu-upsell">
+                <a href="/dashboard/settings?upgrade=pro&interval=month" className="ws-menu-item ws-menu-upsell">
                   <span className="ws-glyph sm plus" aria-hidden="true"><Icon name="zap" size={13} color="var(--brand)" /></span>
                   <span className="ws-meta">
                     <span className="ws-name">{tr('sidebar.newWorkspace')}</span>

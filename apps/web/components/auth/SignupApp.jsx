@@ -50,7 +50,9 @@ export function SignupApp() {
   // instead of always being dropped on /dashboard. Only relative paths are honored.
   function getSafeRedirect() {
     const redirect = new URLSearchParams(window.location.search).get('redirect');
-    return redirect && redirect.startsWith('/') ? redirect : null;
+    return redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.startsWith('/\\')
+      ? redirect
+      : null;
   }
 
   function buildCallbackUrl() {
@@ -230,7 +232,7 @@ export function SignupApp() {
               </MBtn>
             </form>
             <div className="auth-footer">
-              {t('signup.haveAccountPrefix')}<a href="/login">{t('signup.signIn')}</a>
+              {t('signup.haveAccountPrefix')}<a href={getSafeRedirect() ? `/login?redirect=${encodeURIComponent(getSafeRedirect())}` : '/login'}>{t('signup.signIn')}</a>
             </div>
           </div>
         )}
