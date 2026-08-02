@@ -15,7 +15,7 @@
       "Vos e-mails sont récupérés en direct à chaque requête et supprimés dès que la réponse est envoyée. Nous ne conservons aucune copie d'un quelconque corps de message, objet, pièce jointe ou contact.",
       "Nous stockons exactement une seule chose sensible par boîte de réception : un jeton d'accès ou un mot de passe d'application, chiffré avec AES-256-GCM, afin de pouvoir effectuer le prochain appel que vous demandez.",
       "Nous n'entraînons jamais aucun modèle d'IA sur vos e-mails, et nous n'envoyons jamais vos e-mails à un modèle de notre choix. Votre agent est la seule chose qui les lit, sous votre contrôle.",
-      "Chaque connexion est limitée à la seule boîte de réception que vous avez connectée, et vous pouvez la révoquer à tout moment depuis les paramètres de Google, de Microsoft ou de votre fournisseur.",
+      "L'accès est limité par l'identifiant que vous configurez : les clés API peuvent être restreintes à certaines boîtes ou autorisées à atteindre toutes les boîtes de l'espace de travail. Vous pouvez révoquer l'accès du fournisseur à tout moment depuis les paramètres de Google, de Microsoft ou de votre fournisseur.",
       "Le code qui fait tourner le service est public. Vous pouvez le lire, l'auditer ou héberger l'ensemble vous-même."
     ]
   },
@@ -74,12 +74,12 @@
     "title": "4. Le vrai risque : l'injection de requête",
     "p1": "La menace honnête ici, ce n'est pas que je lise vos e-mails. C'est un e-mail hostile qui tente de détourner l'agent : des instructions cachées dans un message qui essaient de faire transférer, supprimer ou divulguer quelque chose par votre IA. C'est un problème réel et non résolu pour tout agent de messagerie. Je ne prétendrai pas qu'il est résolu. Je peux montrer comment il est contenu :",
     "points": [
-      "<b>Une boîte de réception, un jeton.</b> Une connexion ne peut jamais toucher que la seule boîte de réception à laquelle vous l'avez connectée. Un jeton limité ne peut pas atteindre vos autres boîtes de réception, ni celles de quiconque.",
-      "<b>Les actions destructrices sont séparées et signalées.</b> L'envoi et la suppression sont leurs propres outils, marqués comme destructifs, de sorte que votre client IA demande une confirmation avant de les déclencher.",
+      "<b>L'accès aux boîtes est configurable.</b> Les clés API peuvent être restreintes à certaines boîtes ou délibérément autorisées à atteindre toutes les boîtes d'un espace de travail. Une clé restreinte ne peut pas atteindre une boîte qui ne lui a pas été accordée.",
+      "<b>Les actions destructrices sont séparées et signalées.</b> L'envoi et la suppression sont des outils distincts avec des portées séparées ; la suppression exige <code>confirm: true</code>. La présentation d'une confirmation à l'utilisateur dépend de la politique du client.",
       "<b>Moindre privilège.</b> Les connexions demandent un accès en lecture et en rédaction du courrier, pas un contrôle sur l'ensemble du compte. Même un jeton entièrement compromis est borné par la portée que vous avez accordée.",
       "<b>Débit limité.</b> Chaque clé a un débit limité, de sorte qu'un agent emballé ou détourné ne peut pas déclencher des milliers d'actions sans que cela se remarque."
     ],
-    "outro": "Pas résolu. Contenu : les actions irréversibles sont verrouillées, et le rayon d'impact est limité à une seule boîte de réception."
+    "outro": "Pas résolu. Contenu : les actions irréversibles sont protégées, et les portées des clés API ainsi que les restrictions de boîtes peuvent réduire le rayon d'impact."
   },
   "credentials": {
     "title": "5. Comment vos identifiants sont protégés",

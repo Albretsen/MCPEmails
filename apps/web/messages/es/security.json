@@ -15,7 +15,7 @@
       "Tu correo se obtiene en vivo en cada solicitud y se descarta en el momento en que se envía la respuesta. No guardamos ninguna copia del cuerpo de un mensaje, asunto, archivo adjunto ni contacto.",
       "Almacenamos exactamente una cosa sensible por bandeja de entrada: un token de acceso o una contraseña de aplicación, cifrada con AES-256-GCM, para poder hacer la siguiente llamada que pidas.",
       "Nunca entrenamos ningún modelo de IA con tu correo, y nunca enviamos tu correo a un modelo de nuestra elección. Tu agente es lo único que lo lee, bajo tu control.",
-      "Cada conexión está limitada a la única bandeja de entrada que conectaste, y puedes revocarla en cualquier momento desde Google, Microsoft o los ajustes de tu proveedor.",
+      "El acceso está limitado por la credencial que configures: las claves API pueden restringirse a bandejas seleccionadas o tener acceso a todas las bandejas del espacio de trabajo. Puedes revocar el acceso del proveedor en cualquier momento desde Google, Microsoft o los ajustes de tu proveedor.",
       "El código que ejecuta el servicio es público. Puedes leerlo, auditarlo o autoalojar todo el sistema."
     ]
   },
@@ -74,12 +74,12 @@
     "title": "4. El riesgo real: la inyección de prompts",
     "p1": "La amenaza honesta aquí no soy yo leyendo tu correo. Es un correo hostil que intenta secuestrar al agente: instrucciones ocultas dentro de un mensaje que intentan hacer que tu IA reenvíe, elimine o filtre algo. Este es un problema real y sin resolver para todos los agentes de correo. No afirmaré que está resuelto. Puedo mostrar cómo se contiene:",
     "points": [
-      "<b>Una bandeja, un token.</b> Una conexión solo puede tocar la única bandeja de entrada a la que la conectaste. Un token limitado no puede alcanzar tus otras bandejas, ni las de nadie más.",
-      "<b>Las acciones destructivas están separadas y marcadas.</b> Enviar y eliminar son herramientas propias, marcadas como destructivas, para que tu cliente de IA pida confirmación antes de ejecutarlas.",
+      "<b>El acceso a las bandejas es configurable.</b> Las claves API pueden restringirse a bandejas seleccionadas o autorizarse deliberadamente para acceder a todas las bandejas de un espacio de trabajo. Una clave restringida no puede alcanzar una bandeja que no se le haya concedido.",
+      "<b>Las acciones destructivas están separadas y marcadas.</b> Enviar y eliminar son herramientas propias con alcances separados; eliminar requiere <code>confirm: true</code>. Que un cliente presente una confirmación al usuario depende de la política de ese cliente.",
       "<b>Privilegio mínimo.</b> Las conexiones solicitan acceso de lectura y composición de correo, no control de toda la cuenta. Incluso un token totalmente comprometido está limitado por el alcance que concediste.",
       "<b>Con límite de tasa.</b> Cada clave tiene un límite de tasa, así que un agente descontrolado o secuestrado no puede desplegar miles de acciones sin que se note."
     ],
-    "outro": "No resuelto. Contenido: las acciones irreversibles están protegidas y el radio de impacto se mantiene en una sola bandeja de entrada."
+    "outro": "No resuelto. Contenido: las acciones irreversibles están protegidas y los alcances de las claves API y las restricciones de bandeja pueden reducir el radio de impacto."
   },
   "credentials": {
     "title": "5. Cómo se protegen tus credenciales",

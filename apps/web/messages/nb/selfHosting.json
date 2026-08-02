@@ -53,7 +53,7 @@
       {
         "feature": "Gmail / Outlook ettklikks-OAuth",
         "self": "Ikke inkludert",
-        "hosted": "Ja"
+        "hosted": "Gmail: ja; Outlook: venter på verifisering"
       },
       {
         "feature": "Nettdashboard (tilkobling, nøkler, aktivitet)",
@@ -99,7 +99,7 @@
   },
   "commitment": {
     "title": "Selvhosting er en reell forpliktelse.",
-    "body": "Du kjører IMAP/SMTP-konfigurasjonen, oppdateringene og sikkerheten selv, og support er kun via fellesskapet. Gmail- og Outlook-ettklikks-OAuth og nettdashboardet forblir på det hostede produktet, fordi de trenger OAuth-hemmeligheter og et sesjonslag som en installasjon med én operatør ikke har. Hvis du heller vil slippe å drifte infrastruktur, er den hostede planen to minutter unna og gratis å starte med.",
+    "body": "Du kjører IMAP/SMTP-konfigurasjonen, oppdateringene og sikkerheten selv, og support er kun via fellesskapet. Gmail-ettklikks-OAuth og nettdashboardet forblir på det hostede produktet; Outlook-OAuth er bygget, men venter på Microsofts publisistverifisering. Disse funksjonene trenger OAuth-hemmeligheter og et sesjonslag som en installasjon med én operatør ikke har. Hvis du heller vil slippe å drifte infrastruktur, er den hostede planen to minutter unna og gratis å starte med.",
     "cta": "Bruk den hostede versjonen"
   },
   "cta": {

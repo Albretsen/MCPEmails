@@ -15,7 +15,7 @@
       "E-posten din hentes i sanntid ved hver forespørsel og forkastes i det øyeblikket svaret er sendt. Vi beholder ingen kopi av noen meldingstekst, emnefelt, vedlegg eller kontakt.",
       "Vi lagrer nøyaktig én sensitiv ting per innboks: et tilgangstoken eller app-passord, kryptert med AES-256-GCM, slik at vi kan utføre det neste kallet du ber om.",
       "Vi trener aldri noen KI-modell på e-posten din, og vi sender aldri e-posten din til en modell vi selv velger. Agenten din er det eneste som leser den, under din kontroll.",
-      "Hver tilkobling er avgrenset til den enkelte innboksen du koblet til, og du kan når som helst tilbakekalle den fra innstillingene hos Google, Microsoft eller leverandøren din.",
+      "Tilgang er begrenset av legitimasjonen du konfigurerer: API-nøkler kan avgrenses til valgte innbokser eller få tilgang til alle innboksene i arbeidsområdet. Du kan når som helst tilbakekalle leverandørtilgang fra innstillingene hos Google, Microsoft eller leverandøren din.",
       "Koden som driver tjenesten er åpen. Du kan lese den, revidere den eller drifte hele greia selv."
     ]
   },
@@ -74,12 +74,12 @@
     "title": "4. Den reelle risikoen: prompt-injeksjon",
     "p1": "Den ærlige trusselen her er ikke at jeg leser e-posten din. Det er en fiendtlig e-post som forsøker å kapre agenten: instruksjoner skjult inne i en melding som forsøker å få KI-en din til å videresende, slette eller lekke noe. Dette er et reelt, uløst problem for enhver e-postagent. Jeg vil ikke påstå at det er løst. Jeg kan vise hvordan det begrenses:",
     "points": [
-      "<b>Én innboks, ett token.</b> En tilkobling kan kun noensinne berøre den enkelte innboksen du koblet den til. Et avgrenset token kan ikke nå dine andre innbokser, eller noen andres.",
-      "<b>Destruktive handlinger er adskilt og merket.</b> Sending og sletting er egne verktøy, merket som destruktive, så KI-klienten din ber om bekreftelse før de utløses.",
+      "<b>Innbokstilgang kan konfigureres.</b> API-nøkler kan avgrenses til valgte innbokser eller bevisst få tilgang til alle innbokser i et arbeidsområde. En avgrenset nøkkel kan ikke nå en innboks den ikke har fått tilgang til.",
+      "<b>Destruktive handlinger er adskilt og merket.</b> Sending og sletting er egne verktøy med separate omfang; sletting krever <code>confirm: true</code>. Om klienten viser brukeren en bekreftelse, styres av klientens policy.",
       "<b>Minst mulig privilegier.</b> Tilkoblinger ber om tilgang til å lese og skrive e-post, ikke kontoomfattende kontroll. Selv et fullstendig kompromittert token er begrenset av omfanget du innvilget.",
       "<b>Hastighetsbegrenset.</b> Hver nøkkel er hastighetsbegrenset, så en løpsk eller kapret agent kan ikke utløse tusenvis av handlinger ubemerket."
     ],
-    "outro": "Ikke løst. Begrenset: de irreversible handlingene er sikret, og skadeomfanget holdes til én innboks."
+    "outro": "Ikke løst. Begrenset: irreversible handlinger er sikret, og API-nøkkelomfang og innboksbegrensninger kan redusere skadeomfanget."
   },
   "credentials": {
     "title": "5. Slik beskyttes legitimasjonen din",

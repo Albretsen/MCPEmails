@@ -53,7 +53,7 @@
       {
         "feature": "Gmail / Outlook 一键 OAuth",
         "self": "不含",
-        "hosted": "有"
+        "hosted": "Gmail：有；Outlook：等待验证"
       },
       {
         "feature": "网页控制台（连接、密钥、活动）",
@@ -99,7 +99,7 @@
   },
   "commitment": {
     "title": "自托管是一项实实在在的投入。",
-    "body": "IMAP/SMTP 配置、更新和安全都由你自己负责，且仅有社区支持。Gmail 和 Outlook 一键 OAuth 以及网页控制台仍保留在托管产品中，因为它们需要 OAuth 密钥和会话层，而单人运维的安装无法提供。如果你不想自行运维基础设施，托管套餐两分钟即可上手，且免费开始。",
+    "body": "IMAP/SMTP 配置、更新和安全都由你自己负责，且仅有社区支持。Gmail 一键 OAuth 和网页控制台仍保留在托管产品中；Outlook OAuth 已开发完成，但仍在等待 Microsoft 发布者验证。这些功能需要 OAuth 密钥和会话层，而单人运维的安装无法提供。如果你不想自行运维基础设施，托管套餐两分钟即可上手，且免费开始。",
     "cta": "使用托管版本"
   },
   "cta": {

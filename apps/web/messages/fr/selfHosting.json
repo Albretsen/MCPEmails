@@ -53,7 +53,7 @@
       {
         "feature": "OAuth en un clic pour Gmail / Outlook",
         "self": "Non inclus",
-        "hosted": "Oui"
+        "hosted": "Gmail : oui ; Outlook : vérification en attente"
       },
       {
         "feature": "Tableau de bord web (connexion, clés, activité)",
@@ -99,7 +99,7 @@
   },
   "commitment": {
     "title": "L'auto-hébergement est un véritable engagement.",
-    "body": "Vous gérez vous-même la configuration IMAP/SMTP, les mises à jour et la sécurité, et le support est assuré uniquement par la communauté. L'OAuth en un clic pour Gmail et Outlook ainsi que le tableau de bord web restent sur le produit hébergé, car ils nécessitent des secrets OAuth et une couche de session qu'une installation à opérateur unique ne possède pas. Si vous préférez ne pas gérer d'infrastructure, le forfait hébergé prend deux minutes et est gratuit pour démarrer.",
+    "body": "Vous gérez vous-même la configuration IMAP/SMTP, les mises à jour et la sécurité, et le support est assuré uniquement par la communauté. L'OAuth en un clic pour Gmail et le tableau de bord web restent sur le produit hébergé ; l'OAuth Outlook est développé mais attend la vérification de l'éditeur par Microsoft. Ces fonctions nécessitent des secrets OAuth et une couche de session qu'une installation à opérateur unique ne possède pas. Si vous préférez ne pas gérer d'infrastructure, le forfait hébergé prend deux minutes et est gratuit pour démarrer.",
     "cta": "Utiliser la version hébergée"
   },
   "cta": {

@@ -6,7 +6,7 @@
     "dev": "node -e \"try{const{pid}=JSON.parse(require('fs').readFileSync('.next/dev/lock','utf8'));process.kill(pid,'SIGKILL')}catch(e){}\"; next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings 0",
     "test:analytics": "node --test src/lib/analytics.test.mjs",
     "test:billing": "node --test src/lib/billing/upgrade-intent.test.mjs"
   },

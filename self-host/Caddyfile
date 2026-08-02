@@ -1,0 +1,5 @@
+# MCP_PUBLIC_HOST is supplied by docker-compose.tls.yml. Caddy redirects HTTP
+# to HTTPS and automatically provisions/renews the certificate for this name.
+{$MCP_PUBLIC_HOST} {
+    reverse_proxy mcp-server:8000
+}

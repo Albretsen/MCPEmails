@@ -1,0 +1,29 @@
+# Optional public HTTPS entrypoint. Use only with a DNS name you control.
+#
+# Start it with:
+#   MCP_PUBLIC_HOST=mcp.example.com \
+#   APP_URL=https://mcp.example.com \
+#   docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d --build
+#
+# Caddy obtains and renews a publicly trusted certificate automatically. The
+# base compose file still binds port 8787 to loopback, so the MCP server itself
+# is never directly exposed to the network.
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      - mcp-server
+    environment:
+      MCP_PUBLIC_HOST: ${MCP_PUBLIC_HOST:?set MCP_PUBLIC_HOST to your DNS name}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

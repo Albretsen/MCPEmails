@@ -21,13 +21,9 @@ import { NextRequest, NextResponse } from 'next/server';
  *   MCP clients use this to auto-discover the authorization server and begin
  *   the OAuth 2.0 Authorization Code + PKCE flow.
  *
- * API key via query parameter:
- *   As a simpler alternative to OAuth, the API key may be supplied in the URL
- *   as ?key=mcpe_... (mcpemails.com/api/mcp?key=mcpe_...). This lets users paste
- *   a single URL into any MCP client instead of configuring an auth header. The
- *   key is converted into a Bearer header before forwarding upstream, so the
- *   Edge Function's auth contract is unchanged. An Authorization header, when
- *   present, always takes precedence over the query parameter.
+ * API keys must be sent in the Authorization header. Query-string credentials
+ * are rejected because URLs can be retained in browser history, logs,
+ * referrers, and monitoring systems.
  */
 
 const MCP_FUNCTION_URL =
@@ -54,18 +50,27 @@ export function OPTIONS(): NextResponse {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // An explicit Authorization header (e.g. an OAuth access token) always wins.
-  // Otherwise, accept the API key from the ?key= (or ?api_key=) query parameter
-  // and turn it into a Bearer header so the upstream auth path is identical.
-  let authorization = request.headers.get('authorization');
-  if (!authorization) {
-    const queryKey =
-      request.nextUrl.searchParams.get('key') ??
-      request.nextUrl.searchParams.get('api_key');
-    if (queryKey) {
-      authorization = `Bearer ${queryKey.trim()}`;
-    }
+  if (
+    request.nextUrl.searchParams.has('key') ||
+    request.nextUrl.searchParams.has('api_key')
+  ) {
+    return new NextResponse(
+      JSON.stringify({
+        error: 'unauthorized',
+        error_description: 'API keys must be sent in the Authorization header.',
+      }),
+      {
+        status: 401,
+        headers: {
+          ...CORS_HEADERS,
+          'Content-Type': 'application/json',
+          'WWW-Authenticate': WWW_AUTHENTICATE,
+        },
+      }
+    );
   }
+
+  const authorization = request.headers.get('authorization');
 
   // Return 401 immediately for requests with no bearer token so MCP clients
   // can begin OAuth discovery without forwarding an empty request upstream.
