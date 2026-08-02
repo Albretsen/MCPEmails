@@ -1542,8 +1542,8 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
           </div>
         </div>
 
-        <div className="modal-body">
-          <div style={{ marginBottom: 16 }}>
+        <div className="modal-body inbox-detail-body">
+          <div className="inbox-detail-summary">
             <Row label={t('inboxes.detail.connectionStatus')}>{statusBadge}</Row>
             <Row label={t('inboxes.colProvider')}>{PROVIDER_LABELS[inbox.provider] ?? inbox.provider}</Row>
             <Row label={t('inboxes.detail.authMethod')}>
@@ -1573,13 +1573,15 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
             </div>
           )}
 
-          {/* Per-inbox signature editor (Phase 3). Hidden for inboxes pending
-              first connection, where there is no useful signature target yet. */}
           {onSaveSignature && inbox.status !== 'pending' && (
-            <div style={{ paddingTop: 4, marginBottom: 16, borderTop: '1px solid var(--border-1)' }}>
-              <div style={{ height: 12 }} />
+            <details className="inbox-sending-details">
+              <summary>
+                <span>Signature &amp; sending</span>
+                <span>{inbox.sendApprovalRequired ? 'Approval required' : 'Approval optional'}</span>
+              </summary>
+              <p>Set the signature and decide whether MCP-sent messages must wait for a workspace approver.</p>
               <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} />
-            </div>
+            </details>
           )}
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
