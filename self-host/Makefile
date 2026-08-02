@@ -21,7 +21,11 @@ help:
 
 setup: ## Generate .env with fresh secrets (refuses to overwrite an existing one)
 	@if [ -f .env ]; then echo ".env already exists, delete it first to regenerate (this rotates ENCRYPTION_KEY and breaks stored creds)."; exit 1; fi
-	@docker run --rm -v "$(PWD)/cli:/cli:ro" $(DENO_IMG) run --allow-net --allow-env /cli/mcpe.ts gen-secrets > .env
+	@tmp_file=$$(mktemp .env.XXXXXX); \
+	trap 'rm -f "$$tmp_file"' EXIT; \
+	docker run --rm -v "$(PWD)/cli:/cli:ro" $(DENO_IMG) run --allow-net --allow-env /cli/mcpe.ts gen-secrets > "$$tmp_file"; \
+	test -s "$$tmp_file"; \
+	mv "$$tmp_file" .env
 	@echo "✓ wrote .env  (review it; keep it private)"
 
 build: ## Build the server image
