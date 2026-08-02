@@ -3512,6 +3512,8 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "a destination_folder_id, leaving the original in place; IMAP/Outlook/Fastmail " +
       "only), 'flag' (set read/unread/flagged via `flag_action` on message_ids), " +
       "'archive', or 'search_and_move' (apply to all messages matching a search). " +
+      "For flag or archive, search first with email_read action 'search', then pass " +
+      "the returned message ID; search filters are only valid with search_and_move. " +
       "Requires the manage:folders scope. " +
       "To delete messages, use the email_delete tool.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
@@ -3631,11 +3633,13 @@ const CONSOLIDATED_BY_NAME = CONSOLIDATED_SPECS;
 
 /**
  * Build a consolidated tool's input schema by merging the input schemas of its
- * actions' legacy tools. A required `action` enum selects the operation; every
- * other property is optional at the schema level (which params are required
- * depends on the action — the legacy handlers still enforce their own). The
- * first action to contribute a property wins (shared props like inbox_id are
- * identical across tools), except keys listed in an action's `renames`.
+ * actions' legacy tools. A required `action` enum selects the operation. The
+ * action-specific `allOf` rules make the selected action's required fields and
+ * accepted properties explicit; without them, fields from one action (for
+ * example the search fields of `search_and_move`) misleadingly appear usable
+ * with another action (such as `flag`). The first action to contribute a
+ * property wins (shared props like inbox_id are identical across tools), except
+ * keys listed in an action's `renames`.
  */
 function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefinition {
   const properties: Record<string, unknown> = {
@@ -3646,6 +3650,8 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
         "Which operation to perform. Determines which other arguments are used.",
     },
   };
+  const actionProperties = new Map<string, Set<string>>();
+  const actionRequired = new Map<string, string[]>();
   let requiredScope = "";
   const altScopeSet = new Set<string>();
   for (const [actionName, action] of Object.entries(spec.actions)) {
@@ -3657,15 +3663,40 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
     if (!legacy) continue;
     const legacyProps =
       (legacy.inputSchema.properties as Record<string, unknown>) ?? {};
+    const allowedProperties = new Set<string>(["action"]);
     for (const [propKey, propVal] of Object.entries(legacyProps)) {
       const exposedKey = action.renames?.[propKey] ?? propKey;
       if (exposedKey === "action") continue; // never shadow the selector
+      allowedProperties.add(exposedKey);
       if (!(exposedKey in properties)) properties[exposedKey] = propVal;
     }
+    actionProperties.set(actionName, allowedProperties);
+    const legacyRequired = Array.isArray(legacy.inputSchema.required)
+      ? legacy.inputSchema.required.filter((key): key is string => typeof key === "string")
+      : [];
+    actionRequired.set(
+      actionName,
+      legacyRequired.map((key) => action.renames?.[key] ?? key),
+    );
     void actionName;
   }
   // requiredScope must not also appear in altScopes.
   altScopeSet.delete(requiredScope);
+  const allPropertyNames = Object.keys(properties);
+  const actionRules = Object.keys(spec.actions).map((actionName) => {
+    const allowed = actionProperties.get(actionName) ?? new Set(["action"]);
+    const disallowed = allPropertyNames.filter((property) => !allowed.has(property));
+    const then: Record<string, unknown> = {};
+    const required = actionRequired.get(actionName) ?? [];
+    if (required.length > 0) then.required = required;
+    if (disallowed.length > 0) {
+      then.not = { anyOf: disallowed.map((property) => ({ required: [property] })) };
+    }
+    return {
+      if: { properties: { action: { const: actionName } }, required: ["action"] },
+      then,
+    };
+  });
 
   return {
     name,
@@ -3678,6 +3709,7 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
       properties,
       required: ["action"],
       additionalProperties: false,
+      allOf: actionRules,
     },
     annotations: {
       title: spec.title,
