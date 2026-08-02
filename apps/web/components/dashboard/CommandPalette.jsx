@@ -17,6 +17,7 @@ const PAGES = [
   { id: 'keys',     labelKey: 'commandPalette.pageKeys',     icon: 'key',      keywords: 'tokens secrets credentials mcp' },
   { id: 'members',  labelKey: 'commandPalette.pageMembers',  icon: 'users',    keywords: 'team people users invite workspace' },
   { id: 'usage',    labelKey: 'commandPalette.pageUsage',    icon: 'zap',      keywords: 'billing calls quota limits metrics' },
+  { id: 'approvals', labelKey: 'commandPalette.pageApprovals', icon: 'shield', keywords: 'approve reject review pending sends outgoing email' },
   { id: 'settings', labelKey: 'commandPalette.pageSettings', icon: 'settings', keywords: 'account profile password preferences' },
   { id: 'security', labelKey: 'commandPalette.pageSecurity', icon: 'shield',   keywords: 'audit log sessions devices' },
 ];
@@ -50,7 +51,7 @@ export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [
     const q = query.trim();
 
     const pageItems = PAGES
-      .map(p => ({ ...p, label: tr(p.labelKey) }))
+      .map(p => ({ ...p, label: p.labelKey ? tr(p.labelKey) : p.label }))
       .filter(p => matches(q, p.label, p.keywords))
       .map(p => ({ key: `page:${p.id}`, label: p.label, icon: p.icon, sub: tr('commandPalette.groupTitlePage'), run: () => setRoute(p.id) }));
 
