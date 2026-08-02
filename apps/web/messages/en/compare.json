@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Native AI Connectors vs. MCP Email: Which One Wins?",
-    "description": "Built-in AI connectors cover one or two providers and mostly just draft. MCP email adds real send, schedule, and organize actions, in one setup for every AI client."
+    "title": "AI Email Connectors vs MCP Server — Compare Capabilities",
+    "description": "Compare native AI email connectors with an MCP email server: provider coverage, portable AI-client access, and real read, send, schedule, and organize actions."
   },
   "hero": {
     "eyebrow": "Native connectors vs MCP",
@@ -87,8 +87,12 @@
   "links": {
     "compare": "Compare",
     "connectHeading": "Connect",
+    "connectGmail": "Connect Gmail",
     "connectFastmail": "Connect Fastmail",
     "connectIcloud": "Connect iCloud",
+    "connectYahoo": "Connect Yahoo",
+    "connectZoho": "Connect Zoho",
+    "connectYandex": "Connect Yandex",
     "vsNative": "vs native connectors"
   }
 }

@@ -67,7 +67,7 @@ html[data-theme="dark"] .price.featured::before { color: #fff; background: var(-
 /* Theme toggle button (top-right floating) */
 .theme-toggle {
   position: fixed; top: 16px; right: 16px; z-index: 60;
-  width: 36px; height: 36px; border-radius: 999px;
+  width: 44px; height: 44px; border-radius: 999px;
   background: var(--bg-surface); border: 1px solid var(--border-1);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--fg-2);

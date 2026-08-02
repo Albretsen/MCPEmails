@@ -7,6 +7,7 @@ import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-li
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { captureError } from '@/lib/errors/capture';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import {
   IMAP_PRESETS,
   isBrandedImapService,
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
+  const db = createServiceRoleClient();
 
   // 3. Parse and validate the request body.
   let service: string;
@@ -117,6 +119,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
+      await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: 'plan_limit' });
       const capLabel = inboxLimit.maxInboxes === 1 ? '1 inbox' : `${inboxLimit.maxInboxes} inboxes`;
       return NextResponse.json(
         {
@@ -144,6 +147,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!validation.ok) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed' });
     // AUTH_FAILED means the mail server rejected the credentials (wrong app
     // password / account-level auth issue). Surface a structured error_code so
     // the client can distinguish a credential rejection from other 422 causes
@@ -174,13 +178,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //    an existing mailbox. Runs AFTER validation (so we only block real
   //    credentials) and BEFORE the upsert. Uses the service-role `db` (created
   //    here, also reused for the upsert) so the read sees every workspace row.
-  const db = createServiceRoleClient();
   const conflict = await findConflictingInbox(db, workspaceId, {
     host: imapHost,
     effectiveLogin: loginUsername || email,
     email,
   });
   if (conflict.conflict) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: 'conflict' });
     return NextResponse.json(
       {
         error: `This mailbox login is already connected as ${conflict.address}. ` +
@@ -234,6 +238,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   );
 
   if (upsertError) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: 'persistence_failed' });
     console.error('[app-password] Upsert failed:', upsertError.message);
     await captureError(new Error(upsertError.message), {
       severity: 'high',
@@ -245,5 +250,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to save inbox. Please try again.' }, { status: 500 });
   }
 
+  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: funnelProvider(service) });
   return NextResponse.json({ success: true });
+}
+
+function funnelProvider(service: string): 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'unknown' {
+  return service === 'icloud' || service === 'yahoo' || service === 'zoho' || service === 'yandex' ? service : 'unknown';
 }

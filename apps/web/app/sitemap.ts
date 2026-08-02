@@ -12,35 +12,35 @@ import { getAllPosts } from '@/lib/blog/posts';
  */
 const MARKETING_PAGES: {
   path: string;
+  /** Date of the last substantive content change — never use generation time. */
+  lastModified: string;
   changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
   priority: number;
 }[] = [
-  { path: '', changeFrequency: 'weekly', priority: 1.0 },
-  { path: '/pricing', changeFrequency: 'monthly', priority: 0.9 },
-  { path: '/docs', changeFrequency: 'weekly', priority: 0.8 },
-  { path: '/docs/providers', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/native-connectors-vs-mcp', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/self-hosting', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/security', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/for/founders', changeFrequency: 'monthly', priority: 0.8 },
-  { path: '/connect/gmail', changeFrequency: 'monthly', priority: 0.8 },
-  { path: '/connect/fastmail', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/connect/icloud', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/connect/yahoo', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/connect/zoho', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/connect/yandex', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/blog', changeFrequency: 'weekly', priority: 0.7 },
-  { path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
-  { path: '/terms', changeFrequency: 'yearly', priority: 0.3 },
+  { path: '', lastModified: '2026-07-28', changeFrequency: 'weekly', priority: 1.0 },
+  { path: '/pricing', lastModified: '2026-07-30', changeFrequency: 'monthly', priority: 0.9 },
+  { path: '/docs', lastModified: '2026-08-02', changeFrequency: 'weekly', priority: 0.8 },
+  { path: '/docs/providers', lastModified: '2026-08-02', changeFrequency: 'monthly', priority: 0.6 },
+  { path: '/native-connectors-vs-mcp', lastModified: '2026-06-23', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/self-hosting', lastModified: '2026-07-09', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/security', lastModified: '2026-07-28', changeFrequency: 'monthly', priority: 0.6 },
+  { path: '/for/founders', lastModified: '2026-06-23', changeFrequency: 'monthly', priority: 0.8 },
+  { path: '/connect/gmail', lastModified: '2026-06-23', changeFrequency: 'monthly', priority: 0.8 },
+  { path: '/connect/fastmail', lastModified: '2026-06-23', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/connect/icloud', lastModified: '2026-06-23', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/connect/yahoo', lastModified: '2026-06-23', changeFrequency: 'monthly', priority: 0.6 },
+  { path: '/connect/zoho', lastModified: '2026-06-23', changeFrequency: 'monthly', priority: 0.6 },
+  { path: '/connect/yandex', lastModified: '2026-06-23', changeFrequency: 'monthly', priority: 0.6 },
+  { path: '/blog', lastModified: '2026-08-02', changeFrequency: 'weekly', priority: 0.7 },
+  { path: '/privacy', lastModified: '2026-07-28', changeFrequency: 'yearly', priority: 0.3 },
+  { path: '/terms', lastModified: '2026-07-28', changeFrequency: 'yearly', priority: 0.3 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
   const staticEntries: MetadataRoute.Sitemap = MARKETING_PAGES.map(
-    ({ path, changeFrequency, priority }) => ({
+    ({ path, lastModified, changeFrequency, priority }) => ({
       url: localePath('en', path),
-      lastModified: now,
+      lastModified: new Date(`${lastModified}T00:00:00.000Z`),
       changeFrequency,
       priority,
       alternates: { languages: languageAlternates(path) },

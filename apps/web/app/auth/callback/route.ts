@@ -19,6 +19,8 @@ export async function GET(request: Request) {
   const code = searchParams.get('code');
   // `next` lets the middleware preserve the originally-requested URL.
   const next = searchParams.get('next') ?? '/dashboard';
+  const acquisition = searchParams.get('acq');
+  const landing = searchParams.get('landing');
 
   if (!code) {
     // No code means the link was malformed or already used.
@@ -34,6 +36,20 @@ export async function GET(request: Request) {
     return NextResponse.redirect(
       `${origin}/auth/error?reason=${encodeURIComponent(error.message)}`
     );
+  }
+
+  const SOURCES = new Set(['direct', 'organic_google', 'reddit', 'github', 'smithery', 'glama', 'cursor', 'other']);
+  const LANDINGS = new Set(['home', 'blog', 'provider', 'docs', 'pricing', 'other']);
+  if (acquisition && landing && SOURCES.has(acquisition) && LANDINGS.has(landing)) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      // First-touch only: never overwrite a previously attributed workspace.
+      await supabase
+        .from('workspaces')
+        .update({ acquisition_source: acquisition, acquisition_landing: landing })
+        .eq('owner_id', user.id)
+        .is('acquisition_source', null);
+    }
   }
 
   // Session cookies are now written. Redirect to the dashboard (or the

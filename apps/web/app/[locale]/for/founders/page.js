@@ -43,31 +43,12 @@ export default async function FoundersPage({ params }) {
     description: t.has('meta.description') ? t('meta.description') : '',
   });
 
-  // FAQPage structured data, built from the same forFounders.faq.items rendered
-  // on the page so the schema matches visible content (FAQ rich-result rule).
-  const faqItems = Array.isArray(t.raw('faq.items')) ? t.raw('faq.items') : [];
-  const faqLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqItems.map((item) => ({
-      '@type': 'Question',
-      name: item.q,
-      acceptedAnswer: { '@type': 'Answer', text: item.a },
-    })),
-  };
-
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {faqLd.mainEntity.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
-        />
-      )}
       <FoundersClient />
     </>
   );

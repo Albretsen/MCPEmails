@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Security & Trust",
-    "description": "How MCPEmails protects your email: fetched live and never stored, credentials encrypted at rest, scoped and revocable access, and public code you can read or self-host."
+    "title": "AI Email Agent Security — OAuth, Encryption & Privacy",
+    "description": "Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code."
   },
   "hero": {
     "eyebrow": "Security & trust",

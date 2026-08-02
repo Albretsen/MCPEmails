@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Connect Gmail, iCloud & IMAP to Claude",
-    "description": "Give Claude, Cursor, or any MCP client real access to your inbox: read, send, search, and organize email in Gmail, Fastmail, iCloud, and IMAP. Outlook is in progress. Free, nothing stored."
+    "title": "AI Email MCP Server — Connect Gmail & IMAP to Claude",
+    "description": "Connect Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, send, search, and organize mail live. Outlook support is in progress."
   },
   "nav": {
     "features": "Features",
@@ -228,7 +228,8 @@
     "copied": "Copied",
     "copyAria": "Copy {label}",
     "linkSecurity": "Security",
-    "linkSelfHost": "Self-hosting"
+    "linkSelfHost": "Self-hosting",
+    "linkFounders": "For founders"
   },
   "languageSwitcher": {
     "label": "Language",

@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
-import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd } from '@/i18n/seo';
 import PricingClient from '../../../components/marketing/PricingClient';
 
 export async function generateMetadata({ params }) {
@@ -36,29 +36,20 @@ export default async function PricingPage({ params }) {
   setRequestLocale(locale);
   const stripePrices = await fetchStripePrices();
 
-  // FAQPage structured data — built from the same FAQ copy that's rendered
-  // visibly below, so the schema matches on-page content (a requirement for
-  // FAQ rich results and for AI assistants quoting the answers).
   const t = await getTranslations({ locale, namespace: 'pricing' });
-  const faqItems = Array.isArray(t.raw('faq.items')) ? t.raw('faq.items') : [];
-  const faqLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqItems.map((item) => ({
-      '@type': 'Question',
-      name: item.q,
-      acceptedAnswer: { '@type': 'Answer', text: item.a },
-    })),
-  };
+  const title = t.has('meta.title') ? t('meta.title') : 'Pricing';
+  const description = t.has('meta.description')
+    ? t('meta.description')
+    : 'Simple, transparent pricing for AI agents that read and send email. Free plan available. No card required.';
+  const jsonLd = pageJsonLd(locale, {
+    path: '/pricing',
+    title,
+    description,
+  });
 
   return (
     <>
-      {faqLd.mainEntity.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
-        />
-      )}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <PricingClient stripePrices={stripePrices} />
     </>
   );

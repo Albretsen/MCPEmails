@@ -1,7 +1,7 @@
 {
   "gmail": {
     "meta": {
-      "title": "Connect Gmail to Claude (and any AI)",
+      "title": "Connect Gmail to Claude, Cursor & MCP Clients",
       "description": "Connect Gmail to Claude, Cursor, ChatGPT and any MCP client in one click with Google OAuth. Let AI read, send, schedule and organize your Gmail — inboxes and tool calls free."
     },
     "hero": {
@@ -54,7 +54,7 @@
   },
   "fastmail": {
     "meta": {
-      "title": "Connect Fastmail to Claude (and any AI)",
+      "title": "Connect Fastmail to Claude, Cursor & MCP Clients",
       "description": "Connect Fastmail to Claude, Cursor, ChatGPT and any MCP client with an app password. Let AI read, send, schedule and organize your Fastmail — inboxes and tool calls free."
     },
     "hero": {
@@ -104,7 +104,7 @@
   },
   "icloud": {
     "meta": {
-      "title": "Connect iCloud Mail to Claude (and any AI)",
+      "title": "Connect iCloud Mail to Claude, Cursor & MCP Clients",
       "description": "Connect iCloud Mail to Claude, Cursor, ChatGPT and any MCP client with an Apple app-specific password. Let AI read, send, schedule and organize your iCloud email — free."
     },
     "hero": {
@@ -154,7 +154,7 @@
   },
   "yahoo": {
     "meta": {
-      "title": "Connect Yahoo Mail to Claude (and any AI)",
+      "title": "Connect Yahoo Mail to Claude, Cursor & MCP Clients",
       "description": "Connect Yahoo Mail to Claude, Cursor, ChatGPT and any MCP client with an app password. Let AI read, send, schedule and organize your Yahoo Mail. Inboxes and tool calls are free."
     },
     "hero": {
@@ -204,7 +204,7 @@
   },
   "zoho": {
     "meta": {
-      "title": "Connect Zoho Mail to Claude (and any AI)",
+      "title": "Connect Zoho Mail to Claude, Cursor & MCP Clients",
       "description": "Connect Zoho Mail to Claude, Cursor, ChatGPT and any MCP client over IMAP with an app password. Let AI read, send, schedule and organize your Zoho Mail. Inboxes and tool calls are free."
     },
     "hero": {
@@ -254,7 +254,7 @@
   },
   "yandex": {
     "meta": {
-      "title": "Connect Yandex Mail to Claude (and any AI)",
+      "title": "Connect Yandex Mail to Claude, Cursor & MCP Clients",
       "description": "Connect Yandex Mail to Claude, Cursor, ChatGPT and any MCP client over IMAP with an app password. Let AI read, send, schedule and organize your Yandex Mail. Inboxes and tool calls are free."
     },
     "hero": {

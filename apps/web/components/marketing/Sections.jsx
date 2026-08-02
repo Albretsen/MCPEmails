@@ -526,7 +526,7 @@ export function DashboardPreview() {
                     <span style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--mint-500)', flexShrink: 0 }} />
                     <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--cobalt-700)' }}>{a.tool}()</code>
                     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>· {a.inbox}</span>
-                    <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-4, var(--fg-3))' }}>{a.time}</span>
+                    <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-3)' }}>{a.time}</span>
                   </div>
                 ))}
               </div>
@@ -555,7 +555,7 @@ export function HowItWorks() {
           {[0, 1, 2].map((i) => (
             <div className="step" key={i}>
               <span className="num">{String(i + 1).padStart(2, '0')}</span>
-              <h4>{t(`howItWorks.steps.${i}.h`)}</h4>
+              <h3>{t(`howItWorks.steps.${i}.h`)}</h3>
               <p>{t.rich(`howItWorks.steps.${i}.p`, RICH)}</p>
             </div>
           ))}
@@ -697,7 +697,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
             return (
               <div className={"price" + (tier.accent ? " featured" : "")} key={tier.msgKey}>
                 <div>
-                  <h4>{t(`pricing.tiers.${tier.msgKey}.name`)}</h4>
+                  <h3>{t(`pricing.tiers.${tier.msgKey}.name`)}</h3>
                   <div className="num">
                     {livePrice}
                     {tier.per && <small> {tier.per}</small>}
@@ -865,15 +865,16 @@ export function Footer() {
             <LanguageSwitcher />
           </div>
           <div>
-            <h5>{t('footer.productHeading')}</h5>
+            <p className="footer-heading">{t('footer.productHeading')}</p>
             <Link href="/#features">{t('footer.linkFeatures')}</Link>
             <Link href="/#how">{t('footer.linkHow')}</Link>
             <Link href="/#pricing">{t('footer.linkPricing')}</Link>
             <Link href="/docs">{t('footer.linkDocs')}</Link>
             <Link href="/self-hosting">{t('footer.linkSelfHost')}</Link>
+            <Link href="/for/founders">{t('footer.linkFounders')}</Link>
           </div>
           <div>
-            <h5>{t('footer.resourcesHeading')}</h5>
+            <p className="footer-heading">{t('footer.resourcesHeading')}</p>
             <Link href="/docs#tools">{t('footer.linkToolReference')}</Link>
             <Link href="/docs#quickstart">{t('footer.linkQuickstart')}</Link>
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
@@ -881,13 +882,17 @@ export function Footer() {
             <Link href="/blog">Blog</Link>
           </div>
           <div>
-            <h5>{tc('links.connectHeading')}</h5>
+            <p className="footer-heading">{tc('links.connectHeading')}</p>
+            <Link href="/connect/gmail">{tc('links.connectGmail')}</Link>
             <Link href="/connect/fastmail">{tc('links.connectFastmail')}</Link>
             <Link href="/connect/icloud">{tc('links.connectIcloud')}</Link>
+            <Link href="/connect/yahoo">{tc('links.connectYahoo')}</Link>
+            <Link href="/connect/zoho">{tc('links.connectZoho')}</Link>
+            <Link href="/connect/yandex">{tc('links.connectYandex')}</Link>
             <Link href="/native-connectors-vs-mcp">{tc('links.vsNative')}</Link>
           </div>
           <div>
-            <h5>{t('footer.companyHeading')}</h5>
+            <p className="footer-heading">{t('footer.companyHeading')}</p>
             <Link href="/security">{t('footer.linkSecurity')}</Link>
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>

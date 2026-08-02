@@ -85,7 +85,7 @@ export function SocialButton({ icon, label, loading, onClick, disabled }) {
       disabled={disabled}
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 10, width: '100%', padding: '10px 16px',
+        gap: 10, width: '100%', minHeight: 44, padding: '10px 16px',
         border: '1px solid rgba(0,0,0,0.15)', borderRadius: 8,
         background: 'transparent',
         cursor: disabled ? 'not-allowed' : 'pointer',

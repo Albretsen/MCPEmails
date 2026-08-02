@@ -40,15 +40,17 @@ export default function HomeClient({ stripePrices }) {
   return (
     <div data-screen-label="Marketing / Home">
       <Nav onSignIn={onSignIn} onGetStarted={onGetStarted} />
-      <Hero variant={t.heroVariant} onGetStarted={onGetStarted} />
-      <Trusted />
-      <Features />
-      <DashboardPreview />
-      <HowItWorks />
-      <Examples />
-      <Quote />
-      <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} />
-      <Faq />
+      <main>
+        <Hero variant={t.heroVariant} onGetStarted={onGetStarted} />
+        <Trusted />
+        <Features />
+        <DashboardPreview />
+        <HowItWorks />
+        <Examples />
+        <Quote />
+        <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} />
+        <Faq />
+      </main>
       <Footer />
 
       <TweaksPanel>

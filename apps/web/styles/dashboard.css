@@ -206,6 +206,15 @@ body { background: var(--bg-page); }
 .tbl .mono { font-family: var(--font-mono); font-size: 13px; color: var(--fg-2); }
 .tbl .right { text-align: right; }
 
+/* API keys are unspaced credentials. Keep their column readable on mobile;
+   the enclosing .tbl-wrap provides horizontal scrolling when necessary. */
+.tbl-api-keys { min-width: 980px; }
+.tbl-api-keys td:nth-child(2) .mono {
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
 /* === Buttons (re-used) === */
 .btn { font-family: var(--font-sans); font-weight: 500; font-size: 13.5px; line-height: 1;
   border-radius: 8px; padding: 0 14px; height: 34px; display: inline-flex;
@@ -553,12 +562,12 @@ body { background: var(--bg-page); }
 }
 
 .input-with-toggle .form-input {
-  padding-right: 40px;
+  padding-right: 48px;
 }
 
 .toggle-visibility {
   position: absolute;
-  right: 10px;
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -566,6 +575,8 @@ body { background: var(--bg-page); }
   cursor: pointer;
   color: var(--fg-3);
   padding: 0;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   transition: color var(--dur-1) var(--ease-out);
@@ -987,6 +998,22 @@ select.input {
   gap: 14px;
 }
 
+/* Usage has three summary metrics on wide screens; narrower layouts reduce
+   the column count below with the rest of the mobile stat-grid rules. */
+.usage-stat-grid { grid-template-columns: repeat(3, 1fr); }
+
+/* Native language labels stay legible by wrapping within the card on narrow
+   screens instead of widening the mobile viewport. */
+.language-selector {
+  display: flex;
+  gap: 0;
+  align-self: flex-start;
+  border-radius: 8px;
+  border: 1px solid var(--border-1);
+  overflow: hidden;
+  width: fit-content;
+}
+
 /* === Hamburger / menu button (hidden on desktop) ======================== */
 .menu-btn {
   display: none; /* shown only on mobile via media query below */
@@ -1108,6 +1135,9 @@ select.input {
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .usage-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
   /* Overview grid: stack vertically */
   .overview-grid {
@@ -1133,6 +1163,14 @@ select.input {
   /* Stat grid: single column on very small screens */
   .stat-grid {
     grid-template-columns: 1fr;
+  }
+  .usage-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .language-selector {
+    flex-wrap: wrap;
+    width: 100%;
   }
 
   /* Reduce card body padding */

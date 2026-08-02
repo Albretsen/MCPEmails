@@ -13,7 +13,7 @@
 - [How it works](#how-it-works)
 - [Quick start (connecting an agent)](#quick-start-connecting-an-agent)
 - [Capabilities](#capabilities)
-- [MCP tools](#mcp-tools)
+- [Tools](#tools)
 - [OAuth scopes](#oauth-scopes)
 - [Supported providers](#supported-providers)
 - [Pricing](#pricing)
@@ -72,7 +72,7 @@ The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport
 - **Provider‑agnostic search** — Gmail syntax, IMAP `SEARCH`, and JMAP are normalized behind one `email_read` (`action: "search"`) interface.
 - **Team‑ready** — workspaces, members, roles, SSO, and an audit log on the Team plan.
 
-## MCP tools
+## Tools
 
 10 tools. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
 
@@ -219,6 +219,7 @@ Copy [`.env.example`](.env.example) and fill in real values. Required in every e
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase client (public) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server‑side admin key (bypasses RLS) — **secret** |
 | `NEXT_PUBLIC_APP_URL` | Canonical base URL; drives OAuth redirect URIs |
+| `GOOGLE_SITE_VERIFICATION` *(optional)* | Google Search Console HTML-tag verification token; set only in production |
 | `ENCRYPTION_KEY` | 64‑hex AES‑256‑GCM key for credentials at rest — **secret** |
 | `CSRF_SECRET` | 64‑hex HMAC key for CSRF tokens (distinct from above) — **secret** |
 

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Docs",
-    "description": "Get started with MCPEmails in minutes. Quick-start guide, tool reference, and example responses for Gmail and IMAP agents."
+    "title": "MCP Email Server Documentation — Gmail, IMAP & OAuth",
+    "description": "Set up mcpemails with Gmail or IMAP, connect Claude and other MCP clients with OAuth or an API key, and use the complete email tool reference."
   },
   "hero": {
     "eyebrow": "Documentation",
@@ -322,8 +322,8 @@
   },
   "providers": {
     "meta": {
-      "title": "Provider Support",
-      "description": "See which email providers MCPEmails supports and which features are available per provider: Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP."
+      "title": "Supported Email Providers for MCP — Gmail, iCloud & IMAP",
+      "description": "See mcpemails support and capabilities for Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, and generic IMAP/SMTP inboxes."
     },
     "labels": {
       "generic": "Generic IMAP"

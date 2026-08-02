@@ -87,8 +87,12 @@
   "links": {
     "compare": "对比",
     "connectHeading": "连接",
+    "connectGmail": "连接 Gmail",
     "connectFastmail": "连接 Fastmail",
     "connectIcloud": "连接 iCloud",
+    "connectYahoo": "连接 Yahoo",
+    "connectZoho": "连接 Zoho",
+    "connectYandex": "连接 Yandex",
     "vsNative": "对比原生连接器"
   }
 }

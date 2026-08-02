@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Self-host MCP Emails",
-    "description": "Run the same MCP email server that powers mcpemails.com on your own machine. Open source under AGPL-3.0, credentials encrypted with a key only you hold, email fetched live and never stored."
+    "title": "Self-Host an Open-Source Email MCP Server",
+    "description": "Run the open-source mcpemails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content."
   },
   "hero": {
     "eyebrow": "Open source, AGPL-3.0",

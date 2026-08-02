@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { createClient } from '@/lib/supabase/client';
+import { readAcquisitionContext } from '../analytics/AcquisitionCapture';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
@@ -74,6 +75,9 @@ export function SignupApp() {
     const redirect = getSafeRedirect() ?? '/dashboard?firstrun=1';
     const destination = new URL(redirect, window.location.origin);
     destination.searchParams.set('signup_method', provider);
+    const acquisition = readAcquisitionContext();
+    destination.searchParams.set('acq', acquisition.source);
+    destination.searchParams.set('landing', acquisition.landing);
     url.searchParams.set('next', `${destination.pathname}${destination.search}`);
     return url.toString();
   }
@@ -115,10 +119,17 @@ export function SignupApp() {
     trackProductEvent('signup_started', { method: 'password' });
 
     const supabase = createClient();
+    const acquisition = readAcquisitionContext();
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: buildCallbackUrl() },
+      options: {
+        emailRedirectTo: buildCallbackUrl(),
+        data: {
+          acquisition_source: acquisition.source,
+          acquisition_landing: acquisition.landing,
+        },
+      },
     });
 
     if (error) {

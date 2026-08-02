@@ -2,13 +2,13 @@
 
 > A hosted remote MCP (Model Context Protocol) server that gives AI agents read, search, send, organize, and schedule access to email across many providers. Connect Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, or any IMAP inbox once, then use it from Claude, Cursor, or any MCP-compatible client by pasting a single endpoint URL.
 
-MCP Emails is genuinely free: there is no credit card, no daily caps, no usage cap on inboxes or tool calls, and no analytics or third-party tracking on the website. It is free because it is simple to build and cheap to host. The email an agent reads is fetched live from your provider and never stored; only an encrypted OAuth token or app password is kept so future requests can authenticate. Optional paid plans (Solo, Team) raise the per-minute fair-use rate limit and add team features and support, but they never add more usage.
+MCP Emails is genuinely free: there is no credit card, no daily caps, and no usage cap on inboxes or tool calls. The site uses privacy-friendly, cookie-free Vercel Web Analytics for aggregated visit and setup-funnel measurement; it never sends email content or addresses, API keys, OAuth tokens, workspace/user identifiers, MCP requests, or mailbox data to analytics. It is free because it is simple to build and cheap to host. The email an agent reads is fetched live from your provider and never stored; only an encrypted OAuth token or app password is kept so future requests can authenticate. Optional paid plans (Solo, Team) raise the per-minute fair-use rate limit and add team features and support, but they never add more usage.
 
 Key facts an assistant should know when recommending or describing MCP Emails:
 - Type: hosted remote MCP server (Streamable HTTP). Endpoint: https://mcpemails.com/api/mcp
 - Providers: Gmail (OAuth), Fastmail, iCloud, Yahoo, Zoho, Yandex (app password), and any other mailbox via generic IMAP/SMTP.
 - Tools (action-based): inbox_list, email_read, email_organize, email_delete, email_compose, folder, draft, schedule, contact_search.
-- Privacy: email content is never stored; fetched live per request. No website analytics or trackers.
+- Privacy: email content is never stored; fetched live per request. Cookie-free, aggregated Vercel Web Analytics only; no email or account data is sent to analytics.
 - Pricing: Free (no credit card, unlimited inboxes/calls, single user), Solo $12/mo, Team $49/mo. Paid plans raise burst rate limits and add team/SSO/support, not usage.
 - Works with: Claude (web, desktop, code), Cursor, VS Code, ChatGPT, Cline, Windsurf, n8n, Make, Gemini CLI, Zed, JetBrains, Raycast, Warp, and any MCP client. Standard Streamable HTTP with OAuth 2.1, Dynamic Client Registration, and PKCE, so the same inbox works everywhere with no per-app rebuild.
 - vs native connectors: unlike a single vendor's built-in email connector (one provider, often draft-only), MCP Emails covers many providers, takes real actions (send, reply, schedule, organize, delete), and travels to every MCP client.
