@@ -180,10 +180,12 @@ ENCRYPTION_KEY=${randomHex(32)}
 # Secret guarding the POST /dispatch scheduled-send flush
 DISPATCH_SECRET=${randomHex(32)}
 
-# Public base URL of this server (used only for reconnect links in errors)
+# Public base URL of this server (used only for reconnect links in errors).
+# For the optional TLS proxy, set it to https://<your DNS name>.
 APP_URL=http://localhost:8787
 
-# Host port the MCP server listens on -> http://localhost:<MCP_PORT>
+# Host port the MCP server listens on -> http://localhost:<MCP_PORT>.
+# It binds to 127.0.0.1 only and is not exposed to the LAN/internet.
 MCP_PORT=8787
 `;
   // Print to stdout so the caller can inspect or redirect (`> .env`).

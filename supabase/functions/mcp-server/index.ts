@@ -412,46 +412,48 @@ async function authenticateRequest(
   requestId: string | number | null,
 ): Promise<{ apiKey: ApiKeyRow } | Response> {
   // ── Extract the API key ───────────────────────────────────────────────────
-  // Two equally-valid sources, in priority order:
-  //   1. Authorization: Bearer <key>  — used by OAuth access tokens and curl.
-  //   2. ?key=<key> (or ?api_key=)    — lets users paste a single URL into an
-  //                                      MCP client instead of setting a header.
-  // The header wins when both are present.
-  const authHeader = req.headers.get("Authorization");
-  let bearerToken: string;
-
-  if (authHeader) {
-    // Malformed scheme → HTTP 401.
-    if (!authHeader.startsWith("Bearer ")) {
-      return jsonResponse(
-        jsonRpcErrorBody(
-          requestId,
-          RPC_INVALID_API_KEY,
-          "Authorization header must use Bearer scheme.",
-          { hint: "Format: Authorization: Bearer mcpe_<64 hex characters>" },
-        ),
-        401,
-      );
-    }
-    bearerToken = authHeader.slice(7).trim();
-  } else {
-    const params = new URL(req.url).searchParams;
-    const queryKey = params.get("key") ?? params.get("api_key");
-
-    // No key from either source → HTTP 401.
-    if (!queryKey) {
-      return jsonResponse(
-        jsonRpcErrorBody(
-          requestId,
-          RPC_INVALID_API_KEY,
-          "API key is required. Provide it as 'Authorization: Bearer <api-key>' or '?key=<api-key>'.",
-          { hint: "Generate an API key at https://mcpemails.com/dashboard/keys" },
-        ),
-        401,
-      );
-    }
-    bearerToken = queryKey.trim();
+  // API keys and OAuth access tokens must be supplied in the Authorization
+  // header. Query-string credentials are deliberately rejected: URLs are
+  // commonly retained in browser history, logs, referrers, and monitoring.
+  const params = new URL(req.url).searchParams;
+  if (params.has("key") || params.has("api_key")) {
+    return jsonResponse(
+      jsonRpcErrorBody(
+        requestId,
+        RPC_INVALID_API_KEY,
+        "API keys must be supplied using the Authorization header.",
+        { hint: "Format: Authorization: Bearer mcpe_<64 hex characters>" },
+      ),
+      401,
+    );
   }
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return jsonResponse(
+      jsonRpcErrorBody(
+        requestId,
+        RPC_INVALID_API_KEY,
+        "API key is required. Provide it using the Authorization header.",
+        { hint: "Generate an API key at https://mcpemails.com/dashboard/keys" },
+      ),
+      401,
+    );
+  }
+
+  // Malformed scheme → HTTP 401.
+  if (!authHeader.startsWith("Bearer ")) {
+    return jsonResponse(
+      jsonRpcErrorBody(
+        requestId,
+        RPC_INVALID_API_KEY,
+        "Authorization header must use Bearer scheme.",
+        { hint: "Format: Authorization: Bearer mcpe_<64 hex characters>" },
+      ),
+      401,
+    );
+  }
+  const bearerToken = authHeader.slice(7).trim();
 
   // ── Token format check → HTTP 401 ────────────────────────────────────────
   // MCPEmails keys are always exactly 69 characters: "mcpe_" (5) + 64 hex chars.

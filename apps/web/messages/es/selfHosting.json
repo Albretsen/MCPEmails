@@ -53,7 +53,7 @@
       {
         "feature": "OAuth de un clic para Gmail / Outlook",
         "self": "No incluido",
-        "hosted": "Sí"
+        "hosted": "Gmail: sí; Outlook: pendiente de verificación"
       },
       {
         "feature": "Panel web (conexión, claves, actividad)",
@@ -99,7 +99,7 @@
   },
   "commitment": {
     "title": "Auto-alojar es un compromiso real.",
-    "body": "Tú te encargas de la configuración de IMAP/SMTP, las actualizaciones y la seguridad, y el soporte es solo comunitario. El OAuth de un clic para Gmail y Outlook y el panel web permanecen en el producto alojado, porque necesitan secretos de OAuth y una capa de sesión que una instalación de un solo operador no tiene. Si prefieres no gestionar infraestructura, el plan alojado toma dos minutos y es gratis para empezar.",
+    "body": "Tú te encargas de la configuración de IMAP/SMTP, las actualizaciones y la seguridad, y el soporte es solo comunitario. El OAuth de un clic para Gmail y el panel web permanecen en el producto alojado; el OAuth de Outlook está desarrollado, pero pendiente de la verificación del editor por Microsoft. Estas funciones necesitan secretos de OAuth y una capa de sesión que una instalación de un solo operador no tiene. Si prefieres no gestionar infraestructura, el plan alojado toma dos minutos y es gratis para empezar.",
     "cta": "Usa la versión alojada"
   },
   "cta": {

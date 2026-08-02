@@ -30,7 +30,7 @@
       { "feature": "IMAP / SMTP inboxes (app password)", "self": "Yes", "hosted": "Yes" },
       { "feature": "Email fetched live, never stored", "self": "Yes", "hosted": "Yes" },
       { "feature": "Credentials encrypted at rest", "self": "Yes, your key", "hosted": "Yes" },
-      { "feature": "Gmail / Outlook one-click OAuth", "self": "Not included", "hosted": "Yes" },
+      { "feature": "Gmail / Outlook one-click OAuth", "self": "Not included", "hosted": "Gmail: yes; Outlook: pending verification" },
       { "feature": "Web dashboard (connect, keys, activity)", "self": "CLI instead", "hosted": "Yes" },
       { "feature": "Scheduled-send dispatcher", "self": "Bring your own cron", "hosted": "Managed" },
       { "feature": "Automatic updates, backups, uptime", "self": "You", "hosted": "Managed" },
@@ -51,7 +51,7 @@
   },
   "commitment": {
     "title": "Self-hosting is a real commitment.",
-    "body": "You run the IMAP/SMTP configuration, updates, and security yourself, and support is community-only. Gmail and Outlook one-click OAuth and the web dashboard stay on the hosted product, because they need OAuth secrets and a session layer a single-operator install does not. If you would rather not run infrastructure, the hosted plan is two minutes and free to start.",
+    "body": "You run the IMAP/SMTP configuration, updates, and security yourself, and support is community-only. Gmail one-click OAuth and the web dashboard stay on the hosted product; Outlook OAuth is built but pending Microsoft publisher verification. These features need OAuth secrets and a session layer a single-operator install does not. If you would rather not run infrastructure, the hosted plan is two minutes and free to start.",
     "cta": "Use the hosted version"
   },
   "cta": {

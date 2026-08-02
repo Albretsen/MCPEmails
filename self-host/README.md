@@ -37,7 +37,9 @@ yourself and watching the network.
                                                                  └──────────────┘
 ```
 
-Four small containers, all on a private network. Only the MCP server is published to a host port.
+Four small containers, all on a private network. The MCP server is published only to
+`127.0.0.1` by default, so its bearer-token endpoint is not reachable from your LAN or the
+internet.
 
 | Service | Image | Role |
 | --- | --- | --- |
@@ -96,6 +98,30 @@ Start a session with `inbox_list`; the server exposes the same ten action-based 
 hosted product (`inbox_list`, `email_read`, `email_organize`, `email_delete`, `email_compose`,
 `folder`, `draft`, `schedule`, `signature`, `contact_search`).
 
+## Remote access (HTTPS only)
+
+The default endpoint is intentionally local-only. Do **not** make port `8787` public with a
+firewall rule, router port-forward, or a Compose port override: it carries bearer tokens over
+plain HTTP.
+
+To let a remote MCP client connect, use the included Caddy HTTPS proxy. Before starting it,
+create an `A`/`AAAA` DNS record for a hostname you control and point it at this host, then make
+ports 80 and 443 reachable from the internet. Caddy uses port 80 for ACME validation and redirects
+all HTTP traffic to HTTPS.
+
+```bash
+cd self-host
+MCP_PUBLIC_HOST=mcp.example.com \
+APP_URL=https://mcp.example.com \
+docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d --build
+```
+
+Configure the remote client with `https://mcp.example.com` and the same `Authorization: Bearer`
+header shown above. The base stack's `127.0.0.1:8787` listener remains local-only; Caddy reaches
+the MCP container over Docker's private network. For an existing reverse proxy, proxy to
+`http://127.0.0.1:8787`, terminate TLS there, preserve the `Authorization` header, and set
+`APP_URL` to the resulting `https://` URL. Never expose the upstream HTTP listener directly.
+
 ## Common provider presets
 
 | Provider | `SERVICE` | `IMAP_HOST` | `SMTP_HOST` | Ports |
@@ -149,9 +175,10 @@ curl -fsS -X POST -H "X-Dispatch-Secret: $DISPATCH_SECRET" http://localhost:8787
   commit it. The same key encrypts scheduled-send payloads.
 - **API keys** are stored only as SHA-256 hashes (`mcpe_` + 64 hex). The plaintext is shown once at
   creation and never recoverable.
-- **The database and PostgREST are not published** to the host, only the MCP server's port is.
-  Put a TLS-terminating reverse proxy in front of it before exposing it beyond localhost, and set
-  `APP_URL` to its public URL.
+- **Network exposure:** the database and PostgREST are not published, and the MCP server binds to
+  `127.0.0.1` by default. For remote clients, use the included `docker-compose.tls.yml` Caddy
+  proxy or an equivalent TLS-terminating reverse proxy. Set `APP_URL` to the public `https://` URL
+  and do not publish or port-forward the plaintext MCP port.
 - **No outbound calls to us.** The only network the server makes is to your mail provider and your
   own Postgres. Verify it: `make logs S=mcp-server` and watch.
 - **Single-tenant.** One workspace, one operator, is seeded for you. Multi-user workspaces, roles,

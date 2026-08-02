@@ -77,7 +77,9 @@ services:
       APP_URL: ${APP_URL:-http://localhost:8787}
       DISPATCH_SECRET: ${DISPATCH_SECRET:-}
     ports:
-      - "${MCP_PORT:-8787}:8000"
+      # Keep bearer-token traffic on this machine by default. For remote access,
+      # use docker-compose.tls.yml rather than publishing this port directly.
+      - "127.0.0.1:${MCP_PORT:-8787}:8000"
 
   dispatcher:
     image: curlimages/curl:8.11.1

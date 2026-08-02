@@ -15,7 +15,7 @@
       "Your email is fetched live on each request and dropped the moment the response is sent. We keep no copy of any message body, subject, attachment, or contact.",
       "We store exactly one sensitive thing per inbox: an access token or app password, encrypted with AES-256-GCM, so we can make the next call you ask for.",
       "We never train any AI model on your email, and we never send your email to a model of our own choosing. Your agent is the only thing that reads it, under your control.",
-      "Every connection is scoped to the single inbox you connected, and you can revoke it at any time from Google, Microsoft, or your provider's settings.",
+      "Access is limited by the credential you configure: API keys can be restricted to selected inboxes or allowed to reach all workspace inboxes. You can revoke provider access at any time from Google, Microsoft, or your provider's settings.",
       "The code that runs the service is public. You can read it, audit it, or self-host the whole thing."
     ]
   },
@@ -74,12 +74,12 @@
     "title": "4. The real risk: prompt injection",
     "p1": "The honest threat here is not me reading your mail. It is a hostile email trying to hijack the agent: instructions hidden inside a message that try to make your AI forward, delete, or leak something. This is a real, unsolved problem for every email agent. I won't claim it's solved. I can show how it's contained:",
     "points": [
-      "<b>One inbox, one token.</b> A connection can only ever touch the single inbox you connected it to. A scoped token cannot reach your other inboxes, or anyone else's.",
-      "<b>Destructive actions are separated and flagged.</b> Sending and deleting are their own tools, marked destructive, so your AI client asks for confirmation before they fire.",
+      "<b>Inbox access is configurable.</b> API keys can be restricted to selected inboxes, or deliberately allowed to reach all inboxes in a workspace. A restricted key cannot reach an inbox it was not granted.",
+      "<b>Destructive actions are separated and flagged.</b> Sending and deleting are their own tools with separate scopes; deletion requires <code>confirm: true</code>. Whether a client presents a user confirmation is controlled by that client's policy.",
       "<b>Least privilege.</b> Connections request mail read and compose access, not account-wide control. Even a fully compromised token is bounded by the scope you granted.",
       "<b>Rate limited.</b> Every key is rate limited, so a runaway or hijacked agent cannot fan out thousands of actions unnoticed."
     ],
-    "outro": "Not solved. Contained: the irreversible actions are gated, and the blast radius is kept to one inbox."
+    "outro": "Not solved. Contained: irreversible actions are gated, and API-key scopes and inbox restrictions can reduce the blast radius."
   },
   "credentials": {
     "title": "5. How your credentials are protected",

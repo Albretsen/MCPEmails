@@ -1330,10 +1330,16 @@ function SignatureEditor({ inbox, onSave, t }) {
   // Pull the current editor HTML through the sanitizer and sync preview state.
   // Called on the editor's onChange (every keystroke / image insert) and once
   // after the editor mounts, so the preview always reflects the live content.
-  const syncPreview = () => {
+  const syncPreview = (sourceHtml) => {
     if (!editorRef.current) return;
     try {
-      const html = editorRef.current.getHTML(); // already sanitized; may throw >100KB
+      // HTML-source edits update React state before the imperative editor ref
+      // sees the new value. Use the raw value supplied by that mode so its
+      // preview stays live, while applying the same sanitizer as every other
+      // editor path.
+      const html = typeof sourceHtml === 'string'
+        ? sanitizeSignatureHtml(sourceHtml)
+        : editorRef.current.getHTML(); // already sanitized; may throw >100KB
       setPreviewTooBig(false);
       setPreviewHtml(html);
     } catch {
@@ -2335,10 +2341,17 @@ function KeyRevealModal({ rawKey, keyName, mcpUrl, scopes, onDone }) {
             </button>
           </div>
 
-          {/* Ready-to-paste connection URL: the simplest way to connect. */}
+          {/* Keep credentials in the Authorization header, never in a URL. */}
           {mcpUrl ? (
             <div style={{ marginBottom: 16 }}>
-              <CopyField value={`${mcpUrl}?key=${rawKey}`} label={t('apiKeys.revealModal.urlLabel')} />
+              <CopyField
+                value={JSON.stringify({
+                  url: mcpUrl,
+                  headers: { Authorization: `Bearer ${rawKey}` },
+                }, null, 2)}
+                label={t('apiKeys.revealModal.urlLabel')}
+                multiline
+              />
             </div>
           ) : null}
 
@@ -2577,7 +2590,7 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
       <div className="card">
         {keys.length > 0 ? (
           <div className="tbl-wrap">
-          <table className="tbl">
+          <table className="tbl tbl-api-keys">
             <thead>
               <tr>
                 <th>{t('apiKeys.colName')}</th>
@@ -2660,7 +2673,14 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
           </div>
         </div>
         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <CopyField value={`${mcpUrl}?key=YOUR_API_KEY`} label={t('apiKeys.mcpServerUrl')} />
+          <CopyField
+            value={JSON.stringify({
+              url: mcpUrl,
+              headers: { Authorization: 'Bearer YOUR_API_KEY' },
+            }, null, 2)}
+            label={t('apiKeys.mcpServerUrl')}
+            multiline
+          />
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', lineHeight: 1.6 }}>
             {t.rich('apiKeys.urlWarning', RICH)}
           </div>
