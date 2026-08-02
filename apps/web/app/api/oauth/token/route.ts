@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { generateApiKey } from '@/lib/api-keys/generate';
 import { getActiveApiKeyNames, disambiguateApiKeyName } from '@/lib/api-keys/unique-name';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { sha256hex, computeS256Challenge, generateRefreshToken } from '@/lib/oauth/crypto';
 import { oauthError } from '@/lib/oauth/errors';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -216,6 +217,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       expires_at:   refreshExpiresAt,
       api_key_id:   keyRow.id,
     });
+
+    await recordProductFunnelEvent(service, { workspaceId: authCode.workspace_id, stage: 'credential_created', outcome: 'success', category: 'oauth' });
 
     void logEvent(req, 'oauth_token_issued', {
       client_id:  clientId,

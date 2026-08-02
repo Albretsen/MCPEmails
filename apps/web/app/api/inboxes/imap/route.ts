@@ -7,6 +7,7 @@ import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-li
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { captureError } from '@/lib/errors/capture';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 /**
  * POST /api/inboxes/imap
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
+  const db = createServiceRoleClient();
 
   // 3. Parse and validate the request body.
   let email: string;
@@ -83,6 +85,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
+      await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: 'plan_limit' });
       const capLabel = inboxLimit.maxInboxes === 1 ? '1 inbox' : `${inboxLimit.maxInboxes} inboxes`;
       return NextResponse.json(
         {
@@ -108,6 +111,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!validation.ok) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed' });
     // AUTH_FAILED means the mail server rejected the credentials. Surface a
     // structured error_code so the client can distinguish a credential
     // rejection from other 422 causes (missing/invalid fields, bad host,
@@ -137,13 +141,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //    an existing mailbox. Runs AFTER validation (so we only block real
   //    credentials) and BEFORE the upsert. Uses the service-role `db` (created
   //    here, also reused for the upsert) so the read sees every workspace row.
-  const db = createServiceRoleClient();
   const conflict = await findConflictingInbox(db, workspaceId, {
     host: imapHost,
     effectiveLogin: username || email,
     email,
   });
   if (conflict.conflict) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: 'conflict' });
     return NextResponse.json(
       {
         error: `This mailbox login is already connected as ${conflict.address}. ` +
@@ -194,6 +198,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   );
 
   if (upsertError) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: 'persistence_failed' });
     console.error('[imap] Upsert failed:', upsertError.message);
     await captureError(new Error(upsertError.message), {
       severity: 'high',
@@ -204,6 +209,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to save inbox. Please try again.' }, { status: 500 });
   }
 
+  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'generic_imap' });
   return NextResponse.json({ success: true });
 }
 

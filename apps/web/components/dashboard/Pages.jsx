@@ -1457,7 +1457,7 @@ function SignatureEditor({ inbox, onSave, t }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
         <span style={label}>{t('inboxes.detail.signature.replyModeLabel')}</span>
         <select
           className="input"
@@ -2915,7 +2915,7 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
         /* ── Normal state ──────────────────────────────────────────────── */
         <>
           {/* Summary stats */}
-          <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <div className="stat-grid usage-stat-grid">
             <div className="stat">
               <div className="label">{t('usage.totalCalls')}</div>
               <div className="value">{totalCalls.toLocaleString()}</div>
@@ -4258,7 +4258,7 @@ function LanguageSection() {
     <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
       <div className="card-h"><div className="title">{t('settings.languageHeading')}</div></div>
       <div className="card-body">
-        <div style={{ display: 'flex', gap: 0, alignSelf: 'flex-start', borderRadius: 8, border: '1px solid var(--border-1)', overflow: 'hidden', width: 'fit-content' }}>
+        <div className="language-selector">
           {options.map(opt => (
             <button
               key={opt.value}

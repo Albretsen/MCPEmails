@@ -24,8 +24,7 @@
     "npm:react-dom@^19.2.6": "19.2.7_react@19.2.7",
     "npm:react@^19.2.6": "19.2.7",
     "npm:resend@^6.12.4": "6.12.4",
-    "npm:stripe@~22.1.1": "22.1.1_@types+node@20.17.6",
-    "npm:typescript@5": "5.9.3"
+    "npm:stripe@~22.1.1": "22.1.1_@types+node@20.17.6"
   },
   "jsr": {
     "@supabase/functions-js@2.96.0": {
@@ -3749,7 +3748,7 @@
             "npm:react@^19.2.6",
             "npm:resend@^6.12.4",
             "npm:stripe@~22.1.1",
-            "npm:typescript@5"
+            "npm:typescript@^6.0.3"
           ]
         }
       }

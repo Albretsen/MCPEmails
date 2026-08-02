@@ -1644,11 +1644,18 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          acquisition_landing: string | null
+          acquisition_source: string | null
           analytics_first_tool_client: string | null
           analytics_first_tool_name: string | null
           analytics_first_tool_path: string | null
           analytics_first_tool_provider: string | null
           analytics_first_tool_reported_at: string | null
+          analytics_first_inbox_connected_at: string | null
+          analytics_first_inbox_provider: string | null
+          analytics_first_credential_created_at: string | null
+          analytics_first_credential_method: string | null
+          analytics_first_tool_used_at: string | null
           created_at: string
           deleted_at: string | null
           display_name: string
@@ -1661,11 +1668,18 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          acquisition_landing?: string | null
+          acquisition_source?: string | null
           analytics_first_tool_client?: string | null
           analytics_first_tool_name?: string | null
           analytics_first_tool_path?: string | null
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
+          analytics_first_inbox_connected_at?: string | null
+          analytics_first_inbox_provider?: string | null
+          analytics_first_credential_created_at?: string | null
+          analytics_first_credential_method?: string | null
+          analytics_first_tool_used_at?: string | null
           created_at?: string
           deleted_at?: string | null
           display_name: string
@@ -1678,11 +1692,18 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          acquisition_landing?: string | null
+          acquisition_source?: string | null
           analytics_first_tool_client?: string | null
           analytics_first_tool_name?: string | null
           analytics_first_tool_path?: string | null
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
+          analytics_first_inbox_connected_at?: string | null
+          analytics_first_inbox_provider?: string | null
+          analytics_first_credential_created_at?: string | null
+          analytics_first_credential_method?: string | null
+          analytics_first_tool_used_at?: string | null
           created_at?: string
           deleted_at?: string | null
           display_name?: string

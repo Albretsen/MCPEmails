@@ -222,7 +222,8 @@
     "copied": "Copié",
     "copyAria": "Copier {label}",
     "linkSecurity": "Sécurité",
-    "linkSelfHost": "Auto-hébergement"
+    "linkSelfHost": "Auto-hébergement",
+    "linkFounders": "Pour les fondateurs"
   },
   "languageSwitcher": {
     "label": "Langue",

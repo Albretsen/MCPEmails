@@ -1,0 +1,24 @@
+.growth-page { max-width: 1440px; margin: 0 auto; padding: 42px 32px 64px; color: var(--fg-1); }
+.growth-header { display: flex; justify-content: space-between; gap: 24px; align-items: start; margin-bottom: 28px; }
+.growth-title { margin: 0; font-size: 30px; letter-spacing: -0.025em; }
+.growth-subtitle, .growth-definition { color: var(--fg-3); font-size: 14px; line-height: 1.55; }
+.growth-subtitle { margin: 7px 0 0; }
+.growth-definition { margin: 0; max-width: 360px; }
+.growth-definition strong { color: var(--fg-2); }
+.growth-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 30px; }
+.growth-stat { border: 1px solid var(--border-1); background: var(--bg-surface); border-radius: 12px; padding: 16px 18px; }
+.growth-stat-label { color: var(--fg-3); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .045em; }
+.growth-stat-value { font-size: 28px; font-weight: 650; letter-spacing: -.025em; margin: 8px 0 2px; }
+.growth-stat-detail { color: var(--fg-3); font-size: 12px; }
+.growth-section { margin-top: 28px; }
+.growth-section h2 { font-size: 17px; margin: 0 0 6px; }
+.growth-section > p { color: var(--fg-3); font-size: 13px; margin: 0 0 13px; }
+.growth-table-wrap { overflow-x: auto; border: 1px solid var(--border-1); border-radius: 12px; background: var(--bg-surface); }
+.growth-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.growth-table th { color: var(--fg-3); background: var(--ink-50); text-align: left; font-size: 11px; letter-spacing: .035em; text-transform: uppercase; white-space: nowrap; }
+.growth-table th, .growth-table td { padding: 11px 14px; border-bottom: 1px solid var(--border-1); }
+.growth-table tr:last-child td { border-bottom: 0; }
+.growth-table td:not(:first-child), .growth-table th:not(:first-child) { text-align: right; }
+.growth-split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.growth-empty { color: var(--fg-3); padding: 18px; }
+@media (max-width: 850px) { .growth-page { padding: 28px 18px; } .growth-header { display: block; } .growth-definition { margin-top: 16px; } .growth-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .growth-split { grid-template-columns: 1fr; } }

@@ -5,6 +5,8 @@ import { checkApiKeyLimit } from '@/lib/plans/check-api-key-limit';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { getActiveApiKeyNames, isApiKeyNameTaken } from '@/lib/api-keys/unique-name';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 /**
  * POST /api/api-keys
@@ -235,6 +237,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     console.error('[create-api-key] Insert failed:', insertError?.message);
     return NextResponse.json({ error: 'Failed to create API key.' }, { status: 500 });
   }
+  await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId, stage: 'credential_created', outcome: 'success', category: 'api_key' });
 
   // 7. Return the row data plus rawKey ONCE.
   //    The frontend must display this to the user immediately and never request it again.

@@ -87,8 +87,12 @@
   "links": {
     "compare": "Sammenlign",
     "connectHeading": "Koble til",
+    "connectGmail": "Koble til Gmail",
     "connectFastmail": "Koble til Fastmail",
     "connectIcloud": "Koble til iCloud",
+    "connectYahoo": "Koble til Yahoo",
+    "connectZoho": "Koble til Zoho",
+    "connectYandex": "Koble til Yandex",
     "vsNative": "vs innebygde koblinger"
   }
 }

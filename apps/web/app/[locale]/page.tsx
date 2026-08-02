@@ -55,35 +55,12 @@ export default async function HomePage({
     description: t('description'),
   });
 
-  // FAQPage structured data — built from the same FAQ copy rendered on the page
-  // (home.faq.items), so the schema matches visible content (a requirement for
-  // FAQ rich results and for AI assistants quoting the answers).
-  const tHome = await getTranslations({ locale, namespace: 'home' });
-  const faqItems = Array.isArray(tHome.raw('faq.items'))
-    ? (tHome.raw('faq.items') as { q: string; a: string }[])
-    : [];
-  const faqLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqItems.map((item) => ({
-      '@type': 'Question',
-      name: item.q,
-      acceptedAnswer: { '@type': 'Answer', text: item.a },
-    })),
-  };
-
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {faqLd.mainEntity.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
-        />
-      )}
       <HomeClient stripePrices={stripePrices} />
     </>
   );

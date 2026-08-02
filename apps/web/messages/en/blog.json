@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Blog",
-    "description": "Guides, deep-dives, and field notes on AI agents, the Model Context Protocol, and connecting real email to Claude, Cursor, and any MCP client."
+    "title": "AI Email Agent Guides, MCP Tutorials & Security",
+    "description": "Practical guides to connecting email with Claude and MCP clients, securing AI agent access, and using Gmail, IMAP, and email workflows safely."
   },
   "blogName": "mcpemails Blog",
   "index": {

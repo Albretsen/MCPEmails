@@ -379,7 +379,7 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .pricing-footnote {
   margin: 20px 0 0; font-family: var(--font-sans); font-size: 13px; color: var(--fg-3); line-height: 1.5;
 }
-.pricing-footnote a { color: var(--cobalt-600); text-decoration: none; }
+.pricing-footnote a { color: var(--cobalt-600); text-decoration: underline; text-underline-offset: 2px; }
 .pricing-footnote a:hover { text-decoration: underline; }
 
 /* === Pricing page (/pricing) === */
@@ -723,7 +723,7 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 /* === Footer === */
 .footer { background: var(--ink-900); color: var(--fg-on-dark); padding: 56px 0 28px; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
-.footer h5 { margin: 0 0 14px; font-family: var(--font-sans); font-size: 12px; font-weight: 500; color: var(--ink-400); letter-spacing: 0.06em; text-transform: uppercase; }
+.footer h5, .footer-heading { margin: 0 0 14px; font-family: var(--font-sans); font-size: 12px; font-weight: 500; color: var(--ink-300); letter-spacing: 0.06em; text-transform: uppercase; }
 .footer a { display: block; font-family: var(--font-sans); font-size: 14px; color: var(--ink-300); padding: 4px 0; text-decoration: none; }
 .footer a:hover { color: #fff; text-decoration: none; }
 .footer .brand-cell { display: flex; flex-direction: column; gap: 12px; }
@@ -733,7 +733,7 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .footer .footer-copy { display: flex; flex-direction: column; gap: 5px; }
 .footer .footer-copy-label {
   font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--ink-500);
+  text-transform: uppercase; color: var(--ink-300);
 }
 .footer .footer-copy-field {
   display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
@@ -761,7 +761,7 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 .footer .lang-switch .lang-opt.active { color: #fff; font-weight: 600; }
 .footer .legal {
   margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--ink-800);
-  display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-500);
+  display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-300);
 }
 
 /* ============================================================
@@ -888,10 +888,13 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 
   /* === Docs quick-start steps === */
   .docs-step {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
     padding: 28px 0;
   }
+  .docs-step-body { min-width: 0; }
+  .client-tabs { flex-wrap: wrap; }
+  .client-tab { flex: 1 1 140px; }
   .docs-step-num {
     flex-direction: row;
     align-items: center;
@@ -1048,10 +1051,6 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   /* Pricing page: plan cards already single column via .price-grid rule above;
      add spacing below billing toggle */
   .billing-toggle { flex-wrap: wrap; }
-
-  /* Prevent long monospace strings from breaking layout */
-  code, pre { word-break: break-word; }
-  .docs-pre code { word-break: normal; } /* code blocks keep internal wrapping */
 
   /* Tool nav: wrap chips tighter */
   .docs-tool-nav { gap: 6px; }

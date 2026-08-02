@@ -1,5 +1,5 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd } from '@/i18n/seo';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 
 export async function generateMetadata({ params }) {
@@ -45,12 +45,19 @@ export default async function SecurityPage({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('security');
+  const title = t.has('meta.title') ? t('meta.title') : 'AI Email Agent Security';
+  const description = t.has('meta.description') ? t('meta.description') : '';
+  const jsonLd = pageJsonLd(locale, { path: '/security', title, description });
   const richTags = {
     b: (c) => <strong>{c}</strong>,
     c: (c) => <code>{c}</code>,
   };
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Nav />
 
       {/* Hero */}

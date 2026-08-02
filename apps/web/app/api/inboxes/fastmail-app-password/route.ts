@@ -7,6 +7,7 @@ import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-li
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { captureError } from '@/lib/errors/capture';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 /**
  * POST /api/inboxes/fastmail-app-password
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
+  const db = createServiceRoleClient();
 
   // 3. Parse and validate the request body.
   let email: string;
@@ -96,6 +98,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
+      await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: 'plan_limit' });
       const capLabel = inboxLimit.maxInboxes === 1
         ? '1 inbox'
         : `${inboxLimit.maxInboxes} inboxes`;
@@ -122,6 +125,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!validation.ok) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed' });
     // AUTH_FAILED → Fastmail-specific message with app-password hint; include
     // a structured error_code so the client can distinguish a credential
     // rejection from other 422s (missing fields, network errors, etc.).
@@ -151,13 +155,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //    Runs AFTER validation (so we only block real credentials) and BEFORE the
   //    upsert. Uses the service-role `db` (created here, also reused for the
   //    upsert) so the read sees every workspace row.
-  const db = createServiceRoleClient();
   const conflict = await findConflictingInbox(db, workspaceId, {
     host: FASTMAIL_IMAP_HOST,
     effectiveLogin: email,
     email,
   });
   if (conflict.conflict) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: 'conflict' });
     return NextResponse.json(
       {
         error: `This mailbox login is already connected as ${conflict.address}. ` +
@@ -213,6 +217,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   );
 
   if (upsertError) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: 'persistence_failed' });
     console.error('[fastmail-app-password] Upsert failed:', upsertError.message);
     await captureError(new Error(upsertError.message), {
       severity: 'high',
@@ -226,5 +231,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'fastmail' });
   return NextResponse.json({ success: true });
 }

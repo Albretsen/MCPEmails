@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeOutlookCode } from '@/lib/email-providers/outlook';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 /**
  * GET /auth/outlook/callback
@@ -104,6 +105,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     tokens = await exchangeOutlookCode(code, expectedRedirectUri);
   } catch (err) {
     console.error('[outlook/callback] token exchange failed:', err);
+    await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'token_exchange_failed' });
     return redirectWithError('token_exchange_failed');
   }
 
@@ -118,6 +120,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id);
     if (inboxLimit.atLimit) {
+      await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'plan_limit' });
       return redirectWithError('inbox_limit_reached');
     }
   }
@@ -160,9 +163,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   );
 
   if (upsertError) {
+    await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'persistence_failed' });
     return redirectWithError('save_failed');
   }
 
   // 9. Redirect to the Inboxes page with a success indicator.
+  await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'success', category: 'outlook' });
   return NextResponse.redirect(`${DASHBOARD_INBOXES}?connected=outlook`);
 }

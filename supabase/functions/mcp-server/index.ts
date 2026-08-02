@@ -1109,7 +1109,7 @@ async function writeActivityLog(params: ActivityLogParams): Promise<void> {
   }
 }
 
-/** Records only the first successful, read-capable tool call per workspace.
+/** Records the first server-confirmed successful MCP tool call per workspace.
  * It is an aggregate funnel marker, never analytics request data. */
 function analyticsClient(userAgent: string | null): string {
   const ua = (userAgent ?? "").toLowerCase();
@@ -1118,11 +1118,23 @@ function analyticsClient(userAgent: string | null): string {
 }
 
 async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxId: string | null, toolName: string, userAgent: string | null): Promise<void> {
-  if (!["inbox_list", "email_read"].includes(toolName)) return;
   const { data: inbox } = inboxId ? await supabase.from("inboxes").select("provider, service").eq("id", inboxId).maybeSingle() : { data: null };
   const provider = inbox?.service && inbox.service !== "generic" ? inbox.service : inbox?.provider ?? "unknown";
   const { data: oauthToken } = await supabase.from("oauth_refresh_tokens").select("api_key_id").eq("api_key_id", apiKeyId).maybeSingle();
-  await supabase.from("workspaces").update({ analytics_first_tool_name: toolName, analytics_first_tool_provider: provider, analytics_first_tool_client: analyticsClient(userAgent), analytics_first_tool_path: oauthToken ? "oauth" : "api_key" }).eq("id", workspaceId).is("analytics_first_tool_name", null);
+  const occurredAt = new Date().toISOString();
+  const { data: claimed, error } = await supabase.from("workspaces")
+    .update({ analytics_first_tool_name: toolName, analytics_first_tool_provider: provider, analytics_first_tool_client: analyticsClient(userAgent), analytics_first_tool_path: oauthToken ? "oauth" : "api_key", analytics_first_tool_used_at: occurredAt })
+    .eq("id", workspaceId)
+    .is("analytics_first_tool_used_at", null)
+    .select("id");
+  if (error) {
+    console.error("[mcp-server] first_product_use_marker_failed", { workspace_id: workspaceId, error: error.message });
+    return;
+  }
+  if (claimed && claimed.length > 0) {
+    const { error: eventError } = await supabase.from("product_funnel_events").insert({ workspace_id: workspaceId, stage: "first_tool_call", outcome: "success", category: "unknown", error_category: null, occurred_at: occurredAt });
+    if (eventError) console.error("[mcp-server] first_product_use_event_failed", { workspace_id: workspaceId, error: eventError.message });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -17187,7 +17199,9 @@ async function handleToolsCall(
     ipAddress: ctx.ipAddress,
     userAgent: ctx.userAgent,
   });
-  if (logStatus === "success") await markFirstProductUse(apiKey.workspace_id, apiKey.id, resolvedInboxId, dispatchName, ctx.userAgent);
+  // Dispatch mutates logStatus inside AsyncLocalStorage.run; TypeScript cannot
+  // follow that closure mutation and otherwise narrows it to its initial value.
+  if ((logStatus as string) === "success") await markFirstProductUse(apiKey.workspace_id, apiKey.id, resolvedInboxId, dispatchName, ctx.userAgent);
 
   console.log("[mcp-server] tools/call", {
     key_id: apiKey.id,

@@ -349,7 +349,10 @@ const SignatureRichEditor = forwardRef(function SignatureRichEditor(
             onChange={(e) => {
               setSourceError('');
               setHtmlSource(e.target.value);
-              if (onChange) onChange();
+              // Pass the pending source value: React state has not committed
+              // yet, so the parent's imperative getHTML() would be one edit
+              // behind and leave the live preview stale.
+              if (onChange) onChange(e.target.value);
             }}
           />
           {showTableHint && (

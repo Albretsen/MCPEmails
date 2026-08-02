@@ -43,31 +43,12 @@ export default async function ComparePage({ params }) {
     description: t.has('meta.description') ? t('meta.description') : '',
   });
 
-  // FAQPage structured data, built from the same compare.faq.items rendered on
-  // the page so the schema matches visible content (FAQ rich-result requirement).
-  const faqItems = Array.isArray(t.raw('faq.items')) ? t.raw('faq.items') : [];
-  const faqLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqItems.map((item) => ({
-      '@type': 'Question',
-      name: item.q,
-      acceptedAnswer: { '@type': 'Answer', text: item.a },
-    })),
-  };
-
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {faqLd.mainEntity.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
-        />
-      )}
       <CompareClient />
     </>
   );

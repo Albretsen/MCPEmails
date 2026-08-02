@@ -252,20 +252,27 @@ function InboxToggle({ inbox, checked, onChange }) {
 function Switch({ checked, onChange }) {
   return (
     <button
+      type="button"
       onClick={() => onChange(!checked)}
+      aria-pressed={checked}
       style={{
-        width: 36, height: 20, borderRadius: 999,
-        background: checked ? 'var(--brand)' : 'var(--ink-200)',
-        border: 'none', padding: 0, cursor: 'pointer', position: 'relative',
-        transition: 'background 120ms var(--ease-out)',
+        width: 44, height: 44, border: 'none', padding: 0, cursor: 'pointer',
+        position: 'relative', background: 'transparent', display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
       }}
     >
       <span style={{
-        position: 'absolute', top: 2, left: checked ? 18 : 2,
-        width: 16, height: 16, borderRadius: 999, background: '#fff',
-        transition: 'left 120ms var(--ease-out)',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-      }} />
+        width: 36, height: 20, borderRadius: 999,
+        background: checked ? 'var(--brand)' : 'var(--ink-200)',
+        position: 'relative', transition: 'background 120ms var(--ease-out)',
+      }}>
+        <span style={{
+          position: 'absolute', top: 2, left: checked ? 18 : 2,
+          width: 16, height: 16, borderRadius: 999, background: '#fff',
+          transition: 'left 120ms var(--ease-out)',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+        }} />
+      </span>
     </button>
   );
 }

@@ -222,7 +222,8 @@
     "copied": "已复制",
     "copyAria": "复制{label}",
     "linkSecurity": "安全",
-    "linkSelfHost": "自托管"
+    "linkSelfHost": "自托管",
+    "linkFounders": "面向创始人"
   },
   "languageSwitcher": {
     "label": "语言",

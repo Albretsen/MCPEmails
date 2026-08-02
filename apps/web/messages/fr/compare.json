@@ -87,8 +87,12 @@
   "links": {
     "compare": "Comparer",
     "connectHeading": "Connecter",
+    "connectGmail": "Connecter Gmail",
     "connectFastmail": "Connecter Fastmail",
     "connectIcloud": "Connecter iCloud",
+    "connectYahoo": "Connecter Yahoo",
+    "connectZoho": "Connecter Zoho",
+    "connectYandex": "Connecter Yandex",
     "vsNative": "vs connecteurs natifs"
   }
 }

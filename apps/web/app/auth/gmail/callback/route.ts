@@ -5,6 +5,7 @@ import { encryptToken } from '@/lib/crypto';
 import { exchangeGmailCode } from '@/lib/email-providers/gmail';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { captureError } from '@/lib/errors/capture';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 /**
  * GET /auth/gmail/callback
@@ -117,6 +118,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       workspaceId: oauthState.workspace_id,
       userId: user.id,
     });
+    await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'gmail', errorCategory: 'token_exchange_failed' });
     return redirectWithError('token_exchange_failed');
   }
 
@@ -131,6 +133,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id);
     if (inboxLimit.atLimit) {
+      await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'gmail', errorCategory: 'plan_limit' });
       return redirectWithError('inbox_limit_reached');
     }
   }
@@ -185,9 +188,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       workspaceId: oauthState.workspace_id,
       userId: user.id,
     });
+    await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'gmail', errorCategory: 'persistence_failed' });
     return redirectWithError('save_failed');
   }
 
   // 9. Redirect to the Inboxes page with a success indicator.
+  await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'success', category: 'gmail' });
   return NextResponse.redirect(`${DASHBOARD_INBOXES}?connected=gmail`);
 }
