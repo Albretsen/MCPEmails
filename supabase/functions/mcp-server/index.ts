@@ -1559,7 +1559,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           maxItems: 50,
           description:
             "Provider-native message IDs to read (from email_list or email_search). " +
-            "Max 50 per call.",
+            "Max 50 unique IDs per call; duplicate IDs are de-duplicated while " +
+            "preserving their first occurrence.",
         },
         include_html: {
           type: "boolean",
@@ -5989,6 +5990,59 @@ interface ListInboxArgs {
 }
 
 /**
+ * Validate pagination values at runtime as well as in the JSON schema. Some
+ * MCP clients invoke tools without enforcing the advertised input schema, so
+ * silently clamping invalid values makes pagination bugs hard to detect.
+ */
+function invalidPaginationArgument(
+  args: Record<string, unknown>,
+): {
+  result: { content: { type: string; text: string }[]; isError: boolean };
+  logStatus: "error";
+  logErrorCode: string;
+} | null {
+  const limit = args["limit"];
+  if (
+    limit !== undefined &&
+    (typeof limit !== "number" || !Number.isFinite(limit) || !Number.isInteger(limit) ||
+      limit < 1 || limit > 100)
+  ) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "Invalid 'limit': expected an integer between 1 and 100.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  const offset = args["offset"];
+  if (
+    offset !== undefined &&
+    (typeof offset !== "number" || !Number.isFinite(offset) || !Number.isInteger(offset) ||
+      offset < 0)
+  ) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: "Invalid 'offset': expected a non-negative integer.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
+  return null;
+}
+
+/**
  * Executes the `email_list` tool end-to-end.
  *
  * Returns the JSON-RPC result object plus the values needed for activity
@@ -6024,17 +6078,11 @@ async function executeListInbox(
 
   const args = rawArgs as Record<string, unknown>;
 
-  const limit = Math.min(
-    Math.max(
-      1,
-      typeof args["limit"] === "number" ? Math.floor(args["limit"]) : 20,
-    ),
-    100,
-  );
-  const offset = Math.max(
-    0,
-    typeof args["offset"] === "number" ? Math.floor(args["offset"]) : 0,
-  );
+  const paginationError = invalidPaginationArgument(args);
+  if (paginationError) return paginationError;
+
+  const limit = typeof args["limit"] === "number" ? args["limit"] : 20;
+  const offset = typeof args["offset"] === "number" ? args["offset"] : 0;
   const folder =
     typeof args["folder"] === "string" ? args["folder"] : "INBOX";
   const unreadOnly = args["unread_only"] === true;
@@ -6663,9 +6711,14 @@ async function readGmailMessage(
     .map((r) => r.trim())
     .filter((r) => r.length > 0);
 
-  const labelIds = msg.labelIds ?? [];
-  const isRead = !labelIds.includes("UNREAD") ||
-    (markAsRead ? true : !labelIds.includes("UNREAD"));
+  // The Gmail message was fetched before the optional mark-as-read mutation.
+  // Reflect that requested mutation in both state fields so a response can
+  // never claim `is_read: true` while still returning the `UNREAD` label.
+  const originalLabelIds = msg.labelIds ?? [];
+  const labelIds = markAsRead
+    ? originalLabelIds.filter((labelId) => labelId !== "UNREAD")
+    : originalLabelIds;
+  const isRead = !labelIds.includes("UNREAD");
 
   return {
     id: msg.id ?? messageId,
@@ -6684,7 +6737,7 @@ async function readGmailMessage(
     body_text: textPlain ?? (textHtml ? stripHtmlToText(textHtml) : null),
     body_html: includeHtml && textHtml ? sanitizeEmailHtml(textHtml) : null,
     attachments,
-    is_read: markAsRead ? true : isRead,
+    is_read: isRead,
     labels: labelIds,
     in_reply_to: hdrs["in-reply-to"] ?? null,
     references,
@@ -7419,8 +7472,10 @@ async function executeReadAttachment(
   //   image/*  → ImageContent      audio/*  → AudioContent
   //   text/*   → EmbeddedResource (decoded `text`)
   //   else     → EmbeddedResource (`blob`, base64)
-  // The bytes live ONLY in this block (not duplicated into structuredContent),
-  // which carries lightweight metadata the model can reason about cheaply.
+  // The MCP-native block lets capable clients render/save the file directly.
+  // Keep the documented base64 payload in JSON too: many MCP clients expose
+  // only text and structuredContent, where metadata-only results make the
+  // attachment action unusable.
   const meta = {
     message_id: messageId,
     inbox_id: inboxId,
@@ -7429,6 +7484,7 @@ async function executeReadAttachment(
     filename: selected.filename,
     mime_type: selected.mime_type,
     size_bytes: selected.size_bytes,
+    data: selected.data,
   };
 
   const mt = selected.mime_type.toLowerCase();
@@ -7469,7 +7525,7 @@ async function executeReadAttachment(
     result: {
       content: [
         payloadBlock,
-        // Backwards-compat text block mirroring structuredContent (metadata only).
+        // Backwards-compat text block mirroring structuredContent.
         { type: "text", text: JSON.stringify(meta) },
       ],
       structuredContent: meta,
@@ -7522,11 +7578,11 @@ async function executeReadEmails(
 
   const args = rawArgs as Record<string, unknown>;
 
-  const messageIds = Array.isArray(args["message_ids"])
+  const messageIds = [...new Set(Array.isArray(args["message_ids"])
     ? (args["message_ids"] as unknown[])
         .filter((m): m is string => typeof m === "string" && m.trim() !== "")
         .map((m) => m.trim())
-    : [];
+    : [])];
 
   if (messageIds.length === 0) {
     return {
@@ -10608,17 +10664,11 @@ async function executeSearchEmails(
   if (built.empty) return noSearchCriterionError();
   const search = built.search;
 
-  const limit = Math.min(
-    Math.max(
-      1,
-      typeof args["limit"] === "number" ? Math.floor(args["limit"]) : 20,
-    ),
-    100,
-  );
-  const offset = Math.max(
-    0,
-    typeof args["offset"] === "number" ? Math.floor(args["offset"]) : 0,
-  );
+  const paginationError = invalidPaginationArgument(args);
+  if (paginationError) return paginationError;
+
+  const limit = typeof args["limit"] === "number" ? args["limit"] : 20;
+  const offset = typeof args["offset"] === "number" ? args["offset"] : 0;
 
   // include_folders: array of strings, empty by default
   const includeFolders: string[] = Array.isArray(args["include_folders"])
