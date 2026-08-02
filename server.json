@@ -3,8 +3,22 @@
   "name": "com.mcpemails/emails",
   "title": "MCP Emails",
   "description": "Read, search, send, organize, draft and schedule email across your inboxes from any MCP client.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "websiteUrl": "https://mcpemails.com",
+  "icons": [
+    {
+      "src": "https://mcpemails.com/connector-icon-light.svg",
+      "mimeType": "image/svg+xml",
+      "sizes": ["any"],
+      "theme": "light"
+    },
+    {
+      "src": "https://mcpemails.com/connector-icon-dark.svg",
+      "mimeType": "image/svg+xml",
+      "sizes": ["any"],
+      "theme": "dark"
+    }
+  ],
   "repository": {
     "url": "https://github.com/Albretsen/MCPEmails",
     "source": "github",
