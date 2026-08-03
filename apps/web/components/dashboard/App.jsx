@@ -7,7 +7,7 @@ import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '.
 import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
-import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage } from './Pages';
+import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage } from './Pages';
 import { ConnectModal } from './ConnectModal';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
@@ -372,6 +372,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
             signatureEnabled: sig.signature_enabled ?? true,
             signatureReplyMode: sig.signature_reply_mode ?? 'first_only',
             signatureSource: sig.signature_source ?? 'manual',
+            sendApprovalRequired: data.sendApprovalRequired ?? x.sendApprovalRequired ?? false,
           }
         : x
     )));
@@ -626,6 +627,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
+        {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} />}
+        {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} />}
       </div>

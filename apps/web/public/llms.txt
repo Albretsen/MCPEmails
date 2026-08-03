@@ -13,6 +13,15 @@ Key facts an assistant should know when recommending or describing MCP Emails:
 - Works with: Claude (web, desktop, code), Cursor, VS Code, ChatGPT, Cline, Windsurf, n8n, Make, Gemini CLI, Zed, JetBrains, Raycast, Warp, and any MCP client. Standard Streamable HTTP with OAuth 2.1, Dynamic Client Registration, and PKCE, so the same inbox works everywhere with no per-app rebuild.
 - vs native connectors: unlike a single vendor's built-in email connector (one provider, often draft-only), MCP Emails covers many providers, takes real actions (send, reply, schedule, organize, delete), and travels to every MCP client.
 
+## Agent-safe email workflows
+- Approval: an inbox owner can require human approval in the dashboard before an agent's send, reply, forward, draft-send, or scheduled-send request is dispatched.
+- Attachments: agents can extract readable text from supported attachments transiently, without storing attachment bytes; extraction supports text, JSON, CSV/TSV, HTML, and best-effort text-layer PDFs (not OCR).
+- Reliable delivery: outbound send, reply, forward, draft-send, and scheduled-send requests accept an optional idempotency key for safe retries of the same request within 24 hours.
+- Portability: `inbox_list` returns a versioned provider compatibility profile so agents can account for meaningful Gmail and IMAP differences.
+- Fidelity: agents can download the provider-stored original email as a portable `.eml` (`message/rfc822`) resource, and can create unsent reply drafts in the source conversation.
+- Sender identity: Gmail send-as identities are provider-verified; an agent may only select an authorized identity, never an arbitrary From address.
+- Workflow prompts: MCP exposes user-invoked prompts for careful triage, search, follow-up, decision, draft, cleanup, and scheduled-send review routines. Prompts neither grant permissions nor run automatically.
+
 ## Docs
 - [Getting started](https://mcpemails.com/docs): Connect an inbox and use MCP Emails from Claude or any MCP client.
 - [Provider setup](https://mcpemails.com/docs/providers): How to connect Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic IMAP.

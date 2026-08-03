@@ -1077,6 +1077,7 @@ export type Database = {
           oauth_token_expires_at: string | null
           provider: string
           service: string | null
+          send_approval_required: boolean
           signature_enabled: boolean
           signature_html: string | null
           signature_reply_mode: string
@@ -1109,6 +1110,7 @@ export type Database = {
           oauth_token_expires_at?: string | null
           provider: string
           service?: string | null
+          send_approval_required?: boolean
           signature_enabled?: boolean
           signature_html?: string | null
           signature_reply_mode?: string
@@ -1141,6 +1143,7 @@ export type Database = {
           oauth_token_expires_at?: string | null
           provider?: string
           service?: string | null
+          send_approval_required?: boolean
           signature_enabled?: boolean
           signature_html?: string | null
           signature_reply_mode?: string

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "AI Email MCP Server — Connect Gmail & IMAP to Claude",
-    "description": "Connect Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, send, search, and organize mail live. Outlook support is in progress."
+    "title": "Secure AI Email MCP Server — Gmail, IMAP & Claude",
+    "description": "Connect Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls."
   },
   "nav": {
     "features": "Features",
@@ -62,13 +62,13 @@
       },
       "2": {
         "tag": "Sending",
-        "h": "Sending goes through your provider.",
-        "p": "When your agent calls <code>email_compose</code> (to send or reply), the message is dispatched via the Gmail API, Fastmail JMAP, or your own SMTP server. Your domain reputation and deliverability stay entirely in your hands. We never relay mail from our own domain."
+        "h": "You stay in control of every send.",
+        "p": "Messages go through Gmail, Fastmail, or your own SMTP server — never our mail relay. Turn on per-inbox approval to hold sends, replies, forwards, draft sends, and scheduled sends for dashboard review. Automated retries can reuse an idempotency key for 24 hours, and Gmail can send only from a provider-verified Send As identity."
       },
       "3": {
         "tag": "Providers",
         "h": "Gmail, iCloud, Fastmail & any IMAP inbox.",
-        "p": "OAuth 2.0 for Gmail; app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Connect multiple inboxes, label them by use case (work-gmail, ops-fastmail, support-imap), and scope each API key to the inboxes you want that agent to reach. Teams and agencies can manage every client inbox in one shared workspace with roles and an audit log."
+        "p": "OAuth 2.0 for Gmail; app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Every inbox reports a versioned compatibility profile, so an agent can use portable actions while seeing where a provider behaves differently or cannot support an operation."
       },
       "4": {
         "tag": "Access",
@@ -102,11 +102,11 @@
     },
     "tools": {
       "0": "Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard.",
-      "1": "Read mail: list recent summaries, fetch a full message by ID, batch-read up to 50, or run a provider-agnostic search — all via the action argument.",
-      "2": "Organize mail: move, copy, delete, flag, or archive — one at a time, in bulk, or straight from a search.",
-      "3": "Compose: send a new message, reply in-thread, or forward. Dispatched through Gmail API, Fastmail JMAP, or SMTP: your domain, your deliverability.",
+      "1": "Read mail: list recent summaries, fetch a full message, batch-read up to 50, search across providers, extract readable attachment text, or save the original email as .eml.",
+      "2": "Organize mail: move, copy, delete, flag, or archive — one at a time, in bulk, or straight from a search. Long bulk runs report their status and can be cancelled from the dashboard.",
+      "3": "Compose: send a new message, reply in-thread, or forward through Gmail API, Fastmail JMAP, or SMTP. Optional inbox approval holds outbound mail for dashboard review before it leaves.",
       "4": "Manage folders (labels on Gmail): list, create, rename, or delete, and use them as move destinations.",
-      "5": "Drafts: list, create, update, and send drafts stored in the provider's Drafts folder.",
+      "5": "Drafts: list, create, update, and send provider-stored drafts — including an unsent reply kept in the source conversation for review.",
       "6": "Schedule a message for a future time, list pending scheduled sends, and cancel them before they go out.",
       "7": "Find people by name or email with a live scan of recent matching mail. Nothing is stored."
     }

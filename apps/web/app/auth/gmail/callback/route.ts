@@ -167,7 +167,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       oauth_refresh_token: encryptedRefreshToken,
       oauth_token_expires_at: tokenExpiresAt,
       oauth_scope:
-        'openid email https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.modify',
+        'openid email https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.settings.basic',
       status: 'active',
       last_error: null,
       deleted_at: null,

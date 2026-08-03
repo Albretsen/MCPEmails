@@ -103,6 +103,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     { id: "keys",     label: tr('sidebar.navKeys'),     icon: "key",     count: counts.keys },
     { id: "members",  label: tr('sidebar.navMembers'),  icon: "users",   count: counts.members > 1 ? counts.members : undefined },
     { id: "usage",    label: tr('sidebar.navUsage'),    icon: "zap" },
+    { id: "workflows", label: 'Workflows', icon: "activity" },
     { id: "approvals", label: tr('sidebar.navApprovals'), icon: "shield" },
   ];
   const settings = [
@@ -311,9 +312,9 @@ export function Topbar({ route, workspace, mcpUrl, onMenuOpen, onOpenSearch, sid
     inboxes:  tr('sidebar.navInboxes'),
     keys:     tr('sidebar.navKeys'),
     members:  tr('sidebar.navMembers'),
+    usage:    tr('sidebar.navUsage'),
     workflows: 'Workflows',
     approvals: tr('sidebar.navApprovals'),
-    usage:    tr('sidebar.navUsage'),
     settings: tr('sidebar.navSettings'),
     security: tr('sidebar.navSecurity'),
   };

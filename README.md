@@ -59,7 +59,7 @@ Permissions are scoped per key, so you can hand an agent `read:email` only, or g
 }
 ```
 
-The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport). Start every session with `inbox_list` — it returns the inboxes the key can reach and their per‑provider capabilities.
+The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport). Start every session with `inbox_list` — it returns the inboxes the key can reach, their per‑provider capabilities, and a versioned compatibility profile. The profile marks normalized operations as `exact`, `different`, or `unavailable`, so agents can preserve provider differences rather than silently weakening a request.
 
 ## Capabilities
 
@@ -79,12 +79,12 @@ The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport
 | Tool | Actions | Scope(s) |
 | --- | --- | --- |
 | `inbox_list` | *(single action)* | `read:email` |
-| `email_read` | `list`, `read`, `read_batch`, `search`, `attachment` | `read:email` (`search` also accepts `search:email`) |
+| `email_read` | `list`, `read`, `read_batch`, `search`, `attachment`, `extract`, `original` | `read:email` (`search` also accepts `search:email`) |
 | `email_organize` | `move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`, `search_and_move` | `manage:folders` (move/copy/search_and_move), `send:email` (flag/archive) |
 | `email_delete` | `delete`, `delete_batch`, `search_and_delete` | `delete:email` |
 | `email_compose` | `send`, `reply`, `forward` | `send:email` |
 | `folder` | `list`, `create`, `rename`, `delete` | `read:email` (list), `manage:folders` (create/rename/delete) |
-| `draft` | `list`, `create`, `update`, `send`, `delete` | `manage:drafts` (list/create/update/delete), `send:email` (send) |
+| `draft` | `list`, `create`, `reply`, `update`, `send`, `delete` | `manage:drafts` (list/create/reply/update/delete), `read:email` (reply also), `send:email` (send) |
 | `schedule` | `create`, `list`, `cancel` | `schedule:email` |
 | `signature` | `get`, `set` | `read:email` (get), `send:email` (set) |
 | `contact_search` | *(single action)* | `manage:contacts` |
@@ -94,7 +94,9 @@ Notes:
 - Batch actions cap at 50 (`email_read`'s `read_batch`) to 500 (move/delete/flag) messages per call.
 - For a targeted mutation, first use `email_read` with `action: "search"`, then pass the returned `message_id` or `message_ids` to `email_organize` or `email_delete`. Search fields are accepted only by `search_and_move` and `search_and_delete` mutation actions.
 - `contact_search` scans recent mail live — there is no stored address book.
+- `email_read`'s `original` action returns one complete provider-stored MIME message as a portable `.eml` file (up to 25 MB). It is read-only and never marks the message as read.
 - `draft`'s `send` action requires `send:email`, not `manage:drafts` — so a key that can only manage drafts can't use them to bypass the send‑mail consent.
+- `draft`'s `reply` action creates an unsent, provider-native reply in the source conversation. It needs both `manage:drafts` and `read:email`, and defaults to replying only to the sender.
 - `tools/list` only returns the tools your key (or OAuth token) is actually scoped for.
 
 ## OAuth scopes
@@ -295,7 +297,7 @@ Supported locales: **English, Norwegian Bokmål, Spanish, French, Chinese (Simpl
 ## Security model
 
 - **Credentials encrypted at rest** with AES‑256‑GCM; decrypted only inside the edge function at call time.
-- **No message storage** — email bodies are fetched live and never persisted.
+- **No message storage** — email bodies and attachments are fetched live and never persisted. Attachment text extraction runs transiently in the request and returns no raw attachment bytes.
 - **API keys are hashed** (only a prefix is stored for display) and scoped per permission and per inbox, with optional expiry.
 - **OAuth 2.0 + PKCE** for client authorization; **Dynamic Client Registration** (RFC 7591) for MCP clients.
 - **Row‑Level Security** isolates every workspace's data at the database layer.
