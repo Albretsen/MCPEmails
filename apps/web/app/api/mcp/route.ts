@@ -21,9 +21,10 @@ import { NextRequest, NextResponse } from 'next/server';
  *   MCP clients use this to auto-discover the authorization server and begin
  *   the OAuth 2.0 Authorization Code + PKCE flow.
  *
- * API keys must be sent in the Authorization header. Query-string credentials
- * are rejected because URLs can be retained in browser history, logs,
- * referrers, and monitoring systems.
+ * API keys may be sent in the Authorization header or, for backwards
+ * compatibility with existing integrations, as a `key` or `api_key` query
+ * parameter. Prefer the Authorization header: URL credentials can be retained
+ * in browser history, logs, referrers, and monitoring systems.
  */
 
 const MCP_FUNCTION_URL =
@@ -50,27 +51,14 @@ export function OPTIONS(): NextResponse {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  if (
-    request.nextUrl.searchParams.has('key') ||
-    request.nextUrl.searchParams.has('api_key')
-  ) {
-    return new NextResponse(
-      JSON.stringify({
-        error: 'unauthorized',
-        error_description: 'API keys must be sent in the Authorization header.',
-      }),
-      {
-        status: 401,
-        headers: {
-          ...CORS_HEADERS,
-          'Content-Type': 'application/json',
-          'WWW-Authenticate': WWW_AUTHENTICATE,
-        },
-      }
-    );
-  }
-
-  const authorization = request.headers.get('authorization');
+  const queryKey =
+    request.nextUrl.searchParams.get('key') ??
+    request.nextUrl.searchParams.get('api_key');
+  const headerAuthorization = request.headers.get('authorization');
+  // Keep headers authoritative when both mechanisms are supplied. Query-string
+  // support is only for legacy clients that cannot set request headers.
+  const authorization = headerAuthorization ??
+    (queryKey ? `Bearer ${queryKey}` : null);
 
   // Return 401 immediately for requests with no bearer token so MCP clients
   // can begin OAuth discovery without forwarding an empty request upstream.

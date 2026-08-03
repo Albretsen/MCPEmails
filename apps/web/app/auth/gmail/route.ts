@@ -14,6 +14,7 @@ import { randomBytes } from 'crypto';
  *   - gmail.readonly       : list and fetch message bodies
  *   - gmail.send           : compose and send new messages
  *   - gmail.modify         : apply/remove labels, move to trash
+ *   - gmail.settings.basic : discover provider-verified Send As identities
  *
  * access_type=offline  → Google issues a refresh token
  * prompt=consent       → Forces the consent screen so a refresh token is
@@ -39,6 +40,7 @@ const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/gmail.modify',
+  'https://www.googleapis.com/auth/gmail.settings.basic',
 ];
 
 export async function GET(request: Request) {

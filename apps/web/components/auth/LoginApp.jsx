@@ -18,6 +18,10 @@ export function LoginApp() {
   const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
 
   function getSafeRedirect() {
+    // Client components are pre-rendered on the server too. This helper is
+    // also used while rendering the sign-up link, so it must not read the
+    // browser global during SSR.
+    if (typeof window === 'undefined') return null;
     const redirect = new URLSearchParams(window.location.search).get('redirect');
     return redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.startsWith('/\\')
       ? redirect

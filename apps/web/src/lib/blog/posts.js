@@ -43,6 +43,11 @@ import bestWaysClaudeInbox from './posts/best-ways-to-let-claude-manage-your-inb
 import sevenThingsInbox from './posts/7-things-ai-agent-can-do-with-inbox-access';
 import triageSummarize from './posts/ai-agent-triage-summarize-inbox';
 import autoResponder from './posts/build-email-auto-responder-mcp-agent';
+import approveAiAgentEmailSends from './posts/approve-ai-agent-email-sends';
+import extractEmailAttachmentsForAi from './posts/extract-email-attachments-for-ai';
+import aiAgentEmailWorkflowsAndPrompts from './posts/ai-agent-email-workflows-and-prompts';
+import preventDuplicateAiAgentEmailSends from './posts/prevent-duplicate-ai-agent-email-sends';
+import gmailLabelsVsImapFoldersAiAgents from './posts/gmail-labels-vs-imap-folders-ai-agents';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -67,6 +72,11 @@ const MODULE_POSTS = [
   sevenThingsInbox,
   triageSummarize,
   autoResponder,
+  approveAiAgentEmailSends,
+  extractEmailAttachmentsForAi,
+  aiAgentEmailWorkflowsAndPrompts,
+  preventDuplicateAiAgentEmailSends,
+  gmailLabelsVsImapFoldersAiAgents,
 ];
 
 /** @type {Array<import('./types').Post>} */
@@ -165,6 +175,11 @@ Give your agent verbs, not passwords — and let it get to work.`,
  * reorder; any post not listed falls to the end (newest publishedAt first).
  */
 const RELEVANCE_ORDER = [
+  'approve-ai-agent-email-sends',
+  'ai-agent-email-workflows-and-prompts',
+  'extract-email-attachments-for-ai',
+  'prevent-duplicate-ai-agent-email-sends',
+  'gmail-labels-vs-imap-folders-ai-agents',
   'connect-email-to-ai-agent-under-2-minutes',
   'connect-claude-to-email',
   'connect-gmail-to-claude',

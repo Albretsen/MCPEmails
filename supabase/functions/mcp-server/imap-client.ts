@@ -292,15 +292,25 @@ export class ImapClient {
 
   /**
    * UID FETCH (FLAGS ENVELOPE BODYSTRUCTURE) for a set of UIDs.
-   * Returns one summary per message that parsed successfully.
+   *
+   * `includePreview` avoids downloading a body prefix when a caller only needs
+   * envelope metadata to rank a larger candidate set. The returned summaries
+   * still have a string preview (the empty string when it was not fetched), so
+   * callers that expose a preview can fetch it only for their final page.
    */
-  fetchSummaries(uids: number[]): Promise<ImapMessageSummary[]> {
+  fetchSummaries(
+    uids: number[],
+    options: { includePreview?: boolean } = {},
+  ): Promise<ImapMessageSummary[]> {
     if (uids.length === 0) return Promise.resolve([]);
     return this.runExclusive(async () => {
       const tag = this.nextTag();
       const set = uids.join(",");
+      const previewPart = options.includePreview === false
+        ? ""
+        : " BODY.PEEK[1]<0.2048>";
       await this.write(
-        `${tag} UID FETCH ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE BODY.PEEK[1]<0.2048>)${CRLF}`,
+        `${tag} UID FETCH ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart})${CRLF}`,
       );
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {

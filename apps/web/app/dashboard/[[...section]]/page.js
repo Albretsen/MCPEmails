@@ -105,7 +105,7 @@ async function fetchInboxes(supabase, workspaceId) {
   const [{ data: rows, error }, { data: logRows }] = await Promise.all([
     supabase
       .from('inboxes')
-      .select('id, display_name, email_address, provider, service, status, last_error, imap_host, imap_port, smtp_host, smtp_port, imap_username, created_at, signature_text, signature_html, signature_enabled, signature_reply_mode, signature_source')
+      .select('id, display_name, email_address, provider, service, status, last_error, imap_host, imap_port, smtp_host, smtp_port, imap_username, created_at, signature_text, signature_html, signature_enabled, signature_reply_mode, signature_source, send_approval_required')
       .eq('workspace_id', workspaceId)
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
@@ -185,6 +185,7 @@ async function fetchInboxes(supabase, workspaceId) {
     signatureEnabled: row.signature_enabled ?? true,
     signatureReplyMode: row.signature_reply_mode ?? 'first_only',
     signatureSource: row.signature_source ?? null,
+    sendApprovalRequired: row.send_approval_required ?? false,
   }));
 }
 

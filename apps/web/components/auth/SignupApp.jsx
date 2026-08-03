@@ -50,6 +50,10 @@ export function SignupApp() {
   // link) so the user lands back where they started after confirming/signing in,
   // instead of always being dropped on /dashboard. Only relative paths are honored.
   function getSafeRedirect() {
+    // Client components are pre-rendered on the server too. This helper is
+    // also used while rendering the sign-in link, so it must not read the
+    // browser global during SSR.
+    if (typeof window === 'undefined') return null;
     const redirect = new URLSearchParams(window.location.search).get('redirect');
     return redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.startsWith('/\\')
       ? redirect

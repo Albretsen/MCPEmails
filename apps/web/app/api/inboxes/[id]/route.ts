@@ -295,9 +295,16 @@ export async function PATCH(
     update.signature_reply_mode = mode;
   }
 
+  if ('send_approval_required' in input) {
+    if (typeof input.send_approval_required !== 'boolean') {
+      return NextResponse.json({ error: 'send_approval_required must be a boolean.' }, { status: 400 });
+    }
+    (update as any).send_approval_required = input.send_approval_required;
+  }
+
   if (Object.keys(update).length === 0) {
     return NextResponse.json(
-      { error: 'Provide at least one of signature_text, signature_html, signature_enabled, signature_reply_mode.' },
+      { error: 'Provide at least one supported inbox setting.' },
       { status: 400 }
     );
   }
@@ -329,11 +336,12 @@ export async function PATCH(
 
   const workspaceId = inbox.workspace_id;
 
-  // 3. Any edit pins the signature as user-owned so Gmail auto-import never
-  //    overwrites it on a later send.
+  // 3. Signature edits pin the signature as user-owned; approval is independent.
   const now = new Date().toISOString();
-  update.signature_source = 'manual';
-  update.signature_updated_at = now;
+  if ('signature_text' in input || 'signature_html' in input || 'signature_enabled' in input || 'signature_reply_mode' in input) {
+    update.signature_source = 'manual';
+    update.signature_updated_at = now;
+  }
   update.updated_at = now;
 
   const service = createServiceRoleClient();
@@ -343,7 +351,7 @@ export async function PATCH(
     .eq('id', inboxId)
     .eq('workspace_id', workspaceId)
     .select(
-      'signature_text, signature_html, signature_enabled, signature_reply_mode, signature_source, signature_updated_at'
+      'signature_text, signature_html, signature_enabled, signature_reply_mode, signature_source, signature_updated_at, send_approval_required'
     )
     .single();
 
@@ -352,5 +360,5 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to save signature.' }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true, signature: saved });
+  return NextResponse.json({ success: true, signature: saved, sendApprovalRequired: (saved as any).send_approval_required ?? false });
 }

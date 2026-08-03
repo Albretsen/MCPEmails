@@ -35,6 +35,12 @@ const PROVIDERS = [
 
 const MATRIX = {
   // ── Core read/write ────────────────────────────────────────────────────
+  original_message: {
+    label: 'Download original (.eml)',
+    section: 'Core',
+    gmail: true, outlook: true, fastmail: true,
+    icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
+  },
   read: {
     label: 'Read email',
     section: 'Core',
@@ -266,6 +272,14 @@ export default function ProvidersClient() {
           }}>
             {t.rich('providers.legend.imapNote', RICH)}
           </p>
+          <div style={{
+            maxWidth: 760, padding: '14px 16px', borderRadius: 10,
+            border: '1px solid var(--border-1)', background: 'var(--bg-sunken)',
+            fontSize: 13, fontFamily: 'var(--font-sans)', color: 'var(--fg-2)', lineHeight: 1.6,
+          }}>
+            <strong style={{ color: 'var(--fg-1)' }}>Compatibility profiles</strong><br />
+            Every inbox reports a versioned profile to an MCP agent: <em>exact</em> means the normalized operation keeps its meaning, <em>different</em> means the provider uses documented alternative semantics, and <em>unavailable</em> means MCP Emails will not silently weaken the request. Profiles describe connector behavior without inspecting or storing mail.
+          </div>
         </div>
       </section>
 

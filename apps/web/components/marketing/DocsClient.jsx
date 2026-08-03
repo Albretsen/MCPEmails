@@ -155,6 +155,17 @@ const TOOLS = [
         "trash_vs_expunge": "trash", "forward": true, "drafts": true,
         "contacts_api": true, "contacts_db": true, "scheduling": true,
         "search_syntax": "gmail"
+      },
+      "compatibility": {
+        "schema_version": "compatibility-v1",
+        "profile": "gmail-v1",
+        "status": "available",
+        "operations": {
+          "search.body": "different",
+          "organization.move": "different",
+          "organization.copy": "unavailable",
+          "delete.permanent": "unavailable"
+        }
       }
     },
     {
@@ -163,7 +174,13 @@ const TOOLS = [
       "display_name": "Fastmail",
       "provider": "imap",
       "service": "fastmail",
-      "capabilities": { "search_syntax": "imap", "copy": true }
+      "capabilities": { "search_syntax": "imap", "copy": true },
+      "compatibility": {
+        "schema_version": "compatibility-v1",
+        "profile": "imap-baseline-v1",
+        "status": "available",
+        "operations": { "search.has_attachment": "unavailable", "organization.move": "different" }
+      }
     }
   ]
 }`,
@@ -344,6 +361,7 @@ const TOOLS = [
       { name: 'include_attachments', type: 'boolean',       required: false },
       { name: 'include_signature',   type: 'boolean',       required: false },
       { name: 'attachments',         type: 'array',         required: false },
+      { name: 'idempotency_key',     type: 'string',        required: false },
     ],
     example: {
       request: `{
@@ -417,6 +435,7 @@ const TOOLS = [
       { name: 'bcc',      type: 'array[string]', required: false },
       { name: 'html_body',type: 'string',        required: false },
       { name: 'include_signature', type: 'boolean', required: false },
+      { name: 'idempotency_key', type: 'string', required: false },
       { name: 'limit',    type: 'integer',       required: false },
     ],
     example: {
@@ -458,6 +477,7 @@ const TOOLS = [
       { name: 'reply_to',          type: 'string',        required: false },
       { name: 'attachments',       type: 'array',         required: false },
       { name: 'scheduled_send_id', type: 'string (uuid)', required: false },
+      { name: 'idempotency_key',   type: 'string',        required: false },
       { name: 'limit',             type: 'integer',       required: false },
     ],
     example: {
@@ -859,6 +879,30 @@ export default function DocsClient() {
                 {t.rich('endpoint.pollingBody', RICH)}
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Product capabilities — deliberately grouped as interface behaviour, not
+          as a new tool catalogue. */}
+      <section className="section" id="operations" style={{ paddingTop: 64, paddingBottom: 64 }}>
+        <div className="container">
+          <div className="section-head">
+            <div className="eye-label">{t('operations.eyebrow')}</div>
+            <h2>{t('operations.heading')}</h2>
+            <p className="sub">{t('operations.sub')}</p>
+          </div>
+          <div className="docs-endpoint-grid">
+            {['approval', 'portable', 'content', 'reliable', 'workflows', 'drafts'].map((key) => (
+              <div className="docs-endpoint-card" key={key}>
+                <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 16, color: 'var(--fg-1)' }}>
+                  {t(`operations.${key}.heading`)}
+                </h3>
+                <p style={{ margin: '8px 0 0', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.6 }}>
+                  {t.rich(`operations.${key}.body`, RICH)}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

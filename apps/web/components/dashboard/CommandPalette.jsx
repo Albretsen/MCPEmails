@@ -17,6 +17,7 @@ const PAGES = [
   { id: 'keys',     labelKey: 'commandPalette.pageKeys',     icon: 'key',      keywords: 'tokens secrets credentials mcp' },
   { id: 'members',  labelKey: 'commandPalette.pageMembers',  icon: 'users',    keywords: 'team people users invite workspace' },
   { id: 'usage',    labelKey: 'commandPalette.pageUsage',    icon: 'zap',      keywords: 'billing calls quota limits metrics' },
+  { id: 'workflows', label: 'Workflows', icon: 'activity', keywords: 'prompts routines triage draft search cleanup scheduled email' },
   { id: 'approvals', labelKey: 'commandPalette.pageApprovals', icon: 'shield', keywords: 'approve reject review pending sends outgoing email' },
   { id: 'settings', labelKey: 'commandPalette.pageSettings', icon: 'settings', keywords: 'account profile password preferences' },
   { id: 'security', labelKey: 'commandPalette.pageSecurity', icon: 'shield',   keywords: 'audit log sessions devices' },

@@ -90,12 +90,72 @@ export function homeJsonLd(
         applicationSubCategory: 'Email',
         operatingSystem: 'Web',
         publisher: { '@id': orgId },
+        // These are concrete, shipped capabilities rather than a duplicate of
+        // the tool catalogue. Keeping this as one product-level list lets
+        // search engines and assistants discover important workflows without
+        // turning every operation into a separate marketing claim.
+        featureList: [
+          'Human approval before AI-sent email is dispatched',
+          'Transient attachment text extraction',
+          'User-invoked MCP workflow prompts',
+          'Idempotency keys for safe outbound email retries',
+          'Provider compatibility profiles',
+          'Original email export as .eml (message/rfc822)',
+          'Verified Gmail send-as aliases',
+          'Threaded reply drafts',
+        ],
         offers: {
           '@type': 'Offer',
           price: '0',
           priceCurrency: 'USD',
           description: 'Unlimited, free forever. No card required.',
         },
+      },
+    ],
+  };
+}
+
+/**
+ * Structured data for the public documentation index. The `about` topics map
+ * to documented, available behaviours and help search engines distinguish the
+ * reference from generic AI-email setup guides.
+ */
+export function docsJsonLd(
+  locale: string,
+  { title, description }: { title: string; description: string },
+) {
+  const path = '/docs';
+  const url = localePath(locale, path);
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'TechArticle',
+        '@id': url,
+        url,
+        headline: title,
+        description,
+        inLanguage: locale,
+        isPartOf: { '@id': `${APP_URL}/#website` },
+        about: [
+          'AI email approval workflows',
+          'Email attachment text extraction',
+          'MCP prompts',
+          'Idempotent email sending',
+          'Email provider compatibility',
+          'EML email export',
+          'Gmail send-as aliases',
+          'Threaded email drafts',
+        ].map((name) => ({ '@type': 'Thing', name })),
+        breadcrumb: { '@id': `${url}#breadcrumb` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${url}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 2, name: title, item: url },
+        ],
       },
     ],
   };

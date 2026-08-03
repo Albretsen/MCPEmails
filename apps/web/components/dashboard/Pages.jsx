@@ -10,6 +10,7 @@ import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 import SignatureRichEditor from './SignatureRichEditor';
 import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
+import { ApprovalsPanel } from './ApprovalsPanel';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
@@ -26,6 +27,49 @@ const PROVIDER_LABELS = {
   zoho: 'Zoho',
   yandex: 'Yandex',
 };
+
+// Mirrors the server-side Compatibility Profile contract. The dashboard does
+// not run mailbox probes: these are safe connector semantics, not customer
+// email data. Branded app-password providers all use the IMAP baseline.
+function compatibilityForInbox(provider) {
+  if (provider === 'gmail') {
+    return {
+      status: 'Compatible with differences',
+      tone: 'amber',
+      profile: 'gmail-v1',
+      notes: [
+        'Uses labels rather than folders.',
+        'Moving adds a label and removes INBOX; other labels remain.',
+        'Body search is whole-message search.',
+      ],
+    };
+  }
+  if (provider === 'outlook') {
+    return {
+      status: 'Planned connector',
+      tone: 'neutral',
+      profile: 'outlook-v1',
+      notes: [
+        'Uses folders and Microsoft Graph search semantics.',
+        'Flagged search is unavailable through the normalized search path.',
+      ],
+    };
+  }
+  return {
+    status: 'Compatible with differences',
+    tone: 'amber',
+    profile: 'imap-baseline-v1',
+    notes: [
+      'Uses the IMAP protocol baseline; individual servers can differ.',
+      'Attachment-only search is unavailable.',
+      'Move can fall back to copy and delete when MOVE is unavailable.',
+    ],
+  };
+}
+
+export function ApprovalsPage({ userRole }) {
+  return <ApprovalsPanel userRole={userRole} />;
+}
 
 // Rich-text tag handlers shared across pages (inline code + bold).
 const RICH = {
@@ -886,6 +930,47 @@ function UsageChart30({ dailyCounts }) {
 }
 
 /* ---------------- Inboxes ---------------- */
+const WORKFLOW_CARDS = [
+  { title: 'Morning inbox triage', prompt: 'Run my morning inbox triage. Group unread messages into needs a reply today, FYI / can wait, and likely noise. Do not change anything.', scope: 'Read only' },
+  { title: 'Find and brief', prompt: 'Find the answer in my email: [your question]. Cite the sender, subject, and date that support your answer. Do not change anything.', scope: 'Read only' },
+  { title: 'Follow-up radar', prompt: 'Find conversations from the last 14 days where I owe someone a reply or they owe me one. Explain the evidence and rank by urgency. Do not change anything.', scope: 'Read only' },
+  { title: 'Decision tracker', prompt: 'Find recent emails containing decisions, commitments, owners, or deadlines. Give me a concise action list with evidence. Do not change anything.', scope: 'Read only' },
+  { title: 'Prepare reply drafts', prompt: 'Identify emails that need a reply and propose concise draft responses. Show each proposed recipient and summary before creating a draft. Never send.', scope: 'Requires draft access' },
+  { title: 'Clean up safely', prompt: 'Propose a safe organization plan for [receipts/newsletters/etc.]. Show selection criteria and affected count first. Do not change anything until I explicitly confirm.', scope: 'Proposal only' },
+  { title: 'Review scheduled sends', prompt: 'Review my pending scheduled sends. Highlight anything stale, ambiguous, or unusually broad. Do not create or cancel anything.', scope: 'Scheduled sends' },
+];
+
+export function WorkflowsPage({ mcpUrl }) {
+  const { toast } = useToast();
+  const [copied, setCopied] = useState('');
+  const copy = async (title, prompt) => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setCopied(title);
+      toast({ message: 'Workflow prompt copied.', variant: 'success' });
+      setTimeout(() => setCopied(''), 1800);
+    } catch { toast({ message: 'Could not copy the prompt.', variant: 'error' }); }
+  };
+  return (
+    <main className="page" style={{ maxWidth: 1040 }}>
+      <PageHeader title="Workflows" sub="Reliable email routines you can run in any MCP client. Prompts never add permissions; your connection’s scopes still control every action." />
+      <div style={{ background: 'var(--brand-soft, #eef4ff)', border: '1px solid var(--border)', borderRadius: 14, padding: 18, marginBottom: 20, color: 'var(--fg-2)', lineHeight: 1.55 }}>
+        <strong style={{ color: 'var(--fg-1)' }}>Use them your way.</strong> Copy a routine into your agent today. Clients that support MCP prompts can also discover the starter library directly from {mcpUrl}.
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: 14 }}>
+        {WORKFLOW_CARDS.map((card) => (
+          <article key={card.title} style={{ border: '1px solid var(--border)', borderRadius: 14, padding: 18, background: 'var(--bg-1)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div><h2 style={{ margin: 0, fontSize: 16, color: 'var(--fg-1)' }}>{card.title}</h2><span style={{ fontSize: 12, color: 'var(--fg-3)' }}>{card.scope}</span></div>
+            <p style={{ margin: 0, color: 'var(--fg-2)', fontSize: 13, lineHeight: 1.55 }}>{card.prompt}</p>
+            <Btn onClick={() => copy(card.title, card.prompt)} icon={copied === card.title ? 'check' : 'copy'} style={{ marginTop: 'auto', alignSelf: 'flex-start' }}>{copied === card.title ? 'Copied' : 'Copy prompt'}</Btn>
+          </article>
+        ))}
+      </div>
+      <BulkRunsPanel />
+    </main>
+  );
+}
+
 export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck, onSaveSignature }) {
   const t = useTranslations('dashboard');
   // Count errored inboxes to conditionally show a page-level warning banner.
@@ -1016,7 +1101,8 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
 
       <div className="card">
         {inboxes.length > 0 ? (
-          <div className="tbl-wrap">
+          <>
+          <div className="tbl-wrap inbox-table-wrap">
           <table className="tbl">
             <thead>
               <tr>
@@ -1109,6 +1195,50 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
             </tbody>
           </table>
           </div>
+          <div className="inbox-list-mobile">
+            {inboxes.map(ib => {
+              const isError = ib.status === 'error';
+              const status = ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
+                : ib.status === 'pending' ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>
+                : isError ? <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
+                : ib.status === 'revoked' ? <Badge tone="amber" dot="amber">{t('inboxes.statusExpired')}</Badge>
+                : <Badge tone="neutral">{ib.status}</Badge>;
+              return (
+                <article
+                  className="inbox-mobile-card"
+                  key={ib.id}
+                  onClick={() => setDetailInbox(ib)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={t('inboxes.detail.openAria', { label: ib.label })}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailInbox(ib); } }}
+                >
+                  <div className="inbox-mobile-card-top">
+                    <div className="inbox-mobile-identity">
+                      <strong>{ib.label}</strong>
+                      <span className="mono">{ib.address}</span>
+                    </div>
+                    {status}
+                  </div>
+                  <div className="inbox-mobile-meta">
+                    <span><ProviderLogo kind={ib.provider} size={16} /> {PROVIDER_LABELS[ib.provider] ?? ib.provider}</span>
+                    <span>{ib.calls.toLocaleString()} calls</span>
+                  </div>
+                  {isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
+                  <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
+                    <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
+                    {isError ? (
+                      <Btn variant="secondary" size="sm" icon="refresh" onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
+                    ) : (
+                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={checkingId === ib.id} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
+                    )}
+                    <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          </>
         ) : (
           <div className="empty">
             <div className="ico"><Icon name="inbox" size={20} /></div>
@@ -1318,6 +1448,7 @@ function SignatureEditor({ inbox, onSave, t }) {
 
   const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
   const [replyMode, setReplyMode] = useState(inbox.signatureReplyMode ?? 'first_only');
+  const [approvalRequired, setApprovalRequired] = useState(inbox.sendApprovalRequired ?? false);
   const [saving, setSaving] = useState(false);
   const [sizeError, setSizeError] = useState('');
   // Live preview: sanitized HTML rendered exactly as it will appear in mail.
@@ -1357,6 +1488,7 @@ function SignatureEditor({ inbox, onSave, t }) {
   useEffect(() => {
     setEnabled(inbox.signatureEnabled ?? true);
     setReplyMode(inbox.signatureReplyMode ?? 'first_only');
+    setApprovalRequired(inbox.sendApprovalRequired ?? false);
     setSizeError('');
     setPreviewTooBig(false);
     try {
@@ -1397,6 +1529,7 @@ function SignatureEditor({ inbox, onSave, t }) {
         signature_text: text,
         signature_enabled: enabled,
         signature_reply_mode: replyMode,
+        send_approval_required: approvalRequired,
       });
     } catch {
       // App.jsx already showed an error toast; keep the form as-is for retry.
@@ -1424,6 +1557,11 @@ function SignatureEditor({ inbox, onSave, t }) {
           {t('inboxes.detail.signature.enabled')}
         </label>
       </div>
+
+      <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 16, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>
+        <input type="checkbox" checked={approvalRequired} onChange={() => setApprovalRequired(v => !v)} disabled={saving} style={{ accentColor: 'var(--brand)', marginTop: 2 }} />
+        <span><strong style={{ color: 'var(--fg-1)' }}>Require approval before sending</strong><br />Messages sent by an MCP client wait for a workspace approver. Disabled by default.</span>
+      </label>
 
       {wasImported && (
         <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
@@ -1491,6 +1629,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
   // OAuth providers authenticate with a token; IMAP/Fastmail use an app
   // password (surfaced by hasImap). This is what "OAuth token status" maps to.
   const usesOauth = !inbox.hasImap;
+  const compatibility = compatibilityForInbox(inbox.provider);
 
   const statusLabel =
     inbox.status === 'active'  ? t('inboxes.statusConnected') :
@@ -1572,6 +1711,27 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
               {inbox.lastError}
             </div>
           )}
+
+          <div style={{
+            padding: '12px',
+            marginBottom: 16,
+            border: '1px solid var(--border-1)',
+            borderRadius: 8,
+            background: 'var(--bg-sunken)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 7 }}>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
+                Compatibility profile
+              </span>
+              <Badge tone={compatibility.tone}>{compatibility.status}</Badge>
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--fg-3)', marginBottom: 7 }}>
+              {compatibility.profile} · connector semantics
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 18, fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.55 }}>
+              {compatibility.notes.map(note => <li key={note}>{note}</li>)}
+            </ul>
+          </div>
 
           {onSaveSignature && inbox.status !== 'pending' && (
             <details className="inbox-sending-details">
@@ -2731,6 +2891,58 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
       )}
     </div>
   );
+}
+
+/* ---------------- Workflows ---------------- */
+
+// Kept separate from the customer-facing workflow library above. Bulk-run
+// controls need their own route/API wiring before they can replace it.
+function BulkRunsPanel() {
+  const [runs, setRuns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [cancelling, setCancelling] = useState(null);
+
+  const load = async () => {
+    try {
+      const response = await fetch('/api/workflows/runs', { cache: 'no-store' });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Failed to load runs.');
+      setRuns(payload.runs || []); setError('');
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load runs.'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    load();
+    const id = window.setInterval(load, 5000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const cancel = async (id) => {
+    setCancelling(id);
+    try {
+      const response = await fetch('/api/workflows/runs', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Could not request cancellation.');
+      await load();
+    } catch (err) { setError(err instanceof Error ? err.message : 'Could not request cancellation.'); }
+    finally { setCancelling(null); }
+  };
+
+  return <section style={{ marginTop: 28 }}>
+    <h2 style={{ margin: '0 0 6px', fontSize: 18 }}>Large-work controls</h2>
+    <p style={{ color: 'var(--fg-2)', margin: '0 0 14px' }}>See bulk inbox work as it happens. Stop prevents work that has not started; it does not undo messages already changed.</p>
+    {error && <div className="alert alert-error" role="alert">{error}</div>}
+    <div className="card" style={{ overflowX: 'auto' }}>
+      {loading ? <p style={{ color: 'var(--fg-3)' }}>Loading runs…</p> : runs.length === 0 ? <div className="empty-state"><Icon name="activity" size={24} /><h3>No large-work runs yet</h3><p>Bulk move and flag actions will appear here while they run.</p></div> :
+        <table className="data-table"><thead><tr><th>Action</th><th>Inbox</th><th>Progress</th><th>Status</th><th>Started</th><th /></tr></thead><tbody>{runs.map((run) => {
+          const active = run.status === 'running' || run.status === 'cancelling';
+          const label = run.operation.replaceAll('_', ' ');
+          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={run.status === 'cancelling' || cancelling === run.id} onClick={() => cancel(run.id)}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
+        })}</tbody></table>}
+    </div>
+  </section>;
 }
 
 /* ---------------- Usage ---------------- */
