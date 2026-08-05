@@ -84,12 +84,17 @@ import t71 from './connect-claude-to-email/es';
 import t72 from './connect-claude-to-email/fr';
 import t73 from './connect-claude-to-email/nb';
 import t74 from './connect-claude-to-email/zh';
+import t75 from './claude-imap-connector/es';
+import t76 from './claude-imap-connector/fr';
+import t77 from './claude-imap-connector/nb';
+import t78 from './claude-imap-connector/zh';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
   'ai-agent-triage-summarize-inbox': { es: t4, fr: t5, nb: t6, zh: t7 },
   'best-ways-to-let-claude-manage-your-inbox': { es: t8, fr: t9, nb: t10, zh: t11 },
   'build-email-auto-responder-mcp-agent': { es: t12, fr: t13, nb: t14, zh: t15 },
+  'claude-imap-connector': { es: t75, fr: t76, nb: t77, zh: t78 },
   'connect-email-to-ai-agent-under-2-minutes': { fr: t16, nb: t17, zh: t18 },
   'connect-gmail-to-claude': { es: t19, fr: t20, nb: t21, zh: t22 },
   'connect-claude-to-email': { es: t71, fr: t72, nb: t73, zh: t74 },

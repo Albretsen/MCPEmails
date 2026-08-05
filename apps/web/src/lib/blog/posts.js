@@ -48,6 +48,7 @@ import extractEmailAttachmentsForAi from './posts/extract-email-attachments-for-
 import aiAgentEmailWorkflowsAndPrompts from './posts/ai-agent-email-workflows-and-prompts';
 import preventDuplicateAiAgentEmailSends from './posts/prevent-duplicate-ai-agent-email-sends';
 import gmailLabelsVsImapFoldersAiAgents from './posts/gmail-labels-vs-imap-folders-ai-agents';
+import claudeImapConnector from './posts/claude-imap-connector';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -77,6 +78,7 @@ const MODULE_POSTS = [
   aiAgentEmailWorkflowsAndPrompts,
   preventDuplicateAiAgentEmailSends,
   gmailLabelsVsImapFoldersAiAgents,
+  claudeImapConnector,
 ];
 
 /** @type {Array<import('./types').Post>} */
@@ -182,6 +184,7 @@ const RELEVANCE_ORDER = [
   'gmail-labels-vs-imap-folders-ai-agents',
   'connect-email-to-ai-agent-under-2-minutes',
   'connect-claude-to-email',
+  'claude-imap-connector',
   'connect-gmail-to-claude',
   'email-signatures-for-claude',
   'inbox-zero-with-ai-claude',

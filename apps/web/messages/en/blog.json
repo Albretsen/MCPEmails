@@ -7,7 +7,7 @@
   "index": {
     "eyebrow": "The MCPEmails blog",
     "title": "Notes on agents, email & MCP",
-    "lead": "Guides, deep-dives, and field notes on connecting real email to Claude, Cursor, and any MCP-compatible client.",
+    "lead": "Guides, deep-dives, and field notes on connecting Gmail, Fastmail, and any IMAP inbox to Claude, Cursor, and MCP-compatible clients.",
     "filterAria": "Filter posts by topic",
     "all": "All",
     "empty": "No posts tagged “{tag}” yet.",
