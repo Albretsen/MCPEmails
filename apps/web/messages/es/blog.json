@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Blog",
-    "description": "Guías, análisis a fondo y notas de campo sobre agentes de IA, el Model Context Protocol y cómo conectar correo real a Claude, Cursor y cualquier cliente MCP."
+    "description": "Guías sobre agentes de IA, MCP y cómo conectar Gmail, Fastmail y otros buzones IMAP a Claude, Cursor y clientes MCP."
   },
   "blogName": "Blog de mcpemails",
   "index": {
     "eyebrow": "El blog de MCPEmails",
     "title": "Notas sobre agentes, correo y MCP",
-    "lead": "Guías, análisis a fondo y notas de campo sobre cómo conectar correo real a Claude, Cursor y cualquier cliente compatible con MCP.",
+    "lead": "Guías, análisis a fondo y notas de campo sobre cómo conectar Gmail, Fastmail y cualquier buzón IMAP a Claude, Cursor y clientes compatibles con MCP.",
     "filterAria": "Filtrar entradas por tema",
     "all": "Todas",
     "empty": "Aún no hay entradas con la etiqueta “{tag}”.",
