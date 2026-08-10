@@ -341,15 +341,15 @@
     "perKeyHeading": "100 req / min · 1,000 / hr · 10,000 / day",
     "perKeyBody": "Enforced per API key regardless of plan. When exceeded, the server returns error code <code>-32029</code> with <code>data.error_code: \"rate_limit_exceeded\"</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying.",
     "planTag": "Plan per-minute ceiling",
-    "planHeading": "Free 60 / min · Solo 300 / min · Team 1,000 / min",
-    "planBody": "Usage is unlimited; this is a per-workspace fair-use burst limit (aggregated across all your API keys). When exceeded, calls return <code>data.error_code: \"rate_limit_exceeded\"</code> with <code>data.window: \"per_minute\"</code> and a <code>data.retry_after</code> countdown (seconds). Upgrade your plan for a higher ceiling.",
+    "planHeading": "Free 60 / min · Agent 300 / min · Scale 1,000 / min",
+    "planBody": "This is a per-workspace fair-use burst limit (aggregated across all your API keys), separate from your action allowance. When exceeded, calls return <code>data.error_code: \"rate_limit_exceeded\"</code> with <code>data.window: \"per_minute\"</code> and a <code>data.retry_after</code> countdown (seconds). Upgrade your plan for a higher ceiling and action allowance.",
     "retryTag": "Retrying safely",
     "retryHeading": "Always honour retry_after; never retry sends blindly",
     "retryBody": "For <code>rate_limit_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>email_compose</code> sends on <code>provider_error</code>, since the message may have already been accepted by the provider."
   },
   "cta": {
     "heading": "Ready to connect your inbox?",
-    "sub": "Start on the Free plan: unlimited, no card required. Upgrade to Solo or Team for higher burst limits and team features.",
+    "sub": "Start on the Free plan: 2,500 actions per billing period, no card required. Upgrade to Agent or Scale for a larger allowance, higher burst limits, and team features.",
     "primary": "Get started free",
     "secondary": "See pricing"
   },
@@ -420,7 +420,7 @@
     },
     "cta": {
       "heading": "Ready to connect your inbox?",
-      "sub": "Free plan: unlimited connections, no card required.",
+      "sub": "Free plan: unlimited inbox connections and 2,500 actions per billing period, no card required.",
       "primary": "Get started free",
       "secondary": "Read the docs"
     }

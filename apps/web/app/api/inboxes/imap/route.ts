@@ -5,6 +5,8 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
+import { validateSmtpCredential } from '@/lib/email/validate-smtp';
+import { normalizeSecurity } from '@/lib/email/connection-config';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -52,6 +54,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   let smtpHost: string;
   let imapPort: number;
   let smtpPort: number;
+  let imapSecurity: 'tls' | 'starttls';
+  let smtpSecurity: 'tls' | 'starttls';
 
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -63,6 +67,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     smtpHost = typeof body.smtpHost === 'string' ? body.smtpHost.trim().toLowerCase() : '';
     imapPort = typeof body.imapPort === 'number' ? body.imapPort : Number(body.imapPort);
     smtpPort = typeof body.smtpPort === 'number' ? body.smtpPort : Number(body.smtpPort);
+    imapSecurity = normalizeSecurity(body.imapSecurity);
+    smtpSecurity = normalizeSecurity(body.smtpSecurity);
   } catch {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
@@ -82,6 +88,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // 4. Enforce the plan inbox cap for brand-new addresses only.
   const alreadyConnected = await inboxExistsForEmail(supabase, workspaceId, email);
+  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'started', category: 'generic_imap', phase: 'tcp', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
@@ -108,10 +115,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     email,
     username: username || undefined,
     password: appPassword,
+    security: imapSecurity,
   });
 
   if (!validation.ok) {
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed' });
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
     // AUTH_FAILED means the mail server rejected the credentials. Surface a
     // structured error_code so the client can distinguish a credential
     // rejection from other 422 causes (missing/invalid fields, bad host,
@@ -132,6 +140,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
     }
     return NextResponse.json(body, { status: 422 });
+  }
+
+  // Authenticate to SMTP without sending a message. This verifies outbound
+  // capability while preserving the existing read-only validation semantics.
+  const smtpValidation = await validateSmtpCredential({
+    host: smtpHost,
+    port: smtpPort,
+    email,
+    username: username || undefined,
+    password: appPassword,
+    security: smtpSecurity,
+  });
+  if (!smtpValidation.ok) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
   }
 
   // 6. Defense-in-depth: reject if another active inbox in this workspace
@@ -177,10 +200,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       imap_host: imapHost,
       imap_port: imapPort,
       imap_tls: true,
+      imap_security: imapSecurity,
       imap_username: username || null,
       smtp_host: smtpHost,
       smtp_port: smtpPort,
       smtp_tls: true,
+      smtp_security: smtpSecurity,
       imap_password: encryptedPassword,
       oauth_access_token: null,
       oauth_refresh_token: null,
@@ -209,7 +234,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to save inbox. Please try again.' }, { status: 500 });
   }
 
-  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'generic_imap' });
+  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'generic_imap', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
   return NextResponse.json({ success: true });
 }
 

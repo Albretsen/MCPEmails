@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
-export function LoginApp() {
+export function LoginApp({ redirectTo = null }) {
   const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,11 +18,7 @@ export function LoginApp() {
   const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
 
   function getSafeRedirect() {
-    // Client components are pre-rendered on the server too. This helper is
-    // also used while rendering the sign-up link, so it must not read the
-    // browser global during SSR.
-    if (typeof window === 'undefined') return null;
-    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    const redirect = redirectTo;
     return redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.startsWith('/\\')
       ? redirect
       : null;

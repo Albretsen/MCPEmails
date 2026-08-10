@@ -5,6 +5,8 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
+import { validateSmtpCredential } from '@/lib/email/validate-smtp';
+import { yandexLoginUsername } from '@/lib/email/connection-config';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -62,6 +64,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // Zoho only. Whitelisted to the two known values; anything else (absent,
   // unknown, malformed) falls back to 'personal' so behavior is unchanged.
   let zohoAccountType = DEFAULT_ZOHO_ACCOUNT_TYPE;
+  let yandexAccountType: 'personal' | 'business' = 'personal';
   // Optional login override (e.g. Yandex 360 custom-domain accounts whose IMAP
   // login differs from the email address). null = use the email address.
   let loginUsername: string | null = null;
@@ -74,18 +77,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       region?: unknown;
       zohoAccountType?: unknown;
       loginUsername?: unknown;
+      yandexAccountType?: unknown;
     };
     service = typeof body.service === 'string' ? body.service.trim().toLowerCase() : '';
     email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
     appPassword = typeof body.appPassword === 'string' ? body.appPassword.trim() : '';
     region = typeof body.region === 'string' ? body.region : undefined;
     if (isZohoAccountType(body.zohoAccountType)) zohoAccountType = body.zohoAccountType;
+    if (body.yandexAccountType === 'business') yandexAccountType = 'business';
     // Optional login override: trim, drop if empty/whitespace, reject control
     // chars/newlines, cap at 255. Anything invalid falls back to null (use the
     // email address) so a malformed value never breaks the connect flow.
     if (typeof body.loginUsername === 'string') {
       const trimmed = body.loginUsername.trim();
-      // eslint-disable-next-line no-control-regex
       if (trimmed && trimmed.length <= 255 && !/[\x00-\x1f\x7f]/.test(trimmed)) {
         loginUsername = trimmed;
       }
@@ -105,6 +109,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const preset = IMAP_PRESETS[service];
+  if (service === 'yandex' && !loginUsername) {
+    loginUsername = yandexLoginUsername(email, yandexAccountType);
+  }
 
   // Zoho's host depends on the account's data center region AND account type:
   // personal (@zohomail.com) uses imap.zoho.<tld>; organization/custom-domain
@@ -116,6 +123,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // 4. Enforce the plan inbox cap for brand-new addresses only (reconnects reuse
   //    the existing row via upsert and must be allowed even at the cap).
   const alreadyConnected = await inboxExistsForEmail(supabase, workspaceId, email);
+  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'started', category: funnelProvider(service), phase: 'tcp', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
@@ -147,7 +155,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!validation.ok) {
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed' });
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
     // AUTH_FAILED means the mail server rejected the credentials (wrong app
     // password / account-level auth issue). Surface a structured error_code so
     // the client can distinguish a credential rejection from other 422 causes
@@ -169,6 +177,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
     }
     return NextResponse.json(body, { status: 422 });
+  }
+
+
+  const smtpValidation = await validateSmtpCredential({
+    host: smtpHost,
+    port: preset.smtpPort,
+    email,
+    username: loginUsername ?? undefined,
+    password: appPassword,
+    security: preset.smtpSecurity,
+  });
+  if (!smtpValidation.ok) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
   }
 
   // 6. Defense-in-depth: reject if another active inbox in this workspace
@@ -218,9 +240,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       imap_host: imapHost,
       imap_port: preset.imapPort,
       imap_tls: true,
+      imap_security: 'tls',
       smtp_host: smtpHost,
       smtp_port: preset.smtpPort,
       smtp_tls: true,
+      smtp_security: preset.smtpSecurity,
       imap_password: encryptedPassword,
       oauth_access_token: null,
       oauth_refresh_token: null,
@@ -250,7 +274,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to save inbox. Please try again.' }, { status: 500 });
   }
 
-  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: funnelProvider(service) });
+  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: funnelProvider(service), phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
   return NextResponse.json({ success: true });
 }
 

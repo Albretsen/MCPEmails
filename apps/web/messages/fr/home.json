@@ -21,7 +21,7 @@
     "lead": "Connectez Gmail, iCloud, Fastmail ou n'importe quelle boîte IMAP une seule fois. Collez une URL de point de terminaison MCP dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make ou n'importe quel client MCP. Les clients OAuth se connectent en un clic, sans configuration de clé API. Votre agent lit, recherche et envoie du courrier en direct, et le courrier qu'il lit n'est jamais stocké.",
     "ctaPrimary": "Connecter votre boîte de réception",
     "ctaSecondary": "Lire la documentation",
-    "metaUnlimited": "Gratuit illimité, aucun plafond quotidien",
+    "metaUnlimited": "2 500 actions gratuites par période de facturation",
     "metaNoCard": "Aucune carte requise",
     "metaNeverStored": "E-mails récupérés en direct",
     "pipe": {
@@ -117,17 +117,17 @@
   },
   "pricing": {
     "eyebrow": "Tarifs",
-    "title": "Illimité sur chaque formule.",
-    "sub": "L'offre gratuite est vraiment illimitée. Passez à une formule supérieure pour des limites de pointe plus élevées, des fonctionnalités d'équipe et du support. Changez de formule à tout moment.",
+    "title": "Des actions qui évoluent avec vous.",
+    "sub": "Chaque espace de travail inclut des boîtes et des clés API illimitées. Les appels MCP facturables réussis utilisent des actions ; les appels échoués et inbox_list sont gratuits.",
     "perForever": "/pour toujours",
     "perMonth": "/mois",
     "tiers": {
       "free": {
         "name": "Gratuit",
-        "desc": "Tout, en illimité. Aucun plafond quotidien. Pour quiconque construit avec des agents MCP.",
+        "desc": "Découvrez MCPEmails avec 2 500 actions par période de facturation.",
         "features": [
           "Boîtes connectées illimitées",
-          "Aucune limite quotidienne — appels d'outils MCP illimités",
+          "2 500 actions par période de facturation",
           "Clés API illimitées",
           "Gmail, iCloud, Fastmail et toute boîte IMAP",
           "60 requêtes / minute",
@@ -136,29 +136,29 @@
         "cta": "Commencer gratuitement"
       },
       "solo": {
-        "name": "Solo",
+        "name": "Agent",
         "desc": "Pour les utilisateurs intensifs qui font tourner des agents en continu.",
         "features": [
-          "Tout ce qui est dans Gratuit, en illimité",
+        "50 000 actions par période de facturation",
           "300 requêtes / minute (5× en pointe)",
           "Analytique d'usage complète (historique de 90 jours)",
           "Gmail, iCloud, Fastmail et toute boîte IMAP",
           "Support par e-mail"
         ],
-        "cta": "Choisir Solo"
+        "cta": "Choisir Agent"
       },
       "team": {
-        "name": "Team",
+        "name": "Scale",
         "desc": "Pour les équipes et les agences qui gèrent plusieurs boîtes de clients dans un espace de travail partagé, avec rôles, SSO et journaux d'audit.",
         "features": [
-          "Tout ce qui est dans Solo, en illimité",
+        "300 000 actions par période de facturation",
           "1 000 requêtes / minute",
           "Rôles d'équipe et espaces de travail multiples",
           "SSO (SAML / OIDC) + journal d'audit",
           "Analytique d'usage complète (historique d'un an)",
           "Support prioritaire"
         ],
-        "cta": "Choisir Team"
+        "cta": "Choisir Scale"
       }
     },
     "footnote": "Toutes les formules : le courrier que votre agent lit est récupéré en direct et jamais stocké. Jetons OAuth chiffrés au repos. Besoin de quelque chose de sur mesure ? <contact>Contactez-nous</contact>. <comparison>Voir le comparatif complet des fonctionnalités →</comparison>"
@@ -183,7 +183,7 @@
       },
       {
         "q": "Est-ce vraiment gratuit ?",
-        "a": "Oui. L'offre gratuite vous donne des boîtes connectées illimitées, des appels d'outils MCP illimités et des clés API illimitées — aucun plafond quotidien, aucune carte requise. La seule limite est un plafond d'usage équitable par minute, destiné à protéger la plateforme. Les formules payantes ajoutent des membres d'équipe, des limites de pointe plus élevées et du support, jamais plus d'usage."
+        "a": "Oui. L'offre gratuite vous donne des boîtes connectées et des clés API illimitées, ainsi que 2 500 actions facturables par période de facturation — sans plafond quotidien ni carte requise. Les appels échoués et inbox_list sont gratuits. Les formules payantes ajoutent des allocations d'actions plus élevées, des limites de pointe supérieures, des membres d'équipe et du support."
       },
       {
         "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",

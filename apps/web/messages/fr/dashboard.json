@@ -119,7 +119,7 @@
     "goToMembers": "Aller aux Membres",
     "callsPerDayTitle": "Appels par jour",
     "callsPerDaySub": "14 derniers jours · tous outils confondus",
-    "pro": "Pro",
+    "pro": "Scale",
     "recentActivityTitle": "Activité récente",
     "recentActivitySub": "Appels d'outils MCP en direct",
     "noActivityTitle": "Aucune activité pour l'instant",
@@ -295,6 +295,11 @@
   "usage": {
     "title": "Usage",
     "sub": "Appels d'outils MCP sur les 30 derniers jours, toutes boîtes confondues.",
+    "shadowMeterTitle": "Utilisation des actions",
+    "shadowMeterSub": "Actions facturables réussies sur les 30 derniers jours. Visibilité uniquement pendant la période d'observation.",
+    "shadowOnly": "Compteur d'observation",
+    "shadowOfCap": "sur {cap} actions prévues",
+    "lastBillableCalls": "Derniers appels facturables réussis ({count})",
     "quotaExhausted": "Quota quotidien épuisé. Les appels MCP sont rejetés",
     "quotaApproaching": "Quota quotidien à {pct} %, proche de la limite",
     "dailyQuota": "Quota quotidien",
@@ -520,7 +525,7 @@
     "roleOwner": "Propriétaire",
     "sending": "Envoi…",
     "sendInvite": "Envoyer l'invitation",
-    "rolesLockedHint": "Les invités rejoignent en tant que Membre. Passez à Team pour attribuer les rôles Administrateur et Lecteur.",
+    "rolesLockedHint": "Les invités rejoignent en tant que Membre. Passez à Scale pour attribuer les rôles Administrateur et Lecteur.",
     "inviteUpgradeHint": "L'invitation de collaborateurs est disponible sur les formules payantes. Passez à une formule supérieure pour ajouter des membres à cet espace de travail.",
     "errInviteFailed": "Échec de l'envoi de l'invitation.",
     "errRemoveFailed": "Échec de la suppression du membre.",
@@ -544,5 +549,117 @@
     "cancel": "Annuler",
     "removing": "Suppression…",
     "removeMemberBtn": "Supprimer le membre"
+  },
+  "approvals": {
+    "review": {
+      "kicker": "En attente d'approbation",
+      "kickerSettled": "Revue d'envoi",
+      "title": "Approuvez cet e-mail avant son envoi",
+      "titleSettled": "Cet envoi a déjà été traité",
+      "subtitle": "Un assistant IA a préparé cet e-mail. Il n'a pas été remis et ne partira que si vous l'approuvez ici.",
+      "from": "De",
+      "to": "À",
+      "cc": "Cc",
+      "bcc": "Cci",
+      "subject": "Objet",
+      "attachments": "Pièces jointes",
+      "operation": "Type",
+      "route": "Voie de remise",
+      "requested": "Demandé le",
+      "sendAt": "Programmé pour",
+      "expires": "Expire",
+      "unknownInbox": "Boîte inconnue",
+      "unknownTime": "Inconnu",
+      "noSubject": "(sans objet)",
+      "noRecipients": "Aucun destinataire",
+      "noAttachments": "Aucune",
+      "recipientsAtSend": "Cette page n’a pas pu lire les destinataires du message d’origine. Ils seront résolus au moment de l’envoi : vérifiez le texte du message avant d’approuver.",
+      "bccCount": "{count, plural, one {# destinataire masqué} other {# destinataires masqués}}",
+      "attachmentCount": "{count, plural, one {# fichier} other {# fichiers}}",
+      "bodyTitle": "Message",
+      "bodyTruncated": "Ce message dépasse 64 Ko et a été tronqué ici. Ouvrez-le dans le tableau de bord pour tout lire.",
+      "bodyWithheldRole": "Le texte du message est visible par les propriétaires, administrateurs et membres de l'espace. Votre rôle ne peut consulter que les détails de remise.",
+      "bodyStoredWithProvider": "Cette demande envoie un brouillon stocké chez votre fournisseur de messagerie ; son texte ne fait donc pas partie de la demande. Ouvrez le brouillon dans votre application de messagerie avant de décider.",
+      "bodyDecryptFailed": "Le message stocké n'a pas pu être déchiffré et ne peut donc pas être affiché. Rejetez cette demande et demandez à votre assistant de la refaire.",
+      "bodyAbsent": "Cette demande ne contient aucun texte de message.",
+      "bodyHtmlShow": "Afficher la source HTML",
+      "bodyHtmlHide": "Masquer la source HTML",
+      "bodyHtmlNote": "La version HTML est affichée sous forme de source et n'est jamais rendue. Un rendu chargerait des images distantes, ce qui indiquerait à l'auteur du message quand et où vous avez ouvert cette page.",
+      "approve": "Approuver et envoyer",
+      "reject": "Rejeter",
+      "working": "En cours…",
+      "toDashboard": "Ouvrir le tableau de bord",
+      "readOnly": "Vous pouvez consulter cet envoi, mais seul un propriétaire ou un administrateur de l'espace peut l'approuver ou le rejeter.",
+      "footnote": "L'approbation n'est possible que depuis cette page, connecté en tant que propriétaire ou administrateur de l'espace. Un assistant peut préparer un envoi et le rejeter, mais il n'a pas de session de navigateur : il ne peut donc pas l'approuver.",
+      "backToConversation": "Vous pouvez fermer cet onglet et revenir à votre conversation.",
+      "notFoundTitle": "Cette revue n'est pas disponible",
+      "notFoundBody": "Le lien est peut-être périmé, ou il appartient à un espace dont vous n'êtes pas membre. Vérifiez que vous êtes connecté avec le bon compte.",
+      "operations": {
+        "email_send": "Nouvel e-mail",
+        "email_reply": "Réponse",
+        "email_forward": "Transfert",
+        "draft_send": "Envoi d'un brouillon",
+        "schedule_create": "E-mail programmé"
+      },
+      "routes": {
+        "gmail": "API Gmail",
+        "outlook": "Microsoft Graph",
+        "smtp": "IMAP + SMTP"
+      },
+      "caveats": {
+        "gmailThread": "L'envoi rattache le message au fil de conversation existant lorsqu'il s'agit d'une réponse.",
+        "gmailSentLabel": "Une copie est automatiquement écrite dans le libellé Messages envoyés.",
+        "outlookSentItems": "Une copie est automatiquement écrite dans Éléments envoyés.",
+        "smtpNoSentCopy": "La soumission SMTP ne conserve pas elle-même de copie dans Envoyés ; le serveur en ajoute une via IMAP lorsque le compte le permet."
+      },
+      "via": {
+        "dashboard": "Décidé dans le tableau de bord",
+        "review_page": "Décidé via le lien de revue",
+        "mcp_app": "Décidé dans la carte de revue de l'assistant"
+      },
+      "states": {
+        "approvedTitle": "Déjà approuvé",
+        "approvedBody": "Cet e-mail a été approuvé et transmis pour remise. Rien d'autre n'est nécessaire.",
+        "rejectedTitle": "Déjà rejeté",
+        "rejectedBody": "Cet e-mail a été rejeté et ne sera pas envoyé.",
+        "cancelledTitle": "Annulé",
+        "cancelledBody": "Cette demande a été annulée avant toute décision. Rien n'a été envoyé.",
+        "expiredTitle": "Cette demande a expiré",
+        "expiredBody": "Elle n'a pas été traitée à temps et ne sera pas envoyée. Demandez à votre assistant de la refaire si vous le souhaitez toujours.",
+        "decidedElsewhereTitle": "Déjà traité",
+        "decidedElsewhereBody": "Quelqu'un d'autre, ou un autre onglet, a traité cet envoi pendant que cette page était ouverte. Rien n'a changé à l'instant. Ouvrez le tableau de bord pour voir le résultat."
+      },
+      "done": {
+        "approvedTitle": "Approuvé. Cet e-mail est en route.",
+        "approvedBody": "Il est en file d'attente pour être remis depuis votre boîte.",
+        "rejectedTitle": "Rejeté. Rien n'a été envoyé.",
+        "rejectedBody": "Cette demande est close et l'e-mail ne sera pas remis."
+      },
+      "errors": {
+        "csrf": "Cette page est ouverte depuis trop longtemps. Rechargez-la et décidez à nouveau.",
+        "role": "Seul un propriétaire ou un administrateur de l'espace peut trancher cet envoi.",
+        "generic": "Cette décision n'a pas pu être enregistrée. Rien n'a été envoyé — réessayez."
+      }
+    },
+    "mode": {
+      "label": "Revue avant envoi",
+      "off": "Envoyer immédiatement",
+      "offHint": "L'assistant envoie sans demander. Le bon choix pour une boîte servant à du courrier sans enjeu.",
+      "inline": "Carte de revue dans la conversation",
+      "inlineHint": "Une carte apparaît dans la conversation et montre exactement ce qui sera envoyé. Vous pouvez rejeter depuis la carte ; approuver ouvre une page qui exige d'être connecté.",
+      "dashboard": "Revue uniquement dans le tableau de bord",
+      "dashboardHint": "Aucune carte dans la conversation. L'assistant est informé que l'envoi attend, et vous décidez ici.",
+      "guarantee": "Dans les deux modes de revue, l'e-mail est préparé mais pas remis. L'approbation n'a lieu que dans une session de navigateur connectée d'un propriétaire ou d'un administrateur de l'espace, ce dont l'assistant ne dispose pas. La carte de revue est un confort, pas une frontière de permissions."
+    },
+    "panel": {
+      "decidedTitle": "Décidés récemment",
+      "colDecided": "Décidé",
+      "colWhere": "Où",
+      "colOutcome": "Résultat",
+      "statusApproved": "Approuvé",
+      "statusRejected": "Rejeté",
+      "statusExpired": "Expiré",
+      "statusCancelled": "Annulé"
+    }
   }
 }

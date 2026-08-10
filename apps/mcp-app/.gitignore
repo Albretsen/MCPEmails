@@ -1,0 +1,4 @@
+# Build output. The shipped artifact is the generated Deno module at
+# supabase/functions/mcp-server/ui/review-card.html.ts, which is committed;
+# the intermediate bundle is not.
+dist/

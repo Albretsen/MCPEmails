@@ -73,7 +73,7 @@ Dette syr sammen de andre: \`email_read\` (handlingen search, så list) for å s
 
 ## Hva dette koster og hvor grensene ligger
 
-Alle sju fungerer på [Free-planen](/pricing), som koster $0 med ubegrenset antall innbokser og verktøykall. Planene skiller seg på burst-rate, ikke på hva verktøyene kan gjøre. Free tillater 60 forespørsler per minutt, Solo ($12/month) øker til 300, og Team ($49/month) går til 1 000 med teamroller og SSO. Et ukentlig sammendrag berører knapt de takene; en aggressiv triageløkke hvert minutt på tvers av mange innbokser er der du ville merket Free-grensen og ønsket deg Solo.
+Alle sju fungerer på [Free-planen](/pricing), som koster $0 med ubegrenset antall innbokser og 2 500 fakturerbare handlinger per faktureringsperiode. Free tillater 60 forespørsler per minutt; Agent ($12/month) inkluderer 50 000 handlinger og 300 forespørsler per minutt; Scale ($49/month) inkluderer 300 000 handlinger, 1 000 forespørsler per minutt, teamroller og SSO. Et ukentlig sammendrag berører knapt de takene; en aggressiv triageløkke hvert minutt på tvers av mange innbokser bruker Free-kvoten og gir grunn til Agent.
 
 Når du først treffer en grense, returnerer serveren en feil du kan prøve på nytt, med \`data.retry_after\` i sekunder. Respekter den. Og prøv aldri blindt på nytt en \`email_compose\`-sending automatisk, for et nytt forsøk etter en timeout kan bety at to kopier av samme melding havner i noens innboks.
 

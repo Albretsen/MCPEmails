@@ -11,7 +11,7 @@
       "lead": "Offrez à votre agent IA une vraie boîte Gmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec une connexion Google en un clic — et utilisez la même boîte dans tous les clients MCP, pas un seul.",
       "ctaPrimary": "Connecter Gmail gratuitement",
       "ctaSecondary": "Lire la documentation",
-      "meta0": "Boîtes et appels d'outils illimités",
+      "meta0": "Boîtes illimitées et 2 500 actions",
       "meta1": "Connexion Google en un clic (OAuth)",
       "meta2": "E-mails récupérés en direct, jamais stockés"
     },
@@ -41,13 +41,13 @@
       "sub": "De l'inscription au premier e-mail IA en quelques minutes."
     },
     "steps": [
-      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails — sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails — sans carte. Le plan gratuit offre des boîtes illimitées et 2 500 actions par période de facturation." },
       { "h": "Connectez-vous avec Google", "p": "Cliquez sur Connecter Gmail, connectez-vous avec votre compte Google et approuvez l'accès en lecture et en envoi. Pas de mot de passe d'application ni de configuration IMAP." },
       { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
     ],
     "ctaBand": {
       "title": "Offrez une boîte Gmail à votre IA",
-      "sub": "Connectez Gmail en quelques minutes — boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "sub": "Connectez Gmail en quelques minutes — boîtes illimitées et 2 500 actions par période de facturation sur le plan gratuit, sans carte.",
       "ctaPrimary": "Connecter Gmail gratuitement",
       "ctaSecondary": "Lire la documentation"
     }
@@ -64,7 +64,7 @@
       "lead": "Offrez à votre agent IA une vraie boîte Fastmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application — et utilisez la même boîte dans tous les clients MCP, pas un seul.",
       "ctaPrimary": "Connecter Fastmail gratuitement",
       "ctaSecondary": "Lire la documentation",
-      "meta0": "Boîtes et appels d'outils illimités",
+      "meta0": "Boîtes illimitées et 2 500 actions",
       "meta1": "Mot de passe d'application — pas d'OAuth",
       "meta2": "E-mails récupérés en direct, jamais stockés"
     },
@@ -90,14 +90,14 @@
       "sub": "De l'inscription au premier e-mail IA en quelques minutes."
     },
     "steps": [
-      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails — sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails — sans carte. Le plan gratuit offre des boîtes illimitées et 2 500 actions par période de facturation." },
       { "h": "Générez un mot de passe d'application Fastmail", "p": "Dans Fastmail, allez dans Paramètres → Confidentialité et sécurité → Mots de passe d'application et créez-en un pour le courrier (IMAP/SMTP)." },
       { "h": "Collez-le dans mcpemails", "p": "Ajoutez votre adresse Fastmail et le mot de passe d'application pour connecter la boîte en toute sécurité." },
       { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
     ],
     "ctaBand": {
       "title": "Offrez une boîte Fastmail à votre IA",
-      "sub": "Connectez Fastmail en quelques minutes — boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "sub": "Connectez Fastmail en quelques minutes — boîtes illimitées et 2 500 actions par période de facturation sur le plan gratuit, sans carte.",
       "ctaPrimary": "Connecter Fastmail gratuitement",
       "ctaSecondary": "Lire la documentation"
     }
@@ -114,7 +114,7 @@
       "lead": "Offrez à votre agent IA une vraie boîte iCloud en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un mot de passe d'application Apple — et utilisez la même boîte dans tous les clients MCP, pas un seul.",
       "ctaPrimary": "Connecter iCloud gratuitement",
       "ctaSecondary": "Lire la documentation",
-      "meta0": "Boîtes et appels d'outils illimités",
+      "meta0": "Boîtes illimitées et 2 500 actions",
       "meta1": "Mot de passe d'application — pas d'OAuth",
       "meta2": "E-mails récupérés en direct, jamais stockés"
     },
@@ -140,14 +140,14 @@
       "sub": "De l'inscription au premier e-mail IA en quelques minutes."
     },
     "steps": [
-      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails — sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails — sans carte. Le plan gratuit offre des boîtes illimitées et 2 500 actions par période de facturation." },
       { "h": "Générez un mot de passe d'application", "p": "Sur appleid.apple.com, allez dans Connexion et sécurité → Mots de passe pour application et créez-en un (l'authentification à deux facteurs doit être activée)." },
       { "h": "Collez-le dans mcpemails", "p": "Ajoutez votre adresse iCloud et le mot de passe d'application pour connecter la boîte en toute sécurité." },
       { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
     ],
     "ctaBand": {
       "title": "Offrez une boîte iCloud à votre IA",
-      "sub": "Connectez iCloud Mail en quelques minutes — boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "sub": "Connectez iCloud Mail en quelques minutes — boîtes illimitées et 2 500 actions par période de facturation sur le plan gratuit, sans carte.",
       "ctaPrimary": "Connecter iCloud gratuitement",
       "ctaSecondary": "Lire la documentation"
     }
@@ -164,7 +164,7 @@
       "lead": "Offrez à votre agent IA une vraie boîte Yahoo en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
       "ctaPrimary": "Connecter Yahoo gratuitement",
       "ctaSecondary": "Lire la documentation",
-      "meta0": "Boîtes et appels d'outils illimités",
+      "meta0": "Boîtes illimitées et 2 500 actions",
       "meta1": "Mot de passe d'application, pas de configuration OAuth",
       "meta2": "E-mails récupérés en direct, jamais stockés"
     },
@@ -190,14 +190,14 @@
       "sub": "De l'inscription au premier e-mail IA en quelques minutes."
     },
     "steps": [
-      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails, sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails, sans carte. Le plan gratuit offre des boîtes illimitées et 2 500 actions par période de facturation." },
       { "h": "Générez un mot de passe d'application Yahoo", "p": "Activez la vérification en deux étapes, puis générez un mot de passe d'application dans la sécurité de votre compte Yahoo." },
       { "h": "Collez-le dans mcpemails", "p": "Ajoutez votre adresse Yahoo et le mot de passe d'application pour connecter la boîte en toute sécurité." },
       { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
     ],
     "ctaBand": {
       "title": "Offrez une boîte Yahoo à votre IA",
-      "sub": "Connectez Yahoo Mail en quelques minutes. Boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "sub": "Connectez Yahoo Mail en quelques minutes. Boîtes illimitées et 2 500 actions par période de facturation sur le plan gratuit, sans carte.",
       "ctaPrimary": "Connecter Yahoo gratuitement",
       "ctaSecondary": "Lire la documentation"
     }
@@ -214,7 +214,7 @@
       "lead": "Offrez à votre agent IA une vraie boîte Zoho en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et un mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
       "ctaPrimary": "Connecter Zoho gratuitement",
       "ctaSecondary": "Lire la documentation",
-      "meta0": "Boîtes et appels d'outils illimités",
+      "meta0": "Boîtes illimitées et 2 500 actions",
       "meta1": "Mot de passe d'application, pas de configuration OAuth",
       "meta2": "E-mails récupérés en direct, jamais stockés"
     },
@@ -240,14 +240,14 @@
       "sub": "De l'inscription au premier e-mail IA en quelques minutes."
     },
     "steps": [
-      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails, sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails, sans carte. Le plan gratuit offre des boîtes illimitées et 2 500 actions par période de facturation." },
       { "h": "Activez IMAP et générez un mot de passe d'application", "p": "Dans Zoho Mail, activez l'accès IMAP (Paramètres, Comptes de messagerie, Accès IMAP). Si vous utilisez l'authentification à deux facteurs, générez un mot de passe spécifique à l'application dans Zoho Account, Sécurité." },
       { "h": "Collez-le dans mcpemails", "p": "Ajoutez votre adresse Zoho et le mot de passe, et choisissez votre région Zoho si on vous le demande, pour connecter la boîte en toute sécurité." },
       { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
     ],
     "ctaBand": {
       "title": "Offrez une boîte Zoho à votre IA",
-      "sub": "Connectez Zoho Mail en quelques minutes. Boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "sub": "Connectez Zoho Mail en quelques minutes. Boîtes illimitées et 2 500 actions par période de facturation sur le plan gratuit, sans carte.",
       "ctaPrimary": "Connecter Zoho gratuitement",
       "ctaSecondary": "Lire la documentation"
     }
@@ -264,7 +264,7 @@
       "lead": "Offrez à votre agent IA une vraie boîte Yandex en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et un mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
       "ctaPrimary": "Connecter Yandex gratuitement",
       "ctaSecondary": "Lire la documentation",
-      "meta0": "Boîtes et appels d'outils illimités",
+      "meta0": "Boîtes illimitées et 2 500 actions",
       "meta1": "Mot de passe d'application, pas de configuration OAuth",
       "meta2": "E-mails récupérés en direct, jamais stockés"
     },
@@ -290,14 +290,14 @@
       "sub": "De l'inscription au premier e-mail IA en quelques minutes."
     },
     "steps": [
-      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails, sans carte. Le plan gratuit offre boîtes et appels d'outils illimités." },
+      { "h": "Créez un compte gratuit", "p": "Inscrivez-vous sur mcpemails, sans carte. Le plan gratuit offre des boîtes illimitées et 2 500 actions par période de facturation." },
       { "h": "Activez IMAP et créez un mot de passe d'application", "p": "Dans les paramètres de Yandex Mail, activez IMAP et activez les mots de passe d'application et les jetons OAuth. Créez ensuite un mot de passe d'application dans Yandex ID, Sécurité." },
       { "h": "Collez-le dans mcpemails", "p": "Ajoutez votre adresse Yandex et le mot de passe d'application pour connecter la boîte en toute sécurité." },
       { "h": "Collez l'URL MCP dans votre IA", "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte." }
     ],
     "ctaBand": {
       "title": "Offrez une boîte Yandex à votre IA",
-      "sub": "Connectez Yandex Mail en quelques minutes. Boîtes et appels d'outils illimités sur le plan gratuit, sans carte.",
+      "sub": "Connectez Yandex Mail en quelques minutes. Boîtes illimitées et 2 500 actions par période de facturation sur le plan gratuit, sans carte.",
       "ctaPrimary": "Connecter Yandex gratuitement",
       "ctaSecondary": "Lire la documentation"
     }

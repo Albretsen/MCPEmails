@@ -29,7 +29,7 @@ Oppsettet er virkelig kjapt. I claude.ai går du til **Customize → Connectors 
 
 **De ærlige avveiningene:** det er en tredjepartstjeneste i autentiseringsbanen din (du kan trekke tilbake tilgangen fra dashbordet med ett klikk, men du stoler på vertens sikkerhetsmodell). Og det finnes ingen webhooks. For å reagere på ny e-post må Claude polle — kalle \`email_read\` med \`action: list\` og \`unread_only: true\` etter en tidsplan. Push-varsler finnes ikke i MCP. Ethvert verktøy som hevder å reagere på e-post i sanntid, enten poller under panseret eller lagrer e-posten din.
 
-Gratisnivået er $0 for alltid med ubegrenset antall innbokser og verktøykall, med tak på 60 forespørsler/minutt. Betalte planer ([priser](/pricing)) hever burst-taket og legger til teamfunksjoner. Kostnad er sjelden den avgjørende faktoren her.
+Gratisnivået er $0 for alltid med ubegrenset antall innbokser, 2 500 fakturerbare handlinger per faktureringsperiode og tak på 60 forespørsler/minutt. Betalte planer ([priser](/pricing)) hever handlingskvoten og burst-taket, og legger til teamfunksjoner. Kostnad er sjelden den avgjørende faktoren her.
 
 ## Alternativ 2: En egen / selvhostet MCP-server
 

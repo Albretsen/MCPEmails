@@ -112,3 +112,6 @@ file_size_limit = "50MiB"
 # MCP request before the function's application-level validator can run.
 [functions.mcp-server]
 verify_jwt = false
+
+[functions.synthetic-monitor]
+verify_jwt = false

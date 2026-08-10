@@ -21,7 +21,7 @@
     "lead": "Koble til Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks én gang. Lim inn én MCP-endepunkt-URL i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make eller en hvilken som helst MCP-klient. OAuth-klienter kobler til med ett klikk, uten oppsett av API-nøkkel. Agenten din leser, søker og sender e-post i sanntid, og e-posten den leser lagres aldri.",
     "ctaPrimary": "Koble til innboksen din",
     "ctaSecondary": "Les dokumentasjonen",
-    "metaUnlimited": "Ubegrenset gratis, ingen daglige tak",
+    "metaUnlimited": "2 500 handlinger per faktureringsperiode",
     "metaNoCard": "Ingen kort kreves",
     "metaNeverStored": "E-post hentes i sanntid",
     "pipe": {
@@ -117,17 +117,17 @@
   },
   "pricing": {
     "eyebrow": "Priser",
-    "title": "Ubegrenset på alle planer.",
-    "sub": "Gratis er genuint ubegrenset. Oppgrader for høyere burst-grenser, teamfunksjoner og support. Bytt plan når som helst.",
+    "title": "Handlinger som skalerer med deg.",
+    "sub": "Hvert arbeidsområde inkluderer ubegrenset antall innbokser og API-nøkler. Vellykkede fakturerbare MCP-kall bruker handlinger; mislykkede kall og inbox_list er gratis.",
     "perForever": "/for alltid",
     "perMonth": "/måned",
     "tiers": {
       "free": {
         "name": "Gratis",
-        "desc": "Alt, ubegrenset. Ingen daglige tak. For alle som bygger med MCP-agenter.",
+        "desc": "Utforsk MCPEmails med 2 500 handlinger per faktureringsperiode.",
         "features": [
           "Ubegrenset antall tilkoblede innbokser",
-          "Ingen daglige grenser — ubegrenset antall MCP-verktøykall",
+          "2 500 handlinger per faktureringsperiode",
           "Ubegrenset antall API-nøkler",
           "Gmail, iCloud, Fastmail og alle IMAP",
           "60 forespørsler / minutt",
@@ -136,29 +136,29 @@
         "cta": "Start gratis"
       },
       "solo": {
-        "name": "Solo",
+        "name": "Agent",
         "desc": "For storbrukere som kjører agenter døgnet rundt.",
         "features": [
-          "Alt i Gratis, ubegrenset",
+        "50 000 handlinger per faktureringsperiode",
           "300 forespørsler / minutt (5× burst)",
           "Full bruksanalyse (90 dagers historikk)",
           "Gmail, iCloud, Fastmail og alle IMAP",
           "E-poststøtte"
         ],
-        "cta": "Velg Solo"
+        "cta": "Velg Agent"
       },
       "team": {
-        "name": "Team",
+        "name": "Scale",
         "desc": "For team og byråer som administrerer flere klientinnbokser i ett delt arbeidsområde, med roller, SSO og revisjonslogg.",
         "features": [
-          "Alt i Solo, ubegrenset",
+        "300 000 handlinger per faktureringsperiode",
           "1 000 forespørsler / minutt",
           "Teamroller og flere arbeidsområder",
           "SSO (SAML / OIDC) + revisjonslogg",
           "Full bruksanalyse (1 års historikk)",
           "Prioritert støtte"
         ],
-        "cta": "Velg Team"
+        "cta": "Velg Scale"
       }
     },
     "footnote": "Alle planer: e-posten agenten din leser hentes i sanntid og lagres aldri. OAuth-tokens krypteres ved lagring. Trenger du noe tilpasset? <contact>Kontakt oss</contact>. <comparison>Se full funksjonssammenligning →</comparison>"
@@ -183,7 +183,7 @@
       },
       {
         "q": "Er det virkelig gratis?",
-        "a": "Ja. Gratisplanen gir deg ubegrenset antall tilkoblede innbokser, ubegrenset antall MCP-verktøykall og ubegrenset antall API-nøkler — ingen daglige tak, ingen kort kreves. Den eneste grensen er et rimelig tak per minutt for å beskytte plattformen. Betalte planer legger til teammedlemmer, høyere burst-grenser og support, aldri mer bruk."
+        "a": "Ja. Gratisplanen gir deg ubegrenset antall tilkoblede innbokser og API-nøkler, samt 2 500 fakturerbare handlinger per faktureringsperiode — ingen daglige tak og ingen kort kreves. Mislykkede kall og inbox_list er gratis. Betalte planer legger til større handlingskvoter, høyere burst-grenser, teammedlemmer og kundestøtte."
       },
       {
         "q": "Hva kan AI-en faktisk gjøre med innboksen min?",

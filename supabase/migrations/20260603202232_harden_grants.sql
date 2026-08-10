@@ -17,7 +17,16 @@ REVOKE EXECUTE ON FUNCTION public.dispatch_scheduled_sends() FROM authenticated;
 -- stripe_webhook_events have RLS + zero policies (default-deny); auth_logs and
 -- rate_limit_buckets have RLS policies but the table grants are still broader than
 -- needed. Revoke all anon/authenticated table privileges; service_role is untouched.
-REVOKE ALL ON TABLE public.app_errors            FROM anon, authenticated;
-REVOKE ALL ON TABLE public.stripe_webhook_events FROM anon, authenticated;
-REVOKE ALL ON TABLE public.auth_logs             FROM anon, authenticated;
-REVOKE ALL ON TABLE public.rate_limit_buckets    FROM anon, authenticated;
+DO $$
+DECLARE
+  table_name text;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'app_errors', 'stripe_webhook_events', 'auth_logs', 'rate_limit_buckets'
+  ] LOOP
+    IF to_regclass('public.' || table_name) IS NOT NULL THEN
+      EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon, authenticated', table_name);
+    END IF;
+  END LOOP;
+END
+$$;

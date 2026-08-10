@@ -81,7 +81,7 @@ Dette er den reelle byttehandelen, og jeg skal ikke pynte på den. Med en hostet
 
 ## Hva det koster i kroner
 
-MCP Emails er gratis å komme i gang med, og Free er ubegrenset: ubegrenset antall innbokser, verktøykall og API-nøkler, uten kredittkort. Free-nivået kjører på 60 requests/minute med 7-dagers analyse og fellesskapsstøtte. [Solo koster $12/month](/pricing) (300 req/min, 90-dagers analyse, e-poststøtte), og Team koster $49/month for roller, flere arbeidsområder, SSO og revisjonslogger. Selvhosting er $0 i abonnement pluss hva enn VPS-en din og timene dine koster. Vær ærlig om timene.
+MCP Emails er gratis å komme i gang med: ubegrenset antall innbokser og API-nøkler, 2 500 fakturerbare handlinger per faktureringsperiode, uten kredittkort. Free-nivået kjører på 60 requests/minute med 7-dagers analyse og fellesskapsstøtte. [Agent koster $12/month](/pricing) (50 000 handlinger, 300 req/min, 90-dagers analyse, e-poststøtte), og Scale koster $49/month (300 000 handlinger, roller, flere arbeidsområder, SSO og revisjonslogger). Selvhosting er $0 i abonnement pluss hva enn VPS-en din og timene dine koster. Vær ærlig om timene.
 
 ## Så hva bør du velge?
 

@@ -101,6 +101,8 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
     imapPort: reconnect?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort,
     smtpHost: reconnect?.smtpHost ?? '',
     smtpPort: reconnect?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort,
+    imapSecurity: reconnect?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls'),
+    smtpSecurity: reconnect?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls'),
   }));
   const [zohoRegion, setZohoRegion] = useState(DEFAULT_ZOHO_REGION);
   const [zohoAccountType, setZohoAccountType] = useState(DEFAULT_ZOHO_ACCOUNT_TYPE);
@@ -110,6 +112,8 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   const [yandexLogin, setYandexLogin] = useState(
     isReconnect && reconnectProvider === 'yandex' ? (reconnect.username ?? '') : ''
   );
+  const [yandexAccountType, setYandexAccountType] = useState('personal');
+  const [lastFailure, setLastFailure] = useState({ code: null, count: 0 });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   // When the user clicks outside the modal (the scrim) after typing
@@ -130,8 +134,15 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
 
   // ── Step 1: provider selected ──────────────────────────────────────────────
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     trackProductEvent('inbox_connect_started', { provider: provider === 'generic' ? 'imap' : provider });
+    try {
+      await fetch('/api/onboarding', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'provider_selected', provider: provider === 'generic' ? 'generic_imap' : provider }),
+        keepalive: true,
+      });
+    } catch { /* the connection remains available if analytics is unavailable */ }
     if (usesAppPassword) {
       setStep(2);
       return;
@@ -190,6 +201,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
         // sent when non-empty; blank authenticates with the email address.
         const login = yandexLogin.trim();
         if (login) body.loginUsername = login;
+        body.yandexAccountType = yandexAccountType;
       }
     } else {
       // Generic IMAP/SMTP.
@@ -209,7 +221,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
       // Optional: a login username distinct from the email address. Blank means
       // the server authenticates with the email address.
       const username = form.username.trim();
-      body = { email, username, appPassword, imapHost, imapPort, smtpHost, smtpPort };
+      body = { email, username, appPassword, imapHost, imapPort, smtpHost, smtpPort, imapSecurity: form.imapSecurity, smtpSecurity: form.smtpSecurity };
     }
 
     setSubmitting(true);
@@ -223,7 +235,11 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
       const data = await response.json();
 
       if (!response.ok) {
-        setFormError(data.error ?? tr('connect.errorConnectionFailed'));
+        const code = data.error_code ?? 'connection_failed';
+        const count = lastFailure.code === code ? lastFailure.count + 1 : 1;
+        setLastFailure({ code, count });
+        const recovery = count >= 2 ? ' Repeating the same attempt is unlikely to help. Recheck the username, app-password requirements, and security mode before trying again.' : '';
+        setFormError((data.error ?? tr('connect.errorConnectionFailed')) + recovery);
         return;
       }
 
@@ -586,6 +602,17 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
               </div>
 
               {provider === 'yandex' && (
+                <>
+                <div className="field">
+                  <label htmlFor="cm-yandex-account-type">Yandex account type</label>
+                  <select id="cm-yandex-account-type" className="input" value={yandexAccountType} onChange={e => setYandexAccountType(e.target.value)} disabled={isReconnect}>
+                    <option value="personal">Personal Yandex Mail</option>
+                    <option value="business">Yandex 360 Business</option>
+                  </select>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                    Personal accounts normally use the name before @. Business accounts use the full email address.
+                  </span>
+                </div>
                 <div className="field">
                   <label htmlFor="cm-yandex-login">Login (if different from email)</label>
                   <input
@@ -600,9 +627,10 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     aria-readonly={isReconnect || undefined}
                   />
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                    Yandex 360 custom-domain accounts may sign in with a login that differs from the email address. Leave blank to use the email.
+                    Optional manual override for unusual account configurations.
                   </span>
                 </div>
+                </>
               )}
 
               {isGeneric && (
@@ -626,6 +654,13 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                       {tr('connect.usernameHint')}
                     </span>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="cm-imap-security">IMAP security</label>
+                    <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setForm(prev => ({ ...prev, imapSecurity: e.target.value }))} disabled={isReconnect}>
+                      <option value="tls">Implicit TLS</option>
+                      <option value="starttls">STARTTLS</option>
+                    </select>
                   </div>
                   <div className="field host-port-row">
                     <div style={{ flex: 1 }}>
@@ -680,6 +715,13 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                         aria-readonly={isReconnect || undefined}
                       />
                     </div>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="cm-smtp-security">SMTP security</label>
+                    <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setForm(prev => ({ ...prev, smtpSecurity: e.target.value }))} disabled={isReconnect}>
+                      <option value="tls">Implicit TLS</option>
+                      <option value="starttls">STARTTLS</option>
+                    </select>
                   </div>
                 </>
               )}

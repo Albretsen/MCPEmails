@@ -20,5 +20,14 @@ export default async function LoginPage({ searchParams }) {
     redirect(redirectTo);
   }
 
-  return <LoginApp />;
+  const params = await searchParams;
+  const redirectParam = typeof params?.redirect === 'string' ? params.redirect : null;
+  const safeRedirect =
+    redirectParam?.startsWith('/') &&
+    !redirectParam.startsWith('//') &&
+    !redirectParam.startsWith('/\\')
+      ? redirectParam
+      : null;
+
+  return <LoginApp redirectTo={safeRedirect} />;
 }

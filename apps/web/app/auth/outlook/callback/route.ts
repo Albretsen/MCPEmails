@@ -4,7 +4,8 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeOutlookCode } from '@/lib/email-providers/outlook';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
-import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { clientGuidePath } from '@/lib/onboarding/state';
 
 /**
  * GET /auth/outlook/callback
@@ -38,19 +39,34 @@ function redirectWithError(errorCode: string): NextResponse {
   return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=${errorCode}`);
 }
 
+async function recordDeniedAuthorization(state: string | null): Promise<void> {
+  if (!state) return;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data: oauthState } = await supabase.from('oauth_states').select('id,workspace_id,user_id').eq('state', state).eq('provider', 'outlook').gt('expires_at', new Date().toISOString()).maybeSingle();
+  if (!oauthState || oauthState.user_id !== user.id) return;
+  await supabase.from('oauth_states').delete().eq('id', oauthState.id);
+  await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'provider_denied' });
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const state = searchParams.get('state');
   const error = searchParams.get('error');
+  const serviceClientForFailure = createServiceRoleClient();
 
   // 1. Handle user denial: Microsoft sends error=access_denied.
   if (error === 'access_denied') {
+    await recordOAuthCallbackFailure(serviceClientForFailure, state, 'outlook', 'provider_denied');
+    await recordDeniedAuthorization(state);
     return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=cancelled`);
   }
 
   // Surface any other OAuth error from Microsoft.
   if (error) {
+    await recordOAuthCallbackFailure(serviceClientForFailure, state, 'outlook', 'unknown');
     return redirectWithError('oauth_error');
   }
 
@@ -105,7 +121,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     tokens = await exchangeOutlookCode(code, expectedRedirectUri);
   } catch (err) {
     console.error('[outlook/callback] token exchange failed:', err);
-    await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'token_exchange_failed' });
+    await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'token_exchange_failed', phase: 'token_exchange' });
     return redirectWithError('token_exchange_failed');
   }
 
@@ -120,7 +136,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id);
     if (inboxLimit.atLimit) {
-      await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'plan_limit' });
+      await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'plan_limit', phase: 'persistence', connectionType: 'first_connect' });
       return redirectWithError('inbox_limit_reached');
     }
   }
@@ -163,11 +179,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   );
 
   if (upsertError) {
-    await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'persistence_failed' });
+    await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'persistence_failed', phase: 'persistence', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
     return redirectWithError('save_failed');
   }
 
   // 9. Redirect to the Inboxes page with a success indicator.
-  await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'success', category: 'outlook' });
-  return NextResponse.redirect(`${DASHBOARD_INBOXES}?connected=outlook`);
+  await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'success', category: 'outlook', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+  const { data: onboarding } = await serviceClient.from('workspaces').select('onboarding_client').eq('id', oauthState.workspace_id).maybeSingle();
+  const guide = new URL(clientGuidePath(onboarding?.onboarding_client), DASHBOARD_INBOXES);
+  guide.searchParams.set('connected', 'outlook');
+  return NextResponse.redirect(guide.toString());
 }

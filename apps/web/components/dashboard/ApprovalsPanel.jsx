@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Btn, Icon } from '../Primitives';
 import { useToast } from './Toast';
 
@@ -23,8 +24,10 @@ function requestErrorMessage(error) {
  * review summary supplied by the API, never an email body or attachment.
  */
 export function ApprovalsPanel({ userRole }) {
+  const t = useTranslations('dashboard');
   const { toast } = useToast();
   const [items, setItems] = useState([]);
+  const [decided, setDecided] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [decisionItem, setDecisionItem] = useState(null);
@@ -38,6 +41,7 @@ export function ApprovalsPanel({ userRole }) {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Could not load approvals.');
       setItems(Array.isArray(payload.approvals) ? payload.approvals : []);
+      setDecided(Array.isArray(payload.decided) ? payload.decided : []);
       setError('');
     } catch (loadError) {
       setError(requestErrorMessage(loadError));
@@ -63,6 +67,9 @@ export function ApprovalsPanel({ userRole }) {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Could not record this decision.');
       setItems(current => current.filter(item => item.id !== decisionItem.item.id));
+      // Refresh so the row reappears under "Recently decided" with its
+      // provenance, rather than just vanishing from the queue.
+      void load();
       toast({
         message: decisionItem.decision === 'approve'
           ? 'Email approved and queued for sending.'
@@ -86,16 +93,6 @@ export function ApprovalsPanel({ userRole }) {
           <div className="page-title">Approvals</div>
           <div className="page-sub">Review prepared email sends before they leave an inbox.</div>
         </div>
-        <Link className="btn btn-secondary" href="/dashboard/inboxes">Manage inbox settings</Link>
-      </div>
-
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="card-h">
-          <div>
-            <div className="title">Approval is set per inbox</div>
-            <div className="sub">Enable “Require approval before sending” in an inbox’s settings. Workspace owners and admins can then approve or reject pending sends here.</div>
-          </div>
-        </div>
       </div>
 
       {!canDecide && !loading && !error ? (
@@ -111,13 +108,29 @@ export function ApprovalsPanel({ userRole }) {
         </div>
       ) : null}
 
-      <div className="card" style={{ overflowX: 'auto' }}>
-        {loading ? <p className="sub" role="status">Loading pending approvals…</p> : items.length === 0 ? (
-          <div className="empty-state">
-            <Icon name="shield" size={24} />
-            <h3>No messages need a decision</h3>
-            <p>When an inbox requires approval, prepared email sends will appear here.</p>
-            <Link className="btn btn-secondary" href="/dashboard/inboxes">Choose an inbox</Link>
+      <div className="card approvals-card" style={{ overflowX: 'auto' }}>
+        {loading ? <ApprovalListSkeleton /> : items.length === 0 ? (
+          <div className="approvals-empty">
+            <div className="approvals-empty-summary">
+              <div className="approvals-empty-icon" aria-hidden="true"><Icon name="shield" size={26} /></div>
+              <div className="approvals-empty-copy">
+                <span className="approvals-empty-kicker">All clear</span>
+                <h2>Nothing is waiting for approval</h2>
+                <p>Prepared sends that need a decision will appear here. You can safely return when there’s something to review.</p>
+                <Link className="btn btn-primary" href="/dashboard/inboxes">
+                  <Icon name="settings" size={14} className="btn-ico" />
+                  Configure an inbox
+                </Link>
+              </div>
+            </div>
+            <aside className="approvals-empty-guide" aria-label="How email approvals work">
+              <div className="approvals-empty-guide-title">How approvals work</div>
+              <ol>
+                <li><span>1</span> Enable approval for an inbox.</li>
+                <li><span>2</span> An agent prepares an email send.</li>
+                <li><span>3</span> An owner or admin approves it here.</li>
+              </ol>
+            </aside>
           </div>
         ) : (
           <table className="data-table">
@@ -142,7 +155,95 @@ export function ApprovalsPanel({ userRole }) {
         )}
       </div>
 
+      {!loading && decided.length ? <DecidedTable rows={decided} t={t} /> : null}
+
       {decisionItem ? <DecisionDialog item={decisionItem.item} decision={decisionItem.decision} submitting={submitting} onCancel={() => !submitting && setDecisionItem(null)} onConfirm={decide} /> : null}
+    </div>
+  );
+}
+
+/**
+ * Recently decided sends, with the surface each decision was made on.
+ *
+ * Provenance matters here because there are three places a decision can come
+ * from — the review card in the AI conversation, the authenticated review link
+ * that card opens, and this dashboard — and they carry different weight. A
+ * reject can happen in the card; an approve can only ever have come from a
+ * signed-in browser session (docs/mcp-apps/contract.md §6). Showing where each
+ * decision happened makes that visible instead of merely documented.
+ *
+ * `decided_via` is populated by a migration that may land after this code; the
+ * column simply renders as a dash until then.
+ */
+function DecidedTable({ rows, t }) {
+  const statusKey = {
+    approved: 'approvals.panel.statusApproved',
+    rejected: 'approvals.panel.statusRejected',
+    expired: 'approvals.panel.statusExpired',
+    cancelled: 'approvals.panel.statusCancelled',
+  };
+  return (
+    <div className="approvals-decided">
+      <div className="approvals-decided-title">{t('approvals.panel.decidedTitle')}</div>
+      <div className="card" style={{ overflowX: 'auto' }}>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Inbox</th>
+              <th>Subject</th>
+              <th>{t('approvals.panel.colOutcome')}</th>
+              <th>{t('approvals.panel.colWhere')}</th>
+              <th>{t('approvals.panel.colDecided')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const viaKey = row.decided_via ? `approvals.review.via.${row.decided_via}` : null;
+              return (
+                <tr key={row.id}>
+                  <td>{approvalLabel(row)}</td>
+                  <td>{row.summary?.subject || '(no subject)'}</td>
+                  <td>{statusKey[row.status] ? t(statusKey[row.status]) : row.status}</td>
+                  <td>
+                    {viaKey && t.has(viaKey) ? (
+                      <span className="approvals-via">
+                        <Icon name={row.decided_via === 'dashboard' ? 'activity' : 'zap'} size={12} />
+                        {t(viaKey)}
+                      </span>
+                    ) : (
+                      <span className="sub">—</span>
+                    )}
+                  </td>
+                  <td>{row.decided_at ? new Date(row.decided_at).toLocaleString() : '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function ApprovalListSkeleton() {
+  return (
+    <div className="approval-list-skeleton" role="status" aria-label="Loading pending approvals">
+      <div className="approval-skeleton-row approval-skeleton-heading" aria-hidden="true">
+        <span className="sk" style={{ width: 52, height: 11 }} />
+        <span className="sk" style={{ width: 72, height: 11 }} />
+        <span className="sk" style={{ width: 50, height: 11 }} />
+        <span className="sk" style={{ width: 64, height: 11 }} />
+        <span className="sk" style={{ width: 44, height: 11 }} />
+      </div>
+      {[0, 1, 2].map((row) => (
+        <div className="approval-skeleton-row" key={row} aria-hidden="true">
+          <span className="sk" style={{ width: row === 1 ? '74%' : '62%', height: 14 }} />
+          <span className="sk" style={{ width: row === 2 ? '88%' : '72%', height: 14 }} />
+          <span className="sk" style={{ width: row === 0 ? '82%' : '66%', height: 14 }} />
+          <span className="sk" style={{ width: '68%', height: 14 }} />
+          <span className="sk sk-pill" style={{ width: 104, height: 28, justifySelf: 'end' }} />
+        </div>
+      ))}
     </div>
   );
 }

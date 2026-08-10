@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Priser",
-    "description": "Alle planer, inkludert Gratis, har ubegrenset antall innbokser, kall og API-nøkler. Betalte planer gir høyere burst-grenser, teamfunksjoner og kundestøtte. E-posten agenten din leser lagres aldri, uansett plan."
+    "title": "Priser for AI-e-post-MCP-server — Gratis, Agent og Scale",
+    "description": "Sammenlign MCPEmails-planer etter inkluderte vellykkede handlinger. Innbokser og API-nøkler er ubegrenset; handlinger nullstilles ved starten av hver faktureringsperiode."
   },
   "hero": {
     "eyebrow": "Priser",
-    "titleLine1": "Ubegrenset, gratis.",
-    "titleLine2": "Oppgrader for mer kraft.",
-    "lead": "Alle planer, inkludert Gratis, har ubegrenset antall innbokser, kall og API-nøkler. Betalte planer gir høyere burst-grenser, teamfunksjoner og kundestøtte. E-posten agenten din leser lagres aldri, uansett plan."
+    "titleLine1": "Tydelige handlingskvoter.",
+    "titleLine2": "Ingen uventede ekstrakostnader.",
+    "lead": "Hvert arbeidsområde inkluderer ubegrenset antall innbokser og API-nøkler. Vellykkede fakturerbare MCP-kall bruker handlinger; mislykkede kall og inbox_list er gratis. Handlinger nullstilles ved starten av faktureringsperioden, og kall stopper ved grensen."
   },
   "billing": {
     "monthly": "Månedlig",
@@ -22,11 +22,11 @@
   "plans": {
     "free": {
       "name": "Gratis",
-      "desc": "Alt, ubegrenset. Ingen daglige tak. For alle som bygger med MCP-agenter.",
+      "desc": "Utforsk MCPEmails med 2 500 handlinger per faktureringsperiode.",
       "cta": "Start gratis",
       "features": [
         "Ubegrenset antall tilkoblede innbokser",
-        "Ingen daglige grenser — ubegrenset antall MCP-verktøykall",
+        "2 500 handlinger per faktureringsperiode",
         "Ubegrenset antall API-nøkler",
         "Gmail, iCloud, Fastmail og enhver IMAP",
         "60 forespørsler / minutt",
@@ -34,11 +34,11 @@
       ]
     },
     "solo": {
-      "name": "Solo",
+      "name": "Agent",
       "desc": "For erfarne brukere som kjører agenter døgnet rundt.",
-      "cta": "Få Solo",
+      "cta": "Få Agent",
       "features": [
-        "Alt i Gratis, ubegrenset",
+        "50 000 handlinger per faktureringsperiode",
         "300 forespørsler / minutt (5× burst)",
         "Full bruksanalyse (90-dagers historikk)",
         "Gmail, iCloud, Fastmail og enhver IMAP",
@@ -46,12 +46,12 @@
       ]
     },
     "pro": {
-      "name": "Team",
+      "name": "Scale",
       "badge": "Mest populær",
       "desc": "For team og byråer som administrerer flere klientinnbokser i ett delt arbeidsområde, med roller, SSO og revisjonslogg.",
-      "cta": "Få Team",
+      "cta": "Få Scale",
       "features": [
-        "Alt i Solo, ubegrenset",
+        "300 000 handlinger per faktureringsperiode",
         "1 000 forespørsler / minutt",
         "Teamroller og flere arbeidsområder",
         "SSO (SAML / OIDC) + revisjonslogg",
@@ -69,8 +69,8 @@
     "title": "Alt side om side.",
     "featureCol": "Funksjon",
     "free": "Gratis",
-    "solo": "Solo",
-    "team": "Team",
+    "solo": "Agent",
+    "team": "Scale",
     "sections": {
       "usage": {
         "label": "Bruk",
@@ -123,6 +123,9 @@
     },
     "values": {
       "unlimited": "Ubegrenset",
+      "actionsFree": "2 500 / faktureringsperiode",
+      "actionsAgent": "50 000 / faktureringsperiode",
+      "actionsScale": "300 000 / faktureringsperiode",
       "ownerOnly": "Bare deg",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
@@ -137,28 +140,28 @@
     "title": "Vanlige spørsmål.",
     "items": [
       {
-        "q": "Finnes det virkelig ingen bruksgrense?",
-        "a": "Riktig. Det finnes ingen daglige tak og ingen månedlige kalltak. Tilkoblede innbokser, MCP-verktøykall, API-nøkler er ubegrenset på alle planer, inkludert Gratis; teammedlemmer er tilgjengelig på betalte planer (Gratis er for én bruker). Den eneste grensen er et fair-use-tak per minutt (60/min på Gratis, 300/min på Solo, 1 000/min på Team) for å beskytte plattformen mot misbruk. Betalte planer gir høyere burst-kapasitet, teamfunksjoner og kundestøtte, aldri mer bruk."
+        "q": "Hva regnes som en handling?",
+        "a": "Ett vellykket fakturerbart MCP-verktøykall bruker én handling. Mislykkede kall, leverandøravbrudd, autentiseringsfeil, hastighetsbegrensninger, dashbordhandlinger, OAuth, API-nøkkeladministrasjon og inbox_list er gratis. Alle planer inkluderer ubegrenset antall innbokser og API-nøkler."
       },
       {
         "q": "Hva regnes som et MCP-kall?",
-        "a": "Hvert JSON-RPC-verktøykall mot /mcp-endepunktet ditt regnes som ett kall: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule eller contact_search. Kall er ubegrenset; de teller kun mot fair-use-taket ditt per minutt. Vi er en standard MCP-server, så det samme endepunktet fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og enhver MCP-kompatibel klient."
+        "a": "En vellykket fakturerbar JSON-RPC-verktøyinvokasjon mot /mcp-endepunktet bruker én handling. inbox_list, mislykkede kall, leverandøravbrudd, autentiseringsfeil og hastighetsbegrensede kall er gratis. Vi er en standard MCP-server, så det samme endepunktet fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og enhver MCP-kompatibel klient."
       },
       {
         "q": "Lagres e-postinnholdet mitt noe sted?",
         "a": "E-posten agenten din leser lagres aldri: brødtekst, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten, uten at noe beholdes mellom kall. Vi lagrer ditt krypterte OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler. Det eneste unntaket er en melding du ber oss om å planlegge til senere – den lagrer vi frem til den er sendt, og beholder deretter en oppføring for historikken din."
       },
       {
-        "q": "Hva er forskjellen mellom Solo og Team?",
-        "a": "Gratis gir allerede alle ubegrenset bruk. Solo ($12/mnd) er for erfarne brukere som kjører agenter hardt: den hever burst-grensen til 300 forespørsler/minutt, utvider analysehistorikken til 90 dager og legger til e-poststøtte. Team ($49/mnd) er for bedrifter: et tak på 1 000/minutt, teamroller og flere arbeidsområder, SSO (SAML/OIDC), en revisjonslogg, 1-års analysehistorikk og prioritert støtte."
+        "q": "Hva er forskjellen mellom Agent og Scale?",
+        "a": "Gratis inkluderer 2 500 handlinger per faktureringsperiode. Agent inkluderer 50 000 handlinger, en grense på 300 forespørsler per minutt, 90-dagers historikk og e-poststøtte. Scale inkluderer 300 000 handlinger, en grense på 1 000 forespørsler per minutt, roller, revisjonslogg, 1-års historikk og prioritert støtte. Dashbordet viser bruk og nullstillingsdato; kall stopper ved grensen uten automatisk ekstrabelastning."
       },
       {
         "q": "Kan jeg endre eller si opp planen min?",
-        "a": "Ja. Oppgrader, nedgrader eller si opp når som helst fra faktureringsdelen av dashbordet ditt. Hvis du sier opp en betalt plan, beholder du tilgangen ut faktureringsperioden, og går deretter automatisk over til Gratis. Siden Gratis er ubegrenset, mister du kun den høyere burst-grensen, teamfunksjonene og kundestøtten."
+        "a": "Ja. Oppgrader, nedgrader eller si opp når som helst fra faktureringsdelen av dashbordet ditt. Hvis du sier opp en betalt plan, beholder du tilgangen ut faktureringsperioden, og går deretter automatisk over til Gratis med kvoten på 2 500 handlinger."
       },
       {
         "q": "Hvordan fungerer årsrabatten?",
-        "a": "Å betale årlig sparer omtrent 17 % sammenlignet med månedlig fakturering: Solo koster $120/år og Team koster $490/år. Du belastes én gang for 12 måneder på forhånd. Hvis du sier opp midt i året, refunderer vi de ubrukte hele månedene."
+        "a": "Å betale årlig sparer omtrent 17 % sammenlignet med månedlig fakturering: Agent koster $120/år og Scale koster $490/år. Du belastes én gang for 12 måneder på forhånd. Hvis du sier opp midt i året, refunderer vi de ubrukte hele månedene."
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
@@ -176,7 +179,7 @@
   },
   "ctaBand": {
     "title": "Klar til å gi agenten din en innboks?",
-    "sub": "Start på Gratis: ingen kredittkort, ubegrenset fra dag én. Oppgrader når du trenger høyere burst-grenser eller teamfunksjoner.",
+    "sub": "Start på Gratis: ingen kredittkort og 2 500 handlinger per faktureringsperiode. Oppgrader når du trenger flere handlinger, høyere burst-grenser eller teamfunksjoner.",
     "ctaPrimary": "Kom i gang gratis",
     "ctaSecondary": "Les dokumentasjonen"
   }

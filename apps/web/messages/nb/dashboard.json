@@ -119,7 +119,7 @@
     "goToMembers": "Gå til Medlemmer",
     "callsPerDayTitle": "Kall per dag",
     "callsPerDaySub": "Siste 14 dager · på tvers av alle verktøy",
-    "pro": "Pro",
+    "pro": "Scale",
     "recentActivityTitle": "Nylig aktivitet",
     "recentActivitySub": "Direkte MCP-verktøykall",
     "noActivityTitle": "Ingen aktivitet ennå",
@@ -295,6 +295,11 @@
   "usage": {
     "title": "Forbruk",
     "sub": "MCP-verktøykall de siste 30 dagene på tvers av alle innbokser.",
+    "shadowMeterTitle": "Handlingsbruk",
+    "shadowMeterSub": "Vellykkede fakturerbare handlinger de siste 30 dagene. Kun synlighet i skyggeperioden.",
+    "shadowOnly": "Skyggemåler",
+    "shadowOfCap": "av {cap} planlagte handlinger",
+    "lastBillableCalls": "Siste vellykkede fakturerbare kall ({count})",
     "quotaExhausted": "Daglig kvote oppbrukt. MCP-kall blir avvist",
     "quotaApproaching": "Daglig kvote på {pct}%, nærmer seg grensen",
     "dailyQuota": "Daglig kvote",
@@ -520,7 +525,7 @@
     "roleOwner": "Eier",
     "sending": "Sender…",
     "sendInvite": "Send invitasjon",
-    "rolesLockedHint": "Inviterte blir med som Medlem. Oppgrader til Team for å tildele Administrator- og Visningsroller.",
+    "rolesLockedHint": "Inviterte blir med som Medlem. Oppgrader til Scale for å tildele Administrator- og Visningsroller.",
     "inviteUpgradeHint": "Å invitere samarbeidspartnere er tilgjengelig på betalte planer. Oppgrader for å legge til medlemmer i dette arbeidsområdet.",
     "errInviteFailed": "Kunne ikke sende invitasjon.",
     "errRemoveFailed": "Kunne ikke fjerne medlem.",
@@ -544,5 +549,117 @@
     "cancel": "Avbryt",
     "removing": "Fjerner…",
     "removeMemberBtn": "Fjern medlem"
+  },
+  "approvals": {
+    "review": {
+      "kicker": "Venter på godkjenning",
+      "kickerSettled": "Utsendingsgjennomgang",
+      "title": "Godkjenn denne e-posten før den sendes",
+      "titleSettled": "Denne utsendingen er allerede avgjort",
+      "subtitle": "En KI-assistent har forberedt denne e-posten. Den er ikke sendt, og den sendes bare hvis du godkjenner den her.",
+      "from": "Fra",
+      "to": "Til",
+      "cc": "Kopi",
+      "bcc": "Blindkopi",
+      "subject": "Emne",
+      "attachments": "Vedlegg",
+      "operation": "Type",
+      "route": "Leveringsvei",
+      "requested": "Forespurt",
+      "sendAt": "Planlagt til",
+      "expires": "Utløper",
+      "unknownInbox": "Ukjent innboks",
+      "unknownTime": "Ukjent",
+      "noSubject": "(uten emne)",
+      "noRecipients": "Ingen mottaker oppgitt",
+      "noAttachments": "Ingen",
+      "recipientsAtSend": "Denne siden klarte ikke å lese mottakerne fra den opprinnelige meldingen. De hentes når den sendes, så les gjennom meldingsteksten før du godkjenner.",
+      "bccCount": "{count, plural, one {# skjult mottaker} other {# skjulte mottakere}}",
+      "attachmentCount": "{count, plural, one {# fil} other {# filer}}",
+      "bodyTitle": "Melding",
+      "bodyTruncated": "Denne meldingen er lengre enn 64 KB og er avkortet her. Åpne den i dashbordet for å lese alt.",
+      "bodyWithheldRole": "Meldingsteksten vises til eiere, administratorer og medlemmer av arbeidsområdet. Din rolle kan bare se leveringsdetaljene.",
+      "bodyStoredWithProvider": "Denne forespørselen sender et utkast som er lagret hos e-postleverandøren din, så teksten er ikke en del av forespørselen. Åpne utkastet i e-postappen din før du bestemmer deg.",
+      "bodyDecryptFailed": "Den lagrede meldingen kunne ikke dekrypteres og kan derfor ikke vises. Avvis denne forespørselen og be assistenten forberede den på nytt.",
+      "bodyAbsent": "Denne forespørselen har ingen meldingstekst.",
+      "bodyHtmlShow": "Vis HTML-kilde",
+      "bodyHtmlHide": "Skjul HTML-kilde",
+      "bodyHtmlNote": "HTML-versjonen vises som kildekode og gjengis aldri. Gjengivelse ville lastet inn eksterne bilder, som ville fortalt den som skrev meldingen når og hvor du åpnet denne siden.",
+      "approve": "Godkjenn og send",
+      "reject": "Avvis",
+      "working": "Jobber…",
+      "toDashboard": "Åpne dashbordet",
+      "readOnly": "Du kan se gjennom denne utsendingen, men bare en eier eller administrator av arbeidsområdet kan godkjenne eller avvise den.",
+      "footnote": "Godkjenning er bare mulig fra denne siden, innlogget som eier eller administrator av arbeidsområdet. En assistent kan forberede en utsending og avvise en, men den har ingen nettleserøkt og kan derfor ikke godkjenne noe.",
+      "backToConversation": "Du kan lukke denne fanen og gå tilbake til samtalen.",
+      "notFoundTitle": "Denne gjennomgangen er ikke tilgjengelig",
+      "notFoundBody": "Lenken kan være utdatert, eller den kan høre til et arbeidsområde du ikke er medlem av. Sjekk at du er logget inn med riktig konto.",
+      "operations": {
+        "email_send": "Ny e-post",
+        "email_reply": "Svar",
+        "email_forward": "Videresending",
+        "draft_send": "Send lagret utkast",
+        "schedule_create": "Planlagt e-post"
+      },
+      "routes": {
+        "gmail": "Gmail API",
+        "outlook": "Microsoft Graph",
+        "smtp": "IMAP + SMTP"
+      },
+      "caveats": {
+        "gmailThread": "Sendingen legger meldingen i den eksisterende samtalen når den er et svar.",
+        "gmailSentLabel": "En kopi skrives automatisk til Sendt-etiketten.",
+        "outlookSentItems": "En kopi skrives automatisk til Sendte elementer.",
+        "smtpNoSentCopy": "SMTP-innsending lagrer ikke selv en kopi i Sendt; serveren legger til en over IMAP der kontoen tillater det."
+      },
+      "via": {
+        "dashboard": "Avgjort i dashbordet",
+        "review_page": "Avgjort via gjennomgangslenken",
+        "mcp_app": "Avgjort i assistentens gjennomgangskort"
+      },
+      "states": {
+        "approvedTitle": "Allerede godkjent",
+        "approvedBody": "Denne e-posten ble godkjent og sendt videre for levering. Ingenting mer trengs.",
+        "rejectedTitle": "Allerede avvist",
+        "rejectedBody": "Denne e-posten ble avvist og blir ikke sendt.",
+        "cancelledTitle": "Avbrutt",
+        "cancelledBody": "Denne forespørselen ble avbrutt før noen tok stilling til den. Ingenting ble sendt.",
+        "expiredTitle": "Denne forespørselen utløp",
+        "expiredBody": "Den ble ikke avgjort i tide, så den blir ikke sendt. Be assistenten forberede den på nytt hvis du fortsatt vil sende den.",
+        "decidedElsewhereTitle": "Allerede avgjort",
+        "decidedElsewhereBody": "Noen andre, eller en annen fane, avgjorde denne utsendingen mens denne siden var åpen. Ingenting ble endret nå. Åpne dashbordet for å se utfallet."
+      },
+      "done": {
+        "approvedTitle": "Godkjent. E-posten er på vei.",
+        "approvedBody": "Den er lagt i kø for levering fra innboksen din.",
+        "rejectedTitle": "Avvist. Ingenting ble sendt.",
+        "rejectedBody": "Denne forespørselen er lukket, og e-posten blir ikke levert."
+      },
+      "errors": {
+        "csrf": "Denne siden har vært åpen for lenge. Last den inn på nytt og bestem deg igjen.",
+        "role": "Bare en eier eller administrator av arbeidsområdet kan avgjøre denne utsendingen.",
+        "generic": "Avgjørelsen kunne ikke registreres. Ingenting ble sendt — prøv igjen."
+      }
+    },
+    "mode": {
+      "label": "Gjennomgang før sending",
+      "off": "Send umiddelbart",
+      "offHint": "Assistenten sender uten å spørre. Riktig valg for en innboks du bruker til mindre viktig e-post.",
+      "inline": "Gjennomgangskort i samtalen",
+      "inlineHint": "Et kort vises i KI-samtalen med nøyaktig hva som blir sendt. Du kan avvise der; godkjenning åpner en side du må være innlogget for å bruke.",
+      "dashboard": "Gjennomgang bare i dashbordet",
+      "dashboardHint": "Ingen kort i samtalen. Assistenten får beskjed om at utsendingen venter, og du bestemmer her.",
+      "guarantee": "I begge gjennomgangsmodusene forberedes e-posten uten å bli levert. Godkjenning skjer bare i en innlogget nettleserøkt hos en eier eller administrator av arbeidsområdet, noe assistenten ikke har. Gjennomgangskortet er en bekvemmelighet, ikke en tilgangsgrense."
+    },
+    "panel": {
+      "decidedTitle": "Nylig avgjort",
+      "colDecided": "Avgjort",
+      "colWhere": "Hvor",
+      "colOutcome": "Utfall",
+      "statusApproved": "Godkjent",
+      "statusRejected": "Avvist",
+      "statusExpired": "Utløpt",
+      "statusCancelled": "Avbrutt"
+    }
   }
 }

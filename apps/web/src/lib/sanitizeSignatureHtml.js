@@ -9,12 +9,13 @@
 // https-hosted `<img>` (logos) and normal rich-text formatting, but strip
 // scripts, styles, event handlers, iframes, SVG, and dangerous URLs.
 //
-// Built on the already-installed `isomorphic-dompurify` (no new dependency).
-// Pure and side-effect free apart from registering DOMPurify hooks once; safe
-// to import from a Next.js Node-runtime route handler.
+// The browser path uses DOMPurify with the native DOM. During SSR we use the
+// dependency-free server sanitizer so importing this client module never pulls
+// jsdom into a Vercel serverless function.
 // ---------------------------------------------------------------------------
 
-import DOMPurify from "isomorphic-dompurify";
+import createDOMPurify from "dompurify";
+import { sanitizeSignatureHtml as sanitizeSignatureHtmlServer } from "./sanitizeSignatureHtmlServer.js";
 
 /**
  * Maximum length of the sanitized output, in bytes-ish (JS string length).
@@ -97,8 +98,15 @@ const FORBIDDEN_STYLE_PROP = /^(position|behavior|-moz-binding)$/i;
 const FORBIDDEN_STYLE_VALUE = /expression\s*\(|url\s*\(\s*['"]?\s*javascript:/i;
 
 let hooksRegistered = false;
+let browserDOMPurify = null;
 
-function registerHooks() {
+function getBrowserDOMPurify() {
+  if (typeof window === "undefined") return null;
+  if (!browserDOMPurify) browserDOMPurify = createDOMPurify(window);
+  return browserDOMPurify;
+}
+
+function registerHooks(DOMPurify) {
   if (hooksRegistered) return;
   hooksRegistered = true;
 
@@ -176,7 +184,10 @@ export function sanitizeSignatureHtml(dirtyHtml) {
   }
   if (dirtyHtml === "") return "";
 
-  registerHooks();
+  const DOMPurify = getBrowserDOMPurify();
+  if (!DOMPurify) return sanitizeSignatureHtmlServer(dirtyHtml);
+
+  registerHooks(DOMPurify);
 
   const clean = DOMPurify.sanitize(dirtyHtml, {
     ALLOWED_TAGS,

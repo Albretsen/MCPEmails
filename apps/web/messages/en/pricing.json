@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "AI Email MCP Server Pricing — Free & Team Plans",
-    "description": "Compare mcpemails plans for connecting Gmail and IMAP email to AI agents. Every plan includes unlimited inboxes, calls, and API keys; paid plans add team features and support."
+    "title": "AI Email MCP Server Pricing — Free, Agent & Scale Plans",
+    "description": "Compare MCPEmails plans by included successful actions. Inboxes and API keys are unlimited; actions reset with your billing period."
   },
   "hero": {
     "eyebrow": "Pricing",
-    "titleLine1": "Unlimited, free.",
-    "titleLine2": "Upgrade for more power.",
-    "lead": "Every plan, including Free, has unlimited inboxes, calls, and API keys. Paid plans add higher burst limits, team features, and support. The mail your agent reads is never stored, on any plan."
+    "titleLine1": "Clear action allowances.",
+    "titleLine2": "No surprise overages.",
+    "lead": "Every workspace includes unlimited inboxes and API keys. Successful billable MCP calls use actions; failed calls and inbox_list are free. Actions reset with your billing period and work stops at the cap."
   },
   "billing": {
     "monthly": "Monthly",
@@ -22,11 +22,11 @@
   "plans": {
     "free": {
       "name": "Free",
-      "desc": "Everything, unlimited. No daily caps. For everyone building with MCP agents.",
+      "desc": "Explore MCPEmails with 2,500 actions per billing period.",
       "cta": "Start free",
       "features": [
         "Unlimited connected inboxes",
-        "No daily limits — unlimited MCP tool calls",
+        "2,500 actions per billing period",
         "Unlimited API keys",
         "Gmail, iCloud, Fastmail & any IMAP",
         "60 requests / minute",
@@ -34,11 +34,11 @@
       ]
     },
     "solo": {
-      "name": "Solo",
+      "name": "Agent",
       "desc": "For power users running agents around the clock.",
-      "cta": "Get Solo",
+      "cta": "Get Agent",
       "features": [
-        "Everything in Free, unlimited",
+        "50,000 actions per billing period",
         "300 requests / minute (5× burst)",
         "Full usage analytics (90-day history)",
         "Gmail, iCloud, Fastmail & any IMAP",
@@ -46,12 +46,12 @@
       ]
     },
     "pro": {
-      "name": "Team",
+      "name": "Scale",
       "badge": "Most popular",
       "desc": "For teams and agencies managing multiple client inboxes in one shared workspace, with roles, SSO, and audit logs.",
-      "cta": "Get Team",
+      "cta": "Get Scale",
       "features": [
-        "Everything in Solo, unlimited",
+        "300,000 actions per billing period",
         "1,000 requests / minute",
         "Team roles & multiple workspaces",
         "SSO (SAML / OIDC) + audit log",
@@ -69,8 +69,8 @@
     "title": "Everything side by side.",
     "featureCol": "Feature",
     "free": "Free",
-    "solo": "Solo",
-    "team": "Team",
+    "solo": "Agent",
+    "team": "Scale",
     "sections": {
       "usage": {
         "label": "Usage",
@@ -123,6 +123,12 @@
     },
     "values": {
       "unlimited": "Unlimited",
+      "actionsFree": "2,500 / billing period",
+      "actionsAgent": "50,000 / billing period",
+      "actionsScale": "300,000 / billing period",
+      "actionsFree": "2,500 / billing period",
+      "actionsAgent": "50,000 / billing period",
+      "actionsScale": "300,000 / billing period",
       "ownerOnly": "Just you",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
@@ -137,28 +143,28 @@
     "title": "Common questions.",
     "items": [
       {
-        "q": "Is there really no usage limit?",
-        "a": "Correct. There are no daily caps and no monthly call caps. Connected inboxes, MCP tool calls, and API keys are unlimited on every plan, including Free; team members are available on paid plans (Free is single-user). The only limit is a per-minute fair-use ceiling (60/min on Free, 300/min on Solo, 1,000/min on Team) to protect the platform from abuse. Paid plans add higher burst throughput, team features, and support, never more usage."
+        "q": "What counts as an action?",
+        "a": "One successful billable MCP tools/call uses one action. Failed calls, provider outages, authentication errors, rate limits, dashboard actions, OAuth, API-key management, and inbox_list are free. Every plan includes unlimited inboxes and API keys."
       },
       {
         "q": "What counts as an MCP call?",
-        "a": "Each JSON-RPC tool invocation against your /mcp endpoint counts as one call: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule, or contact_search. Calls are unlimited; they only count toward your per-minute fair-use ceiling. We're a standard MCP server, so the same endpoint works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP-compatible client."
+        "a": "A successful billable JSON-RPC tool invocation against your /mcp endpoint uses one action. inbox_list, failed calls, provider outages, authentication errors, and rate-limited calls are free. We're a standard MCP server, so the same endpoint works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP-compatible client."
       },
       {
         "q": "Is my email content stored anywhere?",
         "a": "The email your agent reads is never stored: bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent, with nothing persisted between calls. We store your encrypted OAuth token or app password so we can authenticate future requests. The one exception is a message you ask us to schedule for later — we store it until it is sent, and keep a record afterwards for your history."
       },
       {
-        "q": "What's the difference between Solo and Team?",
-        "a": "Free already gives everyone unlimited usage. Solo ($12/mo) is for power users who run agents hard: it raises the burst rate limit to 300 requests/minute, extends analytics history to 90 days, and adds email support. Team ($49/mo) is for businesses: a 1,000/minute ceiling, team roles and multiple workspaces, SSO (SAML/OIDC), an audit log, 1-year analytics history, and priority support."
+        "q": "What's the difference between Agent and Scale?",
+        "a": "Free includes 2,500 actions per billing period. Agent includes 50,000 actions, a 300 requests/minute ceiling, 90-day history, and email support. Scale includes 300,000 actions, a 1,000/minute ceiling, roles, audit log, 1-year history, and priority support. The dashboard shows your usage and reset date; calls stop at the cap with no automatic overage charge."
       },
       {
         "q": "Can I change or cancel my plan?",
-        "a": "Yes. Upgrade, downgrade, or cancel any time from the billing section of your dashboard. If you cancel a paid plan, you keep access until the end of your billing period, then drop to Free automatically. Since Free is unlimited, you lose only the higher burst limit, team features, and support."
+        "a": "Yes. Upgrade, downgrade, or cancel any time from the billing section of your dashboard. If you cancel a paid plan, you keep access until the end of your billing period, then drop to Free automatically with its 2,500-action allowance."
       },
       {
         "q": "How does the annual discount work?",
-        "a": "Paying annually saves about 17% versus monthly billing: Solo is $120/year and Team is $490/year. You're charged once for 12 months upfront. If you cancel mid-year, we refund the unused whole months."
+        "a": "Paying annually saves about 17% versus monthly billing: Agent is $120/year and Scale is $490/year. You're charged once for 12 months upfront. If you cancel mid-year, we refund the unused whole months."
       },
       {
         "q": "What email providers are supported?",
@@ -176,7 +182,7 @@
   },
   "ctaBand": {
     "title": "Ready to give your agent an inbox?",
-    "sub": "Start on Free: no credit card, unlimited from day one. Upgrade when you need higher burst limits or team features.",
+    "sub": "Start on Free: no credit card and 2,500 actions per billing period. Upgrade when you need a larger allowance, higher burst limits, or team features.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs"
   }

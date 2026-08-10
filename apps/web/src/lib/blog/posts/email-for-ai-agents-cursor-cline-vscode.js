@@ -111,7 +111,7 @@ One honest limitation: there are no webhooks. The server doesn't push you new ma
 
 ## Rate limits for scripted access
 
-If you're driving the server from a cron job or a tight agent loop, mind the limits. Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, on every plan. On top of that there's a per-workspace burst ceiling set by your plan: 60/min on Free, 300/min on Solo ($12/month), 1,000/min on Team ($49/month). See the [pricing page](/pricing) for the full breakdown.
+If you're driving the server from a cron job or a tight agent loop, mind the limits. Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, on every plan. On top of that there's a per-workspace burst ceiling set by your plan: 60/min on Free, 300/min on Agent ($12/month), 1,000/min on Scale ($49/month). See the [pricing page](/pricing) for the full breakdown.
 
 When you hit a limit the server returns a retryable error (code \`-32029\`) with \`data.retry_after\` in seconds. Honor it — back off for that long and try again. And never blind-retry an \`email_compose\` send on a generic failure; you'll fire duplicates. Check whether it actually sent first.
 

@@ -30,21 +30,18 @@ export async function checkMemberLimit(
   supabase: SupabaseClient<any>,
   workspaceId: string,
 ): Promise<MemberLimitCheckResult> {
-  const [workspaceResult, memberCountResult] = await Promise.all([
+  const [effectivePlanResult, memberCountResult] = await Promise.all([
     supabase
-      .from('workspaces')
-      .select('plan, grandfathered')
-      .eq('id', workspaceId)
-      .maybeSingle(),
+      .rpc('effective_workspace_plan', { p_workspace_id: workspaceId }),
     supabase
       .from('workspace_members')
       .select('user_id', { count: 'exact', head: true })
       .eq('workspace_id', workspaceId),
   ]);
 
-  const plan = (workspaceResult.data?.plan as string | undefined) ?? 'free';
-  const grandfathered = workspaceResult.data?.grandfathered ?? false;
-  const limits = resolvePlanLimits(plan, { grandfathered });
+  const effectivePlan = effectivePlanResult.data?.[0];
+  const plan = effectivePlan?.plan ?? 'free';
+  const limits = resolvePlanLimits(plan, { compedScale: effectivePlan?.comped_scale ?? false });
   const currentCount = memberCountResult.count ?? 0;
 
   if (limits.maxMembers === Infinity) {

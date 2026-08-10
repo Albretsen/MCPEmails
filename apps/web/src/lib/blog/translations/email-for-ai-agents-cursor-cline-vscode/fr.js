@@ -104,7 +104,7 @@ Une limitation honnête : il n’y a pas de webhooks. Le serveur ne vous pousse 
 
 ## Limites de débit pour l’accès scripté
 
-Si vous pilotez le serveur depuis une tâche cron ou une boucle d’agent serrée, faites attention aux limites. Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et 10 000 par jour**, sur tous les forfaits. À cela s’ajoute un plafond de pic par espace de travail fixé par votre forfait : 60/min sur Free, 300/min sur Solo (12 $/mois), 1 000/min sur Team (49 $/mois). Voyez la [page des tarifs](/pricing) pour le détail complet.
+Si vous pilotez le serveur depuis une tâche cron ou une boucle d’agent serrée, faites attention aux limites. Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et 10 000 par jour**, sur tous les forfaits. À cela s’ajoute un plafond de pic par espace de travail fixé par votre forfait : 60/min sur Free, 300/min sur Agent (12 $/mois), 1 000/min sur Scale (49 $/mois). Voyez la [page des tarifs](/pricing) pour le détail complet.
 
 Quand vous atteignez une limite, le serveur renvoie une erreur réessayable (code \`-32029\`) avec \`data.retry_after\` en secondes. Respectez-la — patientez d’autant et réessayez. Et ne réessayez jamais à l’aveugle un envoi de \`email_compose\` sur un échec générique ; vous enverriez des doublons. Vérifiez d’abord s’il est réellement parti.
 

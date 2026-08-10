@@ -5,10 +5,11 @@ import { useTranslations } from 'next-intl';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { createClient } from '@/lib/supabase/client';
 import { readAcquisitionContext } from '../analytics/AcquisitionCapture';
+import { appendAcquisitionParams } from '@/lib/acquisition-context.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
-export function SignupApp() {
+export function SignupApp({ redirectTo = null }) {
   const t = useTranslations('auth');
   const SIGNUP_LOADING_MESSAGES = [
     t('signup.loading1'),
@@ -50,11 +51,7 @@ export function SignupApp() {
   // link) so the user lands back where they started after confirming/signing in,
   // instead of always being dropped on /dashboard. Only relative paths are honored.
   function getSafeRedirect() {
-    // Client components are pre-rendered on the server too. This helper is
-    // also used while rendering the sign-in link, so it must not read the
-    // browser global during SSR.
-    if (typeof window === 'undefined') return null;
-    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    const redirect = redirectTo;
     return redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.startsWith('/\\')
       ? redirect
       : null;
@@ -80,8 +77,10 @@ export function SignupApp() {
     const destination = new URL(redirect, window.location.origin);
     destination.searchParams.set('signup_method', provider);
     const acquisition = readAcquisitionContext();
-    destination.searchParams.set('acq', acquisition.source);
-    destination.searchParams.set('landing', acquisition.landing);
+    // Attribution belongs on the account-auth request so the provider route
+    // can preserve it across the external OAuth round trip. Keeping it inside
+    // `next` would expose it on the dashboard and the callback would miss it.
+    appendAcquisitionParams(url.searchParams, acquisition);
     url.searchParams.set('next', `${destination.pathname}${destination.search}`);
     return url.toString();
   }
@@ -132,6 +131,12 @@ export function SignupApp() {
         data: {
           acquisition_source: acquisition.source,
           acquisition_landing: acquisition.landing,
+          acquisition_landing_path: acquisition.landingPath,
+          acquisition_locale: acquisition.locale,
+          acquisition_referrer: acquisition.referrer,
+          acquisition_utm_source: acquisition.utmSource,
+          acquisition_utm_medium: acquisition.utmMedium,
+          acquisition_utm_campaign: acquisition.utmCampaign,
         },
       },
     });

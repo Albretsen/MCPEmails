@@ -7,6 +7,40 @@ import {
   invalidArgumentAuditDetails,
   type InvalidArgumentAuditDetails,
 } from "./validation-observability.ts";
+import {
+  appOnlyReviewCardToolMeta,
+  buildResourceReadResult,
+  buildResourcesListResult,
+  buildResourceTemplatesListResult,
+  clientSupportsUiExtension,
+  RESOURCES_CAPABILITY,
+  reviewCardToolMeta,
+  REVIEW_CARD_TOOL_NAMES,
+  serializeToolForList,
+} from "./mcp-app-resources.ts";
+import {
+  APPROVAL_TOOL_DEFINITIONS,
+  APPROVAL_TTL_MS,
+  approvalLapsedBeforeDecision,
+  approvalReviewUrl,
+  buildApprovalSummary,
+  isApprovalToolName,
+  PENDING_APPROVAL_COLUMNS,
+  type ResolvedSummaryFields,
+  runApprovalTool,
+  summaryIsComplete,
+  writeTolerantly,
+} from "./mcp-app-approvals.ts";
+import {
+  BULK_TOOL_DEFINITIONS,
+  type BulkExecutionOutcome,
+  type BulkExecutionRequest,
+  createBulkPlan,
+  isBulkToolName,
+  type PlanSampleRow,
+  runBulkTool,
+  shouldPlanForMode,
+} from "./mcp-app-bulk.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
 import {
@@ -244,6 +278,14 @@ interface InitializeResult {
     };
     /** User-invoked, reusable email routines. The catalogue is static per key. */
     prompts: { listChanged: false };
+    /**
+     * MCP Apps (`ui://`) resources. Declaring this is a hard requirement, not
+     * a nicety: the host's AppBridge only wires the app→server resource proxy
+     * when the server declares `resources`, so without it every
+     * `resources/read` issued from inside a rendered card fails with
+     * `-32601 Method not found`. See RESOURCES_CAPABILITY.
+     */
+    resources: { subscribe: false; listChanged: false };
   };
   serverInfo: {
     name: string;
@@ -258,7 +300,30 @@ interface InitializeResult {
   instructions?: string;
 }
 
-/** The single protocol version this server supports. */
+/**
+ * The single protocol version this server supports.
+ *
+ * ── Do not "helpfully" bump this ────────────────────────────────────────────
+ * This value was tested empirically during the MCP Apps Phase 0 spike against
+ * a real `@modelcontextprotocol/sdk` (1.29.0) client, with four servers each
+ * echoing a different version:
+ *
+ *   2025-06-18 (this value)  OK — tools, resources and `_meta.ui` all survive
+ *   2025-11-25 (SDK latest)  OK — behaviourally identical
+ *   2024-11-05 (legacy)      OK — behaviourally identical
+ *   2026-07-28 (future-dated) HARD FAIL at handshake:
+ *                             "Server's protocol version is not supported"
+ *
+ * The SDK hard-codes `SUPPORTED_PROTOCOL_VERSIONS` and throws in
+ * `client/index.js` when the server's echoed version is not in that list, so a
+ * future-dated or invented string breaks every SDK-based client instantly. The
+ * MCP Apps extension is orthogonal to the protocol version — nothing about it
+ * is version-gated — so there is no upside to moving.
+ *
+ * Only change this after re-running that matrix against the SDK version real
+ * clients ship, and confirming the target string is in its allow-list.
+ * @see docs/mcp-apps/phase-0-protocol-findings.md Q1
+ */
 const SUPPORTED_PROTOCOL_VERSION = "2025-06-18";
 
 /**
@@ -302,6 +367,14 @@ const SERVER_INSTRUCTIONS =
 const RPC_PARSE_ERROR = -32700;
 const RPC_INVALID_REQUEST = -32600;
 const RPC_METHOD_NOT_FOUND = -32601;
+const RPC_INVALID_PARAMS = -32602;
+
+/**
+ * MCP-defined code for `resources/read` against a URI the server does not
+ * serve. Distinct from -32602 (malformed params): the request was well-formed,
+ * the resource simply does not exist.
+ */
+const RPC_RESOURCE_NOT_FOUND = -32002;
 
 /**
  * MCPEmails custom code: invalid, expired, or revoked API key.
@@ -323,8 +396,14 @@ const RPC_RATE_LIMIT_EXCEEDED = -32029;
 
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
+  // `mcp-protocol-version`, `mcp-session-id` and `last-event-id` are stamped by
+  // the MCP SDK's Streamable HTTP transport. A browser-hosted client (the MCP
+  // Apps host runs in a page and preflights POST /mcp cross-origin) fails the
+  // preflight outright if they are not allowed here — the request never
+  // reaches this function, so the failure is invisible in our logs.
   "Access-Control-Allow-Headers":
-    "authorization, content-type, x-request-id, user-agent",
+    "authorization, content-type, x-request-id, user-agent, " +
+    "mcp-protocol-version, mcp-session-id, last-event-id",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
 };
@@ -817,7 +896,7 @@ async function checkPlanQuota(
   // 1. Look up workspace plan.
   const { data: workspace, error: wsError } = await supabase
     .from("workspaces")
-    .select("plan, grandfathered")
+    .select("plan, grandfathered, owner_id")
     .eq("id", workspaceId)
     .maybeSingle();
 
@@ -836,12 +915,22 @@ async function checkPlanQuota(
     };
   }
 
-  const plan = (workspace.plan as string) ?? "free";
+  const { data: entitlement, error: entitlementError } = await supabase
+    .from("user_usage_entitlements")
+    .select("kind, expires_at")
+    .eq("user_id", workspace.owner_id)
+    .maybeSingle();
+  if (entitlementError) {
+    console.error("[mcp-server] plan_quota_entitlement_lookup_failed", { error: entitlementError.message });
+  }
+  const compedScale = entitlement?.kind === "comped_scale" &&
+    (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date());
+  const plan = compedScale ? "pro" : (workspace.plan as string) ?? "free";
   // Grandfathered ("legacy") workspaces keep the launch-era ceiling. When usage
   // caps (e.g. a monthly total) are reintroduced here later, they must also
   // exempt grandfathered workspaces — see the workspaces.grandfathered column.
-  const grandfathered =
-    (workspace as { grandfathered?: boolean }).grandfathered ?? false;
+  const grandfathered = compedScale ||
+    ((workspace as { grandfathered?: boolean }).grandfathered ?? false);
   const rpmMap = grandfathered
     ? LEGACY_REQUESTS_PER_MINUTE
     : PLAN_REQUESTS_PER_MINUTE;
@@ -1108,18 +1197,47 @@ async function checkRateLimit(
  * Counted atomically per key via the `rate_limit_check` RPC against
  * `rate_limit_buckets`, independent of `activity_log`.
  */
-const DISCOVERY_RATE_LIMITS: {
+interface SlidingWindowLimit {
   label: string;
   bucket: string;
   max: number;
   windowMs: number;
-}[] = [
+}
+
+const DISCOVERY_RATE_LIMITS: SlidingWindowLimit[] = [
   { label: "per_minute", bucket: "min", max: 30, windowMs: 60_000 },
   { label: "per_hour", bucket: "hr", max: 200, windowMs: 3_600_000 },
 ];
 
 /**
- * Check per-key discovery-method rate limits (see DISCOVERY_RATE_LIMITS).
+ * Sliding-window limits for the MCP Apps `resources/*` methods, counted in
+ * their own bucket namespace rather than sharing the discovery budget above.
+ *
+ * `resources/*` is new non-`tools/call` traffic and so must be throttled for
+ * exactly the reason DISCOVERY_RATE_LIMITS exists — but it cannot share that
+ * 30/min budget, because its traffic shape is completely different. Phase 0 Q4
+ * measured the reference host re-fetching the UI resource on **every single
+ * tool call**, with no caching within a session, let alone across sessions
+ * (the host's own `appHtmlCache` field is declared and never consulted). The
+ * card's own `resources/read` is a further fresh POST on top of that. So
+ * `resources/read` traffic tracks `tools/call` traffic roughly 1:1 and would
+ * exhaust a 30/min discovery bucket long before the tool limiter noticed.
+ *
+ * These ceilings are therefore pinned above the per-key `tools/call` limits
+ * (RATE_LIMIT_WINDOWS: 100/min, 1000/hr) with headroom for the card's extra
+ * reads: a legitimate session cannot reach them, because it would have been
+ * throttled on `tools/call` first. A runaway client looping `resources/read`
+ * without calling any tool — the cheap-method hole this whole mechanism
+ * exists to close — still gets cheap 429s, and each denied request costs us a
+ * bucket UPSERT instead of serialising the full card body.
+ */
+const RESOURCE_RATE_LIMITS: SlidingWindowLimit[] = [
+  { label: "per_minute", bucket: "min", max: 200, windowMs: 60_000 },
+  { label: "per_hour", bucket: "hr", max: 2_000, windowMs: 3_600_000 },
+];
+
+/**
+ * Check per-key sliding-window limits for the cheap (non-`tools/call`) methods.
  *
  * Each window is an atomic UPSERT-and-count via the `rate_limit_check` RPC, so
  * concurrent isolates cannot race past the ceiling. The narrowest window is
@@ -1130,13 +1248,19 @@ const DISCOVERY_RATE_LIMITS: {
  * window, so `retryAfterSeconds` is the conservative full window width. A
  * well-behaved client honours Retry-After and backs off; that is good enough
  * to break a loop without an extra round-trip to read the bucket's age.
+ *
+ * @param limits which window table to apply. Defaults to DISCOVERY_RATE_LIMITS.
+ * @param namespace bucket-key namespace, keeping each limit table's counters
+ *        independent. Changing it resets that table's counters for every key.
  */
 async function checkDiscoveryRateLimit(
   apiKeyId: string,
+  limits: SlidingWindowLimit[] = DISCOVERY_RATE_LIMITS,
+  namespace = "discovery",
 ): Promise<RateLimitResult> {
-  for (const w of DISCOVERY_RATE_LIMITS) {
+  for (const w of limits) {
     const { data, error } = await supabase.rpc("rate_limit_check", {
-      p_key: `mcp:discovery:${w.bucket}:${apiKeyId}`,
+      p_key: `mcp:${namespace}:${w.bucket}:${apiKeyId}`,
       p_max_count: w.max,
       p_window_ms: w.windowMs,
     });
@@ -1144,6 +1268,7 @@ async function checkDiscoveryRateLimit(
     if (error) {
       // Fail open: skip this window on a DB/RPC error and check the rest.
       console.error("[mcp-server] discovery_rate_limit_db_error", {
+        namespace,
         window: w.label,
         key_id: apiKeyId,
         error: error.message,
@@ -1310,6 +1435,189 @@ async function writeActivityLog(params: ActivityLogParams): Promise<void> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Phase-1 action usage shadow meter
+// ---------------------------------------------------------------------------
+
+const ACTION_METER_VERSION = 1;
+const BILLABLE_TOOL_NAMES = new Set([
+  "contact_search", "draft_create", "draft_delete", "draft_list", "draft_reply",
+  "draft_send", "draft_update", "email_archive", "email_attachment", "email_copy",
+  "email_copy_batch", "email_delete", "email_delete_batch", "email_extract",
+  "email_flag", "email_forward", "email_list", "email_move", "email_move_batch",
+  "email_original", "email_read", "email_read_batch", "email_reply", "email_search",
+  "email_search_and_delete", "email_search_and_move", "email_send", "folder_create",
+  "folder_delete", "folder_list", "folder_rename", "schedule_cancel", "schedule_create",
+  "schedule_list", "signature_get", "signature_set",
+]);
+
+/** The only non-billable successful MCP tool in meter version 1 is inbox_list.
+ * Keep this allow-list explicit: newly introduced tools are free until this
+ * list and customer-facing documentation are deliberately updated. */
+async function writeActionUsage(
+  workspaceId: string,
+  toolName: string,
+  status: "success" | "error" | "rate_limited",
+  reservationId: string | null = null,
+): Promise<void> {
+  if (reservationId) {
+    const { error } = await supabase.rpc("finalize_action_usage_reservation", {
+      p_reservation_id: reservationId,
+      p_succeeded: status === "success",
+    });
+    if (error) console.error("[mcp-server] action_usage_reservation_finalize_failed", { error: error.message, error_code: error.code });
+    return;
+  }
+  if (status !== "success") return;
+  const billable = BILLABLE_TOOL_NAMES.has(toolName);
+  const { error } = await supabase.from("action_usage").insert({
+    workspace_id: workspaceId,
+    tool_name: toolName,
+    billable,
+    quantity: billable ? 1 : 0,
+    meter_version: ACTION_METER_VERSION,
+  });
+  if (error) {
+    console.error("[mcp-server] action_usage_insert_failed", {
+      tool_name: toolName, billable, error: error.message, error_code: error.code,
+    });
+  }
+}
+
+const SHADOW_ACTION_CAPS: Record<string, number> = {
+  free: 2_500,
+  solo: 50_000,
+  pro: 300_000,
+};
+
+interface UsageBillingWindow {
+  start: string;
+  end: string;
+}
+
+/** Free workspaces use a calendar-month cycle. Paid workspaces are resolved
+ * from Stripe's stored cycle in resolveUsageBillingWindow(). */
+function calendarMonthUsageWindow(now = new Date()): UsageBillingWindow {
+  return {
+    start: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString(),
+    end: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString(),
+  };
+}
+
+function isActiveUsageBillingWindow(start: string | null | undefined, end: string | null | undefined, now = Date.now()): start is string {
+  if (!start || !end) return false;
+  const startMs = new Date(start).getTime();
+  const endMs = new Date(end).getTime();
+  return Number.isFinite(startMs) && Number.isFinite(endMs) && startMs <= now && now < endMs;
+}
+
+/** The ledger, dashboard, and reservation RPC must share exact boundaries.
+ * The current Stripe period is authoritative for paid plans; calendar months
+ * are only the defined Free-plan cycle or a safe transient fallback while a
+ * legacy Stripe row awaits its next webhook sync. */
+async function resolveUsageBillingWindow(ownerId: string, plan: string): Promise<UsageBillingWindow> {
+  if (plan === "free") return calendarMonthUsageWindow();
+  const { data, error } = await supabase.from("user_billing")
+    .select("current_period_start, current_period_end")
+    .eq("user_id", ownerId).maybeSingle();
+  if (error) console.error("[mcp-server] usage_billing_window_lookup_failed", { error: error.message });
+  if (isActiveUsageBillingWindow(data?.current_period_start, data?.current_period_end)) {
+    return { start: data.current_period_start, end: data.current_period_end! };
+  }
+  console.warn("[mcp-server] usage_billing_window_fallback_calendar_month", { plan });
+  return calendarMonthUsageWindow();
+}
+
+/** Records a cap response separately from successful action metering. A failed
+ * operational write must never turn a valid cap response into a server error. */
+async function writeUsageLimitEvent(
+  workspaceId: string,
+  plan: string,
+  usedActions: number,
+  cap: number,
+): Promise<void> {
+  const { error } = await supabase.from("usage_limit_events").insert({
+    workspace_id: workspaceId,
+    effective_plan: plan,
+    used_actions: usedActions,
+    cap,
+    meter_version: ACTION_METER_VERSION,
+  });
+  if (error) {
+    console.error("[mcp-server] usage_limit_event_insert_failed", {
+      plan, used_actions: usedActions, cap, error: error.message, error_code: error.code,
+    });
+  }
+}
+
+/** Calculates (but never enforces) the launch cap condition. Diagnostics stay
+ * aggregate: no message data, arguments, customer identity, or API key. */
+async function logShadowLimitDiagnostic(workspaceId: string): Promise<void> {
+  if (Deno.env.get("USAGE_SHADOW_WOULD_BLOCK") !== "true") return;
+  const [{ data: workspace }, { count, error }] = await Promise.all([
+    supabase.from("workspaces").select("plan").eq("id", workspaceId).maybeSingle(),
+    supabase.from("action_usage").select("*", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId).eq("billable", true).eq("meter_version", ACTION_METER_VERSION)
+      .gte("occurred_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
+  ]);
+  if (error) return;
+  const plan = workspace?.plan ?? "free";
+  const cap = SHADOW_ACTION_CAPS[plan] ?? SHADOW_ACTION_CAPS.free;
+  if ((count ?? 0) >= cap) {
+    console.log("[mcp-server] usage_shadow_would_block", { plan, used_actions: count ?? 0, cap, meter_version: ACTION_METER_VERSION });
+  }
+}
+
+/** Phase-4 controlled rollout: only billable calls from a deterministic 5%
+ * cohort of workspaces created after the configured start can be stopped. */
+interface ActionLimitCheck {
+  response: JsonRpcErrorResponse | null;
+  reservationId: string | null;
+}
+
+async function actionLimitResponse(
+  workspaceId: string,
+  toolName: string,
+  requestId: string | number | null,
+): Promise<ActionLimitCheck> {
+  if (Deno.env.get("USAGE_ENFORCEMENT_ENABLED") !== "true" || !BILLABLE_TOOL_NAMES.has(toolName)) return { response: null, reservationId: null };
+  const startedAt = Deno.env.get("USAGE_ENFORCEMENT_STARTED_AT");
+  if (!startedAt) return { response: null, reservationId: null };
+  const { data: workspace } = await supabase.from("workspaces")
+    .select("plan, owner_id, created_at").eq("id", workspaceId).maybeSingle();
+  if (!workspace || new Date(workspace.created_at) < new Date(startedAt)) return { response: null, reservationId: null };
+  // Stable bucket avoids a user being randomly admitted/removed between calls.
+  let hash = 0; for (const ch of workspaceId) hash = ((hash * 31) + ch.charCodeAt(0)) >>> 0;
+  if ((hash % 100) >= Number(Deno.env.get("USAGE_ENFORCEMENT_ROLLOUT_PERCENT") ?? "5")) return { response: null, reservationId: null };
+  const { data: entitlement } = await supabase.from("user_usage_entitlements")
+    .select("kind, expires_at").eq("user_id", workspace.owner_id).maybeSingle();
+  if (entitlement?.kind === "comped_scale" && (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date())) return { response: null, reservationId: null };
+  const { data: exemption } = await supabase.from("workspace_usage_exemptions")
+    .select("expires_at, revoked_at").eq("workspace_id", workspaceId).is("revoked_at", null)
+    .order("granted_at", { ascending: false }).limit(1).maybeSingle();
+  if (exemption && (!exemption.expires_at || new Date(exemption.expires_at) > new Date())) return { response: null, reservationId: null };
+  const plan = workspace.plan ?? "free";
+  const cap = SHADOW_ACTION_CAPS[plan] ?? SHADOW_ACTION_CAPS.free;
+  const billingWindow = await resolveUsageBillingWindow(workspace.owner_id, plan);
+  const { data: reservation, error: reservationError } = await supabase.rpc("reserve_action_usage", {
+    p_workspace_id: workspaceId, p_tool_name: toolName, p_meter_version: ACTION_METER_VERSION, p_cap: cap,
+    p_period_start: billingWindow.start, p_period_end: billingWindow.end,
+  }).single();
+  if (reservationError) {
+    console.error("[mcp-server] action_usage_reservation_failed", { error: reservationError.message, error_code: reservationError.code });
+    // Fail open only when the reservation subsystem itself is unavailable.
+    return { response: null, reservationId: null };
+  }
+  const result = reservation as { reservation_id: string | null; allowed: boolean; used_actions: number } | null;
+  if (result?.allowed && result.reservation_id) return { response: null, reservationId: result.reservation_id };
+  const usedActions = result?.used_actions ?? cap;
+  await writeUsageLimitEvent(workspaceId, plan, usedActions, cap);
+  return { response: jsonRpcErrorBody(requestId, -32029, "Usage limit reached", {
+    error_code: "usage_limit_reached", effective_plan: plan, used_actions: usedActions,
+    cap, reset_at: billingWindow.end, dashboard_url: `${APP_URL}/dashboard/usage`, pricing_url: `${APP_URL}/pricing`,
+  }), reservationId: null };
+}
+
 /** Records the first server-confirmed successful MCP tool call per workspace.
  * It is an aggregate funnel marker, never analytics request data. */
 function analyticsClient(userAgent: string | null): string {
@@ -1320,11 +1628,13 @@ function analyticsClient(userAgent: string | null): string {
 
 async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxId: string | null, toolName: string, userAgent: string | null): Promise<void> {
   const { data: inbox } = inboxId ? await supabase.from("inboxes").select("provider, service").eq("id", inboxId).maybeSingle() : { data: null };
-  const provider = inbox?.service && inbox.service !== "generic" ? inbox.service : inbox?.provider ?? "unknown";
+  const rawProvider = inbox?.service && inbox.service !== "generic" ? inbox.service : inbox?.provider ?? "unknown";
+  const provider = rawProvider === "imap" || rawProvider === "generic" ? "generic_imap" : rawProvider;
   const { data: oauthToken } = await supabase.from("oauth_refresh_tokens").select("api_key_id").eq("api_key_id", apiKeyId).maybeSingle();
   const occurredAt = new Date().toISOString();
+  const client = analyticsClient(userAgent);
   const { data: claimed, error } = await supabase.from("workspaces")
-    .update({ analytics_first_tool_name: toolName, analytics_first_tool_provider: provider, analytics_first_tool_client: analyticsClient(userAgent), analytics_first_tool_path: oauthToken ? "oauth" : "api_key", analytics_first_tool_used_at: occurredAt })
+    .update({ analytics_first_tool_name: toolName, analytics_first_tool_provider: provider, analytics_first_tool_client: client, analytics_first_tool_path: oauthToken ? "oauth" : "api_key", analytics_first_tool_used_at: occurredAt, onboarding_technical_activated_at: occurredAt, onboarding_client: client, onboarding_stage: "technical_activation" })
     .eq("id", workspaceId)
     .is("analytics_first_tool_used_at", null)
     .select("id");
@@ -1335,6 +1645,122 @@ async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxI
   if (claimed && claimed.length > 0) {
     const { error: eventError } = await supabase.from("product_funnel_events").insert({ workspace_id: workspaceId, stage: "first_tool_call", outcome: "success", category: "unknown", error_category: null, occurred_at: occurredAt });
     if (eventError) console.error("[mcp-server] first_product_use_event_failed", { workspace_id: workspaceId, error: eventError.message });
+    const { error: technicalEventError } = await supabase.from("product_funnel_events").insert({ workspace_id: workspaceId, stage: "technical_activation", outcome: "success", category: client, error_category: null, occurred_at: occurredAt });
+    if (technicalEventError) console.error("[mcp-server] technical_activation_event_failed", { workspace_id: workspaceId, error: technicalEventError.message });
+  }
+
+  // Value activation is deliberately stricter than protocol discovery: the
+  // call must succeed against a resolved inbox. This prevents inbox_list and
+  // tools/list from being mistaken for delivered email value.
+  if (inboxId && toolName !== "inbox_list") {
+    const { data: valueClaimed, error: valueError } = await supabase.from("workspaces")
+      .update({ onboarding_value_activated_at: occurredAt, onboarding_stage: "value_activation" })
+      .eq("id", workspaceId).is("onboarding_value_activated_at", null).select("id");
+    if (valueError) console.error("[mcp-server] value_activation_marker_failed", { workspace_id: workspaceId, error: valueError.message });
+    if (valueClaimed && valueClaimed.length > 0) {
+      const { error: valueEventError } = await supabase.from("product_funnel_events").insert({ workspace_id: workspaceId, stage: "value_activation", outcome: "success", category: provider, error_category: null, occurred_at: occurredAt });
+      if (valueEventError) console.error("[mcp-server] value_activation_event_failed", { workspace_id: workspaceId, error: valueEventError.message });
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// MCP client capability observation
+// ---------------------------------------------------------------------------
+
+/**
+ * Cap on the serialized `capabilities` object we persist. Client-supplied and
+ * unbounded in principle; a pathological client must not be able to write
+ * megabytes into our table one handshake at a time.
+ */
+const MAX_PERSISTED_CAPABILITIES_BYTES = 4_096;
+
+/**
+ * Upsert one row into `mcp_client_capabilities` recording what this client
+ * declared at `initialize`.
+ *
+ * **Observability only. Nothing branches on these rows.** In particular, MCP
+ * Apps `_meta.ui` metadata is emitted unconditionally and is never gated on
+ * `supports_ui`: the Phase 0 spike found the official reference host sends
+ * `capabilities: {}` — no `extensions` key at all — while rendering apps
+ * correctly, so gating on the declaration would have degraded us to a
+ * text-only tool surface against a conforming host. The declaration is a
+ * reliable positive signal when present and carries no information when
+ * absent. This table exists purely so we can learn what real hosts send.
+ *
+ * Failure is swallowed exactly as in `writeActivityLog`: a diagnostic write
+ * must never fail a client's handshake. The insert is awaited rather than
+ * detached so the row is durable before the response is sent, which the edge
+ * runtime does not guarantee for work left running after a response.
+ *
+ * Privacy: only handshake metadata is stored — client name/version, requested
+ * protocol version, and the capability object. No credentials, no mailbox
+ * content, no message data.
+ */
+async function recordClientCapabilities(
+  apiKey: ApiKeyRow,
+  protocolVersion: string,
+  clientInfo: InitializeParams["clientInfo"],
+  capabilities: InitializeParams["capabilities"],
+): Promise<void> {
+  // The conflict target columns are NOT NULL in the table: NULLs never compare
+  // equal in a unique index, so a client that omits clientInfo would insert an
+  // unbounded number of near-identical rows instead of updating one.
+  const clientName = typeof clientInfo?.name === "string" && clientInfo.name.trim()
+    ? clientInfo.name.slice(0, 200)
+    : "unknown";
+  const clientVersion =
+    typeof clientInfo?.version === "string" && clientInfo.version.trim()
+      ? clientInfo.version.slice(0, 100)
+      : "unknown";
+
+  let persistedCapabilities: Record<string, unknown> = capabilities ?? {};
+  if (JSON.stringify(persistedCapabilities).length > MAX_PERSISTED_CAPABILITIES_BYTES) {
+    persistedCapabilities = {
+      truncated: true,
+      keys: Object.keys(capabilities ?? {}).slice(0, 50),
+    };
+  }
+
+  // `first_seen` is deliberately absent from the payload. PostgREST builds the
+  // ON CONFLICT DO UPDATE set from the payload's keys, so omitting it leaves
+  // the original insert's value intact on every subsequent handshake.
+  //
+  // try/catch as well as the returned `error`: supabase-js surfaces most
+  // failures in `error`, but a transport-level fault (aborted fetch, DNS)
+  // rejects. Either way this must not reach the caller — a failed diagnostic
+  // write cannot be allowed to break a client's handshake.
+  try {
+    const { error } = await supabase
+      .from("mcp_client_capabilities")
+      .upsert({
+        workspace_id: apiKey.workspace_id,
+        api_key_id: apiKey.id,
+        client_name: clientName,
+        client_version: clientVersion,
+        protocol_version: protocolVersion.slice(0, 50),
+        capabilities: persistedCapabilities,
+        supports_ui: clientSupportsUiExtension(capabilities),
+        last_seen: new Date().toISOString(),
+      }, {
+        onConflict: "api_key_id,client_name,client_version,protocol_version",
+      });
+
+    if (error) {
+      console.error("[mcp-server] client_capabilities_upsert_failed", {
+        workspace_id: apiKey.workspace_id,
+        key_id: apiKey.id,
+        client_name: clientName,
+        error: error.message,
+        error_code: error.code,
+      });
+    }
+  } catch (err) {
+    console.error("[mcp-server] client_capabilities_upsert_threw", {
+      workspace_id: apiKey.workspace_id,
+      key_id: apiKey.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -1400,10 +1826,24 @@ async function routeMethod(
 
   switch (req.method) {
     case "initialize":
-      return handleInitialize(req, id);
+      return await handleInitialize(req, id, apiKey);
 
     case "tools/list":
-      return handleToolsList(req, id, apiKey);
+      return await handleToolsList(req, id, apiKey);
+
+    // ── MCP Apps resource surface ────────────────────────────────────────
+    // These serve the `ui://` cards. They are read-only, workspace-agnostic
+    // (the catalogue is identical for every key) and require no scope: the
+    // payload is our own static HTML, not customer data. They are throttled
+    // separately in handleRequest — see RESOURCE_RATE_LIMITS.
+    case "resources/list":
+      return handleResourcesList(id, apiKey);
+
+    case "resources/read":
+      return handleResourcesRead(req, id, apiKey);
+
+    case "resources/templates/list":
+      return handleResourceTemplatesList(id);
 
     case "prompts/list":
       return handlePromptsList(id, apiKey);
@@ -1495,6 +1935,19 @@ interface ToolDefinition {
     idempotentHint?: boolean;
     openWorldHint?: boolean;
   };
+  /**
+   * Optional protocol-level metadata, emitted verbatim in tools/list.
+   *
+   * Today this carries only `ui.resourceUri` for MCP Apps — see
+   * REVIEW_CARD_TOOL_NAMES, where it is attached. Clients that do not
+   * understand `_meta` ignore it, which is the extension's intended
+   * graceful-degradation path; the tool behaves identically either way.
+   *
+   * Note that `_meta.ui.visibility` is deliberately NOT used anywhere in this
+   * server. It is a host UI hint and cannot be an authorisation boundary —
+   * see the long note on `reviewCardToolMeta` in mcp-app-resources.ts.
+   */
+  _meta?: Record<string, unknown>;
 }
 
 /**
@@ -4160,6 +4613,63 @@ const TOOL_REGISTRY: ToolDefinition[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// MCP Apps: attach the review-card `_meta` to the outbound tools.
+//
+// Applied here as a single pass rather than sprinkled through CONSOLIDATED_SPECS
+// so the set of UI-bearing tools has exactly one definition (REVIEW_CARD_TOOL_NAMES)
+// that a test can assert against, and so the tool specs stay free of protocol
+// plumbing.
+//
+// Entries are REPLACED with copies, never mutated in place: some registry
+// entries are the same objects held by LEGACY_BY_NAME, and mutating one would
+// leak `_meta` into the legacy per-action tool definitions.
+//
+// This is purely additive metadata. It changes no tool's name, schema,
+// scope, or behaviour, and a client that ignores `_meta` sees byte-identical
+// output to before.
+// ---------------------------------------------------------------------------
+for (let i = 0; i < TOOL_REGISTRY.length; i++) {
+  if (REVIEW_CARD_TOOL_NAMES.includes(TOOL_REGISTRY[i].name)) {
+    TOOL_REGISTRY[i] = { ...TOOL_REGISTRY[i], _meta: reviewCardToolMeta() };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// MCP Apps: the approval tools.
+//
+// Appended last, after the mail surface, so the ordering of the nine
+// documented tools is untouched. They carry `visibility: ["app"]` so a
+// well-behaved host keeps them out of the model's picker — a tidiness measure
+// with no security content whatsoever. Their handlers assume they are called by
+// a hostile agent; see the header of mcp-app-approvals.ts.
+//
+// They are absent from BILLABLE_TOOL_NAMES (non-billable: they act on an
+// approval, not on an inbox's mail) and from IDEMPOTENT_OUTBOUND_OPERATIONS
+// (they send nothing, so there is no delivery to deduplicate).
+// ---------------------------------------------------------------------------
+for (const definition of APPROVAL_TOOL_DEFINITIONS) {
+  TOOL_REGISTRY.push({ ...definition, _meta: appOnlyReviewCardToolMeta() });
+}
+
+// ---------------------------------------------------------------------------
+// MCP Apps: the bulk-plan tools (`bulk_execute`, `bulk_cancel`).
+//
+// Always listed, unlike the `_meta.ui` on email_delete/email_organize below,
+// which is conditional. Listing them unconditionally is harmless: with no
+// pending plan in the caller's workspace, both are inert — every plan_id fails
+// the same "could not be found" guard — and a key whose inboxes have not opted
+// in can never produce a plan for them to act on in the first place.
+//
+// Like the approval tools they carry `visibility: ["app"]` for tidiness, are
+// absent from BILLABLE_TOOL_NAMES (they act on a plan, not on an inbox's mail
+// quota) and from IDEMPOTENT_OUTBOUND_OPERATIONS (they send nothing). Their
+// handlers assume a hostile caller; see the header of mcp-app-bulk.ts.
+// ---------------------------------------------------------------------------
+for (const definition of BULK_TOOL_DEFINITIONS) {
+  TOOL_REGISTRY.push({ ...definition, _meta: appOnlyReviewCardToolMeta() });
+}
+
+// ---------------------------------------------------------------------------
 // MCP input-schema validation
 //
 // MCP clients are not required to validate a tool's advertised inputSchema.
@@ -4626,6 +5136,7 @@ interface InboxRow {
   imap_host: string | null;
   imap_port: number | null;
   imap_tls: boolean;
+  imap_security: "tls" | "starttls" | null;
   /** Optional SASL login username; falls back to email_address when null. */
   imap_username: string | null;
   /** AES-256-GCM ciphertext encoded as base64url text. */
@@ -4633,6 +5144,7 @@ interface InboxRow {
   smtp_host: string | null;
   smtp_port: number | null;
   smtp_tls: boolean;
+  smtp_security: "tls" | "starttls" | null;
   status: string;
   /** Optional HTML signature appended server-side on send. Plaintext (not secret). */
   signature_html: string | null;
@@ -4652,8 +5164,8 @@ interface InboxRow {
 const INBOX_SELECT_COLUMNS =
   "id, workspace_id, provider, email_address, display_name, " +
   "oauth_access_token, oauth_refresh_token, oauth_token_expires_at, " +
-  "imap_host, imap_port, imap_tls, imap_username, imap_password, " +
-  "smtp_host, smtp_port, smtp_tls, status, " +
+  "imap_host, imap_port, imap_tls, imap_security, imap_username, imap_password, " +
+  "smtp_host, smtp_port, smtp_tls, smtp_security, status, " +
   "signature_html, signature_text, signature_enabled, " +
   "signature_reply_mode, signature_source, signature_updated_at, send_approval_required";
 
@@ -5969,6 +6481,7 @@ async function resolveImapAliasMailbox(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -6310,6 +6823,7 @@ async function listImapMessages(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -6398,6 +6912,7 @@ async function readImapMessage(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -6498,6 +7013,7 @@ async function searchImapMessages(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -6630,7 +7146,7 @@ async function imapSmtpSend(
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
-  const security = inbox.smtp_port === 587 ? "starttls" : "tls";
+  const security = inbox.smtp_security ?? (inbox.smtp_port === 587 ? "starttls" : "tls");
   try {
     await sendViaSmtp(
       {
@@ -6665,6 +7181,7 @@ async function appendToSentFolder(inbox: InboxRow, mimeMessage: string): Promise
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -6753,6 +7270,7 @@ async function replyImapMessage(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -8118,6 +8636,7 @@ async function readOriginalMessage(
         client = await ImapClient.connect({
           host: inbox.imap_host,
           port: inbox.imap_port,
+          security: inbox.imap_security ?? "tls",
           email: imapAuthUser(inbox),
           password,
         });
@@ -10496,15 +11015,15 @@ async function executeForwardEmail(
   // Preserve the original operation arguments so the approval dispatcher can
   // execute the same threaded forward once a human approves it.
   try {
-    const approvalId = await queueSendApproval(
+    const approval = await queueSendApproval(
       senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
       "email_forward",
     );
-    if (approvalId) return {
-      result: jsonOk({ status: "pending_approval", approval_id: approvalId, inbox_id: senderInbox.id, message: "This forward has not been sent. Approve it in the MCP Emails dashboard." }, true),
+    if (approval) return {
+      result: jsonOk(pendingApprovalPayload(approval, senderInbox.id, "forward"), true),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -10855,15 +11374,15 @@ async function executeReplyToEmail(
   // this exact reply request. The original args retain the message id needed
   // to derive threading headers at approved-dispatch time.
   try {
-    const approvalId = await queueSendApproval(
+    const approval = await queueSendApproval(
       senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
       "email_reply",
     );
-    if (approvalId) return {
-      result: jsonOk({ status: "pending_approval", approval_id: approvalId, inbox_id: senderInbox.id, message: "This reply has not been sent. Approve it in the MCP Emails dashboard." }, true),
+    if (approval) return {
+      result: jsonOk(pendingApprovalPayload(approval, senderInbox.id, "reply"), true),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -11005,6 +11524,165 @@ async function executeReplyToEmail(
 /** Maximum total attachment size across all attachments in one send call. */
 const SEND_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
 
+/** What a queued approval hands back to the calling tool. */
+interface QueuedApproval {
+  id: string;
+  /** The authenticated page a human approves at. No token — see below. */
+  reviewUrl: string;
+  /** The inbox's `send_review_mode`: 'off' | 'inline' | 'dashboard'. */
+  reviewMode: string;
+}
+
+/**
+ * Read an inbox's `send_review_mode` without widening INBOX_SELECT_COLUMNS.
+ *
+ * Kept as its own query for deploy-order safety: adding the column to the
+ * shared select would make every inbox read in the function fail against a
+ * database where the Phase 2 migration has not been applied yet. This runs only
+ * on the gated path, which is rare by construction, and degrades to 'dashboard'
+ * — today's behaviour — on any error.
+ */
+async function readSendReviewMode(inboxId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("inboxes")
+    .select("send_review_mode")
+    .eq("id", inboxId)
+    .maybeSingle();
+  const mode = (data as { send_review_mode?: unknown } | null)?.send_review_mode;
+  if (error || typeof mode !== "string") return "dashboard";
+  return mode;
+}
+
+/** Provider-agnostic metadata read of one message. Never marks it read. */
+async function readMessageForSummary(
+  inbox: InboxRow,
+  messageId: string,
+): Promise<ReadEmailResult> {
+  switch (inbox.provider) {
+    case "gmail":
+      return await readGmailMessage(inbox, messageId, false, false, false);
+    case "outlook":
+      return await readOutlookMessage(inbox, messageId, false, false, false);
+    default:
+      return await readImapMessage(inbox, messageId, false, false, false);
+  }
+}
+
+/** Provider-agnostic header read of one draft. */
+async function readDraftForSummary(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftContent | null> {
+  switch (inbox.provider) {
+    case "gmail":
+      return await gmailGetDraft(inbox, draftId);
+    case "outlook":
+      return await outlookGetDraft(inbox, draftId);
+    default:
+      return await imapGetDraft(inbox, draftId);
+  }
+}
+
+/**
+ * Resolve the recipients and subject a gated send will actually use.
+ *
+ * WHY THIS EXISTS. `send_approvals.summary` is what the dashboard queue, the
+ * approve page and the review card render, and it used to be built purely from
+ * `payload.to` / `payload.subject`. Three of the five gated operations store
+ * neither or only one of those:
+ *
+ *   email_reply    — no `to` (derived from the original's From/To/Cc at send
+ *                    time), no `subject` (derived as "Re: <original>")
+ *   email_forward  — has `to`, but no `subject` ("Fwd: <original>")
+ *   draft_send     — has only a `draft_id`; the message lives with the provider
+ *
+ * So for those three, a reviewer was asked to approve a send whose recipient
+ * and subject lines were blank. An approval gate that cannot show what is being
+ * approved is a rubber stamp, which is the exact failure the gate exists to
+ * prevent. Resolving here fixes the card, the approve page and the queue at
+ * once, because all three read the same stored summary.
+ *
+ * THE PROVIDER CALL. This costs one metadata read (Gmail `format=metadata` /
+ * Graph `$select` / one IMAP fetch) on a path that:
+ *   - runs only when an inbox has opted into approvals, which is rare by
+ *     construction and never on the hot path;
+ *   - is about to hand the same message id to the same provider anyway, so it
+ *     introduces no new class of failure; and
+ *   - is strictly cheaper than the alternative of resolving lazily at render
+ *     time, which would repeat the call on every card render and every approve
+ *     page load, and would require the Next.js app to hold mail credentials it
+ *     deliberately does not have today.
+ *
+ * IT MUST NEVER THROW. A provider hiccup here must not turn a queueable send
+ * into an error, and must not leave the caller stuck against
+ * `claimOutboundIdempotency` (which only records `pending_approval` once an
+ * approval row exists). Every failure degrades to `{}`, i.e. exactly today's
+ * blank summary.
+ *
+ * KNOWN IMPRECISION, stated rather than hidden: for `draft_send` the draft is
+ * mutable, so what is resolved here is the draft as of queue time and the
+ * dispatcher sends the draft as of approval time. The approve page already
+ * tells the reviewer the content lives with the provider. Queue-time truth is
+ * far better than a blank line, but it is not a guarantee.
+ */
+async function resolveApprovalSummaryFields(
+  inbox: InboxRow,
+  operation: string,
+  payload: Record<string, unknown>,
+): Promise<ResolvedSummaryFields> {
+  // email_send and schedule_create already carry both: no provider call at all.
+  if (summaryIsComplete(payload)) return {};
+
+  try {
+    if (operation === "email_reply" || operation === "email_forward") {
+      const messageId = typeof payload.message_id === "string" ? payload.message_id : "";
+      if (!messageId) return {};
+      const original = await readMessageForSummary(inbox, messageId);
+      const origSubject = original.subject || "(no subject)";
+      if (operation === "email_forward") {
+        return { subject: makeForwardSubject(origSubject) };
+      }
+      // Mirrors the reply-recipient rule in reply{Gmail,Outlook,Imap}Message:
+      // the original sender, plus its To and Cc when reply_all is set, minus
+      // this inbox's own address. Reply-To is deliberately ignored here because
+      // the send paths ignore it too — the summary must describe what will
+      // actually happen, not what arguably should.
+      const entries = payload.reply_all === true
+        ? [original.from, ...original.to, ...original.cc]
+        : [original.from];
+      return {
+        to: entries
+          .filter((entry) => entry && entry.email && entry.email !== inbox.email_address)
+          .slice(0, 50)
+          .map(formatAddressEntry),
+        subject: /^re:/i.test(origSubject.trim()) ? origSubject : `Re: ${origSubject}`,
+      };
+    }
+
+    if (operation === "draft_send") {
+      const draftId = typeof payload.draft_id === "string" ? payload.draft_id : "";
+      if (!draftId) return {};
+      const draft = await readDraftForSummary(inbox, draftId);
+      if (!draft) return {};
+      return {
+        to: draft.to,
+        cc: draft.cc,
+        bcc_count: draft.bcc.length,
+        subject: draft.subject,
+      };
+    }
+  } catch (error) {
+    // Degrade to the previous behaviour (a blank summary) rather than failing
+    // the queue. The reviewer still gets the body, the identity and the route.
+    console.warn("[mcp-server] approval_summary_resolve_failed", {
+      inbox_id: inbox.id,
+      operation,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+  return {};
+}
+
 /** Store an immutable, encrypted delivery request when an inbox has opted into
  * human approval. This is deliberately server-side: an MCP client or API key
  * cannot approve, disable, or otherwise bypass the gate. */
@@ -11014,30 +11692,79 @@ async function queueSendApproval(
   payload: Record<string, unknown>,
   sendAt?: string,
   operation = "email_send",
-): Promise<string | null> {
+): Promise<QueuedApproval | null> {
   if (!inbox.send_approval_required || apiKey.internalApprovalDispatch) return null;
   const ciphertext = await encryptForStorage(JSON.stringify(payload));
-  const { data, error } = await supabase.from("send_approvals").insert({
-    workspace_id: apiKey.workspace_id,
-    inbox_id: inbox.id,
-    api_key_id: apiKey.id,
-    operation,
-    payload: { v: 1, data: ciphertext },
-    payload_encrypted: true,
-    summary: {
-      to: Array.isArray(payload.to) ? payload.to : [],
-      cc: Array.isArray(payload.cc) ? payload.cc : [],
-      bcc_count: Array.isArray(payload.bcc) ? payload.bcc.length : 0,
-      subject: typeof payload.subject === "string" ? payload.subject : "",
-      attachment_count: Array.isArray(payload.attachments) ? payload.attachments.length : 0,
+  // Resolved before the insert, never after: the summary is what a reviewer
+  // sees, so a row must not exist in a state where it is blank. It is also the
+  // last thing that may fail without consequence — nothing has been written and
+  // no provider has been asked to send anything yet.
+  const summary = buildApprovalSummary(
+    payload,
+    await resolveApprovalSummaryFields(inbox, operation, payload),
+  );
+  // A pending request stays decidable for 24h and is then dead: the tools
+  // refuse it, the decide paths refuse it, and the dispatcher re-checks it.
+  const expiresAt = new Date(Date.now() + APPROVAL_TTL_MS).toISOString();
+  const { data, error } = await writeTolerantly<{ id: string } | null>(
+    {
+      workspace_id: apiKey.workspace_id,
+      inbox_id: inbox.id,
+      api_key_id: apiKey.id,
+      operation,
+      payload: { v: 1, data: ciphertext },
+      payload_encrypted: true,
+      summary,
+      expires_at: expiresAt,
+      ...(sendAt ? { send_at: sendAt } : {}),
     },
-    ...(sendAt ? { send_at: sendAt } : {}),
-  }).select("id").single();
+    PENDING_APPROVAL_COLUMNS,
+    (row) => supabase.from("send_approvals").insert(row).select("id").maybeSingle(),
+  );
   if (error || !data) {
     console.error("[mcp-server] send_approval_queue_failed", { inbox_id: inbox.id, error: error?.message });
     throw new Error("send_approval_queue_failed");
   }
-  return (data as { id: string }).id;
+  const id = (data as { id: string }).id;
+  return { id, reviewUrl: approvalReviewUrl(APP_URL, id), reviewMode: await readSendReviewMode(inbox.id) };
+}
+
+/**
+ * The `pending_approval` tool payload, identical for all five gated operations.
+ *
+ * Contract §7 commits to this feature exposing **no new information to the
+ * model**: the fields here are exactly what `send_approvals.summary` already
+ * held, plus `review_url`. Keep it that way — in particular do not add the
+ * subject, the body, or the recipient list, all of which the caller supplied
+ * and none of which we should echo back into the transcript.
+ *
+ * `review_url` carries a bare id and no token, deliberately. A signed URL
+ * sitting in model context would itself be a bearer capability; here the id is
+ * useless without an authenticated session and an owner/admin role, so it is
+ * safe for the model to hold. Do not sign it.
+ */
+function pendingApprovalPayload(
+  approval: QueuedApproval,
+  inboxId: string,
+  noun: string,
+  extra: Record<string, unknown> = {},
+): Record<string, unknown> {
+  const message = approval.reviewMode === "inline"
+    ? `This ${noun} has not been sent. It is waiting for a person to approve it: ` +
+      `open ${approval.reviewUrl} to approve (sign-in required), or call approval_decide ` +
+      `with decision "reject" to discard it.`
+    // Default wording, unchanged from before this feature, for every inbox
+    // whose review mode is 'dashboard' (which is what the migration backfills
+    // for every inbox that already had the gate switched on).
+    : `This ${noun} has not been sent. Approve it in the MCP Emails dashboard.`;
+  return {
+    status: "pending_approval",
+    approval_id: approval.id,
+    inbox_id: inboxId,
+    ...extra,
+    review_url: approval.reviewUrl,
+    message,
+  };
 }
 
 /**
@@ -11341,7 +12068,7 @@ async function executeSendEmail(
   applySignature(sendParams, senderInbox, { include_signature: includeSignature });
 
   try {
-    const approvalId = await queueSendApproval(senderInbox, apiKey, {
+    const approval = await queueSendApproval(senderInbox, apiKey, {
       inbox_id: senderInbox.id,
       to: sendParams.to, cc: sendParams.cc, bcc: sendParams.bcc,
       subject: sendParams.subject, body: sendParams.textBody,
@@ -11349,8 +12076,8 @@ async function executeSendEmail(
       ...(sendParams.attachments.length ? { attachments: sendParams.attachments } : {}),
       ...(sendParams.replyTo ? { reply_to: sendParams.replyTo } : {}),
     });
-    if (approvalId) return {
-      result: jsonOk({ status: "pending_approval", approval_id: approvalId, inbox_id: senderInbox.id, message: "This email has not been sent. Approve it in the MCP Emails dashboard." }, true),
+    if (approval) return {
+      result: jsonOk(pendingApprovalPayload(approval, senderInbox.id, "email"), true),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -12203,6 +12930,7 @@ async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -12527,6 +13255,7 @@ async function imapCreateFolder(inbox: InboxRow, name: string): Promise<{ id: st
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -12596,6 +13325,7 @@ async function imapRenameFolder(inbox: InboxRow, folderId: string, newName: stri
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -12662,6 +13392,7 @@ async function imapDeleteFolder(inbox: InboxRow, folderId: string): Promise<void
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -13048,6 +13779,7 @@ async function imapUpdateFlags(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -13091,6 +13823,7 @@ async function imapArchiveEmail(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -13440,6 +14173,7 @@ async function imapMoveEmail(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -13646,6 +14380,7 @@ async function imapCopyEmail(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -13811,6 +14546,7 @@ async function imapDeleteEmail(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -14180,6 +14916,7 @@ async function imapBulkMove(
       client = await ImapClient.connect({
         host: inbox.imap_host,
         port: inbox.imap_port,
+        security: inbox.imap_security ?? "tls",
         email: imapAuthUser(inbox),
         password,
       });
@@ -14240,6 +14977,7 @@ async function imapBulkCopy(
       client = await ImapClient.connect({
         host: inbox.imap_host,
         port: inbox.imap_port,
+        security: inbox.imap_security ?? "tls",
         email: imapAuthUser(inbox),
         password,
       });
@@ -14297,6 +15035,7 @@ async function imapBulkDelete(
       client = await ImapClient.connect({
         host: inbox.imap_host,
         port: inbox.imap_port,
+        security: inbox.imap_security ?? "tls",
         email: imapAuthUser(inbox),
         password,
       });
@@ -14378,6 +15117,7 @@ async function imapBulkFlag(
       client = await ImapClient.connect({
         host: inbox.imap_host,
         port: inbox.imap_port,
+        security: inbox.imap_security ?? "tls",
         email: imapAuthUser(inbox),
         password,
       });
@@ -14701,6 +15441,217 @@ async function outlookBulkFlag(
 }
 
 
+// ---------------------------------------------------------------------------
+// MCP Apps: bulk operation preview ("plan instead of execute")
+//
+// The four destructive bulk actions below can return a frozen PLAN instead of
+// running, for inboxes that have opted in. See mcp-app-bulk.ts for the security
+// argument; the two things that belong here are the opt-in read and the single
+// shared execution path.
+// ---------------------------------------------------------------------------
+
+/**
+ * Read an inbox's `bulk_review_mode` without widening INBOX_SELECT_COLUMNS.
+ *
+ * Kept as its own query for deploy-order safety, exactly like
+ * `readSendReviewMode`: adding the column to the shared select would make every
+ * inbox read in the function fail against a database where this phase's
+ * migration has not been applied yet.
+ *
+ * **It degrades to 'off', which is today's immediate-execution behaviour.** That
+ * direction is deliberate. An error here must never turn a normal delete into a
+ * plan the caller does not know how to run — a non-UI integration would simply
+ * stop deleting mail and report success at having "previewed" it.
+ */
+async function readBulkReviewMode(inboxId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("inboxes")
+    .select("bulk_review_mode")
+    .eq("id", inboxId)
+    .maybeSingle();
+  const mode = (data as { bulk_review_mode?: unknown } | null)?.bulk_review_mode;
+  if (error || typeof mode !== "string") return "off";
+  return mode;
+}
+
+/**
+ * True when this inbox previews destructive bulk operations instead of running
+ * them. The decision itself lives in `shouldPlanForMode` so it can be tested.
+ */
+async function shouldPlanBulkOperation(inbox: InboxRow): Promise<boolean> {
+  return shouldPlanForMode(await readBulkReviewMode(inbox.id));
+}
+
+/**
+ * The consolidated tools that can return a bulk-plan card.
+ *
+ * Not added to `REVIEW_CARD_TOOL_NAMES` in mcp-app-resources.ts, because that
+ * list is applied unconditionally at module load and this one is decided per
+ * key at `tools/list` time. See the comment in `handleToolsList`.
+ */
+const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = ["email_delete", "email_organize"];
+
+/**
+ * True when any inbox this key may touch previews bulk operations.
+ *
+ * Fails closed on error (returns false = today's behaviour, no card metadata).
+ * The `inbox_ids` allowlist is applied the same way it is everywhere else: a
+ * non-null allowlist restricts the query, and an empty one denies everything.
+ */
+async function keyHasBulkPlanInbox(apiKey: ApiKeyRow): Promise<boolean> {
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) return false;
+  let query = supabase
+    .from("inboxes")
+    .select("id")
+    .eq("workspace_id", apiKey.workspace_id)
+    .eq("bulk_review_mode", "plan")
+    .limit(1);
+  if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
+  const { data, error } = await query;
+  if (error) {
+    // Almost certainly "column does not exist" against a database where this
+    // phase's migration has not landed yet. Silent and safe: no metadata.
+    return false;
+  }
+  return Array.isArray(data) && data.length > 0;
+}
+
+/**
+ * The ONE way this server deletes mail in bulk.
+ *
+ * Extracted so that executing a plan and executing immediately are literally
+ * the same code. A second delete path would be a second place for the
+ * capability gates, the permanent-delete refusal and the per-provider error
+ * mapping to drift, and drift in a delete path is how mail goes missing.
+ */
+function runBulkDeleteOnIds(
+  inbox: InboxRow,
+  messageIds: string[],
+  permanent: boolean,
+): Promise<BulkOpResult> {
+  switch (inbox.provider) {
+    case "gmail":
+      return gmailBulkDelete(inbox, messageIds, permanent);
+    case "outlook":
+      return outlookBulkDelete(inbox, messageIds, permanent);
+    default: // imap and all IMAP service variants
+      return imapBulkDelete(inbox, messageIds, permanent);
+  }
+}
+
+/** The ONE way this server moves mail in bulk. See `runBulkDeleteOnIds`. */
+function runBulkMoveOnIds(
+  inbox: InboxRow,
+  messageIds: string[],
+  resolvedDestination: string,
+  runId: string | null = null,
+): Promise<BulkOpResult> {
+  switch (inbox.provider) {
+    case "gmail":
+      return gmailBulkMove(inbox, messageIds, resolvedDestination, runId);
+    case "outlook":
+      return outlookBulkMove(inbox, messageIds, resolvedDestination, runId);
+    default: // imap and all IMAP service variants
+      return imapBulkMove(inbox, messageIds, resolvedDestination, runId);
+  }
+}
+
+/**
+ * Contract §3 `sample` — up to five preview rows for the card.
+ *
+ * Built in memory from a search result the server already has, returned once in
+ * the plan's tool result, and **never persisted**. See the migration's note on
+ * why `bulk_plans` holds identifiers but no headers.
+ *
+ * Only search-derived plans get a sample: for `delete_batch` / `move_batch` the
+ * caller supplied ids it obtained from an earlier list/search whose results are
+ * already in the transcript, and fetching five messages' metadata purely to
+ * decorate a preview would add a provider round-trip — and a new failure mode —
+ * to an operation that is meant to change nothing.
+ */
+function planSampleFromSearch(messages: SearchEmailSummary[]): PlanSampleRow[] {
+  return messages
+    .slice(0, 5)
+    .map((message) => ({
+      from: message.from?.email ?? message.from?.name ?? "(unknown sender)",
+      subject: message.subject || "(no subject)",
+      date: message.date,
+    }));
+}
+
+/**
+ * `BulkDeps.execute` — runs a claimed plan's frozen id list.
+ *
+ * Re-resolves the inbox from its id (the plan stores a reference, never a
+ * credential snapshot) and hands off to the shared paths above. The workspace
+ * and allowlist checks already happened in `loadPendingPlan`; this re-reads the
+ * inbox because credentials may have been refreshed since the plan was made.
+ */
+async function executeBulkPlanRequest(
+  request: BulkExecutionRequest,
+  apiKey: ApiKeyRow,
+): Promise<BulkExecutionOutcome> {
+  const { data, error } = await supabase
+    .from("inboxes")
+    .select(INBOX_SELECT_COLUMNS)
+    .eq("id", request.inbox_id)
+    .eq("workspace_id", apiKey.workspace_id)
+    .maybeSingle();
+  if (error || !data) {
+    return { succeeded: 0, failed: request.message_ids.length, error_code: "inbox_not_found" };
+  }
+  const inbox = data as unknown as InboxRow;
+
+  const isDelete = request.action === "delete_batch" || request.action === "search_and_delete";
+
+  // A move whose frozen destination is missing must fail rather than default.
+  // Every provider path treats an empty destination differently and none of
+  // them treat it as "do nothing", so guessing here could file mail somewhere
+  // the user never chose.
+  if (!isDelete && !request.destination_id) {
+    console.error("[mcp-server] bulk_plan_missing_destination", { inbox_id: request.inbox_id });
+    return {
+      succeeded: 0,
+      failed: request.message_ids.length,
+      error_code: "destination_missing",
+    };
+  }
+
+  const result = isDelete
+    ? await runBulkDeleteOnIds(inbox, request.message_ids, request.permanent)
+    : await runBulkMoveOnIds(inbox, request.message_ids, request.destination_id!);
+
+  return {
+    succeeded: result.succeeded.length,
+    failed: result.failed.length,
+    error_code: result.failed.length > 0 ? result.failed[0].error : null,
+  };
+}
+
+/** The `BulkDeps` bundle, built per call. */
+function bulkDepsFor(apiKey: ApiKeyRow) {
+  return {
+    // Service-role client: RLS re-evaluates the bulk_plans SELECT policy
+    // against the NEW row, so a status write from an RLS client is rejected.
+    db: supabase,
+    encrypt: encryptForStorage,
+    decrypt: decryptStoredToken,
+    compatibility: (provider: string) => getCompatibilityProfile(provider),
+    execute: (request: BulkExecutionRequest) => executeBulkPlanRequest(request, apiKey),
+    appUrl: APP_URL,
+  };
+}
+
+/** The caller projection both MCP Apps modules take. */
+function bulkCallerFor(apiKey: ApiKeyRow) {
+  return {
+    id: apiKey.id,
+    workspace_id: apiKey.workspace_id,
+    name: apiKey.name,
+    inbox_ids: apiKey.inbox_ids,
+  };
+}
+
 // ── Bulk execute functions ────────────────────────────────────────────────────
 
 /**
@@ -14772,20 +15723,26 @@ async function executeBulkMove(
     };
   }
 
+  // ── MCP Apps: plan instead of execute ────────────────────────────────────
+  // Placed here, after every validation, capability gate and destination
+  // resolution, and immediately before the mailbox would be touched. That
+  // position is what makes the frozen set exactly the set that would have been
+  // acted on — a plan built any earlier would be a plan for an operation that
+  // might still have been rejected.
+  if (await shouldPlanBulkOperation(inbox)) {
+    return await createBulkPlan(bulkDepsFor(apiKey), bulkCallerFor(apiKey), {
+      action: "move_batch",
+      inbox: { id: inbox.id, email_address: inbox.email_address, provider: inbox.provider },
+      message_ids: messageIds,
+      destination_id: resolvedDest,
+      destination_label: destinationFolderId,
+    });
+  }
+
   const runId = await startBulkRun(apiKey, inbox, "move_batch", messageIds.length);
   let bulkResult: BulkOpResult;
   try {
-    switch (inbox.provider) {
-      case "gmail":
-        bulkResult = await gmailBulkMove(inbox, messageIds, resolvedDest, runId);
-        break;
-      case "outlook":
-        bulkResult = await outlookBulkMove(inbox, messageIds, resolvedDest, runId);
-        break;
-      default: // imap and all IMAP service variants
-        bulkResult = await imapBulkMove(inbox, messageIds, resolvedDest, runId);
-        break;
-    }
+    bulkResult = await runBulkMoveOnIds(inbox, messageIds, resolvedDest, runId);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await failBulkRun(runId, "provider_error");
@@ -14970,19 +15927,20 @@ async function executeBulkDelete(
     return permanentDeleteUnsupportedError(inbox.provider);
   }
 
+  // MCP Apps: plan instead of execute. See the matching comment in
+  // executeBulkMove for why this sits immediately before the provider call.
+  if (await shouldPlanBulkOperation(inbox)) {
+    return await createBulkPlan(bulkDepsFor(apiKey), bulkCallerFor(apiKey), {
+      action: "delete_batch",
+      inbox: { id: inbox.id, email_address: inbox.email_address, provider: inbox.provider },
+      message_ids: messageIds,
+      permanent,
+    });
+  }
+
   let bulkResult: BulkOpResult;
   try {
-    switch (inbox.provider) {
-      case "gmail":
-        bulkResult = await gmailBulkDelete(inbox, messageIds, permanent);
-        break;
-      case "outlook":
-        bulkResult = await outlookBulkDelete(inbox, messageIds, permanent);
-        break;
-      default: // imap and all IMAP service variants
-        bulkResult = await imapBulkDelete(inbox, messageIds, permanent);
-        break;
-    }
+    bulkResult = await runBulkDeleteOnIds(inbox, messageIds, permanent);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[mcp-server] email_delete_batch: provider_error", {
@@ -15274,6 +16232,30 @@ async function executeSearchAndMove(
 
   const messageIds = searchResult.messages.map((m) => m.id);
 
+  // ── MCP Apps: plan instead of execute ────────────────────────────────────
+  // After the search, so `match_count` is the EXACT number of resolved ids
+  // rather than a provider estimate (contract §3), and before the zero-match
+  // early return, so a search that matched nothing still renders a card saying
+  // so instead of an unrenderable result.
+  //
+  // The plan freezes these ids. It deliberately does NOT store the search:
+  // re-running it at execute time could match messages that arrived in the
+  // intervening minutes, which is the exact surprise this feature prevents.
+  if (await shouldPlanBulkOperation(inbox)) {
+    return await createBulkPlan(bulkDepsFor(apiKey), bulkCallerFor(apiKey), {
+      action: "search_and_move",
+      inbox: { id: inbox.id, email_address: inbox.email_address, provider: inbox.provider },
+      message_ids: messageIds,
+      destination_id: resolvedDest,
+      destination_label: destinationFolderId,
+      search: search as unknown as Record<string, unknown>,
+      folder: includeFolders.length > 0 ? includeFolders.join(", ") : null,
+      capped: messageIds.length >= limit,
+      limit,
+      sample: planSampleFromSearch(searchResult.messages),
+    });
+  }
+
   if (messageIds.length === 0) {
     return {
       result: jsonOk({
@@ -15295,17 +16277,7 @@ async function executeSearchAndMove(
   // ── Apply bulk move to search results ─────────────────────────────────────
   let bulkResult: BulkOpResult;
   try {
-    switch (inbox.provider) {
-      case "gmail":
-        bulkResult = await gmailBulkMove(inbox, messageIds, resolvedDest);
-        break;
-      case "outlook":
-        bulkResult = await outlookBulkMove(inbox, messageIds, resolvedDest);
-        break;
-      default: // imap
-        bulkResult = await imapBulkMove(inbox, messageIds, resolvedDest);
-        break;
-    }
+    bulkResult = await runBulkMoveOnIds(inbox, messageIds, resolvedDest);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[mcp-server] email_search_and_move: move_error", {
@@ -15464,6 +16436,22 @@ async function executeSearchAndDelete(
 
   const messageIds = searchResult.messages.map((m) => m.id);
 
+  // MCP Apps: plan instead of execute. See the matching comment in
+  // executeSearchAndMove — the ids are frozen here, the search is not stored.
+  if (await shouldPlanBulkOperation(inbox)) {
+    return await createBulkPlan(bulkDepsFor(apiKey), bulkCallerFor(apiKey), {
+      action: "search_and_delete",
+      inbox: { id: inbox.id, email_address: inbox.email_address, provider: inbox.provider },
+      message_ids: messageIds,
+      permanent,
+      search: search as unknown as Record<string, unknown>,
+      folder: includeFolders.length > 0 ? includeFolders.join(", ") : null,
+      capped: messageIds.length >= limit,
+      limit,
+      sample: planSampleFromSearch(searchResult.messages),
+    });
+  }
+
   if (messageIds.length === 0) {
     return {
       result: jsonOk({
@@ -15483,17 +16471,7 @@ async function executeSearchAndDelete(
   // ── Apply bulk delete to search results ───────────────────────────────────
   let bulkResult: BulkOpResult;
   try {
-    switch (inbox.provider) {
-      case "gmail":
-        bulkResult = await gmailBulkDelete(inbox, messageIds, permanent);
-        break;
-      case "outlook":
-        bulkResult = await outlookBulkDelete(inbox, messageIds, permanent);
-        break;
-      default: // imap
-        bulkResult = await imapBulkDelete(inbox, messageIds, permanent);
-        break;
-    }
+    bulkResult = await runBulkDeleteOnIds(inbox, messageIds, permanent);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[mcp-server] email_search_and_delete: delete_error", {
@@ -15631,6 +16609,7 @@ async function imapListDrafts(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -15690,6 +16669,7 @@ async function imapGetDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -15782,6 +16762,7 @@ async function imapCreateDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -15870,6 +16851,7 @@ async function imapUpdateDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -15939,6 +16921,7 @@ async function imapSendDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -15985,6 +16968,7 @@ async function imapSendDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -16027,6 +17011,7 @@ async function imapDeleteDraft(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -16993,15 +17978,15 @@ async function executeSendDraft(
   // The dispatcher uses its internal-only marker to execute this same request
   // without permitting an external MCP credential to bypass the gate.
   try {
-    const approvalId = await queueSendApproval(
+    const approval = await queueSendApproval(
       inbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
       "draft_send",
     );
-    if (approvalId) return {
-      result: jsonOk({ status: "pending_approval", approval_id: approvalId, inbox_id: inbox.id, message: "This draft has not been sent. Approve it in the MCP Emails dashboard." }, true),
+    if (approval) return {
+      result: jsonOk(pendingApprovalPayload(approval, inbox.id, "draft"), true),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -17377,6 +18362,7 @@ async function imapSearchContacts(
     client = await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
     });
@@ -17780,9 +18766,9 @@ async function executeScheduleSend(
 
   payload["inbox_id"] = inbox.id;
   try {
-    const approvalId = await queueSendApproval(inbox, apiKey, payload, sendAt, "schedule_create");
-    if (approvalId) return {
-      result: jsonOk({ status: "pending_approval", approval_id: approvalId, inbox_id: inbox.id, send_at: sendAt, message: "This scheduled email has not been queued. Approve it in the MCP Emails dashboard." }, true),
+    const approval = await queueSendApproval(inbox, apiKey, payload, sendAt, "schedule_create");
+    if (approval) return {
+      result: jsonOk(pendingApprovalPayload(approval, inbox.id, "scheduled email", { send_at: sendAt }), true),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -18263,10 +19249,11 @@ async function executeSetSignature(
  *
  * @see Documents/Architecture/mcp-server-architecture.md §5 (Capability Negotiation)
  */
-function handleInitialize(
+async function handleInitialize(
   req: JsonRpcRequest,
   id: string | number | null,
-): JsonRpcSuccessResponse | JsonRpcErrorResponse {
+  apiKey: ApiKeyRow,
+): Promise<JsonRpcSuccessResponse | JsonRpcErrorResponse> {
   // ── Validate and extract params ──────────────────────────────────────────
   // `params` is required for initialize; an absent params object is treated as
   // an invalid request rather than defaulted, because protocolVersion is a
@@ -18323,6 +19310,17 @@ function handleInitialize(
     });
   }
 
+  // ── Record the handshake for observability ──────────────────────────────
+  // Never gates anything — see recordClientCapabilities. Awaited (like
+  // writeActivityLog) so the row is durable before the response is sent;
+  // the function swallows its own failures and cannot throw.
+  await recordClientCapabilities(
+    apiKey,
+    clientProtocolVersion,
+    clientInfo,
+    clientCapabilities,
+  );
+
   // ── Build and return the capability declaration ──────────────────────────
   // The server responds with its own supported protocol version regardless of
   // what the client requested. Clients must handle version negotiation on
@@ -18340,6 +19338,10 @@ function handleInitialize(
         // during an MCP session.
         listChanged: false,
       },
+      // MCP Apps: the `ui://` card catalogue. Declared unconditionally —
+      // it is not contingent on the client declaring the UI extension, and
+      // clients that never call resources/* are unaffected by its presence.
+      resources: RESOURCES_CAPABILITY,
     },
     serverInfo: {
       name: "mcpemails",
@@ -18372,25 +19374,49 @@ function handleInitialize(
  * @see Documents/Architecture/mcp-server-architecture.md §6 (Tool Registry)
  * @see Documents/Architecture/mcp-tool-design.md §3 (Input Schemas)
  */
-function handleToolsList(
+async function handleToolsList(
   _req: JsonRpcRequest,
   id: string | number | null,
   apiKey: ApiKeyRow,
-): JsonRpcSuccessResponse {
+): Promise<JsonRpcSuccessResponse> {
+  // ── MCP Apps: conditional card metadata on the bulk tools ────────────────
+  //
+  // `email_delete` and `email_organize` get `_meta.ui` ONLY when this key can
+  // actually reach an inbox that previews bulk operations. The reason is a hard
+  // constraint, not a preference: `_meta.ui` is per-tool, not per-call, so a
+  // host renders the card for EVERY result of a UI-bearing tool — and for an
+  // inbox that has not opted in, `email_delete` returns today's plain payload,
+  // which is not an envelope. The card's honest response to that is its
+  // "this review could not be displayed" notice, so attaching the metadata
+  // unconditionally would put a warning under every delete every current user
+  // performs. Gating it on the same opt-in is what makes the brief "a client
+  // that has not opted in must see byte-identical behaviour to today" literally
+  // true, tools/list included.
+  //
+  // Cost is one query per session (`tools/list` runs once per host page load,
+  // Phase 0 Q5), and it fails closed: any error means no metadata, which is
+  // today's behaviour.
+  //
+  // KNOWN GAP, reported rather than hidden: a key spanning one opted-in and one
+  // opted-out inbox gets the metadata, so a delete on the opted-out inbox still
+  // shows that notice. Fixing it properly needs the card to fall back to the
+  // text result on a non-envelope payload, which is a frontend change.
+  const uiBulkTools = await keyHasBulkPlanInbox(apiKey);
+
   // Filter the registry to only tools the API key's scopes allow.
   // An API key with only read:email will see email_list, email_read, email_search.
   // An API key with send:email (in addition or alone) will also see email_send, email_reply.
+  // serializeToolForList omits every optional field (outputSchema, annotations,
+  // _meta) that the entry does not carry, so a tool without UI metadata
+  // produces exactly the JSON it did before MCP Apps existed.
   const visibleTools = TOOL_REGISTRY
     .filter((tool) => isToolAuthorized(tool, apiKey.scopes))
-    .map((tool) => ({
-      name: tool.name,
-      title: tool.title,
-      description: tool.description,
-      inputSchema: tool.inputSchema,
-      // Only include the optional spec fields when present, to keep output clean.
-      ...(tool.outputSchema ? { outputSchema: tool.outputSchema } : {}),
-      ...(tool.annotations ? { annotations: tool.annotations } : {}),
-    }));
+    .map((tool) =>
+      uiBulkTools && BULK_PLAN_CARD_TOOL_NAMES.includes(tool.name)
+        ? { ...tool, _meta: reviewCardToolMeta() }
+        : tool
+    )
+    .map(serializeToolForList);
 
   console.log("[mcp-server] tools/list", {
     key_id: apiKey.id,
@@ -18406,6 +19432,115 @@ function handleToolsList(
       tools: visibleTools,
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// MCP Apps resource methods
+//
+// These serve the `ui://` card catalogue declared by RESOURCES_CAPABILITY.
+// Three properties make them unlike every other method here:
+//
+//  1. They return static, self-authored HTML — never customer data — so they
+//     require no scope and are identical for every API key. Authentication
+//     still applies (handleRequest authenticates before routing); it is what
+//     ties the request to a rate-limit bucket, not what protects the payload.
+//  2. They are called far more often than their "discovery method" siblings.
+//     The host re-reads the resource on every tool call and does not cache, so
+//     they get their own budget (RESOURCE_RATE_LIMITS), not the 30/min
+//     discovery one.
+//  3. `_meta.ui` is emitted unconditionally, never contingent on the client
+//     having declared the UI extension — see clientSupportsUiExtension.
+//
+// The wire shapes live in mcp-app-resources.ts so they can be tested without
+// importing this module (which calls Deno.serve at load).
+// ---------------------------------------------------------------------------
+
+/**
+ * `resources/list` — the full `ui://` catalogue.
+ *
+ * The catalogue is static and key-independent, so there is no filtering step
+ * analogous to tools/list's scope filter. `_meta.ui` (CSP + prefersBorder) is
+ * included on each entry so a host can review the policy at connect time,
+ * before any card is rendered.
+ */
+function handleResourcesList(
+  id: string | number | null,
+  apiKey: ApiKeyRow,
+): JsonRpcSuccessResponse {
+  const result = buildResourcesListResult();
+
+  console.log("[mcp-server] resources/list", {
+    key_id: apiKey.id,
+    resource_count: result.resources.length,
+  });
+
+  return { jsonrpc: "2.0", id, result };
+}
+
+/**
+ * `resources/read` — the document for one `ui://` URI.
+ *
+ * Returns exactly one item in `contents`: the reference host throws
+ * "Unexpected contents count" on any other number, which the user experiences
+ * as a broken card rather than a legible error.
+ *
+ * An unknown URI is answered with a JSON-RPC error (-32002 Resource not
+ * found), never a throw — an uncaught throw here would become a 500 and the
+ * host would report a dead connector rather than a missing resource.
+ */
+function handleResourcesRead(
+  req: JsonRpcRequest,
+  id: string | number | null,
+  apiKey: ApiKeyRow,
+): JsonRpcSuccessResponse | JsonRpcErrorResponse {
+  const params = req.params as Record<string, unknown> | undefined;
+  const uri = params?.["uri"];
+
+  if (typeof uri !== "string" || uri.trim().length === 0) {
+    return jsonRpcErrorBody(
+      id,
+      RPC_INVALID_PARAMS,
+      "resources/read requires params.uri as a non-empty string.",
+    );
+  }
+
+  const result = buildResourceReadResult(uri);
+
+  if (!result) {
+    console.warn("[mcp-server] resources/read: unknown_uri", {
+      key_id: apiKey.id,
+      // The URI is client-supplied but is not customer content: it is a
+      // protocol identifier the client chose from our own resources/list.
+      uri,
+    });
+    return jsonRpcErrorBody(
+      id,
+      RPC_RESOURCE_NOT_FOUND,
+      `Resource not found: ${uri}`,
+      { uri },
+    );
+  }
+
+  console.log("[mcp-server] resources/read", {
+    key_id: apiKey.id,
+    uri,
+    bytes: (result.contents[0]["text"] as string).length,
+  });
+
+  return { jsonrpc: "2.0", id, result };
+}
+
+/**
+ * `resources/templates/list` — always empty.
+ *
+ * Our URIs are concrete, not parameterised. Implemented anyway because the
+ * host's AppBridge proxies this method whenever the server declares
+ * `resources`, and an unhandled -32601 shows up as noise in app-side logs.
+ */
+function handleResourceTemplatesList(
+  id: string | number | null,
+): JsonRpcSuccessResponse {
+  return { jsonrpc: "2.0", id, result: buildResourceTemplatesListResult() };
 }
 
 // ---------------------------------------------------------------------------
@@ -18741,6 +19876,9 @@ async function handleToolsCall(
     );
   }
 
+  const actionLimit = await actionLimitResponse(apiKey.workspace_id, dispatchName, id);
+  if (actionLimit.response) return actionLimit.response;
+
   // Reverse schema renames only after validating the public consolidated
   // contract. In particular, email_organize exposes `flag_action` so it does
   // not collide with the action selector; applying this before validation
@@ -19045,6 +20183,49 @@ async function handleToolsCall(
       logStatus = ls;
       logErrorCode = lec;
       toolResult = { jsonrpc: "2.0", id, result };
+    } else if (isApprovalToolName(dispatchName)) {
+      // MCP Apps approval tools. Every guard (workspace, inbox allowlist,
+      // still-pending, not expired) is re-applied inside each handler — the
+      // scope check above is necessary but nowhere near sufficient, because an
+      // approval_id supplied by the caller proves nothing about the caller.
+      const { result, logStatus: ls, logErrorCode: lec } = await runApprovalTool(
+        dispatchName,
+        {
+          // Service-role client: RLS re-evaluates the send_approvals SELECT
+          // policy against the NEW row, so a status write from an RLS client
+          // would be rejected.
+          db: supabase,
+          encrypt: encryptForStorage,
+          decrypt: decryptStoredToken,
+          appUrl: APP_URL,
+        },
+        {
+          id: apiKey.id,
+          workspace_id: apiKey.workspace_id,
+          name: apiKey.name,
+          inbox_ids: apiKey.inbox_ids,
+        },
+        rawArgs,
+      )!;
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (isBulkToolName(dispatchName)) {
+      // MCP Apps bulk-plan tools. As with the approval tools, the scope check
+      // above is necessary and nowhere near sufficient: a plan_id supplied by
+      // the caller proves nothing, so every guard (workspace, inbox allowlist,
+      // still-pending, not expired) is re-applied inside the handler, and the
+      // operation's scope is read from the encrypted row rather than from any
+      // argument.
+      const { result, logStatus: ls, logErrorCode: lec } = await runBulkTool(
+        dispatchName,
+        bulkDepsFor(apiKey),
+        bulkCallerFor(apiKey),
+        rawArgs,
+      )!;
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
     } else {
       // Tool is registered in TOOL_REGISTRY but not yet implemented.
       // Returns a structured error so MCP clients receive a valid JSON-RPC
@@ -19111,6 +20292,10 @@ async function handleToolsCall(
     ipAddress: ctx.ipAddress,
     userAgent: ctx.userAgent,
   });
+  // Phase 1 is observation-only. Successful calls write one privacy-safe
+  // classification row; failed/rate-limited calls write no usage action.
+  await writeActionUsage(apiKey.workspace_id, dispatchName, logStatus, actionLimit.reservationId);
+  await logShadowLimitDiagnostic(apiKey.workspace_id);
   // Dispatch mutates logStatus inside AsyncLocalStorage.run; TypeScript cannot
   // follow that closure mutation and otherwise narrows it to its initial value.
   if ((logStatus as string) === "success") await markFirstProductUse(apiKey.workspace_id, apiKey.id, resolvedInboxId, dispatchName, ctx.userAgent);
@@ -19290,11 +20475,26 @@ async function handleScheduledDispatch(): Promise<Response> {
       // draft send, direct send, or schedule). Re-run it only inside this
       // trusted dispatcher; the internal marker cannot be supplied by MCP.
       if (typeof payload["approval_id"] === "string") {
+        // `select("*")` so the expiry re-check below works against a database
+        // where the Phase 2 migration has not been applied yet (the columns are
+        // simply absent, and the check degrades to a no-op).
         const { data: approval, error: approvalErr } = await supabase
           .from("send_approvals")
-          .select("id, operation, payload, payload_encrypted, api_key_id")
+          .select("*")
           .eq("id", payload["approval_id"]).eq("status", "approved").maybeSingle();
         if (approvalErr || !approval || !approval.api_key_id) throw new Error("approved request not found");
+        // An approval that ran out of time while still pending must never turn
+        // into a delivery, even if something managed to mark it approved. The
+        // decide paths already refuse to approve an expired row; this is the
+        // last gate before real mail goes out, so it re-checks rather than
+        // trusting that.
+        //
+        // Deliberately keyed on the DECISION, not the delivery: a human who
+        // approved in time may have scheduled the send for next week, and
+        // dropping that would be a bug, not a safety measure.
+        if (approvalLapsedBeforeDecision(approval, Date.now())) {
+          throw new Error("approved request expired before it was decided");
+        }
         const { data: key, error: keyErr } = await supabase.from("api_keys")
           .select("id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at")
           .eq("id", approval.api_key_id).is("deleted_at", null).single();
@@ -19559,12 +20759,23 @@ async function handleRequest(req: Request): Promise<Response> {
   // promptly per the MCP spec. Rate-limiting it to a 429 makes buggy clients
   // treat the connection as dead and retry harder, amplifying load rather than
   // shedding it. tools/call has its own activity_log limiter.
+  //
+  // `resources/*` is covered here too — it is exactly the kind of cheap,
+  // non-activity_log method this guard exists for — but in its own bucket
+  // namespace with a much larger budget, because an MCP Apps host re-reads the
+  // UI resource on every single tool call and caches nothing. Sharing the
+  // 30/min discovery bucket would throttle a perfectly normal session. See
+  // RESOURCE_RATE_LIMITS for the sizing argument.
+  const isResourceMethod = rpcRequest.method.startsWith("resources/");
   if (rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping") {
-    const cheapMethodResult = await checkDiscoveryRateLimit(apiKey.id);
+    const cheapMethodResult = isResourceMethod
+      ? await checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
+      : await checkDiscoveryRateLimit(apiKey.id);
     if (!cheapMethodResult.allowed) {
       console.warn("[mcp-server] cheap_method_rate_limit_exceeded", {
         key_id: apiKey.id,
         method: rpcRequest.method,
+        namespace: isResourceMethod ? "resources" : "discovery",
         window: cheapMethodResult.windowLabel,
         limit: cheapMethodResult.limit,
         retry_after_seconds: cheapMethodResult.retryAfterSeconds,
@@ -19578,7 +20789,21 @@ async function handleRequest(req: Request): Promise<Response> {
   // limiter counts completed `tools/call` rows in activity_log; the cheap
   // discovery methods are throttled separately above.
   // Fail-open: if the DB is unavailable, checkRateLimit returns allowed=true.
-  const rateLimitResult = await checkRateLimit(apiKey.id);
+  //
+  // `resources/*` is exempt from this limiter and from the plan quota below.
+  // Both meter access to mail-touching work: this one counts activity_log rows
+  // (which only `tools/call` writes, so a resource read could only ever be
+  // rejected for *other* traffic), and the quota meters the workspace's burst
+  // ceiling. A `resources/read` serves a few KB of static HTML and touches no
+  // inbox. Charging it against those budgets has one concrete failure mode: an
+  // MCP Apps host re-fetches the UI resource on every tool call, so a workspace
+  // at its ceiling would render a broken review card while its sends kept
+  // working — degrading the safety surface precisely when things are busiest,
+  // which is exactly backwards. The dedicated `mcp:resources:*` bucket above
+  // already bounds this traffic.
+  const rateLimitResult = isResourceMethod
+    ? { allowed: true as const }
+    : await checkRateLimit(apiKey.id);
   if (!rateLimitResult.allowed) {
     console.warn("[mcp-server] rate_limit_exceeded", {
       key_id: apiKey.id,
@@ -19632,7 +20857,10 @@ async function handleRequest(req: Request): Promise<Response> {
   // Usage is unlimited; this enforces the workspace plan's burst ceiling
   // (requests per minute, aggregated across the workspace's API keys).
   // Runs after the per-key rolling-window guard. Fail-open on DB errors.
-  const quotaResult = await checkPlanQuota(apiKey.workspace_id);
+  // `resources/*` exempt — see the note on the per-key limiter above.
+  const quotaResult = isResourceMethod
+    ? { allowed: true as const }
+    : await checkPlanQuota(apiKey.workspace_id);
   if (!quotaResult.allowed) {
     console.warn("[mcp-server] plan_rate_limit_exceeded", {
       workspace_id: apiKey.workspace_id,

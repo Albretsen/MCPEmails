@@ -87,7 +87,7 @@ Si quieres que un mensaje deje de aparecer como sin leer una vez que has respond
 
 ## Límites de tasa, y por qué nunca reintentas un envío a ciegas
 
-Cada API key está limitada a **100 peticiones por minuto, 1000 por hora y 10 000 por día**, independientemente del plan. Tu workspace también tiene un techo de ráfaga según el tier: **60 req/min en Free, 300 en Solo, 1000 en Team** (consulta [precios](/pricing)). Un bucle educado de sondear y responder vive holgadamente dentro de eso, pero uno que se porta mal puede dispararlo.
+Cada API key está limitada a **100 peticiones por minuto, 1000 por hora y 10 000 por día**, independientemente del plan. Tu workspace también tiene un techo de ráfaga según el tier: **60 req/min en Free, 300 en Agent, 1000 en Scale** (consulta [precios](/pricing)). Un bucle educado de sondear y responder vive holgadamente dentro de eso, pero uno que se porta mal puede dispararlo.
 
 Cuando alcanzas un límite, el servidor devuelve un error reintentable (código \`-32029\`) que lleva \`data.retry_after\` en segundos. Hónralo. Duerme ese tiempo y luego continúa.
 
@@ -148,5 +148,5 @@ Si fuera a lanzar esto para una bandeja real mañana, empezaría pequeño y abur
 
 Ese es un sistema en el que de verdad puedes confiar, y se generaliza. El mismo bucle con un prompt distinto se convierte en un bot de triaje, un enrutador de leads o un notificador. Para ver el menú más amplio de lo que un agente puede hacer una vez conectado, consulta [7 cosas que un agente de IA puede hacer con acceso a la bandeja](/blog/7-things-ai-agent-can-do-with-inbox-access). Si aún estás decidiendo si darle a un agente acceso de envío siquiera, vale la pena leer [¿es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) antes de lanzarlo.
 
-¿Listo para construirlo? Crea una API key acotada y lee la referencia de herramientas en [la documentación](/docs), o [empieza gratis](/signup): cada plan incluye llamadas de herramientas ilimitadas, así que lo único que cuesta tu respondedor es la disciplina de añadir primero los guardarraíles.`,
+¿Listo para construirlo? Crea una API key acotada y lee la referencia de herramientas en [la documentación](/docs), o [empieza gratis](/signup): Gratis incluye 2.500 acciones facturables por período de facturación, así que configura primero los guardarraíles antes de automatizar.`,
 };

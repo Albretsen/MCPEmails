@@ -5,6 +5,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
+import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //    Return 402 (Payment Required) so the client can distinguish a plan
   //    limit from a credential error.
   const alreadyConnected = await inboxExistsForEmail(supabase, workspaceId, email);
+  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'started', category: 'fastmail', phase: 'tcp', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!validation.ok) {
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed' });
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
     // AUTH_FAILED → Fastmail-specific message with app-password hint; include
     // a structured error_code so the client can distinguish a credential
     // rejection from other 422s (missing fields, network errors, etc.).
@@ -145,6 +147,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
     }
     return NextResponse.json(body, { status: 422 });
+  }
+
+  const smtpValidation = await validateSmtpCredential({ host: 'smtp.fastmail.com', port: 465, email, password: appPassword, security: 'tls' });
+  if (!smtpValidation.ok) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
   }
 
   // 6. Defense-in-depth: reject if another active inbox in this workspace
@@ -196,9 +204,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       imap_host: FASTMAIL_IMAP_HOST,
       imap_port: FASTMAIL_IMAP_PORT,
       imap_tls: true,
+      imap_security: 'tls',
       smtp_host: 'smtp.fastmail.com',
       smtp_port: 465,
       smtp_tls: true,
+      smtp_security: 'tls',
       imap_password: encryptedPassword,
       // OAuth fields are NULL for app-password connections.
       oauth_access_token: null,
@@ -231,6 +241,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'fastmail' });
+  await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'fastmail', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
   return NextResponse.json({ success: true });
 }

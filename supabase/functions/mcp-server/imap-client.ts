@@ -67,6 +67,8 @@ export interface ImapConnectConfig {
   email: string;
   /** Decrypted app password. */
   password: string;
+  /** Defaults to implicit TLS for backwards compatibility. */
+  security?: "tls" | "starttls";
 }
 
 export interface ImapAddress {
@@ -120,7 +122,7 @@ const COMMAND_TIMEOUT_MS = 15_000;
 
 /** A live, authenticated IMAP session over implicit TLS. */
 export class ImapClient {
-  private conn: Deno.TlsConn;
+  private conn: Deno.Conn;
   private buffer: Uint8Array;
   private bufStart = 0;
   private bufEnd = 0;
@@ -143,7 +145,7 @@ export class ImapClient {
    */
   private commandChain: Promise<unknown> = Promise.resolve();
 
-  private constructor(conn: Deno.TlsConn) {
+  private constructor(conn: Deno.Conn) {
     this.conn = conn;
     this.buffer = new Uint8Array(64 * 1024);
   }
@@ -219,7 +221,9 @@ export class ImapClient {
    * {@link ImapAuthError} on genuine authentication failure (not retryable).
    */
   private static async connectOnce(cfg: ImapConnectConfig): Promise<ImapClient> {
-    const conn = await Deno.connectTls({ hostname: cfg.host, port: cfg.port });
+    let conn: Deno.TcpConn | Deno.TlsConn = cfg.security === "starttls"
+      ? await Deno.connect({ hostname: cfg.host, port: cfg.port })
+      : await Deno.connectTls({ hostname: cfg.host, port: cfg.port });
     const client = new ImapClient(conn);
 
     // Server greeting: expect "* OK ...". A "* BYE" (or any non-OK greeting)
@@ -234,6 +238,18 @@ export class ImapClient {
         );
       }
       throw new Error(`Unexpected IMAP greeting: ${greeting.slice(0, 80)}`);
+    }
+
+    if (cfg.security === "starttls") {
+      const tag = client.nextTag();
+      await client.write(`${tag} STARTTLS${CRLF}`);
+      const response = await client.readTagged(tag);
+      if (response.status !== "OK") {
+        client.close();
+        throw new Error("IMAP server refused STARTTLS");
+      }
+      conn = await Deno.startTls(conn as Deno.TcpConn, { hostname: cfg.host });
+      client.conn = conn;
     }
 
     // SASL PLAIN: base64("\x00" + user + "\x00" + pass).

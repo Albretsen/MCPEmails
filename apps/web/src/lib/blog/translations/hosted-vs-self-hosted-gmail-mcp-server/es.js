@@ -81,7 +81,7 @@ Este es el verdadero compromiso, y no voy a maquillarlo. Con un servidor alojado
 
 ## Cuánto cuesta en dólares
 
-MCP Emails es gratis para empezar, y el plan Free es ilimitado: buzones, llamadas a herramientas y API keys ilimitadas, sin tarjeta de crédito. El plan Free funciona a 60 requests/minute con analíticas de 7 días y soporte de la comunidad. [Solo cuesta $12/month](/pricing) (300 req/min, analíticas de 90 días, soporte por correo) y Team cuesta $49/month por roles, varios espacios de trabajo, SSO y registros de auditoría. El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
+MCP Emails es gratis para empezar: buzones y API keys ilimitadas, 2.500 acciones facturables por período de facturación y sin tarjeta de crédito. El plan Free funciona a 60 requests/minute con analíticas de 7 días y soporte de la comunidad. [Agent cuesta $12/month](/pricing) (50.000 acciones, 300 req/min, analíticas de 90 días, soporte por correo) y Scale cuesta $49/month (300.000 acciones, roles, varios espacios de trabajo, SSO y registros de auditoría). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
 
 ## ¿Cuál deberías elegir?
 

@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
+import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
 import { resolvePlanLimits } from '../../../src/lib/stripe/plans';
@@ -103,12 +104,22 @@ async function fetchActivityFeed(supabase, workspaceId) {
  */
 async function fetchInboxes(supabase, workspaceId) {
   const [{ data: rows, error }, { data: logRows }] = await Promise.all([
-    supabase
-      .from('inboxes')
-      .select('id, display_name, email_address, provider, service, status, last_error, imap_host, imap_port, smtp_host, smtp_port, imap_username, created_at, signature_text, signature_html, signature_enabled, signature_reply_mode, signature_source, send_approval_required')
-      .eq('workspace_id', workspaceId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: true }),
+    // `send_review_mode` is added by a migration that may land after this
+    // code; selectTolerantly re-runs without it rather than blanking the whole
+    // inbox list. See src/lib/approvals/columns.ts.
+    selectTolerantly(
+      ['id', 'display_name', 'email_address', 'provider', 'service', 'status', 'last_error',
+        'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
+        'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
+        'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode'],
+      PENDING_INBOX_COLUMNS,
+      (columns) => supabase
+        .from('inboxes')
+        .select(columns)
+        .eq('workspace_id', workspaceId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true }),
+    ),
 
     // Fetch inbox_id + status + created_at for all activity_log rows in the
     // last 30 days so we can aggregate call counts and the last successful call
@@ -170,6 +181,8 @@ async function fetchInboxes(supabase, workspaceId) {
     imapPort: row.imap_port ?? null,
     smtpHost: row.smtp_host ?? null,
     smtpPort: row.smtp_port ?? null,
+    imapSecurity: row.imap_security ?? (row.imap_port === 143 ? 'starttls' : 'tls'),
+    smtpSecurity: row.smtp_security ?? (row.smtp_port === 587 ? 'starttls' : 'tls'),
     username: row.imap_username ?? null,
     calls: callsByInbox[row.id] ?? 0,
     // When the inbox connection was first created.
@@ -186,6 +199,10 @@ async function fetchInboxes(supabase, workspaceId) {
     signatureReplyMode: row.signature_reply_mode ?? 'first_only',
     signatureSource: row.signature_source ?? null,
     sendApprovalRequired: row.send_approval_required ?? false,
+    // Three-way review mode (off | inline | dashboard). Falls back to the
+    // legacy boolean until every row carries the new column.
+    sendReviewMode:
+      row.send_review_mode ?? (row.send_approval_required ? 'dashboard' : 'off'),
   }));
 }
 
@@ -312,7 +329,7 @@ async function fetchOverviewStats(supabase, workspaceId) {
 async function fetchUsageData(supabase, workspaceId) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [activityResult, inboxesResult] = await Promise.all([
+  const [activityResult, inboxesResult, actionUsageResult] = await Promise.all([
     supabase
       .from('activity_log')
       .select('tool_name, inbox_id, created_at')
@@ -326,6 +343,15 @@ async function fetchUsageData(supabase, workspaceId) {
       .from('inboxes')
       .select('id, display_name, email_address, deleted_at')
       .eq('workspace_id', workspaceId),
+    // Phase-1 meter source. This is deliberately separate from activity_log:
+    // the customer-visible meter never repeatedly counts the audit log.
+    supabase
+      .from('action_usage')
+      .select('tool_name, quantity, occurred_at')
+      .eq('workspace_id', workspaceId)
+      .eq('billable', true)
+      .eq('meter_version', 1)
+      .gte('occurred_at', thirtyDaysAgo),
   ]);
 
   if (activityResult.error) {
@@ -333,6 +359,7 @@ async function fetchUsageData(supabase, workspaceId) {
   }
 
   const rows = activityResult.data ?? [];
+  const actionRows = actionUsageResult.data ?? [];
 
   // Build inbox label lookup: id → { label, address, archived }
   const inboxMap = {};
@@ -398,7 +425,13 @@ async function fetchUsageData(supabase, workspaceId) {
     })
     .sort((a, b) => b.count - a.count);
 
-  return { dailyCounts, totalCalls, byTool, byInbox };
+  const shadowActions = actionRows.reduce((sum, row) => sum + (row.quantity ?? 0), 0);
+  const lastBillableCalls = actionRows
+    .sort((a, b) => String(b.occurred_at).localeCompare(String(a.occurred_at)))
+    .slice(0, 30)
+    .map((row) => ({ tool: row.tool_name, occurredAt: row.occurred_at }));
+
+  return { dailyCounts, totalCalls, byTool, byInbox, shadowActions, lastBillableCalls };
 }
 
 /**
@@ -550,7 +583,7 @@ export default async function DashboardPage({ params }) {
   const cookieStore = await cookies();
   const preferredWorkspaceId = cookieStore.get(ACTIVE_WORKSPACE_COOKIE)?.value ?? null;
 
-  const [{ data: userRecord }, { data: workspaceRows }] = await Promise.all([
+  const [{ data: userRecord }, { data: workspaceRows }, { data: usageEntitlement }] = await Promise.all([
     supabase
       .from('users')
       .select('display_name, email')
@@ -564,6 +597,11 @@ export default async function DashboardPage({ params }) {
       .select('id, slug, display_name, plan, owner_id, grandfathered, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
+    supabase
+      .from('user_usage_entitlements')
+      .select('kind, expires_at')
+      .eq('user_id', user.id)
+      .maybeSingle(),
   ]);
 
   const allWorkspaces = workspaceRows ?? [];
@@ -574,19 +612,26 @@ export default async function DashboardPage({ params }) {
 
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).
   let userRole = 'member';
+  let effectiveWorkspacePlan = null;
   if (workspace) {
-    const { data: memberRow } = await supabase
-      .from('workspace_members')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('workspace_id', workspace.id)
-      .maybeSingle();
+    const [{ data: memberRow }, { data: effectivePlanRows }] = await Promise.all([
+      supabase
+        .from('workspace_members')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('workspace_id', workspace.id)
+        .maybeSingle(),
+      supabase.rpc('effective_workspace_plan', { p_workspace_id: workspace.id }),
+    ]);
     userRole = memberRow?.role ?? 'member';
+    effectiveWorkspacePlan = effectivePlanRows?.[0] ?? null;
   }
 
   // Creating additional workspaces is a Pro feature: the user must OWN at least
   // one Pro/Enterprise workspace. Being an invited member of one does not count.
-  const canCreateWorkspace = allWorkspaces.some(
+  const userCompedScale = usageEntitlement?.kind === 'comped_scale' &&
+    (!usageEntitlement.expires_at || new Date(usageEntitlement.expires_at) > new Date());
+  const canCreateWorkspace = userCompedScale || allWorkspaces.some(
     (w) => w.owner_id === user.id && (w.plan === 'pro' || w.plan === 'enterprise'),
   );
 
@@ -604,7 +649,8 @@ export default async function DashboardPage({ params }) {
   const email = userRecord?.email ?? user.email ?? '';
   const initials = computeInitials(displayName || null, email);
   const workspaceSlug = workspace?.slug ?? 'workspace';
-  const plan = workspace?.plan ?? 'free';
+  const compedScale = effectiveWorkspacePlan?.comped_scale ?? false;
+  const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
 
   // Fetch all page data in parallel; skip if no workspace row exists yet.
   const [overviewStats, activityFeed, inboxes, apiKeys, usageData, auditLog, members, pendingInvites] = workspace
@@ -623,7 +669,7 @@ export default async function DashboardPage({ params }) {
         [],
         [],
         [],
-        { dailyCounts: [], totalCalls: 0, byTool: [], byInbox: [] },
+        { dailyCounts: [], totalCalls: 0, byTool: [], byInbox: [], shadowActions: 0, lastBillableCalls: [] },
         { entries: [], total: 0, page: 0, pageSize: 25 },
         [],
         [],
@@ -631,8 +677,10 @@ export default async function DashboardPage({ params }) {
 
   // Resolve plan limits so the dashboard can show usage (e.g. "1 of 1 inboxes")
   // and enforce caps client-side before attempting an OAuth redirect.
-  const grandfathered = workspace?.grandfathered ?? false;
-  const rawLimits = resolvePlanLimits(plan, { grandfathered });
+  const rawLimits = resolvePlanLimits(plan, { compedScale });
+  const shadowActionCap = ({ free: 2500, solo: 50000, pro: 300000 })[plan] ?? 2500;
+  usageData.shadowActionCap = shadowActionCap;
+  usageData.shadowPlan = plan;
   const planLimits = {
     maxInboxes: rawLimits.maxInboxes === Infinity ? null : rawLimits.maxInboxes,
     maxDailyBurstCalls: rawLimits.maxDailyBurstCalls === Infinity ? null : rawLimits.maxDailyBurstCalls,
@@ -659,6 +707,7 @@ export default async function DashboardPage({ params }) {
         id: workspace?.id ?? '',
         slug: workspaceSlug,
         plan,
+        compedScale,
         displayName: workspace?.display_name ?? workspaceSlug,
         isOwner: workspace?.owner_id === user.id,
       }}

@@ -1,18 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import {
+  acquisitionFromParams,
+  appendAcquisitionParams,
+} from '@/lib/acquisition-context.mjs';
 
 export async function GET(request: Request) {
   const { origin, searchParams } = new URL(request.url);
   const next = searchParams.get('next');
-  const acquisition = searchParams.get('acq');
-  const landing = searchParams.get('landing');
 
   const callbackUrl = new URL('/auth/callback', origin);
   if (next && next.startsWith('/')) {
     callbackUrl.searchParams.set('next', next);
   }
-  if (acquisition) callbackUrl.searchParams.set('acq', acquisition);
-  if (landing) callbackUrl.searchParams.set('landing', landing);
+  if (searchParams.has('acq')) {
+    appendAcquisitionParams(callbackUrl.searchParams, acquisitionFromParams(searchParams));
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({

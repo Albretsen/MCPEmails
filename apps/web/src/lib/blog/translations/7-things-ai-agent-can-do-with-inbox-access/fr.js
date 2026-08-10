@@ -73,7 +73,7 @@ Cela combine les autres : \`email_read\` (action search, puis list) pour rassemb
 
 ## Ce que ça coûte et où se situent les limites
 
-Les sept fonctionnent sur le [plan Free](/pricing), qui est à 0 $ avec un nombre illimité de boîtes mail et d’appels d’outils. Les plans diffèrent sur le débit en pointe, pas sur ce que les outils peuvent faire. Free autorise 60 requêtes par minute, Solo (12 $/mois) passe à 300, et Team (49 $/mois) monte à 1 000 avec des rôles d’équipe et le SSO. Un récapitulatif hebdomadaire effleure à peine ces plafonds ; une boucle de tri agressive toutes les minutes sur de nombreuses boîtes, c’est là que vous sentiriez la limite de Free et voudriez Solo.
+Les sept fonctionnent sur le [plan Free](/pricing), à 0 $ avec des boîtes illimitées et 2 500 actions facturables par période de facturation. Free autorise 60 requêtes par minute ; Agent (12 $/mois) inclut 50 000 actions et 300 requêtes par minute ; Scale (49 $/mois) inclut 300 000 actions, 1 000 requêtes par minute, les rôles d’équipe et le SSO. Un récapitulatif hebdomadaire effleure ces plafonds ; une boucle de tri agressive toutes les minutes sur de nombreuses boîtes utilise l’allocation d’actions de Free et justifie Agent.
 
 Quand vous atteignez bel et bien une limite, le serveur renvoie une erreur réessayable avec \`data.retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi \`email_compose\`, car réessayer après un délai d’attente peut faire atterrir deux copies du même message dans la boîte de quelqu’un.
 

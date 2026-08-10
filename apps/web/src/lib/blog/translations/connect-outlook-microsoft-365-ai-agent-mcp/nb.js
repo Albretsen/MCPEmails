@@ -89,5 +89,5 @@ Ett ærlig forbehold: MCP Emails er poll-basert. Det finnes ingen webhooks og in
 
 De selvhostede Outlook MCP-serverne som svever rundt på GitHub treffer alle den samme veggen: Entra-appregistreringen og Graph-tokenets livssyklus er det egentlige arbeidet, og du eier dem for alltid. Du håndterer fornyelsestokener, tilgangsendringer når Microsoft justerer Graph, og sikkerheten der disse tokenene befinner seg. Med den hostede tilnærmingen er tokenet kryptert i hvile, dekryptert bare inne i en isolert funksjon ved kalltid, og kan tilbakekalles fra dashbordet med ett klikk. Vil du ha hele sammenligningen, går [hostet vs. selvhostet](/blog/hosted-vs-self-hosted-gmail-mcp-server) i dybden på avveiningene.
 
-Å koble til Outlook koster ingenting å prøve — [gratisplanen](/pricing) gir ubegrenset antall innbokser og verktøykall på 60 forespørsler per minutt, uten kort. Legg til Microsoft 365-postkassen din, pek Claude mot endepunktet, og gi den noe å lese.`,
+Å koble til Outlook koster ingenting å prøve — [gratisplanen](/pricing) gir ubegrenset antall innbokser, 2 500 fakturerbare handlinger per faktureringsperiode og 60 forespørsler per minutt, uten kort. Legg til Microsoft 365-postkassen din, pek Claude mot endepunktet, og gi den noe å lese.`,
 };

@@ -119,7 +119,7 @@
     "goToMembers": "前往成员页",
     "callsPerDayTitle": "每日调用量",
     "callsPerDaySub": "最近 14 天 · 所有工具",
-    "pro": "Pro",
+    "pro": "Scale",
     "recentActivityTitle": "近期活动",
     "recentActivitySub": "实时 MCP 工具调用",
     "noActivityTitle": "暂无活动",
@@ -295,6 +295,11 @@
   "usage": {
     "title": "用量",
     "sub": "最近 30 天内所有收件箱的 MCP 工具调用。",
+    "shadowMeterTitle": "操作用量",
+    "shadowMeterSub": "过去 30 天内成功的可计费操作。影子期内仅供查看。",
+    "shadowOnly": "影子计量器",
+    "shadowOfCap": "计划的 {cap} 次操作",
+    "lastBillableCalls": "最近成功的可计费调用（{count}）",
     "quotaExhausted": "每日配额已用尽。MCP 调用正被拒绝",
     "quotaApproaching": "每日配额已达 {pct}%，接近上限",
     "dailyQuota": "每日配额",
@@ -520,7 +525,7 @@
     "roleOwner": "所有者",
     "sending": "正在发送…",
     "sendInvite": "发送邀请",
-    "rolesLockedHint": "受邀者以成员身份加入。升级到 Team 即可分配管理员和查看者角色。",
+    "rolesLockedHint": "受邀者以成员身份加入。升级到 Scale 即可分配管理员和查看者角色。",
     "inviteUpgradeHint": "邀请协作者为付费套餐功能。升级后即可向此工作区添加成员。",
     "errInviteFailed": "发送邀请失败。",
     "errRemoveFailed": "移除成员失败。",
@@ -544,5 +549,117 @@
     "cancel": "取消",
     "removing": "正在移除…",
     "removeMemberBtn": "移除成员"
+  },
+  "approvals": {
+    "review": {
+      "kicker": "等待批准",
+      "kickerSettled": "发送审核",
+      "title": "在发送前批准这封邮件",
+      "titleSettled": "这次发送已经处理过",
+      "subtitle": "这封邮件由 AI 助手起草，尚未发出；只有你在此批准后才会发送。",
+      "from": "发件箱",
+      "to": "收件人",
+      "cc": "抄送",
+      "bcc": "密送",
+      "subject": "主题",
+      "attachments": "附件",
+      "operation": "类型",
+      "route": "投递通道",
+      "requested": "请求时间",
+      "sendAt": "定时发送",
+      "expires": "过期时间",
+      "unknownInbox": "未知邮箱",
+      "unknownTime": "未知",
+      "noSubject": "（无主题）",
+      "noRecipients": "未提供收件人",
+      "noAttachments": "无",
+      "recipientsAtSend": "本页无法从原邮件中读取收件人。收件人将在发送时解析，请在批准前先查看邮件正文。",
+      "bccCount": "{count} 个隐藏收件人",
+      "attachmentCount": "{count} 个文件",
+      "bodyTitle": "正文",
+      "bodyTruncated": "这封邮件超过 64 KB，此处已截断。请在控制台中查看完整内容。",
+      "bodyWithheldRole": "邮件正文仅向工作区的所有者、管理员和成员显示。你的角色只能查看投递信息。",
+      "bodyStoredWithProvider": "此请求发送的是保存在邮件服务商处的草稿，因此正文不包含在请求中。决定前请在邮件应用中打开该草稿。",
+      "bodyDecryptFailed": "无法解密已存储的邮件，因此无法显示。请拒绝此请求，并让助手重新起草。",
+      "bodyAbsent": "此请求没有邮件正文。",
+      "bodyHtmlShow": "显示 HTML 源码",
+      "bodyHtmlHide": "隐藏 HTML 源码",
+      "bodyHtmlNote": "HTML 版本以源码形式展示，从不渲染。渲染会加载远程图片，从而向邮件撰写者泄露你打开本页的时间和位置。",
+      "approve": "批准并发送",
+      "reject": "拒绝",
+      "working": "处理中…",
+      "toDashboard": "打开控制台",
+      "readOnly": "你可以查看此次发送，但只有工作区的所有者或管理员能批准或拒绝。",
+      "footnote": "批准只能在本页完成，且需以工作区所有者或管理员身份登录。助手可以起草和拒绝发送，但它没有浏览器会话，因此无法批准。",
+      "backToConversation": "你可以关闭此标签页，返回对话。",
+      "notFoundTitle": "无法打开此审核",
+      "notFoundBody": "链接可能已过期，或属于你未加入的工作区。请确认你使用的是正确的账号。",
+      "operations": {
+        "email_send": "新邮件",
+        "email_reply": "回复",
+        "email_forward": "转发",
+        "draft_send": "发送已存草稿",
+        "schedule_create": "定时邮件"
+      },
+      "routes": {
+        "gmail": "Gmail API",
+        "outlook": "Microsoft Graph",
+        "smtp": "IMAP + SMTP"
+      },
+      "caveats": {
+        "gmailThread": "若为回复，发送时会把邮件归入现有会话。",
+        "gmailSentLabel": "副本会自动写入“已发送”标签。",
+        "outlookSentItems": "副本会自动写入“已发送邮件”。",
+        "smtpNoSentCopy": "SMTP 投递本身不会在“已发送”中留存副本；在账户允许时，服务器会通过 IMAP 追加一份。"
+      },
+      "via": {
+        "dashboard": "在控制台中决定",
+        "review_page": "通过审核链接决定",
+        "mcp_app": "在助手的审核卡片中决定"
+      },
+      "states": {
+        "approvedTitle": "已批准",
+        "approvedBody": "这封邮件已获批准并交付投递，无需再做其他操作。",
+        "rejectedTitle": "已拒绝",
+        "rejectedBody": "这封邮件已被拒绝，不会发送。",
+        "cancelledTitle": "已取消",
+        "cancelledBody": "此请求在任何人做出决定前已被取消，没有发送任何内容。",
+        "expiredTitle": "此请求已过期",
+        "expiredBody": "未能及时处理，因此不会发送。如果仍需发送，请让助手重新起草。",
+        "decidedElsewhereTitle": "已被处理",
+        "decidedElsewhereBody": "在本页打开期间，其他人或另一个标签页已处理了此次发送。刚才的操作未改变任何内容。请打开控制台查看结果。"
+      },
+      "done": {
+        "approvedTitle": "已批准，邮件正在发送。",
+        "approvedBody": "它已进入队列，将从你的邮箱发出。",
+        "rejectedTitle": "已拒绝，未发送任何内容。",
+        "rejectedBody": "此请求已关闭，邮件不会被投递。"
+      },
+      "errors": {
+        "csrf": "本页打开时间过长。请重新加载后再做决定。",
+        "role": "只有工作区的所有者或管理员能处理此次发送。",
+        "generic": "无法记录该决定。未发送任何内容，请重试。"
+      }
+    },
+    "mode": {
+      "label": "发送前审核",
+      "off": "立即发送",
+      "offHint": "助手不征求同意直接发送。适合风险较低的邮箱。",
+      "inline": "在对话中显示审核卡片",
+      "inlineHint": "对话中会出现一张卡片，完整展示将要发送的内容。可以在卡片上拒绝；批准则会打开一个必须登录才能使用的页面。",
+      "dashboard": "仅在控制台审核",
+      "dashboardHint": "对话中不显示卡片。助手会被告知发送正在等待，而你在此处决定。",
+      "guarantee": "在两种审核模式下，邮件都只会被起草而不会投递。批准只发生在工作区所有者或管理员已登录的浏览器会话中，而助手并不拥有这种会话。审核卡片只是便利工具，不是权限边界。"
+    },
+    "panel": {
+      "decidedTitle": "最近已处理",
+      "colDecided": "处理时间",
+      "colWhere": "处理位置",
+      "colOutcome": "结果",
+      "statusApproved": "已批准",
+      "statusRejected": "已拒绝",
+      "statusExpired": "已过期",
+      "statusCancelled": "已取消"
+    }
   }
 }

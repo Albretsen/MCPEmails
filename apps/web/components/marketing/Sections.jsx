@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { MBtn, MIcon } from '../MarketingPrimitives';
 import { CLIENT_LOGOS, MCP_CLIENT_BRANDS } from '../dashboard/clientLogos';
+import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -37,7 +38,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
         <nav className="nav-links" aria-label="Primary navigation">
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
-          <Link href="/#pricing">{t('nav.pricing')}</Link>
+          <Link href="/pricing">{t('nav.pricing')}</Link>
           <Link href="/native-connectors-vs-mcp">{tc('links.compare')}</Link>
           <Link href="/docs">{t('nav.docs')}</Link>
           <Link href="/self-hosting">{t('nav.selfHost')}</Link>
@@ -79,7 +80,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
           <nav aria-label="Mobile navigation">
             <Link href="/#features" onClick={closeMenu}>{t('nav.features')}</Link>
             <Link href="/#how" onClick={closeMenu}>{t('nav.how')}</Link>
-            <Link href="/#pricing" onClick={closeMenu}>{t('nav.pricing')}</Link>
+            <Link href="/pricing" onClick={closeMenu}>{t('nav.pricing')}</Link>
             <Link href="/native-connectors-vs-mcp" onClick={closeMenu}>{tc('links.compare')}</Link>
             <Link href="/docs" onClick={closeMenu}>{t('nav.docs')}</Link>
             <Link href="/self-hosting" onClick={closeMenu}>{t('nav.selfHost')}</Link>
@@ -406,7 +407,7 @@ export function Features() {
 /**
  * A self-consistent, on-brand mockup of the dashboard so prospects can see the
  * product before signing up. Rendered in HTML/CSS (not a screenshot) so it
- * never drifts from the real naming — note "Team" plan and the real tool names
+ * never drifts from the real naming — note "Scale" plan and the real tool names
  * (email_read, email_compose, email_organize).
  */
 export function DashboardPreview() {
@@ -422,7 +423,7 @@ export function DashboardPreview() {
     { label: 'Inboxes connected', value: '4' },
     { label: 'MCP calls (30d)', value: '12,484' },
     { label: 'Avg. response', value: '214ms' },
-    { label: 'Plan', value: 'Team' },
+    { label: 'Plan', value: 'Scale' },
   ];
   const activity = [
     { tool: 'email_read', inbox: 'work-gmail', time: 'just now' },
@@ -494,7 +495,7 @@ export function DashboardPreview() {
                 <span style={{ width: 28, height: 28, borderRadius: 999, background: 'var(--cobalt-600)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600 }}>J</span>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--fg-1)' }}>jordan</div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>Team plan</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>Scale plan</div>
                 </div>
               </div>
             </div>
@@ -671,11 +672,15 @@ export function Quote() {
 export function Pricing({ onGetStarted, stripePrices }) {
   const t = useTranslations('home');
   // Static, non-translated attributes per tier. `msgKey` indexes the message
-  // bundle; `priceKey` indexes the live Stripe prices map (Team is `pro` there).
+  // bundle; `priceKey` indexes the live Stripe prices map (Scale is `pro` there).
+  // Paid links intentionally go through /signup even for signed-in visitors.
+  // Auth middleware immediately forwards an existing session to the preserved
+  // dashboard checkout intent, while new visitors keep that intent through
+  // Google, GitHub, magic-link, or password authentication.
   const tiers = [
     { msgKey: 'free', priceKey: 'free', price: '$0',  per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
-    { msgKey: 'solo', priceKey: 'solo', price: '$12', per: t('pricing.perMonth'),   accent: false, ctaHref: '/signup' },
-    { msgKey: 'team', priceKey: 'pro',  price: '$49', per: t('pricing.perMonth'),   accent: true,  ctaHref: '/signup' },
+    { msgKey: 'solo', priceKey: 'solo', price: '$12', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('solo', false, false) },
+    { msgKey: 'team', priceKey: 'pro',  price: '$49', per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('pro', false, false) },
   ];
   return (
     <section className="section" id="pricing">
@@ -712,7 +717,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
                 <a
                   className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
                   href={tier.ctaHref}
-                  onClick={tier.ctaHref === "/signup" ? onGetStarted : undefined}
+                  onClick={tier.priceKey === 'free' ? onGetStarted : undefined}
                 >
                   {t(`pricing.tiers.${tier.msgKey}.cta`)}
                 </a>
@@ -868,7 +873,7 @@ export function Footer() {
             <p className="footer-heading">{t('footer.productHeading')}</p>
             <Link href="/#features">{t('footer.linkFeatures')}</Link>
             <Link href="/#how">{t('footer.linkHow')}</Link>
-            <Link href="/#pricing">{t('footer.linkPricing')}</Link>
+            <Link href="/pricing">{t('footer.linkPricing')}</Link>
             <Link href="/docs">{t('footer.linkDocs')}</Link>
             <Link href="/self-hosting">{t('footer.linkSelfHost')}</Link>
             <Link href="/for/founders">{t('footer.linkFounders')}</Link>

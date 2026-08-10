@@ -8,7 +8,12 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "test:analytics": "node --test src/lib/analytics.test.mjs",
-    "test:billing": "node --test src/lib/billing/upgrade-intent.test.mjs"
+    "test:billing": "node --test src/lib/billing/upgrade-intent.test.mjs",
+    "test:plans": "node --test --experimental-strip-types src/lib/stripe/plans.test.ts",
+    "test:seo": "node --test src/lib/blog/seo.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs",
+    "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts",
+    "test:retention": "node --test --experimental-strip-types src/lib/analytics/retention.test.ts",
+    "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -23,6 +28,7 @@
     "@tiptap/react": "^3.27.3",
     "@tiptap/starter-kit": "^3.27.3",
     "@vercel/analytics": "^2.0.1",
+    "dompurify": "^3.4.7",
     "he": "^1.2.0",
     "isomorphic-dompurify": "^2.15.0",
     "jsdom": "^26.0.0",

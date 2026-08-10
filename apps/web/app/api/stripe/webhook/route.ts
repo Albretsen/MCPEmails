@@ -252,6 +252,7 @@ async function handleCheckoutSessionCompleted(
   // Derive the real subscription status instead of assuming 'active'.
   let subscriptionStatus: string | null = null;
   let currentPeriodEnd: number | null = null;
+  let currentPeriodStart: number | null = null;
   let resolvedPlan: PlanId | 'free' = planId;
 
   if (subscriptionId) {
@@ -260,6 +261,8 @@ async function handleCheckoutSessionCompleted(
       subscriptionStatus = subscription.status;
       currentPeriodEnd =
         subscription.items.data[0]?.current_period_end ?? null;
+      currentPeriodStart =
+        subscription.items.data[0]?.current_period_start ?? null;
 
       // Prefer the price the customer actually subscribed to over the metadata
       // plan_id (they should agree, but the subscription is authoritative).
@@ -300,6 +303,7 @@ async function handleCheckoutSessionCompleted(
     newPlan: resolvedPlan,
     subscriptionStatus,
     currentPeriodEnd,
+    currentPeriodStart,
     source: 'checkout.session.completed',
   });
 }
@@ -365,6 +369,7 @@ async function handleSubscriptionUpserted(
       subscriptionId: subscription.id,
       newPlan: null, // sentinel: keep the current plan, only sync linkage/status
       subscriptionStatus: status,
+      currentPeriodStart: subscription.items.data[0]?.current_period_start ?? null,
       currentPeriodEnd: subscription.items.data[0]?.current_period_end ?? null,
       source: `customer.subscription.upserted (unmapped price ${priceId})`,
     });
@@ -377,6 +382,7 @@ async function handleSubscriptionUpserted(
     subscriptionId: subscription.id,
     newPlan: resolved.plan.id,
     subscriptionStatus: status,
+    currentPeriodStart: subscription.items.data[0]?.current_period_start ?? null,
     currentPeriodEnd: subscription.items.data[0]?.current_period_end ?? null,
     source: 'customer.subscription.upserted',
   });
@@ -439,6 +445,8 @@ interface ApplyUserPlanOptions {
   subscriptionStatus?: string | null;
   /** Unix seconds of current period end, if known. */
   currentPeriodEnd?: number | null;
+  /** Unix seconds of current period start, if known. */
+  currentPeriodStart?: number | null;
   /** Human-readable label for log messages. */
   source: string;
 }
@@ -457,6 +465,7 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
     newPlan,
     subscriptionStatus,
     currentPeriodEnd,
+    currentPeriodStart,
     source,
   } = options;
 
@@ -495,6 +504,7 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
     stripe_subscription_id?: string | null;
     subscription_status?: string | null;
     current_period_end?: string;
+    current_period_start?: string;
   } = {
     user_id: resolvedUserId,
     updated_at: new Date().toISOString(),
@@ -506,6 +516,9 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   if (subscriptionStatus !== undefined) billingUpdate.subscription_status = subscriptionStatus;
   if (currentPeriodEnd != null) {
     billingUpdate.current_period_end = new Date(currentPeriodEnd * 1000).toISOString();
+  }
+  if (currentPeriodStart != null) {
+    billingUpdate.current_period_start = new Date(currentPeriodStart * 1000).toISOString();
   }
 
   const { error: billingError } = await supabase

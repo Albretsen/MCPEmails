@@ -104,7 +104,7 @@ En ærlig begrensning: det finnes ingen webhooks. Serveren dytter ikke ny post t
 
 ## Ratebegrensninger for skriptet tilgang
 
-Driver du serveren fra en cron-jobb eller en tett agentløkke, ta hensyn til grensene. Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, på alle planer. I tillegg finnes det et burst-tak per arbeidsområde satt av planen din: 60/min på Free, 300/min på Solo ($12/month), 1 000/min på Team ($49/month). Se [prissiden](/pricing) for hele oversikten.
+Driver du serveren fra en cron-jobb eller en tett agentløkke, ta hensyn til grensene. Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, på alle planer. I tillegg finnes det et burst-tak per arbeidsområde satt av planen din: 60/min på Free, 300/min på Agent ($12/month), 1 000/min på Scale ($49/month). Se [prissiden](/pricing) for hele oversikten.
 
 Når du treffer en grense, returnerer serveren en gjentakbar feil (kode \`-32029\`) med \`data.retry_after\` i sekunder. Respekter den — bakk av så lenge og prøv igjen. Og prøv aldri blindt på nytt en \`email_compose\`-sending ved en generisk feil; du fyrer av duplikater. Sjekk om den faktisk ble sendt først.
 

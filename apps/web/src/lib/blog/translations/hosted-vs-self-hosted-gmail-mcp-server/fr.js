@@ -81,7 +81,7 @@ C'est le vrai compromis, et je ne vais pas l'enjoliver. Avec un serveur héberg�
 
 ## Ce que ça coûte en dollars
 
-MCP Emails est gratuit pour démarrer, et l'offre Free est illimitée : boîtes de réception, appels d'outils et clés API illimités, sans carte bancaire. L'offre Free tourne à 60 requêtes/minute avec 7 jours d'analytics et un support communautaire. [Solo est à 12 $/mois](/pricing) (300 req/min, 90 jours d'analytics, support par e-mail), et Team est à 49 $/mois pour les rôles, plusieurs espaces de travail, le SSO et les journaux d'audit. L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Soyez honnête sur les heures.
+MCP Emails est gratuit pour démarrer : boîtes de réception et clés API illimitées, 2 500 actions facturables par période de facturation, sans carte bancaire. L'offre Free tourne à 60 requêtes/minute avec 7 jours d'analytics et un support communautaire. [Agent est à 12 $/mois](/pricing) (50 000 actions, 300 req/min, 90 jours d'analytics, support par e-mail), et Scale est à 49 $/mois (300 000 actions, rôles, plusieurs espaces de travail, SSO et journaux d'audit). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Soyez honnête sur les heures.
 
 ## Alors, lequel choisir ?
 
