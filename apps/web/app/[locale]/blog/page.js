@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, APP_URL } from '@/i18n/seo';
 import { getAllPosts, getAuthor, getLocalizedPost } from '@/lib/blog/posts';
 import { readingTime } from '@/lib/blog/markdown';
+import { blogPostCanonicalLocale } from '@/lib/blog/seo.mjs';
 import BlogIndexClient from '../../../components/marketing/BlogIndexClient';
 
 export async function generateMetadata({ params }) {
@@ -51,6 +52,7 @@ export default async function BlogIndexPage({ params }) {
       publishedAt: p.publishedAt,
       readingMinutes: readingTime(p.content),
       author: { name: author.name, role: author.role, avatar: author.avatar },
+      canonicalLocale: blogPostCanonicalLocale(p, locale),
     };
   });
 
@@ -73,7 +75,8 @@ export default async function BlogIndexPage({ params }) {
       headline: p.title,
       description: p.description,
       datePublished: p.publishedAt,
-      url: localePath(locale, `/blog/${p.slug}`),
+      url: localePath(p.canonicalLocale, `/blog/${p.slug}`),
+      inLanguage: p.canonicalLocale,
       author: { '@type': 'Person', name: p.author.name },
     })),
   };

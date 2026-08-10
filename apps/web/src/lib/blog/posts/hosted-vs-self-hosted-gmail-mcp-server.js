@@ -88,7 +88,7 @@ This is the real trade-off, and I won't dress it up. With a hosted server, your 
 
 ## What it costs in dollars
 
-MCP Emails is free to start, and Free is unlimited: unlimited inboxes, tool calls, and API keys, no credit card. The Free tier runs at 60 requests/minute with 7-day analytics and community support. [Solo is $12/month](/pricing) (300 req/min, 90-day analytics, email support), and Team is $49/month for roles, multiple workspaces, SSO, and audit logs. Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
+MCP Emails is free to start: unlimited inboxes and API keys, 2,500 billable actions per billing period, and no credit card. The Free tier runs at 60 requests/minute with 7-day analytics and community support. [Agent is $12/month](/pricing) (50,000 actions, 300 req/min, 90-day analytics, email support), and Scale is $49/month (300,000 actions, roles, multiple workspaces, SSO, and audit logs). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
 
 ## So which should you pick?
 

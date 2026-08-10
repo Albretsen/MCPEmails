@@ -308,15 +308,15 @@
     "perKeyHeading": "100 次/分钟 · 1,000 次/小时 · 10,000 次/天",
     "perKeyBody": "无论套餐如何，均按每个 API 密钥强制执行。超出时，服务器返回错误代码 <code>-32029</code>，并附带 <code>data.error_code: \"rate_limit_exceeded\"</code> 和一个 <code>data.retry_after</code> 字段（秒）。重试前请遵守该值。",
     "planTag": "套餐每分钟上限",
-    "planHeading": "免费 60 次/分钟 · Solo 300 次/分钟 · Team 1,000 次/分钟",
-    "planBody": "用量是无限量的；这是一个每工作区的合理使用突发限制（在你所有 API 密钥间汇总）。超出时，调用会返回 <code>data.error_code: \"rate_limit_exceeded\"</code>，并附带 <code>data.window: \"per_minute\"</code> 和一个 <code>data.retry_after</code> 倒计时（秒）。升级你的套餐可获得更高的上限。",
+    "planHeading": "免费 60 次/分钟 · Agent 300 次/分钟 · Scale 1,000 次/分钟",
+    "planBody": "这是一个每工作区的合理使用突发限制（在你所有 API 密钥间汇总），与操作额度分开计算。超出时，调用会返回 <code>data.error_code: \"rate_limit_exceeded\"</code>，并附带 <code>data.window: \"per_minute\"</code> 和一个 <code>data.retry_after</code> 倒计时（秒）。升级你的套餐可获得更高的上限和更多操作额度。",
     "retryTag": "安全重试",
     "retryHeading": "始终遵守 retry_after；切勿盲目重试发送",
     "retryBody": "对于 <code>rate_limit_exceeded</code> 错误，请在重试前等待 <code>data.retry_after</code> 秒。对于 <code>provider_error</code> 请使用指数退避。请勿在 <code>provider_error</code> 时自动重试 <code>email_compose</code> 发送，因为该邮件可能已被服务商接受。"
   },
   "cta": {
     "heading": "准备好连接你的收件箱了吗？",
-    "sub": "从免费套餐开始：无限量，无需信用卡。升级到 Solo 或 Team 可获得更高的突发限额和团队功能。",
+    "sub": "从免费套餐开始：每个计费周期 2,500 次操作，无需信用卡。升级到 Agent 或 Scale 可获得更多操作额度、更高的突发限额和团队功能。",
     "primary": "免费开始使用",
     "secondary": "查看价格"
   },
@@ -386,7 +386,7 @@
     },
     "cta": {
       "heading": "准备好连接你的收件箱了吗？",
-      "sub": "免费套餐：无限量连接，无需信用卡。",
+      "sub": "免费套餐：不限数量的收件箱连接及每个计费周期 2,500 次操作，无需信用卡。",
       "primary": "免费开始使用",
       "secondary": "阅读文档"
     }

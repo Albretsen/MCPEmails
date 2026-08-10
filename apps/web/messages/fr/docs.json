@@ -308,15 +308,15 @@
     "perKeyHeading": "100 req / min · 1 000 / h · 10 000 / jour",
     "perKeyBody": "Appliqué par clé API quelle que soit la formule. En cas de dépassement, le serveur renvoie le code d'erreur <code>-32029</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code> et un champ <code>data.retry_after</code> (secondes). Respectez cette valeur avant de réessayer.",
     "planTag": "Plafond par minute de la formule",
-    "planHeading": "Gratuit 60 / min · Solo 300 / min · Team 1 000 / min",
-    "planBody": "L'usage est illimité ; il s'agit d'une limite de pointe d'usage équitable par espace de travail (agrégée sur toutes vos clés API). En cas de dépassement, les appels renvoient <code>data.error_code: \"rate_limit_exceeded\"</code> avec <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Passez à une formule supérieure pour un plafond plus élevé.",
+    "planHeading": "Gratuit 60 / min · Agent 300 / min · Scale 1 000 / min",
+    "planBody": "Il s'agit d'une limite de pointe d'usage équitable par espace de travail (agrégée sur toutes vos clés API), distincte de votre allocation d'actions. En cas de dépassement, les appels renvoient <code>data.error_code: \"rate_limit_exceeded\"</code> avec <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Passez à une formule supérieure pour un plafond et une allocation d'actions plus élevés.",
     "retryTag": "Réessayer en toute sécurité",
     "retryHeading": "Respectez toujours retry_after ; ne réessayez jamais les envois à l'aveugle",
     "retryBody": "Pour les erreurs <code>rate_limit_exceeded</code>, attendez <code>data.retry_after</code> secondes avant de réessayer. Utilisez un backoff exponentiel pour <code>provider_error</code>. Ne réessayez pas automatiquement les envois <code>email_compose</code> en cas de <code>provider_error</code>, car le message a peut-être déjà été accepté par le fournisseur."
   },
   "cta": {
     "heading": "Prêt à connecter votre boîte de réception ?",
-    "sub": "Commencez avec la formule Gratuit : illimitée, aucune carte requise. Passez à Solo ou Team pour des limites de pointe plus élevées et des fonctionnalités d'équipe.",
+    "sub": "Commencez avec la formule Gratuit : illimitée, aucune carte requise. Passez à Agent ou Scale pour des limites de pointe plus élevées et des fonctionnalités d'équipe.",
     "primary": "Commencer gratuitement",
     "secondary": "Voir les tarifs"
   },

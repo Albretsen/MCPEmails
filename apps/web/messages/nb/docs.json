@@ -308,15 +308,15 @@
     "perKeyHeading": "100 req / min · 1 000 / t · 10 000 / dag",
     "perKeyBody": "Håndheves per API-nøkkel uavhengig av plan. Ved overskridelse returnerer serveren feilkode <code>-32029</code> med <code>data.error_code: \"rate_limit_exceeded\"</code> og et <code>data.retry_after</code>-felt (sekunder). Respekter den verdien før du prøver på nytt.",
     "planTag": "Plantak per minutt",
-    "planHeading": "Free 60 / min · Solo 300 / min · Team 1 000 / min",
-    "planBody": "Bruken er ubegrenset; dette er en burst-grense for rimelig bruk per arbeidsområde (aggregert på tvers av alle API-nøklene dine). Ved overskridelse returnerer kall <code>data.error_code: \"rate_limit_exceeded\"</code> med <code>data.window: \"per_minute\"</code> og en <code>data.retry_after</code>-nedtelling (sekunder). Oppgrader planen din for et høyere tak.",
+    "planHeading": "Free 60 / min · Agent 300 / min · Scale 1 000 / min",
+    "planBody": "Dette er en burst-grense for rimelig bruk per arbeidsområde (aggregert på tvers av alle API-nøklene dine), separat fra handlingskvoten din. Ved overskridelse returnerer kall <code>data.error_code: \"rate_limit_exceeded\"</code> med <code>data.window: \"per_minute\"</code> og en <code>data.retry_after</code>-nedtelling (sekunder). Oppgrader planen din for et høyere tak og en større handlingskvote.",
     "retryTag": "Trygge nye forsøk",
     "retryHeading": "Respekter alltid retry_after; prøv aldri sendinger på nytt i blinde",
     "retryBody": "For <code>rate_limit_exceeded</code>-feil, vent <code>data.retry_after</code> sekunder før du prøver på nytt. Bruk eksponentiell backoff for <code>provider_error</code>. Ikke prøv <code>email_compose</code>-sendinger automatisk på nytt ved <code>provider_error</code>, siden meldingen kan ha blitt akseptert av leverandøren allerede."
   },
   "cta": {
     "heading": "Klar til å koble til innboksen din?",
-    "sub": "Start på Free-planen: ubegrenset, ingen kort kreves. Oppgrader til Solo eller Team for høyere burst-grenser og teamfunksjoner.",
+    "sub": "Start på Free-planen: 2 500 handlinger per faktureringsperiode, ingen kort kreves. Oppgrader til Agent eller Scale for større kvote, høyere burst-grenser og teamfunksjoner.",
     "primary": "Kom i gang gratis",
     "secondary": "Se priser"
   },
@@ -386,7 +386,7 @@
     },
     "cta": {
       "heading": "Klar til å koble til innboksen din?",
-      "sub": "Free-plan: ubegrensede tilkoblinger, ingen kort kreves.",
+      "sub": "Free-plan: ubegrensede innboksforbindelser og 2 500 handlinger per faktureringsperiode, ingen kort kreves.",
       "primary": "Kom i gang gratis",
       "secondary": "Les dokumentasjonen"
     }

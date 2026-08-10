@@ -127,7 +127,7 @@ Speed here doesn't come from cutting corners on security. Email is fetched live 
 
 ## Wrap-up
 
-That's the whole thing: one inbox connection, one endpoint, a handful of tools. Every plan is unlimited on inboxes, calls, and keys, and the Free tier costs nothing and needs no card — check [pricing](/pricing) if you need higher burst limits or SSO. Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
+That's the whole thing: one inbox connection, one endpoint, a handful of tools. Every plan includes unlimited inboxes and API keys; the Free tier includes 2,500 billable actions per billing period and needs no card — check [pricing](/pricing) for larger action allowances, higher burst limits, or SSO. Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
     es: `Conectas tu correo a un agente de IA en dos pasos: conecta el buzón en el panel de MCP Emails y luego apunta tu agente a una única URL de endpoint. Con un cliente compatible con OAuth como claude.ai, eso es todo. Sin código, sin SDK, y tu correo no se almacena en ningún sitio: cada lectura y cada envío llega a tu proveedor en tiempo real y se descarta en cuanto el agente lo recibe.
 
 Esta es la guía rápida. Elige tu proveedor más abajo, sigue los cuatro o cinco pasos y tendrás a Claude (o Cursor, o un script propio) leyendo y enviando correo real en aproximadamente el tiempo que tardas en leer este párrafo dos veces. Si prefieres la versión más a fondo de "qué es esto y si es seguro", empieza por la [guía completa para dar acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access).

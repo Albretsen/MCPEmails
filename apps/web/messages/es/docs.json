@@ -308,15 +308,15 @@
     "perKeyHeading": "100 pet / min · 1.000 / h · 10.000 / día",
     "perKeyBody": "Aplicados por clave de API independientemente del plan. Cuando se superan, el servidor devuelve el código de error <code>-32029</code> con <code>data.error_code: \"rate_limit_exceeded\"</code> y un campo <code>data.retry_after</code> (segundos). Respeta ese valor antes de reintentar.",
     "planTag": "Tope por minuto del plan",
-    "planHeading": "Gratis 60 / min · Solo 300 / min · Team 1.000 / min",
-    "planBody": "El uso es ilimitado; este es un límite de ráfaga de uso justo por espacio de trabajo (agregado entre todas tus claves de API). Cuando se supera, las llamadas devuelven <code>data.error_code: \"rate_limit_exceeded\"</code> con <code>data.window: \"per_minute\"</code> y una cuenta atrás <code>data.retry_after</code> (segundos). Mejora tu plan para un tope más alto.",
+    "planHeading": "Gratis 60 / min · Agent 300 / min · Scale 1.000 / min",
+    "planBody": "Este es un límite de ráfaga de uso justo por espacio de trabajo (agregado entre todas tus claves de API), independiente de tu asignación de acciones. Cuando se supera, las llamadas devuelven <code>data.error_code: \"rate_limit_exceeded\"</code> con <code>data.window: \"per_minute\"</code> y una cuenta atrás <code>data.retry_after</code> (segundos). Mejora tu plan para un tope y una asignación de acciones más altos.",
     "retryTag": "Reintentar de forma segura",
     "retryHeading": "Respeta siempre retry_after; nunca reintentes envíos a ciegas",
     "retryBody": "Para errores <code>rate_limit_exceeded</code>, espera <code>data.retry_after</code> segundos antes de reintentar. Usa retroceso exponencial para <code>provider_error</code>. No reintentes automáticamente los envíos de <code>email_compose</code> ante <code>provider_error</code>, ya que el mensaje puede haber sido aceptado por el proveedor."
   },
   "cta": {
     "heading": "¿Listo para conectar tu bandeja de entrada?",
-    "sub": "Empieza en el plan Gratis: ilimitado, sin tarjeta. Mejora a Solo o Team para límites de ráfaga más altos y funciones de equipo.",
+    "sub": "Empieza en el plan Gratis: ilimitado, sin tarjeta. Mejora a Agent o Scale para límites de ráfaga más altos y funciones de equipo.",
     "primary": "Empieza gratis",
     "secondary": "Ver precios"
   },

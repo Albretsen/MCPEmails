@@ -370,10 +370,22 @@ const MCP_CLIENTS = [
  * and links to the client's official guide. For non-OAuth clients it surfaces
  * a shortcut to create an API key.
  */
-function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
+function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null }) {
   const t = useTranslations('dashboard');
   const steps = client.stepKeys.map((k) => t(k));
   const config = client.config ? client.config(mcpUrl) : null;
+  const [checking, setChecking] = useState(false);
+  const [verified, setVerified] = useState(false);
+
+  const testConnection = async () => {
+    if (!inbox?.id || checking) return;
+    setChecking(true);
+    try {
+      const response = await fetch(`/api/inboxes/${inbox.id}/check`, { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+      setVerified(response.ok && data.ok === true);
+    } finally { setChecking(false); }
+  };
 
   return (
     <div className="scrim" onClick={onClose}>
@@ -437,6 +449,15 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
               </button>
             </div>
           ) : null}
+          {inbox?.id ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-sunken)', border: '1px solid var(--border-1)', borderRadius: 8 }}>
+              <Icon name={verified ? 'check' : 'refresh'} size={15} color={verified ? 'var(--mint-600)' : 'var(--brand)'} />
+              <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)' }}>
+                {verified ? t('guide.ready') : t('inboxes.checkConnection')}
+              </span>
+              {!verified ? <Btn variant="ghost" size="sm" disabled={checking} onClick={testConnection}>{t('inboxes.checkConnection')}</Btn> : null}
+            </div>
+          ) : null}
         </div>
 
         {/* Footer */}
@@ -464,9 +485,9 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys }) {
  * connect an inbox, then connect an MCP client (the URL is highlighted and a
  * per-client guide opens on click).
  */
-function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys }) {
+function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected }) {
   const t = useTranslations('dashboard');
-  const [activeClient, setActiveClient] = useState(null);
+  const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => (c.k === 'api' ? 'curl' : c.k) === initialClient) ?? null);
 
   const step1Done = inboxCount > 0;
   const step2Done = callsThisMonth > 0;
@@ -537,7 +558,7 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
               {MCP_CLIENTS.map((c) => (
                 <button
                   key={c.k}
-                  onClick={() => { trackProductEvent('mcp_connection_started', { client: c.k === 'api' ? 'curl' : c.k }); setActiveClient(c); }}
+                  onClick={() => { const client = c.k === 'api' ? 'curl' : c.k; trackProductEvent('mcp_connection_started', { client }); onClientSelected?.(client); setActiveClient(c); }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
                     background: 'var(--bg-surface)', border: '1px solid var(--border-1)',
@@ -565,6 +586,7 @@ function GettingStartedGuide({ inboxCount, callsThisMonth, mcpUrl, onConnect, on
           mcpUrl={mcpUrl}
           onClose={() => setActiveClient(null)}
           onGoToKeys={onGoToKeys}
+          inbox={inboxes?.[0] ?? null}
         />
       ) : null}
     </div>
@@ -589,7 +611,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers }) {
+export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected }) {
   const t = useTranslations('dashboard');
   const inboxCount = stats?.inboxCount ?? 0;
   // Last 14 days of real per-day call counts, sliced from the 30-day series.
@@ -759,11 +781,14 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
 
       {showGuide ? (
         <GettingStartedGuide
+          inboxes={inboxes}
           inboxCount={inboxCount}
           callsThisMonth={callsThisMonth}
           mcpUrl={mcpUrl}
           onConnect={onConnect}
           onGoToKeys={onGoToKeys}
+          initialClient={onboardingClient}
+          onClientSelected={onClientSelected}
         />
       ) : (
         <div className="overview-grid" style={{ marginTop: 16 }}>
@@ -1443,12 +1468,66 @@ function SignaturePreview({ html, tooBig, t }) {
   );
 }
 
+/** Order matters: this is the order the options are offered in. */
+const REVIEW_MODES = ['off', 'inline', 'dashboard'];
+
+/**
+ * Resolves an inbox's review mode.
+ *
+ * `send_review_mode` is the new three-way column. Until every row has one,
+ * fall back to the legacy `send_approval_required` boolean, which maps onto
+ * the `dashboard` mode (its behaviour today: no card, decide in the dashboard).
+ */
+export function resolveReviewMode(inbox) {
+  const mode = inbox?.sendReviewMode;
+  if (REVIEW_MODES.includes(mode)) return mode;
+  return inbox?.sendApprovalRequired ? 'dashboard' : 'off';
+}
+
+/**
+ * Three-way "review before sending" selector.
+ *
+ * COPY RULE: do not write anything that claims the assistant "cannot" call a
+ * tool. `_meta.ui.visibility` is a host UI hint, not an authorisation boundary
+ * (docs/mcp-apps/contract.md §6) — a prompt-injected agent can reach anything
+ * the review card can reach. The claim that IS true, and the only one made
+ * here, is that nothing is delivered until a signed-in owner or admin approves
+ * it in the browser, which holds in both `inline` and `dashboard`.
+ */
+function ReviewModeSelector({ value, onChange, disabled }) {
+  const t = useTranslations('dashboard');
+  return (
+    <div className="review-mode">
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
+        {t('approvals.mode.label')}
+      </div>
+      {REVIEW_MODES.map(mode => (
+        <label key={mode} className={`review-mode-option${value === mode ? ' is-active' : ''}`}>
+          <input
+            type="radio"
+            name="send-review-mode"
+            value={mode}
+            checked={value === mode}
+            onChange={() => onChange(mode)}
+            disabled={disabled}
+          />
+          <span>
+            <strong>{t(`approvals.mode.${mode}`)}</strong>
+            <span>{t(`approvals.mode.${mode}Hint`)}</span>
+          </span>
+        </label>
+      ))}
+      <p className="review-mode-note">{t('approvals.mode.guarantee')}</p>
+    </div>
+  );
+}
+
 function SignatureEditor({ inbox, onSave, t }) {
   const wasImported = inbox.signatureSource === 'gmail_import';
 
   const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
   const [replyMode, setReplyMode] = useState(inbox.signatureReplyMode ?? 'first_only');
-  const [approvalRequired, setApprovalRequired] = useState(inbox.sendApprovalRequired ?? false);
+  const [reviewMode, setReviewMode] = useState(() => resolveReviewMode(inbox));
   const [saving, setSaving] = useState(false);
   const [sizeError, setSizeError] = useState('');
   // Live preview: sanitized HTML rendered exactly as it will appear in mail.
@@ -1488,7 +1567,7 @@ function SignatureEditor({ inbox, onSave, t }) {
   useEffect(() => {
     setEnabled(inbox.signatureEnabled ?? true);
     setReplyMode(inbox.signatureReplyMode ?? 'first_only');
-    setApprovalRequired(inbox.sendApprovalRequired ?? false);
+    setReviewMode(resolveReviewMode(inbox));
     setSizeError('');
     setPreviewTooBig(false);
     try {
@@ -1529,7 +1608,12 @@ function SignatureEditor({ inbox, onSave, t }) {
         signature_text: text,
         signature_enabled: enabled,
         signature_reply_mode: replyMode,
-        send_approval_required: approvalRequired,
+        // Both columns are sent: `send_review_mode` is the new three-way
+        // setting, `send_approval_required` is the boolean the edge function
+        // still gates on. The API keeps them consistent; remove the boolean
+        // once the server reads the mode directly.
+        send_review_mode: reviewMode,
+        send_approval_required: reviewMode !== 'off',
       });
     } catch {
       // App.jsx already showed an error toast; keep the form as-is for retry.
@@ -1558,10 +1642,7 @@ function SignatureEditor({ inbox, onSave, t }) {
         </label>
       </div>
 
-      <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 16, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>
-        <input type="checkbox" checked={approvalRequired} onChange={() => setApprovalRequired(v => !v)} disabled={saving} style={{ accentColor: 'var(--brand)', marginTop: 2 }} />
-        <span><strong style={{ color: 'var(--fg-1)' }}>Require approval before sending</strong><br />Messages sent by an MCP client wait for a workspace approver. Disabled by default.</span>
-      </label>
+      <ReviewModeSelector value={reviewMode} onChange={setReviewMode} disabled={saving} />
 
       {wasImported && (
         <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
@@ -1737,9 +1818,9 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
             <details className="inbox-sending-details">
               <summary>
                 <span>Signature &amp; sending</span>
-                <span>{inbox.sendApprovalRequired ? 'Approval required' : 'Approval optional'}</span>
+                <span>{t(`approvals.mode.${resolveReviewMode(inbox)}`)}</span>
               </summary>
-              <p>Set the signature and decide whether MCP-sent messages must wait for a workspace approver.</p>
+              <p>Set the signature and choose where a prepared send waits for a human decision.</p>
               <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} />
             </details>
           )}
@@ -2963,7 +3044,12 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
     totalCalls = 0,
     byTool = [],
     byInbox = [],
+    shadowActions = 0,
+    shadowActionCap = 2500,
+    lastBillableCalls = [],
   } = usageData ?? {};
+
+  const shadowPct = shadowActionCap > 0 ? Math.min(100, Math.round((shadowActions / shadowActionCap) * 100)) : 0;
 
   // Plan limits: null means unlimited (Enterprise).
   const dailyCap = planLimits?.maxDailyBurstCalls ?? null;
@@ -2990,6 +3076,19 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
         title={t('usage.title')}
         sub={t('usage.sub')}
       />
+
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="card-h">
+          <div><div className="title">{t('usage.shadowMeterTitle')}</div><div className="sub">{t('usage.shadowMeterSub')}</div></div>
+          <Badge tone="neutral">{t('usage.shadowOnly')}</Badge>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
+          <strong style={{ fontSize: 24 }}>{shadowActions.toLocaleString()}</strong>
+          <span style={{ color: 'var(--fg-3)' }}>{t('usage.shadowOfCap', { cap: shadowActionCap.toLocaleString() })}</span>
+        </div>
+        <div style={{ height: 7, borderRadius: 4, overflow: 'hidden', background: 'var(--bg-sunken)' }}><div style={{ width: `${shadowPct}%`, height: '100%', background: 'var(--brand)' }} /></div>
+        {lastBillableCalls.length > 0 && <div style={{ marginTop: 12, fontSize: 12, color: 'var(--fg-3)' }}>{t('usage.lastBillableCalls', { count: lastBillableCalls.length })}: {lastBillableCalls.slice(0, 5).map((call) => call.tool).join(' · ')}</div>}
+      </div>
 
       {/* Daily quota status card: shown whenever a cap exists */}
       {dailyCap != null && (
@@ -3960,7 +4059,7 @@ function DeleteAccountSection({ email }) {
 const BILLING_PLANS = [
   {
     id: 'solo',
-    name: 'Solo',
+    name: 'Agent',
     monthlyPrice: 12,
     yearlyMonthlyPrice: 10,     // effective monthly cost when billed yearly ($120/yr)
     yearlyAnnualTotal: 120,
@@ -3969,7 +4068,7 @@ const BILLING_PLANS = [
   },
   {
     id: 'pro',
-    name: 'Team',
+    name: 'Scale',
     monthlyPrice: 49,
     yearlyMonthlyPrice: 41,     // effective monthly cost when billed yearly ($490/yr)
     yearlyAnnualTotal: 490,
@@ -3981,14 +4080,14 @@ const BILLING_PLANS = [
 /**
  * BillingSection: shows the current plan and upgrade options.
  *
- * For free-plan workspaces it renders Solo and Team upgrade cards.
+ * For free-plan workspaces it renders Agent and Scale upgrade cards.
  * For paid-plan workspaces it shows the active plan and a link to the
  * Stripe customer portal.
  *
  * Props:
  *   currentPlan: 'free' | 'pro' | 'enterprise' from workspaces.plan
  */
-function BillingSection({ currentPlan, stripePrices, upgradeIntent }) {
+function BillingSection({ currentPlan, compedScale = false, stripePrices, upgradeIntent }) {
   const t = useTranslations('dashboard');
   const [interval, setInterval] = useState('month');
   const [upgrading, setUpgrading] = useState(null); // planId while loading
@@ -4084,11 +4183,11 @@ function BillingSection({ currentPlan, stripePrices, upgradeIntent }) {
   }, [upgradeIntent]);
 
   // Display label for the current plan. "free" is translated; paid plan names
-  // (Solo / Team / Enterprise) are brand-style names kept as-is (capitalized).
+  // (Agent / Scale / Enterprise) are brand-style names kept as-is (capitalized).
   const planKey = currentPlan ?? 'free';
-  const planDisplay = planKey === 'free'
+  const planDisplay = compedScale ? 'Scale — comped' : planKey === 'free'
     ? t('billing.free')
-    : (planKey === 'pro' ? 'Team' : planKey.charAt(0).toUpperCase() + planKey.slice(1));
+    : (planKey === 'solo' ? 'Agent' : planKey === 'pro' ? 'Scale' : planKey.charAt(0).toUpperCase() + planKey.slice(1));
 
   // Derived usage values for the widget
   const monthlyUsed = usage?.monthly?.used ?? null;
@@ -4927,7 +5026,7 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
       <LanguageSection />
 
       {/* Billing section: current plan + upgrade (account-level subscription) */}
-      <BillingSection currentPlan={workspace?.plan ?? 'free'} stripePrices={stripePrices} upgradeIntent={upgradeIntent} />
+      <BillingSection currentPlan={workspace?.plan ?? 'free'} compedScale={workspace?.compedScale ?? false} stripePrices={stripePrices} upgradeIntent={upgradeIntent} />
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}
       <SettingsSectionLabel>{t('settings.sections.workspace')}</SettingsSectionLabel>
@@ -5663,7 +5762,7 @@ export function MembersPage({
   const atSeatLimit = seatLimit !== null && members.length >= seatLimit;
   const canInvite = canManage && !atSeatLimit;
   // Team roles (Admin/Viewer) are a separate paid capability. When invites ARE
-  // allowed but roles aren't (e.g. Solo), everyone joins as a plain Member.
+  // allowed but roles aren't (e.g. Agent), everyone joins as a plain Member.
   const teamRolesEnabled = planLimits?.teamRolesEnabled ?? false;
   const canChangeRoles = userRole === 'owner' && teamRolesEnabled;
 

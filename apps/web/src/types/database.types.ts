@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      action_usage: {
+        Row: {
+          billable: boolean
+          created_at: string
+          id: string
+          meter_version: number
+          occurred_at: string
+          quantity: number
+          tool_name: string
+          workspace_id: string
+        }
+        Insert: {
+          billable: boolean
+          created_at?: string
+          id?: string
+          meter_version?: number
+          occurred_at?: string
+          quantity?: number
+          tool_name: string
+          workspace_id: string
+        }
+        Update: {
+          billable?: boolean
+          created_at?: string
+          id?: string
+          meter_version?: number
+          occurred_at?: string
+          quantity?: number
+          tool_name?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_usage_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_log: {
         Row: {
           api_key_id: string | null
@@ -1067,6 +1108,7 @@ export type Database = {
           imap_host: string | null
           imap_password: string | null
           imap_port: number | null
+          imap_security: string
           imap_tls: boolean
           imap_username: string | null
           last_error: string | null
@@ -1086,6 +1128,7 @@ export type Database = {
           signature_updated_at: string | null
           smtp_host: string | null
           smtp_port: number | null
+          smtp_security: string
           smtp_tls: boolean
           status: string
           updated_at: string
@@ -1100,6 +1143,7 @@ export type Database = {
           imap_host?: string | null
           imap_password?: string | null
           imap_port?: number | null
+          imap_security?: string
           imap_tls?: boolean
           imap_username?: string | null
           last_error?: string | null
@@ -1119,6 +1163,7 @@ export type Database = {
           signature_updated_at?: string | null
           smtp_host?: string | null
           smtp_port?: number | null
+          smtp_security?: string
           smtp_tls?: boolean
           status?: string
           updated_at?: string
@@ -1133,6 +1178,7 @@ export type Database = {
           imap_host?: string | null
           imap_password?: string | null
           imap_port?: number | null
+          imap_security?: string
           imap_tls?: boolean
           imap_username?: string | null
           last_error?: string | null
@@ -1152,6 +1198,7 @@ export type Database = {
           signature_updated_at?: string | null
           smtp_host?: string | null
           smtp_port?: number | null
+          smtp_security?: string
           smtp_tls?: boolean
           status?: string
           updated_at?: string
@@ -1608,6 +1655,7 @@ export type Database = {
         Row: {
           created_at: string
           current_period_end: string | null
+          current_period_start: string | null
           plan: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -1618,6 +1666,7 @@ export type Database = {
         Insert: {
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -1628,6 +1677,7 @@ export type Database = {
         Update: {
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -1648,7 +1698,13 @@ export type Database = {
       workspaces: {
         Row: {
           acquisition_landing: string | null
+          acquisition_landing_path: string | null
+          acquisition_locale: string | null
+          acquisition_referrer: string | null
           acquisition_source: string | null
+          acquisition_utm_campaign: string | null
+          acquisition_utm_medium: string | null
+          acquisition_utm_source: string | null
           analytics_first_tool_client: string | null
           analytics_first_tool_name: string | null
           analytics_first_tool_path: string | null
@@ -1659,6 +1715,16 @@ export type Database = {
           analytics_first_credential_created_at: string | null
           analytics_first_credential_method: string | null
           analytics_first_tool_used_at: string | null
+          onboarding_client: string | null
+          onboarding_client_selected_at: string | null
+          onboarding_connection_verified_at: string | null
+          onboarding_credential_issued_at: string | null
+          onboarding_inbox_connected_at: string | null
+          onboarding_provider: string | null
+          onboarding_stage: string
+          onboarding_started_at: string | null
+          onboarding_technical_activated_at: string | null
+          onboarding_value_activated_at: string | null
           created_at: string
           deleted_at: string | null
           display_name: string
@@ -1672,7 +1738,13 @@ export type Database = {
         }
         Insert: {
           acquisition_landing?: string | null
+          acquisition_landing_path?: string | null
+          acquisition_locale?: string | null
+          acquisition_referrer?: string | null
           acquisition_source?: string | null
+          acquisition_utm_campaign?: string | null
+          acquisition_utm_medium?: string | null
+          acquisition_utm_source?: string | null
           analytics_first_tool_client?: string | null
           analytics_first_tool_name?: string | null
           analytics_first_tool_path?: string | null
@@ -1683,6 +1755,16 @@ export type Database = {
           analytics_first_credential_created_at?: string | null
           analytics_first_credential_method?: string | null
           analytics_first_tool_used_at?: string | null
+          onboarding_client?: string | null
+          onboarding_client_selected_at?: string | null
+          onboarding_connection_verified_at?: string | null
+          onboarding_credential_issued_at?: string | null
+          onboarding_inbox_connected_at?: string | null
+          onboarding_provider?: string | null
+          onboarding_stage?: string
+          onboarding_started_at?: string | null
+          onboarding_technical_activated_at?: string | null
+          onboarding_value_activated_at?: string | null
           created_at?: string
           deleted_at?: string | null
           display_name: string
@@ -1696,7 +1778,13 @@ export type Database = {
         }
         Update: {
           acquisition_landing?: string | null
+          acquisition_landing_path?: string | null
+          acquisition_locale?: string | null
+          acquisition_referrer?: string | null
           acquisition_source?: string | null
+          acquisition_utm_campaign?: string | null
+          acquisition_utm_medium?: string | null
+          acquisition_utm_source?: string | null
           analytics_first_tool_client?: string | null
           analytics_first_tool_name?: string | null
           analytics_first_tool_path?: string | null
@@ -1707,6 +1795,16 @@ export type Database = {
           analytics_first_credential_created_at?: string | null
           analytics_first_credential_method?: string | null
           analytics_first_tool_used_at?: string | null
+          onboarding_client?: string | null
+          onboarding_client_selected_at?: string | null
+          onboarding_connection_verified_at?: string | null
+          onboarding_credential_issued_at?: string | null
+          onboarding_inbox_connected_at?: string | null
+          onboarding_provider?: string | null
+          onboarding_stage?: string
+          onboarding_started_at?: string | null
+          onboarding_technical_activated_at?: string | null
+          onboarding_value_activated_at?: string | null
           created_at?: string
           deleted_at?: string | null
           display_name?: string
@@ -1724,6 +1822,162 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_limit_events: {
+        Row: {
+          cap: number
+          created_at: string
+          effective_plan: string
+          id: string
+          meter_version: number
+          occurred_at: string
+          used_actions: number
+          workspace_id: string
+        }
+        Insert: {
+          cap: number
+          created_at?: string
+          effective_plan: string
+          id?: string
+          meter_version?: number
+          occurred_at?: string
+          used_actions: number
+          workspace_id: string
+        }
+        Update: {
+          cap?: number
+          created_at?: string
+          effective_plan?: string
+          id?: string
+          meter_version?: number
+          occurred_at?: string
+          used_actions?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_limit_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_usage_entitlements: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          granted_at: string
+          granted_by: string | null
+          kind: string
+          reason: string
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          kind: string
+          reason: string
+          source: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          kind?: string
+          reason?: string
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_usage_entitlements_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_usage_entitlements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_usage_exemptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          reason: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          ticket_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          reason: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          ticket_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          reason?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          ticket_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_usage_exemptions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_usage_exemptions_revoked_by_fkey"
+            columns: ["revoked_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_usage_exemptions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1770,6 +2024,10 @@ export type Database = {
         }[]
       }
       my_workspace_ids: { Args: never; Returns: string[] }
+      effective_workspace_plan: {
+        Args: { p_workspace_id: string }
+        Returns: { plan: string; comped_scale: boolean }[]
+      }
       revoke_user_session: {
         Args: { p_session_id: string }
         Returns: {

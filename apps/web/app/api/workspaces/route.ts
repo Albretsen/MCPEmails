@@ -10,9 +10,9 @@ import { planDisplayName } from '@/lib/stripe/plans';
  *
  * Body: { name: string }
  *
- * Gated to the Team tier: the create_workspace() RPC raises P0001 unless the
+ * Gated to the Scale tier: the create_workspace() RPC raises P0001 unless the
  * caller's USER-LEVEL entitlement (user_billing.plan) is 'pro' (display name
- * "Team"). Multiple workspaces is a Team-only feature. The new workspace
+ * "Scale"). Multiple workspaces is a Scale-only feature. The new workspace
  * inherits that plan. The subscription is tied to the user, so all of a user's
  * workspaces share one plan.
  */
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // P0001 covers both the not-authenticated and Pro-gate cases; the auth
     // check above rules out the former, so treat P0001 as the upgrade gate.
     if (error.code === 'P0001') {
-      const teamName = planDisplayName('pro'); // "Team"
+      const teamName = planDisplayName('pro'); // "Scale"
       return NextResponse.json(
         {
           error: `Multiple workspaces is a ${teamName} feature. Upgrade to ${teamName} to create more workspaces.`,

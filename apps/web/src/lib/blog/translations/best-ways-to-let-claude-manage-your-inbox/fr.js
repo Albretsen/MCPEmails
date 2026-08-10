@@ -29,7 +29,7 @@ La configuration est vraiment rapide. Dans claude.ai, vous allez dans **Customiz
 
 **Les compromis honnêtes :** c’est un service tiers dans votre chemin d’authentification (vous pouvez révoquer depuis le tableau de bord en un clic, mais vous faites confiance au modèle de sécurité de l’hébergeur). Et il n’y a pas de webhooks. Pour réagir aux nouveaux messages, Claude doit interroger en continu — appeler \`email_read\` avec \`action: list\` et \`unread_only: true\` selon un calendrier. Les notifications push n’existent pas dans MCP. Tout outil qui prétend réagir aux e-mails en temps réel fait soit de l’interrogation sous le capot, soit stocke vos messages.
 
-Le palier gratuit est à 0 $ pour toujours, avec un nombre illimité de boîtes mail et d’appels d’outils, plafonné à 60 requêtes/minute. Les forfaits payants ([tarifs](/pricing)) relèvent le plafond de pointe et ajoutent des fonctionnalités d’équipe. Le coût est rarement le facteur décisif ici.
+Le palier gratuit est à 0 $ pour toujours, avec un nombre illimité de boîtes mail, 2 500 actions facturables par période de facturation et un plafond de 60 requêtes/minute. Les forfaits payants ([tarifs](/pricing)) relèvent l’allocation d’actions et le plafond de pointe, et ajoutent des fonctionnalités d’équipe. Le coût est rarement le facteur décisif ici.
 
 ## Option 2 : un serveur MCP maison / auto-hébergé
 

@@ -46,12 +46,9 @@ export async function checkApiKeyLimit(
   workspaceId: string,
 ): Promise<ApiKeyLimitCheckResult> {
   // Run both queries in parallel to minimise latency.
-  const [workspaceResult, keyCountResult] = await Promise.all([
+  const [effectivePlanResult, keyCountResult] = await Promise.all([
     supabase
-      .from('workspaces')
-      .select('plan, grandfathered')
-      .eq('id', workspaceId)
-      .maybeSingle(),
+      .rpc('effective_workspace_plan', { p_workspace_id: workspaceId }),
     supabase
       .from('api_keys')
       .select('id', { count: 'exact', head: true })
@@ -59,9 +56,9 @@ export async function checkApiKeyLimit(
       .is('deleted_at', null),
   ]);
 
-  const plan = (workspaceResult.data?.plan as string | undefined) ?? 'free';
-  const grandfathered = workspaceResult.data?.grandfathered ?? false;
-  const limits = resolvePlanLimits(plan, { grandfathered });
+  const effectivePlan = effectivePlanResult.data?.[0];
+  const plan = effectivePlan?.plan ?? 'free';
+  const limits = resolvePlanLimits(plan, { compedScale: effectivePlan?.comped_scale ?? false });
   const currentCount = keyCountResult.count ?? 0;
 
   // Enterprise plan (Infinity) has no key cap.

@@ -119,7 +119,7 @@
     "goToMembers": "Go to Members",
     "callsPerDayTitle": "Calls per day",
     "callsPerDaySub": "Last 14 days · across all tools",
-    "pro": "Pro",
+    "pro": "Scale",
     "recentActivityTitle": "Recent activity",
     "recentActivitySub": "Live MCP tool calls",
     "noActivityTitle": "No activity yet",
@@ -295,6 +295,11 @@
   "usage": {
     "title": "Usage",
     "sub": "MCP tool calls over the last 30 days across all inboxes.",
+    "shadowMeterTitle": "Action usage",
+    "shadowMeterSub": "Successful billable actions in the rolling last 30 days. This is visibility only during the shadow period.",
+    "shadowOnly": "Shadow meter",
+    "shadowOfCap": "of {cap} planned actions",
+    "lastBillableCalls": "Most recent successful billable calls ({count})",
     "quotaExhausted": "Daily quota exhausted. MCP calls are being rejected",
     "quotaApproaching": "Daily quota at {pct}%, approaching limit",
     "dailyQuota": "Daily quota",
@@ -520,7 +525,7 @@
     "roleOwner": "Owner",
     "sending": "Sending…",
     "sendInvite": "Send invite",
-    "rolesLockedHint": "Invites join as Member. Upgrade to Team to assign Admin and Viewer roles.",
+    "rolesLockedHint": "Invites join as Member. Upgrade to Scale to assign Admin and Viewer roles.",
     "inviteUpgradeHint": "Inviting collaborators is available on paid plans. Upgrade to add members to this workspace.",
     "errInviteFailed": "Failed to send invite.",
     "errRemoveFailed": "Failed to remove member.",
@@ -544,5 +549,117 @@
     "cancel": "Cancel",
     "removing": "Removing…",
     "removeMemberBtn": "Remove member"
+  },
+  "approvals": {
+    "review": {
+      "kicker": "Awaiting approval",
+      "kickerSettled": "Send review",
+      "title": "Approve this email before it is sent",
+      "titleSettled": "This send has already been decided",
+      "subtitle": "An AI assistant prepared this email. It has not been delivered, and it will only be sent if you approve it here.",
+      "from": "From",
+      "to": "To",
+      "cc": "Cc",
+      "bcc": "Bcc",
+      "subject": "Subject",
+      "attachments": "Attachments",
+      "operation": "Type",
+      "route": "Delivery route",
+      "requested": "Requested",
+      "sendAt": "Scheduled for",
+      "expires": "Expires",
+      "unknownInbox": "Unknown inbox",
+      "unknownTime": "Unknown",
+      "noSubject": "(no subject)",
+      "noRecipients": "No recipient supplied",
+      "noAttachments": "None",
+      "recipientsAtSend": "This page could not read the recipients from the original message. They will be resolved when it is sent, so check the message text before approving.",
+      "bccCount": "{count, plural, one {# hidden recipient} other {# hidden recipients}}",
+      "attachmentCount": "{count, plural, one {# file} other {# files}}",
+      "bodyTitle": "Message",
+      "bodyTruncated": "This message is longer than 64 KB and has been clipped here. Open it in the dashboard to read all of it.",
+      "bodyWithheldRole": "The message text is shown to workspace owners, admins and members. Your role can review the delivery details only.",
+      "bodyStoredWithProvider": "This request sends a draft that is stored with your email provider, so the text is not part of the request. Open the draft in your mail app to read it before deciding.",
+      "bodyDecryptFailed": "The stored message could not be decrypted, so it cannot be shown. Reject this request and ask your assistant to prepare it again.",
+      "bodyAbsent": "This request has no message text.",
+      "bodyHtmlShow": "Show HTML source",
+      "bodyHtmlHide": "Hide HTML source",
+      "bodyHtmlNote": "The HTML version is shown as source and never rendered. Rendering it would load remote images, which would tell whoever composed this message when and where you opened this page.",
+      "approve": "Approve & send",
+      "reject": "Reject",
+      "working": "Working…",
+      "toDashboard": "Open the dashboard",
+      "readOnly": "You can review this send, but only a workspace owner or admin can approve or reject it.",
+      "footnote": "Approving is possible only from this page, signed in as a workspace owner or admin. An assistant can prepare a send and can reject one, but it has no browser session, so it cannot approve one.",
+      "backToConversation": "You can close this tab and go back to your conversation.",
+      "notFoundTitle": "This review is not available",
+      "notFoundBody": "The link may be out of date, or it may belong to a workspace you are not a member of. Check that you are signed in with the right account.",
+      "operations": {
+        "email_send": "New email",
+        "email_reply": "Reply",
+        "email_forward": "Forward",
+        "draft_send": "Send saved draft",
+        "schedule_create": "Scheduled email"
+      },
+      "routes": {
+        "gmail": "Gmail API",
+        "outlook": "Microsoft Graph",
+        "smtp": "IMAP + SMTP"
+      },
+      "caveats": {
+        "gmailThread": "Sending threads the message into the existing conversation when it is a reply.",
+        "gmailSentLabel": "A copy is written to the Sent label automatically.",
+        "outlookSentItems": "A copy is written to Sent Items automatically.",
+        "smtpNoSentCopy": "SMTP submission does not itself file a copy in Sent; the server appends one over IMAP where the account allows it."
+      },
+      "via": {
+        "dashboard": "Decided in the dashboard",
+        "review_page": "Decided from the review link",
+        "mcp_app": "Decided in the assistant's review card"
+      },
+      "states": {
+        "approvedTitle": "Already approved",
+        "approvedBody": "This email was approved and handed over for delivery. Nothing further is needed.",
+        "rejectedTitle": "Already rejected",
+        "rejectedBody": "This email was rejected and will not be sent.",
+        "cancelledTitle": "Cancelled",
+        "cancelledBody": "This request was cancelled before anyone decided it. Nothing was sent.",
+        "expiredTitle": "This request expired",
+        "expiredBody": "It was not decided in time, so it will not be sent. Ask your assistant to prepare it again if you still want it.",
+        "decidedElsewhereTitle": "Already decided",
+        "decidedElsewhereBody": "Someone else, or another tab, decided this send while this page was open. Nothing changed just now. Open the dashboard to see the outcome."
+      },
+      "done": {
+        "approvedTitle": "Approved. This email is on its way.",
+        "approvedBody": "It has been queued for delivery from your inbox.",
+        "rejectedTitle": "Rejected. Nothing was sent.",
+        "rejectedBody": "This request is closed and the email will not be delivered."
+      },
+      "errors": {
+        "csrf": "This page has been open too long. Reload it and decide again.",
+        "role": "Only a workspace owner or admin can decide this send.",
+        "generic": "That decision could not be recorded. Nothing was sent — please try again."
+      }
+    },
+    "mode": {
+      "label": "Review before sending",
+      "off": "Send immediately",
+      "offHint": "The assistant sends without asking. The right choice for an inbox you use for low-stakes mail.",
+      "inline": "Review card in the conversation",
+      "inlineHint": "A card appears in the AI conversation showing exactly what will be sent. You can reject it there; approving opens a page you have to be signed in to use.",
+      "dashboard": "Review in the dashboard only",
+      "dashboardHint": "No card in the conversation. The assistant is told the send is waiting, and you decide here.",
+      "guarantee": "In both review modes the email is prepared but not delivered. Approving happens only in a signed-in browser session held by a workspace owner or admin, which the assistant does not have. The review card is a convenience, not a permission boundary."
+    },
+    "panel": {
+      "decidedTitle": "Recently decided",
+      "colDecided": "Decided",
+      "colWhere": "Where",
+      "colOutcome": "Outcome",
+      "statusApproved": "Approved",
+      "statusRejected": "Rejected",
+      "statusExpired": "Expired",
+      "statusCancelled": "Cancelled"
+    }
   }
 }

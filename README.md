@@ -70,7 +70,7 @@ The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport
 - **Batch & search‑and‑act** — read, move, delete, or flag up to hundreds of messages in one call, including "search then move/delete" combinators.
 - **Drafts & scheduling** — compose drafts and queue messages for future send (server‑side dispatch).
 - **Provider‑agnostic search** — Gmail syntax, IMAP `SEARCH`, and JMAP are normalized behind one `email_read` (`action: "search"`) interface.
-- **Team‑ready** — workspaces, members, roles, SSO, and an audit log on the Team plan.
+- **Team‑ready** — workspaces, members, roles, SSO, and an audit log on the Scale plan.
 
 ## Tools
 
@@ -126,9 +126,9 @@ Notes:
 
 ## Pricing
 
-The product is **unlimited and free** for individuals — unlimited inboxes, MCP tool calls, and API keys on every tier. The paid tiers monetize team collaboration, higher fair‑use rate limits, longer analytics retention, and support.
+Every plan includes unlimited inboxes and API keys. Successful billable MCP calls use actions: Free includes 2,500 actions per billing period, Agent 50,000, and Scale 300,000. Paid tiers also add higher burst limits, analytics retention, team features, and support.
 
-| | **Free** | **Solo** | **Team** |
+| | **Free** | **Agent** | **Scale** |
 | --- | --- | --- | --- |
 | Price | $0 | $12/mo · $120/yr | $49/mo · $490/yr |
 | Inboxes / tool calls / API keys | Unlimited | Unlimited | Unlimited |
@@ -139,7 +139,7 @@ The product is **unlimited and free** for individuals — unlimited inboxes, MCP
 | SSO (SAML/OIDC) + audit log | — | — | ✅ |
 | Support | Community | Email | Priority |
 
-Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Inviting members requires a paid plan. The "Team" tier carries the internal id `pro`. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
+Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Inviting members requires a paid plan. The "Scale" tier carries the internal id `pro`. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
 
 ## Architecture
 
@@ -234,7 +234,7 @@ Feature‑dependent:
 | `OUTLOOK_CLIENT_ID` / `OUTLOOK_CLIENT_SECRET` / `OUTLOOK_TENANT_ID` | Outlook OAuth (`Mail.Read`, `Mail.Send`, `Mail.ReadWrite`, `offline_access`) |
 | `NEXT_PUBLIC_OAUTH_VERIFICATION_PENDING` | Shows the unverified‑app warning until Google/Microsoft verification completes |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Billing |
-| `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`pro` = Team) |
+| `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`pro` = Scale) |
 
 > Fastmail and other IMAP providers connect via app password and need no OAuth credentials.
 

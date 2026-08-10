@@ -1,31 +1,28 @@
 /**
  * Stripe plan definitions for MCPEmails.
  *
- * Pricing strategy: the entire product is free and UNLIMITED for everyone,
- * with unlimited inboxes, MCP tool calls, and API keys on every tier. We
- * monetize capabilities and support, never raw usage. Two levers differ
- * between tiers: the per-minute fair-use rate limit (`maxRequestsPerMinute`),
- * which protects the platform from abuse, and team collaboration — inviting
- * members is a paid capability, so Free is single-user (`maxMembers: 1`) while
- * paid plans are unlimited.
+ * Pricing strategy: every tier includes unlimited inboxes and API keys. A
+ * successful billable MCP operation consumes an action from the plan's billing
+ * period allowance; failed calls and inbox_list do not consume actions.
  *
- * Three tiers: Free, Solo, Team. (The "Team" tier keeps the internal id `pro`
- * to avoid a workspaces.plan data migration; only its display name is "Team".)
+ * Three tiers: Free, Agent, Scale. (The "Scale" tier keeps the internal id
+ * `pro` to avoid a workspaces.plan data migration; only its display name is
+ * "Scale".)
  *
  * Price IDs are loaded from environment variables so they can differ between
  * test and production without code changes:
  *
  *   STRIPE_PRICE_SOLO_MONTHLY=price_...
  *   STRIPE_PRICE_SOLO_YEARLY=price_...
- *   STRIPE_PRICE_PRO_MONTHLY=price_...   (Team)
- *   STRIPE_PRICE_PRO_YEARLY=price_...    (Team)
+ *   STRIPE_PRICE_PRO_MONTHLY=price_...   (Scale)
+ *   STRIPE_PRICE_PRO_YEARLY=price_...    (Scale)
  *
  * See Documents/pricing-strategy.md for the full strategy.
  */
 
 // ---------------------------------------------------------------------------
 // Plan identifiers: must match the `plan` column values in `workspaces`.
-// `pro` is the internal id for the "Team" tier (display name only).
+// `pro` is the internal id for the "Scale" tier (display name only).
 // ---------------------------------------------------------------------------
 export type PlanId = 'free' | 'solo' | 'pro';
 
@@ -42,16 +39,16 @@ export type SupportTier = 'community' | 'email' | 'priority';
 // ---------------------------------------------------------------------------
 // Feature limits per plan
 //
-// Usage limits (inboxes, calls, keys, members) are Infinity on every tier;
-// they are retained so the existing limit-check helpers report "unlimited".
-// Real differentiation lives in the feature flags below.
+// Inboxes and API keys are unlimited. Monthly tool calls represent billable
+// actions in the current billing period; the live meter and edge enforcement
+// both read the versioned action_usage ledger.
 // ---------------------------------------------------------------------------
 export interface PlanLimits {
   /** Maximum connected inboxes. Infinity = unlimited (all tiers). */
   maxInboxes: number;
   /** Legacy daily burst cap. Infinity = unlimited (all tiers). */
   maxDailyBurstCalls: number;
-  /** Legacy monthly tool-call cap. Infinity = unlimited (all tiers). */
+  /** Billable action cap per billing period. Infinity = a comped entitlement. */
   maxMonthlyToolCalls: number;
   /** Maximum API keys. Infinity = unlimited (all tiers). */
   maxApiKeys: number;
@@ -82,7 +79,7 @@ export interface PlanLimits {
 // ---------------------------------------------------------------------------
 export interface Plan {
   id: PlanId;
-  /** Display name (e.g. "Team" for the `pro` id). */
+  /** Display name (e.g. "Scale" for the `pro` id). */
   name: string;
   description: string;
   limits: PlanLimits;
@@ -107,14 +104,14 @@ export const PLANS: Record<PlanId, Plan> = {
   free: {
     id: 'free',
     name: 'Free',
-    description: 'Everything, unlimited. For everyone building with MCP agents.',
+    description: 'Explore MCPEmails with 2,500 actions each billing period.',
     limits: {
       maxInboxes: Infinity,
       maxDailyBurstCalls: Infinity,
-      maxMonthlyToolCalls: Infinity,
+      maxMonthlyToolCalls: 2_500,
       maxApiKeys: Infinity,
       // Team collaboration is a paid capability: Free is single-user (owner
-      // only). Grandfathered legacy workspaces stay unlimited via resolvePlanLimits.
+      // only).
       maxMembers: 1,
       billingPortalEnabled: false,
       analyticsEnabled: true,
@@ -131,7 +128,7 @@ export const PLANS: Record<PlanId, Plan> = {
     stripePriceIdYearly: null,
     features: [
       'Unlimited connected inboxes',
-      'Unlimited MCP tool calls',
+      '2,500 actions per billing period',
       'Unlimited API keys',
       'Single user (owner only)',
       'Gmail, Fastmail & IMAP',
@@ -143,12 +140,12 @@ export const PLANS: Record<PlanId, Plan> = {
 
   solo: {
     id: 'solo',
-    name: 'Solo',
+    name: 'Agent',
     description: 'For power users running agents around the clock.',
     limits: {
       maxInboxes: Infinity,
       maxDailyBurstCalls: Infinity,
-      maxMonthlyToolCalls: Infinity,
+      maxMonthlyToolCalls: 50_000,
       maxApiKeys: Infinity,
       maxMembers: Infinity,
       billingPortalEnabled: true,
@@ -165,7 +162,7 @@ export const PLANS: Record<PlanId, Plan> = {
     stripePriceIdMonthly: process.env.STRIPE_PRICE_SOLO_MONTHLY ?? null,
     stripePriceIdYearly: process.env.STRIPE_PRICE_SOLO_YEARLY ?? null,
     features: [
-      'Everything in Free, unlimited',
+      '50,000 actions per billing period',
       '5× higher burst rate limit',
       'Full usage analytics (90-day history)',
       'Gmail, Fastmail & IMAP',
@@ -174,15 +171,15 @@ export const PLANS: Record<PlanId, Plan> = {
     highlighted: false,
   },
 
-  // "Team" tier; internal id stays `pro`.
+  // "Scale" tier; internal id stays `pro`.
   pro: {
     id: 'pro',
-    name: 'Team',
+    name: 'Scale',
     description: 'For businesses and teams. Practically limitless.',
     limits: {
       maxInboxes: Infinity,
       maxDailyBurstCalls: Infinity,
-      maxMonthlyToolCalls: Infinity,
+      maxMonthlyToolCalls: 300_000,
       maxApiKeys: Infinity,
       maxMembers: Infinity,
       billingPortalEnabled: true,
@@ -199,7 +196,7 @@ export const PLANS: Record<PlanId, Plan> = {
     stripePriceIdMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY ?? null,
     stripePriceIdYearly: process.env.STRIPE_PRICE_PRO_YEARLY ?? null,
     features: [
-      'Everything in Solo, unlimited',
+      '300,000 actions per billing period',
       'Highest burst rate limit',
       'Team roles & multiple workspaces',
       'SSO (SAML / OIDC) + audit log',
@@ -224,7 +221,7 @@ export function getPlanLimits(planId: string): PlanLimits {
 // Helper: user-facing display name for a plan slug stored in `workspaces.plan`.
 //
 // The DB stores internal ids ('free' | 'solo' | 'pro'); the public pricing page
-// only ever shows "Free", "Solo", and "Team" (the `pro` id's display name). Use
+// only ever shows "Free", "Agent", and "Scale" (the `pro` id's display name). Use
 // this everywhere a plan is shown to a user so the dashboard never leaks the
 // internal "pro" id (which read as "Pro plan" and didn't match the pricing
 // page). Unknown/legacy slugs (e.g. 'enterprise') are Title-cased as a fallback.
@@ -239,30 +236,20 @@ export function planDisplayName(planId: string | null | undefined): string {
 // ---------------------------------------------------------------------------
 // Helper: resolve the EFFECTIVE limits for a specific workspace.
 //
-// Grandfathered ("legacy") workspaces keep the launch-era unlimited *usage*
-// terms: when paid-plan usage caps are introduced later (by giving the usage
-// fields below finite values in PLANS), these workspaces still resolve to
-// unlimited usage. Feature flags (analytics retention, SSO, audit log, support
-// tier, per-minute ceiling) continue to follow the workspace's current plan.
-//
-// Today every plan is already unlimited, so this is a no-op, but wiring it
-// through every limit check now means turning caps on later is a one-file edit
-// in PLANS, with legacy users automatically exempted. See
-// Documents/pricing-strategy.md and the `grandfathered` column on `workspaces`.
+// A permanent comped Scale entitlement resolves to Scale features and an
+// unlimited action allowance. The historical workspaces.grandfathered flag is
+// deliberately not consulted: protected access is user-level and follows an
+// owner across every workspace.
 // ---------------------------------------------------------------------------
 export function resolvePlanLimits(
   planId: string,
-  opts?: { grandfathered?: boolean },
+  opts?: { compedScale?: boolean },
 ): PlanLimits {
-  const base = getPlanLimits(planId);
-  if (!opts?.grandfathered) return base;
+  const base = getPlanLimits(opts?.compedScale ? 'pro' : planId);
+  if (!opts?.compedScale) return base;
   return {
     ...base,
-    maxInboxes: Infinity,
-    maxDailyBurstCalls: Infinity,
     maxMonthlyToolCalls: Infinity,
-    maxApiKeys: Infinity,
-    maxMembers: Infinity,
   };
 }
 

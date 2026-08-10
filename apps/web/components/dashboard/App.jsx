@@ -65,6 +65,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const tr = useTranslations('dashboardChrome');
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
+  const returnedOnboardingClient = readQuery(searchParams, 'onboarding_client');
   const upgradePlan = readQuery(searchParams, 'upgrade');
   const upgradeInterval = readQuery(searchParams, 'interval');
   const upgradeIntent = parseUpgradeIntent(upgradePlan, upgradeInterval);
@@ -116,6 +117,18 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // (identity pre-filled and locked; only the password is re-entered).
   const [reconnectInbox, setReconnectInbox] = useState(null);
   const [showCommand, setShowCommand] = useState(false);
+  const [onboardingClient, setOnboardingClient] = useState(returnedOnboardingClient);
+  const [guideResumeKey, setGuideResumeKey] = useState(0);
+
+  useEffect(() => {
+    if (!firstrun) return;
+    fetch('/api/onboarding', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'started' }) }).catch(() => {});
+  }, [firstrun]);
+
+  const selectOnboardingClient = (client) => {
+    setOnboardingClient(client);
+    fetch('/api/onboarding', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'client_selected', client }) }).catch(() => {});
+  };
 
   useEffect(() => {
     if (!firstToolEvent) return;
@@ -182,7 +195,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       });
       const label = connectedParam.charAt(0).toUpperCase() + connectedParam.slice(1);
       toast({ message: tr('app.connectedSuccess', { provider: label }), variant: 'success' });
-      setRouteState('inboxes');
+      setRouteState(returnedOnboardingClient ? 'overview' : 'inboxes');
     } else if (errorParam === 'inbox_limit_reached') {
       const plan = workspace?.plan ?? 'free';
       const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
@@ -208,9 +221,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         url.searchParams.delete('connected');
         url.searchParams.delete('error');
         url.searchParams.delete('signup_method');
+        url.searchParams.delete('onboarding_client');
         // Every branch above activates the inboxes section; reflect that in the
         // URL (OAuth callbacks land on the bare /dashboard) so a refresh stays.
-        url.pathname = sectionToPath('inboxes');
+        url.pathname = sectionToPath(connectedParam && returnedOnboardingClient ? 'overview' : 'inboxes');
         window.history.replaceState({}, '', url.toString());
       } catch { /* ignore */ }
     }
@@ -373,6 +387,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
             signatureReplyMode: sig.signature_reply_mode ?? 'first_only',
             signatureSource: sig.signature_source ?? 'manual',
             sendApprovalRequired: data.sendApprovalRequired ?? x.sendApprovalRequired ?? false,
+            sendReviewMode: data.sendReviewMode ?? x.sendReviewMode ?? 'off',
           }
         : x
     )));
@@ -489,9 +504,11 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     setReconnectInbox(null);
     setShowConnect(false);
     toast({ message: tr('app.inboxConnectedSuccess', { label }), variant: 'success' });
-    if (firstrun) {
-      // After first inbox, nudge them to keys
-      setTimeout(() => setRoute("keys"), 1200);
+    if (firstrun || onboardingClient) {
+      // Continue the chosen-client guide instead of dropping every provider
+      // into a generic API-key screen.
+      setGuideResumeKey(value => value + 1);
+      setTimeout(() => setRoute("overview"), 600);
     }
   };
 
@@ -622,7 +639,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           <FirstRunBanner onConnect={() => setShowConnect(true)} />
         )}
 
-        {route === "overview" && <OverviewPage inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} />}
+        {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { randomBytes } from 'crypto';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 /**
  * GET /auth/gmail
@@ -111,6 +113,7 @@ export async function GET(request: Request) {
       `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?error=state_store_failed`
     );
   }
+  await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId, stage: 'inbox_connection', outcome: 'started', category: 'gmail', phase: 'authorization', connectionType: loginHint ? 'reconnect' : 'first_connect' });
 
   // Build the Google authorization URL.
   const params = new URLSearchParams({

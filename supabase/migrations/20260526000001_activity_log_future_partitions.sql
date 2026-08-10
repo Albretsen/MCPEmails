@@ -123,6 +123,8 @@ $$;
 -- pg_cron job: runs at midnight on the 1st of every month,
 -- ensures the current month + 3 ahead are covered.
 -- ============================================================
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
 SELECT cron.schedule(
   'ensure-activity-log-partitions',   -- job name (idempotent)
   '0 0 1 * *',                        -- midnight, 1st of every month

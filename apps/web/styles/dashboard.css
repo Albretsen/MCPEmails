@@ -401,6 +401,67 @@ body { background: var(--bg-page); }
 .empty h3 { margin: 0; font-family: var(--font-sans); font-size: 16px; font-weight: 600; }
 .empty p  { margin: 0; font-family: var(--font-sans); font-size: 13.5px; color: var(--fg-3); max-width: 360px; }
 
+/* Approval is an infrequent, high-trust workflow. Its empty state gives the
+   all-clear a clear home, while keeping the one-time setup instructions close
+   to the action that starts them. */
+.approvals-card { min-height: 0; }
+.approval-list-skeleton { min-width: 720px; }
+.approval-skeleton-row {
+  display: grid; grid-template-columns: 1fr 1.5fr 1.5fr 1fr 132px;
+  align-items: center; gap: 20px; min-height: 58px; padding: 0 20px;
+  border-bottom: 1px solid var(--border-1);
+}
+.approval-skeleton-heading {
+  min-height: 42px; background: var(--ink-25);
+}
+.approval-skeleton-row:last-child { border-bottom: 0; }
+.approvals-empty {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.62fr);
+  align-items: stretch;
+}
+.approvals-empty-summary {
+  display: flex; align-items: flex-start; gap: 18px;
+  padding: 40px;
+}
+.approvals-empty-icon {
+  width: 48px; height: 48px; flex: 0 0 48px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--brand); background: var(--cobalt-50);
+  border: 1px solid rgba(37,71,229,0.16); border-radius: 14px;
+}
+.approvals-empty-copy { max-width: 490px; }
+.approvals-empty-kicker {
+  display: block; margin-bottom: 6px;
+  color: var(--mint-700); font-family: var(--font-sans); font-size: 12px;
+  font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.approvals-empty-copy h2 {
+  margin: 0; font-family: var(--font-sans); font-size: 20px;
+  font-weight: 600; letter-spacing: -0.015em;
+}
+.approvals-empty-copy p {
+  margin: 8px 0 20px; color: var(--fg-3); font-family: var(--font-sans);
+  font-size: 14px; line-height: 1.55;
+}
+.approvals-empty-guide {
+  padding: 32px 36px; background: var(--ink-25);
+  border-left: 1px solid var(--border-1);
+}
+.approvals-empty-guide-title {
+  font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+}
+.approvals-empty-guide ol {
+  display: grid; gap: 13px; margin: 18px 0 0; padding: 0; list-style: none;
+  color: var(--fg-2); font-family: var(--font-sans); font-size: 13px;
+}
+.approvals-empty-guide li { display: flex; align-items: center; gap: 10px; }
+.approvals-empty-guide li span {
+  display: inline-flex; width: 20px; height: 20px; align-items: center; justify-content: center;
+  border: 1px solid var(--border-1); border-radius: 999px; background: var(--bg-surface);
+  color: var(--fg-3); font-family: var(--font-mono); font-size: 10px;
+}
+
 /* Subtle dot grid backdrop for the hero / empty illustrations */
 .dotgrid {
   background-image: radial-gradient(var(--ink-200) 1px, transparent 1px);
@@ -1140,6 +1201,14 @@ select.input {
     gap: 12px;
   }
 
+  .approvals-empty {
+    grid-template-columns: 1fr;
+  }
+  .approvals-empty-guide {
+    border-top: 1px solid var(--border-1);
+    border-left: 0;
+  }
+
   /* Stat grid: two columns on mobile */
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1600,4 +1669,174 @@ select.input {
   font-size: 11.5px;
   line-height: 1.4;
   color: var(--fg-3);
+}
+
+/* === Alerts ==================================================== */
+/* Used by ApprovalsPanel and the send-review page. These class names were
+   already in use in ApprovalsPanel.jsx but had no rules anywhere, so the
+   banners rendered as bare text. */
+.alert {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px;
+  background: var(--ink-50); border: 1px solid var(--border-1);
+  font-family: var(--font-sans); font-size: 13px; line-height: 1.5; color: var(--fg-2);
+}
+.alert > span { flex: 1; min-width: 0; }
+.alert-error {
+  background: var(--red-100); border-color: rgba(229,72,77,0.32); color: var(--fg-1);
+}
+
+/* === Send review page (/approvals/[id]) ======================== */
+/* Standalone authenticated page opened from a review card in an AI
+   conversation. It has no dashboard chrome on purpose: the visitor came here
+   to answer one question. */
+.review-shell {
+  min-height: 100vh;
+  background: var(--bg-page);
+  padding: 32px 16px 64px;
+}
+.review-wrap { max-width: 680px; margin: 0 auto; }
+.review-brand { display: inline-flex; margin-bottom: 20px; }
+.review-brand img { height: 26px; }
+.review-card { padding: 24px; }
+.review-card-narrow { padding: 20px; }
+
+.review-head { margin-bottom: 20px; }
+.review-kicker {
+  display: inline-block; margin-bottom: 8px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand);
+}
+.review-head h1 {
+  margin: 0; font-family: var(--font-sans); font-size: 21px; font-weight: 650;
+  letter-spacing: -0.01em; line-height: 1.25; color: var(--fg-1);
+}
+.review-head .sub {
+  margin: 8px 0 0; font-family: var(--font-sans); font-size: 13.5px;
+  line-height: 1.55; color: var(--fg-3);
+}
+.review-provenance {
+  margin: -8px 0 20px; font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3);
+}
+
+.review-banner {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 14px; margin-bottom: 20px; border-radius: 10px;
+  border: 1px solid var(--border-1); background: var(--ink-50);
+}
+.review-banner strong {
+  display: block; font-family: var(--font-sans); font-size: 14px;
+  font-weight: 600; color: var(--fg-1);
+}
+.review-banner p {
+  margin: 4px 0 0; font-family: var(--font-sans); font-size: 13px;
+  line-height: 1.5; color: var(--fg-2);
+}
+.review-banner-icon { flex-shrink: 0; margin-top: 1px; }
+.review-banner-good { background: var(--mint-50); border-color: rgba(31,203,139,0.32); color: var(--mint-700, var(--fg-1)); }
+.review-banner-warn { background: var(--amber-100); border-color: rgba(240,165,62,0.36); }
+.review-banner-neutral { background: var(--ink-50); }
+
+.review-rows { margin: 0; display: grid; gap: 0; }
+.review-row {
+  display: grid; grid-template-columns: 132px minmax(0, 1fr);
+  gap: 16px; padding: 11px 0; border-top: 1px solid var(--border-1);
+}
+.review-row:first-child { border-top: 0; padding-top: 0; }
+.review-row dt {
+  font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3);
+}
+.review-row dd {
+  margin: 0; min-width: 0;
+  font-family: var(--font-sans); font-size: 13.5px; line-height: 1.5; color: var(--fg-2);
+}
+.review-strong { color: var(--fg-1); font-weight: 550; }
+.review-muted { color: var(--fg-3); }
+.review-wrapany { overflow-wrap: anywhere; }
+.review-route { margin-top: 2px; font-family: var(--font-mono); font-size: 12px; overflow-wrap: anywhere; }
+.review-caveats {
+  margin: 6px 0 0; padding-left: 16px;
+  font-size: 12.5px; line-height: 1.5; color: var(--fg-3);
+}
+.review-attachments { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.review-attachments li {
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+  font-size: 13px; color: var(--fg-2);
+}
+
+.review-message { margin-top: 22px; }
+.review-message h2 {
+  margin: 0 0 8px; font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+  letter-spacing: 0.02em; text-transform: uppercase; color: var(--fg-3);
+}
+/* Plain text only, never rendered HTML: rendering would load remote images and
+   report the reviewer's IP and read-time back to whoever composed the message. */
+.review-body {
+  margin: 0; padding: 14px 16px; max-height: 420px; overflow: auto;
+  background: var(--bg-sunken, var(--ink-50)); border: 1px solid var(--border-1);
+  border-radius: 10px;
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; color: var(--fg-1);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.review-body-source { margin-top: 8px; max-height: 260px; color: var(--fg-2); }
+.review-body-note {
+  margin: 8px 0 0; font-family: var(--font-sans); font-size: 12.5px;
+  line-height: 1.5; color: var(--fg-3);
+}
+.review-html { margin-top: 12px; }
+
+.review-actions {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px;
+  margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-1);
+}
+.review-note {
+  margin: 14px 0 0; font-family: var(--font-sans); font-size: 12.5px;
+  line-height: 1.55; color: var(--fg-3);
+}
+
+@media (max-width: 560px) {
+  .review-shell { padding: 20px 12px 48px; }
+  .review-card { padding: 18px 16px; }
+  .review-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .review-head h1 { font-size: 19px; }
+  /* Full-width targets on a phone; the buttons must never be pushed off-screen
+     the way the signature Save button once was. */
+  .review-actions { flex-direction: column-reverse; align-items: stretch; }
+  .review-actions .btn { width: 100%; justify-content: center; }
+}
+
+/* === Approvals: decided history ================================ */
+.approvals-decided { margin-top: 20px; }
+.approvals-decided-title {
+  font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+  color: var(--fg-2); margin-bottom: 8px;
+}
+.approvals-via {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-sans); font-size: 12px; color: var(--fg-3);
+}
+
+/* === Review-mode selector (inbox settings) ===================== */
+.review-mode { display: grid; gap: 8px; margin-top: 16px; }
+.review-mode-option {
+  display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px;
+  align-items: start; padding: 10px 12px;
+  border: 1px solid var(--border-1); border-radius: 10px;
+  background: var(--bg-surface); cursor: pointer;
+  transition: border-color 120ms var(--ease-out), background 120ms var(--ease-out);
+}
+.review-mode-option:hover { border-color: var(--border-2); }
+.review-mode-option.is-active { border-color: var(--brand); background: var(--brand-soft, var(--cobalt-50)); }
+.review-mode-option input { margin-top: 2px; accent-color: var(--brand); }
+.review-mode-option strong {
+  display: block; font-family: var(--font-sans); font-size: 13px;
+  font-weight: 600; color: var(--fg-1);
+}
+.review-mode-option span {
+  display: block; margin-top: 2px;
+  font-family: var(--font-sans); font-size: 12.5px; line-height: 1.5; color: var(--fg-3);
+}
+.review-mode-note {
+  margin: 2px 0 0; font-family: var(--font-sans); font-size: 12.5px;
+  line-height: 1.55; color: var(--fg-3);
 }

@@ -21,7 +21,7 @@
     "lead": "Connect Gmail, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, or any MCP client. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and the mail it reads is never stored.",
     "ctaPrimary": "Connect your inbox",
     "ctaSecondary": "Read the docs",
-    "metaUnlimited": "Unlimited free, no daily caps",
+    "metaUnlimited": "2,500 free actions per billing period",
     "metaNoCard": "No card required",
     "metaNeverStored": "Email fetched live",
     "pipe": {
@@ -123,17 +123,17 @@
   },
   "pricing": {
     "eyebrow": "Pricing",
-    "title": "Unlimited on every plan.",
-    "sub": "Free is genuinely unlimited. Upgrade for higher burst limits, team features, and support. Switch plans any time.",
+    "title": "Actions that scale with you.",
+    "sub": "Every workspace includes unlimited inboxes and API keys. Successful billable MCP calls use actions; failed calls and inbox_list are free.",
     "perForever": "/forever",
     "perMonth": "/month",
     "tiers": {
       "free": {
         "name": "Free",
-        "desc": "Everything, unlimited. No daily caps. For everyone building with MCP agents.",
+        "desc": "Explore MCPEmails with 2,500 actions per billing period.",
         "features": [
           "Unlimited connected inboxes",
-          "No daily limits — unlimited MCP tool calls",
+          "2,500 actions per billing period",
           "Unlimited API keys",
           "Gmail, iCloud, Fastmail & any IMAP",
           "60 requests / minute",
@@ -142,29 +142,29 @@
         "cta": "Start free"
       },
       "solo": {
-        "name": "Solo",
+        "name": "Agent",
         "desc": "For power users running agents around the clock.",
         "features": [
-          "Everything in Free, unlimited",
+          "50,000 actions per billing period",
           "300 requests / minute (5× burst)",
           "Full usage analytics (90-day history)",
           "Gmail, iCloud, Fastmail & any IMAP",
           "Email support"
         ],
-        "cta": "Get Solo"
+        "cta": "Get Agent"
       },
       "team": {
-        "name": "Team",
+        "name": "Scale",
         "desc": "For teams and agencies managing multiple client inboxes in one shared workspace, with roles, SSO, and audit logs.",
         "features": [
-          "Everything in Solo, unlimited",
+          "300,000 actions per billing period",
           "1,000 requests / minute",
           "Team roles & multiple workspaces",
           "SSO (SAML / OIDC) + audit log",
           "Full usage analytics (1-year history)",
           "Priority support"
         ],
-        "cta": "Get Team"
+        "cta": "Get Scale"
       }
     },
     "footnote": "All plans: the mail your agent reads is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <contact>Contact us</contact>. <comparison>See full feature comparison →</comparison>"
@@ -189,7 +189,7 @@
       },
       {
         "q": "Is it really free?",
-        "a": "Yes. The free plan gives you unlimited connected inboxes, unlimited MCP tool calls and unlimited API keys — no daily caps, no card required. The only limit is a per-minute fair-use ceiling to protect the platform. Paid plans add team members, higher burst limits and support, never more usage."
+        "a": "Yes. The free plan gives you unlimited connected inboxes and API keys, plus 2,500 billable actions per billing period — no daily caps and no card required. Failed calls and inbox_list are free. Paid plans add larger action allowances, higher burst limits, team members, and support."
       },
       {
         "q": "What can the AI actually do with my inbox?",

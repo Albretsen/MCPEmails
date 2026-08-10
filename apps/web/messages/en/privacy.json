@@ -100,7 +100,7 @@
       },
       {
         "category": "MCP tool call audit logs",
-        "period": "7 days (Free); 90 days (Solo); 1 year (Team)",
+        "period": "7 days (Free); 90 days (Agent); 1 year (Scale)",
         "reason": "Security audit; plan feature"
       },
       {

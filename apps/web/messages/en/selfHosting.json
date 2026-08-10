@@ -34,7 +34,7 @@
       { "feature": "Web dashboard (connect, keys, activity)", "self": "CLI instead", "hosted": "Yes" },
       { "feature": "Scheduled-send dispatcher", "self": "Bring your own cron", "hosted": "Managed" },
       { "feature": "Automatic updates, backups, uptime", "self": "You", "hosted": "Managed" },
-      { "feature": "Team workspaces, roles, SSO, audit log", "self": "Not included", "hosted": "Team plan" },
+      { "feature": "Team workspaces, roles, SSO, audit log", "self": "Not included", "hosted": "Scale plan" },
       { "feature": "Support", "self": "Community and GitHub", "hosted": "Email and priority" },
       { "feature": "Setup", "self": "About 5 minutes", "hosted": "About 2 minutes" }
     ]

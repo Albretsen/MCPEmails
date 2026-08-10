@@ -87,7 +87,11 @@ function isProtectedPath(pathname: string): boolean {
   // the cookie check would 307-redirect token-bearing MCP clients to /login.
   // The route handler enforces auth itself and returns 401 + WWW-Authenticate
   // for OAuth discovery.
-  const protectedPrefixes = ['/dashboard', '/settings'];
+  // /approvals/[id] is the authenticated send-review page. It is opened from a
+  // link inside an AI conversation, so the redirect-to-login behaviour matters:
+  // an unauthenticated visitor (or a preview bot) must never see the review.
+  // The page re-checks auth itself; this is the outer layer, not the only one.
+  const protectedPrefixes = ['/dashboard', '/settings', '/approvals'];
   return protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 

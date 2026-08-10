@@ -2,7 +2,16 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYNTHETIC_MCP_ENDPOINT") ?? "https://mcpemails.com/api/mcp";
+// The IMAP-connected mailbox the health-check steps (initialize/tools_list/
+// inbox_list/email_read) exercise -- this is the thing actually being
+// monitored and must keep running against hello@mcpemails.com unchanged.
 const ALERT_RECIPIENT = "hello@mcpemails.com";
+// Where alert/recovery notification emails are sent FROM and TO. Migadu
+// (hello@mcpemails.com's SMTP provider) has a measured ~5.6% intermittent
+// send failure rate, so outbound alerting uses a Gmail-connected inbox
+// instead, which sends via the Gmail API rather than the flaky raw SMTP
+// client. Self-send: FROM and TO are both this address.
+const ALERT_EMAIL = "bjellanda@gmail.com";
 // IMAP/SMTP delivery occasionally takes longer than the read-only MCP calls.
 // Keep the synthetic request alive long enough to receive the definitive MCP
 // result rather than classifying a completed delivery as a timeout.
@@ -50,19 +59,29 @@ async function callMcp(apiKey: string, id: number, method: string, params?: Reco
   return body;
 }
 
-function monitorInboxId(response: McpResponse): string | null {
-  const inbox = response.result?.structuredContent?.inboxes?.find((candidate) => candidate.email_address === ALERT_RECIPIENT);
+function findInboxId(response: McpResponse, emailAddress: string): string | null {
+  const inbox = response.result?.structuredContent?.inboxes?.find((candidate) => candidate.email_address === emailAddress);
   return typeof inbox?.inbox_id === "string" && /^[0-9a-f-]{36}$/i.test(inbox.inbox_id) ? inbox.inbox_id : null;
 }
 
-async function sendMonitorEmail(apiKey: string, id: number, subject: string, body: string, idempotencyKey: string, inboxId?: string) {
-  const resolvedInboxId = inboxId ?? monitorInboxId(await callMcp(apiKey, id, "tools/call", { name: "inbox_list", arguments: {} }));
+// Sends monitor alert/recovery emails via the Gmail-connected bjellanda@gmail.com
+// inbox using its own minimally-scoped NOTIFY_MCP_API_KEY, independent of the
+// SYNTHETIC_MCP_API_KEY used above for the hello@mcpemails.com health checks.
+// A missing notify key fails closed here (logs + no-ops) rather than throwing,
+// so a misconfigured alert path can never take down the health-check run above it.
+async function sendMonitorEmail(id: number, subject: string, body: string, idempotencyKey: string) {
+  const notifyApiKey = Deno.env.get("NOTIFY_MCP_API_KEY");
+  if (!notifyApiKey) {
+    console.error("NOTIFY_MCP_API_KEY not configured; skipping synthetic monitor alert email");
+    return;
+  }
+  const resolvedInboxId = findInboxId(await callMcp(notifyApiKey, id, "tools/call", { name: "inbox_list", arguments: {} }), ALERT_EMAIL);
   if (!resolvedInboxId) throw new Error("monitor_inbox_not_found");
-  await callMcp(apiKey, id, "tools/call", {
+  await callMcp(notifyApiKey, id, "tools/call", {
     // The public v112 MCP surface consolidates outbound operations under
     // email_compose; action: send dispatches to the server's email_send handler.
     name: "email_compose",
-    arguments: { action: "send", inbox_id: resolvedInboxId, to: [ALERT_RECIPIENT], subject, body, idempotency_key: idempotencyKey },
+    arguments: { action: "send", inbox_id: resolvedInboxId, to: [ALERT_EMAIL], subject, body, idempotency_key: idempotencyKey },
   });
 }
 
@@ -111,7 +130,7 @@ Deno.serve(async (request) => {
     await runStep("initialize", "initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "mcpemails-synthetic-monitor", version: "1.0" } });
     if (!failureClass) await runStep("tools_list", "tools/list");
     const inboxes = !failureClass ? await runStep("inbox_list", "tools/call", { name: "inbox_list", arguments: {} }) : null;
-    const dedicatedInboxId = inboxes ? monitorInboxId(inboxes) : null;
+    const dedicatedInboxId = inboxes ? findInboxId(inboxes, ALERT_RECIPIENT) : null;
     if (!failureClass && !dedicatedInboxId) fail("mcp_protocol", "inbox_list", "monitor_inbox_not_found");
     if (!failureClass) await runStep("email_read", "tools/call", { name: "email_read", arguments: { action: "list", limit: 1 } });
   }
@@ -127,7 +146,7 @@ Deno.serve(async (request) => {
     if (incidentError || !incident) return json(500, { error: "incident_record_failed", run_id: created.id });
     if (incident.should_alert && apiKey) {
       try {
-        await sendMonitorEmail(apiKey, 100, `MCPEmails synthetic monitor alert: ${incident.fingerprint}`, "A production synthetic monitor incident is open. The monitor will send one recovery notice after the first successful check.", `synthetic-incident-${incident.id}`);
+        await sendMonitorEmail(100, `MCPEmails synthetic monitor alert: ${incident.fingerprint}`, "A production synthetic monitor incident is open. The monitor will send one recovery notice after the first successful check.", `synthetic-incident-${incident.id}`);
         await supabase.rpc("mark_synthetic_monitor_incident_alerted", { p_incident_id: incident.id });
       } catch { /* Leave notification unmarked so a later equivalent failure retries it. */ }
     }
@@ -140,7 +159,7 @@ Deno.serve(async (request) => {
   if (apiKey) for (const incident of recoveryRows) {
     if (!incident.should_recover) continue;
     try {
-      await sendMonitorEmail(apiKey, 200, `MCPEmails synthetic monitor recovery: ${incident.fingerprint}`, "The production synthetic monitor completed successfully after the open incident.", `synthetic-recovery-${incident.id}`);
+      await sendMonitorEmail(200, `MCPEmails synthetic monitor recovery: ${incident.fingerprint}`, "The production synthetic monitor completed successfully after the open incident.", `synthetic-recovery-${incident.id}`);
       await supabase.rpc("mark_synthetic_monitor_recovery_alerted", { p_incident_id: incident.id });
     } catch { /* The incident is resolved; notification stays eligible for a later successful run. */ }
   }

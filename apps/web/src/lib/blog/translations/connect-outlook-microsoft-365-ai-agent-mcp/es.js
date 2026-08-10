@@ -89,5 +89,5 @@ Una advertencia honesta: MCP Emails funciona por sondeo. No hay webhooks ni noti
 
 Los servidores MCP de Outlook autoalojados que circulan por GitHub chocan todos contra el mismo muro: el registro de la aplicación en Entra y el ciclo de vida del token de Graph son el verdadero trabajo, y son tuyos para siempre. Te encargas de los tokens de renovación, de los cambios de permisos cuando Microsoft ajusta Graph y de la seguridad de allí donde residan esos tokens. Con el enfoque alojado, el token está cifrado en reposo, se descifra solo dentro de una función aislada en el momento de la llamada y se puede revocar desde el panel con un clic. Si quieres la comparación completa, [alojado frente a autoalojado](/blog/hosted-vs-self-hosted-gmail-mcp-server) profundiza en las ventajas y desventajas.
 
-Conectar Outlook no cuesta nada probarlo: el [plan Free](/pricing) ofrece bandejas y llamadas de herramientas ilimitadas a 60 solicitudes por minuto, sin tarjeta. Añade tu buzón de Microsoft 365, apunta Claude al endpoint y dale algo que leer.`,
+Conectar Outlook no cuesta nada probarlo: el [plan Free](/pricing) ofrece bandejas ilimitadas, 2.500 acciones facturables por período de facturación y 60 solicitudes por minuto, sin tarjeta. Añade tu buzón de Microsoft 365, apunta Claude al endpoint y dale algo que leer.`,
 };

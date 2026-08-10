@@ -102,5 +102,5 @@ One honest caveat: MCP Emails is poll-based. There are no webhooks and no server
 
 The self-hosted Outlook MCP servers floating around GitHub all hit the same wall: the Entra app registration and Graph token lifecycle are the actual work, and you own them forever. You handle refresh tokens, scope changes when Microsoft adjusts Graph, and the security of wherever those tokens sit. With the hosted approach, the token is encrypted at rest, decrypted only inside an isolated function at call time, and revocable from the dashboard in one click. If you want the full comparison, [hosted vs self-hosted](/blog/hosted-vs-self-hosted-gmail-mcp-server) goes deep on the trade-offs.
 
-Connecting Outlook costs nothing to try — the [Free plan](/pricing) is unlimited inboxes and tool calls at 60 requests per minute, no card required. Add your Microsoft 365 mailbox, point Claude at the endpoint, and give it something to read.`,
+Connecting Outlook costs nothing to try — the [Free plan](/pricing) includes unlimited inboxes, 2,500 billable actions per billing period, and 60 requests per minute, with no card required. Add your Microsoft 365 mailbox, point Claude at the endpoint, and give it something to read.`,
 };

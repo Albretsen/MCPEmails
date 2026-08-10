@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Precios",
-    "description": "Todos los planes, incluido Gratis, tienen bandejas, llamadas y claves de API ilimitados. Los planes de pago añaden límites de ráfaga más altos, funciones de equipo y soporte. El correo que lee tu agente nunca se almacena, en ningún plan."
+    "description": "Bandejas y claves de API ilimitadas. Las llamadas MCP facturables correctas usan acciones; las fallidas e inbox_list son gratis."
   },
   "hero": {
     "eyebrow": "Precios",
-    "titleLine1": "Ilimitado, gratis.",
-    "titleLine2": "Mejora para más potencia.",
-    "lead": "Todos los planes, incluido Gratis, tienen bandejas, llamadas y claves de API ilimitados. Los planes de pago añaden límites de ráfaga más altos, funciones de equipo y soporte. El correo que lee tu agente nunca se almacena, en ningún plan."
+    "titleLine1": "Acciones que escalan.",
+    "titleLine2": "Límites claros.",
+    "lead": "Bandejas y claves de API ilimitadas; las llamadas MCP facturables correctas usan acciones."
   },
   "billing": {
     "monthly": "Mensual",
@@ -22,11 +22,11 @@
   "plans": {
     "free": {
       "name": "Gratis",
-      "desc": "Todo, ilimitado. Sin límites diarios. Para todos los que construyen con agentes MCP.",
+      "desc": "2.500 acciones por período de facturación.",
       "cta": "Empieza gratis",
       "features": [
         "Bandejas conectadas ilimitadas",
-        "Sin límites diarios — llamadas a herramientas MCP ilimitadas",
+        "2.500 acciones por período de facturación",
         "Claves de API ilimitadas",
         "Gmail, iCloud, Fastmail y cualquier IMAP",
         "60 peticiones / minuto",
@@ -34,11 +34,11 @@
       ]
     },
     "solo": {
-      "name": "Solo",
+      "name": "Agent",
       "desc": "Para usuarios avanzados que ejecutan agentes a todas horas.",
-      "cta": "Obtener Solo",
+      "cta": "Obtener Agent",
       "features": [
-        "Todo lo de Gratis, ilimitado",
+        "50.000 acciones por período de facturación",
         "300 peticiones / minuto (ráfaga 5×)",
         "Analíticas de uso completas (historial de 90 días)",
         "Gmail, iCloud, Fastmail y cualquier IMAP",
@@ -46,12 +46,12 @@
       ]
     },
     "pro": {
-      "name": "Team",
+      "name": "Scale",
       "badge": "Más popular",
       "desc": "Para equipos y agencias que gestionan varias bandejas de clientes en un espacio de trabajo compartido, con roles, SSO y registros de auditoría.",
-      "cta": "Obtener Team",
+      "cta": "Obtener Scale",
       "features": [
-        "Todo lo de Solo, ilimitado",
+        "300.000 acciones por período de facturación",
         "1.000 peticiones / minuto",
         "Roles de equipo y múltiples espacios de trabajo",
         "SSO (SAML / OIDC) + registro de auditoría",
@@ -69,8 +69,8 @@
     "title": "Todo lado a lado.",
     "featureCol": "Característica",
     "free": "Gratis",
-    "solo": "Solo",
-    "team": "Team",
+    "solo": "Agent",
+    "team": "Scale",
     "sections": {
       "usage": {
         "label": "Uso",
@@ -123,6 +123,9 @@
     },
     "values": {
       "unlimited": "Ilimitado",
+      "actionsFree": "2.500 / período de facturación",
+      "actionsAgent": "50.000 / período de facturación",
+      "actionsScale": "300.000 / período de facturación",
       "ownerOnly": "Solo tú",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
@@ -137,28 +140,28 @@
     "title": "Preguntas comunes.",
     "items": [
       {
-        "q": "¿De verdad no hay límite de uso?",
-        "a": "Correcto. No hay límites diarios ni topes mensuales de llamadas. Las bandejas conectadas, las llamadas a herramientas MCP, las claves de API son ilimitadas en todos los planes, incluido Gratis; los miembros de equipo están disponibles en los planes de pago (Gratis es de un solo usuario). El único límite es un tope de uso justo por minuto (60/min en Gratis, 300/min en Solo, 1.000/min en Team) para proteger la plataforma del abuso. Los planes de pago añaden mayor rendimiento de ráfaga, funciones de equipo y soporte, nunca más uso."
+        "q": "¿Cómo funcionan las acciones?",
+        "a": "Una llamada MCP facturable que termina correctamente usa una acción. Gratis incluye 2.500 acciones por período de facturación, Agent 50.000 y Scale 300.000. Las llamadas fallidas e inbox_list son gratis."
       },
       {
         "q": "¿Qué cuenta como una llamada MCP?",
-        "a": "Cada invocación de herramienta JSON-RPC contra tu endpoint /mcp cuenta como una llamada: inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule o contact_search. Las llamadas son ilimitadas; solo cuentan para tu tope de uso justo por minuto. Somos un servidor MCP estándar, así que el mismo endpoint funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente compatible con MCP."
+        "a": "Una invocación JSON-RPC facturable que termina correctamente usa una acción. inbox_list, llamadas fallidas, errores de proveedor, autenticación y límites de tasa son gratis."
       },
       {
         "q": "¿Se almacena en algún sitio el contenido de mi correo?",
         "a": "El correo que lee tu agente nunca se almacena: los cuerpos, los asuntos, los adjuntos y el contenido de los hilos se obtienen en vivo desde tu proveedor y se devuelven directamente al agente, sin que nada se persista entre llamadas. Almacenamos tu token de OAuth cifrado o tu contraseña de aplicación para poder autenticar peticiones futuras. La única excepción es un mensaje que nos pides programar para más tarde: lo almacenamos hasta que se envía y luego guardamos un registro para tu historial."
       },
       {
-        "q": "¿Cuál es la diferencia entre Solo y Team?",
-        "a": "Gratis ya da a todos uso ilimitado. Solo ($12/mes) es para usuarios avanzados que exigen mucho a sus agentes: eleva el límite de ráfaga a 300 peticiones/minuto, amplía el historial de analíticas a 90 días y añade soporte por correo. Team ($49/mes) es para empresas: un tope de 1.000/minuto, roles de equipo y múltiples espacios de trabajo, SSO (SAML/OIDC), un registro de auditoría, historial de analíticas de 1 año y soporte prioritario."
+        "q": "¿Cuál es la diferencia entre Agent y Scale?",
+        "a": "Gratis incluye 2.500 acciones; Agent 50.000; y Scale 300.000 por período de facturación, además de sus funciones y límites de ráfaga respectivos."
       },
       {
         "q": "¿Puedo cambiar o cancelar mi plan?",
-        "a": "Sí. Mejora, baja de categoría o cancela cuando quieras desde la sección de facturación de tu panel. Si cancelas un plan de pago, conservas el acceso hasta el final de tu período de facturación y luego pasas a Gratis automáticamente. Como Gratis es ilimitado, solo pierdes el límite de ráfaga más alto, las funciones de equipo y el soporte."
+        "a": "Sí. Al cancelar, conservas el acceso hasta el final del período y luego pasas a Gratis con su asignación de 2.500 acciones."
       },
       {
         "q": "¿Cómo funciona el descuento anual?",
-        "a": "Pagar anualmente ahorra alrededor del 17% frente a la facturación mensual: Solo cuesta $120/año y Team cuesta $490/año. Se te cobra una vez por 12 meses por adelantado. Si cancelas a mitad de año, reembolsamos los meses completos no utilizados."
+        "a": "Pagar anualmente ahorra alrededor del 17% frente a la facturación mensual: Agent cuesta $120/año y Scale cuesta $490/año. Se te cobra una vez por 12 meses por adelantado. Si cancelas a mitad de año, reembolsamos los meses completos no utilizados."
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
@@ -176,7 +179,7 @@
   },
   "ctaBand": {
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
-    "sub": "Empieza en Gratis: sin tarjeta de crédito, ilimitado desde el primer día. Mejora cuando necesites límites de ráfaga más altos o funciones de equipo.",
+    "sub": "Empieza en Gratis: sin tarjeta y con 2.500 acciones por período de facturación.",
     "ctaPrimary": "Empieza gratis",
     "ctaSecondary": "Lee la documentación"
   }

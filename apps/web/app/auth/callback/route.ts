@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { acquisitionFromParams } from '@/lib/acquisition-context.mjs';
 
 /**
  * GET /auth/callback
@@ -19,8 +20,7 @@ export async function GET(request: Request) {
   const code = searchParams.get('code');
   // `next` lets the middleware preserve the originally-requested URL.
   const next = searchParams.get('next') ?? '/dashboard';
-  const acquisition = searchParams.get('acq');
-  const landing = searchParams.get('landing');
+  const acquisition = acquisitionFromParams(searchParams);
 
   if (!code) {
     // No code means the link was malformed or already used.
@@ -38,15 +38,22 @@ export async function GET(request: Request) {
     );
   }
 
-  const SOURCES = new Set(['direct', 'organic_google', 'reddit', 'github', 'smithery', 'glama', 'cursor', 'other']);
-  const LANDINGS = new Set(['home', 'blog', 'provider', 'docs', 'pricing', 'other']);
-  if (acquisition && landing && SOURCES.has(acquisition) && LANDINGS.has(landing)) {
+  if (searchParams.has('acq')) {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       // First-touch only: never overwrite a previously attributed workspace.
       await supabase
         .from('workspaces')
-        .update({ acquisition_source: acquisition, acquisition_landing: landing })
+        .update({
+          acquisition_source: acquisition.source,
+          acquisition_landing: acquisition.landing,
+          acquisition_landing_path: acquisition.landingPath,
+          acquisition_locale: acquisition.locale,
+          acquisition_referrer: acquisition.referrer,
+          acquisition_utm_source: acquisition.utmSource,
+          acquisition_utm_medium: acquisition.utmMedium,
+          acquisition_utm_campaign: acquisition.utmCampaign,
+        })
         .eq('owner_id', user.id)
         .is('acquisition_source', null);
     }

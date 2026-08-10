@@ -43,12 +43,9 @@ export async function checkInboxLimit(
   workspaceId: string,
 ): Promise<InboxLimitCheckResult> {
   // Run both queries in parallel to minimise latency.
-  const [workspaceResult, inboxCountResult] = await Promise.all([
+  const [effectivePlanResult, inboxCountResult] = await Promise.all([
     supabase
-      .from('workspaces')
-      .select('plan, grandfathered')
-      .eq('id', workspaceId)
-      .maybeSingle(),
+      .rpc('effective_workspace_plan', { p_workspace_id: workspaceId }),
     supabase
       .from('inboxes')
       .select('id', { count: 'exact', head: true })
@@ -56,9 +53,9 @@ export async function checkInboxLimit(
       .is('deleted_at', null),
   ]);
 
-  const plan = (workspaceResult.data?.plan as string | undefined) ?? 'free';
-  const grandfathered = workspaceResult.data?.grandfathered ?? false;
-  const limits = resolvePlanLimits(plan, { grandfathered });
+  const effectivePlan = effectivePlanResult.data?.[0];
+  const plan = effectivePlan?.plan ?? 'free';
+  const limits = resolvePlanLimits(plan, { compedScale: effectivePlan?.comped_scale ?? false });
   const currentCount = inboxCountResult.count ?? 0;
 
   // Enterprise plan (Infinity) has no inbox cap.

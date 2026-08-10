@@ -117,17 +117,17 @@
   },
   "pricing": {
     "eyebrow": "Precios",
-    "title": "Ilimitado en todos los planes.",
-    "sub": "Gratis es genuinamente ilimitado. Mejora para obtener límites de ráfaga más altos, funciones de equipo y soporte. Cambia de plan cuando quieras.",
+    "title": "Acciones que escalan contigo.",
+    "sub": "Bandejas y claves de API ilimitadas; las llamadas MCP facturables correctas usan acciones.",
     "perForever": "/para siempre",
     "perMonth": "/mes",
     "tiers": {
       "free": {
         "name": "Gratis",
-        "desc": "Todo, ilimitado. Sin límites diarios. Para todos los que construyen con agentes MCP.",
+        "desc": "2.500 acciones por período de facturación.",
         "features": [
           "Bandejas conectadas ilimitadas",
-          "Sin límites diarios — llamadas a herramientas MCP ilimitadas",
+          "2.500 acciones por período de facturación",
           "Claves de API ilimitadas",
           "Gmail, iCloud, Fastmail y cualquier IMAP",
           "60 peticiones / minuto",
@@ -136,29 +136,29 @@
         "cta": "Empieza gratis"
       },
       "solo": {
-        "name": "Solo",
+        "name": "Agent",
         "desc": "Para usuarios avanzados que ejecutan agentes a todas horas.",
         "features": [
-          "Todo lo de Gratis, ilimitado",
+        "50.000 acciones por período de facturación",
           "300 peticiones / minuto (ráfaga 5×)",
           "Analíticas de uso completas (historial de 90 días)",
           "Gmail, iCloud, Fastmail y cualquier IMAP",
           "Soporte por correo"
         ],
-        "cta": "Obtener Solo"
+        "cta": "Obtener Agent"
       },
       "team": {
-        "name": "Team",
+        "name": "Scale",
         "desc": "Para equipos y agencias que gestionan varias bandejas de clientes en un espacio de trabajo compartido, con roles, SSO y registros de auditoría.",
         "features": [
-          "Todo lo de Solo, ilimitado",
+        "300.000 acciones por período de facturación",
           "1.000 peticiones / minuto",
           "Roles de equipo y múltiples espacios de trabajo",
           "SSO (SAML / OIDC) + registro de auditoría",
           "Analíticas de uso completas (historial de 1 año)",
           "Soporte prioritario"
         ],
-        "cta": "Obtener Team"
+        "cta": "Obtener Scale"
       }
     },
     "footnote": "Todos los planes: el correo que lee tu agente se obtiene en vivo y nunca se almacena. Tokens de OAuth cifrados en reposo. ¿Necesitas algo a medida? <contact>Contáctanos</contact>. <comparison>Ver la comparación completa de funciones →</comparison>"
@@ -183,7 +183,7 @@
       },
       {
         "q": "¿Es realmente gratis?",
-        "a": "Sí. El plan Gratis te da bandejas conectadas ilimitadas, llamadas a herramientas MCP ilimitadas y claves de API ilimitadas — sin límites diarios y sin tarjeta. El único límite es un tope de uso justo por minuto para proteger la plataforma. Los planes de pago añaden miembros de equipo, límites de ráfaga más altos y soporte, nunca más uso."
+        "a": "Sí. El plan Gratis te da bandejas conectadas y claves de API ilimitadas, además de 2.500 acciones facturables por período de facturación — sin tarjeta. Las llamadas fallidas e inbox_list son gratis. Los planes de pago añaden asignaciones de acciones más grandes, límites de ráfaga más altos, miembros de equipo y soporte."
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",

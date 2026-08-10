@@ -9,8 +9,8 @@ import { createClient } from '@/lib/supabase/client';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
-// NOTE: the "Team" tier keeps the internal key `pro` so live Stripe prices
-// (keyed by plan id) resolve correctly. Only its display name is "Team".
+// NOTE: the "Scale" tier keeps the internal key `pro` so live Stripe prices
+// (keyed by plan id) resolve correctly. Only its display name is "Scale".
 // User-facing copy (name, desc, cta, features, badge) is read from the
 // `pricing` message bundle via `plans.<key>.*`.
 
@@ -53,7 +53,7 @@ const TABLE_SECTIONS = [
     key: 'usage',
     rows: [
       { key: 'inboxes',  free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
-      { key: 'calls',    free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
+      { key: 'calls',    free: 'values.actionsFree', solo: 'values.actionsAgent', pro: 'values.actionsScale' },
       { key: 'keys',     free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
       { key: 'members',  free: 'values.ownerOnly', solo: 'values.unlimited', pro: 'values.unlimited' },
       { key: 'burst',    free: 'values.burstFree', solo: 'values.burstSolo', pro: 'values.burstPro' },

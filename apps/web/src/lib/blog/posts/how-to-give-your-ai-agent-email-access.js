@@ -108,15 +108,15 @@ Either way, you revoke any connection from the dashboard in one click. Grab the 
 
 Short answer: yes, and the [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) post makes the full case. The model holds scoped capabilities, not your password; credentials are encrypted; nothing is stored; sending stays on your provider; access revokes in one click.
 
-On rate limits, each API key is capped at 100 requests/min, 1,000/hour, and 10,000/day on every plan. There's also a per-workspace burst ceiling that scales with your plan — 60/min on Free, 300/min on Solo, 1,000/min on Team. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send — you'll send duplicates.
+On rate limits, each API key is capped at 100 requests/min, 1,000/hour, and 10,000/day on every plan. There's also a per-workspace burst ceiling that scales with your plan — 60/min on Free, 300/min on Agent, 1,000/min on Scale. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send — you'll send duplicates.
 
 ## Pricing
 
-Everything is unlimited on every plan: inboxes, tool calls, API keys, team members. Tiers differ only on burst rate, analytics retention, team features, and support.
+Every plan includes unlimited inboxes and API keys. Successful billable tool calls use an action allowance: 2,500 on Free, 50,000 on Agent, and 300,000 on Scale per billing period; failed calls and inbox_list are free. Tiers also differ on burst rate, analytics retention, team features, and support.
 
 - **Free — $0 forever.** No card. 60 req/min, 7-day analytics, community support.
-- **Solo — $12/month** (or $120/year). 300 req/min, 90-day analytics, email support.
-- **Team — $49/month** (or $490/year). 1,000 req/min, team roles and multiple workspaces, SSO with SAML/OIDC plus audit log, 1-year analytics, priority support.
+- **Agent — $12/month** (or $120/year). 50,000 actions per billing period, 300 req/min, 90-day analytics, email support.
+- **Scale — $49/month** (or $490/year). 300,000 actions per billing period, 1,000 req/min, team roles and multiple workspaces, SSO with SAML/OIDC plus audit log, 1-year analytics, priority support.
 
 Full breakdown on the [pricing page](/pricing).
 

@@ -17,6 +17,15 @@ export const metadata = {
  * Middleware redirects already-authenticated users to /dashboard before
  * this page is ever rendered.
  */
-export default function SignupPage() {
-  return <SignupApp />;
+export default async function SignupPage({ searchParams }) {
+  const params = await searchParams;
+  const redirect = typeof params?.redirect === 'string' ? params.redirect : null;
+  const safeRedirect =
+    redirect?.startsWith('/') &&
+    !redirect.startsWith('//') &&
+    !redirect.startsWith('/\\')
+      ? redirect
+      : null;
+
+  return <SignupApp redirectTo={safeRedirect} />;
 }

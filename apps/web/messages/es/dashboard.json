@@ -119,7 +119,7 @@
     "goToMembers": "Ir a Miembros",
     "callsPerDayTitle": "Llamadas por día",
     "callsPerDaySub": "Últimos 14 días · en todas las herramientas",
-    "pro": "Pro",
+    "pro": "Scale",
     "recentActivityTitle": "Actividad reciente",
     "recentActivitySub": "Llamadas a herramientas MCP en vivo",
     "noActivityTitle": "Aún no hay actividad",
@@ -295,6 +295,11 @@
   "usage": {
     "title": "Uso",
     "sub": "Llamadas a herramientas MCP en los últimos 30 días en todas las bandejas.",
+    "shadowMeterTitle": "Uso de acciones",
+    "shadowMeterSub": "Acciones facturables correctas de los últimos 30 días. Solo es visible durante el período de prueba.",
+    "shadowOnly": "Medidor de prueba",
+    "shadowOfCap": "de {cap} acciones previstas",
+    "lastBillableCalls": "Llamadas facturables correctas más recientes ({count})",
     "quotaExhausted": "Cuota diaria agotada. Las llamadas MCP están siendo rechazadas",
     "quotaApproaching": "Cuota diaria al {pct}%, acercándose al límite",
     "dailyQuota": "Cuota diaria",
@@ -520,7 +525,7 @@
     "roleOwner": "Propietario",
     "sending": "Enviando…",
     "sendInvite": "Enviar invitación",
-    "rolesLockedHint": "Las invitaciones se unen como Miembro. Mejora a Team para asignar roles de Administrador y Visor.",
+    "rolesLockedHint": "Las invitaciones se unen como Miembro. Mejora a Scale para asignar roles de Administrador y Visor.",
     "inviteUpgradeHint": "Invitar colaboradores está disponible en los planes de pago. Mejora tu plan para añadir miembros a este espacio de trabajo.",
     "errInviteFailed": "No se pudo enviar la invitación.",
     "errRemoveFailed": "No se pudo eliminar al miembro.",
@@ -544,5 +549,117 @@
     "cancel": "Cancelar",
     "removing": "Eliminando…",
     "removeMemberBtn": "Eliminar miembro"
+  },
+  "approvals": {
+    "review": {
+      "kicker": "Pendiente de aprobación",
+      "kickerSettled": "Revisión de envío",
+      "title": "Aprueba este correo antes de que se envíe",
+      "titleSettled": "Este envío ya se ha decidido",
+      "subtitle": "Un asistente de IA preparó este correo. No se ha entregado y solo se enviará si lo apruebas aquí.",
+      "from": "De",
+      "to": "Para",
+      "cc": "Cc",
+      "bcc": "Cco",
+      "subject": "Asunto",
+      "attachments": "Adjuntos",
+      "operation": "Tipo",
+      "route": "Ruta de entrega",
+      "requested": "Solicitado",
+      "sendAt": "Programado para",
+      "expires": "Caduca",
+      "unknownInbox": "Buzón desconocido",
+      "unknownTime": "Desconocido",
+      "noSubject": "(sin asunto)",
+      "noRecipients": "Sin destinatario",
+      "noAttachments": "Ninguno",
+      "recipientsAtSend": "Esta página no pudo leer los destinatarios del mensaje original. Se resolverán en el momento del envío, así que revisa el texto del mensaje antes de aprobar.",
+      "bccCount": "{count, plural, one {# destinatario oculto} other {# destinatarios ocultos}}",
+      "attachmentCount": "{count, plural, one {# archivo} other {# archivos}}",
+      "bodyTitle": "Mensaje",
+      "bodyTruncated": "Este mensaje supera los 64 KB y se ha recortado aquí. Ábrelo en el panel para leerlo completo.",
+      "bodyWithheldRole": "El texto del mensaje se muestra a propietarios, administradores y miembros del espacio. Tu rol solo puede revisar los datos de entrega.",
+      "bodyStoredWithProvider": "Esta solicitud envía un borrador guardado en tu proveedor de correo, así que el texto no forma parte de la solicitud. Abre el borrador en tu aplicación de correo antes de decidir.",
+      "bodyDecryptFailed": "No se ha podido descifrar el mensaje guardado, así que no puede mostrarse. Rechaza esta solicitud y pide al asistente que la prepare de nuevo.",
+      "bodyAbsent": "Esta solicitud no tiene texto de mensaje.",
+      "bodyHtmlShow": "Ver el código HTML",
+      "bodyHtmlHide": "Ocultar el código HTML",
+      "bodyHtmlNote": "La versión HTML se muestra como código y nunca se renderiza. Renderizarla cargaría imágenes remotas, lo que revelaría a quien redactó el mensaje cuándo y dónde abriste esta página.",
+      "approve": "Aprobar y enviar",
+      "reject": "Rechazar",
+      "working": "Procesando…",
+      "toDashboard": "Abrir el panel",
+      "readOnly": "Puedes revisar este envío, pero solo un propietario o administrador del espacio puede aprobarlo o rechazarlo.",
+      "footnote": "La aprobación solo es posible desde esta página, con la sesión iniciada como propietario o administrador del espacio. Un asistente puede preparar un envío y puede rechazarlo, pero no tiene sesión de navegador, así que no puede aprobarlo.",
+      "backToConversation": "Puedes cerrar esta pestaña y volver a tu conversación.",
+      "notFoundTitle": "Esta revisión no está disponible",
+      "notFoundBody": "Puede que el enlace esté obsoleto o que pertenezca a un espacio del que no eres miembro. Comprueba que has iniciado sesión con la cuenta correcta.",
+      "operations": {
+        "email_send": "Correo nuevo",
+        "email_reply": "Respuesta",
+        "email_forward": "Reenvío",
+        "draft_send": "Enviar borrador guardado",
+        "schedule_create": "Correo programado"
+      },
+      "routes": {
+        "gmail": "API de Gmail",
+        "outlook": "Microsoft Graph",
+        "smtp": "IMAP + SMTP"
+      },
+      "caveats": {
+        "gmailThread": "El envío incorpora el mensaje a la conversación existente cuando es una respuesta.",
+        "gmailSentLabel": "Se escribe una copia en la etiqueta Enviados automáticamente.",
+        "outlookSentItems": "Se escribe una copia en Elementos enviados automáticamente.",
+        "smtpNoSentCopy": "El envío por SMTP no guarda por sí mismo una copia en Enviados; el servidor añade una por IMAP cuando la cuenta lo permite."
+      },
+      "via": {
+        "dashboard": "Decidido en el panel",
+        "review_page": "Decidido desde el enlace de revisión",
+        "mcp_app": "Decidido en la tarjeta de revisión del asistente"
+      },
+      "states": {
+        "approvedTitle": "Ya aprobado",
+        "approvedBody": "Este correo se aprobó y se entregó para su envío. No hace falta nada más.",
+        "rejectedTitle": "Ya rechazado",
+        "rejectedBody": "Este correo se rechazó y no se enviará.",
+        "cancelledTitle": "Cancelado",
+        "cancelledBody": "Esta solicitud se canceló antes de que nadie la decidiera. No se envió nada.",
+        "expiredTitle": "Esta solicitud caducó",
+        "expiredBody": "No se decidió a tiempo, así que no se enviará. Pide al asistente que la prepare de nuevo si todavía la quieres.",
+        "decidedElsewhereTitle": "Ya decidido",
+        "decidedElsewhereBody": "Otra persona, u otra pestaña, decidió este envío mientras esta página estaba abierta. Ahora no ha cambiado nada. Abre el panel para ver el resultado."
+      },
+      "done": {
+        "approvedTitle": "Aprobado. Este correo va en camino.",
+        "approvedBody": "Está en cola para entregarse desde tu buzón.",
+        "rejectedTitle": "Rechazado. No se envió nada.",
+        "rejectedBody": "Esta solicitud está cerrada y el correo no se entregará."
+      },
+      "errors": {
+        "csrf": "Esta página lleva demasiado tiempo abierta. Recarga y vuelve a decidir.",
+        "role": "Solo un propietario o administrador del espacio puede decidir este envío.",
+        "generic": "No se ha podido registrar esa decisión. No se envió nada: inténtalo de nuevo."
+      }
+    },
+    "mode": {
+      "label": "Revisión antes de enviar",
+      "off": "Enviar de inmediato",
+      "offHint": "El asistente envía sin preguntar. La opción adecuada para un buzón que usas para correo de poco riesgo.",
+      "inline": "Tarjeta de revisión en la conversación",
+      "inlineHint": "Aparece una tarjeta en la conversación con exactamente lo que se enviará. Puedes rechazarlo ahí; aprobar abre una página que requiere sesión iniciada.",
+      "dashboard": "Revisar solo en el panel",
+      "dashboardHint": "Sin tarjeta en la conversación. Se informa al asistente de que el envío está esperando y tú decides aquí.",
+      "guarantee": "En ambos modos de revisión el correo se prepara pero no se entrega. La aprobación solo ocurre en una sesión de navegador iniciada por un propietario o administrador del espacio, algo que el asistente no tiene. La tarjeta de revisión es una comodidad, no un límite de permisos."
+    },
+    "panel": {
+      "decidedTitle": "Decididos recientemente",
+      "colDecided": "Decidido",
+      "colWhere": "Dónde",
+      "colOutcome": "Resultado",
+      "statusApproved": "Aprobado",
+      "statusRejected": "Rechazado",
+      "statusExpired": "Caducado",
+      "statusCancelled": "Cancelado"
+    }
   }
 }

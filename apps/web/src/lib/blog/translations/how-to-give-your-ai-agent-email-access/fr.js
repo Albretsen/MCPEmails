@@ -101,15 +101,15 @@ Dans les deux cas, vous révoquez n'importe quelle connexion depuis le tableau d
 
 Réponse courte : oui, et l'article [est-il sûr de donner à un agent IA un accès à la messagerie](/blog/is-it-safe-to-give-ai-agent-email-access) expose l'argumentaire complet. Le modèle détient des capacités à scopes définis, pas votre mot de passe ; les identifiants sont chiffrés ; rien n'est stocké ; l'envoi reste sur votre fournisseur ; l'accès se révoque en un clic.
 
-Côté limites de débit, chaque clé API est plafonnée à 100 requests/min, 1 000/hour et 10 000/day sur tous les forfaits. Il existe aussi un plafond de pointe par espace de travail qui évolue avec votre forfait — 60/min sur Free, 300/min sur Solo, 1 000/min sur Team. Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi via \`email_compose\` — vous enverriez des doublons.
+Côté limites de débit, chaque clé API est plafonnée à 100 requests/min, 1 000/hour et 10 000/day sur tous les forfaits. Il existe aussi un plafond de pointe par espace de travail qui évolue avec votre forfait — 60/min sur Free, 300/min sur Agent, 1 000/min sur Scale. Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi via \`email_compose\` — vous enverriez des doublons.
 
 ## Tarifs
 
-Tout est illimité sur chaque forfait : boîtes mail, appels d'outils, clés API, membres d'équipe. Les niveaux ne diffèrent que par le débit de pointe, la conservation des analyses, les fonctionnalités d'équipe et le support.
+Tous les forfaits incluent des boîtes mail et des clés API illimitées. Les appels facturables réussis utilisent une allocation d'actions : 2 500 sur Free, 50 000 sur Agent et 300 000 sur Scale par période de facturation ; les appels échoués et inbox_list sont gratuits.
 
 - **Free — $0 forever.** Sans carte. 60 req/min, analyses sur 7 jours, support communautaire.
-- **Solo — $12/month** (ou $120/year). 300 req/min, analyses sur 90 jours, support par e-mail.
-- **Team — $49/month** (ou $490/year). 1 000 req/min, rôles d'équipe et plusieurs espaces de travail, SSO avec SAML/OIDC plus journal d'audit, analyses sur 1 an, support prioritaire.
+- **Agent — $12/month** (ou $120/year). 50 000 actions par période de facturation, 300 req/min, analyses sur 90 jours, support par e-mail.
+- **Scale — $49/month** (ou $490/year). 300 000 actions par période de facturation, 1 000 req/min, rôles d'équipe et plusieurs espaces de travail, SSO avec SAML/OIDC plus journal d'audit, analyses sur 1 an, support prioritaire.
 
 Détail complet sur la [page des tarifs](/pricing).
 

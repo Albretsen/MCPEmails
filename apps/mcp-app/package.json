@@ -1,0 +1,21 @@
+{
+  "name": "@mcpemails/mcp-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "MCP Apps review card (ui://mcpemails/review-card.html) rendered inside Claude.",
+  "type": "module",
+  "scripts": {
+    "build": "vite build && node scripts/codegen.mjs",
+    "build:bundle": "vite build",
+    "codegen": "node scripts/codegen.mjs",
+    "size": "node scripts/codegen.mjs --size-only",
+    "harness": "node harness/fixture-server.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "preact": "^10.27.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

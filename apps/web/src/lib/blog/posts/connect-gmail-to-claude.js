@@ -19,7 +19,7 @@ This is the focused, Gmail-only walkthrough. If you run several mailboxes or a n
 
 - A **Gmail or Google Workspace** account.
 - A version of **Claude that supports custom connectors** — claude.ai on a paid plan, or Claude Desktop. (Connectors are how Claude talks to MCP servers.)
-- A free **MCP Emails** account. No credit card, unlimited inboxes and calls. [Start free](/signup) and keep this tab open.
+- A free **MCP Emails** account. No credit card, unlimited inboxes, and 2,500 billable actions per billing period. [Start free](/signup) and keep this tab open.
 
 MCP Emails is the bridge in the middle: it speaks the Model Context Protocol to Claude on one side and the Gmail API to Google on the other. If you want the background on what that means, see [what an MCP email server actually is](/blog/what-is-an-mcp-email-server).
 
@@ -106,7 +106,7 @@ No. The Gmail connection uses Google OAuth, so your password never leaves Google
 
 ## Wrap-up
 
-That's the whole thing: one Google sign-in, one endpoint URL, and Claude can read, search, and send your real mail — without ever storing it. Every plan is unlimited on inboxes, calls, and keys, and the Free tier costs nothing and needs no card (see [pricing](/pricing) if you need higher burst limits or SSO).
+That's the whole thing: one Google sign-in, one endpoint URL, and Claude can read, search, and send your real mail — without ever storing it. Every plan includes unlimited inboxes and API keys; the Free tier costs nothing, needs no card, and includes 2,500 billable actions per billing period (see [pricing](/pricing) for larger allowances, higher burst limits, or SSO).
 
 Ready? [Connect your Gmail free](/signup), paste the endpoint into Claude, and ask it to summarize your unread mail.`,
 };

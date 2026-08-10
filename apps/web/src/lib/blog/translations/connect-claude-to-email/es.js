@@ -1,27 +1,42 @@
 export default {
-  title: 'Conecta Claude a tu correo con MCP (Gmail, Outlook, iCloud e IMAP)',
+  title: 'Conecta Claude a tu correo con MCP (Gmail, iCloud e IMAP)',
   description:
-    'Una guía práctica para conectar Claude a Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho y cualquier buzón IMAP mediante MCP, sin código y sin almacenar correo.',
+    'Una guía práctica para conectar Claude a Gmail, iCloud, Fastmail, Yahoo, Zoho y cualquier buzón IMAP mediante MCP, sin código y sin almacenar correo.',
   coverAlt:
-    'Conecta Claude a Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho y correo IMAP con MCP Emails',
-  content: `Claude puede leer, buscar, organizar y enviar tu correo, pero necesita un servidor MCP para llegar a un buzón real. MCP Emails es ese puente: conecta un buzón una vez, añade un endpoint seguro a Claude y Claude obtiene el mismo conjunto de herramientas de correo con Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho y otros proveedores IMAP.
+    'Conecta Claude a Gmail, iCloud, Fastmail, Yahoo, Zoho y correo IMAP con MCP Emails',
+  content: `> **Outlook y Microsoft 365 están en desarrollo.** Todavía no se pueden conectar en producción. Esta guía cubre Gmail, iCloud, Fastmail, Yahoo, Zoho y otros buzones IMAP disponibles hoy.
+
+Claude puede leer, buscar, organizar y enviar tu correo, pero necesita un servidor MCP para llegar a un buzón real. MCP Emails es ese puente: conecta un buzón una vez, añade un endpoint seguro a Claude y Claude obtiene el mismo conjunto de herramientas de correo con Gmail, iCloud, Fastmail, Yahoo, Zoho y otros proveedores IMAP.
 
 No hay código que escribir, ningún SDK que instalar ni clave de API que usar cuando te conectas mediante el flujo OAuth de Claude. El correo se obtiene en tiempo real de tu proveedor para cada solicitud y MCP Emails no lo almacena.
+
+**Ve a tu proveedor:** [Gmail](#gmail-y-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Yahoo, Zoho, Yandex o IMAP personalizado](#yahoo-zoho-yandex-e-imap-personalizado)
 
 ## Lo que necesitas
 
 - Un **plan o aplicación de Claude compatible con conectores personalizados**.
 - Una cuenta gratuita de **MCP Emails**: [créala aquí](/signup).
-- Un buzón de correo. Gmail y Outlook usan OAuth; iCloud, Fastmail, Yahoo, Zoho y la mayoría de los demás proveedores usan una contraseña específica de aplicación.
+- Un buzón de correo. Gmail usa OAuth; iCloud, Fastmail, Yahoo, Zoho y la mayoría de los demás proveedores usan una contraseña específica de aplicación. La compatibilidad con Outlook está en desarrollo.
 
 ## Paso 1: Conecta tu buzón a MCP Emails
 
 En el panel de MCP Emails, abre **Inboxes → Connect Inbox** y elige tu proveedor.
 
-- **Gmail / Google Workspace:** inicia sesión con Google y aprueba el acceso.
-- **Outlook / Microsoft 365:** inicia sesión con Microsoft y aprueba el acceso.
-- **iCloud y Fastmail:** crea una contraseña específica de aplicación con el proveedor e introdúcela en MCP Emails.
-- **Yahoo, Zoho, Yandex y otros servicios IMAP:** crea una contraseña de aplicación, elige **IMAP** e introduce la dirección y la contraseña. Los ajustes habituales del servidor se detectan automáticamente.
+### Gmail y Google Workspace
+
+Elige **Gmail**, inicia sesión con Google y aprueba el acceso. Tu contraseña de Google nunca se comparte con MCP Emails. Consulta la [guía específica de Gmail](/blog/connect-gmail-to-claude) si un administrador de Workspace controla el acceso a aplicaciones.
+
+### iCloud Mail
+
+Crea una contraseña específica de aplicación en tu cuenta de Apple, elige **iCloud** e introduce esa contraseña, no la normal de tu cuenta de Apple. La [guía de iCloud e IMAP](/blog/connect-icloud-fastmail-imap-to-claude) incluye los pasos exactos.
+
+### Fastmail
+
+Crea en Fastmail una contraseña de aplicación con acceso a Mail, elige **Fastmail** y pégala en MCP Emails. Consérvala hasta que la prueba de conexión termine correctamente.
+
+### Yahoo, Zoho, Yandex e IMAP personalizado
+
+Crea una contraseña de aplicación, elige **IMAP** e introduce la dirección y la contraseña. Los ajustes comunes se detectan automáticamente; los dominios personalizados pueden requerir el host, puerto y modo de seguridad IMAP/SMTP indicados por el proveedor.
 
 Puedes conectar más de un buzón. Claude los descubre con \`inbox_list\`, así que no tienes que pegar identificadores de buzón en un prompt.
 
@@ -69,12 +84,21 @@ MCP Emails ofrece a Claude herramientas de correo concretas, no una contraseña 
 
 MCP Emails funciona por sondeo: Claude comprueba el correo nuevo cuando se lo pides, en vez de recibir un evento push en el instante en que llega un mensaje.
 
+## Solución de problemas de conexión y configuración de Claude
+
+- **El proveedor rechaza la contraseña:** usa una contraseña de aplicación generada por el proveedor, no la contraseña con la que entras en la web. Regénérala después de activar la autenticación de dos factores si es necesario.
+- **Una conexión IMAP personalizada agota el tiempo:** confirma el host, el puerto y el modo TLS. El puerto 993 suele usar TLS implícito; el 143 suele usar STARTTLS.
+- **Claude se conecta pero no ve correo:** comprueba primero que el buzón esté activo en MCP Emails, vuelve a conectar Claude con **read:email** y pídele que llame a **inbox_list**.
+- **Claude puede leer pero no enviar:** vuelve a conectarlo con **send:email** y verifica que la conexión admita SMTP o el envío nativo del proveedor.
+
+Si sigues bloqueado, consulta la [matriz de proveedores](/docs/providers), abre la [guía de inicio](/docs#quickstart) y prueba una solicitud de solo lectura antes de activar el envío.
+
 ## ¿Es seguro conectar Claude al correo?
 
 Sí, siempre que concedas solo el acceso necesario y mantengas a una persona implicada en las acciones salientes.
 
 - **El correo no se almacena.** MCP Emails obtiene el contenido de cada mensaje en tiempo real y lo descarta tras entregarlo. La credencial cifrada necesaria para reconectar con tu proveedor es el único dato del buzón que se conserva.
-- **Tu proveedor mantiene el control de autenticación.** Gmail y Outlook usan OAuth, así que MCP Emails nunca recibe tu contraseña. Con proveedores IMAP, usa una contraseña específica de aplicación revocable en lugar de tu contraseña normal.
+- **Tu proveedor mantiene el control de autenticación.** Gmail usa OAuth, así que MCP Emails nunca recibe tu contraseña. Con proveedores IMAP, usa una contraseña específica de aplicación revocable en lugar de tu contraseña normal.
 - **Los permisos son explícitos.** Da acceso de solo lectura si Claude no debe enviar nunca. Añade el permiso de envío solo cuando lo necesites y revócalo cuando quieras.
 
 Trata el cuerpo de cada correo como una entrada no fiable. Pide a Claude que redacte antes de enviar, revisa los mensajes externos y no dejes que las instrucciones dentro de un correo anulen tu intención. La [guía de seguridad para el acceso al correo](/blog/is-it-safe-to-give-ai-agent-email-access) explica el modelo de amenazas con más detalle.
@@ -82,7 +106,7 @@ Trata el cuerpo de cada correo como una entrada no fiable. Pide a Claude que red
 ## Preguntas frecuentes
 
 **¿Puede Claude conectarse a Gmail, Outlook o iCloud?**  
-Sí. Gmail y Outlook se conectan con OAuth. iCloud se conecta con una contraseña específica de aplicación. MCP Emails también admite Fastmail e IMAP genérico, lo que cubre servicios como Yahoo y Zoho.
+Gmail se conecta con OAuth e iCloud con una contraseña específica de aplicación. Outlook está en desarrollo y todavía no está disponible en producción. MCP Emails también admite Fastmail e IMAP genérico, lo que cubre servicios como Yahoo y Zoho.
 
 **¿Necesito una clave de API?**  
 No para el flujo de conector OAuth de Claude. Pega la URL del endpoint e inicia sesión. Las claves de API son para clientes MCP sin OAuth integrado.

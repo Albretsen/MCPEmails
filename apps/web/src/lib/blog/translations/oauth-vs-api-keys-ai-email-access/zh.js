@@ -76,7 +76,7 @@ API 密钥要求你做、而 OAuth 不要求的唯一一件事：把密钥当成
 
 你的客户端不支持 OAuth——Cline、JetBrains、OpenAI 风格的工具运行器，或者你自己的代码。你正在用 cURL 或一个小程序对着端点写脚本。你需要一个稳定的凭据，好让一个无人值守的进程在没有人去点同意页的情况下也能用。受限的密钥在这里恰到好处，而且有一份针对 [Cursor、Cline 和 VS Code 客户端](/blog/email-for-ai-agents-cursor-cline-vscode)的完整操作指南。
 
-还有一件事无论你选哪个都成立：速率限制。每个 API 密钥的上限是 100 requests/minute、1,000/hour 和 10,000/day，每个工作区还按套餐有一个突发上限（[Free](/pricing) 为 60/min，Team 最高 1,000/min）。当你触及限制时，服务器会返回一个以秒为单位的 \`retry_after\` 值。请遵守它，而且绝不要盲目重试 \`email_compose\` 发送——那样你会重复发送。
+还有一件事无论你选哪个都成立：速率限制。每个 API 密钥的上限是 100 requests/minute、1,000/hour 和 10,000/day，每个工作区还按套餐有一个突发上限（[Free](/pricing) 为 60/min，Scale 最高 1,000/min）。当你触及限制时，服务器会返回一个以秒为单位的 \`retry_after\` 值。请遵守它，而且绝不要盲目重试 \`email_compose\` 发送——那样你会重复发送。
 
 ## 结论
 

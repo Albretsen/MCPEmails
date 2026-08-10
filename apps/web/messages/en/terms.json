@@ -82,7 +82,7 @@
     "p56": "We may change pricing for paid plans with at least 30 days' written notice to your registered email address. Price changes will not apply until your next renewal date.",
     "h57": "5.7 Fair use and service limits",
     "p57a": "To protect platform stability and ensure fair access for all customers, the Service applies a per-minute request rate limit to every plan (a “fair-use limit”), as described on our <pricing>Pricing page</pricing>. We may also apply reasonable technical measures to prevent abuse, automated scraping, or usage that materially degrades the Service for others.",
-    "p57b": "Where a plan is described as “unlimited,” that refers to the absence of fixed monthly usage quotas; it remains subject to this fair-use limit and to Section 4 (Acceptable Use). We reserve the right to introduce, change, or remove usage limits and fair-use thresholds for any plan, including the Free plan, on a going-forward basis. We will give at least 30 days' notice to your registered email address before a change takes effect for your workspace, and may apply new limits to new subscriptions immediately."
+    "p57b": "Connected inboxes and API keys are unlimited. Successful billable MCP calls consume the action allowance published for your plan and remain subject to this fair-use limit and to Section 4 (Acceptable Use). We may change future action allowances and fair-use thresholds on a going-forward basis; any material change will be communicated before it takes effect for your workspace."
   },
   "intellectualProperty": {
     "title": "6. Intellectual Property",

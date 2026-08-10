@@ -5,6 +5,8 @@ import { withFreshGmailToken, verifyGmailAccess, InboxAuthError } from '@/lib/em
 import { withFreshOutlookToken, verifyOutlookAccess, OutlookAuthError } from '@/lib/email-providers/outlook';
 import { openImapSession, McpEmailsError, ImapAuthError } from '@/lib/email/imap';
 import type { Tables } from '@/types/database.types';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 /**
  * POST /api/inboxes/[id]/check
@@ -138,6 +140,11 @@ export async function POST(
       .update({ status: 'active', last_error: null, last_sync_at: now, updated_at: now })
       .eq('id', inboxId)
       .eq('workspace_id', workspaceId);
+
+    const service = createServiceRoleClient();
+    const { data: claimed } = await service.from('workspaces').update({ onboarding_connection_verified_at: now }).eq('id', workspaceId).is('onboarding_connection_verified_at', null).select('id');
+    const category = (inbox.provider === 'imap' ? 'generic_imap' : inbox.provider) as Parameters<typeof recordProductFunnelEvent>[1]['category'];
+    if (claimed?.length) await recordProductFunnelEvent(service, { workspaceId, stage: 'connection_verified', outcome: 'success', category });
 
     return NextResponse.json({
       ok: true,

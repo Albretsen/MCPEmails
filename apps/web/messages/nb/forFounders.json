@@ -92,13 +92,13 @@
       },
       {
         "q": "Hva koster det mens jeg fortsatt er liten?",
-        "a": "Gratis, med ubegrenset antall innbokser og ubegrenset antall verktøykall og ingen daglige grenser. Betalte nivåer legger til teamfunksjoner og support, men en solo-gründer som svarer kunder trenger aldri å betale for å gjøre det."
+        "a": "Gratis, med ubegrenset antall innbokser og 2 500 fakturerbare handlinger per faktureringsperiode. Mislykkede kall og inbox_list er gratis. Betalte nivåer legger til større handlingskvoter, teamfunksjoner og støtte, men en solo-gründer som svarer kunder trenger aldri å betale for å komme i gang."
       }
     ]
   },
   "ctaBand": {
     "title": "Få kveldene dine tilbake",
-    "sub": "Koble til innboksen på minutter og la Claude tømme kundekøen sammen med deg. Ubegrenset og gratis å komme i gang, ingen kort kreves.",
+    "sub": "Koble til innboksen på minutter og la Claude tømme kundekøen sammen med deg. Gratis å komme i gang med 2 500 handlinger per faktureringsperiode, uten kort.",
     "ctaPrimary": "Koble til innboksen gratis",
     "ctaSecondary": "Les dokumentasjonen"
   }

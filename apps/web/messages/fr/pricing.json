@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Tarifs",
-    "description": "Chaque formule, y compris Gratuit, offre des boîtes, des appels et des clés API illimités. Les formules payantes ajoutent des limites de pointe plus élevées, des fonctionnalités d'équipe et du support. Le courrier que votre agent lit n'est jamais stocké, quelle que soit la formule."
+    "description": "Chaque formule inclut des boîtes et des clés API illimitées. Les appels MCP facturables réussis utilisent des actions qui se réinitialisent à chaque période de facturation. Le courrier que votre agent lit n'est jamais stocké."
   },
   "hero": {
     "eyebrow": "Tarifs",
-    "titleLine1": "Illimité, gratuit.",
-    "titleLine2": "Passez à la vitesse supérieure.",
-    "lead": "Chaque formule, y compris Gratuit, offre des boîtes, des appels et des clés API illimités. Les formules payantes ajoutent des limites de pointe plus élevées, des fonctionnalités d'équipe et du support. Le courrier que votre agent lit n'est jamais stocké, quelle que soit la formule."
+    "titleLine1": "Des actions claires.",
+    "titleLine2": "Aucun dépassement surprise.",
+    "lead": "Chaque espace de travail inclut des boîtes et des clés API illimitées. Les appels MCP facturables réussis utilisent des actions ; les appels échoués et inbox_list sont gratuits. Les actions se réinitialisent à chaque période de facturation et les appels s'arrêtent au plafond."
   },
   "billing": {
     "monthly": "Mensuel",
@@ -22,11 +22,11 @@
   "plans": {
     "free": {
       "name": "Gratuit",
-      "desc": "Tout, en illimité. Aucun plafond quotidien. Pour quiconque construit avec des agents MCP.",
+      "desc": "Découvrez MCPEmails avec 2 500 actions par période de facturation.",
       "cta": "Commencer gratuitement",
       "features": [
         "Boîtes connectées illimitées",
-        "Aucune limite quotidienne — appels d'outils MCP illimités",
+        "2 500 actions par période de facturation",
         "Clés API illimitées",
         "Gmail, iCloud, Fastmail et toute boîte IMAP",
         "60 requêtes / minute",
@@ -34,11 +34,11 @@
       ]
     },
     "solo": {
-      "name": "Solo",
+      "name": "Agent",
       "desc": "Pour les utilisateurs intensifs qui font tourner des agents en continu.",
-      "cta": "Choisir Solo",
+      "cta": "Choisir Agent",
       "features": [
-        "Tout ce qui est dans Gratuit, en illimité",
+        "50 000 actions par période de facturation",
         "300 requêtes / minute (5× en pointe)",
         "Analytique d'usage complète (historique de 90 jours)",
         "Gmail, iCloud, Fastmail et toute boîte IMAP",
@@ -46,12 +46,12 @@
       ]
     },
     "pro": {
-      "name": "Team",
+      "name": "Scale",
       "badge": "Le plus populaire",
       "desc": "Pour les équipes et les agences qui gèrent plusieurs boîtes de clients dans un espace de travail partagé, avec rôles, SSO et journaux d'audit.",
-      "cta": "Choisir Team",
+      "cta": "Choisir Scale",
       "features": [
-        "Tout ce qui est dans Solo, en illimité",
+        "300 000 actions par période de facturation",
         "1 000 requêtes / minute",
         "Rôles d'équipe et espaces de travail multiples",
         "SSO (SAML / OIDC) + journal d'audit",
@@ -69,8 +69,8 @@
     "title": "Tout côte à côte.",
     "featureCol": "Fonctionnalité",
     "free": "Gratuit",
-    "solo": "Solo",
-    "team": "Team",
+    "solo": "Agent",
+    "team": "Scale",
     "sections": {
       "usage": {
         "label": "Usage",
@@ -123,6 +123,9 @@
     },
     "values": {
       "unlimited": "Illimité",
+      "actionsFree": "2 500 / période de facturation",
+      "actionsAgent": "50 000 / période de facturation",
+      "actionsScale": "300 000 / période de facturation",
       "ownerOnly": "Vous seul",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
@@ -137,28 +140,28 @@
     "title": "Questions fréquentes.",
     "items": [
       {
-        "q": "N'y a-t-il vraiment aucune limite d'usage ?",
-        "a": "Exact. Il n'y a aucun plafond quotidien ni plafond mensuel d'appels. Les boîtes connectées, les appels d'outils MCP, les clés API sont illimités sur chaque formule, y compris Gratuit ; les membres d'équipe sont disponibles sur les formules payantes (Gratuit est mono-utilisateur). La seule limite est un plafond d'usage équitable par minute (60/min sur Gratuit, 300/min sur Solo, 1 000/min sur Team) afin de protéger la plateforme des abus. Les formules payantes ajoutent un débit de pointe plus élevé, des fonctionnalités d'équipe et du support, jamais plus d'usage."
+        "q": "Qu'est-ce qui compte comme une action ?",
+        "a": "Un appel réussi à un outil MCP facturable utilise une action. Les appels échoués, les pannes de fournisseur, les erreurs d'authentification, les limites de débit, les actions du tableau de bord, OAuth, la gestion des clés API et inbox_list sont gratuits. Chaque formule inclut des boîtes et des clés API illimitées."
       },
       {
         "q": "Qu'est-ce qui compte comme un appel MCP ?",
-        "a": "Chaque invocation d'outil JSON-RPC sur votre point de terminaison /mcp compte pour un appel : inbox_list, email_read, email_compose, email_organize, email_delete, folder, draft, schedule ou contact_search. Les appels sont illimités ; ils ne comptent que pour votre plafond d'usage équitable par minute. Nous sommes un serveur MCP standard, donc le même point de terminaison fonctionne avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et tout client compatible MCP."
+        "a": "Un appel JSON-RPC réussi à un outil facturable sur votre point de terminaison /mcp utilise une action. inbox_list, les appels échoués, les pannes de fournisseur, les erreurs d'authentification et les appels limités en débit sont gratuits. Nous sommes un serveur MCP standard, donc le même point de terminaison fonctionne avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et tout client compatible MCP."
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",
         "a": "Le courrier que votre agent lit n'est jamais stocké : les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent, sans rien conserver entre les appels. Nous stockons votre jeton OAuth chiffré ou votre mot de passe d'application afin de pouvoir authentifier les requêtes futures. La seule exception est un message que vous nous demandez de programmer pour plus tard : nous le stockons jusqu'à son envoi, puis en gardons une trace pour votre historique."
       },
       {
-        "q": "Quelle est la différence entre Solo et Team ?",
-        "a": "Gratuit offre déjà à tous un usage illimité. Solo (12 $/mois) est destiné aux utilisateurs intensifs qui sollicitent fortement les agents : il élève la limite de débit de pointe à 300 requêtes/minute, étend l'historique d'analytique à 90 jours et ajoute le support par e-mail. Team (49 $/mois) est destiné aux entreprises : un plafond de 1 000/minute, des rôles d'équipe et des espaces de travail multiples, le SSO (SAML/OIDC), un journal d'audit, un historique d'analytique d'un an et un support prioritaire."
+        "q": "Quelle est la différence entre Agent et Scale ?",
+        "a": "Gratuit inclut 2 500 actions par période de facturation. Agent inclut 50 000 actions, un plafond de 300 requêtes/minute, un historique de 90 jours et le support par e-mail. Scale inclut 300 000 actions, un plafond de 1 000/minute, les rôles, un journal d'audit, un historique d'un an et le support prioritaire. Le tableau de bord affiche votre usage et votre date de réinitialisation ; les appels s'arrêtent au plafond, sans dépassement automatique."
       },
       {
         "q": "Puis-je changer ou annuler ma formule ?",
-        "a": "Oui. Passez à une formule supérieure ou inférieure, ou annulez à tout moment depuis la section facturation de votre tableau de bord. Si vous annulez une formule payante, vous conservez l'accès jusqu'à la fin de votre période de facturation, puis vous repassez automatiquement à Gratuit. Comme Gratuit est illimité, vous ne perdez que la limite de pointe supérieure, les fonctionnalités d'équipe et le support."
+        "a": "Oui. Passez à une formule supérieure ou inférieure, ou annulez à tout moment depuis la section facturation de votre tableau de bord. Si vous annulez une formule payante, vous conservez l'accès jusqu'à la fin de votre période de facturation, puis vous repassez automatiquement à Gratuit avec son allocation de 2 500 actions."
       },
       {
         "q": "Comment fonctionne la remise annuelle ?",
-        "a": "Payer à l'année permet d'économiser environ 17 % par rapport à la facturation mensuelle : Solo est à 120 $/an et Team à 490 $/an. Vous êtes facturé une fois pour 12 mois d'avance. Si vous annulez en cours d'année, nous remboursons les mois entiers non utilisés."
+        "a": "Payer à l'année permet d'économiser environ 17 % par rapport à la facturation mensuelle : Agent est à 120 $/an et Scale à 490 $/an. Vous êtes facturé une fois pour 12 mois d'avance. Si vous annulez en cours d'année, nous remboursons les mois entiers non utilisés."
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
@@ -176,7 +179,7 @@
   },
   "ctaBand": {
     "title": "Prêt à offrir une boîte de réception à votre agent ?",
-    "sub": "Commencez avec Gratuit : sans carte de crédit, illimité dès le premier jour. Passez à une formule supérieure quand vous avez besoin de limites de pointe plus élevées ou de fonctionnalités d'équipe.",
+    "sub": "Commencez avec Gratuit : sans carte de crédit et 2 500 actions par période de facturation. Passez à une formule supérieure pour une allocation d'actions plus élevée, des limites de pointe supérieures ou des fonctionnalités d'équipe.",
     "ctaPrimary": "Commencer gratuitement",
     "ctaSecondary": "Lire la documentation"
   }

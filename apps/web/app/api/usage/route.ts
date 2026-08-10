@@ -1,31 +1,29 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolvePlanLimits } from '@/lib/stripe/plans';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /**
  * GET /api/usage
  *
- * Returns the authenticated workspace's MCP call usage for the current
- * UTC calendar month and the current UTC calendar day (burst window).
+ * Returns the authenticated workspace's billable action usage for the current
+ * billing-cycle window. The action ledger is also the source used by edge
+ * enforcement, so the customer-visible value cannot drift from the cap check.
  *
  * Response 200:
  * {
  *   plan: string,
  *   monthly: {
- *     used:       number,          // calls made this UTC calendar month
+ *     used:       number,          // calls made this billing cycle
  *     cap:        number | null,   // null = unlimited (Enterprise)
  *     resets_at:  string,          // ISO timestamp of next UTC month start
  *   },
- *   daily_burst: {
- *     used:       number,          // calls made today (UTC calendar day)
- *     cap:        number | null,   // null = unlimited (Enterprise)
- *     resets_at:  string,          // ISO timestamp of next UTC midnight
- *   },
+ *   daily_burst: { ... },
  * }
  *
- * Counts are fetched in parallel from activity_log using the same window
- * boundaries as the edge function quota check (checkPlanQuota).
+ * The daily burst row remains a request-rate diagnostic; the monthly row is
+ * the billable action allowance.
  */
 export async function GET(): Promise<NextResponse> {
   const supabase = await createClient();
@@ -52,7 +50,7 @@ export async function GET(): Promise<NextResponse> {
   // ── Plan ──────────────────────────────────────────────────────────────────
   const { data: workspace, error: workspaceError } = await supabase
     .from('workspaces')
-    .select('plan, grandfathered')
+    .select('plan, owner_id')
     .eq('id', workspaceId)
     .maybeSingle();
 
@@ -60,18 +58,26 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
 
-  const plan = (workspace.plan as string) ?? 'free';
-  const grandfathered = workspace.grandfathered ?? false;
-  const limits = resolvePlanLimits(plan, { grandfathered });
+  const service = createServiceRoleClient();
+  const [{ data: entitlement }, { data: billing }] = await Promise.all([
+    service.from('user_usage_entitlements').select('kind, expires_at').eq('user_id', workspace.owner_id).maybeSingle(),
+    service.from('user_billing').select('current_period_start, current_period_end').eq('user_id', workspace.owner_id).maybeSingle(),
+  ]);
+  const compedScale = entitlement?.kind === 'comped_scale' &&
+    (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date());
+  const plan = compedScale ? 'pro' : ((workspace.plan as string) ?? 'free');
+  const limits = resolvePlanLimits(plan, { compedScale });
 
-  // ── Window boundaries (UTC) ───────────────────────────────────────────────
+  // ── Window boundaries ─────────────────────────────────────────────────────
+  // Paid workspaces follow Stripe's exact billing cycle. Free workspaces use
+  // the documented calendar-month cycle. This matches edge enforcement.
   const now = new Date();
 
   const todayStart = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
   ).toISOString();
 
-  const monthStart = new Date(
+  const calendarMonthStart = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
   ).toISOString();
 
@@ -80,9 +86,18 @@ export async function GET(): Promise<NextResponse> {
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
   ).toISOString();
 
-  const nextMonthUTC = new Date(
+  const nextCalendarMonthUTC = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
   ).toISOString();
+
+  const billingStart = plan !== 'free' && billing?.current_period_start && billing?.current_period_end &&
+    new Date(billing.current_period_start) <= now && now < new Date(billing.current_period_end)
+    ? billing.current_period_start
+    : calendarMonthStart;
+  const billingEnd = plan !== 'free' && billing?.current_period_start && billing?.current_period_end &&
+    new Date(billing.current_period_start) <= now && now < new Date(billing.current_period_end)
+    ? billing.current_period_end
+    : nextCalendarMonthUTC;
 
   // ── Count queries (parallel) ──────────────────────────────────────────────
   const [dailyResult, monthlyResult] = await Promise.all([
@@ -92,10 +107,13 @@ export async function GET(): Promise<NextResponse> {
       .eq('workspace_id', workspaceId)
       .gte('created_at', todayStart),
     supabase
-      .from('activity_log')
+      .from('action_usage')
       .select('*', { count: 'exact', head: true })
       .eq('workspace_id', workspaceId)
-      .gte('created_at', monthStart),
+      .eq('billable', true)
+      .eq('meter_version', 1)
+      .gte('occurred_at', billingStart)
+      .lt('occurred_at', billingEnd),
   ]);
 
   const usedToday = dailyResult.count ?? 0;
@@ -106,7 +124,7 @@ export async function GET(): Promise<NextResponse> {
     monthly: {
       used: usedThisMonth,
       cap: limits.maxMonthlyToolCalls === Infinity ? null : limits.maxMonthlyToolCalls,
-      resets_at: nextMonthUTC,
+      resets_at: billingEnd,
     },
     daily_burst: {
       used: usedToday,

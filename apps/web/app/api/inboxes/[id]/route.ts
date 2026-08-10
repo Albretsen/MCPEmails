@@ -6,6 +6,11 @@ import {
   sanitizeSignatureHtml,
   SIGNATURE_HTML_MAX_LENGTH,
 } from '@/lib/sanitizeSignatureHtmlServer';
+import {
+  PENDING_INBOX_COLUMNS,
+  runTolerantly,
+  selectTolerantly,
+} from '@/lib/approvals/columns';
 import type { Database } from '@/types/database.types';
 
 type InboxUpdate = Database['public']['Tables']['inboxes']['Update'];
@@ -295,11 +300,29 @@ export async function PATCH(
     update.signature_reply_mode = mode;
   }
 
-  if ('send_approval_required' in input) {
+  // Three-way review mode: off | inline | dashboard.
+  //  - off        → the assistant sends without a human decision
+  //  - inline     → a review card appears in the AI conversation; approving it
+  //                 still opens the authenticated /approvals/[id] page
+  //  - dashboard  → no card; decisions happen in the dashboard only
+  // `send_approval_required` is kept in lockstep because the edge function
+  // still gates on the boolean. Drop the mirroring once it reads the mode.
+  if ('send_review_mode' in input) {
+    const mode = input.send_review_mode;
+    if (mode !== 'off' && mode !== 'inline' && mode !== 'dashboard') {
+      return NextResponse.json(
+        { error: "send_review_mode must be one of 'off', 'inline', 'dashboard'." },
+        { status: 400 }
+      );
+    }
+    (update as any).send_review_mode = mode;
+    (update as any).send_approval_required = mode !== 'off';
+  } else if ('send_approval_required' in input) {
     if (typeof input.send_approval_required !== 'boolean') {
       return NextResponse.json({ error: 'send_approval_required must be a boolean.' }, { status: 400 });
     }
     (update as any).send_approval_required = input.send_approval_required;
+    (update as any).send_review_mode = input.send_approval_required ? 'dashboard' : 'off';
   }
 
   if (Object.keys(update).length === 0) {
@@ -345,20 +368,38 @@ export async function PATCH(
   update.updated_at = now;
 
   const service = createServiceRoleClient();
-  const { data: saved, error: updateError } = await service
-    .from('inboxes')
-    .update(update)
-    .eq('id', inboxId)
-    .eq('workspace_id', workspaceId)
-    .select(
-      'signature_text, signature_html, signature_enabled, signature_reply_mode, signature_source, signature_updated_at, send_approval_required'
-    )
-    .single();
+  // `send_review_mode` is added by a migration that may land after this code,
+  // so both the write and the read-back degrade to the pre-migration shape
+  // rather than failing every signature save. See lib/approvals/columns.ts.
+  const { data: saved, error: updateError } = await runTolerantly<any>(
+    update,
+    PENDING_INBOX_COLUMNS,
+    (patch) =>
+      selectTolerantly<any>(
+        ['signature_text', 'signature_html', 'signature_enabled', 'signature_reply_mode',
+          'signature_source', 'signature_updated_at', 'send_approval_required', 'send_review_mode'],
+        PENDING_INBOX_COLUMNS,
+        (columns) =>
+          (service as any)
+            .from('inboxes')
+            .update(patch)
+            .eq('id', inboxId)
+            .eq('workspace_id', workspaceId)
+            .select(columns)
+            .single(),
+      ),
+  );
 
   if (updateError || !saved) {
     console.error('[update-inbox-signature] Failed to save signature:', updateError?.message);
     return NextResponse.json({ error: 'Failed to save signature.' }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true, signature: saved, sendApprovalRequired: (saved as any).send_approval_required ?? false });
+  const sendApprovalRequired = (saved as any).send_approval_required ?? false;
+  return NextResponse.json({
+    success: true,
+    signature: saved,
+    sendApprovalRequired,
+    sendReviewMode: (saved as any).send_review_mode ?? (sendApprovalRequired ? 'dashboard' : 'off'),
+  });
 }

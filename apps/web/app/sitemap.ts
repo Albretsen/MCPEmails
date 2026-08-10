@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { localePath, languageAlternates } from '@/i18n/seo';
-import { getAllPosts } from '@/lib/blog/posts';
+import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
+import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
 
 /**
  * Next.js App Router sitemap generator (renders as /sitemap.xml).
@@ -59,7 +60,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
         lastModified: new Date(post.updatedAt),
         changeFrequency: 'monthly',
         priority: 0.6,
-        alternates: { languages: languageAlternates(path) },
+        alternates: {
+          languages: blogPostLanguageAlternates(
+            getPostLocales(post),
+            path,
+            localePath,
+          ),
+        },
       };
     });
 

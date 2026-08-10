@@ -100,7 +100,7 @@
       },
       {
         "category": "Journaux d'audit des appels d'outils MCP",
-        "period": "7 jours (Gratuit) ; 90 jours (Solo) ; 1 an (Team)",
+        "period": "7 jours (Gratuit) ; 90 jours (Agent) ; 1 an (Scale)",
         "reason": "Audit de sécurité ; fonctionnalité du plan"
       },
       {

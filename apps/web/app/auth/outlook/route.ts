@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { randomBytes } from 'crypto';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 /**
  * GET /auth/outlook
@@ -124,6 +126,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?error=state_store_failed`
     );
   }
+  await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId, stage: 'inbox_connection', outcome: 'started', category: 'outlook', phase: 'authorization', connectionType: loginHint ? 'reconnect' : 'first_connect' });
 
   // Build the Microsoft authorization URL.
   const params = new URLSearchParams({

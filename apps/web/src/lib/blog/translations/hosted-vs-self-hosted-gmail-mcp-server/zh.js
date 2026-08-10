@@ -81,7 +81,7 @@ MCP Emails 从不从自己的域名转发邮件。\`email_compose\`（配合 \`s
 
 ## 在美元上它花多少钱
 
-MCP Emails 起步免费，而且 Free 是无限量的：无限收件箱、无限工具调用、无限 API 密钥，无需信用卡。Free 套餐以 60 requests/minute 运行，配 7 天分析和社区支持。[Solo 是 $12/month](/pricing)（300 req/min、90 天分析、邮件支持），Team 是 $49/month，包含角色、多工作区、SSO 和审计日志。自托管的订阅费是 $0，外加你的 VPS 和你的工时所花的一切。对工时要诚实。
+MCP Emails 起步免费：收件箱和 API 密钥不限数量，每个计费周期含 2,500 次可计费操作，无需信用卡。Free 套餐以 60 requests/minute 运行，配 7 天分析和社区支持。[Agent 是 $12/month](/pricing)（50,000 次操作、300 req/min、90 天分析、邮件支持），Scale 是 $49/month（300,000 次操作、角色、多工作区、SSO 和审计日志）。自托管的订阅费是 $0，外加你的 VPS 和你的工时所花的一切。对工时要诚实。
 
 ## 那么你该选哪个？
 
