@@ -332,6 +332,27 @@ async function readTaggedResponse(
   }
 }
 
+/**
+ * Wait for a SASL continuation line. Servers send a bare "+" or "+ <base64>";
+ * Yandex sends the bare form, so the trailing space must not be required.
+ */
+async function readSaslContinuation(reader: LineReader): Promise<void> {
+  const deadline = Date.now() + TIMEOUT.AUTHENTICATE;
+  while (true) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) {
+      throw new McpEmailsError('CONNECTION_TIMEOUT', 'IMAP server did not send a SASL continuation');
+    }
+    const line = await Promise.race([
+      reader.readLine(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new McpEmailsError('CONNECTION_TIMEOUT', 'IMAP response timeout')), remaining)
+      ),
+    ]);
+    if (line.startsWith('+')) return;
+  }
+}
+
 // ── Private: SASL token builders ──────────────────────────────────────────────
 
 /**
@@ -740,7 +761,20 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
       const payload = buildPlainAuthToken(config.username || config.email, config.appPassword);
       await socketWrite(socket, `${authTag} AUTHENTICATE PLAIN ${payload}\r\n`);
 
-      const authResult = await readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);
+      let authResult = await readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);
+
+      // A tagged BAD rejects the command, not the credentials: the server does
+      // not implement RFC 4959 (SASL-IR) and will not accept the initial
+      // response inline. Yandex is the preset that behaves this way. Retry the
+      // RFC 3501 two-step form on the same connection; NO is a real credential
+      // rejection and falls straight through.
+      if (authResult.status === 'BAD') {
+        const retryTag = nextTag();
+        await socketWrite(socket, `${retryTag} AUTHENTICATE PLAIN\r\n`);
+        await readSaslContinuation(reader);
+        await socketWrite(socket, `${payload}\r\n`);
+        authResult = await readTaggedResponse(reader, retryTag, TIMEOUT.AUTHENTICATE);
+      }
 
       if (authResult.status !== 'OK') {
         socket.destroy();
