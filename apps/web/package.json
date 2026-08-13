@@ -13,6 +13,7 @@
     "test:seo": "node --test src/lib/blog/seo.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs",
     "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts",
     "test:retention": "node --test --experimental-strip-types src/lib/analytics/retention.test.ts",
+    "test:growth": "node --test --experimental-strip-types src/lib/analytics/growth-metrics.test.mjs",
     "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs"
   },
   "dependencies": {
