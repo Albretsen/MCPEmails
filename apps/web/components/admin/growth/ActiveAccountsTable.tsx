@@ -218,7 +218,10 @@ export function ActiveAccountsTable({ rows }: { rows: RosterRow[] }) {
               </td></tr>
             )}
             {shown.map(({ row }) => (
-              <tr key={row.workspace_id} className={row.is_internal || row.is_comped ? 'is-muted' : undefined}>
+              // Only internal accounts recede. A comped account is a real user
+              // on a free plan, and greying it out hid the people most worth
+              // watching.
+              <tr key={row.workspace_id} className={row.is_internal ? 'is-muted' : undefined}>
                 <td>
                   <span className="growth-account">{row.owner_email ?? 'unknown owner'}</span>
                   <span className="growth-account-sub">

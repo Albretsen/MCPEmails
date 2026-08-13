@@ -64,6 +64,35 @@
     "pollingHeading": "轮询，而非推送",
     "pollingBody": "MCPEmails 仅采用请求/响应模式：每个结果都来自你的智能体发起的工具调用。<b>没有 webhook、推送通知或由服务器发起的事件</b>——收到新邮件本身绝不会触发智能体调用。要对新邮件作出响应，请让你的智能体按计划<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread_only: true</code>（注意上面的速率限制）。"
   },
+  "operations": {
+    "eyebrow": "为真实的收件箱工作而建",
+    "heading": "更多掌控，而不是更多工具堆砌。",
+    "sub": "这些都是同一套精简的、基于动作的 MCP 接口所具备的、能识别各家服务商差异的能力，而不是为每个边缘情况单列一份工具目录。",
+    "approval": {
+      "heading": "由服务器强制执行的发送审批",
+      "body": "在仪表板中按收件箱开启审批，即可拦截发送、回复、转发、草稿发送和定时发送。智能体会收到一个待处理结果，需由工作区成员在仪表板中批准或拒绝，之后才会真正发出。"
+    },
+    "portable": {
+      "heading": "服务商兼容性档案",
+      "body": "调用 <code>inbox_list</code> 即可查看每个收件箱的版本化档案。它会将标准化操作标记为一致、有差异或不可用，让智能体可以选择可移植的工作流，而不必假装各家服务商完全相同。"
+    },
+    "content": {
+      "heading": "附件与原始邮件",
+      "body": "对于受支持的文本文件、CSV、HTML、JSON 以及带文本层的 PDF，可将选定附件读取为临时文本；也可以把服务商存储的原件下载为可移植的 <code>.eml</code>。提取过程不会运行内嵌代码，也不会对图片做 OCR。"
+    },
+    "reliable": {
+      "heading": "可靠且可复核的自动化",
+      "body": "重复使用同一个 <code>idempotency_key</code>，可在 24 小时内安全地重试同一个外发请求。批量整理任务会在仪表板中保留状态并接受取消请求；这些任务记录中不会保存任何邮件内容或搜索词。"
+    },
+    "workflows": {
+      "heading": "引导式 MCP 工作流",
+      "body": "支持 MCP prompts 的客户端可以提供内置流程，用于细致的收件箱分拣、未结事项复核、回复草稿准备、整理方案建议以及定时发送复核。Prompts 从不授予权限，也不会自动运行。"
+    },
+    "drafts": {
+      "heading": "同线程回复草稿与 Gmail Send As",
+      "body": "在原始会话中创建一封未发送的回复，供人工复核。Gmail 的发送、回复和转发只能选择由服务商验证、并由 <code>inbox_list</code> 返回的 Send As 身份；其他服务商则使用已连接的地址。"
+    }
+  },
   "oauth": {
     "eyebrow": "OAuth 连接",
     "heading": "对支持 OAuth 的客户端零配置。",
@@ -206,7 +235,8 @@
         "reply_all": "回复所有原始收件人——To + Cc（action 'reply'）。默认 false。",
         "include_attachments": "重新附加原始邮件的附件（action 'forward'）。超出 10 MB 额度的文件将被省略。默认 false。",
         "include_signature": "是否将收件箱已配置的签名追加到这封邮件。默认 true；设为 false 可发送这一封不带签名的邮件。",
-        "attachments": "文件附件。每项：'{' filename、mime_type、data（base64）'}'。最多 20 项，共 10 MB。"
+        "attachments": "文件附件。每项：'{' filename、mime_type、data（base64）'}'。最多 20 项，共 10 MB。",
+        "idempotency_key": "可选的不透明键（1–200 个字符），代表一次逻辑上的外发请求。仅在 24 小时内重试完全相同的动作和参数时才可重复使用；参数不同的重复使用会被拒绝。"
       }
     },
     "folder": {
@@ -236,6 +266,7 @@
         "bcc": "密送收件人（action 'create'/'update'）。默认 []。",
         "html_body": "可选的 HTML 正文（action 'create'/'update'）。",
         "include_signature": "是否在草稿中嵌入收件箱已配置的签名（action 'create'/'update'）。默认 true；设为 false 可保存不带签名的草稿。",
+        "idempotency_key": "可选的不透明键（1–200 个字符），用于一次草稿发送。仅在 24 小时内重试完全相同的发送时才可重复使用；参数不同的重复使用会被拒绝。",
         "limit": "要返回的最大草稿数（action 'list'）。默认 20，最大 50。"
       }
     },
@@ -256,7 +287,8 @@
         "reply_to": "可选的 Reply-To 标头地址（action 'create'）。",
         "attachments": "文件附件（action 'create'）。与 send 操作的结构相同。最多 20 项，共 10 MB。",
         "scheduled_send_id": "要取消的定时发送的 UUID（action 'cancel'）。",
-        "limit": "最大结果数（action 'list'）。默认 20，最大 100。"
+        "limit": "最大结果数（action 'list'）。默认 20，最大 100。",
+        "idempotency_key": "可选的不透明键，用于创建单次定时发送。仅在 24 小时内重试完全相同的创建请求时才可重复使用。"
       }
     },
     "contact_search": {
@@ -341,6 +373,7 @@
       "copy": "复制",
       "delete": "删除 / 移至回收站",
       "permanent_delete": "永久删除（彻底清除）",
+      "original_message": "下载原始邮件（.eml）",
       "drafts": "草稿（创建 / 编辑 / 发送）",
       "contacts_db": "联系人搜索（实时扫描）",
       "scheduling": "定时发送",

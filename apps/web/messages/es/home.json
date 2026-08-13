@@ -111,6 +111,12 @@
       "7": "Encuentra personas por nombre o correo con un escaneo en vivo del correo reciente coincidente. No se almacena nada."
     }
   },
+  "examples": {
+    "eyebrow": "Peticiones reales",
+    "titleLine1": "Solo pídelo.",
+    "titleLine2": "Lee, escribe y organiza.",
+    "sub": "No hay paneles que aprender. Dile a tu asistente de IA lo que quieres en lenguaje natural y usará mcpemails para hacerlo."
+  },
   "quote": {
     "text": "Quería que mis agentes trabajaran mi bandeja de entrada, pero cada opción implicaba entregar a un tercero una copia de mi correo. Así que construí la tubería que deseaba que existiera: conéctate una vez, tu bandeja de entrada se obtiene en vivo y nunca se almacena, y puedes cortarle el acceso a cualquier agente con un clic. Ese es el producto en el que confío con mi propia bandeja.",
     "role": "fundador, mcpemails"
@@ -139,7 +145,7 @@
         "name": "Agent",
         "desc": "Para usuarios avanzados que ejecutan agentes a todas horas.",
         "features": [
-        "50.000 acciones por período de facturación",
+          "50.000 acciones por período de facturación",
           "300 peticiones / minuto (ráfaga 5×)",
           "Analíticas de uso completas (historial de 90 días)",
           "Gmail, iCloud, Fastmail y cualquier IMAP",
@@ -151,7 +157,7 @@
         "name": "Scale",
         "desc": "Para equipos y agencias que gestionan varias bandejas de clientes en un espacio de trabajo compartido, con roles, SSO y registros de auditoría.",
         "features": [
-        "300.000 acciones por período de facturación",
+          "300.000 acciones por período de facturación",
           "1.000 peticiones / minuto",
           "Roles de equipo y múltiples espacios de trabajo",
           "SSO (SAML / OIDC) + registro de auditoría",
@@ -168,7 +174,10 @@
     "title": "Preguntas, respondidas",
     "sub": "Todo lo que necesitas saber antes de conectar tu primera bandeja de entrada.",
     "items": [
-      { "q": "¿Usan analítica?", "a": "Usamos analítica de producto sin cookies y respetuosa con la privacidad para comprender el sitio y la configuración. Nunca recopilamos contenido de correo, direcciones, claves API, tokens OAuth ni datos de solicitudes MCP." },
+      {
+        "q": "¿Usan analítica?",
+        "a": "Usamos analítica de producto sin cookies y respetuosa con la privacidad para comprender el sitio y la configuración. Nunca recopilamos contenido de correo, direcciones, claves API, tokens OAuth ni datos de solicitudes MCP."
+      },
       {
         "q": "¿Con qué clientes de IA funciona?",
         "a": "Con cualquier cliente compatible con MCP. Somos un servidor MCP estándar streamable-http con OAuth 2.1, DCR y PKCE, así que la misma bandeja de entrada funciona en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat y más. Pega una sola URL de endpoint y ya estás conectado — sin tener que reconstruir nada para cada app."
