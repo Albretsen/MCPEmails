@@ -256,7 +256,28 @@ export class ImapClient {
     const token = btoa(`\x00${cfg.email}\x00${cfg.password}`);
     const tag = client.nextTag();
     await client.write(`${tag} AUTHENTICATE PLAIN ${token}${CRLF}`);
-    const resp = await client.readTagged(tag);
+    let resp = await client.readTagged(tag);
+
+    // A tagged BAD rejects the command rather than the credentials: the server
+    // does not implement RFC 4959 (SASL-IR) and will not take the initial
+    // response inline. Yandex answers "BAD AUTHENTICATE Command syntax error"
+    // to the inline form. Retry the RFC 3501 two-step form on the same
+    // connection; a NO is a genuine credential failure and is not retried.
+    if (resp.status === "BAD") {
+      const retryTag = client.nextTag();
+      await client.write(`${retryTag} AUTHENTICATE PLAIN${CRLF}`);
+      // Continuation is a bare "+" on Yandex, so don't require "+ ".
+      const cont = await client.readLine();
+      if (!cont.startsWith("+")) {
+        client.close();
+        throw new ImapAuthError(
+          `IMAP server refused SASL PLAIN: ${cont.slice(0, 120)}`,
+        );
+      }
+      await client.write(`${token}${CRLF}`);
+      resp = await client.readTagged(retryTag);
+    }
+
     if (resp.status !== "OK") {
       client.close();
       // Some servers report a connection-limit refusal as a NO/BYE on AUTH
