@@ -44,6 +44,11 @@ import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe/client';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { getPlanByStripePriceId, type PlanId } from '@/lib/stripe/plans';
+import {
+  billingTarget,
+  primaryWorkspaceId,
+  recordCheckoutCompleted,
+} from '@/lib/analytics/billing-funnel';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -306,6 +311,18 @@ async function handleCheckoutSessionCompleted(
     currentPeriodStart,
     source: 'checkout.session.completed',
   });
+
+  // Close the billing funnel. Only an entitled outcome counts as a completed
+  // checkout: an `incomplete` subscription resolves to `free` above and is a
+  // failed payment, which must not read as revenue in the funnel.
+  if (userId && resolvedPlan !== 'free') {
+    const interval = session.metadata?.interval === 'year' ? 'year' : 'month';
+    const service = createServiceRoleClient();
+    await recordCheckoutCompleted(
+      await primaryWorkspaceId(service, userId),
+      billingTarget(resolvedPlan, interval),
+    );
+  }
 }
 
 /**

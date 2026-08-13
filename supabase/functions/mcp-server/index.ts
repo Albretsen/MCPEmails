@@ -1548,6 +1548,23 @@ async function writeUsageLimitEvent(
       plan, used_actions: usedActions, cap, error: error.message, error_code: error.code,
     });
   }
+
+  // Mirror the cap hit into the product funnel so the whole revenue path
+  // (paywall → pricing view → checkout → paid) can be read from one table.
+  // usage_limit_events stays the metering-accurate record; this is the funnel's
+  // entry point, and its absence is what proved no user had ever been asked to
+  // pay. Best-effort: a funnel write must never fail a cap response.
+  const { error: funnelError } = await supabase.from("product_funnel_events").insert({
+    workspace_id: workspaceId,
+    stage: "paywall_reached",
+    outcome: "success",
+    category: plan === "solo" || plan === "pro" ? plan : "free",
+  });
+  if (funnelError) {
+    console.error("[mcp-server] paywall_funnel_event_failed", {
+      plan, error: funnelError.message, error_code: funnelError.code,
+    });
+  }
 }
 
 /** Calculates (but never enforces) the launch cap condition. Diagnostics stay

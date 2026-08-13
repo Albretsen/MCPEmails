@@ -3,6 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
 import { PLANS, type PlanId, type BillingInterval } from '@/lib/stripe/plans';
+import {
+  billingTarget,
+  primaryWorkspaceId,
+  recordCheckoutStarted,
+} from '@/lib/analytics/billing-funnel';
 
 /**
  * POST /api/stripe/checkout
@@ -77,7 +82,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const priceId =
     interval === 'year' ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly;
 
+  const target = billingTarget(planId, interval);
+
   if (!priceId) {
+    // An unset STRIPE_PRICE_* env var makes a plan silently unbuyable, which is
+    // indistinguishable from disinterest unless it is recorded here.
+    await recordCheckoutStarted(
+      await primaryWorkspaceId(supabase, user.id),
+      target,
+      'price_not_configured',
+    );
     return NextResponse.json(
       {
         error:
@@ -125,6 +139,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       entitledStatuses.includes(billing.subscription_status));
 
   if (hasEntitledSubscription) {
+    await recordCheckoutStarted(workspace.id, target, 'subscription_exists');
     if (billing!.plan === planId) {
       return NextResponse.json(
         { error: `You are already on the ${plan.name} plan.` },
@@ -157,6 +172,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     customerId = result.customerId;
   } catch (err) {
     console.error('[checkout] getOrCreateStripeCustomer failed:', err);
+    await recordCheckoutStarted(workspace.id, target, 'stripe_error');
     return NextResponse.json(
       { error: 'Failed to create Stripe customer. Please try again.' },
       { status: 500 },
@@ -208,10 +224,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       throw new Error('Stripe returned a session without a URL.');
     }
 
+    // The user is now on Stripe's hosted page. A `checkout_completed` event
+    // that never follows this one is the abandonment signal.
+    await recordCheckoutStarted(workspace.id, target);
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[checkout] stripe.checkout.sessions.create failed:', message);
+    await recordCheckoutStarted(workspace.id, target, 'stripe_error');
     return NextResponse.json(
       { error: 'Failed to create checkout session. Please try again.' },
       { status: 500 },
