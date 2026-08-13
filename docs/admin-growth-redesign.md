@@ -452,3 +452,41 @@ clickable and the dot is a real sibling control.
 external, non-comped account**: the volume is dominated by our own and comped
 accounts. The median external account has **one** active day. 11 of 48 external
 accounts are active on four or more days.
+
+---
+
+## 12. Third pass: the roster becomes a real table (2026-08-13)
+
+Fifty-three rows, most of them accounts that tried the product once, is not a
+useful default. The Active accounts table now:
+
+- **Opens filtered to accounts that came back**, meaning more than one active
+  day in the window. `All` is one click away and shows everyone.
+- **Shows exactly one page of ten** when collapsed, and paginates in place. The
+  wrapper holds a fixed minimum height so a short final page does not make the
+  rest of the page jump. Expanding renders the whole filtered set and hides the
+  pager.
+- **Sorts on any column header**, with the direction toggling on a second
+  click. Numbers and dates open largest-first, text opens A to Z. Ties break on
+  workspace id so rows do not shuffle between renders.
+- **Has a search field** matching owner email, workspace name, provider and
+  plan. Changing filter, search or sort returns to page one.
+
+All of it runs client-side over the array the server already fetched: at this
+scale the roster is a few kilobytes and a round trip per keystroke would be
+slower than the sort.
+
+**Definition change.** "Sticky" (four or more active days) is now "Returned"
+(more than one active day), used by both the summary card and the table filter
+so the page has exactly one meaning for it. The number moved from 11 to 25.
+
+### Bug found during this pass
+
+The summary card read **0 returned** while the table's own filter found 25. The
+shared `STICKY_MIN_ACTIVE_DAYS` constant was exported from the `'use client'`
+table module, and a value imported from a client module into a Server Component
+does not arrive as the value: React hands the server a client reference, so the
+comparison ran against `undefined` and matched nothing. Constants both sides
+need now live in `components/admin/growth/roster.ts`, outside the client
+boundary. Worth remembering: this fails silently, with no type error and no
+runtime warning.

@@ -117,6 +117,11 @@
 
 /* ---------- Tables ---------- */
 .growth-table-wrap { overflow-x: auto; border: 1px solid var(--border-1); border-radius: 12px; background: var(--bg-surface); }
+/* A collapsed roster page holds its height even when the last page is short,
+   so paging through does not make the rest of the page jump. Sized to ten
+   two-line rows plus the header, and left as a minimum rather than padded with
+   empty rows: a blank row reads as missing data. */
+.growth-table-wrap.is-paged { min-height: 656px; }
 .growth-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .growth-table th { color: var(--fg-3); background: var(--ink-50); text-align: left; font-size: 11px; letter-spacing: .035em; text-transform: uppercase; white-space: nowrap; }
 .growth-table th, .growth-table td { padding: 11px 14px; border-bottom: 1px solid var(--border-1); }
@@ -127,6 +132,36 @@
 .growth-code-cell { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; }
 .growth-code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px; background: var(--bg-sunken); padding: 2px 6px; border-radius: 5px; }
 .growth-blame { color: var(--fg-4); font-size: 11.5px; }
+
+/* ---------- Table controls: filter, search, pagination, sorting ---------- */
+.growth-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.growth-segment { display: inline-flex; border: 1px solid var(--border-1); border-radius: 9px; overflow: hidden; background: var(--bg-surface); }
+.growth-segment button { padding: 6px 13px; font: inherit; font-size: 13px; color: var(--fg-3); background: none; border: 0; border-right: 1px solid var(--border-1); cursor: pointer; }
+.growth-segment button:last-child { border-right: 0; }
+.growth-segment button:hover { color: var(--fg-1); background: var(--ink-50); }
+.growth-segment button[aria-pressed="true"] { color: var(--fg-on-brand); background: var(--brand); }
+.growth-segment button:focus-visible { outline: none; box-shadow: inset var(--shadow-focus); }
+.growth-search { flex: 1; min-width: 200px; max-width: 340px; padding: 7px 11px; font: inherit; font-size: 13px; color: var(--fg-1); background: var(--bg-surface); border: 1px solid var(--border-1); border-radius: 9px; }
+.growth-search::placeholder { color: var(--fg-4); }
+.growth-search:focus-visible { outline: none; border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+.growth-controls-count { color: var(--fg-4); font-size: 12px; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+.growth-th { display: inline-flex; align-items: center; gap: 5px; }
+/* Numeric columns are right-aligned in the body, so their headers follow. */
+.growth-th.is-numeric { flex-direction: row-reverse; }
+.growth-sort { display: inline-flex; align-items: center; gap: 5px; background: none; border: 0; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
+.growth-sort:hover { color: var(--fg-1); }
+.growth-sort:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: 4px; }
+.growth-sort.is-active { color: var(--fg-1); }
+.growth-sort-arrow { color: var(--fg-4); font-size: 10px; }
+.growth-sort.is-active .growth-sort-arrow { color: var(--brand); }
+
+.growth-pager { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.growth-page-btn { padding: 5px 12px; font: inherit; font-size: 13px; color: var(--fg-2); background: var(--bg-surface); border: 1px solid var(--border-1); border-radius: 8px; cursor: pointer; }
+.growth-page-btn:hover:not(:disabled) { color: var(--fg-1); border-color: var(--border-2); }
+.growth-page-btn:disabled { color: var(--fg-4); cursor: default; opacity: .6; }
+.growth-page-status { color: var(--fg-3); font-size: 13px; font-variant-numeric: tabular-nums; }
+.growth-pager .growth-link { margin-left: auto; }
 
 /* ---------- Active-account roster ---------- */
 .growth-table-roster td { vertical-align: top; }
