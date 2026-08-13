@@ -22,7 +22,7 @@ import { fetchGmailCapSummary, gmailCapProjection } from '@/lib/analytics/growth
 import { GMAIL_OAUTH_USER_CAP } from '@/lib/analytics/growth-types';
 import { ProgressMeter, formatCount } from '../charts';
 import { MetricLink } from '../MetricLink';
-import { SectionError } from './shared';
+import { SectionError, Section } from './shared';
 
 const MONTH_FORMAT = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
@@ -40,8 +40,30 @@ export async function GmailCapSection() {
   const exhaustion = monthLabel(projection.projectedExhaustion);
 
   return (
-    <section className="growth-section" aria-label="Gmail OAuth headroom">
-      <div className="growth-panel growth-cap">
+    <Section
+      title="Gmail OAuth headroom"
+      explain={
+        <>
+          Google caps a published-but-unverified client with restricted Gmail scopes at{' '}
+          <strong>{GMAIL_OAUTH_USER_CAP} distinct accounts that have ever granted consent</strong>, and the
+          count is cumulative: revoking access or deleting an inbox does not return a slot, which is why
+          soft-deleted inboxes are counted here. Our figure is a floor, because Google counts a grant the
+          moment consent is given and anyone who consented then failed before an inbox row was written
+          spends a slot we cannot see. Lifting the cap needs Google verification plus the CASA assessment,
+          which take weeks and do not pause while the cap keeps filling. The authoritative number is in the
+          Google Cloud Console.
+          {summary.google_reported_users !== null
+            && ` Console last reported ${summary.google_reported_users} on ${summary.google_reported_at?.slice(0, 10)}.`}
+        </>
+      }
+      aside={projection.level === 'ok' ? undefined : (
+        <span className={`growth-cap-flag is-${projection.level}`}>
+          Start verification: {formatCount(projection.remaining)} slots left
+          {exhaustion ? `, full around ${exhaustion}` : ''}
+        </span>
+      )}
+    >
+      <div className="growth-cap">
         {/* Thresholds are fractions of the cap: amber from 60 grants, red from 80. */}
         <ProgressMeter
           value={projection.used}
@@ -57,28 +79,12 @@ export async function GmailCapSection() {
           <div><dt>Rate</dt><dd>{projection.ratePerMonth.toFixed(1)} / month</dd></div>
           <div><dt>Slots left</dt><dd>{formatCount(projection.remaining)}</dd></div>
           <div><dt>Projected full</dt><dd>{exhaustion ?? 'No growth'}</dd></div>
+          <div><dt>Connected now</dt><dd>{formatCount(summary.active)}</dd></div>
           <div style={{ alignSelf: 'end' }}>
-            <MetricLink metricKey="gmail_grants">Show grant history</MetricLink>
+            <MetricLink metricKey="gmail_grants">Grant history</MetricLink>
           </div>
         </dl>
-
-        <p className="growth-note">
-          {formatCount(summary.live)} still connected, {formatCount(summary.active)} currently active.
-          Deleting or revoking an inbox does <strong>not</strong> return a slot to Google, so the used figure
-          only ever rises.
-          {summary.google_reported_users !== null
-            ? ` Google Cloud Console reported ${formatCount(summary.google_reported_users)} on ${summary.google_reported_at?.slice(0, 10)}.`
-            : ' No Cloud Console figure has been recorded yet, so this is a floor: consent that failed before an inbox was created is not visible here.'}
-        </p>
-
-        {projection.level !== 'ok' && (
-          <p className={`growth-cap-warning is-${projection.level}`}>
-            <strong>Start verification now.</strong> Google review plus the CASA assessment take weeks, and the
-            cap keeps filling while they run. At the current rate the remaining {formatCount(projection.remaining)}{' '}
-            slots run out {exhaustion ? `around ${exhaustion}` : 'at an unknown date'}.
-          </p>
-        )}
       </div>
-    </section>
+    </Section>
   );
 }

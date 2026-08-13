@@ -42,6 +42,8 @@ import type {
   GrowthOAuthAbandonmentRow,
   GrowthProviderFunnelRow,
   GrowthRetentionPointRow,
+  GrowthActiveWorkspaceRow,
+  GrowthRevenueRow,
 } from '@/lib/analytics/growth-types';
 
 // The cap projection is implemented next to the other pure helpers so it can be
@@ -60,6 +62,7 @@ export const GROWTH_TAGS = {
   gmail: 'growth:gmail',
   errors: 'growth:errors',
   inventory: 'growth:inventory',
+  accounts: 'growth:accounts',
 } as const;
 
 /**
@@ -211,6 +214,22 @@ export async function fetchGmailGrantSeries(): Promise<GrowthResult<GmailGrantMo
 /** Top failing tools over the window. */
 export async function fetchErrorBreakdown(days: number): Promise<GrowthResult<GrowthErrorRow[]>> {
   return rpcRows<GrowthErrorRow>('growth_error_breakdown', GROWTH_TAGS.errors, { p_days: clampDays(days) });
+}
+
+/**
+ * The roster of workspaces that actually used the product in the window.
+ *
+ * Cached under its own tag rather than the shared inventory one: this is the
+ * only fetcher on the page that returns account identity, and keeping it
+ * separable makes it easy to see, and to revoke, who reads it.
+ */
+export async function fetchActiveWorkspaces(days: number): Promise<GrowthResult<GrowthActiveWorkspaceRow[]>> {
+  return rpcRows<GrowthActiveWorkspaceRow>('growth_active_workspaces', GROWTH_TAGS.accounts, { p_days: clampDays(days) });
+}
+
+/** Paying versus comped versus free, with comps kept out of the revenue number. */
+export async function fetchRevenueCounts(): Promise<GrowthResult<GrowthRevenueRow>> {
+  return rpcSingleRow<GrowthRevenueRow>('growth_revenue_counts', GROWTH_TAGS.funnel);
 }
 
 /** One row per workspace from the `billing_funnel_by_workspace` view. */

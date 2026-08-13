@@ -35,22 +35,22 @@ export async function ActivationFunnelSection({ days }: { days: number }) {
   return (
     <Section
       title="Signup to first value"
-      blurb={`Workspaces created in the last ${days} days, measured against where they got to. Stages are cumulative: a workspace that reached a later stage counts at every earlier one, so the funnel can only narrow.`}
+      explain={
+        <>
+          Workspaces created in the last {days} days, measured against how far they got. Stages are
+          cumulative, so a workspace that reached a later stage counts at every earlier one and the funnel
+          can only narrow. Value activation is the stage that matters: everything before it proves only
+          that the plumbing works.
+          <br /><br />
+          <strong>Read the middle stages with care.</strong> Client selection and connection verification
+          were only instrumented on 2026-08-05, and the backfill set late timestamps without earlier ones,
+          so for older workspaces those two stages are inferred from the stage that follows and carry no
+          independent signal. Only 11 workspaces genuinely have a recorded client selection.
+        </>
+      }
     >
-      <div className="growth-panel">
-        <FunnelBars title={`Workspaces created in the last ${days} days`} steps={steps} />
-      </div>
-      <p className="growth-note">
-        Value activation is the stage that matters: a successful call that touched a mailbox.
-        Everything before it proves only that the plumbing works.
-      </p>
-      <p className="growth-note">
-        <strong>Read the middle stages with care.</strong> Client selection and connection verification were
-        only instrumented on 2026-08-05. For workspaces created before that, the 20260805010000 backfill set
-        late timestamps without earlier ones, so those two stages are inferred from the stage that follows
-        them and carry no independent signal. Only 11 workspaces genuinely have a recorded client selection.
-        The funnel is fully trustworthy for windows that start after 2026-08-05.
-      </p>
+      <FunnelBars title={`Workspaces created in the last ${days} days`} steps={steps} />
+
     </Section>
   );
 }
