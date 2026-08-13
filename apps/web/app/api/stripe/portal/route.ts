@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
+import {
+  planCategory,
+  primaryWorkspaceId,
+  recordPortalOpened,
+} from '@/lib/analytics/billing-funnel';
 
 /**
  * POST /api/stripe/portal
@@ -54,7 +59,7 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
   // and backfill `user_billing` so the next call resolves directly.
   const { data: billing } = await supabase
     .from('user_billing')
-    .select('stripe_customer_id')
+    .select('stripe_customer_id, plan')
     .eq('user_id', user.id)
     .maybeSingle();
 
@@ -94,6 +99,11 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
 
   // ── 3. Guard: only users with a Stripe customer have a portal ─────────────
   if (!customerId) {
+    await recordPortalOpened(
+      await primaryWorkspaceId(supabase, user.id),
+      'free',
+      'no_customer',
+    );
     return NextResponse.json(
       {
         error:
@@ -117,11 +127,20 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
       return_url: returnUrl,
     });
 
+    await recordPortalOpened(
+      await primaryWorkspaceId(supabase, user.id),
+      planCategory(billing?.plan),
+    );
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const stripeCode = (err as Record<string, unknown>)?.code as string | undefined;
     console.error('[portal] stripe.billingPortal.sessions.create failed:', message);
+    await recordPortalOpened(
+      await primaryWorkspaceId(supabase, user.id),
+      planCategory(billing?.plan),
+      'stripe_error',
+    );
 
     // ── 5a. Missing / invalid customer (e.g. test-mode ID used against live key)
     // Self-heal: null out the stale customer ID so the account recovers on the

@@ -6,12 +6,30 @@ import { safeDiagnosticPhase } from '@/lib/email/connection-config';
  * and category-only, so this is useful for product analysis without becoming a
  * second audit log or storing mailbox/credential data.
  */
+/** Plan+interval a checkout targeted. Never a Stripe price id or amount. */
+export type BillingTargetCategory = 'solo_month' | 'solo_year' | 'pro_month' | 'pro_year';
+/** The plan a user was on when a paywall / portal event fired. */
+export type BillingPlanCategory = 'free' | 'solo' | 'pro';
+/** Where a signed-in user saw the plans. */
+export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
+
 export type ProductFunnelEvent = {
   workspaceId: string;
-  stage: 'onboarding_started' | 'client_selected' | 'provider_selected' | 'inbox_connection' | 'connection_verified' | 'credential_created' | 'technical_activation' | 'value_activation';
+  stage:
+    | 'onboarding_started' | 'client_selected' | 'provider_selected' | 'inbox_connection'
+    | 'connection_verified' | 'credential_created' | 'technical_activation' | 'value_activation'
+    | 'paywall_reached' | 'pricing_viewed' | 'checkout_started' | 'checkout_completed'
+    | 'billing_portal_opened';
   outcome: 'started' | 'success' | 'failure';
-  category: 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap' | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf' | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown';
-  errorCategory?: 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed' | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown';
+  category:
+    | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
+    | 'api_key' | 'oauth' | 'claude' | 'chatgpt' | 'cursor' | 'vscode' | 'cline' | 'windsurf'
+    | 'gemini' | 'zed' | 'jetbrains' | 'raycast' | 'warp' | 'curl' | 'unknown'
+    | BillingTargetCategory | BillingPlanCategory | PricingSurfaceCategory;
+  errorCategory?:
+    | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
+    | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'
+    | 'price_not_configured' | 'subscription_exists' | 'stripe_error' | 'no_customer';
   /** Coarse protocol phase only; never a host, address, credential, or response. */
   phase?: string;
   connectionType?: 'first_connect' | 'reconnect';

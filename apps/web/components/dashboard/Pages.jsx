@@ -11,6 +11,7 @@ import { useToast } from './Toast';
 import SignatureRichEditor from './SignatureRichEditor';
 import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
 import { ApprovalsPanel } from './ApprovalsPanel';
+import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
@@ -4095,6 +4096,9 @@ function BillingSection({ currentPlan, compedScale = false, stripePrices, upgrad
   const automaticUpgradeStarted = useRef(false);
   const [usage, setUsage] = useState(null); // fetched from /api/usage
   const { toast } = useToast();
+
+  // Billing funnel: record that this user actually saw the plans.
+  usePricingView('dashboard_billing');
 
   // Fetch live usage stats on mount
   useEffect(() => {

@@ -7,6 +7,7 @@ import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import { createClient } from '@/lib/supabase/client';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
+import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
 // NOTE: the "Scale" tier keeps the internal key `pro` so live Stripe prices
@@ -297,6 +298,11 @@ export default function PricingClient({ stripePrices }) {
   const [user, setUser] = useState(null);
   const t = useTranslations('pricing');
   const faqItems = t.raw('faq.items');
+
+  // Billing funnel. The endpoint ignores anonymous callers, so this records
+  // only signed-in users revisiting /pricing, which is the population whose
+  // non-conversion is actually diagnostic.
+  usePricingView('pricing_page');
 
   // Marketing pages are CDN-cached and therefore cannot render session state
   // on the server. Resolve it client-side so signed-in visitors still see a

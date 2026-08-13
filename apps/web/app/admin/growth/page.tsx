@@ -23,6 +23,16 @@ const HISTORY_DAYS = 180;
 type Activity = SuccessfulActivity & { status: string };
 type ActionUsage = { workspace_id: string; quantity: number; occurred_at: string };
 type UsageLimitEvent = { workspace_id: string; occurred_at: string };
+type BillingFunnelRow = {
+  workspace_id: string;
+  plan: string | null;
+  paywall_hits: number;
+  pricing_views: number;
+  checkouts_started: number;
+  checkouts_failed: number;
+  checkouts_completed: number;
+  abandoned_checkout: boolean;
+};
 
 function utcDay(date: Date | string) {
   const value = new Date(date);
@@ -65,17 +75,46 @@ async function fetchUsageReporting(): Promise<{ actions: ActionUsage[]; limitEve
   return { actions: actionsResult.data ?? [], limitEvents: limitEventsResult.data ?? [] };
 }
 
+/**
+ * Billing funnel. Unlike the activation metrics above, this reads the funnel
+ * event table directly rather than deriving from activity: a paywall hit, a
+ * pricing view, and an abandoned checkout leave no trace in `activity_log`.
+ * Reported all-time, not windowed, because the counts are small enough that a
+ * 28-day window would usually show zeros and hide the real shape.
+ */
+async function fetchBillingFunnel(): Promise<BillingFunnelRow[]> {
+  // Generated database types cover tables, not views; cast locally rather than
+  // weakening the shared application client (same convention as product-funnel).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const service = createServiceRoleClient() as any;
+  const { data, error } = await service
+    .from('billing_funnel_by_workspace')
+    .select('workspace_id, plan, paywall_hits, pricing_views, checkouts_started, checkouts_failed, checkouts_completed, abandoned_checkout');
+  if (error) throw new Error(`Could not load billing funnel: ${error.message}`);
+  return (data ?? []) as BillingFunnelRow[];
+}
+
 export default async function GrowthAnalyticsPage() {
   await requireAdmin();
   const service = createServiceRoleClient();
-  const [activities, usageReporting, workspaceResult, inboxResult] = await Promise.all([
+  const [activities, usageReporting, billingFunnel, workspaceResult, inboxResult] = await Promise.all([
     fetchActivities(),
     fetchUsageReporting(),
+    fetchBillingFunnel(),
     service.from('workspaces').select('id, created_at, deleted_at, analytics_first_tool_client, onboarding_technical_activated_at, onboarding_value_activated_at, plan').is('deleted_at', null),
     service.from('inboxes').select('workspace_id, provider, service, status').is('deleted_at', null),
   ]);
   if (workspaceResult.error) throw new Error(`Could not load workspaces: ${workspaceResult.error.message}`);
   if (inboxResult.error) throw new Error(`Could not load inboxes: ${inboxResult.error.message}`);
+
+  const billing = {
+    paywalled: billingFunnel.filter((row) => row.paywall_hits > 0).length,
+    viewedPricing: billingFunnel.filter((row) => row.pricing_views > 0).length,
+    startedCheckout: billingFunnel.filter((row) => row.checkouts_started > 0).length,
+    failedCheckout: billingFunnel.filter((row) => row.checkouts_failed > 0).length,
+    abandoned: billingFunnel.filter((row) => row.abandoned_checkout).length,
+    paid: billingFunnel.filter((row) => row.checkouts_completed > 0).length,
+  };
 
   const today = utcDay(new Date());
   const successfulActivities = activities.filter((activity) => activity.status === 'success');
@@ -237,6 +276,23 @@ export default async function GrowthAnalyticsPage() {
     </section>
     <section className="growth-section"><h2>Engagement frequency</h2><p>Workspace distribution over the rolling 28-day window. Active days measure habit; sessions use a 30-minute inactivity boundary.</p><div className="growth-split"><MixTable title="Active days" rows={mixRows(activeDayBands)} secondHeader="Workspaces" /><MixTable title="Successful sessions" rows={mixRows(sessionBands)} secondHeader="Workspaces" /></div></section>
     <section className="growth-section"><h2>Usage and conversion baseline</h2><p>Rolling 28-day action utilization by current plan cap. The plan mix is a current-state baseline; conversion is reported once a workspace changes plan.</p><div className="growth-split"><MixTable title="Cap utilization" rows={mixRows(utilizationBands)} /><MixTable title="Current plan" rows={mixRows(new Map([['Free', planMix.get('free') ?? 0], ['Agent', planMix.get('solo') ?? 0], ['Scale', planMix.get('pro') ?? 0]]))} /></div></section>
+    <section className="growth-section">
+      <h2>Billing funnel</h2>
+      <p>All-time, workspace-level. Each stage counts workspaces that reached it at least once, so a stage showing zero means no user has ever got that far. <strong>Paywalled</strong> is the entry point: a workspace cannot be expected to convert if it was never asked to pay.</p>
+      <div className="growth-table-wrap">
+        <table className="growth-table">
+          <thead><tr><th>Stage</th><th>Workspaces</th><th>Meaning of zero</th></tr></thead>
+          <tbody>
+            <tr><td>Hit the action cap</td><td>{billing.paywalled}</td><td>Nobody has ever been blocked by a plan limit.</td></tr>
+            <tr><td>Viewed pricing (signed in)</td><td>{billing.viewedPricing}</td><td>No existing user has looked at the plans.</td></tr>
+            <tr><td>Reached Stripe checkout</td><td>{billing.startedCheckout}</td><td>No checkout session was ever created.</td></tr>
+            <tr><td>Checkout request failed</td><td>{billing.failedCheckout}</td><td>The upgrade endpoint has never errored.</td></tr>
+            <tr><td>Abandoned on Stripe</td><td>{billing.abandoned}</td><td>Nobody reached Stripe and left without paying.</td></tr>
+            <tr><td>Completed payment</td><td>{billing.paid}</td><td>No paid conversion recorded.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
     <section className="growth-section"><h2>Connection mix</h2><p>Active inboxes and the client recorded with a workspace’s first successful MCP tool call.</p><div className="growth-split"><MixTable title="Provider" rows={mixRows(providerMix)} /><MixTable title="MCP client" rows={mixRows(clientMix)} /></div></section>
   </main>;
 }
