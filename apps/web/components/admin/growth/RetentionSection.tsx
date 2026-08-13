@@ -57,7 +57,17 @@ export async function RetentionSection() {
   return (
     <Section
       title="Retention"
-      blurb="Measured from value activation, the first successful call that touched a mailbox. Connecting an inbox and never using it is not retention worth counting."
+      explain={
+        <>
+          Measured from value activation, the first successful call that touched a mailbox. Connecting an
+          inbox and never using it is not retention worth counting. Week N of the curve counts workspaces
+          that used a mailbox in the Nth week after activating, and a workspace only enters the denominator
+          once that whole week has elapsed, so the tail is not depressed by cohorts that have not had time
+          to return. In the cohort grid, blank cells are weeks that have not happened yet, which is not the
+          same thing as zero. The active-days bar is habit: a workspace sitting in the single-day band for
+          a whole month is not retained, whatever the aggregate active count says.
+        </>
+      }
     >
       <section className="growth-stat-grid" aria-label="Retention counts" style={{ marginBottom: 18 }}>
         <StatCard
@@ -103,11 +113,6 @@ export async function RetentionSection() {
           ) : (
             <div className="growth-error"><strong>Curve unavailable.</strong><code>{curveResult.error}</code></div>
           )}
-          <p className="growth-note">
-            Week N counts workspaces that used a mailbox in the Nth week after activating. A workspace only
-            enters the denominator once that whole week has elapsed, so the tail is not artificially depressed
-            by cohorts that have not had time to return.
-          </p>
         </div>
 
         <div className="growth-panel">
@@ -120,10 +125,6 @@ export async function RetentionSection() {
           ) : (
             <div className="growth-error"><strong>Cohorts unavailable.</strong><code>{cohortResult.error}</code></div>
           )}
-          <p className="growth-note">
-            Each row is a signup week, each column a week since. Blank cells are weeks that have not happened
-            yet, which is not the same thing as zero.
-          </p>
         </div>
       </div>
 
@@ -136,10 +137,6 @@ export async function RetentionSection() {
               .filter((band) => band.metric === 'active_days')
               .map((band) => ({ name: `${band.band} day(s)`, count: band.workspaces }))}
           />
-          <p className="growth-note">
-            Habit, in one line. A workspace sitting in the single-day band for a whole month is not retained,
-            whatever the aggregate active count says.
-          </p>
         </div>
       )}
     </Section>

@@ -33,6 +33,7 @@ import {
 } from '../../../components/admin/GrowthSkeletons';
 import { GmailCapSection } from '../../../components/admin/growth/GmailCapSection';
 import { HeroStatsSection } from '../../../components/admin/growth/HeroStatsSection';
+import { ActiveUsersSection } from '../../../components/admin/growth/ActiveUsersSection';
 import { AcquisitionSection } from '../../../components/admin/growth/AcquisitionSection';
 import { ActivationFunnelSection } from '../../../components/admin/growth/ActivationFunnelSection';
 import { ProviderFunnelSection } from '../../../components/admin/growth/ProviderFunnelSection';
@@ -74,7 +75,9 @@ export default async function GrowthAnalyticsPage({
         </div>
         <p className="growth-definition">
           <strong>Active workspace:</strong> at least one successful MCP tool call in the rolling window.
-          No customer names, email addresses, IDs, or request content are shown.
+          Every section is aggregate except <strong>Active accounts</strong>, which names workspaces and
+          owner email addresses. No credentials, message content, subjects, recipients or IP addresses
+          appear anywhere on this page.
         </p>
       </header>
 
@@ -94,12 +97,12 @@ export default async function GrowthAnalyticsPage({
         </span>
       </div>
 
-      <Suspense fallback={<SkeletonCapCard />}>
-        <GmailCapSection />
-      </Suspense>
-
       <Suspense fallback={<SkeletonStatRow count={5} label="Summary" />}>
         <HeroStatsSection days={days} />
+      </Suspense>
+
+      <Suspense fallback={<SkeletonTable label="Active accounts" rows={10} />}>
+        <ActiveUsersSection days={days} />
       </Suspense>
 
       <Suspense fallback={<SkeletonChart label="Acquisition and activation" height={240} />}>
@@ -128,6 +131,13 @@ export default async function GrowthAnalyticsPage({
 
       <Suspense fallback={<SkeletonSplitChart label="Estate mix" height={200} />}>
         <MixSection days={days} />
+      </Suspense>
+
+      {/* Last on purpose. It is an operational ceiling worth watching, not a
+          growth metric, and at the top of the page it crowded out everything
+          the page exists to show. */}
+      <Suspense fallback={<SkeletonCapCard />}>
+        <GmailCapSection />
       </Suspense>
     </main>
   );

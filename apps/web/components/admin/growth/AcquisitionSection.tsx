@@ -48,10 +48,16 @@ export async function AcquisitionSection({ days }: { days: number }) {
   return (
     <Section
       title="Acquisition and activation"
-      blurb={`New workspaces against the ones that reached a first mailbox operation, daily over the last ${days} days. The gap between the two bars is the onboarding loss; the line is a 7 day trailing average of signups.`}
+      explain={
+        <>
+          New workspaces against the ones that reached a first mailbox operation, daily over the last{' '}
+          {days} days. The gap between the two bars is the onboarding loss. The line is a 7 day trailing
+          average of signups, because a daily count that swings between 0 and 8 reads as noise otherwise.
+          Cumulative is a partial sum over the selected window, not the all-time total.
+        </>
+      }
     >
-      <div className="growth-panel">
-        <BarSeries
+      <BarSeries
           title="Signups and value activations"
           data={rows.map((row) => ({ label: axisLabel(row.day), values: [row.new_workspaces, row.value_activations] }))}
           series={[
@@ -59,11 +65,9 @@ export async function AcquisitionSection({ days }: { days: number }) {
             { key: 'value_activations', name: 'Value activations' },
           ]}
           overlay={[{ key: 'trend', name: 'Signups, 7 day average', values: movingAverage(rows.map((row) => row.new_workspaces), 7) }]}
-        />
-      </div>
+      />
 
       <div className="growth-split" style={{ marginTop: 18 }}>
-        <div className="growth-panel">
           <LineChart
             title="Active workspaces"
             data={rows.map((row) => ({ label: axisLabel(row.day), values: [row.active_7d, row.active_28d] }))}
@@ -73,15 +77,12 @@ export async function AcquisitionSection({ days }: { days: number }) {
             ]}
             footnote="Rolling counts of workspaces with at least one successful tool call in the trailing window."
           />
-        </div>
-        <div className="growth-panel">
           <LineChart
             title={`Cumulative signups in the last ${days} days`}
             data={rows.map((row, index) => ({ label: axisLabel(row.day), values: [cumulative[index]] }))}
             series={[{ key: 'cumulative', name: 'Workspaces created' }]}
             footnote="Partial sum over the selected window, not the all-time workspace count."
           />
-        </div>
       </div>
 
       <details className="growth-raw">

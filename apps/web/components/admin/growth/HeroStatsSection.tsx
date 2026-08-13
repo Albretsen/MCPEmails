@@ -11,8 +11,7 @@
  * could never give.
  */
 
-import { fetchDailyMetrics, fetchLifecycleCounts } from '@/lib/analytics/growth-queries';
-import { fetchInventory } from '@/lib/analytics/growth-inventory';
+import { fetchDailyMetrics, fetchLifecycleCounts, fetchRevenueCounts } from '@/lib/analytics/growth-queries';
 import { MetricCard } from '../MetricCard';
 import { SectionError, StatBlock, StatCard } from './shared';
 
@@ -36,10 +35,10 @@ export async function HeroStatsSection({ days }: { days: number }) {
   const requested = Math.min(days * 2, 90);
   const comparable = requested >= days * 2;
 
-  const [dailyResult, lifecycleResult, inventoryResult] = await Promise.all([
+  const [dailyResult, lifecycleResult, revenueResult] = await Promise.all([
     fetchDailyMetrics(requested),
     fetchLifecycleCounts(),
-    fetchInventory(days),
+    fetchRevenueCounts(),
   ]);
 
   if (!dailyResult.ok) return <SectionError title="Summary" message={dailyResult.error} />;
@@ -51,7 +50,7 @@ export async function HeroStatsSection({ days }: { days: number }) {
   const priorSameDay = comparable ? rows.at(-1 - days) : undefined;
 
   const lifecycle = lifecycleResult.ok ? lifecycleResult.data : null;
-  const inventory = inventoryResult.ok ? inventoryResult.data : null;
+  const revenue = revenueResult.ok ? revenueResult.data : null;
   const windowLabel = `${days}d`;
 
   return (
@@ -60,7 +59,8 @@ export async function HeroStatsSection({ days }: { days: number }) {
         <StatBlock
           label="Active workspaces (7d)"
           value={latest?.active_7d ?? 0}
-          detail="Successful MCP tool call in the last 7 days"
+          detail="Successful call in the last 7 days"
+          explain="Distinct workspaces with at least one successful MCP tool call in the trailing 7 days. Any successful call counts, including a bare inbox_list, so it is a looser bar than value activation."
           spark={rows.slice(-SPARK_DAYS).map((row) => row.active_7d)}
           delta={priorSameDay ? tone(delta(latest?.active_7d ?? 0, priorSameDay.active_7d), 'up') : undefined}
         />
@@ -70,7 +70,8 @@ export async function HeroStatsSection({ days }: { days: number }) {
         <StatBlock
           label="Active workspaces (28d)"
           value={latest?.active_28d ?? 0}
-          detail={lifecycle ? `${lifecycle.one_and_done} activated workspaces never came back` : 'Successful call in the last 28 days'}
+          detail={lifecycle ? `${lifecycle.one_and_done} activated and never came back` : 'Successful call in the last 28 days'}
+          explain="Distinct workspaces with a successful call in the trailing 28 days. It moves slowly and is the more trustworthy of the two active counts at this volume."
           spark={rows.slice(-SPARK_DAYS).map((row) => row.active_28d)}
           delta={priorSameDay ? tone(delta(latest?.active_28d ?? 0, priorSameDay.active_28d), 'up') : undefined}
         />
@@ -80,7 +81,8 @@ export async function HeroStatsSection({ days }: { days: number }) {
         <StatBlock
           label={`New workspaces (${windowLabel})`}
           value={sum(current.map((row) => row.new_workspaces))}
-          detail="Non-deleted workspaces created in the window"
+          detail="Signups in the window"
+          explain="Workspaces created in the window and not since deleted. A signup count, not a surviving-account count: a workspace that never connected an inbox still counts."
           spark={rows.slice(-SPARK_DAYS).map((row) => row.new_workspaces)}
           delta={previous ? tone(delta(sum(current.map((row) => row.new_workspaces)), sum(previous.map((row) => row.new_workspaces))), 'up') : undefined}
         />
@@ -90,18 +92,30 @@ export async function HeroStatsSection({ days }: { days: number }) {
         <StatBlock
           label={`Value activations (${windowLabel})`}
           value={sum(current.map((row) => row.value_activations))}
-          detail="First successful call that touched a mailbox"
+          detail="First mailbox operation"
+          explain="Workspaces that reached their first successful call touching a real mailbox: a success with an inbox attached that was not just inbox_list. Connecting an inbox and never using it does not count."
           spark={rows.slice(-SPARK_DAYS).map((row) => row.value_activations)}
           delta={previous ? tone(delta(sum(current.map((row) => row.value_activations)), sum(previous.map((row) => row.value_activations))), 'up') : undefined}
         />
       </MetricCard>
 
+      {/* Paying, not "paid". `workspaces.plan` reads 'pro' for a comp as well
+          as a purchase, so counting the column made this card claim five paid
+          workspaces while the true number of paying customers was zero. Comps
+          are reported beside it, quietly, because they are not revenue. */}
       <StatCard
-        label="Paid workspaces"
-        value={inventory?.paidWorkspaces ?? 0}
-        detail={inventory
-          ? `${inventory.planMix.find((plan) => plan.name === 'Agent')?.count ?? 0} Agent, ${inventory.planMix.find((plan) => plan.name === 'Scale')?.count ?? 0} Scale, of ${inventory.workspaces} total`
-          : 'Plan mix unavailable'}
+        label="Paying customers"
+        value={revenue?.paying_workspaces ?? 0}
+        detail={revenue
+          ? `${revenue.comped_workspaces} comped, ${revenue.free_workspaces} free`
+          : 'Revenue counts unavailable'}
+        explain={
+          <>
+            Workspaces on a paid plan whose owner does <strong>not</strong> hold a comped entitlement.
+            A comp lands on the same <code>plan</code> column as a purchase, so anything counting that
+            column alone reports comps as revenue.
+          </>
+        }
       />
     </section>
   );

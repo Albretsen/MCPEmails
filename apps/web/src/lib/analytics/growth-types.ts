@@ -171,6 +171,53 @@ export type GmailGrantMonthRow = {
   cumulative_grants: number;
 };
 
+/**
+ * One active workspace. `growth_active_workspaces(p_days)`.
+ *
+ * This is the ONE reporting row on the page that is not an aggregate: it
+ * carries the workspace name and the owner's email address, deliberately, so
+ * account-level questions can be answered without dropping into SQL. Nothing
+ * else about the account is exposed: no credentials, no message content, no
+ * subjects, no recipients, no IP address.
+ */
+export type GrowthActiveWorkspaceRow = {
+  workspace_id: string;
+  workspace_name: string;
+  owner_email: string | null;
+  plan: string;
+  /** Owner holds an unexpired `comped_scale` entitlement, so this is not revenue. */
+  is_comped: boolean;
+  created_at: string;
+  value_activated_at: string | null;
+  last_active_at: string;
+  active_days: number;
+  sessions: number;
+  calls: number;
+  successes: number;
+  errors: number;
+  inboxes: number;
+  /** Comma-separated provider names of the active inboxes. */
+  providers: string;
+  client: string;
+};
+
+/**
+ * Revenue counts with comped accounts excluded. `growth_revenue_counts()`.
+ *
+ * `workspaces.plan` reads 'pro' for both a purchase and a comp, because both
+ * paths write the same column. Counting that as revenue is how this page came
+ * to claim "5 paid workspaces" while the true paying count was zero.
+ */
+export type GrowthRevenueRow = {
+  paying_workspaces: number;
+  paying_owners: number;
+  comped_workspaces: number;
+  comped_owners: number;
+  free_workspaces: number;
+  paying_solo: number;
+  paying_scale: number;
+};
+
 /** Top failing tools. `growth_error_breakdown(p_days)`. */
 export type GrowthErrorRow = {
   tool_name: string;

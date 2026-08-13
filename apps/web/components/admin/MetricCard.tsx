@@ -44,18 +44,25 @@ export function MetricCard({
     };
   }, [open, close]);
 
+  // The card is a div with a full-bleed button behind its content, not a
+  // button wrapping it. Cards carry their own hover explanation, and a
+  // <button> inside a <button> is invalid HTML: the parser unnests it and
+  // hydration then fails against a tree the server never produced. This keeps
+  // the whole card clickable while leaving the info dot a real sibling
+  // control, above the hit area in z-order.
   return (
     <>
-      <button
-        type="button"
-        className="growth-stat"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-label={`${label}, show history`}
-        onClick={() => setOpen(true)}
-      >
-        {children}
-      </button>
+      <div className="growth-stat is-clickable">
+        <button
+          type="button"
+          className="growth-stat-hit"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label={`${label}, show history`}
+          onClick={() => setOpen(true)}
+        />
+        <div className="growth-stat-content">{children}</div>
+      </div>
       {open && <MetricDrawer metricKey={metricKey} onClose={close} />}
     </>
   );
