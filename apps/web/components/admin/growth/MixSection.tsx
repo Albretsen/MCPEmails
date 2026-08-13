@@ -7,20 +7,34 @@
  * any sense of relative size.
  */
 
+import { fetchRevenueCounts } from '@/lib/analytics/growth-queries';
 import { fetchInventory } from '@/lib/analytics/growth-inventory';
 import { formatCount } from '../charts';
 import { MixBars, SectionError, Section, StatCard } from './shared';
 
 export async function MixSection({ days }: { days: number }) {
-  const result = await fetchInventory(days);
+  const [result, revenueResult] = await Promise.all([fetchInventory(days), fetchRevenueCounts()]);
   if (!result.ok) return <SectionError title="Estate mix" message={result.error} />;
   const inventory = result.data;
+
+  // Never `inventory.planMix`: that reads the `plan` column, which says 'pro'
+  // for a comp as well as a purchase. Comped accounts get their own row so the
+  // paying row cannot quietly absorb them.
+  const revenue = revenueResult.ok ? revenueResult.data : null;
+  const planRows = revenue
+    ? [
+        { name: 'Free', count: revenue.free_workspaces },
+        { name: 'Comped', count: revenue.comped_workspaces },
+        { name: 'Paying (Agent)', count: revenue.paying_solo },
+        { name: 'Paying (Scale)', count: revenue.paying_scale },
+      ].filter((row) => row.count > 0)
+    : [];
 
   return (
     <>
       <Section
         title="Estate mix"
-        blurb="Active inboxes by provider, and the MCP client recorded with each workspace's first successful tool call."
+        explain="Active inboxes by provider, and the MCP client recorded with each workspace's first successful tool call. Every app-password connection is stored as a generic IMAP provider, so a named service is shown wherever one was recorded."
       >
         <div className="growth-split">
           <MixBars title="Mail provider" unit="active inboxes" rows={inventory.providerMix} />
@@ -30,10 +44,18 @@ export async function MixSection({ days }: { days: number }) {
 
       <Section
         title="Plans and cap utilization"
-        blurb={`Share of each workspace's monthly action allowance used in the last ${days} days, against the cap for the plan it is currently on. Caps come from the canonical plan table, so a pricing change moves this chart automatically.`}
+        explain={
+          <>
+            Share of each workspace&rsquo;s monthly action allowance used in the last {days} days, against
+            the cap for the plan it is currently on. Caps come from the canonical plan table, so a pricing
+            change moves this automatically. Cap enforcement currently applies to a deterministic 5 percent
+            cohort of newer workspaces, so a cap-hit count near zero reflects the rollout as much as it
+            reflects usage.
+          </>
+        }
       >
         <div className="growth-split">
-          <MixBars title="Current plan" unit="workspaces" rows={inventory.planMix} />
+          <MixBars title="Current plan" unit="workspaces" rows={planRows} />
           <MixBars title="Cap utilization" unit="workspaces" rows={inventory.utilizationBands} />
         </div>
         <section className="growth-stat-grid" aria-label="Usage volume" style={{ marginTop: 18, marginBottom: 0 }}>
@@ -53,15 +75,12 @@ export async function MixSection({ days }: { days: number }) {
             detail="Non-deleted workspaces in total"
           />
           <StatCard
-            label="Paid workspaces"
-            value={inventory.paidWorkspaces}
-            detail="On the Agent or Scale plan"
+            label="Paying customers"
+            value={revenue?.paying_workspaces ?? 0}
+            detail={revenue ? `${revenue.comped_workspaces} comped, not revenue` : 'Revenue counts unavailable'}
+            explain="A paid plan whose owner holds no comped entitlement. Comps write the same plan column as a purchase, so counting that column alone reports them as revenue."
           />
         </section>
-        <p className="growth-note">
-          Cap enforcement currently applies to a deterministic 5 percent cohort of newer workspaces, so a
-          cap-hit count near zero reflects the rollout as much as it reflects usage.
-        </p>
       </Section>
     </>
   );

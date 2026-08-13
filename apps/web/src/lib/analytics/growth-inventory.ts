@@ -26,7 +26,6 @@ export type MixEntry = { name: string; count: number };
 
 export type GrowthInventory = {
   workspaces: number;
-  planMix: MixEntry[];
   providerMix: MixEntry[];
   clientMix: MixEntry[];
   /** Workspaces bucketed by share of their plan's monthly action allowance. */
@@ -35,11 +34,16 @@ export type GrowthInventory = {
   billableWorkspaces: number;
   capHitWorkspaces: number;
   capRejections: number;
-  paidWorkspaces: number;
 };
 
-/** Display names for the internal plan slugs. `pro` is sold as "Scale". */
-const PLAN_LABELS: Record<string, string> = { free: 'Free', solo: 'Agent', pro: 'Scale' };
+/*
+ * Deliberately absent: any count of "paid" workspaces, and any plan mix built
+ * from `workspaces.plan`. That column reads 'pro' for a comped account as well
+ * as a purchased one, and reporting it as revenue is how this page came to
+ * claim five paid workspaces while the true paying count was zero. The plan
+ * split comes from `growth_revenue_counts()`, which excludes comps, and there
+ * is no comp-inflated number left here for a future caller to reach for.
+ */
 
 const BANDS = ['0-24%', '25-49%', '50-79%', '80-99%', '100%+'] as const;
 
@@ -76,13 +80,10 @@ async function loadInventory(days: number): Promise<GrowthInventory> {
     actionsByWorkspace.set(action.workspace_id, (actionsByWorkspace.get(action.workspace_id) ?? 0) + action.quantity);
   }
 
-  const planCounts = new Map<string, number>();
   const clientCounts = new Map<string, number>();
   const bandCounts = new Map<string, number>(BANDS.map((band) => [band, 0]));
   for (const workspace of workspaceResult.data ?? []) {
     const plan = workspace.plan ?? 'free';
-    const planLabel = PLAN_LABELS[plan] ?? plan;
-    planCounts.set(planLabel, (planCounts.get(planLabel) ?? 0) + 1);
     if (workspace.analytics_first_tool_client) {
       clientCounts.set(workspace.analytics_first_tool_client, (clientCounts.get(workspace.analytics_first_tool_client) ?? 0) + 1);
     }
@@ -103,7 +104,6 @@ async function loadInventory(days: number): Promise<GrowthInventory> {
 
   return {
     workspaces: workspaceResult.data?.length ?? 0,
-    planMix: [...planCounts.entries()].map(([name, count]) => ({ name, count })),
     providerMix: sortDescending(providerCounts),
     clientMix: sortDescending(clientCounts),
     utilizationBands: BANDS.map((band) => ({ name: band, count: bandCounts.get(band) ?? 0 })),
@@ -111,7 +111,6 @@ async function loadInventory(days: number): Promise<GrowthInventory> {
     billableWorkspaces: actionsByWorkspace.size,
     capHitWorkspaces: new Set((limitResult.data ?? []).map((event) => event.workspace_id)).size,
     capRejections: limitResult.data?.length ?? 0,
-    paidWorkspaces: (planCounts.get('Agent') ?? 0) + (planCounts.get('Scale') ?? 0),
   };
 }
 

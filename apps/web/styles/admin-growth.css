@@ -28,19 +28,29 @@
 .growth-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 30px; }
 .growth-stat-grid.is-five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .growth-stat { border: 1px solid var(--border-1); background: var(--bg-surface); border-radius: 12px; padding: 16px 18px; text-align: left; }
-.growth-stat-label { color: var(--fg-3); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .045em; }
+.growth-stat-label { color: var(--fg-3); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .045em; display: flex; align-items: center; gap: 6px; }
+/* The chevron sits top-right on a clickable card, so the dot's panel opens
+   leftwards to stay inside the card's column. */
+.growth-stat .growth-info-panel { left: auto; right: 0; }
 .growth-stat-value { font-size: 28px; font-weight: 650; letter-spacing: -.025em; margin: 8px 0 2px; display: flex; align-items: baseline; gap: 9px; }
 .growth-stat-detail { color: var(--fg-3); font-size: 12px; line-height: 1.45; }
 .growth-stat-spark { margin-top: 12px; }
 .growth-stat-target { color: var(--fg-4); font-size: 12px; margin-top: 4px; }
 
-/* A card is a button when it has a drill-down. Keep the affordance quiet:
-   these are dense operator screens, not marketing. */
-button.growth-stat { width: 100%; font: inherit; cursor: pointer; transition: border-color 120ms ease, box-shadow 120ms ease; }
-button.growth-stat:hover { border-color: var(--border-focus); box-shadow: var(--shadow-2); }
-button.growth-stat:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-color: var(--border-focus); }
-button.growth-stat::after { content: "›"; position: absolute; top: 14px; right: 15px; color: var(--fg-4); font-size: 16px; line-height: 1; }
-button.growth-stat { position: relative; }
+/* A card with a drill-down gets a full-bleed hit area behind its content
+   rather than being a <button> itself: the card contains its own info-dot
+   button, and nesting buttons is invalid HTML that breaks hydration. Keep the
+   affordance quiet, these are dense operator screens, not marketing. */
+.growth-stat.is-clickable { position: relative; transition: border-color 120ms ease, box-shadow 120ms ease; }
+.growth-stat-hit { position: absolute; inset: 0; width: 100%; border: 0; border-radius: 12px; background: none; cursor: pointer; z-index: 1; }
+.growth-stat-hit::after { content: "›"; position: absolute; top: 13px; right: 14px; color: var(--fg-4); font-size: 16px; line-height: 1; }
+.growth-stat.is-clickable:hover { border-color: var(--border-focus); box-shadow: var(--shadow-2); }
+.growth-stat:has(.growth-stat-hit:focus-visible) { box-shadow: var(--shadow-focus); border-color: var(--border-focus); }
+.growth-stat-hit:focus-visible { outline: none; }
+/* Content sits above the hit area but stays transparent to the pointer, so a
+   click anywhere on the card still opens the drawer. The info dot opts back in. */
+.growth-stat-content { position: relative; z-index: 2; pointer-events: none; }
+.growth-stat-content .growth-info { pointer-events: auto; }
 
 /* Delta chips. Tone is semantic, not directional: a falling error rate is
    "good", so the colour is chosen by the metric, never by the arrow. */
@@ -50,26 +60,43 @@ button.growth-stat { position: relative; }
 .growth-delta.is-neutral { color: var(--fg-4); }
 
 /* ---------- Sections and panels ---------- */
-.growth-section { margin-top: 28px; }
-.growth-section h2 { font-size: 17px; margin: 0 0 6px; }
+.growth-section { margin-top: 34px; }
+.growth-section h2 { font-size: 17px; margin: 0; }
 .growth-section > p { color: var(--fg-3); font-size: 13px; margin: 0 0 13px; max-width: 780px; line-height: 1.5; }
+.growth-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 13px; flex-wrap: wrap; }
+.growth-heading-aside { color: var(--fg-3); font-size: 13px; margin-left: 4px; }
 .growth-panel { border: 1px solid var(--border-1); border-radius: 12px; background: var(--bg-surface); padding: 16px 18px; }
+/* Charts bring their own card chrome, so a panel around one draws a second
+   border inside the first. Use .growth-bare where a chart is the only child. */
+.growth-bare { display: block; }
+
+/* ---------- Hover explanations ---------- */
+.growth-info { position: relative; display: inline-flex; vertical-align: middle; }
+.growth-info-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--border-2); background: var(--bg-sunken); color: var(--fg-3); font-size: 10px; font-weight: 700; line-height: 1; cursor: help; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.growth-info-dot:hover { color: var(--fg-1); border-color: var(--border-focus); }
+.growth-info-dot:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.growth-info-panel { position: absolute; z-index: 40; top: calc(100% + 8px); left: 0; width: max-content; max-width: 340px; padding: 11px 13px; border-radius: 10px; border: 1px solid var(--border-1); background: var(--bg-surface); box-shadow: var(--shadow-3); color: var(--fg-2); font-size: 12.5px; font-weight: 400; line-height: 1.55; text-transform: none; letter-spacing: 0; text-align: left; white-space: normal; opacity: 0; visibility: hidden; transition: opacity 100ms ease; pointer-events: none; }
+.growth-info-end .growth-info-panel { left: auto; right: 0; }
+.growth-info:hover .growth-info-panel, .growth-info:focus-within .growth-info-panel { opacity: 1; visibility: visible; }
+.growth-info-panel strong { color: var(--fg-1); }
+.growth-info-panel code { font-size: 11.5px; background: var(--bg-sunken); padding: 1px 4px; border-radius: 4px; }
 .growth-split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
 .growth-note { color: var(--fg-4); font-size: 12px; margin: 9px 0 0; line-height: 1.5; }
 
 /* ---------- Gmail OAuth cap card ---------- */
-.growth-cap { padding: 20px 22px; }
-.growth-cap-facts { display: flex; flex-wrap: wrap; gap: 28px; margin: 16px 0 0; padding-top: 15px; border-top: 1px solid var(--border-1); }
+/* Compact by design. This is an operational ceiling worth watching, not a
+   growth metric, and at the top of the page in full size it crowded out the
+   numbers the page actually exists to show. */
+.growth-cap { padding: 16px 18px; }
+.growth-cap-facts { display: flex; flex-wrap: wrap; gap: 26px; margin: 14px 0 0; padding-top: 13px; border-top: 1px solid var(--border-1); }
 .growth-cap-facts dt { color: var(--fg-3); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
-.growth-cap-facts dd { margin: 5px 0 0; font-size: 17px; font-weight: 620; letter-spacing: -.02em; }
-.growth-cap-warning { margin: 14px 0 0; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.55; }
+.growth-cap-facts dd { margin: 4px 0 0; font-size: 15px; font-weight: 620; letter-spacing: -.02em; }
 /* Tint plus a rule, not coloured text: --amber-700/--red-700 are light-theme
    ink and are not re-tokenised for dark, so text in them would fail contrast
-   on the dark surface. --amber-100/--red-100 ARE re-tokenised (translucent in
-   dark), so the tint reads correctly in both themes. */
-.growth-cap-warning.is-warn { background: var(--amber-100); border-left: 3px solid var(--amber-500); color: var(--fg-2); }
-.growth-cap-warning.is-danger { background: var(--red-100); border-left: 3px solid var(--red-500); color: var(--fg-2); }
-.growth-cap-warning strong { display: block; color: var(--fg-1); }
+   on the dark surface. --amber-100/--red-100 ARE re-tokenised. */
+.growth-cap-flag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.growth-cap-flag.is-warn { background: var(--amber-100); color: var(--fg-2); }
+.growth-cap-flag.is-danger { background: var(--red-100); color: var(--fg-2); }
 .growth-link { background: none; border: 0; padding: 0; font: inherit; font-size: 13px; color: var(--brand); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .growth-link:hover { color: var(--brand-hover); }
 .growth-link:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: 4px; }
@@ -96,6 +123,22 @@ button.growth-stat { position: relative; }
 .growth-table tr:last-child td { border-bottom: 0; }
 .growth-table td:not(:first-child), .growth-table th:not(:first-child) { text-align: right; }
 .growth-empty { color: var(--fg-3); padding: 18px; }
+.growth-table th .growth-info { margin-left: 4px; }
+.growth-code-cell { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.growth-code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px; background: var(--bg-sunken); padding: 2px 6px; border-radius: 5px; }
+.growth-blame { color: var(--fg-4); font-size: 11.5px; }
+
+/* ---------- Active-account roster ---------- */
+.growth-table-roster td { vertical-align: top; }
+/* Internal and comped rows stay visible but recede: they are real load, not
+   customers, and hiding them would misrepresent volume. */
+.growth-table-roster tr.is-muted td { color: var(--fg-4); }
+.growth-table-roster tr.is-muted .growth-account { color: var(--fg-3); }
+.growth-account { display: block; color: var(--fg-1); font-weight: 550; }
+.growth-account-sub { display: block; color: var(--fg-4); font-size: 11.5px; margin-top: 2px; }
+.growth-tag { display: inline-block; margin-left: 5px; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--bg-sunken); color: var(--fg-3); }
+.growth-tag.is-comped { background: var(--amber-100); color: var(--fg-2); }
+.growth-tag.is-internal { background: var(--bg-sunken); color: var(--fg-4); }
 
 /* Raw daily numbers live behind a disclosure: needed occasionally, never
    worth 28 rows of chrome above the charts that replaced them. */

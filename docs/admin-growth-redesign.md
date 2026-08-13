@@ -395,3 +395,60 @@ own skeleton.
   `email_search`, `email_read` and `email_compose`, 278 failures in 28 days.
   That is clients calling tools with arguments the server rejects, not a
   provider fault, and it is worth its own investigation.
+
+---
+
+## 11. Second pass (2026-08-13, after first review)
+
+Seven changes from operator feedback on the shipped page.
+
+1. **Gmail cap demoted.** It was the first thing on the page and dominated it.
+   It is an operational ceiling, not a growth metric, so it moved to the bottom
+   and lost the big number, the prose and the warning block. What remains is a
+   compact meter, a facts row, and a small amber pill beside the heading when
+   the runway is short.
+2. **"5 paid workspaces" was false.** Every one of them was comped.
+   `workspaces.plan` reads `pro` for a comp and a purchase alike, because both
+   paths write the same column. New `growth_revenue_counts()` treats an
+   unexpired `comped_scale` entitlement as not-revenue: the page now reads
+   **0 paying customers, 8 comped, 108 free**. `paidWorkspaces` and the
+   plan-column mix were deleted from the inventory module outright rather than
+   left for a future caller to reach for.
+3. **Double borders removed.** Chart primitives already render their own card,
+   so the `.growth-panel` wrappers were drawing a second border inside the
+   first. Charts now sit directly in the section.
+4. **Prose moved behind question marks.** A new `InfoDot` reveals the
+   explanation on hover or focus, with no JavaScript: it is a sibling element
+   shown by `:focus-within`, and the trigger is a real button linked by
+   `aria-describedby`. Section blurbs, metric definitions and the funnel
+   caveats all live there now.
+5. **Error codes are explained in place.** `src/lib/analytics/error-codes.ts`
+   maps every JSON-RPC and application code to what it means and who to look at
+   first. Hovering `-32602` in the reliability table now says "invalid params,
+   the model is calling the tool wrongly, not the mailbox failing".
+6. **New section: Active accounts.** The roster the page never had. One row per
+   workspace with a successful call in the window, most recent first, with
+   plan, comped and internal tags, last active, active days, sessions, calls,
+   success rate, inboxes and providers. Four summary numbers above it:
+   active accounts, sticky accounts (four or more active days), external share
+   of calls, and median active days.
+7. **Privacy contract updated, not quietly broken.** This roster names
+   workspaces and owner email addresses, deliberately, at the owner's request.
+   The page header now says exactly that instead of continuing to promise that
+   no names or addresses appear. Nothing else changed: no credentials, message
+   content, subjects, recipients or IP addresses are exposed anywhere.
+
+### Bug found and fixed during this pass
+
+The info dot inside a clickable stat card put a `<button>` inside a `<button>`,
+which is invalid HTML: the parser unnests it and React hydration then fails
+against a tree the server never produced. Cards became a `<div>` with a
+full-bleed hit-area button behind the content, so the whole card stays
+clickable and the dot is a real sibling control.
+
+### What the roster immediately showed
+
+53 active accounts in 28 days, but only **7 percent of calls come from an
+external, non-comped account**: the volume is dominated by our own and comped
+accounts. The median external account has **one** active day. 11 of 48 external
+accounts are active on four or more days.

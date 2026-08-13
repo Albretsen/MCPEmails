@@ -14,6 +14,7 @@
 import { fetchBillingFunnel } from '@/lib/analytics/growth-queries';
 import { fetchInventory } from '@/lib/analytics/growth-inventory';
 import { FunnelBars } from '../charts';
+import { InfoDot } from '../InfoDot';
 import { SectionError, Section } from './shared';
 
 export async function BillingFunnelSection() {
@@ -41,16 +42,24 @@ export async function BillingFunnelSection() {
   return (
     <Section
       title="Billing funnel"
-      blurb="All-time. Each stage counts workspaces that reached it at least once. A stage showing zero means no user has ever got that far, which is a measurement fact, not a preference signal."
+      explain={
+        <>
+          All-time. Each stage counts workspaces that reached it at least once, so a stage showing zero
+          means no user has ever got that far: a measurement fact, not a preference signal. The entry stage
+          is <strong>could have been asked to pay</strong>, taken from cap utilization rather than a billing
+          event, because a conversion rate measured against people who were never asked for money is not a
+          conversion rate.
+        </>
+      }
     >
-      <div className="growth-panel">
-        <FunnelBars title="Workspaces reaching each billing stage, all time" steps={steps} />
-      </div>
+      <FunnelBars title="Workspaces reaching each billing stage, all time" steps={steps} />
       <p className="growth-note">
-        Off to the side of the funnel: <strong>{failed}</strong> workspace(s) had a checkout request fail outright,
-        and <strong>{abandoned}</strong> reached Stripe and left without paying. A failure carrying the
-        <code> price_not_configured </code> reason is the one to act on immediately: it means an unset price
-        environment variable made a plan unbuyable, which is indistinguishable from disinterest in aggregate.
+        {failed} checkout request(s) failed outright, {abandoned} reached Stripe and left without paying.
+        <InfoDot label="Checkout failures">
+          A failure carrying the <code>price_not_configured</code> reason is the one to act on immediately:
+          it means an unset price environment variable made a plan unbuyable, which is indistinguishable
+          from disinterest in aggregate.
+        </InfoDot>
       </p>
     </Section>
   );
