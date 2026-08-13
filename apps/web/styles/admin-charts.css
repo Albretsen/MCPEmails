@@ -1,0 +1,130 @@
+/* admin-charts.css: styling for the hand-rolled chart primitives in
+   components/admin/charts. Every colour is a token from colors_and_type.css so
+   html[data-theme="dark"] flips the whole set with no per-chart overrides.
+   Marks are stretched SVG (preserveAspectRatio="none"), so strokes need
+   vector-effect: non-scaling-stroke to keep a constant weight, and all axis
+   text is HTML positioned by percentage rather than <text> inside the SVG. */
+
+/* ── Frame ─────────────────────────────────────────────────────────────── */
+/* min-width: 0 is load-bearing. These cards sit in grid and flex tracks whose
+   default `auto` minimum is the widest thing inside them, so a nowrap numbers
+   table would otherwise stretch the card past the viewport and scroll the
+   whole page sideways instead of scrolling inside its own box. */
+.ac-card { margin: 0; min-width: 0; border: 1px solid var(--border-1); background: var(--bg-surface); border-radius: 12px; padding: 15px 17px 13px; color: var(--fg-1); }
+.ac-head { display: block; margin-bottom: 12px; }
+.ac-head-bare { margin-bottom: 0; }
+.ac-title { font-size: 14px; font-weight: 600; letter-spacing: -.005em; margin: 0; }
+.ac-sub { color: var(--fg-3); font-size: 12px; line-height: 1.5; margin: 4px 0 0; }
+.ac-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; list-style: none; margin: 9px 0 0; padding: 0; }
+.ac-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-2); }
+.ac-swatch { width: 11px; height: 11px; flex: none; border-radius: 3px; border: 1px solid transparent; }
+.ac-swatch-hatched { background: repeating-linear-gradient(135deg, var(--border-2) 0 2px, transparent 2px 5px); }
+.ac-swatch-dashed { height: 0; width: 14px; border-radius: 0; border: 0; border-top: 2px dashed var(--red-500); }
+.ac-legend-name { white-space: nowrap; }
+.ac-legend-note { color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.ac-body { position: relative; }
+.ac-foot { color: var(--fg-3); font-size: 11.5px; line-height: 1.5; margin: 10px 0 0; }
+.ac-empty { color: var(--fg-3); font-size: 13px; margin: 0; padding: 22px 0; text-align: center; }
+
+.ac-details { margin-top: 12px; border-top: 1px solid var(--border-1); padding-top: 8px; }
+.ac-summary { color: var(--fg-3); cursor: pointer; font-size: 11.5px; list-style: none; user-select: none; }
+.ac-summary::-webkit-details-marker { display: none; }
+.ac-summary::before { content: "▸ "; }
+.ac-details[open] .ac-summary::before { content: "▾ "; }
+.ac-summary:hover { color: var(--fg-1); }
+.ac-scroll { overflow-x: auto; max-width: 100%; min-width: 0; }
+.ac-details .ac-scroll { max-height: 320px; overflow-y: auto; margin-top: 8px; }
+.ac-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ac-table th, .ac-table td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--border-1); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ac-table thead th { position: sticky; top: 0; background: var(--bg-surface); color: var(--fg-3); font-size: 10.5px; font-weight: 600; letter-spacing: .035em; text-transform: uppercase; }
+.ac-table th:first-child, .ac-table td:first-child { text-align: left; color: var(--fg-2); font-weight: 500; }
+.ac-table tbody tr:last-child th, .ac-table tbody tr:last-child td { border-bottom: 0; }
+
+.ac-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* ── Plot surface (BarSeries, LineChart) ───────────────────────────────── */
+.ac-plot { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 8px; row-gap: 5px; }
+.ac-yaxis { position: relative; }
+.ac-ytick { position: absolute; right: 0; transform: translateY(-50%); font-size: 10.5px; line-height: 1; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.ac-canvas { position: relative; min-width: 0; }
+.ac-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ac-grid line { stroke: var(--border-1); stroke-width: 1; vector-effect: non-scaling-stroke; shape-rendering: crispEdges; }
+.ac-xaxis-spacer { grid-column: 1; }
+.ac-xaxis { position: relative; grid-column: 2; height: 14px; }
+.ac-xtick { position: absolute; top: 0; font-size: 10.5px; line-height: 1.3; color: var(--fg-3); white-space: nowrap; }
+.ac-xtick-center { transform: translateX(-50%); }
+.ac-xtick-end { transform: translateX(-100%); }
+
+.ac-bar { shape-rendering: crispEdges; }
+.ac-bar:hover { opacity: .78; }
+.ac-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.ac-threshold { stroke: var(--red-500); stroke-width: 1.5; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.ac-threshold-tag { position: absolute; right: 2px; transform: translateY(-50%); padding: 1px 6px; border: 1px solid var(--red-500); border-radius: 999px; background: var(--bg-surface); color: color-mix(in oklab, var(--red-500) 60%, var(--fg-1)); font-size: 10px; line-height: 1.4; white-space: nowrap; }
+.ac-hit { fill: transparent; pointer-events: all; }
+
+/* ── Sparkline ─────────────────────────────────────────────────────────── */
+.ac-spark { display: block; width: 100%; overflow: visible; }
+.ac-spark-line { fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.ac-spark-area { stroke: none; opacity: .13; }
+.ac-spark-empty { display: flex; align-items: center; color: var(--fg-4); font-size: 11px; margin: 0; }
+
+/* ── Capacity meter ────────────────────────────────────────────────────── */
+.ac-meter-value { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+.ac-meter-value strong { font-size: 26px; font-weight: 650; letter-spacing: -.025em; line-height: 1; }
+.ac-meter-of { color: var(--fg-3); font-size: 12.5px; }
+.ac-pill { margin-left: auto; border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Status text is the semantic hue mixed toward the page's own foreground, so
+   it stays above 4.5:1 on the tinted chip in BOTH themes. The raw --red-700 /
+   --amber-700 tokens are tuned for light surfaces and go muddy on dark. */
+.ac-pill-ok { background: var(--mint-50); color: color-mix(in oklab, var(--mint-500) 55%, var(--fg-1)); }
+.ac-pill-warn { background: var(--amber-100); color: color-mix(in oklab, var(--amber-500) 55%, var(--fg-1)); }
+.ac-pill-danger { background: var(--red-100); color: color-mix(in oklab, var(--red-500) 55%, var(--fg-1)); }
+.ac-meter-svg { display: block; width: 100%; height: 12px; border-radius: 999px; overflow: hidden; }
+.ac-meter-track { fill: var(--bg-sunken); }
+.ac-meter-mark { stroke: var(--bg-surface); stroke-width: 2; vector-effect: non-scaling-stroke; opacity: .85; }
+.ac-meter-caption { color: var(--fg-3); font-size: 11.5px; margin: 8px 0 0; }
+
+/* ── Funnel ────────────────────────────────────────────────────────────── */
+.ac-funnel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 13px; }
+.ac-funnel-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 5px; }
+.ac-funnel-label { font-size: 12.5px; font-weight: 500; color: var(--fg-1); }
+.ac-funnel-count { margin-left: auto; font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.ac-funnel-svg { display: block; width: 100%; height: 12px; border-radius: 4px; overflow: hidden; }
+.ac-funnel-track { fill: var(--bg-sunken); }
+.ac-funnel-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-top: 5px; font-size: 11.5px; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.ac-funnel-stat-key { color: var(--fg-3); margin-right: 5px; }
+.ac-funnel-note { color: var(--fg-3); }
+
+/* ── Cohort heatmap ────────────────────────────────────────────────────── */
+.ac-heatmap { border-collapse: separate; border-spacing: 3px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.ac-heatmap th { color: var(--fg-3); font-size: 10.5px; font-weight: 600; letter-spacing: .03em; padding: 3px 6px; white-space: nowrap; }
+.ac-heatmap thead th { text-transform: uppercase; }
+/* The cohort label stays put while the weeks scroll under it: a retention row
+   is meaningless once you cannot see which cohort it belongs to. */
+.ac-hm-label, .ac-hm-corner { position: sticky; left: 0; z-index: 1; background: var(--bg-surface); }
+.ac-hm-label { text-align: left; color: var(--fg-2) !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: 0 !important; }
+.ac-hm-corner { text-align: left; }
+.ac-hm-size { color: var(--fg-3); text-align: right; padding: 3px 8px; white-space: nowrap; }
+.ac-hm-cell { min-width: 46px; padding: 6px 7px; border-radius: 4px; text-align: center; white-space: nowrap; color: var(--fg-1); }
+.ac-hm-empty { background: repeating-linear-gradient(135deg, var(--border-1) 0 3px, transparent 3px 7px); }
+
+/* Narrow cards cannot fit the desktop label density, and the component cannot
+   measure the viewport from the server. Thinning the ticks in CSS keeps the
+   axis readable without shipping any JavaScript to do it. */
+@media (max-width: 850px) {
+  .ac-card { padding: 13px 13px 11px; }
+  .ac-plot { grid-template-columns: 32px minmax(0, 1fr); column-gap: 6px; }
+  .ac-ytick, .ac-xtick { font-size: 9.5px; }
+  .ac-xtick:nth-child(even) { display: none; }
+  .ac-xtick:last-child { display: block; }
+  /* The last label is right-aligned against the edge, so it collides with its
+     neighbour even at half density. Only ever drops one label, and only when
+     the surviving neighbour would sit underneath it. */
+  .ac-xtick:nth-last-child(2) { display: none; }
+  .ac-meter-value strong { font-size: 22px; }
+}
+@media (max-width: 560px) {
+  .ac-xtick { display: none; }
+  .ac-xtick:nth-child(4n + 1), .ac-xtick:last-child { display: block; }
+  .ac-xtick:nth-last-child(2), .ac-xtick:nth-last-child(3) { display: none; }
+}
