@@ -64,6 +64,35 @@
     "pollingHeading": "Interrogation, pas push",
     "pollingBody": "MCPEmails fonctionne uniquement en requête/réponse : chaque résultat provient d'un appel d'outil effectué par votre agent. <b>Il n'y a ni webhooks, ni notifications push, ni événements initiés par le serveur</b> — un e-mail entrant ne déclenche jamais un appel d'agent de lui-même. Pour réagir aux nouveaux messages, faites <b>interroger</b> votre agent périodiquement, p. ex. en appelant <code>email_read</code> avec <code>action: \"list\"</code> et <code>unread_only: true</code> à l'intervalle dont votre flux a besoin (attention aux limites de débit ci-dessus)."
   },
+  "operations": {
+    "eyebrow": "Conçu pour le vrai travail de boîte mail",
+    "heading": "Plus de contrôle, sans plus d’encombrement d’outils.",
+    "sub": "Ce sont des capacités adaptées à chaque fournisseur au sein de la même interface MCP compacte et basée sur les actions, et non un catalogue d’outils distinct pour chaque cas particulier.",
+    "approval": {
+      "heading": "Approbation d’envoi appliquée par le serveur",
+      "body": "Activez l’approbation par boîte dans le tableau de bord pour retenir les envois, réponses, transferts, envois de brouillons et envois programmés. L’agent reçoit un résultat en attente, puis un membre de l’espace de travail l’approuve ou le rejette dans le tableau de bord avant tout envoi."
+    },
+    "portable": {
+      "heading": "Profils de compatibilité des fournisseurs",
+      "body": "Appelez <code>inbox_list</code> pour consulter un profil versionné de chaque boîte. Il indique si les opérations normalisées sont exactes, différentes ou indisponibles, afin que les agents puissent choisir des flux portables sans faire comme si tous les fournisseurs étaient identiques."
+    },
+    "content": {
+      "heading": "Pièces jointes et e-mail d’origine",
+      "body": "Lisez une pièce jointe sélectionnée sous forme de texte temporaire pour les fichiers texte pris en charge, CSV, HTML, JSON et PDF avec couche de texte, ou téléchargez l’original conservé par le fournisseur sous forme de <code>.eml</code> portable. L’extraction n’exécute aucun code intégré et n’applique pas d’OCR aux images."
+    },
+    "reliable": {
+      "heading": "Automatisation fiable et vérifiable",
+      "body": "Réutilisez une <code>idempotency_key</code> pour réessayer sans risque la même requête sortante pendant 24 heures. Les exécutions d’organisation en masse conservent leur statut dans le tableau de bord et acceptent les demandes d’annulation ; aucun contenu de message ni terme de recherche n’est conservé dans ces enregistrements."
+    },
+    "workflows": {
+      "heading": "Workflows MCP guidés",
+      "body": "Les clients qui prennent en charge les prompts MCP peuvent proposer des routines intégrées pour un tri attentif de la boîte, la revue des conversations en suspens, la préparation de brouillons de réponse, des propositions de classement et la revue des envois programmés. Les prompts n’accordent jamais de permissions et ne s’exécutent jamais tout seuls."
+    },
+    "drafts": {
+      "heading": "Brouillons de réponse dans le fil et Send As Gmail",
+      "body": "Créez une réponse non envoyée dans sa conversation d’origine pour relecture humaine. Les envois, réponses et transferts Gmail ne peuvent choisir qu’une identité Send As vérifiée par le fournisseur et renvoyée par <code>inbox_list</code> ; les autres fournisseurs utilisent leur adresse connectée."
+    }
+  },
   "oauth": {
     "eyebrow": "Connexion OAuth",
     "heading": "Zéro configuration pour les clients compatibles OAuth.",
@@ -206,7 +235,8 @@
         "reply_all": "Répondre à tous les destinataires d'origine — To + Cc (action 'reply'). Par défaut false.",
         "include_attachments": "Réattacher les pièces jointes du message d'origine (action 'forward'). Les fichiers dépassant le budget de 10 Mo sont omis. Par défaut false.",
         "include_signature": "Indique s'il faut ajouter la signature configurée de la boîte à ce message. Par défaut true ; mettez false pour envoyer ce seul message sans la signature.",
-        "attachments": "Pièces jointes. Chaque élément : '{' filename, mime_type, data (base64) '}'. Max 20 éléments, 10 Mo au total."
+        "attachments": "Pièces jointes. Chaque élément : '{' filename, mime_type, data (base64) '}'. Max 20 éléments, 10 Mo au total.",
+        "idempotency_key": "Clé opaque facultative (1–200 caractères) pour une seule requête sortante logique. Ne la réutilisez que pour réessayer exactement la même action avec les mêmes arguments dans les 24 heures ; une réutilisation avec des arguments différents est rejetée."
       }
     },
     "folder": {
@@ -236,6 +266,7 @@
         "bcc": "Destinataires en copie cachée (action 'create'/'update'). Par défaut [].",
         "html_body": "Corps HTML facultatif (action 'create'/'update').",
         "include_signature": "Indique s'il faut intégrer la signature configurée de la boîte au brouillon (action 'create'/'update'). Par défaut true ; mettez false pour enregistrer un brouillon sans la signature.",
+        "idempotency_key": "Clé opaque facultative (1–200 caractères) pour un seul envoi de brouillon. Ne la réutilisez que pour réessayer exactement le même envoi dans les 24 heures ; une réutilisation avec des arguments différents est rejetée.",
         "limit": "Nombre maximal de brouillons à renvoyer (action 'list'). Par défaut 20, max 50."
       }
     },
@@ -256,7 +287,8 @@
         "reply_to": "Adresse facultative de l'en-tête Reply-To (action 'create').",
         "attachments": "Pièces jointes (action 'create'). Même schéma que l'action send. Max 20 éléments, 10 Mo au total.",
         "scheduled_send_id": "UUID de l'envoi programmé à annuler (action 'cancel').",
-        "limit": "Nombre maximal de résultats (action 'list'). Par défaut 20, max 100."
+        "limit": "Nombre maximal de résultats (action 'list'). Par défaut 20, max 100.",
+        "idempotency_key": "Clé opaque facultative pour la création d’un seul envoi programmé. Ne la réutilisez que pour réessayer exactement la même requête de création dans les 24 heures."
       }
     },
     "contact_search": {
@@ -341,6 +373,7 @@
       "copy": "Copier",
       "delete": "Supprimer / corbeille",
       "permanent_delete": "Suppression définitive (expunge)",
+      "original_message": "Télécharger l’original (.eml)",
       "drafts": "Brouillons (créer / modifier / envoyer)",
       "contacts_db": "Recherche de contacts (analyse en direct)",
       "scheduling": "Envoi programmé",

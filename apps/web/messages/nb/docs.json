@@ -64,6 +64,35 @@
     "pollingHeading": "Polling, ikke push",
     "pollingBody": "MCPEmails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b> – en innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread_only: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
   },
+  "operations": {
+    "eyebrow": "Bygget for ekte innboksarbeid",
+    "heading": "Mer kontroll, uten mer verktøyrot.",
+    "sub": "Dette er leverandørbevisste egenskaper i det samme kompakte, handlingsbaserte MCP-grensesnittet, ikke en egen verktøykatalog for hvert særtilfelle.",
+    "approval": {
+      "heading": "Sendegodkjenning håndhevet på serveren",
+      "body": "Slå på godkjenning per innboks i dashbordet for å holde tilbake sendinger, svar, videresendinger, utkastsendinger og planlagte sendinger. Agenten får et ventende resultat, og et medlem av arbeidsområdet godkjenner eller avviser det i dashbordet før noe sendes."
+    },
+    "portable": {
+      "heading": "Kompatibilitetsprofiler for leverandører",
+      "body": "Kall <code>inbox_list</code> for å se en versjonert profil for hver innboks. Den merker normaliserte operasjoner som eksakte, forskjellige eller utilgjengelige, slik at agenter kan velge portable arbeidsflyter uten å late som om leverandørene er like."
+    },
+    "content": {
+      "heading": "Vedlegg og original e-post",
+      "body": "Les et valgt vedlegg som midlertidig tekst for støttede tekstfiler, CSV, HTML, JSON og PDF-er med tekstlag, eller last ned originalen leverandøren har lagret, som en portabel <code>.eml</code>. Uthentingen kjører ikke innebygd kode og gjør ikke OCR på bilder."
+    },
+    "reliable": {
+      "heading": "Pålitelig automatisering som kan etterprøves",
+      "body": "Gjenbruk en <code>idempotency_key</code> for trygt å prøve den samme utgående forespørselen på nytt i 24 timer. Masseorganiseringsjobber viser status i dashbordet og tar imot avbestillingsforespørsler, og verken meldingsinnhold eller søkeord lagres i disse jobbpostene."
+    },
+    "workflows": {
+      "heading": "Veiledede MCP-arbeidsflyter",
+      "body": "Klienter som støtter MCP-prompter, kan tilby innebygde rutiner for grundig innbokstriagering, gjennomgang av åpne tråder, forberedelse av svarutkast, organiseringsforslag og gjennomgang av planlagte sendinger. Prompter gir aldri tilganger og kjører aldri av seg selv."
+    },
+    "drafts": {
+      "heading": "Svarutkast i tråden og Gmail Send As",
+      "body": "Opprett et usendt svar i den opprinnelige samtalen for menneskelig gjennomgang. Gmail-sendinger, -svar og -videresendinger kan bare velge en Send As-identitet som er verifisert av leverandøren og returnert av <code>inbox_list</code>; andre leverandører bruker den tilkoblede adressen sin."
+    }
+  },
   "oauth": {
     "eyebrow": "OAuth-tilkobling",
     "heading": "Null konfigurasjon for OAuth-kompatible klienter.",
@@ -206,7 +235,8 @@
         "reply_all": "Svar til alle opprinnelige mottakere — To + Cc (action 'reply'). Standard false.",
         "include_attachments": "Legg ved den opprinnelige meldingens vedlegg på nytt (action 'forward'). Filer over 10 MB-budsjettet utelates. Standard false.",
         "include_signature": "Om innboksens konfigurerte signatur skal legges til denne meldingen. Standard true; sett false for å sende denne ene meldingen uten signaturen.",
-        "attachments": "Filvedlegg. Hvert element: '{' filename, mime_type, data (base64) '}'. Maks 20 elementer, 10 MB totalt."
+        "attachments": "Filvedlegg. Hvert element: '{' filename, mime_type, data (base64) '}'. Maks 20 elementer, 10 MB totalt.",
+        "idempotency_key": "Valgfri ugjennomsiktig nøkkel (1–200 tegn) for én logisk utgående forespørsel. Gjenbruk den bare for å prøve nøyaktig samme handling og argumenter på nytt innen 24 timer; gjenbruk med andre argumenter avvises."
       }
     },
     "folder": {
@@ -236,6 +266,7 @@
         "bcc": "BCC-mottakere (action 'create'/'update'). Standard [].",
         "html_body": "Valgfri HTML-kropp (action 'create'/'update').",
         "include_signature": "Om innboksens konfigurerte signatur skal bygges inn i utkastet (action 'create'/'update'). Standard true; sett false for å lagre et utkast uten signaturen.",
+        "idempotency_key": "Valgfri ugjennomsiktig nøkkel (1–200 tegn) for én utkastsending. Gjenbruk den bare for å prøve nøyaktig samme sending på nytt innen 24 timer; gjenbruk med andre argumenter avvises.",
         "limit": "Maks antall utkast som returneres (action 'list'). Standard 20, maks 50."
       }
     },
@@ -256,7 +287,8 @@
         "reply_to": "Valgfri Reply-To-overskriftsadresse (action 'create').",
         "attachments": "Filvedlegg (action 'create'). Samme skjema som send-handlingen. Maks 20 elementer, 10 MB totalt.",
         "scheduled_send_id": "UUID for den planlagte sendingen som skal avbrytes (action 'cancel').",
-        "limit": "Maks antall resultater (action 'list'). Standard 20, maks 100."
+        "limit": "Maks antall resultater (action 'list'). Standard 20, maks 100.",
+        "idempotency_key": "Valgfri ugjennomsiktig nøkkel for opprettelsen av én planlagt sending. Gjenbruk den bare for å prøve nøyaktig samme create-forespørsel på nytt innen 24 timer."
       }
     },
     "contact_search": {
@@ -341,6 +373,7 @@
       "copy": "Kopier",
       "delete": "Slett / papirkurv",
       "permanent_delete": "Permanent sletting (expunge)",
+      "original_message": "Last ned original (.eml)",
       "drafts": "Utkast (opprett / rediger / send)",
       "contacts_db": "Kontaktsøk (sanntidsskanning)",
       "scheduling": "Planlagt sending",

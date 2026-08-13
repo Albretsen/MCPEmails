@@ -64,6 +64,35 @@
     "pollingHeading": "Sondeo, no push",
     "pollingBody": "MCPEmails es solo de petición/respuesta: cada resultado proviene de una llamada a una herramienta que hace tu agente. <b>No hay webhooks, notificaciones push ni eventos iniciados por el servidor</b>: un correo entrante nunca activa por sí solo una llamada del agente. Para reaccionar al correo nuevo, haz que tu agente <b>sondee</b> de forma periódica, p. ej. llamando a <code>email_read</code> con <code>action: \"list\"</code> y <code>unread_only: true</code> al intervalo que necesite tu flujo (ten en cuenta los límites de tasa anteriores)."
   },
+  "operations": {
+    "eyebrow": "Diseñado para el trabajo real con el correo",
+    "heading": "Más control, sin más desorden de herramientas.",
+    "sub": "Son capacidades conscientes del proveedor dentro de la misma interfaz MCP compacta y basada en acciones, no un catálogo de herramientas aparte para cada caso límite.",
+    "approval": {
+      "heading": "Aprobación de envío aplicada en el servidor",
+      "body": "Activa la aprobación por bandeja en el panel para retener envíos, respuestas, reenvíos, envíos de borradores y envíos programados. El agente recibe un resultado pendiente y un miembro del espacio de trabajo lo aprueba o lo rechaza en el panel antes de que se envíe nada."
+    },
+    "portable": {
+      "heading": "Perfiles de compatibilidad por proveedor",
+      "body": "Llama a <code>inbox_list</code> para ver un perfil versionado de cada bandeja. Identifica las operaciones normalizadas como exactas, diferentes o no disponibles, de modo que los agentes puedan elegir flujos portables sin fingir que todos los proveedores son idénticos."
+    },
+    "content": {
+      "heading": "Adjuntos y correo original",
+      "body": "Lee un adjunto seleccionado como texto transitorio para archivos de texto compatibles, CSV, HTML, JSON y PDF con capa de texto, o descarga el original almacenado por el proveedor como un <code>.eml</code> portable. La extracción no ejecuta código incrustado ni aplica OCR a las imágenes."
+    },
+    "reliable": {
+      "heading": "Automatización fiable y revisable",
+      "body": "Reutiliza una <code>idempotency_key</code> para reintentar con seguridad la misma solicitud saliente durante 24 horas. Las ejecuciones de organización masiva mantienen su estado en el panel y aceptan solicitudes de cancelación; en esos registros no se guarda ningún contenido de los mensajes ni los términos de búsqueda."
+    },
+    "workflows": {
+      "heading": "Flujos de trabajo MCP guiados",
+      "body": "Los clientes compatibles con los prompts de MCP pueden ofrecer rutinas integradas para un triaje cuidadoso de la bandeja, la revisión de conversaciones abiertas, la preparación de borradores de respuesta, propuestas de organización y la revisión de envíos programados. Los prompts nunca conceden permisos ni se ejecutan automáticamente."
+    },
+    "drafts": {
+      "heading": "Borradores de respuesta en el hilo y Send As de Gmail",
+      "body": "Crea una respuesta sin enviar dentro de su conversación original para que la revise una persona. Los envíos, respuestas y reenvíos de Gmail solo pueden elegir una identidad Send As verificada por el proveedor y devuelta por <code>inbox_list</code>; los demás proveedores usan su dirección conectada."
+    }
+  },
   "oauth": {
     "eyebrow": "Conexión OAuth",
     "heading": "Cero configuración para clientes con OAuth.",
@@ -206,7 +235,8 @@
         "reply_all": "Responder a todos los destinatarios originales — To + Cc (action 'reply'). Por defecto false.",
         "include_attachments": "Readjuntar los adjuntos del mensaje original (action 'forward'). Los archivos que superen el presupuesto de 10 MB se omiten. Por defecto false.",
         "include_signature": "Si añadir la firma configurada de la bandeja a este mensaje. Por defecto true; ponlo en false para enviar este único mensaje sin la firma.",
-        "attachments": "Archivos adjuntos. Cada elemento: '{' filename, mime_type, data (base64) '}'. Máx. 20 elementos, 10 MB en total."
+        "attachments": "Archivos adjuntos. Cada elemento: '{' filename, mime_type, data (base64) '}'. Máx. 20 elementos, 10 MB en total.",
+        "idempotency_key": "Clave opaca opcional (1–200 caracteres) para una única solicitud saliente lógica. Reutilízala solo para reintentar exactamente la misma acción con los mismos argumentos en un plazo de 24 horas; una reutilización con argumentos distintos se rechaza."
       }
     },
     "folder": {
@@ -236,6 +266,7 @@
         "bcc": "Destinatarios en copia oculta (action 'create'/'update'). Por defecto [].",
         "html_body": "Cuerpo HTML opcional (action 'create'/'update').",
         "include_signature": "Si incrustar la firma configurada de la bandeja en el borrador (action 'create'/'update'). Por defecto true; ponlo en false para guardar un borrador sin la firma.",
+        "idempotency_key": "Clave opaca opcional (1–200 caracteres) para un único envío de borrador. Reutilízala solo para reintentar exactamente el mismo envío en un plazo de 24 horas; una reutilización con argumentos distintos se rechaza.",
         "limit": "Número máximo de borradores a devolver (action 'list'). Por defecto 20, máx. 50."
       }
     },
@@ -256,7 +287,8 @@
         "reply_to": "Dirección opcional de la cabecera Reply-To (action 'create').",
         "attachments": "Archivos adjuntos (action 'create'). Mismo esquema que la acción send. Máx. 20 elementos, 10 MB en total.",
         "scheduled_send_id": "UUID del envío programado a cancelar (action 'cancel').",
-        "limit": "Número máximo de resultados (action 'list'). Por defecto 20, máx. 100."
+        "limit": "Número máximo de resultados (action 'list'). Por defecto 20, máx. 100.",
+        "idempotency_key": "Clave opaca opcional para la creación de un único envío programado. Reutilízala solo para reintentar exactamente la misma solicitud de creación en un plazo de 24 horas."
       }
     },
     "contact_search": {
@@ -341,6 +373,7 @@
       "copy": "Copiar",
       "delete": "Eliminar / papelera",
       "permanent_delete": "Eliminación permanente (expunge)",
+      "original_message": "Descargar original (.eml)",
       "drafts": "Borradores (crear / editar / enviar)",
       "contacts_db": "Búsqueda de contactos (escaneo en vivo)",
       "scheduling": "Envío programado",

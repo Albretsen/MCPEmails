@@ -111,6 +111,12 @@
       "7": "Finn personer etter navn eller e-post med en sanntidsskanning av nylig matchende e-post. Ingenting lagres."
     }
   },
+  "examples": {
+    "eyebrow": "Ekte forespørsler",
+    "titleLine1": "Bare spør.",
+    "titleLine2": "Den leser, skriver og rydder.",
+    "sub": "Ingen dashbord å lære seg. Fortell AI-assistenten din hva du vil ha, på helt vanlig språk, så bruker den mcpemails til å få det gjort."
+  },
   "quote": {
     "text": "Jeg ville at agentene mine skulle jobbe i innboksen min, men alle alternativer betydde å gi en tredjepart en kopi av e-posten min. Så jeg bygde røret jeg skulle ønske fantes: koble til én gang, innboksen din hentes i sanntid og lagres aldri, og du kan kutte av enhver agent med ett klikk. Det er produktet jeg stoler på med min egen innboks.",
     "role": "grunnlegger, mcpemails"
@@ -139,7 +145,7 @@
         "name": "Agent",
         "desc": "For storbrukere som kjører agenter døgnet rundt.",
         "features": [
-        "50 000 handlinger per faktureringsperiode",
+          "50 000 handlinger per faktureringsperiode",
           "300 forespørsler / minutt (5× burst)",
           "Full bruksanalyse (90 dagers historikk)",
           "Gmail, iCloud, Fastmail og alle IMAP",
@@ -151,7 +157,7 @@
         "name": "Scale",
         "desc": "For team og byråer som administrerer flere klientinnbokser i ett delt arbeidsområde, med roller, SSO og revisjonslogg.",
         "features": [
-        "300 000 handlinger per faktureringsperiode",
+          "300 000 handlinger per faktureringsperiode",
           "1 000 forespørsler / minutt",
           "Teamroller og flere arbeidsområder",
           "SSO (SAML / OIDC) + revisjonslogg",
@@ -168,7 +174,10 @@
     "title": "Svar på det du lurer på",
     "sub": "Alt du trenger å vite før du kobler til den første innboksen din.",
     "items": [
-      { "q": "Bruker dere analyseverktøy?", "a": "Vi bruker personvernvennlig, informasjonskapsel-fri produktanalyse for å forstå nettstedet og oppsettet. Vi samler aldri inn e-postinnhold, adresser, API-nøkler, OAuth-tokener eller MCP-forespørselsdata." },
+      {
+        "q": "Bruker dere analyseverktøy?",
+        "a": "Vi bruker personvernvennlig, informasjonskapsel-fri produktanalyse for å forstå nettstedet og oppsettet. Vi samler aldri inn e-postinnhold, adresser, API-nøkler, OAuth-tokener eller MCP-forespørselsdata."
+      },
       {
         "q": "Hvilke AI-klienter fungerer det med?",
         "a": "Alle MCP-kompatible klienter. Vi er en standard streamable-http MCP-server med OAuth 2.1, DCR og PKCE, så den samme innboksen fungerer i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat og flere. Lim inn én endepunkt-URL, så er du tilkoblet — ingen ombygging per app."

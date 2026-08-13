@@ -268,6 +268,7 @@
         "bcc": "BCC recipients (action 'create'/'update'). Default [].",
         "html_body": "Optional HTML body (action 'create'/'update').",
         "include_signature": "Whether to embed the inbox's configured signature in the draft (action 'create'/'update'). Default true; set false to save a draft without the signature.",
+        "idempotency_key": "Optional opaque key (1–200 characters) for one draft send. Reuse it only to retry the exact same send within 24 hours; a reuse with different arguments is rejected.",
         "limit": "Maximum number of drafts to return (action 'list'). Default 20, max 50."
       }
     },
