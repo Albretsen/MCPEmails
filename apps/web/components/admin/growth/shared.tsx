@@ -9,6 +9,7 @@
 
 import type { ReactNode } from 'react';
 import { Sparkline, formatCount, ratio } from '../charts';
+import { InfoDot, SectionHeading } from '../InfoDot';
 import { deltaTone, type GoodDirection } from '@/lib/analytics/growth-metrics';
 
 /**
@@ -34,13 +35,17 @@ export function StatBlock({
   label,
   value,
   detail,
+  explain,
   delta,
   spark,
   target,
 }: {
   label: string;
   value: string | number;
+  /** One short line. Anything longer belongs in `explain`. */
   detail: string;
+  /** The definition, behind a question mark next to the label. */
+  explain?: ReactNode;
   /** Percentage change against the previous equivalent period. */
   delta?: { percent: number; goodDirection: GoodDirection };
   /** Trailing series for the sparkline, oldest first. */
@@ -50,7 +55,10 @@ export function StatBlock({
   const tone = delta ? deltaTone(delta.percent, delta.goodDirection) : null;
   return (
     <>
-      <div className="growth-stat-label">{label}</div>
+      <div className="growth-stat-label">
+        {label}
+        {explain && <InfoDot label={label}>{explain}</InfoDot>}
+      </div>
       <div className="growth-stat-value">
         <span>{typeof value === 'number' ? formatCount(value) : value}</span>
         {delta && tone && (
@@ -114,12 +122,25 @@ export function MixBars({
   );
 }
 
-/** Section wrapper: heading, one-line explanation, content. */
-export function Section({ title, blurb, children }: { title: string; blurb: string; children: ReactNode }) {
+/**
+ * Section wrapper. The explanation goes behind the heading's question mark
+ * rather than on the page: see InfoDot for why. `aside` is for the rare line
+ * that has to stay visible, such as an active warning.
+ */
+export function Section({
+  title,
+  explain,
+  aside,
+  children,
+}: {
+  title: string;
+  explain: ReactNode;
+  aside?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section className="growth-section">
-      <h2>{title}</h2>
-      <p>{blurb}</p>
+      <SectionHeading title={title} aside={aside}>{explain}</SectionHeading>
       {children}
     </section>
   );

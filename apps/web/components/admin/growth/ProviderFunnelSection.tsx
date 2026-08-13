@@ -15,6 +15,7 @@
 
 import { fetchOAuthAbandonment, fetchProviderFunnel } from '@/lib/analytics/growth-queries';
 import { formatCount, ratio } from '../charts';
+import { InfoDot } from '../InfoDot';
 import { SectionError, Section } from './shared';
 
 /**
@@ -38,7 +39,14 @@ export async function ProviderFunnelSection({ days }: { days: number }) {
   return (
     <Section
       title="Connection funnel by provider"
-      blurb={`Inbox connection attempts in the last ${days} days. Read the workspace columns, not the attempt columns: one user retrying a broken provider twenty times is one lost user, not twenty.`}
+      explain={
+        <>
+          Inbox connection attempts in the last {days} days. Read the workspace columns, not the attempt
+          columns: one user retrying a broken provider twenty times is one lost user, not twenty. This is
+          the view that would have caught Yandex months earlier (2 workspaces, 21 consecutive auth
+          failures, 0 successes).
+        </>
+      }
     >
       <div className="growth-table-wrap">
         <table className="growth-table">
@@ -70,11 +78,16 @@ export async function ProviderFunnelSection({ days }: { days: number }) {
         </table>
       </div>
 
-      <h3 style={{ fontSize: 14, margin: '22px 0 6px' }}>OAuth consent abandonment</h3>
-      <p className="growth-note" style={{ marginTop: 0, marginBottom: 12 }}>
-        All-time. Left for the provider&rsquo;s consent screen and never returned. This leak records no funnel
-        event of any kind, so it has to be counted from the leftover state rows.
-      </p>
+      <div className="growth-heading" style={{ margin: '24px 0 12px' }}>
+        <h3 style={{ fontSize: 14, margin: 0 }}>OAuth consent abandonment</h3>
+        <InfoDot label="OAuth consent abandonment">
+          All-time. Users who left for the provider&rsquo;s consent screen and never came back. This leak
+          records no funnel event of any kind, so it is counted from the leftover OAuth state rows, which
+          are deleted on a successful callback and never cleaned up otherwise. For Gmail the cause is
+          known: the app is published but unverified, so users meet Google&rsquo;s unverified-app
+          interstitial. Only providers whose OAuth flow still exists are listed.
+        </InfoDot>
+      </div>
       {abandonmentResult.ok ? (
         <div className="growth-table-wrap">
           <table className="growth-table">
