@@ -10,9 +10,14 @@
  * workspace name, the owner's email and usage counts, and nothing else: no
  * credentials, no message content, no subjects, no recipients, no IP address.
  *
- * Internal and comped accounts are flagged rather than hidden. Removing them
- * would misrepresent load, and leaving them unmarked is how "5 paid
- * workspaces" ended up on this page when the real number was zero.
+ * Internal accounts are flagged rather than hidden: their traffic is real load
+ * but they are not customers, so they are marked, greyed, and excluded from the
+ * external counts.
+ *
+ * Comped accounts are NOT the same thing. A comp is a billing fact, and several
+ * of ours are real external users given a free plan for good feedback. They
+ * keep full prominence in the roster and count as external everywhere; the tag
+ * is there so they are never mistaken for revenue.
  *
  * The table itself is a client component: filtering, sorting, search and
  * pagination all run over the array fetched here, because at this scale the
@@ -25,22 +30,18 @@ import { formatCount, ratio } from '../charts';
 import { SectionError, Section, StatCard } from './shared';
 import { ActiveAccountsTable } from './ActiveAccountsTable';
 import { countReturned, type RosterRow } from './roster';
-
-/** Accounts we run ourselves. Their traffic is real load but not a customer. */
-const INTERNAL_DOMAINS = ['@mcpemails.com', '@mcpemails.dev'];
-
-function isInternal(email: string | null) {
-  return Boolean(email && INTERNAL_DOMAINS.some((domain) => email.toLowerCase().endsWith(domain)));
-}
+import { isInternalAccount } from '@/lib/analytics/internal-accounts';
 
 export async function ActiveUsersSection({ days }: { days: number }) {
   const result = await fetchActiveWorkspaces(days);
   if (!result.ok) return <SectionError title="Active accounts" message={result.error} />;
 
-  // The internal-domain list is applied here so it stays server-side; the
+  // The internal-account list is applied here so it stays server-side; the
   // table only ever sees the resulting flag.
-  const rows: RosterRow[] = result.data.map((row) => ({ ...row, is_internal: isInternal(row.owner_email) }));
-  const external = rows.filter((row) => !row.is_internal && !row.is_comped);
+  const rows: RosterRow[] = result.data.map((row) => ({ ...row, is_internal: isInternalAccount(row.owner_email) }));
+  // External means "not ours". A comped account still belongs to a real person
+  // and belongs in this number; excluding it was hiding genuine usage.
+  const external = rows.filter((row) => !row.is_internal);
   const calls = rows.reduce((total, row) => total + row.calls, 0);
   const externalCalls = external.reduce((total, row) => total + row.calls, 0);
   // Counted over every row, matching the table's own filter button. The
@@ -55,9 +56,11 @@ export async function ActiveUsersSection({ days }: { days: number }) {
       explain={
         <>
           Every workspace with at least one <strong>successful</strong> tool call in the last {days} days.
-          This is the only section that names accounts. Comped and internal accounts are marked rather
-          than removed, because they are real load but not customers. The table opens filtered to accounts
-          that came back on more than one day; use the All filter to see everyone.
+          This is the only section that names accounts. <strong>Internal</strong> accounts are ours and are
+          greyed out and kept out of the external counts. <strong>Comped</strong> is a billing fact, not a
+          judgement: several comped accounts are real external users given a free plan for good feedback,
+          so they count as external and are tagged only so they are never mistaken for revenue. The table
+          opens filtered to accounts that came back on more than one day.
         </>
       }
     >
@@ -65,7 +68,7 @@ export async function ActiveUsersSection({ days }: { days: number }) {
         <StatCard
           label="Active accounts"
           value={rows.length}
-          detail={`${external.length} external, ${rows.length - external.length} internal or comped`}
+          detail={`${external.length} external, ${rows.length - external.length} internal`}
           explain="A workspace counts as active on one successful tool call. It does not have to have touched a mailbox."
         />
         <StatCard
@@ -78,7 +81,7 @@ export async function ActiveUsersSection({ days }: { days: number }) {
           label="External share of calls"
           value={ratio(externalCalls, calls)}
           detail={`${formatCount(externalCalls)} of ${formatCount(calls)} calls`}
-          explain="How much of the traffic comes from someone who is not us and is not comped. A low share means the headline volume is mostly our own accounts."
+          explain="Share of calls from accounts that are not ours. Comped accounts count as external: they are real people. A low share means the headline volume is mostly our own accounts."
         />
         <StatCard
           label="Median active days"
