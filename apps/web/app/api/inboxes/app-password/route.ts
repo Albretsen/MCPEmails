@@ -164,18 +164,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // errors are handled separately and the message is already actionable).
     const body: Record<string, string> = { error: validation.message };
     if (validation.code === 'AUTH_FAILED') body.error_code = 'auth_failed';
-    // A wrong password is expected/user-driven and not worth recording; the
-    // other codes indicate a real infra/config issue worth tracking frequency
-    // of — this table previously had zero writes anywhere in the codebase.
-    if (validation.code !== 'AUTH_FAILED') {
-      await captureError(new Error(validation.message), {
-        severity: 'low',
-        route: 'api/inboxes/app-password',
-        reason: validation.code,
-        service,
-        workspaceId,
-      });
-    }
+    // Every failure is recorded, AUTH_FAILED included. Skipping it used to look
+    // like the right call (a wrong password is user-driven noise), but it left
+    // a service that rejects *every* login indistinguishable from a typo, and
+    // Yandex sat at 21 failures / 0 successes with nothing on file explaining
+    // why. `detail` carries the sanitized server rejection (status + reason,
+    // credential and address stripped, truncated), which is what separates
+    // "this user mistyped" from "this provider never works": grouping
+    // app_errors by service + reason + detail makes a systemic 100%-failure
+    // provider visible immediately.
+    await captureError(new Error(validation.message), {
+      severity: 'low',
+      route: 'api/inboxes/app-password',
+      reason: validation.code,
+      service,
+      phase: validation.phase,
+      detail: validation.detail ?? null,
+      workspaceId,
+    });
     return NextResponse.json(body, { status: 422 });
   }
 

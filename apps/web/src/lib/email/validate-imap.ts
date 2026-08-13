@@ -1,5 +1,6 @@
 import * as net from 'net';
 import * as tls from 'tls';
+import { sanitizeAuthDiagnostic } from './connection-config';
 
 export const IMAP_VALIDATION_TIMEOUT_MS = 10_000;
 export type MailSecurity = 'tls' | 'starttls';
@@ -13,7 +14,18 @@ export type ImapValidationErrorCode =
 
 export type ImapValidationResult =
   | { ok: true; phase: 'authentication' }
-  | { ok: false; code: ImapValidationErrorCode; message: string; phase: ConnectionPhase };
+  | {
+      ok: false;
+      code: ImapValidationErrorCode;
+      message: string;
+      phase: ConnectionPhase;
+      /**
+       * Sanitized, bounded server rejection text (see `sanitizeAuthDiagnostic`).
+       * Present only for AUTH_FAILED, where the server actually answered; never
+       * contains the credential or the address, and is safe to persist.
+       */
+      detail?: string;
+    };
 
 export interface ImapCredential {
   host: string;
@@ -54,7 +66,13 @@ function readLine(socket: net.Socket): Promise<string> {
   });
 }
 
-function readTaggedResponse(socket: net.Socket, tag: string): Promise<'OK' | 'NO' | 'BAD'> {
+interface TaggedResponse {
+  status: 'OK' | 'NO' | 'BAD';
+  /** Everything after the status word, e.g. "[AUTHENTICATIONFAILED] invalid credentials". */
+  text: string;
+}
+
+function readTaggedResponse(socket: net.Socket, tag: string): Promise<TaggedResponse> {
   return new Promise((resolve, reject) => {
     let buffer = '';
     const cleanup = () => {
@@ -69,7 +87,14 @@ function readTaggedResponse(socket: net.Socket, tag: string): Promise<'OK' | 'NO
         const line = buffer.slice(0, newline);
         buffer = buffer.slice(newline + 2);
         const match = new RegExp(`^${tag} (OK|NO|BAD)(?: |$)`, 'i').exec(line);
-        if (match) { cleanup(); resolve(match[1].toUpperCase() as 'OK' | 'NO' | 'BAD'); return; }
+        if (match) {
+          cleanup();
+          resolve({
+            status: match[1].toUpperCase() as 'OK' | 'NO' | 'BAD',
+            text: line.slice(match[0].length).trim(),
+          });
+          return;
+        }
         newline = buffer.indexOf('\r\n');
       }
     };
@@ -79,6 +104,72 @@ function readTaggedResponse(socket: net.Socket, tag: string): Promise<'OK' | 'NO
     socket.on('error', onError);
     socket.on('close', onClose);
   });
+}
+
+/**
+ * Wait for a SASL continuation line. Servers send a bare "+" or "+ <base64>";
+ * Yandex sends the bare form, so the space must not be required.
+ */
+function readContinuation(socket: net.Socket): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let buffer = '';
+    const cleanup = () => {
+      socket.removeListener('data', onData);
+      socket.removeListener('error', onError);
+      socket.removeListener('close', onClose);
+    };
+    const onData = (chunk: Buffer) => {
+      buffer += chunk.toString('utf8');
+      let newline = buffer.indexOf('\r\n');
+      while (newline >= 0) {
+        const line = buffer.slice(0, newline);
+        buffer = buffer.slice(newline + 2);
+        if (line.startsWith('+')) { cleanup(); resolve(); return; }
+        newline = buffer.indexOf('\r\n');
+      }
+    };
+    const onError = (error: Error) => { cleanup(); reject(error); };
+    const onClose = () => { cleanup(); reject(new Error('Socket closed before a SASL continuation.')); };
+    socket.on('data', onData);
+    socket.on('error', onError);
+    socket.on('close', onClose);
+  });
+}
+
+/**
+ * Perform SASL PLAIN, tolerating servers that do not implement RFC 4959.
+ *
+ * RFC 4959 (SASL-IR) lets the base64 initial response ride along on the
+ * AUTHENTICATE line, and iCloud, Yahoo and Zoho all accept that form. Yandex
+ * does not advertise SASL-IR and answers the inline form with a tagged
+ * `BAD AUTHENTICATE Command syntax error`, a rejection of the *command*, not
+ * of the credentials, which made every Yandex connection fail identically no
+ * matter what the user typed.
+ *
+ * A `BAD` therefore means "this server wants the RFC 3501 two-step form", so the
+ * exchange is retried on the same connection: send `AUTHENTICATE PLAIN`, wait
+ * for the continuation, then send the token on its own line. A `NO` is a genuine
+ * credential rejection and is never retried.
+ */
+async function authenticatePlain(
+  socket: net.Socket,
+  username: string,
+  password: string
+): Promise<TaggedResponse & { token: string }> {
+  const token = Buffer.from(`\x00${username}\x00${password}`, 'utf8').toString('base64');
+
+  await socketWrite(socket, `A0001 AUTHENTICATE PLAIN ${token}\r\n`);
+  const inline = await readTaggedResponse(socket, 'A0001');
+  if (inline.status !== 'BAD') return { ...inline, token };
+
+  await socketWrite(socket, 'A0002 AUTHENTICATE PLAIN\r\n');
+  await readContinuation(socket);
+  await socketWrite(socket, `${token}\r\n`);
+  return { ...(await readTaggedResponse(socket, 'A0002')), token };
+}
+
+function socketWrite(socket: net.Socket, data: string): Promise<void> {
+  return new Promise((resolve) => { socket.write(data, () => resolve()); });
 }
 
 function connectTcp(host: string, port: number, onSocket: (socket: net.Socket) => void): Promise<net.Socket> {
@@ -139,7 +230,7 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
         }
         socket.write('A0000 STARTTLS\r\n');
         phase = 'tls';
-        if ((await readTaggedResponse(socket, 'A0000')) !== 'OK') {
+        if ((await readTaggedResponse(socket, 'A0000')).status !== 'OK') {
           return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: IMAP_VALIDATION_MESSAGES.TLS_HANDSHAKE_FAILED, phase };
         }
         socket = await upgradeTls(cred.host, socket, (value) => { activeSocket = value; });
@@ -147,12 +238,25 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
 
       phase = 'authentication';
       const username = cred.username || cred.email;
-      const token = Buffer.from(`\x00${username}\x00${cred.password}`, 'utf8').toString('base64');
-      socket.write(`A0001 AUTHENTICATE PLAIN ${token}\r\n`);
-      if ((await readTaggedResponse(socket, 'A0001')) !== 'OK') {
-        return { ok: false, code: 'AUTH_FAILED', message: IMAP_VALIDATION_MESSAGES.AUTH_FAILED, phase };
+      const auth = await authenticatePlain(socket, username, cred.password);
+      if (auth.status !== 'OK') {
+        return {
+          ok: false,
+          code: 'AUTH_FAILED',
+          message: IMAP_VALIDATION_MESSAGES.AUTH_FAILED,
+          phase,
+          // The SASL token must be listed: it encodes the username and password
+          // together, and a server echoing the rejected command would otherwise
+          // persist the credential in reversible form.
+          detail: sanitizeAuthDiagnostic(auth.status, auth.text, [
+            auth.token,
+            username,
+            cred.email,
+            cred.password,
+          ]),
+        };
       }
-      socket.write('A0002 LOGOUT\r\n');
+      socket.write('A0003 LOGOUT\r\n');
       return { ok: true, phase: 'authentication' };
     } catch (caught) {
       const error = caught as NodeJS.ErrnoException;
