@@ -1,7 +1,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { ImapAuthError, ImapClient, ImapMailboxInfo, ImapMessageSummary } from "./imap-client.ts";
+import {
+  ImapAuthError,
+  ImapClient,
+  ImapMailboxInfo,
+  ImapMessageSummary,
+  ImapMessageTooLargeError,
+} from "./imap-client.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
 import {
   invalidArgumentAuditDetails,
@@ -6653,14 +6659,31 @@ function imapDateToIso(raw: string | null): string {
   return Number.isNaN(ms) ? new Date().toISOString() : new Date(ms).toISOString();
 }
 
-/** Base64-encode raw bytes (standard, not URL-safe), chunked to avoid call-stack limits. */
+/**
+ * Base64-encode raw bytes (standard, not URL-safe), chunk by chunk.
+ *
+ * The previous implementation accumulated the ENTIRE payload into one latin1
+ * `binary` string and only then called `btoa` on it, so a 25 MB message cost
+ * 25 MB (source bytes) + 25 MB (binary string) + 33 MB (base64 result) live at
+ * once, on top of everything else the request was already holding. That was a
+ * direct contributor to the "Memory limit exceeded" worker kills on the
+ * bulk-download paths (email_original, email_attachment, email_read_batch) in a
+ * 256 MB isolate. Encoding in place drops the full-size intermediate entirely:
+ * peak extra allocation is now just the base64 result plus one small chunk.
+ *
+ * CHUNK_BYTES MUST stay a multiple of 3. Base64 encodes 3 input bytes to 4
+ * output characters, so a boundary that is not 3-aligned would make `btoa` pad
+ * ("=") in the middle of the stream and silently corrupt the output. 8190 is
+ * both 3-aligned (2730 * 3) and small enough to keep the `String.fromCharCode`
+ * spread well under the engine's argument-count limit.
+ */
 function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  const CHUNK_BYTES = 8190;
+  let out = "";
+  for (let i = 0; i < bytes.length; i += CHUNK_BYTES) {
+    out += btoa(String.fromCharCode(...bytes.subarray(i, i + CHUNK_BYTES)));
   }
-  return btoa(binary);
+  return out;
 }
 
 /** Decode a standard (not URL-safe) base64 string to a UTF-8 string. */
@@ -8616,6 +8639,30 @@ interface OriginalMessage {
   provider: string;
 }
 
+/**
+ * Raised as soon as the message is PROVEN to exceed the download ceiling, while
+ * its bytes are still on the wire.
+ *
+ * The original guard compared `original.bytes.length` after the fetch had
+ * completed, which is far too late to be a memory guard: by then the payload
+ * had been materialised several times over (provider response body, decoded
+ * string, Uint8Array) inside a 256 MB isolate, so the "too large" case was
+ * precisely the case that got the worker killed with "Memory limit exceeded"
+ * before it could ever return the error. Deciding from the declared size, or
+ * from the IMAP literal's octet count, lets us abandon the transfer instead.
+ *
+ * `observedBytes` is null when the exact decoded length is not knowable without
+ * reading the body (Gmail declares the size of a base64 JSON envelope, and the
+ * IMAP reader aborts mid-literal), in which case the caller reports the ceiling
+ * rather than a made-up size.
+ */
+class OriginalMessageTooLargeError extends Error {
+  constructor(readonly observedBytes: number | null) {
+    super("original_too_large");
+    this.name = "OriginalMessageTooLargeError";
+  }
+}
+
 function latin1ToBytes(value: string): Uint8Array {
   const bytes = new Uint8Array(value.length);
   for (let i = 0; i < value.length; i++) bytes[i] = value.charCodeAt(i) & 0xff;
@@ -8623,9 +8670,13 @@ function latin1ToBytes(value: string): Uint8Array {
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  // Copy into an ArrayBuffer-backed view: Deno's Web Crypto typings reject a
-  // generic ArrayBufferLike even though the runtime accepts the bytes.
-  const digest = await crypto.subtle.digest("SHA-256", new Uint8Array(bytes));
+  // Hash the caller's view directly. The old `new Uint8Array(bytes)` wrapper
+  // was not a view, it was a full byte-for-byte COPY of the payload, so hashing
+  // a 25 MB .eml briefly doubled its footprint for no reason. The copy was only
+  // ever there to satisfy Deno's Web Crypto typings (BufferSource is declared
+  // over ArrayBuffer, not the generic ArrayBufferLike a Uint8Array may carry);
+  // a cast satisfies the compiler without touching the data.
+  const digest = await crypto.subtle.digest("SHA-256", bytes as unknown as BufferSource);
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
@@ -8635,10 +8686,18 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
  * Fetch the complete MIME representation currently returned by the connected
  * provider. This intentionally does not use the parsed/sanitized read path:
  * callers need a saveable .eml artifact, not model-readable message text.
+ *
+ * `maxBytes` is enforced DURING the fetch, not after it. Every branch below
+ * refuses the transfer from the size the provider declares (Content-Length, or
+ * the IMAP literal's octet count) so an oversized message never lands in the
+ * isolate at all. Providers that decline to declare a size fall through to the
+ * post-read length check in executeReadOriginal, which is a correctness
+ * backstop, not a memory guard.
  */
 async function readOriginalMessage(
   inbox: InboxRow,
   messageId: string,
+  maxBytes: number = ORIGINAL_MESSAGE_MAX_BYTES,
 ): Promise<OriginalMessage> {
   switch (inbox.provider) {
     case "imap": {
@@ -8658,10 +8717,18 @@ async function readOriginalMessage(
           password,
         });
         await client.selectMailbox(imapFolderName(folder));
-        const message = await client.fetchMessageRaw(uid);
+        // Hand the ceiling down to the literal reader so an oversized message is
+        // abandoned while it is still being streamed off the socket. Buffering it
+        // first and measuring afterwards is what kills the isolate.
+        const message = await client.fetchMessageRaw(uid, { maxLiteralBytes: maxBytes });
         if (!message) throw new Error("message_not_found");
         return { bytes: latin1ToBytes(message.raw), provider: "imap" };
       } catch (err) {
+        // The literal exceeded the ceiling. The reader stopped short, so we know
+        // it is over the limit but not by how much: report the ceiling instead.
+        if (err instanceof ImapMessageTooLargeError) {
+          throw new OriginalMessageTooLargeError(null);
+        }
         if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
         throw err;
       } finally {
@@ -8679,6 +8746,23 @@ async function readOriginalMessage(
         if (response.status === 400 || response.status === 404) throw new Error("message_not_found");
         throw new Error(await gmailErrorMessage("Gmail API error", response));
       }
+      // Gmail returns the RFC 822 message base64url-encoded inside a small JSON
+      // envelope, so the body on the wire is about 4/3 of the decoded message.
+      // Deciding from Content-Length lets us drop the connection before
+      // response.json() buffers the body, the parsed string and the decoded
+      // bytes all at once. The envelope makes the estimate a few hundred bytes
+      // generous, so a message sitting within a rounding error of the ceiling
+      // can be refused; that is the side to err on when the alternative is a
+      // dead worker. A response with no Content-Length (chunked) falls through
+      // to the post-read check, exactly as before.
+      const declaredGmailBytes = Number(response.headers.get("content-length"));
+      if (
+        Number.isFinite(declaredGmailBytes) && declaredGmailBytes > 0 &&
+        Math.floor((declaredGmailBytes * 3) / 4) > maxBytes
+      ) {
+        await response.body?.cancel().catch(() => {});
+        throw new OriginalMessageTooLargeError(null);
+      }
       const message = await response.json() as { raw?: string };
       if (!message.raw) throw new Error("original_unavailable");
       return { bytes: base64ToBytes(base64urlToBase64(message.raw)), provider: "gmail" };
@@ -8693,6 +8777,14 @@ async function readOriginalMessage(
         if (response.status === 401) throw new Error("outlook_auth_failed");
         if (response.status === 404) throw new Error("message_not_found");
         throw new Error(`Outlook Graph error: ${response.status} ${response.statusText}`);
+      }
+      // $value streams the raw MIME bytes with no encoding envelope, so
+      // Content-Length IS the message size and the check is exact. Checking it
+      // here means arrayBuffer() never buffers a payload we are going to reject.
+      const declaredOutlookBytes = Number(response.headers.get("content-length"));
+      if (Number.isFinite(declaredOutlookBytes) && declaredOutlookBytes > maxBytes) {
+        await response.body?.cancel().catch(() => {});
+        throw new OriginalMessageTooLargeError(declaredOutlookBytes);
       }
       return { bytes: new Uint8Array(await response.arrayBuffer()), provider: "outlook" };
     }
@@ -8728,10 +8820,33 @@ async function executeReadOriginal(
     return toolError(`Provider '${inbox.provider}' does not support original-message download.`, "unsupported_provider");
   }
 
+  // One shape for both guards (the pre-fetch refusal and the post-read
+  // backstop) so the client sees the same error and the same error_code no
+  // matter which of them fired. `sizeBytes` is null when the transfer was
+  // abandoned before the exact decoded length could be known.
+  const originalTooLargeError = (sizeBytes: number | null) =>
+    toolError(
+      JSON.stringify({
+        error: "original_too_large",
+        message_id: messageId,
+        size_bytes: sizeBytes,
+        max_bytes: ORIGINAL_MESSAGE_MAX_BYTES,
+        message: sizeBytes === null
+          ? `The original message exceeds the ${ORIGINAL_MESSAGE_MAX_BYTES}-byte download limit.`
+          : `The original message is ${sizeBytes} bytes, exceeding the ${ORIGINAL_MESSAGE_MAX_BYTES}-byte download limit.`,
+      }),
+      "original_too_large",
+    );
+
   let original: OriginalMessage;
   try {
-    original = await readOriginalMessage(inbox, messageId);
+    original = await readOriginalMessage(inbox, messageId, ORIGINAL_MESSAGE_MAX_BYTES);
   } catch (err) {
+    // Checked before the string comparisons below because this one carries the
+    // observed size with it.
+    if (err instanceof OriginalMessageTooLargeError) {
+      return originalTooLargeError(err.observedBytes);
+    }
     const message = err instanceof Error ? err.message : String(err);
     if (message === "message_not_found") {
       return toolError(
@@ -8751,14 +8866,12 @@ async function executeReadOriginal(
     return toolError("Provider error while downloading the original message. Please try again in a moment.", "provider_error");
   }
 
+  // Backstop only. readOriginalMessage now refuses oversized messages from the
+  // declared size, so reaching this line means the provider sent no
+  // Content-Length and we could not decide earlier. It keeps the contract
+  // honest; it cannot be relied on to save the isolate.
   if (original.bytes.length > ORIGINAL_MESSAGE_MAX_BYTES) {
-    return toolError(JSON.stringify({
-      error: "original_too_large",
-      message_id: messageId,
-      size_bytes: original.bytes.length,
-      max_bytes: ORIGINAL_MESSAGE_MAX_BYTES,
-      message: `The original message is ${original.bytes.length} bytes, exceeding the ${ORIGINAL_MESSAGE_MAX_BYTES}-byte download limit.`,
-    }), "original_too_large");
+    return originalTooLargeError(original.bytes.length);
   }
 
   const filename = "original-message.eml";
@@ -9019,13 +9132,25 @@ async function executeReadAttachment(
   // ── Pass 2: fetch the bytes of ONLY the selected attachment ─────────────────
   // select_only_index ensures the provider reader encodes just this one file,
   // so a 5 MB multi-attachment message never blows the isolate's memory.
+  //
+  // The byte budget handed to pass 2 is the size pass 1 actually measured, not
+  // the blanket 25 MB ceiling. Every provider reader compares this budget
+  // against the very same size_bytes value pass 1 reported, so the selected file
+  // still passes (the comparison is inclusive at the boundary), while a message
+  // whose parts are far smaller than the cap no longer authorises the reader to
+  // allocate up to 25 MB. Stored messages are immutable per provider ID, so the
+  // two passes cannot legitimately disagree about the size.
+  const passTwoAttachmentBudget = Math.min(
+    selectedMeta.size_bytes,
+    SINGLE_ATTACHMENT_MAX_BYTES,
+  );
   let contentResult: ReadEmailResult;
   try {
     contentResult = await readOneMessage(inbox, messageId, {
       include_html: false,
       include_attachments: true,
       mark_as_read: false,
-      attachment_max_bytes: SINGLE_ATTACHMENT_MAX_BYTES,
+      attachment_max_bytes: passTwoAttachmentBudget,
       select_only_index: selectedIndex,
     });
   } catch (err) {
@@ -14875,7 +15000,33 @@ function formatBulkResult(
   let logErrorCode: string | null = null;
   if (isTotalFailure) {
     const distinctErrors = new Set(failed.map((f) => f.error));
-    logErrorCode = distinctErrors.size === 1 ? failed[0].error : "provider_error";
+    // The per-item `error` string on a bulk-op failure is not always a stable
+    // code: the Gmail/Outlook/IMAP bulk helpers above (gmailBulkMove,
+    // gmailBulkDelete, gmailBulkFlag, outlookBulkMove/Copy/Delete/Flag,
+    // imapBulkMove/Copy/Delete/Flag) fall back to raw, unclassified strings
+    // for any failure they don't recognize -- e.g. `Gmail modify failed: 400`
+    // or a passed-through ImapClient error message. Those raw strings must
+    // never leak into logErrorCode: it feeds activity_log.error_code, which
+    // monitoring/aggregation groups on, and an interpolated HTTP status (or
+    // raw exception text) makes every occurrence a distinct, ungroupable
+    // value. Only surface the shared error verbatim when it's one of the
+    // known, stable, snake_case sentinels these helpers can actually throw;
+    // anything else (including every raw-status-string case above) collapses
+    // to "provider_error", matching how single-message operations already
+    // classify non-401/404 provider failures.
+    const KNOWN_BULK_ERROR_CODES = new Set([
+      "gmail_auth_failed",
+      "outlook_auth_failed",
+      "fastmail_auth_failed",
+      "imap_auth_failed",
+      "message_not_found",
+      "invalid_message_id",
+      "invalid_action",
+      "folder_not_found",
+    ]);
+    logErrorCode = distinctErrors.size === 1 && KNOWN_BULK_ERROR_CODES.has(failed[0].error)
+      ? failed[0].error
+      : "provider_error";
   }
   return {
     result: jsonOk({
@@ -16942,7 +17093,9 @@ async function imapSendDraft(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
+    // Use the RAW folder (decoded from draft_id), not imapFolderName(folder);
+    // see imapUpdateDraft's comment above for why re-normalizing it is wrong.
+    await client.selectMailbox(folder);
     const msg = await client.fetchMessageRaw(uid);
     if (!msg) throw new Error("draft_not_found");
     rawMime = msg.raw;
@@ -16989,7 +17142,9 @@ async function imapSendDraft(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
+    // Same RAW folder as above (not imapFolderName(folder)): the draft lives
+    // wherever it was actually created, not at the generic alias's default.
+    await client.selectMailbox(folder);
     await client.uidStore([uid], ["\\Deleted"], "add");
     await client.uidExpunge([uid]);
   } catch {
@@ -17032,7 +17187,9 @@ async function imapDeleteDraft(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
+    // RAW folder, not imapFolderName(folder); see imapUpdateDraft's comment
+    // (line ~16876) for why the draft's actual mailbox must not be re-normalized.
+    await client.selectMailbox(folder);
     const msg = await client.fetchMessageRaw(uid);
     if (!msg) throw new Error("draft_not_found");
     await client.uidStore([uid], ["\\Deleted"], "add");
@@ -19674,6 +19831,106 @@ function handlePromptsGet(req: JsonRpcRequest, id: string | number | null, apiKe
   return { jsonrpc: "2.0", id, result: { description: prompt.description, messages: [{ role: "user", content: { type: "text", text: renderWorkflowPrompt(prompt, values) } }] } };
 }
 
+// ---------------------------------------------------------------------------
+// Byte-heavy dispatch concurrency guard
+// ---------------------------------------------------------------------------
+
+/**
+ * The dispatches that pull whole messages or whole attachments into the isolate.
+ *
+ * These are the only handlers whose peak memory is set by the SIZE of the mail
+ * rather than by the shape of the request, and they are the three that show up
+ * in every "Memory limit exceeded" worker kill we have traced.
+ */
+const BYTE_HEAVY_DISPATCH_NAMES = new Set([
+  "email_original",
+  "email_attachment",
+  "email_read_batch",
+]);
+
+/**
+ * How many byte-heavy dispatches one API key may have running at the same time.
+ *
+ * Sized against the 256 MB isolate budget rather than against a request rate.
+ * One 25 MB message at the ceiling is roughly 25 MB of source bytes, about
+ * 34 MB of base64, and another copy of that base64 once the JSON-RPC response is
+ * serialised, so a single in-flight call can hold on the order of 90 MB before
+ * anything else the isolate is doing is counted. Two concurrent calls therefore
+ * already sit close to the limit and three would routinely exceed it, which is
+ * exactly the failure being defended against here.
+ */
+const MAX_CONCURRENT_BYTE_HEAVY_PER_KEY = 2;
+
+/**
+ * Stable snake_case sentinel written to activity_log.error_code so these
+ * rejections aggregate as one bucket (same convention as
+ * "idempotency_in_progress", "attachment_too_large", and friends).
+ */
+const BYTE_HEAVY_CONCURRENCY_ERROR_CODE = "concurrent_byte_heavy_limit";
+
+/**
+ * In-flight byte-heavy dispatch count, per API key, for THIS isolate only.
+ *
+ * What this protects against: one client fanning several large downloads out in
+ * parallel onto a warm isolate, which is the exact pattern that produced the
+ * memory kills. In that case the calls land on the same worker and the counter
+ * sees all of them, synchronously and for free, with no database round-trip on
+ * the hot path.
+ *
+ * What this does NOT protect against: a key whose concurrent requests are
+ * spread across several isolates. Supabase Edge Functions are not a singleton
+ * per key, requests are load-balanced across workers and workers are recycled
+ * constantly, so each isolate can admit up to the limit independently and a
+ * cold isolate starts from an empty map. This is deliberately a cheap local
+ * backstop, not a distributed semaphore. A global ceiling would need the same
+ * kind of atomic bucket the rate_limit_check RPC uses (with the added problem
+ * that a slot must be released on completion, so a crashed worker would need a
+ * lease timeout to avoid leaking it permanently). That is the follow-up if
+ * per-isolate accounting proves insufficient; note that the memory limit itself
+ * is per isolate, so bounding each isolate is what actually keeps a worker
+ * alive.
+ */
+const byteHeavyInFlightByKey = new Map<string, number>();
+
+type ByteHeavySlot =
+  | { granted: true; release: () => void }
+  | { granted: false; inFlight: number };
+
+/**
+ * Reserve a byte-heavy slot for this key, or report that the key is saturated.
+ *
+ * Non-byte-heavy dispatches are granted a no-op slot so the call site stays a
+ * single unconditional acquire/release pair, which is what keeps the release
+ * honest. The returned release MUST be called from a `finally`: a handler that
+ * throws would otherwise hold its slot for the remaining life of the isolate
+ * and quietly wedge every later download for that key.
+ */
+function acquireByteHeavySlot(dispatchName: string, apiKeyId: string): ByteHeavySlot {
+  if (!BYTE_HEAVY_DISPATCH_NAMES.has(dispatchName)) {
+    return { granted: true, release: () => {} };
+  }
+
+  const inFlight = byteHeavyInFlightByKey.get(apiKeyId) ?? 0;
+  if (inFlight >= MAX_CONCURRENT_BYTE_HEAVY_PER_KEY) {
+    return { granted: false, inFlight };
+  }
+
+  byteHeavyInFlightByKey.set(apiKeyId, inFlight + 1);
+  let released = false;
+  return {
+    granted: true,
+    release: () => {
+      // Guard against a double release turning the counter negative and
+      // permanently inflating this key's allowance.
+      if (released) return;
+      released = true;
+      const current = byteHeavyInFlightByKey.get(apiKeyId) ?? 1;
+      if (current <= 1) byteHeavyInFlightByKey.delete(apiKeyId);
+      else byteHeavyInFlightByKey.set(apiKeyId, current - 1);
+    },
+  };
+}
+
 /**
  * `tools/call` — executes a named tool with the supplied arguments.
  *
@@ -19975,6 +20232,44 @@ async function handleToolsCall(
     }
     toolResult = { jsonrpc: "2.0", id, result: { ...jsonOk(payload, true), isError: logStatus !== "success" } };
   } else {
+  // ── Byte-heavy concurrency guard ──────────────────────────────────────────
+  // The request-rate limiter counts calls, not bytes, so a client making three
+  // calls a minute never trips it even when each of those calls drags tens of
+  // megabytes through a 256 MB isolate. Bound the byte-heavy dispatches by how
+  // many may be resident AT ONCE for one key instead. Acquired here, after the
+  // idempotency claim has been settled, so a replayed or rejected outbound
+  // request never holds a slot it will not use.
+  const byteHeavySlot = acquireByteHeavySlot(dispatchName, apiKey.id);
+  if (!byteHeavySlot.granted) {
+    console.warn("[mcp-server] tools/call: byte_heavy_concurrency_limit", {
+      key_id: apiKey.id,
+      dispatch_name: dispatchName,
+      in_flight: byteHeavySlot.inFlight,
+      limit: MAX_CONCURRENT_BYTE_HEAVY_PER_KEY,
+    });
+    logStatus = "error";
+    logErrorCode = BYTE_HEAVY_CONCURRENCY_ERROR_CODE;
+    toolResult = {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        ...jsonOk({
+          error_code: BYTE_HEAVY_CONCURRENCY_ERROR_CODE,
+          tool: toolName,
+          in_flight: byteHeavySlot.inFlight,
+          limit: MAX_CONCURRENT_BYTE_HEAVY_PER_KEY,
+          message:
+            `This API key already has ${byteHeavySlot.inFlight} large download(s) in progress. ` +
+            "Downloads that pull whole messages or attachments (email_original, email_attachment, " +
+            `email_read_batch) are limited to ${MAX_CONCURRENT_BYTE_HEAVY_PER_KEY} at a time per key, ` +
+            "so that no single client can exhaust the server's memory. Nothing was fetched. " +
+            "Wait for the in-progress download to finish, then retry this exact request; " +
+            "fetching messages and attachments one at a time avoids this entirely.",
+        }, true),
+        isError: true,
+      },
+    };
+  } else {
   try {
     await activityInboxStore.run(logCtx, async () => {
     // ── Dispatch to the implemented tool handler ───────────────────────────
@@ -20274,6 +20569,12 @@ async function handleToolsCall(
     );
     logStatus = "error";
     logErrorCode = String(-32603);
+  } finally {
+    // Must run on every exit path. A thrown handler that skipped this would
+    // leak the slot for the lifetime of the isolate and lock this key out of
+    // large downloads until the worker happened to be recycled.
+    byteHeavySlot.release();
+  }
   }
   }
 
