@@ -44,7 +44,9 @@ export async function ProviderFunnelSection({ days }: { days: number }) {
           Inbox connection attempts in the last {days} days. Read the workspace columns, not the attempt
           columns: one user retrying a broken provider twenty times is one lost user, not twenty. This is
           the view that would have caught Yandex months earlier (2 workspaces, 21 consecutive auth
-          failures, 0 successes).
+          failures, 0 successes). &ldquo;Resolved attempts&rdquo; counts attempts that ended in a success or
+          a failure, so it always equals the two columns beside it. A consent screen that was opened and
+          never returned from resolves as neither, and is counted in the abandonment table below.
         </>
       }
     >
@@ -56,7 +58,7 @@ export async function ProviderFunnelSection({ days }: { days: number }) {
               <th>Workspaces tried</th>
               <th>Workspaces connected</th>
               <th>Connect rate</th>
-              <th>Attempts</th>
+              <th>Resolved attempts</th>
               <th>Failures</th>
               <th>Top failure reason</th>
             </tr>
