@@ -19,7 +19,7 @@
 -- ============================================================================
 
 ALTER TABLE public.user_usage_entitlements
-  ADD COLUMN unlimited_inboxes boolean NOT NULL DEFAULT false;
+  ADD COLUMN IF NOT EXISTS unlimited_inboxes boolean NOT NULL DEFAULT false;
 
 COMMENT ON COLUMN public.user_usage_entitlements.unlimited_inboxes IS
   'Permanent inbox grandfather from the 2026-08-19 inbox-based repricing. True = the inbox cap never applies to this user, in any workspace they own.';
