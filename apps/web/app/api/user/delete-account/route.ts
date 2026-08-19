@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import { selectAllRows } from '@/lib/supabase/paginate';
 
 /**
  * DELETE /api/user/delete-account
@@ -86,12 +87,26 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
   }
 
   // 3. Fetch ALL workspaces owned by this user (a Pro user may own several).
+  //    Paged deliberately: PostgREST truncates an unpaged select at
+  //    `db-max-rows` (1000) without raising an error, and this id list is what
+  //    every teardown step in 4 is scoped to. A short list would leave live
+  //    workspaces, API keys and encrypted inbox credentials behind on an
+  //    account the user believes is deleted, while still returning success.
   const service = createServiceRoleClient();
-  const { data: ownedWorkspaces, error: workspaceError } = await service
-    .from('workspaces')
-    .select('id')
-    .eq('owner_id', user.id)
-    .is('deleted_at', null);
+  const { data: ownedWorkspaces, error: workspaceError } = await selectAllRows<{
+    id: string;
+  }>((from, to) =>
+    service
+      .from('workspaces')
+      .select('id')
+      .eq('owner_id', user.id)
+      .is('deleted_at', null)
+      // Total order: OFFSET paging over an unordered read may repeat or skip
+      // rows between pages, and a skipped row here is a workspace whose
+      // credentials survive the account deletion.
+      .order('id', { ascending: true })
+      .range(from, to),
+  );
 
   if (workspaceError) {
     console.error('[delete-account] workspace lookup failed:', workspaceError.message);
@@ -101,7 +116,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const ownedIds = (ownedWorkspaces ?? []).map((w) => w.id);
+  const ownedIds = ownedWorkspaces.map((w) => w.id);
   const now = new Date().toISOString();
 
   // 4. Tear down every owned workspace: revoke keys + refresh chains, disconnect
