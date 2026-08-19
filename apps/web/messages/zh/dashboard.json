@@ -452,7 +452,8 @@
     "inboxesUnlimited": "无限量连接收件箱",
     "inboxesCount": "当前已连接 {count} 个",
     "grandfatheredTitle": "无限量收件箱，予以保留",
-    "grandfatheredBody": "在收件箱数量成为付费限制之前你就已经在这里了，因此你的账户永久免费保留无限量连接收件箱。只有当你需要更高的突发限额、更长的历史记录或团队功能时，Pro 和 Team 才值得考虑。"
+    "grandfatheredBody": "在收件箱数量成为付费限制之前你就已经在这里了，因此你的账户永久免费保留无限量连接收件箱。只有当你需要更高的突发限额、更长的历史记录或团队功能时，Pro 和 Team 才值得考虑。",
+    "planChanged": "您已切换到 {plan}。差价将显示在下一张账单中。"
   },
   "security": {
     "title": "安全",

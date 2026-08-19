@@ -452,7 +452,8 @@
     "inboxesUnlimited": "Unlimited connected inboxes",
     "inboxesCount": "{count} connected right now",
     "grandfatheredTitle": "Unlimited inboxes, kept",
-    "grandfatheredBody": "You were already here before inboxes became a paid limit, so your account keeps unlimited connected inboxes at no cost, permanently. Pro and Team are worth it only if you want the higher burst limit, longer history, or team features."
+    "grandfatheredBody": "You were already here before inboxes became a paid limit, so your account keeps unlimited connected inboxes at no cost, permanently. Pro and Team are worth it only if you want the higher burst limit, longer history, or team features.",
+    "planChanged": "You are now on {plan}. The price difference appears on your next invoice."
   },
   "security": {
     "title": "Security",

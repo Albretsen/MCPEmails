@@ -452,7 +452,8 @@
     "inboxesUnlimited": "Ubegrenset antall tilkoblede innbokser",
     "inboxesCount": "{count} tilkoblet akkurat nå",
     "grandfatheredTitle": "Ubegrensede innbokser, beholdt",
-    "grandfatheredBody": "Du var her allerede før innbokser ble en betalt grense, så kontoen din beholder ubegrenset antall tilkoblede innbokser gratis, permanent. Pro og Team er bare verdt det hvis du vil ha høyere burst-grense, lengre historikk eller teamfunksjoner."
+    "grandfatheredBody": "Du var her allerede før innbokser ble en betalt grense, så kontoen din beholder ubegrenset antall tilkoblede innbokser gratis, permanent. Pro og Team er bare verdt det hvis du vil ha høyere burst-grense, lengre historikk eller teamfunksjoner.",
+    "planChanged": "Du er nå på {plan}. Prisdifferansen kommer på neste faktura."
   },
   "security": {
     "title": "Sikkerhet",
