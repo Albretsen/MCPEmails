@@ -96,7 +96,9 @@ If you want a message to stop showing up as unread once you've replied, read it 
 
 Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, regardless of plan. Your workspace also has a burst ceiling by tier — **60 req/min on Free, 300 on Agent, 1,000 on Scale** (see [pricing](/pricing)). A polite poll-and-reply loop lives well inside that, but a misbehaving one can trip it.
 
-When you hit a limit, the server returns a retryable error (code \`-32029\`) carrying \`data.retry_after\` in seconds. Honor it. Sleep for that long, then continue.
+When you hit a rate limit, the server returns a retryable error (code \`-32003\`) carrying \`data.retry_after\` in seconds. Honor it. Sleep for that long, then continue.
+
+Your plan's monthly action allowance is a different limit, and it is not retryable. When it runs out, the call comes back as a normal tool result with \`isError: true\` and a \`_meta["com.mcpemails/usage_limit"]\` block instead of a JSON-RPC error, with no \`retry_after\`. Retrying that just burns cycles until \`reset_at\` or an upgrade, so stop the loop and surface it.
 
 Here's the rule that matters most: **never blindly auto-retry an \`email_compose\` send or reply.** A send is not idempotent. If a send call times out or returns ambiguously, a naive retry can deliver the same reply twice. Retry *reads* freely; treat *sends* as one-shot and only retry on an explicit retryable error, with backoff and a hard cap.
 

@@ -235,3 +235,37 @@ export const GMAIL_OAUTH_USER_CAP = 100;
  * not pause while they run.
  */
 export const GMAIL_OAUTH_WARN_AT = 60;
+
+/** Active inboxes per mail provider. `growth_provider_mix()`. */
+export type GrowthProviderMixRow = {
+  provider: string;
+  inboxes: number;
+};
+
+/** Workspaces per MCP client, from their first successful call. `growth_client_mix()`. */
+export type GrowthClientMixRow = {
+  client: string;
+  workspaces: number;
+};
+
+/**
+ * Workspaces bucketed by share of their plan's action allowance used in their
+ * own current billing period. `growth_utilization_bands(p_caps, p_meter_version)`.
+ *
+ * All five bands come back every time, empty ones included, so the chart keeps
+ * a stable shape. The caps are passed in from the canonical plan table rather
+ * than written in SQL: see `fetchUtilizationBands`.
+ */
+export type GrowthUtilizationBandRow = {
+  band: string;
+  workspaces: number;
+};
+
+/** Billable volume and cap rejections over a window. `growth_usage_volume(p_days, p_meter_version)`. */
+export type GrowthUsageVolumeRow = {
+  billable_actions: number;
+  billable_workspaces: number;
+  cap_hit_workspaces: number;
+  cap_rejections: number;
+  total_workspaces: number;
+};

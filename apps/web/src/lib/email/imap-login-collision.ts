@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
+import { selectAllRows } from '@/lib/supabase/paginate';
 
 /**
  * Workspace-scoped IMAP-login collision check (defense-in-depth).
@@ -42,22 +43,35 @@ export async function findConflictingInbox(
 
   // Narrow on the cheap, indexable predicates; do the effective-login equality
   // in JS below. `email_address <> email` excludes the same-address reconnect.
-  const { data, error } = await db
-    .from('inboxes')
-    .select('email_address, imap_username')
-    .eq('workspace_id', workspaceId)
-    .is('deleted_at', null)
-    .eq('status', 'active')
-    .eq('imap_host', host)
-    .neq('email_address', email);
+  //
+  // Paged, not a plain select: PostgREST silently truncates an unpaged result at
+  // `db-max-rows` (1000) with no error, and a guard that scans the rows it was
+  // handed would then skip the colliding candidate and wave the connect through.
+  // A security check must never depend on the candidate set staying small.
+  const { data, error } = await selectAllRows<{
+    email_address: string;
+    imap_username: string | null;
+  }>((from, to) =>
+    db
+      .from('inboxes')
+      .select('email_address, imap_username')
+      .eq('workspace_id', workspaceId)
+      .is('deleted_at', null)
+      .eq('status', 'active')
+      .eq('imap_host', host)
+      .neq('email_address', email)
+      // Total order: OFFSET paging over an unordered read may repeat or skip
+      // rows between pages, and a skipped row here is a missed collision.
+      .order('id', { ascending: true })
+      .range(from, to),
+  );
 
-  if (error || !data) {
-    // Fail open: a read error here must not break a legitimate connect. The
-    // unique (workspace_id, email_address) constraint and credential validation
-    // remain in force; this collision check is an extra guard.
-    return { conflict: false };
-  }
-
+  // Scan whatever was read before deciding what a read error means. selectAllRows
+  // returns the pages it completed alongside the error, so a failure on page 2
+  // still carries page 1, and a collision found there is a real row that really
+  // exists: acting on it costs nothing in false positives and is the whole point
+  // of the guard. Checking first and failing open second is therefore strictly
+  // better than discarding evidence already in hand.
   for (const row of data) {
     const rowLogin = (row.imap_username || row.email_address).toLowerCase().trim();
     if (rowLogin === effectiveLogin) {
@@ -65,5 +79,12 @@ export async function findConflictingInbox(
     }
   }
 
+  // No collision in what we could read. If `error` is set the candidate set was
+  // incomplete, and we still fail open: a read error must not break a legitimate
+  // connect. The unique (workspace_id, email_address) constraint and credential
+  // validation remain in force; this check is an extra guard, not the only one.
+  if (error) {
+    console.error('[imap-login-collision] partial read, failing open', error);
+  }
   return { conflict: false };
 }

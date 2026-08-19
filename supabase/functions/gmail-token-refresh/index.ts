@@ -23,6 +23,13 @@ const GMAIL_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 /** Query window: refresh tokens expiring within this many minutes. */
 const REFRESH_WINDOW_MINUTES = 10;
 
+/**
+ * Rows fetched per page when draining the expiring-token queue. Must not exceed
+ * PostgREST's `db-max-rows` (1000): a server-truncated page would look like the
+ * last page and we would silently skip the rest of the queue again.
+ */
+const QUERY_PAGE_SIZE = 1000;
+
 const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
 
@@ -221,23 +228,48 @@ Deno.serve(async (_req: Request): Promise<Response> => {
     Date.now() + REFRESH_WINDOW_MINUTES * 60 * 1000
   ).toISOString();
 
-  const { data: inboxes, error: queryError } = await supabase
-    .from('inboxes')
-    .select('id, oauth_access_token, oauth_refresh_token, oauth_token_expires_at')
-    .eq('status', 'active')
-    .eq('provider', 'gmail')
-    .lt('oauth_token_expires_at', windowTimestamp)
-    .is('deleted_at', null);
+  // Paged with .range(): PostgREST truncates an unpaged select at db-max-rows
+  // (1000) without raising an error, so once more than that many tokens fall
+  // into the same 10-minute window the tail is simply never seen by this run --
+  // and those tokens expire in the gap. Draining the queue here (before the
+  // refresh loop mutates any row) keeps the page offsets stable.
+  const inboxes: {
+    id: string;
+    oauth_access_token: string | null;
+    oauth_refresh_token: string | null;
+    oauth_token_expires_at: string | null;
+  }[] = [];
 
-  if (queryError) {
-    console.error('[gmail-token-refresh] Query failed:', queryError.message);
-    return new Response(
-      JSON.stringify({ error: 'Database query failed', detail: queryError.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+  for (let from = 0; ; from += QUERY_PAGE_SIZE) {
+    const { data: page, error: queryError } = await supabase
+      .from('inboxes')
+      .select('id, oauth_access_token, oauth_refresh_token, oauth_token_expires_at')
+      .eq('status', 'active')
+      .eq('provider', 'gmail')
+      .lt('oauth_token_expires_at', windowTimestamp)
+      .is('deleted_at', null)
+      // A total order is what makes the offsets mean anything: without it two
+      // pages can overlap or skip. Soonest-to-expire first, id as tie-breaker.
+      .order('oauth_token_expires_at', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, from + QUERY_PAGE_SIZE - 1);
+
+    if (queryError) {
+      console.error('[gmail-token-refresh] Query failed:', queryError.message);
+      return new Response(
+        JSON.stringify({ error: 'Database query failed', detail: queryError.message }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const batch = page ?? [];
+    inboxes.push(...batch);
+    // A short page means the server had nothing more to give; a full one means
+    // there may be another behind it.
+    if (batch.length < QUERY_PAGE_SIZE) break;
   }
 
-  if (!inboxes || inboxes.length === 0) {
+  if (inboxes.length === 0) {
     console.log('[gmail-token-refresh] No Gmail tokens require refresh.');
     return new Response(
       JSON.stringify({ refreshed: 0, errored: 0 }),

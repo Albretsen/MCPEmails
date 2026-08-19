@@ -44,7 +44,13 @@ import type {
   GrowthRetentionPointRow,
   GrowthActiveWorkspaceRow,
   GrowthRevenueRow,
+  GrowthProviderMixRow,
+  GrowthClientMixRow,
+  GrowthUtilizationBandRow,
+  GrowthUsageVolumeRow,
 } from '@/lib/analytics/growth-types';
+import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
+import { internalAccountMatchers } from '@/lib/analytics/internal-accounts';
 
 // The cap projection is implemented next to the other pure helpers so it can be
 // unit tested without dragging in the Supabase client, and re-exported here
@@ -121,7 +127,13 @@ async function cachedSection<T>(
   }
 }
 
-async function callRpc<T>(fn: string, args: Record<string, number>): Promise<T[]> {
+/**
+ * RPC arguments: numbers, the plan-cap map passed to the bands function, and
+ * the internal-account lists passed to the retention curve.
+ */
+type RpcArgs = Record<string, number | string[] | Record<string, number>>;
+
+async function callRpc<T>(fn: string, args: RpcArgs): Promise<T[]> {
   // Generated database types cover tables, not functions; cast locally rather
   // than weakening the shared service-role client.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,14 +149,14 @@ async function callRpc<T>(fn: string, args: Record<string, number>): Promise<T[]
 function rpcRows<T>(
   fn: string,
   tag: string,
-  args: Record<string, number> = {},
+  args: RpcArgs = {},
 ): Promise<GrowthResult<T[]>> {
   return cachedSection<T[]>([fn, JSON.stringify(args)], tag, () => callRpc<T>(fn, args));
 }
 
 /** For the RPCs that are defined to return exactly one summary row. */
-async function rpcSingleRow<T>(fn: string, tag: string): Promise<GrowthResult<T>> {
-  const result = await rpcRows<T>(fn, tag);
+async function rpcSingleRow<T>(fn: string, tag: string, args: RpcArgs = {}): Promise<GrowthResult<T>> {
+  const result = await rpcRows<T>(fn, tag, args);
   if (!result.ok) return result;
   const row = result.data[0];
   if (!row) {
@@ -167,9 +179,23 @@ export async function fetchEngagementBands(days: number): Promise<GrowthResult<G
   return rpcRows<GrowthEngagementBandRow>('growth_engagement_bands', GROWTH_TAGS.retention, { p_days: clampDays(days) });
 }
 
-/** Weeks-since-value-activation retention curve. */
+/**
+ * Weeks-since-value-activation retention curve, EXTERNAL accounts only.
+ *
+ * The internal list has to cross into SQL because this RPC returns aggregates
+ * rather than rows, so there is nothing left to filter on the way back. It
+ * matters more here than anywhere else on the page: our synthetic monitor calls
+ * the product every five minutes, so including it made the curve rise in its
+ * tail (23 -> 25 -> 40 -> 50%) when no external workspace has ever returned in
+ * week 8 or later.
+ */
 export async function fetchRetentionCurve(weeks: number): Promise<GrowthResult<GrowthRetentionPointRow[]>> {
-  return rpcRows<GrowthRetentionPointRow>('growth_retention_curve', GROWTH_TAGS.retention, { p_weeks: clampWeeks(weeks) });
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthRetentionPointRow>('growth_retention_curve', GROWTH_TAGS.retention, {
+    p_weeks: clampWeeks(weeks),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
 }
 
 /** Signup-cohort retention heatmap cells. */
@@ -230,6 +256,55 @@ export async function fetchActiveWorkspaces(days: number): Promise<GrowthResult<
 /** Paying versus comped versus free, with comps kept out of the revenue number. */
 export async function fetchRevenueCounts(): Promise<GrowthResult<GrowthRevenueRow>> {
   return rpcSingleRow<GrowthRevenueRow>('growth_revenue_counts', GROWTH_TAGS.funnel);
+}
+
+/** Active inboxes by provider, with app-password connections named by service. */
+export async function fetchProviderMix(): Promise<GrowthResult<GrowthProviderMixRow[]>> {
+  return rpcRows<GrowthProviderMixRow>('growth_provider_mix', GROWTH_TAGS.inventory);
+}
+
+/** Workspaces by the MCP client seen on their first successful tool call. */
+export async function fetchClientMix(): Promise<GrowthResult<GrowthClientMixRow[]>> {
+  return rpcRows<GrowthClientMixRow>('growth_client_mix', GROWTH_TAGS.inventory);
+}
+
+/**
+ * The caps the bands are measured against, taken from the canonical plan table
+ * the product actually bills from so a pricing change moves the chart with it.
+ *
+ * Infinity is sent as 0 rather than dropped: JSON has no infinity, an omitted
+ * plan means "unknown plan id" to the RPC (which falls back to the free cap),
+ * and those two cases must not collapse into each other. The RPC reads a
+ * non-positive cap as unlimited.
+ */
+function actionCapsByPlan(): Record<string, number> {
+  return Object.fromEntries(
+    Object.keys(PLANS).map((planId) => {
+      const cap = resolvePlanLimits(planId).maxMonthlyToolCalls;
+      return [planId, Number.isFinite(cap) ? cap : 0];
+    }),
+  );
+}
+
+/**
+ * Workspaces bucketed by share of their action allowance used.
+ *
+ * Deliberately takes no `days`: the allowance is granted per billing period, so
+ * the RPC measures each workspace over its own current period. Dividing a
+ * trailing 7 or 90 day window by a per-period cap, which is what this panel used
+ * to do, produces a number that means nothing in either direction.
+ */
+export async function fetchUtilizationBands(): Promise<GrowthResult<GrowthUtilizationBandRow[]>> {
+  return rpcRows<GrowthUtilizationBandRow>('growth_utilization_bands', GROWTH_TAGS.inventory, {
+    p_caps: actionCapsByPlan(),
+  });
+}
+
+/** Billable actions, cap rejections and estate size over the window. */
+export async function fetchUsageVolume(days: number): Promise<GrowthResult<GrowthUsageVolumeRow>> {
+  return rpcSingleRow<GrowthUsageVolumeRow>('growth_usage_volume', GROWTH_TAGS.inventory, {
+    p_days: clampDays(days),
+  });
 }
 
 /** One row per workspace from the `billing_funnel_by_workspace` view. */

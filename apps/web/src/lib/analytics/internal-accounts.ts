@@ -23,6 +23,16 @@
 /** Domains we own outright. Everything under them is ours by definition. */
 const INTERNAL_DOMAINS = ['@mcpemails.com', '@mcpemails.dev'];
 
+/**
+ * The same two inputs, for the reporting functions that must exclude internal
+ * accounts in SQL because they return aggregates rather than rows. The list is
+ * passed as a parameter rather than written into a migration: this repository
+ * is public and the addresses are personal.
+ */
+export function internalAccountMatchers(): { emails: string[]; domains: string[] } {
+  return { emails: [...configuredInternalEmails()], domains: [...INTERNAL_DOMAINS] };
+}
+
 function configuredInternalEmails(): Set<string> {
   return new Set(
     (process.env.GROWTH_INTERNAL_EMAILS ?? '')

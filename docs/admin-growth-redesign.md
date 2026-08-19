@@ -322,7 +322,8 @@ activations, Gmail cap, billable actions, and each billing funnel stage.
 - `apps/web/components/admin/GrowthSkeletons.jsx` (new)
 - `apps/web/components/admin/charts/*.tsx` (new)
 - `apps/web/app/api/admin/growth/metric/[key]/route.ts` (new)
-- `apps/web/src/lib/analytics/retention.ts` and `retention.test.ts`
+- `apps/web/src/lib/analytics/retention.ts` and `retention.test.ts` (in the end
+  both were deleted; the RPCs replaced them)
 - `apps/web/styles/admin-growth.css`
 - `supabase/migrations/` (RPCs, `admin_oauth_cap_snapshots`, optional rollup
   table and cron job)
@@ -340,7 +341,7 @@ Phases 1 to 5 are built. Phase 6 (nightly rollup table, alerts) is not.
 | 11 reporting RPCs + `admin_oauth_cap_snapshots` | `supabase/migrations/20260813140000_growth_analytics_rpcs.sql`, **applied to production** |
 | Row-shape contract | `apps/web/src/lib/analytics/growth-types.ts` |
 | Cached data layer, tagged, non-throwing | `apps/web/src/lib/analytics/growth-queries.ts` |
-| Current-state inventory queries | `apps/web/src/lib/analytics/growth-inventory.ts` |
+| Current-state inventory RPCs | `supabase/migrations/20260819090000_growth_inventory_rpcs.sql` (was `growth-inventory.ts`, deleted 2026-08-19) |
 | Metric catalogue + pure helpers + tests | `apps/web/src/lib/analytics/growth-metrics.ts`, `growth-metrics.test.mjs` (23 tests, `npm run test:growth`) |
 | Drill-down API | `apps/web/app/api/admin/growth/metric/[key]/route.ts` |
 | Chart primitives (inline SVG, no dependency) | `apps/web/components/admin/charts/` |
@@ -387,9 +388,13 @@ own skeleton.
   biting around 2026-08-23, so the rollup is the time-sensitive one.
 - **Not deployed to Vercel.** The database migration is live; the web app is
   built, linted, tested and browser-verified locally only.
-- `apps/web/src/lib/analytics/retention.ts` is now orphaned: the rewritten page
-  was its only consumer. Delete it or make it an enforced spec, but do not
-  leave it as-is.
+- ~~`apps/web/src/lib/analytics/retention.ts` is now orphaned.~~ Resolved
+  2026-08-13: deleted along with `retention.test.ts` and the `test:retention`
+  script. It had no consumer after the rewrite, and its value-activity
+  definition had already drifted from the SQL (it keyed on tool name alone,
+  where the RPCs also require `inbox_id IS NOT NULL`), so it was not a usable
+  spec. The RPCs in `20260813140000_growth_analytics_rpcs.sql` are now the only
+  definition of session, activation and retention.
 - The reliability panel immediately surfaced its first real finding: JSON-RPC
   `-32602` (invalid params) is the top failure across `email_list`,
   `email_search`, `email_read` and `email_compose`, 278 failures in 28 days.
@@ -490,3 +495,131 @@ comparison ran against `undefined` and matched nothing. Constants both sides
 need now live in `components/admin/growth/roster.ts`, outside the client
 boundary. Worth remembering: this fails silently, with no type error and no
 runtime warning.
+
+
+---
+
+## 13. Fourth pass: the cap utilization chart was reading a thirtieth of the ledger (2026-08-19)
+
+**Symptom.** Every one of 161 workspaces sat in the `0-24%` cap utilization band
+while the account roster on the same page showed users with 2,000 and 30,000
+calls.
+
+**Cause.** `growth-inventory.ts` was written on the reasoning that "at ~116
+workspaces the row counts are trivial", so it read the tables directly instead
+of through an RPC:
+
+```ts
+service.from('action_usage').select('workspace_id, quantity').eq('billable', true).gte('occurred_at', since)
+```
+
+PostgREST caps a response at **1,000 rows** and reports no error when it
+truncates: `content-range: 0-999/33946`. The chart therefore bucketed 161
+workspaces from 1,000 of 33,946 ledger rows. The largest surviving workspace
+came to 22.2% of the free cap, one row under the 25% boundary, which is why the
+result looked clean rather than obviously broken. `billableActions`,
+`billableWorkspaces`, `capHitWorkspaces` and `capRejections` were truncated the
+same way; the billable-actions card read exactly `1,000`.
+
+The real distribution was `157 / 2 / 0 / 1 / 1`: one workspace at **188%** of
+the free cap and one external free user at **85%**, the two accounts this panel
+exists to surface.
+
+**Second defect in the same code.** Usage in the page's trailing N-day window
+was divided by a **per-billing-period** cap, so the same workspace looked fine
+at 7 days and over cap at 90.
+
+**Fix.** Four aggregate RPCs in
+`supabase/migrations/20260819090000_growth_inventory_rpcs.sql`
+(`growth_provider_mix`, `growth_client_mix`, `growth_utilization_bands`,
+`growth_usage_volume`); `growth-inventory.ts` deleted and its fetchers folded
+into `growth-queries.ts`. Each returns a handful of aggregate rows, so there is
+no row count left for a page cap to truncate. Utilization is now measured over
+each workspace's **own current billing period**, resolved exactly as the edge
+function resolves it when enforcing (Stripe period for a paid plan, UTC calendar
+month for Free and as the fallback), and comped entitlements and workspace
+exemptions are treated as unlimited because enforcement treats them that way.
+Caps are still not written in SQL: they are passed in from `plans.ts` as a
+jsonb map, so the canonical plan table stays the single source.
+
+**Rule this leaves behind.** No panel on this page may fetch per-row data in
+order to count it. If a number is an aggregate, Postgres computes it.
+
+### Bug this uncovered downstream
+
+With the entry stage no longer stuck at zero, the billing funnel started
+printing **"10 of 2"**: `Near or over the action cap` (a current-state snapshot,
+2 workspaces) was the top of an all-time funnel, and 10 workspaces had viewed
+pricing all-time without any of them ever hitting a paywall. The cap numbers
+were never ancestors of the pricing stage. They are now stated as two facts
+about the addressable population above a funnel that is genuinely nested
+(pricing view -> checkout -> payment, verified against the view: zero
+violations).
+
+---
+
+## 14. Same-day audit: what else the row cap was hiding (2026-08-19)
+
+Three audits ran after the cap-utilization fix, on the theory that a silent
+1,000-row truncation is never in one place. It was not.
+
+### The cap is server-side and applies to everything
+
+PostgREST here runs `db-max-rows = 1000`. Verified: `activity_log?limit=5000`
+still answers `content-range: 0-999/114461`. **An explicit larger `.limit()`
+does not raise the ceiling.** Only two things defeat it: aggregating in SQL, or
+paging with `.range()`. Helper for the second: `src/lib/supabase/paginate.ts`.
+
+### The customer-facing usage page had the same bug, worse
+
+`dashboard/[[...section]]/page.js` counted `activity_log` and `action_usage`
+rows in Node. Four workspaces were over the cliff. The busiest made 33,292 calls
+and consumed 26,611 billable actions in 30 days; the page told its owner 1,000
+and 1,000. Neither read carried an `ORDER BY`, so the daily chart was drawn from
+an arbitrary physical slice rather than a truncated tail, and per-inbox "last
+successful call" was the max of a random subset (a busy inbox could read as
+having had no successful call in 30 days).
+
+Worst case was the one external user who is actually near a paywall:
+2,120 of 2,500 actions used, shown as **1,000 of 2,500 (40%)**.
+
+Fixed with `workspace_usage_summary()` and `workspace_inbox_activity()`
+(migrations 20260819120000 and 20260819130000). Both are SECURITY INVOKER and
+granted to `authenticated`, so RLS still scopes them: verified by calling them
+as another workspace's owner, which returns zeroes rather than data.
+
+Two related defects fixed at the same time:
+
+- The meter divided a **rolling 30 days** by a **per-billing-period** cap. It
+  now uses the workspace's own period, from one shared definition in
+  `src/lib/usage/billing-window.ts` (mirroring the edge function's rules).
+- The cap was a **fourth hardcoded copy** of `{free:2500,solo:50000,pro:300000}`
+  keyed on the plan alone, so every comped account was told it was capped at
+  300,000 while every other surface treated it as unlimited. It now comes from
+  `resolvePlanLimits(plan, { compedScale })`, and `null` renders as no cap.
+
+### Three growth metrics measured something other than their label
+
+Migration 20260819140000.
+
+1. **The retention curve counted our own accounts.** The synthetic monitor calls
+   the product every five minutes, so it is retained in every week that will
+   ever exist. The chart drew a *rising* tail (W7 23% → W8 25% → W9 40% →
+   W11 50%), the classic "PMF is forming" shape. External-only, the same weeks
+   are **10%, 0%, 0%, 0%**: no external workspace has ever returned in week 8 or
+   later. The internal list is passed into SQL from `isInternalAccount()`.
+2. **Gmail OAuth abandonment mixed three units**: a row count over a row count
+   plus a distinct-address count, reported as 60%. User for user, excluding the
+   14 who abandoned a consent screen and later connected anyway, it is
+   **46%**. The 60% figure was being used to prioritise OAuth verification.
+3. **Provider funnel `attempts` double-counted**: one connection writes a
+   `started` row and a terminal row, so Gmail rendered "92 attempts, 0 failures",
+   which reads as a flawless provider. It is now resolved attempts
+   (success + failure), which always equals the two columns beside it. Consent
+   screens that never resolve are the abandonment table's job.
+
+### Rule
+
+If a number is an aggregate, Postgres computes it. Never fetch rows in order to
+count them, and never trust a `.select()` whose result is scanned in JS unless
+it is paged or provably bounded well under 1,000.
