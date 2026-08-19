@@ -2060,56 +2060,78 @@ function isToolAuthorized(tool: ToolDefinition, scopes: string[]): boolean {
  * fields exposed by email_search / email_search_and_move / email_search_and_delete. The
  * server translates these into each provider's native query dialect, so the
  * agent never needs to know Gmail operators, KQL, OData, JMAP filters, or IMAP
- * SEARCH syntax. Descriptions are sourced verbatim from SEARCH_FIELD_DESCRIPTIONS.
+ * SEARCH syntax. Descriptions come from SEARCH_SCHEMA_DESCRIPTIONS below.
  */
+const SEARCH_SCHEMA_DESCRIPTIONS: Record<string, string> = {
+  from: "Sender to match: address, name, or fragment.",
+  to: "To recipient to match: address, name, or fragment.",
+  cc: "Cc recipient to match: address, name, or fragment.",
+  subject: "Text to match in the subject; phrases match as-is.",
+  body: "Text to find in the body. On Gmail this matches the whole message.",
+  text: "Text to match anywhere, headers included.",
+  unread: "true = unread only; false = read only; omit for both.",
+  has_attachment: "true = only messages with an attachment. Ignored on generic IMAP.",
+  flagged: "true = only flagged/starred messages. Ignored on Outlook.",
+  since: "Received on or after this date or datetime.",
+  before: "Received strictly before this date or datetime.",
+};
+
+/**
+ * The wire text for one search field. Every consolidated tool that searches
+ * emits the whole block, so these strings are paid three times over in every
+ * tools/list; the long-form copies in SEARCH_FIELD_DESCRIPTIONS stay the source
+ * of truth for anything that is not billed per conversation, and any field
+ * added there without a short form here still ships with its description
+ * rather than none.
+ */
+const searchDesc = (field: string): string =>
+  SEARCH_SCHEMA_DESCRIPTIONS[field] ?? SEARCH_FIELD_DESCRIPTIONS[field];
+
 const STRUCTURED_SEARCH_PROPERTIES: Record<string, Record<string, unknown>> = {
-  from: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.from },
-  to: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.to },
-  cc: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.cc },
-  subject: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.subject },
-  body: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.body },
-  text: { type: "string", description: SEARCH_FIELD_DESCRIPTIONS.text },
-  unread: { type: "boolean", description: SEARCH_FIELD_DESCRIPTIONS.unread },
+  from: { type: "string", description: searchDesc("from") },
+  to: { type: "string", description: searchDesc("to") },
+  cc: { type: "string", description: searchDesc("cc") },
+  subject: { type: "string", description: searchDesc("subject") },
+  body: { type: "string", description: searchDesc("body") },
+  text: { type: "string", description: searchDesc("text") },
+  unread: { type: "boolean", description: searchDesc("unread") },
   has_attachment: {
     type: "boolean",
-    description: SEARCH_FIELD_DESCRIPTIONS.has_attachment,
+    description: searchDesc("has_attachment"),
   },
-  flagged: { type: "boolean", description: SEARCH_FIELD_DESCRIPTIONS.flagged },
+  flagged: { type: "boolean", description: searchDesc("flagged") },
   since: {
     type: "string",
     format: "date-time",
-    description: SEARCH_FIELD_DESCRIPTIONS.since,
+    description: searchDesc("since"),
   },
   before: {
     type: "string",
     format: "date-time",
-    description: SEARCH_FIELD_DESCRIPTIONS.before,
+    description: searchDesc("before"),
   },
 };
 
 /** Description for the legacy `query` raw escape-hatch field. */
 const RAW_QUERY_DESCRIPTION =
-  "Raw provider-native query string (escape hatch). Prefer the structured " +
-  "fields above. Combined with them where supported; ignored on Fastmail.";
+  "Provider-native raw query (escape hatch); prefer the structured fields. " +
+  "Ignored on Fastmail.";
 
 /** Shared `inbox_id` property — the standard copy inlined across most tools. */
 const INBOX_ID_PROPERTY = {
   type: "string",
   format: "uuid",
   description:
-    "UUID of the inbox to use. Optional when the API key has access to " +
-    "exactly one inbox (it is auto-selected). Alternatively pass `inbox` " +
-    "with an email address. If you don't know the inbox_id and several are " +
-    "accessible, just omit it — the response then lists every inbox with its " +
-    "inbox_id so you can retry (calling inbox_list does the same).",
+    "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass " +
+    "this or `inbox`; omit both and the error lists every inbox_id.",
 } as const;
 
 /** Shared `inbox` property — the email-address alternative to `inbox_id`. */
 const INBOX_PROPERTY = {
   type: "string",
   description:
-    "Email address of the inbox to use, as a friendly alternative to " +
-    "inbox_id. Optional; ignored if inbox_id is given.",
+    "Inbox email address; an alternative to inbox_id, which wins when both " +
+    "are given.",
 } as const;
 
 /**
@@ -2121,9 +2143,8 @@ const INCLUDE_SIGNATURE_PROPERTY = {
   type: "boolean",
   default: true,
   description:
-    "Whether to append this inbox's configured email signature to the " +
-    "message. Defaults to true. Set to false to send without the signature — " +
-    "useful for terse one-line replies or when you've written your own sign-off.",
+    "Append the inbox's configured signature. Set false for a terse reply or " +
+    "your own sign-off.",
 } as const;
 
 /**
@@ -2137,9 +2158,9 @@ const IDEMPOTENCY_KEY_PROPERTY = {
   minLength: 1,
   maxLength: 200,
   description:
-    "Optional opaque key for one logical outbound operation. Reuse the same key " +
-    "only when retrying the exact same request within 24 hours. A reused key with " +
-    "different arguments is rejected; omit it to preserve normal send behavior.",
+    "Opaque key for one outbound operation; reuse it only when retrying the " +
+    "identical request within 24 hours. Reuse with different arguments is " +
+    "rejected.",
 } as const;
 
 /** All tools available in MCPEmails, in canonical display order. */
@@ -2159,13 +2180,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     name: "inbox_list",
     title: "List Inboxes",
     description:
-      "List inboxes. Returns all email inboxes (mailboxes/accounts) the current " +
-      "API key is permitted to access. Call this FIRST to discover the inbox_id " +
-      "values that every other tool requires. Each result includes the inbox UUID, " +
+      "List every inbox (mailbox or account) this API key may use. Call it " +
+      "FIRST for the inbox_id the other tools take. Each entry carries the UUID, " +
       "email address, display name, provider, optional service brand " +
-      "(icloud/yahoo/zoho/yandex/generic), and a capabilities object describing " +
-      "which features (flags, folders, labels, move, copy, delete, forward, drafts, " +
-      "contacts_api, scheduling) are supported for that inbox.",
+      "(icloud/yahoo/zoho/yandex/generic) and a capabilities object.",
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
@@ -2174,19 +2192,14 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           enum: ["gmail", "outlook", "fastmail", "imap"],
           description:
-            "Optional filter — return only inboxes (email accounts/mailboxes) " +
-            "served by this provider. One of: gmail, outlook, fastmail, imap. " +
-            "Omit to list every inbox the API key can access.",
+            "Return only inboxes served by this provider. Omit for all of them.",
         },
         include_capabilities: {
           type: "boolean",
           default: true,
           description:
-            "Whether each inbox includes its capabilities object (which inbox " +
-            "features — flags, folders, labels, move, copy, delete, forward, " +
-            "drafts, contacts_api, scheduling — are supported). Defaults to " +
-            "true; set false for a compact inbox list of just inbox_id, email " +
-            "address, display name, provider and service brand.",
+            "Include each inbox's capabilities object. Set false for a compact " +
+            "list of inbox_id, email address, display name, provider and brand.",
         },
       },
       additionalProperties: false,
@@ -2220,32 +2233,27 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           maximum: 100,
           default: 20,
           description:
-            "Maximum number of email summaries to return. Defaults to 20. " +
-            "Larger values increase latency; prefer pagination over large limits.",
+            "Message summaries per page. Prefer paginating over a large limit.",
         },
         offset: {
           type: "integer",
           minimum: 0,
           default: 0,
           description:
-            "Zero-based pagination offset. For every follow-up page, pass the " +
-            "previous response's next_offset exactly (rather than assuming a short " +
-            "page is the last page). The inbox ordering is by received date, newest first.",
+            "Zero-based page offset. Pass the previous response's next_offset " +
+            "exactly; a short page is not proof of the end. Newest first.",
         },
         folder: {
           type: "string",
           default: "INBOX",
           description:
-            "Mailbox folder to list. Defaults to 'INBOX'. Common values: 'INBOX', " +
-            "'SENT', 'DRAFTS', 'TRASH'. Provider-specific folder names are supported " +
-            "(e.g., '[Gmail]/Spam' for Gmail). Case-sensitive.",
+            "Folder to list, case-sensitive: 'INBOX', 'SENT', 'DRAFTS', 'TRASH', " +
+            "or provider-specific such as '[Gmail]/Spam'.",
         },
         unread_only: {
           type: "boolean",
           default: false,
-          description:
-            "When true, return only unread messages. Useful for agents that process " +
-            "unread email as a task queue.",
+          description: "Return only unread messages.",
         },
       },
       required: [],
@@ -2271,36 +2279,30 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Opaque provider-native message identifier. Always obtained from a " +
-            "previous call to email_list or email_search.",
+            "Provider-native message id, from a previous list or search.",
         },
         include_html: {
           type: "boolean",
           default: false,
           description:
-            "When true, the response includes the sanitized HTML body in addition to " +
-            "the plain-text body. Set to true only when the agent needs to process " +
-            "formatting, links, or structure from the HTML.",
+            "Also return the sanitized HTML body. Worth it only when you need " +
+            "the formatting or structure.",
         },
         include_attachments: {
           type: "boolean",
           default: false,
           description:
-            "When true, attachments are included in the response as base64-encoded " +
-            "data fields, sharing a single 10 MB budget. For safety, files larger than " +
-            "2 MB are NOT inlined here — they come back as metadata with a `note` telling " +
-            "you to fetch them individually. Attachment metadata (filename, mime_type, " +
-            "size_bytes, attachment_index) is ALWAYS returned regardless of this flag, so " +
-            "prefer leaving this false, inspect the list, then download just the file you " +
-            "need with email_read (action: attachment) by its attachment_index (that path " +
-            "handles files up to 25 MB). Set true only to pull several small attachments at once.",
+            "Inline attachment bytes as base64, sharing one 10 MB budget. Files " +
+            "over 2 MB are NOT inlined; they return metadata with a `note`. " +
+            "Metadata (filename, mime_type, size_bytes, attachment_index) always " +
+            "comes back anyway, so prefer false, then fetch the one file you need " +
+            "with action: attachment by its attachment_index (up to 25 MB).",
         },
         mark_as_read: {
           type: "boolean",
           default: false,
           description:
-            "When true, marks the message as read at the provider after successfully " +
-            "fetching its content. Defaults to false to avoid unintended state changes.",
+            "Mark the message read at the provider after fetching it.",
         },
       },
       required: ["message_id"],
@@ -2330,9 +2332,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           minItems: 1,
           maxItems: 50,
           description:
-            "Provider-native message IDs to read (from email_list or email_search). " +
-            "Max 50 unique IDs per call; duplicate IDs are de-duplicated while " +
-            "preserving their first occurrence.",
+            "Message ids to read. Duplicates are removed, first occurrence kept.",
         },
         include_html: {
           type: "boolean",
@@ -2395,15 +2395,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "integer",
           minimum: 0,
           description:
-            "0-based index of the attachment to download, matching the order of " +
-            "the `attachments` array returned by email_read (action: read). " +
-            "Takes precedence over `filename` when both are supplied.",
+            "0-based position in the `attachments` list from action: read. " +
+            "Wins over `filename`.",
         },
         filename: {
           type: "string",
           description:
-            "Name of the attachment to download (case-insensitive exact match). " +
-            "Use when you know the filename but not its position. Ignored if " +
+            "Exact attachment filename, case-insensitive. Ignored when " +
             "`attachment_index` is given.",
         },
       },
@@ -2521,9 +2519,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           items: { type: "string" },
           default: [],
           description:
-            "Restrict search to these folder names. For IMAP, an empty array (default) " +
-            "searches INBOX; pass folders explicitly to include archive/sent folders. " +
-            "Gmail searches the entire inbox regardless.",
+            "Folders to search. IMAP covers INBOX only unless you name archive " +
+            "or sent folders; Gmail always searches everything.",
         },
       },
       required: [],
@@ -2594,15 +2591,14 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         folder_id: {
           type: "string",
           description:
-            "Provider-native folder/label ID as returned by folder_list. " +
-            "For IMAP this is the mailbox name (e.g. 'INBOX/Work'); " +
-            "for Gmail the label ID; for Outlook/Fastmail the opaque folder ID.",
+            "Folder id from action: list. On IMAP this is the mailbox name " +
+            "(e.g. 'INBOX/Work'), on Gmail the label id.",
         },
         new_name: {
           type: "string",
           minLength: 1,
           maxLength: 255,
-          description: "New display name for the folder or label.",
+          description: "New display name.",
         },
       },
       required: ["folder_id", "new_name"],
@@ -2650,15 +2646,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
-          description:
-            "Provider-native message ID as returned by email_list, email_read, or email_search.",
+          description: "Provider-native message id from a list or search.",
         },
         destination_folder_id: {
           type: "string",
           description:
-            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
-            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
-            "Names and aliases are resolved automatically.",
+            "Target folder: an alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder name, or a folder id. Names and aliases resolve for you.",
         },
       },
       required: ["message_id", "destination_folder_id"],
@@ -2681,15 +2675,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
-          description:
-            "Provider-native message ID as returned by email_list, email_read, or email_search.",
+          description: "Provider-native message id from a list or search.",
         },
         destination_folder_id: {
           type: "string",
           description:
-            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
-            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
-            "Names and aliases are resolved automatically.",
+            "Target folder: an alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder name, or a folder id. Names and aliases resolve for you.",
         },
       },
       required: ["message_id", "destination_folder_id"],
@@ -2715,15 +2707,12 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
-          description:
-            "Provider-native message ID as returned by email_list, email_read, or email_search.",
+          description: "Provider-native message id from a list or search.",
         },
         permanent: {
           type: "boolean",
           description:
-            "When true, hard-deletes the message (bypasses Trash). " +
-            "When false or omitted, moves the message to Trash. " +
-            "Default: false.",
+            "Hard-delete, bypassing Trash. Default false, which trashes it.",
         },
       },
       required: ["message_id"],
@@ -2751,16 +2740,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           items: { type: "string" },
           minItems: 1,
           maxItems: 500,
-          description:
-            "Provider-native message IDs to move (from email_list, email_read, or email_search). " +
-            "Maximum 500 IDs per call.",
+          description: "Provider-native message ids to move.",
         },
         destination_folder_id: {
           type: "string",
           description:
-            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
-            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
-            "Names and aliases are resolved automatically.",
+            "Target folder: an alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder name, or a folder id. Names and aliases resolve for you.",
         },
       },
       required: ["message_ids", "destination_folder_id"],
@@ -2793,9 +2779,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         destination_folder_id: {
           type: "string",
           description:
-            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
-            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
-            "Names and aliases are resolved automatically.",
+            "Target folder: an alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder name, or a folder id. Names and aliases resolve for you.",
         },
       },
       required: ["message_ids", "destination_folder_id"],
@@ -2822,8 +2807,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           items: { type: "string" },
           minItems: 1,
           maxItems: 500,
-          description:
-            "Provider-native message IDs to delete. Maximum 500 IDs per call.",
+          description: "Provider-native message ids to delete.",
         },
         permanent: {
           type: "boolean",
@@ -2866,9 +2850,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           enum: ["read", "unread", "flag", "unflag"],
           description:
-            "Action to apply to all messages: " +
-            "'read' marks as read; 'unread' marks as unread; " +
-            "'flag' stars/flags; 'unflag' removes the flag/star.",
+            "State to apply to every listed message; flag/unflag add or remove " +
+            "the star.",
         },
       },
       required: ["message_ids", "action"],
@@ -2905,23 +2888,20 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         destination_folder_id: {
           type: "string",
           description:
-            "Destination folder: a canonical alias (inbox, sent, drafts, trash, archive, spam), " +
-            "a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from folder_list. " +
-            "Names and aliases are resolved automatically.",
+            "Target folder: an alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder name, or a folder id. Names and aliases resolve for you.",
         },
         include_folders: {
           type: "array",
           items: { type: "string" },
           description:
-            "Optional list of folder/mailbox names to restrict the search scope. " +
-            "For IMAP, when omitted the search covers INBOX only.",
+            "Folder names to search. IMAP covers INBOX only when omitted.",
         },
         limit: {
           type: "number",
           minimum: 1,
           maximum: 500,
-          description:
-            "Maximum number of matching messages to move. Default: 500.",
+          description: "Cap on messages moved. Default 500.",
         },
       },
       required: ["destination_folder_id"],
@@ -2963,15 +2943,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         include_folders: {
           type: "array",
           items: { type: "string" },
-          description:
-            "Optional list of folder/mailbox names to restrict the search scope.",
+          description: "Folder names to search.",
         },
         limit: {
           type: "number",
           minimum: 1,
           maximum: 500,
-          description:
-            "Maximum number of matching messages to delete. Default: 500.",
+          description: "Cap on messages deleted. Default 500.",
         },
       },
       required: [],
@@ -2998,53 +2976,47 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         from: {
           type: "string",
           format: "email",
-          description: "Optional Gmail Send As address. It must be a provider-verified identity returned by inbox_list; arbitrary From addresses are rejected.",
+          description:
+            "Gmail Send As address. Must be a verified identity from inbox_list; " +
+            "anything else is rejected.",
         },
         to: {
           type: "array",
           items: { type: "string", format: "email" },
           minItems: 1,
           maxItems: 50,
-          description:
-            "List of recipient email addresses. Each must be a valid RFC 5322 address. " +
-            "Maximum 50 recipients.",
+          description: "Recipient addresses.",
         },
         cc: {
           type: "array",
           items: { type: "string", format: "email" },
           default: [],
-          description: "List of CC recipient email addresses. Optional.",
+          description: "Cc addresses.",
         },
         bcc: {
           type: "array",
           items: { type: "string", format: "email" },
           default: [],
-          description:
-            "List of BCC recipient email addresses. Optional. BCC recipients are not " +
-            "visible to other recipients.",
+          description: "Bcc addresses; not visible to the other recipients.",
         },
         subject: {
           type: "string",
           minLength: 1,
           maxLength: 998,
-          description:
-            "Email subject line. Must be non-empty. Maximum 998 characters per RFC 5322. " +
-            "The subject is sent as-is; no prefix is added automatically.",
+          description: "Subject line, sent as-is with no prefix added.",
         },
         body: {
           type: "string",
           minLength: 1,
           description:
-            "Email body as plain text. If html_body is also provided, the message is " +
-            "sent as multipart/alternative with both parts. If only body is provided, " +
-            "the message is sent as text/plain.",
+            "Plain-text body. Sent as multipart/alternative when html_body is " +
+            "given too.",
         },
         html_body: {
           type: "string",
           description:
-            "Optional HTML version of the email body. If provided, the message is sent " +
-            "as multipart/alternative. The caller is responsible for ensuring the HTML " +
-            "is safe and correctly structured — this field is not sanitized before sending.",
+            "HTML body. Not sanitized before sending, so it is on you to keep it " +
+            "safe and well-formed.",
         },
         attachments: {
           type: "array",
@@ -3053,15 +3025,15 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             properties: {
               filename: {
                 type: "string",
-                description: "Filename for the attachment as it will appear to the recipient.",
+                description: "Filename the recipient sees.",
               },
               mime_type: {
                 type: "string",
-                description: "MIME type of the attachment (e.g., 'application/pdf', 'image/png').",
+                description: "MIME type, e.g. 'application/pdf'.",
               },
               data: {
                 type: "string",
-                description: "Base64-encoded content of the attachment.",
+                description: "Base64-encoded content.",
               },
             },
             required: ["filename", "mime_type", "data"],
@@ -3069,16 +3041,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           },
           default: [],
           maxItems: 20,
-          description:
-            "Optional list of file attachments. Maximum 20 attachments. Total attachment " +
-            "size must not exceed 10 MB.",
+          description: "File attachments, 10 MB total.",
         },
         reply_to: {
           type: "string",
           format: "email",
           description:
-            "Optional Reply-To header address. When the recipient clicks 'Reply', their " +
-            "email client will address the reply to this address rather than the sender.",
+            "Reply-To address, so replies go here instead of to the sender.",
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
@@ -3111,9 +3080,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         message_id: {
           type: "string",
           description:
-            "Provider-native message identifier of the email being replied to. The tool " +
-            "uses this to look up the original message headers and set In-Reply-To and " +
-            "References correctly.",
+            "Message id being replied to; threading headers derive from it.",
         },
         body: {
           type: "string",
@@ -3132,8 +3099,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "boolean",
           default: false,
           description:
-            "When true, the reply is addressed to all recipients of the original message " +
-            "(To and Cc), not just the sender. Total recipients are capped at 50.",
+            "Reply to the original To and Cc as well as the sender. Still capped " +
+            "at 50 recipients.",
         },
         attachments: {
           type: "array",
@@ -3226,9 +3193,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "boolean",
           default: false,
           description:
-            "When true, re-attach the original message's attachments to the forward. " +
-            "Attachments that exceed the 10 MB per-call budget are silently omitted. " +
-            "Defaults to false.",
+            "Re-attach the original's attachments. Anything past the 10 MB budget " +
+            "is dropped silently.",
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
@@ -3285,7 +3251,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           minimum: 1,
           maximum: 50,
           default: 20,
-          description: "Maximum number of drafts to return. Defaults to 20.",
+          description: "Drafts per page.",
         },
       },
       required: [],
@@ -3310,19 +3276,19 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "array",
           items: { type: "string", format: "email" },
           default: [],
-          description: "Optional recipient addresses. Drafts may be saved without recipients.",
+          description: "Recipient addresses; a draft may have none.",
         },
         cc: {
           type: "array",
           items: { type: "string", format: "email" },
           default: [],
-          description: "Optional CC recipient addresses.",
+          description: "Cc addresses.",
         },
         bcc: {
           type: "array",
           items: { type: "string", format: "email" },
           default: [],
-          description: "Optional BCC recipient addresses.",
+          description: "Bcc addresses.",
         },
         subject: {
           type: "string",
@@ -3330,11 +3296,11 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         body: {
           type: "string",
-          description: "Plain-text body of the draft.",
+          description: "Plain-text draft body.",
         },
         html_body: {
           type: "string",
-          description: "Optional HTML body of the draft.",
+          description: "Optional HTML draft body.",
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
       },
@@ -3359,14 +3325,14 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         inbox: INBOX_PROPERTY,
         message_id: {
           type: "string",
-          description: "Provider-native message identifier of the email to reply to.",
+          description: "Message id to reply to.",
         },
         body: { type: "string", description: "Plain-text content of the reply draft." },
         html_body: { type: "string", description: "Optional HTML version of the reply draft." },
         reply_all: {
           type: "boolean",
           default: false,
-          description: "When true, address the reply to the sender and original To/Cc recipients. Defaults to false.",
+          description: "Address the reply to the original To and Cc too.",
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
       },
@@ -3393,9 +3359,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         inbox: INBOX_PROPERTY,
         draft_id: {
           type: "string",
-          description: "Provider-native draft identifier as returned by the most recent draft_create, " +
-            "draft_update, or draft_list. On IMAP inboxes this changes after every update, so always " +
-            "use the latest one.",
+          description: "Draft id from the most recent draft call. On IMAP it " +
+            "changes after every update, so a stale one fails.",
         },
         to: {
           type: "array",
@@ -3450,9 +3415,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         inbox: INBOX_PROPERTY,
         draft_id: {
           type: "string",
-          description: "Provider-native draft identifier as returned by the most recent draft_create, " +
-            "draft_update, or draft_list. On IMAP inboxes this changes after every update, so always " +
-            "use the latest one.",
+          description: "Draft id from the most recent draft call. On IMAP it " +
+            "changes after every update, so a stale one fails.",
         },
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
@@ -3478,9 +3442,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         inbox: INBOX_PROPERTY,
         draft_id: {
           type: "string",
-          description: "Provider-native draft identifier as returned by the most recent draft_create, " +
-            "draft_update, or draft_list. On IMAP inboxes this changes after every update, so always " +
-            "use the latest one.",
+          description: "Draft id from the most recent draft call. On IMAP it " +
+            "changes after every update, so a stale one fails.",
         },
       },
       required: ["draft_id"],
@@ -3494,18 +3457,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     name: "contact_search",
     title: "Search Contacts",
     description:
-      "Find people matching a name or email fragment by scanning your LIVE " +
-      "mailbox — there is no stored contact list. Each call performs a bounded, " +
-      "header-only scan of recent matching mail and tallies the correspondents " +
-      "who match the query, sorted by most-recently-contacted first (display " +
-      "name, email address, matched-message count, and last-contacted " +
-      "timestamp). Honesty about the tradeoff: results reflect a live scan of a " +
-      "RECENT window of matching messages (not your full history), and the " +
-      "message_count reflects only matched messages within that window — not an " +
-      "all-time total. Nothing is stored between calls. For general or " +
-      "cross-inbox questions (e.g. 'who have I emailed most with X?'), OMIT " +
-      "inbox_id so ALL accessible inboxes are scanned; only set inbox_id when " +
-      "the user explicitly limits the search to one specific inbox.",
+      "Find people by name or email fragment. There is no stored contact list: " +
+      "each call runs a bounded, header-only scan of a RECENT window of " +
+      "matching mail, so message_count counts matches inside that window, not " +
+      "an all-time total. Returns display name, address, count and " +
+      "last-contacted time, most recent first. For general or cross-inbox " +
+      "questions ('who do I email most about X?') OMIT inbox_id so every " +
+      "accessible inbox is scanned.",
     requiredScope: "manage:contacts",
     inputSchema: {
       type: "object",
@@ -3513,30 +3471,22 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         query: {
           type: "string",
           description:
-            "Name or email address fragment to search for. Matched " +
-            "case-insensitively against both the display name and email " +
-            "address of correspondents found in a live scan of recent matching " +
-            "mail. Must be at least 1 character. Example: 'alice' matches " +
-            "'Alice Smith' and 'alice@example.com'.",
+            "Name or email fragment, matched case-insensitively against display " +
+            "names and addresses. 'alice' matches 'Alice Smith'.",
         },
         inbox_id: {
           type: "string",
           format: "uuid",
           description:
-            "Optional. When provided, restricts the live scan to that specific " +
-            "inbox. Omit this for general or cross-inbox questions (e.g. 'who " +
-            "have I emailed most with X?') so ALL accessible inboxes are " +
-            "scanned — only set inbox_id when the user explicitly limits the " +
-            "search to one specific inbox. Do not carry over an inbox_id from a " +
-            "previous unrelated turn. Nothing is stored — every call re-scans " +
-            "live mail.",
+            "Restricts the scan to one inbox. Set it only when the user named a " +
+            "specific inbox, and never carry one over from an earlier turn.",
         },
         limit: {
           type: "integer",
           minimum: 1,
           maximum: 50,
           default: 20,
-          description: "Maximum number of contacts to return. Defaults to 20.",
+          description: "Contacts per page.",
         },
       },
       required: ["query"],
@@ -3567,69 +3517,65 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           items: { type: "string", format: "email" },
           minItems: 1,
           maxItems: 50,
-          description:
-            "List of recipient email addresses. Each must be a valid RFC 5322 address. " +
-            "Maximum 50 recipients.",
+          description: "Recipient addresses.",
         },
         cc: {
           type: "array",
           items: { type: "string", format: "email" },
           default: [],
-          description: "List of CC recipient email addresses. Optional.",
+          description: "Cc addresses.",
         },
         bcc: {
           type: "array",
           items: { type: "string", format: "email" },
           default: [],
-          description: "List of BCC recipient email addresses. Optional.",
+          description: "Bcc addresses.",
         },
         subject: {
           type: "string",
           minLength: 1,
           maxLength: 998,
-          description: "Email subject line. Must be non-empty. Maximum 998 characters.",
+          description: "Subject line.",
         },
         body: {
           type: "string",
           minLength: 1,
           description:
-            "Email body as plain text. If html_body is also provided, the message is " +
-            "sent as multipart/alternative.",
+            "Plain-text body. Sent as multipart/alternative when html_body is " +
+            "given too.",
         },
         html_body: {
           type: "string",
-          description: "Optional HTML version of the email body.",
+          description: "Optional HTML body.",
         },
         attachments: {
           type: "array",
           items: {
             type: "object",
             properties: {
-              filename: { type: "string", description: "Attachment filename." },
-              mime_type: { type: "string", description: "MIME type of the attachment." },
-              data: { type: "string", description: "Base64-encoded attachment content." },
+              filename: { type: "string", description: "Filename the recipient sees." },
+              mime_type: { type: "string", description: "MIME type." },
+              data: { type: "string", description: "Base64-encoded content." },
             },
             required: ["filename", "mime_type", "data"],
             additionalProperties: false,
           },
           default: [],
           maxItems: 20,
-          description:
-            "Optional file attachments. Maximum 20 items. Total size must not exceed 10 MB.",
+          description: "File attachments, 10 MB total.",
         },
         reply_to: {
           type: "string",
           format: "email",
-          description: "Optional Reply-To header address.",
+          description: "Reply-To address.",
         },
         send_at: {
           type: "string",
           format: "date-time",
           description:
-            "ISO 8601 datetime string (with timezone) at which the message should be sent. " +
-            "Must be in the future. Example: '2026-06-01T09:00:00Z' or " +
-            "'2026-06-01T09:00:00+02:00'. The dispatcher runs every minute so the " +
-            "actual send time may be up to 60 seconds after send_at.",
+            "Send time, in the future and carrying a timezone (e.g. " +
+            "'2026-06-01T09:00:00+02:00'). The dispatcher runs every minute, so " +
+            "delivery can be up to 60s late.",
         },
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
@@ -3661,7 +3607,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           minimum: 1,
           maximum: 100,
           default: 20,
-          description: "Maximum number of results to return. Defaults to 20.",
+          description: "Results per page.",
         },
       },
       additionalProperties: false,
@@ -3684,14 +3630,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the scheduled send to cancel, as returned by " +
-            "schedule_create and schedule_list. Alias of scheduled_send_id.",
+          description: "Scheduled send UUID from a create or list call. Alias: " +
+            "scheduled_send_id.",
         },
         scheduled_send_id: {
           type: "string",
           format: "uuid",
-          description: "UUID of the scheduled send to cancel. Alias of `id` — " +
-            "provide either field.",
+          description: "Alias of `id`; pass either one.",
         },
       },
       // Either `id` or `scheduled_send_id` satisfies the requirement.
@@ -3749,28 +3694,25 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           maxLength: 10000,
           description:
-            "Plain-text signature body. Omit to leave unchanged; pass an empty " +
-            "string to clear it.",
+            "Plain-text signature. Omit to keep, empty string to clear.",
         },
         signature_html: {
           type: "string",
           maxLength: 50000,
           description:
-            "Optional HTML signature body. Omit to leave unchanged; pass an empty " +
-            "string to clear it. If only text is provided, an HTML version is " +
-            "derived automatically on send.",
+            "HTML signature. Omit to keep, empty string to clear. Derived from " +
+            "the text version when only that is given.",
         },
         signature_enabled: {
           type: "boolean",
           description:
-            "Whether the signature is appended to outgoing mail. Defaults to true.",
+            "Whether the signature is appended at all. Defaults to true.",
         },
         signature_reply_mode: {
           type: "string",
           enum: ["always", "first_only", "never"],
           description:
-            "When to include the signature on replies/forwards: 'always', " +
-            "'first_only' (default), or 'never'.",
+            "Signature on replies and forwards; 'first_only' is the default.",
         },
       },
       required: [],
@@ -4420,6 +4362,17 @@ interface ConsolidatedAction {
   /** Optional alternative scopes that also authorize this action. */
   altScopes?: string[];
   /**
+   * One clause saying what this action does and which arguments it takes,
+   * emitted into the `action` property's description as "name = hint".
+   *
+   * It lives here rather than in the tool description because the tool
+   * description is read whether or not the model has decided to call the tool,
+   * while this text is what it re-reads while filling in arguments. Keeping the
+   * per-action detail in one place also stops the tool description from
+   * restating the enum it sits next to.
+   */
+  hint?: string;
+  /**
    * Rename map applied when merging the legacy input schema into the
    * consolidated one: { legacyParamName: exposedParamName }. Used to avoid
    * collisions with the reserved `action` selector (email_flag's own `action`).
@@ -4440,154 +4393,268 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
   email_read: {
     title: "Read Email",
     description:
-      "Read, list and search email in an inbox. Set `action`: 'list' (recent " +
-      "messages, optionally by folder/unread), 'read' (full content of one " +
-      "message_id), 'read_batch' (several message_ids), 'search' (structured " +
-      "filters: from/to/subject/body/since/before/unread/has_attachment/flagged), " +
-      "or 'attachment' (download one attachment by attachment_index or filename, " +
-      "returned as base64 `data`), or 'extract' (return readable text from one selected " +
-      "attachment without returning its bytes), or 'original' (download one complete " +
-      "provider-stored MIME message as an .eml file). List and search responses are paginated: a " +
-      "response is only one page, not the complete result set. Always inspect " +
-      "has_more; when true, call this tool again with the returned next_offset " +
-      "as offset and the same action, inbox, and filters. Only has_more: false " +
-      "means the end has been reached.",
+      "Read, list and search email in one inbox. list and search return a " +
+      "single page: when the response says has_more, call again with the " +
+      "returned next_offset and otherwise identical arguments. Only " +
+      "has_more: false means you have seen everything.",
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     actions: {
-      list: { legacy: "email_list", scope: "read:email" },
-      read: { legacy: "email_read", scope: "read:email" },
-      read_batch: { legacy: "email_read_batch", scope: "read:email" },
-      search: { legacy: "email_search", scope: "read:email", altScopes: ["search:email"] },
-      attachment: { legacy: "email_attachment", scope: "read:email" },
-      extract: { legacy: "email_extract", scope: "read:email" },
-      original: { legacy: "email_original", scope: "read:email" },
+      list: {
+        legacy: "email_list",
+        scope: "read:email",
+        hint: "recent messages, optionally by folder or unread",
+      },
+      read: {
+        legacy: "email_read",
+        scope: "read:email",
+        hint: "full content of one message_id",
+      },
+      read_batch: {
+        legacy: "email_read_batch",
+        scope: "read:email",
+        hint: "full content of up to 50 message_ids",
+      },
+      search: {
+        legacy: "email_search",
+        scope: "read:email",
+        altScopes: ["search:email"],
+        hint: "structured filters (from/to/subject/body/since/before/unread/has_attachment/flagged)",
+      },
+      attachment: {
+        legacy: "email_attachment",
+        scope: "read:email",
+        hint: "download one attachment by attachment_index or filename, base64",
+      },
+      extract: {
+        legacy: "email_extract",
+        scope: "read:email",
+        hint: "readable text from one attachment, without its bytes",
+      },
+      original: {
+        legacy: "email_original",
+        scope: "read:email",
+        hint: "the whole stored message as an .eml resource",
+      },
     },
   },
   email_organize: {
     title: "Organize Email",
     description:
-      "Move, copy, flag or archive messages. Set `action`: 'move'/'move_batch' " +
-      "(relocate to a destination_folder_id), 'copy'/'copy_batch' (duplicate into " +
-      "a destination_folder_id, leaving the original in place; IMAP/Outlook/Fastmail " +
-      "only), 'flag' (set read/unread/flagged via `flag_action` on message_ids), " +
-      "'archive', or 'search_and_move' (apply to all messages matching a search). " +
-      "For flag or archive, search first with email_read action 'search', then pass " +
-      "the returned message ID; search filters are only valid with search_and_move. " +
-      "On Gmail, 'move' means add the destination label and remove INBOX; other " +
-      "labels remain, and Gmail does not support native copy. Requires the manage:folders scope. " +
-      "To delete messages, use the email_delete tool.",
+      "Move, copy, flag or archive messages in one inbox. Get message ids from " +
+      "email_read first. On Gmail a move adds the destination label and removes " +
+      "INBOX, leaving other labels in place. Needs manage:folders; deleting is " +
+      "the separate email_delete tool.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
-      move: { legacy: "email_move", scope: "manage:folders" },
-      move_batch: { legacy: "email_move_batch", scope: "manage:folders" },
-      copy: { legacy: "email_copy", scope: "manage:folders" },
-      copy_batch: { legacy: "email_copy_batch", scope: "manage:folders" },
+      move: {
+        legacy: "email_move",
+        scope: "manage:folders",
+        hint: "one message_id to destination_folder_id",
+      },
+      move_batch: {
+        legacy: "email_move_batch",
+        scope: "manage:folders",
+        hint: "the same for up to 500 message_ids",
+      },
+      copy: {
+        legacy: "email_copy",
+        scope: "manage:folders",
+        hint: "duplicate into destination_folder_id, original stays, IMAP/Outlook/Fastmail only (never Gmail)",
+      },
+      copy_batch: {
+        legacy: "email_copy_batch",
+        scope: "manage:folders",
+        hint: "the same for up to 500 message_ids",
+      },
       // BUGFIX (2026-07-28): flag/archive were mis-scoped to "send:email" — see the
       // requiredScope comment on the email_flag/email_archive legacy tool defs above.
-      flag: { legacy: "email_flag", scope: "manage:folders", renames: { action: "flag_action" } },
-      archive: { legacy: "email_archive", scope: "manage:folders" },
-      search_and_move: { legacy: "email_search_and_move", scope: "manage:folders" },
+      flag: {
+        legacy: "email_flag",
+        scope: "manage:folders",
+        renames: { action: "flag_action" },
+        hint: "set read/unread/flagged on message_ids via flag_action",
+      },
+      archive: {
+        legacy: "email_archive",
+        scope: "manage:folders",
+        hint: "move one message_id out of the Inbox",
+      },
+      search_and_move: {
+        legacy: "email_search_and_move",
+        scope: "manage:folders",
+        hint: "move everything matching a search, the only action the search filters apply to",
+      },
     },
   },
   email_delete: {
     title: "Delete Email",
     description:
-      "Delete messages. This is flagged as a DESTRUCTIVE action so your MCP " +
-      "client can prompt you to confirm before it runs. Set `action`: 'delete' " +
-      "(one message_id), 'delete_batch' (several message_ids), or " +
-      "'search_and_delete' (delete every message matching a search). By default " +
-      "deleted mail goes to Trash and can be recovered; pass `permanent: true` " +
-      "to delete it irreversibly. Requires the delete:email scope.",
+      "Delete messages in one inbox. Flagged DESTRUCTIVE so your MCP client can " +
+      "ask for confirmation first. Deleted mail goes to Trash and stays " +
+      "recoverable unless you pass permanent: true, which is irreversible. " +
+      "Needs the delete:email scope.",
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     actions: {
-      delete: { legacy: "email_delete", scope: "delete:email" },
-      delete_batch: { legacy: "email_delete_batch", scope: "delete:email" },
-      search_and_delete: { legacy: "email_search_and_delete", scope: "delete:email" },
+      delete: {
+        legacy: "email_delete",
+        scope: "delete:email",
+        hint: "one message_id",
+      },
+      delete_batch: {
+        legacy: "email_delete_batch",
+        scope: "delete:email",
+        hint: "up to 500 message_ids",
+      },
+      search_and_delete: {
+        legacy: "email_search_and_delete",
+        scope: "delete:email",
+        hint: "every message matching a search",
+      },
     },
   },
   email_compose: {
     title: "Compose Email",
     description:
-      "Send new mail or respond. Set `action`: 'send' (to/subject/body, optional " +
-      "cc/bcc/html_body/attachments), 'reply' (to a message_id, optional reply_all), " +
-      "or 'forward' (a message_id to new recipients). The inbox's configured " +
-      "signature is appended automatically (for replies/forwards it goes above the " +
-      "quoted text); pass include_signature: false to suppress it for terse replies.",
+      "Send new mail, reply, or forward from one inbox. The inbox's signature " +
+      "is appended automatically, above the quoted text on replies and " +
+      "forwards; pass include_signature: false to suppress it.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
-      send: { legacy: "email_send", scope: "send:email" },
-      reply: { legacy: "email_reply", scope: "send:email" },
-      forward: { legacy: "email_forward", scope: "send:email" },
+      send: {
+        legacy: "email_send",
+        scope: "send:email",
+        hint: "new message from to/subject/body, optionally cc/bcc/html_body/attachments",
+      },
+      reply: {
+        legacy: "email_reply",
+        scope: "send:email",
+        hint: "answer a message_id, optionally reply_all",
+      },
+      forward: {
+        legacy: "email_forward",
+        scope: "send:email",
+        hint: "pass a message_id on to new recipients",
+      },
     },
   },
   folder: {
     title: "Folders & Labels",
     description:
-      "Manage mailbox folders or Gmail labels. The action name and parameters use " +
-      "'folder' for cross-provider compatibility, but Gmail returns and manages labels " +
-      "(type: 'label'), not folders. Set `action`: 'list' (all folders/labels with ids " +
-      "and counts), 'create' (name), 'rename' (folder_id, new_name), or 'delete' " +
-      "(folder_id — irreversible). 'list' needs read:email; the rest need manage:folders.",
+      "Manage mailbox folders, which are labels on Gmail: the arguments say " +
+      "'folder' for cross-provider compatibility, but Gmail returns and manages " +
+      "labels (type: 'label'). 'list' needs read:email, the rest manage:folders.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
-      list: { legacy: "folder_list", scope: "read:email" },
-      create: { legacy: "folder_create", scope: "manage:folders" },
-      rename: { legacy: "folder_rename", scope: "manage:folders" },
-      delete: { legacy: "folder_delete", scope: "manage:folders" },
+      list: {
+        legacy: "folder_list",
+        scope: "read:email",
+        hint: "every folder with its id and message counts",
+      },
+      create: {
+        legacy: "folder_create",
+        scope: "manage:folders",
+        hint: "a folder called `name`",
+      },
+      rename: {
+        legacy: "folder_rename",
+        scope: "manage:folders",
+        hint: "folder_id to new_name",
+      },
+      delete: {
+        legacy: "folder_delete",
+        scope: "manage:folders",
+        hint: "folder_id, irreversibly",
+      },
     },
   },
   draft: {
     title: "Drafts",
     description:
-      "Manage draft messages. Set `action`: 'list', 'create' (subject/body, optional " +
-      "to/cc/bcc/html_body), 'reply' (message_id/body, optional reply_all), 'update' (draft_id + fields), or 'send' (draft_id). " +
-      "Reply saves an unsent reply in an existing conversation and needs both manage:drafts and read:email. On " +
-      "IMAP inboxes a draft_id changes on every update — always use the latest. " +
-      "'delete' permanently removes a draft (draft_id) without sending it. The inbox " +
-      "signature is embedded into the draft on create/update (pass " +
-      "include_signature: false to skip); 'send' transmits the stored body as-is and " +
-      "never re-appends, so the signature is never doubled.",
+      "Manage unsent drafts in one inbox. On IMAP a draft_id changes on every " +
+      "update, so always use the most recent one. The signature is embedded on " +
+      "create and update (include_signature: false to skip) and 'send' " +
+      "transmits the stored body as-is, so it is never doubled. 'reply' also " +
+      "needs read:email, 'send' needs send:email.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
-      list: { legacy: "draft_list", scope: "manage:drafts" },
-      create: { legacy: "draft_create", scope: "manage:drafts" },
-      reply: { legacy: "draft_reply", scope: "manage:drafts" },
-      update: { legacy: "draft_update", scope: "manage:drafts" },
+      list: {
+        legacy: "draft_list",
+        scope: "manage:drafts",
+        hint: "saved drafts",
+      },
+      create: {
+        legacy: "draft_create",
+        scope: "manage:drafts",
+        hint: "a new draft, subject and body required",
+      },
+      reply: {
+        legacy: "draft_reply",
+        scope: "manage:drafts",
+        hint: "an unsent reply to message_id, kept in its thread",
+      },
+      update: {
+        legacy: "draft_update",
+        scope: "manage:drafts",
+        hint: "overwrite draft_id with the fields you pass",
+      },
       // SECURITY: 'send' transmits mail, so it is gated by send:email — NOT
       // manage:drafts. Otherwise a key with only manage:drafts could create a
       // draft and send it, bypassing the send:email consent that email_compose
       // enforces (scope-confusion privilege escalation). Do NOT add manage:drafts
       // as an altScope here: altScopes are OR'd, which would reopen the bypass.
-      send: { legacy: "draft_send", scope: "send:email" },
-      delete: { legacy: "draft_delete", scope: "manage:drafts" },
+      send: {
+        legacy: "draft_send",
+        scope: "send:email",
+        hint: "send draft_id and remove it from Drafts",
+      },
+      delete: {
+        legacy: "draft_delete",
+        scope: "manage:drafts",
+        hint: "discard draft_id without sending",
+      },
     },
   },
   schedule: {
     title: "Scheduled Send",
-    description:
-      "Schedule mail for later delivery. Set `action`: 'create' (to/subject/body + " +
-      "send_at ISO timestamp), 'list' (pending scheduled sends), or 'cancel' " +
-      "(pass `id` or its alias `scheduled_send_id`).",
+    description: "Queue mail for later delivery, and manage what is queued.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
-      create: { legacy: "schedule_create", scope: "schedule:email" },
-      list: { legacy: "schedule_list", scope: "schedule:email" },
-      cancel: { legacy: "schedule_cancel", scope: "schedule:email" },
+      create: {
+        legacy: "schedule_create",
+        scope: "schedule:email",
+        hint: "queue to, subject and body for send_at",
+      },
+      list: {
+        legacy: "schedule_list",
+        scope: "schedule:email",
+        hint: "pending scheduled sends",
+      },
+      cancel: {
+        legacy: "schedule_cancel",
+        scope: "schedule:email",
+        hint: "a pending send by `id`, alias `scheduled_send_id`",
+      },
     },
   },
   signature: {
     title: "Signature",
     description:
-      "Read or set the inbox's email signature (appended server-side on " +
-      "send/reply/forward/draft/scheduled mail). Set `action`: 'get' (returns the " +
-      "current signature_html/text, enabled flag, reply_mode and source) or 'set' " +
-      "(write signature_text and/or signature_html, optionally signature_enabled " +
-      "and signature_reply_mode). Setting marks the signature source as 'manual', " +
-      "which overrides Gmail auto-import. 'get' needs read:email; 'set' needs send:email.",
+      "Read or set an inbox's signature, which the server appends on " +
+      "send/reply/forward/draft/scheduled mail. Setting one marks the source " +
+      "'manual', which overrides Gmail auto-import. 'get' needs read:email, " +
+      "'set' needs send:email.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
-      get: { legacy: "signature_get", scope: "read:email" },
-      set: { legacy: "signature_set", scope: "send:email" },
+      get: {
+        legacy: "signature_get",
+        scope: "read:email",
+        hint: "current signature_html and text, enabled flag, reply_mode and source",
+      },
+      set: {
+        legacy: "signature_set",
+        scope: "send:email",
+        hint: "write signature_text and/or signature_html",
+      },
     },
   },
 };
@@ -4606,12 +4673,17 @@ const CONSOLIDATED_BY_NAME = CONSOLIDATED_SPECS;
  * keys listed in an action's `renames`.
  */
 function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefinition {
+  const actionHints = Object.entries(spec.actions)
+    .filter(([, action]) => action.hint)
+    .map(([actionName, action]) => `${actionName} = ${action.hint}`)
+    .join("; ");
   const properties: Record<string, unknown> = {
     action: {
       type: "string",
       enum: Object.keys(spec.actions),
-      description:
-        "Which operation to perform. Determines which other arguments are used.",
+      description: actionHints
+        ? `Operation to run. ${actionHints}.`
+        : "Operation to run.",
     },
   };
   const actionProperties = new Map<string, Set<string>>();
