@@ -105,6 +105,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     { id: "usage",    label: tr('sidebar.navUsage'),    icon: "zap" },
     { id: "workflows", label: 'Workflows', icon: "activity" },
     { id: "approvals", label: tr('sidebar.navApprovals'), icon: "shield" },
+    { id: "automations", label: tr('sidebar.navAutomations'), icon: "zap" },
   ];
   const settings = [
     { id: "settings", label: tr('sidebar.navSettings'), icon: "settings" },
@@ -315,6 +316,7 @@ export function Topbar({ route, workspace, mcpUrl, onMenuOpen, onOpenSearch, sid
     usage:    tr('sidebar.navUsage'),
     workflows: 'Workflows',
     approvals: tr('sidebar.navApprovals'),
+    automations: tr('sidebar.navAutomations'),
     settings: tr('sidebar.navSettings'),
     security: tr('sidebar.navSecurity'),
   };

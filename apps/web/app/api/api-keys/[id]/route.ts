@@ -48,9 +48,17 @@ const VALID_SCOPES = [
   'manage:drafts',
   'manage:contacts',
   'schedule:email',
+  'manage:automations',
 ] as const;
 
-/** Scopes available to workspace viewers (read-only). */
+/**
+ * Scopes available to workspace viewers (read-only).
+ *
+ * manage:automations is deliberately NOT here. An automation is a standing,
+ * unattended write capability: it moves, labels, marks read, forwards or drafts
+ * on a schedule with nobody watching. That is strictly more power than any
+ * interactive write scope, not less, so it cannot belong to the read-only tier.
+ */
 const VIEWER_SCOPES = new Set(['read:email', 'search:email']);
 
 type Scope = (typeof VALID_SCOPES)[number];

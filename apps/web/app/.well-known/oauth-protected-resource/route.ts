@@ -40,6 +40,7 @@ export async function GET() {
         'manage:drafts',
         'manage:contacts',
         'schedule:email',
+        'manage:automations',
       ],
     },
     {

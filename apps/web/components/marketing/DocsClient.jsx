@@ -114,6 +114,10 @@ const SCOPE_STYLES = {
   'manage:drafts':  { bg: 'var(--cobalt-50)', fg: 'var(--cobalt-700)', border: '1px solid rgba(37,71,229,0.18)' },
   'manage:contacts':{ bg: 'var(--mint-50)',   fg: 'var(--mint-700)',   border: '1px solid rgba(31,203,139,0.25)' },
   'schedule:email': { bg: 'var(--amber-50)',  fg: 'var(--amber-700)',  border: '1px solid rgba(217,119,6,0.2)' },
+  // Amber rather than cobalt: this is the only scope that lets the server touch
+  // a mailbox with nobody watching, so it reads alongside the other
+  // acts-on-the-world scopes instead of the quieter manage:* family.
+  'manage:automations': { bg: 'var(--amber-50)', fg: 'var(--amber-700)', border: '1px solid rgba(217,119,6,0.2)' },
   'delete:email':   { bg: 'var(--red-50)',    fg: 'var(--red-700)',    border: '1px solid rgba(229,72,77,0.25)' },
 };
 
@@ -537,6 +541,67 @@ const TOOLS = [
     },
   },
   {
+    // The rule's own action object is exposed as `rule_action` because the
+    // consolidated schema reserves `action` for the operation selector, the same
+    // rename email_organize's `flag` action uses for `flag_action`.
+    name: 'automation',
+    scopes: ['manage:automations'],
+    params: [
+      { name: 'action',               type: 'enum',          required: true },
+      { name: 'automation_id',        type: 'string (uuid)', required: false },
+      { name: 'inbox_id',             type: 'string (uuid)', required: false },
+      { name: 'inbox',                type: 'string',        required: false },
+      { name: 'name',                 type: 'string',        required: false },
+      { name: 'filter',               type: 'object',        required: false },
+      { name: 'rule_action',          type: 'object',        required: false },
+      { name: 'interval_minutes',     type: 'enum',          required: false },
+      { name: 'max_messages_per_run', type: 'integer',       required: false },
+      { name: 'limit',                type: 'integer',       required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 31, "method": "tools/call",
+  "params": {
+    "name": "automation",
+    "arguments": {
+      "action": "create",
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "name": "Vendor invoices to Finance",
+      "filter": {
+        "from": "billing@",
+        "subject": "invoice",
+        "unread": true
+      },
+      "rule_action": {
+        "type": "move",
+        "folder": "Finance/Invoices"
+      },
+      "interval_minutes": 60,
+      "max_messages_per_run": 25
+    }
+  }
+}`,
+      response: `{
+  "automation": {
+    "id": "b41c7d90-2a63-4e18-9f52-6c0d8b1e7a34",
+    "name": "Vendor invoices to Finance",
+    "enabled": false,
+    "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+    "filter": { "from": "billing@", "subject": "invoice", "unread": true },
+    "action": { "type": "move", "folder": "Finance/Invoices" },
+    "interval_minutes": 60,
+    "max_messages_per_run": 25,
+    "next_run_at": null,
+    "last_run_at": null,
+    "consecutive_failures": 0,
+    "disabled_reason": null
+  },
+  "enabled": false,
+  "message": "Automation created and left disabled. Preview it, then enable it."
+}`,
+    },
+  },
+  {
     name: 'signature',
     scopes: ['read:email', 'send:email'],
     params: [
@@ -776,6 +841,7 @@ export default function DocsClient() {
             <a className="btn btn-primary btn-lg" href="#quickstart">{t('hero.ctaQuickStart')}</a>
             <a className="btn btn-secondary btn-lg" href="#oauth">{t('hero.ctaOAuth')}</a>
             <a className="btn btn-secondary btn-lg" href="#tools">{t('hero.ctaTools')}</a>
+            <a className="btn btn-secondary btn-lg" href="#automation-safety">{t('hero.ctaSafety')}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs/providers">{t('hero.ctaProviders')}</Link>
           </div>
         </div>
@@ -991,6 +1057,48 @@ export default function DocsClient() {
           <div className="docs-tools-list">
             {TOOLS.map(tool => (
               <ToolSection key={tool.name} tool={tool} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Automation safety model.
+          Placed straight after the tool reference because it is the answer to the
+          question the `automation` tool raises: what exactly is allowed to happen
+          to a mailbox when nobody is watching. The claims here are deliberately
+          narrow and each one maps to an enforced mechanism, not an intention. */}
+      <section className="section" id="automation-safety" style={{ paddingTop: 80, paddingBottom: 80 }}>
+        <div className="container">
+          <div className="section-head">
+            <div className="eye-label">{t('automationSafety.eyebrow')}</div>
+            <h2>{t('automationSafety.heading')}</h2>
+            <p className="sub">{t.rich('automationSafety.sub', RICH)}</p>
+          </div>
+
+          {/* The determinism claim gets its own panel: it is the one property the
+              rest of the model rests on. */}
+          <div className="docs-endpoint-card" style={{ marginBottom: 28 }}>
+            <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 18, color: 'var(--fg-1)' }}>
+              {t('automationSafety.deterministic.heading')}
+            </h3>
+            <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--fg-2)', lineHeight: 1.7 }}>
+              {t.rich('automationSafety.deterministic.body', RICH)}
+            </p>
+            <p style={{ margin: '12px 0 0', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.7 }}>
+              {t.rich('automationSafety.deterministic.why', RICH)}
+            </p>
+          </div>
+
+          <div className="docs-endpoint-grid">
+            {['noDelete', 'forward', 'draftReply', 'template', 'runLog', 'keyAuthority', 'autoDisable', 'perRunCap'].map((key) => (
+              <div className="docs-endpoint-card" key={key}>
+                <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: 16, color: 'var(--fg-1)' }}>
+                  {t(`automationSafety.items.${key}.heading`)}
+                </h3>
+                <p style={{ margin: '8px 0 0', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.6 }}>
+                  {t.rich(`automationSafety.items.${key}.body`, RICH)}
+                </p>
+              </div>
             ))}
           </div>
         </div>

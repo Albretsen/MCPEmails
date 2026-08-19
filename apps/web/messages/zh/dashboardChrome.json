@@ -63,7 +63,8 @@
     "closeMenu": "关闭导航菜单",
     "workspaceFallback": "工作区",
     "searchPlaceholder": "搜索页面、收件箱、成员…",
-    "openSearch": "打开搜索（Command K）"
+    "openSearch": "打开搜索（Command K）",
+    "navAutomations": "自动化"
   },
   "topbar": {
     "mcpLabel": "MCP 端点",
@@ -165,7 +166,8 @@
     "footSelect": "选择",
     "footClose": "关闭",
     "ariaLabel": "命令面板",
-    "ariaSearch": "搜索"
+    "ariaSearch": "搜索",
+    "pageAutomations": "自动化"
   },
   "toast": {
     "ariaNotifications": "通知",

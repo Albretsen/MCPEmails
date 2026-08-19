@@ -63,7 +63,8 @@
     "closeMenu": "Lukk navigasjonsmenyen",
     "workspaceFallback": "arbeidsområde",
     "searchPlaceholder": "Søk i sider, innbokser, medlemmer…",
-    "openSearch": "Åpne søk (Command K)"
+    "openSearch": "Åpne søk (Command K)",
+    "navAutomations": "Automatiseringer"
   },
   "topbar": {
     "mcpLabel": "MCP-endepunkt",
@@ -165,7 +166,8 @@
     "footSelect": "velg",
     "footClose": "lukk",
     "ariaLabel": "Kommandopalett",
-    "ariaSearch": "Søk"
+    "ariaSearch": "Søk",
+    "pageAutomations": "Automatiseringer"
   },
   "toast": {
     "ariaNotifications": "Varsler",

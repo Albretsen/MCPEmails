@@ -63,7 +63,8 @@
     "closeMenu": "Close navigation menu",
     "workspaceFallback": "workspace",
     "searchPlaceholder": "Search pages, inboxes, members…",
-    "openSearch": "Open search (Command K)"
+    "openSearch": "Open search (Command K)",
+    "navAutomations": "Automations"
   },
   "topbar": {
     "mcpLabel": "MCP endpoint",
@@ -165,7 +166,8 @@
     "footSelect": "select",
     "footClose": "close",
     "ariaLabel": "Command palette",
-    "ariaSearch": "Search"
+    "ariaSearch": "Search",
+    "pageAutomations": "Automations"
   },
   "toast": {
     "ariaNotifications": "Notifications",

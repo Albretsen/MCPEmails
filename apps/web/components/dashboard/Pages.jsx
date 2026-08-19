@@ -11,6 +11,7 @@ import { useToast } from './Toast';
 import SignatureRichEditor from './SignatureRichEditor';
 import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
 import { ApprovalsPanel } from './ApprovalsPanel';
+import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
@@ -70,6 +71,10 @@ function compatibilityForInbox(provider) {
 
 export function ApprovalsPage({ userRole }) {
   return <ApprovalsPanel userRole={userRole} />;
+}
+
+export function AutomationsPage({ userRole, inboxes, keys }) {
+  return <AutomationsPanel userRole={userRole} inboxes={inboxes} keys={keys} />;
 }
 
 // Rich-text tag handlers shared across pages (inline code + bold).
@@ -1910,6 +1915,7 @@ const SCOPE_OPTIONS = [
   { value: 'manage:drafts',   label: 'manage:drafts',   descKey: 'apiKeys.scopes.draftsDesc' },
   { value: 'manage:contacts', label: 'manage:contacts', descKey: 'apiKeys.scopes.contactsDesc' },
   { value: 'schedule:email',  label: 'schedule:email',  descKey: 'apiKeys.scopes.scheduleDesc' },
+  { value: 'manage:automations', label: 'manage:automations', descKey: 'apiKeys.scopes.automationsDesc' },
 ];
 
 /**
