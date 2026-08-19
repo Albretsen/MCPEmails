@@ -134,7 +134,16 @@ export function normalizePreview(text: string): string {
  * still hold markup. Tags go first so a decoded `<` cannot become one.
  */
 export function normalizeSnippetPreview(snippet: string): string {
-  return normalizePreview(snippet.replace(/<[^>]+>/g, " "));
+  return normalizePreview(
+    snippet
+      .replace(/<[^>]+>/g, " ")
+      // An IMAP snippet is a partial body fetch, so it can stop in the middle
+      // of a tag. The rule above needs a closing `>` and cannot match that, so
+      // without this a preview ends in a literal `<table class`. It only became
+      // visible once entity decoding freed enough of the 200-character budget
+      // to reach the end of the snippet.
+      .replace(/<[^>]*$/, " "),
+  );
 }
 
 /**
