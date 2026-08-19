@@ -3,7 +3,7 @@
   "name": "com.mcpemails/emails",
   "title": "MCP Emails",
   "description": "Read, search, send, organize, draft and schedule email across your inboxes from any MCP client.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "websiteUrl": "https://mcpemails.com",
   "icons": [
     {
@@ -28,6 +28,26 @@
     {
       "type": "streamable-http",
       "url": "https://mcpemails.com/api/mcp"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "mcpemails",
+      "version": "1.0.4",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MCPEMAILS_API_KEY",
+          "description": "MCP Emails API key: 'mcpe_' followed by 64 hex characters. Create one at https://mcpemails.com/dashboard/keys",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
     }
   ]
 }
