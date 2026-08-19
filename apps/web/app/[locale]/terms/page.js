@@ -152,8 +152,13 @@ export default async function TermsPage({ params }) {
               <h4>{t('plansAndPayment.h53')}</h4>
               <p>{t('plansAndPayment.p53')}</p>
 
+              {/* 5.4 is deliberately two paragraphs: the cancellation rule and
+                  the 14-day first-charge refund are separate promises, and the
+                  14 days are chosen so the commercial guarantee and the EU/UK
+                  statutory right of withdrawal are one policy. */}
               <h4>{t('plansAndPayment.h54')}</h4>
-              <p>{t.rich('plansAndPayment.p54', richTags)}</p>
+              <p>{t.rich('plansAndPayment.p54a', richTags)}</p>
+              <p>{t.rich('plansAndPayment.p54b', richTags)}</p>
 
               <h4>{t('plansAndPayment.h55')}</h4>
               <p>{t('plansAndPayment.p55')}</p>

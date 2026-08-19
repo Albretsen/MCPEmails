@@ -11,7 +11,7 @@
       "lead": "Give your AI agent a real Gmail inbox in minutes. Read, search, send, reply, schedule and organize mail with one-click Google sign-in — and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect Gmail free",
       "ctaSecondary": "Read the docs",
-      "meta0": "Unlimited inboxes & 2,500 actions",
+      "meta0": "1 inbox free, forever",
       "meta1": "One-click Google sign-in (OAuth)",
       "meta2": "Email fetched live, never stored"
     },
@@ -30,10 +30,26 @@
       "ctaPrimary": "Connect Gmail free"
     },
     "capabilities": [
-      { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across labels — find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward — directly from Gmail, not as a draft you finish by hand." },
-      { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Label, archive & delete", "p": "Keep the inbox tidy — apply labels, archive what's handled, and delete on request." }
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across labels — find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward — directly from Gmail, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Label, archive & delete",
+        "p": "Keep the inbox tidy — apply labels, archive what's handled, and delete on request."
+      }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -41,13 +57,22 @@
       "sub": "From sign-up to first AI email in a couple of minutes."
     },
     "steps": [
-      { "h": "Create a free account", "p": "Sign up for mcpemails — no card required. The free plan gives you unlimited inboxes and 2,500 billable actions per billing period." },
-      { "h": "Sign in with Google", "p": "Click Connect Gmail, sign in with your Google account, and approve read and send access. No app password or IMAP setup." },
-      { "h": "Paste the MCP URL into your AI", "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox." }
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Sign in with Google",
+        "p": "Click Connect Gmail, sign in with your Google account, and approve read and send access. No app password or IMAP setup."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
     ],
     "ctaBand": {
       "title": "Give your AI a Gmail inbox",
-      "sub": "Connect Gmail in minutes — unlimited inboxes and 2,500 billable actions per billing period on the free plan, no card required.",
+      "sub": "Connect Gmail in minutes. One inbox free forever, no card required.",
       "ctaPrimary": "Connect Gmail free",
       "ctaSecondary": "Read the docs"
     }
@@ -64,7 +89,7 @@
       "lead": "Give your AI agent a real Fastmail inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password — and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect Fastmail free",
       "ctaSecondary": "Read the docs",
-      "meta0": "Unlimited inboxes & 2,500 actions",
+      "meta0": "1 inbox free, forever",
       "meta1": "App password — no OAuth setup",
       "meta2": "Email fetched live, never stored"
     },
@@ -79,10 +104,26 @@
       "ctaPrimary": "Connect Fastmail free"
     },
     "capabilities": [
-      { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders — find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward — directly from Fastmail, not as a draft you finish by hand." },
-      { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request." }
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders — find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward — directly from Fastmail, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -90,14 +131,26 @@
       "sub": "From sign-up to first AI email in a couple of minutes."
     },
     "steps": [
-      { "h": "Create a free account", "p": "Sign up for mcpemails — no card required. The free plan gives you unlimited inboxes and 2,500 billable actions per billing period." },
-      { "h": "Generate a Fastmail app password", "p": "In Fastmail, go to Settings → Privacy & Security → App passwords and create one for mail (IMAP/SMTP)." },
-      { "h": "Paste it into mcpemails", "p": "Add your Fastmail address and the app password to connect the inbox securely." },
-      { "h": "Paste the MCP URL into your AI", "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox." }
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Generate a Fastmail app password",
+        "p": "In Fastmail, go to Settings → Privacy & Security → App passwords and create one for mail (IMAP/SMTP)."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Add your Fastmail address and the app password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
     ],
     "ctaBand": {
       "title": "Give your AI a Fastmail inbox",
-      "sub": "Connect Fastmail in minutes — unlimited inboxes and 2,500 billable actions per billing period on the free plan, no card required.",
+      "sub": "Connect Fastmail in minutes. One inbox free forever, no card required.",
       "ctaPrimary": "Connect Fastmail free",
       "ctaSecondary": "Read the docs"
     }
@@ -114,7 +167,7 @@
       "lead": "Give your AI agent a real iCloud inbox in minutes. Read, search, send, reply, schedule and organize mail with an Apple app-specific password — and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect iCloud free",
       "ctaSecondary": "Read the docs",
-      "meta0": "Unlimited inboxes & 2,500 actions",
+      "meta0": "1 inbox free, forever",
       "meta1": "App-specific password — no OAuth",
       "meta2": "Email fetched live, never stored"
     },
@@ -129,10 +182,26 @@
       "ctaPrimary": "Connect iCloud free"
     },
     "capabilities": [
-      { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders — find a receipt, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward — directly from iCloud, not as a draft you finish by hand." },
-      { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request." }
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders — find a receipt, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward — directly from iCloud, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -140,14 +209,26 @@
       "sub": "From sign-up to first AI email in a couple of minutes."
     },
     "steps": [
-      { "h": "Create a free account", "p": "Sign up for mcpemails — no card required. The free plan gives you unlimited inboxes and 2,500 billable actions per billing period." },
-      { "h": "Generate an app-specific password", "p": "At appleid.apple.com, go to Sign-In & Security → App-Specific Passwords and create one (two-factor authentication must be on)." },
-      { "h": "Paste it into mcpemails", "p": "Add your iCloud address and the app-specific password to connect the inbox securely." },
-      { "h": "Paste the MCP URL into your AI", "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox." }
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Generate an app-specific password",
+        "p": "At appleid.apple.com, go to Sign-In & Security → App-Specific Passwords and create one (two-factor authentication must be on)."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Add your iCloud address and the app-specific password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
     ],
     "ctaBand": {
       "title": "Give your AI an iCloud inbox",
-      "sub": "Connect iCloud Mail in minutes — unlimited inboxes and 2,500 billable actions per billing period on the free plan, no card required.",
+      "sub": "Connect iCloud Mail in minutes. One inbox free forever, no card required.",
       "ctaPrimary": "Connect iCloud free",
       "ctaSecondary": "Read the docs"
     }
@@ -164,7 +245,7 @@
       "lead": "Give your AI agent a real Yahoo inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect Yahoo free",
       "ctaSecondary": "Read the docs",
-      "meta0": "Unlimited inboxes & 2,500 actions",
+      "meta0": "1 inbox free, forever",
       "meta1": "App password, no OAuth setup",
       "meta2": "Email fetched live, never stored"
     },
@@ -179,10 +260,26 @@
       "ctaPrimary": "Connect Yahoo free"
     },
     "capabilities": [
-      { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Yahoo, not as a draft you finish by hand." },
-      { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Yahoo, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -190,14 +287,26 @@
       "sub": "From sign-up to first AI email in a couple of minutes."
     },
     "steps": [
-      { "h": "Create a free account", "p": "Sign up for mcpemails, no card required. The free plan gives you unlimited inboxes and 2,500 billable actions per billing period." },
-      { "h": "Generate a Yahoo app password", "p": "Turn on two-step verification, then generate an app password in Yahoo Account Security." },
-      { "h": "Paste it into mcpemails", "p": "Add your Yahoo address and the app password to connect the inbox securely." },
-      { "h": "Paste the MCP URL into your AI", "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox." }
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Generate a Yahoo app password",
+        "p": "Turn on two-step verification, then generate an app password in Yahoo Account Security."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Add your Yahoo address and the app password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
     ],
     "ctaBand": {
       "title": "Give your AI a Yahoo inbox",
-      "sub": "Connect Yahoo Mail in minutes. Unlimited inboxes and 2,500 billable actions per billing period on the free plan, no card required.",
+      "sub": "Connect Yahoo Mail in minutes. One inbox free forever, no card required.",
       "ctaPrimary": "Connect Yahoo free",
       "ctaSecondary": "Read the docs"
     }
@@ -214,7 +323,7 @@
       "lead": "Give your AI agent a real Zoho inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and an app password, and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect Zoho free",
       "ctaSecondary": "Read the docs",
-      "meta0": "Unlimited inboxes & 2,500 actions",
+      "meta0": "1 inbox free, forever",
       "meta1": "App password, no OAuth setup",
       "meta2": "Email fetched live, never stored"
     },
@@ -229,10 +338,26 @@
       "ctaPrimary": "Connect Zoho free"
     },
     "capabilities": [
-      { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Zoho, not as a draft you finish by hand." },
-      { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Zoho, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -240,14 +365,26 @@
       "sub": "From sign-up to first AI email in a couple of minutes."
     },
     "steps": [
-      { "h": "Create a free account", "p": "Sign up for mcpemails, no card required. The free plan gives you unlimited inboxes and 2,500 billable actions per billing period." },
-      { "h": "Enable IMAP and generate an app password", "p": "In Zoho Mail, turn on IMAP access (Settings, Mail Accounts, IMAP Access). If you use two-factor authentication, generate an application-specific password in Zoho Account, Security." },
-      { "h": "Paste it into mcpemails", "p": "Add your Zoho address and the password, and pick your Zoho region if asked, to connect the inbox securely." },
-      { "h": "Paste the MCP URL into your AI", "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox." }
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Enable IMAP and generate an app password",
+        "p": "In Zoho Mail, turn on IMAP access (Settings, Mail Accounts, IMAP Access). If you use two-factor authentication, generate an application-specific password in Zoho Account, Security."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Add your Zoho address and the password, and pick your Zoho region if asked, to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
     ],
     "ctaBand": {
       "title": "Give your AI a Zoho inbox",
-      "sub": "Connect Zoho Mail in minutes. Unlimited inboxes and 2,500 billable actions per billing period on the free plan, no card required.",
+      "sub": "Connect Zoho Mail in minutes. One inbox free forever, no card required.",
       "ctaPrimary": "Connect Zoho free",
       "ctaSecondary": "Read the docs"
     }
@@ -264,7 +401,7 @@
       "lead": "Give your AI agent a real Yandex inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and an app password, and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect Yandex free",
       "ctaSecondary": "Read the docs",
-      "meta0": "Unlimited inboxes & 2,500 actions",
+      "meta0": "1 inbox free, forever",
       "meta1": "App password, no OAuth setup",
       "meta2": "Email fetched live, never stored"
     },
@@ -279,10 +416,26 @@
       "ctaPrimary": "Connect Yandex free"
     },
     "capabilities": [
-      { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Yandex, not as a draft you finish by hand." },
-      { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
-      { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Yandex, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
     ],
     "how": {
       "eyebrow": "Setup",
@@ -290,14 +443,26 @@
       "sub": "From sign-up to first AI email in a couple of minutes."
     },
     "steps": [
-      { "h": "Create a free account", "p": "Sign up for mcpemails, no card required. The free plan gives you unlimited inboxes and 2,500 billable actions per billing period." },
-      { "h": "Enable IMAP and create an app password", "p": "In Yandex Mail settings, enable IMAP and turn on app passwords and OAuth tokens. Then create an app password in Yandex ID, Security." },
-      { "h": "Paste it into mcpemails", "p": "Add your Yandex address and the app password to connect the inbox securely." },
-      { "h": "Paste the MCP URL into your AI", "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox." }
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Enable IMAP and create an app password",
+        "p": "In Yandex Mail settings, enable IMAP and turn on app passwords and OAuth tokens. Then create an app password in Yandex ID, Security."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Add your Yandex address and the app password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
     ],
     "ctaBand": {
       "title": "Give your AI a Yandex inbox",
-      "sub": "Connect Yandex Mail in minutes. Unlimited inboxes and 2,500 billable actions per billing period on the free plan, no card required.",
+      "sub": "Connect Yandex Mail in minutes. One inbox free forever, no card required.",
       "ctaPrimary": "Connect Yandex free",
       "ctaSecondary": "Read the docs"
     }

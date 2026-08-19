@@ -11,7 +11,7 @@ export default {
 
 - 一个 **Gmail 或 Google Workspace** 账户。
 - 一个**支持自定义连接器的 Claude** 版本——付费方案下的 claude.ai，或 Claude Desktop。（连接器是 Claude 与 MCP 服务器对话的方式。）
-- 一个免费的 **MCP Emails** 账户。无需信用卡，邮箱与调用次数不限。[免费开始](/signup)，并保持此标签页打开。
+- 一个免费的 **MCP Emails** 账户。无需信用卡，可永久连接一个邮箱。[免费开始](/signup)，并保持此标签页打开。
 
 MCP Emails 是中间的桥梁：它一侧用 Model Context Protocol 与 Claude 对话，另一侧用 Gmail API 与 Google 对话。如果你想了解这意味着什么的背景知识，请参阅[MCP 邮件服务器究竟是什么](/blog/what-is-an-mcp-email-server)。
 
@@ -98,7 +98,7 @@ https://mcpemails.com/api/mcp
 
 ## 总结
 
-这就是全部内容：一次 Google 登录、一个端点 URL，Claude 就能读取、搜索并发送你真实的邮件——而且从不存储它们。每个方案在邮箱、调用次数和密钥上都不限量，免费层不收任何费用、也无需信用卡（如果你需要更高的突发限额或 SSO，请查看[价格](/pricing)）。
+这就是全部内容：一次 Google 登录、一个端点 URL，Claude 就能读取、搜索并发送你真实的邮件——而且从不存储它们。免费层不收任何费用、无需信用卡，可连接一个邮箱；Pro 可连接你拥有的每一个邮箱（请查看[价格](/pricing)）。
 
 准备好了吗？[免费连接你的 Gmail](/signup)，把端点粘贴进 Claude，让它帮你总结未读邮件。`,
 };

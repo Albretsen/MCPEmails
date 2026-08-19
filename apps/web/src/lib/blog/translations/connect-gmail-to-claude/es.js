@@ -11,7 +11,7 @@ Esta es la guía centrada exclusivamente en Gmail. Si gestionas varias bandejas 
 
 - Una cuenta de **Gmail o Google Workspace**.
 - Una versión de **Claude que admita conectores personalizados**: claude.ai en un plan de pago, o Claude Desktop. (Los conectores son la forma en que Claude se comunica con los servidores MCP.)
-- Una cuenta gratuita de **MCP Emails**. Sin tarjeta de crédito, con bandejas y llamadas ilimitadas. [Empieza gratis](/signup) y mantén esta pestaña abierta.
+- Una cuenta gratuita de **MCP Emails**. Sin tarjeta de crédito, una bandeja conectada para siempre. [Empieza gratis](/signup) y mantén esta pestaña abierta.
 
 MCP Emails es el puente que está en medio: habla el Model Context Protocol con Claude por un lado y la API de Gmail con Google por el otro. Si quieres el contexto sobre lo que eso significa, consulta [qué es realmente un servidor de correo MCP](/blog/what-is-an-mcp-email-server).
 
@@ -98,7 +98,7 @@ No. La conexión con Gmail usa Google OAuth, así que tu contraseña nunca sale 
 
 ## Conclusión
 
-Eso es todo: un inicio de sesión de Google, una URL de endpoint, y Claude puede leer, buscar y enviar tu correo real, sin almacenarlo nunca. Todos los planes son ilimitados en bandejas, llamadas y keys, y el nivel Free no cuesta nada y no necesita tarjeta (consulta [precios](/pricing) si necesitas límites de ráfaga más altos o SSO).
+Eso es todo: un inicio de sesión de Google, una URL de endpoint, y Claude puede leer, buscar y enviar tu correo real, sin almacenarlo nunca. El nivel Gratis no cuesta nada, no necesita tarjeta y conecta una bandeja; Pro conecta todos los buzones que tengas (consulta [precios](/pricing)).
 
 ¿Listo? [Conecta tu Gmail gratis](/signup), pega el endpoint en Claude y pídele que te resuma el correo no leído.`,
 };

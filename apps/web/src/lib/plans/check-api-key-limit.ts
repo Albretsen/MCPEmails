@@ -13,7 +13,7 @@ export interface ApiKeyLimitCheckResult {
   /** Number of active (non-revoked) API keys currently in the workspace. */
   currentCount: number;
   /**
-   * The plan's API key cap. `null` means unlimited (Enterprise).
+   * The plan's API key cap. `null` means unlimited, which is every plan.
    * Used in UI copy: "2 of 3 API keys used".
    */
   maxApiKeys: number | null;
@@ -58,7 +58,10 @@ export async function checkApiKeyLimit(
 
   const effectivePlan = effectivePlanResult.data?.[0];
   const plan = effectivePlan?.plan ?? 'free';
-  const limits = resolvePlanLimits(plan, { compedScale: effectivePlan?.comped_scale ?? false });
+  const limits = resolvePlanLimits(plan, {
+    compedScale: effectivePlan?.comped_scale ?? false,
+    unlimitedInboxes: effectivePlan?.unlimited_inboxes ?? false,
+  });
   const currentCount = keyCountResult.count ?? 0;
 
   // Enterprise plan (Infinity) has no key cap.

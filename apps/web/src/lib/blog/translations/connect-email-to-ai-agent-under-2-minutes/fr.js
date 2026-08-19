@@ -110,5 +110,5 @@ Ici, la rapidité ne vient pas de raccourcis sur la sécurité. L’e-mail est r
 
 ## Pour conclure
 
-C’est tout : une connexion de boîte de réception, un endpoint, une poignée d’outils. Tous les forfaits sont illimités en boîtes de réception, en appels et en clés, et le forfait Free ne coûte rien et ne demande pas de carte — consultez les [tarifs](/pricing) si vous avez besoin de limites de pointe plus élevées ou du SSO. Prêt à l’essayer ? [Commencez gratuitement](/signup), connectez votre boîte de réception et collez l’endpoint dans votre agent.`,
+C’est tout : une connexion de boîte de réception, un endpoint, une poignée d’outils. Le forfait Gratuit connecte une boîte, ne coûte rien et ne demande pas de carte ; Pro connecte toutes les boîtes que vous possédez — consultez les [tarifs](/pricing). Prêt à l’essayer ? [Commencez gratuitement](/signup), connectez votre boîte de réception et collez l’endpoint dans votre agent.`,
 };

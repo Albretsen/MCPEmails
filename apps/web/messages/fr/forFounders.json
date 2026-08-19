@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "L'e-mail pour les fondateurs : répondez à vos clients depuis Claude",
-    "description": "Les fondateurs utilisent mcpemails pour trier et répondre aux e-mails clients directement depuis Claude ou n'importe quelle IA. Lisez, rédigez avec votre propre ton, envoyez et planifiez sur toutes vos boîtes de réception. Illimité et gratuit pour démarrer."
+    "description": "Les fondateurs utilisent mcpemails pour trier et répondre aux e-mails clients directement depuis Claude ou n'importe quelle IA. Lisez, rédigez avec votre propre ton, envoyez et planifiez. Gratuit pour démarrer, avec une boîte connectée."
   },
   "hero": {
     "eyebrow": "Conçu pour les fondateurs",
@@ -51,10 +51,22 @@
     "title": "Une vraie boîte de réception, pas un simple aperçu en lecture seule",
     "sub": "Neuf outils orientés action que votre agent peut utiliser de bout en bout.",
     "items": {
-      "read": { "h": "Lire et chercher", "p": "Listez, lisez et cherchez à travers les dossiers et chaque boîte connectée, récupérés en direct." },
-      "send": { "h": "Envoyer et répondre", "p": "Envoyez, répondez et transférez directement. L'agent termine l'e-mail, pas seulement un brouillon." },
-      "schedule": { "h": "Planifier", "p": "Mettez un envoi en file pour plus tard, pour que les relances partent au bon moment dans la journée du client." },
-      "organize": { "h": "Organiser", "p": "Déplacez, copiez, marquez, archivez et libellez pour que le tri se fasse pendant que vous lisez, pas après." }
+      "read": {
+        "h": "Lire et chercher",
+        "p": "Listez, lisez et cherchez à travers les dossiers et chaque boîte connectée, récupérés en direct."
+      },
+      "send": {
+        "h": "Envoyer et répondre",
+        "p": "Envoyez, répondez et transférez directement. L'agent termine l'e-mail, pas seulement un brouillon."
+      },
+      "schedule": {
+        "h": "Planifier",
+        "p": "Mettez un envoi en file pour plus tard, pour que les relances partent au bon moment dans la journée du client."
+      },
+      "organize": {
+        "h": "Organiser",
+        "p": "Déplacez, copiez, marquez, archivez et libellez pour que le tri se fasse pendant que vous lisez, pas après."
+      }
     }
   },
   "proof": {
@@ -92,13 +104,13 @@
       },
       {
         "q": "Combien ça coûte tant que je suis encore petit ?",
-        "a": "Gratuit, avec des boîtes de réception illimitées et 2 500 actions facturables par période de facturation. Les appels échoués et inbox_list sont gratuits. Les formules payantes ajoutent des allocations d'actions plus élevées, des fonctionnalités d'équipe et du support, mais un fondateur solo qui répond à ses clients n'a jamais à payer pour commencer."
+        "a": "Gratuit, avec une boîte connectée et sans carte bancaire. Pro à 29 $ par mois connecte toutes les boîtes que vous possédez, et Team ajoute des membres, des rôles et un espace de travail distinct par client."
       }
     ]
   },
   "ctaBand": {
     "title": "Récupérez vos soirées",
-    "sub": "Connectez votre boîte de réception en quelques minutes et laissez Claude vider la file des clients avec vous. Illimité et gratuit pour démarrer, sans carte bancaire.",
+    "sub": "Connectez votre boîte en quelques minutes et laissez Claude vider la file des clients avec vous. Une boîte gratuite pour démarrer, sans carte bancaire.",
     "ctaPrimary": "Connectez votre boîte gratuitement",
     "ctaSecondary": "Lire la documentation"
   }

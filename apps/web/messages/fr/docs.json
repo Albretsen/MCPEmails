@@ -255,10 +255,12 @@
       "title": "Brouillons",
       "desc": "Gérer les brouillons dans le dossier Drafts de la boîte. Définissez action : 'list' (brouillons enregistrés, chacun avec son draft_id, son objet, ses destinataires et sa date de création), 'create' (subject/body requis, éventuellement to/cc/bcc/html_body), 'update' (draft_id plus les champs à écraser) ou 'send' (draft_id — supprime le brouillon et l'envoie, irréversible). La signature de la boîte est intégrée à la création ou à la mise à jour du brouillon, elle est donc déjà présente dans le dossier Drafts et n'est pas réajoutée à l'envoi ; passez include_signature: false pour créer un brouillon sans elle. Sur les boîtes basées sur IMAP, un draft_id change à chaque mise à jour, utilisez donc toujours le plus récent ; Gmail et Outlook conservent un draft_id stable.",
       "params": {
-        "action": "Quelle opération effectuer : \"list\", \"create\", \"update\" ou \"send\". Détermine quels autres arguments s'appliquent.",
+        "action": "Quelle opération effectuer : \"list\", \"create\", \"reply\", \"update\" ou \"send\". Détermine quels autres arguments s'appliquent.",
         "inbox_id": "UUID de la boîte qui contient les brouillons. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "draft_id": "ID de brouillon du fournisseur (action 'update' ou 'send'), issu de l'action create, update ou list la plus récente. Sur les boîtes IMAP, il change après chaque mise à jour, utilisez donc toujours le plus récent.",
+        "message_id": "ID du message source pour l'action 'reply', issu d'une action list, read ou search précédente.",
+        "reply_all": "Pour l'action 'reply' : false par défaut, en répondant uniquement à l'expéditeur. Mettez true pour inclure les destinataires To et Cc d'origine.",
         "subject": "Objet du brouillon (action 'create'/'update').",
         "body": "Corps en texte brut du brouillon (action 'create'/'update').",
         "to": "Adresses des destinataires (action 'create'/'update'). Par défaut [].",
@@ -318,7 +320,7 @@
   "errors": {
     "eyebrow": "Codes d'erreur",
     "heading": "Codes d'erreur et conseils de réessai.",
-    "sub": "Les échecs d'authentification, de portée et de limite de débit renvoient un objet <code>error</code> JSON-RPC avec un code numérique. Les échecs d'exécution d'outil (boîte introuvable, erreur du fournisseur, allocation mensuelle d'actions épuisée, etc.) renvoient un <code>result</code> normal avec <code>isError: true</code> et un message lisible dans <code>content[0].text</code>.",
+    "sub": "Les échecs d'authentification, de portée et de limite de débit renvoient un objet <code>error</code> JSON-RPC avec un code numérique. Les échecs d'exécution d'outil (boîte introuvable, erreur du fournisseur, plafond d'usage équitable atteint, etc.) renvoient un <code>result</code> normal avec <code>isError: true</code> et un message lisible dans <code>content[0].text</code>.",
     "thCode": "Code",
     "thType": "Type",
     "thWhen": "Quand cela survient",
@@ -331,28 +333,28 @@
       "param": "Nom d'outil inconnu, ou paramètre manquant / invalide dans tools/call",
       "rate": "Limite de débit par clé ou par espace de travail dépassée (HTTP 429). data.error_code vaut toujours « rate_limit_exceeded ». Attendez data.retry_after secondes, ou lisez l'en-tête Retry-After, avant de réessayer.",
       "tool": "L'outil s'est exécuté mais a rencontré une erreur (boîte introuvable, message introuvable, échec d'authentification du fournisseur, destinataire invalide, pièce jointe trop volumineuse, fournisseur 5xx). La description de l'erreur se trouve dans content[0].text.",
-      "cap": "L'allocation mensuelle d'actions de la formule est épuisée. Elle est renvoyée comme un résultat d'outil normal avec isError: true, et non comme une erreur JSON-RPC, les détails se trouvant sous _meta[\"com.mcpemails/usage_limit\"] : error_code « usage_limit_reached », used_actions, cap et reset_at. Réessayer ne peut pas réussir avant reset_at ou un changement de formule."
+      "cap": "L'espace de travail a atteint son plafond d'usage équitable sur les actions facturables pour la période de facturation en cours. Renvoyé comme un résultat d'outil normal avec isError: true, et non comme une erreur JSON-RPC, les détails se trouvant sous _meta[\"com.mcpemails/usage_limit\"] : error_code « usage_limit_reached » et reset_at. Réessayer ne peut pas réussir avant reset_at."
     }
   },
   "rateLimits": {
     "eyebrow": "Limites de débit",
-    "heading": "Limites de débit et quotas.",
+    "heading": "Limites de débit et usage équitable.",
     "perKeyTag": "Fenêtres glissantes par clé",
     "perKeyHeading": "100 req / min · 1 000 / h · 10 000 / jour",
-    "perKeyBody": "Appliqué par clé API quelle que soit la formule. En cas de dépassement, le serveur renvoie HTTP 429 avec le code d'erreur JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> et un champ <code>data.retry_after</code> (secondes). Respectez cette valeur avant de réessayer. Il s'agit d'une courte pause réessayable, pas de votre allocation mensuelle d'actions.",
+    "perKeyBody": "Appliqué par clé API quelle que soit la formule. En cas de dépassement, le serveur renvoie HTTP 429 avec le code d'erreur JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> et un champ <code>data.retry_after</code> (secondes). Respectez cette valeur avant de réessayer : il s'agit d'une courte pause réessayable.",
     "planTag": "Plafond par minute de la formule",
-    "planHeading": "Gratuit 60 / min · Agent 300 / min · Scale 1 000 / min",
-    "planBody": "Il s'agit d'une limite de pointe d'usage équitable par espace de travail (agrégée sur toutes vos clés API), distincte de votre allocation mensuelle d'actions. En cas de dépassement, les appels renvoient le code d'erreur <code>-32003</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Passez à une formule supérieure pour un plafond plus élevé.",
-    "capTag": "Allocation mensuelle d'actions",
-    "capHeading": "Gratuit 2 500 · Agent 50 000 · Scale 300 000 actions par période de facturation",
-    "capBody": "Les actions facturables sont comptées par espace de travail sur la période de facturation. L'épuisement n'est pas une erreur JSON-RPC : l'appel renvoie HTTP 200 avec un résultat d'outil normal portant <code>isError: true</code> et un bloc <code>_meta[\"com.mcpemails/usage_limit\"]</code> contenant <code>error_code: \"usage_limit_reached\"</code>, <code>used_actions</code>, <code>cap</code> et <code>reset_at</code>. Il n'y a pas de <code>retry_after</code>, car réessayer ne peut pas réussir avant <code>reset_at</code> ou un changement de formule. Traitez cela comme un arrêt, pas comme un backoff.",
+    "planHeading": "Gratuit 60 / min · Pro 300 / min · Team 1 000 / min",
+    "planBody": "Une limite de pointe d'usage équitable par espace de travail, agrégée sur toutes vos clés API. En cas de dépassement, les appels renvoient le code d'erreur <code>-32003</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Pro et Team relèvent le plafond.",
+    "capTag": "Plafond d'usage équitable",
+    "capHeading": "Un arrêt, pas un backoff",
+    "capBody": "Chaque espace de travail dispose d'un plafond d'usage équitable sur les actions facturables par période de facturation. Il se situe très au-dessus de l'usage réel et ne s'achète pas, mais un agent emballé peut l'atteindre. L'atteindre n'est pas une erreur JSON-RPC : l'appel renvoie HTTP 200 avec un résultat d'outil normal portant <code>isError: true</code> et un bloc <code>_meta[\"com.mcpemails/usage_limit\"]</code> contenant <code>error_code: \"usage_limit_reached\"</code> et <code>reset_at</code>. Il n'y a pas de <code>retry_after</code>, car réessayer ne peut pas réussir avant <code>reset_at</code>. Traitez cela comme un arrêt, pas comme un backoff.",
     "retryTag": "Réessayer en toute sécurité",
     "retryHeading": "Respectez toujours retry_after ; ne réessayez jamais les envois à l'aveugle",
-    "retryBody": "Pour les erreurs <code>rate_limit_exceeded</code>, attendez <code>data.retry_after</code> secondes avant de réessayer. Utilisez un backoff exponentiel pour <code>provider_error</code>. Ne réessayez pas automatiquement les envois <code>email_compose</code> en cas de <code>provider_error</code>, car le message a peut-être déjà été accepté par le fournisseur. Ne réessayez jamais <code>usage_limit_reached</code> : cela ne se débloque qu'à <code>reset_at</code> ou lors d'un changement de formule."
+    "retryBody": "Pour les erreurs <code>rate_limit_exceeded</code>, attendez <code>data.retry_after</code> secondes avant de réessayer. Utilisez un backoff exponentiel pour <code>provider_error</code>. Ne réessayez pas automatiquement les envois <code>email_compose</code> en cas de <code>provider_error</code>, car le message a peut-être déjà été accepté par le fournisseur. Ne réessayez jamais <code>usage_limit_reached</code> : cela ne se débloque qu'à <code>reset_at</code>."
   },
   "cta": {
     "heading": "Prêt à connecter votre boîte de réception ?",
-    "sub": "Commencez avec la formule Gratuit : 2 500 actions par période de facturation, aucune carte requise. Passez à Agent ou Scale pour un quota supérieur, des limites de pointe plus élevées et des fonctionnalités d'équipe.",
+    "sub": "Commencez avec la formule Gratuit : une boîte connectée, pour toujours et sans carte bancaire. Pro connecte toutes les boîtes que vous possédez, et Team ajoute des membres, des rôles et un espace de travail par client.",
     "primary": "Commencer gratuitement",
     "secondary": "Voir les tarifs"
   },
@@ -423,7 +425,7 @@
     },
     "cta": {
       "heading": "Prêt à connecter votre boîte de réception ?",
-      "sub": "Formule Gratuit : connexions de boîtes de réception illimitées et 2 500 actions par période de facturation, aucune carte requise.",
+      "sub": "Formule Gratuit : une boîte connectée, pour toujours et sans carte bancaire.",
       "primary": "Commencer gratuitement",
       "secondary": "Lire la documentation"
     }

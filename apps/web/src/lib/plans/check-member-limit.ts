@@ -18,6 +18,11 @@ export interface MemberLimitCheckResult {
 /**
  * Check whether a workspace has reached its plan member seat cap.
  *
+ * Since the 2026-08-19 repricing, seats are a Team (`pro`) feature only: Free
+ * and Pro (`solo`) are both single-user. Verified safe against production at
+ * the time of the change: no workspace on any plan had more than one member, so
+ * nobody was retroactively over their seat cap.
+ *
  * Runs two parallel queries:
  *   1. Fetch the workspace's current plan.
  *   2. Count workspace_members rows for the workspace.
@@ -41,7 +46,13 @@ export async function checkMemberLimit(
 
   const effectivePlan = effectivePlanResult.data?.[0];
   const plan = effectivePlan?.plan ?? 'free';
-  const limits = resolvePlanLimits(plan, { compedScale: effectivePlan?.comped_scale ?? false });
+  // The inbox grandfather is threaded through for consistency with the other
+  // two checkers even though it cannot change a seat count: resolvePlanLimits
+  // only widens maxInboxes from it. Passing it here means one call shape.
+  const limits = resolvePlanLimits(plan, {
+    compedScale: effectivePlan?.comped_scale ?? false,
+    unlimitedInboxes: effectivePlan?.unlimited_inboxes ?? false,
+  });
   const currentCount = memberCountResult.count ?? 0;
 
   if (limits.maxMembers === Infinity) {

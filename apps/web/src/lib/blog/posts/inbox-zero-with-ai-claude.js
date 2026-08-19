@@ -71,7 +71,7 @@ You also keep a hard line on sending: drafts stay drafts until you approve them,
 
 ## Get to zero today
 
-You don't need a new email app or a productivity system — just your existing inbox and an agent that can act on it. Connect your inbox once, paste the endpoint into Claude, and run the five prompts above. The Free tier needs no card and includes 2,500 billable actions per billing period.
+You don't need a new email app or a productivity system — just your existing inbox and an agent that can act on it. Connect your inbox once, paste the endpoint into Claude, and run the five prompts above. The Free tier needs no card and connects one inbox, forever.
 
 [Connect your inbox free](/signup) and ask Claude to triage your unread mail. Inbox zero, supervised instead of suffered.`,
 };

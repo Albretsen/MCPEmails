@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
-import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { normalizeSecurity } from '@/lib/email/connection-config';
@@ -93,18 +93,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: 'plan_limit' });
-      const capLabel = inboxLimit.maxInboxes === 1 ? '1 inbox' : `${inboxLimit.maxInboxes} inboxes`;
-      return NextResponse.json(
-        {
-          error: `Your ${inboxLimit.plan} plan allows ${capLabel}. ` +
-            `Upgrade at mcpemails.com/pricing to connect more.`,
-          error_code: 'inbox_limit_reached',
-          plan: inboxLimit.plan,
-          current_count: inboxLimit.currentCount,
-          max_inboxes: inboxLimit.maxInboxes,
-        },
-        { status: 402 }
-      );
+      // 402 with a stable machine-readable body; the dashboard owns the
+      // localised sentence. See inboxLimitErrorBody for why nothing here
+      // interpolates the internal plan slug.
+      return NextResponse.json(inboxLimitErrorBody(inboxLimit), { status: 402 });
     }
   }
 

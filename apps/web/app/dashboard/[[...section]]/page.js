@@ -12,17 +12,15 @@ import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
-/**
- * The rolling activity window the Usage page charts, in UTC days. The action
- * meter does NOT use this: an allowance is granted per billing period, so it is
- * counted over the period resolved by lib/usage/billing-window.
- */
+/** The rolling activity window the Usage page charts, in UTC days. */
 const USAGE_WINDOW_DAYS = 30;
 
 /**
- * Meter version this page reads. Must track ACTION_METER_VERSION in the MCP
- * edge function: bumping it there without bumping it here silently zeroes the
- * customer's meter while enforcement counts the new rows.
+ * Meter version the usage RPC counts billable actions under. Nothing
+ * customer-facing reads that count any more (the action meter was removed in
+ * the 2026-08-19 repricing), but the RPC still takes the argument, and passing
+ * a version that disagrees with ACTION_METER_VERSION in the MCP edge function
+ * would silently mis-count if the number is ever surfaced again.
  */
 const ACTION_METER_VERSION = 1;
 
@@ -339,27 +337,19 @@ async function fetchOverviewStats(supabase, workspaceId) {
  *   totalCalls: number,
  *   byTool: Array<{ tool: string, count: number, pct: number }>,
  *   byInbox: Array<{ inboxId: string, label: string, address: string, archived: boolean, count: number, pct: number }>,
- *   shadowActions: number,
- *   rejectedActions: number,
- *   lastBillableCalls: Array<{ tool: string, occurredAt: string }>,
  * }>}
  */
 async function fetchUsageData(supabase, workspaceId, billingWindow) {
-  const [summaryResult, inboxesResult, rejectionsResult] = await Promise.all([
+  const [summaryResult, inboxesResult] = await Promise.all([
     // Every number on the Usage page, aggregated in Postgres and returned as
     // one jsonb row.
     //
     // This used to be two raw selects counted in Node, and every figure it
     // produced was capped: PostgREST truncates a response at 1,000 rows and
     // reports no error. Measured on production the day this was fixed, the
-    // busiest workspace made 33,292 calls and consumed 26,611 billable actions
-    // in 30 days, and this page told its owner 1,000 and 1,000. Neither read
-    // carried an ORDER BY either, so the daily chart was drawn from an
-    // arbitrary slice rather than from a truncated tail.
-    //
-    // The activity stats cover a rolling 30 days. The action meter covers the
-    // billing period, because that is the window the cap applies over and the
-    // window edge enforcement counts; see lib/usage/billing-window.
+    // busiest workspace made 33,292 calls in 30 days and this page told its
+    // owner 1,000. Neither read carried an ORDER BY either, so the daily chart
+    // was drawn from an arbitrary slice rather than from a truncated tail.
     supabase.rpc('workspace_usage_summary', {
       p_workspace_id: workspaceId,
       p_period_start: billingWindow.start,
@@ -375,35 +365,10 @@ async function fetchUsageData(supabase, workspaceId, billingWindow) {
       .from('inboxes')
       .select('id, display_name, email_address, deleted_at')
       .eq('workspace_id', workspaceId),
-    // How many calls the MCP server has actually refused this billing period.
-    //
-    // Being at or over the cap does NOT imply anything was refused: enforcement
-    // is gated to a deterministic rollout cohort, so most workspaces sail past
-    // the cap untouched. The dashboard cannot recompute that gate, but it does
-    // not have to: every real rejection writes a row here, so a non-zero count
-    // is proof and a zero count is the absence of proof. The Usage page uses
-    // that to choose between "you are being blocked" and "your allowance is
-    // used up", instead of asserting the first and being wrong 95% of the time.
-    //
-    // Deliberately not filtered by meter_version: a refusal is a refusal
-    // whichever metering definition produced it, and undercounting here would
-    // silently downgrade a true "blocked" state back to a guess.
-    //
-    // head + count: 'exact' returns no rows, just the count, served by
-    // usage_limit_events_workspace_occurred_idx. RLS restricts it to the
-    // caller's own workspaces.
-    supabase
-      .from('usage_limit_events')
-      .select('id', { head: true, count: 'exact' })
-      .eq('workspace_id', workspaceId)
-      .gte('occurred_at', billingWindow.start),
   ]);
 
   if (summaryResult.error) {
     console.error('[fetchUsageData]', summaryResult.error.message);
-  }
-  if (rejectionsResult.error) {
-    console.error('[fetchUsageData rejections]', rejectionsResult.error.message);
   }
 
   const summary = summaryResult.data ?? {};
@@ -452,18 +417,11 @@ async function fetchUsageData(supabase, workspaceId, billingWindow) {
     };
   });
 
-  const shadowActions = summary.billable_actions ?? 0;
-  const lastBillableCalls = (summary.last_billable ?? []).map((entry) => ({
-    tool: entry.tool,
-    occurredAt: entry.occurred_at,
-  }));
-
-  // A failed count query must not read as "nothing was rejected", but it also
-  // must not crash the page. Zero is the honest floor: the UI treats it as
-  // "no proof of rejection" and falls back to allowance-only wording.
-  const rejectedActions = rejectionsResult.count ?? 0;
-
-  return { dailyCounts, totalCalls, byTool, byInbox, shadowActions, rejectedActions, lastBillableCalls };
+  // Billable-action totals and the usage_limit_events rejection count are
+  // deliberately not returned. They fed the monthly allowance meter, which was
+  // removed when inboxes replaced action volume as the value metric; the
+  // rejection count was a second DB round trip serving only that widget.
+  return { dailyCounts, totalCalls, byTool, byInbox };
 }
 
 /**
@@ -701,6 +659,12 @@ export default async function DashboardPage({ params }) {
   const initials = computeInitials(displayName || null, email);
   const workspaceSlug = workspace?.slug ?? 'workspace';
   const compedScale = effectiveWorkspacePlan?.comped_scale ?? false;
+  // The 2026-08-19 repricing grandfather: every user who existed before inboxes
+  // became a paid limit keeps unlimited connected inboxes, permanently. It has
+  // to be read here, not just in the connect routes, or the dashboard would
+  // show a grandfathered free account a 1-inbox cap and a scarcity bar for a
+  // limit the server would never actually enforce against them.
+  const unlimitedInboxes = effectiveWorkspacePlan?.unlimited_inboxes ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
   const billingWindow = resolveUsageBillingWindow(plan, storedBillingPeriod);
 
@@ -721,34 +685,36 @@ export default async function DashboardPage({ params }) {
         [],
         [],
         [],
-        { dailyCounts: [], totalCalls: 0, byTool: [], byInbox: [], shadowActions: 0, rejectedActions: 0, lastBillableCalls: [] },
+        { dailyCounts: [], totalCalls: 0, byTool: [], byInbox: [] },
         { entries: [], total: 0, page: 0, pageSize: 25 },
         [],
         [],
       ];
 
-  // Resolve plan limits so the dashboard can show usage (e.g. "1 of 1 inboxes")
-  // and enforce caps client-side before attempting an OAuth redirect.
-  const rawLimits = resolvePlanLimits(plan, { compedScale });
-  // The cap comes from the canonical plan table, comp adjustment included. It
-  // used to be a fourth hardcoded copy of the numbers keyed on `plan` alone,
-  // which told every comped account it was capped at 300,000 while every other
-  // surface treated the same account as unlimited.
-  usageData.shadowActionCap = rawLimits.maxMonthlyToolCalls === Infinity
-    ? null
-    : rawLimits.maxMonthlyToolCalls;
-  usageData.shadowPlan = plan;
-  usageData.shadowPeriodEnd = billingWindow.end;
+  // Resolve plan limits so the dashboard can show the inbox allowance and stop a
+  // doomed connect attempt before the OAuth round trip. Both protections are
+  // user-level and must be passed together: `compedScale` grants Team features,
+  // `unlimitedInboxes` is the repricing grandfather.
+  const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes });
+  // The monthly action ceiling is deliberately NOT passed to the client. It is
+  // an abuse guard, not a plan feature, and every customer-facing meter built
+  // on it was removed in the 2026-08-19 repricing.
   const planLimits = {
+    // null = unlimited. A grandfathered free account lands here too, and the
+    // inbox cap UI keys off exactly this null to render nothing at all.
     maxInboxes: rawLimits.maxInboxes === Infinity ? null : rawLimits.maxInboxes,
-    maxDailyBurstCalls: rawLimits.maxDailyBurstCalls === Infinity ? null : rawLimits.maxDailyBurstCalls,
-    maxMonthlyToolCalls: rawLimits.maxMonthlyToolCalls === Infinity ? null : rawLimits.maxMonthlyToolCalls,
     maxApiKeys: rawLimits.maxApiKeys === Infinity ? null : rawLimits.maxApiKeys,
     maxMembers: rawLimits.maxMembers === Infinity ? null : rawLimits.maxMembers,
-    // Team roles (Admin/Viewer) are a paid capability; members themselves are
-    // unlimited on every tier. The Members UI uses this to gate role selection.
+    // Team roles (Admin/Viewer) and additional members are both Team
+    // capabilities: Free and Pro are single-seat. The Members UI uses
+    // maxMembers for the seat count and this flag to gate role selection.
     teamRolesEnabled: rawLimits.teamRolesEnabled,
   };
+
+  // True only when the unlimited inboxes come from the grandfather rather than
+  // from the plan the customer is paying for. A Pro subscriber already has
+  // unlimited inboxes and does not need to be told they were spared anything.
+  const inboxesGrandfathered = unlimitedInboxes && !compedScale && plan === 'free';
 
   // The single Streamable HTTP MCP endpoint clients connect to.
   const mcpUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'}/api/mcp`;
@@ -775,6 +741,7 @@ export default async function DashboardPage({ params }) {
       mcpUrl={mcpUrl}
       userRole={userRole}
       planLimits={planLimits}
+      inboxesGrandfathered={inboxesGrandfathered}
       stripePrices={stripePrices}
       overviewStats={overviewStats}
       activityFeed={activityFeed}

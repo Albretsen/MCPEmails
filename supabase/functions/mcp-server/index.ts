@@ -53,7 +53,7 @@ import {
   buildInvalidArgumentsText,
   buildUnknownActionText,
 } from "./invalid-arguments-message.ts";
-import { buildUsageLimitText } from "./usage-limit-message.ts";
+import { buildUsageLimitText, USAGE_LIMIT_SUPPORT_EMAIL } from "./usage-limit-message.ts";
 import {
   type NormalizedSearch,
   parseIsoDate,
@@ -1554,10 +1554,23 @@ async function writeActionUsage(
   }
 }
 
+/** The abuse ceiling per billing period, by internal plan id.
+ *
+ * NOT a pricing lever. Since the 2026-08-19 repricing the value metric is
+ * connected inboxes; these numbers exist only so a runaway or malicious agent
+ * cannot burn unbounded provider quota, and they are never sold, never upsold
+ * against, and never named in customer-facing copy. Keep in step with
+ * `maxMonthlyToolCalls` in apps/web/src/lib/stripe/plans.ts.
+ *
+ * Headroom check against production on the day they were set: the busiest month
+ * any non-comped external workspace had ever recorded was 2,120 billable
+ * actions, against a Free ceiling of 5,000. The two heaviest accounts overall
+ * (roughly 20,000 and 5,000) are internal or comped and are exempted before the
+ * ceiling is consulted. */
 const SHADOW_ACTION_CAPS: Record<string, number> = {
-  free: 2_500,
-  solo: 50_000,
-  pro: 300_000,
+  free: 5_000,
+  solo: 100_000,
+  pro: 500_000,
 };
 
 interface UsageBillingWindow {
@@ -1650,8 +1663,20 @@ async function logShadowLimitDiagnostic(workspaceId: string): Promise<void> {
   }
 }
 
-/** Phase-4 controlled rollout: only billable calls from a deterministic 5%
- * cohort of workspaces created after the configured start can be stopped. */
+/** The ceiling applies to every workspace.
+ *
+ * It used to apply to a deterministic 5% cohort of workspaces created after a
+ * configured start date, which was the right shape for a rollout of a PAYWALL
+ * and the wrong shape for an ABUSE CEILING: a limit that covers 5% of new
+ * signups and none of the existing estate stops nothing. Both gates are gone.
+ * What remains is a kill switch (`USAGE_ENFORCEMENT_DISABLED=true`), off by
+ * default, so a bad ceiling can be lifted without a redeploy.
+ *
+ * The two exemptions that stay are the ones that describe an account we have
+ * deliberately promised not to meter: a comped entitlement on the owner, and a
+ * `workspace_usage_exemptions` grant on the workspace. Reservation failures
+ * still fail OPEN: the ceiling is a backstop, and it must never be the reason a
+ * paying customer cannot read their mail. */
 interface ActionLimitCheck {
   /** A ready-to-return isError tool result, or null when the call may proceed. */
   response: JsonRpcSuccessResponse | null;
@@ -1695,7 +1720,10 @@ function usageLimitResult(
           reset_at: resetAt,
           retryable: false,
           dashboard_url: `${APP_URL}/dashboard/usage`,
-          pricing_url: `${APP_URL}/pricing`,
+          // Support, not pricing. `pricing_url` used to sit here from when this
+          // was a paywall; a client rendering it would offer to sell a bigger
+          // allowance, which no plan provides any more.
+          support_email: USAGE_LIMIT_SUPPORT_EMAIL,
         },
       },
     },
@@ -1707,15 +1735,13 @@ async function actionLimitResponse(
   toolName: string,
   requestId: string | number | null,
 ): Promise<ActionLimitCheck> {
-  if (Deno.env.get("USAGE_ENFORCEMENT_ENABLED") !== "true" || !BILLABLE_TOOL_NAMES.has(toolName)) return { response: null, reservationId: null };
-  const startedAt = Deno.env.get("USAGE_ENFORCEMENT_STARTED_AT");
-  if (!startedAt) return { response: null, reservationId: null };
+  // Kill switch, not a feature flag: enforcement is ON unless something says
+  // otherwise, so a missing or mistyped variable cannot silently disable the
+  // only thing standing between us and an unbounded provider bill.
+  if (Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true" || !BILLABLE_TOOL_NAMES.has(toolName)) return { response: null, reservationId: null };
   const { data: workspace } = await supabase.from("workspaces")
-    .select("plan, owner_id, created_at").eq("id", workspaceId).maybeSingle();
-  if (!workspace || new Date(workspace.created_at) < new Date(startedAt)) return { response: null, reservationId: null };
-  // Stable bucket avoids a user being randomly admitted/removed between calls.
-  let hash = 0; for (const ch of workspaceId) hash = ((hash * 31) + ch.charCodeAt(0)) >>> 0;
-  if ((hash % 100) >= Number(Deno.env.get("USAGE_ENFORCEMENT_ROLLOUT_PERCENT") ?? "5")) return { response: null, reservationId: null };
+    .select("plan, owner_id").eq("id", workspaceId).maybeSingle();
+  if (!workspace) return { response: null, reservationId: null };
   const { data: entitlement } = await supabase.from("user_usage_entitlements")
     .select("kind, expires_at").eq("user_id", workspace.owner_id).maybeSingle();
   if (entitlement?.kind === "comped_scale" && (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date())) return { response: null, reservationId: null };

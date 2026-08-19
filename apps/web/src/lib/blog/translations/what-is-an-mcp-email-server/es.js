@@ -76,5 +76,5 @@ Un servidor de correo MCP alojado se encarga por ti de la dispersión de proveed
 
 Un servidor de correo MCP convierte tu bandeja de entrada en un conjunto de acciones seguras y con nombre que un agente de IA puede llamar sobre un protocolo estándar. El agente obtiene verbos acotados a lo que permitiste. Tu contraseña se queda en el servidor, cifrada. Tu correo de verdad nunca se almacena. Para el recorrido completo de cómo montar esto de principio a fin, empieza por la guía pilar sobre [cómo dar acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access), o salta directamente y [conecta una bandeja en menos de dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes).
 
-¿Quieres probarlo? [Empieza gratis](/signup) —todos los planes son ilimitados, sin tarjeta— o lee [la documentación](/docs) para la referencia de herramientas y la URL del endpoint.`,
+¿Quieres probarlo? [Empieza gratis](/signup) —sin tarjeta, con una bandeja conectada— o lee [la documentación](/docs) para la referencia de herramientas y la URL del endpoint.`,
 };

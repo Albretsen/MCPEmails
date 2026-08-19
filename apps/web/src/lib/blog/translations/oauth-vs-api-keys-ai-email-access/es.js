@@ -76,7 +76,7 @@ Tu cliente es claude.ai, Claude Desktop o Cursor. Quieres cero secretos en tu co
 
 Tu cliente no admite OAuth: Cline, JetBrains, los ejecutores de herramientas al estilo de OpenAI o tu propio código. Estás haciendo scripts contra el endpoint con cURL o un programa pequeño. Necesitas una credencial estable que un proceso sin interfaz pueda usar sin que una persona tenga que hacer clic en una pantalla de consentimiento. Una clave con alcance encaja perfecto aquí, y hay un recorrido completo para los [clientes Cursor, Cline y VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Una cosa más que es cierta sin importar cuál elijas: los límites de uso. Cada clave de API está limitada a 100 requests/minute, 1,000/hour y 10,000/day, y cada workspace tiene un techo de ráfaga según el plan (60/min en [Free](/pricing), hasta 1,000/min en Scale). Cuando alcanzas un límite, el servidor te devuelve un valor \`retry_after\` en segundos. Respétalo, y nunca reintentes a ciegas un envío de \`email_compose\`: enviarías el mensaje dos veces.
+Una cosa más que es cierta sin importar cuál elijas: los límites de uso. Cada clave de API está limitada a 100 requests/minute, 1,000/hour y 10,000/day, y cada workspace tiene un techo de ráfaga según el plan (60/min en [Free](/pricing), hasta 1,000/min en Team). Cuando alcanzas un límite, el servidor te devuelve un valor \`retry_after\` en segundos. Respétalo, y nunca reintentes a ciegas un envío de \`email_compose\`: enviarías el mensaje dos veces.
 
 ## En resumen
 

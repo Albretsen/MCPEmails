@@ -76,5 +76,5 @@ Un serveur e-mail MCP hébergé gère pour vous la dispersion des fournisseurs e
 
 Un serveur e-mail MCP transforme votre boîte de réception en un ensemble d’actions nommées et sûres qu’un agent IA peut appeler via un protocole standard. L’agent obtient des verbes limités à ce que vous avez autorisé. Votre mot de passe reste sur le serveur, chiffré. Votre e-mail proprement dit n’est jamais stocké. Pour le déroulé complet de la mise en place de bout en bout, commencez par le guide pilier sur [donner un accès e-mail à votre agent IA](/blog/how-to-give-your-ai-agent-email-access), ou passez directement à [connecter une boîte en moins de deux minutes](/blog/connect-email-to-ai-agent-under-2-minutes).
 
-Envie d’essayer ? [Commencez gratuitement](/signup) — chaque forfait est illimité, sans carte requise — ou lisez [la documentation](/docs) pour la référence des outils et l’URL de terminaison.`,
+Envie d’essayer ? [Commencez gratuitement](/signup) — sans carte requise, une boîte connectée — ou lisez [la documentation](/docs) pour la référence des outils et l’URL de terminaison.`,
 };

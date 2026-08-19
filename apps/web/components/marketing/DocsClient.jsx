@@ -1077,7 +1077,7 @@ export default function DocsClient() {
   }
 }
 
-// Monthly action cap: a normal tool result (HTTP 200) with isError: true.
+// Fair-use ceiling: a normal tool result (HTTP 200) with isError: true.
 // NOT a JSON-RPC error, and NOT retryable until reset_at.
 {
   "jsonrpc": "2.0",
@@ -1085,18 +1085,14 @@ export default function DocsClient() {
   "result": {
     "content": [{
       "type": "text",
-      "text": "Usage limit reached: 2500 of 2500 monthly actions used on the Free plan. ..."
+      "text": "Usage limit reached for this workspace. Calls resume at reset_at."
     }],
     "isError": true,
     "_meta": {
       "com.mcpemails/usage_limit": {
         "error_code": "usage_limit_reached",
-        "effective_plan": "free",
-        "used_actions": 2500,
-        "cap": 2500,
         "reset_at": "2026-09-01T00:00:00.000Z",
-        "dashboard_url": "https://mcpemails.com/dashboard/usage",
-        "pricing_url": "https://mcpemails.com/pricing"
+        "dashboard_url": "https://mcpemails.com/dashboard/usage"
       }
     }
   }

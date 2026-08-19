@@ -73,7 +73,7 @@ Cela combine les autres : \`email_read\` (action search, puis list) pour rassemb
 
 ## Ce que ça coûte et où se situent les limites
 
-Les sept fonctionnent sur le [plan Free](/pricing), à 0 $ avec des boîtes illimitées et 2 500 actions facturables par période de facturation. Free autorise 60 requêtes par minute ; Agent (12 $/mois) inclut 50 000 actions et 300 requêtes par minute ; Scale (49 $/mois) inclut 300 000 actions, 1 000 requêtes par minute, les rôles d’équipe et le SSO. Un récapitulatif hebdomadaire effleure ces plafonds ; une boucle de tri agressive toutes les minutes sur de nombreuses boîtes utilise l’allocation d’actions de Free et justifie Agent.
+Les sept fonctionnent sur le [plan Gratuit](/pricing), à 0 $, qui connecte une boîte à 60 requêtes par minute. Pro (29 $/mois) connecte toutes les boîtes que vous possédez et porte la limite de pointe à 300 requêtes par minute ; Team (79 $/mois) ajoute des membres avec rôles, un espace de travail distinct par client, le SSO et 1 000 requêtes par minute. Une seule boîte suffit largement pour un récapitulatif hebdomadaire ; dès que vous voulez le pro et le perso dans le même agent, c’est Pro.
 
 Quand vous atteignez bel et bien une limite, le serveur renvoie une erreur réessayable avec \`data.retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi \`email_compose\`, car réessayer après un délai d’attente peut faire atterrir deux copies du même message dans la boîte de quelqu’un.
 

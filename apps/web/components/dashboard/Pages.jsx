@@ -29,6 +29,31 @@ const PROVIDER_LABELS = {
   yandex: 'Yandex',
 };
 
+/**
+ * Customer-facing plan names, keyed by the internal id stored in
+ * `workspaces.plan`. The ids are historical (`solo` predates "Pro", `pro`
+ * predates "Team") and a customer must never see one, so every dashboard
+ * surface that prints a plan goes through `planDisplayName`.
+ *
+ * Mirrors `PLANS[...].name` in src/lib/stripe/plans.ts. It is duplicated rather
+ * than imported because plans.ts reads Stripe price IDs off `process.env` at
+ * module scope, which has no business in a client bundle.
+ */
+export const PLAN_DISPLAY_NAMES = {
+  free: 'Free',
+  solo: 'Pro',
+  pro: 'Team',
+};
+
+/** Customer-facing name for a plan id, never the raw id. */
+export function planDisplayName(planId) {
+  if (!planId) return PLAN_DISPLAY_NAMES.free;
+  return (
+    PLAN_DISPLAY_NAMES[planId] ??
+    planId.charAt(0).toUpperCase() + planId.slice(1)
+  );
+}
+
 // Mirrors the server-side Compatibility Profile contract. The dashboard does
 // not run mailbox probes: these are safe connector semantics, not customer
 // email data. Branded app-password providers all use the IMAP baseline.
@@ -621,20 +646,13 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
   const callsToday = stats?.callsToday ?? 0;
   const callsThisMonth = stats?.callsThisMonth ?? 0;
 
-  // Plan daily burst cap: null means unlimited (Enterprise or unknown).
-  const dailyCap = planLimits?.maxDailyBurstCalls ?? null;
-  const dailyPct = dailyCap != null && dailyCap > 0 ? callsToday / dailyCap : 0;
-  // Warn at ≥80%, block at 100%.
-  const dailyAtLimit = dailyCap != null && callsToday >= dailyCap;
-  const dailyNearLimit = !dailyAtLimit && dailyCap != null && dailyPct >= 0.8;
+  // Call counts are reported, not metered. Volume stopped being a pricing lever
+  // in the 2026-08-19 repricing, so the daily and monthly quota bars that used
+  // to sit under these two stats are gone: the plan is priced by connected
+  // inboxes, and showing a customer a shrinking allowance they cannot buy their
+  // way out of only manufactured anxiety.
 
-  // Plan monthly call cap: null means unlimited (Enterprise or unknown).
-  const monthlyCap = planLimits?.maxMonthlyToolCalls ?? null;
-  const monthlyPct = monthlyCap != null && monthlyCap > 0 ? callsThisMonth / monthlyCap : 0;
-  const monthlyAtLimit = monthlyCap != null && callsThisMonth >= monthlyCap;
-  const monthlyNearLimit = !monthlyAtLimit && monthlyCap != null && monthlyPct >= 0.8;
-
-  // Seat cap: null means unlimited (Enterprise or unknown).
+  // Seat cap: null means unlimited (Team or comped).
   const seatCap = planLimits?.maxMembers ?? null;
   const seatPct = seatCap != null && seatCap > 0 ? memberCount / seatCap : 0;
   const seatAtLimit = seatCap != null && memberCount >= seatCap;
@@ -666,69 +684,13 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
         </div>
         <div className="stat">
           <div className="label">{t('overview.callsToday')}</div>
-          <div className="value" style={dailyAtLimit ? { color: 'var(--red-600, #dc2626)' } : dailyNearLimit ? { color: 'var(--amber-600, #d97706)' } : {}}>
-            {callsToday.toLocaleString()}
-          </div>
-          <div className="delta">
-            {dailyCap != null
-              ? t('overview.ofDailyLimit', { cap: dailyCap.toLocaleString() })
-              : t('overview.callsUtcDay')}
-          </div>
-          {/* Mini progress bar for daily quota */}
-          {dailyCap != null && (
-            <div style={{
-              marginTop: 6,
-              height: 3,
-              borderRadius: 2,
-              background: 'var(--bg-sunken, #f1f5f9)',
-              overflow: 'hidden',
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${Math.min(100, dailyPct * 100)}%`,
-                background: dailyAtLimit
-                  ? 'var(--red-500, #ef4444)'
-                  : dailyNearLimit
-                    ? 'var(--amber-500, #f59e0b)'
-                    : 'var(--brand)',
-                borderRadius: 2,
-                transition: 'width 0.4s',
-              }} />
-            </div>
-          )}
+          <div className="value">{callsToday.toLocaleString()}</div>
+          <div className="delta">{t('overview.callsUtcDay')}</div>
         </div>
         <div className="stat">
           <div className="label">{t('overview.callsThisMonth')}</div>
-          <div className="value" style={monthlyAtLimit ? { color: 'var(--red-600, #dc2626)' } : monthlyNearLimit ? { color: 'var(--amber-600, #d97706)' } : {}}>
-            {callsThisMonth.toLocaleString()}
-          </div>
-          <div className="delta">
-            {monthlyCap != null
-              ? t('overview.ofMonthlyLimit', { cap: monthlyCap.toLocaleString() })
-              : t('overview.callsUtcMonth')}
-          </div>
-          {/* Mini progress bar for monthly quota */}
-          {monthlyCap != null && (
-            <div style={{
-              marginTop: 6,
-              height: 3,
-              borderRadius: 2,
-              background: 'var(--bg-sunken, #f1f5f9)',
-              overflow: 'hidden',
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${Math.min(100, monthlyPct * 100)}%`,
-                background: monthlyAtLimit
-                  ? 'var(--red-500, #ef4444)'
-                  : monthlyNearLimit
-                    ? 'var(--amber-500, #f59e0b)'
-                    : 'var(--brand)',
-                borderRadius: 2,
-                transition: 'width 0.4s',
-              }} />
-            </div>
-          )}
+          <div className="value">{callsThisMonth.toLocaleString()}</div>
+          <div className="delta">{t('overview.callsUtcMonth')}</div>
         </div>
         <div
           className="stat"
@@ -3066,115 +3028,28 @@ function BulkRunsPanel() {
 /* ---------------- Usage ---------------- */
 
 /**
- * Formats a billing-window end timestamp as a plain calendar date.
- *
- * Fixed to UTC on purpose: the window boundary is a UTC instant, and the same
- * markup is rendered on the server (where there is no user time zone) and in
- * the browser, so a floating time zone would produce a hydration mismatch on
- * anyone whose local date differs from the UTC one.
- *
- * Returns null for a missing or unparseable value so callers can fall back to
- * copy that does not name a date.
- */
-function formatPeriodEndDate(iso, locale) {
-  if (!iso) return null;
-  const at = new Date(iso);
-  if (Number.isNaN(at.getTime())) return null;
-  try {
-    return new Intl.DateTimeFormat(locale || 'en', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC',
-    }).format(at);
-  } catch {
-    return at.toISOString().slice(0, 10);
-  }
-}
-
-/**
  * UsagePage: real data from activity_log, passed as the `usageData` prop.
  *
+ * This page is a history view, not a meter. It used to lead with a monthly
+ * "action allowance" bar and an upgrade nudge, which sold a limit the customer
+ * could not act on and that no longer prices anything: plans are priced by
+ * connected inboxes. The remaining fair-use ceiling is an abuse guard and is
+ * deliberately invisible here.
+ *
  * usageData shape:
- *   dailyCounts     Array<{ date: "YYYY-MM-DD", count: number }>, 30 entries oldest-first
- *   totalCalls      number  (sum over the 30-day window)
- *   byTool          Array<{ tool: string, count: number, pct: number }>, sorted desc
- *   byInbox         Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
- *   shadowActions   number  (billable actions used in the current billing period)
- *   shadowActionCap number|null  (the enforced cap; null means unlimited/comped)
- *   shadowPeriodEnd string|null  (ISO instant the allowance resets)
+ *   dailyCounts  Array<{ date: "YYYY-MM-DD", count: number }>, 30 entries oldest-first
+ *   totalCalls   number  (sum over the 30-day window)
+ *   byTool       Array<{ tool: string, count: number, pct: number }>, sorted desc
+ *   byInbox      Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
  */
-export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
+export function UsagePage({ usageData, onConnect, onGoToKeys }) {
   const t = useTranslations('dashboard');
   const {
     dailyCounts = [],
     totalCalls = 0,
     byTool = [],
     byInbox = [],
-    shadowActions = 0,
-    // null means unlimited: a comped entitlement carries no cap, so there is
-    // no percentage to draw and no "of N" to print.
-    shadowActionCap = null,
-    // Exclusive ISO upper bound of the current billing window, i.e. the instant
-    // the allowance resets. Set server-side from resolveUsageBillingWindow().
-    shadowPeriodEnd = null,
-    // Calls the MCP server has actually refused this billing period, counted
-    // from usage_limit_events. See the note on the alert copy below.
-    rejectedActions = 0,
-    lastBillableCalls = [],
   } = usageData ?? {};
-  const { locale } = useAppLocale();
-
-  const hasActionCap = typeof shadowActionCap === 'number' && shadowActionCap > 0;
-  // Bar width is clamped; the state thresholds below use the raw ratio so that
-  // "over cap" stays distinguishable from "exactly at cap".
-  const shadowPct = hasActionCap ? Math.min(100, Math.round((shadowActions / shadowActionCap) * 100)) : 0;
-  const actionRatio = hasActionCap ? shadowActions / shadowActionCap : 0;
-  const actionsAtCap = hasActionCap && shadowActions >= shadowActionCap;
-  const actionsNearCap = hasActionCap && !actionsAtCap && actionRatio >= 0.8;
-  const actionsRemaining = hasActionCap ? Math.max(0, shadowActionCap - shadowActions) : 0;
-  // Being at the cap does not mean anything was refused: enforcement is gated
-  // to a rollout cohort this page cannot recompute. So the at-cap state only
-  // claims rejection when there is a recorded rejection to point at.
-  const actionsRejecting = actionsAtCap && rejectedActions > 0;
-  // Rendered in UTC because the window boundary itself is a UTC instant, and
-  // because a locale-only format would drift between server and client render.
-  const actionResetDate = formatPeriodEndDate(shadowPeriodEnd, locale);
-
-  // Copy for the allowance alert, resolved here rather than inline: the at-cap
-  // case forks on proven-versus-unproven rejection as well as on whether a
-  // reset date is known, and that nests badly inside JSX.
-  let actionAlertBadge = null;
-  let actionAlertHeadline = null;
-  let actionAlertDetail = null;
-  if (actionsRejecting) {
-    actionAlertBadge = t('usage.actionsBlockedBadge');
-    actionAlertHeadline = t('usage.actionsRejected');
-    actionAlertDetail = actionResetDate
-      ? t('usage.actionsRejectedDetail', { count: rejectedActions.toLocaleString(), date: actionResetDate })
-      : t('usage.actionsRejectedDetailNoDate', { count: rejectedActions.toLocaleString() });
-  } else if (actionsAtCap) {
-    actionAlertBadge = t('usage.actionsCapReachedBadge');
-    actionAlertHeadline = t('usage.actionsExhausted');
-    actionAlertDetail = actionResetDate
-      ? t('usage.actionsExhaustedDetail', { used: shadowActions.toLocaleString(), cap: shadowActionCap.toLocaleString(), date: actionResetDate })
-      : t('usage.actionsExhaustedDetailNoDate', { used: shadowActions.toLocaleString(), cap: shadowActionCap.toLocaleString() });
-  } else if (actionsNearCap) {
-    actionAlertBadge = t('usage.actionsNearCapBadge');
-    actionAlertHeadline = t('usage.actionsApproaching', { pct: shadowPct });
-    actionAlertDetail = actionResetDate
-      ? t('usage.actionsRemainingDetail', { remaining: actionsRemaining.toLocaleString(), cap: shadowActionCap.toLocaleString(), date: actionResetDate })
-      : t('usage.actionsRemainingDetailNoDate', { remaining: actionsRemaining.toLocaleString(), cap: shadowActionCap.toLocaleString() });
-  }
-
-  // Plan limits: null means unlimited (Enterprise).
-  const dailyCap = planLimits?.maxDailyBurstCalls ?? null;
-
-  // Calls today: the last entry in dailyCounts (index 29) is today.
-  const callsToday = dailyCounts.length > 0 ? (dailyCounts[dailyCounts.length - 1]?.count ?? 0) : 0;
-  const dailyPct = dailyCap != null && dailyCap > 0 ? callsToday / dailyCap : 0;
-  const dailyAtLimit = dailyCap != null && callsToday >= dailyCap;
-  const dailyNearLimit = !dailyAtLimit && dailyCap != null && dailyPct >= 0.8;
 
   // Derived stats
   const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / 30) : 0;
@@ -3192,173 +3067,6 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
         title={t('usage.title')}
         sub={t('usage.sub')}
       />
-
-      <div className="card" style={{ marginBottom: 14 }}>
-        <div className="card-h">
-          <div><div className="title">{t('usage.actionMeterTitle')}</div><div className="sub">{t('usage.actionMeterSub')}</div></div>
-          {actionAlertBadge && (
-            <Badge tone={actionsAtCap ? 'red' : 'amber'}>{actionAlertBadge}</Badge>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
-          <strong style={{ fontSize: 24 }}>{shadowActions.toLocaleString()}</strong>
-          {hasActionCap && (
-            <span style={{ color: 'var(--fg-3)' }}>{t('usage.actionsOfCap', { cap: shadowActionCap.toLocaleString() })}</span>
-          )}
-        </div>
-        {hasActionCap && (
-          <div style={{ height: 7, borderRadius: 4, overflow: 'hidden', background: 'var(--bg-sunken)' }}><div style={{ width: `${shadowPct}%`, height: '100%', background: actionsAtCap ? 'var(--red-500, #ef4444)' : actionsNearCap ? 'var(--amber-500, #f59e0b)' : 'var(--brand)', transition: 'width 0.4s' }} /></div>
-        )}
-        {/* Allowance alert. Silent below 80%, amber up to the cap, red at or
-            past it. The red state has two wordings: it reports rejection as
-            fact only when usage_limit_events proves it, and otherwise says only
-            that the allowance is spent. Never shown without a cap: a comped
-            workspace has no allowance to run out of. */}
-        {actionAlertHeadline && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            marginTop: 12,
-            padding: '12px 14px',
-            background: actionsAtCap ? 'var(--red-100, #fef2f2)' : 'var(--amber-50, #fffbeb)',
-            border: actionsAtCap ? '1px solid rgba(229,72,77,0.25)' : '1px solid rgba(245,158,11,0.3)',
-            borderRadius: 10,
-            fontFamily: 'var(--font-sans)',
-          }}>
-            <div style={{ flex: 1 }}>
-              <div style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: actionsAtCap ? 'var(--red-700, #b91c1c)' : 'var(--amber-800, #92400e)',
-                marginBottom: 4,
-              }}>
-                {actionAlertHeadline}
-              </div>
-              <div style={{ fontSize: 12, color: actionsAtCap ? 'var(--red-600, #dc2626)' : 'var(--fg-2)' }}>
-                {actionAlertDetail}
-              </div>
-            </div>
-            <a
-              href="/pricing"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0 14px',
-                height: 34,
-                background: 'var(--brand)',
-                color: '#fff',
-                borderRadius: 8,
-                fontFamily: 'var(--font-sans)',
-                fontSize: 13,
-                fontWeight: 500,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
-            >
-              <Icon name="zap" size={13} color="#fff" />
-              {t('usage.upgradePlan')}
-            </a>
-          </div>
-        )}
-        {lastBillableCalls.length > 0 && <div style={{ marginTop: 12, fontSize: 12, color: 'var(--fg-3)' }}>{t('usage.lastBillableCalls', { count: lastBillableCalls.length })}: {lastBillableCalls.slice(0, 5).map((call) => call.tool).join(' · ')}</div>}
-      </div>
-
-      {/* Daily quota status card: shown whenever a cap exists */}
-      {dailyCap != null && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          padding: '14px 18px',
-          marginBottom: 14,
-          background: dailyAtLimit
-            ? 'var(--red-100, #fef2f2)'
-            : dailyNearLimit
-              ? 'var(--amber-50, #fffbeb)'
-              : 'var(--bg-card, #fff)',
-          border: dailyAtLimit
-            ? '1px solid rgba(229,72,77,0.25)'
-            : dailyNearLimit
-              ? '1px solid rgba(245,158,11,0.3)'
-              : '1px solid var(--border)',
-          borderRadius: 10,
-          fontFamily: 'var(--font-sans)',
-        }}>
-          <div style={{ flex: 1 }}>
-            <div style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: dailyAtLimit
-                ? 'var(--red-700, #b91c1c)'
-                : dailyNearLimit
-                  ? 'var(--amber-800, #92400e)'
-                  : 'var(--fg-1)',
-              marginBottom: 6,
-            }}>
-              {dailyAtLimit
-                ? t('usage.quotaExhausted')
-                : dailyNearLimit
-                  ? t('usage.quotaApproaching', { pct: Math.round(dailyPct * 100) })
-                  : t('usage.dailyQuota')}
-            </div>
-            <div style={{
-              height: 6,
-              borderRadius: 3,
-              background: 'var(--bg-sunken, #f1f5f9)',
-              overflow: 'hidden',
-              marginBottom: 6,
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${Math.min(100, dailyPct * 100)}%`,
-                background: dailyAtLimit
-                  ? 'var(--red-500, #ef4444)'
-                  : dailyNearLimit
-                    ? 'var(--amber-500, #f59e0b)'
-                    : 'var(--brand)',
-                borderRadius: 3,
-                transition: 'width 0.4s',
-              }} />
-            </div>
-            <div style={{
-              fontSize: 12,
-              color: dailyAtLimit
-                ? 'var(--red-600, #dc2626)'
-                : 'var(--fg-3)',
-            }}>
-              {t('usage.usedToday', { used: callsToday.toLocaleString(), cap: dailyCap.toLocaleString() })}
-              {dailyAtLimit && t('usage.resetsMidnight')}
-            </div>
-          </div>
-          {(dailyAtLimit || dailyNearLimit) && (
-            <a
-              href="/pricing"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0 14px',
-                height: 34,
-                background: 'var(--brand)',
-                color: '#fff',
-                borderRadius: 8,
-                fontFamily: 'var(--font-sans)',
-                fontSize: 13,
-                fontWeight: 500,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
-            >
-              <Icon name="zap" size={13} color="#fff" />
-              {t('usage.upgradePlan')}
-            </a>
-          )}
-        </div>
-      )}
 
       {isEmpty ? (
         /* ── Empty state ───────────────────────────────────────────────── */
@@ -4235,53 +3943,65 @@ function DeleteAccountSection({ email }) {
 const BILLING_PLANS = [
   {
     id: 'solo',
-    name: 'Agent',
-    monthlyPrice: 12,
-    yearlyMonthlyPrice: 10,     // effective monthly cost when billed yearly ($120/yr)
-    yearlyAnnualTotal: 120,
+    name: PLAN_DISPLAY_NAMES.solo,
+    monthlyPrice: 29,
+    yearlyMonthlyPrice: 23,     // effective monthly cost when billed yearly ($276/yr)
+    yearlyAnnualTotal: 276,
     featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeature4'],
-    highlighted: false,
+    // Pro is the highlighted plan: unlimited inboxes for one person is the
+    // upgrade nearly everyone here actually wants. Team only pays off once
+    // other people need in.
+    highlighted: true,
   },
   {
     id: 'pro',
-    name: 'Scale',
-    monthlyPrice: 49,
-    yearlyMonthlyPrice: 41,     // effective monthly cost when billed yearly ($490/yr)
-    yearlyAnnualTotal: 490,
+    name: PLAN_DISPLAY_NAMES.pro,
+    monthlyPrice: 79,
+    yearlyMonthlyPrice: 63,     // effective monthly cost when billed yearly ($756/yr)
+    yearlyAnnualTotal: 756,
     featureKeys: ['billing.plans.teamFeature1', 'billing.plans.teamFeature2', 'billing.plans.teamFeature3', 'billing.plans.teamFeature4', 'billing.plans.teamFeature5', 'billing.plans.teamFeature6'],
-    highlighted: true,
+    highlighted: false,
   },
 ];
 
 /**
  * BillingSection: shows the current plan and upgrade options.
  *
- * For free-plan workspaces it renders Agent and Scale upgrade cards.
- * For paid-plan workspaces it shows the active plan and a link to the
- * Stripe customer portal.
+ * For free-plan workspaces it renders the Pro and Team upgrade cards. For
+ * paid-plan workspaces it shows the active plan and a link to the Stripe
+ * customer portal.
+ *
+ * It used to open with a live meter of MCP calls against a monthly allowance.
+ * That is gone: volume is not what a plan buys any more, so the summary now
+ * states the thing the plan actually governs, connected inboxes, and says so
+ * positively for the grandfathered cohort rather than leaving them guessing.
  *
  * Props:
- *   currentPlan: 'free' | 'pro' | 'enterprise' from workspaces.plan
+ *   currentPlan:  'free' | 'solo' | 'pro' | 'enterprise' from workspaces.plan
+ *   maxInboxes:   number | null. null means unlimited, which is also how a
+ *                 grandfathered free account arrives here.
+ *   inboxCount:   inboxes connected right now.
+ *   grandfathered true when unlimited inboxes come from the pre-repricing
+ *                 entitlement rather than from a paid plan.
  */
-function BillingSection({ currentPlan, compedScale = false, stripePrices, upgradeIntent }) {
+function BillingSection({
+  currentPlan,
+  compedScale = false,
+  stripePrices,
+  upgradeIntent,
+  maxInboxes = null,
+  inboxCount = 0,
+  grandfathered = false,
+}) {
   const t = useTranslations('dashboard');
   const [interval, setInterval] = useState('month');
   const [upgrading, setUpgrading] = useState(null); // planId while loading
   const [openingPortal, setOpeningPortal] = useState(false);
   const automaticUpgradeStarted = useRef(false);
-  const [usage, setUsage] = useState(null); // fetched from /api/usage
   const { toast } = useToast();
 
   // Billing funnel: record that this user actually saw the plans.
   usePricingView('dashboard_billing');
-
-  // Fetch live usage stats on mount
-  useEffect(() => {
-    fetch('/api/usage')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setUsage(data); })
-      .catch(() => {});
-  }, []);
 
   /** Open the Stripe Customer Portal in the same tab. */
   const handleOpenPortal = async () => {
@@ -4361,25 +4081,18 @@ function BillingSection({ currentPlan, compedScale = false, stripePrices, upgrad
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upgradeIntent]);
 
-  // Display label for the current plan. "free" is translated; paid plan names
-  // (Agent / Scale / Enterprise) are brand-style names kept as-is (capitalized).
+  // Display label for the current plan. "free" is translated; the paid tiers use
+  // their customer-facing names, never the internal ids ('solo' / 'pro').
   const planKey = currentPlan ?? 'free';
-  const planDisplay = compedScale ? 'Scale — comped' : planKey === 'free'
-    ? t('billing.free')
-    : (planKey === 'solo' ? 'Agent' : planKey === 'pro' ? 'Scale' : planKey.charAt(0).toUpperCase() + planKey.slice(1));
+  const planDisplay = compedScale
+    ? `${PLAN_DISPLAY_NAMES.pro} (comped)`
+    : planKey === 'free'
+      ? t('billing.free')
+      : planDisplayName(planKey);
 
-  // Derived usage values for the widget
-  const monthlyUsed = usage?.monthly?.used ?? null;
-  const monthlyCap  = usage?.monthly?.cap  ?? null;
-  const monthlyPct  = monthlyCap != null && monthlyCap > 0 ? (monthlyUsed ?? 0) / monthlyCap : 0;
-  const monthlyAtLimit   = monthlyCap != null && (monthlyUsed ?? 0) >= monthlyCap;
-  const monthlyNearLimit = !monthlyAtLimit && monthlyCap != null && monthlyPct >= 0.8;
-
-  const dailyUsed = usage?.daily_burst?.used ?? null;
-  const dailyCap  = usage?.daily_burst?.cap  ?? null;
-  const dailyPct  = dailyCap != null && dailyCap > 0 ? (dailyUsed ?? 0) / dailyCap : 0;
-  const dailyAtLimit   = dailyCap != null && (dailyUsed ?? 0) >= dailyCap;
-  const dailyNearLimit = !dailyAtLimit && dailyCap != null && dailyPct >= 0.8;
+  // Inbox allowance. null = unlimited, which covers paid plans, comped
+  // accounts, and the grandfathered pre-repricing cohort alike.
+  const inboxesUnlimited = maxInboxes == null;
 
   return (
     <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
@@ -4398,91 +4111,56 @@ function BillingSection({ currentPlan, compedScale = false, stripePrices, upgrad
 
       <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* ── Live usage widget ─────────────────────────────────────────── */}
-        {usage && (
+        {/* ── What the plan actually governs ──────────────────────────────
+            One line, no bar. A progress bar here would be scarcity theatre for
+            a paid or grandfathered account, and the free account already meets
+            the real limit at the point it matters: the second inbox. */}
+        <div style={{
+          padding: '14px 16px',
+          background: 'var(--bg-sunken)',
+          borderRadius: 10,
+          border: '1px solid var(--border-1)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+        }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {t('billing.planIncludes')}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, color: 'var(--fg-1)' }}>
+            <Icon name="check" size={13} color="var(--mint-600)" />
+            <span>
+              {inboxesUnlimited
+                ? t('billing.inboxesUnlimited')
+                : maxInboxes === 1
+                  ? t('billing.inboxesOne')
+                  : t('billing.inboxesUsed', { count: inboxCount, max: maxInboxes })}
+            </span>
+          </div>
+          {inboxesUnlimited && (
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+              {t('billing.inboxesCount', { count: inboxCount })}
+            </div>
+          )}
+        </div>
+
+        {/* Grandfathered accounts keep unlimited inboxes for free, forever.
+            Saying so once, quietly and positively, beats leaving someone to
+            wonder why a paywall everyone else hit never appeared for them. */}
+        {grandfathered && (
           <div style={{
-            padding: '14px 16px',
-            background: 'var(--bg-sunken)',
+            padding: '12px 14px',
+            background: 'var(--brand-soft)',
+            border: '1px solid rgba(37,71,229,0.18)',
             borderRadius: 10,
-            border: '1px solid var(--border-1)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12,
+            fontFamily: 'var(--font-sans)',
           }}>
-            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              {t('billing.thisMonthsUsage')}
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', marginBottom: 4 }}>
+              {t('billing.grandfatheredTitle')}
             </div>
-
-            {/* Monthly calls */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>
-                  {t('billing.mcpCallsThisMonth')}
-                </span>
-                <span style={{
-                  fontFamily: 'var(--font-mono, monospace)',
-                  fontSize: 12.5,
-                  color: monthlyAtLimit ? 'var(--red-600, #dc2626)' : monthlyNearLimit ? 'var(--amber-600, #d97706)' : 'var(--fg-1)',
-                  fontWeight: 600,
-                }}>
-                  {(monthlyUsed ?? 0).toLocaleString()}
-                  {monthlyCap != null ? ` / ${monthlyCap.toLocaleString()}` : ''}
-                </span>
-              </div>
-              {monthlyCap != null && (
-                <div style={{ height: 4, borderRadius: 3, background: 'var(--bg-page, #f8fafc)', overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%',
-                    width: `${Math.min(100, monthlyPct * 100)}%`,
-                    background: monthlyAtLimit ? 'var(--red-500, #ef4444)' : monthlyNearLimit ? 'var(--amber-500, #f59e0b)' : 'var(--brand)',
-                    borderRadius: 3,
-                    transition: 'width 0.4s',
-                  }} />
-                </div>
-              )}
-              {monthlyCap != null && (
-                <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-4)', marginTop: 4 }}>
-                  {monthlyCap - (monthlyUsed ?? 0) > 0
-                    ? t('billing.callsRemaining', { remaining: (monthlyCap - (monthlyUsed ?? 0)).toLocaleString(), date: new Date(usage.monthly.resets_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) })
-                    : t('billing.monthlyExhausted', { date: new Date(usage.monthly.resets_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) })}
-                </div>
-              )}
+            <div style={{ fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.5 }}>
+              {t('billing.grandfatheredBody')}
             </div>
-
-            {/* Daily burst calls */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>
-                  {t('billing.callsTodayBurst')}
-                </span>
-                <span style={{
-                  fontFamily: 'var(--font-mono, monospace)',
-                  fontSize: 12.5,
-                  color: dailyAtLimit ? 'var(--red-600, #dc2626)' : dailyNearLimit ? 'var(--amber-600, #d97706)' : 'var(--fg-1)',
-                  fontWeight: 600,
-                }}>
-                  {(dailyUsed ?? 0).toLocaleString()}
-                  {dailyCap != null ? ` / ${dailyCap.toLocaleString()}` : ''}
-                </span>
-              </div>
-              {dailyCap != null && (
-                <div style={{ height: 4, borderRadius: 3, background: 'var(--bg-page, #f8fafc)', overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%',
-                    width: `${Math.min(100, dailyPct * 100)}%`,
-                    background: dailyAtLimit ? 'var(--red-500, #ef4444)' : dailyNearLimit ? 'var(--amber-500, #f59e0b)' : 'var(--mint-500, #10b981)',
-                    borderRadius: 3,
-                    transition: 'width 0.4s',
-                  }} />
-                </div>
-              )}
-              {dailyCap != null && (
-                <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-4)', marginTop: 4 }}>
-                  {t('billing.resetsMidnight')}
-                </div>
-              )}
-            </div>
-
           </div>
         )}
 
@@ -5175,7 +4853,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, inboxCount = 0, grandfathered = false, onWorkspaceUpdate }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -5205,7 +4883,15 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
       <LanguageSection />
 
       {/* Billing section: current plan + upgrade (account-level subscription) */}
-      <BillingSection currentPlan={workspace?.plan ?? 'free'} compedScale={workspace?.compedScale ?? false} stripePrices={stripePrices} upgradeIntent={upgradeIntent} />
+      <BillingSection
+        currentPlan={workspace?.plan ?? 'free'}
+        compedScale={workspace?.compedScale ?? false}
+        stripePrices={stripePrices}
+        upgradeIntent={upgradeIntent}
+        maxInboxes={planLimits?.maxInboxes ?? null}
+        inboxCount={inboxCount}
+        grandfathered={grandfathered}
+      />
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}
       <SettingsSectionLabel>{t('settings.sections.workspace')}</SettingsSectionLabel>

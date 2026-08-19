@@ -63,7 +63,7 @@ Vous gardez aussi une ligne ferme sur l'envoi : les brouillons restent des broui
 
 ## Atteignez le zéro dès aujourd'hui
 
-Vous n'avez besoin ni d'une nouvelle application de messagerie ni d'un système de productivité — juste de votre boîte mail existante et d'un agent capable d'agir dessus. Connectez votre boîte une fois, collez l'endpoint dans Claude et lancez les cinq prompts ci-dessus. Tous les forfaits sont illimités et l'offre Free ne demande aucune carte.
+Vous n'avez besoin ni d'une nouvelle application de messagerie ni d'un système de productivité — juste de votre boîte mail existante et d'un agent capable d'agir dessus. Connectez votre boîte une fois, collez l'endpoint dans Claude et lancez les cinq prompts ci-dessus. L'offre Gratuit ne demande aucune carte et connecte une boîte, pour toujours.
 
 [Connectez votre boîte mail gratuitement](/signup) et demandez à Claude de trier votre courrier non lu. L'inbox zero, supervisé au lieu d'être subi.`,
 };

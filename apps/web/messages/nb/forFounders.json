@@ -51,10 +51,22 @@
     "title": "En ekte innboks, ikke et skrivebeskyttet glimt",
     "sub": "Ni handlingsbaserte verktøy agenten din kan bruke fra start til slutt.",
     "items": {
-      "read": { "h": "Les og søk", "p": "List opp, les og søk på tvers av mapper og hver tilkoblet innboks, hentet i sanntid." },
-      "send": { "h": "Send og svar", "p": "Send, svar og videresend direkte. Agenten fullfører e-posten, ikke bare et utkast." },
-      "schedule": { "h": "Planlegg", "p": "Sett en sending i kø til senere, så oppfølginger går ut til rett tidspunkt i kundens dag." },
-      "organize": { "h": "Organiser", "p": "Flytt, kopier, flagg, arkiver og merk, så sorteringen skjer mens du leser, ikke etterpå." }
+      "read": {
+        "h": "Les og søk",
+        "p": "List opp, les og søk på tvers av mapper og hver tilkoblet innboks, hentet i sanntid."
+      },
+      "send": {
+        "h": "Send og svar",
+        "p": "Send, svar og videresend direkte. Agenten fullfører e-posten, ikke bare et utkast."
+      },
+      "schedule": {
+        "h": "Planlegg",
+        "p": "Sett en sending i kø til senere, så oppfølginger går ut til rett tidspunkt i kundens dag."
+      },
+      "organize": {
+        "h": "Organiser",
+        "p": "Flytt, kopier, flagg, arkiver og merk, så sorteringen skjer mens du leser, ikke etterpå."
+      }
     }
   },
   "proof": {
@@ -92,13 +104,13 @@
       },
       {
         "q": "Hva koster det mens jeg fortsatt er liten?",
-        "a": "Gratis, med ubegrenset antall innbokser og 2 500 fakturerbare handlinger per faktureringsperiode. Mislykkede kall og inbox_list er gratis. Betalte nivåer legger til større handlingskvoter, teamfunksjoner og støtte, men en solo-gründer som svarer kunder trenger aldri å betale for å komme i gang."
+        "a": "Gratis, med én tilkoblet innboks og uten kort. Pro til $29 i måneden kobler til alle postkassene du eier, og Team legger til medlemmer, roller og et eget arbeidsområde per kunde."
       }
     ]
   },
   "ctaBand": {
     "title": "Få kveldene dine tilbake",
-    "sub": "Koble til innboksen på minutter og la Claude tømme kundekøen sammen med deg. Gratis å komme i gang med 2 500 handlinger per faktureringsperiode, uten kort.",
+    "sub": "Koble til innboksen på minutter og la Claude tømme kundekøen sammen med deg. Én innboks gratis for å komme i gang, uten kort.",
     "ctaPrimary": "Koble til innboksen gratis",
     "ctaSecondary": "Les dokumentasjonen"
   }

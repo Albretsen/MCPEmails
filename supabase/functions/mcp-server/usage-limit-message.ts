@@ -1,9 +1,18 @@
 // ---------------------------------------------------------------------------
-// The words a workspace sees when it runs out of actions.
+// The words a workspace sees when it trips the fair-use action ceiling.
 //
-// This is the only paywall this product has, and until now it was four words
-// long. The server returned a JSON-RPC protocol error, `-32029 Usage limit
-// reached`, with the cap, the reset date and the upgrade link tucked into
+// Read this first: the ceiling is NOT a paywall any more. The 2026-08-19
+// repricing moved the value metric to connected inboxes, and actions became a
+// silent abuse ceiling set far above anything a real account does. Nothing in
+// this file may sell, upsell, or imply that paying buys more actions, because
+// it does not. A message that says "upgrade for a bigger allowance" would be a
+// false statement about the product. What a person who hits this needs is to
+// know it happened, that retrying is pointless, and how to reach a human.
+//
+// The transport reasoning below predates the repricing and still holds. Until
+// it was fixed, this text was four words long: the server returned a JSON-RPC
+// protocol error, `-32029 Usage limit reached`, with the cap, the reset date
+// and the link tucked into
 // `error.data`. The reference MCP SDK renders a protocol error as the string
 // `MCP error ${code}: ${message}` and hangs `data` off a separate property that
 // hosts routinely drop, so the model was handed four words and improvised the
@@ -24,19 +33,29 @@
 /**
  * Customer-facing plan names.
  *
- * The internal plan ids predate the pricing page and no longer match it: `solo`
- * is sold as Agent and `pro` as Scale. A message the user reads has to use the
- * name printed on the pricing page, or the upgrade path names a product they
- * cannot find.
+ * The internal plan ids have never matched the pricing page and drifted twice:
+ * `solo` was sold as Solo, then Agent, and is now Pro; `pro` was Team, then
+ * Scale, and is Team again. A message a person reads has to use the name
+ * printed on the pricing page. Mirror of `planDisplayName` in
+ * apps/web/src/lib/stripe/plans.ts.
  */
 export const PLAN_DISPLAY_NAMES: Record<string, string> = {
   free: "Free",
-  solo: "Agent",
-  pro: "Scale",
+  solo: "Pro",
+  pro: "Team",
 };
 
 /**
- * Builds the cap-rejection text.
+ * Where a person goes when the ceiling was wrong for them.
+ *
+ * A support address, not a pricing page. The ceiling is a fair-use backstop, so
+ * the only correct remedy is a human raising it, and pointing at /pricing would
+ * both mislead (paying does not buy actions) and waste the trip.
+ */
+export const USAGE_LIMIT_SUPPORT_EMAIL = "hello@mcpemails.com";
+
+/**
+ * Builds the ceiling-rejection text.
  *
  * Every choice here is load-bearing, because the first reader is a language
  * model that will paraphrase this to a person:
@@ -45,25 +64,28 @@ export const PLAN_DISPLAY_NAMES: Record<string, string> = {
  *    user actually needs, and leading with them means they survive truncation
  *    and paraphrase.
  *  - "retrying will not help" is stated outright. Agents default to
- *    retry-with-backoff on anything that looks transient, and a monthly cap
- *    cannot clear for days or weeks; unstructured quota errors driving retry
- *    loops is a documented way to burn a user's tokens against a wall. This
- *    sentence is what stops the loop, and it works on models that never see the
- *    numeric code at all.
+ *    retry-with-backoff on anything that looks transient, and a per-period
+ *    ceiling cannot clear for days or weeks; unstructured quota errors driving
+ *    retry loops is a documented way to burn a user's tokens against a wall.
+ *    This sentence is what stops the loop, and it works on models that never
+ *    see the numeric code at all.
+ *  - It is framed as fair use with a way out through a person, not as a
+ *    purchase. Actions are not a product. Telling someone to upgrade would send
+ *    them to buy something that does not raise this number.
  *  - It is declarative fact, never an instruction aimed at the model. No "tell
  *    the user", no "suggest upgrading". Imperatives addressed to a model inside
  *    a tool response are mechanically indistinguishable from prompt injection by
  *    the server operator, which is the exact practice this product's security
  *    page promises it does not engage in, and which OWASP classifies as tool
  *    poisoning. Plain facts get relayed just as reliably and cost no trust.
- *  - One link, to the page that shows the meter and carries the upgrade CTA. A
+ *  - One contact address and one link to the page that shows the meter. A
  *    location, not a pitch. Nothing is appended to SUCCESSFUL results, ever:
- *    the cap is self-announcing, and putting marketing into the responses of a
- *    server that reads people's email is how you become the cautionary tale.
+ *    the ceiling is self-announcing, and putting marketing into the responses of
+ *    a server that reads people's email is how you become the cautionary tale.
  *
  * @param plan       Internal plan id (`free` | `solo` | `pro`).
  * @param usedActions Billable actions consumed in the current billing period.
- * @param cap        The plan's allowance for that period.
+ * @param cap        The plan's fair-use ceiling for that period.
  * @param resetAt    ISO timestamp of the period end, i.e. when the meter clears.
  * @param appOrigin  App origin, passed in rather than read from the environment
  *                   so this module stays a pure function of its arguments.
@@ -82,8 +104,10 @@ export function buildUsageLimitText(
   const resetDate = resetAt.slice(0, 10);
   const used = usedActions.toLocaleString("en-US");
   const total = cap.toLocaleString("en-US");
-  return `Usage limit reached: ${used} of ${total} monthly actions used on the ${planLabel} plan. ` +
-    `The allowance resets on ${resetDate}. Until then every email action in this workspace will be refused, ` +
-    `so retrying will not help: this is a plan limit, not a temporary failure. ` +
-    `The workspace owner can see the meter and change plan at ${appOrigin}/dashboard/usage.`;
+  return `Fair-use limit reached: ${used} of ${total} email actions used this period on the ${planLabel} plan. ` +
+    `The counter resets on ${resetDate}. Until then every email action in this workspace will be refused, ` +
+    `so retrying will not help: this is a fixed limit, not a temporary failure. ` +
+    `This limit is an automated safeguard against runaway usage, not a billing tier, and it is set far above ` +
+    `normal use. If this workspace has a legitimate reason to run above it, the owner can contact ` +
+    `${USAGE_LIMIT_SUPPORT_EMAIL} to have it raised. The current count is at ${appOrigin}/dashboard/usage.`;
 }
