@@ -73,7 +73,7 @@ Esto cose las demás: \`email_read\` (acción search y luego list) para reunir l
 
 ## Cuánto cuesta esto y dónde están los límites
 
-Los siete funcionan en el [plan Free](/pricing), que cuesta 0 $ con bandejas ilimitadas y 2.500 acciones facturables por período de facturación. Free permite 60 peticiones por minuto; Agent (12 $/mes) incluye 50.000 acciones y 300 peticiones por minuto; Scale (49 $/mes) incluye 300.000 acciones, 1.000 peticiones por minuto, roles de equipo y SSO. Un resumen semanal apenas roza esos techos; un bucle de clasificación agresivo cada minuto a través de muchas bandejas es donde usarías la asignación de acciones de Free y querrías Agent.
+Los siete funcionan en el [plan Gratis](/pricing), que cuesta 0 $ y conecta una bandeja a 60 peticiones por minuto. Pro (29 $/mes) conecta todos los buzones que tengas y sube el límite de ráfaga a 300 peticiones por minuto; Team (79 $/mes) añade miembros con roles, un espacio de trabajo separado por cliente, SSO y 1.000 peticiones por minuto. Una bandeja sobra para un resumen semanal; en cuanto quieras el trabajo y lo personal en el mismo agente, eso es Pro.
 
 Cuando llegues a un límite, el servidor devuelve un error reintentable con \`data.retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío de \`email_compose\`, porque un reintento tras un timeout puede significar que dos copias del mismo mensaje aterricen en la bandeja de alguien.
 

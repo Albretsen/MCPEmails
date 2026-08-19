@@ -11,7 +11,7 @@
       "lead": "Gi AI-agenten din en ekte Gmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett klikks Google-pålogging — og bruk samme innboks i alle MCP-klienter, ikke bare én.",
       "ctaPrimary": "Koble til Gmail gratis",
       "ctaSecondary": "Les dokumentasjonen",
-      "meta0": "Ubegrensede innbokser og 2 500 handlinger",
+      "meta0": "1 innboks gratis, for alltid",
       "meta1": "Google-pålogging med ett klikk (OAuth)",
       "meta2": "E-post hentes direkte, lagres aldri"
     },
@@ -30,10 +30,26 @@
       "ctaPrimary": "Koble til Gmail gratis"
     },
     "capabilities": [
-      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av etiketter — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Gmail, ikke som et utkast du fullfører for hånd." },
-      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Merk, arkiver og slett", "p": "Hold innboksen ryddig — legg på etiketter, arkiver det som er håndtert, og slett på forespørsel." }
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av etiketter — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Gmail, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Merk, arkiver og slett",
+        "p": "Hold innboksen ryddig — legg på etiketter, arkiver det som er håndtert, og slett på forespørsel."
+      }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -41,13 +57,22 @@
       "sub": "Fra registrering til første AI-e-post på et par minutter."
     },
     "steps": [
-      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails — uten kort. Gratisplanen gir deg ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode." },
-      { "h": "Logg inn med Google", "p": "Klikk Koble til Gmail, logg inn med Google-kontoen din, og godkjenn lese- og sendetilgang. Ingen app-passord eller IMAP-oppsett." },
-      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Logg inn med Google",
+        "p": "Klikk Koble til Gmail, logg inn med Google-kontoen din, og godkjenn lese- og sendetilgang. Ingen app-passord eller IMAP-oppsett."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
     ],
     "ctaBand": {
       "title": "Gi AI-en din en Gmail-innboks",
-      "sub": "Koble til Gmail på minutter — ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode på gratisplanen, uten kort.",
+      "sub": "Koble til Gmail på minutter. Én innboks gratis for alltid, uten kort.",
       "ctaPrimary": "Koble til Gmail gratis",
       "ctaSecondary": "Les dokumentasjonen"
     }
@@ -64,7 +89,7 @@
       "lead": "Gi AI-agenten din en ekte Fastmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord — og bruk samme innboks i alle MCP-klienter, ikke bare én.",
       "ctaPrimary": "Koble til Fastmail gratis",
       "ctaSecondary": "Les dokumentasjonen",
-      "meta0": "Ubegrensede innbokser og 2 500 handlinger",
+      "meta0": "1 innboks gratis, for alltid",
       "meta1": "App-passord — ingen OAuth-oppsett",
       "meta2": "E-post hentes direkte, lagres aldri"
     },
@@ -79,10 +104,26 @@
       "ctaPrimary": "Koble til Fastmail gratis"
     },
     "capabilities": [
-      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Fastmail, ikke som et utkast du fullfører for hånd." },
-      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Fastmail, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -90,14 +131,26 @@
       "sub": "Fra registrering til første AI-e-post på et par minutter."
     },
     "steps": [
-      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails — uten kort. Gratisplanen gir deg ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode." },
-      { "h": "Generer et Fastmail-app-passord", "p": "I Fastmail går du til Innstillinger → Personvern og sikkerhet → App-passord og oppretter ett for e-post (IMAP/SMTP)." },
-      { "h": "Lim det inn i mcpemails", "p": "Legg til Fastmail-adressen din og app-passordet for å koble til innboksen trygt." },
-      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Generer et Fastmail-app-passord",
+        "p": "I Fastmail går du til Innstillinger → Personvern og sikkerhet → App-passord og oppretter ett for e-post (IMAP/SMTP)."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Legg til Fastmail-adressen din og app-passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
     ],
     "ctaBand": {
       "title": "Gi AI-en din en Fastmail-innboks",
-      "sub": "Koble til Fastmail på minutter — ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode på gratisplanen, uten kort.",
+      "sub": "Koble til Fastmail på minutter. Én innboks gratis for alltid, uten kort.",
       "ctaPrimary": "Koble til Fastmail gratis",
       "ctaSecondary": "Les dokumentasjonen"
     }
@@ -114,7 +167,7 @@
       "lead": "Gi AI-agenten din en ekte iCloud-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et app-spesifikt Apple-passord — og bruk samme innboks i alle MCP-klienter, ikke bare én.",
       "ctaPrimary": "Koble til iCloud gratis",
       "ctaSecondary": "Les dokumentasjonen",
-      "meta0": "Ubegrensede innbokser og 2 500 handlinger",
+      "meta0": "1 innboks gratis, for alltid",
       "meta1": "App-spesifikt passord — ingen OAuth",
       "meta2": "E-post hentes direkte, lagres aldri"
     },
@@ -129,10 +182,26 @@
       "ctaPrimary": "Koble til iCloud gratis"
     },
     "capabilities": [
-      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper — finn en kvittering, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra iCloud, ikke som et utkast du fullfører for hånd." },
-      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper — finn en kvittering, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra iCloud, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -140,14 +209,26 @@
       "sub": "Fra registrering til første AI-e-post på et par minutter."
     },
     "steps": [
-      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails — uten kort. Gratisplanen gir deg ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode." },
-      { "h": "Generer et app-spesifikt passord", "p": "På appleid.apple.com går du til Pålogging og sikkerhet → App-spesifikke passord og oppretter ett (tofaktorautentisering må være på)." },
-      { "h": "Lim det inn i mcpemails", "p": "Legg til iCloud-adressen din og det app-spesifikke passordet for å koble til innboksen trygt." },
-      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Generer et app-spesifikt passord",
+        "p": "På appleid.apple.com går du til Pålogging og sikkerhet → App-spesifikke passord og oppretter ett (tofaktorautentisering må være på)."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Legg til iCloud-adressen din og det app-spesifikke passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
     ],
     "ctaBand": {
       "title": "Gi AI-en din en iCloud-innboks",
-      "sub": "Koble til iCloud Mail på minutter — ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode på gratisplanen, uten kort.",
+      "sub": "Koble til iCloud Mail på minutter. Én innboks gratis for alltid, uten kort.",
       "ctaPrimary": "Koble til iCloud gratis",
       "ctaSecondary": "Les dokumentasjonen"
     }
@@ -164,7 +245,7 @@
       "lead": "Gi AI-agenten din en ekte Yahoo-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
       "ctaPrimary": "Koble til Yahoo gratis",
       "ctaSecondary": "Les dokumentasjonen",
-      "meta0": "Ubegrensede innbokser og 2 500 handlinger",
+      "meta0": "1 innboks gratis, for alltid",
       "meta1": "App-passord, ingen OAuth-oppsett",
       "meta2": "E-post hentes direkte, lagres aldri"
     },
@@ -179,10 +260,26 @@
       "ctaPrimary": "Koble til Yahoo gratis"
     },
     "capabilities": [
-      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yahoo, ikke som et utkast du fullfører for hånd." },
-      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yahoo, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -190,14 +287,26 @@
       "sub": "Fra registrering til første AI-e-post på et par minutter."
     },
     "steps": [
-      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails, uten kort. Gratisplanen gir deg ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode." },
-      { "h": "Generer et Yahoo-app-passord", "p": "Slå på tostegsbekreftelse, og generer så et app-passord under Yahoo-kontosikkerhet." },
-      { "h": "Lim det inn i mcpemails", "p": "Legg til Yahoo-adressen din og app-passordet for å koble til innboksen trygt." },
-      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Generer et Yahoo-app-passord",
+        "p": "Slå på tostegsbekreftelse, og generer så et app-passord under Yahoo-kontosikkerhet."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Legg til Yahoo-adressen din og app-passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
     ],
     "ctaBand": {
       "title": "Gi AI-en din en Yahoo-innboks",
-      "sub": "Koble til Yahoo Mail på minutter. Ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode på gratisplanen, uten kort.",
+      "sub": "Koble til Yahoo Mail på minutter. Én innboks gratis for alltid, uten kort.",
       "ctaPrimary": "Koble til Yahoo gratis",
       "ctaSecondary": "Les dokumentasjonen"
     }
@@ -214,7 +323,7 @@
       "lead": "Gi AI-agenten din en ekte Zoho-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og et app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
       "ctaPrimary": "Koble til Zoho gratis",
       "ctaSecondary": "Les dokumentasjonen",
-      "meta0": "Ubegrensede innbokser og 2 500 handlinger",
+      "meta0": "1 innboks gratis, for alltid",
       "meta1": "App-passord, ingen OAuth-oppsett",
       "meta2": "E-post hentes direkte, lagres aldri"
     },
@@ -229,10 +338,26 @@
       "ctaPrimary": "Koble til Zoho gratis"
     },
     "capabilities": [
-      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Zoho, ikke som et utkast du fullfører for hånd." },
-      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Zoho, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -240,14 +365,26 @@
       "sub": "Fra registrering til første AI-e-post på et par minutter."
     },
     "steps": [
-      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails, uten kort. Gratisplanen gir deg ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode." },
-      { "h": "Aktiver IMAP og generer et app-passord", "p": "I Zoho Mail slår du på IMAP-tilgang (Innstillinger, E-postkontoer, IMAP-tilgang). Hvis du bruker tofaktorautentisering, genererer du et app-spesifikt passord i Zoho-kontoen din under Sikkerhet." },
-      { "h": "Lim det inn i mcpemails", "p": "Legg til Zoho-adressen din og passordet, og velg Zoho-regionen din hvis du blir spurt, for å koble til innboksen trygt." },
-      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Aktiver IMAP og generer et app-passord",
+        "p": "I Zoho Mail slår du på IMAP-tilgang (Innstillinger, E-postkontoer, IMAP-tilgang). Hvis du bruker tofaktorautentisering, genererer du et app-spesifikt passord i Zoho-kontoen din under Sikkerhet."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Legg til Zoho-adressen din og passordet, og velg Zoho-regionen din hvis du blir spurt, for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
     ],
     "ctaBand": {
       "title": "Gi AI-en din en Zoho-innboks",
-      "sub": "Koble til Zoho Mail på minutter. Ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode på gratisplanen, uten kort.",
+      "sub": "Koble til Zoho Mail på minutter. Én innboks gratis for alltid, uten kort.",
       "ctaPrimary": "Koble til Zoho gratis",
       "ctaSecondary": "Les dokumentasjonen"
     }
@@ -264,7 +401,7 @@
       "lead": "Gi AI-agenten din en ekte Yandex-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og et app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
       "ctaPrimary": "Koble til Yandex gratis",
       "ctaSecondary": "Les dokumentasjonen",
-      "meta0": "Ubegrensede innbokser og 2 500 handlinger",
+      "meta0": "1 innboks gratis, for alltid",
       "meta1": "App-passord, ingen OAuth-oppsett",
       "meta2": "E-post hentes direkte, lagres aldri"
     },
@@ -279,10 +416,26 @@
       "ctaPrimary": "Koble til Yandex gratis"
     },
     "capabilities": [
-      { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yandex, ikke som et utkast du fullfører for hånd." },
-      { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
-      { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yandex, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
     ],
     "how": {
       "eyebrow": "Oppsett",
@@ -290,14 +443,26 @@
       "sub": "Fra registrering til første AI-e-post på et par minutter."
     },
     "steps": [
-      { "h": "Opprett en gratis konto", "p": "Registrer deg på mcpemails, uten kort. Gratisplanen gir deg ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode." },
-      { "h": "Aktiver IMAP og opprett et app-passord", "p": "I Yandex Mail-innstillingene aktiverer du IMAP og slår på app-passord og OAuth-tokener. Opprett så et app-passord i Yandex ID under Sikkerhet." },
-      { "h": "Lim det inn i mcpemails", "p": "Legg til Yandex-adressen din og app-passordet for å koble til innboksen trygt." },
-      { "h": "Lim MCP-URL-en inn i AI-en", "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen." }
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Aktiver IMAP og opprett et app-passord",
+        "p": "I Yandex Mail-innstillingene aktiverer du IMAP og slår på app-passord og OAuth-tokener. Opprett så et app-passord i Yandex ID under Sikkerhet."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Legg til Yandex-adressen din og app-passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
     ],
     "ctaBand": {
       "title": "Gi AI-en din en Yandex-innboks",
-      "sub": "Koble til Yandex Mail på minutter. Ubegrenset med innbokser og 2 500 handlinger per faktureringsperiode på gratisplanen, uten kort.",
+      "sub": "Koble til Yandex Mail på minutter. Én innboks gratis for alltid, uten kort.",
       "ctaPrimary": "Koble til Yandex gratis",
       "ctaSecondary": "Les dokumentasjonen"
     }

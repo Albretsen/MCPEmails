@@ -28,7 +28,7 @@
       {
         "feature": "Precio",
         "self": "Gratis, tú lo ejecutas",
-        "hosted": "Gratis, $12 o $49"
+        "hosted": "Gratis, $29 o $79"
       },
       {
         "feature": "El servidor MCP y las 10 herramientas",
@@ -73,7 +73,7 @@
       {
         "feature": "Espacios de equipo, roles, SSO, registro de auditoría",
         "self": "No incluido",
-        "hosted": "Plan Scale"
+        "hosted": "Plan Team"
       },
       {
         "feature": "Soporte",

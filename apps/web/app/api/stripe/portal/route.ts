@@ -121,10 +121,24 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
   const returnUrl = `${appUrl}/dashboard`;
 
   // ── 5. Create the Stripe Billing Portal session ────────────────────────────
+  //
+  // We pin our OWN portal configuration rather than the account default. The
+  // same Stripe account bills another product, so the default configuration is
+  // shared and must not be reshaped around MCPEmails plans.
+  //
+  // Plan switching is deliberately NOT offered in the portal: the API silently
+  // drops `features.subscription_update.products` on this account, so the
+  // update screen cannot be given a price list to offer. Upgrades and interval
+  // changes go through our own checkout instead, where the copy is ours. The
+  // portal still covers invoices, payment method, tax ID, and cancellation
+  // (at period end, matching the published refund policy).
+  const portalConfiguration = process.env.STRIPE_PORTAL_CONFIGURATION_ID;
+
   try {
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
+      ...(portalConfiguration ? { configuration: portalConfiguration } : {}),
     });
 
     await recordPortalOpened(

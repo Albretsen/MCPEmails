@@ -83,5 +83,5 @@ A hosted MCP email server handles the provider sprawl and the credential securit
 
 An MCP email server turns your inbox into a set of safe, named actions an AI agent can call over a standard protocol. The agent gets verbs scoped to what you allowed. Your password stays on the server, encrypted. Your actual email never gets stored. For the full walkthrough of wiring this up end to end, start with the pillar guide on [giving your AI agent email access](/blog/how-to-give-your-ai-agent-email-access), or skip ahead and [connect an inbox in under two minutes](/blog/connect-email-to-ai-agent-under-2-minutes).
 
-Want to try it? [Start free](/signup) — no card required, with 2,500 billable actions per billing period — or read [the docs](/docs) for the tool reference and endpoint URL.`,
+Want to try it? [Start free](/signup) — no card required, one connected inbox — or read [the docs](/docs) for the tool reference and endpoint URL.`,
 };

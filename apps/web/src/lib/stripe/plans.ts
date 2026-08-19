@@ -1,28 +1,40 @@
 /**
  * Stripe plan definitions for MCPEmails.
  *
- * Pricing strategy: every tier includes unlimited inboxes and API keys. A
- * successful billable MCP operation consumes an action from the plan's billing
- * period allowance; failed calls and inbox_list do not consume actions.
+ * PRICING STRATEGY (rebuilt 2026-08-19).
  *
- * Three tiers: Free, Agent, Scale. (The "Scale" tier keeps the internal id
- * `pro` to avoid a workspaces.plan data migration; only its display name is
- * "Scale".)
+ * The value metric is CONNECTED INBOXES, not actions. Inboxes are the scarce,
+ * defensible asset: every workspace with two or more inboxes is active, and the
+ * businesses that run three to seven mailboxes (hotels, agencies, publishers)
+ * are the accounts worth pricing for. Action volume is abundant, invisible to
+ * the customer, and was never reachable as a paywall, so it has been demoted to
+ * a silent abuse ceiling that never appears in customer-facing copy.
  *
- * Price IDs are loaded from environment variables so they can differ between
- * test and production without code changes:
+ * Three tiers: Free (1 inbox), Pro (unlimited inboxes, one person), Team
+ * (unlimited inboxes, several people, separate workspaces per client).
  *
- *   STRIPE_PRICE_SOLO_MONTHLY=price_...
- *   STRIPE_PRICE_SOLO_YEARLY=price_...
- *   STRIPE_PRICE_PRO_MONTHLY=price_...   (Scale)
- *   STRIPE_PRICE_PRO_YEARLY=price_...    (Scale)
+ * The internal ids stay `free` / `solo` / `pro` so `workspaces.plan` needs no
+ * data migration. Only the display names moved:
  *
- * See Documents/pricing-strategy.md for the full strategy.
+ *   free -> "Free"
+ *   solo -> "Pro"    (was "Agent", before that "Solo")
+ *   pro  -> "Team"   (was "Scale", before that "Team")
+ *
+ * Price IDs come from environment variables so test and production can differ:
+ *
+ *   STRIPE_PRICE_SOLO_MONTHLY=price_...   (Pro monthly)
+ *   STRIPE_PRICE_SOLO_YEARLY=price_...    (Pro yearly)
+ *   STRIPE_PRICE_PRO_MONTHLY=price_...    (Team monthly)
+ *   STRIPE_PRICE_PRO_YEARLY=price_...     (Team yearly)
+ *
+ * GRANDFATHERING. Every user who existed before the repricing keeps unlimited
+ * inboxes at no cost, permanently. That protection is user-level and lives in
+ * `user_usage_entitlements.unlimited_inboxes`, so it follows an owner into any
+ * workspace they create later. It is resolved through `resolvePlanLimits`.
  */
 
 // ---------------------------------------------------------------------------
 // Plan identifiers: must match the `plan` column values in `workspaces`.
-// `pro` is the internal id for the "Scale" tier (display name only).
 // ---------------------------------------------------------------------------
 export type PlanId = 'free' | 'solo' | 'pro';
 
@@ -37,34 +49,38 @@ export type BillingInterval = 'month' | 'year';
 export type SupportTier = 'community' | 'email' | 'priority';
 
 // ---------------------------------------------------------------------------
-// Feature limits per plan
-//
-// Inboxes and API keys are unlimited. Monthly tool calls represent billable
-// actions in the current billing period; the live meter and edge enforcement
-// both read the versioned action_usage ledger.
+// Feature limits per plan.
 // ---------------------------------------------------------------------------
 export interface PlanLimits {
-  /** Maximum connected inboxes. Infinity = unlimited (all tiers). */
+  /** Maximum connected inboxes. THE value metric. Infinity = unlimited. */
   maxInboxes: number;
   /** Legacy daily burst cap. Infinity = unlimited (all tiers). */
   maxDailyBurstCalls: number;
-  /** Billable action cap per billing period. Infinity = a comped entitlement. */
+  /**
+   * SILENT ABUSE CEILING. Billable actions per billing period.
+   *
+   * This is deliberately NOT a pricing lever and must never appear on the
+   * pricing page, in plan feature lists, in the dashboard, or in the docs. It
+   * exists so a runaway or malicious agent cannot burn unbounded provider
+   * quota. Every ceiling is set far above any observed real usage: the highest
+   * month any external workspace has ever recorded is 3,105 actions.
+   *
+   * Infinity = a comped entitlement.
+   */
   maxMonthlyToolCalls: number;
   /** Maximum API keys. Infinity = unlimited (all tiers). */
   maxApiKeys: number;
-  /** Maximum workspace members. Infinity = unlimited (all tiers). */
+  /** Maximum workspace members. */
   maxMembers: number;
   /** Whether the customer portal (billing self-service) is available. */
   billingPortalEnabled: boolean;
   /** Whether the usage analytics page is available. */
   analyticsEnabled: boolean;
-
-  // ── Real differentiators ────────────────────────────────────────────────
   /** Per-minute fair-use rate-limit ceiling enforced in the MCP edge function. */
   maxRequestsPerMinute: number;
   /** How many days of usage history the analytics dashboard exposes. */
   analyticsRetentionDays: number;
-  /** Team roles / multiple workspaces. */
+  /** Team roles and multiple workspaces (one workspace per client or business). */
   teamRolesEnabled: boolean;
   /** SSO (SAML / OIDC). */
   ssoEnabled: boolean;
@@ -79,7 +95,7 @@ export interface PlanLimits {
 // ---------------------------------------------------------------------------
 export interface Plan {
   id: PlanId;
-  /** Display name (e.g. "Scale" for the `pro` id). */
+  /** Display name shown to customers. */
   name: string;
   description: string;
   limits: PlanLimits;
@@ -91,6 +107,15 @@ export interface Plan {
   stripePriceIdMonthly: string | null;
   /** Stripe price ID for yearly billing. null = not applicable. */
   stripePriceIdYearly: string | null;
+  /**
+   * Retired live Stripe price IDs that still map to this plan.
+   *
+   * Subscriptions created before the 2026-08-19 repricing keep billing on their
+   * original price. The webhook must still resolve those prices to a plan, or a
+   * renewal would look like an unknown price and silently drop the customer's
+   * entitlement. Never remove an id from this list while a subscription is on it.
+   */
+  legacyStripePriceIds: string[];
   /** Features to display in the pricing table (marketing copy). */
   features: string[];
   /** Whether this is the recommended plan (highlighted in pricing UI). */
@@ -104,14 +129,12 @@ export const PLANS: Record<PlanId, Plan> = {
   free: {
     id: 'free',
     name: 'Free',
-    description: 'Explore MCPEmails with 2,500 actions each billing period.',
+    description: 'Connect one inbox and give your agent a real mailbox.',
     limits: {
-      maxInboxes: Infinity,
+      maxInboxes: 1,
       maxDailyBurstCalls: Infinity,
-      maxMonthlyToolCalls: 2_500,
+      maxMonthlyToolCalls: 5_000,
       maxApiKeys: Infinity,
-      // Team collaboration is a paid capability: Free is single-user (owner
-      // only).
       maxMembers: 1,
       billingPortalEnabled: false,
       analyticsEnabled: true,
@@ -126,28 +149,29 @@ export const PLANS: Record<PlanId, Plan> = {
     yearlyPriceCents: 0,
     stripePriceIdMonthly: null,
     stripePriceIdYearly: null,
+    legacyStripePriceIds: [],
     features: [
-      'Unlimited connected inboxes',
-      '2,500 actions per billing period',
+      '1 connected inbox',
+      'Read, search, organise, draft and send',
+      'Gmail, iCloud, Fastmail and any IMAP',
       'Unlimited API keys',
-      'Single user (owner only)',
-      'Gmail, Fastmail & IMAP',
-      'Basic usage analytics (7-day)',
+      'Single user',
       'Community support',
     ],
     highlighted: false,
   },
 
+  // "Pro" tier; internal id stays `solo`.
   solo: {
     id: 'solo',
-    name: 'Agent',
-    description: 'For power users running agents around the clock.',
+    name: 'Pro',
+    description: 'Every mailbox you own, in one agent. Work, personal, and each side business.',
     limits: {
       maxInboxes: Infinity,
       maxDailyBurstCalls: Infinity,
-      maxMonthlyToolCalls: 50_000,
+      maxMonthlyToolCalls: 100_000,
       maxApiKeys: Infinity,
-      maxMembers: Infinity,
+      maxMembers: 1,
       billingPortalEnabled: true,
       analyticsEnabled: true,
       maxRequestsPerMinute: 300,
@@ -157,29 +181,33 @@ export const PLANS: Record<PlanId, Plan> = {
       auditLogEnabled: false,
       supportTier: 'email',
     },
-    monthlyPriceCents: 1200,  // $12 / month
-    yearlyPriceCents: 12000,  // $120 / year (~17% off)
+    monthlyPriceCents: 2900,
+    yearlyPriceCents: 27600,
     stripePriceIdMonthly: process.env.STRIPE_PRICE_SOLO_MONTHLY ?? null,
     stripePriceIdYearly: process.env.STRIPE_PRICE_SOLO_YEARLY ?? null,
+    legacyStripePriceIds: [
+      'price_1TcQBDARrgumc6cqy1Z9AAEw', // Agent monthly, $12
+      'price_1TcQBEARrgumc6cq6MGFktzy', // Agent yearly, $120
+    ],
     features: [
-      '50,000 actions per billing period',
-      '5× higher burst rate limit',
+      'Unlimited connected inboxes',
+      'Scheduled sends and approvals',
+      '5x higher burst rate limit',
       'Full usage analytics (90-day history)',
-      'Gmail, Fastmail & IMAP',
       'Email support',
     ],
-    highlighted: false,
+    highlighted: true,
   },
 
-  // "Scale" tier; internal id stays `pro`.
+  // "Team" tier; internal id stays `pro`.
   pro: {
     id: 'pro',
-    name: 'Scale',
-    description: 'For businesses and teams. Practically limitless.',
+    name: 'Team',
+    description: 'Shared inboxes for a team, with a separate workspace per client or business.',
     limits: {
       maxInboxes: Infinity,
       maxDailyBurstCalls: Infinity,
-      maxMonthlyToolCalls: 300_000,
+      maxMonthlyToolCalls: 500_000,
       maxApiKeys: Infinity,
       maxMembers: Infinity,
       billingPortalEnabled: true,
@@ -191,26 +219,32 @@ export const PLANS: Record<PlanId, Plan> = {
       auditLogEnabled: true,
       supportTier: 'priority',
     },
-    monthlyPriceCents: 4900,   // $49 / month
-    yearlyPriceCents: 49000,   // $490 / year (~17% off)
+    monthlyPriceCents: 7900,
+    yearlyPriceCents: 75600,
     stripePriceIdMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY ?? null,
     stripePriceIdYearly: process.env.STRIPE_PRICE_PRO_YEARLY ?? null,
+    legacyStripePriceIds: [
+      'price_1TcQBFARrgumc6cqmaRTXJ5Q', // Scale monthly, $49
+      'price_1TcQBGARrgumc6cqmy0LeLSL', // Scale yearly, $490
+      'price_1Tb0HfARrgumc6cqMeQSsMNr', // Team monthly, $19 (archived)
+      'price_1Tb0HfARrgumc6cqQR33xYAN', // Team yearly, $152 (archived)
+    ],
     features: [
-      '300,000 actions per billing period',
-      'Highest burst rate limit',
-      'Team roles & multiple workspaces',
-      'SSO (SAML / OIDC) + audit log',
+      'Everything in Pro',
+      'Unlimited members with roles',
+      'A separate workspace per client or business',
+      'SSO (SAML / OIDC) and audit log',
       'Full usage analytics (1-year history)',
       'Priority support',
     ],
-    highlighted: true,
+    highlighted: false,
   },
 } as const;
 
 // ---------------------------------------------------------------------------
 // Helper: look up limits for a plan name stored in DB.
-// Falls back to 'free' limits if an unrecognised value is encountered
-// (this also covers any legacy 'enterprise' rows).
+// Falls back to 'free' limits for an unrecognised value (covers legacy
+// 'enterprise' rows).
 // ---------------------------------------------------------------------------
 export function getPlanLimits(planId: string): PlanLimits {
   const plan = PLANS[planId as PlanId];
@@ -219,12 +253,9 @@ export function getPlanLimits(planId: string): PlanLimits {
 
 // ---------------------------------------------------------------------------
 // Helper: user-facing display name for a plan slug stored in `workspaces.plan`.
-//
-// The DB stores internal ids ('free' | 'solo' | 'pro'); the public pricing page
-// only ever shows "Free", "Agent", and "Scale" (the `pro` id's display name). Use
-// this everywhere a plan is shown to a user so the dashboard never leaks the
-// internal "pro" id (which read as "Pro plan" and didn't match the pricing
-// page). Unknown/legacy slugs (e.g. 'enterprise') are Title-cased as a fallback.
+// The DB stores internal ids ('free' | 'solo' | 'pro'); customers only ever see
+// "Free", "Pro", and "Team". Use this everywhere a plan is shown to a user so
+// the dashboard never leaks an internal id.
 // ---------------------------------------------------------------------------
 export function planDisplayName(planId: string | null | undefined): string {
   if (!planId) return PLANS.free.name;
@@ -236,20 +267,29 @@ export function planDisplayName(planId: string | null | undefined): string {
 // ---------------------------------------------------------------------------
 // Helper: resolve the EFFECTIVE limits for a specific workspace.
 //
-// A permanent comped Scale entitlement resolves to Scale features and an
-// unlimited action allowance. The historical workspaces.grandfathered flag is
-// deliberately not consulted: protected access is user-level and follows an
-// owner across every workspace.
+// Two protections stack on top of the base plan, both user-level so they follow
+// an owner into every workspace they own:
+//
+//   compedScale       a permanent comped grant: Team features, no action ceiling.
+//   unlimitedInboxes  the 2026-08-19 repricing grandfather: every user who
+//                     existed before the change keeps unlimited inboxes for
+//                     free, permanently, on whatever plan they are on.
+//
+// The historical `workspaces.grandfathered` flag is deliberately not consulted:
+// it marks only the 7 accounts from the August 3rd migration, not this cohort.
 // ---------------------------------------------------------------------------
 export function resolvePlanLimits(
   planId: string,
-  opts?: { compedScale?: boolean },
+  opts?: { compedScale?: boolean; unlimitedInboxes?: boolean },
 ): PlanLimits {
   const base = getPlanLimits(opts?.compedScale ? 'pro' : planId);
-  if (!opts?.compedScale) return base;
+  const needsComp = Boolean(opts?.compedScale);
+  const needsInboxes = Boolean(opts?.unlimitedInboxes);
+  if (!needsComp && !needsInboxes) return base;
   return {
     ...base,
-    maxMonthlyToolCalls: Infinity,
+    ...(needsComp ? { maxMonthlyToolCalls: Infinity } : {}),
+    ...(needsInboxes ? { maxInboxes: Infinity } : {}),
   };
 }
 
@@ -257,10 +297,12 @@ export function resolvePlanLimits(
 // Helper: resolve a Stripe price ID to its plan and interval.
 // Used in the webhook handler to map incoming subscription events to plans.
 //
+// Current prices are matched first, then retired prices that pre-date the
+// 2026-08-19 repricing. A legacy yearly id is detected by its position in the
+// list, so each plan lists monthly before yearly.
+//
 // Returns null for an unknown, archived, or unconfigured price (rather than
-// throwing) so the webhook can log-and-continue without crashing. The empty /
-// non-string guard prevents a falsy `priceId` from spuriously matching a plan
-// whose own price-id env var is unset (and therefore also null).
+// throwing) so the webhook can log-and-continue without crashing.
 // ---------------------------------------------------------------------------
 export function getPlanByStripePriceId(
   priceId: string | null | undefined,
@@ -274,6 +316,13 @@ export function getPlanByStripePriceId(
     }
     if (plan.stripePriceIdYearly && plan.stripePriceIdYearly === priceId) {
       return { plan, interval: 'year' };
+    }
+  }
+  for (const plan of Object.values(PLANS)) {
+    const idx = plan.legacyStripePriceIds.indexOf(priceId);
+    if (idx !== -1) {
+      // Legacy ids are listed monthly-then-yearly in pairs.
+      return { plan, interval: idx % 2 === 0 ? 'month' : 'year' };
     }
   }
   return null;

@@ -94,5 +94,5 @@ Si todavía estás decidiendo si conectar el correo a un agente, empieza por el 
 
 ## Conclusión
 
-iCloud, Fastmail e IMAP no son ciudadanos de segunda aquí. Genera una contraseña de aplicación, pégala en **Inboxes → Connect Inbox**, apunta Claude al [endpoint](/docs) y tendrás un agente con acceso completo de lectura y envío, más el borrado permanente que los proveedores con OAuth no pueden ofrecer. Es [gratis para empezar](/signup), sin tarjeta y con buzones ilimitados.`,
+iCloud, Fastmail e IMAP no son ciudadanos de segunda aquí. Genera una contraseña de aplicación, pégala en **Inboxes → Connect Inbox**, apunta Claude al [endpoint](/docs) y tendrás un agente con acceso completo de lectura y envío, más el borrado permanente que los proveedores con OAuth no pueden ofrecer. Es [gratis para empezar](/signup), sin tarjeta y con un buzón para siempre.`,
 };

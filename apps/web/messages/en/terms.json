@@ -75,14 +75,15 @@
     "h53": "5.3 Upgrades and downgrades",
     "p53": "You may upgrade your plan at any time; the new rate takes effect immediately and is prorated for the remainder of the current billing period. Downgrading takes effect at the start of the next billing period. Features that exceed the new plan's limits will be disabled at the downgrade date.",
     "h54": "5.4 Refunds",
-    "p54": "Payments for monthly plans are non-refundable except where required by applicable consumer protection law. For annual plans, you may request a prorated refund for unused complete months within 14 days of your renewal date by contacting us at <email></email>.",
+    "p54a": "<b>Cancel any time, keep what you have paid for.</b> Cancelling stops the next renewal, and your paid plan stays active until the end of the period you have already paid for. We do not refund partial periods and we do not pro-rate an unused part of a monthly or annual term.",
+    "p54b": "<b>14-day refund on a first charge.</b> If the first charge on a new subscription is not what you expected, contact us at <email></email> within 14 days of that charge and we will refund it in full. That single 14-day window is also how we honour the statutory right of withdrawal available to consumers in the EU and the UK, so you never have to work out which one applies to you. Nothing in this section limits any non-waivable right you have under applicable consumer protection law.",
     "h55": "5.5 Late payment and suspension",
     "p55": "If a payment fails, we will retry the charge and notify you by email. If payment remains outstanding after 7 days, we may suspend access to paid features until the balance is settled. If payment remains outstanding after 30 days, we may terminate the account in accordance with Section 8.",
     "h56": "5.6 Price changes",
     "p56": "We may change pricing for paid plans with at least 30 days' written notice to your registered email address. Price changes will not apply until your next renewal date.",
     "h57": "5.7 Fair use and service limits",
     "p57a": "To protect platform stability and ensure fair access for all customers, the Service applies a per-minute request rate limit to every plan (a “fair-use limit”), as described on our <pricing>Pricing page</pricing>. We may also apply reasonable technical measures to prevent abuse, automated scraping, or usage that materially degrades the Service for others.",
-    "p57b": "Connected inboxes and API keys are unlimited. Successful billable MCP calls consume the action allowance published for your plan and remain subject to this fair-use limit and to Section 4 (Acceptable Use). We may change future action allowances and fair-use thresholds on a going-forward basis; any material change will be communicated before it takes effect for your workspace."
+    "p57b": "The number of connected inboxes included with each plan is published on our Pricing page. Every workspace is additionally subject to a fair-use ceiling on automated activity and to Section 4 (Acceptable Use). That ceiling exists to stop a runaway or abusive agent, is set far above ordinary use, and is not a purchasable allowance. We may change fair-use thresholds on a going-forward basis; any material change will be communicated before it takes effect for your workspace."
   },
   "intellectualProperty": {
     "title": "6. Intellectual Property",

@@ -87,7 +87,7 @@ Hvis du vil at en melding skal slutte å dukke opp som ulest når du har svart, 
 
 ## Ratebegrensninger, og hvorfor du aldri prøver et send-kall på nytt i blinde
 
-Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, uavhengig av plan. Arbeidsområdet ditt har også et burst-tak per nivå — **60 req/min på Free, 300 på Agent, 1 000 på Scale** (se [priser](/pricing)). En høflig poll-og-svar-løkke lever godt innenfor det, men en som oppfører seg dårlig kan utløse det.
+Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, uavhengig av plan. Arbeidsområdet ditt har også et burst-tak per nivå — **60 req/min på Gratis, 300 på Pro, 1 000 på Team** (se [priser](/pricing)). En høflig poll-og-svar-løkke lever godt innenfor det, men en som oppfører seg dårlig kan utløse det.
 
 Når du treffer en hastighetsgrense, returnerer serveren en feil du kan prøve på nytt (kode \`-32003\`) med \`data.retry_after\` i sekunder. Respekter den. Sov så lenge, og fortsett deretter.
 
@@ -150,5 +150,5 @@ Hvis jeg skulle satt dette i drift for en ekte innboks i morgen, ville jeg start
 
 Det er et system du faktisk kan stole på, og det lar seg generalisere. Den samme løkken med en annen prompt blir en triagebot, en lead-ruter eller en varsler. For en bredere meny over hva en agent kan gjøre når den er koblet til, se [7 ting en AI-agent kan gjøre med innbokstilgang](/blog/7-things-ai-agent-can-do-with-inbox-access). Hvis du fortsatt vurderer om du i det hele tatt skal gi en agent sendetilgang, er [er det trygt å gi en AI-agent e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) verdt tiden din før du går i drift.
 
-Klar til å bygge det? Opprett en avgrenset API-nøkkel og les verktøyreferansen i [dokumentasjonen](/docs), eller [start gratis](/signup) — Free inkluderer 2 500 fakturerbare handlinger per faktureringsperiode; legg til sikringene før du automatiserer.`,
+Klar til å bygge det? Opprett en avgrenset API-nøkkel og les verktøyreferansen i [dokumentasjonen](/docs), eller [start gratis](/signup) — Gratis kobler til én innboks, og Pro kobler til alle du eier; legg til sikringene før du automatiserer.`,
 };

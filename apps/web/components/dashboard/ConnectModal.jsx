@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
+import { upgradeDestination } from '@/lib/billing/upgrade-intent.mjs';
 import {
   IMAP_PRESETS,
   GENERIC_IMAP_DEFAULTS,
@@ -100,16 +101,32 @@ const OAUTH_ROUTES = {
 /**
  * ConnectModal: inbox connection modal.
  *
- * When `atInboxLimit` is true the modal shows an upgrade prompt instead of
- * the provider selection step, because the workspace has reached its plan's
- * inbox cap and connecting a new inbox is not possible without upgrading.
- * The free plan has no inbox cap, so this branch only applies to plans that
- * define one.
+ * When `atInboxLimit` is true the modal shows the upgrade offer instead of the
+ * provider picker. This is the product's single moment of value: the person is
+ * standing in front of the modal trying to add a second mailbox, which is
+ * exactly what Pro sells. So the panel names what they were doing, states the
+ * price, and goes straight to Stripe Checkout rather than dumping them on a
+ * pricing page to start over.
  *
- * @param {boolean} atInboxLimit  - True when the workspace is at its inbox cap.
- * @param {string}  plan          - The workspace's current plan slug (e.g. "free").
+ * The panel never appears for a workspace whose cap is unlimited, which covers
+ * paid plans, comped accounts, and the grandfathered pre-repricing cohort:
+ * App.jsx computes `atInboxLimit` as false whenever maxInboxes is null.
+ *
+ * @param {boolean} atInboxLimit - True when the workspace is at its inbox cap.
+ * @param {string}  planName     - Customer-facing plan name ("Free"/"Pro"/"Team").
+ *                                 Never the internal slug.
+ * @param {number}  inboxCount   - Inboxes connected right now.
+ * @param {number|null} maxInboxes - The plan's cap, or null for unlimited.
  */
-export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 'free', reconnect = null }) {
+export function ConnectModal({
+  onClose,
+  onConnect,
+  atInboxLimit = false,
+  planName = 'Free',
+  inboxCount = null,
+  maxInboxes = null,
+  reconnect = null,
+}) {
   const tr = useTranslations('dashboardChrome');
   // Reconnect mode: re-open the form this inbox was created with, identity
   // pre-filled and locked, so only the password is re-entered. Map the stored
@@ -383,7 +400,9 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
               </h2>
               <div className="sub" style={{ marginTop: 4 }}>
                 {atInboxLimit
-                  ? tr('connect.subLimitReached', { plan: plan.charAt(0).toUpperCase() + plan.slice(1) })
+                  ? (typeof inboxCount === 'number' && typeof maxInboxes === 'number'
+                      ? tr('connect.subLimitReached', { plan: planName, count: inboxCount, max: maxInboxes })
+                      : tr('connect.subLimitReachedNoCount', { plan: planName }))
                   : step === 1
                     ? tr('connect.subChooseProvider')
                     : isGeneric
@@ -457,8 +476,10 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 </div>
               </div>
 
-              {/* Feature highlights */}
+              {/* Feature highlights. Unlimited inboxes leads: it is the thing
+                  they were just blocked on, and the rest is supporting detail. */}
               {[
+                'connect.featureInboxes',
                 'connect.featureRateLimit',
                 'connect.featureHistory',
                 'connect.featureTeam',
@@ -926,12 +947,32 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
 
         {/* Footer */}
         <div className="modal-foot">
-          {/* Plan limit reached: show upgrade CTA */}
+          {/* Plan limit reached: go straight to Stripe Checkout for Pro monthly.
+              /dashboard/settings?upgrade=solo&interval=month is consumed by
+              BillingSection, which starts checkout on mount, so this is one
+              click from blocked to card form. The pricing page stays available
+              as the secondary link for anyone who wants to compare first. */}
           {atInboxLimit && (
             <>
               <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
               <a
                 href="/pricing"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  height: 34,
+                  padding: '0 10px',
+                  color: 'var(--fg-2)',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 13,
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {tr('connect.comparePlans')}
+              </a>
+              <a
+                href={upgradeDestination('solo', false)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',

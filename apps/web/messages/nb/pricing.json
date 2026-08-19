@@ -1,18 +1,18 @@
 {
   "meta": {
-    "title": "Priser for AI-e-post-MCP-server — Gratis, Agent og Scale",
-    "description": "Sammenlign MCPEmails-planer etter inkluderte vellykkede handlinger. Innbokser og API-nøkler er ubegrenset; handlinger nullstilles ved starten av hver faktureringsperiode."
+    "title": "Priser for AI-e-post-MCP-server, Gratis, Pro og Team",
+    "description": "Gratis kobler til én innboks. Pro kobler til alle innboksene dine for $29 i måneden. Team legger til medlemmer, roller, SSO og et eget arbeidsområde per kunde."
   },
   "hero": {
     "eyebrow": "Priser",
-    "titleLine1": "Tydelige handlingskvoter.",
-    "titleLine2": "Ingen uventede ekstrakostnader.",
-    "lead": "Hvert arbeidsområde inkluderer ubegrenset antall innbokser og API-nøkler. Vellykkede fakturerbare MCP-kall bruker handlinger; mislykkede kall og inbox_list er gratis. Handlinger nullstilles ved starten av faktureringsperioden, og kall stopper ved grensen."
+    "titleLine1": "Én innboks, gratis.",
+    "titleLine2": "Alle innboksene, $29.",
+    "lead": "Koble til en postkasse én gang, så kan agenten lese, søke, organisere, skrive, planlegge og sende. Gratis dekker én innboks. Pro dekker alle postkassene du eier. Team legger til folk, roller og et eget arbeidsområde per kunde."
   },
   "billing": {
     "monthly": "Månedlig",
     "annual": "Årlig",
-    "save": "Spar ~17 %"
+    "save": "Spar ~20 %"
   },
   "card": {
     "perForever": "/for alltid",
@@ -22,39 +22,38 @@
   "plans": {
     "free": {
       "name": "Gratis",
-      "desc": "Utforsk MCPEmails med 2 500 handlinger per faktureringsperiode.",
+      "desc": "Koble til én innboks og gi agenten din en ekte postkasse.",
       "cta": "Start gratis",
       "features": [
-        "Ubegrenset antall tilkoblede innbokser",
-        "2 500 handlinger per faktureringsperiode",
-        "Ubegrenset antall API-nøkler",
+        "1 tilkoblet innboks",
+        "Les, søk, organiser, skriv og send",
         "Gmail, iCloud, Fastmail og enhver IMAP",
-        "60 forespørsler / minutt",
+        "Ubegrenset antall API-nøkler",
+        "Én bruker",
         "Fellesskapsstøtte"
       ]
     },
     "solo": {
-      "name": "Agent",
-      "desc": "For erfarne brukere som kjører agenter døgnet rundt.",
-      "cta": "Få Agent",
+      "name": "Pro",
+      "desc": "Alle postkassene du eier, i én agent. Jobb, privat og hvert sideprosjekt.",
+      "cta": "Få Pro",
       "features": [
-        "50 000 handlinger per faktureringsperiode",
-        "300 forespørsler / minutt (5× burst)",
+        "Ubegrenset antall tilkoblede innbokser",
+        "Planlagte sendinger og godkjenninger",
+        "5x høyere burst-grense",
         "Full bruksanalyse (90-dagers historikk)",
-        "Gmail, iCloud, Fastmail og enhver IMAP",
         "E-poststøtte"
       ]
     },
     "pro": {
-      "name": "Scale",
-      "badge": "Mest populær",
-      "desc": "For team og byråer som administrerer flere klientinnbokser i ett delt arbeidsområde, med roller, SSO og revisjonslogg.",
-      "cta": "Få Scale",
+      "name": "Team",
+      "desc": "Delte innbokser for et team, med et eget arbeidsområde per kunde eller virksomhet.",
+      "cta": "Få Team",
       "features": [
-        "300 000 handlinger per faktureringsperiode",
-        "1 000 forespørsler / minutt",
-        "Teamroller og flere arbeidsområder",
-        "SSO (SAML / OIDC) + revisjonslogg",
+        "Alt i Pro",
+        "Ubegrenset antall medlemmer med roller",
+        "Et eget arbeidsområde per kunde eller virksomhet",
+        "SSO (SAML / OIDC) og revisjonslogg",
         "Full bruksanalyse (1-års historikk)",
         "Prioritert støtte"
       ]
@@ -69,14 +68,13 @@
     "title": "Alt side om side.",
     "featureCol": "Funksjon",
     "free": "Gratis",
-    "solo": "Agent",
-    "team": "Scale",
+    "solo": "Pro",
+    "team": "Team",
     "sections": {
       "usage": {
-        "label": "Bruk",
+        "label": "Hva du får",
         "rows": {
           "inboxes": "Tilkoblede innbokser",
-          "calls": "MCP-verktøykall",
           "keys": "API-nøkler",
           "members": "Teammedlemmer",
           "burst": "Burst-grense"
@@ -123,9 +121,7 @@
     },
     "values": {
       "unlimited": "Ubegrenset",
-      "actionsFree": "2 500 / faktureringsperiode",
-      "actionsAgent": "50 000 / faktureringsperiode",
-      "actionsScale": "300 000 / faktureringsperiode",
+      "oneInbox": "1 innboks",
       "ownerOnly": "Bare deg",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
@@ -140,28 +136,28 @@
     "title": "Vanlige spørsmål.",
     "items": [
       {
-        "q": "Hva regnes som en handling?",
-        "a": "Ett vellykket fakturerbart MCP-verktøykall bruker én handling. Mislykkede kall, leverandøravbrudd, autentiseringsfeil, hastighetsbegrensninger, dashbordhandlinger, OAuth, API-nøkkeladministrasjon og inbox_list er gratis. Alle planer inkluderer ubegrenset antall innbokser og API-nøkler."
+        "q": "Hva får jeg på gratisplanen?",
+        "a": "Én tilkoblet innboks, for alltid, uten kort. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende. Når du vil ha postkasse nummer to på samme agent, er det Pro."
       },
       {
         "q": "Hva regnes som et MCP-kall?",
-        "a": "En vellykket fakturerbar JSON-RPC-verktøyinvokasjon mot /mcp-endepunktet bruker én handling. inbox_list, mislykkede kall, leverandøravbrudd, autentiseringsfeil og hastighetsbegrensede kall er gratis. Vi er en standard MCP-server, så det samme endepunktet fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og enhver MCP-kompatibel klient."
+        "a": "En JSON-RPC-verktøyinvokasjon mot /mcp-endepunktet ditt. Vi er en standard MCP-server, så det samme endepunktet fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og enhver MCP-kompatibel klient. Planene prises etter antall tilkoblede innbokser, ikke etter hvor mange kall agenten din gjør."
       },
       {
         "q": "Lagres e-postinnholdet mitt noe sted?",
-        "a": "E-posten agenten din leser lagres aldri: brødtekst, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten, uten at noe beholdes mellom kall. Vi lagrer ditt krypterte OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler. Det eneste unntaket er en melding du ber oss om å planlegge til senere – den lagrer vi frem til den er sendt, og beholder deretter en oppføring for historikken din."
+        "a": "E-posten agenten din leser lagres aldri: brødtekst, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten, uten at noe beholdes mellom kall. Vi lagrer ditt krypterte OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler. Det eneste unntaket er en melding du ber oss om å planlegge til senere. Den lagrer vi frem til den er sendt, og beholder deretter en oppføring for historikken din."
       },
       {
-        "q": "Hva er forskjellen mellom Agent og Scale?",
-        "a": "Gratis inkluderer 2 500 handlinger per faktureringsperiode. Agent inkluderer 50 000 handlinger, en grense på 300 forespørsler per minutt, 90-dagers historikk og e-poststøtte. Scale inkluderer 300 000 handlinger, en grense på 1 000 forespørsler per minutt, roller, revisjonslogg, 1-års historikk og prioritert støtte. Dashbordet viser bruk og nullstillingsdato; kall stopper ved grensen uten automatisk ekstrabelastning."
+        "q": "Hva er forskjellen mellom Pro og Team?",
+        "a": "Pro er for én person med ubegrenset antall innbokser: alle postkassene du eier i én agent, et tak på 300 forespørsler per minutt, 90-dagers brukshistorikk og e-poststøtte. Team er for flere enn én person: ubegrenset antall medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO (SAML / OIDC), revisjonslogg, 1-års historikk og prioritert støtte."
       },
       {
         "q": "Kan jeg endre eller si opp planen min?",
-        "a": "Ja. Oppgrader, nedgrader eller si opp når som helst fra faktureringsdelen av dashbordet ditt. Hvis du sier opp en betalt plan, beholder du tilgangen ut faktureringsperioden, og går deretter automatisk over til Gratis med kvoten på 2 500 handlinger."
+        "a": "Ja. Oppgrader, nedgrader eller si opp når som helst fra faktureringsdelen av dashbordet ditt. Oppsigelse stopper neste fornyelse, og du beholder alt du har betalt for ut inneværende periode, og går deretter over til Gratis med én tilkoblet innboks. Vi refunderer ikke delvise perioder, men se refusjonsspørsmålet under om den første belastningen på et nytt abonnement."
       },
       {
         "q": "Hvordan fungerer årsrabatten?",
-        "a": "Å betale årlig sparer omtrent 17 % sammenlignet med månedlig fakturering: Agent koster $120/år og Scale koster $490/år. Du belastes én gang for 12 måneder på forhånd. Hvis du sier opp midt i året, refunderer vi de ubrukte hele månedene."
+        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Pro koster $276 i året ($23 i måneden) og Team koster $756 i året ($63 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
@@ -169,7 +165,7 @@
       },
       {
         "q": "Finnes det en refusjonsordning?",
-        "a": "Hvis du er misfornøyd innen 30 dager etter din første betalte faktura, kontakt oss for full refusjon, uten spørsmål."
+        "a": "Ja. Hvis den første belastningen på et nytt abonnement ikke er som du forventet, kontakt oss innen 14 dager, så refunderer vi den i sin helhet. Etter det kan du si opp når som helst og beholde tilgangen ut perioden du allerede har betalt for, men vi refunderer ikke delvise perioder. Er du forbruker i EU eller Storbritannia, er de samme 14 dagene din lovfestede angrerett."
       },
       {
         "q": "Kan jeg selvhoste den i stedet for å betale?",
@@ -179,7 +175,7 @@
   },
   "ctaBand": {
     "title": "Klar til å gi agenten din en innboks?",
-    "sub": "Start på Gratis: ingen kredittkort og 2 500 handlinger per faktureringsperiode. Oppgrader når du trenger flere handlinger, høyere burst-grenser eller teamfunksjoner.",
+    "sub": "Start på Gratis: én innboks, uten kort. Legg til alle de andre postkassene dine med Pro, for $29 i måneden.",
     "ctaPrimary": "Kom i gang gratis",
     "ctaSecondary": "Les dokumentasjonen"
   }

@@ -21,7 +21,7 @@
     "lead": "Koble til Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks én gang. Lim inn én MCP-endepunkt-URL i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make eller en hvilken som helst MCP-klient. OAuth-klienter kobler til med ett klikk, uten oppsett av API-nøkkel. Agenten din leser, søker og sender e-post i sanntid, og e-posten den leser lagres aldri.",
     "ctaPrimary": "Koble til innboksen din",
     "ctaSecondary": "Les dokumentasjonen",
-    "metaUnlimited": "2 500 handlinger per faktureringsperiode",
+    "metaFreeInbox": "1 innboks gratis, for alltid",
     "metaNoCard": "Ingen kort kreves",
     "metaNeverStored": "E-post hentes i sanntid",
     "pipe": {
@@ -123,48 +123,48 @@
   },
   "pricing": {
     "eyebrow": "Priser",
-    "title": "Handlinger som skalerer med deg.",
-    "sub": "Hvert arbeidsområde inkluderer ubegrenset antall innbokser og API-nøkler. Vellykkede fakturerbare MCP-kall bruker handlinger; mislykkede kall og inbox_list er gratis.",
+    "title": "Prisen følger innboksene, ikke bruken.",
+    "sub": "Gratis kobler til én innboks. Pro kobler til alle postkassene du eier. Team legger til folk, roller og et eget arbeidsområde per kunde.",
     "perForever": "/for alltid",
     "perMonth": "/måned",
     "tiers": {
       "free": {
         "name": "Gratis",
-        "desc": "Utforsk MCPEmails med 2 500 handlinger per faktureringsperiode.",
+        "desc": "Koble til én innboks og gi agenten din en ekte postkasse.",
         "features": [
-          "Ubegrenset antall tilkoblede innbokser",
-          "2 500 handlinger per faktureringsperiode",
-          "Ubegrenset antall API-nøkler",
+          "1 tilkoblet innboks",
+          "Les, søk, organiser, skriv og send",
           "Gmail, iCloud, Fastmail og alle IMAP",
-          "60 forespørsler / minutt",
+          "Ubegrenset antall API-nøkler",
+          "Én bruker",
           "Fellesskapsstøtte"
         ],
         "cta": "Start gratis"
       },
       "solo": {
-        "name": "Agent",
-        "desc": "For storbrukere som kjører agenter døgnet rundt.",
+        "name": "Pro",
+        "desc": "Alle postkassene du eier, i én agent. Jobb, privat og hvert sideprosjekt.",
         "features": [
-          "50 000 handlinger per faktureringsperiode",
-          "300 forespørsler / minutt (5× burst)",
+          "Ubegrenset antall tilkoblede innbokser",
+          "Planlagte sendinger og godkjenninger",
+          "5x høyere burst-grense",
           "Full bruksanalyse (90 dagers historikk)",
-          "Gmail, iCloud, Fastmail og alle IMAP",
           "E-poststøtte"
         ],
-        "cta": "Velg Agent"
+        "cta": "Velg Pro"
       },
       "team": {
-        "name": "Scale",
-        "desc": "For team og byråer som administrerer flere klientinnbokser i ett delt arbeidsområde, med roller, SSO og revisjonslogg.",
+        "name": "Team",
+        "desc": "Delte innbokser for et team, med et eget arbeidsområde per kunde eller virksomhet.",
         "features": [
-          "300 000 handlinger per faktureringsperiode",
-          "1 000 forespørsler / minutt",
-          "Teamroller og flere arbeidsområder",
-          "SSO (SAML / OIDC) + revisjonslogg",
+          "Alt i Pro",
+          "Ubegrenset antall medlemmer med roller",
+          "Et eget arbeidsområde per kunde eller virksomhet",
+          "SSO (SAML / OIDC) og revisjonslogg",
           "Full bruksanalyse (1 års historikk)",
           "Prioritert støtte"
         ],
-        "cta": "Velg Scale"
+        "cta": "Velg Team"
       }
     },
     "footnote": "Alle planer: e-posten agenten din leser hentes i sanntid og lagres aldri. OAuth-tokens krypteres ved lagring. Trenger du noe tilpasset? <contact>Kontakt oss</contact>. <comparison>Se full funksjonssammenligning →</comparison>"
@@ -192,7 +192,7 @@
       },
       {
         "q": "Er det virkelig gratis?",
-        "a": "Ja. Gratisplanen gir deg ubegrenset antall tilkoblede innbokser og API-nøkler, samt 2 500 fakturerbare handlinger per faktureringsperiode — ingen daglige tak og ingen kort kreves. Mislykkede kall og inbox_list er gratis. Betalte planer legger til større handlingskvoter, høyere burst-grenser, teammedlemmer og kundestøtte."
+        "a": "Ja. Gratisplanen kobler til én innboks, for alltid og uten kort, og agenten din får alle verktøyene vi leverer mot den: lese, søke, sende, svare, planlegge og organisere. Pro er for når du vil ha postkasse nummer to på samme agent, og Team for når andre folk skal inn."
       },
       {
         "q": "Hva kan AI-en faktisk gjøre med innboksen min?",

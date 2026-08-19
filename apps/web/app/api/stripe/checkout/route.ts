@@ -215,8 +215,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         plan_id: planId,
         interval,
       },
-      // Automatically tax based on the customer's location (requires Stripe Tax).
-      // Comment out if Stripe Tax is not enabled on the account.
+      // Stripe Tax stays OFF, deliberately (decision 2026-08-19).
+      //
+      // Stripe Tax IS active on the account, but the account holds ZERO tax
+      // registrations. Stripe only calculates tax where you are registered, so
+      // enabling automatic_tax today would add a "Tax: $0.00" line to every
+      // checkout in every country and change nothing else. The prerequisite is
+      // registering for Norway MVA, EU Non-Union OSS and UK VAT; until those
+      // exist there is nothing for it to compute.
+      //
+      // Turning it on later needs no price migration: the prices created in the
+      // repricing already carry tax_behavior=exclusive, so the displayed amount
+      // stays the amount and tax is added on top the day registrations land.
       // automatic_tax: { enabled: true },
     });
 

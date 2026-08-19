@@ -101,15 +101,15 @@ Uansett kan du trekke tilbake enhver tilkobling fra dashbordet med ett klikk. He
 
 Kort svar: ja, og innlegget [er det trygt å gi en AI-agent e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) legger frem hele saken. Modellen holder scope-begrensede kapabiliteter, ikke passordet ditt; legitimasjon er kryptert; ingenting lagres; sending forblir på leverandøren din; tilgang trekkes tilbake med ett klikk.
 
-Når det gjelder rate-grenser, er hver API-nøkkel begrenset til 100 requests/min, 1 000/time og 10 000/dag på alle planer. Det finnes også et burst-tak per arbeidsområde som skalerer med planen din — 60/min på Free, 300/min på Agent, 1 000/min på Scale. Når du treffer en grense returnerer serveren en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder. Respekter den. Og prøv aldri blindt å sende på nytt automatisk med \`email_compose\` — da sender du duplikater.
+Når det gjelder rate-grenser, er hver API-nøkkel begrenset til 100 requests/min, 1 000/time og 10 000/dag på alle planer. Det finnes også et burst-tak per arbeidsområde som skalerer med planen din — 60/min på Gratis, 300/min på Pro, 1 000/min på Team. Når du treffer en grense returnerer serveren en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder. Respekter den. Og prøv aldri blindt å sende på nytt automatisk med \`email_compose\` — da sender du duplikater.
 
 ## Priser
 
-Alle planer inkluderer ubegrenset med innbokser og API-nøkler. Vellykkede fakturerbare kall bruker en handlingskvote: 2 500 på Free, 50 000 på Agent og 300 000 på Scale per faktureringsperiode; mislykkede kall og inbox_list er gratis.
+Planene prises etter antall tilkoblede innbokser. API-nøkler er ubegrenset på alle nivåer, og nivåene skiller seg ellers på burst-grense, analyselagring, teamfunksjoner og støtte.
 
 - **Free — $0 for alltid.** Ingen kort. 60 req/min, 7-dagers analyser, fellesskapsstøtte.
-- **Agent — $12/month** (eller $120/year). 50 000 handlinger per faktureringsperiode, 300 req/min, 90-dagers analyser, e-poststøtte.
-- **Scale — $49/month** (eller $490/year). 300 000 handlinger per faktureringsperiode, 1 000 req/min, teamroller og flere arbeidsområder, SSO med SAML/OIDC pluss revisjonslogg, 1-års analyser, prioritert støtte.
+- **Pro, $29/month** (eller $276/year, $23/month). Ubegrenset antall tilkoblede innbokser, 300 req/min, 90-dagers analyser, e-poststøtte.
+- **Team, $79/month** (eller $756/year, $63/month). Alt i Pro, pluss medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO med SAML/OIDC pluss revisjonslogg, 1 000 req/min, 1-års analyser, prioritert støtte.
 
 Full oversikt på [prissiden](/pricing).
 

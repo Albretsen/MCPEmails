@@ -11,7 +11,7 @@ Voici le guide ciblé, dédié uniquement à Gmail. Si vous gérez plusieurs bo�
 
 - Un compte **Gmail ou Google Workspace**.
 - Une version de **Claude qui prend en charge les connecteurs personnalisés** — claude.ai avec un forfait payant, ou Claude Desktop. (Les connecteurs sont le moyen par lequel Claude communique avec les serveurs MCP.)
-- Un compte **MCP Emails** gratuit. Aucune carte bancaire, boîtes mail et appels illimités. [Commencez gratuitement](/signup) et gardez cet onglet ouvert.
+- Un compte **MCP Emails** gratuit. Aucune carte bancaire, une boîte connectée pour toujours. [Commencez gratuitement](/signup) et gardez cet onglet ouvert.
 
 MCP Emails est le pont au milieu : il parle le Model Context Protocol avec Claude d'un côté et l'API Gmail avec Google de l'autre. Si vous voulez comprendre ce que cela signifie, consultez [ce qu'est réellement un serveur e-mail MCP](/blog/what-is-an-mcp-email-server).
 
@@ -98,7 +98,7 @@ Non. La connexion Gmail utilise Google OAuth, donc votre mot de passe ne quitte 
 
 ## Pour conclure
 
-C'est tout : une connexion Google, une URL d'endpoint, et Claude peut lire, rechercher et envoyer vos vrais e-mails — sans jamais les stocker. Tous les forfaits sont illimités en boîtes mail, en appels et en clés, et le niveau Gratuit ne coûte rien et ne nécessite aucune carte (voir [tarifs](/pricing) si vous avez besoin de limites de pointe plus élevées ou de SSO).
+C'est tout : une connexion Google, une URL d'endpoint, et Claude peut lire, rechercher et envoyer vos vrais e-mails — sans jamais les stocker. Le niveau Gratuit ne coûte rien, ne nécessite aucune carte et connecte une boîte ; Pro connecte toutes les boîtes que vous possédez (voir [tarifs](/pricing)).
 
 Prêt ? [Connectez votre Gmail gratuitement](/signup), collez l'endpoint dans Claude, et demandez-lui de résumer vos e-mails non lus.`,
 };

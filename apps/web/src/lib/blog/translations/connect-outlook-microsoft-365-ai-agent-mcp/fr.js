@@ -89,5 +89,5 @@ Une réserve honnête : MCP Emails fonctionne par interrogation (polling). Il n'
 
 Les serveurs MCP Outlook auto-hébergés qui circulent sur GitHub se heurtent tous au même mur : l'enregistrement d'application Entra et le cycle de vie des jetons Graph sont le vrai travail, et vous en êtes propriétaire pour toujours. Vous gérez les jetons de renouvellement, les changements de scopes quand Microsoft ajuste Graph, et la sécurité de l'endroit où ces jetons résident. Avec l'approche hébergée, le jeton est chiffré au repos, déchiffré uniquement à l'intérieur d'une fonction isolée au moment de l'appel, et révocable depuis le tableau de bord en un clic. Si vous voulez la comparaison complète, [hébergé vs auto-hébergé](/blog/hosted-vs-self-hosted-gmail-mcp-server) approfondit les compromis.
 
-Connecter Outlook ne coûte rien à essayer — le [plan Free](/pricing) offre des boîtes illimitées, 2 500 actions facturables par période de facturation et 60 requêtes par minute, sans carte requise. Ajoutez votre boîte Microsoft 365, pointez Claude vers l'endpoint, et donnez-lui quelque chose à lire.`,
+Connecter Outlook ne coûte rien à essayer — le [plan Gratuit](/pricing) connecte une boîte avec 60 requêtes par minute, sans carte requise. Ajoutez votre boîte Microsoft 365, pointez Claude vers l'endpoint, et donnez-lui quelque chose à lire.`,
 };

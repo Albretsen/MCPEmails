@@ -80,7 +80,7 @@ This stitches the others together: \`email_read\` (action search, then list) to 
 
 ## What this costs and where the limits sit
 
-All seven work on the [Free plan](/pricing), which is $0 with unlimited inboxes and 2,500 billable actions per billing period. Free allows 60 requests per minute; Agent ($12/month) includes 50,000 actions and 300 requests per minute; Scale ($49/month) includes 300,000 actions, 1,000 requests per minute, team roles, and SSO. A weekly digest barely touches those ceilings; an aggressive every-minute triage loop across many inboxes is where you'd use Free's action allowance and want Agent.
+All seven work on the [Free plan](/pricing), which is $0 and connects one inbox at 60 requests per minute. Pro ($29/month) connects every mailbox you own and raises the burst limit to 300 requests per minute; Team ($79/month) adds members with roles, a separate workspace per client, SSO, and 1,000 requests per minute. One inbox is plenty for a weekly digest; the moment you want work and personal mail on the same agent, that is Pro.
 
 When you do hit a limit, the server returns a retryable error with \`data.retry_after\` in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send, because a retry on a timeout can mean two copies of the same message land in someone's inbox.
 

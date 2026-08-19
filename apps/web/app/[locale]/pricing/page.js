@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { fetchStripePrices } from '@/lib/stripe/getPrices';
-import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd } from '@/i18n/seo';
+import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pricingJsonLd } from '@/i18n/seo';
 import PricingClient from '../../../components/marketing/PricingClient';
 
 export async function generateMetadata({ params }) {
@@ -41,11 +41,9 @@ export default async function PricingPage({ params }) {
   const description = t.has('meta.description')
     ? t('meta.description')
     : 'Simple, transparent pricing for AI agents that read and send email. Free plan available. No card required.';
-  const jsonLd = pageJsonLd(locale, {
-    path: '/pricing',
-    title,
-    description,
-  });
+  // Emits the real plan catalogue as Product + Offers, so an assistant asked
+  // what mcpemails costs reads the same three tiers a visitor sees.
+  const jsonLd = pricingJsonLd(locale, { title, description });
 
   return (
     <>

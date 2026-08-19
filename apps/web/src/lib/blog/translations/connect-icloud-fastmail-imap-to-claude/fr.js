@@ -94,5 +94,5 @@ Si vous hésitez encore à brancher l’e-mail sur un agent tout court, commence
 
 ## Pour conclure
 
-iCloud, Fastmail et l’IMAP ne sont pas des citoyens de seconde zone ici. Générez un mot de passe d’application, collez-le dans **Inboxes → Connect Inbox**, pointez Claude vers l’[endpoint](/docs) et vous obtenez un agent avec un accès complet en lecture/envoi, plus une suppression définitive que les fournisseurs OAuth ne peuvent pas offrir. C’est [gratuit pour démarrer](/signup), sans carte, avec un nombre illimité de boîtes.`,
+iCloud, Fastmail et l’IMAP ne sont pas des citoyens de seconde zone ici. Générez un mot de passe d’application, collez-le dans **Inboxes → Connect Inbox**, pointez Claude vers l’[endpoint](/docs) et vous obtenez un agent avec un accès complet en lecture/envoi, plus une suppression définitive que les fournisseurs OAuth ne peuvent pas offrir. C’est [gratuit pour démarrer](/signup), sans carte, avec une boîte pour toujours.`,
 };

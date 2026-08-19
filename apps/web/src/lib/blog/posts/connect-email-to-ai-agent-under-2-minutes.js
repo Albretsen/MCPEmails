@@ -127,7 +127,7 @@ Speed here doesn't come from cutting corners on security. Email is fetched live 
 
 ## Wrap-up
 
-That's the whole thing: one inbox connection, one endpoint, a handful of tools. Every plan includes unlimited inboxes and API keys; the Free tier includes 2,500 billable actions per billing period and needs no card — check [pricing](/pricing) for larger action allowances, higher burst limits, or SSO. Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
+That's the whole thing: one inbox connection, one endpoint, a handful of tools. The Free tier connects one inbox and needs no card; Pro connects every mailbox you own. See [pricing](/pricing). Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
     es: `Conectas tu correo a un agente de IA en dos pasos: conecta el buzón en el panel de MCP Emails y luego apunta tu agente a una única URL de endpoint. Con un cliente compatible con OAuth como claude.ai, eso es todo. Sin código, sin SDK, y tu correo no se almacena en ningún sitio: cada lectura y cada envío llega a tu proveedor en tiempo real y se descarta en cuanto el agente lo recibe.
 
 Esta es la guía rápida. Elige tu proveedor más abajo, sigue los cuatro o cinco pasos y tendrás a Claude (o Cursor, o un script propio) leyendo y enviando correo real en aproximadamente el tiempo que tardas en leer este párrafo dos veces. Si prefieres la versión más a fondo de "qué es esto y si es seguro", empieza por la [guía completa para dar acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access).
@@ -236,6 +236,6 @@ La rapidez aquí no viene de recortar en seguridad. El correo se obtiene en tiem
 
 ## Para terminar
 
-Eso es todo: una conexión de buzón, un endpoint, un puñado de herramientas. Todos los planes son ilimitados en buzones, llamadas y claves, y el plan Free no cuesta nada ni pide tarjeta; consulta los [precios](/pricing) si necesitas límites de ráfaga más altos o SSO. ¿Listo para probarlo? [Empieza gratis](/signup), conecta tu buzón y pega el endpoint en tu agente.`,
+Eso es todo: una conexión de buzón, un endpoint, un puñado de herramientas. El plan Gratis conecta un buzón, no cuesta nada ni pide tarjeta; Pro conecta todos los buzones que tengas; consulta los [precios](/pricing). ¿Listo para probarlo? [Empieza gratis](/signup), conecta tu buzón y pega el endpoint en tu agente.`,
   },
 };

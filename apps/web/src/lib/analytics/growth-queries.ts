@@ -269,13 +269,19 @@ export async function fetchClientMix(): Promise<GrowthResult<GrowthClientMixRow[
 }
 
 /**
- * The caps the bands are measured against, taken from the canonical plan table
- * the product actually bills from so a pricing change moves the chart with it.
+ * The ceilings the bands are measured against, taken from the canonical plan
+ * table the edge function enforces from, so raising a ceiling moves the chart
+ * with it.
+ *
+ * Since the 2026-08-19 repricing these are abuse ceilings rather than sold
+ * allowances, which changes how to READ this panel: a workspace at 60% of its
+ * ceiling is not a customer about to convert, it is a workspace worth looking
+ * at for a runaway loop. Conversion pressure now lives in the inbox count.
  *
  * Infinity is sent as 0 rather than dropped: JSON has no infinity, an omitted
- * plan means "unknown plan id" to the RPC (which falls back to the free cap),
- * and those two cases must not collapse into each other. The RPC reads a
- * non-positive cap as unlimited.
+ * plan means "unknown plan id" to the RPC (which falls back to the free
+ * ceiling), and those two cases must not collapse into each other. The RPC
+ * reads a non-positive cap as unlimited.
  */
 function actionCapsByPlan(): Record<string, number> {
   return Object.fromEntries(

@@ -76,7 +76,7 @@ Klienten din er claude.ai, Claude Desktop eller Cursor. Du vil ha null hemmeligh
 
 Klienten din har ingen OAuth-støtte — Cline, JetBrains, OpenAI-stil-verktøykjørerne, eller din egen kode. Du skripter mot endepunktet med cURL eller et lite program. Du trenger en stabil legitimasjon som en hodeløs prosess kan bruke uten at et menneske klikker seg gjennom en samtykkeskjerm. En scopet nøkkel er akkurat riktig her, og det finnes en full gjennomgang for [Cursor-, Cline- og VS Code-klientene](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Én ting til som er sant uansett hva du velger: rategrenser. Hver API-nøkkel er begrenset til 100 requests/minute, 1 000/hour og 10 000/day, og hvert arbeidsområde har et burst-tak per plan (60/min på [Free](/pricing), opptil 1 000/min på Scale). Når du treffer en grense gir serveren tilbake en \`retry_after\`-verdi i sekunder. Respekter den, og prøv aldri en \`email_compose\`-sending blindt på nytt — du kommer til å sende dobbelt.
+Én ting til som er sant uansett hva du velger: rategrenser. Hver API-nøkkel er begrenset til 100 requests/minute, 1 000/hour og 10 000/day, og hvert arbeidsområde har et burst-tak per plan (60/min på [Free](/pricing), opptil 1 000/min på Team). Når du treffer en grense gir serveren tilbake en \`retry_after\`-verdi i sekunder. Respekter den, og prøv aldri en \`email_compose\`-sending blindt på nytt — du kommer til å sende dobbelt.
 
 ## Konklusjonen
 
