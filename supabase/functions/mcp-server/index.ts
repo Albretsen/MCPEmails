@@ -5944,7 +5944,7 @@ async function resolveSenderIdentity(
       // builds raw messages, so use the selected identity's signature here.
       signature_html: identity.signature_html ?? inbox.signature_html,
       signature_text: identity.signature_html
-        ? stripHtmlToText(identity.signature_html)
+        ? signatureHtmlToText(identity.signature_html)
         : inbox.signature_text,
     },
     defaultReplyTo: identity.reply_to ?? undefined,
@@ -6017,7 +6017,7 @@ async function maybeImportGmailSignature(inbox: InboxRow): Promise<void> {
       return;
     }
 
-    const signatureText = stripHtmlToText(signatureHtml);
+    const signatureText = signatureHtmlToText(signatureHtml);
 
     const { error } = await supabase
       .from("inboxes")
@@ -7735,6 +7735,39 @@ function stripHtmlToText(html: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/**
+ * Convert SIGNATURE html to its plain-text half.
+ *
+ * Deliberately separate from `stripHtmlToText`, which serves arbitrary email
+ * bodies: signatures are almost always laid out as a `<table>`, and that
+ * function only breaks on `<br>`/`</p>`/`</div>`. A cell-based signature
+ * therefore flattened into one run-on line ("Asgeir AlbretsenFounder · MCP
+ * Emails"). Here every cell and row boundary is a line break, because plain
+ * text has no columns and one cell per line is the only faithful rendering.
+ * Widening `stripHtmlToText` itself would reshape `body_text` for every
+ * table-heavy marketing email an agent reads, so the two stay independent.
+ */
+function signatureHtmlToText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(?:p|div|tr|td|th|li|h[1-6]|blockquote|pre)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, " ")
+    // Empty cells (a logo `<td>`, a spacer row) each contribute a newline;
+    // squeeze the runs so the signature keeps its shape.
+    .replace(/ *\n */g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -9711,7 +9744,7 @@ function escapeSignatureHtml(text: string): string {
  *
  * Returns `null` when no signature should be appended (disabled, or both
  * stored fields empty). When only one half is stored, the other is derived:
- *   - missing text  ← stripHtmlToText(signature_html)
+ *   - missing text  ← signatureHtmlToText(signature_html)
  *   - missing html  ← escaped signature_text with newlines as <br>
  *
  * The returned `html` is the inner signature markup only — callers wrap it in
@@ -9726,7 +9759,7 @@ function composeSignatureBlocks(
   const storedHtml = (inbox.signature_html ?? "").trim();
   if (!storedText && !storedHtml) return null;
 
-  const text = storedText || stripHtmlToText(storedHtml);
+  const text = storedText || signatureHtmlToText(storedHtml);
   // Belt-and-suspenders: scrub the stored HTML at send-time injection (covers
   // rows written before the tool-side sanitizer, or via any other write path)
   // before it is wrapped in the mcpemails-signature div. Idempotent on
@@ -9735,9 +9768,16 @@ function composeSignatureBlocks(
     ? sanitizeSignatureHtml(storedHtml)
     : escapeSignatureHtml(storedText).replace(/\n/g, "<br>\n");
 
-  // Guard against a signature that strips down to nothing (e.g. html was only
-  // markup with no text content and no text counterpart was stored).
-  if (!text.trim() && !html.trim()) return null;
+  // Guard against a signature that strips down to nothing. The check has to be
+  // on the html's CONTENT, not on the string being non-empty: the dashboard
+  // editor persists `<p></p>` for an untouched signature field, which is a
+  // non-empty string that renders as nothing. Treating it as a signature
+  // appended a bare `-- ` delimiter followed by emptiness to every message.
+  // An image-only signature (a logo with no text) is still a real signature,
+  // so `<img>` counts as content alongside text.
+  const htmlHasContent = signatureHtmlToText(html).trim().length > 0 ||
+    /<img[\s>]/i.test(html);
+  if (!text.trim() && !htmlHasContent) return null;
 
   return { text, html };
 }

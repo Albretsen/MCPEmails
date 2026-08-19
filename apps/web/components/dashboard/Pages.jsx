@@ -1418,7 +1418,9 @@ function htmlToPlainSeed(html) {
   if (!html) return '';
   return html
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|tr|li)>/gi, '\n')
+    // Table cells count as block boundaries: signature layouts are usually
+    // tables, and plain text has no columns.
+    .replace(/<\/(p|div|tr|td|th|li|h[1-6]|blockquote|pre)>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/gi, ' ')
     .replace(/&amp;/gi, '&')
