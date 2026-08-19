@@ -495,7 +495,7 @@ export function DashboardPreview() {
                 <span style={{ width: 28, height: 28, borderRadius: 999, background: 'var(--cobalt-600)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600 }}>J</span>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--fg-1)' }}>jordan</div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>Scale plan</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>Pro plan</div>
                 </div>
               </div>
             </div>
