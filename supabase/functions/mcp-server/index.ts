@@ -48,6 +48,10 @@ import {
   shouldPlanForMode,
 } from "./mcp-app-bulk.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
+import {
+  normalizePreview,
+  stripHtmlToText,
+} from "./text-extract.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
 import { buildUsageLimitText } from "./usage-limit-message.ts";
 import {
@@ -6243,11 +6247,6 @@ function formatAddressEntry(a: EmailAddressEntry): string {
   return a.name ? `${a.name} <${a.email}>` : a.email;
 }
 
-/** Collapses whitespace and trims the input to ≤200 characters. */
-function normalizePreview(text: string): string {
-  return text.replace(/\s+/g, " ").trim().slice(0, 200);
-}
-
 // ---------------------------------------------------------------------------
 // Gmail provider — email_list
 // ---------------------------------------------------------------------------
@@ -6977,7 +6976,7 @@ async function listImapMessages(
         to: s.envelope.to.map(decodeEnvelopeAddress),
         subject: decodeEnvelopeSubject(s.envelope.subject),
         date: s.envelope.date,
-        preview: s.preview,
+        preview: normalizePreview(s.preview),
         is_read: s.flags.includes("\\Seen"),
         has_attachments: s.hasAttachments,
         folder,
@@ -7091,7 +7090,7 @@ async function readImapMessage(
       reply_to: replyToList[0] ?? null,
       subject,
       date: imapDateToIso(getHeader(h, "date")),
-      body_text: parsed.text ?? (parsed.html ? stripHtmlToText(parsed.html) : null),
+      body_text: parsed.text ?? (parsed.html ? stripHtmlToText(parsed.html, { keepLinks: true }) : null),
       body_html: includeHtml && parsed.html ? sanitizeEmailHtml(parsed.html) : null,
       attachments,
       is_read: markAsRead ? true : msg.flags.includes("\\Seen"),
@@ -7228,7 +7227,7 @@ async function searchImapMessages(
       to: s.envelope.to.map(decodeEnvelopeAddress),
       subject: decodeEnvelopeSubject(s.envelope.subject),
       date: s.envelope.date,
-      preview: s.preview,
+      preview: normalizePreview(s.preview),
       is_read: s.flags.includes("\\Seen"),
       has_attachments: s.hasAttachments,
       folder,
@@ -7713,31 +7712,6 @@ async function executeListInbox(
  * directly in a user-facing browser without an additional pass through a
  * DOM-based sanitizer.
  */
-
-/**
- * Convert an HTML body to readable plain text: drop <style>/<script> blocks and
- * all tags, decode common entities, and collapse whitespace. Used as the
- * `body_text` fallback for HTML-only messages so an agent reading `body_text`
- * always gets the content (e.g. OTP codes) without needing `include_html`.
- */
-function stripHtmlToText(html: string): string {
-  return html
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/div>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
 
 /**
  * Convert SIGNATURE html to its plain-text half.
@@ -8280,7 +8254,7 @@ async function readGmailMessage(
     date: msg.internalDate
       ? new Date(Number(msg.internalDate)).toISOString()
       : new Date().toISOString(),
-    body_text: textPlain ?? (textHtml ? stripHtmlToText(textHtml) : null),
+    body_text: textPlain ?? (textHtml ? stripHtmlToText(textHtml, { keepLinks: true }) : null),
     body_html: includeHtml && textHtml ? sanitizeEmailHtml(textHtml) : null,
     attachments,
     is_read: isRead,
@@ -8380,7 +8354,7 @@ async function readOutlookMessage(
   if (bodyContentType === "html") {
     bodyHtml = bodyContent;
     // Derive plain text from the HTML so body_text always has the content.
-    bodyText = stripHtmlToText(bodyContent);
+    bodyText = stripHtmlToText(bodyContent, { keepLinks: true });
   } else {
     bodyText = bodyContent;
   }

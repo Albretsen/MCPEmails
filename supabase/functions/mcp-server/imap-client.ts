@@ -18,6 +18,8 @@
  * A faithful Node reference lives at apps/web/src/lib/email/imap.ts.
  */
 
+import { normalizeSnippetPreview } from "./text-extract.ts";
+
 export class ImapAuthError extends Error {
   constructor(message: string) {
     super(message);
@@ -1243,9 +1245,17 @@ function snippetToPreview(snippet: string): string {
   return cleanPreviewText(t);
 }
 
-/** Strip HTML tags, collapse whitespace, cap at 200 chars. */
+/**
+ * Strip HTML tags, decode entities, drop invisible padding, collapse
+ * whitespace, cap at 200 chars.
+ *
+ * Delegates to the shared cleaner so this path cannot drift from the Gmail and
+ * Outlook summaries again. The cap has to come after the invisible strip, not
+ * before: a preheader padded with U+200C would otherwise fill all 200
+ * characters here and reach the caller as a preview that cleans up to nothing.
+ */
 function cleanPreviewText(s: string): string {
-  return s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+  return normalizeSnippetPreview(s);
 }
 
 /** Parse an IMAP ENVELOPE token list into structured fields. */
