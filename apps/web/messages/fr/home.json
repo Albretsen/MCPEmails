@@ -261,5 +261,18 @@
     "eyebrow": "Aperçu du produit",
     "title": "Visualisez toute votre opération MCP en un coup d'œil.",
     "sub": "Un tableau de bord en temps réel pour chaque boîte connectée, clé d'API et appel d'outil, pour toujours savoir ce que font vos agents."
+  },
+  "demo": {
+    "eyebrow": "Voyez-le fonctionner",
+    "title": "Trois minutes, une vraie boîte mail.",
+    "sub": "Un enregistrement sans coupure sur un compte Fastmail réel, un compte Gmail et une seconde boîte IMAP. Chaque appel et chaque résultat sont réels.",
+    "caption": "Enregistré sur une boîte de démonstration remplie de courrier fictif. Aucune correspondance réelle n'apparaît dans cette vidéo.",
+    "player": {
+      "label": "Vidéo de démonstration : MCP Emails sur trois boîtes mail réelles",
+      "play": "Lancer la démonstration",
+      "runtime": "3 min",
+      "captions": "English",
+      "fallback": "Votre navigateur ne peut pas lire cette vidéo. Le guide de démarrage rapide de la documentation couvre les mêmes étapes."
+    }
   }
 }

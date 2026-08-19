@@ -1185,3 +1185,103 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 }
 .providers-conn-tbl .feat-name a { color: var(--fg-1); font-weight: 600; }
 .providers-conn-tbl .feat-name a:hover { text-decoration: underline; }
+/* === Demo video =========================================================
+   The home page's proof section. Kept token-driven so it inherits both
+   themes; dark mode here is html[data-theme="dark"], not a media query. */
+.demo-video-section { padding-top: 72px; padding-bottom: 72px; }
+
+.demo-video-frame {
+  position: relative;
+  margin: 0;
+  border-radius: 14px;
+  border: 1px solid var(--border-1);
+  background: var(--bg-sunken);
+  box-shadow: 0 24px 60px -24px rgba(15, 23, 42, 0.28);
+  overflow: hidden;
+}
+
+.demo-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: var(--ink-900);
+  /* Cover, so a poster that is not exactly 16:9 never letterboxes oddly. */
+  object-fit: cover;
+}
+
+/* Overlay play affordance. The native controls are always present underneath;
+   this only exists so the first click has a target big enough to hit on a
+   phone, and so the runtime is visible before anyone commits to watching. */
+.demo-video-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  border: 0;
+  background: linear-gradient(180deg, rgba(9, 14, 26, 0.15), rgba(9, 14, 26, 0.55));
+  color: #fff;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background var(--dur-2) var(--ease-out);
+}
+.demo-video-play:hover { background: linear-gradient(180deg, rgba(9, 14, 26, 0.1), rgba(9, 14, 26, 0.45)); }
+.demo-video-play:focus-visible { outline: 3px solid var(--border-focus); outline-offset: -3px; }
+
+.demo-video-play-icon {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: var(--r-pill);
+  background: var(--brand);
+  color: var(--fg-on-brand);
+  box-shadow: 0 10px 30px -8px rgba(9, 14, 26, 0.6);
+  padding-left: 4px;
+  flex: 0 0 auto;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.demo-video-play:hover .demo-video-play-icon { transform: scale(1.05); }
+
+.demo-video-play-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: var(--fs-18);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: left;
+  text-shadow: 0 1px 12px rgba(9, 14, 26, 0.5);
+}
+.demo-video-play-meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  font-weight: 400;
+  opacity: 0.82;
+  letter-spacing: 0.02em;
+}
+
+.demo-video-caption {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-1);
+  background: var(--bg-surface);
+  color: var(--fg-3);
+  font-size: var(--fs-14);
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-video-play,
+  .demo-video-play-icon { transition: none; }
+  .demo-video-play:hover .demo-video-play-icon { transform: none; }
+}
+
+@media (max-width: 767px) {
+  .demo-video-section { padding-top: 40px; padding-bottom: 40px; }
+  .demo-video-play-icon { width: 54px; height: 54px; }
+  .demo-video-play-text { font-size: var(--fs-16); }
+  .demo-video-caption { padding: 12px 16px; font-size: var(--fs-13, 13px); }
+}

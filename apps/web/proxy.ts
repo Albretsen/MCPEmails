@@ -198,7 +198,10 @@ export const config = {
      *  - _next/image   (image optimisation endpoint)
      *  - favicon.ico
      *  - common image/font extensions
+     *  - video and caption files: a <video> issues many ranged requests,
+     *    and without this each one runs updateSession() and a Supabase
+     *    auth round-trip, then answers with cookies the CDN will not cache.
      */
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf|mp4|webm|mov|m4v|ogg|vtt)$).*)',
   ],
 };

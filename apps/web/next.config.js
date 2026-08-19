@@ -208,6 +208,24 @@ const nextConfig = {
           { key: 'X-Permitted-Cross-Domain-Policies',  value: 'none' },
         ],
       },
+      {
+        // Demo video and its poster/captions. These are large, immutable
+        // build outputs rather than page content, so they get the same
+        // year-long immutable cache as any hashed asset.
+        //
+        // This was originally declared in the repo-root vercel.json, which
+        // Vercel never loads (Root Directory is apps/web), so it would have
+        // been a no-op. It belongs here for the same reason HSTS does.
+        //
+        // Consequence worth knowing before the first cut ships: `immutable`
+        // means a re-cut MUST ship under a new filename. Overwriting
+        // demo.mp4 in place leaves every previous visitor on the old file
+        // for up to a year.
+        source: '/demo/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
     ];
   },
 
