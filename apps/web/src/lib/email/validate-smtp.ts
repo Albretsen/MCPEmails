@@ -1,11 +1,23 @@
 import * as net from 'net';
 import * as tls from 'tls';
 import type { ConnectionPhase, MailSecurity } from './validate-imap';
+import { sanitizeAuthDiagnostic } from './connection-config';
 
 export const SMTP_VALIDATION_TIMEOUT_MS = 10_000;
 export type SmtpValidationResult =
   | { ok: true; phase: 'authentication' }
-  | { ok: false; code: 'AUTH_FAILED' | 'CONNECTION_REFUSED' | 'CONNECTION_TIMEOUT' | 'TLS_HANDSHAKE_FAILED' | 'SMTP_PROTOCOL_ERROR'; message: string; phase: ConnectionPhase };
+  | {
+      ok: false;
+      code: 'AUTH_FAILED' | 'CONNECTION_REFUSED' | 'CONNECTION_TIMEOUT' | 'TLS_HANDSHAKE_FAILED' | 'SMTP_PROTOCOL_ERROR';
+      message: string;
+      phase: ConnectionPhase;
+      /**
+       * Sanitized, bounded server rejection text, mirroring the IMAP validator.
+       * Present only for AUTH_FAILED, where the server actually answered.
+       * Never contains the credential, the address or the SASL token.
+       */
+      detail?: string;
+    };
 
 export interface SmtpCredential {
   host: string;
@@ -88,7 +100,23 @@ export async function validateSmtpCredential(cred: SmtpCredential): Promise<Smtp
       const token = Buffer.from(`\x00${cred.username || cred.email}\x00${cred.password}`, 'utf8').toString('base64');
       socket.write(`AUTH PLAIN ${token}\r\n`);
       const auth = await readReply(socket);
-      if (auth.code < 200 || auth.code >= 300) return { ok: false, code: 'AUTH_FAILED', message: 'The SMTP server rejected these credentials. Check the username and app password.', phase };
+      if (auth.code < 200 || auth.code >= 300) {
+        return {
+          ok: false,
+          code: 'AUTH_FAILED',
+          message: 'The SMTP server rejected these credentials. Check the username and app password.',
+          phase,
+          // The SASL token must be in the secrets list: it is base64 of
+          // "\0user\0password", so a server echoing the rejected AUTH command
+          // would otherwise persist the credential in reversible form.
+          detail: sanitizeAuthDiagnostic(String(auth.code), auth.lines.join(' '), [
+            token,
+            cred.username || cred.email,
+            cred.email,
+            cred.password,
+          ]),
+        };
+      }
       socket.write('QUIT\r\n');
       return { ok: true, phase: 'authentication' };
     } catch (caught) {

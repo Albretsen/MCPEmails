@@ -20,8 +20,8 @@
       "body": "Gmail connects with <b>Google OAuth</b> — sign in with Google, approve read and send access, and you're connected. No app password, no IMAP settings to dig up. Revoke access anytime from your Google account or the mcpemails dashboard."
     },
     "verificationNote": {
-      "title": "Heads up while Google verification is in progress",
-      "body": "mcpemails is currently in Google's verification and CASA security review. Until it completes, Google shows a “Google hasn't verified this app” screen — click <b>Advanced</b>, then <b>Go to mcpemails.com</b> to continue — and the connection needs reconnecting roughly every 7 days. Both go away once verification lands."
+      "title": "What Google will show you",
+      "body": "Google shows a “Google hasn't verified this app” screen for any app it has not reviewed — click <b>Advanced</b>, then <b>Go to mcpemails.com</b> to continue. That review requires a paid third-party security assessment we have chosen not to buy, so the screen is here to stay. Once connected, the inbox stays connected: access renews automatically and stops only if you revoke it from your Google account."
     },
     "caps": {
       "eyebrow": "What your AI can do",

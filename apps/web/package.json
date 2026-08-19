@@ -11,7 +11,7 @@
     "test:billing": "node --test src/lib/billing/upgrade-intent.test.mjs",
     "test:plans": "node --test --experimental-strip-types src/lib/stripe/plans.test.ts",
     "test:seo": "node --test src/lib/blog/seo.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs",
-    "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts",
+    "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts src/lib/email-providers/imap-presets.test.ts",
     "test:growth": "node --test --experimental-strip-types src/lib/analytics/growth-metrics.test.mjs",
     "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs"
   },

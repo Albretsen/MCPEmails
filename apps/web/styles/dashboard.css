@@ -366,6 +366,15 @@ body { background: var(--bg-page); }
   transition: all 120ms var(--ease-out); background: var(--bg-surface);
 }
 .provider-chip:hover { border-color: var(--border-2); }
+/* These chips are the modal's primary control and are keyboard-reachable
+   (role="radio", tabIndex 0), but nothing rendered focus, so a keyboard user
+   selecting a provider could not see where they were. --shadow-focus is the
+   token the rest of the app already focuses with, in both themes. */
+.provider-chip:focus-visible {
+  box-shadow: var(--shadow-focus);
+  border-color: var(--brand);
+  outline: none;
+}
 .provider-chip.sel { border-color: var(--brand); background: var(--cobalt-50); }
 .provider-chip .pn { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--fg-1); }
 .provider-chip .ps { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); }

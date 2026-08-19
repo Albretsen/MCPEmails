@@ -4,8 +4,8 @@ import '../../styles/dashboard.css';
 import { SignupApp } from '../../components/auth/SignupApp';
 
 export const metadata = {
-  title: 'Create workspace · mcpemails',
-  description: 'Create your mcpemails workspace and connect your first inbox',
+  title: 'Create your account · mcpemails',
+  description: 'Create your mcpemails account and connect your first inbox',
 };
 
 /**

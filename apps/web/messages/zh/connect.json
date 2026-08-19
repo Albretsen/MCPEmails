@@ -20,8 +20,8 @@
       "body": "Gmail 通过 <b>Google OAuth</b> 连接——用 Google 登录、授予读取与发送权限，即可完成连接。无需应用专用密码，也无需查找 IMAP 设置。你可随时在 Google 账户或 mcpemails 控制台中撤销访问权限。"
     },
     "verificationNote": {
-      "title": "Google 验证进行期间请注意",
-      "body": "mcpemails 目前正在进行 Google 验证与 CASA 安全审核。在审核完成之前，Google 会显示「Google 尚未验证此应用」的提示页——点击<b>高级</b>，再点击<b>前往 mcpemails.com</b> 即可继续——并且连接大约每 7 天需要重新连接一次。验证通过后这两点都会消失。"
+      "title": "Google 将会显示的内容",
+      "body": "对于任何未经其审核的应用，Google 都会显示「Google 尚未验证此应用」的提示页——点击<b>高级</b>，再点击<b>前往 mcpemails.com</b> 即可继续。通过该审核需要一份收费的第三方安全评估，我们选择不购买，因此该提示页会一直存在。连接完成后，邮箱会保持连接：访问权限会自动续期，只有当你在 Google 账号中撤销授权时才会中断。"
     },
     "caps": {
       "eyebrow": "你的 AI 能做什么",

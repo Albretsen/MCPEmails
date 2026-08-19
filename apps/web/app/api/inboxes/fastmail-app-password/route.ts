@@ -135,23 +135,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const userMessage = isAuthFailed ? FASTMAIL_AUTH_FAILED_MESSAGE : validation.message;
     const body: Record<string, string> = { error: userMessage };
     if (isAuthFailed) body.error_code = 'auth_failed';
-    // A wrong password is expected/user-driven and not worth recording; the
-    // other codes indicate a real infra/config issue worth tracking frequency
-    // of — this table previously had zero writes anywhere in the codebase.
-    if (!isAuthFailed) {
-      await captureError(new Error(validation.message), {
-        severity: 'low',
-        route: 'api/inboxes/fastmail-app-password',
-        reason: validation.code,
-        workspaceId,
-      });
-    }
+    // Fastmail is the clearest case against skipping AUTH_FAILED here: it has
+    // 6 connect attempts and 0 successes, every one of them an auth failure,
+    // and because this branch dropped exactly those rows there was nothing on
+    // file to say whether users were mistyping or the flow was broken outright.
+    // A provider at a 100% failure rate is precisely what this table is for.
+    // `detail` is sanitized before storage (credential, address and SASL token
+    // stripped by sanitizeAuthDiagnostic), so recording it is safe.
+    await captureError(new Error(validation.message), {
+      severity: 'low',
+      route: 'api/inboxes/fastmail-app-password',
+      reason: validation.code,
+      phase: validation.phase,
+      detail: validation.detail ?? null,
+      workspaceId,
+    });
     return NextResponse.json(body, { status: 422 });
   }
 
   const smtpValidation = await validateSmtpCredential({ host: 'smtp.fastmail.com', port: 465, email, password: appPassword, security: 'tls' });
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    await captureError(new Error(smtpValidation.message), {
+      severity: 'low',
+      route: 'api/inboxes/fastmail-app-password',
+      reason: smtpValidation.code,
+      phase: `smtp_${smtpValidation.phase}`,
+      detail: smtpValidation.detail ?? null,
+      workspaceId,
+    });
     return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
   }
 

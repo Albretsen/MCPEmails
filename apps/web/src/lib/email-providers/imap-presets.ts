@@ -203,3 +203,70 @@ export function zohoHosts(
 export function isBrandedImapService(value: string): value is BrandedImapService {
   return value === 'icloud' || value === 'yahoo' || value === 'zoho' || value === 'yandex';
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Connect-form ergonomics
+ *
+ * Both helpers below exist because of what production failures actually look
+ * like, not because of a hypothetical. See the notes on each.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * The conventional port for each transport security mode.
+ *
+ * The generic IMAP form let the port and the security mode drift apart, and
+ * that mismatch was the single largest source of failed generic connections:
+ * picking STARTTLS while the port stayed 993 makes us open a plaintext socket
+ * to a TLS-only listener, so the server never speaks and the attempt dies as
+ * CONNECTION_TIMEOUT in the `greeting` phase (22 recorded failures). The
+ * mirror image, implicit TLS against 143, fails the handshake instead
+ * (13 recorded failures at phase `tls`). Together that was two thirds of all
+ * non-credential generic IMAP failures, and neither error text could tell the
+ * user which of the two fields to change.
+ *
+ * Keeping the pair in step in the form removes the mismatch at the source.
+ */
+export const MAIL_PORTS: Record<'imap' | 'smtp', Record<SmtpSecurity, number>> = {
+  imap: { tls: 993, starttls: 143 },
+  smtp: { tls: 465, starttls: 587 },
+};
+
+/** Conventional port for a protocol/security pair. */
+export function portForSecurity(protocol: 'imap' | 'smtp', security: SmtpSecurity): number {
+  return MAIL_PORTS[protocol][security];
+}
+
+/**
+ * The security mode conventionally served on a port, or null when the port is
+ * not one of the two well-known ones (a custom port carries no implication, so
+ * the user's explicit choice must stand).
+ */
+export function securityForPort(protocol: 'imap' | 'smtp', port: number): SmtpSecurity | null {
+  const ports = MAIL_PORTS[protocol];
+  if (port === ports.tls) return 'tls';
+  if (port === ports.starttls) return 'starttls';
+  return null;
+}
+
+/**
+ * Strip whitespace from an app-specific password.
+ *
+ * Every provider we offer an app-password flow for generates a token out of a
+ * fixed alphabet and none of them include a space in it, but several *display*
+ * the token in groups (Google separates four blocks with spaces, Apple with
+ * hyphens) and password managers and PDF viewers readily add a trailing
+ * newline or a non-breaking space when the value is copied. Those characters
+ * reach the IMAP server inside the SASL token and come back as an ordinary
+ * `NO [AUTHENTICATIONFAILED]`, which is indistinguishable from a wrong
+ * password, so the user is told to check a password that is in fact correct.
+ *
+ * Only internal *whitespace* is removed: hyphens are left alone because Apple
+ * app-specific passwords legitimately contain them.
+ *
+ * This deliberately does NOT apply to the generic IMAP/SMTP connector, where
+ * the credential is a real account password that may contain spaces on purpose.
+ */
+export function normalizeAppPassword(value: string): string {
+  // \s misses the zero-width and BOM characters that copy-paste introduces.
+  return value.replace(/[\s\u00a0\u200b-\u200d\ufeff]/g, '');
+}

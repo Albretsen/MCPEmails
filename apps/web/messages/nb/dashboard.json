@@ -148,8 +148,8 @@
     "reconnect": "Koble til på nytt",
     "checkConnection": "Sjekk tilkobling",
     "disconnectInbox": "Koble fra innboks",
-    "emptyTitle": "Ingen innbokser tilkoblet",
-    "emptyDesc": "Koble til Gmail, Fastmail eller en hvilken som helst IMAP-leverandør for å gi agentene dine tilgang.",
+    "emptyTitle": "Ingen postkasser tilkoblet",
+    "emptyDesc": "Koble til en hvilken som helst IMAP-postkasse, eller Gmail, for å gi agentene dine tilgang.",
     "disconnectDialog": {
       "title": "Koble fra innboks?",
       "sub": "Dette vil oppheve tilgang og fjerne denne innboksen fra arbeidsområdet ditt.",
@@ -192,7 +192,10 @@
         "previewTooLarge": "Signaturen er for stor til å forhåndsvises.",
         "imageNote": "Enkelte e-postklienter (f.eks. Gmail) kan skjule bilder til mottakeren klikker «vis bilder». Dette er normalt for signaturer med bilder som ligger på nett."
       }
-    }
+    },
+    "emptyAltLead": "Ikke klar til å koble til en postkasse ennå?",
+    "emptyViewKeys": "Hent MCP-URL-en og API-nøkkelen din",
+    "emptyReadDocs": "Les oppsettsveiledningene"
   },
   "apiKeys": {
     "title": "API-nøkler",

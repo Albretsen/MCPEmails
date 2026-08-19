@@ -148,8 +148,8 @@
     "reconnect": "重新连接",
     "checkConnection": "检查连接",
     "disconnectInbox": "断开收件箱",
-    "emptyTitle": "尚未连接收件箱",
-    "emptyDesc": "连接 Gmail、Fastmail 或任意 IMAP 提供商，让你的智能体获得访问权限。",
+    "emptyTitle": "尚未连接邮箱",
+    "emptyDesc": "连接任意 IMAP 邮箱或 Gmail，即可让你的智能体访问。",
     "disconnectDialog": {
       "title": "断开收件箱？",
       "sub": "此操作将撤销访问权限，并从你的工作区中移除此收件箱。",
@@ -192,7 +192,10 @@
         "previewTooLarge": "签名过大，无法预览。",
         "imageNote": "某些邮件客户端（如 Gmail）可能会隐藏图片，直到收件人点击“显示图片”。对于使用托管图片的签名，这是正常现象。"
       }
-    }
+    },
+    "emptyAltLead": "还不想现在连接邮箱？",
+    "emptyViewKeys": "获取你的 MCP URL 和 API 密钥",
+    "emptyReadDocs": "阅读客户端配置指南"
   },
   "apiKeys": {
     "title": "API 密钥",
