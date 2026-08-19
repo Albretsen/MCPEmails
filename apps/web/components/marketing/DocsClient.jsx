@@ -583,8 +583,9 @@ const ERROR_CODES = [
   { code: '-32001', type: 'JSON-RPC error', whenKey: 'auth', retryable: false },
   { code: '-32601', type: 'JSON-RPC error', whenKey: 'method', retryable: false },
   { code: '-32602', type: 'JSON-RPC error', whenKey: 'param', retryable: false },
-  { code: '-32029', type: 'JSON-RPC error', whenKey: 'rate', retryable: true },
+  { code: '-32003', type: 'JSON-RPC error', whenKey: 'rate', retryable: true },
   { code: 'isError: true', type: 'Tool result', whenKey: 'tool', retryable: false },
+  { code: 'isError: true', type: 'Tool result', whenKey: 'cap', retryable: false },
 ];
 
 /* ─── Sub-components ─────────────────────────────────────────── */
@@ -1018,7 +1019,7 @@ export default function DocsClient() {
               </thead>
               <tbody>
                 {ERROR_CODES.map(e => (
-                  <tr key={e.code}>
+                  <tr key={e.whenKey}>
                     <td><code style={{ fontFamily: 'var(--font-mono)', fontSize: 13 }}>{e.code}</code></td>
                     <td>
                       <span
@@ -1058,12 +1059,13 @@ export default function DocsClient() {
   }
 }
 
-// Rate limit error: JSON-RPC error object with data
+// Rate limit: JSON-RPC error object with data (HTTP 429). Safe to retry
+// after retry_after seconds.
 {
   "jsonrpc": "2.0",
   "id": 3,
   "error": {
-    "code": -32029,
+    "code": -32003,
     "message": "Rate limit exceeded",
     "data": {
       "error_code": "rate_limit_exceeded",
@@ -1071,6 +1073,31 @@ export default function DocsClient() {
       "limit": 100,
       "used": 100,
       "retry_after": 34
+    }
+  }
+}
+
+// Monthly action cap: a normal tool result (HTTP 200) with isError: true.
+// NOT a JSON-RPC error, and NOT retryable until reset_at.
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "result": {
+    "content": [{
+      "type": "text",
+      "text": "Usage limit reached: 2500 of 2500 monthly actions used on the Free plan. ..."
+    }],
+    "isError": true,
+    "_meta": {
+      "com.mcpemails/usage_limit": {
+        "error_code": "usage_limit_reached",
+        "effective_plan": "free",
+        "used_actions": 2500,
+        "cap": 2500,
+        "reset_at": "2026-09-01T00:00:00.000Z",
+        "dashboard_url": "https://mcpemails.com/dashboard/usage",
+        "pricing_url": "https://mcpemails.com/pricing"
+      }
     }
   }
 }`}
@@ -1098,6 +1125,11 @@ export default function DocsClient() {
               <div className="num">{t('rateLimits.planTag')}</div>
               <h4>{t('rateLimits.planHeading')}</h4>
               <p>{t.rich('rateLimits.planBody', RICH)}</p>
+            </div>
+            <div className="step">
+              <div className="num">{t('rateLimits.capTag')}</div>
+              <h4>{t('rateLimits.capHeading')}</h4>
+              <p>{t.rich('rateLimits.capBody', RICH)}</p>
             </div>
             <div className="step">
               <div className="num">{t('rateLimits.retryTag')}</div>

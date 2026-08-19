@@ -318,19 +318,20 @@
   "errors": {
     "eyebrow": "Feilkoder",
     "heading": "Feilkoder og veiledning for nye forsøk.",
-    "sub": "Feil ved autentisering, omfang og hastighetsgrense returnerer et JSON-RPC <code>error</code>-objekt med en numerisk kode. Feil ved verktøykjøring (innboks ikke funnet, leverandørfeil osv.) returnerer et vanlig <code>result</code> med <code>isError: true</code> og en lesbar melding i <code>content[0].text</code>.",
+    "sub": "Feil ved autentisering, omfang og hastighetsgrense returnerer et JSON-RPC <code>error</code>-objekt med en numerisk kode. Feil ved verktøykjøring (innboks ikke funnet, leverandørfeil, oppbrukt månedlig handlingskvote osv.) returnerer et vanlig <code>result</code> med <code>isError: true</code> og en lesbar melding i <code>content[0].text</code>.",
     "thCode": "Kode",
     "thType": "Type",
     "thWhen": "Når den oppstår",
     "thRetryable": "Kan prøves på nytt",
     "retryableNo": "Nei",
-    "exampleLabel": "Eksempel på svar ved kjøringsfeil",
+    "exampleLabel": "Eksempler på feilsvar",
     "rows": {
       "auth": "Manglende, feilformatert, tilbakekalt eller utløpt API-nøkkel. Returneres også når API-nøkkelen mangler det nødvendige omfanget for verktøyet som kalles.",
       "method": "Ukjent JSON-RPC-metode (f.eks. kall av en annen metode enn initialize, tools/list, tools/call)",
       "param": "Ukjent verktøynavn, eller manglende / ugyldig parameter i tools/call",
-      "rate": "Hastighetsgrense per nøkkel eller daglig kvote for planen overskredet. Sjekk data.error_code: \"rate_limit_exceeded\" vs \"quota_exceeded\". Sjekk data.retry_after (sekunder) før du prøver på nytt.",
-      "tool": "Verktøyet ble kjørt, men støtte på en feil (innboks ikke funnet, melding ikke funnet, autentiseringsfeil hos leverandør, ugyldig mottaker, vedlegg for stort, leverandør 5xx). Feilbeskrivelsen finnes i content[0].text."
+      "rate": "Hastighetsgrense per nøkkel eller per arbeidsområde overskredet (HTTP 429). data.error_code er alltid \"rate_limit_exceeded\". Vent data.retry_after sekunder, eller les Retry-After-headeren, før du prøver på nytt.",
+      "tool": "Verktøyet ble kjørt, men støtte på en feil (innboks ikke funnet, melding ikke funnet, autentiseringsfeil hos leverandør, ugyldig mottaker, vedlegg for stort, leverandør 5xx). Feilbeskrivelsen finnes i content[0].text.",
+      "cap": "Den månedlige handlingskvoten for planen er brukt opp. Den returneres som et vanlig verktøyresultat med isError: true, ikke som en JSON-RPC-feil, med detaljene under _meta[\"com.mcpemails/usage_limit\"]: error_code \"usage_limit_reached\", used_actions, cap og reset_at. Nye forsøk kan ikke lykkes før reset_at eller en planendring."
     }
   },
   "rateLimits": {
@@ -338,13 +339,16 @@
     "heading": "Hastighetsgrenser og kvoter.",
     "perKeyTag": "Rullerende vinduer per nøkkel",
     "perKeyHeading": "100 req / min · 1 000 / t · 10 000 / dag",
-    "perKeyBody": "Håndheves per API-nøkkel uavhengig av plan. Ved overskridelse returnerer serveren feilkode <code>-32029</code> med <code>data.error_code: \"rate_limit_exceeded\"</code> og et <code>data.retry_after</code>-felt (sekunder). Respekter den verdien før du prøver på nytt.",
+    "perKeyBody": "Håndheves per API-nøkkel uavhengig av plan. Ved overskridelse returnerer serveren HTTP 429 med JSON-RPC-feilkode <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> og et <code>data.retry_after</code>-felt (sekunder). Respekter den verdien før du prøver på nytt. Dette er en kort pause du kan prøve på nytt etter, ikke den månedlige handlingskvoten din.",
     "planTag": "Plantak per minutt",
     "planHeading": "Free 60 / min · Agent 300 / min · Scale 1 000 / min",
-    "planBody": "Dette er en burst-grense for rimelig bruk per arbeidsområde (aggregert på tvers av alle API-nøklene dine), separat fra handlingskvoten din. Ved overskridelse returnerer kall <code>data.error_code: \"rate_limit_exceeded\"</code> med <code>data.window: \"per_minute\"</code> og en <code>data.retry_after</code>-nedtelling (sekunder). Oppgrader planen din for et høyere tak og en større handlingskvote.",
+    "planBody": "Dette er en burst-grense for rimelig bruk per arbeidsområde (aggregert på tvers av alle API-nøklene dine), separat fra den månedlige handlingskvoten din. Ved overskridelse returnerer kall feilkode <code>-32003</code> med <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> og en <code>data.retry_after</code>-nedtelling (sekunder). Oppgrader planen din for et høyere tak.",
+    "capTag": "Månedlig handlingskvote",
+    "capHeading": "Free 2 500 · Agent 50 000 · Scale 300 000 handlinger per faktureringsperiode",
+    "capBody": "Fakturerbare handlinger telles per arbeidsområde gjennom faktureringsperioden. Å gå tom er ikke en JSON-RPC-feil: kallet returnerer HTTP 200 med et vanlig verktøyresultat som bærer <code>isError: true</code> og en <code>_meta[\"com.mcpemails/usage_limit\"]</code>-blokk med <code>error_code: \"usage_limit_reached\"</code>, <code>used_actions</code>, <code>cap</code> og <code>reset_at</code>. Det finnes ingen <code>retry_after</code>, fordi nye forsøk ikke kan lykkes før <code>reset_at</code> eller en planendring. Behandle det som full stopp, ikke som backoff.",
     "retryTag": "Trygge nye forsøk",
     "retryHeading": "Respekter alltid retry_after; prøv aldri sendinger på nytt i blinde",
-    "retryBody": "For <code>rate_limit_exceeded</code>-feil, vent <code>data.retry_after</code> sekunder før du prøver på nytt. Bruk eksponentiell backoff for <code>provider_error</code>. Ikke prøv <code>email_compose</code>-sendinger automatisk på nytt ved <code>provider_error</code>, siden meldingen kan ha blitt akseptert av leverandøren allerede."
+    "retryBody": "For <code>rate_limit_exceeded</code>-feil, vent <code>data.retry_after</code> sekunder før du prøver på nytt. Bruk eksponentiell backoff for <code>provider_error</code>. Ikke prøv <code>email_compose</code>-sendinger automatisk på nytt ved <code>provider_error</code>, siden meldingen kan ha blitt akseptert av leverandøren allerede. Prøv aldri <code>usage_limit_reached</code> på nytt: den løsner først ved <code>reset_at</code> eller ved en planendring."
   },
   "cta": {
     "heading": "Klar til å koble til innboksen din?",

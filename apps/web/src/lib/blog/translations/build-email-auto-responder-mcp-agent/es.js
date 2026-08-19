@@ -89,7 +89,9 @@ Si quieres que un mensaje deje de aparecer como sin leer una vez que has respond
 
 Cada API key está limitada a **100 peticiones por minuto, 1000 por hora y 10 000 por día**, independientemente del plan. Tu workspace también tiene un techo de ráfaga según el tier: **60 req/min en Free, 300 en Agent, 1000 en Scale** (consulta [precios](/pricing)). Un bucle educado de sondear y responder vive holgadamente dentro de eso, pero uno que se porta mal puede dispararlo.
 
-Cuando alcanzas un límite, el servidor devuelve un error reintentable (código \`-32029\`) que lleva \`data.retry_after\` en segundos. Hónralo. Duerme ese tiempo y luego continúa.
+Cuando alcanzas un límite de tasa, el servidor devuelve un error reintentable (código \`-32003\`) que lleva \`data.retry_after\` en segundos. Hónralo. Duerme ese tiempo y luego continúa.
+
+La asignación mensual de acciones de tu plan es otro límite distinto, y no es reintentable. Cuando se agota, la llamada vuelve como un resultado de herramienta normal con \`isError: true\` y un bloque \`_meta["com.mcpemails/usage_limit"]\` en lugar de un error JSON-RPC, sin \`retry_after\`. Reintentar solo quema ciclos hasta \`reset_at\` o hasta que mejores de plan, así que detén el bucle y muéstralo.
 
 Aquí está la regla que más importa: **nunca reintentes a ciegas un envío o una respuesta de \`email_compose\`.** Un envío no es idempotente. Si una llamada de envío agota el tiempo o devuelve un resultado ambiguo, un reintento ingenuo puede entregar la misma respuesta dos veces. Reintenta las *lecturas* sin problema; trata los *envíos* como una sola oportunidad y reintenta solo ante un error reintentable explícito, con backoff y un tope estricto.
 

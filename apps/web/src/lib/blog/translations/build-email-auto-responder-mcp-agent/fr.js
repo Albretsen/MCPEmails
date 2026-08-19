@@ -89,7 +89,9 @@ Si vous voulez qu’un message cesse d’apparaître comme non lu une fois que v
 
 Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et 10 000 par jour**, quel que soit le forfait. Votre espace de travail a aussi un plafond de pointe selon le palier — **60 req/min sur Free, 300 sur Agent, 1 000 sur Scale** (voir [tarifs](/pricing)). Une boucle polie d’interrogation et de réponse reste largement en dessous, mais une boucle mal réglée peut le déclencher.
 
-Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable (code \`-32029\`) portant \`data.retry_after\` en secondes. Respectez-la. Patientez ce temps, puis continuez.
+Lorsque vous atteignez une limite de débit, le serveur renvoie une erreur réessayable (code \`-32003\`) portant \`data.retry_after\` en secondes. Respectez-la. Patientez ce temps, puis continuez.
+
+L’allocation mensuelle d’actions de votre formule est une autre limite, et elle n’est pas réessayable. Quand elle est épuisée, l’appel revient sous forme de résultat d’outil normal avec \`isError: true\` et un bloc \`_meta["com.mcpemails/usage_limit"]\` au lieu d’une erreur JSON-RPC, sans \`retry_after\`. Réessayer ne fait que consommer des cycles jusqu’à \`reset_at\` ou un changement de formule : arrêtez la boucle et remontez l’information.
 
 Voici la règle qui compte le plus : **ne réessayez jamais automatiquement et à l’aveugle un envoi ou une réponse \`email_compose\`.** Un envoi n’est pas idempotent. Si un appel d’envoi expire ou renvoie un résultat ambigu, un réessai naïf peut livrer deux fois la même réponse. Réessayez les *lectures* librement ; traitez les *envois* comme uniques et ne les réessayez que sur une erreur explicitement réessayable, avec backoff et un plafond strict.
 
