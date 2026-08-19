@@ -1,14 +1,30 @@
 import { redirect, notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
 import { resolvePlanLimits } from '../../../src/lib/stripe/plans';
+import { resolveUsageBillingWindow } from '../../../src/lib/usage/billing-window';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
+
+/**
+ * The rolling activity window the Usage page charts, in UTC days. The action
+ * meter does NOT use this: an allowance is granted per billing period, so it is
+ * counted over the period resolved by lib/usage/billing-window.
+ */
+const USAGE_WINDOW_DAYS = 30;
+
+/**
+ * Meter version this page reads. Must track ACTION_METER_VERSION in the MCP
+ * edge function: bumping it there without bumping it here silently zeroes the
+ * customer's meter while enforcement counts the new rows.
+ */
+const ACTION_METER_VERSION = 1;
 
 export const dynamic = 'force-dynamic';
 
@@ -121,15 +137,17 @@ async function fetchInboxes(supabase, workspaceId) {
         .order('created_at', { ascending: true }),
     ),
 
-    // Fetch inbox_id + status + created_at for all activity_log rows in the
-    // last 30 days so we can aggregate call counts and the last successful call
-    // per inbox without a GROUP BY RPC.
-    supabase
-      .from('activity_log')
-      .select('inbox_id, status, created_at')
-      .eq('workspace_id', workspaceId)
-      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      .not('inbox_id', 'is', null),
+    // Per-inbox call count and last successful call, aggregated in Postgres.
+    // This used to fetch every activity_log row of the last 30 days and count
+    // them here. PostgREST truncates a response at 1,000 rows without an error
+    // and the read carried no ORDER BY, so on a busy workspace both numbers
+    // came off an arbitrary slice: the count capped at 1,000, and
+    // `lastCallByInbox` was the maximum of a random subset, which could show a
+    // heavily used inbox as having had no successful call in 30 days.
+    supabase.rpc('workspace_inbox_activity', {
+      p_workspace_id: workspaceId,
+      p_days: USAGE_WINDOW_DAYS,
+    }),
   ]);
 
   if (error || !rows) {
@@ -144,11 +162,8 @@ async function fetchInboxes(supabase, workspaceId) {
   const lastCallByInbox = {};
   for (const row of logRows ?? []) {
     if (!row.inbox_id) continue;
-    callsByInbox[row.inbox_id] = (callsByInbox[row.inbox_id] ?? 0) + 1;
-    if (row.status === 'success') {
-      const prev = lastCallByInbox[row.inbox_id];
-      if (!prev || row.created_at > prev) lastCallByInbox[row.inbox_id] = row.created_at;
-    }
+    callsByInbox[row.inbox_id] = row.calls ?? 0;
+    if (row.last_success_at) lastCallByInbox[row.inbox_id] = row.last_success_at;
   }
 
   return rows.map((row) => ({
@@ -324,17 +339,34 @@ async function fetchOverviewStats(supabase, workspaceId) {
  *   totalCalls: number,
  *   byTool: Array<{ tool: string, count: number, pct: number }>,
  *   byInbox: Array<{ inboxId: string, label: string, address: string, archived: boolean, count: number, pct: number }>,
+ *   shadowActions: number,
+ *   rejectedActions: number,
+ *   lastBillableCalls: Array<{ tool: string, occurredAt: string }>,
  * }>}
  */
-async function fetchUsageData(supabase, workspaceId) {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
-  const [activityResult, inboxesResult, actionUsageResult] = await Promise.all([
-    supabase
-      .from('activity_log')
-      .select('tool_name, inbox_id, created_at')
-      .eq('workspace_id', workspaceId)
-      .gte('created_at', thirtyDaysAgo),
+async function fetchUsageData(supabase, workspaceId, billingWindow) {
+  const [summaryResult, inboxesResult, rejectionsResult] = await Promise.all([
+    // Every number on the Usage page, aggregated in Postgres and returned as
+    // one jsonb row.
+    //
+    // This used to be two raw selects counted in Node, and every figure it
+    // produced was capped: PostgREST truncates a response at 1,000 rows and
+    // reports no error. Measured on production the day this was fixed, the
+    // busiest workspace made 33,292 calls and consumed 26,611 billable actions
+    // in 30 days, and this page told its owner 1,000 and 1,000. Neither read
+    // carried an ORDER BY either, so the daily chart was drawn from an
+    // arbitrary slice rather than from a truncated tail.
+    //
+    // The activity stats cover a rolling 30 days. The action meter covers the
+    // billing period, because that is the window the cap applies over and the
+    // window edge enforcement counts; see lib/usage/billing-window.
+    supabase.rpc('workspace_usage_summary', {
+      p_workspace_id: workspaceId,
+      p_period_start: billingWindow.start,
+      p_period_end: billingWindow.end,
+      p_days: USAGE_WINDOW_DAYS,
+      p_meter_version: ACTION_METER_VERSION,
+    }),
     // Include soft-deleted inboxes here (no deleted_at filter): a call can be
     // attributed to an inbox that was since deleted/revoked, and we still want
     // to show its original label/address (greyed-out) instead of "Unknown
@@ -343,23 +375,38 @@ async function fetchUsageData(supabase, workspaceId) {
       .from('inboxes')
       .select('id, display_name, email_address, deleted_at')
       .eq('workspace_id', workspaceId),
-    // Phase-1 meter source. This is deliberately separate from activity_log:
-    // the customer-visible meter never repeatedly counts the audit log.
+    // How many calls the MCP server has actually refused this billing period.
+    //
+    // Being at or over the cap does NOT imply anything was refused: enforcement
+    // is gated to a deterministic rollout cohort, so most workspaces sail past
+    // the cap untouched. The dashboard cannot recompute that gate, but it does
+    // not have to: every real rejection writes a row here, so a non-zero count
+    // is proof and a zero count is the absence of proof. The Usage page uses
+    // that to choose between "you are being blocked" and "your allowance is
+    // used up", instead of asserting the first and being wrong 95% of the time.
+    //
+    // Deliberately not filtered by meter_version: a refusal is a refusal
+    // whichever metering definition produced it, and undercounting here would
+    // silently downgrade a true "blocked" state back to a guess.
+    //
+    // head + count: 'exact' returns no rows, just the count, served by
+    // usage_limit_events_workspace_occurred_idx. RLS restricts it to the
+    // caller's own workspaces.
     supabase
-      .from('action_usage')
-      .select('tool_name, quantity, occurred_at')
+      .from('usage_limit_events')
+      .select('id', { head: true, count: 'exact' })
       .eq('workspace_id', workspaceId)
-      .eq('billable', true)
-      .eq('meter_version', 1)
-      .gte('occurred_at', thirtyDaysAgo),
+      .gte('occurred_at', billingWindow.start),
   ]);
 
-  if (activityResult.error) {
-    console.error('[fetchUsageData]', activityResult.error.message);
+  if (summaryResult.error) {
+    console.error('[fetchUsageData]', summaryResult.error.message);
+  }
+  if (rejectionsResult.error) {
+    console.error('[fetchUsageData rejections]', rejectionsResult.error.message);
   }
 
-  const rows = activityResult.data ?? [];
-  const actionRows = actionUsageResult.data ?? [];
+  const summary = summaryResult.data ?? {};
 
   // Build inbox label lookup: id → { label, address, archived }
   const inboxMap = {};
@@ -373,65 +420,50 @@ async function fetchUsageData(supabase, workspaceId) {
     };
   }
 
-  // Build 30-day date array in UTC, oldest-first (index 0 = 29 days ago, index 29 = today)
-  const dates = [];
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-    dates.push(d.toISOString().slice(0, 10)); // YYYY-MM-DD
-  }
-
-  // Aggregate per-day, per-tool, per-inbox
-  const countsByDay = {};
-  const countsByTool = {};
-  const countsByInbox = {};
-
-  for (const row of rows) {
-    // created_at comes back as "2026-05-24 22:38:29+00"; first 10 chars are YYYY-MM-DD
-    const day = (row.created_at ?? '').slice(0, 10);
-    if (day) countsByDay[day] = (countsByDay[day] ?? 0) + 1;
-    if (row.tool_name) countsByTool[row.tool_name] = (countsByTool[row.tool_name] ?? 0) + 1;
-    if (row.inbox_id) countsByInbox[row.inbox_id] = (countsByInbox[row.inbox_id] ?? 0) + 1;
-  }
-
-  const totalCalls = rows.length;
-
-  const dailyCounts = dates.map((date) => ({
-    date,
-    count: countsByDay[date] ?? 0,
+  // The RPC returns one entry per UTC day in the window, oldest first, with
+  // quiet days already present as zeroes, so there is no date array to rebuild
+  // here and no way for the series and the counts to cover different days.
+  const dailyCounts = (summary.daily ?? []).map((entry) => ({
+    date: entry.date,
+    count: entry.count ?? 0,
   }));
 
-  const byTool = Object.entries(countsByTool)
-    .map(([tool, count]) => ({
-      tool,
-      count,
-      pct: totalCalls > 0 ? Math.round((count / totalCalls) * 100) : 0,
-    }))
-    .sort((a, b) => b.count - a.count);
+  const totalCalls = summary.total_calls ?? 0;
 
-  const byInbox = Object.entries(countsByInbox)
-    .map(([inboxId, count]) => {
-      const entry = inboxMap[inboxId];
-      return {
-        inboxId,
-        // Resolve the original label even for deleted inboxes. Only a row that
-        // was hard-deleted (no soft-delete record at all) falls back to the id.
-        label: entry?.label ?? `Inbox ${inboxId.slice(0, 8)}`,
-        address: entry?.address ?? '',
-        // True when the inbox was deleted/revoked, or when no row exists at all.
-        archived: entry ? entry.archived : true,
-        count,
-        pct: totalCalls > 0 ? Math.round((count / totalCalls) * 100) : 0,
-      };
-    })
-    .sort((a, b) => b.count - a.count);
+  const byTool = (summary.by_tool ?? []).map((entry) => ({
+    tool: entry.tool,
+    count: entry.count ?? 0,
+    pct: totalCalls > 0 ? Math.round(((entry.count ?? 0) / totalCalls) * 100) : 0,
+  }));
 
-  const shadowActions = actionRows.reduce((sum, row) => sum + (row.quantity ?? 0), 0);
-  const lastBillableCalls = actionRows
-    .sort((a, b) => String(b.occurred_at).localeCompare(String(a.occurred_at)))
-    .slice(0, 30)
-    .map((row) => ({ tool: row.tool_name, occurredAt: row.occurred_at }));
+  const byInbox = (summary.by_inbox ?? []).map((entry) => {
+    const inboxId = entry.inbox_id;
+    const inbox = inboxMap[inboxId];
+    return {
+      inboxId,
+      // Resolve the original label even for deleted inboxes. Only a row that
+      // was hard-deleted (no soft-delete record at all) falls back to the id.
+      label: inbox?.label ?? `Inbox ${String(inboxId).slice(0, 8)}`,
+      address: inbox?.address ?? '',
+      // True when the inbox was deleted/revoked, or when no row exists at all.
+      archived: inbox ? inbox.archived : true,
+      count: entry.count ?? 0,
+      pct: totalCalls > 0 ? Math.round(((entry.count ?? 0) / totalCalls) * 100) : 0,
+    };
+  });
 
-  return { dailyCounts, totalCalls, byTool, byInbox, shadowActions, lastBillableCalls };
+  const shadowActions = summary.billable_actions ?? 0;
+  const lastBillableCalls = (summary.last_billable ?? []).map((entry) => ({
+    tool: entry.tool,
+    occurredAt: entry.occurred_at,
+  }));
+
+  // A failed count query must not read as "nothing was rejected", but it also
+  // must not crash the page. Zero is the honest floor: the UI treats it as
+  // "no proof of rejection" and falls back to allowance-only wording.
+  const rejectedActions = rejectionsResult.count ?? 0;
+
+  return { dailyCounts, totalCalls, byTool, byInbox, shadowActions, rejectedActions, lastBillableCalls };
 }
 
 /**
@@ -613,8 +645,9 @@ export default async function DashboardPage({ params }) {
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).
   let userRole = 'member';
   let effectiveWorkspacePlan = null;
+  let storedBillingPeriod = null;
   if (workspace) {
-    const [{ data: memberRow }, { data: effectivePlanRows }] = await Promise.all([
+    const [{ data: memberRow }, { data: effectivePlanRows }, { data: billingRow }] = await Promise.all([
       supabase
         .from('workspace_members')
         .select('role')
@@ -622,9 +655,27 @@ export default async function DashboardPage({ params }) {
         .eq('workspace_id', workspace.id)
         .maybeSingle(),
       supabase.rpc('effective_workspace_plan', { p_workspace_id: workspace.id }),
+      // The owner's Stripe cycle, which is what the action allowance is granted
+      // over. Read for the workspace OWNER, not the viewer: a member of someone
+      // else's paid workspace must see that workspace's period.
+      //
+      // Service-role, deliberately. `user_billing_select_own` restricts SELECT
+      // to `user_id = auth.uid()`, so reading it with the viewer's client
+      // returns null for every member who is not the owner, and the window
+      // silently degrades to a calendar month while the edge function (which is
+      // service-role) keeps enforcing against the real Stripe period. The meter
+      // and the thing that blocks you would then disagree, on a billing
+      // surface. Only the two period timestamps are selected, never a Stripe
+      // customer or subscription id. /api/usage reads it the same way.
+      createServiceRoleClient()
+        .from('user_billing')
+        .select('current_period_start, current_period_end')
+        .eq('user_id', workspace.owner_id)
+        .maybeSingle(),
     ]);
     userRole = memberRow?.role ?? 'member';
     effectiveWorkspacePlan = effectivePlanRows?.[0] ?? null;
+    storedBillingPeriod = billingRow ?? null;
   }
 
   // Creating additional workspaces is a Pro feature: the user must OWN at least
@@ -651,6 +702,7 @@ export default async function DashboardPage({ params }) {
   const workspaceSlug = workspace?.slug ?? 'workspace';
   const compedScale = effectiveWorkspacePlan?.comped_scale ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
+  const billingWindow = resolveUsageBillingWindow(plan, storedBillingPeriod);
 
   // Fetch all page data in parallel; skip if no workspace row exists yet.
   const [overviewStats, activityFeed, inboxes, apiKeys, usageData, auditLog, members, pendingInvites] = workspace
@@ -659,7 +711,7 @@ export default async function DashboardPage({ params }) {
         fetchActivityFeed(supabase, workspace.id),
         fetchInboxes(supabase, workspace.id),
         fetchApiKeys(supabase, workspace.id),
-        fetchUsageData(supabase, workspace.id),
+        fetchUsageData(supabase, workspace.id, billingWindow),
         fetchAuditLog(supabase, workspace.id),
         fetchMembers(supabase, workspace.id),
         fetchPendingInvites(supabase, workspace.id),
@@ -669,7 +721,7 @@ export default async function DashboardPage({ params }) {
         [],
         [],
         [],
-        { dailyCounts: [], totalCalls: 0, byTool: [], byInbox: [], shadowActions: 0, lastBillableCalls: [] },
+        { dailyCounts: [], totalCalls: 0, byTool: [], byInbox: [], shadowActions: 0, rejectedActions: 0, lastBillableCalls: [] },
         { entries: [], total: 0, page: 0, pageSize: 25 },
         [],
         [],
@@ -678,9 +730,15 @@ export default async function DashboardPage({ params }) {
   // Resolve plan limits so the dashboard can show usage (e.g. "1 of 1 inboxes")
   // and enforce caps client-side before attempting an OAuth redirect.
   const rawLimits = resolvePlanLimits(plan, { compedScale });
-  const shadowActionCap = ({ free: 2500, solo: 50000, pro: 300000 })[plan] ?? 2500;
-  usageData.shadowActionCap = shadowActionCap;
+  // The cap comes from the canonical plan table, comp adjustment included. It
+  // used to be a fourth hardcoded copy of the numbers keyed on `plan` alone,
+  // which told every comped account it was capped at 300,000 while every other
+  // surface treated the same account as unlimited.
+  usageData.shadowActionCap = rawLimits.maxMonthlyToolCalls === Infinity
+    ? null
+    : rawLimits.maxMonthlyToolCalls;
   usageData.shadowPlan = plan;
+  usageData.shadowPeriodEnd = billingWindow.end;
   const planLimits = {
     maxInboxes: rawLimits.maxInboxes === Infinity ? null : rawLimits.maxInboxes,
     maxDailyBurstCalls: rawLimits.maxDailyBurstCalls === Infinity ? null : rawLimits.maxDailyBurstCalls,
