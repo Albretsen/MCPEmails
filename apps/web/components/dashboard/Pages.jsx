@@ -3030,13 +3030,43 @@ function BulkRunsPanel() {
 /* ---------------- Usage ---------------- */
 
 /**
+ * Formats a billing-window end timestamp as a plain calendar date.
+ *
+ * Fixed to UTC on purpose: the window boundary is a UTC instant, and the same
+ * markup is rendered on the server (where there is no user time zone) and in
+ * the browser, so a floating time zone would produce a hydration mismatch on
+ * anyone whose local date differs from the UTC one.
+ *
+ * Returns null for a missing or unparseable value so callers can fall back to
+ * copy that does not name a date.
+ */
+function formatPeriodEndDate(iso, locale) {
+  if (!iso) return null;
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return null;
+  try {
+    return new Intl.DateTimeFormat(locale || 'en', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }).format(at);
+  } catch {
+    return at.toISOString().slice(0, 10);
+  }
+}
+
+/**
  * UsagePage: real data from activity_log, passed as the `usageData` prop.
  *
  * usageData shape:
- *   dailyCounts  Array<{ date: "YYYY-MM-DD", count: number }>, 30 entries oldest-first
- *   totalCalls   number  (sum over the 30-day window)
- *   byTool       Array<{ tool: string, count: number, pct: number }>, sorted desc
- *   byInbox      Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
+ *   dailyCounts     Array<{ date: "YYYY-MM-DD", count: number }>, 30 entries oldest-first
+ *   totalCalls      number  (sum over the 30-day window)
+ *   byTool          Array<{ tool: string, count: number, pct: number }>, sorted desc
+ *   byInbox         Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
+ *   shadowActions   number  (billable actions used in the current billing period)
+ *   shadowActionCap number|null  (the enforced cap; null means unlimited/comped)
+ *   shadowPeriodEnd string|null  (ISO instant the allowance resets)
  */
 export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
   const t = useTranslations('dashboard');
@@ -3046,11 +3076,60 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
     byTool = [],
     byInbox = [],
     shadowActions = 0,
-    shadowActionCap = 2500,
+    // null means unlimited: a comped entitlement carries no cap, so there is
+    // no percentage to draw and no "of N" to print.
+    shadowActionCap = null,
+    // Exclusive ISO upper bound of the current billing window, i.e. the instant
+    // the allowance resets. Set server-side from resolveUsageBillingWindow().
+    shadowPeriodEnd = null,
+    // Calls the MCP server has actually refused this billing period, counted
+    // from usage_limit_events. See the note on the alert copy below.
+    rejectedActions = 0,
     lastBillableCalls = [],
   } = usageData ?? {};
+  const { locale } = useAppLocale();
 
-  const shadowPct = shadowActionCap > 0 ? Math.min(100, Math.round((shadowActions / shadowActionCap) * 100)) : 0;
+  const hasActionCap = typeof shadowActionCap === 'number' && shadowActionCap > 0;
+  // Bar width is clamped; the state thresholds below use the raw ratio so that
+  // "over cap" stays distinguishable from "exactly at cap".
+  const shadowPct = hasActionCap ? Math.min(100, Math.round((shadowActions / shadowActionCap) * 100)) : 0;
+  const actionRatio = hasActionCap ? shadowActions / shadowActionCap : 0;
+  const actionsAtCap = hasActionCap && shadowActions >= shadowActionCap;
+  const actionsNearCap = hasActionCap && !actionsAtCap && actionRatio >= 0.8;
+  const actionsRemaining = hasActionCap ? Math.max(0, shadowActionCap - shadowActions) : 0;
+  // Being at the cap does not mean anything was refused: enforcement is gated
+  // to a rollout cohort this page cannot recompute. So the at-cap state only
+  // claims rejection when there is a recorded rejection to point at.
+  const actionsRejecting = actionsAtCap && rejectedActions > 0;
+  // Rendered in UTC because the window boundary itself is a UTC instant, and
+  // because a locale-only format would drift between server and client render.
+  const actionResetDate = formatPeriodEndDate(shadowPeriodEnd, locale);
+
+  // Copy for the allowance alert, resolved here rather than inline: the at-cap
+  // case forks on proven-versus-unproven rejection as well as on whether a
+  // reset date is known, and that nests badly inside JSX.
+  let actionAlertBadge = null;
+  let actionAlertHeadline = null;
+  let actionAlertDetail = null;
+  if (actionsRejecting) {
+    actionAlertBadge = t('usage.actionsBlockedBadge');
+    actionAlertHeadline = t('usage.actionsRejected');
+    actionAlertDetail = actionResetDate
+      ? t('usage.actionsRejectedDetail', { count: rejectedActions.toLocaleString(), date: actionResetDate })
+      : t('usage.actionsRejectedDetailNoDate', { count: rejectedActions.toLocaleString() });
+  } else if (actionsAtCap) {
+    actionAlertBadge = t('usage.actionsCapReachedBadge');
+    actionAlertHeadline = t('usage.actionsExhausted');
+    actionAlertDetail = actionResetDate
+      ? t('usage.actionsExhaustedDetail', { used: shadowActions.toLocaleString(), cap: shadowActionCap.toLocaleString(), date: actionResetDate })
+      : t('usage.actionsExhaustedDetailNoDate', { used: shadowActions.toLocaleString(), cap: shadowActionCap.toLocaleString() });
+  } else if (actionsNearCap) {
+    actionAlertBadge = t('usage.actionsNearCapBadge');
+    actionAlertHeadline = t('usage.actionsApproaching', { pct: shadowPct });
+    actionAlertDetail = actionResetDate
+      ? t('usage.actionsRemainingDetail', { remaining: actionsRemaining.toLocaleString(), cap: shadowActionCap.toLocaleString(), date: actionResetDate })
+      : t('usage.actionsRemainingDetailNoDate', { remaining: actionsRemaining.toLocaleString(), cap: shadowActionCap.toLocaleString() });
+  }
 
   // Plan limits: null means unlimited (Enterprise).
   const dailyCap = planLimits?.maxDailyBurstCalls ?? null;
@@ -3080,14 +3159,74 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
 
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="card-h">
-          <div><div className="title">{t('usage.shadowMeterTitle')}</div><div className="sub">{t('usage.shadowMeterSub')}</div></div>
-          <Badge tone="neutral">{t('usage.shadowOnly')}</Badge>
+          <div><div className="title">{t('usage.actionMeterTitle')}</div><div className="sub">{t('usage.actionMeterSub')}</div></div>
+          {actionAlertBadge && (
+            <Badge tone={actionsAtCap ? 'red' : 'amber'}>{actionAlertBadge}</Badge>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
           <strong style={{ fontSize: 24 }}>{shadowActions.toLocaleString()}</strong>
-          <span style={{ color: 'var(--fg-3)' }}>{t('usage.shadowOfCap', { cap: shadowActionCap.toLocaleString() })}</span>
+          {hasActionCap && (
+            <span style={{ color: 'var(--fg-3)' }}>{t('usage.actionsOfCap', { cap: shadowActionCap.toLocaleString() })}</span>
+          )}
         </div>
-        <div style={{ height: 7, borderRadius: 4, overflow: 'hidden', background: 'var(--bg-sunken)' }}><div style={{ width: `${shadowPct}%`, height: '100%', background: 'var(--brand)' }} /></div>
+        {hasActionCap && (
+          <div style={{ height: 7, borderRadius: 4, overflow: 'hidden', background: 'var(--bg-sunken)' }}><div style={{ width: `${shadowPct}%`, height: '100%', background: actionsAtCap ? 'var(--red-500, #ef4444)' : actionsNearCap ? 'var(--amber-500, #f59e0b)' : 'var(--brand)', transition: 'width 0.4s' }} /></div>
+        )}
+        {/* Allowance alert. Silent below 80%, amber up to the cap, red at or
+            past it. The red state has two wordings: it reports rejection as
+            fact only when usage_limit_events proves it, and otherwise says only
+            that the allowance is spent. Never shown without a cap: a comped
+            workspace has no allowance to run out of. */}
+        {actionAlertHeadline && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            marginTop: 12,
+            padding: '12px 14px',
+            background: actionsAtCap ? 'var(--red-100, #fef2f2)' : 'var(--amber-50, #fffbeb)',
+            border: actionsAtCap ? '1px solid rgba(229,72,77,0.25)' : '1px solid rgba(245,158,11,0.3)',
+            borderRadius: 10,
+            fontFamily: 'var(--font-sans)',
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: actionsAtCap ? 'var(--red-700, #b91c1c)' : 'var(--amber-800, #92400e)',
+                marginBottom: 4,
+              }}>
+                {actionAlertHeadline}
+              </div>
+              <div style={{ fontSize: 12, color: actionsAtCap ? 'var(--red-600, #dc2626)' : 'var(--fg-2)' }}>
+                {actionAlertDetail}
+              </div>
+            </div>
+            <a
+              href="/pricing"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '0 14px',
+                height: 34,
+                background: 'var(--brand)',
+                color: '#fff',
+                borderRadius: 8,
+                fontFamily: 'var(--font-sans)',
+                fontSize: 13,
+                fontWeight: 500,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              <Icon name="zap" size={13} color="#fff" />
+              {t('usage.upgradePlan')}
+            </a>
+          </div>
+        )}
         {lastBillableCalls.length > 0 && <div style={{ marginTop: 12, fontSize: 12, color: 'var(--fg-3)' }}>{t('usage.lastBillableCalls', { count: lastBillableCalls.length })}: {lastBillableCalls.slice(0, 5).map((call) => call.tool).join(' · ')}</div>}
       </div>
 

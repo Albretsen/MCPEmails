@@ -23,6 +23,25 @@ function hashToken(raw: string): string {
   return crypto.createHash('sha256').update(raw, 'utf8').digest('hex');
 }
 
+/**
+ * Escape a caller-supplied string so `ilike` matches it literally.
+ *
+ * `ilike` is a PATTERN match, so an address is not just a value: `_` and `%`
+ * are LIKE wildcards, and PostgREST additionally rewrites `*` to `%` on the
+ * way in. Without escaping, `foo_bar@x.com` also matches `fooXbar@x.com`, so
+ * the duplicate-invite and already-a-member checks below could match a
+ * stranger's row, or match several rows at once (which makes `.maybeSingle()`
+ * return PGRST116 and, since we ignore the error, skips the check entirely).
+ *
+ * Backslash is LIKE's default escape character, so it must be escaped first.
+ * A literal `*` is not expressible through PostgREST's like/ilike at all; it is
+ * escaped here too, so the worst case for such an address is a missed dedupe,
+ * never a match against somebody else's.
+ */
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_*]/g, (char) => `\\${char}`);
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
 
@@ -58,6 +77,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+  // Stored rows are not guaranteed lower-case (the invite index is on
+  // LOWER(email)), so lookups stay case-insensitive via `ilike`, but always on
+  // the escaped form, never on the raw address.
+  const emailPattern = escapeLikePattern(normalizedEmail);
 
   // 3. Verify caller's membership and role (owner or admin may invite).
   const { data: callerMember, error: memberError } = await supabase
@@ -98,9 +121,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     .from('workspace_invites')
     .select('id')
     .eq('workspace_id', workspaceId)
-    .ilike('email', normalizedEmail)
+    .ilike('email', emailPattern)
     .is('accepted_at', null)
     .gt('expires_at', new Date().toISOString())
+    .limit(1)
     .maybeSingle();
 
   if (existingInvite) {
@@ -114,7 +138,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const { data: matchedUser } = await service
     .from('users')
     .select('id')
-    .ilike('email', normalizedEmail)
+    .ilike('email', emailPattern)
+    .limit(1)
     .maybeSingle();
 
   if (matchedUser) {

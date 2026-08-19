@@ -10,6 +10,11 @@
  * email_read/search/send build on the same connection primitives.
  *
  * Auth failures throw ImapAuthError so callers can surface a reconnect prompt.
+ * Oversized messages throw ImapMessageTooLargeError rather than being buffered,
+ * because this runs in a 256MB Deno isolate that is shared with other tenants'
+ * in-flight requests: one unbounded allocation kills the whole worker, not just
+ * the request that caused it. See MAX_SHARED_BUFFER_BYTES and
+ * DEFAULT_MAX_LITERAL_BYTES below for the two ceilings that enforce this.
  * A faithful Node reference lives at apps/web/src/lib/email/imap.ts.
  */
 
@@ -58,6 +63,24 @@ function isConnectionLimitResponse(text: string): boolean {
     t.includes("[unavailable]") ||
     t.includes("try again")
   );
+}
+
+/**
+ * Thrown when a server response carries a literal larger than the caller's
+ * byte budget, or when a single protocol line would grow the read buffer past
+ * {@link MAX_SHARED_BUFFER_BYTES}.
+ *
+ * This exists because the edge isolate has a hard 256MB memory limit and is
+ * shared: an unbounded fetch does not fail the offending request, it kills the
+ * worker (HTTP 546) and takes every other request in that isolate with it.
+ * Refusing the message up front turns an infrastructure-wide failure into an
+ * ordinary per-request error the caller can report.
+ */
+export class ImapMessageTooLargeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ImapMessageTooLargeError";
+  }
 }
 
 export interface ImapConnectConfig {
@@ -120,6 +143,107 @@ export interface ImapMailboxStatus {
 const CRLF = "\r\n";
 const COMMAND_TIMEOUT_MS = 15_000;
 
+/**
+ * Default ceiling on a single IMAP literal (one FETCH body, one long header).
+ *
+ * Sized off what the product actually supports rather than off a round number:
+ * callers allow attachments up to 25MB, and a 25MB attachment is roughly 34MB
+ * once base64-encoded, before headers and sibling parts. 40MB therefore clears
+ * the largest currently-legal message with room to spare while still bounding
+ * the allocation. Callers doing cheap work (summaries, flags, folder listings)
+ * should pass a much tighter budget: the ceiling is a per-command parameter
+ * precisely so a listing operation never pays a fetch-sized worst case.
+ */
+export const DEFAULT_MAX_LITERAL_BYTES = 40 * 1024 * 1024;
+
+/** Starting size of the shared line buffer, and the size we shrink back to. */
+const INITIAL_BUFFER_BYTES = 64 * 1024;
+
+/**
+ * Hard ceiling on the shared line buffer. Only whole protocol LINES have to fit
+ * here now (large literals are streamed into their own exact-size allocation),
+ * and the biggest realistic line is a UID SEARCH result: even a 500k-message
+ * mailbox answers in well under 4MB, so 16MB is pathological rather than large.
+ */
+const MAX_SHARED_BUFFER_BYTES = 16 * 1024 * 1024;
+
+/**
+ * Beyond this size the buffer grows in fixed steps instead of doubling.
+ * Doubling is what made the old growth path so expensive: `grown.set(buffer)`
+ * holds the old and new allocations simultaneously, so a 32MB buffer doubling
+ * to 64MB peaked at 96MB inside a 256MB isolate.
+ */
+const BUFFER_GROWTH_STEP_BYTES = 1024 * 1024;
+
+/**
+ * Literals at or below this size are served from the shared buffer exactly as
+ * before. Larger ones get their own right-sized allocation so the shared buffer
+ * is never inflated (and never has to be grown) by a message body.
+ */
+const LITERAL_STREAM_THRESHOLD_BYTES = 64 * 1024;
+
+/** Scratch chunk used when draining a literal we have refused to buffer. */
+const DISCARD_CHUNK_BYTES = 32 * 1024;
+
+/**
+ * Stand-in emitted for a captured literal when `readTagged` runs in
+ * capture mode. The NUL bytes make collisions with real server data impossible:
+ * RFC 3501 forbids NUL inside a quoted string, so no genuine quoted value can
+ * ever be mistaken for a placeholder.
+ */
+const LITERAL_PLACEHOLDER_PREFIX = "\u0000IMAP-LITERAL-";
+const LITERAL_PLACEHOLDER_SUFFIX = "\u0000";
+
+function literalPlaceholder(index: number): string {
+  return `${LITERAL_PLACEHOLDER_PREFIX}${index}${LITERAL_PLACEHOLDER_SUFFIX}`;
+}
+
+/**
+ * Swap a placeholder produced by capture mode back for its literal. Returns the
+ * value untouched when it is not a placeholder, so callers can run every string
+ * attribute through this regardless of whether the server used a literal or a
+ * plain quoted string.
+ */
+function resolveLiteral(value: string, literals: string[]): string {
+  if (
+    !value.startsWith(LITERAL_PLACEHOLDER_PREFIX) ||
+    !value.endsWith(LITERAL_PLACEHOLDER_SUFFIX)
+  ) {
+    return value;
+  }
+  const index = Number(
+    value.slice(LITERAL_PLACEHOLDER_PREFIX.length, value.length - LITERAL_PLACEHOLDER_SUFFIX.length),
+  );
+  if (!Number.isInteger(index) || index < 0 || index >= literals.length) return value;
+  return literals[index];
+}
+
+/** Shape returned by {@link ImapClient.readTagged}. */
+interface ImapTaggedResponse {
+  status: "OK" | "NO" | "BAD";
+  text: string;
+  untagged: string[];
+  /**
+   * Literals captured verbatim, in the order the server sent them, when the
+   * command asked for capture mode. Empty otherwise (literals are then inlined
+   * into the untagged lines exactly as they always were).
+   */
+  literals: string[];
+}
+
+/** Per-command knobs for {@link ImapClient.readTagged}. */
+interface ReadTaggedOptions {
+  /** Byte budget for any single literal. Defaults to {@link DEFAULT_MAX_LITERAL_BYTES}. */
+  maxLiteralBytes?: number;
+  /**
+   * Hand literals back through `literals[]` instead of escaping and splicing
+   * them into the logical line. Only worth it for commands that fetch large
+   * bodies: it skips an escape pass, a giant string concatenation and a
+   * re-tokenize pass, each of which was a full-size copy of the message.
+   */
+  captureLiterals?: boolean;
+}
+
 /** A live, authenticated IMAP session over implicit TLS. */
 export class ImapClient {
   private conn: Deno.Conn;
@@ -127,6 +251,12 @@ export class ImapClient {
   private bufStart = 0;
   private bufEnd = 0;
   private tagCounter = 0;
+  /**
+   * Set once the peer has closed the socket. `readLine` answers EOF with an
+   * empty string, which used to leave `readTagged` spinning forever waiting for
+   * a tagged completion that can never arrive; the flag lets it give up instead.
+   */
+  private eofReached = false;
   private readonly decoder = new TextDecoder("latin1");
   private readonly encoder = new TextEncoder();
 
@@ -334,10 +464,14 @@ export class ImapClient {
    * envelope metadata to rank a larger candidate set. The returned summaries
    * still have a string preview (the empty string when it was not fetched), so
    * callers that expose a preview can fetch it only for their final page.
+   *
+   * This command only ever asks for envelope metadata and a 2KB body prefix, so
+   * `maxLiteralBytes` is worth setting well below the default: a listing has no
+   * business buffering a message-sized literal, whatever the server sends.
    */
   fetchSummaries(
     uids: number[],
-    options: { includePreview?: boolean } = {},
+    options: { includePreview?: boolean; maxLiteralBytes?: number } = {},
   ): Promise<ImapMessageSummary[]> {
     if (uids.length === 0) return Promise.resolve([]);
     return this.runExclusive(async () => {
@@ -349,7 +483,9 @@ export class ImapClient {
       await this.write(
         `${tag} UID FETCH ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart})${CRLF}`,
       );
-      const resp = await this.readTagged(tag);
+      const resp = await this.readTagged(tag, {
+        maxLiteralBytes: options.maxLiteralBytes,
+      });
       if (resp.status !== "OK") {
         throw new Error(`UID FETCH failed: ${resp.text}`);
       }
@@ -367,12 +503,29 @@ export class ImapClient {
   /**
    * UID FETCH the full raw RFC 822 message plus flags. Returns null if the UID
    * is not present in the FETCH response.
+   *
+   * `maxLiteralBytes` caps the raw message this call is willing to buffer,
+   * defaulting to {@link DEFAULT_MAX_LITERAL_BYTES}; anything larger throws
+   * {@link ImapMessageTooLargeError} instead of being read into memory. Callers
+   * that only need headers or a small part should pass a far smaller budget so
+   * a single outsized message cannot dominate the isolate's memory.
+   *
+   * The body is fetched in capture mode, which is what keeps this affordable:
+   * the literal is decoded once and handed back as-is, rather than being escaped
+   * into a quoted string, concatenated into a giant logical line, and then
+   * unescaped again by the tokenizer (three extra copies of the whole message).
    */
-  fetchMessageRaw(uid: number): Promise<ImapRawMessage | null> {
+  fetchMessageRaw(
+    uid: number,
+    options: { maxLiteralBytes?: number } = {},
+  ): Promise<ImapRawMessage | null> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
       await this.write(`${tag} UID FETCH ${uid} (FLAGS BODY.PEEK[])${CRLF}`);
-      const resp = await this.readTagged(tag);
+      const resp = await this.readTagged(tag, {
+        maxLiteralBytes: options.maxLiteralBytes,
+        captureLiterals: true,
+      });
       if (resp.status !== "OK") {
         throw new Error(`UID FETCH failed: ${resp.text}`);
       }
@@ -394,7 +547,9 @@ export class ImapClient {
           typeof key === "string" && key.startsWith("BODY[") &&
           typeof attrs[i + 1] === "string"
         ) {
-          raw = attrs[i + 1] as string;
+          // In capture mode this is a placeholder standing in for the literal;
+          // servers that answer with a plain quoted string come back unchanged.
+          raw = resolveLiteral(attrs[i + 1] as string, resp.literals);
         }
       }
       return { raw, flags };
@@ -714,7 +869,27 @@ export class ImapClient {
       this.bufStart = 0;
     }
     if (this.bufEnd === this.buffer.length) {
-      const grown = new Uint8Array(this.buffer.length * 2);
+      if (this.buffer.length >= MAX_SHARED_BUFFER_BYTES) {
+        // Only whole protocol lines live in this buffer, so hitting the ceiling
+        // means the server sent a single line larger than any legitimate IMAP
+        // response. Failing this one command is far cheaper than letting the
+        // allocation climb until the isolate is killed underneath every other
+        // request sharing this worker.
+        throw new ImapMessageTooLargeError(
+          `IMAP response line exceeds the ${MAX_SHARED_BUFFER_BYTES}-byte read-buffer ceiling`,
+        );
+      }
+      // Grow by doubling only while the buffer is small, then in fixed steps.
+      // Both the old and the new allocation are live during `set()`, so
+      // unbounded doubling is what turned a large read into a memory spike of
+      // 1.5x the target size.
+      const target = Math.min(
+        MAX_SHARED_BUFFER_BYTES,
+        this.buffer.length < BUFFER_GROWTH_STEP_BYTES
+          ? this.buffer.length * 2
+          : this.buffer.length + BUFFER_GROWTH_STEP_BYTES,
+      );
+      const grown = new Uint8Array(target);
       grown.set(this.buffer);
       this.buffer = grown;
     }
@@ -725,6 +900,25 @@ export class ImapClient {
     if (n === null) return false;
     this.bufEnd += n;
     return true;
+  }
+
+  /**
+   * Return the buffer to its starting size once a command has finished with it.
+   *
+   * Without this, a single oversized response left the connection carrying an
+   * inflated buffer for the rest of its life, even though every later command
+   * only needed a few kilobytes. Skipped when unread bytes would not fit, which
+   * cannot happen between commands but keeps the invariant honest.
+   */
+  private shrinkBuffer(): void {
+    if (this.buffer.length <= INITIAL_BUFFER_BYTES) return;
+    const pending = this.bufEnd - this.bufStart;
+    if (pending > INITIAL_BUFFER_BYTES) return;
+    const fresh = new Uint8Array(INITIAL_BUFFER_BYTES);
+    if (pending > 0) fresh.set(this.buffer.subarray(this.bufStart, this.bufEnd));
+    this.buffer = fresh;
+    this.bufStart = 0;
+    this.bufEnd = pending;
   }
 
   /** Read one CRLF-terminated line (without the trailing CRLF). */
@@ -740,6 +934,7 @@ export class ImapClient {
       const ok = await this.fill();
       if (!ok) {
         // EOF: return whatever remains.
+        this.eofReached = true;
         const line = this.decoder.decode(this.buffer.subarray(this.bufStart, this.bufEnd));
         this.bufStart = this.bufEnd;
         return line;
@@ -749,6 +944,14 @@ export class ImapClient {
 
   /** Read exactly n bytes (used for IMAP literals), as a latin1 string. */
   private async readExact(n: number): Promise<string> {
+    // Large literals get their own right-sized allocation and are read straight
+    // off the socket. Routing them through the shared buffer instead would grow
+    // that buffer to the size of the message (plus a transient copy of the old
+    // one), and then keep it that big for the life of the connection.
+    if (n > LITERAL_STREAM_THRESHOLD_BYTES) {
+      const bytes = await this.readExactBytes(n);
+      return this.decoder.decode(bytes);
+    }
     while (this.bufEnd - this.bufStart < n) {
       const ok = await this.fill();
       if (!ok) break;
@@ -760,34 +963,145 @@ export class ImapClient {
   }
 
   /**
+   * Read exactly n bytes into a dedicated buffer: whatever the shared buffer is
+   * already holding, then the remainder direct from the socket. Returns a short
+   * view on EOF, matching what the buffered path does when the peer hangs up
+   * mid-literal. Safe to bypass the shared buffer because every caller holds the
+   * command lock, so nothing else can be reading this socket.
+   */
+  private async readExactBytes(n: number): Promise<Uint8Array> {
+    const out = new Uint8Array(n);
+    const buffered = Math.min(n, this.bufEnd - this.bufStart);
+    if (buffered > 0) {
+      out.set(this.buffer.subarray(this.bufStart, this.bufStart + buffered));
+      this.bufStart += buffered;
+    }
+    if (this.bufStart === this.bufEnd) {
+      this.bufStart = 0;
+      this.bufEnd = 0;
+    }
+    let filled = buffered;
+    while (filled < n) {
+      const read = await withTimeout(
+        this.conn.read(out.subarray(filled)),
+        COMMAND_TIMEOUT_MS,
+      );
+      if (read === null) {
+        this.eofReached = true;
+        break;
+      }
+      filled += read;
+    }
+    return filled === n ? out : out.subarray(0, filled);
+  }
+
+  /**
+   * Consume n literal bytes and throw them away, reusing one small scratch
+   * chunk so nothing accumulates. Used when a literal is over budget: the bytes
+   * are already in flight and IMAP has no way to cancel them mid-response, so
+   * the only alternatives are to read past them or to kill the connection.
+   * Draining is preferred because it leaves the socket byte-aligned and the
+   * session reusable, which matters when the caller is mid-way through a batch.
+   */
+  private async discardExact(n: number): Promise<void> {
+    let remaining = n;
+    const buffered = Math.min(remaining, this.bufEnd - this.bufStart);
+    this.bufStart += buffered;
+    remaining -= buffered;
+    if (this.bufStart === this.bufEnd) {
+      this.bufStart = 0;
+      this.bufEnd = 0;
+    }
+    const scratch = new Uint8Array(DISCARD_CHUNK_BYTES);
+    while (remaining > 0) {
+      const chunk = scratch.subarray(0, Math.min(scratch.length, remaining));
+      const read = await withTimeout(this.conn.read(chunk), COMMAND_TIMEOUT_MS);
+      if (read === null) {
+        this.eofReached = true;
+        return;
+      }
+      remaining -= read;
+    }
+  }
+
+  /**
    * Read an untagged-line response up to the tagged completion line.
    * Literals ({N}) are expanded inline as IMAP quoted strings so the result is
    * one logical string per untagged item, safe to tokenize.
+   *
+   * Capture mode changes only what happens to the literal itself: the line gets
+   * a short placeholder and the bytes are handed back through `literals[]`. The
+   * inline expansion is still the default because every other command in this
+   * file relies on reading its values straight out of the logical line.
+   *
+   * A literal over `maxLiteralBytes` is drained and discarded rather than
+   * buffered. We keep reading (discarding further literals, dropping untagged
+   * lines) until the tagged completion arrives and only then throw, so the
+   * socket is left exactly where the next command expects it: byte-aligned, with
+   * no half-read response waiting to corrupt the following one.
    */
   private async readTagged(
     tag: string,
-  ): Promise<{ status: "OK" | "NO" | "BAD"; text: string; untagged: string[] }> {
+    options: ReadTaggedOptions = {},
+  ): Promise<ImapTaggedResponse> {
+    const maxLiteralBytes = options.maxLiteralBytes ?? DEFAULT_MAX_LITERAL_BYTES;
     const untagged: string[] = [];
-    while (true) {
-      let line = await this.readLine();
+    const literals: string[] = [];
+    // Size of the first literal that blew the budget; non-null means "finish
+    // draining this response, then fail".
+    let oversized: number | null = null;
 
-      // Expand any trailing/embedded literals on this logical line.
-      let litMatch = /\{(\d+)\}$/.exec(line);
-      while (litMatch) {
-        const n = Number(litMatch[1]);
-        const literal = await this.readExact(n);
-        const cont = await this.readLine();
-        line = line.slice(0, litMatch.index) +
-          `"${escapeQuoted(literal)}"` + cont;
-        litMatch = /\{(\d+)\}$/.exec(line);
-      }
+    try {
+      while (true) {
+        let line = await this.readLine();
 
-      if (line.startsWith(`${tag} `)) {
-        const m = /^(\S+)\s+(OK|NO|BAD)\s*(.*)$/.exec(line);
-        const status = (m?.[2] as "OK" | "NO" | "BAD") ?? "BAD";
-        return { status, text: m?.[3] ?? line, untagged };
+        // Expand any trailing/embedded literals on this logical line.
+        let litMatch = /\{(\d+)\}$/.exec(line);
+        while (litMatch) {
+          const n = Number(litMatch[1]);
+          if (oversized !== null || n > maxLiteralBytes) {
+            if (oversized === null) oversized = n;
+            await this.discardExact(n);
+            const cont = await this.readLine();
+            // The line is on its way to the bin, but it still has to be
+            // well-formed enough for the literal scan below to terminate.
+            line = line.slice(0, litMatch.index) + '""' + cont;
+          } else if (options.captureLiterals) {
+            const literal = await this.readExact(n);
+            const cont = await this.readLine();
+            line = line.slice(0, litMatch.index) +
+              `"${literalPlaceholder(literals.length)}"` + cont;
+            literals.push(literal);
+          } else {
+            const literal = await this.readExact(n);
+            const cont = await this.readLine();
+            line = line.slice(0, litMatch.index) +
+              `"${escapeQuoted(literal)}"` + cont;
+          }
+          litMatch = /\{(\d+)\}$/.exec(line);
+        }
+
+        if (line.startsWith(`${tag} `)) {
+          if (oversized !== null) {
+            throw new ImapMessageTooLargeError(
+              `IMAP message is ${oversized} bytes, over the ${maxLiteralBytes}-byte limit for this operation`,
+            );
+          }
+          const m = /^(\S+)\s+(OK|NO|BAD)\s*(.*)$/.exec(line);
+          const status = (m?.[2] as "OK" | "NO" | "BAD") ?? "BAD";
+          return { status, text: m?.[3] ?? line, untagged, literals };
+        }
+        if (this.eofReached) {
+          // The peer hung up before completing the response. Without this the
+          // loop would spin on empty lines forever, burning the isolate.
+          throw new Error("IMAP connection closed before tagged response");
+        }
+        // Nothing downstream will look at this response once it is doomed, so
+        // stop retaining lines the moment the budget is blown.
+        if (oversized === null) untagged.push(line);
       }
-      untagged.push(line);
+    } finally {
+      this.shrinkBuffer();
     }
   }
 }

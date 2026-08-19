@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { selectAllRows } from '@/lib/supabase/paginate';
 
 /**
  * API key name distinguishability helpers.
@@ -23,13 +24,24 @@ export async function getActiveApiKeyNames(
   supabase: Pick<SupabaseClient, 'from'>,
   workspaceId: string,
 ): Promise<string[]> {
-  const { data } = await supabase
-    .from('api_keys')
-    .select('name')
-    .eq('workspace_id', workspaceId)
-    .is('deleted_at', null);
+  // This list is the ONLY thing the collision check below reads, so a partial
+  // list is worse than useless: a truncated read hides an existing name and we
+  // hand back a duplicate, which is exactly what this file exists to prevent.
+  // PostgREST caps an unpaged select at `db-max-rows` (1000) with no error, so
+  // page it.
+  const { data } = await selectAllRows<{ name: string | null }>((from, to) =>
+    supabase
+      .from('api_keys')
+      .select('name')
+      .eq('workspace_id', workspaceId)
+      .is('deleted_at', null)
+      // Total order: OFFSET paging over an unordered read may repeat or skip
+      // rows between pages, which would defeat the point of paging at all.
+      .order('id', { ascending: true })
+      .range(from, to),
+  );
 
-  return (data ?? [])
+  return data
     .map((row: { name: string | null }) => (row.name ?? '').trim())
     .filter((name: string) => name.length > 0);
 }

@@ -320,19 +320,20 @@
   "errors": {
     "eyebrow": "Error codes",
     "heading": "Error codes & retry guidance.",
-    "sub": "Auth, scope, and rate limit failures return a JSON-RPC <code>error</code> object with a numeric code. Tool execution failures (inbox not found, provider error, etc.) return a normal <code>result</code> with <code>isError: true</code> and a human-readable message in <code>content[0].text</code>.",
+    "sub": "Auth, scope, and rate limit failures return a JSON-RPC <code>error</code> object with a numeric code. Tool execution failures (inbox not found, provider error, monthly action cap reached, etc.) return a normal <code>result</code> with <code>isError: true</code> and a human-readable message in <code>content[0].text</code>.",
     "thCode": "Code",
     "thType": "Type",
     "thWhen": "When it occurs",
     "thRetryable": "Retryable",
     "retryableNo": "No",
-    "exampleLabel": "Example execution error response",
+    "exampleLabel": "Example error responses",
     "rows": {
       "auth": "Missing, malformed, revoked, or expired API key. Also returned when the API key lacks the required scope for the called tool.",
       "method": "Unknown JSON-RPC method (e.g. calling a method other than initialize, tools/list, tools/call)",
       "param": "Unknown tool name, or missing / invalid parameter in tools/call",
-      "rate": "Per-key rate limit or plan daily quota exceeded. Check data.error_code: \"rate_limit_exceeded\" vs \"quota_exceeded\". Check data.retry_after (seconds) before retrying.",
-      "tool": "Tool executed but encountered an error (inbox not found, message not found, provider auth failure, invalid recipient, attachment too large, provider 5xx). The error description is in content[0].text."
+      "rate": "Per-key or per-workspace rate limit exceeded (HTTP 429). data.error_code is always \"rate_limit_exceeded\". Wait data.retry_after seconds, or read the Retry-After header, before retrying.",
+      "tool": "Tool executed but encountered an error (inbox not found, message not found, provider auth failure, invalid recipient, attachment too large, provider 5xx). The error description is in content[0].text.",
+      "cap": "Monthly action allowance for the plan is used up. Returned as a normal tool result with isError: true, not as a JSON-RPC error, with the details under _meta[\"com.mcpemails/usage_limit\"]: error_code \"usage_limit_reached\", used_actions, cap, and reset_at. Retrying cannot succeed before reset_at or a plan change."
     }
   },
   "rateLimits": {
@@ -340,13 +341,16 @@
     "heading": "Rate limits & quotas.",
     "perKeyTag": "Per-key rolling windows",
     "perKeyHeading": "100 req / min · 1,000 / hr · 10,000 / day",
-    "perKeyBody": "Enforced per API key regardless of plan. When exceeded, the server returns error code <code>-32029</code> with <code>data.error_code: \"rate_limit_exceeded\"</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying.",
+    "perKeyBody": "Enforced per API key regardless of plan. When exceeded, the server returns HTTP 429 with JSON-RPC error code <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying. This is a short, retryable pause, not your monthly action allowance.",
     "planTag": "Plan per-minute ceiling",
     "planHeading": "Free 60 / min · Agent 300 / min · Scale 1,000 / min",
-    "planBody": "This is a per-workspace fair-use burst limit (aggregated across all your API keys), separate from your action allowance. When exceeded, calls return <code>data.error_code: \"rate_limit_exceeded\"</code> with <code>data.window: \"per_minute\"</code> and a <code>data.retry_after</code> countdown (seconds). Upgrade your plan for a higher ceiling and action allowance.",
+    "planBody": "This is a per-workspace fair-use burst limit (aggregated across all your API keys), separate from your monthly action allowance. When exceeded, calls return error code <code>-32003</code> with <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> and a <code>data.retry_after</code> countdown (seconds). Upgrade your plan for a higher ceiling.",
+    "capTag": "Monthly action allowance",
+    "capHeading": "Free 2,500 · Agent 50,000 · Scale 300,000 actions per billing period",
+    "capBody": "Billable actions are counted per workspace across the billing period. Running out is not a JSON-RPC error: the call returns HTTP 200 with a normal tool result carrying <code>isError: true</code> and a <code>_meta[\"com.mcpemails/usage_limit\"]</code> block with <code>error_code: \"usage_limit_reached\"</code>, <code>used_actions</code>, <code>cap</code> and <code>reset_at</code>. There is no <code>retry_after</code>, because retrying cannot succeed before <code>reset_at</code> or a plan change. Treat it as a stop, not a backoff.",
     "retryTag": "Retrying safely",
     "retryHeading": "Always honour retry_after; never retry sends blindly",
-    "retryBody": "For <code>rate_limit_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>email_compose</code> sends on <code>provider_error</code>, since the message may have already been accepted by the provider."
+    "retryBody": "For <code>rate_limit_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>email_compose</code> sends on <code>provider_error</code>, since the message may have already been accepted by the provider. Never retry <code>usage_limit_reached</code>: it clears only at <code>reset_at</code> or on a plan change."
   },
   "cta": {
     "heading": "Ready to connect your inbox?",

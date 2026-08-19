@@ -17,11 +17,28 @@ import {
   fetchLifecycleCounts,
   fetchRetentionCurve,
 } from '@/lib/analytics/growth-queries';
+import type { GrowthRetentionPointRow } from '@/lib/analytics/growth-types';
 import { CohortHeatmap, LineChart, ratio } from '../charts';
 import { MixBars, SectionError, Section, StatCard } from './shared';
 
 const COHORT_WEEKS = 12;
 const WEEK_FORMAT = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+
+/**
+ * The curve is drawn as percentages, but its tail runs on single-digit
+ * denominators, where a percentage is not a rate: `ratio()` refuses to print
+ * one below ten for exactly that reason, and a line chart has nowhere to print
+ * "0 of 2" instead. So the small denominators are named in the footnote, which
+ * is the only place on the chart with room for them without colliding labels.
+ */
+function thinTailFootnote(curve: GrowthRetentionPointRow[]): string {
+  const base = 'External accounts only. Denominator is the workspaces whose Nth week has fully elapsed, '
+    + 'so the tail is not depressed by cohorts that have not had time to return.';
+  const thin = curve.filter((point) => point.eligible < 10);
+  if (thin.length === 0) return base;
+  const named = thin.map((point) => `W${point.week_index} n=${point.eligible}`).join(', ');
+  return `${base} Read the tail as counts, not rates: ${named}.`;
+}
 
 export async function RetentionSection() {
   const [lifecycleResult, curveResult, cohortResult, bandsResult] = await Promise.all([
@@ -63,8 +80,11 @@ export async function RetentionSection() {
           inbox and never using it is not retention worth counting. Week N of the curve counts workspaces
           that used a mailbox in the Nth week after activating, and a workspace only enters the denominator
           once that whole week has elapsed, so the tail is not depressed by cohorts that have not had time
-          to return. In the cohort grid, blank cells are weeks that have not happened yet, which is not the
-          same thing as zero. The active-days bar is habit: a workspace sitting in the single-day band for
+          to return. The curve counts EXTERNAL workspaces only: our own accounts are excluded, because the
+          synthetic monitor calls the product every five minutes and is therefore retained in every week
+          that will ever exist. Including it drew a rising tail on a curve whose real tail is zero. The
+          cohort grid below still includes every account; blank cells there are weeks that have not
+          happened yet, which is not the same thing as zero. The active-days bar is habit: a workspace sitting in the single-day band for
           a whole month is not retained, whatever the aggregate active count says.
         </>
       }
@@ -108,7 +128,7 @@ export async function RetentionSection() {
               }))}
               series={[{ key: 'retained', name: 'Still active (%)' }]}
               unit="percent"
-              footnote="Denominator is the workspaces whose Nth week has fully elapsed, so the tail is not depressed by cohorts that have not had time to return."
+              footnote={thinTailFootnote(curve)}
             />
           ) : (
             <div className="growth-error"><strong>Curve unavailable.</strong><code>{curveResult.error}</code></div>

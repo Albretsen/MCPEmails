@@ -131,7 +131,8 @@ Every plan includes unlimited inboxes and API keys. Successful billable MCP call
 | | **Free** | **Agent** | **Scale** |
 | --- | --- | --- | --- |
 | Price | $0 | $12/mo · $120/yr | $49/mo · $490/yr |
-| Inboxes / tool calls / API keys | Unlimited | Unlimited | Unlimited |
+| Inboxes / API keys | Unlimited | Unlimited | Unlimited |
+| Billable actions | 2,500 / billing period | 50,000 / billing period | 300,000 / billing period |
 | Members | 1 (owner only) | Unlimited | Unlimited |
 | Fair‑use rate limit | 60 req/min | 300 req/min | 1,000 req/min |
 | Analytics retention | 7 days | 90 days | 1 year |
@@ -139,7 +140,7 @@ Every plan includes unlimited inboxes and API keys. Successful billable MCP call
 | SSO (SAML/OIDC) + audit log | — | — | ✅ |
 | Support | Community | Email | Priority |
 
-Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Inviting members requires a paid plan. The "Scale" tier carries the internal id `pro`. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
+Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Rate limits are retryable: they come back as JSON-RPC error `-32003` with `data.retry_after` in seconds. Running out of actions is not retryable: it comes back as a normal tool result with `isError: true` and a `_meta["com.mcpemails/usage_limit"]` block, and only clears at `reset_at` or on a plan change. Inviting members requires a paid plan. The "Scale" tier carries the internal id `pro`. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
 
 ## Architecture
 
