@@ -49,6 +49,10 @@ import {
 } from "./mcp-app-bulk.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
+import {
+  buildInvalidArgumentsText,
+  buildUnknownActionText,
+} from "./invalid-arguments-message.ts";
 import { buildUsageLimitText } from "./usage-limit-message.ts";
 import {
   type NormalizedSearch,
@@ -446,6 +450,48 @@ function jsonRpcErrorBody(
     error.data = data;
   }
   return { jsonrpc: "2.0", id, error };
+}
+
+/**
+ * Builds an argument rejection as a TOOL result rather than a protocol error.
+ *
+ * Same envelope, and the same reasoning, as usageLimitResult(): a successful
+ * JSON-RPC response carrying `isError: true`, which is what the MCP
+ * specification reserves for a call that reached a real tool and was refused by
+ * that tool's rules, and what clients SHOULD hand to the model. A protocol
+ * error is for a request that could not be routed at all; hosts are only
+ * permitted to forward those, and in practice they render `error.message` and
+ * drop `error.data`, which is where every field-level detail used to live.
+ *
+ * Machine-readable fields ride in `_meta` under a namespaced key rather than in
+ * `structuredContent`, which is contractually the shape declared by each tool's
+ * `outputSchema` and matches no tool's output here.
+ *
+ * Only argument validation for a KNOWN tool comes through here. Malformed
+ * JSON-RPC, an unknown method, an unknown tool name and every authentication or
+ * scope failure stay protocol errors: those are precisely the requests the
+ * protocol layer could not route, and a model cannot act on them anyway.
+ */
+function invalidArgumentsResult(
+  requestId: string | number | null,
+  text: string,
+  meta: Record<string, unknown>,
+): JsonRpcSuccessResponse {
+  return {
+    jsonrpc: "2.0",
+    id: requestId,
+    result: {
+      content: [{ type: "text", text }],
+      isError: true,
+      _meta: {
+        "com.mcpemails/invalid_arguments": {
+          error_code: "invalid_arguments",
+          retryable: false,
+          ...meta,
+        },
+      },
+    },
+  };
 }
 
 function jsonResponse(
@@ -2052,6 +2098,28 @@ function isToolAuthorized(tool: ToolDefinition, scopes: string[]): boolean {
 }
 
 /**
+ * Custom `format` token for a field that accepts a calendar date OR an instant.
+ *
+ * `since` and `before` take either, which no standard token can express:
+ * "date-time" demands a time component and "date" forbids one. They were
+ * declared "date-time", so the schema rejected the example printed in the
+ * field's own description ("2026-06-01") and in the runtime error text that
+ * fires one layer below it, costing ~300 rejections across 30 workspaces. The
+ * handler has always accepted both, via parseIsoDate.
+ *
+ * A custom token is the honest way to write the union rather than a comfortable
+ * lie: JSON Schema lets a vocabulary define its own `format` values and
+ * requires validators that do not recognise one to IGNORE it, so a strict
+ * client degrades to accepting both shapes instead of rejecting bare dates
+ * before they ever leave the caller. `send_at` deliberately keeps "date-time":
+ * a scheduled send needs an unambiguous instant, and a bare date there would
+ * silently mean UTC midnight, which is nearly always in the past.
+ *
+ * Enforced by isIsoDateOrDateTime() in validateInputSchema below.
+ */
+const ISO_DATE_OR_DATE_TIME = "date-or-date-time";
+
+/**
  * Shared JSON-Schema properties for the structured, provider-agnostic search
  * fields exposed by email_search / email_search_and_move / email_search_and_delete. The
  * server translates these into each provider's native query dialect, so the
@@ -2073,12 +2141,12 @@ const STRUCTURED_SEARCH_PROPERTIES: Record<string, Record<string, unknown>> = {
   flagged: { type: "boolean", description: SEARCH_FIELD_DESCRIPTIONS.flagged },
   since: {
     type: "string",
-    format: "date-time",
+    format: ISO_DATE_OR_DATE_TIME,
     description: SEARCH_FIELD_DESCRIPTIONS.since,
   },
   before: {
     type: "string",
-    format: "date-time",
+    format: ISO_DATE_OR_DATE_TIME,
     description: SEARCH_FIELD_DESCRIPTIONS.before,
   },
 };
@@ -4346,6 +4414,14 @@ const TOOL_ANNOTATIONS: Record<
   draft_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   schedule_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   contact_search: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  // Fetch-only sub-actions of email_read. They reached the client with no
+  // annotations at all until now, which was invisible because a consolidated
+  // tool annotates itself; a tool promoted back to the registry would have
+  // shipped unannotated.
+  email_attachment: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  email_extract: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  email_original: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  signature_get: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   // Non-destructive mutations — non-idempotent (each call produces a new effect).
   email_send: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   email_reply: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
@@ -4354,12 +4430,16 @@ const TOOL_ANNOTATIONS: Record<
   schedule_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   folder_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   folder_rename: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  // Writes the whole signature, so repeating a call lands on the same state.
+  signature_set: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   // Non-destructive mutations — idempotent by default per spec ToolAnnotations.
   email_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   email_move_batch: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   email_copy: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   email_copy_batch: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  email_search_and_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  // Bulk and query-driven, like email_search_and_delete: the convention at the
+  // top of this section marks anything that bulk-affects messages destructive.
+  email_search_and_move: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
   draft_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   draft_reply: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   draft_update: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
@@ -4472,7 +4552,14 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "On Gmail, 'move' means add the destination label and remove INBOX; other " +
       "labels remain, and Gmail does not support native copy. Requires the manage:folders scope. " +
       "To delete messages, use the email_delete tool.",
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    // 'search_and_move' relocates every message matching a caller-supplied
+    // query, so one wrong filter empties an inbox into a folder nobody expects;
+    // that is the bulk, non-additive case this file's destructive-action
+    // convention names, and the most destructive action is what a consolidated
+    // tool must be annotated for. Nothing here erases mail, so it stays below
+    // email_delete in severity, but "may perform destructive updates" is
+    // exactly what the hint means.
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     actions: {
       move: { legacy: "email_move", scope: "manage:folders" },
       move_batch: { legacy: "email_move_batch", scope: "manage:folders" },
@@ -4524,7 +4611,13 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "(type: 'label'), not folders. Set `action`: 'list' (all folders/labels with ids " +
       "and counts), 'create' (name), 'rename' (folder_id, new_name), or 'delete' " +
       "(folder_id — irreversible). 'list' needs read:email; the rest need manage:folders.",
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    // destructiveHint follows the DELETE action, because a consolidated tool is
+    // annotated once for everything it can do and the client reads the
+    // annotation, not the prose. This said false while the description said
+    // "irreversible" three lines up, so hosts ran folder deletions without ever
+    // asking the human: on Gmail that strips a label from every message
+    // carrying it, and no undo exists on any provider.
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     actions: {
       list: { legacy: "folder_list", scope: "read:email" },
       create: { legacy: "folder_create", scope: "manage:folders" },
@@ -4543,7 +4636,11 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "signature is embedded into the draft on create/update (pass " +
       "include_signature: false to skip); 'send' transmits the stored body as-is and " +
       "never re-appends, so the signature is never doubled.",
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    // Same rule as `folder`: the 'delete' action permanently removes an unsent
+    // draft, which the legacy draft_delete entry has always flagged as
+    // destructive. Consolidating the actions behind one tool silently dropped
+    // that flag, since only this annotation reaches the client.
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     actions: {
       list: { legacy: "draft_list", scope: "manage:drafts" },
       create: { legacy: "draft_create", scope: "manage:drafts" },
@@ -4580,7 +4677,10 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "(write signature_text and/or signature_html, optionally signature_enabled " +
       "and signature_reply_mode). Setting marks the signature source as 'manual', " +
       "which overrides Gmail auto-import. 'get' needs read:email; 'set' needs send:email.",
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    // Both actions are idempotent: 'set' writes the whole signature, so
+    // repeating a call lands on the same stored state rather than appending to
+    // it. readOnlyHint stays false because 'set' does write.
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     actions: {
       get: { legacy: "signature_get", scope: "read:email" },
       set: { legacy: "signature_set", scope: "send:email" },
@@ -4789,6 +4889,41 @@ function matchesInputSchemaType(value: unknown, expected: string): boolean {
   }
 }
 
+/**
+ * Mirrors parseIsoDate's accepted inputs: a bare `YYYY-MM-DD`, which it pins to
+ * UTC midnight, or a full date-time. The timezone requirement is kept for
+ * date-times because parseIsoDate hands those to `new Date`, whose reading of a
+ * bare local time depends on the runtime's zone; a date-only value has no such
+ * ambiguity. Date.parse also accepts prose like "June 1 2026", which is why the
+ * shape is checked as well as the parse.
+ */
+function isIsoDateOrDateTime(value: string): boolean {
+  if (Number.isNaN(Date.parse(value))) return false;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return true;
+  return /^\d{4}-\d{2}-\d{2}T/.test(value) && /(?:Z|[+-]\d{2}:\d{2})$/i.test(value);
+}
+
+/**
+ * Which properties of `value` tripped a `not` rule, for the one shape this
+ * server generates: buildConsolidatedTool forbids an action's non-arguments as
+ * `not: { anyOf: [{ required: ["x"] }, ...] }`. Any other `not` shape yields
+ * nothing and the caller falls back to the generic wording.
+ */
+function disallowedPropertiesPresent(notSchema: InputSchema, value: unknown): string[] {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return [];
+  const object = value as Record<string, unknown>;
+  const names: string[] = [];
+  for (const branch of Array.isArray(notSchema.anyOf) ? notSchema.anyOf : []) {
+    if (!branch || typeof branch !== "object" || Array.isArray(branch)) continue;
+    const required = (branch as InputSchema).required;
+    if (!Array.isArray(required)) continue;
+    for (const key of required) {
+      if (typeof key === "string" && key in object && !names.includes(key)) names.push(key);
+    }
+  }
+  return names;
+}
+
 function validateInputSchema(schema: InputSchema, value: unknown, path = "arguments"): InputSchemaError[] {
   const errors: InputSchemaError[] = [];
   const add = (keyword: string, message: string) => errors.push({ path, keyword, message });
@@ -4810,6 +4945,9 @@ function validateInputSchema(schema: InputSchema, value: unknown, path = "argume
     if (schema.format === "email" && !isValidEmailAddress(value)) add("format", "must be a valid email address");
     if (schema.format === "uuid" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) add("format", "must be a UUID");
     if (schema.format === "date-time" && (Number.isNaN(Date.parse(value)) || !/(?:Z|[+-]\d{2}:\d{2})$/i.test(value))) add("format", "must be an ISO 8601 date-time with timezone");
+    if (schema.format === ISO_DATE_OR_DATE_TIME && !isIsoDateOrDateTime(value)) {
+      add("format", "must be an ISO 8601 date such as 2026-06-01 (read as UTC midnight) or a date-time with timezone such as 2026-06-01T09:00:00Z");
+    }
   }
   if (typeof value === "number") {
     if (typeof schema.minimum === "number" && value < schema.minimum) add("minimum", `must be greater than or equal to ${schema.minimum}`);
@@ -4852,7 +4990,15 @@ function validateInputSchema(schema: InputSchema, value: unknown, path = "argume
     add("anyOf", "must satisfy at least one allowed argument combination");
   }
   if (schema.not && typeof schema.not === "object" && !Array.isArray(schema.not) && validateInputSchema(schema.not as InputSchema, value, path).length === 0) {
-    add("not", "contains arguments that are not valid for the selected action");
+    // Name the arguments that caused it. This rule fires whenever a caller
+    // mixes fields from two actions of a consolidated tool (search filters on
+    // action 'list', say), and it is the second-largest rejection signature in
+    // production; "not valid for the selected action" alone leaves the caller
+    // to guess which of a dozen arguments to drop.
+    const offending = disallowedPropertiesPresent(schema.not as InputSchema, value);
+    add("not", offending.length > 0
+      ? `must not include ${offending.join(", ")}: the selected action does not accept them`
+      : "include values the selected action does not accept");
   }
   return errors;
 }
@@ -20169,7 +20315,7 @@ async function handleToolsCall(
       : null;
     const actionSpec = action ? consolidated.actions[action] : undefined;
     if (!actionSpec) {
-      const valid = Object.keys(consolidated.actions).join(", ");
+      const validActions = Object.keys(consolidated.actions);
       await writeActivityLog({
         workspaceId: apiKey.workspace_id,
         apiKeyId: apiKey.id,
@@ -20180,14 +20326,25 @@ async function handleToolsCall(
         durationMs: null,
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
+        // This branch wrote no details until now, which is why the reject
+        // bucket was unreadable: an unresolved action logs under the
+        // CONSOLIDATED name (email_compose) while every resolved call logs
+        // under its legacy dispatch name (email_send), so `email_compose` in
+        // the activity log is by construction 100% errors and looked like a
+        // dead send path. Recording the phase makes the two distinguishable.
+        //
+        // The action is deliberately persisted as null even when the caller
+        // sent one: a rejected action is free text from the caller, not a
+        // member of our enum, and this payload is the value-free one.
+        errorDetails: invalidArgumentAuditDetails(toolName, null, [{
+          path: "arguments.action",
+          keyword: action ? "enum" : "required",
+        }]),
       });
-      return jsonRpcErrorBody(
+      return invalidArgumentsResult(
         id,
-        -32602,
-        action
-          ? `Unknown action '${action}' for ${toolName}. Valid actions: ${valid}.`
-          : `${toolName} requires an 'action' argument (one of: ${valid}).`,
-        { tool: toolName, valid_actions: Object.keys(consolidated.actions) },
+        buildUnknownActionText(toolName, action, validActions),
+        { tool: toolName, action, valid_actions: validActions },
       );
     }
     dispatchName = actionSpec.legacy;
@@ -20248,6 +20405,11 @@ async function handleToolsCall(
     schemaValidationArguments(tool.inputSchema, rawArgs),
   );
   if (argumentErrors.length > 0) {
+    const rejectedAction = consolidated
+      ? (typeof (rawArgs as Record<string, unknown> | null)?.["action"] === "string"
+        ? (rawArgs as Record<string, unknown>)["action"] as string
+        : null)
+      : null;
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
@@ -20258,21 +20420,24 @@ async function handleToolsCall(
       durationMs: null,
       ipAddress: ctx.ipAddress,
       userAgent: ctx.userAgent,
-      errorDetails: invalidArgumentAuditDetails(
-        toolName,
-        consolidated
-          ? (typeof (rawArgs as Record<string, unknown> | null)?.["action"] === "string"
-            ? (rawArgs as Record<string, unknown>)["action"] as string
-            : null)
-          : null,
-        argumentErrors,
-      ),
+      // errorCode stays the numeric -32602 even though the response is no
+      // longer a JSON-RPC error: activity_log.error_code is a stable internal
+      // taxonomy, and renaming the largest signature in the table would split
+      // it from the months of history it needs to be compared against.
+      errorDetails: invalidArgumentAuditDetails(toolName, rejectedAction, argumentErrors),
     });
-    return jsonRpcErrorBody(
+    // The validator's per-field messages are the whole value of this response,
+    // and as a protocol error they never reached the model: hosts render
+    // `error.message` ("Invalid arguments for email_read.") and drop
+    // `error.data`, where the fields lived. Carrying them in the result text
+    // turns the largest error signature in production into something a model
+    // can correct on its next call. `errors` still rides in `_meta` for
+    // programmatic clients; unlike the persisted audit payload it keeps the
+    // messages, which are derived from the schema and echo no request content.
+    return invalidArgumentsResult(
       id,
-      -32602,
-      `Invalid arguments for ${toolName}.`,
-      { tool: toolName, errors: argumentErrors },
+      buildInvalidArgumentsText(toolName, argumentErrors),
+      { tool: toolName, action: rejectedAction, errors: argumentErrors },
     );
   }
 
