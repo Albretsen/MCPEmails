@@ -452,7 +452,8 @@
     "inboxesUnlimited": "Boîtes connectées illimitées",
     "inboxesCount": "{count} connectées actuellement",
     "grandfatheredTitle": "Boîtes illimitées, conservées",
-    "grandfatheredBody": "Vous étiez déjà là avant que les boîtes ne deviennent une limite payante, donc votre compte conserve des boîtes connectées illimitées sans frais, de façon permanente. Pro et Team ne valent le coup que si vous voulez la limite de pointe supérieure, un historique plus long ou les fonctionnalités d'équipe."
+    "grandfatheredBody": "Vous étiez déjà là avant que les boîtes ne deviennent une limite payante, donc votre compte conserve des boîtes connectées illimitées sans frais, de façon permanente. Pro et Team ne valent le coup que si vous voulez la limite de pointe supérieure, un historique plus long ou les fonctionnalités d'équipe.",
+    "planChanged": "Vous êtes maintenant sur {plan}. La différence de prix apparaîtra sur votre prochaine facture."
   },
   "security": {
     "title": "Sécurité",

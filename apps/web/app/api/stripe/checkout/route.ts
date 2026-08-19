@@ -127,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // a second Stripe subscription (which would double-charge them).
   const { data: billing } = await supabase
     .from('user_billing')
-    .select('plan, subscription_status')
+    .select('plan, subscription_status, stripe_subscription_id')
     .eq('user_id', user.id)
     .maybeSingle();
 
@@ -146,17 +146,68 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         { status: 409 },
       );
     }
-    // Different paid plan: must change it in the portal, not via a new checkout.
-    return NextResponse.json(
-      {
-        error:
-          'You already have an active subscription. ' +
-          'Use the billing portal to change your plan or interval.',
-        error_code: 'subscription_exists',
-        portal: true,
-      },
-      { status: 409 },
-    );
+    // Different paid plan or interval: change the price on the existing
+    // subscription rather than opening a second one.
+    //
+    // This used to send the customer to the Billing Portal, which was a dead
+    // end: the portal cannot offer a plan list on this account (the API
+    // silently drops features.subscription_update.products), and the account
+    // default configuration belongs to a different product, so it must not be
+    // reshaped around these plans. Doing the swap here also keeps the customer
+    // on our own copy instead of Stripe's.
+    const subscriptionId = billing!.stripe_subscription_id;
+
+    if (!subscriptionId) {
+      // Entitled with no subscription id is a comped or manually seeded plan.
+      // Those are not ours to re-price from a self-service button.
+      return NextResponse.json(
+        {
+          error:
+            'Your plan is managed manually. Contact support to change it.',
+          error_code: 'subscription_not_self_service',
+        },
+        { status: 409 },
+      );
+    }
+
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const currentItem = subscription.items.data[0];
+
+      if (!currentItem) {
+        throw new Error(`Subscription ${subscriptionId} has no items.`);
+      }
+
+      if (currentItem.price.id === priceId) {
+        return NextResponse.json(
+          { error: `You are already on ${plan.name}, billed ${interval}ly.` },
+          { status: 409 },
+        );
+      }
+
+      // `create_prorations` puts the adjustment on the next invoice instead of
+      // charging the card the moment the button is pressed, so an upgrade
+      // never produces a surprise immediate charge.
+      await stripe.subscriptions.update(subscriptionId, {
+        items: [{ id: currentItem.id, price: priceId }],
+        proration_behavior: 'create_prorations',
+        metadata: { user_id: user.id, plan_id: planId, interval },
+      });
+
+      // The subscription.updated webhook projects the new plan onto
+      // user_billing and every workspace the user owns.
+      return NextResponse.json(
+        { changed: true, plan: plan.name, interval },
+        { status: 200 },
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[checkout] plan change failed:', message);
+      return NextResponse.json(
+        { error: 'Could not change your plan. Please try again.' },
+        { status: 500 },
+      );
+    }
   }
 
   // ── 5. Get or create the single Stripe Customer for this user ─────────────

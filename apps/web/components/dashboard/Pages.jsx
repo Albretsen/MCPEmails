@@ -4056,6 +4056,15 @@ function BillingSection({
       if (typeof data?.url === 'string') {
         // Redirect to Stripe Checkout hosted page
         window.location.href = data.url;
+      } else if (data?.changed === true) {
+        // An existing subscriber switched plan or interval. There is no hosted
+        // page for that: the price changed in place, so reload to pick up the
+        // new plan once the webhook has projected it.
+        toast({
+          message: t('billing.planChanged', { plan: data.plan }),
+          variant: 'success',
+        });
+        window.location.reload();
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
       }

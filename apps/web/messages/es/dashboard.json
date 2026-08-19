@@ -452,7 +452,8 @@
     "inboxesUnlimited": "Bandejas conectadas ilimitadas",
     "inboxesCount": "{count} conectadas ahora mismo",
     "grandfatheredTitle": "Bandejas ilimitadas, conservadas",
-    "grandfatheredBody": "Ya estabas aquí antes de que las bandejas pasaran a ser un límite de pago, así que tu cuenta conserva bandejas conectadas ilimitadas sin coste, de forma permanente. Pro y Team solo valen la pena si quieres el límite de ráfaga más alto, un historial más largo o funciones de equipo."
+    "grandfatheredBody": "Ya estabas aquí antes de que las bandejas pasaran a ser un límite de pago, así que tu cuenta conserva bandejas conectadas ilimitadas sin coste, de forma permanente. Pro y Team solo valen la pena si quieres el límite de ráfaga más alto, un historial más largo o funciones de equipo.",
+    "planChanged": "Ahora estás en {plan}. La diferencia de precio aparecerá en tu próxima factura."
   },
   "security": {
     "title": "Seguridad",
