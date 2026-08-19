@@ -261,5 +261,18 @@
     "eyebrow": "Vista del producto",
     "title": "Ve toda tu operación MCP de un vistazo.",
     "sub": "Un panel en tiempo real para cada bandeja conectada, clave de API y llamada a herramientas, para que siempre sepas qué hacen tus agentes."
+  },
+  "demo": {
+    "eyebrow": "Míralo funcionar",
+    "title": "Tres minutos, una bandeja real.",
+    "sub": "Una grabación sin cortes sobre una cuenta real de Fastmail, una de Gmail y una segunda bandeja IMAP. Cada llamada y cada resultado son reales.",
+    "caption": "Grabado sobre una bandeja de demostración con correo ficticio. En este vídeo no aparece ninguna correspondencia real.",
+    "player": {
+      "label": "Vídeo de demostración: MCP Emails funcionando en tres bandejas reales",
+      "play": "Reproducir la demostración",
+      "runtime": "3 min",
+      "captions": "English",
+      "fallback": "Tu navegador no puede reproducir este vídeo. La guía rápida de la documentación cubre los mismos pasos."
+    }
   }
 }

@@ -5,6 +5,7 @@ import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '.
 import {
   Nav, Hero, Trusted, Features, DashboardPreview, HowItWorks, Examples, Quote, Pricing, Faq, Footer
 } from './Sections';
+import { DemoVideo, DEMO_VIDEO_AVAILABLE } from './DemoVideo';
 
 const TWEAK_DEFAULTS = {
   heroVariant: 'pipe',
@@ -44,7 +45,10 @@ export default function HomeClient({ stripePrices }) {
         <Hero variant={t.heroVariant} onGetStarted={onGetStarted} />
         <Trusted />
         <Features />
-        <DashboardPreview />
+        {/* The demo recording replaces the invented dashboard mockup. Until the
+            video files land under public/demo/, keep the old section rather
+            than shipping an empty player. See DemoVideo.jsx. */}
+        {DEMO_VIDEO_AVAILABLE ? <DemoVideo /> : <DashboardPreview />}
         <HowItWorks />
         <Examples />
         <Quote />

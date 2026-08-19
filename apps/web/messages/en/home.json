@@ -261,5 +261,18 @@
     "eyebrow": "Product preview",
     "title": "See your whole MCP operation at a glance.",
     "sub": "A real-time dashboard for every connected inbox, API key, and tool call, so you always know what your agents are doing."
+  },
+  "demo": {
+    "eyebrow": "See it work",
+    "title": "Three minutes, one real inbox.",
+    "sub": "An unedited run against a live Fastmail account, a Gmail account, and a second IMAP inbox. Every tool call and every result is the real thing.",
+    "caption": "Recorded against a demo mailbox seeded with fictional mail. No real correspondence appears in this video.",
+    "player": {
+      "label": "Demo video: MCP Emails working across three live inboxes",
+      "play": "Play the demo",
+      "runtime": "3 min",
+      "captions": "English",
+      "fallback": "Your browser cannot play this video. The quickstart in the docs covers the same steps."
+    }
   }
 }

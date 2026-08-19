@@ -261,5 +261,18 @@
     "eyebrow": "Produktforhåndsvisning",
     "title": "Se hele MCP-driften din med ett blikk.",
     "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør."
+  },
+  "demo": {
+    "eyebrow": "Se det virke",
+    "title": "Tre minutter, én ekte innboks.",
+    "sub": "Et uklippet opptak mot en ekte Fastmail-konto, en Gmail-konto og en annen IMAP-innboks. Hvert verktøykall og hvert resultat er ekte.",
+    "caption": "Tatt opp mot en demo-innboks fylt med oppdiktet e-post. Ingen ekte korrespondanse vises i denne videoen.",
+    "player": {
+      "label": "Demovideo: MCP Emails på tvers av tre ekte innbokser",
+      "play": "Spill av demoen",
+      "runtime": "3 min",
+      "captions": "English",
+      "fallback": "Nettleseren din kan ikke spille av denne videoen. Hurtigstarten i dokumentasjonen dekker de samme trinnene."
+    }
   }
 }
