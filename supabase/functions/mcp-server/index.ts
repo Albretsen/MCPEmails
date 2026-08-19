@@ -49,6 +49,7 @@ import {
 } from "./mcp-app-bulk.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
+import { buildUsageLimitText } from "./usage-limit-message.ts";
 import {
   type NormalizedSearch,
   parseIsoDate,
@@ -389,12 +390,28 @@ const RPC_RESOURCE_NOT_FOUND = -32002;
 const RPC_INVALID_API_KEY = -32001;
 
 /**
- * MCPEmails custom code: per-key rate limit exceeded.
- * In the JSON-RPC application-defined error range (-32099 to -32000).
+ * MCPEmails custom code: rate limit exceeded. Covers both the per-key rolling
+ * window and the per-plan per-minute burst ceiling. Retryable after
+ * `data.retry_after` seconds.
+ *
+ * Was -32029 until 2026-08-19. JSON-RPC reserves -32099..-32000 for
+ * implementation-defined server errors, but the MCP specification has since
+ * sub-partitioned that block and reserved -32020..-32099 for itself, handing
+ * out codes sequentially from -32020 (it has reached -32022). -32029 was
+ * sitting in the spec's path and would eventually have been allocated out from
+ * under us; -32042 has already been burned that way. -32003 is inside the
+ * -32019..-32000 implementation-defined sub-range and clear of -32000
+ * (ConnectionClosed) and -32001 (RequestTimeout), which the MCP SDK defines.
+ *
  * Callers should branch on data.error_code === "rate_limit_exceeded" rather
  * than this numeric code, which is implementation detail.
+ *
+ * The monthly action cap deliberately does NOT use this or any other JSON-RPC
+ * error code: it is a tool-execution error rather than a protocol error, and
+ * is returned as an isError tool result so the model actually reads it. See
+ * usageLimitResult().
  */
-const RPC_RATE_LIMIT_EXCEEDED = -32029;
+const RPC_RATE_LIMIT_EXCEEDED = -32003;
 
 // ---------------------------------------------------------------------------
 // CORS headers — allow any MCP client origin
@@ -1011,7 +1028,7 @@ async function checkPlanQuota(
 /**
  * Build an HTTP 429 response for a per-plan per-minute ceiling hit.
  *
- * Uses the same JSON-RPC error code (-32029) and `error_code:
+ * Uses the same JSON-RPC error code (-32003) and `error_code:
  * "rate_limit_exceeded"` as the per-key rolling-window limiter. The
  * human_message references the pricing page so users know how to upgrade for a
  * higher ceiling.
@@ -1311,7 +1328,8 @@ async function checkDiscoveryRateLimit(
  *  - X-RateLimit-Remaining: always 0 (limit was exceeded)
  *  - X-RateLimit-Window: which window was saturated (per_minute / per_hour / per_day)
  *
- * The JSON-RPC error code is -32029 (application-defined).
+ * The JSON-RPC error code is -32003 (application-defined; see
+ * RPC_RATE_LIMIT_EXCEEDED for why it is not in the -32020..-32099 block).
  * Callers should branch on data.error_code === "rate_limit_exceeded".
  */
 function buildRateLimitResponse(
@@ -1535,40 +1553,35 @@ async function resolveUsageBillingWindow(ownerId: string, plan: string): Promise
 }
 
 /** Records a cap response separately from successful action metering. A failed
- * operational write must never turn a valid cap response into a server error. */
+ * operational write must never turn a valid cap response into a server error.
+ *
+ * Both records are written by one RPC because they answer different questions
+ * and must be allowed to disagree. `usage_limit_events` takes every rejection,
+ * since support and capacity work needs the real count. The funnel's
+ * `paywall_reached` row is written at most once per workspace per billing
+ * period: a funnel stage is something a workspace ENTERS, and an agent that
+ * retries a blocked call five times has still only reached one paywall. Before
+ * this, each retry booked another hit, which would have made the very first
+ * real cap hit look like a burst of demand and permanently depressed the
+ * paywall -> pricing conversion rate that the billing funnel reports. */
 async function writeUsageLimitEvent(
   workspaceId: string,
   plan: string,
   usedActions: number,
   cap: number,
+  periodStart: string,
 ): Promise<void> {
-  const { error } = await supabase.from("usage_limit_events").insert({
-    workspace_id: workspaceId,
-    effective_plan: plan,
-    used_actions: usedActions,
-    cap,
-    meter_version: ACTION_METER_VERSION,
+  const { error } = await supabase.rpc("record_usage_limit_event", {
+    p_workspace_id: workspaceId,
+    p_plan: plan,
+    p_used_actions: usedActions,
+    p_cap: cap,
+    p_meter_version: ACTION_METER_VERSION,
+    p_period_start: periodStart,
   });
   if (error) {
-    console.error("[mcp-server] usage_limit_event_insert_failed", {
+    console.error("[mcp-server] usage_limit_event_record_failed", {
       plan, used_actions: usedActions, cap, error: error.message, error_code: error.code,
-    });
-  }
-
-  // Mirror the cap hit into the product funnel so the whole revenue path
-  // (paywall → pricing view → checkout → paid) can be read from one table.
-  // usage_limit_events stays the metering-accurate record; this is the funnel's
-  // entry point, and its absence is what proved no user had ever been asked to
-  // pay. Best-effort: a funnel write must never fail a cap response.
-  const { error: funnelError } = await supabase.from("product_funnel_events").insert({
-    workspace_id: workspaceId,
-    stage: "paywall_reached",
-    outcome: "success",
-    category: plan === "solo" || plan === "pro" ? plan : "free",
-  });
-  if (funnelError) {
-    console.error("[mcp-server] paywall_funnel_event_failed", {
-      plan, error: funnelError.message, error_code: funnelError.code,
     });
   }
 }
@@ -1594,8 +1607,53 @@ async function logShadowLimitDiagnostic(workspaceId: string): Promise<void> {
 /** Phase-4 controlled rollout: only billable calls from a deterministic 5%
  * cohort of workspaces created after the configured start can be stopped. */
 interface ActionLimitCheck {
-  response: JsonRpcErrorResponse | null;
+  /** A ready-to-return isError tool result, or null when the call may proceed. */
+  response: JsonRpcSuccessResponse | null;
   reservationId: string | null;
+}
+
+/**
+ * Builds the cap rejection as a TOOL result rather than a protocol error.
+ *
+ * The envelope is a successful JSON-RPC response carrying `isError: true`,
+ * which is what the MCP specification reserves for business-logic failures and
+ * what clients SHOULD pass to the model. The machine-readable fields ride in
+ * `_meta` under a namespaced key rather than in `structuredContent`, because
+ * `structuredContent` is contractually the shape declared by each tool's
+ * `outputSchema` and a cap rejection matches no tool's output. `_meta` is the
+ * spec's channel for exactly this, and clients that do not understand it drop
+ * it without complaint (the same reasoning as the Apps `_meta.ui` block).
+ */
+function usageLimitResult(
+  requestId: string | number | null,
+  plan: string,
+  usedActions: number,
+  cap: number,
+  resetAt: string,
+): JsonRpcSuccessResponse {
+  return {
+    jsonrpc: "2.0",
+    id: requestId,
+    result: {
+      content: [{
+        type: "text",
+        text: buildUsageLimitText(plan, usedActions, cap, resetAt, APP_URL),
+      }],
+      isError: true,
+      _meta: {
+        "com.mcpemails/usage_limit": {
+          error_code: "usage_limit_reached",
+          effective_plan: plan,
+          used_actions: usedActions,
+          cap,
+          reset_at: resetAt,
+          retryable: false,
+          dashboard_url: `${APP_URL}/dashboard/usage`,
+          pricing_url: `${APP_URL}/pricing`,
+        },
+      },
+    },
+  };
 }
 
 async function actionLimitResponse(
@@ -1634,11 +1692,11 @@ async function actionLimitResponse(
   const result = reservation as { reservation_id: string | null; allowed: boolean; used_actions: number } | null;
   if (result?.allowed && result.reservation_id) return { response: null, reservationId: result.reservation_id };
   const usedActions = result?.used_actions ?? cap;
-  await writeUsageLimitEvent(workspaceId, plan, usedActions, cap);
-  return { response: jsonRpcErrorBody(requestId, -32029, "Usage limit reached", {
-    error_code: "usage_limit_reached", effective_plan: plan, used_actions: usedActions,
-    cap, reset_at: billingWindow.end, dashboard_url: `${APP_URL}/dashboard/usage`, pricing_url: `${APP_URL}/pricing`,
-  }), reservationId: null };
+  await writeUsageLimitEvent(workspaceId, plan, usedActions, cap, billingWindow.start);
+  return {
+    response: usageLimitResult(requestId, plan, usedActions, cap, billingWindow.end),
+    reservationId: null,
+  };
 }
 
 /** Records the first server-confirmed successful MCP tool call per workspace.
@@ -1653,7 +1711,13 @@ async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxI
   const { data: inbox } = inboxId ? await supabase.from("inboxes").select("provider, service").eq("id", inboxId).maybeSingle() : { data: null };
   const rawProvider = inbox?.service && inbox.service !== "generic" ? inbox.service : inbox?.provider ?? "unknown";
   const provider = rawProvider === "imap" || rawProvider === "generic" ? "generic_imap" : rawProvider;
-  const { data: oauthToken } = await supabase.from("oauth_refresh_tokens").select("api_key_id").eq("api_key_id", apiKeyId).maybeSingle();
+  // Existence check, not a lookup: oauth_refresh_tokens holds one row per refresh
+  // grant, so a long-lived OAuth key has hundreds of rows for the same api_key_id
+  // (604 for the worst one in prod). A bare .maybeSingle() therefore fails with
+  // PGRST116 on exactly the keys we are trying to detect, and the discarded error
+  // left every OAuth connection recorded as analytics_first_tool_path "api_key".
+  // .limit(1) keeps it to a single indexed row; this runs on every tool call.
+  const { data: oauthToken } = await supabase.from("oauth_refresh_tokens").select("id").eq("api_key_id", apiKeyId).limit(1).maybeSingle();
   const occurredAt = new Date().toISOString();
   const client = analyticsClient(userAgent);
   const { data: claimed, error } = await supabase.from("workspaces")
@@ -5519,13 +5583,27 @@ async function resolveInboxArgInner(
   const resolveByEmail = async (
     email: string,
   ): Promise<{ ok: true; inbox: InboxRow } | { ok: false; reason: "not_found" }> => {
+    // The address is client-supplied and `ilike` is a PATTERN match: `_` and `%`
+    // are LIKE wildcards and PostgREST rewrites `*` to `%`, so an unescaped
+    // "%@%" would silently resolve to whichever inbox sorts first rather than to
+    // the one the caller named. Escape so the address can only match itself.
+    //
+    // The escape is not sufficient on its own. Postgres honours the backslash
+    // for `%` and `_`, but PostgREST's `*` -> `%` rewrite is an unconditional
+    // text substitution that does not respect a preceding backslash, so an
+    // address containing a literal `*` still reaches the database as a wildcard.
+    // The exact-match guard after the fetch is what actually closes this; the
+    // escaping just keeps the query selective. `.eq()` is not a drop-in
+    // replacement here because `email_address` is stored as entered and is not
+    // normalised to lowercase.
+    const pattern = email.replace(/[\\%_*]/g, (char) => `\\${char}`);
     let query = supabase
       .from("inboxes")
       .select(INBOX_SELECT_COLUMNS)
       .eq("workspace_id", apiKey.workspace_id)
       .is("deleted_at", null)
       .eq("status", "active")
-      .ilike("email_address", email);
+      .ilike("email_address", pattern);
 
     if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0) {
       query = query.in("id", apiKey.inbox_ids);
@@ -5533,7 +5611,15 @@ async function resolveInboxArgInner(
 
     const { data, error } = await query.limit(1).maybeSingle();
     if (error || !data) return { ok: false, reason: "not_found" };
-    return { ok: true, inbox: data as unknown as InboxRow };
+    const inbox = data as unknown as InboxRow;
+    // Verify the row we got back really is the address the caller named. Any
+    // pattern metacharacter that survived escaping can only ever cause a match
+    // on a DIFFERENT inbox, and resolving the wrong mailbox is how mail gets
+    // read from, or sent out of, an account the caller did not ask for.
+    if (inbox.email_address.toLowerCase() !== email.toLowerCase()) {
+      return { ok: false, reason: "not_found" };
+    }
+    return { ok: true, inbox };
   };
 
   if (rawInboxId) {
@@ -20151,7 +20237,30 @@ async function handleToolsCall(
   }
 
   const actionLimit = await actionLimitResponse(apiKey.workspace_id, dispatchName, id);
-  if (actionLimit.response) return actionLimit.response;
+  if (actionLimit.response) {
+    // A cap rejection used to return here without writing anything to
+    // activity_log, which quietly exempted it from both throttles: the per-key
+    // rolling window and the per-plan burst ceiling each count activity_log
+    // rows, so a capped client stuck in a retry loop was the one caller in the
+    // system that could hammer this function for free, forever. Logging the
+    // rejection puts it back under both limiters and leaves operators a row
+    // that explains why a workspace suddenly went quiet.
+    const cappedArgs = rawArgs !== null && typeof rawArgs === "object" && !Array.isArray(rawArgs)
+      ? rawArgs as Record<string, unknown>
+      : null;
+    await writeActivityLog({
+      workspaceId: apiKey.workspace_id,
+      apiKeyId: apiKey.id,
+      inboxId: typeof cappedArgs?.["inbox_id"] === "string" ? cappedArgs["inbox_id"] as string : null,
+      toolName: dispatchName,
+      status: "rate_limited",
+      errorCode: "usage_limit_reached",
+      durationMs: null,
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    });
+    return actionLimit.response;
+  }
 
   // Reverse schema renames only after validating the public consolidated
   // contract. In particular, email_organize exposes `flag_action` so it does

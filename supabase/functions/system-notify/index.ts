@@ -19,6 +19,11 @@ type McpResponse = {
       inboxes?: Array<{ inbox_id?: unknown; email_address?: unknown }>;
       message_id?: unknown;
     };
+    // The MCP server reports a monthly action-cap rejection as an isError tool
+    // result carrying this namespaced block, not as a JSON-RPC error. Named
+    // here so an alert that dies because the notifier's own workspace ran out
+    // of actions says so, instead of collapsing into "mcp_protocol".
+    _meta?: { "com.mcpemails/usage_limit"?: { error_code?: unknown } };
   };
   error?: { code?: unknown; data?: unknown };
 };
@@ -45,7 +50,8 @@ async function fetchGrowthStats(supabase: SupabaseClient): Promise<GrowthStats> 
   const since24h = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const since7d = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const count = async (query: Promise<{ count: number | null; error: unknown }>) => {
+  // PromiseLike, not Promise: a PostgREST builder is thenable but not a Promise.
+  const count = async (query: PromiseLike<{ count: number | null; error: unknown }>) => {
     try {
       const { count: value, error } = await query;
       return error ? null : value;
@@ -63,21 +69,22 @@ async function fetchGrowthStats(supabase: SupabaseClient): Promise<GrowthStats> 
   // Of the workspaces created in the last 7 days, how many have connected an
   // inbox yet -- a cheap read of the existing analytics_first_inbox_connected_at
   // column on workspaces, no join required.
-  let recentWorkspaces: number | null = null;
-  let recentWorkspacesConnected: number | null = null;
-  try {
-    const { data, error } = await supabase
-      .from("workspaces")
-      .select("analytics_first_inbox_connected_at")
-      .gte("created_at", since7d)
-      .is("deleted_at", null);
-    if (!error && data) {
-      recentWorkspaces = data.length;
-      recentWorkspacesConnected = data.filter((w) => w.analytics_first_inbox_connected_at != null).length;
-    }
-  } catch {
-    // leave both null
-  }
+  //
+  // Both numbers are exact head counts rather than data.length over a fetched
+  // page: PostgREST caps a row-returning select at db-max-rows (1000) with no
+  // error, so counting the rows we were handed would quietly flatten out at
+  // 1000 once a week's signups got that far, and the connected ratio with it.
+  const [recentWorkspaces, recentWorkspacesConnected] = await Promise.all([
+    count(
+      supabase.from("workspaces").select("*", { count: "exact", head: true })
+        .gte("created_at", since7d).is("deleted_at", null),
+    ),
+    count(
+      supabase.from("workspaces").select("*", { count: "exact", head: true })
+        .gte("created_at", since7d).is("deleted_at", null)
+        .not("analytics_first_inbox_connected_at", "is", null),
+    ),
+  ]);
 
   return { totalUsers, last24h, last7d, recentWorkspaces, recentWorkspacesConnected };
 }
@@ -141,7 +148,11 @@ async function callMcp(apiKey: string, id: number, method: string, params?: Reco
   });
   const body = await response.json().catch(() => null) as McpResponse | null;
   if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? "authentication" : "public_endpoint");
-  if (!body || body.error || body.result?.isError) throw new Error("mcp_protocol");
+  if (!body) throw new Error("mcp_protocol");
+  if (body.result?._meta?.["com.mcpemails/usage_limit"]?.error_code === "usage_limit_reached") {
+    throw new Error("usage_limit_reached");
+  }
+  if (body.error || body.result?.isError) throw new Error("mcp_protocol");
   return body;
 }
 
