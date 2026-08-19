@@ -149,7 +149,7 @@
     "checkConnection": "Check connection",
     "disconnectInbox": "Disconnect inbox",
     "emptyTitle": "No inboxes connected",
-    "emptyDesc": "Connect Gmail, Fastmail, or any IMAP provider to give your agents access.",
+    "emptyDesc": "Connect any IMAP mailbox, or Gmail, to give your agents access.",
     "disconnectDialog": {
       "title": "Disconnect inbox?",
       "sub": "This will revoke access and remove this inbox from your workspace.",
@@ -192,7 +192,10 @@
         "previewTooLarge": "Signature is too large to preview.",
         "imageNote": "Some email clients (e.g. Gmail) may hide images until the recipient clicks \"display images\". This is normal for signatures with hosted images."
       }
-    }
+    },
+    "emptyAltLead": "Not ready to connect a mailbox yet?",
+    "emptyViewKeys": "Get your MCP URL and API key",
+    "emptyReadDocs": "Read the client setup guides"
   },
   "apiKeys": {
     "title": "API keys",

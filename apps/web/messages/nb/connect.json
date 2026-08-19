@@ -20,8 +20,8 @@
       "body": "Gmail kobles til med <b>Google OAuth</b> — logg inn med Google, godkjenn lese- og sendetilgang, og du er tilkoblet. Ingen app-passord, ingen IMAP-innstillinger å grave fram. Trekk tilbake tilgangen når som helst fra Google-kontoen din eller mcpemails-dashbordet."
     },
     "verificationNote": {
-      "title": "Merk mens Google-verifiseringen pågår",
-      "body": "mcpemails er for øyeblikket under Googles verifisering og CASA-sikkerhetsgjennomgang. Inntil den fullføres, viser Google et «Google har ikke verifisert denne appen»-skjermbilde — klikk <b>Avansert</b>, deretter <b>Gå til mcpemails.com</b> for å fortsette — og tilkoblingen må kobles til på nytt omtrent hver 7. dag. Begge forsvinner når verifiseringen er på plass."
+      "title": "Dette viser Google deg",
+      "body": "Google viser et «Google har ikke verifisert denne appen»-skjermbilde for alle apper de ikke har gjennomgått — klikk <b>Avansert</b>, deretter <b>Gå til mcpemails.com</b> for å fortsette. Den gjennomgangen krever en betalt sikkerhetsvurdering fra tredjepart som vi har valgt å ikke kjøpe, så skjermbildet blir værende. Når postkassen først er tilkoblet, forblir den tilkoblet: tilgangen fornyes automatisk og opphører bare hvis du trekker den tilbake fra Google-kontoen din."
     },
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",

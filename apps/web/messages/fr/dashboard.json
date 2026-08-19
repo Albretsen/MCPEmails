@@ -149,7 +149,7 @@
     "checkConnection": "Vérifier la connexion",
     "disconnectInbox": "Déconnecter la boîte",
     "emptyTitle": "Aucune boîte connectée",
-    "emptyDesc": "Connectez Gmail, Fastmail ou tout fournisseur IMAP pour donner l'accès à vos agents.",
+    "emptyDesc": "Connectez n’importe quelle boîte IMAP, ou Gmail, pour donner accès à vos agents.",
     "disconnectDialog": {
       "title": "Déconnecter la boîte ?",
       "sub": "Cela révoquera l'accès et retirera cette boîte de votre espace de travail.",
@@ -192,7 +192,10 @@
         "previewTooLarge": "La signature est trop volumineuse pour afficher un aperçu.",
         "imageNote": "Certains clients de messagerie (p. ex. Gmail) peuvent masquer les images jusqu'à ce que le destinataire clique sur « afficher les images ». C'est normal pour les signatures comportant des images hébergées."
       }
-    }
+    },
+    "emptyAltLead": "Pas encore prêt à connecter une boîte ?",
+    "emptyViewKeys": "Obtenir votre URL MCP et votre clé d’API",
+    "emptyReadDocs": "Lire les guides de configuration"
   },
   "apiKeys": {
     "title": "Clés API",

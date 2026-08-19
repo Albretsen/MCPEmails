@@ -20,8 +20,8 @@
       "body": "Gmail se connecte via <b>Google OAuth</b> — connectez-vous avec Google, approuvez l'accès en lecture et en envoi, et c'est connecté. Pas de mot de passe d'application, pas de paramètres IMAP à dénicher. Révoquez l'accès à tout moment depuis votre compte Google ou le tableau de bord mcpemails."
     },
     "verificationNote": {
-      "title": "À savoir pendant la vérification Google en cours",
-      "body": "mcpemails est actuellement en cours de vérification Google et d'examen de sécurité CASA. Tant que ce n'est pas terminé, Google affiche un écran « Google n'a pas validé cette application » — cliquez sur <b>Paramètres avancés</b>, puis sur <b>Accéder à mcpemails.com</b> pour continuer — et la connexion doit être renouvelée environ tous les 7 jours. Les deux disparaîtront une fois la vérification aboutie."
+      "title": "Ce que Google va afficher",
+      "body": "Google affiche un écran « Google n'a pas validé cette application » pour toute application qu'il n'a pas examinée : cliquez sur <b>Paramètres avancés</b>, puis sur <b>Accéder à mcpemails.com</b> pour continuer. Cet examen exige une évaluation de sécurité externe payante que nous avons choisi de ne pas acheter, l'écran restera donc affiché. Une fois connectée, la boîte reste connectée : l'accès se renouvelle automatiquement et ne s'interrompt que si vous le révoquez depuis votre compte Google."
     },
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",

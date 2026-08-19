@@ -20,8 +20,8 @@
       "body": "Gmail se conecta con <b>Google OAuth</b> — inicia sesión con Google, aprueba el acceso de lectura y envío, y quedas conectado. Sin contraseña de aplicación ni ajustes IMAP que rastrear. Revoca el acceso cuando quieras desde tu cuenta de Google o el panel de mcpemails."
     },
     "verificationNote": {
-      "title": "Aviso mientras la verificación de Google está en curso",
-      "body": "mcpemails está actualmente en el proceso de verificación y revisión de seguridad CASA de Google. Hasta que se complete, Google muestra una pantalla de “Google no ha verificado esta aplicación” — haz clic en <b>Configuración avanzada</b> y luego en <b>Ir a mcpemails.com</b> para continuar — y la conexión hay que volver a conectarla aproximadamente cada 7 días. Ambas cosas desaparecen una vez que se completa la verificación."
+      "title": "Lo que verás en Google",
+      "body": "Google muestra una pantalla de “Google no ha verificado esta aplicación” para cualquier aplicación que no haya revisado: haz clic en <b>Configuración avanzada</b> y luego en <b>Ir a mcpemails.com</b> para continuar. Esa revisión exige una evaluación de seguridad externa de pago que hemos decidido no contratar, así que la pantalla seguirá apareciendo. Una vez conectado, el buzón sigue conectado: el acceso se renueva automáticamente y solo se interrumpe si lo revocas desde tu cuenta de Google."
     },
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",

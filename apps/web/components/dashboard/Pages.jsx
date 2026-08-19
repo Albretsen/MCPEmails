@@ -997,7 +997,7 @@ export function WorkflowsPage({ mcpUrl }) {
   );
 }
 
-export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck, onSaveSignature }) {
+export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onGoToKeys }) {
   const t = useTranslations('dashboard');
   // Count errored inboxes to conditionally show a page-level warning banner.
   const erroredCount = inboxes.filter(ib => ib.status === "error").length;
@@ -1272,6 +1272,40 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
             <p>{t('inboxes.emptyDesc')}</p>
             <div style={{ marginTop: 8 }}>
               <Btn variant="primary" icon="plus" onClick={onConnect}>{t('inboxes.connectInbox')}</Btn>
+            </div>
+            {/* Closing the connect modal landed the user here, where the only
+                control reopened the modal they had just backed out of. Anyone
+                who left because they needed to go and generate an app password,
+                or wanted to see what they were setting up first, had no way
+                forward and nothing else to look at. The two things they most
+                likely wanted next are their MCP URL and the client setup
+                guides, so both are reachable from here. */}
+            <div style={{
+              marginTop: 20,
+              paddingTop: 16,
+              borderTop: '1px solid var(--border-1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)' }}>
+                {t('inboxes.emptyAltLead')}
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
+                {onGoToKeys && (
+                  <Btn variant="secondary" size="sm" icon="key" onClick={onGoToKeys}>
+                    {t('inboxes.emptyViewKeys')}
+                  </Btn>
+                )}
+                <a
+                  href="/docs"
+                  className="btn btn-secondary btn-sm"
+                  style={{ textDecoration: 'none' }}
+                >
+                  {t('inboxes.emptyReadDocs')}
+                </a>
+              </div>
             </div>
           </div>
         )}

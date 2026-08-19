@@ -196,6 +196,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    // The IMAP half of this route records every failure; the SMTP half
+    // recorded none, so a provider that reads fine but cannot send looked
+    // identical to a clean success in app_errors.
+    await captureError(new Error(smtpValidation.message), {
+      severity: 'low',
+      route: 'api/inboxes/app-password',
+      reason: smtpValidation.code,
+      service,
+      phase: `smtp_${smtpValidation.phase}`,
+      detail: smtpValidation.detail ?? null,
+      workspaceId,
+    });
     return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
   }
 
