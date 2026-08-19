@@ -68,7 +68,7 @@
       "<b>Bruk en avgrenset, tilbakekallbar tilkobling.</b> Du kobler til med OAuth eller et app-passord som kun gir tilgang til e-post, og du kan tilbakekalle den med ett klikk hos leverandøren din, uten at jeg er involvert.",
       "<b>Se hva den gjør.</b> Hvert verktøykall agenten din gjør registreres i en aktivitetslogg du kan lese, så du ser nøyaktig hva som ble lest og når."
     ],
-    "outro": "Og hvis en innebygd koblings-integrasjon allerede dekker leverandøren din og gjør det du trenger, bruk den. Dette finnes for leverandørene og kombinasjonene med flere innbokser som de ikke dekker."
+    "outro": "Og hvis en kobling som er innebygd i assistenten din allerede dekker leverandøren din og gjør det du trenger, bruk den. Dette finnes for postkassene den ikke når, og for å jobbe i flere av gangen."
   },
   "injection": {
     "title": "4. Den reelle risikoen: prompt-injeksjon",
@@ -108,7 +108,7 @@
       {
         "provider": "Supabase",
         "purpose": "Database, autentisering, edge-funksjoner",
-        "location": "EU (Frankfurt) eller USA (Virginia); du velger ved registrering"
+        "location": "EU (Stockholm)"
       },
       {
         "provider": "Vercel",

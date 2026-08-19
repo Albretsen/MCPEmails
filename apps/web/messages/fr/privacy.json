@@ -136,7 +136,7 @@
     "thLocation": "Localisation",
     "supabasePurpose": "Base de données, authentification, fonctions edge",
     "supabaseData": "Données de compte, configuration d'espace de travail, journaux d'audit",
-    "supabaseLocation": "UE (Francfort) ou États-Unis (Virginie) ; vous choisissez à l'inscription",
+    "supabaseLocation": "UE (Stockholm)",
     "vercelPurpose": "Hébergement web, CDN",
     "vercelData": "Métadonnées des requêtes HTTP ; aucun contenu d'e-mail",
     "vercelLocation": "Edge mondial (région la plus proche de l'utilisateur)",
@@ -157,7 +157,7 @@
     "title": "6. Transferts internationaux de données",
     "p1": "MCPEmails est exploité depuis la Norvège, qui est soumise au cadre de protection des données de l'Espace économique européen (EEE). Si vous accédez au service depuis l'extérieur de l'EEE, vos données peuvent être transférées et traitées dans des pays situés au sein de l'EEE.",
     "p2": "Nos sous-traitants d'infrastructure (Supabase, Vercel) opèrent dans le cadre de clauses contractuelles types (CCT) approuvées par la Commission européenne pour les transferts de données vers des pays tiers. Pour Stripe, le traitement est couvert par leur certification au titre du cadre de protection des données UE-États-Unis (EU-US Data Privacy Framework).",
-    "p3": "Les clients entreprise peuvent choisir de stocker toutes les données de compte et de configuration exclusivement dans une infrastructure basée dans l'UE (région de Francfort), sans frais supplémentaires."
+    "p3": "Les données de compte et de configuration sont stockées sur une infrastructure située dans l'UE, dans la région de Stockholm."
   },
   "yourRights": {
     "title": "7. Vos droits",
@@ -233,8 +233,8 @@
   },
   "cta": {
     "title": "Des questions sur vos données ?",
-    "sub": "Notre équipe chargée de la confidentialité est là pour vous aider. Écrivez-nous et nous répondrons dans un délai de 30 jours.",
-    "contactBtn": "Contacter l'équipe confidentialité",
+    "sub": "Écrivez-nous à privacy@mcpemails.com et nous répondrons dans un délai de 30 jours.",
+    "contactBtn": "Écrire à privacy@",
     "termsBtn": "Lire nos Conditions"
   }
 }

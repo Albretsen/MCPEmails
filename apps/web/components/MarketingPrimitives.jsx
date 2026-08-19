@@ -59,10 +59,18 @@ export function ThemeToggle() {
   });
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    try { localStorage.setItem("mcpe-theme", theme); } catch(e) {}
   }, [theme]);
+  // Only an explicit toggle pins a choice. Without one we keep following the
+  // system preference on every visit.
+  function toggle() {
+    setTheme(t => {
+      const next = t === "dark" ? "light" : "dark";
+      try { localStorage.setItem("mcpe-theme", next); } catch(e) {}
+      return next;
+    });
+  }
   return (
-    <button className="theme-toggle" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} title="Toggle theme">
+    <button className="theme-toggle" onClick={toggle} title="Toggle theme">
       <MIcon name={theme === "dark" ? "sun" : "moon"} size={16} color="currentColor"/>
     </button>
   );

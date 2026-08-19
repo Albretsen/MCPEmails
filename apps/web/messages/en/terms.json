@@ -171,7 +171,7 @@
   },
   "contact": {
     "title": "11. Contact Us",
-    "intro": "If you have questions about these Terms or need to reach our legal team:",
+    "intro": "If you have questions about these Terms or need to reach us about a legal matter:",
     "legalLabel": "Legal enquiries",
     "privacyLabel": "Privacy questions",
     "securityLabel": "Security reports",
@@ -181,8 +181,8 @@
   },
   "cta": {
     "title": "Questions about these Terms?",
-    "sub": "Our legal team is happy to help. Reach out and we will respond within 14 business days.",
-    "contactBtn": "Contact legal team",
+    "sub": "Email legal@mcpemails.com and we will respond within 14 business days.",
+    "contactBtn": "Email legal@",
     "privacyBtn": "Read our Privacy Policy"
   }
 }

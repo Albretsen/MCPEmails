@@ -61,7 +61,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "Todos los planes incluyen: el correo se obtiene en vivo, nunca se almacena · credenciales cifradas en reposo · alojamiento en la UE y EE. UU.",
+    "all": "Todos los planes incluyen: el correo se obtiene en vivo, nunca se almacena · credenciales cifradas en reposo · alojamiento en la UE",
     "custom": "¿Necesitas algo a medida? <contact>Contáctanos</contact>."
   },
   "comparison": {
@@ -108,8 +108,7 @@
         "label": "Privacidad y seguridad",
         "rows": {
           "neverStored": "El correo se obtiene en vivo, nunca se almacena",
-          "encrypted": "Credenciales cifradas en reposo",
-          "soc2": "Informe SOC 2 Type II bajo petición"
+          "encrypted": "Credenciales cifradas en reposo"
         }
       },
       "support": {
@@ -161,7 +160,7 @@
       },
       {
         "q": "¿Cómo funciona el descuento anual?",
-        "a": "Pagar anualmente ahorra alrededor del 17% frente a la facturación mensual: Agent cuesta $120/año y Scale cuesta $490/año. Se te cobra una vez por 12 meses por adelantado. Si cancelas a mitad de año, reembolsamos los meses completos no utilizados."
+        "a": "Pagar anualmente ahorra alrededor del 17% frente a la facturación mensual: Agent cuesta $120/año y Scale cuesta $490/año. Se te cobra una vez por 12 meses por adelantado. Si cancelas a mitad de año, conservas el acceso hasta el final del año pagado."
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
@@ -169,7 +168,7 @@
       },
       {
         "q": "¿Hay política de reembolso?",
-        "a": "Si no estás satisfecho dentro de los 30 días de tu primera factura de pago, contáctanos para un reembolso completo, sin preguntas."
+        "a": "Los planes mensuales no son reembolsables, salvo cuando lo exija la legislación aplicable de protección al consumidor. En un plan anual, puedes solicitar un reembolso prorrateado por los meses completos no utilizados dentro de los 14 días posteriores a tu fecha de renovación escribiéndonos. Cancelar detiene los cobros futuros y conservas el acceso hasta el final del periodo que ya pagaste. La política completa está en nuestros Términos."
       },
       {
         "q": "¿Puedo auto-alojarlo en lugar de pagar?",

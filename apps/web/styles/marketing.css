@@ -478,6 +478,16 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .featured-col.tbl-check, .featured-col.tbl-dash, .featured-col.tbl-val {
   background: rgba(37,71,229,0.03);
 }
+/* Prose variant: this table compares two approaches in sentences rather than
+   scoring features with icons, so cells read left aligned and the label column
+   gives its width back to the two text columns. Scoped so the pricing table,
+   which still uses check and dash icons, is untouched. */
+.comparison-tbl-prose thead th:not(:first-child) { text-align: left; }
+.comparison-tbl-prose thead th { white-space: normal; }
+.comparison-tbl-prose thead th.feat-col { width: 24%; }
+.comparison-tbl-prose .tbl-val { text-align: left; line-height: 1.45; }
+.comparison-tbl-prose tbody td { vertical-align: top; }
+
 /* Highlight the pro column in tbody */
 .comparison-tbl tbody tr:not(.tbl-section-head) td:nth-child(3) {
   background: rgba(37, 71, 229, 0.03);

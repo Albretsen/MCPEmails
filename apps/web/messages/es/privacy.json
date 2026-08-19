@@ -136,7 +136,7 @@
     "thLocation": "Ubicación",
     "supabasePurpose": "Base de datos, autenticación, edge functions",
     "supabaseData": "Datos de cuenta, configuración del espacio de trabajo, registros de auditoría",
-    "supabaseLocation": "UE (Fráncfort) o EE. UU. (Virginia); eliges al registrarte",
+    "supabaseLocation": "UE (Estocolmo)",
     "vercelPurpose": "Alojamiento web, CDN",
     "vercelData": "Metadatos de peticiones HTTP; sin contenido de correo",
     "vercelLocation": "Edge global (región más cercana al usuario)",
@@ -157,7 +157,7 @@
     "title": "6. Transferencias internacionales de datos",
     "p1": "MCPEmails se opera desde Noruega, que está sujeta al marco de protección de datos del Espacio Económico Europeo (EEE). Si accedes al servicio desde fuera del EEE, tus datos pueden transferirse y tratarse en países dentro del EEE.",
     "p2": "Nuestros subencargados de infraestructura (Supabase, Vercel) operan bajo Cláusulas Contractuales Tipo (CCT) aprobadas por la Comisión Europea para transferencias de datos a terceros países. Para Stripe, el tratamiento está cubierto por su certificación del Marco de Privacidad de Datos UE-EE. UU.",
-    "p3": "Los clientes empresariales pueden optar por almacenar todos los datos de cuenta y configuración exclusivamente en infraestructura ubicada en la UE (región de Fráncfort) sin coste adicional."
+    "p3": "Los datos de cuenta y configuración se almacenan en infraestructura ubicada en la UE, en la región de Estocolmo."
   },
   "yourRights": {
     "title": "7. Tus derechos",
@@ -233,8 +233,8 @@
   },
   "cta": {
     "title": "¿Preguntas sobre tus datos?",
-    "sub": "Nuestro equipo de privacidad está aquí para ayudar. Escríbenos y responderemos en un plazo de 30 días.",
-    "contactBtn": "Contactar al equipo de privacidad",
+    "sub": "Escríbenos a privacy@mcpemails.com y responderemos en un plazo de 30 días.",
+    "contactBtn": "Escribir a privacy@",
     "termsBtn": "Lee nuestros Términos"
   }
 }

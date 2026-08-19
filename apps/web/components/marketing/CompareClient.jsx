@@ -27,37 +27,13 @@ function FaqItem({ q, a }) {
   );
 }
 
-/* Comparison-table rows. Each cell is either a boolean (check/dash) or a
-   message key resolved against the `compare` bundle. Feature labels resolve
-   from `table.rows.<key>.label`. */
-const TABLE_ROWS = [
-  { key: 'providers',  native: false, mcp: true },
-  { key: 'imap',       native: false, mcp: true },
-  { key: 'send',       native: false, mcp: true },
-  { key: 'schedule',   native: false, mcp: true },
-  { key: 'organize',   native: false, mcp: true },
-  { key: 'multiAi',    native: false, mcp: true },
-  { key: 'oauth',      native: true,  mcp: true },
-  { key: 'storage',    native: true,  mcp: true },
-];
-
-function Cell({ value }) {
-  if (value === true) {
-    return (
-      <td className="tbl-check">
-        <MIcon name="check" size={16} color="var(--mint-600)" />
-      </td>
-    );
-  }
-  if (value === false) {
-    return <td className="tbl-dash"><span>–</span></td>;
-  }
-  return <td className="tbl-val">{value}</td>;
-}
+/* Comparison-table rows. Every cell is descriptive text resolved against the
+   `compare` bundle: `table.rows.<key>.label`, `.native` and `.mcp`. */
+const TABLE_ROWS = ['who', 'mailboxes', 'clients', 'count', 'creds', 'selfhost'];
 
 export default function CompareClient() {
   const t = useTranslations('compare');
-  const axisKeys = ['coverage', 'actions', 'portable'];
+  const axisKeys = ['coverage', 'inboxes', 'portable', 'control'];
 
   return (
     <div>
@@ -78,7 +54,7 @@ export default function CompareClient() {
         </div>
       </section>
 
-      {/* Three honest axes */}
+      {/* Four structural axes */}
       <section className="section principles">
         <div className="container">
           <div className="section-head principles-head">
@@ -111,7 +87,7 @@ export default function CompareClient() {
             <h2 style={{ fontSize: 36 }}>{t('table.title')}</h2>
           </div>
           <div className="comparison-wrap">
-            <table className="comparison-tbl">
+            <table className="comparison-tbl comparison-tbl-prose">
               <thead>
                 <tr>
                   <th className="feat-col">{t('table.featureCol')}</th>
@@ -120,11 +96,11 @@ export default function CompareClient() {
                 </tr>
               </thead>
               <tbody>
-                {TABLE_ROWS.map((row) => (
-                  <tr key={row.key}>
-                    <td className="feat-name">{t(`table.rows.${row.key}`)}</td>
-                    <Cell value={row.native} />
-                    <Cell value={row.mcp} />
+                {TABLE_ROWS.map((key) => (
+                  <tr key={key}>
+                    <td className="feat-name">{t(`table.rows.${key}.label`)}</td>
+                    <td className="tbl-val">{t(`table.rows.${key}.native`)}</td>
+                    <td className="tbl-val">{t(`table.rows.${key}.mcp`)}</td>
                   </tr>
                 ))}
               </tbody>

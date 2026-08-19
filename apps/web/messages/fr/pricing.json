@@ -61,7 +61,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · hébergement UE et US",
+    "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · hébergement dans l'UE",
     "custom": "Besoin de quelque chose de sur mesure ? <contact>Contactez-nous</contact>."
   },
   "comparison": {
@@ -108,8 +108,7 @@
         "label": "Confidentialité et sécurité",
         "rows": {
           "neverStored": "E-mails récupérés en direct, jamais stockés",
-          "encrypted": "Identifiants chiffrés au repos",
-          "soc2": "Rapport SOC 2 Type II sur demande"
+          "encrypted": "Identifiants chiffrés au repos"
         }
       },
       "support": {
@@ -161,7 +160,7 @@
       },
       {
         "q": "Comment fonctionne la remise annuelle ?",
-        "a": "Payer à l'année permet d'économiser environ 17 % par rapport à la facturation mensuelle : Agent est à 120 $/an et Scale à 490 $/an. Vous êtes facturé une fois pour 12 mois d'avance. Si vous annulez en cours d'année, nous remboursons les mois entiers non utilisés."
+        "a": "Payer à l'année permet d'économiser environ 17 % par rapport à la facturation mensuelle : Agent est à 120 $/an et Scale à 490 $/an. Vous êtes facturé une fois pour 12 mois d'avance. Si vous annulez en cours d'année, vous conservez l'accès jusqu'à la fin de l'année payée."
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
@@ -169,7 +168,7 @@
       },
       {
         "q": "Existe-t-il une politique de remboursement ?",
-        "a": "Si vous n'êtes pas satisfait dans les 30 jours suivant votre première facture payée, contactez-nous pour un remboursement intégral, sans poser de questions."
+        "a": "Les formules mensuelles ne sont pas remboursables, sauf lorsque le droit de la consommation applicable l'exige. Sur une formule annuelle, vous pouvez demander un remboursement au prorata des mois entiers non utilisés dans les 14 jours suivant votre date de renouvellement, en nous écrivant. L'annulation met fin aux prélèvements suivants et vous conservez l'accès jusqu'à la fin de la période déjà payée. La politique complète figure dans nos Conditions."
       },
       {
         "q": "Puis-je l'héberger moi-même plutôt que de payer ?",

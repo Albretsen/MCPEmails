@@ -68,7 +68,7 @@
       "<b>Usa una conexión limitada y revocable.</b> Te conectas con OAuth o una contraseña de aplicación que concede únicamente acceso al correo, y puedes revocarla con un clic desde tu proveedor, sin intervención alguna de mi parte.",
       "<b>Observa lo que hace.</b> Cada llamada a una herramienta que hace tu agente queda registrada en un registro de actividad que puedes leer, para que veas con precisión a qué se accedió y cuándo."
     ],
-    "outro": "Y si un conector nativo ya cubre tu proveedor y hace lo que necesitas, úsalo. Esto existe para los proveedores y las combinaciones de varias bandejas de entrada que ellos no cubren."
+    "outro": "Y si un conector integrado en tu asistente ya cubre tu proveedor y hace lo que necesitas, úsalo. Esto existe para los buzones a los que no llega, y para trabajar con varios a la vez."
   },
   "injection": {
     "title": "4. El riesgo real: la inyección de prompts",
@@ -108,7 +108,7 @@
       {
         "provider": "Supabase",
         "purpose": "Base de datos, autenticación, funciones edge",
-        "location": "UE (Fráncfort) o EE. UU. (Virginia); tú eliges al registrarte"
+        "location": "UE (Estocolmo)"
       },
       {
         "provider": "Vercel",

@@ -111,7 +111,7 @@
   "tools": {
     "eyebrow": "Referencia de herramientas",
     "heading": "10 herramientas. Todas las operaciones de correo que tu agente necesita.",
-    "sub": "<b>Indicar una bandeja es opcional.</b> Cuando tu clave tiene exactamente una bandeja, cada herramienta por bandeja la resuelve automáticamente — no hace falta <code>inbox_id</code>. Con varias bandejas, pasa <code>inbox_id</code> (el UUID de <code>inbox_list</code>) o <code>inbox</code> (la dirección de la bandeja). La mayoría de las herramientas toman un argumento <code>action</code> que selecciona la operación; las insignias muestran los permisos que necesita cada una, y <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token OAuth) tiene permiso. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
+    "sub": "<b>Indicar una bandeja es opcional.</b> Cuando tu clave tiene exactamente una bandeja, cada herramienta por bandeja la resuelve automáticamente, no hace falta <code>inbox_id</code>. Con varias bandejas, pasa <code>inbox_id</code> (el UUID de <code>inbox_list</code>) o <code>inbox</code> (la dirección de la bandeja). La mayoría de las herramientas toman un argumento <code>action</code> que selecciona la operación; las insignias muestran los permisos que necesita cada una, y <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token OAuth) tiene permiso. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas. Una clave con permisos de envío o borrado también lista algunas herramientas auxiliares además de estas diez: <code>approval_review</code>, <code>approval_decide</code>, <code>approval_update</code> y <code>approval_schedule</code> actúan sobre un mensaje retenido para aprobación humana, mientras que <code>bulk_execute</code> y <code>bulk_cancel</code> ejecutan o cancelan un borrado o movimiento masivo previsualizado antes. Están marcadas para la tarjeta de revisión del cliente y no para el selector de herramientas del modelo, así que un cliente puede listarlas aunque no formen parte de la superficie de correo documentada.",
     "noParams": "Sin parámetros. Llama con un objeto de argumentos vacío:",
     "showExample": "Mostrar petición y respuesta de ejemplo",
     "hideExample": "Ocultar petición y respuesta de ejemplo",
@@ -259,6 +259,8 @@
         "inbox_id": "UUID de la bandeja que contiene los borradores. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "draft_id": "ID de borrador del proveedor (action 'update' o 'send'), de la acción create, update o list más reciente. En bandejas IMAP cambia tras cada actualización, así que usa siempre el más reciente.",
+        "message_id": "ID del mensaje de origen para la acción 'reply', obtenido de una acción list, read o search anterior.",
+        "reply_all": "Para la acción 'reply': false por defecto, respondiendo solo al remitente. Ponlo en true para incluir los destinatarios originales de To y Cc.",
         "subject": "Asunto del borrador (action 'create'/'update').",
         "body": "Cuerpo de texto del borrador (action 'create'/'update').",
         "to": "Direcciones de destinatarios (action 'create'/'update'). Por defecto [].",
@@ -398,19 +400,19 @@
     "hero": {
       "eyebrow": "Soporte de proveedores",
       "heading": "Qué funciona, por proveedor.",
-      "lead": "MCPEmails conecta Gmail, Fastmail y cualquier bandeja IMAP (iCloud, Yahoo, Zoho, Yandex, genérica). No todos los proveedores exponen las mismas APIs — esta tabla muestra exactamente qué admite hoy cada uno.",
+      "lead": "MCPEmails conecta Gmail, Fastmail y cualquier bandeja IMAP (iCloud, Yahoo, Zoho, Yandex, genérica). No todos los proveedores exponen las mismas APIs, así que esta tabla muestra exactamente qué admite cada uno.",
       "ctaConnect": "Conectar una bandeja",
       "ctaBack": "Volver a la documentación"
     },
     "legend": {
       "supported": "Compatible",
       "notSupported": "No compatible",
-      "planned": "Planificado (aún no lanzado)",
+      "planned": "No disponible",
       "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex e IMAP genérico</b> funcionan todos a través del mismo transporte IMAP/SMTP (Fastmail e iCloud usan una contraseña específica de aplicación) y comparten un conjunto de funciones idéntico, incluida la sintaxis de búsqueda IMAP. Las columnas se muestran por separado para mayor claridad."
     },
     "ariaSupported": "Compatible",
     "ariaNotSupported": "No compatible",
-    "plannedBadge": "planificado",
+    "plannedBadge": "n/d",
     "table": {
       "feature": "Característica"
     },

@@ -111,7 +111,7 @@
   "tools": {
     "eyebrow": "工具参考",
     "heading": "10 个工具。满足你智能体所需的每一项邮件操作。",
-    "sub": "<b>指定收件箱是可选的。</b>当你的密钥只有一个收件箱时，每个按收件箱的工具都会自动解析它——无需 <code>inbox_id</code>。有多个收件箱时，传入 <code>inbox_id</code>（来自 <code>inbox_list</code> 的 UUID）或 <code>inbox</code>（收件箱的邮箱地址）。大多数工具接受一个 <code>action</code> 参数来选择操作；徽章显示每个工具所需的权限范围，而 <code>tools/list</code> 只返回你的密钥（或 OAuth 令牌）有权限的工具。点击“显示示例”查看完整的请求与响应。",
+    "sub": "<b>指定收件箱是可选的。</b>当你的密钥只有一个收件箱时，每个按收件箱的工具都会自动解析它，无需 <code>inbox_id</code>。有多个收件箱时，传入 <code>inbox_id</code>（来自 <code>inbox_list</code> 的 UUID）或 <code>inbox</code>（收件箱的邮箱地址）。大多数工具接受一个 <code>action</code> 参数来选择操作；徽章显示每个工具所需的权限范围，而 <code>tools/list</code> 只返回你的密钥（或 OAuth 令牌）有权限的工具。点击“显示示例”查看完整的请求与响应。携带发送或删除权限范围的密钥，除这十个工具外还会列出几个辅助工具：<code>approval_review</code>、<code>approval_decide</code>、<code>approval_update</code> 和 <code>approval_schedule</code> 用于处理等待人工批准的邮件，而 <code>bulk_execute</code> 和 <code>bulk_cancel</code> 用于执行或取消先经预览的批量删除或移动。它们面向客户端的审阅卡片，而非模型的工具选择器，因此客户端可能会列出它们，尽管它们不属于本文档所述的邮件工具集。",
     "noParams": "无参数。使用空的参数对象进行调用：",
     "showExample": "显示示例请求与响应",
     "hideExample": "隐藏示例请求与响应",
@@ -259,6 +259,8 @@
         "inbox_id": "拥有这些草稿的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "draft_id": "提供商草稿 ID（action 'update' 或 'send'），来自最近的 create、update 或 list 操作。在 IMAP 收件箱上，它在每次更新后都会改变，因此始终使用最新的。",
+        "message_id": "用于 action 'reply' 的源邮件 ID，来自此前的 list、read 或 search 操作。",
+        "reply_all": "用于 action 'reply'：默认为 false，仅回复发件人。设为 true 可包含原始的 To 和 Cc 收件人。",
         "subject": "草稿主题行（action 'create'/'update'）。",
         "body": "草稿的纯文本正文（action 'create'/'update'）。",
         "to": "收件人地址（action 'create'/'update'）。默认 []。",
@@ -398,19 +400,19 @@
     "hero": {
       "eyebrow": "服务商支持",
       "heading": "各服务商分别支持什么。",
-      "lead": "MCPEmails 连接 Gmail、Fastmail 以及任何 IMAP 收件箱（iCloud、Yahoo、Zoho、Yandex、通用）。并非每个服务商都提供相同的 API —— 此表精确展示了每一个服务商目前支持的内容。",
+      "lead": "MCPEmails 连接 Gmail、Fastmail 以及任何 IMAP 收件箱（iCloud、Yahoo、Zoho、Yandex、通用）。并非每个服务商都提供相同的 API，因此此表精确展示了每一个服务商所支持的内容。",
       "ctaConnect": "连接一个收件箱",
       "ctaBack": "返回文档"
     },
     "legend": {
       "supported": "支持",
       "notSupported": "不支持",
-      "planned": "计划中（尚未上线）",
+      "planned": "不可用",
       "imapNote": "<b>Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP</b> 全部通过同一个 IMAP/SMTP 传输连接（Fastmail 和 iCloud 使用应用专用密码），并共享完全相同的功能集，包括 IMAP 搜索语法。这些列分开展示只是为了清晰。"
     },
     "ariaSupported": "支持",
     "ariaNotSupported": "不支持",
-    "plannedBadge": "计划中",
+    "plannedBadge": "不可用",
     "table": {
       "feature": "功能"
     },

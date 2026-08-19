@@ -48,8 +48,8 @@
   },
   "does": {
     "eyebrow": "Hva det faktisk gjør",
-    "title": "En ekte innboks, ikke et skrivebeskyttet glimt",
-    "sub": "Ni handlingsbaserte verktøy agenten din kan bruke fra start til slutt.",
+    "title": "En ekte innboks agenten din kan jobbe i",
+    "sub": "Ti handlingsbaserte verktøy agenten din kan bruke fra start til slutt.",
     "items": {
       "read": { "h": "Les og søk", "p": "List opp, les og søk på tvers av mapper og hver tilkoblet innboks, hentet i sanntid." },
       "send": { "h": "Send og svar", "p": "Send, svar og videresend direkte. Agenten fullfører e-posten, ikke bare et utkast." },

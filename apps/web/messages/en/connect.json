@@ -26,12 +26,12 @@
     "caps": {
       "eyebrow": "What your AI can do",
       "title": "A Gmail inbox your agent can actually use",
-      "sub": "Nine action-based MCP tools — not just drafts. Your agent finishes the job inside Gmail.",
+      "sub": "Ten action-based MCP tools, from read and search to send, schedule and archive. Your agent finishes the job inside Gmail.",
       "ctaPrimary": "Connect Gmail free"
     },
     "capabilities": [
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across labels — find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward — directly from Gmail, not as a draft you finish by hand." },
+      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Gmail. Sending is gated by the scopes on your API key." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
       { "tag": "Organize", "h": "Label, archive & delete", "p": "Keep the inbox tidy — apply labels, archive what's handled, and delete on request." }
     ],
@@ -75,12 +75,12 @@
     "caps": {
       "eyebrow": "What your AI can do",
       "title": "A Fastmail inbox your agent can actually use",
-      "sub": "Nine action-based MCP tools — not just drafts. Your agent finishes the job inside Fastmail.",
+      "sub": "Ten action-based MCP tools, from read and search to send, schedule and archive. Your agent finishes the job inside Fastmail.",
       "ctaPrimary": "Connect Fastmail free"
     },
     "capabilities": [
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders — find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward — directly from Fastmail, not as a draft you finish by hand." },
+      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Fastmail. Sending is gated by the scopes on your API key." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
       { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],
@@ -125,12 +125,12 @@
     "caps": {
       "eyebrow": "What your AI can do",
       "title": "An iCloud inbox your agent can actually use",
-      "sub": "Nine action-based MCP tools — not just drafts. Your agent finishes the job inside iCloud Mail.",
+      "sub": "Ten action-based MCP tools, from read and search to send, schedule and archive. Your agent finishes the job inside iCloud Mail.",
       "ctaPrimary": "Connect iCloud free"
     },
     "capabilities": [
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders — find a receipt, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward — directly from iCloud, not as a draft you finish by hand." },
+      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from iCloud. Sending is gated by the scopes on your API key." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
       { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],
@@ -175,12 +175,12 @@
     "caps": {
       "eyebrow": "What your AI can do",
       "title": "A Yahoo inbox your agent can actually use",
-      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Yahoo Mail.",
+      "sub": "Ten action-based MCP tools, from read and search to send, schedule and archive. Your agent finishes the job inside Yahoo Mail.",
       "ctaPrimary": "Connect Yahoo free"
     },
     "capabilities": [
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Yahoo, not as a draft you finish by hand." },
+      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Yahoo. Sending is gated by the scopes on your API key." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
       { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],
@@ -225,12 +225,12 @@
     "caps": {
       "eyebrow": "What your AI can do",
       "title": "A Zoho inbox your agent can actually use",
-      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Zoho Mail.",
+      "sub": "Ten action-based MCP tools, from read and search to send, schedule and archive. Your agent finishes the job inside Zoho Mail.",
       "ctaPrimary": "Connect Zoho free"
     },
     "capabilities": [
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Zoho, not as a draft you finish by hand." },
+      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Zoho. Sending is gated by the scopes on your API key." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
       { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],
@@ -275,12 +275,12 @@
     "caps": {
       "eyebrow": "What your AI can do",
       "title": "A Yandex inbox your agent can actually use",
-      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Yandex Mail.",
+      "sub": "Ten action-based MCP tools, from read and search to send, schedule and archive. Your agent finishes the job inside Yandex Mail.",
       "ctaPrimary": "Connect Yandex free"
     },
     "capabilities": [
       { "tag": "Read", "h": "Read & search mail", "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender." },
-      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Yandex, not as a draft you finish by hand." },
+      { "tag": "Send", "h": "Send, reply & forward", "p": "Compose and send real messages, reply in-thread, and forward, directly from Yandex. Sending is gated by the scopes on your API key." },
       { "tag": "Schedule", "h": "Schedule for later", "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule." },
       { "tag": "Organize", "h": "Move, copy, flag, archive, delete", "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request." }
     ],

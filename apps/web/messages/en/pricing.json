@@ -61,7 +61,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "All plans include: email fetched live, never stored · credentials encrypted at rest · EU & US hosting",
+    "all": "All plans include: email fetched live, never stored · credentials encrypted at rest · EU hosting",
     "custom": "Need something custom? <contact>Contact us</contact>."
   },
   "comparison": {
@@ -108,8 +108,7 @@
         "label": "Privacy & security",
         "rows": {
           "neverStored": "Email fetched live, never stored",
-          "encrypted": "Credentials encrypted at rest",
-          "soc2": "SOC 2 Type II report on request"
+          "encrypted": "Credentials encrypted at rest"
         }
       },
       "support": {
@@ -123,9 +122,6 @@
     },
     "values": {
       "unlimited": "Unlimited",
-      "actionsFree": "2,500 / billing period",
-      "actionsAgent": "50,000 / billing period",
-      "actionsScale": "300,000 / billing period",
       "actionsFree": "2,500 / billing period",
       "actionsAgent": "50,000 / billing period",
       "actionsScale": "300,000 / billing period",
@@ -164,7 +160,7 @@
       },
       {
         "q": "How does the annual discount work?",
-        "a": "Paying annually saves about 17% versus monthly billing: Agent is $120/year and Scale is $490/year. You're charged once for 12 months upfront. If you cancel mid-year, we refund the unused whole months."
+        "a": "Paying annually saves about 17% versus monthly billing: Agent is $120/year and Scale is $490/year. You're charged once for 12 months upfront. If you cancel mid-year, you keep access until the end of the paid year."
       },
       {
         "q": "What email providers are supported?",
@@ -172,7 +168,7 @@
       },
       {
         "q": "Is there a refund policy?",
-        "a": "If you're unsatisfied within 30 days of your first paid invoice, contact us for a full refund, no questions asked."
+        "a": "Monthly plans are not refundable, except where consumer protection law requires it. On an annual plan, you can request a prorated refund for unused complete months within 14 days of your renewal date by emailing us. Cancelling stops future charges, and you keep access until the end of the period you already paid for. The full policy is in our Terms."
       },
       {
         "q": "Can I self-host it instead of paying?",

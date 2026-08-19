@@ -1,82 +1,113 @@
 {
   "meta": {
-    "title": "Conectores nativos vs correo MCP",
-    "description": "Por qué un servidor de correo MCP gestionado supera a los conectores nativos de IA: más proveedores, acciones reales de enviar, programar y organizar, y una sola configuración que funciona en cualquier cliente MCP."
+    "title": "Conectores de correo con IA vs servidor MCP: en qué se diferencian los dos enfoques",
+    "description": "Dos formas de dar tu bandeja de entrada a un asistente de IA: un conector integrado en un asistente, o un servidor de correo MCP que conectas tú. En qué se diferencian en alcance de buzones, varias bandejas, portabilidad y quién guarda las credenciales."
   },
   "hero": {
     "eyebrow": "Conectores nativos vs MCP",
-    "titleLine1": "Los conectores de IA integrados se detienen",
-    "titleLine2": "donde empieza tu bandeja de entrada",
-    "lead": "Los conectores de correo nativos de IA abarcan uno o dos proveedores y casi siempre solo crean borradores. Un servidor de correo MCP gestionado conecta cualquier bandeja, realiza acciones reales y te acompaña a todos los clientes de IA.",
+    "titleLine1": "Dos formas de dar tu bandeja",
+    "titleLine2": "de entrada a un asistente de IA",
+    "lead": "Un conector integrado en un asistente es el camino más corto cuando cubre tu proveedor de correo. Un servidor de correo MCP es un servicio aparte que conectas tú: llega a cualquier buzón que hable IMAP y SMTP, sostiene varias bandejas a la vez y funciona en todos los clientes MCP. Así se diferencian los dos enfoques, estructuralmente.",
     "ctaPrimary": "Conecta una bandeja gratis",
     "ctaSecondary": "Lee la documentación"
   },
   "axes": {
-    "eyebrow": "Tres diferencias honestas",
-    "title": "Dónde gana un servidor MCP gestionado",
-    "sub": "Sin rodeos. Estas son las diferencias concretas entre un conector integrado de un solo proveedor y un servidor de correo MCP.",
+    "eyebrow": "Cuatro diferencias estructurales",
+    "title": "Dónde divergen los dos enfoques",
+    "sub": "No es un marcador de funciones. Estas diferencias se derivan de cómo está construido cada enfoque, así que se mantienen sean cuales sean las capacidades que lance cada fabricante.",
     "items": {
       "coverage": {
-        "tag": "Cobertura",
-        "h": "Cualquier bandeja, no solo Gmail",
-        "p": "Los conectores integrados suelen alcanzar solo un buzón — Gmail, a veces Outlook. No pueden tocar <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni ninguna otra cuenta <b>IMAP/SMTP</b>. Nosotros los conectamos todos: Gmail por OAuth y el resto con una contraseña de aplicación o IMAP simple."
+        "tag": "Alcance de buzones",
+        "h": "Cualquier buzón que hable IMAP",
+        "p": "Un conector integrado llega a los proveedores de correo que su fabricante ha integrado. <b>IMAP y SMTP</b> son protocolos abiertos que tu buzón ya habla, sea quien sea quien lo opere, así que una sola conexión cubre <b>Fastmail, iCloud, Yahoo, Zoho, Yandex, Migadu</b>, un servidor que gestione tu empresa o uno que alojes tú. Gmail se conecta por OAuth."
       },
-      "actions": {
-        "tag": "Acciones reales",
-        "h": "Envía y programa, no solo borradores",
-        "p": "Muchos conectores nativos se detienen en <b>crear un borrador</b> que aún tienes que abrir y enviar. Nuestras nueve herramientas basadas en acciones <b>envían, responden, reenvían, programan, mueven, copian, marcan, archivan y eliminan</b> directamente — el agente termina el trabajo dentro de la bandeja."
+      "inboxes": {
+        "tag": "Varias bandejas",
+        "h": "Un espacio de trabajo, no una sola cuenta",
+        "p": "Un conector integrado sigue a la cuenta con la que iniciaste sesión, así que el asistente ve una sola identidad. Aquí una bandeja es un recurso dentro de un espacio de trabajo. Un mismo agente puede leer tu dirección de soporte, responder desde la tuya y archivar un mensaje en un buzón compartido en una sola conversación, y un equipo puede compartir las mismas bandejas."
       },
       "portable": {
         "tag": "Portátil",
-        "h": "Una configuración, cualquier IA",
-        "p": "El conector integrado de un proveedor solo funciona dentro de la app de ese proveedor. Nuestro servidor habla MCP streamable-http estándar con <b>OAuth 2.1 / DCR / PKCE</b>, así que la misma bandeja funciona en <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> y más — sin rehacerlo por cada app."
+        "h": "Una configuración, todos los clientes MCP",
+        "p": "Un conector que construye un fabricante se ejecuta dentro de la app de ese fabricante, por definición. Este es un servidor MCP streamable-http estándar con <b>OAuth 2.1, DCR y PKCE</b>, así que las mismas bandejas funcionan en <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> y cualquier otro cliente MCP. Cambiar de asistente no te cuesta nada."
+      },
+      "control": {
+        "tag": "Control",
+        "h": "La conexión es tuya",
+        "p": "Las credenciales se guardan cifradas en tu propio espacio de trabajo, con permisos por clave de API, revocables con un clic, y cada llamada queda registrada en un historial de auditoría. El código fuente es público, así que puedes leer exactamente qué se ejecuta, o <b>alojar el servidor entero tú mismo</b>."
       }
     }
   },
   "table": {
     "eyebrow": "Lado a lado",
-    "title": "Conectores nativos vs MCP Emails",
-    "featureCol": "Capacidad",
-    "nativeCol": "Conectores nativos",
+    "title": "Cómo está construido cada enfoque",
+    "featureCol": "Pregunta",
+    "nativeCol": "Integrado en un asistente",
     "mcpCol": "MCP Emails",
     "rows": {
-      "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
-      "imap": "Cualquier buzón IMAP / SMTP",
-      "send": "Enviar y responder directamente (no solo borradores)",
-      "schedule": "Programar envíos para más tarde",
-      "organize": "Mover, copiar, marcar, archivar, eliminar",
-      "multiAi": "Funciona en Claude, Cursor, ChatGPT, n8n…",
-      "oauth": "Gmail por OAuth",
-      "storage": "El correo se obtiene en vivo, nunca se almacena"
+      "who": {
+        "label": "Quién construye la integración",
+        "native": "El fabricante del asistente, para los proveedores de correo que ha integrado",
+        "mcp": "Conectas el buzón tú mismo"
+      },
+      "mailboxes": {
+        "label": "Qué buzones",
+        "native": "Los proveedores que ese fabricante admite",
+        "mcp": "Gmail por OAuth, y cualquier buzón IMAP y SMTP"
+      },
+      "clients": {
+        "label": "Qué clientes de IA",
+        "native": "La app en la que viene",
+        "mcp": "Cualquier cliente MCP"
+      },
+      "count": {
+        "label": "Cuántas bandejas a la vez",
+        "native": "La cuenta con la que iniciaste sesión",
+        "mcp": "Tantas como tenga tu espacio de trabajo"
+      },
+      "creds": {
+        "label": "Dónde viven las credenciales",
+        "native": "Con el fabricante del asistente",
+        "mcp": "Cifradas en tu espacio de trabajo, revocables por clave"
+      },
+      "selfhost": {
+        "label": "¿Puedes ejecutarlo tú mismo?",
+        "native": "No",
+        "mcp": "Sí, alójalo desde el código fuente"
+      }
     },
-    "footnote": "Las capacidades de los conectores nativos de IA varían según el proveedor; las diferencias anteriores reflejan el patrón habitual de un solo proveedor y solo borradores."
+    "footnote": "Los dos enfoques siguen cambiando. Las diferencias anteriores se derivan de cómo está construido cada uno, no de ninguna versión concreta."
   },
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de verdad",
-    "sub": "Conecta cualquier buzón en minutos — bandejas ilimitadas y 2.500 acciones facturables por período de facturación en el plan gratuito, sin tarjeta.",
+    "sub": "Conecta cualquier buzón en minutos, con bandejas ilimitadas y 2.500 acciones facturables por período de facturación en el plan gratuito, sin tarjeta.",
     "ctaPrimary": "Conecta una bandeja gratis",
     "ctaSecondary": "Lee la documentación"
   },
   "faq": {
     "eyebrow": "Preguntas frecuentes",
     "title": "Conectores nativos vs MCP, respondido",
-    "sub": "Las objeciones que surgen antes de cambiar de un conector integrado.",
+    "sub": "Las preguntas que hace la gente al elegir entre los dos.",
     "items": [
       {
-        "q": "¿No puede Claude o ChatGPT leer ya mi Gmail con un conector integrado?",
-        "a": "A veces, para un solo proveedor y a menudo solo de lectura o solo borradores. mcpemails conecta Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier buzón IMAP, y realiza acciones reales: enviar, responder, reenviar, programar, mover, copiar, marcar, archivar y eliminar. Esa misma bandeja funciona luego en cualquier cliente MCP, no solo en la app de un proveedor."
+        "q": "¿Puede mi asistente llegar ya a mi correo sin esto?",
+        "a": "Si tu asistente trae un conector para tu proveedor de correo y hace lo que necesitas, úsalo. Es el camino más corto. Esto existe para los buzones a los que un conector integrado no llega, para trabajar con varias bandejas a la vez y para mantener una sola configuración que te acompañe de un cliente de IA al siguiente."
       },
       {
-        "q": "¿Qué buzones suelen quedar fuera de los conectores integrados?",
-        "a": "La mayoría de los conectores nativos alcanzan Gmail y a veces Outlook. Por lo general no pueden tocar Fastmail, iCloud, Yahoo, Zoho, Yandex ni un servidor IMAP/SMTP autoalojado. mcpemails los conecta todos."
+        "q": "¿A qué buzones llega esto?",
+        "a": "A Gmail por OAuth y a cualquier buzón que hable IMAP y SMTP. Eso incluye Fastmail, iCloud, Yahoo, Zoho, Yandex, Migadu, un buzón que gestione tu empresa y uno que alojes tú. Lo conectas con una contraseña de aplicación o con credenciales IMAP normales."
       },
       {
-        "q": "¿Los conectores nativos envían correo de verdad o solo lo dejan en borrador?",
-        "a": "Muchos se detienen en crear un borrador que aún tienes que abrir y enviar tú. mcpemails envía, responde, reenvía y programa directamente, así el agente termina la tarea dentro de tu bandeja."
+        "q": "¿Envía, o solo crea borradores?",
+        "a": "Envía, responde, reenvía, programa para más tarde, mueve, copia, marca, archiva y elimina. Tú decides cuáles de esas cosas puede hacer cada clave de API, así que puedes empezar en solo lectura y ampliar los permisos cuando confíes en la configuración."
+      },
+      {
+        "q": "¿Puedo conectar más de una bandeja?",
+        "a": "Sí, tantas como quieras. Las bandejas pertenecen a un espacio de trabajo y no a un solo inicio de sesión, así que un mismo agente puede trabajar con varias en la misma conversación, y las personas de un espacio de trabajo pueden compartirlas."
       },
       {
         "q": "Si lo configuro para Claude, ¿funciona también en Cursor o ChatGPT?",
-        "a": "Sí. mcpemails es un servidor MCP streamable-http estándar con OAuth 2.1, DCR y PKCE, así que una sola configuración funciona en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente MCP. El conector integrado de un proveedor solo funciona dentro de la app de ese proveedor."
+        "a": "Sí. Es un servidor MCP streamable-http estándar con OAuth 2.1, DCR y PKCE, así que una sola configuración funciona en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente MCP. Un conector integrado en un asistente se ejecuta dentro de ese asistente."
       },
       {
         "q": "¿Es privado si un tercero conecta mi bandeja?",

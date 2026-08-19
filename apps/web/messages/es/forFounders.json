@@ -48,8 +48,8 @@
   },
   "does": {
     "eyebrow": "Lo que hace de verdad",
-    "title": "Una bandeja real, no un vistazo de solo lectura",
-    "sub": "Nueve herramientas basadas en acciones que tu agente puede usar de principio a fin.",
+    "title": "Una bandeja real en la que tu agente puede trabajar",
+    "sub": "Diez herramientas basadas en acciones que tu agente puede usar de principio a fin.",
     "items": {
       "read": { "h": "Leer y buscar", "p": "Lista, lee y busca entre carpetas y todas las bandejas conectadas, obtenido en vivo." },
       "send": { "h": "Enviar y responder", "p": "Envía, responde y reenvía directamente. El agente termina el correo, no solo un borrador." },

@@ -26,12 +26,12 @@
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
       "title": "Una bandeja Gmail que tu agente puede usar de verdad",
-      "sub": "Nueve herramientas MCP basadas en acciones — no solo borradores. Tu agente termina el trabajo dentro de Gmail.",
+      "sub": "Diez herramientas MCP basadas en acciones, de leer y buscar a enviar, programar y archivar. Tu agente termina el trabajo dentro de Gmail.",
       "ctaPrimary": "Conecta Gmail gratis"
     },
     "capabilities": [
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre etiquetas — encuentra esa factura, resume un hilo o saca lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Gmail, no como un borrador que terminas a mano." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Gmail. El envío está limitado por los permisos de tu clave de API." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
       { "tag": "Organizar", "h": "Etiquetar, archivar y eliminar", "p": "Mantén la bandeja ordenada — aplica etiquetas, archiva lo ya resuelto y elimina cuando se pida." }
     ],
@@ -75,12 +75,12 @@
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
       "title": "Una bandeja Fastmail que tu agente puede usar de verdad",
-      "sub": "Nueve herramientas MCP basadas en acciones — no solo borradores. Tu agente termina el trabajo dentro de Fastmail.",
+      "sub": "Diez herramientas MCP basadas en acciones, de leer y buscar a enviar, programar y archivar. Tu agente termina el trabajo dentro de Fastmail.",
       "ctaPrimary": "Conecta Fastmail gratis"
     },
     "capabilities": [
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas — encuentra esa factura, resume un hilo o saca lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Fastmail, no como un borrador que terminas a mano." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Fastmail. El envío está limitado por los permisos de tu clave de API." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
       { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],
@@ -125,12 +125,12 @@
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
       "title": "Una bandeja iCloud que tu agente puede usar de verdad",
-      "sub": "Nueve herramientas MCP basadas en acciones — no solo borradores. Tu agente termina el trabajo dentro de iCloud Mail.",
+      "sub": "Diez herramientas MCP basadas en acciones, de leer y buscar a enviar, programar y archivar. Tu agente termina el trabajo dentro de iCloud Mail.",
       "ctaPrimary": "Conecta iCloud gratis"
     },
     "capabilities": [
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas — encuentra un recibo, resume un hilo o saca lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde iCloud, no como un borrador que terminas a mano." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde iCloud. El envío está limitado por los permisos de tu clave de API." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
       { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],
@@ -175,12 +175,12 @@
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
       "title": "Una bandeja Yahoo que tu agente puede usar de verdad",
-      "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de Yahoo Mail.",
+      "sub": "Diez herramientas MCP basadas en acciones, de leer y buscar a enviar, programar y archivar. Tu agente termina el trabajo dentro de Yahoo Mail.",
       "ctaPrimary": "Conecta Yahoo gratis"
     },
     "capabilities": [
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yahoo, no como un borrador que terminas a mano." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yahoo. El envío está limitado por los permisos de tu clave de API." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
       { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],
@@ -225,12 +225,12 @@
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
       "title": "Una bandeja Zoho que tu agente puede usar de verdad",
-      "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de Zoho Mail.",
+      "sub": "Diez herramientas MCP basadas en acciones, de leer y buscar a enviar, programar y archivar. Tu agente termina el trabajo dentro de Zoho Mail.",
       "ctaPrimary": "Conecta Zoho gratis"
     },
     "capabilities": [
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Zoho, no como un borrador que terminas a mano." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Zoho. El envío está limitado por los permisos de tu clave de API." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
       { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],
@@ -275,12 +275,12 @@
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
       "title": "Una bandeja Yandex que tu agente puede usar de verdad",
-      "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de Yandex Mail.",
+      "sub": "Diez herramientas MCP basadas en acciones, de leer y buscar a enviar, programar y archivar. Tu agente termina el trabajo dentro de Yandex Mail.",
       "ctaPrimary": "Conecta Yandex gratis"
     },
     "capabilities": [
       { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yandex, no como un borrador que terminas a mano." },
+      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yandex. El envío está limitado por los permisos de tu clave de API." },
       { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
       { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
     ],

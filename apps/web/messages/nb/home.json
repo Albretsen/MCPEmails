@@ -102,13 +102,15 @@
     },
     "tools": {
       "0": "Oppdag alle tilkoblede innbokser og ID-ene deres. Kall dette først, ingen kopiering av UUID fra dashbordet.",
-      "1": "Les e-post: list opp nylige sammendrag, hent en hel melding etter ID, batch-les opptil 50, eller kjør et leverandøruavhengig søk — alt via action-argumentet.",
-      "2": "Organiser e-post: flytt, kopier, slett, flagg eller arkiver — én om gangen, i bulk eller rett fra et søk.",
-      "3": "Skriv: send en ny melding, svar i tråden eller videresend. Sendes gjennom Gmail API, Fastmail JMAP eller SMTP: ditt domene, din leveringsdyktighet.",
-      "4": "Administrer mapper (etiketter på Gmail): list opp, opprett, gi nytt navn eller slett, og bruk dem som flyttemål.",
-      "5": "Utkast: list opp, opprett, oppdater og send utkast lagret i leverandørens Drafts-mappe.",
-      "6": "Planlegg en melding for et fremtidig tidspunkt, list opp ventende planlagte sendinger, og avbryt dem før de går ut.",
-      "7": "Finn personer etter navn eller e-post med en sanntidsskanning av nylig matchende e-post. Ingenting lagres."
+      "1": "Les e-post: list opp nylige sammendrag, hent en hel melding etter ID, batch-les opptil 50, eller kjør et leverandøruavhengig søk, alt via action-argumentet.",
+      "2": "Organiser e-post: flytt, kopier, flagg eller arkiver, én om gangen, i bulk eller rett fra et søk.",
+      "3": "Slett e-post: én melding, en bunke, eller alle som treffer et søk. Slettet e-post havner i papirkurven og kan hentes tilbake, med mindre du ber om permanent sletting.",
+      "4": "Skriv: send en ny melding, svar i tråden eller videresend. Sendes gjennom Gmail API, Fastmail JMAP eller SMTP: ditt domene, din leveringsdyktighet.",
+      "5": "Administrer mapper (etiketter på Gmail): list opp, opprett, gi nytt navn eller slett, og bruk dem som flyttemål.",
+      "6": "Utkast: list opp, opprett, oppdater og send utkast lagret i leverandørens Drafts-mappe.",
+      "7": "Planlegg en melding for et fremtidig tidspunkt, list opp ventende planlagte sendinger, og avbryt dem før de går ut.",
+      "8": "Les eller sett innboksens signatur som ren tekst eller HTML, og velg om den skal på svar og videresendinger. Den legges til på serversiden ved sending.",
+      "9": "Finn personer etter navn eller e-post med en sanntidsskanning av nylig matchende e-post. Ingenting lagres."
     }
   },
   "examples": {
@@ -196,7 +198,7 @@
       },
       {
         "q": "Hva kan AI-en faktisk gjøre med innboksen min?",
-        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen — flytte, kopiere, flagge, arkivere og slette. Ni action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
+        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen: flytte, kopiere, flagge, arkivere og slette. Ti action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din."
       },
       {
         "q": "Hvordan kobler jeg til en innboks?",

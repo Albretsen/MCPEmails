@@ -1,82 +1,113 @@
 {
   "meta": {
-    "title": "Innebygde koblinger vs MCP-e-post",
-    "description": "Hvorfor en administrert MCP-e-postserver slår innebygde AI-koblinger: flere leverandører, ekte send-, planlegg- og organiser-handlinger, og ett oppsett som virker i alle MCP-klienter."
+    "title": "AI-e-postkoblinger vs MCP-server: slik skiller de to tilnærmingene seg",
+    "description": "To måter å gi en AI-assistent innboksen din på: en kobling som er innebygd i én assistent, eller en MCP-e-postserver du kobler til selv. Slik skiller de seg på hvilke postkasser de når, flere innbokser, flyttbarhet og hvem som har legitimasjonen."
   },
   "hero": {
     "eyebrow": "Innebygde koblinger vs MCP",
-    "titleLine1": "Innebygde AI-koblinger stopper",
-    "titleLine2": "der innboksen din begynner",
-    "lead": "Innebygde AI-e-postkoblinger dekker én eller to leverandører og lager stort sett bare utkast. En administrert MCP-e-postserver kobler til hvilken som helst innboks, utfører ekte handlinger og følger med deg til alle AI-klienter.",
+    "titleLine1": "To måter å gi en AI-assistent",
+    "titleLine2": "innboksen din på",
+    "lead": "En kobling som er innebygd i en assistent, er den korteste veien når den dekker e-postleverandøren din. En MCP-e-postserver er en egen tjeneste du kobler til selv: den når enhver postkasse som snakker IMAP og SMTP, holder flere innbokser samtidig og virker i alle MCP-klienter. Slik skiller de to tilnærmingene seg, strukturelt.",
     "ctaPrimary": "Koble til en innboks gratis",
     "ctaSecondary": "Les dokumentasjonen"
   },
   "axes": {
-    "eyebrow": "Tre ærlige forskjeller",
-    "title": "Der en administrert MCP-server vinner",
-    "sub": "Ingen luftige løfter. Dette er de konkrete forskjellene mellom en innebygd kobling fra én leverandør og en MCP-e-postserver.",
+    "eyebrow": "Fire strukturelle forskjeller",
+    "title": "Der de to tilnærmingene skiller lag",
+    "sub": "Ikke en funksjonsliste med poeng. Disse forskjellene følger av hvordan hver tilnærming er bygget, så de holder uansett hvilke funksjoner en leverandør lanserer.",
     "items": {
       "coverage": {
-        "tag": "Dekning",
-        "h": "Hver innboks, ikke bare Gmail",
-        "p": "Innebygde koblinger når vanligvis bare én postkasse — Gmail, av og til Outlook. De kan ikke nå <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> eller noen annen <b>IMAP/SMTP</b>-konto. Vi kobler til alle: Gmail via OAuth, resten via et app-passord eller vanlig IMAP."
+        "tag": "Postkasserekkevidde",
+        "h": "Enhver postkasse som snakker IMAP",
+        "p": "En innebygd kobling når de e-postleverandørene leverandøren bak den har integrert. <b>IMAP og SMTP</b> er åpne protokoller postkassen din allerede snakker, uansett hvem som drifter den, så én tilkobling dekker <b>Fastmail, iCloud, Yahoo, Zoho, Yandex, Migadu</b>, en server bedriften din drifter, eller en du hoster selv. Gmail kobles til via OAuth."
       },
-      "actions": {
-        "tag": "Ekte handlinger",
-        "h": "Send og planlegg, ikke bare utkast",
-        "p": "Mange innebygde koblinger stopper ved å <b>lage et utkast</b> som du fortsatt må åpne og sende. Våre ni handlingsbaserte verktøy <b>sender, svarer, videresender, planlegger, flytter, kopierer, flagger, arkiverer og sletter</b> direkte — agenten fullfører jobben inne i innboksen."
+      "inboxes": {
+        "tag": "Flere innbokser",
+        "h": "Et arbeidsområde, ikke én innlogget konto",
+        "p": "En innebygd kobling følger kontoen du logget inn med, så assistenten ser én identitet. Her er en innboks en ressurs inne i et arbeidsområde. Én agent kan lese support-adressen din, svare fra din egen og legge en melding i en delt postkasse i samme samtale, og et team kan dele de samme innboksene."
       },
       "portable": {
         "tag": "Flyttbar",
-        "h": "Ett oppsett, alle AI-er",
-        "p": "En leverandørs innebygde kobling virker bare i den leverandørens app. Vår server snakker standard streamable-http MCP med <b>OAuth 2.1 / DCR / PKCE</b>, så samme innboks virker i <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> og flere — uten ombygging per app."
+        "h": "Ett oppsett, alle MCP-klienter",
+        "p": "En kobling som en leverandør bygger, kjører per definisjon inne i den leverandørens app. Dette er en standard streamable-http MCP-server med <b>OAuth 2.1, DCR og PKCE</b>, så de samme innboksene virker i <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> og enhver annen MCP-klient. Å bytte assistent koster deg ingenting."
+      },
+      "control": {
+        "tag": "Kontroll",
+        "h": "Du eier tilkoblingen",
+        "p": "Legitimasjonen lagres kryptert i ditt eget arbeidsområde, avgrenset per API-nøkkel, kan trekkes tilbake med ett klikk, og hvert kall skrives til et revisjonsspor. Kildekoden er offentlig, så du kan lese nøyaktig hva som kjører, eller <b>hoste hele serveren selv</b>."
       }
     }
   },
   "table": {
     "eyebrow": "Side om side",
-    "title": "Innebygde koblinger vs MCP Emails",
-    "featureCol": "Funksjon",
-    "nativeCol": "Innebygde koblinger",
+    "title": "Hvordan hver tilnærming er bygget",
+    "featureCol": "Spørsmål",
+    "nativeCol": "Innebygd i en assistent",
     "mcpCol": "MCP Emails",
     "rows": {
-      "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
-      "imap": "Hvilken som helst IMAP-/SMTP-postkasse",
-      "send": "Send og svar direkte (ikke bare utkast)",
-      "schedule": "Planlegg sendinger til senere",
-      "organize": "Flytt, kopier, flagg, arkiver, slett",
-      "multiAi": "Virker i Claude, Cursor, ChatGPT, n8n …",
-      "oauth": "Gmail via OAuth",
-      "storage": "E-post hentes direkte, lagres aldri"
+      "who": {
+        "label": "Hvem bygger integrasjonen",
+        "native": "Leverandøren av assistenten, for e-postleverandørene den har integrert",
+        "mcp": "Du kobler til postkassen selv"
+      },
+      "mailboxes": {
+        "label": "Hvilke postkasser",
+        "native": "Leverandørene den aktøren støtter",
+        "mcp": "Gmail via OAuth, pluss enhver IMAP- og SMTP-postkasse"
+      },
+      "clients": {
+        "label": "Hvilke AI-klienter",
+        "native": "Appen den leveres i",
+        "mcp": "Enhver MCP-klient"
+      },
+      "count": {
+        "label": "Hvor mange innbokser samtidig",
+        "native": "Kontoen du logget inn med",
+        "mcp": "Så mange som arbeidsområdet ditt rommer"
+      },
+      "creds": {
+        "label": "Hvor legitimasjonen ligger",
+        "native": "Hos leverandøren av assistenten",
+        "mcp": "Kryptert i arbeidsområdet ditt, kan trekkes tilbake per nøkkel"
+      },
+      "selfhost": {
+        "label": "Kan du kjøre den selv",
+        "native": "Nei",
+        "mcp": "Ja, host den fra kildekoden"
+      }
     },
-    "footnote": "Funksjonene til typiske innebygde AI-koblinger varierer mellom leverandører; forskjellene over gjenspeiler det vanlige mønsteret med én leverandør og kun utkast."
+    "footnote": "Begge tilnærmingene endrer seg hele tiden. Forskjellene over følger av hvordan hver av dem er bygget, ikke av en bestemt utgivelse."
   },
   "ctaBand": {
     "title": "Gi AI-en din en ekte innboks",
-    "sub": "Koble til hvilken som helst postkasse på minutter — ubegrenset antall innbokser og 2 500 fakturerbare handlinger per faktureringsperiode på gratisplanen, uten kort.",
+    "sub": "Koble til hvilken som helst postkasse på minutter, med ubegrenset antall innbokser og 2 500 fakturerbare handlinger per faktureringsperiode på gratisplanen, uten kort.",
     "ctaPrimary": "Koble til en innboks gratis",
     "ctaSecondary": "Les dokumentasjonen"
   },
   "faq": {
     "eyebrow": "Vanlige spørsmål",
     "title": "Innebygde koblinger vs MCP, besvart",
-    "sub": "Innvendingene folk kommer med før de bytter fra en innebygd kobling.",
+    "sub": "Spørsmålene folk stiller når de velger mellom de to.",
     "items": [
       {
-        "q": "Kan ikke Claude eller ChatGPT allerede lese Gmailen min med en innebygd kobling?",
-        "a": "Av og til, for én leverandør og ofte bare med lese- eller utkasttilgang. mcpemails kobler til Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og hvilken som helst IMAP-postkasse, og utfører ekte handlinger: send, svar, videresend, planlegg, flytt, kopier, flagg, arkiver og slett. Samme innboks virker da i alle MCP-klienter, ikke bare i én leverandørs app."
+        "q": "Kan assistenten min allerede nå e-posten min uten dette?",
+        "a": "Hvis assistenten din har en kobling for e-postleverandøren din, og den gjør det du trenger, bruk den. Det er den korteste veien. Dette finnes for postkassene en innebygd kobling ikke når, for å jobbe på tvers av flere innbokser samtidig, og for å ha ett oppsett som følger deg fra én AI-klient til den neste."
       },
       {
-        "q": "Hvilke postkasser går innebygde koblinger vanligvis glipp av?",
-        "a": "De fleste innebygde koblinger når Gmail og av og til Outlook. De kan vanligvis ikke røre Fastmail, iCloud, Yahoo, Zoho, Yandex eller en selvhostet IMAP-/SMTP-server. mcpemails kobler til alle sammen."
+        "q": "Hvilke postkasser når dette?",
+        "a": "Gmail via OAuth, og enhver postkasse som snakker IMAP og SMTP. Det inkluderer Fastmail, iCloud, Yahoo, Zoho, Yandex, Migadu, en postkasse bedriften din drifter, og en du hoster selv. Du kobler den til med et app-passord eller vanlig IMAP-innlogging."
       },
       {
-        "q": "Sender innebygde koblinger faktisk e-post, eller lager de bare utkast?",
-        "a": "Mange stopper ved å lage et utkast som du fortsatt må åpne og sende selv. mcpemails sender, svarer, videresender og planlegger direkte, slik at agenten fullfører jobben inne i innboksen din."
+        "q": "Kan den sende, eller lager den bare utkast?",
+        "a": "Den sender, svarer, videresender, planlegger til senere, flytter, kopierer, flagger, arkiverer og sletter. Du bestemmer hva hver enkelt API-nøkkel får lov til å gjøre, så du kan starte med bare lesetilgang og utvide tilgangene når du stoler på oppsettet."
+      },
+      {
+        "q": "Kan jeg koble til mer enn én innboks?",
+        "a": "Ja, så mange du vil. Innbokser hører til et arbeidsområde og ikke til én innlogging, så én agent kan jobbe på tvers av flere av dem i samme samtale, og folkene i et arbeidsområde kan dele dem."
       },
       {
         "q": "Hvis jeg setter dette opp for Claude, virker det da også i Cursor eller ChatGPT?",
-        "a": "Ja. mcpemails er en standard streamable-http MCP-server med OAuth 2.1, DCR og PKCE, så ett oppsett virker på tvers av Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og hvilken som helst MCP-klient. En leverandørs innebygde kobling virker bare inne i den leverandørens app."
+        "a": "Ja. Dette er en standard streamable-http MCP-server med OAuth 2.1, DCR og PKCE, så ett oppsett virker på tvers av Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og hvilken som helst MCP-klient. En kobling som er innebygd i en assistent, kjører inne i den assistenten."
       },
       {
         "q": "Er det privat at en tredjepart kobler til innboksen min?",

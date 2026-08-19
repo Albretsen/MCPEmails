@@ -136,7 +136,7 @@
     "thLocation": "Plassering",
     "supabasePurpose": "Database, autentisering, edge-funksjoner",
     "supabaseData": "Kontodata, arbeidsområdekonfigurasjon, revisjonslogger",
-    "supabaseLocation": "EU (Frankfurt) eller USA (Virginia); du velger ved registrering",
+    "supabaseLocation": "EU (Stockholm)",
     "vercelPurpose": "Webhotell, CDN",
     "vercelData": "HTTP-forespørselsmetadata; ingen e-postinnhold",
     "vercelLocation": "Globalt edge (nærmeste region til brukeren)",
@@ -157,7 +157,7 @@
     "title": "6. Internasjonale dataoverføringer",
     "p1": "MCPEmails drives fra Norge, som er underlagt det europeiske økonomiske samarbeidsområdets (EØS) personvernrammeverk. Hvis du bruker tjenesten fra utenfor EØS, kan dataene dine bli overført til og behandlet i land innenfor EØS.",
     "p2": "Våre infrastruktur-underdatabehandlere (Supabase, Vercel) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering.",
-    "p3": "Bedriftskunder kan velge å lagre alle konto- og konfigurasjonsdata utelukkende i EU-basert infrastruktur (Frankfurt-regionen) uten ekstra kostnad."
+    "p3": "Konto- og konfigurasjonsdata lagres på EU-basert infrastruktur i Stockholm-regionen."
   },
   "yourRights": {
     "title": "7. Dine rettigheter",
@@ -233,8 +233,8 @@
   },
   "cta": {
     "title": "Spørsmål om dataene dine?",
-    "sub": "Personvernteamet vårt er her for å hjelpe. Send oss en e-post, så svarer vi innen 30 dager.",
-    "contactBtn": "Kontakt personvernteamet",
+    "sub": "Send en e-post til privacy@mcpemails.com, så svarer vi innen 30 dager.",
+    "contactBtn": "Send e-post til privacy@",
     "termsBtn": "Les vilkårene våre"
   }
 }

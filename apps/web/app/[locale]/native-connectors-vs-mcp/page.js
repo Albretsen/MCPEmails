@@ -7,10 +7,10 @@ const PATH = '/native-connectors-vs-mcp';
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'compare' });
-  const title = t.has('meta.title') ? t('meta.title') : 'Native connectors vs MCP';
+  const title = t.has('meta.title') ? t('meta.title') : 'AI Email Connectors vs MCP Server: How the Two Approaches Differ';
   const description = t.has('meta.description')
     ? t('meta.description')
-    : 'Why a managed MCP email server beats AI-native built-in connectors: more providers, real actions, and one setup across every AI client.';
+    : 'Two ways to give an AI assistant your inbox: a connector built into one assistant, or an MCP email server you connect yourself. How they differ on mailbox reach, multiple inboxes, portability, and who holds the credentials.';
   return {
     title,
     description,
@@ -39,7 +39,7 @@ export default async function ComparePage({ params }) {
   const t = await getTranslations({ locale, namespace: 'compare' });
   const jsonLd = pageJsonLd(locale, {
     path: PATH,
-    title: t.has('meta.title') ? t('meta.title') : 'Native connectors vs MCP',
+    title: t.has('meta.title') ? t('meta.title') : 'AI Email Connectors vs MCP Server: How the Two Approaches Differ',
     description: t.has('meta.description') ? t('meta.description') : '',
   });
 

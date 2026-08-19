@@ -26,12 +26,12 @@
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",
       "title": "Une boîte Gmail que votre agent peut vraiment utiliser",
-      "sub": "Neuf outils MCP basés sur des actions — pas seulement des brouillons. Votre agent termine le travail dans Gmail.",
+      "sub": "Dix outils MCP basés sur des actions, de la lecture et la recherche à l'envoi, la planification et l'archivage. Votre agent termine le travail dans Gmail.",
       "ctaPrimary": "Connecter Gmail gratuitement"
     },
     "capabilities": [
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les libellés — trouvez cette facture, résumez un fil ou récupérez le dernier message d'un expéditeur." },
-      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez — directement depuis Gmail, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Gmail. L'envoi est encadré par les portées de votre clé d'API." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
       { "tag": "Organiser", "h": "Étiqueter, archiver et supprimer", "p": "Gardez la boîte rangée — appliquez des libellés, archivez ce qui est traité et supprimez à la demande." }
     ],
@@ -75,12 +75,12 @@
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",
       "title": "Une boîte Fastmail que votre agent peut vraiment utiliser",
-      "sub": "Neuf outils MCP basés sur des actions — pas seulement des brouillons. Votre agent termine le travail dans Fastmail.",
+      "sub": "Dix outils MCP basés sur des actions, de la lecture et la recherche à l'envoi, la planification et l'archivage. Votre agent termine le travail dans Fastmail.",
       "ctaPrimary": "Connecter Fastmail gratuitement"
     },
     "capabilities": [
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers — trouvez cette facture, résumez un fil ou récupérez le dernier message d'un expéditeur." },
-      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez — directement depuis Fastmail, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Fastmail. L'envoi est encadré par les portées de votre clé d'API." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
       { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée — classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
@@ -125,12 +125,12 @@
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",
       "title": "Une boîte iCloud que votre agent peut vraiment utiliser",
-      "sub": "Neuf outils MCP basés sur des actions — pas seulement des brouillons. Votre agent termine le travail dans iCloud Mail.",
+      "sub": "Dix outils MCP basés sur des actions, de la lecture et la recherche à l'envoi, la planification et l'archivage. Votre agent termine le travail dans iCloud Mail.",
       "ctaPrimary": "Connecter iCloud gratuitement"
     },
     "capabilities": [
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers — trouvez un reçu, résumez un fil ou récupérez le dernier message d'un expéditeur." },
-      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez — directement depuis iCloud, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis iCloud. L'envoi est encadré par les portées de votre clé d'API." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
       { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée — classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
@@ -175,12 +175,12 @@
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",
       "title": "Une boîte Yahoo que votre agent peut vraiment utiliser",
-      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Yahoo Mail.",
+      "sub": "Dix outils MCP basés sur des actions, de la lecture et la recherche à l'envoi, la planification et l'archivage. Votre agent termine le travail dans Yahoo Mail.",
       "ctaPrimary": "Connecter Yahoo gratuitement"
     },
     "capabilities": [
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur." },
-      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Yahoo, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Yahoo. L'envoi est encadré par les portées de votre clé d'API." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
       { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
@@ -225,12 +225,12 @@
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",
       "title": "Une boîte Zoho que votre agent peut vraiment utiliser",
-      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Zoho Mail.",
+      "sub": "Dix outils MCP basés sur des actions, de la lecture et la recherche à l'envoi, la planification et l'archivage. Votre agent termine le travail dans Zoho Mail.",
       "ctaPrimary": "Connecter Zoho gratuitement"
     },
     "capabilities": [
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur." },
-      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Zoho, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Zoho. L'envoi est encadré par les portées de votre clé d'API." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
       { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
@@ -275,12 +275,12 @@
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",
       "title": "Une boîte Yandex que votre agent peut vraiment utiliser",
-      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Yandex Mail.",
+      "sub": "Dix outils MCP basés sur des actions, de la lecture et la recherche à l'envoi, la planification et l'archivage. Votre agent termine le travail dans Yandex Mail.",
       "ctaPrimary": "Connecter Yandex gratuitement"
     },
     "capabilities": [
       { "tag": "Lire", "h": "Lire et rechercher le courrier", "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur." },
-      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Yandex, pas sous forme de brouillon à finir à la main." },
+      { "tag": "Envoyer", "h": "Envoyer, répondre et transférer", "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Yandex. L'envoi est encadré par les portées de votre clé d'API." },
       { "tag": "Planifier", "h": "Planifier pour plus tard", "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning." },
       { "tag": "Organiser", "h": "Déplacer, copier, marquer, archiver, supprimer", "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande." }
     ],
