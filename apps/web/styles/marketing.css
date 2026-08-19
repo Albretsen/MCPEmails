@@ -487,6 +487,12 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .comparison-tbl-prose thead th.feat-col { width: 24%; }
 .comparison-tbl-prose .tbl-val { text-align: left; line-height: 1.45; }
 .comparison-tbl-prose tbody td { vertical-align: top; }
+/* Three prose columns cannot share a phone width without collapsing to a few
+   words per line, so below this breakpoint the table keeps a readable width
+   and scrolls inside .comparison-wrap, which is already overflow-x: auto. */
+@media (max-width: 760px) {
+  .comparison-tbl-prose { min-width: 620px; }
+}
 
 /* Highlight the pro column in tbody */
 .comparison-tbl tbody tr:not(.tbl-section-head) td:nth-child(3) {
