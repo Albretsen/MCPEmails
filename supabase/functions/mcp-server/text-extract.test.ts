@@ -186,3 +186,22 @@ Deno.test("snippet previews clean padding before the cap", () => {
     "the sentence must survive the cap",
   );
 });
+
+Deno.test("a snippet truncated mid-tag does not leak the tag fragment", () => {
+  // IMAP returns a partial body, so the snippet can stop inside a tag. <[^>]+>
+  // needs a closing > and cannot match that.
+  assertEquals(
+    normalizeSnippetPreview("<p>Review them below:</p><table class"),
+    "Review them below:",
+    "the dangling fragment must go",
+  );
+  // Known limitation, asserted so it is a decision and not a surprise: a bare
+  // `<` in prose is swallowed along with everything up to the next `>`, because
+  // <[^>]+> cannot tell prose from markup. It predates this module and fixing
+  // it needs a real parser, which a 200-character triage line does not justify.
+  assertEquals(
+    normalizeSnippetPreview("<div>Total: 4 < 5 items</div>"),
+    "Total: 4",
+    "documents the bare-< limitation rather than pretending it is handled",
+  );
+});
