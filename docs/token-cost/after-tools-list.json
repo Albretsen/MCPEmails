@@ -1,0 +1,3976 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "inbox_list",
+        "title": "List Inboxes",
+        "description": "List every inbox (mailbox or account) this API key may use. Call it FIRST for the inbox_id the other tools take. Each entry carries the UUID, email address, display name, provider, optional service brand (icloud/yahoo/zoho/yandex/generic) and a capabilities object.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "gmail",
+                "outlook",
+                "fastmail",
+                "imap"
+              ],
+              "description": "Return only inboxes served by this provider. Omit for all of them."
+            },
+            "include_capabilities": {
+              "type": "boolean",
+              "default": true,
+              "description": "Include each inbox's capabilities object. Set false for a compact list of inbox_id, email address, display name, provider and brand."
+            }
+          },
+          "additionalProperties": false
+        },
+        "outputSchema": {
+          "type": "object",
+          "properties": {
+            "inboxes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "inbox_id": {
+                    "type": "string"
+                  },
+                  "email_address": {
+                    "type": "string"
+                  },
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "provider": {
+                    "type": "string"
+                  },
+                  "service": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "capabilities": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "compatibility": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "sender_identities": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "email_address": {
+                          "type": "string"
+                        },
+                        "display_name": {
+                          "type": "string"
+                        },
+                        "reply_to": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "is_primary": {
+                          "type": "boolean"
+                        },
+                        "is_default": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "email_address",
+                        "display_name",
+                        "is_primary",
+                        "is_default"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "sender_identity_status": {
+                    "type": "string",
+                    "enum": [
+                      "available",
+                      "reconnect_required",
+                      "unavailable"
+                    ]
+                  }
+                },
+                "required": [
+                  "inbox_id",
+                  "email_address",
+                  "provider"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "required": [
+            "inboxes"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "List Inboxes",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "email_read",
+        "title": "Read Email",
+        "description": "Read, list and search email in one inbox. list and search return a single page: when the response says has_more, call again with the returned next_offset and otherwise identical arguments. Only has_more: false means you have seen everything.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "read",
+                "read_batch",
+                "search",
+                "attachment",
+                "extract",
+                "original"
+              ],
+              "description": "Operation to run. list = recent messages, optionally by folder or unread; read = full content of one message_id; read_batch = full content of up to 50 message_ids; search = structured filters (from/to/subject/body/since/before/unread/has_attachment/flagged); attachment = download one attachment by attachment_index or filename, base64; extract = readable text from one attachment, without its bytes; original = the whole stored message as an .eml resource."
+            },
+            "inbox_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass this or `inbox`; omit both and the error lists every inbox_id."
+            },
+            "inbox": {
+              "type": "string",
+              "description": "Inbox email address; an alternative to inbox_id, which wins when both are given."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Message summaries per page. Prefer paginating over a large limit."
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "description": "Zero-based page offset. Pass the previous response's next_offset exactly; a short page is not proof of the end. Newest first."
+            },
+            "folder": {
+              "type": "string",
+              "default": "INBOX",
+              "description": "Folder to list, case-sensitive: 'INBOX', 'SENT', 'DRAFTS', 'TRASH', or provider-specific such as '[Gmail]/Spam'."
+            },
+            "unread_only": {
+              "type": "boolean",
+              "default": false,
+              "description": "Return only unread messages."
+            },
+            "message_id": {
+              "type": "string",
+              "description": "Provider-native message id, from a previous list or search."
+            },
+            "include_html": {
+              "type": "boolean",
+              "default": false,
+              "description": "Also return the sanitized HTML body. Worth it only when you need the formatting or structure."
+            },
+            "include_attachments": {
+              "type": "boolean",
+              "default": false,
+              "description": "Inline attachment bytes as base64, sharing one 10 MB budget. Files over 2 MB are NOT inlined; they return metadata with a `note`. Metadata (filename, mime_type, size_bytes, attachment_index) always comes back anyway, so prefer false, then fetch the one file you need with action: attachment by its attachment_index (up to 25 MB)."
+            },
+            "mark_as_read": {
+              "type": "boolean",
+              "default": false,
+              "description": "Mark the message read at the provider after fetching it."
+            },
+            "message_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 50,
+              "description": "Message ids to read. Duplicates are removed, first occurrence kept."
+            },
+            "from": {
+              "type": "string",
+              "description": "Sender to match: address, name, or fragment."
+            },
+            "to": {
+              "type": "string",
+              "description": "To recipient to match: address, name, or fragment."
+            },
+            "cc": {
+              "type": "string",
+              "description": "Cc recipient to match: address, name, or fragment."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Text to match in the subject; phrases match as-is."
+            },
+            "body": {
+              "type": "string",
+              "description": "Text to find in the body. On Gmail this matches the whole message."
+            },
+            "text": {
+              "type": "string",
+              "description": "Text to match anywhere, headers included."
+            },
+            "unread": {
+              "type": "boolean",
+              "description": "true = unread only; false = read only; omit for both."
+            },
+            "has_attachment": {
+              "type": "boolean",
+              "description": "true = only messages with an attachment. Ignored on generic IMAP."
+            },
+            "flagged": {
+              "type": "boolean",
+              "description": "true = only flagged/starred messages. Ignored on Outlook."
+            },
+            "since": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Received on or after this date or datetime."
+            },
+            "before": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Received strictly before this date or datetime."
+            },
+            "query": {
+              "type": "string",
+              "description": "Provider-native raw query (escape hatch); prefer the structured fields. Ignored on Fastmail."
+            },
+            "include_folders": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "description": "Folders to search. IMAP covers INBOX only unless you name archive or sent folders; Gmail always searches everything."
+            },
+            "attachment_index": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "0-based position in the `attachments` list from action: read. Wins over `filename`."
+            },
+            "filename": {
+              "type": "string",
+              "description": "Exact attachment filename, case-insensitive. Ignored when `attachment_index` is given."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "list"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_html"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_attachments"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mark_as_read"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "attachment_index"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "filename"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "read"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "offset"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "folder"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread_only"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "attachment_index"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "filename"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "read_batch"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_ids"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "offset"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "folder"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread_only"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "attachment_index"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "filename"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "search"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "folder"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread_only"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_html"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_attachments"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mark_as_read"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "attachment_index"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "filename"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "attachment"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "offset"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "folder"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread_only"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_html"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_attachments"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mark_as_read"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "extract"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "offset"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "folder"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread_only"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_html"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_attachments"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mark_as_read"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "original"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "offset"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "folder"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread_only"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_html"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_attachments"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mark_as_read"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "attachment_index"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "filename"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "annotations": {
+          "title": "Read Email",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "email_organize",
+        "title": "Organize Email",
+        "description": "Move, copy, flag or archive messages in one inbox. Get message ids from email_read first. On Gmail a move adds the destination label and removes INBOX, leaving other labels in place. Needs manage:folders; deleting is the separate email_delete tool.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "move",
+                "move_batch",
+                "copy",
+                "copy_batch",
+                "flag",
+                "archive",
+                "search_and_move"
+              ],
+              "description": "Operation to run. move = one message_id to destination_folder_id; move_batch = the same for up to 500 message_ids; copy = duplicate into destination_folder_id, original stays, IMAP/Outlook/Fastmail only (never Gmail); copy_batch = the same for up to 500 message_ids; flag = set read/unread/flagged on message_ids via flag_action; archive = move one message_id out of the Inbox; search_and_move = move everything matching a search, the only action the search filters apply to."
+            },
+            "inbox_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass this or `inbox`; omit both and the error lists every inbox_id."
+            },
+            "inbox": {
+              "type": "string",
+              "description": "Inbox email address; an alternative to inbox_id, which wins when both are given."
+            },
+            "message_id": {
+              "type": "string",
+              "description": "Provider-native message id from a list or search."
+            },
+            "destination_folder_id": {
+              "type": "string",
+              "description": "Target folder: an alias (inbox, sent, drafts, trash, archive, spam), a folder name, or a folder id. Names and aliases resolve for you."
+            },
+            "message_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 500,
+              "description": "Provider-native message ids to move."
+            },
+            "flag_action": {
+              "type": "string",
+              "enum": [
+                "read",
+                "unread",
+                "flag",
+                "unflag"
+              ],
+              "description": "State to apply to every listed message; flag/unflag add or remove the star."
+            },
+            "from": {
+              "type": "string",
+              "description": "Sender to match: address, name, or fragment."
+            },
+            "to": {
+              "type": "string",
+              "description": "To recipient to match: address, name, or fragment."
+            },
+            "cc": {
+              "type": "string",
+              "description": "Cc recipient to match: address, name, or fragment."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Text to match in the subject; phrases match as-is."
+            },
+            "body": {
+              "type": "string",
+              "description": "Text to find in the body. On Gmail this matches the whole message."
+            },
+            "text": {
+              "type": "string",
+              "description": "Text to match anywhere, headers included."
+            },
+            "unread": {
+              "type": "boolean",
+              "description": "true = unread only; false = read only; omit for both."
+            },
+            "has_attachment": {
+              "type": "boolean",
+              "description": "true = only messages with an attachment. Ignored on generic IMAP."
+            },
+            "flagged": {
+              "type": "boolean",
+              "description": "true = only flagged/starred messages. Ignored on Outlook."
+            },
+            "since": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Received on or after this date or datetime."
+            },
+            "before": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Received strictly before this date or datetime."
+            },
+            "query": {
+              "type": "string",
+              "description": "Provider-native raw query (escape hatch); prefer the structured fields. Ignored on Fastmail."
+            },
+            "include_folders": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Folder names to search. IMAP covers INBOX only when omitted."
+            },
+            "limit": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 500,
+              "description": "Cap on messages moved. Default 500."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "move"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id",
+                  "destination_folder_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flag_action"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "move_batch"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_ids",
+                  "destination_folder_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flag_action"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "copy"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id",
+                  "destination_folder_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flag_action"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "copy_batch"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_ids",
+                  "destination_folder_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flag_action"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "flag"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_ids",
+                  "flag_action"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "destination_folder_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "archive"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "destination_folder_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flag_action"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "search_and_move"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "destination_folder_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flag_action"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "annotations": {
+          "title": "Organize Email",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "email_delete",
+        "title": "Delete Email",
+        "description": "Delete messages in one inbox. Flagged DESTRUCTIVE so your MCP client can ask for confirmation first. Deleted mail goes to Trash and stays recoverable unless you pass permanent: true, which is irreversible. Needs the delete:email scope.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "delete",
+                "delete_batch",
+                "search_and_delete"
+              ],
+              "description": "Operation to run. delete = one message_id; delete_batch = up to 500 message_ids; search_and_delete = every message matching a search."
+            },
+            "inbox_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass this or `inbox`; omit both and the error lists every inbox_id."
+            },
+            "inbox": {
+              "type": "string",
+              "description": "Inbox email address; an alternative to inbox_id, which wins when both are given."
+            },
+            "message_id": {
+              "type": "string",
+              "description": "Provider-native message id from a list or search."
+            },
+            "permanent": {
+              "type": "boolean",
+              "description": "Hard-delete, bypassing Trash. Default false, which trashes it."
+            },
+            "message_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 500,
+              "description": "Provider-native message ids to delete."
+            },
+            "from": {
+              "type": "string",
+              "description": "Sender to match: address, name, or fragment."
+            },
+            "to": {
+              "type": "string",
+              "description": "To recipient to match: address, name, or fragment."
+            },
+            "cc": {
+              "type": "string",
+              "description": "Cc recipient to match: address, name, or fragment."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Text to match in the subject; phrases match as-is."
+            },
+            "body": {
+              "type": "string",
+              "description": "Text to find in the body. On Gmail this matches the whole message."
+            },
+            "text": {
+              "type": "string",
+              "description": "Text to match anywhere, headers included."
+            },
+            "unread": {
+              "type": "boolean",
+              "description": "true = unread only; false = read only; omit for both."
+            },
+            "has_attachment": {
+              "type": "boolean",
+              "description": "true = only messages with an attachment. Ignored on generic IMAP."
+            },
+            "flagged": {
+              "type": "boolean",
+              "description": "true = only flagged/starred messages. Ignored on Outlook."
+            },
+            "since": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Received on or after this date or datetime."
+            },
+            "before": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Received strictly before this date or datetime."
+            },
+            "query": {
+              "type": "string",
+              "description": "Provider-native raw query (escape hatch); prefer the structured fields. Ignored on Fastmail."
+            },
+            "include_folders": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Folder names to search."
+            },
+            "limit": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 500,
+              "description": "Cap on messages deleted. Default 500."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "delete"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "delete_batch"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_ids"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unread"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "has_attachment"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "flagged"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "since"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "before"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_folders"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "search_and_delete"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_ids"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "annotations": {
+          "title": "Delete Email",
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "email_compose",
+        "title": "Compose Email",
+        "description": "Send new mail, reply, or forward from one inbox. The inbox's signature is appended automatically, above the quoted text on replies and forwards; pass include_signature: false to suppress it.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "send",
+                "reply",
+                "forward"
+              ],
+              "description": "Operation to run. send = new message from to/subject/body, optionally cc/bcc/html_body/attachments; reply = answer a message_id, optionally reply_all; forward = pass a message_id on to new recipients."
+            },
+            "inbox_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass this or `inbox`; omit both and the error lists every inbox_id."
+            },
+            "inbox": {
+              "type": "string",
+              "description": "Inbox email address; an alternative to inbox_id, which wins when both are given."
+            },
+            "from": {
+              "type": "string",
+              "format": "email",
+              "description": "Gmail Send As address. Must be a verified identity from inbox_list; anything else is rejected."
+            },
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
+              "minItems": 1,
+              "maxItems": 50,
+              "description": "Recipient addresses."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
+              "default": [],
+              "description": "Cc addresses."
+            },
+            "bcc": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
+              "default": [],
+              "description": "Bcc addresses; not visible to the other recipients."
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 998,
+              "description": "Subject line, sent as-is with no prefix added."
+            },
+            "body": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Plain-text body. Sent as multipart/alternative when html_body is given too."
+            },
+            "html_body": {
+              "type": "string",
+              "description": "HTML body. Not sanitized before sending, so it is on you to keep it safe and well-formed."
+            },
+            "attachments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "filename": {
+                    "type": "string",
+                    "description": "Filename the recipient sees."
+                  },
+                  "mime_type": {
+                    "type": "string",
+                    "description": "MIME type, e.g. 'application/pdf'."
+                  },
+                  "data": {
+                    "type": "string",
+                    "description": "Base64-encoded content."
+                  }
+                },
+                "required": [
+                  "filename",
+                  "mime_type",
+                  "data"
+                ],
+                "additionalProperties": false
+              },
+              "default": [],
+              "maxItems": 20,
+              "description": "File attachments, 10 MB total."
+            },
+            "reply_to": {
+              "type": "string",
+              "format": "email",
+              "description": "Reply-To address, so replies go here instead of to the sender."
+            },
+            "include_signature": {
+              "type": "boolean",
+              "default": true,
+              "description": "Append the inbox's configured signature. Set false for a terse reply or your own sign-off."
+            },
+            "idempotency_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Opaque key for one outbound operation; reuse it only when retrying the identical request within 24 hours. Reuse with different arguments is rejected."
+            },
+            "message_id": {
+              "type": "string",
+              "description": "Message id being replied to; threading headers derive from it."
+            },
+            "reply_all": {
+              "type": "boolean",
+              "default": false,
+              "description": "Reply to the original To and Cc as well as the sender. Still capped at 50 recipients."
+            },
+            "include_attachments": {
+              "type": "boolean",
+              "default": false,
+              "description": "Re-attach the original's attachments. Anything past the 10 MB budget is dropped silently."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "send"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "to",
+                  "subject",
+                  "body"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_all"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_attachments"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "reply"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id",
+                  "body"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "bcc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_attachments"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "forward"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id",
+                  "to"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "attachments"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_all"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "annotations": {
+          "title": "Compose Email",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://mcpemails/review-card.html"
+          }
+        }
+      },
+      {
+        "name": "folder",
+        "title": "Folders & Labels",
+        "description": "Manage mailbox folders, which are labels on Gmail: the arguments say 'folder' for cross-provider compatibility, but Gmail returns and manages labels (type: 'label'). 'list' needs read:email, the rest manage:folders.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "create",
+                "rename",
+                "delete"
+              ],
+              "description": "Operation to run. list = every folder with its id and message counts; create = a folder called `name`; rename = folder_id to new_name; delete = folder_id, irreversibly."
+            },
+            "inbox_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass this or `inbox`; omit both and the error lists every inbox_id."
+            },
+            "inbox": {
+              "type": "string",
+              "description": "Inbox email address; an alternative to inbox_id, which wins when both are given."
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Name of the new folder or label."
+            },
+            "folder_id": {
+              "type": "string",
+              "description": "Folder id from action: list. On IMAP this is the mailbox name (e.g. 'INBOX/Work'), on Gmail the label id."
+            },
+            "new_name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "New display name."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "list"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "folder_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "new_name"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "create"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "name"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "folder_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "new_name"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "rename"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "folder_id",
+                  "new_name"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "name"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "delete"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "folder_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "new_name"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "annotations": {
+          "title": "Folders & Labels",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "draft",
+        "title": "Drafts",
+        "description": "Manage unsent drafts in one inbox. On IMAP a draft_id changes on every update, so always use the most recent one. The signature is embedded on create and update (include_signature: false to skip) and 'send' transmits the stored body as-is, so it is never doubled. 'reply' also needs read:email, 'send' needs send:email.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "create",
+                "reply",
+                "update",
+                "send",
+                "delete"
+              ],
+              "description": "Operation to run. list = saved drafts; create = a new draft, subject and body required; reply = an unsent reply to message_id, kept in its thread; update = overwrite draft_id with the fields you pass; send = send draft_id and remove it from Drafts; delete = discard draft_id without sending."
+            },
+            "inbox_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass this or `inbox`; omit both and the error lists every inbox_id."
+            },
+            "inbox": {
+              "type": "string",
+              "description": "Inbox email address; an alternative to inbox_id, which wins when both are given."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "description": "Drafts per page."
+            },
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
+              "default": [],
+              "description": "Recipient addresses; a draft may have none."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
+              "default": [],
+              "description": "Cc addresses."
+            },
+            "bcc": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
+              "default": [],
+              "description": "Bcc addresses."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Draft subject line."
+            },
+            "body": {
+              "type": "string",
+              "description": "Plain-text draft body."
+            },
+            "html_body": {
+              "type": "string",
+              "description": "Optional HTML draft body."
+            },
+            "include_signature": {
+              "type": "boolean",
+              "default": true,
+              "description": "Append the inbox's configured signature. Set false for a terse reply or your own sign-off."
+            },
+            "message_id": {
+              "type": "string",
+              "description": "Message id to reply to."
+            },
+            "reply_all": {
+              "type": "boolean",
+              "default": false,
+              "description": "Address the reply to the original To and Cc too."
+            },
+            "draft_id": {
+              "type": "string",
+              "description": "Draft id from the most recent draft call. On IMAP it changes after every update, so a stale one fails."
+            },
+            "idempotency_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Opaque key for one outbound operation; reuse it only when retrying the identical request within 24 hours. Reuse with different arguments is rejected."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "list"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "bcc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "html_body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_signature"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_all"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "draft_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "idempotency_key"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "create"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "subject",
+                  "body"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_all"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "draft_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "idempotency_key"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "reply"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "message_id",
+                  "body"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "bcc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "draft_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "idempotency_key"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "update"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "draft_id",
+                  "body"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_all"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "idempotency_key"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "send"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "draft_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "bcc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "html_body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_signature"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_all"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "delete"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "draft_id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "bcc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "html_body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "include_signature"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "message_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_all"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "idempotency_key"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "annotations": {
+          "title": "Drafts",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://mcpemails/review-card.html"
+          }
+        }
+      },
+      {
+        "name": "schedule",
+        "title": "Scheduled Send",
+        "description": "Queue mail for later delivery, and manage what is queued.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "list",
+                "cancel"
+              ],
+              "description": "Operation to run. create = queue to, subject and body for send_at; list = pending scheduled sends; cancel = a pending send by `id`, alias `scheduled_send_id`."
+            },
+            "inbox_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass this or `inbox`; omit both and the error lists every inbox_id."
+            },
+            "inbox": {
+              "type": "string",
+              "description": "Inbox email address; an alternative to inbox_id, which wins when both are given."
+            },
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
+              "minItems": 1,
+              "maxItems": 50,
+              "description": "Recipient addresses."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
+              "default": [],
+              "description": "Cc addresses."
+            },
+            "bcc": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
+              "default": [],
+              "description": "Bcc addresses."
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 998,
+              "description": "Subject line."
+            },
+            "body": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Plain-text body. Sent as multipart/alternative when html_body is given too."
+            },
+            "html_body": {
+              "type": "string",
+              "description": "Optional HTML body."
+            },
+            "attachments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "filename": {
+                    "type": "string",
+                    "description": "Filename the recipient sees."
+                  },
+                  "mime_type": {
+                    "type": "string",
+                    "description": "MIME type."
+                  },
+                  "data": {
+                    "type": "string",
+                    "description": "Base64-encoded content."
+                  }
+                },
+                "required": [
+                  "filename",
+                  "mime_type",
+                  "data"
+                ],
+                "additionalProperties": false
+              },
+              "default": [],
+              "maxItems": 20,
+              "description": "File attachments, 10 MB total."
+            },
+            "reply_to": {
+              "type": "string",
+              "format": "email",
+              "description": "Reply-To address."
+            },
+            "send_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Send time, in the future and carrying a timezone (e.g. '2026-06-01T09:00:00+02:00'). The dispatcher runs every minute, so delivery can be up to 60s late."
+            },
+            "idempotency_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Opaque key for one outbound operation; reuse it only when retrying the identical request within 24 hours. Reuse with different arguments is rejected."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Results per page."
+            },
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Scheduled send UUID from a create or list call. Alias: scheduled_send_id."
+            },
+            "scheduled_send_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Alias of `id`; pass either one."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "create"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "required": [
+                  "to",
+                  "subject",
+                  "body",
+                  "send_at"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "scheduled_send_id"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "list"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "inbox"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "bcc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "html_body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "attachments"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "send_at"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "idempotency_key"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "scheduled_send_id"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "cancel"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "inbox_id"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "inbox"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "cc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "bcc"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "subject"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "html_body"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "attachments"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reply_to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "send_at"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "idempotency_key"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "annotations": {
+          "title": "Scheduled Send",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://mcpemails/review-card.html"
+          }
+        }
+      },
+      {
+        "name": "signature",
+        "title": "Signature",
+        "description": "Read or set an inbox's signature, which the server appends on send/reply/forward/draft/scheduled mail. Setting one marks the source 'manual', which overrides Gmail auto-import. 'get' needs read:email, 'set' needs send:email.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "get",
+                "set"
+              ],
+              "description": "Operation to run. get = current signature_html and text, enabled flag, reply_mode and source; set = write signature_text and/or signature_html."
+            },
+            "inbox_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass this or `inbox`; omit both and the error lists every inbox_id."
+            },
+            "inbox": {
+              "type": "string",
+              "description": "Inbox email address; an alternative to inbox_id, which wins when both are given."
+            },
+            "signature_text": {
+              "type": "string",
+              "maxLength": 10000,
+              "description": "Plain-text signature. Omit to keep, empty string to clear."
+            },
+            "signature_html": {
+              "type": "string",
+              "maxLength": 50000,
+              "description": "HTML signature. Omit to keep, empty string to clear. Derived from the text version when only that is given."
+            },
+            "signature_enabled": {
+              "type": "boolean",
+              "description": "Whether the signature is appended at all. Defaults to true."
+            },
+            "signature_reply_mode": {
+              "type": "string",
+              "enum": [
+                "always",
+                "first_only",
+                "never"
+              ],
+              "description": "Signature on replies and forwards; 'first_only' is the default."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "get"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "signature_text"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "signature_html"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "signature_enabled"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "signature_reply_mode"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "set"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              },
+              "then": {}
+            }
+          ]
+        },
+        "annotations": {
+          "title": "Signature",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "contact_search",
+        "title": "Search Contacts",
+        "description": "Find people by name or email fragment. There is no stored contact list: each call runs a bounded, header-only scan of a RECENT window of matching mail, so message_count counts matches inside that window, not an all-time total. Returns display name, address, count and last-contacted time, most recent first. For general or cross-inbox questions ('who do I email most about X?') OMIT inbox_id so every accessible inbox is scanned.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Name or email fragment, matched case-insensitively against display names and addresses. 'alice' matches 'Alice Smith'."
+            },
+            "inbox_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Restricts the scan to one inbox. Set it only when the user named a specific inbox, and never carry one over from an earlier turn."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "description": "Contacts per page."
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            },
+            "total": {
+              "type": "integer"
+            },
+            "contacts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "inbox_id": {
+                    "type": "string"
+                  },
+                  "email_address": {
+                    "type": "string"
+                  },
+                  "display_name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "message_count": {
+                    "type": "integer"
+                  },
+                  "last_contacted_at": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "inbox_id",
+                  "email_address"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "required": [
+            "query",
+            "contacts",
+            "total"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Search Contacts",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "approval_review",
+        "title": "Review a pending send",
+        "description": "Fetch the full contents of a send that is waiting for human approval, including its body, so it can be shown in the review card. Read-only. Approving is not possible from here: it requires the signed-in review page linked as review_url.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "approval_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The approval_id returned by a gated send (status: \"pending_approval\")."
+            }
+          },
+          "required": [
+            "approval_id"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Review a pending send",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://mcpemails/review-card.html",
+            "visibility": [
+              "app"
+            ]
+          }
+        }
+      },
+      {
+        "name": "approval_decide",
+        "title": "Reject a pending send",
+        "description": "Reject a send that is waiting for human approval, so it is never delivered. `decision` accepts only \"reject\". Approving is deliberately not available over MCP — it requires a signed-in browser session with an owner or admin role, at the review_url of the approval.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "approval_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The approval_id returned by a gated send (status: \"pending_approval\")."
+            },
+            "decision": {
+              "type": "string",
+              "enum": [
+                "reject"
+              ],
+              "description": "Only \"reject\" is accepted. Approving requires the review page."
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 500,
+              "description": "Optional reason, stored on the audit record."
+            }
+          },
+          "required": [
+            "approval_id",
+            "decision"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Reject a pending send",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://mcpemails/review-card.html",
+            "visibility": [
+              "app"
+            ]
+          }
+        }
+      },
+      {
+        "name": "approval_update",
+        "title": "Edit a pending send",
+        "description": "Change the subject or body of a send that is waiting for human approval. The message still has to be approved afterwards, and the reviewer sees the edited version. Subject can only be set on operations that carry one (email_send, schedule_create).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "approval_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The approval_id returned by a gated send (status: \"pending_approval\")."
+            },
+            "subject": {
+              "type": "string",
+              "maxLength": 998,
+              "description": "Replacement subject line."
+            },
+            "body_text": {
+              "type": "string",
+              "maxLength": 1000000,
+              "description": "Replacement plain-text body."
+            },
+            "body_html": {
+              "type": "string",
+              "maxLength": 1000000,
+              "description": "Replacement HTML body."
+            }
+          },
+          "required": [
+            "approval_id"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Edit a pending send",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://mcpemails/review-card.html",
+            "visibility": [
+              "app"
+            ]
+          }
+        }
+      },
+      {
+        "name": "approval_schedule",
+        "title": "Schedule a pending send",
+        "description": "Set the delivery time of a send that is waiting for human approval. Nothing is queued until it is approved; this only decides when an approved message goes out. send_at must be in the future.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "approval_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The approval_id returned by a gated send (status: \"pending_approval\")."
+            },
+            "send_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "ISO 8601 timestamp with timezone, in the future."
+            }
+          },
+          "required": [
+            "approval_id",
+            "send_at"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Schedule a pending send",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://mcpemails/review-card.html",
+            "visibility": [
+              "app"
+            ]
+          }
+        }
+      },
+      {
+        "name": "bulk_execute",
+        "title": "Run a previewed bulk operation",
+        "description": "Run a bulk delete or move that was previewed as a plan. Takes only the plan_id: which messages are affected was decided and frozen when the preview was created, and cannot be changed here. A plan runs at most once and expires 15 minutes after it is created.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "plan_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The plan_id returned with a bulk preview."
+            }
+          },
+          "required": [
+            "plan_id"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Run a previewed bulk operation",
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://mcpemails/review-card.html",
+            "visibility": [
+              "app"
+            ]
+          }
+        }
+      },
+      {
+        "name": "bulk_cancel",
+        "title": "Cancel a previewed bulk operation",
+        "description": "Decline a previewed bulk delete or move, so it can never run. Takes only the plan_id. Nothing in the mailbox changes. A preview would also expire on its own after 15 minutes; cancelling records the decision instead of leaving it implicit.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "plan_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The plan_id returned with a bulk preview."
+            }
+          },
+          "required": [
+            "plan_id"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Cancel a previewed bulk operation",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://mcpemails/review-card.html",
+            "visibility": [
+              "app"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
