@@ -89,3 +89,49 @@ export function neutralizeDeep<T>(value: T, depth = 0): T {
   }
   return value;
 }
+
+// ---------------------------------------------------------------------------
+// The same character class, for the *tool response* path.
+//
+// `normalizePreview` and `stripHtmlToText` in index.ts collapse whitespace with
+// /\s+/, and JS `\s` stops at U+200A: it never matched U+200B..U+200F. Senders
+// pad the hidden preheader div with hundreds of U+200C so their mail client
+// shows one tidy line, and that padding used to fill the entire 200-character
+// preview budget with zero characters of information.
+//
+// These are deliberately NOT `neutralizeText`. That function is one of three
+// mirrored copies of an anti-spoofing contract (see the header above); its call
+// sites are the approval card, the approve page and the audit log, and they are
+// audited as a rendering boundary where a human decides whether to click
+// Approve. Previews and bodies are a quality-and-cost concern, not that
+// boundary, and giving them their own names keeps a future reader from reading
+// a preview call site as security-critical, or from assuming the two must
+// always move together. They share the character class on purpose: there is
+// only one right answer to "which characters are invisible".
+// ---------------------------------------------------------------------------
+
+/**
+ * Strip every invisible character from a short structural field.
+ *
+ * For fields a model or a person *scans* rather than reads: previews, subjects,
+ * labels. The bidi marks go too, because in a 200-character summary line they
+ * only ever reorder someone's perception of a sender or a subject.
+ */
+export function stripInvisibleText(value: string): string {
+  return value.replace(UNSAFE_TEXT, "");
+}
+
+/**
+ * Strip only the zero-width characters, leaving the bidi marks in place.
+ *
+ * For message bodies. U+200E/U+200F and the isolates are legitimate in Hebrew,
+ * Arabic, Persian and Urdu prose, and removing them from a body silently
+ * corrupts mail we are only meant to be relaying (the same reasoning as the
+ * "WHAT IS DELIBERATELY NOT NEUTRALISED" note above). The zero-width block and
+ * the BOM carry no meaning in any language, so they are always safe to drop.
+ */
+const ZERO_WIDTH_TEXT = /[\u200b-\u200d\u2060-\u2064\ufeff]/g;
+
+export function stripZeroWidthText(value: string): string {
+  return value.replace(ZERO_WIDTH_TEXT, "");
+}
