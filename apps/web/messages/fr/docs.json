@@ -318,19 +318,20 @@
   "errors": {
     "eyebrow": "Codes d'erreur",
     "heading": "Codes d'erreur et conseils de réessai.",
-    "sub": "Les échecs d'authentification, de portée et de limite de débit renvoient un objet <code>error</code> JSON-RPC avec un code numérique. Les échecs d'exécution d'outil (boîte introuvable, erreur du fournisseur, etc.) renvoient un <code>result</code> normal avec <code>isError: true</code> et un message lisible dans <code>content[0].text</code>.",
+    "sub": "Les échecs d'authentification, de portée et de limite de débit renvoient un objet <code>error</code> JSON-RPC avec un code numérique. Les échecs d'exécution d'outil (boîte introuvable, erreur du fournisseur, allocation mensuelle d'actions épuisée, etc.) renvoient un <code>result</code> normal avec <code>isError: true</code> et un message lisible dans <code>content[0].text</code>.",
     "thCode": "Code",
     "thType": "Type",
     "thWhen": "Quand cela survient",
     "thRetryable": "Réessayable",
     "retryableNo": "Non",
-    "exampleLabel": "Exemple de réponse d'erreur d'exécution",
+    "exampleLabel": "Exemples de réponses d'erreur",
     "rows": {
       "auth": "Clé API manquante, mal formée, révoquée ou expirée. Également renvoyé lorsque la clé API n'a pas la portée requise pour l'outil appelé.",
       "method": "Méthode JSON-RPC inconnue (par ex. appel d'une méthode autre qu'initialize, tools/list, tools/call)",
       "param": "Nom d'outil inconnu, ou paramètre manquant / invalide dans tools/call",
-      "rate": "Limite de débit par clé ou quota quotidien de la formule dépassé. Vérifiez data.error_code : « rate_limit_exceeded » contre « quota_exceeded ». Vérifiez data.retry_after (secondes) avant de réessayer.",
-      "tool": "L'outil s'est exécuté mais a rencontré une erreur (boîte introuvable, message introuvable, échec d'authentification du fournisseur, destinataire invalide, pièce jointe trop volumineuse, fournisseur 5xx). La description de l'erreur se trouve dans content[0].text."
+      "rate": "Limite de débit par clé ou par espace de travail dépassée (HTTP 429). data.error_code vaut toujours « rate_limit_exceeded ». Attendez data.retry_after secondes, ou lisez l'en-tête Retry-After, avant de réessayer.",
+      "tool": "L'outil s'est exécuté mais a rencontré une erreur (boîte introuvable, message introuvable, échec d'authentification du fournisseur, destinataire invalide, pièce jointe trop volumineuse, fournisseur 5xx). La description de l'erreur se trouve dans content[0].text.",
+      "cap": "L'allocation mensuelle d'actions de la formule est épuisée. Elle est renvoyée comme un résultat d'outil normal avec isError: true, et non comme une erreur JSON-RPC, les détails se trouvant sous _meta[\"com.mcpemails/usage_limit\"] : error_code « usage_limit_reached », used_actions, cap et reset_at. Réessayer ne peut pas réussir avant reset_at ou un changement de formule."
     }
   },
   "rateLimits": {
@@ -338,17 +339,20 @@
     "heading": "Limites de débit et quotas.",
     "perKeyTag": "Fenêtres glissantes par clé",
     "perKeyHeading": "100 req / min · 1 000 / h · 10 000 / jour",
-    "perKeyBody": "Appliqué par clé API quelle que soit la formule. En cas de dépassement, le serveur renvoie le code d'erreur <code>-32029</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code> et un champ <code>data.retry_after</code> (secondes). Respectez cette valeur avant de réessayer.",
+    "perKeyBody": "Appliqué par clé API quelle que soit la formule. En cas de dépassement, le serveur renvoie HTTP 429 avec le code d'erreur JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> et un champ <code>data.retry_after</code> (secondes). Respectez cette valeur avant de réessayer. Il s'agit d'une courte pause réessayable, pas de votre allocation mensuelle d'actions.",
     "planTag": "Plafond par minute de la formule",
     "planHeading": "Gratuit 60 / min · Agent 300 / min · Scale 1 000 / min",
-    "planBody": "Il s'agit d'une limite de pointe d'usage équitable par espace de travail (agrégée sur toutes vos clés API), distincte de votre allocation d'actions. En cas de dépassement, les appels renvoient <code>data.error_code: \"rate_limit_exceeded\"</code> avec <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Passez à une formule supérieure pour un plafond et une allocation d'actions plus élevés.",
+    "planBody": "Il s'agit d'une limite de pointe d'usage équitable par espace de travail (agrégée sur toutes vos clés API), distincte de votre allocation mensuelle d'actions. En cas de dépassement, les appels renvoient le code d'erreur <code>-32003</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Passez à une formule supérieure pour un plafond plus élevé.",
+    "capTag": "Allocation mensuelle d'actions",
+    "capHeading": "Gratuit 2 500 · Agent 50 000 · Scale 300 000 actions par période de facturation",
+    "capBody": "Les actions facturables sont comptées par espace de travail sur la période de facturation. L'épuisement n'est pas une erreur JSON-RPC : l'appel renvoie HTTP 200 avec un résultat d'outil normal portant <code>isError: true</code> et un bloc <code>_meta[\"com.mcpemails/usage_limit\"]</code> contenant <code>error_code: \"usage_limit_reached\"</code>, <code>used_actions</code>, <code>cap</code> et <code>reset_at</code>. Il n'y a pas de <code>retry_after</code>, car réessayer ne peut pas réussir avant <code>reset_at</code> ou un changement de formule. Traitez cela comme un arrêt, pas comme un backoff.",
     "retryTag": "Réessayer en toute sécurité",
     "retryHeading": "Respectez toujours retry_after ; ne réessayez jamais les envois à l'aveugle",
-    "retryBody": "Pour les erreurs <code>rate_limit_exceeded</code>, attendez <code>data.retry_after</code> secondes avant de réessayer. Utilisez un backoff exponentiel pour <code>provider_error</code>. Ne réessayez pas automatiquement les envois <code>email_compose</code> en cas de <code>provider_error</code>, car le message a peut-être déjà été accepté par le fournisseur."
+    "retryBody": "Pour les erreurs <code>rate_limit_exceeded</code>, attendez <code>data.retry_after</code> secondes avant de réessayer. Utilisez un backoff exponentiel pour <code>provider_error</code>. Ne réessayez pas automatiquement les envois <code>email_compose</code> en cas de <code>provider_error</code>, car le message a peut-être déjà été accepté par le fournisseur. Ne réessayez jamais <code>usage_limit_reached</code> : cela ne se débloque qu'à <code>reset_at</code> ou lors d'un changement de formule."
   },
   "cta": {
     "heading": "Prêt à connecter votre boîte de réception ?",
-    "sub": "Commencez avec la formule Gratuit : illimitée, aucune carte requise. Passez à Agent ou Scale pour des limites de pointe plus élevées et des fonctionnalités d'équipe.",
+    "sub": "Commencez avec la formule Gratuit : 2 500 actions par période de facturation, aucune carte requise. Passez à Agent ou Scale pour un quota supérieur, des limites de pointe plus élevées et des fonctionnalités d'équipe.",
     "primary": "Commencer gratuitement",
     "secondary": "Voir les tarifs"
   },
@@ -419,7 +423,7 @@
     },
     "cta": {
       "heading": "Prêt à connecter votre boîte de réception ?",
-      "sub": "Formule Gratuit : connexions illimitées, aucune carte requise.",
+      "sub": "Formule Gratuit : connexions de boîtes de réception illimitées et 2 500 actions par période de facturation, aucune carte requise.",
       "primary": "Commencer gratuitement",
       "secondary": "Lire la documentation"
     }

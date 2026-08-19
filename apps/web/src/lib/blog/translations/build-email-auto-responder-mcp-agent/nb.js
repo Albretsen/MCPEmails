@@ -89,7 +89,9 @@ Hvis du vil at en melding skal slutte å dukke opp som ulest når du har svart, 
 
 Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, uavhengig av plan. Arbeidsområdet ditt har også et burst-tak per nivå — **60 req/min på Free, 300 på Agent, 1 000 på Scale** (se [priser](/pricing)). En høflig poll-og-svar-løkke lever godt innenfor det, men en som oppfører seg dårlig kan utløse det.
 
-Når du treffer en grense, returnerer serveren en feil du kan prøve på nytt (kode \`-32029\`) med \`data.retry_after\` i sekunder. Respekter den. Sov så lenge, og fortsett deretter.
+Når du treffer en hastighetsgrense, returnerer serveren en feil du kan prøve på nytt (kode \`-32003\`) med \`data.retry_after\` i sekunder. Respekter den. Sov så lenge, og fortsett deretter.
+
+Den månedlige handlingskvoten på planen din er en annen grense, og den kan du ikke prøve på nytt. Når den er brukt opp, kommer kallet tilbake som et vanlig verktøyresultat med \`isError: true\` og en \`_meta["com.mcpemails/usage_limit"]\`-blokk i stedet for en JSON-RPC-feil, uten \`retry_after\`. Å prøve på nytt brenner bare sykluser fram til \`reset_at\` eller en oppgradering, så stopp løkken og vis det fram.
 
 Her er regelen som betyr mest: **prøv aldri en \`email_compose\`-sending eller -respons automatisk på nytt i blinde.** En sending er ikke idempotent. Hvis et send-kall får tidsavbrudd eller returnerer tvetydig, kan et naivt nytt forsøk levere det samme svaret to ganger. Prøv *lesinger* på nytt fritt; behandle *sendinger* som engangskall, og prøv bare på nytt ved en eksplisitt feil du kan prøve på nytt, med backoff og et hardt tak.
 
