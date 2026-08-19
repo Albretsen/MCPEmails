@@ -25,6 +25,7 @@ const VALID_SCOPES = new Set([
   'manage:drafts',
   'manage:contacts',
   'schedule:email',
+  'manage:automations',
 ]);
 
 const SCOPE_META = {
@@ -36,6 +37,11 @@ const SCOPE_META = {
   'manage:drafts':   { icon: 'copy',   title: 'Manage drafts',              desc: 'create, update, list and send drafts.', required: false, destructive: false },
   'manage:contacts': { icon: 'users',  title: 'Manage contacts',            desc: 'contact_search (find people via a live scan of your mail; nothing stored).', required: false, destructive: false },
   'schedule:email':  { icon: 'bell',   title: 'Schedule emails',            desc: 'schedule sends and manage scheduled messages.', required: false, destructive: false },
+  // Not marked destructive: an automation can never delete mail, and the two
+  // actions that leave the mailbox (forward, draft_reply) are approval-gated or
+  // produce a draft. It is still a standing, unattended capability rather than
+  // a one-off call, which is what the description has to make plain.
+  'manage:automations': { icon: 'zap', title: 'Run scheduled automations', desc: 'create and run rules that sort mail on a schedule with nobody watching. Never deletes; forwarding needs approval.', required: false, destructive: false },
 };
 
 export default async function AuthorizePage({ searchParams }) {

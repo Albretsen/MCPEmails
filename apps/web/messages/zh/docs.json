@@ -11,6 +11,7 @@
     "ctaQuickStart": "快速开始",
     "ctaOAuth": "OAuth（claude.ai）",
     "ctaTools": "工具参考",
+    "ctaSafety": "安全模型",
     "ctaProviders": "服务商支持"
   },
   "quickstart": {
@@ -27,7 +28,7 @@
       "apikey": {
         "label": "创建 API 密钥",
         "heading": "为你的智能体生成一个 bearer 令牌",
-        "body": "在 仪表板 → API 密钥 中，点击「创建密钥」。为其命名，选择你的智能体所需的范围——read:email、search:email、send:email、manage:folders、delete:email、manage:drafts、manage:contacts 和 schedule:email——并复制该密钥。它只显示一次。"
+        "body": "在 仪表板 → API 密钥 中，点击「创建密钥」。为其命名，选择你的智能体所需的范围——read:email、search:email、send:email、manage:folders、delete:email、manage:drafts、manage:contacts、schedule:email 和 manage:automations——并复制该密钥。它只显示一次。"
       },
       "addclient": {
         "label": "将 MCPEmails 添加到你的智能体",
@@ -105,12 +106,12 @@
     "howTitle": "底层工作原理",
     "howP1": "claude.ai 通过 <b>RFC 7591 动态客户端注册</b>自行注册，因此你永远不必预先注册客户端 ID。",
     "howP2": "授权使用 <b>OAuth 2.0 授权码 + PKCE</b>（RFC 7636），因此从不传输任何客户端密钥。",
-    "howP3": "令牌的范围严格限定为你批准的权限——<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code> 和 <code>schedule:email</code>。",
+    "howP3": "令牌的范围严格限定为你批准的权限——<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code> 和 <code>manage:automations</code>。",
     "noOauthNote": "<b>使用不支持 OAuth 的客户端？</b>在 仪表盘 → API 密钥 中创建一个 API 密钥，并将其作为 bearer 令牌传递。API 密钥连接和 OAuth 连接使用同一个 MCP 端点和同样的工具目录。"
   },
   "tools": {
     "eyebrow": "工具参考",
-    "heading": "10 个工具。满足你智能体所需的每一项邮件操作。",
+    "heading": "11 个工具。满足你智能体所需的每一项邮件操作。",
     "sub": "<b>指定收件箱是可选的。</b>当你的密钥只有一个收件箱时，每个按收件箱的工具都会自动解析它——无需 <code>inbox_id</code>。有多个收件箱时，传入 <code>inbox_id</code>（来自 <code>inbox_list</code> 的 UUID）或 <code>inbox</code>（收件箱的邮箱地址）。大多数工具接受一个 <code>action</code> 参数来选择操作；徽章显示每个工具所需的权限范围，而 <code>tools/list</code> 只返回你的密钥（或 OAuth 令牌）有权限的工具。点击“显示示例”查看完整的请求与响应。",
     "noParams": "无参数。使用空的参数对象进行调用：",
     "showExample": "显示示例请求与响应",
@@ -259,6 +260,8 @@
         "inbox_id": "拥有这些草稿的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "draft_id": "提供商草稿 ID（action 'update' 或 'send'），来自最近的 create、update 或 list 操作。在 IMAP 收件箱上，它在每次更新后都会改变，因此始终使用最新的。",
+        "message_id": "操作 'reply' 的源邮件 ID，来自此前的 list、read 或 search 操作。",
+        "reply_all": "用于操作 'reply'：默认为 false，仅回复发件人。设为 true 可包含原始的 To 和 Cc 收件人。",
         "subject": "草稿主题行（action 'create'/'update'）。",
         "body": "草稿的纯文本正文（action 'create'/'update'）。",
         "to": "收件人地址（action 'create'/'update'）。默认 []。",
@@ -301,6 +304,22 @@
         "limit": "要返回的最大联系人数。默认 20，最大 50。"
       }
     },
+    "automation": {
+      "title": "自动化",
+      "desc": "创建并管理无人值守的定时分拣规则。一条规则就是一个已保存的搜索加上一个固定动作，按固定周期重新求值，回路中没有任何模型：邮件只被匹配，绝不被解读。设置 action：'create'（name、filter、rule_action 与 interval_minutes；规则创建时始终处于停用状态）、'list'、'get'、'update'、'enable'、'disable'、'delete'（运行历史会保留）、'runs'（近期运行的计数）或 'preview'（试运行，报告过滤条件此刻匹配到什么，且不执行任何操作）。可用的规则动作为 move、label（仅 Gmail）、mark_read、forward 和 draft_reply。删除邮件不向自动化开放。无论邮箱的审批设置如何，转发始终会被扣留等待人工批准，而 draft_reply 只会写入草稿。启用前请先预览。每个操作都需要 manage:automations。",
+      "params": {
+        "action": "要执行的操作：「create」、「list」、「get」、「update」、「enable」、「disable」、「delete」、「runs」或「preview」。它决定其余参数中哪些会生效。",
+        "automation_id": "目标规则的 UUID，由 'create' 或 'list' 返回。get、update、enable、disable、delete 和 runs 必填。preview 可选：传入它即可对已保存的规则试运行，而不是使用临时过滤条件。",
+        "inbox_id": "规则所监视邮箱的 UUID（'create'），或用于预览的邮箱。当密钥恰好只有一个邮箱时可省略；否则请传入本参数或 inbox。",
+        "inbox": "邮箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
+        "name": "规则的可读名称，1 至 80 个字符。'create' 时必填。",
+        "filter": "已保存的搜索，使用与 email_read 的 'search' 操作相同的结构化条件：from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before。至少需要一个条件，因为空过滤条件会匹配你的整个邮箱。此处不接受提供商原生的原始查询字符串：一条规则会在无人值守的情况下连续运行数月，而原始字符串是一种无人校验的方言。",
+        "rule_action": "对每个匹配项施加的那一个固定动作，形式为带类型标签的对象，type 可为 move（另加 folder）、label（另加 label，仅 Gmail）、mark_read、forward（另加 to 以及可选的 note）或 draft_reply（另加 template）。它之所以叫 rule_action，是因为 action 已用于选择操作。不存在任何删除类动作，提出这种请求会被拒绝而非被忽略。转发始终扣留等待批准，draft_reply 只写入草稿。模板只会替换 '{{sender_name}}'、'{{sender_email}}'、'{{subject}}' 和 '{{date}}'，且全部经过 HTML 转义；其余内容一律为字面文本，邮件正文绝不会被插入模板。",
+        "interval_minutes": "两次运行之间的分钟数，取自固定档位 15、30、60、180、360、720 或 1440。'create' 时必填。使用档位而非自由整数，是为了让一分钟一次的规则无法把提供商打到触发限流。",
+        "max_messages_per_run": "单次运行最多可处理的匹配邮件数：1 至 200，默认 25。这就是影响半径，限定一个写错的过滤条件在有人查看运行日志之前最多能触及多少邮件。",
+        "limit": "用于操作 'runs'：返回多少次运行记录，最新的在前。默认 20，最大 100。"
+      }
+    },
     "signature": {
       "title": "签名",
       "desc": "读取或配置收件箱的电子邮件签名，该签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加。设置 action：'get'（返回当前签名的文本和 HTML、是否启用、回复/转发模式，以及其来源——'manual'、'gmail_import' 或 null），或 'set'（写入 signature_text 和/或 signature_html，以及可选的 signature_enabled 和 signature_reply_mode）。签名支持富文本 HTML：粗体、斜体、标题、列表、颜色、对齐、链接，以及以 https URL 引用的托管徽标/图片，因此代理可以通过传入 signature_html 设置完整格式化的签名。仪表盘中也提供相同的富文本编辑器。设置签名会将其来源标记为 'manual'，这将永久覆盖该收件箱的 Gmail 自动导入。'get' 需要 read:email；'set' 需要 send:email。",
@@ -312,6 +331,50 @@
         "signature_html": "可选的富文本 HTML 签名正文（action 'set'）。支持格式（粗体、斜体、下划线、标题、列表、颜色、对齐、链接）以及通过 src 为 https URL 的 <img> 标签引用的托管图片（不支持 base64 或 CID）；保存时会进行净化。省略则保持不变；传入空字符串可清除它。",
         "signature_enabled": "签名是否追加到外发邮件（action 'set'）。默认 true；设为 false 可在不删除文本的情况下停止追加。",
         "signature_reply_mode": "何时在回复和转发中包含签名（action 'set'）：\"always\"（每次回复/转发）、\"first_only\"（默认——仅线程中的第一封邮件，避免重复署名）或 \"never\"。"
+      }
+    }
+  },
+  "automationSafety": {
+    "eyebrow": "自动化安全模型",
+    "heading": "一条定时规则能做什么，不能做什么。",
+    "sub": "自动化会按计划触碰你的邮箱，而且无人在旁。这与你正在对话的智能体属于不同的风险类别，因此下面这些保证由服务端强制执行，而不是交给你所写的规则去自觉遵守。",
+    "deterministic": {
+      "heading": "无人值守时没有任何模型在运行。",
+      "body": "一条规则就是一个已保存的查询加上一个固定动作。运行时，服务端对你的邮箱执行该查询，并把该动作施加到匹配项上。没有任何东西会先读你的邮件、再决定拿它怎么办。邮件内容只被匹配，绝不被当作指令来解读，因此提示词注入在无人值守这条路径上是结构性缺席的，而不是被过滤、被评分或被缓解。回路里根本没有可供注入文本对话的对象。",
+      "why": "这一点值得直说，因为这一类里真正危险的形态，是一个智能体读取不可信的来信、随后在无人在场的情况下据此行动。EchoLeak，以及被植入后门的 Postmark MCP 服务器等公开事件，让买家对此保持警惕是完全合理的。在交互式会话中，确实有模型读取你的邮件，这正是产品的意义所在，而那里有人在场，并且内容会被标记为不可信数据。定时路径是独自运行的那一条，它里面完全没有模型。"
+    },
+    "items": {
+      "noDelete": {
+        "heading": "自动化绝不删除邮件。",
+        "body": "删除并非可用动作，这是刻意设计。移动、加标签、标为已读、转发和起草回复就是全部动作集合。删除是规则一旦出错便无法挽回的唯一动作，因此它在校验层就被排除：任何仅仅提到删除的动作都会被拒绝，而不是被悄悄忽略。"
+      },
+      "forward": {
+        "heading": "转发始终等待真人。",
+        "body": "自动化产生的转发会进入审批队列，只有工作区成员批准后才会离开你的邮箱，无论各邮箱的发送审批设置如何。每条规则的收件人数量也有上限。无人值守的规则无法自行把邮件送出你的组织。"
+      },
+      "draftReply": {
+        "heading": "草稿回复永远只是草稿。",
+        "body": "draft_reply 规则会在原对话中写入一封未发送的草稿，到此为止。在任何提供商、任何配置下，都不会有任何内容被无人值守地发出。"
+      },
+      "template": {
+        "heading": "模板只替换四个字段，别无其他。",
+        "body": "回复模板按原样存储，永远不会被求值。只有 '{{sender_name}}'、'{{sender_email}}'、'{{subject}}' 和 '{{date}}' 会被替换，并且全部经过 HTML 转义。邮件正文绝不会被插入，也不存在任何可求值的表达式语法，因此送进你邮箱的任何东西都无法把模板变成一次运算。"
+      },
+      "runLog": {
+        "heading": "每一次运行都有据可查。",
+        "body": "每次运行都会记录过滤条件匹配到了什么、每封邮件发生了什么、以及有哪些进入了审批队列，并附带匹配、已处理、成功、失败和跳过的计数。可逆动作会保留撤销所需的状态。运行历史比它所属的规则活得更久，因为它正是对你邮箱做过什么的记录。用操作 'runs' 或在仪表板中查看。"
+      },
+      "keyAuthority": {
+        "heading": "一条规则只拥有一把密钥的权限。",
+        "body": "每条规则都以创建它的那把 API 密钥的身份运行。它永远无法超出该密钥已有的范围和邮箱访问权限；它执行的每个动作都会像交互式调用一样计量、限流并写入审计日志；吊销该密钥即可让规则停止。"
+      },
+      "autoDisable": {
+        "heading": "反复失败即自动停用。",
+        "body": "连续 5 次运行失败后，规则会被自动停用，并记录原因。指向一个已不再响应的邮箱的规则会就此停下，而不是永远每 15 分钟重试一次。"
+      },
+      "perRunCap": {
+        "heading": "每次运行的影响半径都有上限。",
+        "body": "每条规则都带有单次运行最多可处理的邮件数，范围 1 至 200，默认 25，因此一个比你本意更宽泛的过滤条件，在你看到运行日志之前最多只会触及这么多邮件。此外，规则创建时即为停用状态，而预览是一次试运行，它展示过滤条件此刻匹配到什么，却不执行任何操作。"
       }
     }
   },

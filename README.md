@@ -74,7 +74,7 @@ The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport
 
 ## Tools
 
-10 tools. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
+11 tools. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
 
 | Tool | Actions | Scope(s) |
 | --- | --- | --- |
@@ -87,6 +87,7 @@ The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport
 | `draft` | `list`, `create`, `reply`, `update`, `send`, `delete` | `manage:drafts` (list/create/reply/update/delete), `read:email` (reply also), `send:email` (send) |
 | `schedule` | `create`, `list`, `cancel` | `schedule:email` |
 | `signature` | `get`, `set` | `read:email` (get), `send:email` (set) |
+| `automation` | `create`, `list`, `get`, `update`, `enable`, `disable`, `delete`, `runs`, `preview` | `manage:automations` |
 | `contact_search` | *(single action)* | `manage:contacts` |
 
 Notes:
@@ -97,6 +98,7 @@ Notes:
 - `email_read`'s `original` action returns one complete provider-stored MIME message as a portable `.eml` file (up to 25 MB). It is read-only and never marks the message as read.
 - `draft`'s `send` action requires `send:email`, not `manage:drafts` — so a key that can only manage drafts can't use them to bypass the send‑mail consent.
 - `draft`'s `reply` action creates an unsent, provider-native reply in the source conversation. It needs both `manage:drafts` and `read:email`, and defaults to replying only to the sender.
+- `automation` manages unattended scheduled triage rules: a stored search plus one fixed action, evaluated on a cadence with no model in the loop. There is no delete action, a `forward` always waits for human approval, and `draft_reply` only ever writes a draft. See `docs/automations-trust-boundary.md`.
 - `tools/list` only returns the tools your key (or OAuth token) is actually scoped for.
 
 ## OAuth scopes
@@ -111,6 +113,7 @@ Notes:
 | `manage:drafts` | Create, edit, and delete drafts (sending one also requires `send:email`) |
 | `manage:contacts` | Live contact lookup from recent mail |
 | `schedule:email` | Queue messages for future delivery |
+| `manage:automations` | Create and manage unattended scheduled triage rules (no delete action; forwards stay approval-gated) |
 
 ## Supported providers
 

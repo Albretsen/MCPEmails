@@ -1840,3 +1840,24 @@ select.input {
   margin: 2px 0 0; font-family: var(--font-sans); font-size: 12.5px;
   line-height: 1.55; color: var(--fg-3);
 }
+
+/* === Automations ================================================ */
+/**
+ * A bare `.sub` is the dashboard's muted-text convention, but it only ever had
+ * rules under specific parents (.card-h, .modal-h), so elsewhere it inherits
+ * body colour and reads as primary text. Scoping one rule to the automations
+ * page fixes every muted line on it, including the ones inside its modals:
+ * those are rendered as DOM children of the page even though they are fixed.
+ *
+ * Colour and family only. Font size stays wherever it was already set, so
+ * `.modal-h .sub` keeps its larger subtitle size.
+ */
+.automations .sub { font-family: var(--font-sans); color: var(--fg-3); }
+
+/**
+ * The automations modals set their own width inline (the create form is 620px,
+ * the run log 760px) because they carry a form and a table respectively. They
+ * deliberately do NOT set max-width, so the base `.modal { max-width: 92vw }`
+ * still governs phones, and the run tables scroll inside their own `.tbl-wrap`
+ * rather than pushing the page sideways.
+ */

@@ -11,6 +11,7 @@
     "ctaQuickStart": "Démarrage rapide",
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Référence des outils",
+    "ctaSafety": "Modèle de sécurité",
     "ctaProviders": "Fournisseurs pris en charge"
   },
   "quickstart": {
@@ -27,7 +28,7 @@
       "apikey": {
         "label": "Créez une clé API",
         "heading": "Générez un jeton bearer pour votre agent",
-        "body": "Dans Tableau de bord → Clés d'API, cliquez sur « Créer une clé ». Nommez-la, sélectionnez les portées dont votre agent a besoin — read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts et schedule:email — et copiez la clé. Elle n'est affichée qu'une seule fois."
+        "body": "Dans Tableau de bord → Clés d'API, cliquez sur « Créer une clé ». Nommez-la, sélectionnez les portées dont votre agent a besoin — read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email et manage:automations — et copiez la clé. Elle n'est affichée qu'une seule fois."
       },
       "addclient": {
         "label": "Ajoutez MCPEmails à votre agent",
@@ -105,12 +106,12 @@
     "howTitle": "Comment ça fonctionne en coulisses",
     "howP1": "claude.ai s'enregistre via <b>RFC 7591 Dynamic Client Registration</b>, donc vous ne préenregistrez jamais d'ID client.",
     "howP2": "L'autorisation utilise <b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636), donc aucun secret client n'est jamais transmis.",
-    "howP3": "Les jetons sont limités exactement aux autorisations que vous approuvez — <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code> et <code>schedule:email</code>.",
+    "howP3": "Les jetons sont limités exactement aux autorisations que vous approuvez — <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> et <code>manage:automations</code>.",
     "noOauthNote": "<b>Vous utilisez un client sans prise en charge d'OAuth ?</b> Créez une clé API dans Tableau de bord → Clés API et passez-la comme jeton bearer. Les connexions par clé API et par OAuth utilisent le même point de terminaison MCP et le même catalogue d'outils."
   },
   "tools": {
     "eyebrow": "Référence des outils",
-    "heading": "10 outils. Toutes les opérations e-mail dont votre agent a besoin.",
+    "heading": "11 outils. Toutes les opérations e-mail dont votre agent a besoin.",
     "sub": "<b>Cibler une boîte est facultatif.</b> Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement — pas besoin d’<code>inbox_id</code>. Avec plusieurs boîtes, passez <code>inbox_id</code> (l'UUID renvoyé par <code>inbox_list</code>) ou <code>inbox</code> (l'adresse e-mail de la boîte). La plupart des outils prennent un argument <code>action</code> qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.",
     "noParams": "Aucun paramètre. Appelez avec un objet d'arguments vide :",
     "showExample": "Afficher l'exemple de requête et réponse",
@@ -259,6 +260,8 @@
         "inbox_id": "UUID de la boîte qui contient les brouillons. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "draft_id": "ID de brouillon du fournisseur (action 'update' ou 'send'), issu de l'action create, update ou list la plus récente. Sur les boîtes IMAP, il change après chaque mise à jour, utilisez donc toujours le plus récent.",
+        "message_id": "ID du message source pour l'action 'reply', issu d'une action list, read ou search précédente.",
+        "reply_all": "Pour l'action 'reply' : false par défaut, la réponse n'allant qu'à l'expéditeur. Mettez true pour inclure les destinataires To et Cc d'origine.",
         "subject": "Objet du brouillon (action 'create'/'update').",
         "body": "Corps en texte brut du brouillon (action 'create'/'update').",
         "to": "Adresses des destinataires (action 'create'/'update'). Par défaut [].",
@@ -301,6 +304,22 @@
         "limit": "Nombre maximal de contacts à renvoyer. Par défaut 20, max 50."
       }
     },
+    "automation": {
+      "title": "Automatisations",
+      "desc": "Créez et gérez des règles de tri planifiées et sans surveillance. Une règle est une recherche enregistrée plus une action fixe, réévaluée à une cadence fixe et sans aucun modèle dans la boucle : le courrier est mis en correspondance, jamais interprété. Définissez action : 'create' (name, filter, rule_action et interval_minutes ; une règle est toujours créée désactivée), 'list', 'get', 'update', 'enable', 'disable', 'delete' (l'historique des exécutions est conservé), 'runs' (compteurs des exécutions récentes) ou 'preview' (une simulation qui indique ce que le filtre trouve à l'instant et n'applique rien). Les actions de règle disponibles sont move, label (Gmail uniquement), mark_read, forward et draft_reply. Supprimer du courrier n'est pas proposé à une automatisation. Un transfert est toujours retenu pour approbation humaine, quel que soit le réglage d'approbation de la boîte, et draft_reply se contente d'écrire un brouillon. Prévisualisez avant d'activer. Chaque action exige manage:automations.",
+      "params": {
+        "action": "Opération à effectuer : « create », « list », « get », « update », « enable », « disable », « delete », « runs » ou « preview ». Détermine quels autres arguments s'appliquent.",
+        "automation_id": "UUID de la règle visée, tel que renvoyé par 'create' ou 'list'. Obligatoire pour get, update, enable, disable, delete et runs. Facultatif pour preview : passez-le pour simuler une règle enregistrée plutôt qu'un filtre improvisé.",
+        "inbox_id": "UUID de la boîte surveillée par la règle ('create'), ou de la boîte à prévisualiser. Facultatif quand la clé ne couvre qu'une boîte ; sinon passez ce champ ou inbox.",
+        "inbox": "Adresse e-mail de la boîte, alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "name": "Nom lisible de la règle, de 1 à 80 caractères. Obligatoire pour 'create'.",
+        "filter": "La recherche enregistrée, avec les mêmes critères structurés que ceux acceptés par l'action 'search' d'email_read : from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before. Au moins un critère est exigé, car un filtre vide correspondrait à toute votre boîte. Les requêtes natives du fournisseur en texte brut ne sont pas acceptées ici : une règle se réexécute sans surveillance pendant des mois, et une chaîne brute est un dialecte que rien ne valide.",
+        "rule_action": "L'unique action fixe appliquée à chaque correspondance, sous forme d'objet typé dont le type vaut move (plus folder), label (plus label, Gmail uniquement), mark_read, forward (plus to, et un note facultatif) ou draft_reply (plus template). Il s'appelle rule_action parce que action sélectionne déjà l'opération. Aucune action de suppression n'existe, et une telle demande est refusée et non ignorée. Un transfert est toujours retenu pour approbation, et draft_reply écrit seulement un brouillon. Un modèle ne substitue que '{{sender_name}}', '{{sender_email}}', '{{subject}}' et '{{date}}', chacun échappé en HTML ; tout le reste est du texte littéral et le corps des messages n'est jamais interpolé.",
+        "interval_minutes": "Minutes entre deux exécutions, dans l'échelle fixe 15, 30, 60, 180, 360, 720 ou 1440. Obligatoire pour 'create'. Une échelle plutôt qu'un entier libre, pour qu'une règle d'une minute ne pousse pas le fournisseur à limiter le débit.",
+        "max_messages_per_run": "Nombre de messages correspondants qu'une exécution peut traiter : de 1 à 200, 25 par défaut. C'est le rayon d'impact : il plafonne la quantité de courrier qu'un filtre mal réglé peut toucher avant qu'une personne ne lise le journal d'exécution.",
+        "limit": "Pour l'action 'runs' : nombre d'exécutions à renvoyer, de la plus récente à la plus ancienne. Par défaut 20, maximum 100."
+      }
+    },
     "signature": {
       "title": "Signature",
       "desc": "Lire ou configurer la signature e-mail de la boîte, qui est ajoutée côté serveur à chaque envoi, réponse, transfert, brouillon et message programmé. Définissez action : 'get' (renvoie le texte et le HTML de la signature actuelle, si elle est activée, le mode de réponse/transfert et sa source — 'manual', 'gmail_import' ou null) ou 'set' (écrire signature_text et/ou signature_html, et éventuellement signature_enabled et signature_reply_mode). Les signatures prennent en charge le HTML enrichi : gras, italique, titres, listes, couleurs, alignement, liens et images/logos hébergés référencés par des URL https, de sorte qu'un agent peut définir une signature entièrement mise en forme en passant signature_html. Le même éditeur enrichi est disponible dans le tableau de bord. Définir une signature marque sa source comme 'manual', ce qui remplace définitivement l'import automatique de Gmail pour cette boîte. 'get' nécessite read:email ; 'set' nécessite send:email.",
@@ -312,6 +331,50 @@
         "signature_html": "Corps de signature en HTML enrichi facultatif (action 'set'). Accepte la mise en forme (gras, italique, souligné, titres, listes, couleurs, alignement, liens) et des images hébergées via des balises <img> dont le src est une URL https (pas de base64 ni de CID) ; il est nettoyé à l'enregistrement. Omettez-le pour ne rien changer ; passez une chaîne vide pour l'effacer.",
         "signature_enabled": "Indique si la signature est ajoutée au courrier sortant (action 'set'). Par défaut true ; mettez false pour cesser de l'ajouter sans supprimer le texte.",
         "signature_reply_mode": "Quand inclure la signature dans les réponses et les transferts (action 'set') : \"always\" (chaque réponse/transfert), \"first_only\" (par défaut — uniquement le premier message d'un fil, pour éviter la double signature) ou \"never\"."
+      }
+    }
+  },
+  "automationSafety": {
+    "eyebrow": "Modèle de sécurité des automatisations",
+    "heading": "Ce qu'une règle planifiée peut faire, et ne peut pas faire.",
+    "sub": "Une automatisation touche votre boîte selon un calendrier, sans personne pour regarder. Ce n'est pas la même catégorie de risque qu'un agent avec lequel vous discutez, aussi les garanties ci-dessous sont-elles appliquées par le serveur plutôt que confiées à la règle que vous écrivez.",
+    "deterministic": {
+      "heading": "Aucun modèle ne tourne sans surveillance.",
+      "body": "Une règle est une requête enregistrée plus une action fixe. À l'exécution, le serveur lance cette requête sur votre boîte et applique cette action aux correspondances. Rien ne lit votre courrier pour décider ensuite quoi en faire. Le contenu des e-mails est mis en correspondance, jamais interprété comme une instruction : l'injection de prompt est donc structurellement absente du chemin sans surveillance, et non simplement filtrée, notée ou atténuée. Il n'y a rien dans la boucle à qui un texte injecté puisse parler.",
+      "why": "Cela mérite d'être dit clairement, car la forme dangereuse dans cette catégorie est un agent qui lit du courrier entrant non fiable puis agit dessus sans aucun humain présent. Des incidents publics, comme EchoLeak et le serveur MCP Postmark porteur d'une porte dérobée, ont légitimement rendu les acheteurs méfiants envers exactement cela. En session interactive, un modèle lit bien votre courrier, ce qui est tout l'intérêt du produit, et là une personne est présente et le contenu est marqué comme donnée non fiable. Le chemin planifié est celui qui s'exécute seul, et il ne contient aucun modèle."
+    },
+    "items": {
+      "noDelete": {
+        "heading": "Une automatisation ne supprime jamais de courrier.",
+        "body": "La suppression n'est pas une action disponible, par conception. Déplacer, libeller, marquer comme lu, transférer et rédiger un brouillon de réponse forment l'ensemble complet. La suppression est la seule action qu'une règle défaillante rend irréversible : elle est donc exclue au niveau de la validation, où une action qui ne fait que nommer la suppression est refusée plutôt qu'ignorée en silence."
+      },
+      "forward": {
+        "heading": "Les transferts attendent toujours une personne.",
+        "body": "Un transfert issu d'une automatisation est placé dans la file d'approbation et ne quitte votre boîte qu'après validation par un membre de l'espace de travail, quel que soit le réglage d'approbation d'envoi de la boîte. Le nombre de destinataires est plafonné par règle. Une règle sans surveillance ne peut pas sortir du courrier de votre organisation toute seule."
+      },
+      "draftReply": {
+        "heading": "Un brouillon de réponse reste un brouillon.",
+        "body": "Une règle draft_reply écrit un brouillon non envoyé dans la conversation d'origine, et s'arrête là. Rien n'est envoyé sans surveillance, chez aucun fournisseur, sous aucune configuration."
+      },
+      "template": {
+        "heading": "Les modèles substituent quatre champs, et rien d'autre.",
+        "body": "Un modèle de réponse est stocké tel quel et n'est jamais évalué. Seuls '{{sender_name}}', '{{sender_email}}', '{{subject}}' et '{{date}}' sont substitués, chacun échappé en HTML. Le corps des messages n'est jamais interpolé et il n'existe aucune syntaxe d'expression à évaluer : rien de ce qui arrive dans votre boîte ne peut transformer un modèle en calcul."
+      },
+      "runLog": {
+        "heading": "Chaque exécution laisse une trace.",
+        "body": "Chaque exécution consigne ce que le filtre a trouvé, ce qui est arrivé à chaque message et ce qui a été mis en attente d'approbation, avec les compteurs de correspondances, traités, réussis, échoués et ignorés. Les actions réversibles conservent l'état nécessaire pour les annuler. L'historique survit à la règle à laquelle il appartient, car il est le compte rendu de ce qui a été fait à votre boîte. Consultez-le avec l'action 'runs' ou dans le tableau de bord."
+      },
+      "keyAuthority": {
+        "heading": "Une règle a l'autorité d'exactement une clé.",
+        "body": "Chaque règle s'exécute au nom de la clé d'API qui l'a créée. Elle ne peut jamais dépasser les portées ni l'accès aux boîtes dont cette clé dispose déjà, chacune de ses actions est comptabilisée, soumise aux limites de débit et écrite dans le journal d'audit exactement comme un appel interactif, et révoquer la clé arrête la règle."
+      },
+      "autoDisable": {
+        "heading": "L'échec répété la désactive.",
+        "body": "Après 5 exécutions en échec consécutives, la règle est désactivée automatiquement et le motif est consigné. Une règle pointée sur une boîte qui ne répond plus s'arrête, au lieu de réessayer toutes les 15 minutes indéfiniment."
+      },
+      "perRunCap": {
+        "heading": "Un rayon d'impact plafonné par exécution.",
+        "body": "Chaque règle porte un nombre maximal de messages qu'une exécution peut traiter, de 1 à 200 et 25 par défaut : un filtre plus large que prévu touche au plus ce nombre de messages avant que vous ne voyiez le journal. Une règle est en outre créée désactivée, et la prévisualisation est une simulation qui montre ce que le filtre trouve à l'instant sans rien appliquer."
       }
     }
   },
