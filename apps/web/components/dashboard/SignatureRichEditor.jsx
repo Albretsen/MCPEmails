@@ -94,13 +94,59 @@ function hasUnsupportedRichMarkup(html) {
   return /<table[\s>]/i.test(html || '');
 }
 
-/** Plain-text fallback for HTML-source mode, via a detached DOM node. */
+/**
+ * Block-level closing tags that become a line break in the plain-text half.
+ * Table cells are included because signature layouts are overwhelmingly
+ * table-based, and plain text has no columns: one cell per line is the only
+ * faithful rendering.
+ */
+const BLOCK_BOUNDARY = /<\/(?:p|div|tr|td|th|li|h[1-6]|blockquote|pre)>/gi;
+
+/**
+ * Plain-text fallback for HTML-source mode.
+ *
+ * Line breaks are injected at block boundaries BEFORE the markup is flattened.
+ * Reading `textContent` alone concatenates adjacent block elements with no
+ * separator, which collapsed every multi-line signature into a single run-on
+ * line ("Asgeir AlbretsenFounder · MCP Emailsmcpemails.com") and shipped that
+ * to `signature_text`, where it became the visible signature on any text-only
+ * message. The detached node is still used afterwards to decode entities.
+ */
 function htmlToText(html) {
   if (!html) return '';
-  if (typeof document === 'undefined') return html.replace(/<[^>]+>/g, '');
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  return div.textContent || '';
+  const withBreaks = html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(BLOCK_BOUNDARY, '\n');
+  const flattened =
+    typeof document === 'undefined'
+      ? withBreaks
+          .replace(/<[^>]+>/g, '')
+          .replace(/&nbsp;/gi, ' ')
+          .replace(/&amp;/gi, '&')
+          .replace(/&lt;/gi, '<')
+          .replace(/&gt;/gi, '>')
+          .replace(/&quot;/gi, '"')
+          .replace(/&#39;/gi, "'")
+      : (() => {
+          const div = document.createElement('div');
+          div.innerHTML = withBreaks;
+          return div.textContent || '';
+        })();
+  return normalizeSignatureText(flattened);
+}
+
+/**
+ * Collapse the whitespace left behind by block-boundary breaks: empty cells
+ * (e.g. the logo `<td>`) and nested block elements each contribute a newline,
+ * so runs of them are squeezed to at most one blank line.
+ */
+function normalizeSignatureText(text) {
+  return text
+    .replace(/\r\n?/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 const ToolbarButton = ({ active, onClick, disabled, title, children }) => (

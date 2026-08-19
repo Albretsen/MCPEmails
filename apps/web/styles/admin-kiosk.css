@@ -1,0 +1,400 @@
+/* admin-kiosk.css: the wall-mounted board at /admin/growth/kiosk.
+
+   Self-contained, like admin-growth.css. It loads only the shared design
+   tokens from colors_and_type.css / theme.css and owns everything else, so
+   nothing here can be broken by a change to the dashboard or marketing sheets.
+
+   THE ONE RULE: the board is exactly one screen tall and never scrolls to be
+   read. Everything above `.kiosk-more` fits in 100dvh at any sensible aspect
+   ratio, which is why every size below is a `clamp()` between a floor in
+   pixels and a fraction of the viewport. No media queries: the target panel is
+   a 1920x1200 touchscreen driven at a 2x device scale factor (a ~960x600
+   logical viewport), but the same sheet has to look deliberate when an
+   operator opens the URL on a laptop, and a breakpoint set for one of those
+   would be wrong for the other.
+
+   Scrolling is still allowed, and `.kiosk-more` below the fold is the reason:
+   the panel is a touchscreen, so someone who wants the retention curve can
+   swipe up and get it. What must never happen is scrolling being *required*
+   to see the headline numbers. */
+
+.kiosk {
+  --kiosk-accent:  var(--cobalt-300);
+  --kiosk-good:    var(--mint-500);
+  --kiosk-warn:    var(--amber-500);
+  --kiosk-bad:     var(--red-500);
+  --kiosk-gap:     clamp(6px, 1.1dvh, 14px);
+  --kiosk-radius:  clamp(8px, 1.4dvh, 16px);
+
+  /* Painted rather than inherited. The kiosk pins itself to the dark theme
+     regardless of the visitor's stored preference (see the page component for
+     why), so it cannot rely on the page background having followed. */
+  background:
+    radial-gradient(120% 90% at 50% -20%, rgba(37, 71, 229, 0.22), transparent 62%),
+    var(--bg-page);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+
+  /* A wall display has no pointer and nothing on the board is selectable
+     text, so a stray touch-drag that highlights a number is pure noise. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ---------- The one-screen board ---------- */
+
+.kiosk-board {
+  height: 100dvh;
+  display: grid;
+  /* header, headline numbers, the two big panels, the supporting strip */
+  grid-template-rows: auto minmax(0, 1.05fr) minmax(0, 1.75fr) minmax(0, 1.15fr);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--kiosk-gap);
+  padding: var(--kiosk-gap) clamp(10px, 1.6vw, 26px);
+  box-sizing: border-box;
+}
+
+/* Direct children default to a quarter row so a tile that forgets to declare
+   a span still lands somewhere sane instead of stretching the grid. */
+.kiosk-board > * { grid-column: span 3; min-height: 0; min-width: 0; }
+
+/* ---------- Header ---------- */
+
+.kiosk-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 clamp(2px, 0.4vw, 8px) calc(var(--kiosk-gap) * 0.6);
+  border-bottom: 1px solid var(--border-1);
+}
+.kiosk-wordmark {
+  margin: 0;
+  font-size: clamp(15px, 2.5dvh, 26px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55em;
+}
+.kiosk-wordmark em {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.62em;
+  color: var(--fg-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.kiosk-head-right {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(8px, 1.4vw, 20px);
+  font-size: clamp(10px, 1.5dvh, 15px);
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+.kiosk-clock { font-variant-numeric: tabular-nums; color: var(--fg-1); font-weight: 600; }
+
+/* The live dot. Its animation is the only thing on an otherwise static board
+   that proves the browser has not silently frozen, which on an unattended
+   display is worth more than it looks. */
+.kiosk-live { display: inline-flex; align-items: center; gap: 0.5em; }
+.kiosk-live::before {
+  content: "";
+  width: 0.6em; height: 0.6em; border-radius: 50%;
+  background: var(--kiosk-good);
+  box-shadow: 0 0 0 0 rgba(31, 203, 139, 0.55);
+  animation: kiosk-pulse 2.4s ease-out infinite;
+}
+@keyframes kiosk-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(31, 203, 139, 0.5); }
+  70%  { box-shadow: 0 0 0 0.62em rgba(31, 203, 139, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(31, 203, 139, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-live::before { animation: none; }
+}
+
+/* ---------- Tiles ---------- */
+
+.kiosk-tile {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3px, 0.6dvh, 8px);
+  min-height: 0;
+  min-width: 0;
+  padding: clamp(7px, 1.3dvh, 16px) clamp(9px, 1vw, 18px);
+  border: 1px solid var(--border-1);
+  border-radius: var(--kiosk-radius);
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+.kiosk-tile.is-good  { border-color: color-mix(in srgb, var(--kiosk-good) 45%, var(--border-1)); }
+.kiosk-tile.is-warn  { border-color: color-mix(in srgb, var(--kiosk-warn) 50%, var(--border-1)); }
+.kiosk-tile.is-bad   { border-color: color-mix(in srgb, var(--kiosk-bad) 50%, var(--border-1)); }
+/* The milestone tile. Dashed because the number in it is a target, not an
+   achievement, and a solid frame would let it read as one at a glance. */
+.kiosk-tile.is-goal  { border-style: dashed; border-color: color-mix(in srgb, var(--kiosk-accent) 55%, var(--border-1)); }
+
+.kiosk-tile-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.kiosk-tile-head h2 {
+  margin: 0;
+  font-size: clamp(8.5px, 1.35dvh, 13px);
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kiosk-tile-aside {
+  font-size: clamp(8.5px, 1.3dvh, 12px);
+  color: var(--fg-4);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.kiosk-tile-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* ---------- Headline numbers ---------- */
+
+.kiosk-big { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.kiosk-big-row { display: flex; align-items: baseline; gap: 0.4em; flex-wrap: nowrap; }
+.kiosk-big-value {
+  font-size: clamp(26px, 5.6dvh, 62px);
+  font-weight: 680;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-1);
+}
+.kiosk-big-suffix { font-size: 0.42em; font-weight: 550; color: var(--fg-3); margin-left: 0.12em; letter-spacing: 0; }
+.kiosk-trend {
+  font-size: clamp(10px, 1.6dvh, 16px);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  padding: 0.1em 0.42em;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.kiosk-trend.is-good { color: var(--kiosk-good); background: color-mix(in srgb, var(--kiosk-good) 15%, transparent); }
+.kiosk-trend.is-bad  { color: var(--kiosk-bad);  background: color-mix(in srgb, var(--kiosk-bad) 15%, transparent); }
+.kiosk-trend.is-flat { color: var(--fg-4);       background: color-mix(in srgb, var(--fg-4) 14%, transparent); }
+
+.kiosk-big-caption {
+  margin: clamp(2px, 0.5dvh, 6px) 0 0;
+  font-size: clamp(9px, 1.45dvh, 14px);
+  line-height: 1.35;
+  color: var(--fg-3);
+}
+.kiosk-big-caption strong { color: var(--fg-2); font-weight: 600; }
+
+/* The trend area is the tile's slack: it takes whatever height is left after
+   the number and the caption, and disappears rather than pushing them out. */
+.kiosk-spark { margin-top: auto; width: 100%; flex: 1 1 0; min-height: 0; display: block; }
+
+/* ---------- Bar list ---------- */
+
+.kiosk-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: center; gap: clamp(3px, 0.7dvh, 9px); flex: 1; min-height: 0; }
+.kiosk-bars li { display: grid; grid-template-columns: minmax(0, 7.5em) 1fr auto; align-items: center; gap: clamp(5px, 0.6vw, 10px); }
+.kiosk-bar-name {
+  font-size: clamp(9px, 1.5dvh, 14px);
+  color: var(--fg-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kiosk-bar-track { height: clamp(6px, 1.1dvh, 12px); border-radius: 999px; background: var(--bg-sunken); overflow: hidden; }
+.kiosk-bar-fill { display: block; height: 100%; border-radius: 999px; }
+.kiosk-bar-count { font-size: clamp(9px, 1.5dvh, 14px); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--fg-1); }
+
+/* ---------- Funnel ---------- */
+
+.kiosk-funnel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(3px, 0.55dvh, 8px); flex: 1; min-height: 0; }
+.kiosk-funnel li {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 clamp(7px, 0.8vw, 13px);
+  border-radius: calc(var(--kiosk-radius) * 0.6);
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+.kiosk-funnel-fill {
+  position: absolute; inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--kiosk-accent) 34%, transparent);
+  border-radius: inherit;
+}
+.kiosk-funnel li.is-pending .kiosk-funnel-fill { background: color-mix(in srgb, var(--fg-4) 16%, transparent); }
+.kiosk-funnel-label, .kiosk-funnel-value { position: relative; }
+.kiosk-funnel-label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  min-width: 0;
+  font-size: clamp(9px, 1.5dvh, 14px);
+  color: var(--fg-2);
+  white-space: nowrap; overflow: hidden;
+}
+.kiosk-funnel li.is-pending .kiosk-funnel-label { color: var(--fg-4); }
+.kiosk-funnel-value { font-size: clamp(11px, 1.9dvh, 19px); font-weight: 680; font-variant-numeric: tabular-nums; }
+.kiosk-funnel li.is-pending .kiosk-funnel-value { color: var(--fg-4); }
+/* The note sits beside the label, and is the part that gives way when the
+   tile is narrow: the step's name and its number must always survive. */
+.kiosk-funnel-note {
+  font-style: normal;
+  font-size: clamp(8px, 1.2dvh, 11px);
+  /* One step brighter than the other muted text on the board. It sits on top
+     of the step's own fill rather than on the tile background, and at --fg-4
+     it disappeared into the bar it was explaining. */
+  color: var(--fg-3);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Gauge ---------- */
+
+.kiosk-gauge { display: flex; flex-direction: column; justify-content: center; gap: clamp(4px, 0.8dvh, 10px); flex: 1; min-height: 0; }
+.kiosk-gauge-row { display: flex; align-items: baseline; gap: 0.45em; }
+.kiosk-gauge-value { font-size: clamp(20px, 4dvh, 44px); font-weight: 680; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.kiosk-gauge-max { font-size: clamp(9px, 1.4dvh, 13px); color: var(--fg-3); }
+.kiosk-gauge-track { height: clamp(8px, 1.4dvh, 16px); border-radius: 999px; background: var(--bg-sunken); overflow: hidden; }
+.kiosk-gauge-fill { display: block; height: 100%; border-radius: 999px; background: var(--kiosk-good); }
+.kiosk-gauge-track.is-warn   .kiosk-gauge-fill { background: var(--kiosk-warn); }
+.kiosk-gauge-track.is-danger .kiosk-gauge-fill { background: var(--kiosk-bad); }
+
+/* ---------- Small fact rows ---------- */
+
+.kiosk-facts { display: flex; margin: 0; padding: 0; gap: clamp(8px, 1.2vw, 22px); flex-wrap: wrap; }
+.kiosk-facts div { display: flex; flex-direction: column; gap: 1px; }
+.kiosk-facts dt { font-size: clamp(8px, 1.2dvh, 11px); text-transform: uppercase; letter-spacing: 0.07em; color: var(--fg-4); }
+.kiosk-facts dd { margin: 0; font-size: clamp(11px, 1.8dvh, 18px); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--fg-1); }
+
+/* ---------- Charts ---------- */
+
+.kiosk-chart { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: clamp(3px, 0.6dvh, 8px); }
+.kiosk-chart-plot { flex: 1; min-height: 0; width: 100%; display: block; }
+.kiosk-legend { display: flex; gap: clamp(8px, 1.2vw, 18px); font-size: clamp(8.5px, 1.3dvh, 12px); color: var(--fg-3); flex-wrap: wrap; }
+.kiosk-legend span { display: inline-flex; align-items: center; gap: 0.42em; white-space: nowrap; }
+.kiosk-legend i { width: 0.72em; height: 0.72em; border-radius: 3px; display: inline-block; }
+
+.kiosk-empty { margin: auto 0; font-size: clamp(9px, 1.4dvh, 14px); color: var(--fg-4); }
+.kiosk-error { margin: auto 0; display: flex; flex-direction: column; gap: 3px; font-size: clamp(9px, 1.3dvh, 13px); }
+.kiosk-error strong { color: var(--kiosk-bad); }
+.kiosk-error span { color: var(--fg-4); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+
+/* ---------- Below the fold ---------- */
+
+/* Deliberately introduced by a hint rather than left to be discovered. On a
+   touchscreen with no scrollbar there is otherwise nothing to say that more
+   exists, and an operator will conclude the board is all there is. */
+.kiosk-scroll-hint {
+  grid-column: 1 / -1;
+  align-self: end;
+  justify-self: center;
+  font-size: clamp(8px, 1.15dvh, 11px);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  /* Quiet, but not so quiet that nobody ever finds the detail below. A
+     touchscreen with no scrollbar gives no other hint that more exists. */
+  color: var(--fg-3);
+  padding-bottom: 1px;
+}
+
+.kiosk-more {
+  padding: clamp(18px, 3dvh, 40px) clamp(10px, 1.6vw, 26px) clamp(28px, 5dvh, 60px);
+  border-top: 1px solid var(--border-1);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: clamp(10px, 1.6vh, 18px);
+  user-select: text;
+}
+.kiosk-more-head { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.kiosk-more-head h2 { margin: 0; font-size: clamp(15px, 2.4dvh, 24px); letter-spacing: -0.02em; }
+.kiosk-more-head p { margin: 0; font-size: 13px; color: var(--fg-3); }
+.kiosk-more-head a { color: var(--kiosk-accent); font-size: 13px; }
+/* Tiles below the fold are read up close, so they get a fixed comfortable
+   height instead of competing for a share of the viewport. */
+.kiosk-more .kiosk-tile { min-height: 190px; }
+.kiosk-more .kiosk-tile-head h2 { font-size: 11px; }
+.kiosk-more .kiosk-bar-name, .kiosk-more .kiosk-bar-count { font-size: 13px; }
+
+/* ---------- Table (below the fold only) ---------- */
+
+.kiosk-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.kiosk-table th, .kiosk-table td { text-align: left; padding: 5px 8px 5px 0; border-bottom: 1px solid var(--border-1); }
+.kiosk-table th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--fg-4); font-weight: 600; }
+.kiosk-table td { color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.kiosk-table td.is-num, .kiosk-table th.is-num { text-align: right; padding-right: 0; }
+.kiosk-table tr:last-child th, .kiosk-table tr:last-child td { border-bottom: 0; }
+
+/* ---------- Very short viewports ---------- */
+
+/* Below roughly 520 logical pixels of height the four-row board stops being
+   readable however much the clamps shrink: the supporting strip is the row
+   that carries the least, so it is the one that goes. It is still reachable
+   by scrolling, which is the whole point of keeping the board scrollable. */
+@media (max-height: 520px) {
+  .kiosk-board { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1.6fr); }
+  .kiosk-strip { display: none; }
+  .kiosk-scroll-hint { display: none; }
+}
+
+/* ---------- Grouped columns ---------- */
+
+.kiosk-cols { flex: 1; min-height: 0; display: flex; align-items: stretch; gap: clamp(3px, 0.5vw, 10px); }
+.kiosk-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.kiosk-col-bars {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(1px, 0.2vw, 4px);
+  /* The lane the bars stand in, so an empty week still reads as a slot that
+     could have been filled rather than as a gap in the chart. */
+  border-bottom: 1px solid var(--border-1);
+  padding-bottom: 1px;
+}
+.kiosk-col-bar {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  max-width: clamp(10px, 1.6vw, 26px);
+  border-radius: 3px 3px 0 0;
+  align-self: flex-end;
+}
+/* The count rides above its own bar. Absolutely positioned so it cannot add
+   height and push the bar below the plot floor. */
+.kiosk-col-bar b {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  font-size: clamp(7px, 1.05dvh, 11px);
+  font-weight: 600;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+.kiosk-col-label {
+  text-align: center;
+  font-size: clamp(7px, 1.1dvh, 11px);
+  color: var(--fg-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Skeleton ---------- */
+
+/* Only ever seen for the fraction of a second before the first render lands,
+   and only on a cold cache. It exists to hold the grid at the right shape, so
+   it is a tinted frame and nothing else: a shimmer animation on a wall display
+   is movement that means nothing. */
+.kiosk-skeleton { background: color-mix(in srgb, var(--bg-surface) 70%, transparent); }
