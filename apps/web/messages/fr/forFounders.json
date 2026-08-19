@@ -48,8 +48,8 @@
   },
   "does": {
     "eyebrow": "Ce qu'il fait vraiment",
-    "title": "Une vraie boîte de réception, pas un simple aperçu en lecture seule",
-    "sub": "Neuf outils orientés action que votre agent peut utiliser de bout en bout.",
+    "title": "Une vraie boîte de réception où votre agent peut travailler",
+    "sub": "Dix outils orientés action que votre agent peut utiliser de bout en bout.",
     "items": {
       "read": { "h": "Lire et chercher", "p": "Listez, lisez et cherchez à travers les dossiers et chaque boîte connectée, récupérés en direct." },
       "send": { "h": "Envoyer et répondre", "p": "Envoyez, répondez et transférez directement. L'agent termine l'e-mail, pas seulement un brouillon." },

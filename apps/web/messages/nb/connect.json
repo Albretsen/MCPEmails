@@ -26,12 +26,12 @@
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",
       "title": "En Gmail-innboks agenten faktisk kan bruke",
-      "sub": "Ni handlingsbaserte MCP-verktøy — ikke bare utkast. Agenten fullfører jobben inne i Gmail.",
+      "sub": "Ti handlingsbaserte MCP-verktøy, fra lesing og søk til sending, planlegging og arkivering. Agenten fullfører jobben inne i Gmail.",
       "ctaPrimary": "Koble til Gmail gratis"
     },
     "capabilities": [
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av etiketter — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Gmail, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Gmail. Sending styres av tilgangsområdene på API-nøkkelen din." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
       { "tag": "Organiser", "h": "Merk, arkiver og slett", "p": "Hold innboksen ryddig — legg på etiketter, arkiver det som er håndtert, og slett på forespørsel." }
     ],
@@ -75,12 +75,12 @@
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",
       "title": "En Fastmail-innboks agenten faktisk kan bruke",
-      "sub": "Ni handlingsbaserte MCP-verktøy — ikke bare utkast. Agenten fullfører jobben inne i Fastmail.",
+      "sub": "Ti handlingsbaserte MCP-verktøy, fra lesing og søk til sending, planlegging og arkivering. Agenten fullfører jobben inne i Fastmail.",
       "ctaPrimary": "Koble til Fastmail gratis"
     },
     "capabilities": [
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Fastmail, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Fastmail. Sending styres av tilgangsområdene på API-nøkkelen din." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
       { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],
@@ -125,12 +125,12 @@
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",
       "title": "En iCloud-innboks agenten faktisk kan bruke",
-      "sub": "Ni handlingsbaserte MCP-verktøy — ikke bare utkast. Agenten fullfører jobben inne i iCloud Mail.",
+      "sub": "Ti handlingsbaserte MCP-verktøy, fra lesing og søk til sending, planlegging og arkivering. Agenten fullfører jobben inne i iCloud Mail.",
       "ctaPrimary": "Koble til iCloud gratis"
     },
     "capabilities": [
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper — finn en kvittering, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra iCloud, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra iCloud. Sending styres av tilgangsområdene på API-nøkkelen din." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
       { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],
@@ -175,12 +175,12 @@
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",
       "title": "En Yahoo-innboks agenten faktisk kan bruke",
-      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Yahoo Mail.",
+      "sub": "Ti handlingsbaserte MCP-verktøy, fra lesing og søk til sending, planlegging og arkivering. Agenten fullfører jobben inne i Yahoo Mail.",
       "ctaPrimary": "Koble til Yahoo gratis"
     },
     "capabilities": [
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yahoo, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yahoo. Sending styres av tilgangsområdene på API-nøkkelen din." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
       { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],
@@ -225,12 +225,12 @@
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",
       "title": "En Zoho-innboks agenten faktisk kan bruke",
-      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Zoho Mail.",
+      "sub": "Ti handlingsbaserte MCP-verktøy, fra lesing og søk til sending, planlegging og arkivering. Agenten fullfører jobben inne i Zoho Mail.",
       "ctaPrimary": "Koble til Zoho gratis"
     },
     "capabilities": [
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Zoho, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Zoho. Sending styres av tilgangsområdene på API-nøkkelen din." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
       { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],
@@ -275,12 +275,12 @@
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",
       "title": "En Yandex-innboks agenten faktisk kan bruke",
-      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Yandex Mail.",
+      "sub": "Ti handlingsbaserte MCP-verktøy, fra lesing og søk til sending, planlegging og arkivering. Agenten fullfører jobben inne i Yandex Mail.",
       "ctaPrimary": "Koble til Yandex gratis"
     },
     "capabilities": [
       { "tag": "Les", "h": "Les og søk i e-post", "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender." },
-      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yandex, ikke som et utkast du fullfører for hånd." },
+      { "tag": "Send", "h": "Send, svar og videresend", "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Yandex. Sending styres av tilgangsområdene på API-nøkkelen din." },
       { "tag": "Planlegg", "h": "Planlegg til senere", "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan." },
       { "tag": "Organiser", "h": "Flytt, kopier, flagg, arkiver, slett", "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel." }
     ],

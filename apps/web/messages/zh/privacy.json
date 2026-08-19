@@ -136,7 +136,7 @@
     "thLocation": "位置",
     "supabasePurpose": "数据库、认证、edge functions",
     "supabaseData": "账户数据、工作区配置、审计日志",
-    "supabaseLocation": "欧盟（法兰克福）或美国（弗吉尼亚）；由你在注册时选择",
+    "supabaseLocation": "欧盟（斯德哥尔摩）",
     "vercelPurpose": "网站托管、CDN",
     "vercelData": "HTTP 请求元数据；无邮件内容",
     "vercelLocation": "全球边缘（距用户最近的区域）",
@@ -157,7 +157,7 @@
     "title": "6. 国际数据传输",
     "p1": "MCPEmails 在挪威运营，受欧洲经济区（EEA）数据保护框架的约束。如果你从 EEA 之外访问服务，你的数据可能会被传输至 EEA 内的国家并在那里处理。",
     "p2": "我们的基础设施子处理者（Supabase、Vercel）依据欧盟委员会批准的标准合同条款（SCC）运营，用于向第三国进行数据传输。对于 Stripe，处理活动受其欧盟-美国数据隐私框架认证的覆盖。",
-    "p3": "企业客户可以选择将所有账户和配置数据专门存储在位于欧盟的基础设施（法兰克福区域）中，无需额外付费。"
+    "p3": "账户和配置数据存储在位于欧盟的基础设施上，区域为斯德哥尔摩。"
   },
   "yourRights": {
     "title": "7. 你的权利",
@@ -233,8 +233,8 @@
   },
   "cta": {
     "title": "对你的数据有疑问？",
-    "sub": "我们的隐私团队随时为你提供帮助。给我们发邮件，我们将在 30 天内回复。",
-    "contactBtn": "联系隐私团队",
+    "sub": "发邮件至 privacy@mcpemails.com，我们将在 30 天内回复。",
+    "contactBtn": "发邮件至 privacy@",
     "termsBtn": "阅读我们的条款"
   }
 }

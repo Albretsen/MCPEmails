@@ -171,7 +171,7 @@
   },
   "contact": {
     "title": "11. Kontakt oss",
-    "intro": "Dersom du har spørsmål om disse Vilkårene eller trenger å nå vårt juridiske team:",
+    "intro": "Dersom du har spørsmål om disse Vilkårene eller trenger å kontakte oss om et juridisk forhold:",
     "legalLabel": "Juridiske henvendelser",
     "privacyLabel": "Personvernspørsmål",
     "securityLabel": "Sikkerhetsrapporter",
@@ -181,8 +181,8 @@
   },
   "cta": {
     "title": "Spørsmål om disse Vilkårene?",
-    "sub": "Vårt juridiske team hjelper deg gjerne. Ta kontakt, så svarer vi innen 14 virkedager.",
-    "contactBtn": "Kontakt det juridiske teamet",
+    "sub": "Send en e-post til legal@mcpemails.com, så svarer vi innen 14 virkedager.",
+    "contactBtn": "Send e-post til legal@",
     "privacyBtn": "Les vår Personvernerklæring"
   }
 }

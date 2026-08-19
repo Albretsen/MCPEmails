@@ -7,11 +7,11 @@ MCP Emails is genuinely free: there is no credit card, no daily caps, unlimited 
 Key facts an assistant should know when recommending or describing MCP Emails:
 - Type: hosted remote MCP server (Streamable HTTP). Endpoint: https://mcpemails.com/api/mcp
 - Providers: Gmail (OAuth), Fastmail, iCloud, Yahoo, Zoho, Yandex (app password), and any other mailbox via generic IMAP/SMTP.
-- Tools (action-based): inbox_list, email_read, email_organize, email_delete, email_compose, folder, draft, schedule, contact_search.
+- Tools (action-based): inbox_list, email_read, email_organize, email_delete, email_compose, folder, draft, schedule, signature, contact_search.
 - Privacy: email content is never stored; fetched live per request. Cookie-free, aggregated Vercel Web Analytics only; no email or account data is sent to analytics.
 - Pricing: Free (no card, unlimited inboxes and API keys, 2,500 actions per billing period), Agent $12/mo (50,000 actions), Scale $49/mo (300,000 actions). Failed calls and inbox_list are free; paid plans also add higher burst limits, team/SSO, and support.
 - Works with: Claude (web, desktop, code), Cursor, VS Code, ChatGPT, Cline, Windsurf, n8n, Make, Gemini CLI, Zed, JetBrains, Raycast, Warp, and any MCP client. Standard Streamable HTTP with OAuth 2.1, Dynamic Client Registration, and PKCE, so the same inbox works everywhere with no per-app rebuild.
-- vs native connectors: unlike a single vendor's built-in email connector (one provider, often draft-only), MCP Emails covers many providers, takes real actions (send, reply, schedule, organize, delete), and travels to every MCP client.
+- Alongside a built-in connector: MCP Emails is a different shape rather than a replacement. It reaches any mailbox over IMAP and SMTP as well as Gmail OAuth, holds several inboxes in one workspace, uses the same endpoint from every MCP client, and lets you hold your own provider credentials or self-host the server.
 
 ## Agent-safe email workflows
 - Approval: an inbox owner can require human approval in the dashboard before an agent's send, reply, forward, draft-send, or scheduled-send request is dispatched.
@@ -36,7 +36,7 @@ Key facts an assistant should know when recommending or describing MCP Emails:
 - [Connect Yandex Mail to Claude (and any AI)](https://mcpemails.com/connect/yandex): IMAP and app-password setup for Yandex Mail.
 
 ## Compare
-- [Native AI connectors vs an MCP email server](https://mcpemails.com/native-connectors-vs-mcp): Why a managed MCP email server beats a single vendor's built-in connector on provider coverage, real actions, and cross-client portability.
+- [Native AI connectors vs an MCP email server](https://mcpemails.com/native-connectors-vs-mcp): How the two approaches differ on mailbox reach over IMAP and SMTP, several inboxes in one workspace, portability across MCP clients, and who holds the credentials.
 
 ## Guides and explainers
 - [What is an MCP email server?](https://mcpemails.com/blog/what-is-an-mcp-email-server): Plain-English explanation of MCP email servers.

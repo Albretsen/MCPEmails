@@ -1,82 +1,113 @@
 {
   "meta": {
-    "title": "Connecteurs natifs vs e-mail MCP",
-    "description": "Pourquoi un serveur d'e-mail MCP géré surpasse les connecteurs natifs des IA : plus de fournisseurs, de vraies actions d'envoi, de planification et d'organisation, et une seule configuration valable sur tous les clients MCP."
+    "title": "Connecteurs d'e-mail IA vs serveur MCP : en quoi les deux approches diffèrent",
+    "description": "Deux façons de donner votre boîte mail à un assistant IA : un connecteur intégré à un assistant, ou un serveur d'e-mail MCP que vous connectez vous-même. En quoi ils diffèrent sur la portée des boîtes, les boîtes multiples, la portabilité et qui détient les identifiants."
   },
   "hero": {
     "eyebrow": "Connecteurs natifs vs MCP",
-    "titleLine1": "Les connecteurs IA intégrés s'arrêtent",
-    "titleLine2": "là où commence votre boîte mail",
-    "lead": "Les connecteurs d'e-mail natifs des IA couvrent un ou deux fournisseurs et se contentent le plus souvent de créer des brouillons. Un serveur d'e-mail MCP géré connecte n'importe quelle boîte, effectue de vraies actions et vous suit sur tous les clients IA.",
+    "titleLine1": "Deux façons de donner votre boîte",
+    "titleLine2": "mail à un assistant IA",
+    "lead": "Un connecteur intégré à un assistant est le chemin le plus court quand il couvre votre fournisseur de messagerie. Un serveur d'e-mail MCP est un service distinct que vous connectez vous-même : il atteint n'importe quelle boîte qui parle IMAP et SMTP, en gère plusieurs à la fois et fonctionne dans tous les clients MCP. Voici, structurellement, en quoi les deux approches diffèrent.",
     "ctaPrimary": "Connecter une boîte gratuitement",
     "ctaSecondary": "Lire la documentation"
   },
   "axes": {
-    "eyebrow": "Trois différences honnêtes",
-    "title": "Là où un serveur MCP géré l'emporte",
-    "sub": "Sans détour. Voici les écarts concrets entre un connecteur intégré d'un seul fournisseur et un serveur d'e-mail MCP.",
+    "eyebrow": "Quatre différences structurelles",
+    "title": "Là où les deux approches divergent",
+    "sub": "Ce n'est pas un tableau de scores de fonctionnalités. Ces différences découlent de la façon dont chaque approche est construite, elles tiennent donc quelles que soient les capacités livrées par tel ou tel éditeur.",
     "items": {
       "coverage": {
-        "tag": "Couverture",
-        "h": "Chaque boîte, pas seulement Gmail",
-        "p": "Les connecteurs intégrés n'atteignent en général qu'une seule boîte — Gmail, parfois Outlook. Ils ne peuvent pas toucher <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via OAuth, le reste via un mot de passe d'application ou simplement IMAP."
+        "tag": "Portée des boîtes",
+        "h": "Toute boîte qui parle IMAP",
+        "p": "Un connecteur intégré atteint les fournisseurs de messagerie que son éditeur a intégrés. <b>IMAP et SMTP</b> sont des protocoles ouverts que votre boîte parle déjà, quel que soit son hébergeur, si bien qu'une seule connexion couvre <b>Fastmail, iCloud, Yahoo, Zoho, Yandex, Migadu</b>, un serveur géré par votre entreprise ou un serveur que vous hébergez vous-même. Gmail se connecte via OAuth."
       },
-      "actions": {
-        "tag": "Vraies actions",
-        "h": "Envoyer et planifier, pas seulement des brouillons",
-        "p": "Beaucoup de connecteurs natifs s'arrêtent à la <b>création d'un brouillon</b> que vous devez encore ouvrir et envoyer. Nos neuf outils basés sur des actions <b>envoient, répondent, transfèrent, planifient, déplacent, copient, marquent, archivent et suppriment</b> directement — l'agent termine le travail dans la boîte."
+      "inboxes": {
+        "tag": "Plusieurs boîtes",
+        "h": "Un espace de travail, pas un seul compte connecté",
+        "p": "Un connecteur intégré suit le compte avec lequel vous vous êtes connecté : l'assistant ne voit qu'une seule identité. Ici, une boîte est une ressource au sein d'un espace de travail. Un même agent peut lire votre adresse de support, répondre depuis la vôtre et classer un message dans une boîte partagée au cours d'une seule conversation, et une équipe peut partager les mêmes boîtes."
       },
       "portable": {
         "tag": "Portable",
-        "h": "Une config, toutes les IA",
-        "p": "Le connecteur intégré d'un fournisseur ne fonctionne que dans l'app de ce fournisseur. Notre serveur parle le MCP streamable-http standard avec <b>OAuth 2.1 / DCR / PKCE</b>, si bien que la même boîte fonctionne dans <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> et plus — sans tout refaire pour chaque app."
+        "h": "Une configuration, tous les clients MCP",
+        "p": "Un connecteur construit par un éditeur s'exécute dans l'app de cet éditeur, par définition. Il s'agit ici d'un serveur MCP streamable-http standard avec <b>OAuth 2.1, DCR et PKCE</b>, si bien que les mêmes boîtes fonctionnent dans <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> et tout autre client MCP. Changer d'assistant ne vous coûte rien."
+      },
+      "control": {
+        "tag": "Contrôle",
+        "h": "La connexion vous appartient",
+        "p": "Les identifiants sont chiffrés au repos dans votre propre espace de travail, limités par clé d'API, révocables en un clic, et chaque appel est inscrit dans un journal d'audit. Le code source est public : vous pouvez lire exactement ce qui s'exécute, ou <b>héberger vous-même l'ensemble du serveur</b>."
       }
     }
   },
   "table": {
     "eyebrow": "Côte à côte",
-    "title": "Connecteurs natifs vs MCP Emails",
-    "featureCol": "Capacité",
-    "nativeCol": "Connecteurs natifs",
+    "title": "Comment chaque approche est construite",
+    "featureCol": "Question",
+    "nativeCol": "Intégré à un assistant",
     "mcpCol": "MCP Emails",
     "rows": {
-      "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
-      "imap": "N'importe quelle boîte IMAP / SMTP",
-      "send": "Envoyer et répondre directement (pas que des brouillons)",
-      "schedule": "Planifier des envois pour plus tard",
-      "organize": "Déplacer, copier, marquer, archiver, supprimer",
-      "multiAi": "Fonctionne dans Claude, Cursor, ChatGPT, n8n…",
-      "oauth": "Gmail via OAuth",
-      "storage": "E-mails récupérés en direct, jamais stockés"
+      "who": {
+        "label": "Qui construit l'intégration",
+        "native": "L'éditeur de l'assistant, pour les fournisseurs de messagerie qu'il a intégrés",
+        "mcp": "Vous connectez la boîte vous-même"
+      },
+      "mailboxes": {
+        "label": "Quelles boîtes mail",
+        "native": "Les fournisseurs pris en charge par cet éditeur",
+        "mcp": "Gmail via OAuth, plus toute boîte IMAP et SMTP"
+      },
+      "clients": {
+        "label": "Quels clients IA",
+        "native": "L'app dans laquelle il est livré",
+        "mcp": "N'importe quel client MCP"
+      },
+      "count": {
+        "label": "Combien de boîtes à la fois",
+        "native": "Le compte avec lequel vous vous êtes connecté",
+        "mcp": "Autant que votre espace de travail en contient"
+      },
+      "creds": {
+        "label": "Où résident les identifiants",
+        "native": "Chez l'éditeur de l'assistant",
+        "mcp": "Chiffrés dans votre espace de travail, révocables par clé"
+      },
+      "selfhost": {
+        "label": "Pouvez-vous l'exécuter vous-même",
+        "native": "Non",
+        "mcp": "Oui, hébergez-le depuis le code source"
+      }
     },
-    "footnote": "Les capacités des connecteurs natifs des IA varient selon le fournisseur ; les écarts ci-dessus reflètent le schéma courant d'un seul fournisseur limité aux brouillons."
+    "footnote": "Les deux approches continuent d'évoluer. Les différences ci-dessus découlent de la façon dont chacune est construite, et non d'une version particulière."
   },
   "ctaBand": {
     "title": "Offrez une vraie boîte mail à votre IA",
-    "sub": "Connectez n'importe quelle boîte en quelques minutes — boîtes illimitées et 2 500 actions par période de facturation sur le plan gratuit, sans carte.",
+    "sub": "Connectez n'importe quelle boîte en quelques minutes, avec des boîtes illimitées et 2 500 actions par période de facturation sur le plan gratuit, sans carte.",
     "ctaPrimary": "Connecter une boîte gratuitement",
     "ctaSecondary": "Lire la documentation"
   },
   "faq": {
     "eyebrow": "Questions fréquentes",
     "title": "Connecteurs natifs vs MCP, on répond",
-    "sub": "Les objections que l'on entend avant de quitter un connecteur intégré.",
+    "sub": "Les questions que l'on se pose au moment de choisir entre les deux.",
     "items": [
       {
-        "q": "Claude ou ChatGPT ne peuvent-ils pas déjà lire mon Gmail avec un connecteur intégré ?",
-        "a": "Parfois, pour un seul fournisseur et souvent en lecture seule ou en brouillon seulement. mcpemails connecte Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et n'importe quelle boîte IMAP, et effectue de vraies actions : envoyer, répondre, transférer, planifier, déplacer, copier, marquer, archiver et supprimer. La même boîte fonctionne ensuite dans tous les clients MCP, pas seulement dans l'app d'un seul fournisseur."
+        "q": "Mon assistant peut-il déjà atteindre mes e-mails sans cela ?",
+        "a": "Si votre assistant propose un connecteur pour votre fournisseur de messagerie et qu'il fait ce dont vous avez besoin, utilisez-le. C'est le chemin le plus court. Ceci existe pour les boîtes qu'un connecteur intégré n'atteint pas, pour travailler sur plusieurs boîtes à la fois, et pour garder une seule configuration qui vous suit d'un client IA au suivant."
       },
       {
-        "q": "Quelles boîtes les connecteurs intégrés laissent-ils de côté en général ?",
-        "a": "La plupart des connecteurs natifs atteignent Gmail et parfois Outlook. Ils ne peuvent généralement pas toucher Fastmail, iCloud, Yahoo, Zoho, Yandex ni un serveur IMAP/SMTP auto-hébergé. mcpemails les connecte tous."
+        "q": "Quelles boîtes mail cela atteint-il ?",
+        "a": "Gmail via OAuth, et toute boîte qui parle IMAP et SMTP. Cela inclut Fastmail, iCloud, Yahoo, Zoho, Yandex, Migadu, une boîte gérée par votre entreprise et une boîte que vous hébergez vous-même. Vous la connectez avec un mot de passe d'application ou des identifiants IMAP ordinaires."
       },
       {
-        "q": "Les connecteurs natifs envoient-ils vraiment les e-mails, ou se contentent-ils de les rédiger ?",
-        "a": "Beaucoup s'arrêtent à la création d'un brouillon que vous devez encore ouvrir et envoyer vous-même. mcpemails envoie, répond, transfère et planifie directement, si bien que l'agent termine le travail dans votre boîte."
+        "q": "Est-ce que cela envoie, ou seulement rédige des brouillons ?",
+        "a": "Cela envoie, répond, transfère, planifie pour plus tard, déplace, copie, marque, archive et supprime. Vous décidez ce que chaque clé d'API a le droit de faire, vous pouvez donc commencer en lecture seule et élargir les autorisations une fois la configuration éprouvée."
+      },
+      {
+        "q": "Puis-je connecter plusieurs boîtes ?",
+        "a": "Oui, autant que vous voulez. Les boîtes appartiennent à un espace de travail plutôt qu'à une seule connexion, si bien qu'un même agent peut travailler sur plusieurs d'entre elles dans la même conversation, et les membres d'un espace de travail peuvent les partager."
       },
       {
         "q": "Si je configure ceci pour Claude, est-ce que ça marche aussi dans Cursor ou ChatGPT ?",
-        "a": "Oui. mcpemails est un serveur MCP streamable-http standard avec OAuth 2.1, DCR et PKCE, donc une seule configuration fonctionne dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et n'importe quel client MCP. Le connecteur intégré d'un fournisseur ne fonctionne que dans l'app de ce fournisseur."
+        "a": "Oui. Il s'agit d'un serveur MCP streamable-http standard avec OAuth 2.1, DCR et PKCE, donc une seule configuration fonctionne dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et n'importe quel client MCP. Un connecteur intégré à un assistant s'exécute à l'intérieur de cet assistant."
       },
       {
         "q": "Est-ce confidentiel si un tiers connecte ma boîte mail ?",

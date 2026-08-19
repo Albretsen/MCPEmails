@@ -111,7 +111,7 @@
   "tools": {
     "eyebrow": "Référence des outils",
     "heading": "10 outils. Toutes les opérations e-mail dont votre agent a besoin.",
-    "sub": "<b>Cibler une boîte est facultatif.</b> Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement — pas besoin d’<code>inbox_id</code>. Avec plusieurs boîtes, passez <code>inbox_id</code> (l'UUID renvoyé par <code>inbox_list</code>) ou <code>inbox</code> (l'adresse e-mail de la boîte). La plupart des outils prennent un argument <code>action</code> qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.",
+    "sub": "<b>Cibler une boîte est facultatif.</b> Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement, pas besoin d’<code>inbox_id</code>. Avec plusieurs boîtes, passez <code>inbox_id</code> (l'UUID renvoyé par <code>inbox_list</code>) ou <code>inbox</code> (l'adresse e-mail de la boîte). La plupart des outils prennent un argument <code>action</code> qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes. Une clé portant des portées d'envoi ou de suppression liste aussi quelques outils auxiliaires en plus de ces dix : <code>approval_review</code>, <code>approval_decide</code>, <code>approval_update</code> et <code>approval_schedule</code> agissent sur un message retenu pour approbation humaine, tandis que <code>bulk_execute</code> et <code>bulk_cancel</code> exécutent ou annulent une suppression ou un déplacement en masse prévisualisé au préalable. Ils sont destinés à la carte de révision du client plutôt qu'au sélecteur d'outils du modèle, si bien qu'un client peut les afficher même s'ils ne font pas partie de la surface e-mail documentée.",
     "noParams": "Aucun paramètre. Appelez avec un objet d'arguments vide :",
     "showExample": "Afficher l'exemple de requête et réponse",
     "hideExample": "Masquer l'exemple de requête et réponse",
@@ -259,6 +259,8 @@
         "inbox_id": "UUID de la boîte qui contient les brouillons. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "draft_id": "ID de brouillon du fournisseur (action 'update' ou 'send'), issu de l'action create, update ou list la plus récente. Sur les boîtes IMAP, il change après chaque mise à jour, utilisez donc toujours le plus récent.",
+        "message_id": "ID du message source pour l'action 'reply', issu d'une action list, read ou search précédente.",
+        "reply_all": "Pour l'action 'reply' : false par défaut, ne répondant qu'à l'expéditeur. Mettez true pour inclure les destinataires To et Cc d'origine.",
         "subject": "Objet du brouillon (action 'create'/'update').",
         "body": "Corps en texte brut du brouillon (action 'create'/'update').",
         "to": "Adresses des destinataires (action 'create'/'update'). Par défaut [].",
@@ -398,19 +400,19 @@
     "hero": {
       "eyebrow": "Fournisseurs pris en charge",
       "heading": "Ce qui fonctionne, par fournisseur.",
-      "lead": "MCPEmails connecte Gmail, Fastmail et toute boîte IMAP (iCloud, Yahoo, Zoho, Yandex, générique). Tous les fournisseurs n'exposent pas les mêmes API — ce tableau montre exactement ce que chacun prend en charge aujourd'hui.",
+      "lead": "MCPEmails connecte Gmail, Fastmail et toute boîte IMAP (iCloud, Yahoo, Zoho, Yandex, générique). Tous les fournisseurs n'exposent pas les mêmes API, ce tableau montre donc exactement ce que chacun prend en charge.",
       "ctaConnect": "Connecter une boîte",
       "ctaBack": "Retour aux docs"
     },
     "legend": {
       "supported": "Pris en charge",
       "notSupported": "Non pris en charge",
-      "planned": "Prévu (pas encore livré)",
+      "planned": "Non disponible",
       "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex et IMAP générique</b> se connectent tous via le même transport IMAP/SMTP (Fastmail et iCloud utilisent un mot de passe spécifique à l'application) et partagent un ensemble de fonctionnalités identique, y compris la syntaxe de recherche IMAP. Les colonnes sont affichées séparément pour plus de clarté."
     },
     "ariaSupported": "Pris en charge",
     "ariaNotSupported": "Non pris en charge",
-    "plannedBadge": "prévu",
+    "plannedBadge": "n/d",
     "table": {
       "feature": "Fonctionnalité"
     },

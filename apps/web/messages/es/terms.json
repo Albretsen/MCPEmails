@@ -171,7 +171,7 @@
   },
   "contact": {
     "title": "11. Contáctanos",
-    "intro": "Si tienes preguntas sobre estos Términos o necesitas contactar a nuestro equipo legal:",
+    "intro": "Si tienes preguntas sobre estos Términos o necesitas contactarnos por un asunto legal:",
     "legalLabel": "Consultas legales",
     "privacyLabel": "Preguntas de privacidad",
     "securityLabel": "Informes de seguridad",
@@ -181,8 +181,8 @@
   },
   "cta": {
     "title": "¿Preguntas sobre estos Términos?",
-    "sub": "Nuestro equipo legal estará encantado de ayudar. Contáctanos y responderemos en un plazo de 14 días hábiles.",
-    "contactBtn": "Contactar al equipo legal",
+    "sub": "Escríbenos a legal@mcpemails.com y responderemos en un plazo de 14 días hábiles.",
+    "contactBtn": "Escribir a legal@",
     "privacyBtn": "Lee nuestra Política de privacidad"
   }
 }

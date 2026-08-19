@@ -76,10 +76,12 @@ const TABLE_SECTIONS = [
       { name: 'inbox_list',     free: true, solo: true, pro: true },
       { name: 'email_read',     free: true, solo: true, pro: true },
       { name: 'email_organize', free: true, solo: true, pro: true },
+      { name: 'email_delete',   free: true, solo: true, pro: true },
       { name: 'email_compose',  free: true, solo: true, pro: true },
       { name: 'folder',         free: true, solo: true, pro: true },
       { name: 'draft',          free: true, solo: true, pro: true },
       { name: 'schedule',       free: true, solo: true, pro: true },
+      { name: 'signature',      free: true, solo: true, pro: true },
       { name: 'contact_search', free: true, solo: true, pro: true },
     ],
   },
@@ -98,7 +100,6 @@ const TABLE_SECTIONS = [
     rows: [
       { key: 'neverStored', free: true,  solo: true,  pro: true },
       { key: 'encrypted',   free: true,  solo: true,  pro: true },
-      { key: 'soc2',        free: false, solo: false, pro: true },
     ],
   },
   {

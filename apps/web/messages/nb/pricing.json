@@ -61,7 +61,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "Alle planer inkluderer: e-post hentes i sanntid, lagres aldri · legitimasjon kryptert i hvile · hosting i EU og USA",
+    "all": "Alle planer inkluderer: e-post hentes i sanntid, lagres aldri · legitimasjon kryptert i hvile · hosting i EU",
     "custom": "Trenger du noe tilpasset? <contact>Kontakt oss</contact>."
   },
   "comparison": {
@@ -108,8 +108,7 @@
         "label": "Personvern og sikkerhet",
         "rows": {
           "neverStored": "E-post hentes i sanntid, lagres aldri",
-          "encrypted": "Legitimasjon kryptert i hvile",
-          "soc2": "SOC 2 Type II-rapport på forespørsel"
+          "encrypted": "Legitimasjon kryptert i hvile"
         }
       },
       "support": {
@@ -161,7 +160,7 @@
       },
       {
         "q": "Hvordan fungerer årsrabatten?",
-        "a": "Å betale årlig sparer omtrent 17 % sammenlignet med månedlig fakturering: Agent koster $120/år og Scale koster $490/år. Du belastes én gang for 12 måneder på forhånd. Hvis du sier opp midt i året, refunderer vi de ubrukte hele månedene."
+        "a": "Å betale årlig sparer omtrent 17 % sammenlignet med månedlig fakturering: Agent koster $120/år og Scale koster $490/år. Du belastes én gang for 12 måneder på forhånd. Hvis du sier opp midt i året, beholder du tilgangen ut det betalte året."
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
@@ -169,7 +168,7 @@
       },
       {
         "q": "Finnes det en refusjonsordning?",
-        "a": "Hvis du er misfornøyd innen 30 dager etter din første betalte faktura, kontakt oss for full refusjon, uten spørsmål."
+        "a": "Månedlige planer refunderes ikke, med mindre gjeldende forbrukervernlovgivning krever det. På en årlig plan kan du be om en forholdsmessig refusjon for ubrukte hele måneder innen 14 dager etter fornyelsesdatoen ved å sende oss en e-post. Oppsigelse stopper fremtidige belastninger, og du beholder tilgangen ut perioden du allerede har betalt for. Hele ordningen står i vilkårene våre."
       },
       {
         "q": "Kan jeg selvhoste den i stedet for å betale?",

@@ -542,7 +542,8 @@ export function DashboardPreview() {
 /* ============== HOW IT WORKS ============== */
 export function HowItWorks() {
   const t = useTranslations('home');
-  const toolNames = ['inbox_list', 'email_read', 'email_organize', 'email_compose', 'folder', 'draft', 'schedule', 'contact_search'];
+  // Registry order, matching TOOL_REGISTRY in the MCP server (all ten tools).
+  const toolNames = ['inbox_list', 'email_read', 'email_organize', 'email_delete', 'email_compose', 'folder', 'draft', 'schedule', 'signature', 'contact_search'];
   return (
     <section className="section how" id="how">
       <div className="container">

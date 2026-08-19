@@ -68,7 +68,7 @@
       "<b>Use a scoped, revocable connection.</b> You connect with OAuth or an app password that grants only mail access, and you can revoke it in one click from your provider, with no involvement from me.",
       "<b>Watch what it does.</b> Every tool call your agent makes is recorded in an activity log you can read, so you can see precisely what was accessed and when."
     ],
-    "outro": "And if a native connector already covers your provider and does what you need, use it. This exists for the providers and multi-inbox combinations they don't cover."
+    "outro": "And if a connector built into your assistant already covers your provider and does what you need, use it. This exists for the mailboxes it does not reach, and for working across several at once."
   },
   "injection": {
     "title": "4. The real risk: prompt injection",
@@ -108,7 +108,7 @@
       {
         "provider": "Supabase",
         "purpose": "Database, auth, edge functions",
-        "location": "EU (Frankfurt) or US (Virginia); you choose at signup"
+        "location": "EU (Stockholm)"
       },
       {
         "provider": "Vercel",

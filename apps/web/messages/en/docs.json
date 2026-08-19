@@ -111,7 +111,7 @@
   "tools": {
     "eyebrow": "Tool reference",
     "heading": "10 tools. Every email operation your agent needs.",
-    "sub": "<b>Targeting an inbox is optional.</b> When your key has exactly one inbox, every per-inbox tool auto-resolves it — no <code>inbox_id</code> needed. With multiple inboxes, pass either <code>inbox_id</code> (the UUID from <code>inbox_list</code>) or <code>inbox</code> (the inbox's email address). Most tools take an <code>action</code> argument that selects the operation; the badges show the scope(s) each one needs, and <code>tools/list</code> only returns the tools your key (or OAuth token) is scoped for. Click \"Show example\" to see a full request and response.",
+    "sub": "<b>Targeting an inbox is optional.</b> When your key has exactly one inbox, every per-inbox tool auto-resolves it, no <code>inbox_id</code> needed. With multiple inboxes, pass either <code>inbox_id</code> (the UUID from <code>inbox_list</code>) or <code>inbox</code> (the inbox's email address). Most tools take an <code>action</code> argument that selects the operation; the badges show the scope(s) each one needs, and <code>tools/list</code> only returns the tools your key (or OAuth token) is scoped for. Click \"Show example\" to see a full request and response. A key that carries send or delete scopes also lists a few helper tools beyond these ten: <code>approval_review</code>, <code>approval_decide</code>, <code>approval_update</code> and <code>approval_schedule</code> act on a message held for human approval, while <code>bulk_execute</code> and <code>bulk_cancel</code> run or cancel a bulk delete or move that was previewed first. They are flagged for the client's review card rather than the model's tool picker, so a client may list them even though they are not part of the documented email surface.",
     "noParams": "No parameters. Call with an empty arguments object:",
     "showExample": "Show example request & response",
     "hideExample": "Hide example request & response",
@@ -400,19 +400,19 @@
     "hero": {
       "eyebrow": "Provider support",
       "heading": "What works, per provider.",
-      "lead": "MCPEmails connects Gmail, Fastmail, and any IMAP inbox (iCloud, Yahoo, Zoho, Yandex, generic). Not every provider exposes the same APIs — this table shows exactly what each one supports today.",
+      "lead": "MCPEmails connects Gmail, Fastmail, and any IMAP inbox (iCloud, Yahoo, Zoho, Yandex, generic). Not every provider exposes the same APIs, so this table shows exactly what each one supports.",
       "ctaConnect": "Connect an inbox",
       "ctaBack": "Back to docs"
     },
     "legend": {
       "supported": "Supported",
       "notSupported": "Not supported",
-      "planned": "Planned (not yet shipped)",
+      "planned": "Not available",
       "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</b> all connect over the same IMAP/SMTP transport (Fastmail and iCloud use an app-specific password) and share an identical feature set, including IMAP search syntax. The columns are shown separately for clarity."
     },
     "ariaSupported": "Supported",
     "ariaNotSupported": "Not supported",
-    "plannedBadge": "planned",
+    "plannedBadge": "n/a",
     "table": {
       "feature": "Feature"
     },

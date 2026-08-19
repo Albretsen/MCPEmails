@@ -171,7 +171,7 @@
   },
   "contact": {
     "title": "11. Nous contacter",
-    "intro": "Si vous avez des questions sur les présentes Conditions ou si vous devez joindre notre équipe juridique :",
+    "intro": "Si vous avez des questions sur les présentes Conditions ou si vous devez nous joindre pour une question juridique :",
     "legalLabel": "Demandes juridiques",
     "privacyLabel": "Questions de confidentialité",
     "securityLabel": "Signalements de sécurité",
@@ -181,8 +181,8 @@
   },
   "cta": {
     "title": "Des questions sur ces Conditions ?",
-    "sub": "Notre équipe juridique est ravie de vous aider. Contactez-nous et nous répondrons dans un délai de 14 jours ouvrables.",
-    "contactBtn": "Contacter l'équipe juridique",
+    "sub": "Écrivez-nous à legal@mcpemails.com et nous répondrons dans un délai de 14 jours ouvrables.",
+    "contactBtn": "Écrire à legal@",
     "privacyBtn": "Lire notre Politique de confidentialité"
   }
 }

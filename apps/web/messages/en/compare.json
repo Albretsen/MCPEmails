@@ -1,82 +1,113 @@
 {
   "meta": {
-    "title": "AI Email Connectors vs MCP Server — Compare Capabilities",
-    "description": "Compare native AI email connectors with an MCP email server: provider coverage, portable AI-client access, and real read, send, schedule, and organize actions."
+    "title": "AI Email Connectors vs MCP Server: How the Two Approaches Differ",
+    "description": "Two ways to give an AI assistant your inbox: a connector built into one assistant, or an MCP email server you connect yourself. How they differ on mailbox reach, multiple inboxes, portability, and who holds the credentials."
   },
   "hero": {
     "eyebrow": "Native connectors vs MCP",
-    "titleLine1": "Built-in AI connectors stop",
-    "titleLine2": "where your inbox starts",
-    "lead": "AI-native email connectors cover one or two providers and mostly draft. A managed MCP email server connects any inbox, takes real actions, and travels with you to every AI client.",
+    "titleLine1": "Two ways to give an AI",
+    "titleLine2": "assistant your inbox",
+    "lead": "A connector built into an assistant is the shortest path when it covers your mail provider. An MCP email server is a separate service you connect yourself: it reaches any mailbox that speaks IMAP and SMTP, holds several inboxes at once, and works in every MCP client. Here is how the two approaches differ, structurally.",
     "ctaPrimary": "Connect an inbox free",
     "ctaSecondary": "Read the docs"
   },
   "axes": {
-    "eyebrow": "Three honest differences",
-    "title": "Where a managed MCP server wins",
-    "sub": "No hand-waving. These are the concrete gaps between a single-vendor built-in connector and an MCP email server.",
+    "eyebrow": "Four structural differences",
+    "title": "Where the two approaches diverge",
+    "sub": "Not a feature scoreboard. These differences follow from how each approach is built, so they hold whatever capabilities any vendor ships.",
     "items": {
       "coverage": {
-        "tag": "Coverage",
-        "h": "Every inbox, not just Gmail",
-        "p": "Built-in connectors typically reach one mailbox — Gmail, sometimes Outlook. They can't touch <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over OAuth, the rest over an app password or plain IMAP."
+        "tag": "Mailbox reach",
+        "h": "Any mailbox that speaks IMAP",
+        "p": "A built-in connector reaches the mail providers its vendor has integrated. <b>IMAP and SMTP</b> are open protocols your mailbox already speaks, whoever runs it, so one connection covers <b>Fastmail, iCloud, Yahoo, Zoho, Yandex, Migadu</b>, a server your company runs, or one you host yourself. Gmail connects over OAuth."
       },
-      "actions": {
-        "tag": "Real actions",
-        "h": "Send and schedule, not just draft",
-        "p": "Many native connectors stop at <b>creating a draft</b> you still have to open and send. Our nine action-based tools <b>send, reply, forward, schedule, move, copy, flag, archive, and delete</b> directly — the agent finishes the job inside the inbox."
+      "inboxes": {
+        "tag": "Many inboxes",
+        "h": "A workspace, not one signed-in account",
+        "p": "A built-in connector follows the account you signed in with, so the assistant sees one identity. Here an inbox is a resource inside a workspace. One agent can read your support address, reply from your own, and file a message in a shared mailbox in a single conversation, and a team can share the same inboxes."
       },
       "portable": {
         "tag": "Portable",
-        "h": "One setup, every AI",
-        "p": "A vendor's built-in connector only works inside that vendor's app. Our server speaks standard streamable-http MCP with <b>OAuth 2.1 / DCR / PKCE</b>, so the same inbox works in <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code>, and more — no per-app rebuild."
+        "h": "One setup, every MCP client",
+        "p": "A connector a vendor builds runs inside that vendor's app, by definition. This is a standard streamable-http MCP server with <b>OAuth 2.1, DCR and PKCE</b>, so the same inboxes work in <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> and any other MCP client. Changing assistant costs you nothing."
+      },
+      "control": {
+        "tag": "Control",
+        "h": "You hold the connection",
+        "p": "Credentials are encrypted at rest in your own workspace, scoped per API key, revocable in one click, and every call is written to an audit trail. The source is public, so you can read exactly what runs, or <b>host the whole server yourself</b>."
       }
     }
   },
   "table": {
     "eyebrow": "Side by side",
-    "title": "Native connectors vs MCP Emails",
-    "featureCol": "Capability",
-    "nativeCol": "Native connectors",
+    "title": "How each approach is built",
+    "featureCol": "Question",
+    "nativeCol": "Built into an assistant",
     "mcpCol": "MCP Emails",
     "rows": {
-      "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
-      "imap": "Any IMAP / SMTP mailbox",
-      "send": "Send & reply directly (not just drafts)",
-      "schedule": "Schedule sends for later",
-      "organize": "Move, copy, flag, archive, delete",
-      "multiAi": "Works across Claude, Cursor, ChatGPT, n8n…",
-      "oauth": "Gmail over OAuth",
-      "storage": "Email fetched live, never stored"
+      "who": {
+        "label": "Who builds the integration",
+        "native": "The assistant vendor, for the mail providers it has integrated",
+        "mcp": "You connect the mailbox yourself"
+      },
+      "mailboxes": {
+        "label": "Which mailboxes",
+        "native": "The providers that vendor supports",
+        "mcp": "Gmail over OAuth, plus any IMAP and SMTP mailbox"
+      },
+      "clients": {
+        "label": "Which AI clients",
+        "native": "The app it ships in",
+        "mcp": "Any MCP client"
+      },
+      "count": {
+        "label": "How many inboxes at once",
+        "native": "The account you signed in with",
+        "mcp": "As many as your workspace holds"
+      },
+      "creds": {
+        "label": "Where credentials live",
+        "native": "With the assistant vendor",
+        "mcp": "Encrypted in your workspace, revocable per key"
+      },
+      "selfhost": {
+        "label": "Can you run it yourself",
+        "native": "No",
+        "mcp": "Yes, host it from source"
+      }
     },
-    "footnote": "Capabilities of typical AI-native connectors vary by vendor; the gaps above reflect the common one-provider, draft-only pattern."
+    "footnote": "Both approaches keep changing. The differences above follow from how each one is built rather than from any particular release."
   },
   "ctaBand": {
     "title": "Give your AI a real inbox",
-    "sub": "Connect any mailbox in minutes — unlimited inboxes and 2,500 billable actions per billing period on the free plan, no card required.",
+    "sub": "Connect any mailbox in minutes, with unlimited inboxes and 2,500 billable actions per billing period on the free plan, no card required.",
     "ctaPrimary": "Connect an inbox free",
     "ctaSecondary": "Read the docs"
   },
   "faq": {
     "eyebrow": "Common questions",
     "title": "Native connectors vs MCP, answered",
-    "sub": "The objections people raise before switching from a built-in connector.",
+    "sub": "The questions people ask when they are choosing between the two.",
     "items": [
       {
-        "q": "Can't Claude or ChatGPT already read my Gmail with a built-in connector?",
-        "a": "Sometimes, for one provider and often read-only or draft-only. mcpemails connects Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any IMAP mailbox, and it takes real actions: send, reply, forward, schedule, move, copy, flag, archive, and delete. The same inbox then works in every MCP client, not just one vendor's app."
+        "q": "Can my assistant already reach my mail without this?",
+        "a": "If your assistant ships a connector for your mail provider and it does what you need, use it. That is the shortest path. This exists for the mailboxes a built-in connector does not reach, for working across several inboxes at once, and for keeping one setup that follows you from one AI client to the next."
       },
       {
-        "q": "Which mailboxes do built-in connectors usually miss?",
-        "a": "Most native connectors reach Gmail and sometimes Outlook. They typically can't touch Fastmail, iCloud, Yahoo, Zoho, Yandex, or a self-hosted IMAP/SMTP server. mcpemails connects all of them."
+        "q": "Which mailboxes does this reach?",
+        "a": "Gmail over OAuth, and any mailbox that speaks IMAP and SMTP. That includes Fastmail, iCloud, Yahoo, Zoho, Yandex, Migadu, a mailbox your company runs, and one you host yourself. You connect it with an app password or ordinary IMAP credentials."
       },
       {
-        "q": "Do native connectors actually send email, or just draft it?",
-        "a": "Many stop at creating a draft you still have to open and send yourself. mcpemails sends, replies, forwards, and schedules directly, so the agent finishes the task inside your inbox."
+        "q": "Can it send, or does it only draft?",
+        "a": "It sends, replies, forwards, schedules for later, moves, copies, flags, archives and deletes. You decide which of those any given API key is allowed to do, so you can start read-only and widen the scopes once you trust the setup."
+      },
+      {
+        "q": "Can I connect more than one inbox?",
+        "a": "Yes, as many as you like. Inboxes belong to a workspace rather than to a single sign-in, so one agent can work across several of them in the same conversation, and the people in a workspace can share them."
       },
       {
         "q": "If I set this up for Claude, does it work in Cursor or ChatGPT too?",
-        "a": "Yes. mcpemails is a standard streamable-http MCP server with OAuth 2.1, DCR, and PKCE, so one setup works across Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP client. A vendor's built-in connector only works inside that vendor's app."
+        "a": "Yes. This is a standard streamable-http MCP server with OAuth 2.1, DCR and PKCE, so one setup works across Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make and any MCP client. A connector built into an assistant runs inside that assistant."
       },
       {
         "q": "Is it private if a third party connects my inbox?",

@@ -171,7 +171,7 @@
   },
   "contact": {
     "title": "11. 联系我们",
-    "intro": "如果你对本条款有疑问或需要联系我们的法务团队：",
+    "intro": "如果你对本条款有疑问，或需要就法律事务联系我们：",
     "legalLabel": "法务咨询",
     "privacyLabel": "隐私问题",
     "securityLabel": "安全报告",
@@ -181,8 +181,8 @@
   },
   "cta": {
     "title": "对本条款有疑问？",
-    "sub": "我们的法务团队乐意提供帮助。请与我们联系，我们将在 14 个工作日内回复。",
-    "contactBtn": "联系法务团队",
+    "sub": "发邮件至 legal@mcpemails.com，我们将在 14 个工作日内回复。",
+    "contactBtn": "发邮件至 legal@",
     "privacyBtn": "阅读我们的隐私政策"
   }
 }

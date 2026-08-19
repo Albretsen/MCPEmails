@@ -102,13 +102,15 @@
     },
     "tools": {
       "0": "Découvrez toutes les boîtes connectées et leurs ID. Appelez ceci en premier, sans copier-coller d'UUID depuis le tableau de bord.",
-      "1": "Lire le courrier : listez les résumés récents, récupérez un message complet par ID, lisez jusqu'à 50 par lot ou lancez une recherche indépendante du fournisseur — le tout via l'argument action.",
-      "2": "Organiser le courrier : déplacez, copiez, supprimez, marquez ou archivez — un à la fois, en masse ou directement depuis une recherche.",
-      "3": "Rédiger : envoyez un nouveau message, répondez dans le fil ou transférez. Expédié par l'API Gmail, Fastmail JMAP ou SMTP : votre domaine, votre délivrabilité.",
-      "4": "Gérez les dossiers (libellés sur Gmail) : listez, créez, renommez ou supprimez, et utilisez-les comme destinations de déplacement.",
-      "5": "Brouillons : listez, créez, mettez à jour et envoyez les brouillons stockés dans le dossier Drafts du fournisseur.",
-      "6": "Programmez un message pour plus tard, listez les envois programmés en attente et annulez-les avant leur départ.",
-      "7": "Trouvez des personnes par nom ou e-mail grâce à une analyse en direct du courrier récent correspondant. Rien n'est stocké."
+      "1": "Lire le courrier : listez les résumés récents, récupérez un message complet par ID, lisez jusqu'à 50 par lot ou lancez une recherche indépendante du fournisseur, le tout via l'argument action.",
+      "2": "Organiser le courrier : déplacez, copiez, marquez ou archivez, un à la fois, en masse ou directement depuis une recherche.",
+      "3": "Supprimer le courrier : un message, un lot, ou tous ceux qui correspondent à une recherche. Le courrier supprimé part à la corbeille et reste récupérable, sauf si vous demandez une suppression définitive.",
+      "4": "Rédiger : envoyez un nouveau message, répondez dans le fil ou transférez. Expédié par l'API Gmail, Fastmail JMAP ou SMTP : votre domaine, votre délivrabilité.",
+      "5": "Gérez les dossiers (libellés sur Gmail) : listez, créez, renommez ou supprimez, et utilisez-les comme destinations de déplacement.",
+      "6": "Brouillons : listez, créez, mettez à jour et envoyez les brouillons stockés dans le dossier Drafts du fournisseur.",
+      "7": "Programmez un message pour plus tard, listez les envois programmés en attente et annulez-les avant leur départ.",
+      "8": "Lisez ou définissez la signature d'une boîte en texte brut ou en HTML, et choisissez si elle s'ajoute aux réponses et aux transferts. Elle est ajoutée côté serveur à l'envoi.",
+      "9": "Trouvez des personnes par nom ou e-mail grâce à une analyse en direct du courrier récent correspondant. Rien n'est stocké."
     }
   },
   "examples": {
@@ -196,7 +198,7 @@
       },
       {
         "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",
-        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception — déplacer, copier, marquer, archiver et supprimer. Neuf outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
+        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Dix outils basés sur l'action, pour que l'agent termine le travail dans votre boîte."
       },
       {
         "q": "Comment connecter une boîte de réception ?",

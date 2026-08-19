@@ -68,7 +68,7 @@
       "<b>Utilisez une connexion limitée et révocable.</b> Vous vous connectez avec OAuth ou un mot de passe d'application qui n'accorde qu'un accès au courrier, et vous pouvez le révoquer en un clic depuis votre fournisseur, sans aucune intervention de ma part.",
       "<b>Surveillez ce qu'il fait.</b> Chaque appel d'outil effectué par votre agent est enregistré dans un journal d'activité que vous pouvez consulter, pour voir précisément ce qui a été consulté et quand."
     ],
-    "outro": "Et si un connecteur natif couvre déjà votre fournisseur et fait ce dont vous avez besoin, utilisez-le. Ceci existe pour les fournisseurs et les combinaisons multi-boîtes qu'ils ne couvrent pas."
+    "outro": "Et si un connecteur intégré à votre assistant couvre déjà votre fournisseur et fait ce dont vous avez besoin, utilisez-le. Ceci existe pour les boîtes qu'il n'atteint pas, et pour travailler sur plusieurs à la fois."
   },
   "injection": {
     "title": "4. Le vrai risque : l'injection de requête",
@@ -108,7 +108,7 @@
       {
         "provider": "Supabase",
         "purpose": "Base de données, authentification, fonctions edge",
-        "location": "UE (Francfort) ou États-Unis (Virginie) ; vous choisissez à l'inscription"
+        "location": "UE (Stockholm)"
       },
       {
         "provider": "Vercel",

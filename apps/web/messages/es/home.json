@@ -102,13 +102,15 @@
     },
     "tools": {
       "0": "Descubre todas las bandejas conectadas y sus IDs. Llama a esto primero, sin copiar y pegar UUIDs del panel.",
-      "1": "Leer correo: lista resúmenes recientes, obtén un mensaje completo por ID, lee hasta 50 por lotes o ejecuta una búsqueda independiente del proveedor — todo mediante el argumento action.",
-      "2": "Organizar correo: mueve, copia, elimina, marca o archiva — uno a uno, en lote o directamente desde una búsqueda.",
-      "3": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail, Fastmail JMAP o SMTP: tu dominio, tu entregabilidad.",
-      "4": "Gestiona carpetas (etiquetas en Gmail): lista, crea, renombra o elimina, y úsalas como destino de movimientos.",
-      "5": "Borradores: lista, crea, actualiza y envía borradores guardados en la carpeta Drafts del proveedor.",
-      "6": "Programa un mensaje para una hora futura, lista los envíos programados pendientes y cancélalos antes de que salgan.",
-      "7": "Encuentra personas por nombre o correo con un escaneo en vivo del correo reciente coincidente. No se almacena nada."
+      "1": "Leer correo: lista resúmenes recientes, obtén un mensaje completo por ID, lee hasta 50 por lotes o ejecuta una búsqueda independiente del proveedor, todo mediante el argumento action.",
+      "2": "Organizar correo: mueve, copia, marca o archiva, uno a uno, en lote o directamente desde una búsqueda.",
+      "3": "Eliminar correo: un mensaje, un lote o todos los que coincidan con una búsqueda. Lo eliminado va a la papelera y se puede recuperar, salvo que pidas un borrado permanente.",
+      "4": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail, Fastmail JMAP o SMTP: tu dominio, tu entregabilidad.",
+      "5": "Gestiona carpetas (etiquetas en Gmail): lista, crea, renombra o elimina, y úsalas como destino de movimientos.",
+      "6": "Borradores: lista, crea, actualiza y envía borradores guardados en la carpeta Drafts del proveedor.",
+      "7": "Programa un mensaje para una hora futura, lista los envíos programados pendientes y cancélalos antes de que salgan.",
+      "8": "Lee o define la firma de una bandeja en texto plano o HTML, y decide si se añade a respuestas y reenvíos. Se agrega en el servidor al enviar.",
+      "9": "Encuentra personas por nombre o correo con un escaneo en vivo del correo reciente coincidente. No se almacena nada."
     }
   },
   "examples": {
@@ -196,7 +198,7 @@
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",
-        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja — mover, copiar, marcar, archivar y eliminar. Nueve herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
+        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Diez herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja."
       },
       {
         "q": "¿Cómo conecto una bandeja de entrada?",

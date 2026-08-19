@@ -48,8 +48,8 @@
   },
   "does": {
     "eyebrow": "What it actually does",
-    "title": "A real inbox, not a read-only peek",
-    "sub": "Nine action-based tools your agent can use end to end.",
+    "title": "A real inbox your agent can work in",
+    "sub": "Ten action-based tools your agent can use end to end.",
     "items": {
       "read": { "h": "Read & search", "p": "List, read, and search across folders and every connected inbox, fetched live." },
       "send": { "h": "Send & reply", "p": "Send, reply, and forward directly. The agent finishes the email, not just a draft." },

@@ -111,7 +111,7 @@
   "tools": {
     "eyebrow": "Verktøyreferanse",
     "heading": "10 verktøy. Alle e-postoperasjonene agenten din trenger.",
-    "sub": "<b>Å angi innboks er valgfritt.</b> Når nøkkelen din har nøyaktig én innboks, løser hvert per-innboks-verktøy den automatisk — ingen <code>inbox_id</code> nødvendig. Med flere innbokser oppgir du enten <code>inbox_id</code> (UUID-en fra <code>inbox_list</code>) eller <code>inbox</code> (innboksens e-postadresse). De fleste verktøy tar et <code>action</code>-argument som velger operasjonen; merkene viser hvilke omfang hvert verktøy trenger, og <code>tools/list</code> returnerer bare verktøyene nøkkelen din (eller OAuth-tokenet) har omfang for. Klikk «Vis eksempel» for å se en full forespørsel og respons.",
+    "sub": "<b>Å angi innboks er valgfritt.</b> Når nøkkelen din har nøyaktig én innboks, løser hvert per-innboks-verktøy den automatisk, ingen <code>inbox_id</code> nødvendig. Med flere innbokser oppgir du enten <code>inbox_id</code> (UUID-en fra <code>inbox_list</code>) eller <code>inbox</code> (innboksens e-postadresse). De fleste verktøy tar et <code>action</code>-argument som velger operasjonen; merkene viser hvilke omfang hvert verktøy trenger, og <code>tools/list</code> returnerer bare verktøyene nøkkelen din (eller OAuth-tokenet) har omfang for. Klikk «Vis eksempel» for å se en full forespørsel og respons. En nøkkel med omfang for sending eller sletting lister også noen hjelpeverktøy i tillegg til disse ti: <code>approval_review</code>, <code>approval_decide</code>, <code>approval_update</code> og <code>approval_schedule</code> handler på en melding som venter på godkjenning fra et menneske, mens <code>bulk_execute</code> og <code>bulk_cancel</code> kjører eller avbryter en masseoperasjon for sletting eller flytting som ble forhåndsvist først. De er merket for klientens gjennomgangskort og ikke for modellens verktøyvelger, så en klient kan liste dem selv om de ikke er en del av den dokumenterte e-postflaten.",
     "noParams": "Ingen parametere. Kall med et tomt arguments-objekt:",
     "showExample": "Vis eksempel på forespørsel og svar",
     "hideExample": "Skjul eksempel på forespørsel og svar",
@@ -259,6 +259,8 @@
         "inbox_id": "UUID for innboksen som eier utkastene. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
         "draft_id": "Leverandørens utkast-ID (action 'update' eller 'send'), fra den nyeste create-, update- eller list-handlingen. På IMAP-innbokser endres den etter hver oppdatering, så bruk alltid den nyeste.",
+        "message_id": "ID-en til kildemeldingen for action 'reply', hentet fra en tidligere list-, read- eller search-handling.",
+        "reply_all": "For action 'reply': false som standard, slik at du bare svarer avsenderen. Sett true for å inkludere de opprinnelige To- og Cc-mottakerne.",
         "subject": "Emnefeltet for utkastet (action 'create'/'update').",
         "body": "Tekstkropp for utkastet (action 'create'/'update').",
         "to": "Mottakeradresser (action 'create'/'update'). Standard [].",
@@ -398,19 +400,19 @@
     "hero": {
       "eyebrow": "Leverandørstøtte",
       "heading": "Hva som fungerer, per leverandør.",
-      "lead": "MCPEmails kobler til Gmail, Fastmail og enhver IMAP-innboks (iCloud, Yahoo, Zoho, Yandex, generisk). Ikke alle leverandører eksponerer de samme API-ene — denne tabellen viser nøyaktig hva hver av dem støtter i dag.",
+      "lead": "MCPEmails kobler til Gmail, Fastmail og enhver IMAP-innboks (iCloud, Yahoo, Zoho, Yandex, generisk). Ikke alle leverandører eksponerer de samme API-ene, så denne tabellen viser nøyaktig hva hver av dem støtter.",
       "ctaConnect": "Koble til en innboks",
       "ctaBack": "Tilbake til dokumentasjonen"
     },
     "legend": {
       "supported": "Støttet",
       "notSupported": "Ikke støttet",
-      "planned": "Planlagt (ikke lansert ennå)",
+      "planned": "Ikke tilgjengelig",
       "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP</b> kobler alle til over den samme IMAP/SMTP-transporten (Fastmail og iCloud bruker et app-spesifikt passord) og deler et identisk funksjonssett, inkludert IMAP-søkesyntaks. Kolonnene vises hver for seg for tydelighetens skyld."
     },
     "ariaSupported": "Støttet",
     "ariaNotSupported": "Ikke støttet",
-    "plannedBadge": "planlagt",
+    "plannedBadge": "n/t",
     "table": {
       "feature": "Funksjon"
     },
