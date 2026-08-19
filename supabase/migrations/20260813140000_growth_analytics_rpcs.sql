@@ -29,8 +29,10 @@
 --                          `workspaces.onboarding_value_activated_at` column.
 --   session              : successful calls by one workspace, split whenever
 --                          the gap from the previous successful call is at
---                          least 30 minutes. Mirrors buildSessions() in
---                          `src/lib/analytics/retention.ts`.
+--                          least 30 minutes. Defined here and nowhere else:
+--                          the earlier TypeScript implementation was deleted
+--                          once this file became the only consumer, so there
+--                          is no second copy to keep in step.
 --   day                  : UTC calendar day. now() is converted explicitly so
 --                          results never depend on the server's timezone.
 --
@@ -210,8 +212,9 @@ $$;
 -- How often an active workspace actually comes back, as a distribution rather
 -- than an average. Two metrics: distinct active UTC days, and sessions.
 --
--- Band labels use EN DASHES (U+2013) to match frequencyBand() in retention.ts
--- exactly. A hyphen here would produce bands the renderer cannot key on.
+-- Band labels use EN DASHES (U+2013) and must match the literals the renderer
+-- keys on in `src/lib/analytics/growth-types.ts`. A hyphen here would produce
+-- bands the renderer cannot key on.
 --
 -- All eight metric/band combinations are always returned, including empty
 -- ones, so the table has a stable shape and a zero reads as a real zero.
@@ -240,7 +243,7 @@ AS $$
       AND a.created_at < b.window_end
   ),
   -- A session boundary is a gap of at least 30 minutes from the immediately
-  -- preceding successful call, which is exactly what buildSessions() does.
+  -- preceding successful call. See the SHARED DEFINITIONS header above.
   gaps AS (
     SELECT
       sc.workspace_id,
