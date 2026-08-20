@@ -11,6 +11,7 @@
     "ctaQuickStart": "Hurtigstart",
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Verktøyreferanse",
+    "ctaSafety": "Sikkerhetsmodell",
     "ctaProviders": "Leverandørstøtte"
   },
   "quickstart": {
@@ -27,7 +28,7 @@
       "apikey": {
         "label": "Opprett en API-nøkkel",
         "heading": "Generer et bearer-token for agenten din",
-        "body": "I Dashbord → API-nøkler klikker du «Opprett nøkkel». Gi den navn, velg omfangene agenten din trenger — read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts og schedule:email — og kopier nøkkelen. Den vises bare én gang."
+        "body": "I Dashbord → API-nøkler klikker du «Opprett nøkkel». Gi den navn, velg omfangene agenten din trenger — read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email og manage:automations — og kopier nøkkelen. Den vises bare én gang."
       },
       "addclient": {
         "label": "Legg MCPEmails til i agenten din",
@@ -105,12 +106,12 @@
     "howTitle": "Hvordan det fungerer under panseret",
     "howP1": "claude.ai registrerer seg selv via <b>RFC 7591 Dynamic Client Registration</b>, så du forhåndsregistrerer aldri en client-ID.",
     "howP2": "Godkjenning bruker <b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636), så ingen client secret overføres noensinne.",
-    "howP3": "Tokens er avgrenset til nøyaktig de tillatelsene du godkjenner — <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code> og <code>schedule:email</code>.",
+    "howP3": "Tokens er avgrenset til nøyaktig de tillatelsene du godkjenner — <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> og <code>manage:automations</code>.",
     "noOauthNote": "<b>Bruker du en klient uten OAuth-støtte?</b> Opprett en API-nøkkel i Dashboard → API Keys og send den som et bearer-token. API-nøkkel- og OAuth-tilkoblinger bruker samme MCP-endepunkt og den samme verktøykatalogen."
   },
   "tools": {
     "eyebrow": "Verktøyreferanse",
-    "heading": "10 verktøy. Alle e-postoperasjonene agenten din trenger.",
+    "heading": "11 verktøy. Alle e-postoperasjonene agenten din trenger.",
     "sub": "<b>Å angi innboks er valgfritt.</b> Når nøkkelen din har nøyaktig én innboks, løser hvert per-innboks-verktøy den automatisk — ingen <code>inbox_id</code> nødvendig. Med flere innbokser oppgir du enten <code>inbox_id</code> (UUID-en fra <code>inbox_list</code>) eller <code>inbox</code> (innboksens e-postadresse). De fleste verktøy tar et <code>action</code>-argument som velger operasjonen; merkene viser hvilke omfang hvert verktøy trenger, og <code>tools/list</code> returnerer bare verktøyene nøkkelen din (eller OAuth-tokenet) har omfang for. Klikk «Vis eksempel» for å se en full forespørsel og respons.",
     "noParams": "Ingen parametere. Kall med et tomt arguments-objekt:",
     "showExample": "Vis eksempel på forespørsel og svar",
@@ -259,8 +260,8 @@
         "inbox_id": "UUID for innboksen som eier utkastene. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
         "draft_id": "Leverandørens utkast-ID (action 'update' eller 'send'), fra den nyeste create-, update- eller list-handlingen. På IMAP-innbokser endres den etter hver oppdatering, så bruk alltid den nyeste.",
-        "message_id": "Kilde-meldings-ID for action 'reply', fra en tidligere list-, read- eller search-handling.",
-        "reply_all": "For action 'reply': false som standard, slik at du svarer bare til avsenderen. Sett true for å inkludere de opprinnelige To- og Cc-mottakerne.",
+        "message_id": "ID-en til kildemeldingen for handlingen 'reply', hentet fra en tidligere list-, read- eller search-handling.",
+        "reply_all": "For handlingen 'reply': false som standard, slik at svaret bare går til avsenderen. Sett true for å ta med de opprinnelige To- og Cc-mottakerne.",
         "subject": "Emnefeltet for utkastet (action 'create'/'update').",
         "body": "Tekstkropp for utkastet (action 'create'/'update').",
         "to": "Mottakeradresser (action 'create'/'update'). Standard [].",
@@ -303,6 +304,22 @@
         "limit": "Maks antall kontakter som returneres. Standard 20, maks 50."
       }
     },
+    "automation": {
+      "title": "Automatiseringer",
+      "desc": "Opprett og administrer planlagte triageregler som kjører uten tilsyn. En regel er et lagret søk pluss én fast handling, som evalueres på nytt med et fast intervall og uten noen modell i løkken: e-post matches, den tolkes aldri. Sett action: 'create' (name, filter, rule_action og interval_minutes; en regel opprettes alltid deaktivert), 'list', 'get', 'update', 'enable', 'disable', 'delete' (kjørehistorikken beholdes), 'runs' (tellere for nylige kjøringer) eller 'preview' (en tørrkjøring som viser hva filteret treffer akkurat nå, og som ikke utfører noe). Tilgjengelige regelhandlinger er move, label (en Gmail-etikett, en Outlook-kategori eller et IMAP-nøkkelord), mark_read, forward og draft_reply. Å slette e-post er ikke tilgjengelig for en automatisering. En videresending holdes alltid tilbake for menneskelig godkjenning uansett hva godkjenningsinnstillingen for postboksen sier, og draft_reply skriver bare et utkast. Forhåndsvis før du aktiverer. Alle handlinger krever manage:automations.",
+      "params": {
+        "action": "Hvilken operasjon som skal utføres: «create», «list», «get», «update», «enable», «disable», «delete», «runs» eller «preview». Bestemmer hvilke andre argumenter som gjelder.",
+        "automation_id": "UUID-en til regelen du vil handle på, slik 'create' eller 'list' returnerer den. Påkrevd for get, update, enable, disable, delete og runs. Valgfri for preview: send den inn for å tørrkjøre en lagret regel i stedet for et løst filter.",
+        "inbox_id": "UUID-en til postboksen regelen overvåker ('create'), eller postboksen du vil forhåndsvise mot. Valgfri når nøkkelen har nøyaktig én postboks; ellers oppgir du denne eller inbox.",
+        "inbox": "E-postadressen til postboksen, som et enklere alternativ til inbox_id. Valgfri; ignoreres hvis inbox_id er oppgitt.",
+        "name": "Lesbart navn på regelen, 1 til 80 tegn. Påkrevd ved 'create'.",
+        "filter": "Det lagrede søket, med de samme strukturerte kriteriene som handlingen 'search' i email_read tar imot: from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before. Minst ett kriterium kreves, fordi et tomt filter ville truffet hele postboksen din. Leverandørspesifikke råspørringer tas ikke imot her: en regel kjører uten tilsyn i månedsvis, og en råstreng er en dialekt ingenting validerer.",
+        "rule_action": "Den ene faste handlingen som brukes på hvert treff, som et merket objekt med type move (pluss folder), label (pluss label; skrives som en Gmail-etikett, en Outlook-kategori eller et IMAP-nøkkelord), mark_read, forward (pluss to og en valgfri note) eller draft_reply (pluss template). Den heter rule_action fordi action allerede velger operasjonen. Det finnes ingen slettehandling, og en slik forespørsel avvises i stedet for å bli ignorert. En videresending holdes alltid tilbake for godkjenning, og draft_reply skriver bare et utkast. En mal setter kun inn '{{sender_name}}', '{{sender_email}}', '{{subject}}' og '{{date}}', alle HTML-escapet; alt annet er ren tekst, og meldingsinnhold interpoleres aldri.",
+        "interval_minutes": "Minutter mellom kjøringer, fra den faste stigen 15, 30, 60, 180, 360, 720 eller 1440. Påkrevd ved 'create'. En stige i stedet for et fritt heltall, slik at en ettminutts regel ikke hamrer løs på leverandøren til den rategrensen.",
+        "max_messages_per_run": "Hvor mange treff én kjøring kan handle på: 1 til 200, 25 som standard. Dette er skadeomfanget, og begrenser hvor mye e-post et feil filter kan røre før et menneske leser kjøreloggen.",
+        "limit": "For handlingen 'runs': hvor mange kjøringer som skal returneres, nyeste først. Standard 20, maks 100."
+      }
+    },
     "signature": {
       "title": "Signatur",
       "desc": "Les eller konfigurer innboksens e-postsignatur, som legges til på serversiden ved hver sending, svar, videresending, utkast og planlagt melding. Sett action: 'get' (returnerer gjeldende signaturtekst og HTML, om den er aktivert, svar-/videresendingsmodusen og kilden — 'manual', 'gmail_import' eller null) eller 'set' (skriv signature_text og/eller signature_html, og eventuelt signature_enabled og signature_reply_mode). Signaturer støtter rik HTML: fet, kursiv, overskrifter, lister, farger, justering, lenker og hostede logoer/bilder referert som https-URL-er, slik at en agent kan sette en fullt formatert signatur ved å oppgi signature_html. Den samme rike editoren er tilgjengelig i dashbordet. Å sette en signatur merker kilden som 'manual', som permanent overstyrer Gmail-auto-import for den innboksen. 'get' trenger read:email; 'set' trenger send:email.",
@@ -314,6 +331,50 @@
         "signature_html": "Valgfri rik HTML-kropp for signaturen (action 'set'). Støtter formatering (fet, kursiv, understreking, overskrifter, lister, farger, justering, lenker) og hostede bilder via <img>-tagger der src er en https-URL (ingen base64 eller CID); den saneres ved lagring. Utelat for å la den være uendret; oppgi en tom streng for å fjerne den.",
         "signature_enabled": "Om signaturen legges til utgående e-post (action 'set'). Standard true; sett false for å slutte å legge den til uten å slette teksten.",
         "signature_reply_mode": "Når signaturen skal inkluderes ved svar og videresending (action 'set'): \"always\" (hvert svar/videresending), \"first_only\" (standard — bare den første meldingen i en tråd, for å unngå dobbel signering) eller \"never\"."
+      }
+    }
+  },
+  "automationSafety": {
+    "eyebrow": "Sikkerhetsmodell for automatiseringer",
+    "heading": "Hva en planlagt regel kan og ikke kan gjøre.",
+    "sub": "En automatisering rører postboksen din etter en plan, uten at noen ser på. Det er en annen risikokategori enn en agent du sitter og snakker med, så garantiene nedenfor håndheves av serveren i stedet for å overlates til regelen du skriver.",
+    "deterministic": {
+      "heading": "Ingen modell kjører uten tilsyn.",
+      "body": "En regel er et lagret søk pluss én fast handling. Når den kjører, utfører serveren søket mot postboksen din og bruker handlingen på treffene. Ingenting leser e-posten din og bestemmer så hva som skal gjøres med den. E-postinnhold matches, det tolkes aldri som en instruksjon, og dermed er prompt-injeksjon strukturelt fraværende fra den ubetjente veien, ikke bare filtrert, poengsatt eller dempet. Det finnes ingenting i løkken som en injisert tekst kan snakke med.",
+      "why": "Dette er verdt å si rett ut, for den farlige formen i denne kategorien er en agent som leser upålitelig innkommende e-post og deretter handler på den uten et menneske til stede. Offentlige hendelser, blant annet EchoLeak og den bakdørsinfiserte Postmark-MCP-serveren, har gjort kjøpere med rette skeptiske til nettopp det. I en interaktiv økt leser en modell faktisk e-posten din, som er hele poenget med produktet, og der er det et menneske til stede og innholdet er merket som upålitelige data. Den planlagte veien er den som kjører alene, og den inneholder ingen modell i det hele tatt."
+    },
+    "items": {
+      "noDelete": {
+        "heading": "Automatiseringer sletter aldri e-post.",
+        "body": "Sletting er ikke en tilgjengelig handling, med hensikt. Flytte, merke med etikett, markere som lest, videresende og skrive et svarutkast er hele settet. Sletting er den ene handlingen en feilslått regel gjør irreversibel, så den er utelukket i valideringslaget, der en handling som bare nevner sletting avvises i stedet for å bli stilltiende ignorert."
+      },
+      "forward": {
+        "heading": "Videresending venter alltid på et menneske.",
+        "body": "En videresending fra en automatisering legges i godkjenningskøen og forlater postboksen din først når et medlem av arbeidsområdet godkjenner den, uansett hva innstillingen for sendegodkjenning på postboksen sier. Antall mottakere er begrenset per regel. En ubetjent regel kan ikke sende e-post ut av organisasjonen din på egen hånd."
+      },
+      "draftReply": {
+        "heading": "Svarutkast blir alltid bare utkast.",
+        "body": "En draft_reply-regel skriver et usendt utkast inn i den opprinnelige samtalen og stopper der. Ingenting sendes uten tilsyn, hos noen leverandør, under noen konfigurasjon."
+      },
+      "template": {
+        "heading": "Maler setter inn fire felt, og ikke noe mer.",
+        "body": "En svarmal lagres ordrett og evalueres aldri. Bare '{{sender_name}}', '{{sender_email}}', '{{subject}}' og '{{date}}' settes inn, alle HTML-escapet. Meldingsinnhold interpoleres aldri, og det finnes ingen uttrykkssyntaks å evaluere, så ingenting som lander i postboksen din kan gjøre en mal om til en beregning."
+      },
+      "runLog": {
+        "heading": "Hver kjøring er dokumentert.",
+        "body": "Hver kjøring registrerer hva filteret traff, hva som skjedde med hver melding og hva som ble lagt i godkjenningskø, sammen med tellere for treff, behandlet, vellykket, mislykket og hoppet over. Reversible handlinger tar vare på tilstanden som trengs for å angre dem. Kjørehistorikken lever lenger enn regelen den hører til, fordi den er dokumentasjonen på hva som ble gjort med postboksen din. Les den med handlingen 'runs' eller i dashbordet."
+      },
+      "keyAuthority": {
+        "heading": "En regel har nøyaktig én nøkkels myndighet.",
+        "body": "Hver regel kjører som API-nøkkelen som opprettet den. Den kan aldri overskride omfangene eller postbokstilgangen den nøkkelen allerede har, hver handling den utfører måles, rategrenses og skrives til revisjonsloggen akkurat som et interaktivt kall, og å tilbakekalle nøkkelen stopper regelen."
+      },
+      "autoDisable": {
+        "heading": "Gjentatte feil slår den av.",
+        "body": "Etter 5 mislykkede kjøringer på rad deaktiveres regelen automatisk, og årsaken registreres. En regel som peker mot en postboks som har sluttet å svare, stopper i stedet for å prøve på nytt hvert 15. minutt i det uendelige."
+      },
+      "perRunCap": {
+        "heading": "Begrenset skadeomfang per kjøring.",
+        "body": "Hver regel har et maksimalt antall meldinger én kjøring kan handle på, fra 1 til 200 og 25 som standard, slik at et filter som er bredere enn du mente, treffer høyst så mange meldinger før du ser kjøreloggen. En regel opprettes dessuten deaktivert, og forhåndsvisning er en tørrkjøring som viser hva filteret treffer akkurat nå, uten å utføre noe."
       }
     }
   },

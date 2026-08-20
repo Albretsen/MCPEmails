@@ -46,6 +46,7 @@ export async function GET() {
         'manage:drafts',
         'manage:contacts',
         'schedule:email',
+        'manage:automations',
       ],
       response_types_supported: ['code'],
       grant_types_supported: ['authorization_code', 'refresh_token'],

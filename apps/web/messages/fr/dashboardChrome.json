@@ -64,7 +64,8 @@
     "workspaceFallback": "espace de travail",
     "searchPlaceholder": "Rechercher des pages, des boîtes, des membres…",
     "openSearch": "Ouvrir la recherche (Command K)",
-    "navWorkflows": "Workflows"
+    "navWorkflows": "Workflows",
+    "navAutomations": "Automatisations"
   },
   "topbar": {
     "mcpLabel": "Point de terminaison MCP",
@@ -195,7 +196,8 @@
     "footSelect": "sélectionner",
     "footClose": "fermer",
     "ariaLabel": "Palette de commandes",
-    "ariaSearch": "Rechercher"
+    "ariaSearch": "Rechercher",
+    "pageAutomations": "Automatisations"
   },
   "toast": {
     "ariaNotifications": "Notifications",
