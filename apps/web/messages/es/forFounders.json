@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Email para fundadores: responde a tus clientes desde Claude",
-    "description": "Los fundadores usan mcpemails para clasificar y responder el correo de clientes directamente desde Claude o cualquier IA. Lee, redacta con tu propia voz, envía y programa en todas tus bandejas. Ilimitado y gratis para empezar."
+    "description": "Los fundadores usan mcpemails para clasificar y responder el correo de clientes directamente desde Claude o cualquier IA. Lee, redacta con tu propia voz, envía y programa. Gratis para empezar, con una bandeja conectada."
   },
   "hero": {
     "eyebrow": "Hecho para fundadores",
@@ -51,10 +51,22 @@
     "title": "Una bandeja real, no un vistazo de solo lectura",
     "sub": "Nueve herramientas basadas en acciones que tu agente puede usar de principio a fin.",
     "items": {
-      "read": { "h": "Leer y buscar", "p": "Lista, lee y busca entre carpetas y todas las bandejas conectadas, obtenido en vivo." },
-      "send": { "h": "Enviar y responder", "p": "Envía, responde y reenvía directamente. El agente termina el correo, no solo un borrador." },
-      "schedule": { "h": "Programar", "p": "Pon un envío en cola para más tarde, así los seguimientos salen en el momento justo del día del cliente." },
-      "organize": { "h": "Organizar", "p": "Mueve, copia, marca, archiva y etiqueta para que la clasificación ocurra mientras lees, no después." }
+      "read": {
+        "h": "Leer y buscar",
+        "p": "Lista, lee y busca entre carpetas y todas las bandejas conectadas, obtenido en vivo."
+      },
+      "send": {
+        "h": "Enviar y responder",
+        "p": "Envía, responde y reenvía directamente. El agente termina el correo, no solo un borrador."
+      },
+      "schedule": {
+        "h": "Programar",
+        "p": "Pon un envío en cola para más tarde, así los seguimientos salen en el momento justo del día del cliente."
+      },
+      "organize": {
+        "h": "Organizar",
+        "p": "Mueve, copia, marca, archiva y etiqueta para que la clasificación ocurra mientras lees, no después."
+      }
     }
   },
   "proof": {
@@ -92,13 +104,13 @@
       },
       {
         "q": "¿Cuánto cuesta mientras sigo siendo pequeño?",
-        "a": "Gratis, con bandejas ilimitadas y 2.500 acciones facturables por período de facturación. Las llamadas fallidas e inbox_list son gratis. Los planes de pago añaden asignaciones de acciones más grandes, funciones de equipo y soporte, pero un fundador en solitario que responde a clientes nunca tiene que pagar para empezar."
+        "a": "Gratis, con una bandeja conectada y sin tarjeta. Pro, por $29 al mes, conecta todos los buzones que tengas, y Team añade miembros, roles y un espacio de trabajo separado por cliente."
       }
     ]
   },
   "ctaBand": {
     "title": "Recupera tus tardes",
-    "sub": "Conecta tu bandeja en minutos y deja que Claude vacíe la cola de clientes contigo. Ilimitado y gratis para empezar, sin tarjeta.",
+    "sub": "Conecta tu bandeja en minutos y deja que Claude vacíe la cola de clientes contigo. Una bandeja gratis para empezar, sin tarjeta.",
     "ctaPrimary": "Conecta tu bandeja gratis",
     "ctaSecondary": "Lee la documentación"
   }

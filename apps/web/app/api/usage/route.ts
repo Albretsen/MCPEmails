@@ -16,14 +16,17 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
  *   plan: string,
  *   monthly: {
  *     used:       number,          // calls made this billing cycle
- *     cap:        number | null,   // null = unlimited (Enterprise)
+ *     cap:        number | null,   // null = a comped entitlement
  *     resets_at:  string,          // ISO timestamp of next UTC month start
  *   },
  *   daily_burst: { ... },
  * }
  *
  * The daily burst row remains a request-rate diagnostic; the monthly row is
- * the billable action allowance.
+ * the abuse ceiling, NOT a pricing lever. Since the 2026-08-19 repricing the
+ * value metric is connected inboxes; the action ceiling exists so a runaway
+ * agent cannot burn unbounded provider quota, and it must never be presented as
+ * something a customer can buy more of.
  */
 export async function GET(): Promise<NextResponse> {
   const supabase = await createClient();
@@ -60,13 +63,16 @@ export async function GET(): Promise<NextResponse> {
 
   const service = createServiceRoleClient();
   const [{ data: entitlement }, { data: billing }] = await Promise.all([
-    service.from('user_usage_entitlements').select('kind, expires_at').eq('user_id', workspace.owner_id).maybeSingle(),
+    service.from('user_usage_entitlements').select('kind, expires_at, unlimited_inboxes').eq('user_id', workspace.owner_id).maybeSingle(),
     service.from('user_billing').select('current_period_start, current_period_end').eq('user_id', workspace.owner_id).maybeSingle(),
   ]);
   const compedScale = entitlement?.kind === 'comped_scale' &&
     (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date());
   const plan = compedScale ? 'pro' : ((workspace.plan as string) ?? 'free');
-  const limits = resolvePlanLimits(plan, { compedScale });
+  const limits = resolvePlanLimits(plan, {
+    compedScale,
+    unlimitedInboxes: entitlement?.unlimited_inboxes ?? false,
+  });
 
   // ── Window boundaries ─────────────────────────────────────────────────────
   // Paid workspaces follow Stripe's exact billing cycle. Free workspaces use

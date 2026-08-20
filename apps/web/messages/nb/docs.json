@@ -258,10 +258,12 @@
       "title": "Utkast",
       "desc": "Administrer utkast i innboksens Drafts-mappe. Sett action: 'list' (lagrede utkast, hvert med draft_id, emne, mottakere og opprettet-tidspunkt), 'create' (subject/body påkrevd, valgfritt to/cc/bcc/html_body), 'update' (draft_id pluss feltene som skal overskrives) eller 'send' (draft_id — fjerner utkastet og sender det, kan ikke angres). Innboksens signatur bygges inn når utkastet opprettes eller oppdateres, så den er allerede til stede i Drafts-mappen og legges ikke til på nytt ved sending; oppgi include_signature: false for å opprette et utkast uten den. På IMAP-baserte innbokser endres en draft_id ved hver oppdatering, så bruk alltid den nyeste; Gmail og Outlook beholder en stabil draft_id.",
       "params": {
-        "action": "Hvilken operasjon som skal utføres: \"list\", \"create\", \"update\" eller \"send\". Avgjør hvilke andre argumenter som gjelder.",
+        "action": "Hvilken operasjon som skal utføres: \"list\", \"create\", \"reply\", \"update\" eller \"send\". Avgjør hvilke andre argumenter som gjelder.",
         "inbox_id": "UUID for innboksen som eier utkastene. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
         "draft_id": "Leverandørens utkast-ID (action 'update' eller 'send'), fra den nyeste create-, update- eller list-handlingen. På IMAP-innbokser endres den etter hver oppdatering, så bruk alltid den nyeste.",
+        "message_id": "Kilde-meldings-ID for action 'reply', fra en tidligere list-, read- eller search-handling.",
+        "reply_all": "For action 'reply': false som standard, slik at du svarer bare til avsenderen. Sett true for å inkludere de opprinnelige To- og Cc-mottakerne.",
         "subject": "Emnefeltet for utkastet (action 'create'/'update').",
         "body": "Tekstkropp for utkastet (action 'create'/'update').",
         "to": "Mottakeradresser (action 'create'/'update'). Standard [].",
@@ -321,7 +323,7 @@
   "errors": {
     "eyebrow": "Feilkoder",
     "heading": "Feilkoder og veiledning for nye forsøk.",
-    "sub": "Feil ved autentisering, omfang og hastighetsgrense returnerer et JSON-RPC <code>error</code>-objekt med en numerisk kode. Feil ved verktøykjøring (innboks ikke funnet, leverandørfeil, oppbrukt månedlig handlingskvote osv.) returnerer et vanlig <code>result</code> med <code>isError: true</code> og en lesbar melding i <code>content[0].text</code>.",
+    "sub": "Feil ved autentisering, omfang og hastighetsgrense returnerer et JSON-RPC <code>error</code>-objekt med en numerisk kode. Feil ved verktøykjøring (innboks ikke funnet, leverandørfeil, tak for rimelig bruk nådd osv.) returnerer et vanlig <code>result</code> med <code>isError: true</code> og en lesbar melding i <code>content[0].text</code>.",
     "thCode": "Kode",
     "thType": "Type",
     "thWhen": "Når den oppstår",
@@ -334,28 +336,28 @@
       "param": "Ukjent verktøynavn, eller manglende / ugyldig parameter i tools/call",
       "rate": "Hastighetsgrense per nøkkel eller per arbeidsområde overskredet (HTTP 429). data.error_code er alltid \"rate_limit_exceeded\". Vent data.retry_after sekunder, eller les Retry-After-headeren, før du prøver på nytt.",
       "tool": "Verktøyet ble kjørt, men støtte på en feil (innboks ikke funnet, melding ikke funnet, autentiseringsfeil hos leverandør, ugyldig mottaker, vedlegg for stort, leverandør 5xx). Feilbeskrivelsen finnes i content[0].text.",
-      "cap": "Den månedlige handlingskvoten for planen er brukt opp. Den returneres som et vanlig verktøyresultat med isError: true, ikke som en JSON-RPC-feil, med detaljene under _meta[\"com.mcpemails/usage_limit\"]: error_code \"usage_limit_reached\", used_actions, cap og reset_at. Nye forsøk kan ikke lykkes før reset_at eller en planendring."
+      "cap": "Arbeidsområdet har nådd taket for rimelig bruk av fakturerbare handlinger i inneværende faktureringsperiode. Det returneres som et vanlig verktøyresultat med isError: true, ikke som en JSON-RPC-feil, med detaljene under _meta[\"com.mcpemails/usage_limit\"]: error_code \"usage_limit_reached\" og reset_at. Nye forsøk kan ikke lykkes før reset_at."
     }
   },
   "rateLimits": {
     "eyebrow": "Hastighetsgrenser",
-    "heading": "Hastighetsgrenser og kvoter.",
+    "heading": "Hastighetsgrenser og rimelig bruk.",
     "perKeyTag": "Rullerende vinduer per nøkkel",
     "perKeyHeading": "100 req / min · 1 000 / t · 10 000 / dag",
-    "perKeyBody": "Håndheves per API-nøkkel uavhengig av plan. Ved overskridelse returnerer serveren HTTP 429 med JSON-RPC-feilkode <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> og et <code>data.retry_after</code>-felt (sekunder). Respekter den verdien før du prøver på nytt. Dette er en kort pause du kan prøve på nytt etter, ikke den månedlige handlingskvoten din.",
+    "perKeyBody": "Håndheves per API-nøkkel uavhengig av plan. Ved overskridelse returnerer serveren HTTP 429 med JSON-RPC-feilkode <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> og et <code>data.retry_after</code>-felt (sekunder). Respekter den verdien før du prøver på nytt: dette er en kort pause du kan prøve på nytt etter.",
     "planTag": "Plantak per minutt",
-    "planHeading": "Free 60 / min · Agent 300 / min · Scale 1 000 / min",
-    "planBody": "Dette er en burst-grense for rimelig bruk per arbeidsområde (aggregert på tvers av alle API-nøklene dine), separat fra den månedlige handlingskvoten din. Ved overskridelse returnerer kall feilkode <code>-32003</code> med <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> og en <code>data.retry_after</code>-nedtelling (sekunder). Oppgrader planen din for et høyere tak.",
-    "capTag": "Månedlig handlingskvote",
-    "capHeading": "Free 2 500 · Agent 50 000 · Scale 300 000 handlinger per faktureringsperiode",
-    "capBody": "Fakturerbare handlinger telles per arbeidsområde gjennom faktureringsperioden. Å gå tom er ikke en JSON-RPC-feil: kallet returnerer HTTP 200 med et vanlig verktøyresultat som bærer <code>isError: true</code> og en <code>_meta[\"com.mcpemails/usage_limit\"]</code>-blokk med <code>error_code: \"usage_limit_reached\"</code>, <code>used_actions</code>, <code>cap</code> og <code>reset_at</code>. Det finnes ingen <code>retry_after</code>, fordi nye forsøk ikke kan lykkes før <code>reset_at</code> eller en planendring. Behandle det som full stopp, ikke som backoff.",
+    "planHeading": "Gratis 60 / min · Pro 300 / min · Team 1 000 / min",
+    "planBody": "En burst-grense for rimelig bruk per arbeidsområde, aggregert på tvers av alle API-nøklene dine. Ved overskridelse returnerer kall feilkode <code>-32003</code> med <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> og en <code>data.retry_after</code>-nedtelling (sekunder). Pro og Team hever taket.",
+    "capTag": "Tak for rimelig bruk",
+    "capHeading": "Full stopp, ikke backoff",
+    "capBody": "Hvert arbeidsområde har et tak for rimelig bruk av fakturerbare handlinger per faktureringsperiode. Det ligger langt over reell bruk og er ikke noe du kjøper deg forbi, men en agent som løper løpsk kan nå det. Å nå det er ikke en JSON-RPC-feil: kallet returnerer HTTP 200 med et vanlig verktøyresultat som bærer <code>isError: true</code> og en <code>_meta[\"com.mcpemails/usage_limit\"]</code>-blokk med <code>error_code: \"usage_limit_reached\"</code> og <code>reset_at</code>. Det finnes ingen <code>retry_after</code>, fordi nye forsøk ikke kan lykkes før <code>reset_at</code>. Behandle det som full stopp, ikke som backoff.",
     "retryTag": "Trygge nye forsøk",
     "retryHeading": "Respekter alltid retry_after; prøv aldri sendinger på nytt i blinde",
-    "retryBody": "For <code>rate_limit_exceeded</code>-feil, vent <code>data.retry_after</code> sekunder før du prøver på nytt. Bruk eksponentiell backoff for <code>provider_error</code>. Ikke prøv <code>email_compose</code>-sendinger automatisk på nytt ved <code>provider_error</code>, siden meldingen kan ha blitt akseptert av leverandøren allerede. Prøv aldri <code>usage_limit_reached</code> på nytt: den løsner først ved <code>reset_at</code> eller ved en planendring."
+    "retryBody": "For <code>rate_limit_exceeded</code>-feil, vent <code>data.retry_after</code> sekunder før du prøver på nytt. Bruk eksponentiell backoff for <code>provider_error</code>. Ikke prøv <code>email_compose</code>-sendinger automatisk på nytt ved <code>provider_error</code>, siden meldingen kan ha blitt akseptert av leverandøren allerede. Prøv aldri <code>usage_limit_reached</code> på nytt: den løsner først ved <code>reset_at</code>."
   },
   "cta": {
     "heading": "Klar til å koble til innboksen din?",
-    "sub": "Start på Free-planen: 2 500 handlinger per faktureringsperiode, ingen kort kreves. Oppgrader til Agent eller Scale for større kvote, høyere burst-grenser og teamfunksjoner.",
+    "sub": "Start på Gratis-planen: én tilkoblet innboks, for alltid og uten kort. Pro kobler til alle postkassene du eier, og Team legger til medlemmer, roller og et arbeidsområde per kunde.",
     "primary": "Kom i gang gratis",
     "secondary": "Se priser"
   },
@@ -426,7 +428,7 @@
     },
     "cta": {
       "heading": "Klar til å koble til innboksen din?",
-      "sub": "Free-plan: ubegrensede innboksforbindelser og 2 500 handlinger per faktureringsperiode, ingen kort kreves.",
+      "sub": "Gratis-plan: én tilkoblet innboks, for alltid og uten kort.",
       "primary": "Kom i gang gratis",
       "secondary": "Les dokumentasjonen"
     }

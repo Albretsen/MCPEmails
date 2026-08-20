@@ -1,18 +1,18 @@
 {
   "meta": {
     "title": "Tarifs",
-    "description": "Chaque formule inclut des boîtes et des clés API illimitées. Les appels MCP facturables réussis utilisent des actions qui se réinitialisent à chaque période de facturation. Le courrier que votre agent lit n'est jamais stocké."
+    "description": "Gratuit connecte une boîte. Pro connecte toutes vos boîtes pour 29 $ par mois. Team ajoute des membres, des rôles, le SSO et un espace de travail par client."
   },
   "hero": {
     "eyebrow": "Tarifs",
-    "titleLine1": "Des actions claires.",
-    "titleLine2": "Aucun dépassement surprise.",
-    "lead": "Chaque espace de travail inclut des boîtes et des clés API illimitées. Les appels MCP facturables réussis utilisent des actions ; les appels échoués et inbox_list sont gratuits. Les actions se réinitialisent à chaque période de facturation et les appels s'arrêtent au plafond."
+    "titleLine1": "Une boîte, gratuite.",
+    "titleLine2": "Toutes vos boîtes, 29 $.",
+    "lead": "Connectez une boîte une fois et votre agent peut lire, chercher, organiser, rédiger, programmer et envoyer. Gratuit couvre une boîte. Pro couvre toutes les boîtes que vous possédez. Team ajoute des personnes, des rôles et un espace de travail distinct par client."
   },
   "billing": {
     "monthly": "Mensuel",
     "annual": "Annuel",
-    "save": "Économisez ~17 %"
+    "save": "Économisez ~20 %"
   },
   "card": {
     "perForever": "/pour toujours",
@@ -22,39 +22,38 @@
   "plans": {
     "free": {
       "name": "Gratuit",
-      "desc": "Découvrez MCPEmails avec 2 500 actions par période de facturation.",
+      "desc": "Connectez une boîte et donnez à votre agent une vraie messagerie.",
       "cta": "Commencer gratuitement",
       "features": [
-        "Boîtes connectées illimitées",
-        "2 500 actions par période de facturation",
-        "Clés API illimitées",
+        "1 boîte connectée",
+        "Lire, chercher, organiser, rédiger et envoyer",
         "Gmail, iCloud, Fastmail et toute boîte IMAP",
-        "60 requêtes / minute",
+        "Clés API illimitées",
+        "Un seul utilisateur",
         "Support communautaire"
       ]
     },
     "solo": {
-      "name": "Agent",
-      "desc": "Pour les utilisateurs intensifs qui font tourner des agents en continu.",
-      "cta": "Choisir Agent",
+      "name": "Pro",
+      "desc": "Toutes vos boîtes, dans un seul agent. Le travail, le personnel et chaque activité annexe.",
+      "cta": "Choisir Pro",
       "features": [
-        "50 000 actions par période de facturation",
-        "300 requêtes / minute (5× en pointe)",
+        "Boîtes connectées illimitées",
+        "Envois programmés et validations",
+        "Limite de pointe 5x plus élevée",
         "Analytique d'usage complète (historique de 90 jours)",
-        "Gmail, iCloud, Fastmail et toute boîte IMAP",
         "Support par e-mail"
       ]
     },
     "pro": {
-      "name": "Scale",
-      "badge": "Le plus populaire",
-      "desc": "Pour les équipes et les agences qui gèrent plusieurs boîtes de clients dans un espace de travail partagé, avec rôles, SSO et journaux d'audit.",
-      "cta": "Choisir Scale",
+      "name": "Team",
+      "desc": "Des boîtes partagées pour une équipe, avec un espace de travail distinct par client ou activité.",
+      "cta": "Choisir Team",
       "features": [
-        "300 000 actions par période de facturation",
-        "1 000 requêtes / minute",
-        "Rôles d'équipe et espaces de travail multiples",
-        "SSO (SAML / OIDC) + journal d'audit",
+        "Tout ce que contient Pro",
+        "Membres illimités avec rôles",
+        "Un espace de travail distinct par client ou activité",
+        "SSO (SAML / OIDC) et journal d'audit",
         "Analytique d'usage complète (historique d'un an)",
         "Support prioritaire"
       ]
@@ -69,14 +68,13 @@
     "title": "Tout côte à côte.",
     "featureCol": "Fonctionnalité",
     "free": "Gratuit",
-    "solo": "Agent",
-    "team": "Scale",
+    "solo": "Pro",
+    "team": "Team",
     "sections": {
       "usage": {
-        "label": "Usage",
+        "label": "Ce que vous obtenez",
         "rows": {
           "inboxes": "Boîtes connectées",
-          "calls": "Appels d'outils MCP",
           "keys": "Clés API",
           "members": "Membres d'équipe",
           "burst": "Limite de débit en pointe"
@@ -123,9 +121,7 @@
     },
     "values": {
       "unlimited": "Illimité",
-      "actionsFree": "2 500 / période de facturation",
-      "actionsAgent": "50 000 / période de facturation",
-      "actionsScale": "300 000 / période de facturation",
+      "oneInbox": "1 boîte",
       "ownerOnly": "Vous seul",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
@@ -140,28 +136,28 @@
     "title": "Questions fréquentes.",
     "items": [
       {
-        "q": "Qu'est-ce qui compte comme une action ?",
-        "a": "Un appel réussi à un outil MCP facturable utilise une action. Les appels échoués, les pannes de fournisseur, les erreurs d'authentification, les limites de débit, les actions du tableau de bord, OAuth, la gestion des clés API et inbox_list sont gratuits. Chaque formule inclut des boîtes et des clés API illimitées."
+        "q": "Que comprend la formule gratuite ?",
+        "a": "Une boîte connectée, pour toujours, sans carte bancaire. Votre agent dispose de tous les outils MCP que nous publions sur cette boîte : lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer. Dès que vous voulez une deuxième boîte sur le même agent, c'est Pro."
       },
       {
         "q": "Qu'est-ce qui compte comme un appel MCP ?",
-        "a": "Un appel JSON-RPC réussi à un outil facturable sur votre point de terminaison /mcp utilise une action. inbox_list, les appels échoués, les pannes de fournisseur, les erreurs d'authentification et les appels limités en débit sont gratuits. Nous sommes un serveur MCP standard, donc le même point de terminaison fonctionne avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et tout client compatible MCP."
+        "a": "Un appel d'outil JSON-RPC sur votre point de terminaison /mcp. Nous sommes un serveur MCP standard, donc le même point de terminaison fonctionne avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make et tout client compatible MCP. Les formules sont facturées au nombre de boîtes connectées, pas au nombre d'appels de votre agent."
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",
         "a": "Le courrier que votre agent lit n'est jamais stocké : les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent, sans rien conserver entre les appels. Nous stockons votre jeton OAuth chiffré ou votre mot de passe d'application afin de pouvoir authentifier les requêtes futures. La seule exception est un message que vous nous demandez de programmer pour plus tard : nous le stockons jusqu'à son envoi, puis en gardons une trace pour votre historique."
       },
       {
-        "q": "Quelle est la différence entre Agent et Scale ?",
-        "a": "Gratuit inclut 2 500 actions par période de facturation. Agent inclut 50 000 actions, un plafond de 300 requêtes/minute, un historique de 90 jours et le support par e-mail. Scale inclut 300 000 actions, un plafond de 1 000/minute, les rôles, un journal d'audit, un historique d'un an et le support prioritaire. Le tableau de bord affiche votre usage et votre date de réinitialisation ; les appels s'arrêtent au plafond, sans dépassement automatique."
+        "q": "Quelle est la différence entre Pro et Team ?",
+        "a": "Pro s'adresse à une personne avec des boîtes illimitées : toutes vos boîtes dans un seul agent, un plafond de 300 requêtes par minute, un historique d'usage de 90 jours et le support par e-mail. Team s'adresse à plusieurs personnes : membres illimités avec rôles, un espace de travail distinct par client ou activité, SSO (SAML / OIDC), journal d'audit, historique d'un an et support prioritaire."
       },
       {
         "q": "Puis-je changer ou annuler ma formule ?",
-        "a": "Oui. Passez à une formule supérieure ou inférieure, ou annulez à tout moment depuis la section facturation de votre tableau de bord. Si vous annulez une formule payante, vous conservez l'accès jusqu'à la fin de votre période de facturation, puis vous repassez automatiquement à Gratuit avec son allocation de 2 500 actions."
+        "a": "Oui. Changez de formule ou annulez à tout moment depuis la section facturation de votre tableau de bord. L'annulation arrête le renouvellement suivant et vous gardez tout ce que vous avez payé jusqu'à la fin de la période en cours, puis vous repassez à Gratuit avec une boîte connectée. Nous ne remboursons pas les périodes partielles, mais voyez la question sur les remboursements pour le premier paiement d'un nouvel abonnement."
       },
       {
         "q": "Comment fonctionne la remise annuelle ?",
-        "a": "Payer à l'année permet d'économiser environ 17 % par rapport à la facturation mensuelle : Agent est à 120 $/an et Scale à 490 $/an. Vous êtes facturé une fois pour 12 mois d'avance. Si vous annulez en cours d'année, nous remboursons les mois entiers non utilisés."
+        "a": "Payer à l'année permet d'économiser environ 20 % par rapport à la facturation mensuelle : Pro est à 276 $ par an (23 $ par mois) et Team à 756 $ par an (63 $ par mois). Vous êtes facturé une fois pour 12 mois d'avance. L'annulation arrête le renouvellement et vous gardez l'accès jusqu'à la fin de l'année payée. Hormis le remboursement sous 14 jours du premier paiement, nous ne remboursons pas les mois restants."
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
@@ -169,7 +165,7 @@
       },
       {
         "q": "Existe-t-il une politique de remboursement ?",
-        "a": "Si vous n'êtes pas satisfait dans les 30 jours suivant votre première facture payée, contactez-nous pour un remboursement intégral, sans poser de questions."
+        "a": "Oui. Si le premier paiement d'un nouvel abonnement ne correspond pas à ce que vous attendiez, écrivez-nous dans les 14 jours et nous le remboursons intégralement. Ensuite, vous pouvez annuler à tout moment et garder l'accès jusqu'à la fin de la période déjà payée, mais nous ne remboursons pas les périodes partielles. Si vous êtes un consommateur dans l'UE ou au Royaume-Uni, ces mêmes 14 jours constituent votre droit légal de rétractation."
       },
       {
         "q": "Puis-je l'héberger moi-même plutôt que de payer ?",
@@ -179,7 +175,7 @@
   },
   "ctaBand": {
     "title": "Prêt à offrir une boîte de réception à votre agent ?",
-    "sub": "Commencez avec Gratuit : sans carte de crédit et 2 500 actions par période de facturation. Passez à une formule supérieure pour une allocation d'actions plus élevée, des limites de pointe supérieures ou des fonctionnalités d'équipe.",
+    "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Ajoutez toutes vos autres boîtes avec Pro, pour 29 $ par mois.",
     "ctaPrimary": "Commencer gratuitement",
     "ctaSecondary": "Lire la documentation"
   }

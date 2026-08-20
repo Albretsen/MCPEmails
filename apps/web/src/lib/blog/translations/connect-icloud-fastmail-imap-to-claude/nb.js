@@ -94,5 +94,5 @@ Hvis du fortsatt vurderer om du i det hele tatt skal koble e-post til en agent, 
 
 ## Oppsummering
 
-iCloud, Fastmail og IMAP er ikke andrerangs her. Generer et app-passord, lim det inn i **Inboxes → Connect Inbox**, pek Claude mot [endepunktet](/docs), og du har en agent med full lese-/sendetilgang pluss permanent sletting som OAuth-leverandørene ikke kan tilby. Det er [gratis å komme i gang](/signup), uten kort, ubegrenset antall innbokser.`,
+iCloud, Fastmail og IMAP er ikke andrerangs her. Generer et app-passord, lim det inn i **Inboxes → Connect Inbox**, pek Claude mot [endepunktet](/docs), og du har en agent med full lese-/sendetilgang pluss permanent sletting som OAuth-leverandørene ikke kan tilby. Det er [gratis å komme i gang](/signup), uten kort, én innboks for alltid.`,
 };

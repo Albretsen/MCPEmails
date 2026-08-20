@@ -7,7 +7,7 @@ import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '.
 import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
-import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage } from './Pages';
+import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, planDisplayName } from './Pages';
 import { ConnectModal } from './ConnectModal';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
@@ -60,7 +60,7 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, inboxesGrandfathered = false, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null }) {
   const searchParams = useSearchParams();
   const tr = useTranslations('dashboardChrome');
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -197,13 +197,19 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       toast({ message: tr('app.connectedSuccess', { provider: label }), variant: 'success' });
       setRouteState(returnedOnboardingClient ? 'overview' : 'inboxes');
     } else if (errorParam === 'inbox_limit_reached') {
-      const plan = workspace?.plan ?? 'free';
-      const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+      // The provider OAuth callbacks redirect here carrying the error code and
+      // nothing else, so this path must not depend on a count or a max.
       toast({
-        message: tr('app.inboxLimitReached', { plan: planLabel }),
+        message: tr('app.inboxLimitReached', { plan: planDisplayName(workspace?.plan) }),
         variant: 'warning',
       });
+      // Re-open the connect modal in its upgrade state. The user came here
+      // trying to add a mailbox; sending them to an inbox list with a toast
+      // makes them find the offer themselves, and the two instrumented
+      // checkouts we have both came from people pushed at a card form before
+      // they wanted anything. The offer belongs where the intent already is.
       setRouteState('inboxes');
+      setShowConnect(true);
     } else if (errorParam === 'token_exchange_failed') {
       toast({ message: tr('app.tokenExchangeFailed'), variant: 'error' });
       setRouteState('inboxes');
@@ -640,17 +646,30 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
 
         {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
-        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
+        {route === "usage"    && <UsagePage usageData={usageData} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
-        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} onWorkspaceUpdate={setWorkspace} />}
+        {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} inboxCount={inboxes.length} grandfathered={inboxesGrandfathered} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} />}
       </div>
 
-      {showConnect && <ConnectModal reconnect={reconnectInbox} onClose={() => { setShowConnect(false); setReconnectInbox(null); }} onConnect={onConnect} atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes} plan={workspace?.plan ?? 'free'} />}
+      {/* atInboxLimit is false whenever maxInboxes is null, which is how every
+          paid, comped, and grandfathered account arrives here: no cap, no
+          upgrade panel, straight to the provider picker. */}
+      {showConnect && (
+        <ConnectModal
+          reconnect={reconnectInbox}
+          onClose={() => { setShowConnect(false); setReconnectInbox(null); }}
+          onConnect={onConnect}
+          atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes}
+          planName={planDisplayName(workspace?.plan)}
+          inboxCount={inboxes.length}
+          maxInboxes={planLimits?.maxInboxes ?? null}
+        />
+      )}
 
       <CommandPalette
         open={showCommand}

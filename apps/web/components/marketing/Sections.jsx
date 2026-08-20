@@ -117,7 +117,7 @@ export function HeroTextBlock({ onGetStarted }) {
         <Link className="btn btn-secondary btn-lg" href="/docs">{t('hero.ctaSecondary')}</Link>
       </div>
       <div className="hero-meta">
-        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaUnlimited')}</span>
+        <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaFreeInbox')}</span>
         <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaNoCard')}</span>
         <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaNeverStored')}</span>
       </div>
@@ -495,7 +495,7 @@ export function DashboardPreview() {
                 <span style={{ width: 28, height: 28, borderRadius: 999, background: 'var(--cobalt-600)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600 }}>J</span>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--fg-1)' }}>jordan</div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>Scale plan</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--fg-3)', textTransform: 'capitalize' }}>Pro plan</div>
                 </div>
               </div>
             </div>
@@ -672,15 +672,19 @@ export function Quote() {
 export function Pricing({ onGetStarted, stripePrices }) {
   const t = useTranslations('home');
   // Static, non-translated attributes per tier. `msgKey` indexes the message
-  // bundle; `priceKey` indexes the live Stripe prices map (Scale is `pro` there).
+  // bundle; `priceKey` indexes the live Stripe prices map (Team is `pro` there).
   // Paid links intentionally go through /signup even for signed-in visitors.
   // Auth middleware immediately forwards an existing session to the preserved
   // dashboard checkout intent, while new visitors keep that intent through
   // Google, GitHub, magic-link, or password authentication.
+  //
+  // Pro carries the accent: unlimited inboxes for one person is the upgrade
+  // almost everyone actually wants, and Team only pays off once other people
+  // are involved.
   const tiers = [
     { msgKey: 'free', priceKey: 'free', price: '$0',  per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
-    { msgKey: 'solo', priceKey: 'solo', price: '$12', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('solo', false, false) },
-    { msgKey: 'team', priceKey: 'pro',  price: '$49', per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('pro', false, false) },
+    { msgKey: 'solo', priceKey: 'solo', price: '$29', per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('solo', false, false) },
+    { msgKey: 'team', priceKey: 'pro',  price: '$79', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
   ];
   return (
     <section className="section" id="pricing">

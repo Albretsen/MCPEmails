@@ -258,10 +258,12 @@
       "title": "Borradores",
       "desc": "Gestiona los borradores en la carpeta Drafts de la bandeja. Define action: 'list' (borradores guardados, cada uno con su draft_id, asunto, destinatarios y fecha de creación), 'create' (subject/body obligatorios, opcionalmente to/cc/bcc/html_body), 'update' (draft_id más los campos a sobrescribir) o 'send' (draft_id — elimina el borrador y lo envía, irreversible). La firma de la bandeja se incrusta cuando el borrador se crea o se actualiza, así que ya está presente en la carpeta Drafts y no se vuelve a añadir al enviar; pasa include_signature: false para crear un borrador sin ella. En bandejas basadas en IMAP un draft_id cambia en cada actualización, así que usa siempre el más reciente; Gmail y Outlook mantienen un draft_id estable.",
       "params": {
-        "action": "Qué operación realizar: \"list\", \"create\", \"update\" o \"send\". Determina qué otros argumentos se aplican.",
+        "action": "Qué operación realizar: \"list\", \"create\", \"reply\", \"update\" o \"send\". Determina qué otros argumentos se aplican.",
         "inbox_id": "UUID de la bandeja que contiene los borradores. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "draft_id": "ID de borrador del proveedor (action 'update' o 'send'), de la acción create, update o list más reciente. En bandejas IMAP cambia tras cada actualización, así que usa siempre el más reciente.",
+        "message_id": "ID del mensaje de origen para la action 'reply', de una acción list, read o search previa.",
+        "reply_all": "Para la action 'reply': false por defecto, respondiendo solo al remitente. Ponlo en true para incluir a los destinatarios originales de To y Cc.",
         "subject": "Asunto del borrador (action 'create'/'update').",
         "body": "Cuerpo de texto del borrador (action 'create'/'update').",
         "to": "Direcciones de destinatarios (action 'create'/'update'). Por defecto [].",
@@ -321,7 +323,7 @@
   "errors": {
     "eyebrow": "Códigos de error",
     "heading": "Códigos de error y guía de reintentos.",
-    "sub": "Los fallos de autenticación, alcance y límite de tasa devuelven un objeto <code>error</code> JSON-RPC con un código numérico. Los fallos de ejecución de herramientas (bandeja no encontrada, error del proveedor, asignación mensual de acciones agotada, etc.) devuelven un <code>result</code> normal con <code>isError: true</code> y un mensaje legible en <code>content[0].text</code>.",
+    "sub": "Los fallos de autenticación, alcance y límite de tasa devuelven un objeto <code>error</code> JSON-RPC con un código numérico. Los fallos de ejecución de herramientas (bandeja no encontrada, error del proveedor, techo de uso justo alcanzado, etc.) devuelven un <code>result</code> normal con <code>isError: true</code> y un mensaje legible en <code>content[0].text</code>.",
     "thCode": "Código",
     "thType": "Tipo",
     "thWhen": "Cuándo ocurre",
@@ -334,28 +336,28 @@
       "param": "Nombre de herramienta desconocido, o parámetro ausente / inválido en tools/call",
       "rate": "Límite de tasa por clave o por espacio de trabajo superado (HTTP 429). data.error_code es siempre \"rate_limit_exceeded\". Espera data.retry_after segundos, o consulta la cabecera Retry-After, antes de reintentar.",
       "tool": "La herramienta se ejecutó pero encontró un error (bandeja no encontrada, mensaje no encontrado, fallo de autenticación del proveedor, destinatario inválido, adjunto demasiado grande, 5xx del proveedor). La descripción del error está en content[0].text.",
-      "cap": "La asignación mensual de acciones del plan se ha agotado. Se devuelve como un resultado de herramienta normal con isError: true, no como un error JSON-RPC, con los detalles en _meta[\"com.mcpemails/usage_limit\"]: error_code \"usage_limit_reached\", used_actions, cap y reset_at. Reintentar no puede funcionar antes de reset_at o de un cambio de plan."
+      "cap": "El espacio de trabajo ha alcanzado su techo de uso justo de acciones facturables para el periodo de facturación actual. Se devuelve como un resultado de herramienta normal con isError: true, no como un error JSON-RPC, con los detalles en _meta[\"com.mcpemails/usage_limit\"]: error_code \"usage_limit_reached\" y reset_at. Reintentar no puede funcionar antes de reset_at."
     }
   },
   "rateLimits": {
     "eyebrow": "Límites de tasa",
-    "heading": "Límites de tasa y cuotas.",
+    "heading": "Límites de tasa y uso justo.",
     "perKeyTag": "Ventanas móviles por clave",
     "perKeyHeading": "100 pet / min · 1.000 / h · 10.000 / día",
-    "perKeyBody": "Aplicados por clave de API independientemente del plan. Cuando se superan, el servidor devuelve HTTP 429 con el código de error JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> y un campo <code>data.retry_after</code> (segundos). Respeta ese valor antes de reintentar. Es una pausa breve y reintentable, no tu asignación mensual de acciones.",
+    "perKeyBody": "Aplicados por clave de API independientemente del plan. Cuando se superan, el servidor devuelve HTTP 429 con el código de error JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> y un campo <code>data.retry_after</code> (segundos). Respeta ese valor antes de reintentar: es una pausa breve y reintentable.",
     "planTag": "Tope por minuto del plan",
-    "planHeading": "Gratis 60 / min · Agent 300 / min · Scale 1.000 / min",
-    "planBody": "Este es un límite de ráfaga de uso justo por espacio de trabajo (agregado entre todas tus claves de API), independiente de tu asignación mensual de acciones. Cuando se supera, las llamadas devuelven el código de error <code>-32003</code> con <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> y una cuenta atrás <code>data.retry_after</code> (segundos). Mejora tu plan para un tope más alto.",
-    "capTag": "Asignación mensual de acciones",
-    "capHeading": "Gratis 2.500 · Agent 50.000 · Scale 300.000 acciones por periodo de facturación",
-    "capBody": "Las acciones facturables se cuentan por espacio de trabajo a lo largo del periodo de facturación. Agotarlas no es un error JSON-RPC: la llamada devuelve HTTP 200 con un resultado de herramienta normal que lleva <code>isError: true</code> y un bloque <code>_meta[\"com.mcpemails/usage_limit\"]</code> con <code>error_code: \"usage_limit_reached\"</code>, <code>used_actions</code>, <code>cap</code> y <code>reset_at</code>. No hay <code>retry_after</code>, porque reintentar no puede funcionar antes de <code>reset_at</code> o de un cambio de plan. Trátalo como una parada, no como un retroceso.",
+    "planHeading": "Gratis 60 / min · Pro 300 / min · Team 1.000 / min",
+    "planBody": "Un límite de ráfaga de uso justo por espacio de trabajo, agregado entre todas tus claves de API. Cuando se supera, las llamadas devuelven el código de error <code>-32003</code> con <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> y una cuenta atrás <code>data.retry_after</code> (segundos). Pro y Team elevan el tope.",
+    "capTag": "Techo de uso justo",
+    "capHeading": "Una parada, no un retroceso",
+    "capBody": "Cada espacio de trabajo tiene un techo de uso justo de acciones facturables por periodo de facturación. Está muy por encima del uso real y no es algo que se compre, pero un agente descontrolado puede alcanzarlo. Alcanzarlo no es un error JSON-RPC: la llamada devuelve HTTP 200 con un resultado de herramienta normal que lleva <code>isError: true</code> y un bloque <code>_meta[\"com.mcpemails/usage_limit\"]</code> con <code>error_code: \"usage_limit_reached\"</code> y <code>reset_at</code>. No hay <code>retry_after</code>, porque reintentar no puede funcionar antes de <code>reset_at</code>. Trátalo como una parada, no como un retroceso.",
     "retryTag": "Reintentar de forma segura",
     "retryHeading": "Respeta siempre retry_after; nunca reintentes envíos a ciegas",
-    "retryBody": "Para errores <code>rate_limit_exceeded</code>, espera <code>data.retry_after</code> segundos antes de reintentar. Usa retroceso exponencial para <code>provider_error</code>. No reintentes automáticamente los envíos de <code>email_compose</code> ante <code>provider_error</code>, ya que el mensaje puede haber sido aceptado por el proveedor. Nunca reintentes <code>usage_limit_reached</code>: solo se libera en <code>reset_at</code> o al cambiar de plan."
+    "retryBody": "Para errores <code>rate_limit_exceeded</code>, espera <code>data.retry_after</code> segundos antes de reintentar. Usa retroceso exponencial para <code>provider_error</code>. No reintentes automáticamente los envíos de <code>email_compose</code> ante <code>provider_error</code>, ya que el mensaje puede haber sido aceptado por el proveedor. Nunca reintentes <code>usage_limit_reached</code>: solo se libera en <code>reset_at</code>."
   },
   "cta": {
     "heading": "¿Listo para conectar tu bandeja de entrada?",
-    "sub": "Empieza en el plan Gratis: 2.500 acciones por período de facturación, sin tarjeta. Mejora a Agent o Scale para una cuota mayor, límites de ráfaga más altos y funciones de equipo.",
+    "sub": "Empieza en el plan Gratis: una bandeja conectada, para siempre y sin tarjeta. Pro conecta todos los buzones que tengas, y Team añade miembros, roles y un espacio de trabajo por cliente.",
     "primary": "Empieza gratis",
     "secondary": "Ver precios"
   },
@@ -426,7 +428,7 @@
     },
     "cta": {
       "heading": "¿Listo para conectar tu bandeja de entrada?",
-      "sub": "Plan Gratis: conexiones de bandeja de entrada ilimitadas y 2.500 acciones por período de facturación, sin tarjeta.",
+      "sub": "Plan Gratis: una bandeja conectada, para siempre y sin tarjeta.",
       "primary": "Empieza gratis",
       "secondary": "Lee la documentación"
     }

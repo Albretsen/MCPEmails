@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
-import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
@@ -101,20 +101,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: 'plan_limit' });
-      const capLabel = inboxLimit.maxInboxes === 1
-        ? '1 inbox'
-        : `${inboxLimit.maxInboxes} inboxes`;
-      return NextResponse.json(
-        {
-          error: `Your ${inboxLimit.plan} plan allows ${capLabel}. ` +
-            `Upgrade at mcpemails.com/pricing to connect more.`,
-          error_code: 'inbox_limit_reached',
-          plan: inboxLimit.plan,
-          current_count: inboxLimit.currentCount,
-          max_inboxes: inboxLimit.maxInboxes,
-        },
-        { status: 402 }
-      );
+      // 402 with a stable machine-readable body; the dashboard owns the
+      // localised sentence. See inboxLimitErrorBody for why nothing here
+      // interpolates the internal plan slug.
+      return NextResponse.json(inboxLimitErrorBody(inboxLimit), { status: 402 });
     }
   }
 
@@ -135,23 +125,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const userMessage = isAuthFailed ? FASTMAIL_AUTH_FAILED_MESSAGE : validation.message;
     const body: Record<string, string> = { error: userMessage };
     if (isAuthFailed) body.error_code = 'auth_failed';
-    // A wrong password is expected/user-driven and not worth recording; the
-    // other codes indicate a real infra/config issue worth tracking frequency
-    // of — this table previously had zero writes anywhere in the codebase.
-    if (!isAuthFailed) {
-      await captureError(new Error(validation.message), {
-        severity: 'low',
-        route: 'api/inboxes/fastmail-app-password',
-        reason: validation.code,
-        workspaceId,
-      });
-    }
+    // Fastmail is the clearest case against skipping AUTH_FAILED here: it has
+    // 6 connect attempts and 0 successes, every one of them an auth failure,
+    // and because this branch dropped exactly those rows there was nothing on
+    // file to say whether users were mistyping or the flow was broken outright.
+    // A provider at a 100% failure rate is precisely what this table is for.
+    // `detail` is sanitized before storage (credential, address and SASL token
+    // stripped by sanitizeAuthDiagnostic), so recording it is safe.
+    await captureError(new Error(validation.message), {
+      severity: 'low',
+      route: 'api/inboxes/fastmail-app-password',
+      reason: validation.code,
+      phase: validation.phase,
+      detail: validation.detail ?? null,
+      workspaceId,
+    });
     return NextResponse.json(body, { status: 422 });
   }
 
   const smtpValidation = await validateSmtpCredential({ host: 'smtp.fastmail.com', port: 465, email, password: appPassword, security: 'tls' });
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    await captureError(new Error(smtpValidation.message), {
+      severity: 'low',
+      route: 'api/inboxes/fastmail-app-password',
+      reason: smtpValidation.code,
+      phase: `smtp_${smtpValidation.phase}`,
+      detail: smtpValidation.detail ?? null,
+      workspaceId,
+    });
     return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
   }
 

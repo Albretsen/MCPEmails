@@ -83,7 +83,7 @@ Your client is claude.ai, Claude Desktop, or Cursor. You want zero secrets in yo
 
 Your client has no OAuth support — Cline, JetBrains, the OpenAI-style tool runners, or your own code. You're scripting against the endpoint with cURL or a small program. You need a stable credential a headless process can use without a human clicking through a consent screen. A scoped key is exactly right here, and there's a full walkthrough for the [Cursor, Cline, and VS Code clients](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-One more thing that's true regardless of which you pick: rate limits. Every API key is capped at 100 requests/minute, 1,000/hour, and 10,000/day, and each workspace has a burst ceiling by plan (60/min on [Free](/pricing), up to 1,000/min on Scale). When you hit a limit the server hands back a \`retry_after\` value in seconds. Honor it, and never blind-retry an \`email_compose\` send — you'll double-send.
+One more thing that's true regardless of which you pick: rate limits. Every API key is capped at 100 requests/minute, 1,000/hour, and 10,000/day, and each workspace has a burst ceiling by plan (60/min on [Free](/pricing), up to 1,000/min on Team). When you hit a limit the server hands back a \`retry_after\` value in seconds. Honor it, and never blind-retry an \`email_compose\` send — you'll double-send.
 
 ## The bottom line
 

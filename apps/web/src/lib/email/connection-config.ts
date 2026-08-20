@@ -43,7 +43,11 @@ export function sanitizeAuthDiagnostic(
   text: string,
   secrets: readonly (string | null | undefined)[] = []
 ): string {
-  const tag = /^(OK|NO|BAD)$/i.test(status) ? status.toUpperCase() : 'UNKNOWN';
+  // IMAP answers with a tagged OK/NO/BAD; SMTP answers with a three-digit
+  // status such as 535. Both are non-identifying and both are the part that
+  // makes a diagnostic worth keeping, so both are preserved verbatim. Anything
+  // else is server-controlled free text and is not trusted into the tag slot.
+  const tag = /^(OK|NO|BAD|\d{3})$/i.test(status) ? status.toUpperCase() : 'UNKNOWN';
 
   // Strip the exact submitted values first: a username may itself be an address,
   // and a password could in principle appear in an echoed command.

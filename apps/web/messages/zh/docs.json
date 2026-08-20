@@ -258,10 +258,12 @@
       "title": "草稿",
       "desc": "管理收件箱 Drafts 文件夹中的草稿。设置 action：'list'（已保存的草稿，每个都含 draft_id、主题、收件人和创建时间）、'create'（subject/body 必填，可选 to/cc/bcc/html_body）、'update'（draft_id 加上要覆盖的字段），或 'send'（draft_id——移除草稿并发送，不可逆）。收件箱的签名会在草稿创建或更新时嵌入，因此它已经存在于 Drafts 文件夹中，发送时不会再次追加；传入 include_signature: false 可创建不带签名的草稿。在基于 IMAP 的收件箱上，draft_id 在每次更新后都会改变，因此始终使用最新的；Gmail 和 Outlook 保持 draft_id 稳定。",
       "params": {
-        "action": "要执行的操作：\"list\"、\"create\"、\"update\" 或 \"send\"。决定其他哪些参数适用。",
+        "action": "要执行的操作：\"list\"、\"create\"、\"reply\"、\"update\" 或 \"send\"。决定其他哪些参数适用。",
         "inbox_id": "拥有这些草稿的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "draft_id": "提供商草稿 ID（action 'update' 或 'send'），来自最近的 create、update 或 list 操作。在 IMAP 收件箱上，它在每次更新后都会改变，因此始终使用最新的。",
+        "message_id": "action 'reply' 的源邮件 ID，来自先前的 list、read 或 search 操作。",
+        "reply_all": "对于 action 'reply'：默认为 false，仅回复发件人。设为 true 可包含原始的 To 和 Cc 收件人。",
         "subject": "草稿主题行（action 'create'/'update'）。",
         "body": "草稿的纯文本正文（action 'create'/'update'）。",
         "to": "收件人地址（action 'create'/'update'）。默认 []。",
@@ -321,7 +323,7 @@
   "errors": {
     "eyebrow": "错误代码",
     "heading": "错误代码与重试指南。",
-    "sub": "认证、权限范围和速率限制失败会返回一个带有数字代码的 JSON-RPC <code>error</code> 对象。工具执行失败（收件箱未找到、服务商错误、每月操作额度用尽等）会返回一个正常的 <code>result</code>，其中 <code>isError: true</code>，并在 <code>content[0].text</code> 中提供人类可读的消息。",
+    "sub": "认证、权限范围和速率限制失败会返回一个带有数字代码的 JSON-RPC <code>error</code> 对象。工具执行失败（收件箱未找到、服务商错误、触及合理使用上限等）会返回一个正常的 <code>result</code>，其中 <code>isError: true</code>，并在 <code>content[0].text</code> 中提供人类可读的消息。",
     "thCode": "代码",
     "thType": "类型",
     "thWhen": "发生时机",
@@ -334,28 +336,28 @@
       "param": "未知的工具名称，或 tools/call 中缺少 / 无效的参数",
       "rate": "超出每密钥或每工作区的速率限制（HTTP 429）。data.error_code 始终为 \"rate_limit_exceeded\"。重试前请等待 data.retry_after 秒，或读取 Retry-After 响应头。",
       "tool": "工具已执行但遇到错误（收件箱未找到、邮件未找到、服务商认证失败、收件人无效、附件过大、服务商 5xx）。错误描述在 content[0].text 中。",
-      "cap": "套餐的每月操作额度已用尽。它以普通工具结果返回，带 isError: true，而不是 JSON-RPC 错误；详情位于 _meta[\"com.mcpemails/usage_limit\"]：error_code \"usage_limit_reached\"、used_actions、cap 和 reset_at。在 reset_at 之前或未更换套餐时，重试不可能成功。"
+      "cap": "工作区在当前计费周期内已触及可计费操作的合理使用上限。它以普通工具结果返回，带 isError: true，而不是 JSON-RPC 错误；详情位于 _meta[\"com.mcpemails/usage_limit\"]：error_code \"usage_limit_reached\" 和 reset_at。在 reset_at 之前重试不可能成功。"
     }
   },
   "rateLimits": {
     "eyebrow": "速率限制",
-    "heading": "速率限制与配额。",
+    "heading": "速率限制与合理使用。",
     "perKeyTag": "每密钥滚动窗口",
     "perKeyHeading": "100 次/分钟 · 1,000 次/小时 · 10,000 次/天",
-    "perKeyBody": "无论套餐如何，均按每个 API 密钥强制执行。超出时，服务器返回 HTTP 429 以及 JSON-RPC 错误代码 <code>-32003</code>、<code>data.error_code: \"rate_limit_exceeded\"</code> 和一个 <code>data.retry_after</code> 字段（秒）。重试前请遵守该值。这只是一次可以重试的短暂暂停，不是你的每月操作额度。",
+    "perKeyBody": "无论套餐如何，均按每个 API 密钥强制执行。超出时，服务器返回 HTTP 429 以及 JSON-RPC 错误代码 <code>-32003</code>、<code>data.error_code: \"rate_limit_exceeded\"</code> 和一个 <code>data.retry_after</code> 字段（秒）。重试前请遵守该值：这只是一次可以重试的短暂暂停。",
     "planTag": "套餐每分钟上限",
-    "planHeading": "免费 60 次/分钟 · Agent 300 次/分钟 · Scale 1,000 次/分钟",
-    "planBody": "这是一个每工作区的合理使用突发限制（在你所有 API 密钥间汇总），与每月操作额度分开计算。超出时，调用会返回错误代码 <code>-32003</code>，并附带 <code>data.error_code: \"rate_limit_exceeded\"</code>、<code>data.window: \"per_minute\"</code> 和一个 <code>data.retry_after</code> 倒计时（秒）。升级你的套餐可获得更高的上限。",
-    "capTag": "每月操作额度",
-    "capHeading": "免费 2,500 · Agent 50,000 · Scale 300,000 次操作/计费周期",
-    "capBody": "计费操作按工作区在整个计费周期内累计。额度用尽不是 JSON-RPC 错误：调用会返回 HTTP 200 和一个普通工具结果，带有 <code>isError: true</code> 以及一个 <code>_meta[\"com.mcpemails/usage_limit\"]</code> 区块，其中包含 <code>error_code: \"usage_limit_reached\"</code>、<code>used_actions</code>、<code>cap</code> 和 <code>reset_at</code>。这里没有 <code>retry_after</code>，因为在 <code>reset_at</code> 之前或未更换套餐时重试不可能成功。请把它当作停止信号，而不是退避重试。",
+    "planHeading": "免费 60 次/分钟 · Pro 300 次/分钟 · Team 1,000 次/分钟",
+    "planBody": "这是一个每工作区的合理使用突发限制，在你所有 API 密钥间汇总。超出时，调用会返回错误代码 <code>-32003</code>，并附带 <code>data.error_code: \"rate_limit_exceeded\"</code>、<code>data.window: \"per_minute\"</code> 和一个 <code>data.retry_after</code> 倒计时（秒）。Pro 和 Team 会提高该上限。",
+    "capTag": "合理使用上限",
+    "capHeading": "这是停止信号，不是退避重试",
+    "capBody": "每个工作区在每个计费周期内都有一个针对可计费操作的合理使用上限。它远高于真实用量，也不是可以花钱突破的东西，但失控的智能体有可能触及它。触及该上限不是 JSON-RPC 错误：调用会返回 HTTP 200 和一个普通工具结果，带有 <code>isError: true</code> 以及一个 <code>_meta[\"com.mcpemails/usage_limit\"]</code> 区块，其中包含 <code>error_code: \"usage_limit_reached\"</code> 和 <code>reset_at</code>。这里没有 <code>retry_after</code>，因为在 <code>reset_at</code> 之前重试不可能成功。请把它当作停止信号，而不是退避重试。",
     "retryTag": "安全重试",
     "retryHeading": "始终遵守 retry_after；切勿盲目重试发送",
-    "retryBody": "对于 <code>rate_limit_exceeded</code> 错误，请在重试前等待 <code>data.retry_after</code> 秒。对于 <code>provider_error</code> 请使用指数退避。请勿在 <code>provider_error</code> 时自动重试 <code>email_compose</code> 发送，因为该邮件可能已被服务商接受。切勿重试 <code>usage_limit_reached</code>：它只在 <code>reset_at</code> 或更换套餐时才会解除。"
+    "retryBody": "对于 <code>rate_limit_exceeded</code> 错误，请在重试前等待 <code>data.retry_after</code> 秒。对于 <code>provider_error</code> 请使用指数退避。请勿在 <code>provider_error</code> 时自动重试 <code>email_compose</code> 发送，因为该邮件可能已被服务商接受。切勿重试 <code>usage_limit_reached</code>：它只在 <code>reset_at</code> 时才会解除。"
   },
   "cta": {
     "heading": "准备好连接你的收件箱了吗？",
-    "sub": "从免费套餐开始：每个计费周期 2,500 次操作，无需信用卡。升级到 Agent 或 Scale 可获得更多操作额度、更高的突发限额和团队功能。",
+    "sub": "从免费套餐开始：一个已连接收件箱，永久免费，无需信用卡。Pro 可连接你拥有的每一个邮箱，Team 再增加成员、角色，以及每个客户一个工作区。",
     "primary": "免费开始使用",
     "secondary": "查看价格"
   },
@@ -426,7 +428,7 @@
     },
     "cta": {
       "heading": "准备好连接你的收件箱了吗？",
-      "sub": "免费套餐：不限数量的收件箱连接及每个计费周期 2,500 次操作，无需信用卡。",
+      "sub": "免费套餐：一个已连接收件箱，永久免费，无需信用卡。",
       "primary": "免费开始使用",
       "secondary": "阅读文档"
     }

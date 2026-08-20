@@ -10,9 +10,13 @@ import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
-// NOTE: the "Scale" tier keeps the internal key `pro` so live Stripe prices
-// (keyed by plan id) resolve correctly. Only its display name is "Scale".
-// User-facing copy (name, desc, cta, features, badge) is read from the
+// The value metric is CONNECTED INBOXES. Free is one inbox, Pro is every inbox
+// you own, Team adds people. The action ceiling is a silent abuse guard and is
+// deliberately absent from this page (see src/lib/stripe/plans.ts).
+//
+// NOTE: the "Pro" tier keeps the internal key `solo` and "Team" keeps `pro`, so
+// live Stripe prices (keyed by plan id) resolve correctly. Only the display
+// names changed. User-facing copy (name, desc, cta, features) is read from the
 // `pricing` message bundle via `plans.<key>.*`.
 
 const PLANS = [
@@ -27,21 +31,21 @@ const PLANS = [
   },
   {
     key: 'solo',
-    monthly: 12,
-    annual: 10,        // effective monthly when billed yearly ($120/yr)
-    perKey: 'card.perMonth',
-    featured: false,
-    ctaHref: '/signup',
-    ctaPrimary: false,
-  },
-  {
-    key: 'pro',
-    monthly: 49,
-    annual: 41,        // effective monthly when billed yearly ($490/yr)
+    monthly: 29,
+    annual: 23,        // effective monthly when billed yearly ($276/yr)
     perKey: 'card.perMonth',
     featured: true,
     ctaHref: '/signup',
     ctaPrimary: true,
+  },
+  {
+    key: 'pro',
+    monthly: 79,
+    annual: 63,        // effective monthly when billed yearly ($756/yr)
+    perKey: 'card.perMonth',
+    featured: false,
+    ctaHref: '/signup',
+    ctaPrimary: false,
   },
 ];
 
@@ -53,10 +57,11 @@ const TABLE_SECTIONS = [
   {
     key: 'usage',
     rows: [
-      { key: 'inboxes',  free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
-      { key: 'calls',    free: 'values.actionsFree', solo: 'values.actionsAgent', pro: 'values.actionsScale' },
+      { key: 'inboxes',  free: 'values.oneInbox',  solo: 'values.unlimited', pro: 'values.unlimited' },
       { key: 'keys',     free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
-      { key: 'members',  free: 'values.ownerOnly', solo: 'values.unlimited', pro: 'values.unlimited' },
+      // Pro is deliberately single-seat: sharing inboxes with other people is
+      // what Team is for.
+      { key: 'members',  free: 'values.ownerOnly', solo: 'values.ownerOnly', pro: 'values.unlimited' },
       { key: 'burst',    free: 'values.burstFree', solo: 'values.burstSolo', pro: 'values.burstPro' },
     ],
   },

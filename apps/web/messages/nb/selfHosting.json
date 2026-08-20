@@ -28,7 +28,7 @@
       {
         "feature": "Pris",
         "self": "Gratis, du kjører den",
-        "hosted": "Gratis, $12 eller $49"
+        "hosted": "Gratis, $29 eller $79"
       },
       {
         "feature": "MCP-serveren og alle 10 verktøyene",
@@ -73,7 +73,7 @@
       {
         "feature": "Teamarbeidsområder, roller, SSO, revisjonslogg",
         "self": "Ikke inkludert",
-        "hosted": "Scale-plan"
+        "hosted": "Team-plan"
       },
       {
         "feature": "Support",

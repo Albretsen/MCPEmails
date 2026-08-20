@@ -21,7 +21,7 @@
     "lead": "Connectez Gmail, iCloud, Fastmail ou n'importe quelle boîte IMAP une seule fois. Collez une URL de point de terminaison MCP dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make ou n'importe quel client MCP. Les clients OAuth se connectent en un clic, sans configuration de clé API. Votre agent lit, recherche et envoie du courrier en direct, et le courrier qu'il lit n'est jamais stocké.",
     "ctaPrimary": "Connecter votre boîte de réception",
     "ctaSecondary": "Lire la documentation",
-    "metaUnlimited": "2 500 actions gratuites par période de facturation",
+    "metaFreeInbox": "1 boîte gratuite, pour toujours",
     "metaNoCard": "Aucune carte requise",
     "metaNeverStored": "E-mails récupérés en direct",
     "pipe": {
@@ -123,48 +123,48 @@
   },
   "pricing": {
     "eyebrow": "Tarifs",
-    "title": "Des actions qui évoluent avec vous.",
-    "sub": "Chaque espace de travail inclut des boîtes et des clés API illimitées. Les appels MCP facturables réussis utilisent des actions ; les appels échoués et inbox_list sont gratuits.",
+    "title": "Un tarif par boîte, pas à l'usage.",
+    "sub": "Gratuit connecte une boîte. Pro connecte toutes les boîtes que vous possédez. Team ajoute des personnes, des rôles et un espace de travail distinct par client.",
     "perForever": "/pour toujours",
     "perMonth": "/mois",
     "tiers": {
       "free": {
         "name": "Gratuit",
-        "desc": "Découvrez MCPEmails avec 2 500 actions par période de facturation.",
+        "desc": "Connectez une boîte et donnez à votre agent une vraie messagerie.",
         "features": [
-          "Boîtes connectées illimitées",
-          "2 500 actions par période de facturation",
-          "Clés API illimitées",
+          "1 boîte connectée",
+          "Lire, chercher, organiser, rédiger et envoyer",
           "Gmail, iCloud, Fastmail et toute boîte IMAP",
-          "60 requêtes / minute",
+          "Clés API illimitées",
+          "Un seul utilisateur",
           "Support communautaire"
         ],
         "cta": "Commencer gratuitement"
       },
       "solo": {
-        "name": "Agent",
-        "desc": "Pour les utilisateurs intensifs qui font tourner des agents en continu.",
+        "name": "Pro",
+        "desc": "Toutes vos boîtes, dans un seul agent. Le travail, le personnel et chaque activité annexe.",
         "features": [
-          "50 000 actions par période de facturation",
-          "300 requêtes / minute (5× en pointe)",
+          "Boîtes connectées illimitées",
+          "Envois programmés et validations",
+          "Limite de pointe 5x plus élevée",
           "Analytique d'usage complète (historique de 90 jours)",
-          "Gmail, iCloud, Fastmail et toute boîte IMAP",
           "Support par e-mail"
         ],
-        "cta": "Choisir Agent"
+        "cta": "Choisir Pro"
       },
       "team": {
-        "name": "Scale",
-        "desc": "Pour les équipes et les agences qui gèrent plusieurs boîtes de clients dans un espace de travail partagé, avec rôles, SSO et journaux d'audit.",
+        "name": "Team",
+        "desc": "Des boîtes partagées pour une équipe, avec un espace de travail distinct par client ou activité.",
         "features": [
-          "300 000 actions par période de facturation",
-          "1 000 requêtes / minute",
-          "Rôles d'équipe et espaces de travail multiples",
-          "SSO (SAML / OIDC) + journal d'audit",
+          "Tout ce que contient Pro",
+          "Membres illimités avec rôles",
+          "Un espace de travail distinct par client ou activité",
+          "SSO (SAML / OIDC) et journal d'audit",
           "Analytique d'usage complète (historique d'un an)",
           "Support prioritaire"
         ],
-        "cta": "Choisir Scale"
+        "cta": "Choisir Team"
       }
     },
     "footnote": "Toutes les formules : le courrier que votre agent lit est récupéré en direct et jamais stocké. Jetons OAuth chiffrés au repos. Besoin de quelque chose de sur mesure ? <contact>Contactez-nous</contact>. <comparison>Voir le comparatif complet des fonctionnalités →</comparison>"
@@ -192,7 +192,7 @@
       },
       {
         "q": "Est-ce vraiment gratuit ?",
-        "a": "Oui. L'offre gratuite vous donne des boîtes connectées et des clés API illimitées, ainsi que 2 500 actions facturables par période de facturation — sans plafond quotidien ni carte requise. Les appels échoués et inbox_list sont gratuits. Les formules payantes ajoutent des allocations d'actions plus élevées, des limites de pointe supérieures, des membres d'équipe et du support."
+        "a": "Oui. L'offre gratuite connecte une boîte, pour toujours et sans carte bancaire, et votre agent dispose de tous les outils que nous publions sur elle : lire, chercher, envoyer, répondre, programmer et organiser. Pro sert dès que vous voulez une deuxième boîte sur le même agent, et Team dès que d'autres personnes doivent y accéder."
       },
       {
         "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",

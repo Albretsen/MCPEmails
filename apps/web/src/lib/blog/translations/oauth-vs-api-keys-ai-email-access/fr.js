@@ -76,7 +76,7 @@ Votre client est claude.ai, Claude Desktop ou Cursor. Vous ne voulez aucun secre
 
 Votre client n’a pas de support OAuth — Cline, JetBrains, les exécuteurs d’outils façon OpenAI, ou votre propre code. Vous scriptez contre le point de terminaison avec cURL ou un petit programme. Vous avez besoin d’un identifiant stable qu’un processus sans interface peut utiliser sans qu’un humain ait à cliquer sur un écran de consentement. Une clé restreinte est exactement ce qu’il faut ici, et il existe un guide complet pour les [clients Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Une dernière chose vraie quel que soit votre choix : les limites de débit. Chaque clé API est plafonnée à 100 requêtes/minute, 1 000/heure et 10 000/jour, et chaque espace de travail dispose d’un plafond de pointe selon le plan (60/min sur [Free](/pricing), jusqu’à 1 000/min sur Scale). Quand vous atteignez une limite, le serveur vous renvoie une valeur \`retry_after\` en secondes. Respectez-la, et ne réessayez jamais à l’aveugle un envoi via \`email_compose\` — vous enverriez le message deux fois.
+Une dernière chose vraie quel que soit votre choix : les limites de débit. Chaque clé API est plafonnée à 100 requêtes/minute, 1 000/heure et 10 000/jour, et chaque espace de travail dispose d’un plafond de pointe selon le plan (60/min sur [Free](/pricing), jusqu’à 1 000/min sur Team). Quand vous atteignez une limite, le serveur vous renvoie une valeur \`retry_after\` en secondes. Respectez-la, et ne réessayez jamais à l’aveugle un envoi via \`email_compose\` — vous enverriez le message deux fois.
 
 ## Le bilan
 

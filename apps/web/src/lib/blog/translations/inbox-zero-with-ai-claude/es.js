@@ -63,7 +63,7 @@ También mantienes una línea firme respecto al envío: los borradores siguen si
 
 ## Llega a cero hoy mismo
 
-No necesitas una nueva aplicación de correo ni un sistema de productividad — solo tu bandeja de entrada actual y un agente que pueda actuar sobre ella. Conecta tu bandeja una vez, pega el endpoint en Claude y ejecuta los cinco prompts de arriba. Todos los planes son ilimitados y el plan Free no necesita tarjeta.
+No necesitas una nueva aplicación de correo ni un sistema de productividad — solo tu bandeja de entrada actual y un agente que pueda actuar sobre ella. Conecta tu bandeja una vez, pega el endpoint en Claude y ejecuta los cinco prompts de arriba. El plan Gratis no necesita tarjeta y conecta una bandeja, para siempre.
 
 [Conecta tu bandeja gratis](/signup) y pídele a Claude que clasifique tu correo sin leer. Inbox zero, supervisado en lugar de sufrido.`,
 };

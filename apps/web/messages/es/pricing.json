@@ -1,18 +1,18 @@
 {
   "meta": {
     "title": "Precios",
-    "description": "Bandejas y claves de API ilimitadas. Las llamadas MCP facturables correctas usan acciones; las fallidas e inbox_list son gratis."
+    "description": "Gratis conecta una bandeja. Pro conecta todas tus bandejas por $29 al mes. Team añade miembros, roles, SSO y un espacio de trabajo por cliente."
   },
   "hero": {
     "eyebrow": "Precios",
-    "titleLine1": "Acciones que escalan.",
-    "titleLine2": "Límites claros.",
-    "lead": "Bandejas y claves de API ilimitadas; las llamadas MCP facturables correctas usan acciones."
+    "titleLine1": "Una bandeja, gratis.",
+    "titleLine2": "Todas tus bandejas, $29.",
+    "lead": "Conecta un buzón una vez y tu agente podrá leer, buscar, organizar, redactar, programar y enviar. Gratis cubre una bandeja. Pro cubre todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente."
   },
   "billing": {
     "monthly": "Mensual",
     "annual": "Anual",
-    "save": "Ahorra ~17%"
+    "save": "Ahorra ~20%"
   },
   "card": {
     "perForever": "/para siempre",
@@ -22,39 +22,38 @@
   "plans": {
     "free": {
       "name": "Gratis",
-      "desc": "2.500 acciones por período de facturación.",
+      "desc": "Conecta una bandeja y dale a tu agente un buzón de verdad.",
       "cta": "Empieza gratis",
       "features": [
-        "Bandejas conectadas ilimitadas",
-        "2.500 acciones por período de facturación",
-        "Claves de API ilimitadas",
+        "1 bandeja conectada",
+        "Leer, buscar, organizar, redactar y enviar",
         "Gmail, iCloud, Fastmail y cualquier IMAP",
-        "60 peticiones / minuto",
+        "Claves de API ilimitadas",
+        "Un solo usuario",
         "Soporte de la comunidad"
       ]
     },
     "solo": {
-      "name": "Agent",
-      "desc": "Para usuarios avanzados que ejecutan agentes a todas horas.",
-      "cta": "Obtener Agent",
+      "name": "Pro",
+      "desc": "Todos los buzones que tengas, en un solo agente. Trabajo, personal y cada proyecto paralelo.",
+      "cta": "Obtener Pro",
       "features": [
-        "50.000 acciones por período de facturación",
-        "300 peticiones / minuto (ráfaga 5×)",
+        "Bandejas conectadas ilimitadas",
+        "Envíos programados y aprobaciones",
+        "Límite de ráfaga 5x más alto",
         "Analíticas de uso completas (historial de 90 días)",
-        "Gmail, iCloud, Fastmail y cualquier IMAP",
         "Soporte por correo"
       ]
     },
     "pro": {
-      "name": "Scale",
-      "badge": "Más popular",
-      "desc": "Para equipos y agencias que gestionan varias bandejas de clientes en un espacio de trabajo compartido, con roles, SSO y registros de auditoría.",
-      "cta": "Obtener Scale",
+      "name": "Team",
+      "desc": "Bandejas compartidas para un equipo, con un espacio de trabajo separado por cliente o negocio.",
+      "cta": "Obtener Team",
       "features": [
-        "300.000 acciones por período de facturación",
-        "1.000 peticiones / minuto",
-        "Roles de equipo y múltiples espacios de trabajo",
-        "SSO (SAML / OIDC) + registro de auditoría",
+        "Todo lo de Pro",
+        "Miembros ilimitados con roles",
+        "Un espacio de trabajo separado por cliente o negocio",
+        "SSO (SAML / OIDC) y registro de auditoría",
         "Analíticas de uso completas (historial de 1 año)",
         "Soporte prioritario"
       ]
@@ -69,14 +68,13 @@
     "title": "Todo lado a lado.",
     "featureCol": "Característica",
     "free": "Gratis",
-    "solo": "Agent",
-    "team": "Scale",
+    "solo": "Pro",
+    "team": "Team",
     "sections": {
       "usage": {
-        "label": "Uso",
+        "label": "Qué incluye",
         "rows": {
           "inboxes": "Bandejas conectadas",
-          "calls": "Llamadas a herramientas MCP",
           "keys": "Claves de API",
           "members": "Miembros de equipo",
           "burst": "Límite de ráfaga"
@@ -123,9 +121,7 @@
     },
     "values": {
       "unlimited": "Ilimitado",
-      "actionsFree": "2.500 / período de facturación",
-      "actionsAgent": "50.000 / período de facturación",
-      "actionsScale": "300.000 / período de facturación",
+      "oneInbox": "1 bandeja",
       "ownerOnly": "Solo tú",
       "burstFree": "60 / min",
       "burstSolo": "300 / min",
@@ -140,28 +136,28 @@
     "title": "Preguntas comunes.",
     "items": [
       {
-        "q": "¿Cómo funcionan las acciones?",
-        "a": "Una llamada MCP facturable que termina correctamente usa una acción. Gratis incluye 2.500 acciones por período de facturación, Agent 50.000 y Scale 300.000. Las llamadas fallidas e inbox_list son gratis."
+        "q": "¿Qué incluye el plan gratuito?",
+        "a": "Una bandeja conectada, para siempre y sin tarjeta. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar. Cuando quieras un segundo buzón en el mismo agente, eso es Pro."
       },
       {
         "q": "¿Qué cuenta como una llamada MCP?",
-        "a": "Una invocación JSON-RPC facturable que termina correctamente usa una acción. inbox_list, llamadas fallidas, errores de proveedor, autenticación y límites de tasa son gratis."
+        "a": "Una invocación de herramienta JSON-RPC contra tu endpoint /mcp. Somos un servidor MCP estándar, así que el mismo endpoint funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make y cualquier cliente compatible con MCP. Los planes se cobran por bandejas conectadas, no por el número de llamadas de tu agente."
       },
       {
         "q": "¿Se almacena en algún sitio el contenido de mi correo?",
         "a": "El correo que lee tu agente nunca se almacena: los cuerpos, los asuntos, los adjuntos y el contenido de los hilos se obtienen en vivo desde tu proveedor y se devuelven directamente al agente, sin que nada se persista entre llamadas. Almacenamos tu token de OAuth cifrado o tu contraseña de aplicación para poder autenticar peticiones futuras. La única excepción es un mensaje que nos pides programar para más tarde: lo almacenamos hasta que se envía y luego guardamos un registro para tu historial."
       },
       {
-        "q": "¿Cuál es la diferencia entre Agent y Scale?",
-        "a": "Gratis incluye 2.500 acciones; Agent 50.000; y Scale 300.000 por período de facturación, además de sus funciones y límites de ráfaga respectivos."
+        "q": "¿Cuál es la diferencia entre Pro y Team?",
+        "a": "Pro es para una persona con bandejas ilimitadas: todos los buzones que tengas en un solo agente, un techo de 300 peticiones por minuto, historial de uso de 90 días y soporte por correo. Team es para más de una persona: miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML / OIDC), registro de auditoría, historial de 1 año y soporte prioritario."
       },
       {
         "q": "¿Puedo cambiar o cancelar mi plan?",
-        "a": "Sí. Al cancelar, conservas el acceso hasta el final del período y luego pasas a Gratis con su asignación de 2.500 acciones."
+        "a": "Sí. Cambia de plan o cancela cuando quieras desde la sección de facturación de tu panel. Al cancelar se detiene la siguiente renovación y conservas todo lo que has pagado hasta el final del período actual; después pasas a Gratis con una bandeja conectada. No reembolsamos períodos parciales, pero consulta la pregunta sobre reembolsos para el primer cargo de una suscripción nueva."
       },
       {
         "q": "¿Cómo funciona el descuento anual?",
-        "a": "Pagar anualmente ahorra alrededor del 17% frente a la facturación mensual: Agent cuesta $120/año y Scale cuesta $490/año. Se te cobra una vez por 12 meses por adelantado. Si cancelas a mitad de año, reembolsamos los meses completos no utilizados."
+        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Pro cuesta $276 al año ($23 al mes) y Team cuesta $756 al año ($63 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
@@ -169,7 +165,7 @@
       },
       {
         "q": "¿Hay política de reembolso?",
-        "a": "Si no estás satisfecho dentro de los 30 días de tu primera factura de pago, contáctanos para un reembolso completo, sin preguntas."
+        "a": "Sí. Si el primer cargo de una suscripción nueva no es lo que esperabas, escríbenos en un plazo de 14 días y te lo reembolsamos íntegro. Después de eso, puedes cancelar cuando quieras y conservar el acceso hasta el final del período que ya has pagado, pero no reembolsamos períodos parciales. Si eres consumidor en la UE o el Reino Unido, esos mismos 14 días son tu derecho legal de desistimiento."
       },
       {
         "q": "¿Puedo auto-alojarlo en lugar de pagar?",
@@ -179,7 +175,7 @@
   },
   "ctaBand": {
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
-    "sub": "Empieza en Gratis: sin tarjeta y con 2.500 acciones por período de facturación.",
+    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Añade todos los demás buzones que tengas con Pro, por $29 al mes.",
     "ctaPrimary": "Empieza gratis",
     "ctaSecondary": "Lee la documentación"
   }
