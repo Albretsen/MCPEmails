@@ -7,7 +7,7 @@ import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '.
 import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
-import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, planDisplayName } from './Pages';
+import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, planDisplayName } from './Pages';
 import { ConnectModal } from './ConnectModal';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
@@ -652,6 +652,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "usage"    && <UsagePage usageData={usageData} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
+        {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
         {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} inboxCount={inboxes.length} grandfathered={inboxesGrandfathered} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} />}
       </div>

@@ -11,6 +11,7 @@
     "ctaQuickStart": "Quick start",
     "ctaOAuth": "OAuth (claude.ai)",
     "ctaTools": "Tool reference",
+    "ctaSafety": "Safety model",
     "ctaProviders": "Provider support"
   },
   "quickstart": {
@@ -27,7 +28,7 @@
       "apikey": {
         "label": "Create an API key",
         "heading": "Generate a bearer token for your agent",
-        "body": "In Dashboard → API Keys, click \"Create key\". Name it, select the scopes your agent needs — read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, and schedule:email — and copy the key. It is shown only once."
+        "body": "In Dashboard → API Keys, click \"Create key\". Name it, select the scopes your agent needs — read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email, and manage:automations — and copy the key. It is shown only once."
       },
       "addclient": {
         "label": "Add MCPEmails to your agent",
@@ -105,12 +106,12 @@
     "howTitle": "How it works under the hood",
     "howP1": "claude.ai registers itself via <b>RFC 7591 Dynamic Client Registration</b>, so you never pre-register a client ID.",
     "howP2": "Authorization uses <b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636), so no client secret is ever transmitted.",
-    "howP3": "Tokens are scoped to exactly the permissions you approve — <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, and <code>schedule:email</code>.",
+    "howP3": "Tokens are scoped to exactly the permissions you approve — <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code>, and <code>manage:automations</code>.",
     "noOauthNote": "<b>Using a client without OAuth support?</b> Create an API key in Dashboard → API Keys and pass it as a bearer token. API key and OAuth connections use the same MCP endpoint and the same tool catalogue."
   },
   "tools": {
     "eyebrow": "Tool reference",
-    "heading": "10 tools. Every email operation your agent needs.",
+    "heading": "11 tools. Every email operation your agent needs.",
     "sub": "<b>Targeting an inbox is optional.</b> When your key has exactly one inbox, every per-inbox tool auto-resolves it — no <code>inbox_id</code> needed. With multiple inboxes, pass either <code>inbox_id</code> (the UUID from <code>inbox_list</code>) or <code>inbox</code> (the inbox's email address). Most tools take an <code>action</code> argument that selects the operation; the badges show the scope(s) each one needs, and <code>tools/list</code> only returns the tools your key (or OAuth token) is scoped for. Click \"Show example\" to see a full request and response.",
     "noParams": "No parameters. Call with an empty arguments object:",
     "showExample": "Show example request & response",
@@ -306,6 +307,22 @@
         "limit": "Maximum number of contacts to return. Default 20, max 50."
       }
     },
+    "automation": {
+      "title": "Automations",
+      "desc": "Create and manage unattended scheduled triage rules. A rule is a stored search plus one fixed action, re-evaluated on a fixed cadence with no model in the loop: mail is matched, never interpreted. Set action: 'create' (name, filter, rule_action and interval_minutes; a rule is always created disabled), 'list', 'get', 'update', 'enable', 'disable', 'delete' (the run history is kept), 'runs' (recent run counters), or 'preview' (a dry run that reports what a filter matches right now and applies nothing). The rule actions available are move, label (a Gmail label, an Outlook category or an IMAP keyword), mark_read, forward and draft_reply. Deleting mail is not available to an automation. A forward is always held for human approval whatever the inbox's approval setting says, and draft_reply only ever writes a draft. Preview before you enable. Every action needs manage:automations.",
+      "params": {
+        "action": "Which operation to perform: \"create\", \"list\", \"get\", \"update\", \"enable\", \"disable\", \"delete\", \"runs\", or \"preview\". Determines which other arguments apply.",
+        "automation_id": "UUID of the rule to act on, as returned by 'create' or 'list'. Required for get, update, enable, disable, delete and runs. Optional for preview: pass it to dry-run a stored rule instead of an ad-hoc filter.",
+        "inbox_id": "UUID of the inbox the rule watches ('create'), or the inbox to preview against. Optional when the key has exactly one inbox; otherwise pass this or inbox.",
+        "inbox": "Email address of the inbox, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
+        "name": "Human-readable name for the rule, 1 to 80 characters. Required on 'create'.",
+        "filter": "The stored search, using the same structured criteria the email_read 'search' action accepts: from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before. At least one criterion is required, because an empty filter would match your whole mailbox. Provider-native raw query strings are not accepted here: a rule re-runs unattended for months, and a raw string is a dialect nothing validates.",
+        "rule_action": "The single fixed action applied to every match, as a tagged object with a type of move (plus folder), label (plus label; written as a Gmail label, an Outlook category, or an IMAP keyword), mark_read, forward (plus to, and an optional note), or draft_reply (plus template). It is called rule_action because action already selects the operation. There is no delete-shaped action and one is refused, not ignored. A forward is always held for approval, and draft_reply only writes a draft. A template substitutes only '{{sender_name}}', '{{sender_email}}', '{{subject}}' and '{{date}}', each HTML-escaped; everything else is literal text and message bodies are never interpolated.",
+        "interval_minutes": "Minutes between runs, from the fixed ladder 15, 30, 60, 180, 360, 720 or 1440. Required on 'create'. A ladder rather than a free integer, so a one-minute rule cannot hammer a provider into rate limiting.",
+        "max_messages_per_run": "How many matching messages one run may act on: 1 to 200, default 25. This is the blast radius, capping how much mail a wrong filter can touch before a human reads the run log.",
+        "limit": "For action 'runs': how many runs to return, newest first. Default 20, max 100."
+      }
+    },
     "signature": {
       "title": "Signature",
       "desc": "Read or configure the inbox's email signature, which is appended server-side on every send, reply, forward, draft, and scheduled message. Set action: 'get' (returns the current signature text and HTML, whether it is enabled, the reply/forward mode, and its source — 'manual', 'gmail_import', or null) or 'set' (write signature_text and/or signature_html, and optionally signature_enabled and signature_reply_mode). Signatures support rich HTML: bold, italic, headings, lists, colors, alignment, links, and hosted logo/images referenced as https URLs, so an agent can set a fully formatted signature by passing signature_html. The same rich editor is available in the dashboard. Setting a signature marks its source as 'manual', which permanently overrides Gmail auto-import for that inbox. 'get' needs read:email; 'set' needs send:email.",
@@ -317,6 +334,50 @@
         "signature_html": "Optional rich HTML signature body (action 'set'). Accepts formatting (bold, italic, underline, headings, lists, colors, alignment, links) and hosted images via <img> tags whose src is an https URL (no base64 or CID); it is sanitized on save. Omit to leave unchanged; pass an empty string to clear it.",
         "signature_enabled": "Whether the signature is appended to outgoing mail (action 'set'). Default true; set false to stop appending without deleting the text.",
         "signature_reply_mode": "When to include the signature on replies and forwards (action 'set'): \"always\" (every reply/forward), \"first_only\" (default — only the first message in a thread, avoiding double-signing), or \"never\"."
+      }
+    }
+  },
+  "automationSafety": {
+    "eyebrow": "Automation safety model",
+    "heading": "What a scheduled rule can and cannot do.",
+    "sub": "An automation touches your mailbox on a schedule with nobody watching. That is a different risk category from an agent you are talking to, so the guarantees below are enforced by the server rather than left to the rule you write.",
+    "deterministic": {
+      "heading": "No model runs unattended.",
+      "body": "A rule is a stored query plus one fixed action. When it runs, the server executes the query against your mailbox and applies that action to the matches. Nothing reads your mail and then decides what to do with it. Email content is matched, never interpreted as an instruction, so prompt injection is structurally absent from the unattended path rather than filtered, scored, or otherwise mitigated. There is nothing in the loop for injected text to talk to.",
+      "why": "This is worth saying plainly, because the dangerous shape in this category is an agent that reads untrusted inbound email and then acts on it with no human present. Public incidents, including EchoLeak and the backdoored Postmark MCP server, have left buyers reasonably wary of exactly that. In an interactive session a model does read your mail, which is the point of the product, and there a person is present and the content is marked as untrusted data. The scheduled path is the one that runs alone, and it contains no model at all."
+    },
+    "items": {
+      "noDelete": {
+        "heading": "Automations never delete mail.",
+        "body": "Delete is not an available action, by design. Move, label, mark as read, forward, and draft a reply are the complete set. Deletion is the one action a misfiring rule makes irreversible, so it is excluded at the validation layer, where an action that merely names deletion is refused rather than quietly ignored."
+      },
+      "forward": {
+        "heading": "Forwards always wait for a person.",
+        "body": "A forward from an automation is queued to the approval queue and leaves your mailbox only after a workspace member approves it, regardless of the per-inbox send approval setting. Recipients are capped per rule. An unattended rule cannot move mail out of your organization on its own."
+      },
+      "draftReply": {
+        "heading": "Draft replies only ever draft.",
+        "body": "A draft_reply rule writes an unsent draft into the original conversation and stops there. Nothing is sent unattended, on any provider, under any configuration."
+      },
+      "template": {
+        "heading": "Templates substitute four fields, and nothing else.",
+        "body": "A reply template is stored verbatim and never evaluated. Only '{{sender_name}}', '{{sender_email}}', '{{subject}}' and '{{date}}' are substituted, each HTML-escaped. Message body content is never interpolated, and there is no expression syntax to evaluate, so nothing arriving in your inbox can turn a template into a computation."
+      },
+      "runLog": {
+        "heading": "Every run is on the record.",
+        "body": "Each run records what the filter matched, what happened to each message, and what was queued for approval, alongside counters for matched, processed, succeeded, failed, and skipped. Reversible actions keep the state needed to undo them. Run history outlives the rule it belongs to, because it is the record of what was done to your mailbox. Read it with action 'runs' or in the dashboard."
+      },
+      "keyAuthority": {
+        "heading": "A rule has exactly one key's authority.",
+        "body": "Each rule runs as the API key that created it. It can never exceed the scopes or the inbox access that key already has, every action it takes is metered, rate-limited, and written to the audit log exactly like an interactive call, and revoking the key stops the rule."
+      },
+      "autoDisable": {
+        "heading": "Repeated failure turns it off.",
+        "body": "After 5 consecutive failed runs a rule is disabled automatically and the reason is recorded. A rule pointed at a mailbox that has stopped answering stops, instead of retrying against it every 15 minutes forever."
+      },
+      "perRunCap": {
+        "heading": "A capped blast radius per run.",
+        "body": "Each rule carries a maximum number of messages a single run may act on, 1 to 200 and 25 by default, so a filter broader than you intended touches at most that many messages before you see the run log. A rule is also created disabled, and preview is a dry run that shows what a filter matches right now without applying anything."
       }
     }
   },
