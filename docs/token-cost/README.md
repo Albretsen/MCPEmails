@@ -146,3 +146,68 @@ informed trade rather than a surprise.
 Description compression and shared-boilerplate removal (~10,800 bytes) **survive
 the split and grow in value**, since `inbox_id` and `inbox` duplicate across more
 tools. Those are the changes to make first, whichever way the split goes.
+
+## Second pass: what shipped after the decision record was first written
+
+### Schema compression (shipped)
+
+Model-visible schema for a typical key: **47,023 to 37,457 bytes, -20.3%**.
+Verified by blanking every `description` in the before and after payloads and
+deep-comparing the rest: no tool name, property, enum, default, required array,
+`outputSchema`, `annotations` or `_meta` changed. Five constraints were
+protected as must-not-cut and all survived with their meaning intact.
+
+### Bounded bodies with a real continuation (shipped)
+
+Nothing capped `body_text`. `read_batch` concatenated up to 50 uncapped bodies.
+A 200,000 character body now returns 8,000 with 194 bytes of continuation
+overhead; 50 such bodies in one `read_batch` fall from 10,000,000 characters to
+24,000. A whole body returned from offset 0 emits **no new fields at all**, so
+ordinary mail is byte-identical to before, which was the constraint that set the
+defaults. `body_next_offset` is the exact cut index, and a test walks every
+window and reconstructs the body exactly.
+
+Known transient: the server declares `listChanged: false`, so clients keep the
+tool schema they cached at connect time. Between this deploy and a client's next
+reconnect, a body over 8,000 characters produces a `body_continue` naming
+`body_offset`, which such a client rejects. Exposure is one failed call on an
+unusually large body, with the model still holding 8,000 characters. This is a
+general property of any schema change on a live MCP server, not specific to this
+one.
+
+### Three bugs found by reading production, not code
+
+Each was found by re-reading the live server after a deploy, and each predates
+this investigation:
+
+1. **A preview ending in a literal `<table class`.** An IMAP snippet is a
+   partial body fetch and can stop mid-tag; `<[^>]+>` needs a closing `>`.
+   Always present, only visible once entity decoding freed enough budget.
+2. **`body_text` empty next to a full `body_html`.** `parsed.text ?? ...` only
+   falls back on null or undefined, and Intercom, Zendesk and most ticketing
+   systems send a multipart/alternative whose text part is an empty string. The
+   cheap path returned nothing and the expensive `include_html` re-read was
+   mandatory, at roughly 4x the tokens.
+3. **Table-built bodies arriving as runs of blank lines.** `stripHtmlToText`
+   never normalised CRLF, so `\r` was neither a space nor a line break to any
+   later rule. Roughly half of a real body carried nothing. Table layout is how
+   essentially all marketing mail is built, so this was the common path.
+
+End to end on one real production message: reading it cost a mandatory
+`include_html` call at about 5,800 characters and now costs 176, complete and
+clean. **-97%.**
+
+## A process note worth keeping
+
+Main moved from `f19cb6d` to `6fae083` during this work, and three edge-function
+deploys from a worktree branched off the older commit silently reverted another
+session's shipped fix (`4cad298`, which corrected four `destructiveHint`
+annotations so hosts stop running folder and draft deletions without asking a
+human). Caught by re-checking `main` before a web deploy, then repaired by
+merging and redeploying.
+
+The existing memory note about this hazard says "merge to main, deploy from
+main". That is necessary but not sufficient, because it does not fire on a
+worktree that was clean when the session started. **Re-check `git rev-parse
+main` immediately before every deploy, not only at session start.** A long
+session is exactly when main moves.
