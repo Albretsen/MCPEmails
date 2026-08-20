@@ -4000,7 +4000,10 @@ function BillingSection({
   grandfathered = false,
 }) {
   const t = useTranslations('dashboard');
-  const [interval, setInterval] = useState('month');
+  // Matches the pricing page, where annual is preselected. An upgrade intent
+  // arriving from /pricing overrides this with whatever the visitor actually
+  // chose there.
+  const [interval, setInterval] = useState('year');
   const [upgrading, setUpgrading] = useState(null); // planId while loading
   const [openingPortal, setOpeningPortal] = useState(false);
   const automaticUpgradeStarted = useRef(false);

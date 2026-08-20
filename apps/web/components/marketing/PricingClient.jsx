@@ -299,7 +299,11 @@ function FaqItem({ q, a }) {
  * @param {{ stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
  */
 export default function PricingClient({ stripePrices }) {
-  const [annual, setAnnual] = useState(false);
+  // Annual is the default selection, not just an available option. Which
+  // interval is preselected swings the annual mix far more than the size of
+  // the discount does, and annual prepay is the cheapest working capital a
+  // bootstrapped product has. Monthly stays one click away.
+  const [annual, setAnnual] = useState(true);
   const [user, setUser] = useState(null);
   const t = useTranslations('pricing');
   const faqItems = t.raw('faq.items');
