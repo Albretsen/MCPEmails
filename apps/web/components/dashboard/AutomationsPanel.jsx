@@ -745,6 +745,7 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
                 <div className="field">
                   <label htmlFor="automation-label">{t('automations.modal.labelLabel')}</label>
                   <input id="automation-label" className="input" type="text" maxLength={200} value={form.label} placeholder={t('automations.modal.labelPlaceholder')} onChange={(event) => set('label', event.target.value)} disabled={submitting} />
+                  <div className="sub" style={{ fontSize: 12 }}>{t('automations.modal.labelHelp')}</div>
                 </div>
               ) : null}
 
@@ -1030,10 +1031,22 @@ function RunItems({ rule, run, onBack }) {
 
 function describeItemDetail(item, t) {
   const detail = item.detail && typeof item.detail === 'object' ? item.detail : {};
-  if (item.outcome === 'failed' && detail.error_code) return t('automations.runs.detailFailed', { code: String(detail.error_code) });
+  if (item.outcome === 'failed') {
+    // Named before the generic code branch: an IMAP server that will not keep
+    // custom keywords is a cause the user can act on, not an opaque code.
+    if (detail.error_code === 'imap_keywords_unsupported') return t('automations.runs.detailKeywordsUnsupported');
+    if (detail.error_code) return t('automations.runs.detailFailed', { code: String(detail.error_code) });
+  }
   if (item.outcome === 'queued_for_approval') return t('automations.runs.detailQueued');
   if (item.outcome === 'skipped_duplicate') return t('automations.runs.detailSkipped');
   if (detail.to_folder) return t('automations.runs.detailMoved', { folder: String(detail.to_folder) });
+  // `applied_as` is what the mailbox actually carries, which is not always the
+  // label that was typed: an IMAP keyword cannot hold a space.
+  if (detail.applied_as) {
+    return detail.already_present
+      ? t('automations.runs.detailLabelAlready', { label: String(detail.applied_as) })
+      : t('automations.runs.detailLabelled', { label: String(detail.applied_as) });
+  }
   return t('automations.runs.detailApplied');
 }
 

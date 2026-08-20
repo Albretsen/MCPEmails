@@ -277,3 +277,140 @@ export async function assertWorkspaceResources(
   }
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// What "apply a label" means on each provider
+//
+// A label is one idea with three provider-native spellings, and only one of
+// them has naming rules strict enough to refuse a rule over:
+//
+//   gmail   -> a LABEL.    Free-form text, created if it does not exist.
+//   outlook -> a CATEGORY. Free-form text, merged into the message's categories.
+//   imap    -> a KEYWORD.  An IMAP atom, so a constrained ASCII token.
+//
+// Kept in step with supabase/functions/mcp-server/label-target.ts, which is the
+// enforcing copy: the runner re-derives all of this before it writes anything.
+// This copy exists so the dashboard refuses an impossible label at the moment a
+// person types it, rather than storing a rule that can only ever fail.
+// ---------------------------------------------------------------------------
+
+export type LabelTargetKind = 'label' | 'category' | 'keyword';
+
+export interface LabelTarget {
+  kind: LabelTargetKind;
+  /** Exactly what will be written to the mailbox. */
+  applied_as: string;
+  /** True when applied_as differs from what the user typed. */
+  transformed: boolean;
+}
+
+/** See MAX_IMAP_KEYWORD_CHARS in label-target.ts for why there is a ceiling at all. */
+export const MAX_IMAP_KEYWORD_CHARS = 64;
+
+// RFC 3501 atom-specials, plus '[' which is refused here deliberately: it is
+// legal in an atom but round-trips badly through enough servers that allowing
+// half a bracket pair buys nothing.
+const IMAP_KEYWORD_ILLEGAL_RE = /[()[\]{}%*"\\]/;
+const IMAP_KEYWORD_NON_ATOM_RE = /[^\x21-\x7e]/;
+const IMAP_KEYWORD_ILLEGAL_LIST = '( ) [ ] { } % * " \\';
+
+/**
+ * Normalises a label into a legal IMAP keyword, or refuses it.
+ *
+ * THE ONE TRANSFORMATION: runs of whitespace become a single underscore, so
+ * "Order updates" is applied as "Order_updates". Nothing else is transformed:
+ * an illegal character is an error, because a user who typed "Sale (50%)" wants
+ * to be told their label was refused, not to find "Sale_50" in their mailbox.
+ */
+export function normalizeImapKeyword(label: string): ValidationResult<LabelTarget> {
+  const raw = label.trim();
+  if (!raw) return fail('Enter the label to apply to matching mail.');
+
+  const keyword = raw.replace(/\s+/g, '_');
+  const transformed = keyword !== raw;
+
+  if (keyword.startsWith('\\')) {
+    return fail(
+      'On an IMAP mailbox a label is stored as an IMAP keyword, and a keyword cannot begin '
+      + 'with a backslash: that namespace is reserved for system flags such as \\Seen. '
+      + 'Choose a name without the leading backslash.',
+    );
+  }
+  if (IMAP_KEYWORD_ILLEGAL_RE.test(keyword)) {
+    return fail(
+      `On an IMAP mailbox a label is stored as an IMAP keyword, which cannot contain ${IMAP_KEYWORD_ILLEGAL_LIST}. `
+      + 'Choose a name without those characters, or move the mail to a folder instead.',
+    );
+  }
+  if (IMAP_KEYWORD_NON_ATOM_RE.test(keyword)) {
+    return fail(
+      'On an IMAP mailbox a label is stored as an IMAP keyword, which the IMAP protocol limits to '
+      + 'printable ASCII. Use ASCII letters, digits, - or _, or move the mail to a folder instead: '
+      + 'folder names have no such limit.',
+    );
+  }
+  if (keyword.length > MAX_IMAP_KEYWORD_CHARS) {
+    return fail(
+      `On an IMAP mailbox a label is stored as an IMAP keyword, which can be at most ${MAX_IMAP_KEYWORD_CHARS} characters.`,
+    );
+  }
+  return { ok: true, value: { kind: 'keyword', applied_as: keyword, transformed } };
+}
+
+/**
+ * Resolves what a label becomes on one provider.
+ *
+ * Every IMAP service is stored as provider 'imap' with a `service`
+ * discriminator, so IMAP is the default branch and an unrecognised provider is
+ * treated as IMAP rather than waved through. A null provider is unconstrained:
+ * the runner validates again before it writes, and refusing a legal label
+ * because the dashboard could not read the inbox row is the worse error.
+ */
+export function labelTargetFor(provider: string | null, label: string): ValidationResult<LabelTarget> {
+  const trimmed = label.trim();
+  if (!trimmed) return fail('Enter the label to apply to matching mail.');
+  if (provider === null || provider === 'gmail') {
+    return { ok: true, value: { kind: 'label', applied_as: trimmed, transformed: false } };
+  }
+  if (provider === 'outlook') {
+    return { ok: true, value: { kind: 'category', applied_as: trimmed, transformed: false } };
+  }
+  return normalizeImapKeyword(trimmed);
+}
+
+/**
+ * Re-checks a validated action against the inbox it will run on.
+ *
+ * Split from `validateAction` because the provider is a second database read
+ * the callers only need when the action is a label, and threading an inbox row
+ * through every validator to serve one action type would be the wrong shape.
+ */
+export function validateActionForProvider(
+  action: StoredAction,
+  provider: string | null,
+): ValidationResult<StoredAction> {
+  if (action.type !== 'label') return { ok: true, value: action };
+  const target = labelTargetFor(provider, action.label);
+  if (!target.ok) return fail(target.error);
+  return { ok: true, value: action };
+}
+
+/**
+ * Reads just the provider of an inbox in the caller's workspace.
+ *
+ * Returns null when the row is not readable, which callers treat as "no
+ * provider-specific constraint": the runner is the enforcing copy.
+ */
+export async function readInboxProvider(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  workspaceId: string,
+  inboxId: string,
+): Promise<string | null> {
+  const { data } = await db.from('inboxes')
+    .select('provider')
+    .eq('id', inboxId)
+    .eq('workspace_id', workspaceId)
+    .maybeSingle();
+  return typeof data?.provider === 'string' ? data.provider : null;
+}

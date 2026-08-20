@@ -1,0 +1,215 @@
+// ---------------------------------------------------------------------------
+// label-target.ts - what "apply a label" means on each provider.
+//
+// "Label" is one idea with three provider-native spellings, and only one of
+// them has naming rules strict enough to be worth enforcing before a mailbox is
+// touched:
+//
+//   gmail   -> a LABEL.    Free-form text. Resolved to (or created as) a label id.
+//   outlook -> a CATEGORY. Free-form text, held in the message's `categories` array.
+//   imap    -> a KEYWORD.  An IMAP atom, so a constrained ASCII token.
+//
+// Everything in this module is PURE: no I/O, no provider clients, no imports.
+// That is what lets the three callers share one answer instead of three
+// almost-agreeing ones:
+//
+//   * index.ts, which makes the actual provider call (`applyLabelToMessage`);
+//   * triage-engine.ts, which refuses a rule that could never work at the moment
+//     it is written rather than five minutes later in a run log;
+//   * apps/web/src/lib/automations/rules.ts, which mirrors it for the dashboard.
+//
+// The rule this module exists to hold: a transformed name is REPORTED, never
+// applied silently. If the mailbox ends up with "Order_updates" the user must be
+// told that, or the mailbox and the dashboard disagree about what was done.
+// ---------------------------------------------------------------------------
+
+/** The provider-native thing a label becomes. */
+export type LabelTargetKind = "label" | "category" | "keyword";
+
+export interface LabelTarget {
+  kind: LabelTargetKind;
+  /** Exactly what will be written to the mailbox. */
+  applied_as: string;
+  /** True when `applied_as` differs from what the user typed. */
+  transformed: boolean;
+}
+
+export type LabelTargetResult =
+  | { ok: true; target: LabelTarget }
+  | { ok: false; error: string };
+
+/**
+ * Keyword length ceiling.
+ *
+ * RFC 3501 sets none, which is exactly why one is needed here: servers pick
+ * their own, and discovering a server's limit by having a STORE rejected
+ * mid-run is the failure mode this module exists to prevent. 64 is comfortably
+ * under every limit we have seen and still longer than any label a person types.
+ */
+export const MAX_IMAP_KEYWORD_CHARS = 64;
+
+/**
+ * Characters an IMAP keyword may not contain.
+ *
+ * RFC 3501's flag-keyword is an `atom`, and atom-specials are `(`, `)`, `{`,
+ * SP, CTL, the list-wildcards `%` and `*`, the quoted-specials `"` and `\`, and
+ * the resp-special `]`. `[` is technically legal in an atom; it is refused here
+ * anyway, deliberately stricter than the RFC, because a name of the form
+ * "[Work]" round-trips badly through enough servers that allowing half of a
+ * bracket pair buys nothing.
+ */
+const IMAP_KEYWORD_ILLEGAL_RE = /[()[\]{}%*"\\]/;
+
+/** Anything outside printable ASCII, checked after whitespace has been folded. */
+const IMAP_KEYWORD_NON_ATOM_RE = /[^\x21-\x7e]/;
+
+/** The illegal set, spelled out for an error a user can act on. */
+const IMAP_KEYWORD_ILLEGAL_LIST = '( ) [ ] { } % * " \\';
+
+/**
+ * Normalises a human label into a legal IMAP keyword, or refuses it.
+ *
+ * THE ONE TRANSFORMATION: runs of whitespace become a single underscore, so
+ * "Order updates" is applied as "Order_updates". Spaces are the single most
+ * common thing in a label and the single thing an IMAP atom cannot hold, and
+ * refusing every multi-word label would make the action useless on 110 of the
+ * 163 connected inboxes. Every caller reports `applied_as` when `transformed`
+ * is set, so the mailbox never quietly disagrees with the UI.
+ *
+ * NOTHING ELSE is transformed. An illegal character is an error, not a silent
+ * substitution: a user who typed "Sale (50%)" wants to know their label was
+ * refused, not to find "Sale_50" in their mailbox.
+ */
+export function normalizeImapKeyword(label: string): LabelTargetResult {
+  const raw = label.trim();
+  if (!raw) {
+    return { ok: false, error: "A label is required." };
+  }
+  // Fold whitespace FIRST, so the checks below see the string that will
+  // actually be sent rather than the one that was typed.
+  const keyword = raw.replace(/\s+/g, "_");
+  const transformed = keyword !== raw;
+
+  if (keyword.startsWith("\\")) {
+    return {
+      ok: false,
+      error:
+        `On an IMAP mailbox a label is stored as an IMAP keyword, and a keyword cannot ` +
+        `begin with a backslash: that namespace is reserved for system flags such as ` +
+        `\\Seen and \\Flagged. Rename "${raw}" without the leading backslash.`,
+    };
+  }
+  if (IMAP_KEYWORD_ILLEGAL_RE.test(keyword)) {
+    return {
+      ok: false,
+      error:
+        `On an IMAP mailbox a label is stored as an IMAP keyword, which cannot contain ` +
+        `${IMAP_KEYWORD_ILLEGAL_LIST}. Rename "${raw}" without those characters, or use a ` +
+        `move action to file the mail in a folder instead.`,
+    };
+  }
+  if (IMAP_KEYWORD_NON_ATOM_RE.test(keyword)) {
+    return {
+      ok: false,
+      error:
+        `On an IMAP mailbox a label is stored as an IMAP keyword, which is limited to ` +
+        `printable ASCII by the IMAP protocol. Rename "${raw}" using ASCII letters, ` +
+        `digits, - or _, or use a move action to file the mail in a folder instead: ` +
+        `folder names have no such limit.`,
+    };
+  }
+  if (keyword.length > MAX_IMAP_KEYWORD_CHARS) {
+    return {
+      ok: false,
+      error:
+        `On an IMAP mailbox a label is stored as an IMAP keyword, which must be at most ` +
+        `${MAX_IMAP_KEYWORD_CHARS} characters. "${raw}" is longer than that.`,
+    };
+  }
+  return { ok: true, target: { kind: "keyword", applied_as: keyword, transformed } };
+}
+
+/**
+ * Resolves what a label becomes on one provider.
+ *
+ * `provider` follows the house convention: every IMAP service is stored as
+ * "imap" with a `service` discriminator, so IMAP is the `default` branch and a
+ * provider nobody has heard of is treated as IMAP rather than waved through.
+ * A null provider (the caller could not determine one) is treated as Gmail-shaped,
+ * i.e. unconstrained, because refusing a legal label on an unknown provider is
+ * the worse error: the provider seam validates again before it writes anything.
+ */
+export function labelTargetFor(provider: string | null, label: string): LabelTargetResult {
+  const trimmed = label.trim();
+  if (!trimmed) return { ok: false, error: "A label is required." };
+  switch (provider) {
+    case null:
+    case "gmail":
+      return { ok: true, target: { kind: "label", applied_as: trimmed, transformed: false } };
+    case "outlook":
+      return { ok: true, target: { kind: "category", applied_as: trimmed, transformed: false } };
+    default:
+      return normalizeImapKeyword(trimmed);
+  }
+}
+
+/** The provider-native noun, for copy that has to name the thing. */
+export function labelTargetKindFor(provider: string | null): LabelTargetKind {
+  switch (provider) {
+    case null:
+    case "gmail":
+      return "label";
+    case "outlook":
+      return "category";
+    default:
+      return "keyword";
+  }
+}
+
+/**
+ * Merges one category into a message's existing `categories`.
+ *
+ * THIS IS THE DATA-LOSS GUARD. Graph treats `categories` as a REPLACE: a PATCH
+ * carrying `["Receipts"]` does not add "Receipts", it makes "Receipts" the only
+ * category the message has, silently discarding whatever the user had already
+ * filed it under. Every write therefore has to read first and merge, and the
+ * merge lives here, as a pure function, so it is directly testable rather than
+ * buried in a fetch.
+ *
+ * Comparison is case-insensitive because Outlook's own category list is, and
+ * an existing "receipts" is left with its existing casing rather than being
+ * rewritten to match what the rule happens to have typed. `changed:false` means
+ * the caller must skip the PATCH entirely: there is nothing to add, and a
+ * no-op PATCH is still a write that can fail.
+ */
+export function mergeOutlookCategories(
+  existing: readonly string[],
+  category: string,
+): { categories: string[]; changed: boolean } {
+  const clean = existing.filter((c) => typeof c === "string" && c.length > 0);
+  const lowered = category.toLowerCase();
+  if (clean.some((c) => c.toLowerCase() === lowered)) {
+    return { categories: [...clean], changed: false };
+  }
+  return { categories: [...clean, category], changed: true };
+}
+
+/**
+ * Whether a mailbox's PERMANENTFLAGS permit a custom keyword.
+ *
+ * `\*` in PERMANENTFLAGS is the server saying "you may invent keywords here"
+ * (RFC 3501 section 7.1). A server that lists the keyword itself also permits
+ * it, which is how a mailbox with a fixed, pre-provisioned keyword set answers.
+ * `null` in, `null` out: a server that sent no PERMANENTFLAGS at all has told us
+ * nothing, and the RFC's guidance in that case is to assume flags are permanent,
+ * so the caller attempts the STORE and treats a rejection as the real answer.
+ */
+export function permanentFlagsAllowKeyword(
+  permanentFlags: readonly string[] | null,
+  keyword: string,
+): boolean | null {
+  if (!permanentFlags) return null;
+  if (permanentFlags.some((f) => f === "\\*")) return true;
+  const lowered = keyword.toLowerCase();
+  return permanentFlags.some((f) => f.toLowerCase() === lowered);
+}

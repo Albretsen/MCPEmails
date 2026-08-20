@@ -8,7 +8,9 @@ import {
   RULE_COLUMNS,
   assertWorkspaceResources,
   isUuid,
+  readInboxProvider,
   validateAction,
+  validateActionForProvider,
   validateFilter,
   validateInterval,
   validateMaxMessages,
@@ -54,7 +56,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'A request body is required.' }, { status: 400 });
 
   const { data: existing } = await c.db.from('triage_rules')
-    .select('id, inbox_id, api_key_id, enabled, running_since')
+    .select('id, inbox_id, api_key_id, action, enabled, running_since')
     .eq('id', id)
     .eq('workspace_id', c.workspaceId)
     .is('deleted_at', null)
@@ -99,6 +101,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status });
     patch.inbox_id = nextInboxId;
     patch.api_key_id = nextApiKeyId;
+  }
+
+  // A label works on every provider, but not every NAME does: on IMAP a label
+  // is a keyword, which is an atom. Either half of the pair can change in one
+  // PATCH, so the check runs against the action and the inbox this rule will
+  // have AFTER the edit, not the ones it had before.
+  const nextAction = patch.action ?? existing.action;
+  if (nextAction && typeof nextAction === 'object' && nextAction.type === 'label') {
+    const provider = await readInboxProvider(c.db, c.workspaceId, nextInboxId);
+    const forProvider = validateActionForProvider(nextAction, provider);
+    if (!forProvider.ok) return NextResponse.json({ error: forProvider.error }, { status: 400 });
   }
 
   if (body.enabled !== undefined) {

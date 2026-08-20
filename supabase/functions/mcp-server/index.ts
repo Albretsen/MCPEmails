@@ -10,6 +10,12 @@ import {
 } from "./imap-client.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
 import {
+  type LabelTargetKind,
+  labelTargetFor,
+  mergeOutlookCategories,
+  permanentFlagsAllowKeyword,
+} from "./label-target.ts";
+import {
   invalidArgumentAuditDetails,
   type InvalidArgumentAuditDetails,
 } from "./validation-observability.ts";
@@ -3620,7 +3626,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         action: {
           type: "object",
           description:
-            "One tagged action. {type:'move',folder} | {type:'label',label} (Gmail only) | " +
+            "One tagged action. {type:'move',folder} | {type:'label',label} (applied as a " +
+            "Gmail label, an Outlook category, or an IMAP keyword; on IMAP a label is an " +
+            "atom, so spaces become underscores and ( ) [ ] { } % * \" \\ are refused) | " +
             "{type:'mark_read'} | {type:'forward',to:[...],note} | {type:'draft_reply',template}. " +
             "DELETING MAIL IS NOT AVAILABLE to an automation and is refused. 'forward' is " +
             "ALWAYS held for human approval regardless of the inbox's approval setting, and " +
@@ -3703,7 +3711,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         action: {
           type: "object",
           description:
-            "One tagged action. {type:'move',folder} | {type:'label',label} (Gmail only) | " +
+            "One tagged action. {type:'move',folder} | {type:'label',label} (applied as a " +
+            "Gmail label, an Outlook category, or an IMAP keyword; on IMAP a label is an " +
+            "atom, so spaces become underscores and ( ) [ ] { } % * \" \\ are refused) | " +
             "{type:'mark_read'} | {type:'forward',to:[...],note} | {type:'draft_reply',template}. " +
             "DELETING MAIL IS NOT AVAILABLE to an automation and is refused. 'forward' is " +
             "ALWAYS held for human approval regardless of the inbox's approval setting, and " +
@@ -5102,7 +5112,8 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "or 'preview' (DRY RUN: reports what a filter matches right now and applies " +
       "nothing). NOTE the two different keys: `action` selects the operation on this " +
       "tool, while `rule_action` is the action the RULE performs on matching mail. " +
-      "Rule actions are move, label (Gmail only), mark_read, forward and " +
+      "Rule actions are move, label (applied as a Gmail label, an Outlook category " +
+      "or an IMAP keyword), mark_read, forward and " +
       "draft_reply. DELETING MAIL IS NOT AVAILABLE to an automation. A forward is ALWAYS " +
       "held for human approval whatever the inbox's approval setting says, and a " +
       "draft_reply only ever writes a draft. Always 'preview' before you 'enable'. " +
@@ -14944,6 +14955,268 @@ async function outlookArchiveEmail(
   }
 }
 
+// ── Label / category / keyword seam ────────────────────────────────────────
+//
+// "Apply a label" has three provider-native spellings and, until now, only one
+// implementation. `applyLabelToMessage` below is the single entry point; the
+// three helpers above it are the per-provider halves and are not called from
+// anywhere else. The naming rules they share (what a legal IMAP keyword is,
+// how an Outlook category merges) live in label-target.ts as pure functions, so
+// the validators can refuse an impossible label before a rule is ever stored.
+
+/**
+ * Per-inbox Gmail label-name -> label-id cache.
+ *
+ * Gmail's modify API takes label IDs, not names, so every label action needs a
+ * labels.list round-trip to translate. An automation run touches up to 200
+ * messages with ONE label name, and 200 identical lookups against the same
+ * account is how a rule earns a 429. Keyed on the inbox id plus the lowercased
+ * name; the TTL is far longer than the engine's 40-second run budget and short
+ * enough that a label deleted in the Gmail UI is not cached for a whole day.
+ */
+const gmailLabelIdCache = new Map<string, { id: string; expiresAtMs: number }>();
+const GMAIL_LABEL_CACHE_TTL_MS = 5 * 60 * 1000;
+
+function gmailLabelCacheKey(inbox: InboxRow, name: string): string {
+  return `${inbox.id} ${name.toLowerCase()}`;
+}
+
+/**
+ * Fetches the account's labels and returns the id whose name matches, or null.
+ * A plain labels.list: deliberately NOT gmailListFolders, which fans out a
+ * labels.get per label for message counts nobody needs here.
+ */
+async function gmailFindLabelIdByName(
+  inbox: InboxRow,
+  accessToken: string,
+  name: string,
+): Promise<string | null> {
+  const resp = await fetch(
+    "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    throw new Error(await gmailErrorMessage("Gmail labels.list failed", resp));
+  }
+  const data = (await resp.json()) as { labels?: { id: string; name: string }[] };
+  const lower = name.toLowerCase();
+  const hit = (data.labels ?? []).find((l) => (l.name ?? "").toLowerCase() === lower);
+  return hit ? hit.id : null;
+}
+
+/**
+ * Resolves a Gmail label NAME to a label id, creating the label when it does
+ * not exist.
+ *
+ * Creating is the point of the difference from resolveFolderId, which
+ * best-effort passes an unknown name through and lets Gmail reject it. A rule
+ * that says "label these Receipts" should produce a "Receipts" label, not fail
+ * every run because nobody made one by hand first. The visibility fields make
+ * the new label behave like one a user created in the Gmail UI: visible in the
+ * label list and on messages.
+ *
+ * Throws "gmail_auth_failed" on 401.
+ */
+async function gmailResolveOrCreateLabelId(inbox: InboxRow, name: string): Promise<string> {
+  const cacheKey = gmailLabelCacheKey(inbox, name);
+  const cached = gmailLabelIdCache.get(cacheKey);
+  if (cached && cached.expiresAtMs > Date.now()) return cached.id;
+  gmailLabelIdCache.delete(cacheKey);
+
+  const accessToken = await withFreshGmailToken(inbox);
+  let labelId = await gmailFindLabelIdByName(inbox, accessToken, name);
+
+  if (!labelId) {
+    const resp = await fetch(
+      "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          labelListVisibility: "labelShow",
+          messageListVisibility: "show",
+        }),
+      },
+    );
+    if (resp.ok) {
+      const created = (await resp.json()) as { id: string };
+      labelId = created.id;
+    } else if (resp.status === 401) {
+      throw new Error("gmail_auth_failed");
+    } else if (resp.status === 409) {
+      // Someone (another run, another client) created it between our list and
+      // our create. Re-read rather than fail: the label the user asked for now
+      // exists, which is the outcome they wanted.
+      labelId = await gmailFindLabelIdByName(inbox, accessToken, name);
+      if (!labelId) throw new Error(await gmailErrorMessage("Gmail labels.create failed", resp));
+    } else {
+      throw new Error(await gmailErrorMessage("Gmail labels.create failed", resp));
+    }
+  }
+
+  gmailLabelIdCache.set(cacheKey, {
+    id: labelId,
+    expiresAtMs: Date.now() + GMAIL_LABEL_CACHE_TTL_MS,
+  });
+  return labelId;
+}
+
+/**
+ * Adds one category to an Outlook message, PRESERVING the ones already on it.
+ *
+ * Graph's `categories` is a REPLACE, not an append: PATCHing `["Receipts"]`
+ * makes Receipts the message's only category and silently discards the rest.
+ * So this reads the current array first and merges (mergeOutlookCategories),
+ * and skips the PATCH entirely when the category is already present, because a
+ * no-op write is still a write that can fail.
+ *
+ * A category that is not in the mailbox's master category list is accepted and
+ * shows up uncoloured rather than being rejected. That is the behaviour we
+ * want: provisioning a master-list entry needs MailboxSettings.ReadWrite, a
+ * consent scope no connected inbox currently grants, and an uncoloured category
+ * still files, filters and searches exactly like a coloured one.
+ *
+ * Throws "outlook_auth_failed" on 401/403 and "message_not_found" on 404.
+ */
+async function outlookAddCategory(
+  inbox: InboxRow,
+  messageId: string,
+  category: string,
+): Promise<{ applied: boolean; previous: string[]; categories: string[] }> {
+  const accessToken = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}?$select=categories`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("message_not_found");
+    const body = await resp.text();
+    throw new Error(`Outlook categories read failed: ${body}`);
+  }
+  const data = (await resp.json()) as { categories?: string[] };
+  const previous = Array.isArray(data.categories) ? data.categories : [];
+  const merged = mergeOutlookCategories(previous, category);
+  if (!merged.changed) return { applied: false, previous, categories: merged.categories };
+  await outlookPatchMessage(inbox, messageId, { categories: merged.categories });
+  return { applied: true, previous, categories: merged.categories };
+}
+
+/**
+ * Adds one IMAP keyword to a single message.
+ *
+ * The message_id must be in "<folder>:<uid>" format (from encodeImapId).
+ *
+ * Custom keywords are OPTIONAL in IMAP. A server states support by including
+ * `\*` in the PERMANENTFLAGS it returns on SELECT, and the ones that do not
+ * support them tend to answer a STORE with a bare OK and then persist nothing,
+ * which is the one outcome this must never report as success. So the check runs
+ * before the write when the server told us, and a STORE rejection is translated
+ * into the same clear refusal when it did not.
+ *
+ * Throws "imap_auth_failed" on credential rejection and
+ * "imap_keywords_unsupported" when the server will not keep the keyword.
+ */
+async function imapAddKeyword(
+  inbox: InboxRow,
+  messageId: string,
+  keyword: string,
+): Promise<void> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const { folder, uid } = decodeImapId(messageId);
+  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+
+  const password = await decryptStoredToken(inbox.imap_password);
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
+      email: imapAuthUser(inbox),
+      password,
+    });
+    await client.selectMailbox(imapFolderName(folder));
+    const allowed = permanentFlagsAllowKeyword(client.permanentFlags(), keyword);
+    if (allowed === false) throw new Error("imap_keywords_unsupported");
+    try {
+      await client.uidStore([uid], [keyword], "add");
+    } catch (storeErr) {
+      // `allowed === null` means the server advertised nothing, so a refusal
+      // here IS the answer. Re-throwing a raw "UID STORE failed: ..." would
+      // surface as a generic provider_error and tell the user nothing.
+      if (allowed === null) throw new Error("imap_keywords_unsupported");
+      throw storeErr;
+    }
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
+/**
+ * Applies a label to one message, whatever the provider calls a label.
+ *
+ * The provider-agnostic seam the label action runs on: Gmail label, Outlook
+ * category, IMAP keyword. Branching is the inline `switch (inbox.provider)` the
+ * rest of this file uses, with `default:` meaning IMAP because every IMAP
+ * service is stored as provider="imap" with a `service` discriminator.
+ *
+ * Returns WHAT WAS ACTUALLY APPLIED, not merely that something was. The name
+ * can legitimately differ from the one the user typed (an IMAP keyword cannot
+ * hold a space), and a caller that logged the typed name would be recording a
+ * label the mailbox does not have.
+ *
+ * Throws "label_unsupported_name" when the name cannot be expressed on this
+ * provider, plus the usual per-provider auth / not-found sentinels.
+ */
+async function applyLabelToMessage(
+  inbox: InboxRow,
+  messageId: string,
+  labelName: string,
+): Promise<{
+  kind: LabelTargetKind;
+  applied_as: string;
+  label_id: string | null;
+  already_present: boolean;
+}> {
+  const target = labelTargetFor(inbox.provider, labelName);
+  if (!target.ok) throw new Error("label_unsupported_name");
+  const appliedAs = target.target.applied_as;
+
+  switch (inbox.provider) {
+    case "gmail": {
+      const labelId = await gmailResolveOrCreateLabelId(inbox, appliedAs);
+      // Add only. A label action must not remove INBOX the way a move does, or
+      // it would silently archive everything it touched.
+      await gmailModifyLabels(inbox, messageId, [labelId], []);
+      return { kind: "label", applied_as: appliedAs, label_id: labelId, already_present: false };
+    }
+    case "outlook": {
+      const result = await outlookAddCategory(inbox, messageId, appliedAs);
+      return {
+        kind: "category",
+        applied_as: appliedAs,
+        label_id: null,
+        already_present: !result.applied,
+      };
+    }
+    default: {
+      await imapAddKeyword(inbox, messageId, appliedAs);
+      return { kind: "keyword", applied_as: appliedAs, label_id: null, already_present: false };
+    }
+  }
+}
+
 
 // ── Shared execute helper ──────────────────────────────────────────────────
 
@@ -22050,10 +22323,10 @@ const triageStore: TriageStore = {
 /**
  * Applies one triage action to one message.
  *
- * Every branch delegates to a provider-agnostic seam that the interactive tools
- * already use, so an automated move and a hand-driven move are literally the
- * same code path. Nothing here reaches a provider directly except the Gmail
- * label add, which has no bulk seam of its own.
+ * Every branch delegates to a provider-agnostic seam, so an automated move and a
+ * hand-driven move are literally the same code path. Nothing here reaches a
+ * provider directly: `label` goes through `applyLabelToMessage`, which owns the
+ * Gmail label / Outlook category / IMAP keyword split.
  */
 async function applyTriageAction(input: {
   inbox: TriageInbox;
@@ -22090,35 +22363,40 @@ async function applyTriageAction(input: {
     }
 
     case "label": {
-      // Labels are a Gmail concept. Outlook categories and IMAP keywords are
-      // near-equivalents, but neither is reachable through an existing seam, and
-      // inventing provider code here would defeat the point of the split. The
-      // rule validator rejects a label action on a non-Gmail inbox up front, so
-      // this branch is the belt-and-suspenders half of that check.
-      if (inboxRow.provider !== "gmail") {
-        return { ok: false, error_code: "label_unsupported_provider" };
-      }
-      let labelId: string;
+      // Every provider, through the one seam. What "label" means differs
+      // (Gmail label / Outlook category / IMAP keyword) and so can the NAME:
+      // an IMAP keyword cannot hold a space, so "Order updates" is applied as
+      // "Order_updates". The run item records what was actually written rather
+      // than what was typed, because those are not always the same string and a
+      // run log that reported the typed one would be lying about the mailbox.
+      let applied: Awaited<ReturnType<typeof applyLabelToMessage>>;
       try {
-        labelId = await resolveFolderId(inboxRow, action.label);
+        applied = await applyLabelToMessage(inboxRow, match.id, action.label);
       } catch (error) {
-        console.warn("[triage] label_resolve_failed", {
+        console.warn("[triage] label_failed", {
           inbox_id: inboxRow.id,
           error: error instanceof Error ? error.message : String(error),
         });
-        return { ok: false, error_code: "label_unresolved" };
-      }
-      try {
-        // Add only. A label action must not remove INBOX the way a move does, or
-        // it would silently archive everything it touched.
-        await gmailModifyLabels(inboxRow, match.id, [labelId], []);
-      } catch (error) {
         return { ok: false, error_code: providerErrorCode(error) };
       }
       return {
         ok: true,
-        detail: { label: action.label },
-        undo: { op: "label", message_id: match.id, label_id: labelId },
+        detail: {
+          label: action.label,
+          applied_as: applied.applied_as,
+          target: applied.kind,
+          ...(applied.label_id ? { label_id: applied.label_id } : {}),
+          ...(applied.already_present ? { already_present: true } : {}),
+        },
+        // Nothing to reverse when the message already carried it: undoing an
+        // action we did not take would remove a label the user put there.
+        undo: applied.already_present ? null : {
+          op: "label",
+          message_id: match.id,
+          target: applied.kind,
+          applied_as: applied.applied_as,
+          ...(applied.label_id ? { label_id: applied.label_id } : {}),
+        },
       };
     }
 
@@ -22181,11 +22459,26 @@ async function applyTriageAction(input: {
   }
 }
 
+/**
+ * Sentinels a run item may carry verbatim, because each names a cause the user
+ * can act on. Anything not listed collapses to "provider_error": a raw upstream
+ * message in a run log is a leak, not a diagnosis.
+ */
+const TRIAGE_PASSTHROUGH_ERROR_CODES = new Set([
+  "message_not_found",
+  // The label cannot be expressed on this provider (an IMAP keyword holding a
+  // character an atom cannot). The validators refuse this when the rule is
+  // written; reaching it here means the inbox changed under a stored rule.
+  "label_unsupported_name",
+  // The IMAP server does not keep custom keywords. Nothing was applied.
+  "imap_keywords_unsupported",
+]);
+
 /** Reduce a thrown provider error to a short code. Never message content. */
 function providerErrorCode(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   if (message.includes("auth_failed")) return "auth_failed";
-  if (message === "message_not_found") return "message_not_found";
+  if (TRIAGE_PASSTHROUGH_ERROR_CODES.has(message)) return message;
   return "provider_error";
 }
 

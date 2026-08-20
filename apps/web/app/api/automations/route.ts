@@ -11,7 +11,9 @@ import {
   RULE_COLUMNS,
   assertWorkspaceResources,
   isUuid,
+  readInboxProvider,
   validateAction,
+  validateActionForProvider,
   validateFilter,
   validateInterval,
   validateMaxMessages,
@@ -127,6 +129,13 @@ export async function POST(request: NextRequest) {
 
   const ownership = await assertWorkspaceResources(c.db, c.workspaceId, body.inbox_id, body.api_key_id);
   if (ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status });
+
+  // A label works on every provider, but not every NAME does: on IMAP a label
+  // is a keyword, which is an atom. Refuse it here rather than store a rule
+  // whose every run can only fail.
+  const provider = await readInboxProvider(c.db, c.workspaceId, body.inbox_id);
+  const forProvider = validateActionForProvider(action.value, provider);
+  if (!forProvider.ok) return NextResponse.json({ error: forProvider.error }, { status: 400 });
 
   const count = await c.db.from('triage_rules')
     .select('id', { count: 'exact', head: true })

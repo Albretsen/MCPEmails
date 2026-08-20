@@ -275,6 +275,12 @@ export class ImapClient {
    */
   private commandChain: Promise<unknown> = Promise.resolve();
 
+  /**
+   * PERMANENTFLAGS from the most recent SELECT, or null when the server sent
+   * none. Per-mailbox, so it is reset on every SELECT rather than accumulated.
+   */
+  private lastPermanentFlags: string[] | null = null;
+
   private constructor(conn: Deno.Conn) {
     this.conn = conn;
     this.buffer = new Uint8Array(64 * 1024);
@@ -424,16 +430,38 @@ export class ImapClient {
     return client;
   }
 
-  /** SELECT a mailbox. Throws if the folder does not exist. */
+  /**
+   * SELECT a mailbox. Throws if the folder does not exist.
+   *
+   * Also captures the untagged `* OK [PERMANENTFLAGS (...)]` response code,
+   * which is the ONLY way to learn whether this mailbox accepts custom keywords
+   * before trying to set one. See {@link permanentFlags}.
+   */
   selectMailbox(mailbox: string): Promise<void> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
+      this.lastPermanentFlags = null;
       await this.write(`${tag} SELECT ${quoteImap(mailbox)}${CRLF}`);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
         throw new Error(`Mailbox not found: ${mailbox}`);
       }
+      this.lastPermanentFlags = parsePermanentFlags(resp.untagged);
     });
+  }
+
+  /**
+   * PERMANENTFLAGS reported by the last SELECT, or null when the server sent
+   * none (which RFC 3501 says to read as "assume flags are permanent", i.e. as
+   * an absence of information rather than a refusal).
+   *
+   * The value callers actually want out of this is whether the mailbox contains
+   * `\*`, the server's statement that a client may invent keywords. Interpreting
+   * it lives in label-target.ts's `permanentFlagsAllowKeyword` so the rule is
+   * shared with the validators rather than restated per call site.
+   */
+  permanentFlags(): string[] | null {
+    return this.lastPermanentFlags;
   }
 
   /** UID SEARCH; returns matching UIDs (ascending). criteria e.g. "ALL", "UNSEEN". */
@@ -1129,6 +1157,21 @@ function toUidSet(uids: number[]): string {
   }
   ranges.push(start === end ? `${start}` : `${start}:${end}`);
   return ranges.join(",");
+}
+
+/**
+ * Pull PERMANENTFLAGS out of a SELECT's untagged lines.
+ *
+ * The line looks like `* OK [PERMANENTFLAGS (\Answered \Deleted \Seen \*)] ...`.
+ * Returns null when the server sent no such line at all, which is a different
+ * fact from "sent an empty list" and is why the return type is nullable.
+ */
+export function parsePermanentFlags(untagged: string[]): string[] | null {
+  for (const line of untagged) {
+    const m = line.match(/\[PERMANENTFLAGS\s*\(([^)]*)\)\]/i);
+    if (m) return m[1].trim().split(/\s+/).filter(Boolean);
+  }
+  return null;
 }
 
 function quoteImap(s: string): string {
