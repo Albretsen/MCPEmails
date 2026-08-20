@@ -221,3 +221,27 @@ export function stripHtmlToText(
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
+
+/**
+ * Choose the plain-text body, preferring the sender's own text/plain part but
+ * falling back to the HTML when that part is present and EMPTY.
+ *
+ * `??` was the bug: it only falls back on null/undefined, and a large family of
+ * senders (Intercom, Zendesk and most ticketing systems) ship a
+ * multipart/alternative whose text/plain part is an empty string. Those arrived
+ * with body_text: "" next to a full body_html, so an agent reading body_text
+ * saw nothing at all and had to re-read the message with include_html to
+ * discover there was content, at roughly 4x the tokens. Observed on real mail.
+ *
+ * Whitespace-only counts as empty for the same reason: a part containing one
+ * \r\n carries no more information than an absent one.
+ */
+export function preferredBodyText(text: string | null | undefined, html: string | null | undefined): string | null {
+  if (typeof text === "string" && text.trim() !== "") return text;
+  if (typeof html === "string" && html !== "") {
+    const converted = stripHtmlToText(html, { keepLinks: true });
+    if (converted.trim() !== "") return converted;
+  }
+  return text ?? null;
+}
+
