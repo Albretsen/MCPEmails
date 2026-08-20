@@ -61,6 +61,7 @@ import {
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
 import {
   normalizePreview,
+  preferredBodyText,
   stripHtmlToText,
 } from "./text-extract.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
@@ -7401,7 +7402,7 @@ async function readImapMessage(
       reply_to: replyToList[0] ?? null,
       subject,
       date: imapDateToIso(getHeader(h, "date")),
-      body_text: parsed.text ?? (parsed.html ? stripHtmlToText(parsed.html, { keepLinks: true }) : null),
+      body_text: preferredBodyText(parsed.text, parsed.html),
       body_html: includeHtml && parsed.html ? sanitizeEmailHtml(parsed.html) : null,
       attachments,
       is_read: markAsRead ? true : msg.flags.includes("\\Seen"),
@@ -8599,7 +8600,7 @@ async function readGmailMessage(
     date: msg.internalDate
       ? new Date(Number(msg.internalDate)).toISOString()
       : new Date().toISOString(),
-    body_text: textPlain ?? (textHtml ? stripHtmlToText(textHtml, { keepLinks: true }) : null),
+    body_text: preferredBodyText(textPlain, textHtml),
     body_html: includeHtml && textHtml ? sanitizeEmailHtml(textHtml) : null,
     attachments,
     is_read: isRead,

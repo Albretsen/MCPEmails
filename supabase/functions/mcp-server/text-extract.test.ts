@@ -17,6 +17,7 @@ import {
   decodeHtmlEntities,
   normalizePreview,
   normalizeSnippetPreview,
+  preferredBodyText,
   stripHtmlToText,
 } from "./text-extract.ts";
 
@@ -204,4 +205,45 @@ Deno.test("a snippet truncated mid-tag does not leak the tag fragment", () => {
     "Total: 4",
     "documents the bare-< limitation rather than pretending it is handled",
   );
+});
+
+// ── Which body actually reaches the model ───────────────────────────────────
+
+Deno.test("an empty text/plain part falls back to the HTML", () => {
+  // Observed on real mail: Intercom and most ticketing systems send a
+  // multipart/alternative whose text part is "". `??` kept that empty string,
+  // so body_text arrived blank next to a full body_html and the agent had to
+  // re-read with include_html to find any content at all.
+  assertEquals(
+    preferredBodyText("", "<p>Ticket #123 received.</p>"),
+    "Ticket #123 received.",
+    "empty text part must not win over real HTML",
+  );
+});
+
+Deno.test("a whitespace-only text part also falls back", () => {
+  assertEquals(
+    preferredBodyText("\r\n  \r\n", "<p>Real content.</p>"),
+    "Real content.",
+    "whitespace carries no more information than absence",
+  );
+});
+
+Deno.test("a real text part is preferred over the HTML", () => {
+  assertEquals(
+    preferredBodyText("The sender's own plain text.", "<p>Converted.</p>"),
+    "The sender's own plain text.",
+    "never second-guess a sender who supplied plain text",
+  );
+});
+
+Deno.test("null text with HTML converts, and null both stays null", () => {
+  assertEquals(preferredBodyText(null, "<p>Hi.</p>"), "Hi.", "null falls back too");
+  assertEquals(preferredBodyText(null, null), null, "nothing in, nothing out");
+});
+
+Deno.test("HTML that converts to nothing does not mask the original", () => {
+  // A tracking-pixel-only body converts to "". Returning that is correct, but
+  // it must not be mistaken for a successful conversion of real content.
+  assertEquals(preferredBodyText("", '<img src="p.gif">'), "", "stays empty, not null");
 });
