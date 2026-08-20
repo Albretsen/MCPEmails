@@ -19,6 +19,7 @@ const PAGES = [
   { id: 'usage',    labelKey: 'commandPalette.pageUsage',    icon: 'zap',      keywords: 'billing calls quota limits metrics' },
   { id: 'workflows', label: 'Workflows', icon: 'activity', keywords: 'prompts routines triage draft search cleanup scheduled email' },
   { id: 'approvals', labelKey: 'commandPalette.pageApprovals', icon: 'shield', keywords: 'approve reject review pending sends outgoing email' },
+  { id: 'automations', labelKey: 'commandPalette.pageAutomations', icon: 'zap', keywords: 'automation rule triage schedule unattended filter move label forward recurring' },
   { id: 'settings', labelKey: 'commandPalette.pageSettings', icon: 'settings', keywords: 'account profile password preferences' },
   { id: 'security', labelKey: 'commandPalette.pageSecurity', icon: 'shield',   keywords: 'audit log sessions devices' },
 ];

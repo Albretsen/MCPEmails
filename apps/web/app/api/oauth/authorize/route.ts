@@ -26,6 +26,7 @@ const VALID_SCOPES = new Set([
   'manage:drafts',
   'manage:contacts',
   'schedule:email',
+  'manage:automations',
 ]);
 
 function generateAuthCode(): string {

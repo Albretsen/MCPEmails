@@ -88,7 +88,7 @@ function ClientMark({ clientId, logoUrl, size = 36 }) {
 const PRESETS = [
   { id: 'readOnly', icon: 'eye',      scopes: ['read:email', 'search:email'] },
   { id: 'standard', icon: 'zap',      scopes: ['read:email', 'search:email', 'send:email', 'manage:drafts', 'manage:contacts'], recommended: true },
-  { id: 'full',     icon: 'shield',   scopes: ['read:email', 'search:email', 'send:email', 'manage:folders', 'delete:email', 'manage:drafts', 'manage:contacts', 'schedule:email'] },
+  { id: 'full',     icon: 'shield',   scopes: ['read:email', 'search:email', 'send:email', 'manage:folders', 'delete:email', 'manage:drafts', 'manage:contacts', 'schedule:email', 'manage:automations'] },
 ];
 
 // ─── Preset cards (radiogroup) ───────────────────────────────────────────────
