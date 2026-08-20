@@ -23,7 +23,7 @@ Koden kjører på din egen maskinvare. Ingen tredjepart sitter noensinne mellom 
 
 ### Det er gratis i kroner
 
-Ingen abonnement. Gmail API-et selv er gratis ved et hvilket som helst volum en agent vil treffe. Hvis tiden din er billig i forhold til $12/month, taler regnestykket for å lage din egen.
+Ingen abonnement. Gmail API-et selv er gratis ved et hvilket som helst volum en agent vil treffe. Hvis tiden din er billig i forhold til $29/month, taler regnestykket for å lage din egen.
 
 ### Du kan bøye det til hva som helst
 

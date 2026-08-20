@@ -407,7 +407,7 @@ export function Features() {
 /**
  * A self-consistent, on-brand mockup of the dashboard so prospects can see the
  * product before signing up. Rendered in HTML/CSS (not a screenshot) so it
- * never drifts from the real naming — note "Scale" plan and the real tool names
+ * never drifts from the real naming (note the "Team" plan and the real tool names)
  * (email_read, email_compose, email_organize).
  */
 export function DashboardPreview() {
@@ -423,7 +423,7 @@ export function DashboardPreview() {
     { label: 'Inboxes connected', value: '4' },
     { label: 'MCP calls (30d)', value: '12,484' },
     { label: 'Avg. response', value: '214ms' },
-    { label: 'Plan', value: 'Scale' },
+    { label: 'Plan', value: 'Team' },
   ];
   const activity = [
     { tool: 'email_read', inbox: 'work-gmail', time: 'just now' },

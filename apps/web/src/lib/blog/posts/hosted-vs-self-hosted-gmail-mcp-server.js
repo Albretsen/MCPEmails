@@ -30,7 +30,7 @@ The code runs on your hardware. No third party ever sits between your agent and 
 
 ### It's free in dollars
 
-No subscription. The Gmail API itself is free at any volume an agent will hit. If your time is cheap relative to $12/month, the math favors rolling your own.
+No subscription. The Gmail API itself is free at any volume an agent will hit. If your time is cheap relative to $29/month, the math favors rolling your own.
 
 ### You can bend it to anything
 
