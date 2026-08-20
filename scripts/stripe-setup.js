@@ -8,9 +8,20 @@
  * Usage:
  *   STRIPE_SECRET_KEY=sk_test_... node scripts/stripe-setup.js
  *
- * What it creates:
- *   - Product "MCPEmails Pro"        → price $19/mo  +  $152/yr
- *   - Product "MCPEmails Enterprise" → price $99/mo  +  $792/yr
+ * What it creates (the 2026-08-19 catalogue; the value metric is connected
+ * inboxes, so there are exactly two paid tiers and no usage add-on):
+ *   - Product "MCPEmails Pro"  → price $29/mo  +  $276/yr
+ *   - Product "MCPEmails Team" → price $79/mo  +  $756/yr
+ *
+ * The env var names lag the customer-facing names by one rename and are kept
+ * that way so no environment has to be re-keyed: Pro writes STRIPE_PRICE_SOLO_*
+ * and Team writes STRIPE_PRICE_PRO_*, matching the `solo` and `pro` plan ids in
+ * the database. There is no Enterprise tier: this script used to provision one,
+ * and nothing has ever read STRIPE_PRICE_ENTERPRISE_*.
+ *
+ * Prices are created with tax_behavior=exclusive so Stripe Tax can be switched
+ * on later without a price migration. (It is off today: the account holds no
+ * tax registrations, so it would calculate zero everywhere.)
  *
  * After running, commit nothing — the .env.local changes are local only.
  * Add the same four STRIPE_PRICE_* vars to your Vercel project via the
@@ -44,19 +55,21 @@ const ENV_FILE = path.resolve(__dirname, '../apps/web/.env.local');
 
 const PRODUCTS = [
   {
+    // Sold as "Pro"; internal plan id `solo`, hence the SOLO env vars.
     name: 'MCPEmails Pro',
-    description: 'For power users and small teams who rely on email automation.',
+    description: 'Every mailbox you own, in one agent. Unlimited connected inboxes, one person.',
     prices: [
-      { unit_amount: 1900,  currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_PRO_MONTHLY' },
-      { unit_amount: 15200, currency: 'usd', interval: 'year',  envVar: 'STRIPE_PRICE_PRO_YEARLY' },
+      { unit_amount: 2900,  currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_SOLO_MONTHLY' },
+      { unit_amount: 27600, currency: 'usd', interval: 'year',  envVar: 'STRIPE_PRICE_SOLO_YEARLY' },
     ],
   },
   {
-    name: 'MCPEmails Enterprise',
-    description: 'Unlimited scale for teams with advanced compliance needs.',
+    // Sold as "Team"; internal plan id `pro`, hence the PRO env vars.
+    name: 'MCPEmails Team',
+    description: 'Shared inboxes for a team, with a separate workspace per client or business.',
     prices: [
-      { unit_amount: 9900,  currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_ENTERPRISE_MONTHLY' },
-      { unit_amount: 79200, currency: 'usd', interval: 'year',  envVar: 'STRIPE_PRICE_ENTERPRISE_YEARLY' },
+      { unit_amount: 7900,  currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_PRO_MONTHLY' },
+      { unit_amount: 75600, currency: 'usd', interval: 'year',  envVar: 'STRIPE_PRICE_PRO_YEARLY' },
     ],
   },
 ];
@@ -165,7 +178,8 @@ async function main() {
         (p) =>
           p.unit_amount === priceDef.unit_amount &&
           p.currency === priceDef.currency &&
-          p.recurring?.interval === priceDef.interval,
+          p.recurring?.interval === priceDef.interval &&
+          p.tax_behavior === 'exclusive',
       );
 
       let price;
@@ -179,6 +193,9 @@ async function main() {
           unit_amount: String(priceDef.unit_amount),
           currency: priceDef.currency,
           'recurring[interval]': priceDef.interval,
+          // Immutable once set, so it is set now rather than after the first
+          // tax registration forces a whole new price and a migration.
+          tax_behavior: 'exclusive',
         });
         const display = `$${(priceDef.unit_amount / 100).toFixed(2)}/${priceDef.interval}`;
         console.log(`  ✓  Created price: ${display} (${price.id})`);
@@ -217,6 +234,7 @@ async function main() {
   console.log('  1. Add your real STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to .env.local');
   console.log('  2. Set up the Stripe webhook (see Documents/Human-Input/STRIPE_SETUP_NEEDED.md §5)');
   console.log('  3. Add all four STRIPE_PRICE_* vars to Vercel: https://vercel.com/dashboard');
+  console.log('     (Pro = STRIPE_PRICE_SOLO_*, Team = STRIPE_PRICE_PRO_*)');
   console.log('  4. Restart your dev server.\n');
 }
 

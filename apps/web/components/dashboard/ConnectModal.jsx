@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
+import { upgradeDestination } from '@/lib/billing/upgrade-intent.mjs';
 import {
   IMAP_PRESETS,
   GENERIC_IMAP_DEFAULTS,
@@ -12,17 +13,46 @@ import {
   ZOHO_REGIONS,
   DEFAULT_ZOHO_REGION,
   DEFAULT_ZOHO_ACCOUNT_TYPE,
+  portForSecurity,
+  securityForPort,
+  normalizeAppPassword,
 } from '@/lib/email-providers/imap-presets';
 
 /**
  * Zoho serves personal (@zohomail.com) and organization (paid custom-domain)
  * mailboxes on different hosts (imap.zoho vs imappro.zoho), so the user must
  * tell us which they have. Sent to the connect route as `zohoAccountType`.
+ * Labels resolve through dashboardChrome so they translate.
  */
 const ZOHO_ACCOUNT_TYPES = [
-  { value: 'personal', label: 'Personal (@zohomail.com)' },
-  { value: 'organization', label: 'Custom domain / Organization' },
+  { value: 'personal', labelKey: 'connect.zohoPersonal' },
+  { value: 'organization', labelKey: 'connect.zohoOrganization' },
 ];
+
+/** Per-provider guidance key in dashboardChrome. */
+const HINT_KEYS = {
+  generic: 'connect.hintGeneric',
+  icloud: 'connect.hintIcloud',
+  yahoo: 'connect.hintYahoo',
+  zoho: 'connect.hintZoho',
+  yandex: 'connect.hintYandex',
+  fastmail: 'connect.hintFastmail',
+};
+
+/**
+ * Where each app-password provider actually generates the credential. These are
+ * deep links to the generator, not to a help article: the top recorded failure
+ * across every app-password provider is a plain `NO [AUTHENTICATIONFAILED]`,
+ * i.e. the user submitted their normal account password, so the shortest route
+ * to the right page is the thing most likely to change the outcome.
+ */
+const APP_PASSWORD_URLS = {
+  icloud: 'https://account.apple.com/account/manage',
+  yahoo: 'https://login.yahoo.com/myaccount/security/app-password',
+  zoho: 'https://accounts.zoho.com/home#security/device_pass',
+  yandex: 'https://id.yandex.com/security/app-passwords',
+  fastmail: 'https://app.fastmail.com/settings/security/apppw',
+};
 
 /**
  * ConnectModal.jsx: inbox connection modal.
@@ -44,17 +74,19 @@ const ZOHO_ACCOUNT_TYPES = [
 
 /** Provider cards shown in step 1. `subKey` resolves a dashboardChrome key. */
 const PROVIDERS = [
-  { k: 'gmail',    label: 'Gmail',    subKey: 'connect.subGmail',       logoKind: 'gmail' },
-  { k: 'fastmail', label: 'Fastmail', subKey: 'connect.subFastmail',    logoKind: 'imap' },
-  // Branded IMAP presets (app password).
+  // IMAP leads. It is the path that works with every mailbox, it is the only
+  // one no first-party connector covers, and it is the one that does not send
+  // the user out to a third-party consent screen to complete.
+  { k: 'generic', label: 'IMAP / SMTP', subKey: 'connect.subGeneric', logoKind: 'imap' },
+  // Branded IMAP presets (app password) — IMAP underneath, host/port prefilled.
   ...Object.values(IMAP_PRESETS).map(p => ({
     k: p.service,
     label: p.label,
     subKey: 'connect.subAppPassword',
     logoKind: p.logoKind,
   })),
-  // Generic catch-all connector.
-  { k: 'generic', label: 'IMAP / SMTP', subKey: 'connect.subGeneric', logoKind: 'imap' },
+  { k: 'fastmail', label: 'Fastmail', subKey: 'connect.subFastmail',    logoKind: 'imap' },
+  { k: 'gmail',    label: 'Gmail',    subKey: 'connect.subGmail',       logoKind: 'gmail' },
   // Outlook is temporarily unavailable (Microsoft connector not live yet) —
   // shown LAST, greyed out / non-selectable with a "coming soon" flag until it ships.
   { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook', disabled: true },
@@ -69,16 +101,32 @@ const OAUTH_ROUTES = {
 /**
  * ConnectModal: inbox connection modal.
  *
- * When `atInboxLimit` is true the modal shows an upgrade prompt instead of
- * the provider selection step, because the workspace has reached its plan's
- * inbox cap and connecting a new inbox is not possible without upgrading.
- * The free plan has no inbox cap, so this branch only applies to plans that
- * define one.
+ * When `atInboxLimit` is true the modal shows the upgrade offer instead of the
+ * provider picker. This is the product's single moment of value: the person is
+ * standing in front of the modal trying to add a second mailbox, which is
+ * exactly what Pro sells. So the panel names what they were doing, states the
+ * price, and goes straight to Stripe Checkout rather than dumping them on a
+ * pricing page to start over.
  *
- * @param {boolean} atInboxLimit  - True when the workspace is at its inbox cap.
- * @param {string}  plan          - The workspace's current plan slug (e.g. "free").
+ * The panel never appears for a workspace whose cap is unlimited, which covers
+ * paid plans, comped accounts, and the grandfathered pre-repricing cohort:
+ * App.jsx computes `atInboxLimit` as false whenever maxInboxes is null.
+ *
+ * @param {boolean} atInboxLimit - True when the workspace is at its inbox cap.
+ * @param {string}  planName     - Customer-facing plan name ("Free"/"Pro"/"Team").
+ *                                 Never the internal slug.
+ * @param {number}  inboxCount   - Inboxes connected right now.
+ * @param {number|null} maxInboxes - The plan's cap, or null for unlimited.
  */
-export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 'free', reconnect = null }) {
+export function ConnectModal({
+  onClose,
+  onConnect,
+  atInboxLimit = false,
+  planName = 'Free',
+  inboxCount = null,
+  maxInboxes = null,
+  reconnect = null,
+}) {
   const tr = useTranslations('dashboardChrome');
   // Reconnect mode: re-open the form this inbox was created with, identity
   // pre-filled and locked, so only the password is re-entered. Map the stored
@@ -91,7 +139,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   const reconnectProvider = isReconnect
     ? (reconnect.service && reconnect.service !== 'generic' ? reconnect.service : 'generic')
     : null;
-  const [provider, setProvider] = useState(reconnectProvider ?? 'gmail');
+  const [provider, setProvider] = useState(reconnectProvider ?? 'generic');
   const [step, setStep] = useState(isReconnect ? 2 : 1);
   const [form, setForm] = useState(() => ({
     email: reconnect?.address ?? '',
@@ -131,6 +179,35 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
   // gated and unsupported here, so it is not offered.
   const usesAppPassword =
     isPreset || isGeneric || provider === 'fastmail';
+
+  /**
+   * Keep the transport security and the port consistent in the generic form.
+   *
+   * These two fields describe one decision, and letting them disagree is what
+   * produced the two largest classes of generic IMAP failure in production:
+   * STARTTLS left on port 993 stalls waiting for a greeting that a TLS-only
+   * listener will never send (recorded as a timeout in the `greeting` phase),
+   * and implicit TLS pointed at 143 fails the handshake. Changing the security
+   * mode therefore moves the port to the matching standard, and typing a
+   * standard port moves the security mode to match it. A non-standard port
+   * implies nothing, so the user's explicit choice is left untouched.
+   */
+  const setSecurity = (protocol, security) => {
+    setForm(prev => ({
+      ...prev,
+      [protocol === 'imap' ? 'imapSecurity' : 'smtpSecurity']: security,
+      [protocol === 'imap' ? 'imapPort' : 'smtpPort']: portForSecurity(protocol, security),
+    }));
+  };
+
+  const setPort = (protocol, value) => {
+    const implied = securityForPort(protocol, Number(value));
+    setForm(prev => ({
+      ...prev,
+      [protocol === 'imap' ? 'imapPort' : 'smtpPort']: value,
+      ...(implied ? { [protocol === 'imap' ? 'imapSecurity' : 'smtpSecurity']: implied } : {}),
+    }));
+  };
 
   // ── Step 1: provider selected ──────────────────────────────────────────────
 
@@ -172,7 +249,16 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
     setFormError(null);
 
     const email = form.email.trim().toLowerCase();
-    const appPassword = form.password.trim();
+    // Branded app-password providers issue tokens that never contain
+    // whitespace, but they display them in groups and copy-paste readily drags
+    // in a stray space, newline or non-breaking space. Those characters travel
+    // inside the SASL token and come back as an ordinary credential rejection,
+    // so the user is told to fix a password that was already right. The generic
+    // connector is excluded: there the value is a real account password and a
+    // space in it may well be deliberate.
+    const appPassword = isGeneric
+      ? form.password.trim()
+      : normalizeAppPassword(form.password);
 
     if (!email || !email.includes('@')) {
       setFormError(tr('connect.errorEmailRequired'));
@@ -314,14 +400,14 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
               </h2>
               <div className="sub" style={{ marginTop: 4 }}>
                 {atInboxLimit
-                  ? tr('connect.subLimitReached', { plan: plan.charAt(0).toUpperCase() + plan.slice(1) })
+                  ? (typeof inboxCount === 'number' && typeof maxInboxes === 'number'
+                      ? tr('connect.subLimitReached', { plan: planName, count: inboxCount, max: maxInboxes })
+                      : tr('connect.subLimitReachedNoCount', { plan: planName }))
                   : step === 1
                     ? tr('connect.subChooseProvider')
                     : isGeneric
                       ? tr('connect.subGenericForm')
-                      : preset
-                        ? preset.hint
-                        : tr('connect.subFastmailAppPassword')}
+                      : tr(HINT_KEYS[provider] ?? 'connect.hintGeneric')}
               </div>
             </div>
             <button
@@ -390,8 +476,10 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 </div>
               </div>
 
-              {/* Feature highlights */}
+              {/* Feature highlights. Unlimited inboxes leads: it is the thing
+                  they were just blocked on, and the rest is supporting detail. */}
               {[
+                'connect.featureInboxes',
                 'connect.featureRateLimit',
                 'connect.featureHistory',
                 'connect.featureTeam',
@@ -415,7 +503,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
           {/* ─── Step 1: Provider selection ─────────────────────────────────── */}
           {!atInboxLimit && step === 1 && (
             <>
-              <div className="provider-grid">
+              <div className="provider-grid" role="radiogroup" aria-label={tr('connect.subChooseProvider')}>
                 {PROVIDERS.map(p => (
                   <div
                     key={p.k}
@@ -436,30 +524,64 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                 ))}
               </div>
 
-              {/* Gmail verification-pending warning. Gated behind
-                  OAUTH_VERIFICATION_PENDING so the owner can hide it after
-                  Google verification completes, without a code change. Only
-                  Gmail applies — Outlook is currently disabled (coming soon),
-                  and the Google/CASA review text never applied to Microsoft. */}
+              {/* Gmail: a plain account of what Google's screens look like.
+                  This used to be an amber alert box with a warning triangle,
+                  which is the wrong instrument: the screen it describes is a
+                  permanent condition of shipping an unverified Google app, not
+                  an incident, and dressing it as a hazard talked users out of a
+                  flow they had already chosen. 39.5% of Gmail connects were
+                  abandoned with no failure ever recorded on our side, i.e. on
+                  Google's screen. So: show the screen, name the exact buttons,
+                  and say why the wording is what it is. */}
               {OAUTH_VERIFICATION_PENDING && provider === 'gmail' && (
                 <div
                   role="note"
                   style={{
                     marginTop: 16,
-                    padding: '12px 14px',
-                    background: 'var(--amber-100)',
-                    border: '1px solid rgba(240,165,62,0.35)',
+                    padding: 14,
+                    background: 'var(--bg-sunken)',
+                    border: '1px solid var(--border-1)',
                     borderRadius: 8,
                     fontFamily: 'var(--font-sans)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <Icon name="alert-triangle" size={14} color="var(--amber-700)" />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--amber-700)' }}>
-                      {tr('connect.verificationWarningTitle')}
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', marginBottom: 4 }}>
+                    {tr('connect.googleStepsTitle')}
+                  </div>
+                  <p style={{ margin: '0 0 12px', fontSize: 12.5, lineHeight: 1.55, color: 'var(--fg-2)' }}>
+                    {tr('connect.googleStepsIntro')}
+                  </p>
+
+                  {/* This asset is the icon registered on our Google OAuth
+                      consent screen, so it is the mark the user is about to see
+                      on Google's own page. Shown at badge size next to a line
+                      saying exactly that: it helps the user confirm they are in
+                      the right flow. It is deliberately NOT presented as a
+                      screenshot of Google's screen, which is not what it is. */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    marginBottom: 12,
+                    padding: '8px 10px',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-1)',
+                    borderRadius: 6,
+                  }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/google-consent-logo.png"
+                      alt=""
+                      width={28}
+                      height={28}
+                      style={{ flexShrink: 0, borderRadius: 4 }}
+                    />
+                    <span style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--fg-2)' }}>
+                      {tr('connect.googleConsentAlt')}
                     </span>
                   </div>
-                  <ul style={{
+
+                  <ol style={{
                     margin: 0,
                     paddingLeft: 18,
                     fontSize: 12.5,
@@ -469,15 +591,60 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     flexDirection: 'column',
                     gap: 6,
                   }}>
-                    <li>{tr('connect.verificationWarningReview')}</li>
-                    <li>{tr('connect.verificationWarningGoogleScreen')}</li>
-                    <li>{tr('connect.verificationWarningReauth')}</li>
-                  </ul>
+                    <li>{tr('connect.googleStep1')}</li>
+                    <li>{tr('connect.googleStep2')}</li>
+                    <li>{tr('connect.googleStep3')}</li>
+                  </ol>
+
+                  <p style={{
+                    margin: '12px 0 0',
+                    paddingTop: 12,
+                    borderTop: '1px solid var(--border-1)',
+                    fontSize: 12,
+                    lineHeight: 1.55,
+                    color: 'var(--fg-3)',
+                  }}>
+                    {tr('connect.googleStepsWhy')}
+                  </p>
+                  {/* The old copy claimed access expired "roughly every 7 days".
+                      It does not. Access tokens last an hour and are renewed by
+                      a background job the user never sees; the refresh token
+                      behind them is only invalidated if the user revokes it.
+                      Production bears this out: the oldest Gmail inbox has been
+                      connected and healthy for 82 days, and of 41 Gmail inboxes
+                      the only 3 in an error state were explicit revocations.
+                      The 7-day figure applies to Google projects left in
+                      "Testing" publishing status, which is a different thing
+                      from being unverified. */}
+                  <p style={{ margin: '8px 0 0', fontSize: 12, lineHeight: 1.55, color: 'var(--fg-3)' }}>
+                    {tr('connect.googleStepsDuration')}
+                  </p>
                 </div>
               )}
 
-              {/* Fastmail: app-password guidance + help link */}
-              {provider === 'fastmail' && (
+              {/* Generic IMAP is the lead option, so it gets a short case
+                  for itself rather than a bare one-liner. */}
+              {isGeneric && (
+                <div style={{
+                  marginTop: 16,
+                  padding: 14,
+                  background: 'var(--bg-sunken)',
+                  border: '1px solid var(--border-1)',
+                  borderRadius: 8,
+                  fontFamily: 'var(--font-sans)',
+                }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', marginBottom: 4 }}>
+                    {tr('connect.imapLeadTitle')}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: 'var(--fg-2)' }}>
+                    {tr('connect.imapLeadBody')}
+                  </p>
+                </div>
+              )}
+
+              {/* App-password providers: guidance + a link straight to the page
+                  that generates the credential. */}
+              {(isPreset || provider === 'fastmail') && (
                 <p style={{
                   margin: '12px 0 0',
                   fontFamily: 'var(--font-sans)',
@@ -485,39 +652,15 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   color: 'var(--fg-3)',
                   lineHeight: 1.5,
                 }}>
-                  {tr('connect.fastmailHintAppPassword')}{' '}
+                  {tr(HINT_KEYS[provider])}{' '}
                   <a
-                    href="https://www.fastmail.help/hc/en-us/articles/5076446901519"
+                    href={APP_PASSWORD_URLS[provider]}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: 'var(--brand)' }}
                   >
                     {tr('connect.howToGenerate')}
                   </a>.
-                </p>
-              )}
-
-              {/* App-password providers: short guidance + help link */}
-              {(isPreset || isGeneric) && (
-                <p style={{
-                  margin: '12px 0 0',
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 12,
-                  color: 'var(--fg-3)',
-                  lineHeight: 1.5,
-                }}>
-                  {isGeneric
-                    ? tr('connect.genericHint')
-                    : preset.hint}
-                  {preset && (
-                    <>
-                      {' '}
-                      <a href={preset.appPasswordHelpUrl} target="_blank" rel="noopener noreferrer"
-                        style={{ color: 'var(--brand)' }}>
-                        {tr('connect.howToGenerate')}
-                      </a>.
-                    </>
-                  )}
                 </p>
               )}
             </>
@@ -547,7 +690,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
 
               {provider === 'zoho' && (
                 <div className="field">
-                  <label htmlFor="cm-zoho-account-type">Account type</label>
+                  <label htmlFor="cm-zoho-account-type">{tr('connect.zohoAccountTypeLabel')}</label>
                   <select
                     id="cm-zoho-account-type"
                     className="input"
@@ -555,11 +698,11 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     onChange={e => setZohoAccountType(e.target.value)}
                   >
                     {ZOHO_ACCOUNT_TYPES.map(t => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
+                      <option key={t.value} value={t.value}>{tr(t.labelKey)}</option>
                     ))}
                   </select>
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                    Paid accounts on a custom domain use Zoho&apos;s organization (imappro) servers.
+                    {tr('connect.zohoAccountTypeHint')}
                   </span>
                 </div>
               )}
@@ -604,22 +747,22 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
               {provider === 'yandex' && (
                 <>
                 <div className="field">
-                  <label htmlFor="cm-yandex-account-type">Yandex account type</label>
+                  <label htmlFor="cm-yandex-account-type">{tr('connect.yandexAccountTypeLabel')}</label>
                   <select id="cm-yandex-account-type" className="input" value={yandexAccountType} onChange={e => setYandexAccountType(e.target.value)} disabled={isReconnect}>
-                    <option value="personal">Personal Yandex Mail</option>
-                    <option value="business">Yandex 360 Business</option>
+                    <option value="personal">{tr('connect.yandexPersonal')}</option>
+                    <option value="business">{tr('connect.yandexBusiness')}</option>
                   </select>
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                    Personal accounts normally use the name before @. Business accounts use the full email address.
+                    {tr('connect.yandexAccountTypeHint')}
                   </span>
                 </div>
                 <div className="field">
-                  <label htmlFor="cm-yandex-login">Login (if different from email)</label>
+                  <label htmlFor="cm-yandex-login">{tr('connect.yandexLoginLabel')}</label>
                   <input
                     id="cm-yandex-login"
                     className="input"
                     type="text"
-                    placeholder="Optional"
+                    placeholder={tr('connect.yandexLoginPlaceholder')}
                     value={yandexLogin}
                     onChange={e => setYandexLogin(e.target.value)}
                     autoComplete="username"
@@ -627,7 +770,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     aria-readonly={isReconnect || undefined}
                   />
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                    Optional manual override for unusual account configurations.
+                    {tr('connect.yandexLoginHint')}
                   </span>
                 </div>
                 </>
@@ -656,11 +799,14 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                     </span>
                   </div>
                   <div className="field">
-                    <label htmlFor="cm-imap-security">IMAP security</label>
-                    <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setForm(prev => ({ ...prev, imapSecurity: e.target.value }))} disabled={isReconnect}>
-                      <option value="tls">Implicit TLS</option>
-                      <option value="starttls">STARTTLS</option>
+                    <label htmlFor="cm-imap-security">{tr('connect.imapSecurityLabel')}</label>
+                    <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setSecurity('imap', e.target.value)} disabled={isReconnect}>
+                      <option value="tls">{tr('connect.securityTls')}</option>
+                      <option value="starttls">{tr('connect.securityStarttls')}</option>
                     </select>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                      {tr('connect.securityPortNote')}
+                    </span>
                   </div>
                   <div className="field host-port-row">
                     <div style={{ flex: 1 }}>
@@ -683,7 +829,7 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                         className="input"
                         type="number"
                         value={form.imapPort}
-                        onChange={e => setForm(prev => ({ ...prev, imapPort: e.target.value }))}
+                        onChange={e => setPort('imap', e.target.value)}
                         readOnly={isReconnect}
                         aria-readonly={isReconnect || undefined}
                       />
@@ -710,17 +856,17 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                         className="input"
                         type="number"
                         value={form.smtpPort}
-                        onChange={e => setForm(prev => ({ ...prev, smtpPort: e.target.value }))}
+                        onChange={e => setPort('smtp', e.target.value)}
                         readOnly={isReconnect}
                         aria-readonly={isReconnect || undefined}
                       />
                     </div>
                   </div>
                   <div className="field">
-                    <label htmlFor="cm-smtp-security">SMTP security</label>
-                    <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setForm(prev => ({ ...prev, smtpSecurity: e.target.value }))} disabled={isReconnect}>
-                      <option value="tls">Implicit TLS</option>
-                      <option value="starttls">STARTTLS</option>
+                    <label htmlFor="cm-smtp-security">{tr('connect.smtpSecurityLabel')}</label>
+                    <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setSecurity('smtp', e.target.value)} disabled={isReconnect}>
+                      <option value="tls">{tr('connect.securityTls')}</option>
+                      <option value="starttls">{tr('connect.securityStarttls')}</option>
                     </select>
                   </div>
                 </>
@@ -732,7 +878,13 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   id="cm-password"
                   className="input"
                   type="password"
-                  placeholder="••••-••••-••••-••••"
+                  // The old placeholder was "••••-••••-••••-••••", which asserts a
+                  // dashed four-group shape. Only Apple's app-specific password
+                  // looks like that; Yahoo's and Yandex's are unbroken strings and
+                  // the generic connector takes an ordinary password. Showing a
+                  // format that is wrong for most of the form invites users to
+                  // retype the credential into that shape.
+                  placeholder=""
                   value={form.password}
                   onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
                   onKeyDown={e => { if (e.key === 'Enter' && !submitting) handleAppPasswordSubmit(); }}
@@ -740,8 +892,35 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
                   autoFocus={isReconnect}
                 />
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                  {tr('connect.passwordHint')}
+                  {isGeneric ? tr('connect.passwordHint') : tr('connect.appPasswordHint', { provider: providerLabel() })}
                 </span>
+                {/* The link to generate the credential only ever existed on the
+                    provider-selection step, so by the time the user was actually
+                    looking at the password box it was gone. Every app-password
+                    provider's dominant failure is a bare
+                    `NO [AUTHENTICATIONFAILED]` — the account password submitted
+                    in place of an app password — so the link belongs here, next
+                    to the field it is about. */}
+                {!isGeneric && APP_PASSWORD_URLS[provider] && (
+                  <a
+                    href={APP_PASSWORD_URLS[provider]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      marginTop: 2,
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 12,
+                      color: 'var(--brand)',
+                      width: 'fit-content',
+                    }}
+                  >
+                    <Icon name="key" size={12} />
+                    {tr('connect.openAppPasswordPage', { provider: providerLabel() })}
+                  </a>
+                )}
               </div>
 
               {formError && (
@@ -768,12 +947,32 @@ export function ConnectModal({ onClose, onConnect, atInboxLimit = false, plan = 
 
         {/* Footer */}
         <div className="modal-foot">
-          {/* Plan limit reached: show upgrade CTA */}
+          {/* Plan limit reached: go straight to Stripe Checkout for Pro monthly.
+              /dashboard/settings?upgrade=solo&interval=month is consumed by
+              BillingSection, which starts checkout on mount, so this is one
+              click from blocked to card form. The pricing page stays available
+              as the secondary link for anyone who wants to compare first. */}
           {atInboxLimit && (
             <>
               <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
               <a
                 href="/pricing"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  height: 34,
+                  padding: '0 10px',
+                  color: 'var(--fg-2)',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 13,
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {tr('connect.comparePlans')}
+              </a>
+              <a
+                href={upgradeDestination('solo', false)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',

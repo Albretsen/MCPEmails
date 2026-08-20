@@ -103,7 +103,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     { id: "keys",     label: tr('sidebar.navKeys'),     icon: "key",     count: counts.keys },
     { id: "members",  label: tr('sidebar.navMembers'),  icon: "users",   count: counts.members > 1 ? counts.members : undefined },
     { id: "usage",    label: tr('sidebar.navUsage'),    icon: "zap" },
-    { id: "workflows", label: 'Workflows', icon: "activity" },
+    { id: "workflows", label: tr('sidebar.navWorkflows'), icon: "activity" },
     { id: "approvals", label: tr('sidebar.navApprovals'), icon: "shield" },
   ];
   const settings = [

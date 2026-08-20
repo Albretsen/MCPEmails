@@ -94,5 +94,5 @@ IMAP 不一样。Fastmail、iCloud、Yahoo、Zoho、Yandex 以及通用 IMAP 都
 
 ## 小结
 
-iCloud、Fastmail 和 IMAP 在这里绝非二等公民。生成一个应用密码，把它粘贴进 **Inboxes → Connect Inbox**，把 Claude 指向[端点](/docs)，你就拥有了一个具备完整读取/发送权限的代理，外加 OAuth 服务商给不了的永久删除。它[免费起步](/signup)，无需信用卡，邮箱数量不限。`,
+iCloud、Fastmail 和 IMAP 在这里绝非二等公民。生成一个应用密码，把它粘贴进 **Inboxes → Connect Inbox**，把 Claude 指向[端点](/docs)，你就拥有了一个具备完整读取/发送权限的代理，外加 OAuth 服务商给不了的永久删除。它[免费起步](/signup)，无需信用卡，可永久连接一个邮箱。`,
 };

@@ -1,0 +1,52 @@
+{
+  "name": "mcpemails",
+  "version": "1.0.4",
+  "mcpName": "com.mcpemails/emails",
+  "description": "Stdio bridge to the MCP Emails server. Read, search, send, organize, draft and schedule email from Claude Desktop, Cursor, Cline, Windsurf and any other stdio MCP client.",
+  "keywords": [
+    "mcp",
+    "modelcontextprotocol",
+    "model-context-protocol",
+    "mcp-server",
+    "email",
+    "imap",
+    "smtp",
+    "gmail",
+    "claude",
+    "cursor",
+    "cline",
+    "windsurf",
+    "stdio",
+    "bridge"
+  ],
+  "homepage": "https://mcpemails.com",
+  "bugs": {
+    "url": "https://github.com/Albretsen/MCPEmails/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Albretsen/MCPEmails.git",
+    "directory": "packages/mcpemails"
+  },
+  "license": "AGPL-3.0-only",
+  "author": "MCP Emails",
+  "type": "commonjs",
+  "bin": {
+    "mcpemails": "bin/mcpemails.js"
+  },
+  "main": "bin/mcpemails.js",
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test/bridge.test.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

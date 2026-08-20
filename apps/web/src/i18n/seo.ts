@@ -1,4 +1,5 @@
 import { routing } from './routing';
+import { PLANS } from '@/lib/stripe/plans';
 
 export const APP_URL = (
   process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'
@@ -47,12 +48,48 @@ export const OG_LOCALE: Record<string, string> = {
 };
 
 /**
+ * Subscription Offer nodes built straight from the canonical plan catalogue.
+ *
+ * This is the surface AI assistants read when they answer "what does mcpemails
+ * cost", so it must never drift from src/lib/stripe/plans.ts. It used to carry
+ * a single hardcoded Offer describing the product as "Unlimited, free forever",
+ * which became a false public claim the moment the free tier was capped at one
+ * connected inbox.
+ *
+ * Every offer is a monthly UnitPriceSpecification: the yearly prices are a
+ * discount on the same subscription rather than a separate product, and
+ * publishing both as sibling Offers reads as two competing prices.
+ */
+function planOffers(url: string) {
+  return (['free', 'solo', 'pro'] as const).map((id) => {
+    const plan = PLANS[id];
+    const price = (plan.monthlyPriceCents / 100).toString();
+    return {
+      '@type': 'Offer',
+      name: plan.name,
+      description: plan.description,
+      url,
+      price,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price,
+        priceCurrency: 'USD',
+        unitText: 'MONTH',
+        billingDuration: 1,
+        billingIncrement: 1,
+      },
+    };
+  });
+}
+
+/**
  * Structured-data graph for the home page (Organization + WebSite +
  * SoftwareApplication). This is the product's primary acquisition surface:
  * AI assistants and search engines read it to describe and recommend
- * mcpemails. Everything here must be literally true — no aggregateRating or
- * other invented signals. The free Offer mirrors the real "unlimited, free"
- * tier; richer pricing lives in the FAQPage schema on /pricing.
+ * mcpemails. Everything here must be literally true: no aggregateRating or
+ * other invented signals. The offers mirror the real plan catalogue.
  */
 export function homeJsonLd(
   locale: string,
@@ -104,12 +141,39 @@ export function homeJsonLd(
           'Verified Gmail send-as aliases',
           'Threaded reply drafts',
         ],
-        offers: {
-          '@type': 'Offer',
-          price: '0',
-          priceCurrency: 'USD',
-          description: 'Unlimited, free forever. No card required.',
-        },
+        offers: planOffers(localePath(locale, '/pricing')),
+      },
+    ],
+  };
+}
+
+/**
+ * Structured data for /pricing: the plan catalogue as a `Product` with one
+ * `Offer` per tier, plus the standard WebPage + BreadcrumbList.
+ *
+ * Assistants asked "how much is mcpemails" answer from whatever is machine
+ * readable, and until now that was a lone free Offer on the home page. Emitting
+ * the real three-tier catalogue here is the difference between being described
+ * accurately and being described as free-and-unlimited.
+ */
+export function pricingJsonLd(
+  locale: string,
+  { title, description }: { title: string; description: string }
+) {
+  const url = localePath(locale, '/pricing');
+  const graph = pageJsonLd(locale, { path: '/pricing', title, description })['@graph'];
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      ...graph,
+      {
+        '@type': 'Product',
+        '@id': `${url}#plans`,
+        name: 'mcpemails',
+        description,
+        url,
+        brand: { '@id': `${APP_URL}/#organization` },
+        offers: planOffers(url),
       },
     ],
   };

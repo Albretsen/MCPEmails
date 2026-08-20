@@ -379,7 +379,7 @@ export const SEARCH_FIELD_DESCRIPTIONS: Record<string, string> = {
   unread: "true = only unread messages; false = only read messages; omit for either.",
   has_attachment: "true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
   flagged: "true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
-  since: "ISO 8601 date or datetime; return messages received on/after (>=) this instant. E.g. \"2026-06-01\".",
-  before: "ISO 8601 date or datetime; return messages received strictly before (<) this instant.",
+  since: "ISO 8601 date or date-time; return messages received on/after (>=) this instant. A bare date is read as UTC midnight. E.g. \"2026-06-01\" or \"2026-06-01T09:00:00Z\".",
+  before: "ISO 8601 date or date-time; return messages received strictly before (<) this instant. A bare date is read as UTC midnight. E.g. \"2026-07-01\".",
   raw: "Escape hatch: a provider-native query appended to the structured criteria. Ignored on Fastmail (JMAP).",
 };

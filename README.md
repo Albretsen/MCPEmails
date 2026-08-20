@@ -70,7 +70,7 @@ The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport
 - **Batch & search‑and‑act** — read, move, delete, or flag up to hundreds of messages in one call, including "search then move/delete" combinators.
 - **Drafts & scheduling** — compose drafts and queue messages for future send (server‑side dispatch).
 - **Provider‑agnostic search** — Gmail syntax, IMAP `SEARCH`, and JMAP are normalized behind one `email_read` (`action: "search"`) interface.
-- **Team‑ready** — workspaces, members, roles, SSO, and an audit log on the Scale plan.
+- **Team‑ready**: workspaces, members, roles, SSO, and an audit log on the Team plan.
 
 ## Tools
 
@@ -126,21 +126,25 @@ Notes:
 
 ## Pricing
 
-Every plan includes unlimited inboxes and API keys. Successful billable MCP calls use actions: Free includes 2,500 actions per billing period, Agent 50,000, and Scale 300,000. Paid tiers also add higher burst limits, analytics retention, team features, and support.
+The value metric is **connected inboxes**. Free connects one mailbox, Pro connects every mailbox you own, and Team adds people, roles, and a separate workspace per client. Annual billing saves about 20%.
 
-| | **Free** | **Agent** | **Scale** |
+| | **Free** | **Pro** | **Team** |
 | --- | --- | --- | --- |
-| Price | $0 | $12/mo · $120/yr | $49/mo · $490/yr |
-| Inboxes / API keys | Unlimited | Unlimited | Unlimited |
-| Billable actions | 2,500 / billing period | 50,000 / billing period | 300,000 / billing period |
-| Members | 1 (owner only) | Unlimited | Unlimited |
+| Price | $0 | $29/mo · $276/yr ($23/mo) | $79/mo · $756/yr ($63/mo) |
+| Connected inboxes | 1 | Unlimited | Unlimited |
+| API keys | Unlimited | Unlimited | Unlimited |
+| Members | 1 (owner only) | 1 (owner only) | Unlimited, with roles |
 | Fair‑use rate limit | 60 req/min | 300 req/min | 1,000 req/min |
 | Analytics retention | 7 days | 90 days | 1 year |
 | Team roles & workspaces | — | — | ✅ |
 | SSO (SAML/OIDC) + audit log | — | — | ✅ |
 | Support | Community | Email | Priority |
 
-Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Rate limits are retryable: they come back as JSON-RPC error `-32003` with `data.retry_after` in seconds. Running out of actions is not retryable: it comes back as a normal tool result with `isError: true` and a `_meta["com.mcpemails/usage_limit"]` block, and only clears at `reset_at` or on a plan change. Inviting members requires a paid plan. The "Scale" tier carries the internal id `pro`. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
+Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Rate limits are retryable: they come back as JSON-RPC error `-32003` with `data.retry_after` in seconds.
+
+Every workspace additionally has a **fair-use ceiling** on billable actions per billing period. It is an abuse guard, not a plan feature: it sits far above any observed real usage, is never shown to customers, and cannot be bought past. Hitting it is not retryable and not a JSON-RPC error: it comes back as a normal tool result with `isError: true` and a `_meta["com.mcpemails/usage_limit"]` block, and clears at `reset_at`.
+
+Internal plan ids predate the names: `solo` is sold as **Pro** and `pro` is sold as **Team**. Every user who existed before the 2026-08-19 repricing keeps unlimited inboxes for free, permanently. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
 
 ## Architecture
 
@@ -235,7 +239,7 @@ Feature‑dependent:
 | `OUTLOOK_CLIENT_ID` / `OUTLOOK_CLIENT_SECRET` / `OUTLOOK_TENANT_ID` | Outlook OAuth (`Mail.Read`, `Mail.Send`, `Mail.ReadWrite`, `offline_access`) |
 | `NEXT_PUBLIC_OAUTH_VERIFICATION_PENDING` | Shows the unverified‑app warning until Google/Microsoft verification completes |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Billing |
-| `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`pro` = Scale) |
+| `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`solo` = Pro, `pro` = Team) |
 
 > Fastmail and other IMAP providers connect via app password and need no OAuth credentials.
 

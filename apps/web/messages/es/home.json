@@ -21,7 +21,7 @@
     "lead": "Conecta Gmail, iCloud, Fastmail o cualquier bandeja IMAP una sola vez. Pega una URL de endpoint MCP en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make o cualquier cliente MCP. Los clientes OAuth se conectan con un clic, sin configurar claves de API. Tu agente lee, busca y envía correo en vivo, y el correo que lee nunca se almacena.",
     "ctaPrimary": "Conecta tu bandeja de entrada",
     "ctaSecondary": "Lee la documentación",
-    "metaUnlimited": "Gratis ilimitado, sin límites diarios",
+    "metaFreeInbox": "1 bandeja gratis, para siempre",
     "metaNoCard": "Sin tarjeta",
     "metaNeverStored": "El correo se obtiene en vivo",
     "pipe": {
@@ -123,48 +123,48 @@
   },
   "pricing": {
     "eyebrow": "Precios",
-    "title": "Acciones que escalan contigo.",
-    "sub": "Bandejas y claves de API ilimitadas; las llamadas MCP facturables correctas usan acciones.",
+    "title": "El precio va por bandeja, no por uso.",
+    "sub": "Gratis conecta una bandeja. Pro conecta todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente.",
     "perForever": "/para siempre",
     "perMonth": "/mes",
     "tiers": {
       "free": {
         "name": "Gratis",
-        "desc": "2.500 acciones por período de facturación.",
+        "desc": "Conecta una bandeja y dale a tu agente un buzón de verdad.",
         "features": [
-          "Bandejas conectadas ilimitadas",
-          "2.500 acciones por período de facturación",
-          "Claves de API ilimitadas",
+          "1 bandeja conectada",
+          "Leer, buscar, organizar, redactar y enviar",
           "Gmail, iCloud, Fastmail y cualquier IMAP",
-          "60 peticiones / minuto",
+          "Claves de API ilimitadas",
+          "Un solo usuario",
           "Soporte de la comunidad"
         ],
         "cta": "Empieza gratis"
       },
       "solo": {
-        "name": "Agent",
-        "desc": "Para usuarios avanzados que ejecutan agentes a todas horas.",
+        "name": "Pro",
+        "desc": "Todos los buzones que tengas, en un solo agente. Trabajo, personal y cada proyecto paralelo.",
         "features": [
-          "50.000 acciones por período de facturación",
-          "300 peticiones / minuto (ráfaga 5×)",
+          "Bandejas conectadas ilimitadas",
+          "Envíos programados y aprobaciones",
+          "Límite de ráfaga 5x más alto",
           "Analíticas de uso completas (historial de 90 días)",
-          "Gmail, iCloud, Fastmail y cualquier IMAP",
           "Soporte por correo"
         ],
-        "cta": "Obtener Agent"
+        "cta": "Obtener Pro"
       },
       "team": {
-        "name": "Scale",
-        "desc": "Para equipos y agencias que gestionan varias bandejas de clientes en un espacio de trabajo compartido, con roles, SSO y registros de auditoría.",
+        "name": "Team",
+        "desc": "Bandejas compartidas para un equipo, con un espacio de trabajo separado por cliente o negocio.",
         "features": [
-          "300.000 acciones por período de facturación",
-          "1.000 peticiones / minuto",
-          "Roles de equipo y múltiples espacios de trabajo",
-          "SSO (SAML / OIDC) + registro de auditoría",
+          "Todo lo de Pro",
+          "Miembros ilimitados con roles",
+          "Un espacio de trabajo separado por cliente o negocio",
+          "SSO (SAML / OIDC) y registro de auditoría",
           "Analíticas de uso completas (historial de 1 año)",
           "Soporte prioritario"
         ],
-        "cta": "Obtener Scale"
+        "cta": "Obtener Team"
       }
     },
     "footnote": "Todos los planes: el correo que lee tu agente se obtiene en vivo y nunca se almacena. Tokens de OAuth cifrados en reposo. ¿Necesitas algo a medida? <contact>Contáctanos</contact>. <comparison>Ver la comparación completa de funciones →</comparison>"
@@ -192,7 +192,7 @@
       },
       {
         "q": "¿Es realmente gratis?",
-        "a": "Sí. El plan Gratis te da bandejas conectadas y claves de API ilimitadas, además de 2.500 acciones facturables por período de facturación — sin tarjeta. Las llamadas fallidas e inbox_list son gratis. Los planes de pago añaden asignaciones de acciones más grandes, límites de ráfaga más altos, miembros de equipo y soporte."
+        "a": "Sí. El plan Gratis conecta una bandeja, para siempre y sin tarjeta, y tu agente dispone de todas las herramientas que publicamos sobre ella: leer, buscar, enviar, responder, programar y organizar. Pro es para cuando quieras un segundo buzón en el mismo agente, y Team para cuando otras personas necesiten acceso."
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",

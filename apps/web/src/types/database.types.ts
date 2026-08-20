@@ -1876,6 +1876,7 @@ export type Database = {
           kind: string
           reason: string
           source: string
+          unlimited_inboxes: boolean
           updated_at: string
           user_id: string
         }
@@ -1887,6 +1888,7 @@ export type Database = {
           kind: string
           reason: string
           source: string
+          unlimited_inboxes?: boolean
           updated_at?: string
           user_id: string
         }
@@ -1898,6 +1900,7 @@ export type Database = {
           kind?: string
           reason?: string
           source?: string
+          unlimited_inboxes?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -2026,7 +2029,7 @@ export type Database = {
       my_workspace_ids: { Args: never; Returns: string[] }
       effective_workspace_plan: {
         Args: { p_workspace_id: string }
-        Returns: { plan: string; comped_scale: boolean }[]
+        Returns: { plan: string; comped_scale: boolean; unlimited_inboxes: boolean }[]
       }
       revoke_user_session: {
         Args: { p_session_id: string }

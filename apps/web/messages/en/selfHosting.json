@@ -25,18 +25,66 @@
     "thSelf": "Self-host",
     "thHosted": "Hosted",
     "rows": [
-      { "feature": "Price", "self": "Free, you run it", "hosted": "Free, $12, or $49" },
-      { "feature": "The MCP server and all 10 tools", "self": "Yes", "hosted": "Yes" },
-      { "feature": "IMAP / SMTP inboxes (app password)", "self": "Yes", "hosted": "Yes" },
-      { "feature": "Email fetched live, never stored", "self": "Yes", "hosted": "Yes" },
-      { "feature": "Credentials encrypted at rest", "self": "Yes, your key", "hosted": "Yes" },
-      { "feature": "Gmail / Outlook one-click OAuth", "self": "Not included", "hosted": "Gmail: yes; Outlook: pending verification" },
-      { "feature": "Web dashboard (connect, keys, activity)", "self": "CLI instead", "hosted": "Yes" },
-      { "feature": "Scheduled-send dispatcher", "self": "Bring your own cron", "hosted": "Managed" },
-      { "feature": "Automatic updates, backups, uptime", "self": "You", "hosted": "Managed" },
-      { "feature": "Team workspaces, roles, SSO, audit log", "self": "Not included", "hosted": "Scale plan" },
-      { "feature": "Support", "self": "Community and GitHub", "hosted": "Email and priority" },
-      { "feature": "Setup", "self": "About 5 minutes", "hosted": "About 2 minutes" }
+      {
+        "feature": "Price",
+        "self": "Free, you run it",
+        "hosted": "Free, $29, or $79"
+      },
+      {
+        "feature": "The MCP server and all 10 tools",
+        "self": "Yes",
+        "hosted": "Yes"
+      },
+      {
+        "feature": "IMAP / SMTP inboxes (app password)",
+        "self": "Yes",
+        "hosted": "Yes"
+      },
+      {
+        "feature": "Email fetched live, never stored",
+        "self": "Yes",
+        "hosted": "Yes"
+      },
+      {
+        "feature": "Credentials encrypted at rest",
+        "self": "Yes, your key",
+        "hosted": "Yes"
+      },
+      {
+        "feature": "Gmail / Outlook one-click OAuth",
+        "self": "Not included",
+        "hosted": "Gmail: yes; Outlook: pending verification"
+      },
+      {
+        "feature": "Web dashboard (connect, keys, activity)",
+        "self": "CLI instead",
+        "hosted": "Yes"
+      },
+      {
+        "feature": "Scheduled-send dispatcher",
+        "self": "Bring your own cron",
+        "hosted": "Managed"
+      },
+      {
+        "feature": "Automatic updates, backups, uptime",
+        "self": "You",
+        "hosted": "Managed"
+      },
+      {
+        "feature": "Team workspaces, roles, SSO, audit log",
+        "self": "Not included",
+        "hosted": "Team plan"
+      },
+      {
+        "feature": "Support",
+        "self": "Community and GitHub",
+        "hosted": "Email and priority"
+      },
+      {
+        "feature": "Setup",
+        "self": "About 5 minutes",
+        "hosted": "About 2 minutes"
+      }
     ]
   },
   "security": {

@@ -21,7 +21,7 @@
     "lead": "Connect Gmail, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, or any MCP client. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and the mail it reads is never stored.",
     "ctaPrimary": "Connect your inbox",
     "ctaSecondary": "Read the docs",
-    "metaUnlimited": "2,500 free actions per billing period",
+    "metaFreeInbox": "1 inbox free, forever",
     "metaNoCard": "No card required",
     "metaNeverStored": "Email fetched live",
     "pipe": {
@@ -123,48 +123,48 @@
   },
   "pricing": {
     "eyebrow": "Pricing",
-    "title": "Actions that scale with you.",
-    "sub": "Every workspace includes unlimited inboxes and API keys. Successful billable MCP calls use actions; failed calls and inbox_list are free.",
+    "title": "Priced by inbox, not by usage.",
+    "sub": "Free connects one inbox. Pro connects every mailbox you own. Team adds people, roles, and a separate workspace per client.",
     "perForever": "/forever",
     "perMonth": "/month",
     "tiers": {
       "free": {
         "name": "Free",
-        "desc": "Explore MCPEmails with 2,500 actions per billing period.",
+        "desc": "Connect one inbox and give your agent a real mailbox.",
         "features": [
-          "Unlimited connected inboxes",
-          "2,500 actions per billing period",
-          "Unlimited API keys",
+          "1 connected inbox",
+          "Read, search, organise, draft and send",
           "Gmail, iCloud, Fastmail & any IMAP",
-          "60 requests / minute",
+          "Unlimited API keys",
+          "Single user",
           "Community support"
         ],
         "cta": "Start free"
       },
       "solo": {
-        "name": "Agent",
-        "desc": "For power users running agents around the clock.",
+        "name": "Pro",
+        "desc": "Every mailbox you own, in one agent. Work, personal, and each side business.",
         "features": [
-          "50,000 actions per billing period",
-          "300 requests / minute (5× burst)",
+          "Unlimited connected inboxes",
+          "Scheduled sends and approvals",
+          "5x higher burst rate limit",
           "Full usage analytics (90-day history)",
-          "Gmail, iCloud, Fastmail & any IMAP",
           "Email support"
         ],
-        "cta": "Get Agent"
+        "cta": "Get Pro"
       },
       "team": {
-        "name": "Scale",
-        "desc": "For teams and agencies managing multiple client inboxes in one shared workspace, with roles, SSO, and audit logs.",
+        "name": "Team",
+        "desc": "Shared inboxes for a team, with a separate workspace per client or business.",
         "features": [
-          "300,000 actions per billing period",
-          "1,000 requests / minute",
-          "Team roles & multiple workspaces",
-          "SSO (SAML / OIDC) + audit log",
+          "Everything in Pro",
+          "Unlimited members with roles",
+          "A separate workspace per client or business",
+          "SSO (SAML / OIDC) and audit log",
           "Full usage analytics (1-year history)",
           "Priority support"
         ],
-        "cta": "Get Scale"
+        "cta": "Get Team"
       }
     },
     "footnote": "All plans: the mail your agent reads is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <contact>Contact us</contact>. <comparison>See full feature comparison →</comparison>"
@@ -174,7 +174,10 @@
     "title": "Questions, answered",
     "sub": "Everything you need to know before connecting your first inbox.",
     "items": [
-      { "q": "Do you use analytics?", "a": "We use privacy-preserving, cookieless product analytics to understand site and setup performance. We never collect email content, addresses, API keys, OAuth tokens, or MCP request data." },
+      {
+        "q": "Do you use analytics?",
+        "a": "We use privacy-preserving, cookieless product analytics to understand site and setup performance. We never collect email content, addresses, API keys, OAuth tokens, or MCP request data."
+      },
       {
         "q": "Which AI clients does it work with?",
         "a": "Any MCP-compatible client. We're a standard streamable-http MCP server with OAuth 2.1, DCR and PKCE, so the same inbox works in Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat and more. Paste one endpoint URL and you're connected — no per-app rebuild."
@@ -189,7 +192,7 @@
       },
       {
         "q": "Is it really free?",
-        "a": "Yes. The free plan gives you unlimited connected inboxes and API keys, plus 2,500 billable actions per billing period — no daily caps and no card required. Failed calls and inbox_list are free. Paid plans add larger action allowances, higher burst limits, team members, and support."
+        "a": "Yes. The free plan connects one inbox, forever, with no card required, and your agent gets every tool we ship against it: read, search, send, reply, schedule and organise. Pro is for when you want a second mailbox on the same agent, and Team is for when other people need in."
       },
       {
         "q": "What can the AI actually do with my inbox?",

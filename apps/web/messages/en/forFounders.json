@@ -51,10 +51,22 @@
     "title": "A real inbox, not a read-only peek",
     "sub": "Nine action-based tools your agent can use end to end.",
     "items": {
-      "read": { "h": "Read & search", "p": "List, read, and search across folders and every connected inbox, fetched live." },
-      "send": { "h": "Send & reply", "p": "Send, reply, and forward directly. The agent finishes the email, not just a draft." },
-      "schedule": { "h": "Schedule", "p": "Queue a send for later so follow-ups go out at the right moment in the customer's day." },
-      "organize": { "h": "Organize", "p": "Move, copy, flag, archive, and label so triage happens while you read, not after." }
+      "read": {
+        "h": "Read & search",
+        "p": "List, read, and search across folders and every connected inbox, fetched live."
+      },
+      "send": {
+        "h": "Send & reply",
+        "p": "Send, reply, and forward directly. The agent finishes the email, not just a draft."
+      },
+      "schedule": {
+        "h": "Schedule",
+        "p": "Queue a send for later so follow-ups go out at the right moment in the customer's day."
+      },
+      "organize": {
+        "h": "Organize",
+        "p": "Move, copy, flag, archive, and label so triage happens while you read, not after."
+      }
     }
   },
   "proof": {
@@ -92,13 +104,13 @@
       },
       {
         "q": "What does it cost while I am still small?",
-        "a": "Free, with unlimited inboxes, 2,500 billable actions per billing period, and no daily caps. Paid tiers add larger action allowances, team features, and support."
+        "a": "Free, with one connected inbox and no card required. Pro at $29 a month connects every mailbox you own, and Team adds members, roles, and a separate workspace per client."
       }
     ]
   },
   "ctaBand": {
     "title": "Get your evenings back",
-    "sub": "Connect your inbox in minutes and let Claude clear the customer queue with you. Unlimited and free to start, no card required.",
+    "sub": "Connect your inbox in minutes and let Claude clear the customer queue with you. One inbox free to start, no card required.",
     "ctaPrimary": "Connect your inbox free",
     "ctaSecondary": "Read the docs"
   }

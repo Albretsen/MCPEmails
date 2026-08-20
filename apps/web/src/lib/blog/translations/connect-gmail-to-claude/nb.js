@@ -11,7 +11,7 @@ Dette er den fokuserte gjennomgangen kun for Gmail. Hvis du kjører flere postka
 
 - En **Gmail- eller Google Workspace**-konto.
 - En versjon av **Claude som støtter egendefinerte connectors** — claude.ai på et betalt abonnement, eller Claude Desktop. (Connectors er måten Claude snakker med MCP-servere på.)
-- En gratis **MCP Emails**-konto. Ingen kredittkort, ubegrenset antall innbokser og kall. [Start gratis](/signup) og hold denne fanen åpen.
+- En gratis **MCP Emails**-konto. Ingen kredittkort, én tilkoblet innboks for alltid. [Start gratis](/signup) og hold denne fanen åpen.
 
 MCP Emails er broen i midten: den snakker Model Context Protocol til Claude på den ene siden og Gmail API til Google på den andre. Hvis du vil ha bakgrunnen for hva det betyr, se [hva en MCP-e-postserver faktisk er](/blog/what-is-an-mcp-email-server).
 

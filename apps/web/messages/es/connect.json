@@ -11,7 +11,7 @@
       "lead": "Dale a tu agente de IA una bandeja Gmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con el inicio de sesión de Google con un clic — y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
       "ctaPrimary": "Conecta Gmail gratis",
       "ctaSecondary": "Lee la documentación",
-      "meta0": "Bandejas ilimitadas y 2.500 acciones",
+      "meta0": "1 bandeja gratis, para siempre",
       "meta1": "Inicio de sesión de Google con un clic (OAuth)",
       "meta2": "El correo se obtiene en vivo, nunca se almacena"
     },
@@ -20,8 +20,8 @@
       "body": "Gmail se conecta con <b>Google OAuth</b> — inicia sesión con Google, aprueba el acceso de lectura y envío, y quedas conectado. Sin contraseña de aplicación ni ajustes IMAP que rastrear. Revoca el acceso cuando quieras desde tu cuenta de Google o el panel de mcpemails."
     },
     "verificationNote": {
-      "title": "Aviso mientras la verificación de Google está en curso",
-      "body": "mcpemails está actualmente en el proceso de verificación y revisión de seguridad CASA de Google. Hasta que se complete, Google muestra una pantalla de “Google no ha verificado esta aplicación” — haz clic en <b>Configuración avanzada</b> y luego en <b>Ir a mcpemails.com</b> para continuar — y la conexión hay que volver a conectarla aproximadamente cada 7 días. Ambas cosas desaparecen una vez que se completa la verificación."
+      "title": "Lo que verás en Google",
+      "body": "Google muestra una pantalla de “Google no ha verificado esta aplicación” para cualquier aplicación que no haya revisado: haz clic en <b>Configuración avanzada</b> y luego en <b>Ir a mcpemails.com</b> para continuar. Esa revisión exige una evaluación de seguridad externa de pago que hemos decidido no contratar, así que la pantalla seguirá apareciendo. Una vez conectado, el buzón sigue conectado: el acceso se renueva automáticamente y solo se interrumpe si lo revocas desde tu cuenta de Google."
     },
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
@@ -30,10 +30,26 @@
       "ctaPrimary": "Conecta Gmail gratis"
     },
     "capabilities": [
-      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre etiquetas — encuentra esa factura, resume un hilo o saca lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Gmail, no como un borrador que terminas a mano." },
-      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Etiquetar, archivar y eliminar", "p": "Mantén la bandeja ordenada — aplica etiquetas, archiva lo ya resuelto y elimina cuando se pida." }
+      {
+        "tag": "Leer",
+        "h": "Leer y buscar correo",
+        "p": "Lista, lee y busca entre etiquetas — encuentra esa factura, resume un hilo o saca lo último de un remitente."
+      },
+      {
+        "tag": "Enviar",
+        "h": "Enviar, responder y reenviar",
+        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Gmail, no como un borrador que terminas a mano."
+      },
+      {
+        "tag": "Programar",
+        "h": "Programar para más tarde",
+        "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado."
+      },
+      {
+        "tag": "Organizar",
+        "h": "Etiquetar, archivar y eliminar",
+        "p": "Mantén la bandeja ordenada — aplica etiquetas, archiva lo ya resuelto y elimina cuando se pida."
+      }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -41,13 +57,22 @@
       "sub": "Del registro al primer correo con IA en un par de minutos."
     },
     "steps": [
-      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails — sin tarjeta. El plan gratuito te da bandejas ilimitadas y 2.500 acciones por período de facturación." },
-      { "h": "Inicia sesión con Google", "p": "Haz clic en Conectar Gmail, inicia sesión con tu cuenta de Google y aprueba el acceso de lectura y envío. Sin contraseña de aplicación ni configuración IMAP." },
-      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+      {
+        "h": "Crea una cuenta gratis",
+        "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      },
+      {
+        "h": "Inicia sesión con Google",
+        "p": "Haz clic en Conectar Gmail, inicia sesión con tu cuenta de Google y aprueba el acceso de lectura y envío. Sin contraseña de aplicación ni configuración IMAP."
+      },
+      {
+        "h": "Pega la URL MCP en tu IA",
+        "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+      }
     ],
     "ctaBand": {
       "title": "Dale a tu IA una bandeja Gmail",
-      "sub": "Conecta Gmail en minutos — bandejas ilimitadas y 2.500 acciones por período de facturación en el plan gratuito, sin tarjeta.",
+      "sub": "Conecta Gmail en minutos. Una bandeja gratis para siempre, sin tarjeta.",
       "ctaPrimary": "Conecta Gmail gratis",
       "ctaSecondary": "Lee la documentación"
     }
@@ -64,7 +89,7 @@
       "lead": "Dale a tu agente de IA una bandeja Fastmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación — y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
       "ctaPrimary": "Conecta Fastmail gratis",
       "ctaSecondary": "Lee la documentación",
-      "meta0": "Bandejas ilimitadas y 2.500 acciones",
+      "meta0": "1 bandeja gratis, para siempre",
       "meta1": "Contraseña de aplicación — sin OAuth",
       "meta2": "El correo se obtiene en vivo, nunca se almacena"
     },
@@ -79,10 +104,26 @@
       "ctaPrimary": "Conecta Fastmail gratis"
     },
     "capabilities": [
-      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas — encuentra esa factura, resume un hilo o saca lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Fastmail, no como un borrador que terminas a mano." },
-      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      {
+        "tag": "Leer",
+        "h": "Leer y buscar correo",
+        "p": "Lista, lee y busca entre carpetas — encuentra esa factura, resume un hilo o saca lo último de un remitente."
+      },
+      {
+        "tag": "Enviar",
+        "h": "Enviar, responder y reenviar",
+        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Fastmail, no como un borrador que terminas a mano."
+      },
+      {
+        "tag": "Programar",
+        "h": "Programar para más tarde",
+        "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado."
+      },
+      {
+        "tag": "Organizar",
+        "h": "Mover, copiar, marcar, archivar, eliminar",
+        "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida."
+      }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -90,14 +131,26 @@
       "sub": "Del registro al primer correo con IA en un par de minutos."
     },
     "steps": [
-      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails — sin tarjeta. El plan gratuito te da bandejas ilimitadas y 2.500 acciones por período de facturación." },
-      { "h": "Genera una contraseña de aplicación de Fastmail", "p": "En Fastmail, ve a Configuración → Privacidad y seguridad → Contraseñas de aplicación y crea una para correo (IMAP/SMTP)." },
-      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de Fastmail y la contraseña de aplicación para conectar la bandeja de forma segura." },
-      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+      {
+        "h": "Crea una cuenta gratis",
+        "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      },
+      {
+        "h": "Genera una contraseña de aplicación de Fastmail",
+        "p": "En Fastmail, ve a Configuración → Privacidad y seguridad → Contraseñas de aplicación y crea una para correo (IMAP/SMTP)."
+      },
+      {
+        "h": "Pégala en mcpemails",
+        "p": "Añade tu dirección de Fastmail y la contraseña de aplicación para conectar la bandeja de forma segura."
+      },
+      {
+        "h": "Pega la URL MCP en tu IA",
+        "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+      }
     ],
     "ctaBand": {
       "title": "Dale a tu IA una bandeja Fastmail",
-      "sub": "Conecta Fastmail en minutos — bandejas ilimitadas y 2.500 acciones por período de facturación en el plan gratuito, sin tarjeta.",
+      "sub": "Conecta Fastmail en minutos. Una bandeja gratis para siempre, sin tarjeta.",
       "ctaPrimary": "Conecta Fastmail gratis",
       "ctaSecondary": "Lee la documentación"
     }
@@ -114,7 +167,7 @@
       "lead": "Dale a tu agente de IA una bandeja iCloud real en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña específica de aplicación de Apple — y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
       "ctaPrimary": "Conecta iCloud gratis",
       "ctaSecondary": "Lee la documentación",
-      "meta0": "Bandejas ilimitadas y 2.500 acciones",
+      "meta0": "1 bandeja gratis, para siempre",
       "meta1": "Contraseña específica de aplicación — sin OAuth",
       "meta2": "El correo se obtiene en vivo, nunca se almacena"
     },
@@ -129,10 +182,26 @@
       "ctaPrimary": "Conecta iCloud gratis"
     },
     "capabilities": [
-      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas — encuentra un recibo, resume un hilo o saca lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde iCloud, no como un borrador que terminas a mano." },
-      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      {
+        "tag": "Leer",
+        "h": "Leer y buscar correo",
+        "p": "Lista, lee y busca entre carpetas — encuentra un recibo, resume un hilo o saca lo último de un remitente."
+      },
+      {
+        "tag": "Enviar",
+        "h": "Enviar, responder y reenviar",
+        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde iCloud, no como un borrador que terminas a mano."
+      },
+      {
+        "tag": "Programar",
+        "h": "Programar para más tarde",
+        "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado."
+      },
+      {
+        "tag": "Organizar",
+        "h": "Mover, copiar, marcar, archivar, eliminar",
+        "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida."
+      }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -140,14 +209,26 @@
       "sub": "Del registro al primer correo con IA en un par de minutos."
     },
     "steps": [
-      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails — sin tarjeta. El plan gratuito te da bandejas ilimitadas y 2.500 acciones por período de facturación." },
-      { "h": "Genera una contraseña específica de aplicación", "p": "En appleid.apple.com, ve a Inicio de sesión y seguridad → Contraseñas específicas de aplicación y crea una (la autenticación de dos factores debe estar activada)." },
-      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de iCloud y la contraseña específica de aplicación para conectar la bandeja de forma segura." },
-      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+      {
+        "h": "Crea una cuenta gratis",
+        "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      },
+      {
+        "h": "Genera una contraseña específica de aplicación",
+        "p": "En appleid.apple.com, ve a Inicio de sesión y seguridad → Contraseñas específicas de aplicación y crea una (la autenticación de dos factores debe estar activada)."
+      },
+      {
+        "h": "Pégala en mcpemails",
+        "p": "Añade tu dirección de iCloud y la contraseña específica de aplicación para conectar la bandeja de forma segura."
+      },
+      {
+        "h": "Pega la URL MCP en tu IA",
+        "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+      }
     ],
     "ctaBand": {
       "title": "Dale a tu IA una bandeja iCloud",
-      "sub": "Conecta iCloud Mail en minutos — bandejas ilimitadas y 2.500 acciones por período de facturación en el plan gratuito, sin tarjeta.",
+      "sub": "Conecta iCloud Mail en minutos. Una bandeja gratis para siempre, sin tarjeta.",
       "ctaPrimary": "Conecta iCloud gratis",
       "ctaSecondary": "Lee la documentación"
     }
@@ -164,7 +245,7 @@
       "lead": "Dale a tu agente de IA una bandeja Yahoo real en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
       "ctaPrimary": "Conecta Yahoo gratis",
       "ctaSecondary": "Lee la documentación",
-      "meta0": "Bandejas ilimitadas y 2.500 acciones",
+      "meta0": "1 bandeja gratis, para siempre",
       "meta1": "Contraseña de aplicación, sin configurar OAuth",
       "meta2": "El correo se obtiene en vivo, nunca se almacena"
     },
@@ -179,10 +260,26 @@
       "ctaPrimary": "Conecta Yahoo gratis"
     },
     "capabilities": [
-      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yahoo, no como un borrador que terminas a mano." },
-      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      {
+        "tag": "Leer",
+        "h": "Leer y buscar correo",
+        "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente."
+      },
+      {
+        "tag": "Enviar",
+        "h": "Enviar, responder y reenviar",
+        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yahoo, no como un borrador que terminas a mano."
+      },
+      {
+        "tag": "Programar",
+        "h": "Programar para más tarde",
+        "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado."
+      },
+      {
+        "tag": "Organizar",
+        "h": "Mover, copiar, marcar, archivar, eliminar",
+        "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida."
+      }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -190,14 +287,26 @@
       "sub": "Del registro al primer correo con IA en un par de minutos."
     },
     "steps": [
-      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito te da bandejas ilimitadas y 2.500 acciones por período de facturación." },
-      { "h": "Genera una contraseña de aplicación de Yahoo", "p": "Activa la verificación en dos pasos y luego genera una contraseña de aplicación en Seguridad de la cuenta de Yahoo." },
-      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de Yahoo y la contraseña de aplicación para conectar la bandeja de forma segura." },
-      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+      {
+        "h": "Crea una cuenta gratis",
+        "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      },
+      {
+        "h": "Genera una contraseña de aplicación de Yahoo",
+        "p": "Activa la verificación en dos pasos y luego genera una contraseña de aplicación en Seguridad de la cuenta de Yahoo."
+      },
+      {
+        "h": "Pégala en mcpemails",
+        "p": "Añade tu dirección de Yahoo y la contraseña de aplicación para conectar la bandeja de forma segura."
+      },
+      {
+        "h": "Pega la URL MCP en tu IA",
+        "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+      }
     ],
     "ctaBand": {
       "title": "Dale a tu IA una bandeja Yahoo",
-      "sub": "Conecta Yahoo Mail en minutos. Bandejas ilimitadas y 2.500 acciones por período de facturación en el plan gratuito, sin tarjeta.",
+      "sub": "Conecta Yahoo Mail en minutos. Una bandeja gratis para siempre, sin tarjeta.",
       "ctaPrimary": "Conecta Yahoo gratis",
       "ctaSecondary": "Lee la documentación"
     }
@@ -214,7 +323,7 @@
       "lead": "Dale a tu agente de IA una bandeja Zoho real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y una contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
       "ctaPrimary": "Conecta Zoho gratis",
       "ctaSecondary": "Lee la documentación",
-      "meta0": "Bandejas ilimitadas y 2.500 acciones",
+      "meta0": "1 bandeja gratis, para siempre",
       "meta1": "Contraseña de aplicación, sin configurar OAuth",
       "meta2": "El correo se obtiene en vivo, nunca se almacena"
     },
@@ -229,10 +338,26 @@
       "ctaPrimary": "Conecta Zoho gratis"
     },
     "capabilities": [
-      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Zoho, no como un borrador que terminas a mano." },
-      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      {
+        "tag": "Leer",
+        "h": "Leer y buscar correo",
+        "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente."
+      },
+      {
+        "tag": "Enviar",
+        "h": "Enviar, responder y reenviar",
+        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Zoho, no como un borrador que terminas a mano."
+      },
+      {
+        "tag": "Programar",
+        "h": "Programar para más tarde",
+        "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado."
+      },
+      {
+        "tag": "Organizar",
+        "h": "Mover, copiar, marcar, archivar, eliminar",
+        "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida."
+      }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -240,14 +365,26 @@
       "sub": "Del registro al primer correo con IA en un par de minutos."
     },
     "steps": [
-      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito te da bandejas ilimitadas y 2.500 acciones por período de facturación." },
-      { "h": "Activa IMAP y genera una contraseña de aplicación", "p": "En Zoho Mail, activa el acceso IMAP (Configuración, Cuentas de correo, Acceso IMAP). Si usas autenticación de dos factores, genera una contraseña específica de aplicación en Cuenta de Zoho, Seguridad." },
-      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de Zoho y la contraseña, y elige tu región de Zoho si se te pide, para conectar la bandeja de forma segura." },
-      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+      {
+        "h": "Crea una cuenta gratis",
+        "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      },
+      {
+        "h": "Activa IMAP y genera una contraseña de aplicación",
+        "p": "En Zoho Mail, activa el acceso IMAP (Configuración, Cuentas de correo, Acceso IMAP). Si usas autenticación de dos factores, genera una contraseña específica de aplicación en Cuenta de Zoho, Seguridad."
+      },
+      {
+        "h": "Pégala en mcpemails",
+        "p": "Añade tu dirección de Zoho y la contraseña, y elige tu región de Zoho si se te pide, para conectar la bandeja de forma segura."
+      },
+      {
+        "h": "Pega la URL MCP en tu IA",
+        "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+      }
     ],
     "ctaBand": {
       "title": "Dale a tu IA una bandeja Zoho",
-      "sub": "Conecta Zoho Mail en minutos. Bandejas ilimitadas y 2.500 acciones por período de facturación en el plan gratuito, sin tarjeta.",
+      "sub": "Conecta Zoho Mail en minutos. Una bandeja gratis para siempre, sin tarjeta.",
       "ctaPrimary": "Conecta Zoho gratis",
       "ctaSecondary": "Lee la documentación"
     }
@@ -264,7 +401,7 @@
       "lead": "Dale a tu agente de IA una bandeja Yandex real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y una contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
       "ctaPrimary": "Conecta Yandex gratis",
       "ctaSecondary": "Lee la documentación",
-      "meta0": "Bandejas ilimitadas y 2.500 acciones",
+      "meta0": "1 bandeja gratis, para siempre",
       "meta1": "Contraseña de aplicación, sin configurar OAuth",
       "meta2": "El correo se obtiene en vivo, nunca se almacena"
     },
@@ -279,10 +416,26 @@
       "ctaPrimary": "Conecta Yandex gratis"
     },
     "capabilities": [
-      { "tag": "Leer", "h": "Leer y buscar correo", "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente." },
-      { "tag": "Enviar", "h": "Enviar, responder y reenviar", "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yandex, no como un borrador que terminas a mano." },
-      { "tag": "Programar", "h": "Programar para más tarde", "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado." },
-      { "tag": "Organizar", "h": "Mover, copiar, marcar, archivar, eliminar", "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida." }
+      {
+        "tag": "Leer",
+        "h": "Leer y buscar correo",
+        "p": "Lista, lee y busca entre carpetas para encontrar esa factura, resumir un hilo o sacar lo último de un remitente."
+      },
+      {
+        "tag": "Enviar",
+        "h": "Enviar, responder y reenviar",
+        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, directamente desde Yandex, no como un borrador que terminas a mano."
+      },
+      {
+        "tag": "Programar",
+        "h": "Programar para más tarde",
+        "p": "Pon un mensaje en cola para que salga en el momento justo, así tu agente redacta ahora y envía según lo programado."
+      },
+      {
+        "tag": "Organizar",
+        "h": "Mover, copiar, marcar, archivar, eliminar",
+        "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida."
+      }
     ],
     "how": {
       "eyebrow": "Configuración",
@@ -290,14 +443,26 @@
       "sub": "Del registro al primer correo con IA en un par de minutos."
     },
     "steps": [
-      { "h": "Crea una cuenta gratis", "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito te da bandejas ilimitadas y 2.500 acciones por período de facturación." },
-      { "h": "Activa IMAP y crea una contraseña de aplicación", "p": "En la configuración de Yandex Mail, activa IMAP y habilita las contraseñas de aplicación y los tokens OAuth. Luego crea una contraseña de aplicación en Yandex ID, Seguridad." },
-      { "h": "Pégala en mcpemails", "p": "Añade tu dirección de Yandex y la contraseña de aplicación para conectar la bandeja de forma segura." },
-      { "h": "Pega la URL MCP en tu IA", "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja." }
+      {
+        "h": "Crea una cuenta gratis",
+        "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      },
+      {
+        "h": "Activa IMAP y crea una contraseña de aplicación",
+        "p": "En la configuración de Yandex Mail, activa IMAP y habilita las contraseñas de aplicación y los tokens OAuth. Luego crea una contraseña de aplicación en Yandex ID, Seguridad."
+      },
+      {
+        "h": "Pégala en mcpemails",
+        "p": "Añade tu dirección de Yandex y la contraseña de aplicación para conectar la bandeja de forma segura."
+      },
+      {
+        "h": "Pega la URL MCP en tu IA",
+        "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+      }
     ],
     "ctaBand": {
       "title": "Dale a tu IA una bandeja Yandex",
-      "sub": "Conecta Yandex Mail en minutos. Bandejas ilimitadas y 2.500 acciones por período de facturación en el plan gratuito, sin tarjeta.",
+      "sub": "Conecta Yandex Mail en minutos. Una bandeja gratis para siempre, sin tarjeta.",
       "ctaPrimary": "Conecta Yandex gratis",
       "ctaSecondary": "Lee la documentación"
     }

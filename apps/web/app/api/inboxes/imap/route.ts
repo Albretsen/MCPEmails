@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
-import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { normalizeSecurity } from '@/lib/email/connection-config';
@@ -93,18 +93,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: 'plan_limit' });
-      const capLabel = inboxLimit.maxInboxes === 1 ? '1 inbox' : `${inboxLimit.maxInboxes} inboxes`;
-      return NextResponse.json(
-        {
-          error: `Your ${inboxLimit.plan} plan allows ${capLabel}. ` +
-            `Upgrade at mcpemails.com/pricing to connect more.`,
-          error_code: 'inbox_limit_reached',
-          plan: inboxLimit.plan,
-          current_count: inboxLimit.currentCount,
-          max_inboxes: inboxLimit.maxInboxes,
-        },
-        { status: 402 }
-      );
+      // 402 with a stable machine-readable body; the dashboard owns the
+      // localised sentence. See inboxLimitErrorBody for why nothing here
+      // interpolates the internal plan slug.
+      return NextResponse.json(inboxLimitErrorBody(inboxLimit), { status: 402 });
     }
   }
 
@@ -126,19 +118,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // etc.). Network/TLS errors keep their own messages without error_code.
     const body: Record<string, string> = { error: validation.message };
     if (validation.code === 'AUTH_FAILED') body.error_code = 'auth_failed';
-    // A wrong password is expected, user-driven, and not worth recording. The
-    // other codes (bad host, connection refused/timeout, TLS/protocol errors)
-    // indicate either a real product/infra issue or a config mistake we could
-    // proactively warn users about, so they're worth tracking frequency of —
-    // this table previously had zero writes anywhere in the codebase.
-    if (validation.code !== 'AUTH_FAILED') {
-      await captureError(new Error(validation.message), {
-        severity: 'low',
-        route: 'api/inboxes/imap',
-        reason: validation.code,
-        workspaceId,
-      });
-    }
+    // AUTH_FAILED used to be skipped here on the theory that a wrong password
+    // is user-driven noise. That reasoning does not survive contact with the
+    // numbers: auth failures are the single largest bucket of generic IMAP
+    // failures (49 of 101), and skipping them meant the largest failure mode on
+    // the connector we most want to work left no trace at all. A mistyped
+    // password and a host that rejects every login in the same way are only
+    // distinguishable in aggregate, and only if the rows exist.
+    //
+    // Nothing secret is recorded. `detail` is the sanitized server rejection
+    // (see sanitizeAuthDiagnostic: the submitted username, address, password
+    // and the SASL token are stripped before it is stored), and the host/port/
+    // security triple is server configuration the user typed into a form, not
+    // a credential. The email address is deliberately NOT recorded.
+    await captureError(new Error(validation.message), {
+      severity: 'low',
+      route: 'api/inboxes/imap',
+      reason: validation.code,
+      phase: validation.phase,
+      detail: validation.detail ?? null,
+      // The host/port/security combination is what distinguishes a genuinely
+      // unreachable server from the port/security mismatch that produced most
+      // of these failures, and it was the field whose absence made the earlier
+      // rows unactionable.
+      imapHost,
+      imapPort,
+      imapSecurity,
+      workspaceId,
+    });
     return NextResponse.json(body, { status: 422 });
   }
 
@@ -154,6 +161,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    // An inbox that authenticates over IMAP but fails on SMTP is a distinct and
+    // more interesting failure than either half alone, and it had no diagnostic
+    // record at all: the funnel counted it, nothing said why.
+    await captureError(new Error(smtpValidation.message), {
+      severity: 'low',
+      route: 'api/inboxes/imap',
+      reason: smtpValidation.code,
+      phase: `smtp_${smtpValidation.phase}`,
+      detail: smtpValidation.detail ?? null,
+      smtpHost,
+      smtpPort,
+      smtpSecurity,
+      workspaceId,
+    });
     return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
   }
 

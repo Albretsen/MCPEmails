@@ -66,10 +66,24 @@ async function _fetchStripePrices(): Promise<StripePricesMap> {
 
 // ---------------------------------------------------------------------------
 // Cached export; revalidates every hour
+//
+// The cache key includes every configured price ID, not just a constant. The
+// 2026-08-19 repricing repointed STRIPE_PRICE_* at new prices, and because the
+// key used to be a bare 'stripe-prices' the cache kept serving the retired
+// amounts: the page rendered the old $12 and $49 next to new copy quoting $29.
+// Deriving the key from the IDs means repointing a price invalidates the entry
+// on the next request instead of up to an hour later.
 // ---------------------------------------------------------------------------
+
+const priceIdFingerprint = Object.values(PLANS)
+  .map(
+    (plan) =>
+      `${plan.id}:${plan.stripePriceIdMonthly ?? '-'}:${plan.stripePriceIdYearly ?? '-'}`,
+  )
+  .join('|');
 
 export const fetchStripePrices: () => Promise<StripePricesMap> = unstable_cache(
   _fetchStripePrices,
-  ['stripe-prices'],
+  ['stripe-prices', priceIdFingerprint],
   { revalidate: 3600 },
 );
