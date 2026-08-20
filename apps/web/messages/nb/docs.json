@@ -133,7 +133,7 @@
     },
     "email_read": {
       "title": "Les e-post",
-      "desc": "Les, list og søk i meldinger i en innboks. Sett action: 'list' for nylige meldingssammendrag (nyeste først, med filtrering på mappe/uleste og paginering), 'read' for det fulle innholdet i én message_id (tekstkropp, valgfri renset HTML og vedlegg), 'read_batch' for å hente opptil 50 message_ids i ett kall, 'search' for strukturerte, leverandøruavhengige filtre (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), eller 'attachment' for å laste ned ett enkelt vedlegg (etter attachment_index eller filename) som base64-data — opptil 25 MB. Skrivebeskyttet — endrer aldri noe. 'search'-handlingen låses også opp alene av det smalere omfanget search:email.",
+      "desc": "Les, list og søk i meldinger i en innboks. Sett action: 'list' for nylige meldingssammendrag (nyeste først, med filtrering på mappe/uleste og paginering), 'read' for det fulle innholdet i én message_id (tekstkropp, valgfri renset HTML og vedlegg), 'read_batch' for å hente opptil 50 message_ids i ett kall, 'search' for strukturerte, leverandøruavhengige filtre (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), eller 'attachment' for å laste ned ett enkelt vedlegg (etter attachment_index eller filename) som base64-data — opptil 25 MB. Skrivebeskyttet — endrer aldri noe. 'search'-handlingen låses også opp alene av det smalere omfanget search:email. Lange meldingskropper returneres i vinduer: sjekk body_truncated, og send body_next_offset tilbake som body_offset for å fortsette.",
       "params": {
         "action": "Hvilken operasjon som skal utføres: \"list\" (nylige meldingssammendrag), \"read\" (fullt innhold i én message_id), \"read_batch\" (flere message_ids), \"search\" (strukturerte filtre) eller \"attachment\" (last ned ett vedlegg som base64). Avgjør hvilke andre argumenter som gjelder.",
         "inbox_id": "UUID for innboksen det skal leses fra. Valgfritt — løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å oppdage inbox-ID-er.",
@@ -147,6 +147,9 @@
         "limit": "Maks antall resultater som returneres (action 'list' eller 'search'). Standard 20, maks 100.",
         "offset": "Nullbasert pagineringsforskyvning (action 'list' eller 'search'). Standard 0.",
         "include_html": "Inkluder renset HTML-kropp (action 'read'/'read_batch'). Standard false.",
+        "body_offset": "Tegnforskyvning i rentekst-kroppen (handling 'read'/'read_batch'). Standard 0. Send den returnerte body_next_offset tilbake for å fortsette.",
+        "body_html_offset": "Som body_offset, for den sanerte HTML-kroppen når include_html er true. Standard 0.",
+        "body_max_chars": "Antall tegn av kroppen som returneres per melding. Standard 8000 for 'read' og 2000 for 'read_batch'. Maks 50000.",
         "include_attachments": "Inkluder base64-vedleggsdata (action 'read'/'read_batch'). På 'read_batch' deles 10 MB-grensen på tvers av hele kallet. Standard false.",
         "mark_as_read": "Merk meldingen(e) som lest etter henting (action 'read'/'read_batch'). Standard false.",
         "from": "Avsender som skal matches (action 'search'): e-postadresse, visningsnavn eller fragment (f.eks. \"alice@example.com\" eller \"Alice\").",

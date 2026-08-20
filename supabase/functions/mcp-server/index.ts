@@ -10,6 +10,17 @@ import {
 } from "./imap-client.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
 import {
+  batchBodyAllowance,
+  BATCH_BODY_RESPONSE_CHARS,
+  BATCH_READ_BODY_CHARS,
+  BODY_MAX_CHARS_CEILING,
+  clampBodyMaxChars,
+  readBodyOffset,
+  SINGLE_READ_BODY_CHARS,
+  singleReadContinuation,
+  windowBody,
+} from "./body-window.ts";
+import {
   invalidArgumentAuditDetails,
   type InvalidArgumentAuditDetails,
 } from "./validation-observability.ts";
@@ -2304,6 +2315,27 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description:
             "Mark the message read at the provider after fetching it.",
         },
+        body_offset: {
+          type: "integer",
+          minimum: 0,
+          default: 0,
+          description:
+            "Start of the plain-text window. Pass back body_next_offset to continue a truncated body.",
+        },
+        body_html_offset: {
+          type: "integer",
+          minimum: 0,
+          default: 0,
+          description:
+            "The same for body_html: pass back body_html_next_offset.",
+        },
+        body_max_chars: {
+          type: "integer",
+          minimum: 0,
+          maximum: BODY_MAX_CHARS_CEILING,
+          description:
+            "Body chars per message. Default 8000 here, 2000 on read_batch. 0 returns headers only.",
+        },
       },
       required: ["message_id"],
       additionalProperties: false,
@@ -2357,6 +2389,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description:
             "When true, marks each message as read at the provider after successfully " +
             "fetching its content. Defaults to false to avoid unintended state changes.",
+        },
+        body_max_chars: {
+          type: "integer",
+          minimum: 0,
+          maximum: BODY_MAX_CHARS_CEILING,
+          description:
+            "Body chars per message. Default 8000 here, 2000 on read_batch. 0 returns headers only.",
         },
       },
       required: ["message_ids"],
@@ -3731,6 +3770,30 @@ const LEGACY_TOOLS: ToolDefinition[] = [
 // keeps each tool's argument definition readable and the metadata in one place.
 // ---------------------------------------------------------------------------
 
+/**
+ * The body continuation fields, present on a read only when a body was
+ * windowed. Declared here so a client validating structuredContent sees them
+ * described rather than merely tolerated by additionalProperties.
+ */
+const BODY_CONTINUATION_SCHEMA = {
+  body_truncated: {
+    type: "boolean",
+    description: "True when body_text stops short of body_total_chars.",
+  },
+  body_offset: { type: "integer", description: "Where this window starts." },
+  body_total_chars: { type: "integer", description: "Length of the whole plain-text body." },
+  body_next_offset: { type: "integer", description: "Pass back as body_offset for the next window." },
+  body_continue: { type: "string", description: "The exact email_read call that returns the rest." },
+  body_html_truncated: { type: "boolean" },
+  body_html_offset: { type: "integer" },
+  body_html_total_chars: { type: "integer" },
+  body_html_next_offset: {
+    type: "integer",
+    description: "Pass back as body_html_offset for the next HTML window.",
+  },
+  body_html_continue: { type: "string" },
+} as const;
+
 /** JSON-Schema fragment for an {name,email} address entry. */
 const ADDRESS_ENTRY_SCHEMA = {
   type: "object",
@@ -3913,6 +3976,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       date: { type: "string", description: "ISO 8601 UTC timestamp." },
       body_text: { type: ["string", "null"] },
       body_html: { type: ["string", "null"] },
+      ...BODY_CONTINUATION_SCHEMA,
       attachments: { type: "array", items: { type: "object", additionalProperties: true } },
       is_read: { type: "boolean" },
       labels: { type: "array", items: { type: "string" } },
@@ -3942,6 +4006,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
             date: { type: "string", description: "ISO 8601 UTC timestamp." },
             body_text: { type: ["string", "null"] },
             body_html: { type: ["string", "null"] },
+            ...BODY_CONTINUATION_SCHEMA,
             attachments: {
               type: "array",
               items: { type: "object", additionalProperties: true },
@@ -4396,7 +4461,9 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "Read, list and search email in one inbox. list and search return a " +
       "single page: when the response says has_more, call again with the " +
       "returned next_offset and otherwise identical arguments. Only " +
-      "has_more: false means you have seen everything.",
+      "has_more: false means you have seen everything. Long bodies are " +
+      "windowed the same way: body_truncated means read again with " +
+      "body_next_offset as body_offset.",
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     actions: {
       list: {
@@ -4412,7 +4479,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       read_batch: {
         legacy: "email_read_batch",
         scope: "read:email",
-        hint: "full content of up to 50 message_ids",
+        hint: "up to 50 message_ids, bodies windowed tighter than read",
       },
       search: {
         legacy: "email_search",
@@ -8000,12 +8067,46 @@ interface ReadEmailResult {
   subject: string;
   /** ISO 8601 UTC timestamp. */
   date: string;
-  /** Decoded, UTF-8-normalised plain-text body. */
+  /**
+   * Decoded, UTF-8-normalised plain-text body, windowed to `body_max_chars`
+   * (see body-window.ts). Whenever the window did not reach the end, the
+   * `body_truncated` / `body_total_chars` / `body_next_offset` /
+   * `body_continue` fields below are present and say so; they are absent on a
+   * complete body read from offset 0, which is the overwhelmingly common case.
+   */
   body_text: string | null;
   /**
    * Sanitised HTML body. null unless `include_html: true` was requested.
+   * Windowed under the same budget as body_text, with its own `body_html_*`
+   * continuation fields: it is a different string of a different length, so it
+   * cannot share body_text's offset.
    */
   body_html: string | null;
+  // ── Body continuation ────────────────────────────────────────────────────
+  // All optional and all set by readOneMessage, only when a window was
+  // requested AND there is something to report. A whole small message read
+  // from offset 0 therefore serialises exactly as it did before bodies were
+  // capped: no new keys, no new bytes.
+  /** True when body_text stops short of the end; false on a final continuation window. */
+  body_truncated?: boolean;
+  /** Character offset body_text starts at. */
+  body_offset?: number;
+  /** Length of the complete plain-text body. */
+  body_total_chars?: number;
+  /** Offset to pass back as body_offset for the next window. */
+  body_next_offset?: number;
+  /** The literal email_read call that returns the next window. */
+  body_continue?: string;
+  /** As body_truncated, for body_html. */
+  body_html_truncated?: boolean;
+  /** As body_offset, for body_html. */
+  body_html_offset?: number;
+  /** As body_total_chars, for body_html. */
+  body_html_total_chars?: number;
+  /** As body_next_offset, for body_html (pass back as body_html_offset). */
+  body_html_next_offset?: number;
+  /** As body_continue, for body_html. */
+  body_html_continue?: string;
   /**
    * Attachment metadata, always listed when the message has attachments
    * (regardless of `include_attachments`). Each entry carries an
@@ -8589,6 +8690,25 @@ async function readOneMessage(
      * which OOM-kills the isolate on large mail (see email_attachment).
      */
     select_only_index?: number;
+    /**
+     * Bound the two bodies and attach continuation fields. OMITTED means no
+     * windowing at all, and that default is load-bearing: the reply/forward
+     * quoting paths and readMessageForSummary call the provider readers
+     * directly and must always see the complete body. Truncating a body that
+     * is about to be quoted into an outgoing message would be a silent partial
+     * WRITE (github/github-mcp-server#2182), which is a data-loss bug and not
+     * a token saving. Only the two read tools pass this.
+     */
+    body_window?: {
+      /** Start offset into body_text. */
+      offset: number;
+      /** Start offset into body_html (a different string, so a different offset). */
+      html_offset: number;
+      /** Window size, applied to each body separately. */
+      max_chars: number;
+      /** Builds the `*_continue` sentence for this caller's tool shape. */
+      recovery: (nextOffset: number, html: boolean) => string;
+    };
   },
 ): Promise<ReadEmailResult> {
   const attachmentBudgetBytes = opts.attachment_max_bytes ?? ATTACHMENT_DATA_BUDGET;
@@ -8650,6 +8770,34 @@ async function readOneMessage(
     return stamped;
   });
 
+  // Bound the bodies LAST, once, in the one place every provider read passes
+  // through. Doing it per provider would be three chances to get the arithmetic
+  // wrong and three places for the next reader to forget.
+  if (opts.body_window) {
+    const w = opts.body_window;
+    const textWindow = windowBody(result.body_text, {
+      offset: w.offset,
+      maxChars: w.max_chars,
+      prefix: "body",
+      recovery: (next) => w.recovery(next, false),
+    });
+    result.body_text = textWindow.text;
+    Object.assign(result, textWindow.fields);
+
+    // body_html is capped under the same budget. It is only ever present on an
+    // explicit include_html, which already costs 3.7x, so leaving it uncapped
+    // would leave the largest single response this server can produce
+    // unbounded.
+    const htmlWindow = windowBody(result.body_html, {
+      offset: w.html_offset,
+      maxChars: w.max_chars,
+      prefix: "body_html",
+      recovery: (next) => w.recovery(next, true),
+    });
+    result.body_html = htmlWindow.text;
+    Object.assign(result, htmlWindow.fields);
+  }
+
   return result;
 }
 
@@ -8702,6 +8850,12 @@ async function executeReadEmail(
   const includeAttachments = args["include_attachments"] === true;
   const markAsRead = args["mark_as_read"] === true;
 
+  // A single read is a deliberate request for ONE message, so it gets the
+  // generous window; read_batch is tighter on purpose (see body-window.ts).
+  const bodyMaxChars = clampBodyMaxChars(args["body_max_chars"], SINGLE_READ_BODY_CHARS);
+  const bodyOffset = readBodyOffset(args["body_offset"]);
+  const bodyHtmlOffset = readBodyOffset(args["body_html_offset"]);
+
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
   if (!resolved.ok) return inboxResolutionError(resolved, "email_read");
@@ -8732,6 +8886,12 @@ async function executeReadEmail(
       include_html: includeHtml,
       include_attachments: includeAttachments,
       mark_as_read: markAsRead,
+      body_window: {
+        offset: bodyOffset,
+        html_offset: bodyHtmlOffset,
+        max_chars: bodyMaxChars,
+        recovery: (next, html) => singleReadContinuation(messageId, next, html),
+      },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -9547,6 +9707,11 @@ async function executeReadEmails(
   const includeAttachments = args["include_attachments"] === true;
   const markAsRead = args["mark_as_read"] === true;
 
+  // 50 messages share ONE context window, so the per-message allowance here is
+  // a quarter of what a single read gets, and it sits under a whole-response
+  // ceiling as well. See body-window.ts for why the asymmetry is deliberate.
+  const perMessageBodyCap = clampBodyMaxChars(args["body_max_chars"], BATCH_READ_BODY_CHARS);
+
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
   if (!resolved.ok) return inboxResolutionError(resolved, "email_read_batch");
@@ -9577,13 +9742,37 @@ async function executeReadEmails(
   // Cumulative attachment-byte budget shared across the batch.
   let attachmentBudgetRemaining = ATTACHMENT_DATA_BUDGET;
 
+  // Cumulative BODY budget, in characters, shared across the batch, spent as
+  // messages are read. Errored ids consume none of it, so a batch full of stale
+  // ids does not starve the ones that resolved.
+  let bodyBudgetRemaining = BATCH_BODY_RESPONSE_CHARS;
+  let messagesLeft = messageIds.length;
+
   for (const messageId of messageIds) {
+    const allowance = batchBodyAllowance(
+      perMessageBodyCap,
+      bodyBudgetRemaining,
+      messagesLeft,
+    );
+    messagesLeft--;
+
     let readResult: ReadEmailResult;
     try {
       readResult = await readOneMessage(inbox, messageId, {
         include_html: includeHtml,
         include_attachments: includeAttachments,
         mark_as_read: markAsRead,
+        body_window: {
+          // No batch-level offsets: continuing a specific message inside a
+          // 50-id call is a single read of that id, which is what the
+          // continuation sentence tells the model to do. One shared offset
+          // across 50 different-length bodies would be meaningless, and per-id
+          // offsets would be a parameter shape no model would drive correctly.
+          offset: 0,
+          html_offset: 0,
+          max_chars: allowance,
+          recovery: (next, html) => singleReadContinuation(messageId, next, html),
+        },
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -9629,6 +9818,11 @@ async function executeReadEmails(
         }
       }
     }
+
+    // Spend what this message actually emitted. A short body hands the unspent
+    // remainder to the messages after it rather than wasting it.
+    bodyBudgetRemaining -= (readResult.body_text?.length ?? 0) +
+      (readResult.body_html?.length ?? 0);
 
     messages.push(readResult);
   }

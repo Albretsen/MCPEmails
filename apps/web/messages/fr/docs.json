@@ -133,7 +133,7 @@
     },
     "email_read": {
       "title": "Lire un e-mail",
-      "desc": "Lire, lister et rechercher des messages dans une boîte. Définissez action : 'list' pour des résumés de messages récents (les plus récents d'abord, avec filtrage par dossier/non lus et pagination), 'read' pour le contenu complet d'un message_id (corps texte, HTML assaini facultatif et pièces jointes), 'read_batch' pour récupérer jusqu'à 50 message_ids en un seul appel, 'search' pour des filtres structurés et indépendants du fournisseur (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), ou 'attachment' pour télécharger une seule pièce jointe (par attachment_index ou filename) en données base64 — jusqu'à 25 Mo. En lecture seule — ne modifie jamais rien. L'action 'search' est aussi débloquée seule par la portée plus restreinte search:email.",
+      "desc": "Lire, lister et rechercher des messages dans une boîte. Définissez action : 'list' pour des résumés de messages récents (les plus récents d'abord, avec filtrage par dossier/non lus et pagination), 'read' pour le contenu complet d'un message_id (corps texte, HTML assaini facultatif et pièces jointes), 'read_batch' pour récupérer jusqu'à 50 message_ids en un seul appel, 'search' pour des filtres structurés et indépendants du fournisseur (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), ou 'attachment' pour télécharger une seule pièce jointe (par attachment_index ou filename) en données base64 — jusqu'à 25 Mo. En lecture seule — ne modifie jamais rien. L'action 'search' est aussi débloquée seule par la portée plus restreinte search:email. Les corps longs sont renvoyés par fenêtres : vérifiez body_truncated, puis renvoyez body_next_offset comme body_offset pour continuer.",
       "params": {
         "action": "Quelle opération effectuer : \"list\" (résumés de messages récents), \"read\" (contenu complet d'un message_id), \"read_batch\" (plusieurs message_ids), \"search\" (filtres structurés) ou \"attachment\" (télécharger une pièce jointe en base64). Détermine quels autres arguments s'appliquent.",
         "inbox_id": "UUID de la boîte à lire. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour découvrir les ID de boîte.",
@@ -147,6 +147,9 @@
         "limit": "Nombre max de résultats à renvoyer (action 'list' ou 'search'). Par défaut 20, max 100.",
         "offset": "Décalage de pagination commençant à zéro (action 'list' ou 'search'). Par défaut 0.",
         "include_html": "Inclure le corps HTML assaini (action 'read'/'read_batch'). Par défaut false.",
+        "body_offset": "Décalage en caractères dans le corps en texte brut (action 'read'/'read_batch'). Par défaut 0. Renvoyez le body_next_offset reçu pour continuer.",
+        "body_html_offset": "Comme body_offset, pour le corps HTML nettoyé lorsque include_html vaut true. Par défaut 0.",
+        "body_max_chars": "Nombre de caractères du corps renvoyés par message. Par défaut 8000 pour 'read' et 2000 pour 'read_batch'. Maximum 50000.",
         "include_attachments": "Inclure les données des pièces jointes en base64 (action 'read'/'read_batch'). En 'read_batch', la limite totale de 10 Mo est partagée entre tous les messages de l'appel. Par défaut false.",
         "mark_as_read": "Marquer le ou les messages comme lus après récupération (action 'read'/'read_batch'). Par défaut false.",
         "from": "Expéditeur à faire correspondre (action 'search') : adresse e-mail, nom affiché ou fragment (p. ex. \"alice@example.com\" ou \"Alice\").",

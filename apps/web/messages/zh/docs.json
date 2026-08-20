@@ -133,7 +133,7 @@
     },
     "email_read": {
       "title": "读取邮件",
-      "desc": "在收件箱中读取、列出和搜索邮件。设置 action：'list' 获取最近邮件摘要（最新优先，可按文件夹/未读筛选并分页），'read' 获取单个 message_id 的完整内容（纯文本正文、可选的净化后 HTML 和附件），'read_batch' 在一次调用中获取最多 50 个 message_ids，'search' 进行结构化、与提供商无关的筛选（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before），或 'attachment' 将单个附件（按 attachment_index 或 filename）下载为 base64 数据——最大 25 MB。只读——从不更改任何内容。'search' 操作也可由更窄的 search:email 权限单独解锁。",
+      "desc": "在收件箱中读取、列出和搜索邮件。设置 action：'list' 获取最近邮件摘要（最新优先，可按文件夹/未读筛选并分页），'read' 获取单个 message_id 的完整内容（纯文本正文、可选的净化后 HTML 和附件），'read_batch' 在一次调用中获取最多 50 个 message_ids，'search' 进行结构化、与提供商无关的筛选（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before），或 'attachment' 将单个附件（按 attachment_index 或 filename）下载为 base64 数据——最大 25 MB。只读——从不更改任何内容。'search' 操作也可由更窄的 search:email 权限单独解锁。 较长的正文将分段返回：请检查 body_truncated，并将 body_next_offset 作为 body_offset 传回以继续读取。",
       "params": {
         "action": "要执行的操作：\"list\"（最近邮件摘要）、\"read\"（单个 message_id 的完整内容）、\"read_batch\"（多个 message_ids）、\"search\"（结构化筛选）或 \"attachment\"（将单个附件下载为 base64）。决定其他哪些参数适用。",
         "inbox_id": "要读取的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以发现收件箱 ID。",
@@ -147,6 +147,9 @@
         "limit": "要返回的最大结果数（action 'list' 或 'search'）。默认 20，最大 100。",
         "offset": "从零开始的分页偏移量（action 'list' 或 'search'）。默认 0。",
         "include_html": "包含净化后的 HTML 正文（action 'read'/'read_batch'）。默认 false。",
+        "body_offset": "纯文本正文的字符偏移量（action 为 'read'/'read_batch'）。默认 0。将返回的 body_next_offset 传回即可继续读取。",
+        "body_html_offset": "与 body_offset 相同，用于 include_html 为 true 时经过清理的 HTML 正文。默认 0。",
+        "body_max_chars": "每封邮件返回的正文字符数。'read' 默认 8000，'read_batch' 默认 2000。最大 50000。",
         "include_attachments": "包含 base64 附件数据（action 'read'/'read_batch'）。在 'read_batch' 中，10 MB 总额度在调用内所有邮件间共享。默认 false。",
         "mark_as_read": "获取后将邮件标记为已读（action 'read'/'read_batch'）。默认 false。",
         "from": "要匹配的发件人（action 'search'）：邮箱地址、显示名称或片段（例如 \"alice@example.com\" 或 \"Alice\"）。",
