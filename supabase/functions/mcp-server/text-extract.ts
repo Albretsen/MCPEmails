@@ -217,7 +217,16 @@ export function stripHtmlToText(
         .replace(/<[^>]+>/g, ""),
     ),
   )
+    // CRLF first, or none of the rules below see a line boundary at all. A
+    // table-built email (which is most marketing and every ticketing system)
+    // otherwise arrives as long runs of "\r\n \r\n \r\n": one blank line per
+    // layout cell, measured at roughly half the body on real mail.
+    .replace(/\r\n?/g, "\n")
     .replace(/[ \t]+/g, " ")
+    // A line holding only a space is a blank line. Trim it before collapsing,
+    // or the run-of-blank-lines rule below never matches.
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
