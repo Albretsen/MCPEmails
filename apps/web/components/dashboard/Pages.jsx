@@ -4089,8 +4089,16 @@ function BillingSection({
   useEffect(() => {
     if (!upgradeIntent || automaticUpgradeStarted.current) return;
     automaticUpgradeStarted.current = true;
-    setInterval(upgradeIntent.interval);
+    // Consume the intent even when we do not act on it, so a refresh cannot
+    // retry.
     window.history.replaceState(window.history.state, '', '/dashboard/settings');
+    // Someone already on a paid plan (including a comped grant, which resolves
+    // to an effective paid plan) must never be dropped into Checkout straight
+    // off a URL parameter. The page's own upgrade cards are hidden for them;
+    // this effect used to bypass that and could open a real payment for
+    // access they already have.
+    if (isOnPaidPlan) return;
+    setInterval(upgradeIntent.interval);
     handleUpgrade(upgradeIntent.planId, upgradeIntent.interval);
   // Intent is parsed and validated by DashboardApp. This effect must run once.
   // eslint-disable-next-line react-hooks/exhaustive-deps

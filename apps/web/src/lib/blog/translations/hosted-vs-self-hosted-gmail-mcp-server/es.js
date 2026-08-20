@@ -23,7 +23,7 @@ El código se ejecuta en tu propio hardware. Ningún tercero se interpone jamás
 
 ### Es gratis en dólares
 
-Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con $12/month, las cuentas favorecen montártelo tú mismo.
+Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con $29/month, las cuentas favorecen montártelo tú mismo.
 
 ### Puedes adaptarlo a cualquier cosa
 

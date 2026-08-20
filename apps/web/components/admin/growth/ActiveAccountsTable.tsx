@@ -233,7 +233,7 @@ export function ActiveAccountsTable({ rows }: { rows: RosterRow[] }) {
                   {row.is_internal && <span className="growth-tag is-internal">internal</span>}
                   {row.is_comped
                     ? <span className="growth-tag is-comped">comped</span>
-                    : <span className="growth-tag">{row.plan === 'pro' ? 'Scale' : row.plan === 'solo' ? 'Agent' : 'Free'}</span>}
+                    : <span className="growth-tag">{row.plan === 'pro' ? 'Team' : row.plan === 'solo' ? 'Pro' : 'Free'}</span>}
                 </td>
                 <td>{daysAgo(row.last_active_at) === 0 ? 'today' : `${daysAgo(row.last_active_at)}d ago`}</td>
                 <td>{row.active_days}</td>

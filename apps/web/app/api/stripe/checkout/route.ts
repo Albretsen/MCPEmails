@@ -131,6 +131,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     .eq('user_id', user.id)
     .maybeSingle();
 
+  // A comped grant lives in user_usage_entitlements, NOT in user_billing, so a
+  // comped user can sit at plan 'free' here while already having full paid
+  // access. Without this check they fall through to a real Checkout session
+  // and pay for what they were given for nothing.
+  const { data: entitlement } = await supabase
+    .from('user_usage_entitlements')
+    .select('kind, expires_at')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  const hasCompedGrant =
+    entitlement?.kind === 'comped_scale' &&
+    (entitlement.expires_at == null ||
+      new Date(entitlement.expires_at) > new Date());
+
+  if (hasCompedGrant) {
+    await recordCheckoutStarted(workspace.id, target, 'subscription_exists');
+    return NextResponse.json(
+      {
+        error:
+          'Your account already has full access at no charge. ' +
+          'Contact us if you need to change it.',
+        error_code: 'subscription_not_self_service',
+      },
+      { status: 409 },
+    );
+  }
+
   const entitledStatuses = ['active', 'trialing', 'past_due', 'unpaid'];
   const hasEntitledSubscription =
     billing != null &&

@@ -51,9 +51,9 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     plan: workspace?.plan ?? 'free',
   };
 
-  // The plan a newly created workspace would inherit. Paid workspaces (incl.
-  // any legacy enterprise) are "Scale".
-  const inheritPlanLabel = 'Scale';
+  // The plan a newly created workspace would inherit. Derived from the plan
+  // catalogue so it cannot drift when a tier is renamed.
+  const inheritPlanLabel = planDisplayName('pro');
 
   async function switchWorkspace(id) {
     setWsMenuOpen(false);
