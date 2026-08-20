@@ -247,3 +247,17 @@ Deno.test("HTML that converts to nothing does not mask the original", () => {
   // it must not be mistaken for a successful conversion of real content.
   assertEquals(preferredBodyText("", '<img src="p.gif">'), "", "stays empty, not null");
 });
+
+Deno.test("a table-built body does not arrive as runs of blank lines", () => {
+  // Every layout cell contributes its own line break. Real mail measured about
+  // half its body as "\r\n \r\n" runs carrying nothing.
+  const html = "<table><tr><td>Ticket 42</td></tr>\r\n<tr><td>  </td></tr>\r\n" +
+    "<tr><td>  </td></tr>\r\n<tr><td>Submitted</td></tr></table>";
+  const out = stripHtmlToText(html);
+  assert(!/\n\s*\n\s*\n/.test(out), `blank-line run survived: ${JSON.stringify(out)}`);
+  assert(out.includes("Ticket 42") && out.includes("Submitted"), `content lost: ${out}`);
+});
+
+Deno.test("CRLF is normalised so line rules can see boundaries", () => {
+  assertEquals(stripHtmlToText("<p>a</p>\r\n\r\n\r\n<p>b</p>").includes("\r"), false, "no CR survives");
+});
