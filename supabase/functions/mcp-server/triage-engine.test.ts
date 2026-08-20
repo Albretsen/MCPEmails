@@ -23,6 +23,14 @@
 
 // deno-lint-ignore-file no-explicit-any
 
+import { parsePermanentFlags } from "./imap-client.ts";
+import {
+  labelTargetFor,
+  MAX_IMAP_KEYWORD_CHARS,
+  mergeOutlookCategories,
+  normalizeImapKeyword,
+  permanentFlagsAllowKeyword,
+} from "./label-target.ts";
 import {
   checkTriageAuthority,
   handleTriageDispatch,
@@ -870,27 +878,321 @@ Deno.test("automation create refuses an action the calling key lacks the scope f
   assertEquals(log.inserts.length, 0, "nothing is written");
 });
 
-Deno.test("a label rule is refused on a non-Gmail inbox at write time", async () => {
+// ---------------------------------------------------------------------------
+// label on every provider
+//
+// `label` shipped Gmail-only. It is not: Outlook calls it a category and IMAP
+// calls it a keyword, and IMAP is 110 of the 163 connected inboxes, so the
+// Gmail-only version was wrong for the majority case. What survives from the
+// old restriction is a NAME check, and only on IMAP, where a keyword is an atom.
+// ---------------------------------------------------------------------------
+
+/** A create-a-label-rule call against one provider. */
+async function createLabelRule(
+  provider: string,
+  label: string,
+): Promise<{ result: any; log: FakeDbLog }> {
   const log: FakeDbLog = { inserts: [], updates: [], rows: {} };
   const previewed = { calls: [] as any[] };
   const deps = automationDeps(log, previewed);
   deps.resolveInbox = () =>
     Promise.resolve({
       ok: true,
-      inbox: { id: "inbox-1", workspace_id: "ws-1", email_address: "a@b.com", provider: "imap" },
+      inbox: { id: "inbox-1", workspace_id: "ws-1", email_address: "a@b.com", provider },
     });
   const { runAutomationTool } = await import("./triage-engine.ts");
-
   const result = await runAutomationTool("create", {
     inbox_id: "inbox-1",
     name: "Tag receipts",
     filter: { subject: "receipt" },
-    rule_action: { type: "label", label: "Receipts" },
+    rule_action: { type: "label", label },
     interval_minutes: 60,
   }, deps);
+  return { result, log };
+}
 
-  assert(result.result.isError === true, "a rule that could never work is refused when it is written");
-  assertEquals(log.inserts.length, 0, "rather than discovered in a run log later");
+Deno.test("a label rule now validates on Gmail, Outlook and IMAP alike", async () => {
+  for (const provider of ["gmail", "outlook", "imap"]) {
+    const { result, log } = await createLabelRule(provider, "Receipts");
+    assertEquals(result.logStatus, "success", `a label rule is accepted on ${provider}`);
+    assertEquals(log.inserts.length, 1, `and is stored on ${provider}`);
+    assertEquals(
+      log.inserts[0].row.action,
+      { type: "label", label: "Receipts" },
+      "the label is stored VERBATIM, so the rule reads back as it was written",
+    );
+  }
+});
+
+Deno.test("an IMAP label that cannot be a legal keyword is refused when it is written", async () => {
+  // An IMAP keyword is an atom, so these characters cannot appear in one.
+  // Silently stripping them would leave the mailbox holding a keyword the
+  // dashboard never shows, so the rule is refused instead.
+  for (const label of ["Sale (50%)", "Work [urgent]", 'Say "hi"', "back\\slash", "{braced}"]) {
+    const { result, log } = await createLabelRule("imap", label);
+    assert(result.result.isError === true, `"${label}" is refused on IMAP`);
+    assertEquals(log.inserts.length, 0, `and no rule row is written for "${label}"`);
+    const text = (result.result.content[0] as any).text as string;
+    assert(
+      text.includes("IMAP keyword"),
+      "the refusal names the IMAP keyword, so the user knows what the constraint is",
+    );
+    assert(text.includes("move action"), "and points at the action that has no such limit");
+  }
+});
+
+Deno.test("an IMAP label may not begin with a backslash", async () => {
+  // That namespace belongs to system flags (\Seen, \Flagged). A rule that set
+  // one would be a rule that could mark mail read under another name.
+  const { result, log } = await createLabelRule("imap", "\\Seen");
+  assert(result.result.isError === true, "a system-flag-shaped keyword is refused");
+  assertEquals(log.inserts.length, 0, "and nothing is written");
+  const text = (result.result.content[0] as any).text as string;
+  assert(text.includes("system flags"), "the refusal says why that namespace is off limits");
+});
+
+Deno.test("spaces in an IMAP label become underscores, and the caller is told so", async () => {
+  const { result, log } = await createLabelRule("imap", "Order updates");
+  assertEquals(result.logStatus, "success", "a multi-word label is accepted");
+  assertEquals(
+    log.inserts[0].row.action.label,
+    "Order updates",
+    "the rule stores what the user typed",
+  );
+  const payload = result.result.structuredContent as any;
+  assert(
+    String(payload.message).includes("Order_updates"),
+    "but the caller is told the KEYWORD the mailbox will actually carry",
+  );
+  assert(
+    String(payload.label_applied_as).includes("IMAP keyword"),
+    "and the noun is named, because IMAP does not have labels",
+  );
+});
+
+Deno.test("an Outlook label rule says it will be applied as a category", async () => {
+  const { result } = await createLabelRule("outlook", "Receipts");
+  const payload = result.result.structuredContent as any;
+  assert(
+    String(payload.label_applied_as).includes("Outlook category"),
+    "Outlook calls it a category, and the copy should not pretend otherwise",
+  );
+});
+
+Deno.test("a Gmail label rule carries no rename note, because nothing is renamed", async () => {
+  const { result } = await createLabelRule("gmail", "Order updates");
+  const payload = result.result.structuredContent as any;
+  assert(
+    payload.label_applied_as === undefined,
+    "a note that says nothing new is noise",
+  );
+});
+
+Deno.test("the IMAP keyword rules are exactly what the seam will send", () => {
+  const ok = normalizeImapKeyword("  Order   updates  ");
+  assert(ok.ok === true, "a multi-word label normalises");
+  if (ok.ok) {
+    assertEquals(ok.target.applied_as, "Order_updates", "runs of whitespace collapse to one underscore");
+    assertEquals(ok.target.transformed, true, "and the transformation is reported, never silent");
+    assertEquals(ok.target.kind, "keyword", "IMAP calls it a keyword");
+  }
+  const untouched = normalizeImapKeyword("Receipts");
+  assert(untouched.ok === true && untouched.target.transformed === false, "a legal keyword is left alone");
+  assert(normalizeImapKeyword("").ok === false, "an empty label is refused");
+  assert(normalizeImapKeyword("kvittering-2026_q3").ok === true, "hyphens, digits and underscores are legal");
+  assert(normalizeImapKeyword("\u53d7\u636e").ok === false, "non-ASCII cannot be an IMAP atom, so it is refused rather than mangled");
+  assert(normalizeImapKeyword("x".repeat(MAX_IMAP_KEYWORD_CHARS + 1)).ok === false, "over-long keywords are refused");
+  assert(normalizeImapKeyword("x".repeat(MAX_IMAP_KEYWORD_CHARS)).ok === true, "and the ceiling itself is allowed");
+});
+
+Deno.test("labelTargetFor names the right thing per provider", () => {
+  const gmail = labelTargetFor("gmail", "Order updates");
+  assert(gmail.ok === true && gmail.target.kind === "label", "Gmail has labels");
+  assert(gmail.ok === true && gmail.target.applied_as === "Order updates", "and no naming constraint");
+  const outlook = labelTargetFor("outlook", "Order updates");
+  assert(outlook.ok === true && outlook.target.kind === "category", "Outlook has categories");
+  assert(outlook.ok === true && outlook.target.applied_as === "Order updates", "and no naming constraint");
+  const imap = labelTargetFor("imap", "Order updates");
+  assert(imap.ok === true && imap.target.kind === "keyword", "IMAP has keywords");
+  // A service we have never heard of is IMAP-shaped, not waved through: every
+  // IMAP service is stored as provider="imap", so an unknown value is a bug or
+  // a new IMAP service, and both want the stricter answer.
+  const unknown = labelTargetFor("some-new-imap-service", "Order updates");
+  assert(unknown.ok === true && unknown.target.kind === "keyword", "an unknown provider is treated as IMAP");
+});
+
+// ---------------------------------------------------------------------------
+// The Outlook merge
+//
+// THE DATA-LOSS CASE. Graph's `categories` is a REPLACE: a PATCH carrying one
+// category makes it the message's ONLY category. A rule that labelled 200
+// messages without reading first would strip every category the user had put on
+// them, unrecoverably and unattended, which is the worst thing this feature
+// could do.
+// ---------------------------------------------------------------------------
+
+Deno.test("the Outlook merge preserves the categories a message already has", () => {
+  const merged = mergeOutlookCategories(["Personal", "Tax"], "Receipts");
+  assertEquals(
+    merged.categories,
+    ["Personal", "Tax", "Receipts"],
+    "the PATCH body carries the EXISTING categories plus the new one, never the new one alone",
+  );
+  assertEquals(merged.changed, true, "and the write is worth making");
+});
+
+Deno.test("the Outlook merge skips the write when the category is already there", () => {
+  const merged = mergeOutlookCategories(["Personal", "Receipts"], "Receipts");
+  assertEquals(merged.changed, false, "nothing to add means no PATCH at all");
+  assertEquals(merged.categories, ["Personal", "Receipts"], "and nothing is reordered or dropped");
+});
+
+Deno.test("the Outlook merge matches case-insensitively and keeps the existing casing", () => {
+  // Outlook's own category list is case-insensitive, so "receipts" and
+  // "Receipts" are one category. Rewriting the casing would be a silent edit of
+  // something the user named.
+  const merged = mergeOutlookCategories(["receipts"], "Receipts");
+  assertEquals(merged.changed, false, "the category is recognised as already present");
+  assertEquals(merged.categories, ["receipts"], "with the user's casing untouched");
+});
+
+Deno.test("the Outlook merge on a message with no categories yet writes just the one", () => {
+  assertEquals(mergeOutlookCategories([], "Receipts").categories, ["Receipts"], "the empty case still works");
+});
+
+Deno.test("an Outlook label run sends a PATCH that keeps the pre-existing categories", async () => {
+  // The engine-level half of the same property: `applyAction` here stands in for
+  // index.ts's `applyLabelToMessage` and records the body it would have PATCHed,
+  // so the assertion is on WHAT REACHES THE PROVIDER, not on the merge alone.
+  const state = freshState({
+    inbox: { id: "inbox-1", workspace_id: "ws-1", email_address: "a@b.com", provider: "outlook" },
+  });
+  const patches: any[] = [];
+  const mailbox = new Map<string, string[]>([
+    ["msg-a", ["Personal", "Tax"]],
+    ["msg-b", ["Receipts"]],
+  ]);
+  const deps: TriageDeps = {
+    ...fakeDeps(state, [fakeMatch("msg-a"), fakeMatch("msg-b")], { calls: [] }),
+    applyAction: (input) => {
+      const label = (input.action as any).label as string;
+      const merged = mergeOutlookCategories(mailbox.get(input.match.id) ?? [], label);
+      if (merged.changed) patches.push({ id: input.match.id, categories: merged.categories });
+      return Promise.resolve({
+        ok: true,
+        detail: {
+          label,
+          applied_as: label,
+          target: "category",
+          ...(merged.changed ? {} : { already_present: true }),
+        },
+        undo: merged.changed ? { op: "label", message_id: input.match.id } : null,
+      });
+    },
+  };
+
+  const summary = await runTriageRule(deps, fakeRule({ action: { type: "label", label: "Receipts" } }));
+
+  assertEquals(summary.succeeded, 2, "both messages are handled");
+  assertEquals(patches.length, 1, "only the message that was missing the category is written to");
+  assertEquals(
+    patches[0].categories,
+    ["Personal", "Tax", "Receipts"],
+    "and that write CARRIES THE USER'S EXISTING CATEGORIES: dropping them would be silent data loss",
+  );
+  const items = state.runItems.filter((i) => i.outcome === "applied");
+  assertEquals(items[0].detail.target, "category", "the run log names what the provider actually calls it");
+  assertEquals(items[1].detail.already_present, true, "and says when the message already carried it");
+  assertEquals(items[1].undo_state, null, "with no undo, because nothing was done to reverse");
+});
+
+Deno.test("a run log records the name the mailbox actually carries, not the one typed", async () => {
+  const state = freshState({
+    inbox: { id: "inbox-1", workspace_id: "ws-1", email_address: "a@b.com", provider: "imap" },
+  });
+  const deps: TriageDeps = {
+    ...fakeDeps(state, [fakeMatch("msg-a")], { calls: [] }),
+    applyAction: (input) => {
+      const label = (input.action as any).label as string;
+      const target = labelTargetFor("imap", label);
+      const appliedAs = target.ok ? target.target.applied_as : label;
+      return Promise.resolve({
+        ok: true,
+        detail: { label, applied_as: appliedAs, target: "keyword" },
+        undo: { op: "label", message_id: input.match.id, applied_as: appliedAs },
+      });
+    },
+  };
+
+  await runTriageRule(deps, fakeRule({ action: { type: "label", label: "Order updates" } }));
+
+  const item = state.runItems[0];
+  assertEquals(item.detail.label, "Order updates", "what was asked for");
+  assertEquals(item.detail.applied_as, "Order_updates", "and what the mailbox actually holds");
+  assertEquals(item.detail.target, "keyword", "under the name IMAP uses for it");
+});
+
+Deno.test("a run that cannot apply a keyword fails loudly rather than reporting success", async () => {
+  // The silent-failure case the PERMANENTFLAGS check exists to prevent: a server
+  // that does not keep custom keywords must produce a failed run item, not an
+  // applied one over a mailbox where nothing changed.
+  const state = freshState({
+    inbox: { id: "inbox-1", workspace_id: "ws-1", email_address: "a@b.com", provider: "imap" },
+  });
+  const deps: TriageDeps = {
+    ...fakeDeps(state, [fakeMatch("msg-a")], { calls: [] }),
+    applyAction: () => Promise.resolve({ ok: false, error_code: "imap_keywords_unsupported" }),
+  };
+
+  const summary = await runTriageRule(deps, fakeRule({ action: { type: "label", label: "Receipts" } }));
+
+  assertEquals(summary.failed, 1, "the message counts as failed");
+  assertEquals(summary.succeeded, 0, "and never as applied");
+  assertEquals(state.runItems[0].outcome, "failed", "the run log says so");
+  assertEquals(
+    state.runItems[0].detail.error_code,
+    "imap_keywords_unsupported",
+    "with a code that names the cause instead of a generic provider error",
+  );
+});
+
+Deno.test("PERMANENTFLAGS decides whether a server takes custom keywords", () => {
+  assertEquals(
+    permanentFlagsAllowKeyword(["\\Seen", "\\Deleted", "\\*"], "Receipts"),
+    true,
+    "\\* is the server saying a client may invent keywords",
+  );
+  assertEquals(
+    permanentFlagsAllowKeyword(["\\Seen", "\\Deleted"], "Receipts"),
+    false,
+    "a fixed list without \\* means this keyword will not stick",
+  );
+  assertEquals(
+    permanentFlagsAllowKeyword(["\\Seen", "Receipts"], "receipts"),
+    true,
+    "a pre-provisioned keyword counts, case-insensitively",
+  );
+  assertEquals(
+    permanentFlagsAllowKeyword(null, "Receipts"),
+    null,
+    "no PERMANENTFLAGS at all is an absence of information, not a refusal",
+  );
+});
+
+Deno.test("PERMANENTFLAGS is parsed out of the SELECT response", () => {
+  assertEquals(
+    parsePermanentFlags([
+      "* 231 EXISTS",
+      "* OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \\*)] Limited",
+    ]),
+    ["\\Answered", "\\Flagged", "\\Deleted", "\\Seen", "\\Draft", "\\*"],
+    "the untagged OK response code is where custom-keyword support is announced",
+  );
+  assertEquals(
+    parsePermanentFlags(["* 231 EXISTS", "* OK [UIDVALIDITY 1] UIDs valid"]),
+    null,
+    "a SELECT that never mentions PERMANENTFLAGS yields null, not an empty list",
+  );
 });
 
 Deno.test("a move whose destination is trash or junk is refused", () => {

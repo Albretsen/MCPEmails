@@ -306,7 +306,7 @@
     },
     "automation": {
       "title": "自动化",
-      "desc": "创建并管理无人值守的定时分拣规则。一条规则就是一个已保存的搜索加上一个固定动作，按固定周期重新求值，回路中没有任何模型：邮件只被匹配，绝不被解读。设置 action：'create'（name、filter、rule_action 与 interval_minutes；规则创建时始终处于停用状态）、'list'、'get'、'update'、'enable'、'disable'、'delete'（运行历史会保留）、'runs'（近期运行的计数）或 'preview'（试运行，报告过滤条件此刻匹配到什么，且不执行任何操作）。可用的规则动作为 move、label（仅 Gmail）、mark_read、forward 和 draft_reply。删除邮件不向自动化开放。无论邮箱的审批设置如何，转发始终会被扣留等待人工批准，而 draft_reply 只会写入草稿。启用前请先预览。每个操作都需要 manage:automations。",
+      "desc": "创建并管理无人值守的定时分拣规则。一条规则就是一个已保存的搜索加上一个固定动作，按固定周期重新求值，回路中没有任何模型：邮件只被匹配，绝不被解读。设置 action：'create'（name、filter、rule_action 与 interval_minutes；规则创建时始终处于停用状态）、'list'、'get'、'update'、'enable'、'disable'、'delete'（运行历史会保留）、'runs'（近期运行的计数）或 'preview'（试运行，报告过滤条件此刻匹配到什么，且不执行任何操作）。可用的规则动作为 move、label（Gmail 标签、Outlook 类别或 IMAP 关键字）、mark_read、forward 和 draft_reply。删除邮件不向自动化开放。无论邮箱的审批设置如何，转发始终会被扣留等待人工批准，而 draft_reply 只会写入草稿。启用前请先预览。每个操作都需要 manage:automations。",
       "params": {
         "action": "要执行的操作：「create」、「list」、「get」、「update」、「enable」、「disable」、「delete」、「runs」或「preview」。它决定其余参数中哪些会生效。",
         "automation_id": "目标规则的 UUID，由 'create' 或 'list' 返回。get、update、enable、disable、delete 和 runs 必填。preview 可选：传入它即可对已保存的规则试运行，而不是使用临时过滤条件。",
@@ -314,7 +314,7 @@
         "inbox": "邮箱的电子邮件地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "name": "规则的可读名称，1 至 80 个字符。'create' 时必填。",
         "filter": "已保存的搜索，使用与 email_read 的 'search' 操作相同的结构化条件：from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before。至少需要一个条件，因为空过滤条件会匹配你的整个邮箱。此处不接受提供商原生的原始查询字符串：一条规则会在无人值守的情况下连续运行数月，而原始字符串是一种无人校验的方言。",
-        "rule_action": "对每个匹配项施加的那一个固定动作，形式为带类型标签的对象，type 可为 move（另加 folder）、label（另加 label，仅 Gmail）、mark_read、forward（另加 to 以及可选的 note）或 draft_reply（另加 template）。它之所以叫 rule_action，是因为 action 已用于选择操作。不存在任何删除类动作，提出这种请求会被拒绝而非被忽略。转发始终扣留等待批准，draft_reply 只写入草稿。模板只会替换 '{{sender_name}}'、'{{sender_email}}'、'{{subject}}' 和 '{{date}}'，且全部经过 HTML 转义；其余内容一律为字面文本，邮件正文绝不会被插入模板。",
+        "rule_action": "对每个匹配项施加的那一个固定动作，形式为带类型标签的对象，type 可为 move（另加 folder）、label（另加 label；写入为 Gmail 标签、Outlook 类别或 IMAP 关键字）、mark_read、forward（另加 to 以及可选的 note）或 draft_reply（另加 template）。它之所以叫 rule_action，是因为 action 已用于选择操作。不存在任何删除类动作，提出这种请求会被拒绝而非被忽略。转发始终扣留等待批准，draft_reply 只写入草稿。模板只会替换 '{{sender_name}}'、'{{sender_email}}'、'{{subject}}' 和 '{{date}}'，且全部经过 HTML 转义；其余内容一律为字面文本，邮件正文绝不会被插入模板。",
         "interval_minutes": "两次运行之间的分钟数，取自固定档位 15、30、60、180、360、720 或 1440。'create' 时必填。使用档位而非自由整数，是为了让一分钟一次的规则无法把提供商打到触发限流。",
         "max_messages_per_run": "单次运行最多可处理的匹配邮件数：1 至 200，默认 25。这就是影响半径，限定一个写错的过滤条件在有人查看运行日志之前最多能触及多少邮件。",
         "limit": "用于操作 'runs'：返回多少次运行记录，最新的在前。默认 20，最大 100。"

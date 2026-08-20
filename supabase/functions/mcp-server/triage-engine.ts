@@ -47,6 +47,10 @@
 
 import { neutralizeMaybe, neutralizeText } from "./text-safety.ts";
 import type { NormalizedSearch } from "./search-translate.ts";
+// Pure naming rules, no provider code: what a label is called on each provider
+// and which of those names are legal. See the note on `applyAction` above about
+// why the runner owns no provider code of its own.
+import { labelTargetFor } from "./label-target.ts";
 
 // ---------------------------------------------------------------------------
 // Budgets and constants
@@ -1256,9 +1260,11 @@ const AUTOMATION_PUBLIC_COLUMNS =
  * Validates the create/update body as a whole.
  *
  * Deliberately validates the ACTION against the inbox's provider too: a label
- * action on an IMAP inbox is not a runtime failure to discover five minutes
+ * an IMAP server cannot hold is not a runtime failure to discover five minutes
  * later in a run log, it is a rule that can never work, and the moment to say so
- * is when it is being written.
+ * is when it is being written. The label ACTION itself works on every provider
+ * (Gmail label, Outlook category, IMAP keyword); only the NAME is constrained,
+ * and only on IMAP, where a keyword is an atom.
  */
 export function validateAutomationBody(
   args: Record<string, unknown>,
@@ -1286,11 +1292,9 @@ export function validateAutomationBody(
   if (args["action"] !== undefined || !partial) {
     const check = validateTriageAction(args["action"]);
     if (!check.ok) return fail(check.error);
-    if (check.value.type === "label" && inboxProvider && inboxProvider !== "gmail") {
-      return fail(
-        "action.type 'label' is only available on Gmail inboxes. Labels are a Gmail " +
-          "concept; on this inbox use action.type 'move' with a folder instead.",
-      );
+    if (check.value.type === "label") {
+      const target = labelTargetFor(inboxProvider, check.value.label);
+      if (!target.ok) return fail(target.error);
     }
     out.action = check.value;
   }
@@ -1305,6 +1309,24 @@ export function validateAutomationBody(
     out.max_messages_per_run = check.value;
   }
   return { ok: true, value: out };
+}
+
+/**
+ * A one-line note when the provider will store the label under a different name
+ * or a different noun from the one the caller typed.
+ *
+ * The rule stores the label VERBATIM, so it reads back as it was written, and
+ * the provider seam derives the applied name at run time. That is the right
+ * split, but it leaves the caller with no way to know that "Order updates"
+ * reaches an IMAP mailbox as the keyword "Order_updates". This closes that gap
+ * at the only moment it matters: when the rule is being written.
+ */
+function labelAppliedNote(action: TriageAction | undefined, provider: string | null): string | null {
+  if (!action || action.type !== "label") return null;
+  const target = labelTargetFor(provider, action.label);
+  if (!target.ok || target.target.kind === "label") return null;
+  const noun = target.target.kind === "category" ? "Outlook category" : "IMAP keyword";
+  return `On this inbox the label is applied as the ${noun} '${target.target.applied_as}'.`;
 }
 
 /** Loads one rule, scoped to the caller's workspace. Tenancy is never implicit. */
@@ -1399,12 +1421,15 @@ export async function runAutomationTool(
       if (error || !data) {
         return toolErr(`automation create: could not save the rule (${error?.code ?? "unknown"}).`, "db_error");
       }
+      const createNote = labelAppliedNote(body.value.action, resolved.inbox.provider);
       return toolOk({
         automation: data,
         enabled: false,
+        ...(createNote ? { label_applied_as: createNote } : {}),
         message:
           "Created and DISABLED. Nothing will run until you call automation with " +
-          "action 'enable'. Call action 'preview' first to see what the filter matches.",
+          "action 'enable'. Call action 'preview' first to see what the filter matches." +
+          (createNote ? ` ${createNote}` : ""),
       });
     }
 
@@ -1451,7 +1476,11 @@ export async function runAutomationTool(
         .select(AUTOMATION_PUBLIC_COLUMNS)
         .maybeSingle();
       if (error || !data) return toolErr("automation update: could not save the change.", "db_error");
-      return toolOk({ automation: data });
+      const updateNote = labelAppliedNote(body.value.action, provider);
+      return toolOk({
+        automation: data,
+        ...(updateNote ? { label_applied_as: updateNote, message: updateNote } : {}),
+      });
     }
 
     case "enable": {
