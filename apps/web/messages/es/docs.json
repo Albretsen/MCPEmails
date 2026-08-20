@@ -133,7 +133,7 @@
     },
     "email_read": {
       "title": "Leer correo",
-      "desc": "Lee, lista y busca mensajes en una bandeja. Define action: 'list' para resúmenes de mensajes recientes (más nuevos primero, con filtro por carpeta/no leídos y paginación), 'read' para el contenido completo de un message_id (cuerpo de texto, HTML saneado opcional y adjuntos), 'read_batch' para obtener hasta 50 message_ids en una sola llamada, 'search' para filtros estructurados e independientes del proveedor (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), o 'attachment' para descargar un único adjunto (por attachment_index o filename) como datos base64 — hasta 25 MB. Solo lectura — nunca cambia nada. La acción 'search' también se desbloquea por sí sola con el permiso más limitado search:email.",
+      "desc": "Lee, lista y busca mensajes en una bandeja. Define action: 'list' para resúmenes de mensajes recientes (más nuevos primero, con filtro por carpeta/no leídos y paginación), 'read' para el contenido completo de un message_id (cuerpo de texto, HTML saneado opcional y adjuntos), 'read_batch' para obtener hasta 50 message_ids en una sola llamada, 'search' para filtros estructurados e independientes del proveedor (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), o 'attachment' para descargar un único adjunto (por attachment_index o filename) como datos base64 — hasta 25 MB. Solo lectura — nunca cambia nada. La acción 'search' también se desbloquea por sí sola con el permiso más limitado search:email. Los cuerpos largos se devuelven por ventanas: revisa body_truncated y reenvía body_next_offset como body_offset para continuar.",
       "params": {
         "action": "Qué operación realizar: \"list\" (resúmenes de mensajes recientes), \"read\" (contenido completo de un message_id), \"read_batch\" (varios message_ids), \"search\" (filtros estructurados) o \"attachment\" (descargar un adjunto como base64). Determina qué otros argumentos se aplican.",
         "inbox_id": "UUID de la bandeja desde la que leer. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para descubrir los IDs de bandeja.",
@@ -147,6 +147,9 @@
         "limit": "Máximo de resultados a devolver (action 'list' o 'search'). Por defecto 20, máx. 100.",
         "offset": "Desplazamiento de paginación basado en cero (action 'list' o 'search'). Por defecto 0.",
         "include_html": "Incluir el cuerpo HTML saneado (action 'read'/'read_batch'). Por defecto false.",
+        "body_offset": "Desplazamiento de caracteres en el cuerpo de texto plano (acción 'read'/'read_batch'). Predeterminado 0. Reenvía el body_next_offset devuelto para continuar.",
+        "body_html_offset": "Como body_offset, para el cuerpo HTML saneado cuando include_html es true. Predeterminado 0.",
+        "body_max_chars": "Caracteres del cuerpo devueltos por mensaje. Predeterminado 8000 para 'read' y 2000 para 'read_batch'. Máximo 50000.",
         "include_attachments": "Incluir datos de adjuntos en base64 (action 'read'/'read_batch'). En 'read_batch' el total de 10 MB se comparte entre todos los mensajes de la llamada. Por defecto false.",
         "mark_as_read": "Marcar el mensaje (o mensajes) como leído tras obtenerlo (action 'read'/'read_batch'). Por defecto false.",
         "from": "Remitente a coincidir (action 'search'): dirección de correo, nombre visible o fragmento (p. ej. \"alice@example.com\" o \"Alice\").",
