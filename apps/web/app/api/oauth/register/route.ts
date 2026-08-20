@@ -42,6 +42,7 @@ const DYNAMIC_SCOPES = [
   'manage:drafts',
   'manage:contacts',
   'schedule:email',
+  'manage:automations',
 ];
 
 export async function OPTIONS(): Promise<Response> {

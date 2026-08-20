@@ -19,6 +19,7 @@ export const DASHBOARD_SECTIONS = [
   'usage',
   'workflows',
   'approvals',
+  'automations',
   'settings',
   'security',
 ];
