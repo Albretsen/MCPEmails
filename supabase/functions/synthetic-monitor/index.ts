@@ -63,11 +63,12 @@ async function callMcp(apiKey: string, id: number, method: string, params?: Reco
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch (error) {
-    // AbortSignal.timeout rejects with a TimeoutError whose message ("Signal
-    // timed out.") fails safeCode's charset and used to degrade to the generic
-    // `unexpected_response`, which then classified as `mcp_protocol` and paged
-    // on the first strike. Read `name` structurally: DOMException does not
-    // reliably sit on Error's prototype chain across runtimes.
+    // AbortSignal.timeout rejects with a TimeoutError whose message ("The
+    // operation was aborted due to timeout") fails safeCode's charset and used
+    // to degrade to the generic `unexpected_response`, which then classified as
+    // `mcp_protocol` and paged on the first strike. Read `name` structurally:
+    // DOMException does not reliably sit on Error's prototype chain across
+    // runtimes.
     const name = typeof error === "object" && error !== null && "name" in error ? String((error as { name: unknown }).name) : "";
     throw new Error(name === "TimeoutError" ? "request_timeout" : "endpoint_unreachable");
   }
