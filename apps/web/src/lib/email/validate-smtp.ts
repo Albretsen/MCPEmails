@@ -8,13 +8,20 @@ export type SmtpValidationResult =
   | { ok: true; phase: 'authentication' }
   | {
       ok: false;
-      code: 'AUTH_FAILED' | 'CONNECTION_REFUSED' | 'CONNECTION_TIMEOUT' | 'TLS_HANDSHAKE_FAILED' | 'SMTP_PROTOCOL_ERROR';
+      code:
+        | 'AUTH_FAILED'
+        | 'AUTH_MECHANISM_UNSUPPORTED'
+        | 'CONNECTION_REFUSED'
+        | 'CONNECTION_TIMEOUT'
+        | 'TLS_HANDSHAKE_FAILED'
+        | 'SMTP_PROTOCOL_ERROR';
       message: string;
       phase: ConnectionPhase;
       /**
        * Sanitized, bounded server rejection text, mirroring the IMAP validator.
-       * Present only for AUTH_FAILED, where the server actually answered.
-       * Never contains the credential, the address or the SASL token.
+       * Present only for AUTH_FAILED and AUTH_MECHANISM_UNSUPPORTED, where the
+       * server actually answered. Never contains the credential, the address or
+       * the SASL token.
        */
       detail?: string;
     };
@@ -26,6 +33,78 @@ export interface SmtpCredential {
   username?: string;
   password: string;
   security: MailSecurity;
+}
+
+export const SMTP_AUTH_FAILED_MESSAGE =
+  'The SMTP server rejected these credentials. Check the username and app password.';
+
+/**
+ * Distinct from AUTH_FAILED on purpose: the server refused the *mechanism*, so
+ * telling the user to re-check a password that is very probably correct sends
+ * them down the wrong path.
+ */
+export const SMTP_MECHANISM_UNSUPPORTED_MESSAGE =
+  'This SMTP server does not offer a password-based login method we support (it wants GSSAPI, NTLM or OAuth). ' +
+  'Ask the mail host to enable SMTP AUTH LOGIN on the mailbox.';
+
+/**
+ * A submission port that never answers is almost always the wrong port rather
+ * than a broken host: Microsoft Exchange (OVH Hosted Exchange, Microsoft 365)
+ * serves STARTTLS on 587 and does not listen on 465 at all, so an implicit-TLS
+ * attempt there hangs until it times out.
+ */
+export const SMTP_TIMEOUT_MESSAGE =
+  'The SMTP connection timed out. If this is port 465, try port 587 with STARTTLS instead. ' +
+  'Some hosts, Microsoft Exchange among them, do not offer implicit TLS on 465.';
+
+/**
+ * SASL mechanisms this client can perform. Both carry the password over the
+ * connection, so both are attempted only once the session is under TLS.
+ */
+type SaslMechanism = 'PLAIN' | 'LOGIN';
+
+/**
+ * Mechanisms named on the EHLO `AUTH` line, upper-cased.
+ *
+ * Two syntaxes are in the wild and some servers emit both: the RFC 4954
+ * `250-AUTH LOGIN PLAIN` and the pre-standard `250-AUTH=LOGIN PLAIN` that
+ * old Outlook builds required (OVH's MX Plan hosts still send the pair).
+ */
+function advertisedMechanisms(lines: readonly string[]): Set<string> {
+  const mechanisms = new Set<string>();
+  for (const line of lines) {
+    const match = /^250[ -]AUTH[ =](.*)$/i.exec(line);
+    if (!match) continue;
+    for (const mechanism of match[1].trim().split(/\s+/)) {
+      if (mechanism) mechanisms.add(mechanism.toUpperCase());
+    }
+  }
+  return mechanisms;
+}
+
+/**
+ * PLAIN first when a server offers both: it authenticates in one round trip,
+ * which keeps every provider that works today on exactly the exchange it works
+ * with now. A server that advertises no AUTH line at all still gets both tried,
+ * since the capability list is advisory and some hosts omit it.
+ */
+function mechanismOrder(advertised: Set<string>): SaslMechanism[] {
+  const usable = (['PLAIN', 'LOGIN'] as const).filter((mechanism) => advertised.has(mechanism));
+  return usable.length > 0 ? [...usable] : ['PLAIN', 'LOGIN'];
+}
+
+/**
+ * True when the reply refused the mechanism rather than the credential.
+ *
+ * 504 5.7.4 "Unrecognized authentication type" is what Microsoft Exchange
+ * answers to AUTH PLAIN, which advertises only GSSAPI/NTLM/LOGIN. 534 and the
+ * 5.5.1/5.7.4 enhanced codes are the same refusal from other servers. A wrong
+ * password is 535, which is deliberately excluded here so a real credential
+ * failure stops the loop instead of burning the next mechanism on it.
+ */
+function isMechanismRejection(reply: { code: number; lines: readonly string[] }): boolean {
+  if (reply.code === 504 || reply.code === 534) return true;
+  return reply.code === 535 && /\b5\.7\.4\b/.test(reply.lines.join(' '));
 }
 
 function readReply(socket: net.Socket): Promise<{ code: number; lines: string[] }> {
@@ -49,6 +128,35 @@ function readReply(socket: net.Socket): Promise<{ code: number; lines: string[] 
     const onClose = () => { cleanup(); reject(new Error('SMTP socket closed before a complete reply.')); };
     socket.on('data', onData); socket.on('error', onError); socket.on('close', onClose);
   });
+}
+
+/** SASL PLAIN in one command: base64("\0" + user + "\0" + pass). */
+async function authPlain(socket: net.Socket, username: string, password: string) {
+  const token = Buffer.from(`\x00${username}\x00${password}`, 'utf8').toString('base64');
+  socket.write(`AUTH PLAIN ${token}\r\n`);
+  return { ...(await readReply(socket)), secrets: [token] };
+}
+
+/**
+ * SASL LOGIN: a three-step challenge (`AUTH LOGIN` → base64 user → base64 pass).
+ * The username is sent as its own line rather than as an initial response,
+ * because the initial-response form is the part Exchange is inconsistent about.
+ */
+async function authLogin(socket: net.Socket, username: string, password: string) {
+  const encodedUser = Buffer.from(username, 'utf8').toString('base64');
+  const encodedPassword = Buffer.from(password, 'utf8').toString('base64');
+  const secrets = [encodedUser, encodedPassword];
+
+  socket.write('AUTH LOGIN\r\n');
+  const challenge = await readReply(socket);
+  if (challenge.code !== 334) return { ...challenge, secrets };
+
+  socket.write(`${encodedUser}\r\n`);
+  const passwordPrompt = await readReply(socket);
+  if (passwordPrompt.code !== 334) return { ...passwordPrompt, secrets };
+
+  socket.write(`${encodedPassword}\r\n`);
+  return { ...(await readReply(socket)), secrets };
 }
 
 function tcp(host: string, port: number, setSocket: (s: net.Socket) => void): Promise<net.Socket> {
@@ -76,7 +184,7 @@ export async function validateSmtpCredential(cred: SmtpCredential): Promise<Smtp
   let phase: ConnectionPhase = 'tcp';
   let timer: NodeJS.Timeout | undefined;
   const timeout = new Promise<SmtpValidationResult>((resolve) => {
-    timer = setTimeout(() => { active?.destroy(); resolve({ ok: false, code: 'CONNECTION_TIMEOUT', message: 'The SMTP connection timed out.', phase }); }, SMTP_VALIDATION_TIMEOUT_MS);
+    timer = setTimeout(() => { active?.destroy(); resolve({ ok: false, code: 'CONNECTION_TIMEOUT', message: SMTP_TIMEOUT_MESSAGE, phase }); }, SMTP_VALIDATION_TIMEOUT_MS);
   });
   const attempt = (async (): Promise<SmtpValidationResult> => {
     try {
@@ -88,37 +196,61 @@ export async function validateSmtpCredential(cred: SmtpCredential): Promise<Smtp
       socket.write('EHLO mcpemails.com\r\n');
       const capabilities = await readReply(socket);
       if (capabilities.code !== 250) return { ok: false, code: 'SMTP_PROTOCOL_ERROR', message: 'The SMTP server rejected the connection greeting.', phase };
+      // The capability list that decides the mechanism must be the one read
+      // under TLS: servers routinely withhold password mechanisms until the
+      // session is encrypted (Exchange adds LOGIN only after STARTTLS).
+      let authCapabilities = capabilities.lines;
       if (cred.security === 'starttls') {
         if (!capabilities.lines.some((line) => /^250[ -]STARTTLS\b/i.test(line))) return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: 'This SMTP server does not advertise STARTTLS on the selected port.', phase: 'tls' };
         socket.write('STARTTLS\r\n'); phase = 'tls';
         if ((await readReply(socket)).code !== 220) return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: 'The SMTP server refused STARTTLS.', phase };
         socket = await upgrade(cred.host, socket, (s) => { active = s; });
         socket.write('EHLO mcpemails.com\r\n');
-        if ((await readReply(socket)).code !== 250) return { ok: false, code: 'SMTP_PROTOCOL_ERROR', message: 'The SMTP server rejected the secure connection greeting.', phase: 'greeting' };
+        const secureCapabilities = await readReply(socket);
+        if (secureCapabilities.code !== 250) return { ok: false, code: 'SMTP_PROTOCOL_ERROR', message: 'The SMTP server rejected the secure connection greeting.', phase: 'greeting' };
+        authCapabilities = secureCapabilities.lines;
       }
       phase = 'authentication';
-      const token = Buffer.from(`\x00${cred.username || cred.email}\x00${cred.password}`, 'utf8').toString('base64');
-      socket.write(`AUTH PLAIN ${token}\r\n`);
-      const auth = await readReply(socket);
-      if (auth.code < 200 || auth.code >= 300) {
-        return {
-          ok: false,
-          code: 'AUTH_FAILED',
-          message: 'The SMTP server rejected these credentials. Check the username and app password.',
-          phase,
-          // The SASL token must be in the secrets list: it is base64 of
-          // "\0user\0password", so a server echoing the rejected AUTH command
-          // would otherwise persist the credential in reversible form.
-          detail: sanitizeAuthDiagnostic(String(auth.code), auth.lines.join(' '), [
-            token,
-            cred.username || cred.email,
-            cred.email,
-            cred.password,
-          ]),
-        };
+      const username = cred.username || cred.email;
+
+      // Try each mechanism the server will actually take. A 504 costs one round
+      // trip and leaves the session usable, so falling back in place is cheaper
+      // than reconnecting and is what every mainstream mail client does.
+      let last: { code: number; lines: string[]; secrets: string[] } | null = null;
+      for (const mechanism of mechanismOrder(advertisedMechanisms(authCapabilities))) {
+        const reply = mechanism === 'PLAIN'
+          ? await authPlain(socket, username, cred.password)
+          : await authLogin(socket, username, cred.password);
+        if (reply.code >= 200 && reply.code < 300) {
+          socket.write('QUIT\r\n');
+          return { ok: true, phase: 'authentication' };
+        }
+        last = reply;
+        // Only a refused mechanism is worth retrying differently. A rejected
+        // password (535 without 5.7.4) is final: retrying would just spend a
+        // second failed login against the provider's lockout counter.
+        if (!isMechanismRejection(reply)) break;
       }
-      socket.write('QUIT\r\n');
-      return { ok: true, phase: 'authentication' };
+
+      const mechanismRefused = last !== null && isMechanismRejection(last);
+      return {
+        ok: false,
+        code: mechanismRefused ? 'AUTH_MECHANISM_UNSUPPORTED' : 'AUTH_FAILED',
+        message: mechanismRefused ? SMTP_MECHANISM_UNSUPPORTED_MESSAGE : SMTP_AUTH_FAILED_MESSAGE,
+        phase,
+        // The SASL tokens must be in the secrets list: PLAIN's is base64 of
+        // "\0user\0password" and LOGIN's second line is base64 of the password
+        // on its own, so a server echoing the rejected AUTH exchange would
+        // otherwise persist the credential in reversible form.
+        detail: last
+          ? sanitizeAuthDiagnostic(String(last.code), last.lines.join(' '), [
+              ...last.secrets,
+              username,
+              cred.email,
+              cred.password,
+            ])
+          : undefined,
+      };
     } catch (caught) {
       const error = caught as NodeJS.ErrnoException;
       if (error.code === 'ECONNREFUSED') return { ok: false, code: 'CONNECTION_REFUSED', message: 'Could not connect to the SMTP server.', phase };

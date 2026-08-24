@@ -3,10 +3,15 @@
  *
  * Sends mail for IMAP inboxes (iCloud, Yahoo, Zoho, Yandex, generic) that have
  * no send API. Supports both implicit TLS (port 465) and STARTTLS (port 587),
- * with SASL PLAIN auth using the stored app password.
+ * authenticating with whichever password mechanism the server advertises
+ * (SASL PLAIN or SASL LOGIN), using the stored app password.
  *
- * Delivery flow: greeting → EHLO → [STARTTLS → EHLO] → AUTH PLAIN → MAIL FROM →
+ * Delivery flow: greeting → EHLO → [STARTTLS → EHLO] → AUTH → MAIL FROM →
  * RCPT TO (each recipient) → DATA → message → QUIT.
+ *
+ * Microsoft Exchange (OVH Hosted Exchange, Microsoft 365) advertises only
+ * GSSAPI/NTLM/LOGIN and answers AUTH PLAIN with "504 5.7.4 Unrecognized
+ * authentication type", so PLAIN alone cannot send through those hosts.
  *
  * Auth failures throw SmtpAuthError so callers can surface a reconnect prompt.
  */
@@ -53,21 +58,33 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
   const session = new SmtpSession(conn);
   try {
     await session.expect(220);
-    await session.ehlo(EHLO_DOMAIN);
+    let capabilities = await session.ehlo(EHLO_DOMAIN);
 
     if (cfg.security === "starttls") {
       await session.command("STARTTLS", 220);
       // In this branch `conn` is the plain TCP connection from Deno.connect.
       conn = await Deno.startTls(conn as Deno.TcpConn, { hostname: cfg.host });
       session.upgrade(conn);
-      await session.ehlo(EHLO_DOMAIN);
+      // Re-read capabilities under TLS: servers withhold password mechanisms
+      // until the session is encrypted (Exchange only adds LOGIN after STARTTLS).
+      capabilities = await session.ehlo(EHLO_DOMAIN);
     }
 
-    // SASL PLAIN: base64("\0" + user + "\0" + pass).
-    const token = btoa(`\x00${cfg.email}\x00${cfg.password}`);
-    const auth = await session.commandRaw(`AUTH PLAIN ${token}`);
-    if (auth.code !== 235) {
-      throw new SmtpAuthError(`SMTP authentication failed: ${auth.code} ${auth.text}`);
+    // A refused mechanism costs one round trip and leaves the session usable,
+    // so fall back in place rather than reconnecting.
+    let auth: SmtpReply | null = null;
+    for (const mechanism of mechanismOrder(advertisedMechanisms(capabilities.lines))) {
+      auth = mechanism === "PLAIN"
+        ? await session.authPlain(cfg.email, cfg.password)
+        : await session.authLogin(cfg.email, cfg.password);
+      if (auth.code === 235) break;
+      if (!isMechanismRejection(auth)) break;
+    }
+    if (!auth || auth.code !== 235) {
+      const reason = auth
+        ? `${auth.code} ${auth.text}`
+        : "no supported authentication mechanism";
+      throw new SmtpAuthError(`SMTP authentication failed: ${reason}`);
     }
 
     await session.command(`MAIL FROM:<${msg.from}>`, 250);
@@ -89,9 +106,62 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
   }
 }
 
-interface SmtpReply {
+export interface SmtpReply {
   code: number;
   text: string;
+  /** Each reply line with its "NNN-" prefix stripped, in order. */
+  lines: string[];
+}
+
+/** SASL mechanisms this client can perform, both password-based. */
+export type SaslMechanism = "PLAIN" | "LOGIN";
+
+/**
+ * Mechanisms named on the EHLO `AUTH` line, upper-cased. Both the RFC 4954
+ * form (`AUTH LOGIN PLAIN`) and the pre-standard `AUTH=LOGIN PLAIN` that some
+ * hosts still emit alongside it are recognised.
+ */
+export function advertisedMechanisms(lines: readonly string[]): Set<string> {
+  const mechanisms = new Set<string>();
+  for (const line of lines) {
+    const match = /^AUTH[ =](.*)$/i.exec(line.trim());
+    if (!match) continue;
+    for (const mechanism of match[1].trim().split(/\s+/)) {
+      if (mechanism) mechanisms.add(mechanism.toUpperCase());
+    }
+  }
+  return mechanisms;
+}
+
+/**
+ * PLAIN first when both are offered: one round trip, and it keeps every
+ * provider that sends today on precisely the exchange it uses today. A server
+ * that advertises no AUTH line still gets both tried, since that list is
+ * advisory and a few hosts omit it entirely.
+ */
+export function mechanismOrder(advertised: Set<string>): SaslMechanism[] {
+  const usable = (["PLAIN", "LOGIN"] as const).filter((m) => advertised.has(m));
+  return usable.length > 0 ? [...usable] : ["PLAIN", "LOGIN"];
+}
+
+/**
+ * True when the server refused the mechanism rather than the credential.
+ * 504/534 (and 535 carrying enhanced code 5.7.4) mean "I don't do that kind of
+ * auth"; a plain 535 is a wrong password and must not trigger a second attempt
+ * against the provider's lockout counter.
+ */
+export function isMechanismRejection(reply: SmtpReply): boolean {
+  if (reply.code === 504 || reply.code === 534) return true;
+  return reply.code === 535 && /\b5\.7\.4\b/.test(reply.text);
+}
+
+/**
+ * base64 of UTF-8 bytes. `btoa` throws on any code point above U+00FF, so an
+ * app password with an accented character would otherwise fail before it ever
+ * reached the server.
+ */
+function b64(value: string): string {
+  return btoa(String.fromCharCode(...new TextEncoder().encode(value)));
 }
 
 class SmtpSession {
@@ -118,8 +188,26 @@ class SmtpSession {
     }
   }
 
-  async ehlo(domain: string): Promise<void> {
-    await this.command(`EHLO ${domain}`, 250);
+  async ehlo(domain: string): Promise<SmtpReply> {
+    return await this.command(`EHLO ${domain}`, 250);
+  }
+
+  /** SASL PLAIN in one command: base64("\0" + user + "\0" + pass). */
+  async authPlain(username: string, password: string): Promise<SmtpReply> {
+    return await this.commandRaw(`AUTH PLAIN ${b64(`\x00${username}\x00${password}`)}`);
+  }
+
+  /**
+   * SASL LOGIN: `AUTH LOGIN` → base64 username → base64 password, each a
+   * separate line answered with a 334 challenge. The username is not sent as an
+   * initial response because that is the form Exchange is inconsistent about.
+   */
+  async authLogin(username: string, password: string): Promise<SmtpReply> {
+    const challenge = await this.commandRaw("AUTH LOGIN");
+    if (challenge.code !== 334) return challenge;
+    const prompt = await this.commandRaw(b64(username));
+    if (prompt.code !== 334) return prompt;
+    return await this.commandRaw(b64(password));
   }
 
   /** Send a command and assert the reply code equals `expected`. */
@@ -167,7 +255,7 @@ class SmtpSession {
       }
       lines.push(m[3]);
       if (m[2] === " ") {
-        return { code: Number(m[1]), text: lines.join(" ") };
+        return { code: Number(m[1]), text: lines.join(" "), lines: [...lines] };
       }
     }
   }
