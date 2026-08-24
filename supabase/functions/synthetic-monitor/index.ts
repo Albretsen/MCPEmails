@@ -24,6 +24,13 @@ type StepResult = { name: StepName; status: "succeeded" | "failed"; duration_ms:
 type Incident = { id: string; fingerprint: string; should_alert?: boolean; should_recover?: boolean };
 type McpResponse = { result?: { isError?: boolean; structuredContent?: { inboxes?: Array<{ inbox_id?: unknown; email_address?: unknown }> } }; error?: { code?: unknown; data?: unknown } };
 
+// Codes raised by callMcp when no MCP response ever came back. These describe
+// the transport, not the server's behaviour, so they classify as
+// `public_endpoint`, which is deliberately absent from the immediate-alert list
+// in record_synthetic_monitor_failure and therefore needs two consecutive
+// failures before it pages. A single hung request is not an incident.
+const TRANSPORT_FAILURE_CODES = new Set(["public_endpoint", "request_timeout", "endpoint_unreachable"]);
+
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 }
@@ -47,12 +54,23 @@ function mcpFailureCode(body: McpResponse | null): string {
 }
 
 async function callMcp(apiKey: string, id: number, method: string, params?: Record<string, unknown>) {
-  const response = await fetch(PUBLIC_MCP_ENDPOINT, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ jsonrpc: "2.0", id, method, ...(params ? { params } : {}) }),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
+  let response: Response;
+  try {
+    response = await fetch(PUBLIC_MCP_ENDPOINT, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ jsonrpc: "2.0", id, method, ...(params ? { params } : {}) }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (error) {
+    // AbortSignal.timeout rejects with a TimeoutError whose message ("Signal
+    // timed out.") fails safeCode's charset and used to degrade to the generic
+    // `unexpected_response`, which then classified as `mcp_protocol` and paged
+    // on the first strike. Read `name` structurally: DOMException does not
+    // reliably sit on Error's prototype chain across runtimes.
+    const name = typeof error === "object" && error !== null && "name" in error ? String((error as { name: unknown }).name) : "";
+    throw new Error(name === "TimeoutError" ? "request_timeout" : "endpoint_unreachable");
+  }
   const body = await response.json().catch(() => null) as McpResponse | null;
   if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? "authentication" : "public_endpoint");
   if (!body || body.error || body.result?.isError) throw new Error(mcpFailureCode(body));
@@ -117,7 +135,16 @@ Deno.serve(async (request) => {
       return result;
     } catch (error) {
       const code = error instanceof Error ? error.message : "internal";
-      failureClass = code === "authentication" ? "authentication" : code === "public_endpoint" ? "public_endpoint" : name === "email_read" ? "provider_read" : "mcp_protocol";
+      // Transport codes win over the per-step default: a request that never
+      // returned proves nothing about the MCP layer or the provider, and the
+      // step name is still carried in the fingerprint for diagnosis.
+      failureClass = code === "authentication"
+        ? "authentication"
+        : TRANSPORT_FAILURE_CODES.has(code)
+          ? "public_endpoint"
+          : name === "email_read"
+            ? "provider_read"
+            : "mcp_protocol";
       failedStep = name;
       steps.push({ name, status: "failed", duration_ms: Date.now() - stepStarted, error_code: safeCode(code) });
       return null;
@@ -148,7 +175,12 @@ Deno.serve(async (request) => {
       try {
         await sendMonitorEmail(100, `MCPEmails synthetic monitor alert: ${incident.fingerprint}`, "A production synthetic monitor incident is open. The monitor will send one recovery notice after the first successful check.", `synthetic-incident-${incident.id}`);
         await supabase.rpc("mark_synthetic_monitor_incident_alerted", { p_incident_id: incident.id });
-      } catch { /* Leave notification unmarked so a later equivalent failure retries it. */ }
+      } catch (error) {
+        // Leave notification unmarked so a later equivalent failure retries it,
+        // but never silently: an alert path that is failing every cycle is
+        // otherwise invisible. Sanitized code only, per the monitoring contract.
+        console.error(JSON.stringify({ event: "synthetic_monitor_incident_alert_failed", incident_id: incident.id, error_code: safeCode(error instanceof Error ? error.message : null) }));
+      }
     }
     return json(503, { run_id: created.id, status, failed_step: failedStep });
   }
@@ -161,7 +193,12 @@ Deno.serve(async (request) => {
     try {
       await sendMonitorEmail(200, `MCPEmails synthetic monitor recovery: ${incident.fingerprint}`, "The production synthetic monitor completed successfully after the open incident.", `synthetic-recovery-${incident.id}`);
       await supabase.rpc("mark_synthetic_monitor_recovery_alerted", { p_incident_id: incident.id });
-    } catch { /* The incident is resolved; notification stays eligible for a later successful run. */ }
+    } catch (error) {
+      // The incident is resolved; the notification stays eligible for a later
+      // successful run. Log the sanitized code so a persistently broken
+      // recovery path surfaces instead of just arriving a cycle late.
+      console.error(JSON.stringify({ event: "synthetic_monitor_recovery_alert_failed", incident_id: incident.id, error_code: safeCode(error instanceof Error ? error.message : null) }));
+    }
   }
   return json(200, { run_id: created.id, status });
 });
