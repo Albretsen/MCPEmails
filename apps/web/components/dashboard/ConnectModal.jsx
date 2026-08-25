@@ -112,6 +112,11 @@ const OAUTH_ROUTES = {
  * paid plans, comped accounts, and the grandfathered pre-repricing cohort:
  * App.jsx computes `atInboxLimit` as false whenever maxInboxes is null.
  *
+ * The same panel is shown when a connect route answers 402
+ * `inbox_limit_reached`, which covers the cases the prop cannot see: the cap
+ * reached in another tab or on another device since this page loaded. In that
+ * case the counts and the upgrade URL come from the response body.
+ *
  * @param {boolean} atInboxLimit - True when the workspace is at its inbox cap.
  * @param {string}  planName     - Customer-facing plan name ("Free"/"Pro"/"Team").
  *                                 Never the internal slug.
@@ -162,12 +167,30 @@ export function ConnectModal({
   );
   const [yandexAccountType, setYandexAccountType] = useState('personal');
   const [lastFailure, setLastFailure] = useState({ code: null, count: 0 });
+  // Set when a connect route answers 402 inbox_limit_reached. The client-side
+  // `atInboxLimit` prop is computed from the inbox list this page loaded with,
+  // so it goes stale whenever the cap is reached in another tab, on another
+  // device, or by a plan change mid-session. The server is the authority; when
+  // it says the cap is hit, the modal switches to the same upgrade panel the
+  // prop would have shown, rather than printing the route's unlocalised
+  // fallback sentence as a form error.
+  const [serverLimit, setServerLimit] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   // When the user clicks outside the modal (the scrim) after typing
   // credentials, show a discard confirmation instead of closing outright so
   // an accidental click doesn't wipe what they entered.
   const [confirmingClose, setConfirmingClose] = useState(false);
+
+  // The upgrade panel replaces the provider picker and the credentials form,
+  // whether the cap was known up front (prop) or learned from a 402 (state).
+  // The server's numbers win when present: they were counted at the moment of
+  // the refusal, the prop's were counted at page load.
+  const showLimitPanel = atInboxLimit || serverLimit !== null;
+  const limitPlanName = serverLimit?.planName ?? planName;
+  const limitInboxCount = serverLimit?.inboxCount ?? inboxCount;
+  const limitMaxInboxes = serverLimit?.maxInboxes ?? maxInboxes;
+  const limitUpgradeUrl = serverLimit?.upgradeUrl ?? '/pricing';
 
   // ── Provider categories ─────────────────────────────────────────────────────
 
@@ -321,6 +344,24 @@ export function ConnectModal({
       const data = await response.json();
 
       if (!response.ok) {
+        // A plan cap is not a credential problem. Rendering `data.error` here
+        // would show the route's unlocalised English fallback, and the repeat
+        // hint below would then tell the user to recheck their app password —
+        // advice that cannot fix a refusal that never reached their mail
+        // server. Switch to the upgrade panel instead, which is localised and
+        // carries the offer. Only the numbers come from the response; the
+        // sentences come from the message catalogue.
+        if (data.error_code === 'inbox_limit_reached') {
+          setLastFailure({ code: null, count: 0 });
+          setFormError(null);
+          setServerLimit({
+            planName: typeof data.plan_name === 'string' ? data.plan_name : planName,
+            inboxCount: typeof data.current_count === 'number' ? data.current_count : null,
+            maxInboxes: typeof data.max_inboxes === 'number' ? data.max_inboxes : null,
+            upgradeUrl: typeof data.upgrade_url === 'string' ? data.upgrade_url : '/pricing',
+          });
+          return;
+        }
         const code = data.error_code ?? 'connection_failed';
         const count = lastFailure.code === code ? lastFailure.count + 1 : 1;
         setLastFailure({ code, count });
@@ -358,6 +399,9 @@ export function ConnectModal({
   const hasUnsavedInput = () =>
     step === 2 &&
     !submitting &&
+    // The credentials form is no longer on screen once the upgrade panel
+    // takes over, so there is nothing for a discard prompt to protect.
+    !showLimitPanel &&
     Boolean(
       form.email.trim() ||
         form.username.trim() ||
@@ -390,7 +434,7 @@ export function ConnectModal({
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
             <div>
               <h2 style={{ margin: 0 }}>
-                {atInboxLimit
+                {showLimitPanel
                   ? tr('connect.titleLimitReached')
                   : isReconnect
                     ? tr('connect.titleReconnectProvider', { provider: providerLabel() })
@@ -399,10 +443,10 @@ export function ConnectModal({
                       : tr('connect.titleConnectInbox')}
               </h2>
               <div className="sub" style={{ marginTop: 4 }}>
-                {atInboxLimit
-                  ? (typeof inboxCount === 'number' && typeof maxInboxes === 'number'
-                      ? tr('connect.subLimitReached', { plan: planName, count: inboxCount, max: maxInboxes })
-                      : tr('connect.subLimitReachedNoCount', { plan: planName }))
+                {showLimitPanel
+                  ? (typeof limitInboxCount === 'number' && typeof limitMaxInboxes === 'number'
+                      ? tr('connect.subLimitReached', { plan: limitPlanName, count: limitInboxCount, max: limitMaxInboxes })
+                      : tr('connect.subLimitReachedNoCount', { plan: limitPlanName }))
                   : step === 1
                     ? tr('connect.subChooseProvider')
                     : isGeneric
@@ -432,7 +476,7 @@ export function ConnectModal({
         <div className="modal-body">
 
           {/* ─── Plan limit: upgrade prompt ────────────────────────────────── */}
-          {atInboxLimit && (
+          {showLimitPanel && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Icon + copy */}
               <div style={{
@@ -501,7 +545,7 @@ export function ConnectModal({
           )}
 
           {/* ─── Step 1: Provider selection ─────────────────────────────────── */}
-          {!atInboxLimit && step === 1 && (
+          {!showLimitPanel && step === 1 && (
             <>
               <div className="provider-grid" role="radiogroup" aria-label={tr('connect.subChooseProvider')}>
                 {PROVIDERS.map(p => (
@@ -667,7 +711,7 @@ export function ConnectModal({
           )}
 
           {/* ─── Step 2: Credentials form ───────────────────────────────────── */}
-          {!atInboxLimit && step === 2 && (
+          {!showLimitPanel && step === 2 && (
             <>
               {isReconnect && (
                 <div
@@ -952,11 +996,11 @@ export function ConnectModal({
               BillingSection, which starts checkout on mount, so this is one
               click from blocked to card form. The pricing page stays available
               as the secondary link for anyone who wants to compare first. */}
-          {atInboxLimit && (
+          {showLimitPanel && (
             <>
               <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
               <a
-                href="/pricing"
+                href={limitUpgradeUrl}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -996,7 +1040,7 @@ export function ConnectModal({
           )}
 
           {/* Normal flow: provider selection */}
-          {!atInboxLimit && step === 1 && (
+          {!showLimitPanel && step === 1 && (
             <>
               <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
               <Btn variant="primary" icon="shield" onClick={handleConnect}>
@@ -1006,7 +1050,7 @@ export function ConnectModal({
           )}
 
           {/* Normal flow: credentials */}
-          {!atInboxLimit && step === 2 && (
+          {!showLimitPanel && step === 2 && (
             <>
               {/* Reconnect mode has no provider-selection step to return to, so the
                   secondary action cancels instead of going "back". */}
