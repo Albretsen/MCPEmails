@@ -95,6 +95,7 @@ import {
 } from "./invalid-arguments-message.ts";
 import { buildUsageLimitText, USAGE_LIMIT_SUPPORT_EMAIL } from "./usage-limit-message.ts";
 import {
+  isIsoDateOrDateTime,
   type NormalizedSearch,
   parseIsoDate,
   SEARCH_FIELD_DESCRIPTIONS,
@@ -2236,8 +2237,8 @@ function isToolAuthorized(tool: ToolDefinition, scopes: string[]): boolean {
  * "date-time" demands a time component and "date" forbids one. They were
  * declared "date-time", so the schema rejected the example printed in the
  * field's own description ("2026-06-01") and in the runtime error text that
- * fires one layer below it, costing ~300 rejections across 30 workspaces. The
- * handler has always accepted both, via parseIsoDate.
+ * fires one layer below it. The handler has always accepted both, via
+ * parseIsoDate.
  *
  * A custom token is the honest way to write the union rather than a comfortable
  * lie: JSON Schema lets a vocabulary define its own `format` values and
@@ -2247,7 +2248,21 @@ function isToolAuthorized(tool: ToolDefinition, scopes: string[]): boolean {
  * a scheduled send needs an unambiguous instant, and a bare date there would
  * silently mean UTC midnight, which is nearly always in the past.
  *
- * Enforced by isIsoDateOrDateTime() in validateInputSchema below.
+ * ACCEPTED SET (2026-08-25). The token alone did not close the error class it
+ * was introduced for. Enforcement additionally demanded a timezone on any
+ * date-time, so the naive `2026-08-01T00:00:00` that models emit constantly was
+ * still refused: 306 rejections across 30 workspaces in the last 30 days, the
+ * second largest error class on the product, and invisible to the agent because
+ * a JSON-RPC -32602 payload never reaches the model. A zone-less date-time is
+ * now accepted and read as UTC, exactly like a bare date. The ambiguity that
+ * originally justified the strictness is answered in parseIsoDate, which pins
+ * such a value to UTC itself instead of letting `new Date` resolve it against
+ * whatever timezone the edge runtime booted in. What is still rejected: prose
+ * ("June 1 2026"), a space instead of the `T` separator, and out-of-range
+ * fields ("2026-13-01").
+ *
+ * Enforced by isIsoDateOrDateTime(), which lives beside parseIsoDate in
+ * search-translate.ts so the two definitions of "accepted" cannot drift.
  */
 const ISO_DATE_OR_DATE_TIME = "date-or-date-time";
 
@@ -2268,8 +2283,8 @@ const SEARCH_SCHEMA_DESCRIPTIONS: Record<string, string> = {
   unread: "true = unread only; false = read only; omit for both.",
   has_attachment: "true = only messages with an attachment. Ignored on generic IMAP.",
   flagged: "true = only flagged/starred messages. Ignored on Outlook.",
-  since: "Received on or after this date or datetime.",
-  before: "Received strictly before this date or datetime.",
+  since: "Received on or after this date or datetime (no timezone = UTC).",
+  before: "Received strictly before this date or datetime (no timezone = UTC).",
 };
 
 /**
@@ -5622,20 +5637,6 @@ function matchesInputSchemaType(value: unknown, expected: string): boolean {
 }
 
 /**
- * Mirrors parseIsoDate's accepted inputs: a bare `YYYY-MM-DD`, which it pins to
- * UTC midnight, or a full date-time. The timezone requirement is kept for
- * date-times because parseIsoDate hands those to `new Date`, whose reading of a
- * bare local time depends on the runtime's zone; a date-only value has no such
- * ambiguity. Date.parse also accepts prose like "June 1 2026", which is why the
- * shape is checked as well as the parse.
- */
-function isIsoDateOrDateTime(value: string): boolean {
-  if (Number.isNaN(Date.parse(value))) return false;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return true;
-  return /^\d{4}-\d{2}-\d{2}T/.test(value) && /(?:Z|[+-]\d{2}:\d{2})$/i.test(value);
-}
-
-/**
  * Which properties of `value` tripped a `not` rule, for the one shape this
  * server generates: buildConsolidatedTool forbids an action's non-arguments as
  * `not: { anyOf: [{ required: ["x"] }, ...] }`. Any other `not` shape yields
@@ -5678,7 +5679,7 @@ function validateInputSchema(schema: InputSchema, value: unknown, path = "argume
     if (schema.format === "uuid" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) add("format", "must be a UUID");
     if (schema.format === "date-time" && (Number.isNaN(Date.parse(value)) || !/(?:Z|[+-]\d{2}:\d{2})$/i.test(value))) add("format", "must be an ISO 8601 date-time with timezone");
     if (schema.format === ISO_DATE_OR_DATE_TIME && !isIsoDateOrDateTime(value)) {
-      add("format", "must be an ISO 8601 date such as 2026-06-01 (read as UTC midnight) or a date-time with timezone such as 2026-06-01T09:00:00Z");
+      add("format", "must be an ISO 8601 date such as 2026-06-01 or a date-time such as 2026-06-01T09:00:00 (a value with no timezone is read as UTC)");
     }
   }
   if (typeof value === "number") {
@@ -13866,7 +13867,10 @@ const SEARCH_TIMEOUT_MS = 30_000;
  * - `unread` is included when strictly `true` or `false`; `has_attachment` and
  *   `flagged` only when truthy (only `true` is meaningful).
  * - `since`/`before` ISO strings are validated via parseIsoDate; an invalid
- *   value yields an error.
+ *   value yields an error. The raw string is kept as sent, not the parsed
+ *   Date: every provider formatter re-parses it through parseIsoDate, which
+ *   reads a zone-less value as UTC, so a naive date-time means the same instant
+ *   here as it does in the Gmail, IMAP and Graph queries built from it.
  * - `query` (legacy) maps to `raw`.
  *
  * Returns either the built search, or a `{ field }` indicating which date arg
