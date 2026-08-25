@@ -401,3 +401,55 @@ export const nonEnvelope = {
   permanent: false,
   folder: "INBOX",
 };
+
+// ---------------------------------------------------------------------------
+// A HELD SEND, exactly as the server now returns it.
+//
+// This is the payload the whole MCP Apps outbound path exists for, and until
+// 2026-08-25 the card could never see it. A gated email_compose / draft /
+// schedule call returned only the flat `pending_approval` object below, with no
+// `schema_version`, so `classifyResult` called it "foreign" and the card drew
+// nothing. The one producer of an `outbound_review` envelope was the app-only
+// `approval_review`, which the card calls FROM an already-rendered card, so the
+// card rendered only if it was already rendered.
+//
+// `index.ts#heldSendResult` now merges the envelope over the pending-approval
+// keys, and that merge rule is reproduced here by construction (spread of the
+// pending keys, then spread of a real envelope fixture) rather than transcribed
+// from a server response, so it cannot drift on the envelope side. The
+// server-side half of the same property, that the two key sets are disjoint and
+// that neither channel leaks the body into model context, is pinned in
+// supabase/functions/mcp-server/mcp-app-approvals.test.ts.
+//
+// The point of having it here: `state-machine.mjs` runs the REAL, shipped
+// `classifyResult` over it. If this ever stops classifying as "envelope", the
+// card is back to rendering nothing on the send it was built to review.
+// ---------------------------------------------------------------------------
+export const heldSendMerged = {
+  // ── the published pending-approval keys, unchanged ──────────────────────
+  status: "pending_approval",
+  approval_id: "8f2a1c74-0f3e-4a91-9c2b-1d6f0e5a7b33",
+  inbox_id: "b1d0a2e4-77aa-4c11-9f31-2c9d8e6a1b02",
+  review_url:
+    "https://mcpemails.com/approvals/8f2a1c74-0f3e-4a91-9c2b-1d6f0e5a7b33",
+  message:
+    "This reply has not been sent. It is waiting for a person to approve it: " +
+    "open https://mcpemails.com/approvals/8f2a1c74-0f3e-4a91-9c2b-1d6f0e5a7b33 " +
+    'to approve (sign-in required), or call approval_decide with decision "reject" to discard it.',
+  // ── the contract §1 envelope, merged on top ─────────────────────────────
+  ...outboundGmail,
+  dashboard_url: "https://mcpemails.com/dashboard/approvals",
+};
+
+/**
+ * The same held send as it looked BEFORE the fix: the pending-approval keys and
+ * nothing else. Kept as the negative control, because "envelope" is only a
+ * meaningful assertion next to the payload that did not classify as one.
+ */
+export const heldSendLegacy = {
+  status: heldSendMerged.status,
+  approval_id: heldSendMerged.approval_id,
+  inbox_id: heldSendMerged.inbox_id,
+  review_url: heldSendMerged.review_url,
+  message: heldSendMerged.message,
+};

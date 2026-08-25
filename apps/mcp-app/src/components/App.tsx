@@ -122,7 +122,30 @@ export function App(props: { bridge: HostBridge }) {
     //
     // (`.card:empty` in styles.css collapses the shell so this leaves no empty
     // box and reports a zero height to the host's auto-fit.)
-    if (store.resultStatus === "foreign") return null;
+    //
+    // The same judgement covers the two ways there is no payload at all:
+    //
+    //   cancelled — the host sent tool-cancelled. The call was abandoned and
+    //               the host is already telling the user so. Adding our own
+    //               notice under it would just be a second voice.
+    //   absent    — the watchdog fired: connect() resolved and nothing
+    //               followed. On Claude this is almost always a re-mount of an
+    //               old conversation cell, where the tool call succeeded days
+    //               ago and the spec simply owes a late-mounting view nothing
+    //               (see store.ts). The send happened. Announcing "this review
+    //               could not be displayed" over a send that went through is
+    //               the exact scare this card refuses to raise. Silence.
+    //
+    // Three separate statuses, one rendering, on purpose: the distinction is
+    // real and is kept where it is still known, and the fact that it does not
+    // change what the user sees is the point rather than a redundancy.
+    if (
+      store.resultStatus === "foreign" ||
+      store.resultStatus === "cancelled" ||
+      store.resultStatus === "absent"
+    ) {
+      return null;
+    }
 
     // OUR PAYLOAD, UNREADABLE -> LOUD. Something that identified itself as our
     // envelope could not be parsed. That is a real defect and a reviewer who

@@ -190,21 +190,50 @@ export function buildResourceTemplatesListResult(): {
 // ---------------------------------------------------------------------------
 
 /**
- * Tools that render the review card when they are called.
+ * The outbound tools that can return a review card, and the single source of
+ * truth for *which* tools those are.
  *
- * Deliberately limited to the three outbound tools. Read-only tools and the
- * bulk tools get no `_meta` in this phase: attaching a card to a tool is a
- * commitment to render something coherent for every one of its actions, and
- * the bulk-plan payloads (`contract.md` §3) do not exist yet.
+ * ── Card-bearing is not the same as card-emitting ───────────────────────────
+ * Membership here means "a call to this tool can produce a payload the card
+ * knows how to render". It does NOT mean the tool always does, and it must not
+ * be read as "attach `_meta.ui` at module load". These three only ever produce
+ * a reviewable payload when the send is held for a human — `queueSendApproval`
+ * returns null unless the target inbox has `send_approval_required` set — and
+ * that switch is off for the overwhelming majority of inboxes.
+ *
+ * `_meta.ui` is per-tool, not per-call: a host mounts and fetches the card for
+ * EVERY result of a tool that carries it. So stamping these three
+ * unconditionally made every ordinary send mount a card with nothing to show,
+ * which is what the stuck loading skeleton under `email_compose` actually was.
+ * The list is therefore applied at `tools/list` time, per key, through
+ * `reviewCardMetaForListing` below — see the gate note in `handleToolsList`.
  *
  * The `approval_*` tools are not listed here: they are defined in
  * `mcp-app-approvals.ts` and carry `appOnlyReviewCardToolMeta()` instead,
- * which adds `visibility: ["app"]` on top of the same resource URI.
+ * which adds `visibility: ["app"]` on top of the same resource URI. They are
+ * correctly unconditional — they are app-only affordances that exist solely to
+ * drive the card and always return an envelope.
  */
 export const REVIEW_CARD_TOOL_NAMES: readonly string[] = [
   "email_compose",
   "draft",
   "schedule",
+];
+
+/**
+ * The bulk tools that can return a bulk-plan card.
+ *
+ * Kept beside `REVIEW_CARD_TOOL_NAMES` rather than in `index.ts` because the
+ * two lists are now governed by the same rule: a card-bearing tool earns its
+ * `_meta.ui` per key at `tools/list` time, never at module load. (It lived in
+ * `index.ts` while the outbound list was unconditional and this one was not —
+ * that asymmetry is gone.)
+ *
+ * These emit a plan only when the target inbox has `bulk_review_mode = 'plan'`.
+ */
+export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
+  "email_delete",
+  "email_organize",
 ];
 
 /**
@@ -266,6 +295,54 @@ export function appOnlyReviewCardToolMeta(): {
   ui: { resourceUri: string; visibility: string[] };
 } {
   return { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["app"] } };
+}
+
+/**
+ * The two per-key opt-ins that decide whether a card-bearing tool is listed
+ * with `_meta.ui` in one `tools/list` response.
+ *
+ * Both are booleans the caller has already resolved from the database, so the
+ * decision below stays pure and testable while the query stays in `index.ts`.
+ */
+export interface ReviewCardGates {
+  /** True when the key can reach an inbox with `send_approval_required`. */
+  outbound: boolean;
+  /** True when the key can reach an inbox with `bulk_review_mode = 'plan'`. */
+  bulk: boolean;
+}
+
+/**
+ * The `_meta` one tool carries in a `tools/list` response, or `undefined` when
+ * it must carry none.
+ *
+ * ── Why this is a function of the key and not of the tool ───────────────────
+ * `_meta.ui` is per-tool, so a host mounts, fetches and renders the card for
+ * every single result of a tool that advertises one. A card-bearing tool that
+ * is not gated in can never produce a payload the card understands — the send
+ * is not held, the bulk op is not planned — so the host would spend an iframe
+ * and a `resources/read` on every ordinary result and show the user a skeleton
+ * or a "could not be displayed" notice for its trouble. Withholding the
+ * metadata is the only way to make "a key that has not opted in sees exactly
+ * what it saw before MCP Apps existed" literally true, `tools/list` included.
+ *
+ * Returns `undefined` (not `null`, not an empty object) for every other tool,
+ * so the caller can leave the registry entry untouched. That matters for the
+ * `approval_*` and `bulk_*` tools, which carry `appOnlyReviewCardToolMeta()`
+ * from the registry and must keep it unconditionally — they are app-only
+ * affordances that always return an envelope, so there is no mismatch to gate
+ * against.
+ */
+export function reviewCardMetaForListing(
+  toolName: string,
+  gates: ReviewCardGates,
+): { ui: { resourceUri: string } } | undefined {
+  if (REVIEW_CARD_TOOL_NAMES.includes(toolName)) {
+    return gates.outbound ? reviewCardToolMeta() : undefined;
+  }
+  if (BULK_PLAN_CARD_TOOL_NAMES.includes(toolName)) {
+    return gates.bulk ? reviewCardToolMeta() : undefined;
+  }
+  return undefined;
 }
 
 /**

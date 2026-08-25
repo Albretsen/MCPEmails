@@ -65,9 +65,19 @@ ships inside the edge function, so a hardcoded origin is deployment config baked
 
 **Gating is an explicit opt-in, never capability sniffing.** Earlier drafts of §3 said a plan is returned
 "when the client is UI-capable". Phase 0 proved that is undetectable — the reference host renders apps
-while sending `capabilities: {}` with no `extensions` key. Behaviour branches on a per-inbox setting
-(`send_review_mode`, `bulk_review_mode`), both defaulting to off, so a client that has not opted in sees
-byte-identical behaviour to today. The failure direction matters: a wrongly-fired capability guess would
+while sending `capabilities: {}` with no `extensions` key. Behaviour branches on per-inbox settings, all
+defaulting to off, so a client that has not opted in sees byte-identical behaviour to today. The two
+gates key on different columns and the distinction matters:
+
+| Surface | Column | Effect when off |
+|---|---|---|
+| outbound (`email_compose`, `draft`, `schedule`) | `send_approval_required` | the send is not held, so no envelope exists and `_meta.ui` is withheld at `tools/list` |
+| bulk (`email_delete`, `email_organize`) | `bulk_review_mode = 'plan'` | no plan is produced and `_meta.ui` is withheld at `tools/list` |
+
+`send_review_mode` is **not** a gate. It selects the wording of the pending-approval `message` (inline
+names the one-click `review_url`, dashboard points at the dashboard) and does not decide whether a card
+is offered: a held send returns the envelope under either mode. The failure direction matters: a
+wrongly-fired capability guess would
 divert a scripted integration into a plan it cannot execute, so it deletes nothing and silently lapses.
 
 ### Degradation rule
@@ -83,9 +93,13 @@ body-free summary for `content` on any tool that returns message content. Do not
 
 ## 2. `outbound` — the send under review
 
-Returned by the app-only tool `approval_review`. **Contains decrypted body content and must never be
-placed in model context.** The tool result goes to the iframe only; the card calls
-`ui/update-model-context` afterwards with a summary that deliberately omits the body.
+Returned **by the gated send itself** (`email_compose` / `draft` / `schedule`, whenever
+`queueSendApproval` holds the send), and by the app-only tools `approval_review`, `approval_update` and
+`approval_schedule`. See §2a for the held-send response, which is a superset rather than a bare envelope.
+
+**Contains decrypted body content and must never be placed in model context.** It travels in
+`structuredContent` only; the `content` text is written separately in every case. The card calls
+`ui/update-model-context` after a decision with a summary that deliberately omits the body.
 
 ```jsonc
 {
@@ -136,6 +150,94 @@ placed in model context.** The tool result goes to the iframe only; the card cal
 
 **Body size:** the server clips `body.text` / `body.html` at 64 KB each and sets `truncated: true`. The
 card shows a "view full message in dashboard" link (`ui/open-link`) in that case.
+
+---
+
+## 2a. The held-send response
+
+**A send that is held for approval returns the envelope directly.** This is the response
+`email_compose` (send / reply / forward), `draft` (send) and `schedule` (create) produce whenever
+`queueSendApproval` holds the request, i.e. whenever the sending inbox has `send_approval_required`.
+
+### Why it is not just the envelope
+
+An earlier version of this document assumed the model would call `approval_review` after seeing a
+`pending_approval` result, and the card would render from that. It never happened, and it could not:
+
+* the held send returned a flat `{status:"pending_approval", approval_id, inbox_id, review_url, message}`
+  object with no `schema_version`, so `classifyResult` in `apps/mcp-app/src/store.ts` classified it
+  `"foreign"` and the card rendered nothing (correctly: see §1's degradation rule);
+* `approval_review` is `visibility: ["app"]`, which the card only calls from an already-rendered card;
+* nothing in the `message` text asked the model to make the call, and adding such an instruction would
+  violate the rule against writing model directives into tool output.
+
+So the card rendered only if it was already rendered, and the `tools/list` gate that stamps `_meta.ui`
+onto exactly the keys that can hold a send gated nothing.
+
+### The shape
+
+`structuredContent` is the pending-approval keys **plus** the §1 envelope, merged at the top level:
+
+```jsonc
+{
+  // the published pending-approval keys, unchanged
+  "status": "pending_approval",
+  "approval_id": "uuid",
+  "inbox_id": "uuid",
+  "review_url": "https://mcpemails.com/approvals/<uuid>",
+  "message": "This reply has not been sent. …",
+  "send_at": "2026-09-01T09:00:00Z",   // schedule_create only
+
+  // the §1 envelope, merged on top
+  "schema_version": "review-card-v1",
+  "card": "outbound_review",
+  "state": "pending",
+  "dashboard_url": "https://mcpemails.com/dashboard/approvals",
+  "outbound": { … },                    // §2
+  "provider": { … },                    // §5
+  "actor": { "can_decide": true, "reason": null }
+}
+```
+
+A superset rather than a replacement, for two reasons. The pending-approval keys are a published output
+contract and callers already read them off `structuredContent`. And `isEnvelope` is structural: it
+requires only `schema_version` and `card`, and ignores unknown top-level keys, so a merged payload
+renders exactly as a bare envelope would.
+
+**The two key sets are disjoint, and that is load-bearing.** A collision would silently drop one side.
+`mcp-app-approvals.test.ts` asserts the disjointness and asserts that the merged object has exactly the
+sum of both key counts; do not add `state`, `dashboard_url` or `card` to the pending payload, and do not
+add `status` or `message` to the envelope.
+
+### The two channels
+
+`content` carries the **pending-approval payload alone**, pretty-printed: byte-for-byte what this path
+returned before the card existed. The envelope goes only to `structuredContent`.
+
+This is why the held-send path does not use `index.ts#jsonOk`, which puts one object in both. §7's
+strongest claim, that no new information is exposed to the model by this feature, stays literally true
+rather than approximately true. `outboundSummaryText` is deliberately *not* substituted for the payload's
+own `message`: that helper is written for `approval_review`, where the model is asking about an approval
+it may know nothing else about, whereas here the `message` already says what happened and what to do next.
+
+### Per-operation body disclosure
+
+The envelope's body field differs by operation, and the reasoning differs with it:
+
+| Operation | `outbound.body` | Reasoning |
+| --- | --- | --- |
+| `email_send`, `email_reply`, `email_forward` | the caller's body | The model supplied it in the same request. Returning it to the card discloses nothing it did not just write. For a reply or a forward the snapshot holds the *new* body only; the quoted original is never in it. |
+| `schedule_create` | the caller's body | Same: `schedule_create`'s payload is built from the tool's own `to`/`subject`/`body` arguments. |
+| `draft_send` | `null` | The snapshot holds only a `draft_id`; the message lives with the provider (`contentLivesWithProvider`). A dashboard-authored draft the model has never seen therefore stays unseen, in both channels. |
+
+In every case the body is kept out of `content`, so none of it reaches model context on this path.
+
+### Failure behaviour
+
+Building the envelope must never turn a queued send into an error: the approval row is already written,
+and the call sites' `catch` reports "no email was sent". So a failure degrades to exactly the old
+pending-approval payload, the send stays queued, and the card renders nothing, which is the pre-card
+behaviour.
 
 ---
 
@@ -273,6 +375,9 @@ single load-bearing rule of this feature.
 
 ### Tools
 
+`approval_review` is no longer the card's entry point: a held send returns the envelope itself (§2a), and
+these tools are what the card calls *after* it has rendered.
+
 All carry `_meta.ui = { resourceUri: "ui://mcpemails/review-card.html", visibility: ["app"] }` — the
 `visibility` is set because well-behaved hosts will keep these out of the model's picker, which is worth
 having. It is a tidiness measure, **not** a control. Audit-logged, non-billable (absent from
@@ -322,6 +427,13 @@ bulk sample rows never enter it at all.
 | Post-decision summary via `ui/update-model-context` (outcome, recipient count, subject) | bcc addresses |
 | Bulk plan match count and scope description | The message sample rows |
 
-The initial tool result for a gated send contains only what `queueSendApproval` already puts in
-`send_approvals.summary` today: to, cc, bcc_count, subject, attachment_count, plus `review_url`. **No new
-information is exposed to the model by this feature.** That claim is accurate and is the one to lead with.
+The **model-visible** half of the tool result for a gated send is unchanged from before this feature:
+the flat pending-approval payload, which carries only what `queueSendApproval` already puts in
+`send_approvals.summary` (to, cc, bcc_count, subject, attachment_count) plus `review_url` and a prose
+`message`. **No new information is exposed to the model by this feature.** That claim is accurate and is
+the one to lead with.
+
+The envelope added in §2a travels in `structuredContent` only, and `structuredContent` is the card
+channel. Note the honest caveat that applies to the whole feature: some hosts may show `structuredContent`
+to the model too, and the model can call `approval_review` for the same body regardless. This is context
+hygiene, not a boundary, and it is worth having and worth not overselling.

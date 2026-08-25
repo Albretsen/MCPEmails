@@ -19,10 +19,12 @@ import {
   buildResourceReadResult,
   buildResourcesListResult,
   buildResourceTemplatesListResult,
+  BULK_PLAN_CARD_TOOL_NAMES,
   clientSupportsUiExtension,
   MCP_APP_MIME_TYPE,
   mcpAppUiMeta,
   RESOURCES_CAPABILITY,
+  reviewCardMetaForListing,
   reviewCardToolMeta,
   REVIEW_CARD_RESOURCE_URI,
   REVIEW_CARD_TOOL_NAMES,
@@ -241,17 +243,192 @@ Deno.test("the approval tools advertise app-only visibility, as a hint and nothi
   );
 });
 
-Deno.test("only the three outbound tools carry review-card _meta", () => {
+Deno.test("only the three outbound tools are outbound-card-bearing", () => {
   assertEquals(
     [...REVIEW_CARD_TOOL_NAMES].sort(),
     ["draft", "email_compose", "schedule"],
-    "UI-bearing tool names",
+    "outbound card-bearing tool names",
+  );
+  assertEquals(
+    [...BULK_PLAN_CARD_TOOL_NAMES].sort(),
+    ["email_delete", "email_organize"],
+    "bulk card-bearing tool names",
   );
 
-  // Read-only and bulk tools must not advertise a card yet: the bulk-plan
-  // payload (contract.md §3) does not exist.
-  for (const name of ["inbox_list", "email_read", "email_organize", "email_delete", "folder", "signature", "contact_search"]) {
-    assert(!REVIEW_CARD_TOOL_NAMES.includes(name), `${name} must not carry UI _meta yet`);
+  // The two lists are disjoint: a tool is gated by exactly one opt-in, never
+  // by both, so reviewCardMetaForListing's first-match-wins order is not load
+  // bearing and cannot silently start mattering.
+  for (const name of BULK_PLAN_CARD_TOOL_NAMES) {
+    assert(!REVIEW_CARD_TOOL_NAMES.includes(name), `${name} must be gated by exactly one opt-in`);
+  }
+
+  // Read-only tools advertise no card under any gate.
+  for (const name of ["inbox_list", "email_read", "folder", "signature", "contact_search"]) {
+    assert(!REVIEW_CARD_TOOL_NAMES.includes(name), `${name} must not be outbound card-bearing`);
+    assert(!BULK_PLAN_CARD_TOOL_NAMES.includes(name), `${name} must not be bulk card-bearing`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// tools/list gating
+//
+// The bug these cover: `_meta.ui` is per-tool, not per-call, so a host mounts
+// and renders the card for EVERY result of a tool that advertises one. The
+// outbound tools were stamped unconditionally at module load, but they only
+// ever produce a reviewable payload when the send is held for a human — and
+// send_approval_required is set on 3 of 204 production inboxes. So ~99% of
+// sends got a card with nothing to show: the stuck loading skeleton.
+// ---------------------------------------------------------------------------
+
+const NO_GATES = { outbound: false, bulk: false };
+const ALL_GATES = { outbound: true, bulk: true };
+
+Deno.test("a card-bearing tool gets no _meta when its gate is closed", () => {
+  for (const name of REVIEW_CARD_TOOL_NAMES) {
+    assertEquals(reviewCardMetaForListing(name, NO_GATES), undefined, `${name} ungated`);
+    // The bulk opt-in must not open the outbound gate, or an inbox that
+    // previews deletes would start mounting empty cards under every send.
+    assertEquals(
+      reviewCardMetaForListing(name, { outbound: false, bulk: true }),
+      undefined,
+      `${name} must not be opened by the bulk opt-in`,
+    );
+  }
+  for (const name of BULK_PLAN_CARD_TOOL_NAMES) {
+    assertEquals(reviewCardMetaForListing(name, NO_GATES), undefined, `${name} ungated`);
+    assertEquals(
+      reviewCardMetaForListing(name, { outbound: true, bulk: false }),
+      undefined,
+      `${name} must not be opened by the send-approval opt-in`,
+    );
+  }
+});
+
+Deno.test("a card-bearing tool gets the exact nested _meta.ui.resourceUri when gated in", () => {
+  for (const name of [...REVIEW_CARD_TOOL_NAMES, ...BULK_PLAN_CARD_TOOL_NAMES]) {
+    assertEquals(
+      reviewCardMetaForListing(name, ALL_GATES),
+      { ui: { resourceUri: "ui://mcpemails/review-card.html" } },
+      `${name} gated in`,
+    );
+  }
+
+  // Phase 0 Q7.4: the nested key only, never the deprecated flat one, and no
+  // `visibility` — the mail tools are meant to be model-callable.
+  const serialized = JSON.stringify(reviewCardMetaForListing("email_compose", ALL_GATES));
+  assert(!serialized.includes("ui/resourceUri"), "must not emit the deprecated flat key");
+  assert(!serialized.includes("visibility"), "mail tools must not restrict visibility");
+});
+
+Deno.test("a non-card tool gets no _meta under any combination of gates", () => {
+  // Includes the app-only tools: they carry appOnlyReviewCardToolMeta() from
+  // the registry unconditionally and must be passed through untouched, so this
+  // helper returning undefined for them is what preserves their metadata.
+  for (
+    const name of [
+      "inbox_list",
+      "email_read",
+      "folder",
+      "draft_unknown",
+      "signature",
+      "automation",
+      "contact_search",
+      "approval_review",
+      "approval_decide",
+      "approval_update",
+      "approval_schedule",
+      "bulk_execute",
+      "bulk_cancel",
+      "",
+    ]
+  ) {
+    for (const gates of [NO_GATES, ALL_GATES, { outbound: true, bulk: false }, { outbound: false, bulk: true }]) {
+      assertEquals(
+        reviewCardMetaForListing(name, gates),
+        undefined,
+        `${name || "(empty)"} must never be given card _meta`,
+      );
+    }
+  }
+});
+
+Deno.test("gating is by exact name, never a prefix or case-insensitive match", () => {
+  for (const name of ["Email_Compose", "email_compose ", "email_compose_v2", "draftx", "schedul"]) {
+    assertEquals(reviewCardMetaForListing(name, ALL_GATES), undefined, `${name} must not match`);
+  }
+});
+
+Deno.test("gated _meta is a fresh object per call so responses cannot alias state", () => {
+  const first = reviewCardMetaForListing("email_compose", ALL_GATES)!;
+  const second = reviewCardMetaForListing("email_compose", ALL_GATES)!;
+  assert(first !== second, "meta objects must not be shared");
+  first.ui.resourceUri = "ui://evil/card.html";
+  assertEquals(second.ui.resourceUri, REVIEW_CARD_RESOURCE_URI, "mutation must not leak");
+});
+
+Deno.test("an ungated card-bearing tool serialises byte-identically to pre-MCP-Apps", () => {
+  // The standard the bulk gate held itself to, now extended to the outbound
+  // tools: a key with no approval-required inbox must see exactly the JSON it
+  // saw before MCP Apps existed. Compare the two serialisations as strings, so
+  // a stray `_meta: undefined` or a reordered key would fail.
+  const registryEntry = {
+    name: "email_compose",
+    title: "Compose email",
+    description: "Send, reply, or forward.",
+    inputSchema: { type: "object", properties: {}, required: ["action"] },
+    annotations: { title: "Compose email", readOnlyHint: false },
+  };
+
+  const meta = reviewCardMetaForListing(registryEntry.name, NO_GATES);
+  const listed = serializeToolForList(meta ? { ...registryEntry, _meta: meta } : registryEntry);
+
+  assertEquals(
+    JSON.stringify(listed),
+    JSON.stringify({
+      name: "email_compose",
+      title: "Compose email",
+      description: "Send, reply, or forward.",
+      inputSchema: { type: "object", properties: {}, required: ["action"] },
+      annotations: { title: "Compose email", readOnlyHint: false },
+    }),
+    "ungated email_compose wire bytes",
+  );
+  assert(!("_meta" in listed), "_meta key omitted, not undefined");
+
+  // And with the gate open it gains exactly one key, changing nothing else.
+  const gatedMeta = reviewCardMetaForListing(registryEntry.name, ALL_GATES);
+  const gated = serializeToolForList({ ...registryEntry, _meta: gatedMeta! });
+  assertEquals(
+    JSON.stringify(gated),
+    JSON.stringify({
+      name: "email_compose",
+      title: "Compose email",
+      description: "Send, reply, or forward.",
+      inputSchema: { type: "object", properties: {}, required: ["action"] },
+      annotations: { title: "Compose email", readOnlyHint: false },
+      _meta: { ui: { resourceUri: "ui://mcpemails/review-card.html" } },
+    }),
+    "gated email_compose wire bytes",
+  );
+});
+
+Deno.test("a non-card tool is byte-identical to its pre-MCP-Apps JSON", () => {
+  const inboxList = {
+    name: "inbox_list",
+    title: "List inboxes",
+    description: "List the accessible inboxes.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    annotations: { title: "List inboxes", readOnlyHint: true, openWorldHint: true },
+  };
+
+  for (const gates of [NO_GATES, ALL_GATES]) {
+    const meta = reviewCardMetaForListing(inboxList.name, gates);
+    const listed = serializeToolForList(meta ? { ...inboxList, _meta: meta } : inboxList);
+    assertEquals(
+      JSON.stringify(listed),
+      JSON.stringify(inboxList),
+      "inbox_list wire bytes are untouched by MCP Apps",
+    );
   }
 });
 

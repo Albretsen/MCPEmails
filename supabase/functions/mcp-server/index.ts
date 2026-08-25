@@ -37,8 +37,8 @@ import {
   buildResourceTemplatesListResult,
   clientSupportsUiExtension,
   RESOURCES_CAPABILITY,
-  reviewCardToolMeta,
-  REVIEW_CARD_TOOL_NAMES,
+  type ReviewCardGates,
+  reviewCardMetaForListing,
   serializeToolForList,
 } from "./mcp-app-resources.ts";
 import {
@@ -47,6 +47,8 @@ import {
   approvalLapsedBeforeDecision,
   approvalReviewUrl,
   buildApprovalSummary,
+  buildHeldSendEnvelope,
+  heldSendToolResult,
   isApprovalToolName,
   PENDING_APPROVAL_COLUMNS,
   type ResolvedSummaryFields,
@@ -2211,8 +2213,10 @@ interface ToolDefinition {
   /**
    * Optional protocol-level metadata, emitted verbatim in tools/list.
    *
-   * Today this carries only `ui.resourceUri` for MCP Apps — see
-   * REVIEW_CARD_TOOL_NAMES, where it is attached. Clients that do not
+   * Today this carries only `ui.resourceUri` for MCP Apps. Only the app-only
+   * tools (approval_*, bulk_*) carry it in the registry; the mail tools get
+   * theirs per key in `handleToolsList` via `reviewCardMetaForListing`, and a
+   * registry entry for one of them must stay `_meta`-free. Clients that do not
    * understand `_meta` ignore it, which is the extension's intended
    * graceful-degradation path; the tool behaves identically either way.
    *
@@ -5592,26 +5596,25 @@ const TOOL_REGISTRY: ToolDefinition[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// MCP Apps: attach the review-card `_meta` to the outbound tools.
+// MCP Apps: the outbound tools carry NO review-card `_meta` in the registry.
 //
-// Applied here as a single pass rather than sprinkled through CONSOLIDATED_SPECS
-// so the set of UI-bearing tools has exactly one definition (REVIEW_CARD_TOOL_NAMES)
-// that a test can assert against, and so the tool specs stay free of protocol
-// plumbing.
+// There used to be a pass here that stamped `reviewCardToolMeta()` onto every
+// entry named in REVIEW_CARD_TOOL_NAMES at module load. It is deliberately
+// gone. `_meta.ui` is per-tool, not per-call, so that pass made a host mount,
+// fetch and render the review card under EVERY email_compose/draft/schedule
+// result — while those tools only ever produce something the card can render
+// when the send is held for a human, which `queueSendApproval` does only for an
+// inbox with `send_approval_required`. In production that is 3 inboxes out of
+// 204, so ~99% of sends paid for an iframe and a resources/read in order to
+// show the user a stuck skeleton.
 //
-// Entries are REPLACED with copies, never mutated in place: some registry
-// entries are the same objects held by LEGACY_BY_NAME, and mutating one would
-// leak `_meta` into the legacy per-action tool definitions.
-//
-// This is purely additive metadata. It changes no tool's name, schema,
-// scope, or behaviour, and a client that ignores `_meta` sees byte-identical
-// output to before.
+// The metadata is now attached per key in `handleToolsList`, exactly like the
+// bulk tools' has been all along; REVIEW_CARD_TOOL_NAMES remains the single
+// definition of *which* tools are card-bearing, and `reviewCardMetaForListing`
+// is the single definition of *when* they say so. Keep this note: re-adding a
+// module-load stamp here is the regression, and it is an easy one to make
+// because the shape looks harmless.
 // ---------------------------------------------------------------------------
-for (let i = 0; i < TOOL_REGISTRY.length; i++) {
-  if (REVIEW_CARD_TOOL_NAMES.includes(TOOL_REGISTRY[i].name)) {
-    TOOL_REGISTRY[i] = { ...TOOL_REGISTRY[i], _meta: reviewCardToolMeta() };
-  }
-}
 
 // ---------------------------------------------------------------------------
 // MCP Apps: the approval tools.
@@ -5633,8 +5636,11 @@ for (const definition of APPROVAL_TOOL_DEFINITIONS) {
 // ---------------------------------------------------------------------------
 // MCP Apps: the bulk-plan tools (`bulk_execute`, `bulk_cancel`).
 //
-// Always listed, unlike the `_meta.ui` on email_delete/email_organize below,
-// which is conditional. Listing them unconditionally is harmless: with no
+// Always listed, and always carrying `_meta.ui`, unlike the five card-bearing
+// mail tools below whose metadata is gated per key. That difference is
+// principled: these two are app-only affordances that act on a plan and always
+// return an envelope, so there is no result shape for the card to fail on.
+// Listing them unconditionally is harmless besides: with no
 // pending plan in the caller's workspace, both are inert — every plan_id fails
 // the same "could not be found" guard — and a key whose inboxes have not opted
 // in can never produce a plan for them to act on in the first place.
@@ -12437,7 +12443,7 @@ async function executeForwardEmail(
       "email_forward",
     );
     if (approval) return {
-      result: jsonOk(pendingApprovalPayload(approval, senderInbox.id, "forward"), true),
+      result: await heldSendResult(approval, apiKey, senderInbox.id, "forward"),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -12796,7 +12802,7 @@ async function executeReplyToEmail(
       "email_reply",
     );
     if (approval) return {
-      result: jsonOk(pendingApprovalPayload(approval, senderInbox.id, "reply"), true),
+      result: await heldSendResult(approval, apiKey, senderInbox.id, "reply"),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -12945,6 +12951,18 @@ interface QueuedApproval {
   reviewUrl: string;
   /** The inbox's `send_review_mode`: 'off' | 'inline' | 'dashboard'. */
   reviewMode: string;
+  /**
+   * The row exactly as the database returned it from the INSERT.
+   *
+   * Carried rather than re-read, because the only consumer
+   * (`buildHeldSendEnvelope`) needs the stored columns (`created_at`,
+   * `expires_at`, `send_at`, `summary`, the encrypted `payload`), and a second
+   * SELECT for a row this same statement just wrote would be a round trip that
+   * can also fail, on a path where a failure must not turn a queued send into
+   * an error. `writeTolerantly` may have dropped columns that do not exist yet,
+   * so every reader treats each field as optional.
+   */
+  row: Record<string, unknown>;
 }
 
 /**
@@ -13120,7 +13138,26 @@ async function queueSendApproval(
   // A pending request stays decidable for 24h and is then dead: the tools
   // refuse it, the decide paths refuse it, and the dispatcher re-checks it.
   const expiresAt = new Date(Date.now() + APPROVAL_TTL_MS).toISOString();
-  const { data, error } = await writeTolerantly<{ id: string } | null>(
+  // `select("*")` rather than `select("id")`: the caller turns this row into the
+  // review card's envelope (see `buildHeldSendEnvelope`), and returning it from
+  // the statement that wrote it is both cheaper and less failure-prone than a
+  // second read. This is the service-role client, so RLS does not narrow what
+  // the RETURNING clause can hand back.
+  //
+  // `*` rather than a column list, for the same reason `loadPendingApproval`
+  // uses it: a named `expires_at` would fail outright against a database where
+  // the Phase 2 migration has not landed, which is precisely the case
+  // `writeTolerantly` below exists to survive.
+  //
+  // The cost, stated rather than hidden: the RETURNING clause now ships the
+  // encrypted payload back, and `buildHeldSendEnvelope` decrypts it again. For
+  // a send with 10 MB of attachments that is real work. It is accepted because
+  // this path already encrypted the same bytes two statements ago, it runs only
+  // for an inbox with `send_approval_required` (3 of 204 in production), and
+  // the alternative (handing the envelope builder the plaintext we still hold)
+  // would give the card a different source of truth from `approval_review`,
+  // which reads the stored row. One source, one code path.
+  const { data, error } = await writeTolerantly<Record<string, unknown> | null>(
     {
       workspace_id: apiKey.workspace_id,
       inbox_id: inbox.id,
@@ -13133,14 +13170,20 @@ async function queueSendApproval(
       ...(sendAt ? { send_at: sendAt } : {}),
     },
     PENDING_APPROVAL_COLUMNS,
-    (row) => supabase.from("send_approvals").insert(row).select("id").maybeSingle(),
+    (row) => supabase.from("send_approvals").insert(row).select("*").maybeSingle(),
   );
   if (error || !data) {
     console.error("[mcp-server] send_approval_queue_failed", { inbox_id: inbox.id, error: error?.message });
     throw new Error("send_approval_queue_failed");
   }
-  const id = (data as { id: string }).id;
-  return { id, reviewUrl: approvalReviewUrl(APP_URL, id), reviewMode: await readSendReviewMode(inbox.id) };
+  const inserted = data as Record<string, unknown>;
+  const id = inserted.id as string;
+  return {
+    id,
+    row: inserted,
+    reviewUrl: approvalReviewUrl(APP_URL, id),
+    reviewMode: await readSendReviewMode(inbox.id),
+  };
 }
 
 /**
@@ -13156,6 +13199,12 @@ async function queueSendApproval(
  * sitting in model context would itself be a bearer capability; here the id is
  * useless without an authenticated session and an owner/admin role, so it is
  * safe for the model to hold. Do not sign it.
+ *
+ * This object is now the MODEL-VISIBLE half only. `heldSendResult` merges the
+ * review card's `outbound_review` envelope over these keys for
+ * `structuredContent`, and that envelope does carry the body, which is why the
+ * two channels are written separately there instead of through `jsonOk`. The
+ * paragraph above still governs this function: nothing new goes in here.
  */
 function pendingApprovalPayload(
   approval: QueuedApproval,
@@ -13179,6 +13228,100 @@ function pendingApprovalPayload(
     review_url: approval.reviewUrl,
     message,
   };
+}
+
+/**
+ * The tool result for a send that was held for a human, for all five gated
+ * operations.
+ *
+ * ── WHY THIS EXISTS ─────────────────────────────────────────────────────────
+ * The MCP Apps review card could not render on an outbound send. `tools/list`
+ * gates `_meta.ui` onto email_compose / draft / schedule for any key that can
+ * reach an inbox with `send_approval_required` (see `keyReviewCardGates`), so
+ * the host mounts the card, and then the tool returned the flat
+ * `pendingApprovalPayload` object, which carries no `schema_version`, so the
+ * card classified it "foreign" and drew nothing. The only producer of an
+ * `outbound_review` envelope was `approval_review`, which the card calls from
+ * an already-rendered card. The card rendered only if it was already rendered,
+ * and nothing in the pending-approval text ever asked the model to break the
+ * loop. The gate gated nothing.
+ *
+ * ── THE SHAPE: A SUPERSET, NOT A REPLACEMENT ────────────────────────────────
+ * `structuredContent` is the pending-approval keys PLUS the envelope, merged at
+ * the top level. The two key sets are disjoint (status, approval_id, inbox_id,
+ * review_url, message, send_at vs schema_version, card, dashboard_url, state,
+ * outbound, provider, actor) and a test pins that, because a future collision
+ * would silently change one side or the other. The card's `isEnvelope` only
+ * requires `schema_version` and `card` and ignores unknown top-level keys, so
+ * the merged object renders; every existing consumer of the published
+ * pending-approval keys still finds them where they were.
+ *
+ * ── WHY NOT jsonOk ──────────────────────────────────────────────────────────
+ * `jsonOk` mirrors its object into BOTH `structuredContent` and the
+ * model-visible `content` text. The envelope carries the decrypted body, and
+ * contract §7 commits to the default flow not re-injecting message content into
+ * the conversation. So the two channels are written separately here: `content`
+ * is the pending-approval payload alone, byte-for-byte what this path emitted
+ * before the card existed, and the envelope goes only to `structuredContent`.
+ * That keeps §7's strongest claim literally true ("no new information is
+ * exposed to the model by this feature") rather than merely mostly true.
+ *
+ * Note that `outboundSummaryText` in mcp-app-approvals.ts is NOT used here even
+ * though it produces a body-free summary for this exact envelope. It is written
+ * for `approval_review`, where the model has asked about an approval it may
+ * know nothing else about. Here the payload's own `message` already says what
+ * happened and what to do next, and swapping in different prose would change
+ * the model-visible half of a shipped contract for no gain.
+ *
+ * ── NEVER THROWS ────────────────────────────────────────────────────────────
+ * The approval row is already written by the time this runs. Every call site is
+ * inside a `try` whose `catch` reports "no email was sent; retry shortly",
+ * which would be a lie about a send that IS queued. So an envelope that cannot
+ * be built degrades to exactly the old payload and the send stays queued.
+ */
+async function heldSendResult(
+  approval: QueuedApproval,
+  apiKey: ApiKeyRow,
+  inboxId: string,
+  noun: string,
+  extra: Record<string, unknown> = {},
+): Promise<{ content: { type: string; text: string }[]; structuredContent: Record<string, unknown> }> {
+  const payload = pendingApprovalPayload(approval, inboxId, noun, extra);
+
+  let envelope: Record<string, unknown> | null = null;
+  try {
+    envelope = await buildHeldSendEnvelope(
+      {
+        // Service-role client, same as the approval tools use: the envelope
+        // reads the inbox, the requesting key and the client name, none of
+        // which the RLS client can see from here.
+        db: supabase,
+        encrypt: encryptForStorage,
+        decrypt: decryptStoredToken,
+        appUrl: APP_URL,
+      },
+      {
+        id: apiKey.id,
+        workspace_id: apiKey.workspace_id,
+        name: apiKey.name,
+        inbox_ids: apiKey.inbox_ids,
+      },
+      approval.row,
+    );
+  } catch (error) {
+    // Degrade, never fail. The card falls back to rendering nothing, which is
+    // precisely the behaviour of every build before this change.
+    console.warn("[mcp-server] held_send_envelope_failed", {
+      approval_id: approval.id,
+      inbox_id: inboxId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  // The merge itself lives in mcp-app-approvals.ts so it is testable without
+  // importing this module. `content` is the payload alone; `structuredContent`
+  // is the superset.
+  return heldSendToolResult(payload, envelope);
 }
 
 /**
@@ -13491,7 +13634,7 @@ async function executeSendEmail(
       ...(sendParams.replyTo ? { reply_to: sendParams.replyTo } : {}),
     });
     if (approval) return {
-      result: jsonOk(pendingApprovalPayload(approval, senderInbox.id, "email"), true),
+      result: await heldSendResult(approval, apiKey, senderInbox.id, "email"),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -17225,37 +17368,54 @@ async function shouldPlanBulkOperation(inbox: InboxRow): Promise<boolean> {
 }
 
 /**
- * The consolidated tools that can return a bulk-plan card.
+ * Both MCP Apps opt-ins for one key, resolved in a single round trip.
  *
- * Not added to `REVIEW_CARD_TOOL_NAMES` in mcp-app-resources.ts, because that
- * list is applied unconditionally at module load and this one is decided per
- * key at `tools/list` time. See the comment in `handleToolsList`.
- */
-const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = ["email_delete", "email_organize"];
-
-/**
- * True when any inbox this key may touch previews bulk operations.
+ * ── Why one query and not two ───────────────────────────────────────────────
+ * `tools/list` is on the connect path — it runs once per host page load
+ * (Phase 0 Q5) and the user is staring at a spinner while it runs. Two gates
+ * used to mean one query because only the bulk gate existed; adding a second
+ * serialised await would have doubled the latency of the whole method for a
+ * pair of booleans. So both flags come back from one `.or()`-filtered select
+ * and the booleans are derived here in TypeScript.
  *
- * Fails closed on error (returns false = today's behaviour, no card metadata).
- * The `inbox_ids` allowlist is applied the same way it is everywhere else: a
+ * The filter is what keeps the result small: it returns only inboxes that have
+ * actually opted into something, which for almost every workspace is zero rows.
+ * That matters because PostgREST silently truncates any row-returning select at
+ * 1000 rows with no error whatsoever — nothing below relies on seeing every
+ * inbox, only on seeing at least one opted-in one, and an unfiltered scan would
+ * have been a correctness trap waiting for a large workspace.
+ *
+ * Fails closed on error (both false = today's behaviour, no card metadata). The
+ * `inbox_ids` allowlist is applied the same way it is everywhere else: a
  * non-null allowlist restricts the query, and an empty one denies everything.
  */
-async function keyHasBulkPlanInbox(apiKey: ApiKeyRow): Promise<boolean> {
-  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) return false;
+async function keyReviewCardGates(apiKey: ApiKeyRow): Promise<ReviewCardGates> {
+  const denied: ReviewCardGates = { outbound: false, bulk: false };
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) return denied;
   let query = supabase
     .from("inboxes")
-    .select("id")
+    .select("bulk_review_mode, send_approval_required")
     .eq("workspace_id", apiKey.workspace_id)
-    .eq("bulk_review_mode", "plan")
-    .limit(1);
+    .or("bulk_review_mode.eq.plan,send_approval_required.is.true");
   if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
   const { data, error } = await query;
   if (error) {
-    // Almost certainly "column does not exist" against a database where this
-    // phase's migration has not landed yet. Silent and safe: no metadata.
-    return false;
+    // Almost certainly "column does not exist" against a database where one of
+    // these phases' migrations has not landed yet. Silent and safe: no
+    // metadata, which is exactly the pre-MCP-Apps tool surface.
+    console.warn("[mcp-server] review_card_gate_query_failed", {
+      key_id: apiKey.id,
+      error: error.message,
+    });
+    return denied;
   }
-  return Array.isArray(data) && data.length > 0;
+  const rows = (data ?? []) as Array<
+    { bulk_review_mode?: unknown; send_approval_required?: unknown }
+  >;
+  return {
+    outbound: rows.some((row) => row.send_approval_required === true),
+    bulk: rows.some((row) => row.bulk_review_mode === "plan"),
+  };
 }
 
 /**
@@ -19758,7 +19918,7 @@ async function executeSendDraft(
       "draft_send",
     );
     if (approval) return {
-      result: jsonOk(pendingApprovalPayload(approval, inbox.id, "draft"), true),
+      result: await heldSendResult(approval, apiKey, inbox.id, "draft"),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -20540,7 +20700,7 @@ async function executeScheduleSend(
   try {
     const approval = await queueSendApproval(inbox, apiKey, payload, sendAt, "schedule_create");
     if (approval) return {
-      result: jsonOk(pendingApprovalPayload(approval, inbox.id, "scheduled email", { send_at: sendAt }), true),
+      result: await heldSendResult(approval, apiKey, inbox.id, "scheduled email", { send_at: sendAt }),
       logStatus: "success", logErrorCode: null,
     };
   } catch {
@@ -21151,29 +21311,43 @@ async function handleToolsList(
   id: string | number | null,
   apiKey: ApiKeyRow,
 ): Promise<JsonRpcSuccessResponse> {
-  // ── MCP Apps: conditional card metadata on the bulk tools ────────────────
+  // ── MCP Apps: conditional card metadata on every card-bearing tool ───────
   //
-  // `email_delete` and `email_organize` get `_meta.ui` ONLY when this key can
-  // actually reach an inbox that previews bulk operations. The reason is a hard
-  // constraint, not a preference: `_meta.ui` is per-tool, not per-call, so a
-  // host renders the card for EVERY result of a UI-bearing tool — and for an
-  // inbox that has not opted in, `email_delete` returns today's plain payload,
-  // which is not an envelope. The card's honest response to that is its
-  // "this review could not be displayed" notice, so attaching the metadata
-  // unconditionally would put a warning under every delete every current user
-  // performs. Gating it on the same opt-in is what makes the brief "a client
-  // that has not opted in must see byte-identical behaviour to today" literally
-  // true, tools/list included.
+  // Two gates, one rule. A tool gets `_meta.ui` ONLY when this key can actually
+  // reach an inbox whose opt-in lets that tool produce something the card can
+  // render:
+  //
+  //   • email_delete / email_organize  ← an inbox with bulk_review_mode='plan'
+  //   • email_compose / draft / schedule ← an inbox with send_approval_required
+  //
+  // The reason is a hard constraint, not a preference: `_meta.ui` is per-tool,
+  // not per-call, so a host mounts and renders the card for EVERY result of a
+  // UI-bearing tool — and for an inbox that has not opted in, those tools
+  // return today's plain payload, which is not an envelope. The card's honest
+  // response to that is a skeleton it never fills, or its "this review could
+  // not be displayed" notice. Gating on the opt-in is what makes the brief "a
+  // client that has not opted in must see byte-identical behaviour to today"
+  // literally true, tools/list included.
+  //
+  // The outbound half of this is a fix, not a design. Those three tools were
+  // stamped with `_meta.ui` unconditionally at module load, and because
+  // send_approval_required is set on 3 of 204 production inboxes, ~99% of all
+  // sends mounted a card with nothing in it — the stuck loading skeleton under
+  // email_compose. Bringing them under the same gate closes it.
   //
   // Cost is one query per session (`tools/list` runs once per host page load,
-  // Phase 0 Q5), and it fails closed: any error means no metadata, which is
-  // today's behaviour.
+  // Phase 0 Q5) for BOTH gates together — see keyReviewCardGates, which is
+  // deliberately a single round trip — and it fails closed: any error means no
+  // metadata, which is the pre-MCP-Apps behaviour.
   //
-  // KNOWN GAP, reported rather than hidden: a key spanning one opted-in and one
-  // opted-out inbox gets the metadata, so a delete on the opted-out inbox still
-  // shows that notice. Fixing it properly needs the card to fall back to the
-  // text result on a non-envelope payload, which is a frontend change.
-  const uiBulkTools = await keyHasBulkPlanInbox(apiKey);
+  // KNOWN GAP, reported rather than hidden: this is a per-key gate, not a
+  // per-inbox one, so a key spanning one opted-in and one opted-out inbox gets
+  // the metadata and a call against the opted-out inbox still shows the empty
+  // card. It is now a much smaller gap than it was — it needs a mixed key
+  // rather than merely any key — but it is the same gap. Fixing it properly
+  // needs the card to fall back to the text result on a non-envelope payload,
+  // which is a frontend change.
+  const uiGates = await keyReviewCardGates(apiKey);
 
   // Filter the registry to only tools the API key's scopes allow.
   // An API key with only read:email will see email_list, email_read, email_search.
@@ -21183,11 +21357,14 @@ async function handleToolsList(
   // produces exactly the JSON it did before MCP Apps existed.
   const visibleTools = TOOL_REGISTRY
     .filter((tool) => isToolAuthorized(tool, apiKey.scopes))
-    .map((tool) =>
-      uiBulkTools && BULK_PLAN_CARD_TOOL_NAMES.includes(tool.name)
-        ? { ...tool, _meta: reviewCardToolMeta() }
-        : tool
-    )
+    .map((tool) => {
+      // undefined for a tool that is not card-bearing OR is not gated in, in
+      // which case the registry entry is passed through untouched — which is
+      // what preserves the unconditional `visibility: ["app"]` metadata the
+      // approval_* and bulk_* tools carry from the registry.
+      const meta = reviewCardMetaForListing(tool.name, uiGates);
+      return meta ? { ...tool, _meta: meta } : tool;
+    })
     .map(serializeToolForList);
 
   console.log("[mcp-server] tools/list", {

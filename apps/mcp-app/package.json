@@ -10,6 +10,7 @@
     "codegen": "node scripts/codegen.mjs",
     "size": "node scripts/codegen.mjs --size-only",
     "harness": "node harness/fixture-server.mjs",
+    "verify": "node harness/state-machine.mjs",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
