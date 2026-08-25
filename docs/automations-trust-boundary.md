@@ -160,8 +160,20 @@ each of them requires a fresh threat model, a written decision, and a revision o
 9. **Auto-retrying a run that failed mid-flight.** A stale lease is reclaimed and the run is marked
    failed, deliberately: its actions may have partially applied and it has no record of where it stopped.
 10. **Letting a rule act with more authority than its key.** A rule runs as `triage_rules.api_key_id`,
-    inside that key's scopes and inbox allowlist, metered and audit-logged like an interactive call, and
-    the FK cascades so revoking the key takes its rules with it.
+    inside that key's scopes and inbox allowlist, metered and audit-logged like an interactive call.
+    `checkTriageAuthority` re-derives all of that from the LIVE key row on every run, so a scope or an
+    inbox taken away since the rule was written stops it on the next run, not on the next dashboard edit.
+
+    **Rotation is not revocation (2026-08-25).** An OAuth-issued `api_keys` row IS the connection:
+    `/api/oauth/token` inserts one row per connection and each refresh UPDATES that row in place with a
+    new hash and a new one-hour expiry. So `expires_at` on such a key is the freshness of the current
+    access token, and the authorization itself lives in `oauth_refresh_tokens` on a sliding 180-day
+    window. Reading `expires_at` as the end of authority failed every unattended run that happened more
+    than an hour after the user's last interactive session: 134 consecutive `api_key_expired` failures
+    across one customer's 38 rules before it was found. The runner therefore consults the grant behind
+    the key when, and only when, the key looks expired. What must NOT be relaxed further: a `deleted_at`
+    key, a revoked or aged-out refresh chain, a missing scope and an inbox allowlist are all still hard
+    stops, and a grant lookup that fails is treated as no grant, so the run fails closed.
 
 ---
 
@@ -172,6 +184,10 @@ each of them requires a fresh threat model, a written decision, and a revision o
 - A rule is created disabled. Enabling is always a separate explicit act.
 - `preview` is read-only: it applies nothing, sends nothing, and must not claim anything in the seen
   ledger. The web preview route degrades to 503 when the edge function does not implement it.
+- Auto-disable is never silent: crossing `TRIAGE_MAX_CONSECUTIVE_FAILURES` emits an
+  `automation.auto_disabled` system event through `emit_system_event`, and the dashboard renders the rule's
+  health from `automationHealth()`. A rule that stops itself and tells nobody is the failure mode this
+  feature was shipped with, and it cost four days of a real customer's automations.
 - Auto-disable at `TRIAGE_MAX_CONSECUTIVE_FAILURES` (5) with `disabled_reason` set. A rule pointed at a
   dead mailbox stops.
 - `max_messages_per_run` is the per-run blast radius, and `interval_minutes` is a fixed ladder rather than

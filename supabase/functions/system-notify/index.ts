@@ -89,6 +89,95 @@ async function fetchGrowthStats(supabase: SupabaseClient): Promise<GrowthStats> 
   return { totalUsers, last24h, last7d, recentWorkspaces, recentWorkspacesConnected };
 }
 
+// Everything the automation.auto_disabled email needs beyond the event payload
+// itself. Same guarded style as fetchGrowthStats: any single lookup may come
+// back null, and the email renders "unknown" rather than failing to send. The
+// owner's email address is read HERE, at send time, and deliberately never
+// written into system_events.payload, which the migration reserves for
+// structured metadata only.
+type AutomationContext = {
+  ownerEmail: string | null;
+  workspaceName: string | null;
+  rulesEnabled: number | null;
+  rulesAutoDisabled: number | null;
+};
+
+async function fetchAutomationContext(
+  supabase: SupabaseClient,
+  workspaceId: string,
+): Promise<AutomationContext> {
+  const out: AutomationContext = {
+    ownerEmail: null,
+    workspaceName: null,
+    rulesEnabled: null,
+    rulesAutoDisabled: null,
+  };
+  if (!UUID_RE.test(workspaceId)) return out;
+
+  try {
+    const { data } = await supabase
+      .from("workspaces")
+      .select("display_name, owner_id")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (data) {
+      out.workspaceName = typeof data.display_name === "string" ? data.display_name : null;
+      if (typeof data.owner_id === "string") {
+        const { data: owner } = await supabase
+          .from("users")
+          .select("email")
+          .eq("id", data.owner_id)
+          .maybeSingle();
+        if (owner && typeof owner.email === "string") out.ownerEmail = owner.email;
+      }
+    }
+  } catch { /* best-effort: the alert is worth sending without it */ }
+
+  // Exact head counts, never data.length: a row-returning select silently
+  // truncates at 1000, so counting fetched rows would understate a workspace
+  // with a lot of rules. Same trap fetchGrowthStats documents.
+  const count = async (query: PromiseLike<{ count: number | null; error: unknown }>) => {
+    try {
+      const { count: value, error } = await query;
+      return error ? null : value;
+    } catch {
+      return null;
+    }
+  };
+  const [enabled, autoDisabled] = await Promise.all([
+    count(
+      supabase.from("triage_rules").select("*", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId).eq("enabled", true).is("deleted_at", null),
+    ),
+    count(
+      supabase.from("triage_rules").select("*", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId).eq("enabled", false).is("deleted_at", null)
+        .not("disabled_reason", "is", null),
+    ),
+  ]);
+  out.rulesEnabled = enabled;
+  out.rulesAutoDisabled = autoDisabled;
+  return out;
+}
+
+// What each automation failure code means for the person who has to act on it.
+// Kept short and specific: the point of this alert is that somebody reads it
+// once and knows whether to reconnect a client, fix a mailbox, or look at us.
+const AUTOMATION_ERROR_GUIDANCE: Record<string, string> = {
+  api_key_expired:
+    "The OAuth connection behind the rule is gone (disconnected, or the refresh chain aged out). "
+    + "The user has to reconnect MCP Emails in their MCP client and switch the rule back on. "
+    + "NOTE: a merely stale access token no longer produces this - the runner follows key rotation.",
+  api_key_unavailable: "The key was revoked or deleted. The rule cannot run until it is pointed at a live key.",
+  scope_denied: "The key no longer holds the scope the rule's action needs.",
+  inbox_not_permitted: "The key's inbox allowlist no longer includes the rule's inbox.",
+  inbox_unavailable: "The inbox the rule targets is gone.",
+  search_failed: "The mailbox search failed repeatedly. Likely a provider or credential problem on that inbox.",
+  folder_unresolved: "The destination folder could not be resolved on the provider.",
+  invalid_filter: "The stored filter no longer validates. This is ours, not the user's.",
+  invalid_action: "The stored action no longer validates. This is ours, not the user's.",
+};
+
 // Only "user.signup" is wired up for now; new event types just need a new
 // entry here -- an event_type with no matching entry is a no-op, not a
 // transport failure (see the unmatched-template branch below). buildTemplate
@@ -132,6 +221,46 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
       `signed up: ${new Date().toISOString()}`,
       "",
       "Full picture: https://mcpemails.com/admin/growth",
+    ].join("\n");
+
+    return { subject, body };
+  }
+
+  if (eventType === "automation.auto_disabled") {
+    // An automation switched itself off after repeated failures. This is the
+    // alert that did not exist when one customer's rules failed 134 times over
+    // four days with nobody told, so it is written to be read once and acted on.
+    const ruleId = typeof payload.rule_id === "string" ? payload.rule_id : "unknown";
+    const workspaceId = typeof payload.workspace_id === "string" ? payload.workspace_id : "";
+    const inboxId = typeof payload.inbox_id === "string" ? payload.inbox_id : "unknown";
+    const ruleName = typeof payload.rule_name === "string" && payload.rule_name ? payload.rule_name : "(unnamed)";
+    const errorCode = typeof payload.error_code === "string" ? payload.error_code : "unknown";
+    const failures = typeof payload.consecutive_failures === "number" ? payload.consecutive_failures : null;
+    const context = await fetchAutomationContext(supabase, workspaceId);
+
+    const who = context.ownerEmail ?? context.workspaceName ?? workspaceId ?? "unknown workspace";
+    const subject = `Automation switched itself off: ${who}`;
+    const body = [
+      `An automation stopped itself after ${failures === null ? "repeated" : failures} consecutive failed runs.`,
+      "",
+      "WHO",
+      `owner: ${context.ownerEmail ?? "unknown"}`,
+      `workspace: ${context.workspaceName ?? "unknown"} (${workspaceId || "unknown"})`,
+      "",
+      "WHAT STOPPED",
+      `rule: ${ruleName}`,
+      `rule_id: ${ruleId}`,
+      `inbox_id: ${inboxId}`,
+      `error_code: ${errorCode}`,
+      "",
+      "WHAT IT MEANS",
+      AUTOMATION_ERROR_GUIDANCE[errorCode] ?? "No specific guidance for this code. Read the rule's run log.",
+      "",
+      "REST OF THE WORKSPACE",
+      `automations still switched on: ${context.rulesEnabled === null ? "unknown" : context.rulesEnabled}`,
+      `automations already switched off by failures: ${context.rulesAutoDisabled === null ? "unknown" : context.rulesAutoDisabled}`,
+      "",
+      `disabled at: ${new Date().toISOString()}`,
     ].join("\n");
 
     return { subject, body };

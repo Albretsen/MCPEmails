@@ -43,6 +43,7 @@ import {
   type TriageApiKey,
   type TriageDeps,
   type TriageInbox,
+  type TriageKeyGrant,
   type TriageMatch,
   type TriageRuleRow,
   type TriageStore,
@@ -89,6 +90,8 @@ interface FakeState {
   staleLeases: { id: string }[];
   dueRules: TriageRuleRow[];
   apiKey: TriageApiKey | null;
+  /** What loadKeyGrant answers. Null = no OAuth chain references this key. */
+  keyGrant: TriageKeyGrant | null;
   inbox: TriageInbox | null;
 }
 
@@ -111,6 +114,7 @@ function freshState(overrides: Partial<FakeState> = {}): FakeState {
       expires_at: null,
       deleted_at: null,
     },
+    keyGrant: null,
     inbox: { id: "inbox-1", workspace_id: "ws-1", email_address: "a@b.com", provider: "gmail" },
     ...overrides,
   };
@@ -157,8 +161,16 @@ function fakeStore(state: FakeState): TriageStore {
       return Promise.resolve();
     },
     loadApiKey: () => Promise.resolve(state.apiKey),
+    loadKeyGrant: () => Promise.resolve(state.keyGrant),
     loadInbox: () => Promise.resolve(state.inbox),
   };
+}
+
+/** A store from before rotation-following existed: no loadKeyGrant at all. */
+function storeWithoutGrantLookup(state: FakeState): TriageStore {
+  const store = { ...fakeStore(state) };
+  delete (store as { loadKeyGrant?: unknown }).loadKeyGrant;
+  return store;
 }
 
 function fakeRule(overrides: Partial<TriageRuleRow> = {}): TriageRuleRow {
@@ -444,6 +456,22 @@ Deno.test("an empty filter is refused", () => {
   assert(!result.ok, "an empty filter matches the whole mailbox and must be refused");
 });
 
+Deno.test("a stored filter date must be the same ISO shape the tools accept", () => {
+  for (const good of ["2026-08-25", "2026-08-25T09:00", "2026-08-25T09:00:00Z", "2026-08-25T09:00:00+02:00"]) {
+    assert(validateTriageFilter({ since: good }).ok, `${good} is a shape the search tools accept`);
+  }
+  // `Date.parse` used to accept all of these. A rule is re-validated and re-run
+  // by a cron, so a zone-less or prose date could select a different day's mail
+  // depending on which region the edge function booted in.
+  for (const bad of ["June 1 2026", "08/25/2026", "2026-08-25 09:00:00", "2026-13-01", "yesterday", ""]) {
+    assert(
+      !validateTriageFilter({ since: bad }).ok,
+      `${JSON.stringify(bad)} must not be storable as a filter date`,
+    );
+  }
+  assert(!validateTriageFilter({ before: "June 1 2026" }).ok, "both date fields are checked");
+});
+
 Deno.test("only ladder intervals are accepted", () => {
   for (const good of [15, 30, 60, 180, 360, 720, 1440]) {
     assert(validateTriageInterval(good).ok, `${good} is on the ladder`);
@@ -609,6 +637,189 @@ Deno.test("draft_reply additionally requires read:email", () => {
   const action = { type: "draft_reply" as const, template: "hi" };
   const result = checkTriageAuthority(key, "inbox-1", action, Date.now());
   assert(!result.ok, "manage:drafts alone is not enough to derive reply recipients");
+});
+
+// ---------------------------------------------------------------------------
+// Rotation is not revocation
+//
+// The incident these cover: an OAuth-issued api_keys row IS the connection, and
+// the refresh grant rotates that row in place with a new one-hour expiry. A
+// cron running an hour after the user's last Claude session therefore saw
+// `expires_at` in the past and failed a live connection as "expired", once an
+// hour, for days. What must NOT change is that a real withdrawal of authority
+// still stops the rule on its next run.
+// ---------------------------------------------------------------------------
+
+const EXPIRED_KEY: TriageApiKey = {
+  id: "key-1",
+  workspace_id: "ws-1",
+  name: "OAuth: Claude",
+  scopes: ["manage:folders"],
+  inbox_ids: null,
+  // An hour before the fake clock: exactly what a key looks like when the
+  // client has not refreshed since the user's last session.
+  expires_at: new Date(1_000_000 - 3_600_000).toISOString(),
+  deleted_at: null,
+};
+
+const LIVE_GRANT: TriageKeyGrant = {
+  live: true,
+  expires_at: new Date(1_000_000 + 180 * 24 * 3_600_000).toISOString(),
+};
+
+const DEAD_GRANT: TriageKeyGrant = { live: false, expires_at: null };
+
+Deno.test("an expired access token with a live OAuth grant is rotation, not expiry", () => {
+  const move = { type: "move" as const, folder: "X" };
+  assert(
+    checkTriageAuthority(EXPIRED_KEY, "inbox-1", move, 1_000_000, LIVE_GRANT).ok,
+    "a key between refreshes, on a connection that is still authorized, may run",
+  );
+});
+
+Deno.test("an expired access token whose grant is gone still fails", () => {
+  const move = { type: "move" as const, folder: "X" };
+
+  const noGrant = checkTriageAuthority(EXPIRED_KEY, "inbox-1", move, 1_000_000, null);
+  assert(!noGrant.ok, "no OAuth chain means a dashboard key, and those expire for real");
+  assertEquals(
+    !noGrant.ok ? noGrant.error_code : "",
+    "api_key_expired",
+    "and it is reported as an expiry",
+  );
+
+  const revoked = checkTriageAuthority(EXPIRED_KEY, "inbox-1", move, 1_000_000, DEAD_GRANT);
+  assert(!revoked.ok, "a revoked or aged-out refresh chain is a real end of authority");
+  assert(
+    !revoked.ok && revoked.error_detail.includes("Reconnect"),
+    "and it tells the user the fix is to reconnect the client, not to edit the rule",
+  );
+});
+
+Deno.test("following rotation never launders a genuine revocation", () => {
+  const move = { type: "move" as const, folder: "X" };
+
+  // Deleted key + live chain: the dashboard revoke sets deleted_at AND kills
+  // the chain, but even a half-applied revocation must stop the rule.
+  const deleted = checkTriageAuthority(
+    { ...EXPIRED_KEY, deleted_at: "2026-08-01T00:00:00Z" },
+    "inbox-1",
+    move,
+    1_000_000,
+    LIVE_GRANT,
+  );
+  assert(!deleted.ok, "a deleted key fails even when a refresh chain is still live");
+  assertEquals(
+    !deleted.ok ? deleted.error_code : "",
+    "api_key_unavailable",
+    "revocation keeps its own error code",
+  );
+
+  // Scope and inbox restriction are still read off the LIVE key row, so a
+  // rotation-following run can never do more than the key may currently do.
+  const descoped = checkTriageAuthority(
+    { ...EXPIRED_KEY, scopes: [] },
+    "inbox-1",
+    move,
+    1_000_000,
+    LIVE_GRANT,
+  );
+  assert(!descoped.ok, "a scope removed since the rule was written still bites");
+  assertEquals(!descoped.ok ? descoped.error_code : "", "scope_denied", "named as a scope denial");
+
+  const wrongInbox = checkTriageAuthority(
+    { ...EXPIRED_KEY, inbox_ids: ["other-inbox"] },
+    "inbox-1",
+    move,
+    1_000_000,
+    LIVE_GRANT,
+  );
+  assert(!wrongInbox.ok, "an inbox the key was restricted away from still bites");
+  assertEquals(
+    !wrongInbox.ok ? wrongInbox.error_code : "",
+    "inbox_not_permitted",
+    "named as an inbox restriction",
+  );
+});
+
+Deno.test("a run whose key is mid-rotation completes instead of failing", async () => {
+  const state = freshState({ apiKey: EXPIRED_KEY, keyGrant: LIVE_GRANT });
+  const applied = { calls: [] as any[] };
+
+  const summary = await runTriageRule(fakeDeps(state, [fakeMatch("m")], applied), fakeRule());
+
+  assertEquals(summary.status, "completed", "the run is not a failure");
+  assertEquals(summary.error_code, null, "and carries no error code");
+  assertEquals(applied.calls.length, 1, "the mailbox work actually happened");
+  assertEquals(
+    state.released[0].consecutive_failures,
+    0,
+    "so the failure counter that used to march to the auto-disable stays at zero",
+  );
+});
+
+Deno.test("a store that cannot look up the grant fails closed, not open", async () => {
+  const state = freshState({ apiKey: EXPIRED_KEY, keyGrant: LIVE_GRANT });
+  const applied = { calls: [] as any[] };
+  const deps: TriageDeps = {
+    ...fakeDeps(state, [fakeMatch("m")], applied),
+    store: storeWithoutGrantLookup(state),
+  };
+
+  const summary = await runTriageRule(deps, fakeRule());
+
+  assertEquals(summary.error_code, "api_key_expired", "an unanswerable grant question fails the run");
+  assertEquals(applied.calls.length, 0, "and the mailbox is untouched");
+});
+
+// ---------------------------------------------------------------------------
+// The auto-disable must not be silent
+// ---------------------------------------------------------------------------
+
+Deno.test("auto-disabling at the failure ceiling notifies, and only then", async () => {
+  const notified: any[] = [];
+  const notifyDeps = (state: FakeState, applied: { calls: any[] }): TriageDeps => ({
+    ...fakeDeps(state, [fakeMatch("m")], applied),
+    notifyRuleDisabled: (input) => {
+      notified.push(input);
+      return Promise.resolve();
+    },
+  });
+
+  // One short of the ceiling: the rule keeps going, so there is nothing to say.
+  const nearState = freshState({ apiKey: null });
+  await runTriageRule(
+    notifyDeps(nearState, { calls: [] }),
+    fakeRule({ consecutive_failures: 3 }),
+  );
+  assertEquals(notified.length, 0, "a failure that does not disable the rule is not announced");
+
+  // The fifth consecutive failure switches the rule off, which is the moment a
+  // person has to be told: from here on the rule does nothing at all.
+  const state = freshState({ apiKey: null });
+  await runTriageRule(
+    notifyDeps(state, { calls: [] }),
+    fakeRule({ consecutive_failures: 4, name: "Archive newsletters" }),
+  );
+  assertEquals(notified.length, 1, "the auto-disable is announced exactly once");
+  assertEquals(notified[0].ruleId, "rule-1", "the notification names the rule");
+  assertEquals(notified[0].workspaceId, "ws-1", "and its workspace");
+  assertEquals(notified[0].errorCode, "api_key_unavailable", "and why it stopped");
+  assertEquals(notified[0].consecutiveFailures, 5, "and how many runs it took");
+  assert(state.released[0].enabled === false, "the rule really is switched off");
+});
+
+Deno.test("a notifier that throws does not become a second failure", async () => {
+  const state = freshState({ apiKey: null });
+  const deps: TriageDeps = {
+    ...fakeDeps(state, [fakeMatch("m")], { calls: [] }),
+    notifyRuleDisabled: () => Promise.reject(new Error("pg_net is down")),
+  };
+
+  const summary = await runTriageRule(deps, fakeRule({ consecutive_failures: 4 }));
+
+  assertEquals(summary.error_code, "api_key_unavailable", "the run reports the ORIGINAL cause");
+  assertEquals(state.released[0].enabled, false, "and the rule is still switched off");
 });
 
 Deno.test("a revoked key stops the run before any provider call", async () => {

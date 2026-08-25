@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Badge, Btn, Icon } from '../Primitives';
 import { useToast } from './Toast';
+// Health is derived in one place, shared with the server-side validator module,
+// so the banner and the row can never disagree about whether a rule is broken.
+import { automationHealth, AUTOMATION_ERROR_MESSAGE_KEYS } from '@/lib/automations/rules';
 
 /* AutomationsPanel.jsx: scheduled, unattended triage rules.
 
@@ -98,6 +101,12 @@ function formatTimestamp(value) {
 
 function inboxLabel(row) {
   return row?.inboxes?.display_name || row?.inboxes?.email_address || null;
+}
+
+/** The cause in the user's terms. An unmapped code becomes "check the run log". */
+function causeText(errorCode, t) {
+  const key = errorCode ? AUTOMATION_ERROR_MESSAGE_KEYS[errorCode] : null;
+  return key ? t(key) : t('automations.health.causeUnknown');
 }
 
 /* ── Panel ─────────────────────────────────────────────────────────────── */
@@ -213,6 +222,12 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
         </span>
       </div>
 
+      {/* A broken automation is invisible by nature: it stops touching the
+          mailbox and nothing else changes. This banner is the one place that
+          says so out loud, above the fold, before the table the user would
+          otherwise have to read row by row. */}
+      {!loading ? <HealthBanner rules={rules} t={t} /> : null}
+
       {!canManage && !loading && !error ? (
         <div className="alert" role="status" style={{ marginBottom: 16 }}>
           {t('automations.viewerNotice')}
@@ -305,6 +320,53 @@ export function AutomationsPanel({ userRole, inboxes = [], keys = [] }) {
   );
 }
 
+/* ── Health banner ──────────────────────────────────────────────────────── */
+
+/**
+ * Everything that is wrong right now, in one sentence plus the causes.
+ *
+ * Stopped rules lead, because a stopped rule is doing nothing at all, whereas a
+ * failing one is still trying. Causes are de-duplicated: thirty-three rules on
+ * one connection share one cause, and thirty-three copies of it would bury the
+ * one thing the user has to do about it.
+ */
+function HealthBanner({ rules, t }) {
+  const stopped = [];
+  const failing = [];
+  const causes = new Set();
+
+  for (const rule of rules) {
+    const health = automationHealth(rule);
+    if (health.state === 'ok') continue;
+    (health.state === 'auto_disabled' ? stopped : failing).push(rule);
+    causes.add(causeText(health.errorCode, t));
+  }
+  if (stopped.length === 0 && failing.length === 0) return null;
+
+  const severe = stopped.length > 0;
+  return (
+    <div
+      className={severe ? 'alert alert-error' : 'alert'}
+      role={severe ? 'alert' : 'status'}
+      style={{ marginBottom: 16, alignItems: 'flex-start' }}
+    >
+      <Icon name={severe ? 'alert-triangle' : 'activity'} size={16} />
+      <span>
+        <strong>
+          {severe
+            ? t('automations.health.bannerStopped', { count: stopped.length })
+            : t('automations.health.bannerFailing', { count: failing.length })}
+        </strong>{' '}
+        {severe && failing.length > 0
+          ? `${t('automations.health.bannerAlsoFailing', { count: failing.length })} `
+          : ''}
+        {[...causes].join(' ')}{' '}
+        {severe ? t('automations.health.bannerFix') : null}
+      </span>
+    </div>
+  );
+}
+
 /* ── Row ───────────────────────────────────────────────────────────────── */
 
 function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onRuns, onDelete }) {
@@ -312,14 +374,22 @@ function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onRuns, onDelete 
   const lastRun = rule.last_run;
   const lastRunAt = formatTimestamp(lastRun?.started_at);
   const running = Boolean(rule.running_since);
+  const health = automationHealth(rule);
 
   return (
     <tr>
       <td>
         <div style={{ fontWeight: 500 }}>{rule.name}</div>
-        {rule.disabled_reason ? (
+        {health.state === 'auto_disabled' ? (
           <div className="sub" style={{ fontSize: 12, color: 'var(--red-700)', marginTop: 2 }}>
-            {t('automations.autoDisabled')}
+            {t('automations.autoDisabled')} {causeText(health.errorCode, t)}
+          </div>
+        ) : health.state === 'failing' ? (
+          // Said BEFORE the rule switches itself off, with the count, because
+          // the whole point is to be told while there is still time to fix it.
+          <div className="sub" style={{ fontSize: 12, color: 'var(--amber-700)', marginTop: 2 }}>
+            {t('automations.health.rowFailing', { count: health.consecutiveFailures })}{' '}
+            {causeText(health.errorCode, t)}
           </div>
         ) : null}
       </td>

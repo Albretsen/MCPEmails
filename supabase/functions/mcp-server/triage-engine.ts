@@ -46,7 +46,10 @@
 // ---------------------------------------------------------------------------
 
 import { neutralizeMaybe, neutralizeText } from "./text-safety.ts";
-import type { NormalizedSearch } from "./search-translate.ts";
+// The SAME date predicate the tool schema enforces, imported rather than
+// re-expressed. A stored rule must not be allowed to hold a date shape an
+// interactive search would have refused: see the note in validateTriageFilter.
+import { isIsoDateOrDateTime, type NormalizedSearch } from "./search-translate.ts";
 // Pure naming rules, no provider code: what a label is called on each provider
 // and which of those names are legal. See the note on `applyAction` above about
 // why the runner owns no provider code of its own.
@@ -328,10 +331,24 @@ export function validateTriageFilter(raw: unknown): TriageValidation<NormalizedS
   for (const key of ALLOWED_FILTER_DATE_FIELDS) {
     const value = input[key];
     if (value === undefined || value === null) continue;
-    if (typeof value !== "string" || Number.isNaN(Date.parse(value))) {
-      return fail(`filter.${key} must be an ISO 8601 date or datetime.`);
+    // `isIsoDateOrDateTime`, not a bare `Date.parse`. Two things go wrong with
+    // the looser check, and both are worse here than in an interactive call:
+    //   - `Date.parse` accepts prose such as "June 1 2026", which the tool
+    //     schema refuses, so a stored rule could hold a window the interactive
+    //     surface would never have let a caller write.
+    //   - a zone-less date-time falls through to `new Date`, which reads it in
+    //     the HOST's zone. A rule is re-validated and re-run on a cron in
+    //     whichever region the edge function boots in, so the same rule could
+    //     select a different day's mail from one run to the next.
+    // Verified against prod before tightening: no stored rule uses `since` or
+    // `before` at all, so nothing already saved is invalidated by this.
+    if (typeof value !== "string" || !isIsoDateOrDateTime(value)) {
+      return fail(
+        `filter.${key} must be an ISO 8601 date or datetime, for example ` +
+          "2026-08-25 or 2026-08-25T09:00:00Z.",
+      );
     }
-    (out as Record<string, unknown>)[key] = value;
+    (out as Record<string, unknown>)[key] = value.trim();
     criteria++;
   }
 
@@ -577,6 +594,42 @@ export interface TriageApiKey {
   deleted_at: string | null;
 }
 
+/**
+ * The OAuth grant standing behind a pinned `api_keys` row, when one does.
+ *
+ * WHY THIS TYPE EXISTS AT ALL. An `api_keys` row means two different things
+ * depending on how it was made, and automations were broken by the difference:
+ *
+ *   - A key minted in the dashboard is a bearer credential the user created,
+ *     with an expiry the user chose. `expires_at` is the END OF ITS AUTHORITY.
+ *   - A key minted by the OAuth connector flow (apps/web/app/api/oauth/token)
+ *     is the durable identity of one connection, and `expires_at` is one hour
+ *     out. The refresh grant does not insert a new row: it UPDATES this one in
+ *     place with a new hash and a new hour. So `expires_at` on an OAuth-backed
+ *     key is the freshness of the current ACCESS TOKEN, not the lifetime of the
+ *     authorization. The authorization lives in `oauth_refresh_tokens`, on a
+ *     sliding 180-day window that an active connection keeps pushing out.
+ *
+ * Interactive traffic never noticed, because a client refreshes immediately
+ * before it calls. A cron did notice: it ran an hour or a day after the user's
+ * last Claude session, saw `expires_at` in the past, and called a perfectly
+ * live connection expired. That is what this type lets `checkTriageAuthority`
+ * tell apart, and it is the ONLY thing it relaxes: scopes, the inbox allowlist
+ * and `deleted_at` are still read from the live key row on every single run.
+ */
+export interface TriageKeyGrant {
+  /**
+   * True when at least one unrevoked, unexpired refresh token points at this
+   * key: the connection is alive and its access token is merely between
+   * refreshes. False means the grant itself ended (the user disconnected the
+   * connector, or the chain finally aged out), which is a real revocation and
+   * must still stop the rule.
+   */
+  live: boolean;
+  /** Furthest-out expiry among the live chains. Null when none is live. */
+  expires_at: string | null;
+}
+
 /** The inbox, opaque to this module beyond identity. */
 export interface TriageInbox {
   id: string;
@@ -682,6 +735,16 @@ export interface TriageStore {
     undo_state: Record<string, unknown> | null;
   }): Promise<void>;
   loadApiKey(apiKeyId: string): Promise<TriageApiKey | null>;
+  /**
+   * The OAuth grant behind a key, or null when no OAuth chain references it.
+   *
+   * Optional so a caller that does not implement it degrades to the old, strict
+   * reading of `expires_at` rather than to a permissive one: a missing
+   * implementation makes an expired key fail, never pass. index.ts supplies the
+   * real query. It is asked ONLY when the key already looks expired, so the
+   * common path (a key refreshed minutes ago) costs nothing.
+   */
+  loadKeyGrant?(apiKeyId: string): Promise<TriageKeyGrant | null>;
   loadInbox(inboxId: string): Promise<TriageInbox | null>;
 }
 
@@ -716,6 +779,23 @@ export interface TriageDeps {
     errorCode: string | null;
     durationMs: number;
   }): Promise<void>;
+  /**
+   * Announce that a rule just switched itself off after repeated failures.
+   *
+   * Optional, and deliberately fire-and-forget: a notification that fails must
+   * never turn into a second failure for a rule that has already stopped. It
+   * exists because the auto-disable was previously SILENT, which is how one
+   * customer's 33 rules failed 134 times over four days with nobody told. The
+   * payload is structured metadata only, in keeping with `system_events`.
+   */
+  notifyRuleDisabled?(input: {
+    ruleId: string;
+    workspaceId: string;
+    inboxId: string;
+    ruleName: string;
+    errorCode: string;
+    consecutiveFailures: number;
+  }): Promise<void>;
   /** Injectable clock, for tests. */
   now?(): number;
 }
@@ -736,12 +816,35 @@ function nowMs(deps: TriageDeps): number {
  * scope that has since been revoked, or on an inbox the key was later restricted
  * away from. Checking here means revocation takes effect on the next run rather
  * than on the next dashboard edit.
+ *
+ * THE ONE RELAXATION, AND WHY IT IS NOT A HOLE. `expires_at` on an OAuth-backed
+ * key is the freshness of the current access token, not the end of the grant
+ * (see `TriageKeyGrant` for the full account). So when a key looks expired the
+ * caller may hand us the grant behind it, and a LIVE grant lets the run
+ * proceed. Everything that expresses a deliberate withdrawal of authority is
+ * untouched by that:
+ *
+ *   - Revoking the key in the dashboard sets `deleted_at` AND revokes the
+ *     refresh chain (apps/web/app/api/api-keys/[id]/revoke). Caught first,
+ *     before the grant is even consulted.
+ *   - Disconnecting the connector (RFC 7009 revoke) sets `revoked_at` on the
+ *     chain, so `grant.live` is false and the rule stops.
+ *   - An abandoned connection's chain ages out on its own 180-day window, so
+ *     "nobody has touched this in half a year" still ends the automation.
+ *   - Scopes and the inbox allowlist are read from the LIVE key row below, on
+ *     every run, exactly as before. Following a rotation never widens what the
+ *     rule may do; it only declines to call a live connection a dead one.
+ *
+ * `grant` omitted or null means "no OAuth chain references this key", i.e. a
+ * dashboard-minted key whose `expires_at` is an expiry the user chose. Those
+ * expire for real.
  */
 export function checkTriageAuthority(
   apiKey: TriageApiKey | null,
   inboxId: string,
   action: TriageAction,
   nowIsoMs: number,
+  grant: TriageKeyGrant | null = null,
 ): { ok: true } | { ok: false; error_code: string; error_detail: string } {
   if (!apiKey || apiKey.deleted_at) {
     return {
@@ -751,11 +854,28 @@ export function checkTriageAuthority(
     };
   }
   if (apiKey.expires_at && Date.parse(apiKey.expires_at) <= nowIsoMs) {
-    return {
-      ok: false,
-      error_code: "api_key_expired",
-      error_detail: "The API key this automation runs as has expired.",
-    };
+    if (!grant) {
+      return {
+        ok: false,
+        error_code: "api_key_expired",
+        error_detail: "The API key this automation runs as has expired.",
+      };
+    }
+    if (!grant.live) {
+      // A grant record exists but is dead: this connection was disconnected or
+      // has aged out. Worth its own wording, because the fix is to reconnect
+      // the MCP client, not to edit anything in the dashboard.
+      return {
+        ok: false,
+        error_code: "api_key_expired",
+        error_detail:
+          "The connection this automation runs as has been disconnected or has expired. " +
+          "Reconnect MCP Emails in your MCP client, then switch the automation back on.",
+      };
+    }
+    // Live grant, stale access token: this is rotation, not revocation. Fall
+    // through to the scope and inbox checks, which are the ones that carry the
+    // authority question.
   }
   const needed = TRIAGE_ACTION_SCOPES[action.type];
   if (!apiKey.scopes.includes(needed)) {
@@ -856,6 +976,32 @@ export async function runTriageRule(
         }
         : {}),
     });
+    // TELL SOMEBODY. Auto-disable used to be entirely silent: the rule stopped,
+    // `disabled_reason` was written, and unless the owner happened to open the
+    // Automations page they never learned that the feature they were relying on
+    // had switched itself off. Emitted only at the disable, not on every failed
+    // run, so a broken rule produces one notification rather than one an hour.
+    if (disable && deps.notifyRuleDisabled) {
+      try {
+        await deps.notifyRuleDisabled({
+          ruleId: rule.id,
+          workspaceId: rule.workspace_id,
+          inboxId: rule.inbox_id,
+          // User-authored text on its way into an operator's mailbox, so it is
+          // neutralized and truncated at this boundary like every other
+          // user-authored string this module passes on.
+          ruleName: neutralizeText(rule.name ?? "").slice(0, 80),
+          errorCode,
+          consecutiveFailures: consecutive,
+        });
+      } catch (error) {
+        // Never a second failure for a rule that has already stopped.
+        console.warn("[triage] disable_notify_failed", {
+          rule_id: rule.id,
+          error: redactErrorDetail(error),
+        });
+      }
+    }
     return {
       rule_id: rule.id,
       status: "failed",
@@ -879,9 +1025,42 @@ export async function runTriageRule(
   const action = actionCheck.value;
 
   // ── Authority ─────────────────────────────────────────────────────────────
+  // The grant is looked up ONLY when the pinned key already looks expired.
+  // That is the uncommon path (a key whose OAuth client refreshed within the
+  // hour is not expired), so the ordinary run still costs exactly one key read,
+  // and the extra query buys the one distinction this check could not make
+  // before: an access token between refreshes versus a withdrawn authorization.
   const apiKey = await store.loadApiKey(rule.api_key_id);
-  const authority = checkTriageAuthority(apiKey, rule.inbox_id, action, nowMs(deps));
+  const keyLooksExpired = Boolean(
+    apiKey && !apiKey.deleted_at && apiKey.expires_at &&
+      Date.parse(apiKey.expires_at) <= nowMs(deps),
+  );
+  let grant: TriageKeyGrant | null = null;
+  if (keyLooksExpired && store.loadKeyGrant) {
+    try {
+      grant = await store.loadKeyGrant(rule.api_key_id);
+    } catch (error) {
+      // Fail CLOSED. An unreadable grant must not be read as a live one, so the
+      // rule fails this run exactly as it did before, and the next run retries.
+      console.warn("[triage] key_grant_lookup_failed", {
+        rule_id: rule.id,
+        error: redactErrorDetail(error),
+      });
+      grant = null;
+    }
+  }
+  const authority = checkTriageAuthority(apiKey, rule.inbox_id, action, nowMs(deps), grant);
   if (!authority.ok) return await failRun(authority.error_code, authority.error_detail);
+  if (keyLooksExpired && grant?.live) {
+    // Worth a line in the logs: it is the difference between "this ran" and
+    // "this should have failed", and it is the signal that would have made the
+    // original incident visible in minutes rather than days.
+    console.info("[triage] running_on_rotating_key", {
+      rule_id: rule.id,
+      api_key_id: rule.api_key_id,
+      grant_expires_at: grant.expires_at,
+    });
+  }
   const key = apiKey as TriageApiKey;
 
   const inbox = await store.loadInbox(rule.inbox_id);

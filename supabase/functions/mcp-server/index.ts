@@ -22847,6 +22847,47 @@ const triageStore: TriageStore = {
     return data as unknown as TriageApiKey;
   },
 
+  async loadKeyGrant(apiKeyId) {
+    // Is there still an OAuth authorization behind this key?
+    //
+    // An OAuth-issued key IS the connection: /api/oauth/token inserts one
+    // api_keys row per connection and every later refresh UPDATES that row in
+    // place with a fresh hash and a fresh hour. So `expires_at` on such a key
+    // says when the current access token goes stale, and says nothing about
+    // whether the user is still connected. This answers the second question,
+    // which is the one an unattended runner actually needs.
+    //
+    // Newest rows first, five of them rather than one: rotation inserts the new
+    // refresh token BEFORE it revokes the old, and rolls the new one back if
+    // the key update fails, so for a moment the newest row can be revoked while
+    // the connection is perfectly alive on the previous one. Any live row means
+    // a live grant. Five is ample for that window and keeps the read bounded
+    // for a connection that has refreshed thousands of times.
+    const { data, error } = await supabase
+      .from("oauth_refresh_tokens")
+      .select("expires_at, revoked_at")
+      .eq("api_key_id", apiKeyId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    // Thrown, not swallowed: the engine treats a failed lookup as "no grant",
+    // which fails the run closed. Returning null here instead would be the same
+    // outcome but would hide the database error.
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as { expires_at: string; revoked_at: string | null }[];
+    // No chain at all means this is not an OAuth key: a dashboard-minted key
+    // whose expiry the user chose, and which therefore expires for real.
+    if (rows.length === 0) return null;
+    const nowMs = Date.now();
+    const liveExpiries = rows
+      .filter((row) => !row.revoked_at && Date.parse(row.expires_at) > nowMs)
+      .map((row) => row.expires_at)
+      .sort();
+    return {
+      live: liveExpiries.length > 0,
+      expires_at: liveExpiries.length > 0 ? liveExpiries[liveExpiries.length - 1] : null,
+    };
+  },
+
   async loadInbox(inboxId) {
     const row = await loadInboxRowForTriage(inboxId);
     if (!row) return null;
@@ -23279,6 +23320,27 @@ function triageDeps(): TriageDeps {
         userAgent: "mcp-emails-triage-runner",
       });
       await writeActionUsage(input.workspaceId, input.operation, input.status);
+    },
+    async notifyRuleDisabled(input) {
+      // Reuses the existing system-event pipeline (migration
+      // 20260805170000_add_system_event_notifications.sql) rather than growing a
+      // second notifier: emit_system_event writes the audit row and fires the
+      // pg_net call to the system-notify Edge Function, which owns delivery.
+      // Structured metadata only, per the table's contract: ids, an error code,
+      // a counter and the rule's (neutralized, truncated) name. No message
+      // content, no addresses, no credentials.
+      const { error } = await supabase.rpc("emit_system_event", {
+        p_event_type: "automation.auto_disabled",
+        p_payload: {
+          rule_id: input.ruleId,
+          workspace_id: input.workspaceId,
+          inbox_id: input.inboxId,
+          rule_name: input.ruleName,
+          error_code: input.errorCode,
+          consecutive_failures: input.consecutiveFailures,
+        },
+      });
+      if (error) throw new Error(error.message);
     },
   };
 }

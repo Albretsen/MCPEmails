@@ -52,6 +52,34 @@ const FORBIDDEN_MOVE_DESTINATIONS = [
   'trash', 'bin', 'deleted', 'deleted items', 'deleted messages', 'junk', 'spam',
 ];
 
+/**
+ * The date shape a stored filter may hold.
+ *
+ * Kept in step with ISO_DATE_OR_DATE_TIME_RE in
+ * supabase/functions/mcp-server/search-translate.ts, which is the enforcing
+ * copy: the runner re-validates every stored filter before each run, so a date
+ * this module accepted but that one refuses is a rule whose every run fails.
+ *
+ * Why not a bare `Date.parse`, which is what this used to be: it accepts prose
+ * such as "June 1 2026" that the MCP tool surface refuses outright, and it
+ * reads a zone-less date-time in the HOST's timezone. A rule is re-run on a
+ * cron in whichever region the edge function boots in, so that reading could
+ * quietly select a different day's mail from one run to the next.
+ */
+const ISO_DATE_OR_DATE_TIME_RE =
+  /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)(Z|[+-]\d{2}:?\d{2})?)?$/i;
+
+export function isIsoDateOrDateTime(value: string): boolean {
+  const trimmed = value.trim();
+  const match = ISO_DATE_OR_DATE_TIME_RE.exec(trimmed);
+  if (!match) return false;
+  // The shape cannot tell that month 13 or hour 25 do not exist, so the value
+  // is parsed too. Normalised to UTC first, for the reason above.
+  const [, date, time, zone] = match;
+  const normalized = time === undefined ? `${date}T00:00:00Z` : `${date}T${time}${zone ?? 'Z'}`;
+  return !Number.isNaN(new Date(normalized).getTime());
+}
+
 function folderLeaf(folder: string): string {
   const leaf = folder.split(/[/.\\]/).filter(Boolean).pop() ?? folder;
   return leaf.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -131,10 +159,10 @@ export function validateFilter(raw: unknown): ValidationResult<StoredFilter> {
     }
 
     if ((FILTER_DATE_FIELDS as readonly string[]).includes(key)) {
-      if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
-        return fail(`The filter field "${key}" must be a date.`);
+      if (typeof value !== 'string' || !isIsoDateOrDateTime(value)) {
+        return fail(`The filter field "${key}" must be an ISO date such as 2026-08-25.`);
       }
-      out[key] = value;
+      out[key] = value.trim();
       continue;
     }
 
@@ -240,6 +268,93 @@ export const RUN_COLUMNS =
 
 export const RUN_ITEM_COLUMNS =
   'id, run_id, outcome, subject_redacted, sender_redacted, detail, undone_at, created_at';
+
+// ---------------------------------------------------------------------------
+// Is this automation actually working?
+//
+// A rule that is quietly broken looks almost exactly like a rule that has
+// nothing to do: both sit in the table with a timestamp next to them. That is
+// not a cosmetic problem. One customer's rules failed every hour for four days
+// and switched five of themselves off, and the only place that fact existed was
+// a `disabled_reason` string nobody had a reason to go and read.
+//
+// So the health of a rule is derived ONCE, here, and both the row and the
+// summary banner render the same answer. The strings live in the locale files;
+// this module decides the state and the cause, never the wording.
+// ---------------------------------------------------------------------------
+
+export type AutomationHealthState =
+  /** Running, or idle for ordinary reasons. */
+  | 'ok'
+  /** Still switched on, but its recent runs are failing. */
+  | 'failing'
+  /** Switched itself off after repeated failures. It is doing nothing at all. */
+  | 'auto_disabled';
+
+export interface AutomationHealth {
+  state: AutomationHealthState;
+  /** The run error code behind it, when one is known. */
+  errorCode: string | null;
+  consecutiveFailures: number;
+}
+
+/**
+ * The only two writers of `disabled_reason` are the runner's auto-disable and
+ * the MCP `automation disable` action, and only the latter uses this exact
+ * sentence. Anything else in that column means the rule stopped itself.
+ */
+const DISABLED_BY_REQUEST = 'Disabled by request.';
+
+/** The runner writes "... Last error: <code>. Fix the cause and re-enable." */
+const LAST_ERROR_RE = /Last error:\s*([a-z0-9_]+)/i;
+
+/**
+ * @param rule a row as /api/automations returns it, with its `last_run` summary.
+ */
+export function automationHealth(rule: {
+  enabled?: boolean | null;
+  consecutive_failures?: number | null;
+  disabled_reason?: string | null;
+  last_run?: { status?: string | null; error_code?: string | null } | null;
+}): AutomationHealth {
+  const consecutiveFailures = typeof rule.consecutive_failures === 'number' ? rule.consecutive_failures : 0;
+  const reason = typeof rule.disabled_reason === 'string' ? rule.disabled_reason : '';
+  const lastRunFailed = rule.last_run?.status === 'failed';
+
+  // Prefer the live run log over the frozen sentence: the sentence records why
+  // the rule stopped, the run log records whether that cause is still true.
+  const errorCode = (lastRunFailed && rule.last_run?.error_code)
+    ? rule.last_run.error_code
+    : (LAST_ERROR_RE.exec(reason)?.[1] ?? null);
+
+  if (!rule.enabled && reason && reason !== DISABLED_BY_REQUEST) {
+    return { state: 'auto_disabled', errorCode, consecutiveFailures };
+  }
+  if (rule.enabled && (consecutiveFailures > 0 || lastRunFailed)) {
+    return { state: 'failing', errorCode, consecutiveFailures };
+  }
+  return { state: 'ok', errorCode: null, consecutiveFailures };
+}
+
+/**
+ * Run error code to the locale key that explains it in the user's own terms.
+ *
+ * Deliberately not exhaustive: a code with no entry falls back to a generic
+ * "look at the run log" line rather than showing a raw identifier, because an
+ * identifier tells a user nothing they can act on.
+ */
+export const AUTOMATION_ERROR_MESSAGE_KEYS: Record<string, string> = {
+  api_key_expired: 'automations.health.causeConnectionEnded',
+  api_key_unavailable: 'automations.health.causeKeyRevoked',
+  scope_denied: 'automations.health.causeScopeDenied',
+  inbox_not_permitted: 'automations.health.causeInboxNotPermitted',
+  inbox_unavailable: 'automations.health.causeInboxUnavailable',
+  search_failed: 'automations.health.causeSearchFailed',
+  folder_unresolved: 'automations.health.causeFolderUnresolved',
+  invalid_filter: 'automations.health.causeInvalidRule',
+  invalid_action: 'automations.health.causeInvalidRule',
+  run_interrupted: 'automations.health.causeInterrupted',
+};
 
 /**
  * Confirms the inbox and API key both belong to the caller's workspace.
