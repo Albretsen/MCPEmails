@@ -106,9 +106,9 @@ export interface NormalizedSearch {
    * IMAP (FLAGGED). Dropped for Graph (no usable predicate).
    */
   flagged?: boolean;
-  /** ISO 8601 date or datetime; received on/after (>=) this instant. */
+  /** ISO 8601 date or datetime (no timezone = UTC); received on/after (>=) this instant. */
   since?: string;
-  /** ISO 8601 date or datetime; received strictly before (<) this instant. */
+  /** ISO 8601 date or datetime (no timezone = UTC); received strictly before (<) this instant. */
   before?: string;
   /**
    * Provider-native query passed through verbatim. Precedence: structured
@@ -130,32 +130,93 @@ const MONTHS_ABBR = [
 ] as const;
 
 /**
+ * The single shape definition shared by the parser below and by the schema
+ * validator (isIsoDateOrDateTime), so the two can never drift apart and start
+ * disagreeing about what a caller is allowed to send.
+ *
+ * Groups: (1) the calendar date, (2) the optional time, (3) the optional zone
+ * designator. The zone is `Z`, `+HH:MM` or the colon-less `+HHMM` that V8 also
+ * accepts; a lowercase `z` is tolerated via the `i` flag because callers copy
+ * timestamps out of logs. Everything else (a space instead of `T`, a bare
+ * offset like `+02`, prose such as "June 1 2026") is deliberately not matched:
+ * see the note on the fallback branch of parseIsoDate.
+ */
+const ISO_DATE_OR_DATE_TIME_RE =
+  /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)(Z|[+-]\d{2}:?\d{2})?)?$/i;
+
+/**
  * Parse an ISO 8601 date or datetime into a Date. Accepts:
- *   "2026-06-03", "2026-06-03T14:12:00Z", "2026-06-03T14:12:00+02:00".
- * A bare date ("YYYY-MM-DD") is interpreted as UTC midnight.
+ *   "2026-06-03", "2026-06-03T14:12", "2026-06-03T14:12:00",
+ *   "2026-06-03T14:12:00Z", "2026-06-03T14:12:00+02:00".
  * Throws on an unparseable value so callers fail loud rather than silently
  * emitting a wrong query.
+ *
+ * TIMEZONE: a value that carries no zone designator, whether it is a bare date
+ * or a full date-time, is read as UTC. That is the whole reason this function
+ * normalises the string itself instead of handing it to `new Date`: under
+ * ECMAScript a date-only string is UTC but a date-*time* without an offset is
+ * LOCAL, so `new Date("2026-08-01T00:00:00")` would mean a different instant
+ * depending on the timezone the edge runtime happens to boot in, and the same
+ * search would return different mail from two regions. Appending "Z" before
+ * parsing removes the runtime from the equation entirely.
  */
 export function parseIsoDate(input: string): Date {
   const s = input.trim();
-  // Bare date → pin to UTC midnight (avoid local-tz drift from `new Date`).
-  const bare = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-  if (bare) {
-    const d = new Date(Date.UTC(
-      Number(bare[1]),
-      Number(bare[2]) - 1,
-      Number(bare[3]),
-    ));
+  const match = ISO_DATE_OR_DATE_TIME_RE.exec(s);
+  if (match) {
+    const [, date, time, zone] = match;
+    // No time at all means UTC midnight; a time with no zone is pinned to UTC
+    // rather than inheriting the host's. Only an explicit zone is passed
+    // through as written, because it already names an unambiguous instant.
+    const normalized = time === undefined
+      ? `${date}T00:00:00Z`
+      : `${date}T${time}${zone ?? "Z"}`;
+    const d = new Date(normalized);
     if (Number.isNaN(d.getTime())) {
-      throw new RangeError(`Invalid ISO date: ${JSON.stringify(input)}`);
+      // Reachable for a well-shaped but impossible value such as
+      // "2026-13-01" or "2026-08-01T25:00:00": the regex can only see the
+      // shape, not whether the fields are in range.
+      throw new RangeError(`Invalid ISO 8601 date/datetime: ${JSON.stringify(input)}`);
     }
     return d;
   }
+  // Fallback for callers that do not go through the tool schema validator (the
+  // unattended triage runner stores a filter that was only checked with
+  // Date.parse). Anything landing here is whatever `new Date` makes of it,
+  // including the local-time reading of an odd date-time shape, which is
+  // precisely why the schema layer refuses to accept these from a tool call.
   const d = new Date(s);
   if (Number.isNaN(d.getTime())) {
     throw new RangeError(`Invalid ISO 8601 date/datetime: ${JSON.stringify(input)}`);
   }
   return d;
+}
+
+/**
+ * Does `value` match the date/date-time contract the search tools advertise?
+ *
+ * Used by validateInputSchema in index.ts for the "date-or-date-time" format
+ * token. It lives here, next to parseIsoDate, because the promise it makes to
+ * the caller is only worth anything if it accepts exactly what the parser one
+ * layer down understands.
+ *
+ * The shape is checked as well as the parse because `new Date` cheerfully
+ * accepts prose ("June 1 2026") and other implementation-defined junk, which
+ * would then reach the provider as a date nobody intended. The parse is
+ * checked as well as the shape because the shape cannot tell that month 13 or
+ * hour 25 do not exist.
+ */
+export function isIsoDateOrDateTime(value: string): boolean {
+  const s = value.trim();
+  if (!ISO_DATE_OR_DATE_TIME_RE.test(s)) return false;
+  try {
+    // Safe from the permissive fallback above: the regex has already matched,
+    // so parseIsoDate takes its strict branch.
+    parseIsoDate(s);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Gmail date format: YYYY/MM/DD (UTC calendar date). */
@@ -178,7 +239,7 @@ export function formatImapDate(input: string): string {
 
 /**
  * JMAP / Graph UTCDate: ISO 8601 in UTC with seconds, e.g.
- * "2026-06-03T00:00:00Z". A bare input date becomes UTC midnight.
+ * "2026-06-03T00:00:00Z". An input with no timezone is read as UTC.
  */
 export function formatUtcDateTime(input: string): string {
   const d = parseIsoDate(input);
@@ -379,7 +440,7 @@ export const SEARCH_FIELD_DESCRIPTIONS: Record<string, string> = {
   unread: "true = only unread messages; false = only read messages; omit for either.",
   has_attachment: "true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
   flagged: "true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
-  since: "ISO 8601 date or date-time; return messages received on/after (>=) this instant. A bare date is read as UTC midnight. E.g. \"2026-06-01\" or \"2026-06-01T09:00:00Z\".",
-  before: "ISO 8601 date or date-time; return messages received strictly before (<) this instant. A bare date is read as UTC midnight. E.g. \"2026-07-01\".",
+  since: "ISO 8601 date or date-time; return messages received on/after (>=) this instant. A value with no timezone is read as UTC. E.g. \"2026-06-01\", \"2026-06-01T09:00:00\" or \"2026-06-01T09:00:00Z\".",
+  before: "ISO 8601 date or date-time; return messages received strictly before (<) this instant. A value with no timezone is read as UTC. E.g. \"2026-07-01\" or \"2026-07-01T00:00:00\".",
   raw: "Escape hatch: a provider-native query appended to the structured criteria. Ignored on Fastmail (JMAP).",
 };
