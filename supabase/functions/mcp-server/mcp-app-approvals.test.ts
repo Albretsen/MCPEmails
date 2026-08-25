@@ -28,7 +28,9 @@ import {
   type ApprovalCaller,
   type ApprovalDeps,
   buildApprovalSummary,
+  buildHeldSendEnvelope,
   clipBody,
+  heldSendToolResult,
   isApprovalExpired,
   isApprovalToolName,
   runApprovalDecide,
@@ -615,6 +617,166 @@ Deno.test("approval_review returns the contract §2 envelope", async () => {
   assertEquals(envelope.provider.label, "Gmail API", "provider label");
   assertEquals(envelope.provider.route, "users.messages.send", "provider route");
   assertEquals(envelope.actor.can_decide, true, "inline actions available");
+});
+
+// ---------------------------------------------------------------------------
+// The held-send response
+//
+// THE BUG THESE GUARD. A gated email_compose / draft / schedule call used to
+// return the flat `{status:"pending_approval", ...}` object, which carries no
+// `schema_version`, so the card's `classifyResult` called it "foreign" and drew
+// nothing. The only producer of an `outbound_review` envelope was
+// `approval_review`, which the card calls from an already-rendered card: the
+// card rendered only if it was already rendered. `tools/list` gates `_meta.ui`
+// onto exactly the keys that can hold a send, so the gate gated nothing.
+//
+// The cross-check that actually matters is in apps/mcp-app/harness, which runs
+// the SHIPPED `classifyResult` over this payload. These pin the server half.
+// ---------------------------------------------------------------------------
+
+/** The five keys index.ts#pendingApprovalPayload has always returned. */
+const PENDING_KEYS = ["status", "approval_id", "inbox_id", "review_url", "message"];
+
+function pendingPayload(extra: Row = {}): Row {
+  return {
+    status: "pending_approval",
+    approval_id: APPROVAL_ID,
+    inbox_id: INBOX,
+    ...extra,
+    review_url: `https://mcpemails.com/approvals/${APPROVAL_ID}`,
+    message: "This email has not been sent. It is waiting for a person to approve it.",
+  };
+}
+
+Deno.test("a held send returns something the card will actually render", async () => {
+  const store = freshStore();
+  const envelope = await buildHeldSendEnvelope(makeDeps(store), caller, pendingApproval());
+  const result = heldSendToolResult(pendingPayload(), envelope);
+  const sc = result.structuredContent as Record<string, any>;
+
+  // apps/mcp-app/src/contract.ts#isEnvelope, restated. Two string fields is the
+  // whole structural check, and it is the difference between the card rendering
+  // and the card staying silent.
+  assertEquals(typeof sc.schema_version, "string", "isEnvelope: schema_version");
+  assertEquals(typeof sc.card, "string", "isEnvelope: card");
+  assertEquals(sc.schema_version, "review-card-v1", "the version the card supports");
+
+  // apps/mcp-app/src/components/App.tsx takes the outbound_review branch on
+  // `card === "outbound_review" && envelope.outbound`.
+  assertEquals(sc.card, "outbound_review", "discriminator");
+  assert(!!sc.outbound, "the payload its discriminator promises");
+  assertEquals(sc.state, "pending", "state");
+  assertEquals(sc.outbound.approval_id, APPROVAL_ID, "approval_id");
+  assertEquals(
+    sc.outbound.review_url,
+    `https://mcpemails.com/approvals/${APPROVAL_ID}`,
+    "the Approve button's target",
+  );
+  assertEquals(sc.provider.label, "Gmail API", "provider block");
+  assertEquals(sc.dashboard_url, "https://mcpemails.com/dashboard/approvals", "dashboard_url");
+});
+
+Deno.test("the pending-approval keys survive the merge unchanged", async () => {
+  // They are a published output contract: anything already reading them off
+  // structuredContent must keep finding them, with the same values.
+  const store = freshStore();
+  const payload = pendingPayload();
+  const envelope = await buildHeldSendEnvelope(makeDeps(store), caller, pendingApproval());
+  const sc = heldSendToolResult(payload, envelope).structuredContent as Row;
+
+  for (const key of PENDING_KEYS) {
+    assertEquals(sc[key], payload[key], `${key} survives`);
+  }
+  // schedule_create's extra top-level field, which sits alongside them.
+  const scheduled = heldSendToolResult(
+    pendingPayload({ send_at: "2026-09-01T09:00:00.000Z" }),
+    envelope,
+  ).structuredContent as Row;
+  assertEquals(scheduled.send_at, "2026-09-01T09:00:00.000Z", "send_at survives");
+});
+
+Deno.test("the two key sets are disjoint, so neither side can shadow the other", async () => {
+  // The merge is only safe because of this. If someone adds `state` or
+  // `dashboard_url` to the pending payload, or `status` to the envelope, one
+  // side silently loses, and this is where it gets caught.
+  const store = freshStore();
+  const envelope = await buildHeldSendEnvelope(makeDeps(store), caller, pendingApproval());
+  const pendingKeys = Object.keys(pendingPayload({ send_at: "x" }));
+  assertEquals(
+    Object.keys(envelope).filter((key) => pendingKeys.includes(key)),
+    [],
+    "no key appears on both sides",
+  );
+
+  const sc = heldSendToolResult(pendingPayload(), envelope).structuredContent;
+  assertEquals(
+    Object.keys(sc).length,
+    PENDING_KEYS.length + Object.keys(envelope).length,
+    "the merge is a strict superset, losing nothing",
+  );
+});
+
+Deno.test("a held send does not put the body in model context (contract §7)", async () => {
+  // The whole reason this path writes both channels by hand instead of calling
+  // index.ts#jsonOk, which would mirror the envelope into `content` too.
+  const store = freshStore();
+  const envelope = await buildHeldSendEnvelope(makeDeps(store), caller, pendingApproval());
+  const result = heldSendToolResult(pendingPayload(), envelope);
+  const text = result.content.map((part) => part.text).join("\n");
+
+  assert(!text.includes("SENTINEL-BODY-TEXT"), "the plain-text body must not be in content");
+  assert(!text.includes("SENTINEL-BODY-HTML"), "the HTML body must not be in content");
+  assert(!text.includes("hidden@x.com"), "bcc must not be in content");
+  assert(!text.includes("schema_version"), "the envelope is not mirrored into content");
+  // The body IS in the card channel. That is the point of the change.
+  assert(
+    JSON.stringify(result.structuredContent).includes("SENTINEL-BODY-TEXT"),
+    "the card still gets the body it exists to show",
+  );
+  // …and the model still gets actionable prose (contract §1 degradation rule).
+  assert(text.includes(APPROVAL_ID), "the review link is the actionable part");
+  assert(text.includes("pending_approval"), "the status a scripted client reads");
+});
+
+Deno.test("draft_send hands the card no body at all", async () => {
+  // Not a judgement call about disclosure: a draft's content lives with the
+  // provider, so the snapshot holds a draft_id and nothing to show. Pinned so a
+  // future change that starts snapshotting draft bodies has to come back and
+  // think about contract §7 rather than inheriting a pass.
+  const store = freshStore({
+    operation: "draft_send",
+    payload: {
+      v: 1,
+      data: CIPHER_PREFIX + JSON.stringify({ draft_id: "r-99", body: SECRET_BODY }),
+    },
+  });
+  const envelope = await buildHeldSendEnvelope(
+    makeDeps(store),
+    caller,
+    store.send_approvals[0],
+  );
+  const outbound = (envelope as Row).outbound as Row;
+  assertEquals(outbound.operation, "draft_send", "operation");
+  assertEquals(outbound.body.text, null, "no body text");
+  assertEquals(outbound.body.html, null, "no body html");
+  assert(
+    !JSON.stringify(envelope).includes("SENTINEL-BODY-TEXT"),
+    "nothing from the snapshot body leaks into the envelope",
+  );
+});
+
+Deno.test("an envelope that cannot be built degrades to exactly the old payload", async () => {
+  // The approval row is already written by the time the envelope is built, and
+  // every call site sits inside a catch that reports "no email was sent". A
+  // failure here must therefore be invisible, not fatal.
+  const payload = pendingPayload();
+  const result = heldSendToolResult(payload, null);
+  assertEquals(result.structuredContent, payload, "the pre-card payload, unchanged");
+  assertEquals(
+    result.content[0].text,
+    JSON.stringify(payload, null, 2),
+    "the pre-card content text, unchanged",
+  );
 });
 
 Deno.test("the review URL carries a bare id and no credential", () => {

@@ -24,10 +24,26 @@ export interface SafeAreaInsets {
   left: number;
 }
 
+/**
+ * `hostContext.toolInfo`: the `tools/call` that instantiated this app.
+ *
+ * `id` is the JSON-RPC request id of that call and `tool` is the full tool
+ * definition, so `tool.name` says which of our tools produced the card. Purely
+ * diagnostic here, and optional: phase-0 Q6 recorded `toolInfo` as one of the
+ * fields the ext-apps reference host does not send at all, so nothing may
+ * depend on it being present.
+ */
+export interface ToolInfo {
+  id?: string | number;
+  tool?: { name?: string; title?: string; [k: string]: unknown };
+  [k: string]: unknown;
+}
+
 export interface HostContext {
   theme?: Theme;
   displayMode?: DisplayMode;
   availableDisplayModes?: DisplayMode[];
+  toolInfo?: ToolInfo;
   containerDimensions?: {
     width?: number;
     maxWidth?: number;
@@ -59,6 +75,19 @@ export interface ToolResultParams {
   [key: string]: unknown;
 }
 
+/**
+ * Params of `ui/notifications/tool-cancelled`. The spec says the host MUST send
+ * this "if the tool execution was cancelled, for any reason (which can
+ * optionally be specified), including user action, sampling error, classifier
+ * intervention", so `reason` is best-effort prose and may be absent.
+ */
+export interface ToolCancelledParams {
+  reason?: string;
+  [key: string]: unknown;
+}
+
+export type LogLevel = "debug" | "info" | "warning" | "error";
+
 interface Pending {
   resolve: (v: any) => void;
   reject: (e: Error) => void;
@@ -73,10 +102,18 @@ export class HostBridge {
   hostContext: HostContext = {};
   hostCapabilities: HostCapabilities = {};
   hostInfo: { name?: string; version?: string } = {};
+  /**
+   * The protocol version the host echoed from `ui/initialize`, which is not
+   * necessarily the one we asked for. Recorded rather than discarded because it
+   * is the first thing worth knowing when a card misbehaves against one host
+   * and not another: the whole point of the handshake is that the host picks.
+   */
+  protocolVersion: string | null = null;
   connected = false;
 
   onToolInput?: (args: Record<string, unknown> | undefined) => void;
   onToolResult?: (params: ToolResultParams) => void;
+  onToolCancelled?: (params: ToolCancelledParams) => void;
   onHostContextChanged?: (patch: HostContext) => void;
   onTeardown?: () => void;
 
@@ -137,6 +174,14 @@ export class HostBridge {
         case "ui/notifications/tool-result":
           this.onToolResult?.(params as ToolResultParams);
           return;
+        case "ui/notifications/tool-cancelled":
+          // The host MUST send this when a call is cancelled for any reason
+          // (user action, sampling error, classifier intervention). Ignoring it
+          // used to strand the card on its loading skeleton forever, because
+          // tool-result is the only other thing that can end the wait and a
+          // cancelled call never produces one.
+          this.onToolCancelled?.(params as ToolCancelledParams);
+          return;
         case "ui/notifications/host-context-changed":
           this.mergeContext(params as HostContext);
           this.onHostContextChanged?.(params as HostContext);
@@ -145,14 +190,26 @@ export class HostBridge {
           this.onTeardown?.();
           return;
         default:
-          return; // tool-input-partial, tool-cancelled, ... — nothing to do.
+          return; // tool-input-partial, ... : nothing to do.
       }
     }
 
-    // Host -> app requests. Only teardown is meaningful; everything else must
-    // get a well-formed error rather than silence.
+    // Host -> app requests. Anything we do not answer with a well-formed
+    // response looks, from the host's side, like a dead frame.
     if (method === "ui/resource-teardown") {
       this.onTeardown?.();
+      this.post({ jsonrpc: "2.0", id, result: {} });
+      return;
+    }
+    if (method === "ping") {
+      // Liveness check. Claude's own MCP Apps docs call out that a hand-rolled
+      // postMessage bridge "will silently drop requests sent from the host to
+      // the widget, such as ping (a liveness check)". Answering -32601 is not
+      // silence, but it is not much better: a host is entitled to read "method
+      // not found" on its own liveness probe as "this frame is not a
+      // conforming app" and tear the card down. An empty result is the whole
+      // contract. Claude.ai web is not believed to send ping today, which is
+      // exactly why this must not be left to be discovered in production.
       this.post({ jsonrpc: "2.0", id, result: {} });
       return;
     }
@@ -204,6 +261,7 @@ export class HostBridge {
   async connect(appInfo: { name: string; version: string }): Promise<void> {
     this.listen();
     const result = await this.request<{
+      protocolVersion?: string;
       hostInfo?: Json;
       hostCapabilities?: HostCapabilities;
       hostContext?: HostContext;
@@ -219,6 +277,12 @@ export class HostBridge {
       INITIALIZE_TIMEOUT_MS,
     );
 
+    // `McpUiInitializeResult` carries protocolVersion, hostInfo,
+    // hostCapabilities and hostContext, and deliberately carries NO tool
+    // result. Nothing here can hydrate the card; the only thing the handshake
+    // settles about the result is that it has not arrived yet.
+    this.protocolVersion =
+      typeof result?.protocolVersion === "string" ? result.protocolVersion : null;
     this.hostInfo = (result?.hostInfo ?? {}) as { name?: string; version?: string };
     this.hostCapabilities = result?.hostCapabilities ?? {};
     this.hostContext = result?.hostContext ?? {};
@@ -261,6 +325,32 @@ export class HostBridge {
 
   sendSizeChanged(width: number, height: number) {
     this.notify("ui/notifications/size-changed", { width, height });
+  }
+
+  /**
+   * Fire-and-forget line to the host's log channel.
+   *
+   * The spec's interactive-phase diagram shows the host recording
+   * `notifications/message` for debugging and telemetry. It is a notification,
+   * so there is no reply to wait for and no failure to handle: whether the host
+   * keeps the line, drops it, or has no log channel at all, the card must
+   * render exactly the same. Hence the swallow. This must never be able to
+   * throw into a render path, because the one moment it gets used is the moment
+   * something has already gone wrong.
+   *
+   * Nothing from a tool payload goes in here. The call sites log protocol
+   * facts (versions, host name, tool name, elapsed ms), not email content.
+   */
+  log(level: LogLevel, data: Json) {
+    try {
+      this.notify("notifications/message", {
+        level,
+        logger: "mcpemails.review-card",
+        data,
+      });
+    } catch {
+      /* the log channel is never worth an exception */
+    }
   }
 
   /**

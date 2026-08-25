@@ -809,6 +809,82 @@ async function buildOutboundEnvelope(
   };
 }
 
+/**
+ * The contract §2 envelope for a send that has JUST been held for approval.
+ *
+ * WHY THIS IS EXPORTED, AND WHY IT MATTERS MORE THAN IT LOOKS. Until this
+ * existed the review card could not render on the thing it was built to review.
+ * A gated `email_compose` / `draft` / `schedule` call returned the flat
+ * `{status:"pending_approval", ...}` payload, which carries no
+ * `schema_version`, so the card classified it "foreign" and rendered nothing
+ * (see `apps/mcp-app/src/store.ts#classifyResult`). The only producer of an
+ * `outbound_review` envelope was `approval_review`, an app-only tool the card
+ * calls from an already-rendered card. That is circular: the card rendered only
+ * if it was already rendered, and nothing in the pending-approval message text
+ * ever asked the model to make the second call.
+ *
+ * So the send itself now returns the envelope, and `index.ts` merges it over
+ * the pending-approval keys. Deliberately the SAME builder `approval_review`
+ * uses, not a parallel one: two builders for one wire shape is how the card and
+ * the review page drift, and the card renders whichever it gets with no way to
+ * tell them apart.
+ *
+ * `row` is the freshly-inserted `send_approvals` row (`insert().select("*")`),
+ * which is why this takes a loose record rather than the module-private
+ * `ApprovalRow`. It is read, never trusted for authority: the caller has just
+ * written it under the service-role client, and every field this reads is one
+ * the caller supplied moments ago.
+ *
+ * MODEL-CONTEXT NOTE (contract §7). The returned envelope contains decrypted
+ * body content for every operation except `draft_send` (whose content lives
+ * with the provider, see `contentLivesWithProvider`). It belongs in
+ * `structuredContent` and must never be mirrored into the `content` text. Do
+ * not hand this to `jsonOk`.
+ */
+/**
+ * Assemble the two channels of a held-send tool result.
+ *
+ * `payload` is the flat `pending_approval` object index.ts has always returned;
+ * `envelope` is `buildHeldSendEnvelope`'s output, or null when it could not be
+ * built (in which case this degrades to exactly the pre-card behaviour).
+ *
+ * ── THE TWO CHANNELS ARE NOT THE SAME OBJECT, ON PURPOSE ────────────────────
+ * `content` reaches the model. `structuredContent` reaches the card. The
+ * envelope carries decrypted body text and HTML for four of the five gated
+ * operations, and contract §7 commits to the default flow not re-injecting
+ * message content into the conversation, so only the payload goes into
+ * `content`. This is why the caller must not reach for `index.ts#jsonOk`, which
+ * puts one object in both.
+ *
+ * ── THE MERGE IS A SUPERSET ─────────────────────────────────────────────────
+ * `structuredContent` is the payload's keys PLUS the envelope's. The card's
+ * `isEnvelope` needs only `schema_version` and `card` and ignores extra
+ * top-level keys, so the merged object renders; and the pending-approval keys
+ * are a published output contract, so they stay exactly where callers already
+ * find them. The two key sets are disjoint today and a test pins that, because
+ * a collision would silently drop one side.
+ *
+ * Lives here rather than in index.ts so the merge rule is directly testable
+ * (index.ts calls `Deno.serve` at module load and cannot be imported).
+ */
+export function heldSendToolResult(
+  payload: Record<string, unknown>,
+  envelope: Record<string, unknown> | null,
+): { content: { type: string; text: string }[]; structuredContent: Record<string, unknown> } {
+  return {
+    content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+    structuredContent: envelope ? { ...payload, ...envelope } : payload,
+  };
+}
+
+export async function buildHeldSendEnvelope(
+  deps: ApprovalDeps,
+  caller: ApprovalCaller,
+  row: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  return await buildOutboundEnvelope(deps, caller, row as unknown as ApprovalRow);
+}
+
 async function requestingKeyName(
   deps: ApprovalDeps,
   caller: ApprovalCaller,
