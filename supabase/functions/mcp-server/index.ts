@@ -93,6 +93,13 @@ import {
   buildInvalidArgumentsText,
   buildUnknownActionText,
 } from "./invalid-arguments-message.ts";
+import {
+  type ActionArgumentIndex,
+  type ExtraArgumentReview,
+  neutralDefaultOf,
+  reviewExtraArguments,
+  withOwningActions,
+} from "./consolidated-arguments.ts";
 import { buildUsageLimitText, USAGE_LIMIT_SUPPORT_EMAIL } from "./usage-limit-message.ts";
 import {
   isIsoDateOrDateTime,
@@ -5433,6 +5440,22 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
 const CONSOLIDATED_BY_NAME = CONSOLIDATED_SPECS;
 
 /**
+ * Which action of a consolidated tool owns which argument, built beside the
+ * schema by buildConsolidatedTool and keyed by tool name.
+ *
+ * The published `allOf` rules say only that an argument is forbidden for the
+ * selected action. This index says where it is allowed instead, and which of
+ * its values the schema itself calls a no-op, which is what lets dispatch tell
+ * a harmless extra argument apart from a filter the caller expected to be
+ * honoured. See consolidated-arguments.ts for why that distinction is the whole
+ * point, and why the ownership is held here rather than published in the schema.
+ *
+ * Derived from the same merge as `properties` and the `allOf` rules so it
+ * cannot describe a contract other than the one clients were handed.
+ */
+const CONSOLIDATED_ARGUMENT_INDEX: Record<string, ActionArgumentIndex> = {};
+
+/**
  * Build a consolidated tool's input schema by merging the input schemas of its
  * actions' legacy tools. A required `action` enum selects the operation. The
  * action-specific `allOf` rules make the selected action's required fields and
@@ -5441,6 +5464,8 @@ const CONSOLIDATED_BY_NAME = CONSOLIDATED_SPECS;
  * with another action (such as `flag`). The first action to contribute a
  * property wins (shared props like inbox_id are identical across tools), except
  * keys listed in an action's `renames`.
+ *
+ * Side effect: records the tool's entry in CONSOLIDATED_ARGUMENT_INDEX.
  */
 function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefinition {
   const actionHints = Object.entries(spec.actions)
@@ -5503,6 +5528,26 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
       then,
     };
   });
+
+  // The runtime half of the same contract. `neutralDefaults` reads the default
+  // off the MERGED property, not off the owning action's legacy schema: the
+  // merged copy is the one clients were shown, so it is the one whose promise
+  // about an omitted value we are entitled to act on.
+  const ownersByProperty: Record<string, string[]> = {};
+  const allowedByAction: Record<string, string[]> = {};
+  for (const [actionName, allowed] of actionProperties) {
+    allowedByAction[actionName] = [...allowed];
+    for (const property of allowed) {
+      if (property === "action") continue;
+      (ownersByProperty[property] ??= []).push(actionName);
+    }
+  }
+  const neutralDefaults: Record<string, unknown> = {};
+  for (const [property, propertySchema] of Object.entries(properties)) {
+    const neutral = neutralDefaultOf(propertySchema);
+    if (neutral.present) neutralDefaults[property] = neutral.value;
+  }
+  CONSOLIDATED_ARGUMENT_INDEX[name] = { ownersByProperty, allowedByAction, neutralDefaults };
 
   return {
     name,
@@ -5723,15 +5768,31 @@ function validateInputSchema(schema: InputSchema, value: unknown, path = "argume
     add("anyOf", "must satisfy at least one allowed argument combination");
   }
   if (schema.not && typeof schema.not === "object" && !Array.isArray(schema.not) && validateInputSchema(schema.not as InputSchema, value, path).length === 0) {
-    // Name the arguments that caused it. This rule fires whenever a caller
+    // Report one failure PER offending argument, each on its own path, rather
+    // than one lumped failure on `arguments`. This rule fires whenever a caller
     // mixes fields from two actions of a consolidated tool (search filters on
-    // action 'list', say), and it is the second-largest rejection signature in
-    // production; "not valid for the selected action" alone leaves the caller
-    // to guess which of a dozen arguments to drop.
+    // action 'list', say), and it is the largest rejection signature in
+    // production; a single "must not include a, b, c" on the object reads as
+    // one unfixable complaint about the whole call, and it lands in
+    // activity_log.error_details as the bare path "arguments", which is why
+    // months of that signature could be counted but never attributed to a
+    // field. Per-argument paths cost nothing, carry no request content (the
+    // names come from our own schema), and make both readings precise.
+    //
+    // The wording here is deliberately action-agnostic; dispatch replaces it
+    // with one naming the owning action, which only it can know. See
+    // withOwningActions in consolidated-arguments.ts.
     const offending = disallowedPropertiesPresent(schema.not as InputSchema, value);
-    add("not", offending.length > 0
-      ? `must not include ${offending.join(", ")}: the selected action does not accept them`
-      : "include values the selected action does not accept");
+    if (offending.length === 0) {
+      add("not", "include values the selected action does not accept");
+    }
+    for (const property of offending) {
+      errors.push({
+        path: `${path}.${property}`,
+        keyword: "not",
+        message: "is not an argument of the selected action",
+      });
+    }
   }
   return errors;
 }
@@ -21569,6 +21630,10 @@ async function handleToolsCall(
   let dispatchName = toolName;
   let effectiveScope: string = tool.requiredScope;
   let effectiveAltScopes: string[] | undefined = tool.altScopes;
+  // The selected action, and how its sibling actions' arguments were treated.
+  // Both are needed after validation, which is where they turn into wording.
+  let selectedAction: string | null = null;
+  let extraArguments: ExtraArgumentReview | null = null;
   const consolidated = CONSOLIDATED_BY_NAME[toolName];
   if (consolidated) {
     const argsObj =
@@ -21615,6 +21680,46 @@ async function handleToolsCall(
     dispatchName = actionSpec.legacy;
     effectiveScope = actionSpec.scope;
     effectiveAltScopes = actionSpec.altScopes;
+    selectedAction = action;
+
+    // ── Arguments belonging to a sibling action ─────────────────────────────
+    // A consolidated tool advertises every action's arguments in one flat
+    // `properties` map and confines them to their action in a conditional rule
+    // that models read far less reliably. Sending one argument from the wrong
+    // action refused the whole call, which was the largest error class on the
+    // product; see the header of consolidated-arguments.ts for the numbers.
+    //
+    // Only the arguments that provably assert nothing are dropped: the value
+    // sent is the very default the published schema declares, so the schema has
+    // already promised that sending it and omitting it are the same request.
+    // Anything that could have narrowed, redirected or altered the result stays
+    // exactly where the caller put it and still fails validation below, because
+    // running a call with a filter quietly removed hands back a plausible
+    // answer to a question the caller never asked, and neither the model nor
+    // the user can see that it happened.
+    //
+    // Deleting the keys in place mirrors the rename pass further down: handlers
+    // read this same object, so the dropped argument must be gone before
+    // validation, before the idempotency claim hashes the arguments, and before
+    // dispatch.
+    const argumentIndex = CONSOLIDATED_ARGUMENT_INDEX[toolName];
+    if (argumentIndex) {
+      extraArguments = reviewExtraArguments(argumentIndex, action as string, argsObj);
+      for (const property of extraArguments.ignorable) delete argsObj[property];
+      if (extraArguments.ignorable.length > 0) {
+        // Logged rather than persisted: this call is about to succeed, and
+        // activity_log.error_details is the value-free payload of a REJECTED
+        // call. Bending it to cover a success would break every query that
+        // treats a row with error_details as an error. The property names are
+        // ours, not the caller's, so they are safe to print.
+        console.info("[mcp-server] tools/call: ignored_inert_arguments", {
+          key_id: apiKey.id,
+          tool_name: toolName,
+          action,
+          properties: extraArguments.ignorable,
+        });
+      }
+    }
   }
 
   // ── Scope check ───────────────────────────────────────────────────────────
@@ -21675,6 +21780,15 @@ async function handleToolsCall(
         ? (rawArgs as Record<string, unknown>)["action"] as string
         : null)
       : null;
+    // An argument that survived the review above did so because dropping it
+    // could have changed the answer. The validator has flagged it but can only
+    // say it does not belong here; the review knows which sibling action does
+    // take it, and naming that action is the difference between a caller that
+    // retries at random and one that retries correctly. Paths and keywords are
+    // untouched, so the persisted classification below is unaffected.
+    const reportedErrors = extraArguments && selectedAction
+      ? withOwningActions(argumentErrors, extraArguments, selectedAction)
+      : argumentErrors;
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
@@ -21701,8 +21815,8 @@ async function handleToolsCall(
     // messages, which are derived from the schema and echo no request content.
     return invalidArgumentsResult(
       id,
-      buildInvalidArgumentsText(toolName, argumentErrors),
-      { tool: toolName, action: rejectedAction, errors: argumentErrors },
+      buildInvalidArgumentsText(toolName, reportedErrors),
+      { tool: toolName, action: rejectedAction, errors: reportedErrors },
     );
   }
 
