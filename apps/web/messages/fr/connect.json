@@ -2,13 +2,13 @@
   "gmail": {
     "meta": {
       "title": "Connecter Gmail à Claude (et à toute IA)",
-      "description": "Connectez Gmail à Claude, Cursor, ChatGPT et à tout client MCP en un clic avec Google OAuth. Laissez l'IA lire, envoyer, planifier et organiser votre Gmail — boîtes et appels d'outils gratuits."
+      "description": "Connectez Gmail à Claude, Cursor, ChatGPT et tout client MCP en un clic avec Google OAuth. Laissez l'IA lire, envoyer, planifier et organiser Gmail. 1 boîte gratuite, pour toujours."
     },
     "hero": {
       "eyebrow": "Gmail + IA",
-      "titleLine1": "Connectez Gmail à Claude —",
+      "titleLine1": "Connectez Gmail à Claude",
       "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-      "lead": "Offrez à votre agent IA une vraie boîte Gmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec une connexion Google en un clic — et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "lead": "Offrez à votre agent IA une vraie boîte Gmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec une connexion Google en un clic, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
       "ctaPrimary": "Connecter Gmail gratuitement",
       "ctaSecondary": "Lire la documentation",
       "meta0": "1 boîte gratuite, pour toujours",
@@ -17,7 +17,7 @@
     },
     "method": {
       "title": "Comment Gmail se connecte : Google OAuth en un clic",
-      "body": "Gmail se connecte via <b>Google OAuth</b> — connectez-vous avec Google, approuvez l'accès en lecture et en envoi, et c'est connecté. Pas de mot de passe d'application, pas de paramètres IMAP à dénicher. Révoquez l'accès à tout moment depuis votre compte Google ou le tableau de bord mcpemails."
+      "body": "Gmail se connecte via <b>Google OAuth</b> : connectez-vous avec Google, approuvez l'accès en lecture et en envoi, et c'est connecté. Pas de mot de passe d'application, pas de paramètres IMAP à dénicher. Révoquez l'accès à tout moment depuis votre compte Google ou le tableau de bord mcpemails."
     },
     "verificationNote": {
       "title": "Ce que Google va afficher",
@@ -26,19 +26,19 @@
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",
       "title": "Une boîte Gmail que votre agent peut vraiment utiliser",
-      "sub": "Neuf outils MCP basés sur des actions — pas seulement des brouillons. Votre agent termine le travail dans Gmail.",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Gmail.",
       "ctaPrimary": "Connecter Gmail gratuitement"
     },
     "capabilities": [
       {
         "tag": "Lire",
         "h": "Lire et rechercher le courrier",
-        "p": "Listez, lisez et recherchez dans les libellés — trouvez cette facture, résumez un fil ou récupérez le dernier message d'un expéditeur."
+        "p": "Listez, lisez et recherchez dans les libellés : trouvez cette facture, résumez un fil ou récupérez le dernier message d'un expéditeur."
       },
       {
         "tag": "Envoyer",
         "h": "Envoyer, répondre et transférer",
-        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez — directement depuis Gmail, pas sous forme de brouillon à finir à la main."
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Gmail, pas sous forme de brouillon à finir à la main."
       },
       {
         "tag": "Planifier",
@@ -48,7 +48,7 @@
       {
         "tag": "Organiser",
         "h": "Étiqueter, archiver et supprimer",
-        "p": "Gardez la boîte rangée — appliquez des libellés, archivez ce qui est traité et supprimez à la demande."
+        "p": "Gardez la boîte rangée : appliquez des libellés, archivez ce qui est traité et supprimez à la demande."
       }
     ],
     "how": {
@@ -80,39 +80,39 @@
   "fastmail": {
     "meta": {
       "title": "Connecter Fastmail à Claude (et à toute IA)",
-      "description": "Connectez Fastmail à Claude, Cursor, ChatGPT et à tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre Fastmail — boîtes et appels gratuits."
+      "description": "Connectez Fastmail à Claude, Cursor, ChatGPT et tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Fastmail. 1 boîte gratuite, pour toujours."
     },
     "hero": {
       "eyebrow": "Fastmail + IA",
-      "titleLine1": "Connectez Fastmail à Claude —",
+      "titleLine1": "Connectez Fastmail à Claude",
       "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-      "lead": "Offrez à votre agent IA une vraie boîte Fastmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application — et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "lead": "Offrez à votre agent IA une vraie boîte Fastmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
       "ctaPrimary": "Connecter Fastmail gratuitement",
       "ctaSecondary": "Lire la documentation",
       "meta0": "1 boîte gratuite, pour toujours",
-      "meta1": "Mot de passe d'application — pas d'OAuth",
+      "meta1": "Mot de passe d'application, pas d'OAuth",
       "meta2": "E-mails récupérés en direct, jamais stockés"
     },
     "method": {
       "title": "Comment Fastmail se connecte : un mot de passe d'application",
-      "body": "Fastmail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Fastmail</b> — générez-en un dans Fastmail sous Paramètres → Confidentialité et sécurité → Mots de passe d'application, collez-le dans mcpemails, et c'est connecté. Pas de parcours OAuth, pas de fenêtres pop-up."
+      "body": "Fastmail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Fastmail</b> : générez-en un dans Fastmail sous Paramètres → Confidentialité et sécurité → Mots de passe d'application, collez-le dans mcpemails, et c'est connecté. Pas de parcours OAuth, pas de fenêtres pop-up."
     },
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",
       "title": "Une boîte Fastmail que votre agent peut vraiment utiliser",
-      "sub": "Neuf outils MCP basés sur des actions — pas seulement des brouillons. Votre agent termine le travail dans Fastmail.",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Fastmail.",
       "ctaPrimary": "Connecter Fastmail gratuitement"
     },
     "capabilities": [
       {
         "tag": "Lire",
         "h": "Lire et rechercher le courrier",
-        "p": "Listez, lisez et recherchez dans les dossiers — trouvez cette facture, résumez un fil ou récupérez le dernier message d'un expéditeur."
+        "p": "Listez, lisez et recherchez dans les dossiers : trouvez cette facture, résumez un fil ou récupérez le dernier message d'un expéditeur."
       },
       {
         "tag": "Envoyer",
         "h": "Envoyer, répondre et transférer",
-        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez — directement depuis Fastmail, pas sous forme de brouillon à finir à la main."
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Fastmail, pas sous forme de brouillon à finir à la main."
       },
       {
         "tag": "Planifier",
@@ -122,7 +122,7 @@
       {
         "tag": "Organiser",
         "h": "Déplacer, copier, marquer, archiver, supprimer",
-        "p": "Gardez la boîte rangée — classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande."
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande."
       }
     ],
     "how": {
@@ -158,17 +158,17 @@
   "icloud": {
     "meta": {
       "title": "Connecter iCloud Mail à Claude (et à toute IA)",
-      "description": "Connectez iCloud Mail à Claude, Cursor, ChatGPT et à tout client MCP avec un mot de passe d'application Apple. Laissez l'IA lire, envoyer, planifier et organiser vos e-mails iCloud — gratuitement."
+      "description": "Connectez iCloud Mail à Claude, Cursor, ChatGPT et tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser iCloud. 1 boîte gratuite, pour toujours."
     },
     "hero": {
       "eyebrow": "iCloud Mail + IA",
-      "titleLine1": "Connectez iCloud Mail à Claude —",
+      "titleLine1": "Connectez iCloud Mail à Claude",
       "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-      "lead": "Offrez à votre agent IA une vraie boîte iCloud en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un mot de passe d'application Apple — et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "lead": "Offrez à votre agent IA une vraie boîte iCloud en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un mot de passe d'application Apple, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
       "ctaPrimary": "Connecter iCloud gratuitement",
       "ctaSecondary": "Lire la documentation",
       "meta0": "1 boîte gratuite, pour toujours",
-      "meta1": "Mot de passe d'application — pas d'OAuth",
+      "meta1": "Mot de passe d'application, pas d'OAuth",
       "meta2": "E-mails récupérés en direct, jamais stockés"
     },
     "method": {
@@ -178,19 +178,19 @@
     "caps": {
       "eyebrow": "Ce que votre IA peut faire",
       "title": "Une boîte iCloud que votre agent peut vraiment utiliser",
-      "sub": "Neuf outils MCP basés sur des actions — pas seulement des brouillons. Votre agent termine le travail dans iCloud Mail.",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans iCloud Mail.",
       "ctaPrimary": "Connecter iCloud gratuitement"
     },
     "capabilities": [
       {
         "tag": "Lire",
         "h": "Lire et rechercher le courrier",
-        "p": "Listez, lisez et recherchez dans les dossiers — trouvez un reçu, résumez un fil ou récupérez le dernier message d'un expéditeur."
+        "p": "Listez, lisez et recherchez dans les dossiers : trouvez un reçu, résumez un fil ou récupérez le dernier message d'un expéditeur."
       },
       {
         "tag": "Envoyer",
         "h": "Envoyer, répondre et transférer",
-        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez — directement depuis iCloud, pas sous forme de brouillon à finir à la main."
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis iCloud, pas sous forme de brouillon à finir à la main."
       },
       {
         "tag": "Planifier",
@@ -200,7 +200,7 @@
       {
         "tag": "Organiser",
         "h": "Déplacer, copier, marquer, archiver, supprimer",
-        "p": "Gardez la boîte rangée — classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande."
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l'essentiel, archivez le reste ou supprimez à la demande."
       }
     ],
     "how": {
@@ -236,7 +236,7 @@
   "yahoo": {
     "meta": {
       "title": "Connecter Yahoo Mail à Claude (et à toute IA)",
-      "description": "Connectez Yahoo Mail à Claude, Cursor, ChatGPT et à tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre Yahoo Mail. Boîtes et appels d'outils gratuits."
+      "description": "Connectez Yahoo Mail à Claude, Cursor, ChatGPT et tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Yahoo. 1 boîte gratuite, pour toujours."
     },
     "hero": {
       "eyebrow": "Yahoo Mail + IA",
@@ -314,7 +314,7 @@
   "zoho": {
     "meta": {
       "title": "Connecter Zoho Mail à Claude (et à toute IA)",
-      "description": "Connectez Zoho Mail à Claude, Cursor, ChatGPT et à tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre Zoho Mail. Boîtes et appels d'outils gratuits."
+      "description": "Connectez Zoho Mail à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Zoho. 1 boîte gratuite, pour toujours."
     },
     "hero": {
       "eyebrow": "Zoho Mail + IA",
@@ -392,7 +392,7 @@
   "yandex": {
     "meta": {
       "title": "Connecter Yandex Mail à Claude (et à toute IA)",
-      "description": "Connectez Yandex Mail à Claude, Cursor, ChatGPT et à tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre Yandex Mail. Boîtes et appels d'outils gratuits."
+      "description": "Connectez Yandex Mail à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Yandex. 1 boîte gratuite, pour toujours."
     },
     "hero": {
       "eyebrow": "Yandex Mail + IA",

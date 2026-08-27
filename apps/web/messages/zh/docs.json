@@ -28,7 +28,7 @@
       "apikey": {
         "label": "创建 API 密钥",
         "heading": "为你的智能体生成一个 bearer 令牌",
-        "body": "在 仪表板 → API 密钥 中，点击「创建密钥」。为其命名，选择你的智能体所需的范围——read:email、search:email、send:email、manage:folders、delete:email、manage:drafts、manage:contacts、schedule:email 和 manage:automations——并复制该密钥。它只显示一次。"
+        "body": "在 仪表板 → API 密钥 中，点击「创建密钥」。为其命名，选择你的智能体所需的范围（read:email、search:email、send:email、manage:folders、delete:email、manage:drafts、manage:contacts、schedule:email 和 manage:automations），并复制该密钥。它只显示一次。"
       },
       "addclient": {
         "label": "将 MCPEmails 添加到你的智能体",
@@ -60,10 +60,10 @@
     "infoTransport": "传输：<b>Streamable HTTP</b>（MCP 2025-06-18）",
     "infoAuth": "认证：<b>Authorization: Bearer &lt;api-key&gt;</b>",
     "infoRateLimits": "速率限制：每个密钥 <b>100 次/分钟 · 1,000 次/小时 · 10,000 次/天</b>，另加你套餐的工作区上限",
-    "infoFormat": "响应格式：<b>JSON-RPC 2.0</b>——成功的结果还会携带一个带类型的 <code>structuredContent</code> 对象",
+    "infoFormat": "响应格式：<b>JSON-RPC 2.0</b>，成功的结果还会携带一个带类型的 <code>structuredContent</code> 对象",
     "handshakeLabel": "初始化握手",
     "pollingHeading": "轮询，而非推送",
-    "pollingBody": "MCPEmails 仅采用请求/响应模式：每个结果都来自你的智能体发起的工具调用。<b>没有 webhook、推送通知或由服务器发起的事件</b>——收到新邮件本身绝不会触发智能体调用。要对新邮件作出响应，请让你的智能体按计划<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread_only: true</code>（注意上面的速率限制）。"
+    "pollingBody": "MCPEmails 仅采用请求/响应模式：每个结果都来自你的智能体发起的工具调用。<b>没有 webhook、推送通知或由服务器发起的事件</b>，收到新邮件本身绝不会触发智能体调用。要对新邮件作出响应，请让你的智能体按计划<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread_only: true</code>（注意上面的速率限制）。"
   },
   "operations": {
     "eyebrow": "为真实的收件箱工作而建",
@@ -106,13 +106,13 @@
     "howTitle": "底层工作原理",
     "howP1": "claude.ai 通过 <b>RFC 7591 动态客户端注册</b>自行注册，因此你永远不必预先注册客户端 ID。",
     "howP2": "授权使用 <b>OAuth 2.0 授权码 + PKCE</b>（RFC 7636），因此从不传输任何客户端密钥。",
-    "howP3": "令牌的范围严格限定为你批准的权限——<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code> 和 <code>manage:automations</code>。",
+    "howP3": "令牌的范围严格限定为你批准的权限：<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code> 和 <code>manage:automations</code>。",
     "noOauthNote": "<b>使用不支持 OAuth 的客户端？</b>在 仪表盘 → API 密钥 中创建一个 API 密钥，并将其作为 bearer 令牌传递。API 密钥连接和 OAuth 连接使用同一个 MCP 端点和同样的工具目录。"
   },
   "tools": {
     "eyebrow": "工具参考",
     "heading": "11 个工具。满足你智能体所需的每一项邮件操作。",
-    "sub": "<b>指定收件箱是可选的。</b>当你的密钥只有一个收件箱时，每个按收件箱的工具都会自动解析它——无需 <code>inbox_id</code>。有多个收件箱时，传入 <code>inbox_id</code>（来自 <code>inbox_list</code> 的 UUID）或 <code>inbox</code>（收件箱的邮箱地址）。大多数工具接受一个 <code>action</code> 参数来选择操作；徽章显示每个工具所需的权限范围，而 <code>tools/list</code> 只返回你的密钥（或 OAuth 令牌）有权限的工具。点击“显示示例”查看完整的请求与响应。",
+    "sub": "<b>指定收件箱是可选的。</b>当你的密钥只有一个收件箱时，每个按收件箱的工具都会自动解析它，无需 <code>inbox_id</code>。有多个收件箱时，传入 <code>inbox_id</code>（来自 <code>inbox_list</code> 的 UUID）或 <code>inbox</code>（收件箱的邮箱地址）。大多数工具接受一个 <code>action</code> 参数来选择操作；徽章显示每个工具所需的权限范围，而 <code>tools/list</code> 只返回你的密钥（或 OAuth 令牌）有权限的工具。点击“显示示例”查看完整的请求与响应。",
     "noParams": "无参数。使用空的参数对象进行调用：",
     "showExample": "显示示例请求与响应",
     "hideExample": "隐藏示例请求与响应",
@@ -128,16 +128,16 @@
       "title": "列出收件箱",
       "desc": "返回当前 API 密钥或 OAuth 令牌可访问的所有收件箱。先调用它来发现 inbox_id 值，这样你就无需从仪表板复制粘贴 UUID。每个结果都包含邮箱地址、提供商、可选的服务品牌（icloud/yahoo/zoho/yandex/generic/fastmail），以及描述该收件箱支持哪些功能的 capabilities 对象。",
       "params": {
-        "provider": "可选筛选——只返回由该提供商提供服务的收件箱。可选值之一：gmail、fastmail、imap。省略则列出密钥可访问的所有收件箱。",
+        "provider": "可选筛选，只返回由该提供商提供服务的收件箱。可选值之一：gmail、fastmail、imap。省略则列出密钥可访问的所有收件箱。",
         "include_capabilities": "每个收件箱是否包含其 capabilities 对象（支持哪些功能）。默认 true；设为 false 可得到仅含 inbox_id、邮箱地址、显示名称、提供商和服务品牌的精简列表。"
       }
     },
     "email_read": {
       "title": "读取邮件",
-      "desc": "在收件箱中读取、列出和搜索邮件。设置 action：'list' 获取最近邮件摘要（最新优先，可按文件夹/未读筛选并分页），'read' 获取单个 message_id 的完整内容（纯文本正文、可选的净化后 HTML 和附件），'read_batch' 在一次调用中获取最多 50 个 message_ids，'search' 进行结构化、与提供商无关的筛选（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before），或 'attachment' 将单个附件（按 attachment_index 或 filename）下载为 base64 数据——最大 25 MB。只读——从不更改任何内容。'search' 操作也可由更窄的 search:email 权限单独解锁。 较长的正文将分段返回：请检查 body_truncated，并将 body_next_offset 作为 body_offset 传回以继续读取。",
+      "desc": "在收件箱中读取、列出和搜索邮件。设置 action：'list' 获取最近邮件摘要（最新优先，可按文件夹/未读筛选并分页），'read' 获取单个 message_id 的完整内容（纯文本正文、可选的净化后 HTML 和附件），'read_batch' 在一次调用中获取最多 50 个 message_ids，'search' 进行结构化、与提供商无关的筛选（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before），或 'attachment' 将单个附件（按 attachment_index 或 filename）下载为 base64 数据，最大 25 MB。只读，从不更改任何内容。'search' 操作也可由更窄的 search:email 权限单独解锁。 较长的正文将分段返回：请检查 body_truncated，并将 body_next_offset 作为 body_offset 传回以继续读取。",
       "params": {
         "action": "要执行的操作：\"list\"（最近邮件摘要）、\"read\"（单个 message_id 的完整内容）、\"read_batch\"（多个 message_ids）、\"search\"（结构化筛选）或 \"attachment\"（将单个附件下载为 base64）。决定其他哪些参数适用。",
-        "inbox_id": "要读取的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以发现收件箱 ID。",
+        "inbox_id": "要读取的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以发现收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "message_id": "要读取的提供商邮件 ID（action 'read' 或 'attachment'），来自先前的 list 或 search。",
         "message_ids": "要读取的提供商邮件 ID（action 'read_batch'），来自先前的 list 或 search。每次调用最多 50 个。",
@@ -158,7 +158,7 @@
         "cc": "要匹配的抄送人（Cc）（action 'search'）：邮箱地址、显示名称或片段。",
         "subject": "要在主题行中匹配的文本（action 'search'）。多词短语按原样匹配。",
         "body": "要在邮件正文中查找的自由文本（action 'search'）。（在 Gmail 上，这会匹配整封邮件，而不仅是正文。）",
-        "text": "要在邮件任意位置匹配的自由文本——标头和正文（action 'search'）。",
+        "text": "要在邮件任意位置匹配的自由文本，涵盖标头和正文（action 'search'）。",
         "unread": "action 'search'：true = 仅未读邮件；false = 仅已读邮件；省略则两者皆可。",
         "has_attachment": "action 'search'：true = 仅含附件的邮件。通用 IMAP 不支持（在那里被忽略）。",
         "flagged": "action 'search'：true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在那里被忽略）。",
@@ -173,18 +173,18 @@
       "desc": "移动、复制、标记或归档邮件。设置 action：'move'/'move_batch'（移动到某个 destination_folder_id）、'copy'/'copy_batch'（复制到某个 destination_folder_id，同时保留原件；仅支持 IMAP、Outlook 和 Fastmail）、'flag'（通过 message_ids 上的 flag_action 设置已读/未读/标记）、'archive'（移出收件箱，非破坏性），或 'search_and_move'（应用于匹配某个结构化搜索的每封邮件，避免过期的邮件 ID）。每个操作都需要与之匹配的权限：移动和复制需要 manage:folders，flag/archive 需要 send:email。删除邮件由独立的 email_delete 工具负责。",
       "params": {
         "action": "要执行的操作：\"move\"、\"move_batch\"、\"copy\"、\"copy_batch\"、\"flag\"、\"archive\" 或 \"search_and_move\"。决定其他哪些参数适用以及需要哪种权限。",
-        "inbox_id": "拥有这些邮件的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox_id": "拥有这些邮件的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "message_id": "单封邮件操作（move、copy、archive）的提供商邮件 ID，来自先前的 list、read 或 search。",
         "message_ids": "批量操作（move_batch、copy_batch、flag）的提供商邮件 ID。每次调用最多 500 个。",
         "destination_folder_id": "目标文件夹（move、move_batch、copy、copy_batch、search_and_move）：规范别名（inbox、sent、drafts、trash、archive、spam）、文件夹/标签名称（例如 'Receipts'），或来自 folder 的 list 操作的提供商原生文件夹 ID。名称和别名会自动解析。",
-        "flag_action": "对于 action 'flag'：要应用到每封邮件的更改——\"read\" 或 \"unread\" 设置已读状态，或 \"flag\"/\"unflag\" 添加或移除星标/跟进标记。",
+        "flag_action": "对于 action 'flag'：要应用到每封邮件的更改：\"read\" 或 \"unread\" 设置已读状态，或 \"flag\"/\"unflag\" 添加或移除星标/跟进标记。",
         "from": "要匹配的发件人（search_and_move）：邮箱地址、显示名称或片段。",
         "to": "要匹配的主收件人（To）（search_and_move）：邮箱地址、显示名称或片段。",
         "cc": "要匹配的抄送人（Cc）（search_and_move）：邮箱地址、显示名称或片段。",
         "subject": "要在主题行中匹配的文本（search_and_move）。",
         "body": "要在邮件正文中查找的自由文本（search_and_move）。（在 Gmail 上，这会匹配整封邮件。）",
-        "text": "要在邮件任意位置匹配的自由文本——标头和正文（search_and_move）。",
+        "text": "要在邮件任意位置匹配的自由文本，涵盖标头和正文（search_and_move）。",
         "unread": "搜索操作：true = 仅未读；false = 仅已读；省略则两者皆可。",
         "has_attachment": "搜索操作：true = 仅含附件的邮件。通用 IMAP 不支持（在那里被忽略）。",
         "flagged": "搜索操作：true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在那里被忽略）。",
@@ -197,10 +197,10 @@
     },
     "email_delete": {
       "title": "删除邮件",
-      "desc": "删除邮件——独立工具，与 email_organize 分开，因为删除是破坏性操作。设置 action：'delete'/'delete_batch'（默认进回收站，或永久删除），或 'search_and_delete'（删除匹配某个结构化搜索的每封邮件——避免过期的邮件 ID）。删除默认进回收站，除非你传入 permanent: true，那将不可逆。每个操作都需要 delete:email 权限，整个工具都会向你的 MCP 客户端标记为破坏性操作，在删除任何内容之前由客户端处理用户确认。",
+      "desc": "删除邮件。这是独立工具，与 email_organize 分开，因为删除是破坏性操作。设置 action：'delete'/'delete_batch'（默认进回收站，或永久删除），或 'search_and_delete'（删除匹配某个结构化搜索的每封邮件，避免过期的邮件 ID）。删除默认进回收站，除非你传入 permanent: true，那将不可逆。每个操作都需要 delete:email 权限，整个工具都会向你的 MCP 客户端标记为破坏性操作，在删除任何内容之前由客户端处理用户确认。",
       "params": {
         "action": "要执行的操作：\"delete\"、\"delete_batch\" 或 \"search_and_delete\"。决定其他哪些参数适用。",
-        "inbox_id": "拥有这些邮件的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox_id": "拥有这些邮件的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "message_id": "单封删除（action 'delete'）的提供商邮件 ID，来自先前的 list、read 或 search。",
         "message_ids": "批量删除（action 'delete_batch'）的提供商邮件 ID。每次调用最多 500 个。",
@@ -210,7 +210,7 @@
         "cc": "要匹配的抄送人（Cc）（search_and_delete）：邮箱地址、显示名称或片段。",
         "subject": "要在主题行中匹配的文本（search_and_delete）。",
         "body": "要在邮件正文中查找的自由文本（search_and_delete）。（在 Gmail 上，这会匹配整封邮件。）",
-        "text": "要在邮件任意位置匹配的自由文本——标头和正文（search_and_delete）。",
+        "text": "要在邮件任意位置匹配的自由文本，涵盖标头和正文（search_and_delete）。",
         "unread": "搜索操作：true = 仅未读；false = 仅已读；省略则两者皆可。",
         "has_attachment": "搜索操作：true = 仅含附件的邮件。通用 IMAP 不支持（在那里被忽略）。",
         "flagged": "搜索操作：true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在那里被忽略）。",
@@ -223,10 +223,10 @@
     },
     "email_compose": {
       "title": "撰写邮件",
-      "desc": "发送新邮件或回复现有邮件。设置 action：'send' 发送新邮件（to/subject/body，可选 cc/bcc/html_body/reply_to/attachments）、'reply' 回复某个 message_id（线程标头自动设置；可选 reply_all），或 'forward' 将某个 message_id 转发给新收件人（可选择重新附加原始文件）。收件箱的签名会自动追加——在回复和转发时，它位于你的文本之后、引用块之前，由签名的回复模式控制；传入 include_signature: false 可在单封简短邮件中抑制它。三者一经发送均不可撤销。",
+      "desc": "发送新邮件或回复现有邮件。设置 action：'send' 发送新邮件（to/subject/body，可选 cc/bcc/html_body/reply_to/attachments）、'reply' 回复某个 message_id（线程标头自动设置；可选 reply_all），或 'forward' 将某个 message_id 转发给新收件人（可选择重新附加原始文件）。收件箱的签名会自动追加：在回复和转发时，它位于你的文本之后、引用块之前，由签名的回复模式控制；传入 include_signature: false 可在单封简短邮件中抑制它。三者一经发送均不可撤销。",
       "params": {
         "action": "要执行的操作：\"send\"、\"reply\" 或 \"forward\"。决定其他哪些参数适用。",
-        "inbox_id": "要从中发送的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox_id": "要从中发送的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "message_id": "原始邮件的提供商邮件 ID（action 'reply' 或 'forward'），来自先前的 list、read 或 search。",
         "to": "收件人邮箱地址（'send' 和 'forward' 必填）。最多 50 个。",
@@ -236,7 +236,7 @@
         "bcc": "密送收件人（send、forward）。默认 []。",
         "html_body": "正文的 HTML 版本（multipart/alternative）。调用方负责确保 HTML 安全。",
         "reply_to": "Reply-To 标头地址（action 'send'）。",
-        "reply_all": "回复所有原始收件人——To + Cc（action 'reply'）。默认 false。",
+        "reply_all": "回复所有原始收件人，即 To + Cc（action 'reply'）。默认 false。",
         "include_attachments": "重新附加原始邮件的附件（action 'forward'）。超出 10 MB 额度的文件将被省略。默认 false。",
         "include_signature": "是否将收件箱已配置的签名追加到这封邮件。默认 true；设为 false 可发送这一封不带签名的邮件。",
         "attachments": "文件附件。每项：'{' filename、mime_type、data（base64）'}'。最多 20 项，共 10 MB。",
@@ -245,10 +245,10 @@
     },
     "folder": {
       "title": "文件夹",
-      "desc": "管理邮箱文件夹（在 Gmail 上为标签）。设置 action：'list'（每个文件夹及其提供商原生 ID、显示名称、类型和邮件计数——列出邮件时将这些 ID 用作 folder 参数，并用作移动目标）、'create'（name）、'rename'（folder_id、new_name），或 'delete'（folder_id——不可逆；其中的邮件可能因提供商而丢失）。'list' 需要 read:email；create/rename/delete 需要 manage:folders，且 delete 会向你的 MCP 客户端标记为破坏性操作。",
+      "desc": "管理邮箱文件夹（在 Gmail 上为标签）。设置 action：'list'（每个文件夹及其提供商原生 ID、显示名称、类型和邮件计数。列出邮件时将这些 ID 用作 folder 参数，并用作移动目标）、'create'（name）、'rename'（folder_id、new_name），或 'delete'（folder_id，不可逆；其中的邮件可能因提供商而丢失）。'list' 需要 read:email；create/rename/delete 需要 manage:folders，且 delete 会向你的 MCP 客户端标记为破坏性操作。",
       "params": {
         "action": "要执行的操作：\"list\"、\"create\"、\"rename\" 或 \"delete\"。决定其他哪些参数适用以及需要哪种权限。",
-        "inbox_id": "要管理其文件夹的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox_id": "要管理其文件夹的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "name": "新文件夹或标签的名称（action 'create'）。1–255 个字符。",
         "folder_id": "提供商原生的文件夹/标签 ID（action 'rename' 或 'delete'），来自 folder 的 list 操作。",
@@ -257,10 +257,10 @@
     },
     "draft": {
       "title": "草稿",
-      "desc": "管理收件箱 Drafts 文件夹中的草稿。设置 action：'list'（已保存的草稿，每个都含 draft_id、主题、收件人和创建时间）、'create'（subject/body 必填，可选 to/cc/bcc/html_body）、'update'（draft_id 加上要覆盖的字段），或 'send'（draft_id——移除草稿并发送，不可逆）。收件箱的签名会在草稿创建或更新时嵌入，因此它已经存在于 Drafts 文件夹中，发送时不会再次追加；传入 include_signature: false 可创建不带签名的草稿。在基于 IMAP 的收件箱上，draft_id 在每次更新后都会改变，因此始终使用最新的；Gmail 和 Outlook 保持 draft_id 稳定。",
+      "desc": "管理收件箱 Drafts 文件夹中的草稿。设置 action：'list'（已保存的草稿，每个都含 draft_id、主题、收件人和创建时间）、'create'（subject/body 必填，可选 to/cc/bcc/html_body）、'update'（draft_id 加上要覆盖的字段），或 'send'（draft_id，移除草稿并发送，不可逆）。收件箱的签名会在草稿创建或更新时嵌入，因此它已经存在于 Drafts 文件夹中，发送时不会再次追加；传入 include_signature: false 可创建不带签名的草稿。在基于 IMAP 的收件箱上，draft_id 在每次更新后都会改变，因此始终使用最新的；Gmail 和 Outlook 保持 draft_id 稳定。",
       "params": {
         "action": "要执行的操作：\"list\"、\"create\"、\"reply\"、\"update\" 或 \"send\"。决定其他哪些参数适用。",
-        "inbox_id": "拥有这些草稿的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox_id": "拥有这些草稿的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "draft_id": "提供商草稿 ID（action 'update' 或 'send'），来自最近的 create、update 或 list 操作。在 IMAP 收件箱上，它在每次更新后都会改变，因此始终使用最新的。",
         "message_id": "操作 'reply' 的源邮件 ID，来自此前的 list、read 或 search 操作。",
@@ -278,10 +278,10 @@
     },
     "schedule": {
       "title": "定时发送",
-      "desc": "通过服务器端队列安排邮件在未来发送。设置 action：'create'（to/subject/body 加上 ISO 8601 格式的 send_at 时间戳——收件人和正文会立即校验，无效的发送不会入队）、'list'（待发送的定时任务，最近的优先，可按收件箱筛选），或 'cancel'（scheduled_send_id——只能取消仍为 'pending' 的发送）。调度器每分钟运行一次，因此实际投递可能在 send_at 之后最多 60 秒。",
+      "desc": "通过服务器端队列安排邮件在未来发送。设置 action：'create'（to/subject/body 加上 ISO 8601 格式的 send_at 时间戳，收件人和正文会立即校验，无效的发送不会入队）、'list'（待发送的定时任务，最近的优先，可按收件箱筛选），或 'cancel'（scheduled_send_id，只能取消仍为 'pending' 的发送）。调度器每分钟运行一次，因此实际投递可能在 send_at 之后最多 60 秒。",
       "params": {
         "action": "要执行的操作：\"create\"、\"list\" 或 \"cancel\"。决定其他哪些参数适用。",
-        "inbox_id": "要从中发送（action 'create'）或用于筛选（action 'list'）的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox_id": "要从中发送（action 'create'）或用于筛选（action 'list'）的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "to": "收件人邮箱地址（action 'create'）。最多 50 个。",
         "subject": "邮件主题行（action 'create'）。最多 998 个字符。",
@@ -299,7 +299,7 @@
     },
     "contact_search": {
       "title": "搜索联系人",
-      "desc": "通过对你邮箱的实时扫描按姓名或邮箱查找通信人——没有存储的联系人列表。每次调用都会扫描最近的一段匹配邮件窗口，并返回匹配的人员，按最近联系排序，每个都含显示名称、邮箱、匹配邮件数量和最后联系时间戳。计数反映该窗口内的匹配邮件，而非你的完整历史，且调用之间不存储任何内容。",
+      "desc": "通过对你邮箱的实时扫描按姓名或邮箱查找通信人，没有存储的联系人列表。每次调用都会扫描最近的一段匹配邮件窗口，并返回匹配的人员，按最近联系排序，每个都含显示名称、邮箱、匹配邮件数量和最后联系时间戳。计数反映该窗口内的匹配邮件，而非你的完整历史，且调用之间不存储任何内容。",
       "params": {
         "query": "姓名或邮箱片段，对显示名称和地址进行不区分大小写的匹配。至少 1 个字符。",
         "inbox_id": "可选。将实时扫描限制在一个收件箱。省略则扫描密钥可访问的收件箱（数量有限）。",
@@ -325,15 +325,15 @@
     },
     "signature": {
       "title": "签名",
-      "desc": "读取或配置收件箱的电子邮件签名，该签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加。设置 action：'get'（返回当前签名的文本和 HTML、是否启用、回复/转发模式，以及其来源——'manual'、'gmail_import' 或 null），或 'set'（写入 signature_text 和/或 signature_html，以及可选的 signature_enabled 和 signature_reply_mode）。签名支持富文本 HTML：粗体、斜体、标题、列表、颜色、对齐、链接，以及以 https URL 引用的托管徽标/图片，因此代理可以通过传入 signature_html 设置完整格式化的签名。仪表盘中也提供相同的富文本编辑器。设置签名会将其来源标记为 'manual'，这将永久覆盖该收件箱的 Gmail 自动导入。'get' 需要 read:email；'set' 需要 send:email。",
+      "desc": "读取或配置收件箱的电子邮件签名，该签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加。设置 action：'get'（返回当前签名的文本和 HTML、是否启用、回复/转发模式，以及其来源：'manual'、'gmail_import' 或 null），或 'set'（写入 signature_text 和/或 signature_html，以及可选的 signature_enabled 和 signature_reply_mode）。签名支持富文本 HTML：粗体、斜体、标题、列表、颜色、对齐、链接，以及以 https URL 引用的托管徽标/图片，因此代理可以通过传入 signature_html 设置完整格式化的签名。仪表盘中也提供相同的富文本编辑器。设置签名会将其来源标记为 'manual'，这将永久覆盖该收件箱的 Gmail 自动导入。'get' 需要 read:email；'set' 需要 send:email。",
       "params": {
         "action": "要执行的操作：\"get\"（读取当前签名）或 \"set\"（写入签名）。决定其他哪些参数适用以及需要哪种权限。",
-        "inbox_id": "要读取或设置其签名的收件箱的 UUID。可选——当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
+        "inbox_id": "要读取或设置其签名的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
         "inbox": "要使用的收件箱的邮箱地址，作为 inbox_id 的便捷替代。可选；若已提供 inbox_id 则忽略。",
         "signature_text": "纯文本签名正文（action 'set'）。省略则保持不变；传入空字符串可清除它。若仅提供文本，发送时会自动派生出 HTML 版本。",
         "signature_html": "可选的富文本 HTML 签名正文（action 'set'）。支持格式（粗体、斜体、下划线、标题、列表、颜色、对齐、链接）以及通过 src 为 https URL 的 <img> 标签引用的托管图片（不支持 base64 或 CID）；保存时会进行净化。省略则保持不变；传入空字符串可清除它。",
         "signature_enabled": "签名是否追加到外发邮件（action 'set'）。默认 true；设为 false 可在不删除文本的情况下停止追加。",
-        "signature_reply_mode": "何时在回复和转发中包含签名（action 'set'）：\"always\"（每次回复/转发）、\"first_only\"（默认——仅线程中的第一封邮件，避免重复署名）或 \"never\"。"
+        "signature_reply_mode": "何时在回复和转发中包含签名（action 'set'）：\"always\"（每次回复/转发）、\"first_only\"（默认，仅线程中的第一封邮件，避免重复署名）或 \"never\"。"
       }
     }
   },
@@ -407,8 +407,8 @@
     "perKeyHeading": "100 次/分钟 · 1,000 次/小时 · 10,000 次/天",
     "perKeyBody": "无论套餐如何，均按每个 API 密钥强制执行。超出时，服务器返回 HTTP 429 以及 JSON-RPC 错误代码 <code>-32003</code>、<code>data.error_code: \"rate_limit_exceeded\"</code> 和一个 <code>data.retry_after</code> 字段（秒）。重试前请遵守该值：这只是一次可以重试的短暂暂停。",
     "planTag": "套餐每分钟上限",
-    "planHeading": "免费 60 次/分钟 · Pro 300 次/分钟 · Team 1,000 次/分钟",
-    "planBody": "这是一个每工作区的合理使用突发限制，在你所有 API 密钥间汇总。超出时，调用会返回错误代码 <code>-32003</code>，并附带 <code>data.error_code: \"rate_limit_exceeded\"</code>、<code>data.window: \"per_minute\"</code> 和一个 <code>data.retry_after</code> 倒计时（秒）。Pro 和 Team 会提高该上限。",
+    "planHeading": "免费 60 次/分钟 · Personal 120 次/分钟 · Pro 300 次/分钟 · Team 1,000 次/分钟",
+    "planBody": "这是一个每工作区的合理使用突发限制，在你所有 API 密钥间汇总。超出时，调用会返回错误代码 <code>-32003</code>，并附带 <code>data.error_code: \"rate_limit_exceeded\"</code>、<code>data.window: \"per_minute\"</code> 和一个 <code>data.retry_after</code> 倒计时（秒）。Personal、Pro 和 Team 会提高该上限。",
     "capTag": "合理使用上限",
     "capHeading": "这是停止信号，不是退避重试",
     "capBody": "每个工作区在每个计费周期内都有一个针对可计费操作的合理使用上限。它远高于真实用量，也不是可以花钱突破的东西，但失控的智能体有可能触及它。触及该上限不是 JSON-RPC 错误：调用会返回 HTTP 200 和一个普通工具结果，带有 <code>isError: true</code> 以及一个 <code>_meta[\"com.mcpemails/usage_limit\"]</code> 区块，其中包含 <code>error_code: \"usage_limit_reached\"</code> 和 <code>reset_at</code>。这里没有 <code>retry_after</code>，因为在 <code>reset_at</code> 之前重试不可能成功。请把它当作停止信号，而不是退避重试。",
@@ -418,7 +418,7 @@
   },
   "cta": {
     "heading": "准备好连接你的收件箱了吗？",
-    "sub": "从免费套餐开始：一个已连接收件箱，永久免费，无需信用卡。Pro 可连接你拥有的每一个邮箱，Team 再增加成员、角色，以及每个客户一个工作区。",
+    "sub": "从免费套餐开始：一个已连接收件箱，永久免费，无需信用卡。Personal 每月 $5 可连接三个邮箱，Pro 可连接你拥有的每一个邮箱，Team 再增加成员、角色，以及每个客户一个工作区。",
     "primary": "免费开始使用",
     "secondary": "查看价格"
   },
@@ -464,7 +464,7 @@
     "hero": {
       "eyebrow": "服务商支持",
       "heading": "各服务商分别支持什么。",
-      "lead": "MCPEmails 连接 Gmail、Fastmail 以及任何 IMAP 收件箱（iCloud、Yahoo、Zoho、Yandex、通用）。并非每个服务商都提供相同的 API —— 此表精确展示了每一个服务商目前支持的内容。",
+      "lead": "MCPEmails 连接 Gmail、Fastmail 以及任何 IMAP 收件箱（iCloud、Yahoo、Zoho、Yandex、通用）。并非每个服务商都提供相同的 API，此表精确展示了每一个服务商目前支持的内容。",
       "ctaConnect": "连接一个收件箱",
       "ctaBack": "返回文档"
     },
@@ -481,11 +481,11 @@
       "feature": "功能"
     },
     "notes": {
-      "gmail": "<b>Gmail —— 文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。",
-      "permanentDelete": "<b>永久删除：</b>Gmail 在你删除时会移至回收站 —— 它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
-      "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表——在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
-      "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径——无需服务商原生的定时 API。",
-      "signatures": "<b>签名：</b>每个收件箱的签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加——这适用于<b>所有</b>服务商。签名支持富文本 HTML 格式（粗体、斜体、标题、列表、颜色、对齐、链接）以及托管的徽标/图片；可在仪表盘的富文本编辑器或 <code>signature</code> MCP 工具（接受 <code>signature_html</code>）中设置。图片以托管的 https URL 引用，可在所有服务商中显示，不过某些客户端（如 Gmail）可能会先隐藏图片，直到收件人点击“显示图片”——对于任何含托管图片的签名，这都是正常现象。使用 <code>signature_reply_mode</code> 控制其是否出现在回复和转发中。按单次调用，在 <code>email_compose</code> 或 <code>draft</code> 上传入 <code>include_signature: false</code> 可跳过它。"
+      "gmail": "<b>Gmail 的文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。",
+      "permanentDelete": "<b>永久删除：</b>Gmail 在你删除时会移至回收站，它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
+      "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表，在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
+      "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径，无需服务商原生的定时 API。",
+      "signatures": "<b>签名：</b>每个收件箱的签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加，这适用于<b>所有</b>服务商。签名支持富文本 HTML 格式（粗体、斜体、标题、列表、颜色、对齐、链接）以及托管的徽标/图片；可在仪表盘的富文本编辑器或 <code>signature</code> MCP 工具（接受 <code>signature_html</code>）中设置。图片以托管的 https URL 引用，可在所有服务商中显示，不过某些客户端（如 Gmail）可能会先隐藏图片，直到收件人点击“显示图片”，对于任何含托管图片的签名，这都是正常现象。使用 <code>signature_reply_mode</code> 控制其是否出现在回复和转发中。按单次调用，在 <code>email_compose</code> 或 <code>draft</code> 上传入 <code>include_signature: false</code> 可跳过它。"
     },
     "cta": {
       "heading": "准备好连接你的收件箱了吗？",

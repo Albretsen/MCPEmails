@@ -255,7 +255,7 @@
     },
     "editModal": {
       "title": "Rediger tilgang",
-      "sub": "Endre hva {name} kan gjøre og hvilke innbokser den når. Trer i kraft umiddelbart – ingen ny tilkobling nødvendig.",
+      "sub": "Endre hva {name} kan gjøre og hvilke innbokser den når. Trer i kraft umiddelbart, ingen ny tilkobling nødvendig.",
       "cancel": "Avbryt",
       "permissions": "Tillatelser",
       "inboxAccess": "Innbokstilgang",
@@ -416,7 +416,7 @@
     "manageBilling": "Administrer fakturering",
     "portalItem1": "Se og last ned fakturaer",
     "portalItem2": "Oppdater betalingsmetode",
-    "portalItem3": "Endre eller avbryt abonnement",
+    "portalItem3": "Si opp abonnementet",
     "monthly": "Månedlig",
     "annual": "Årlig (spar ~20 %)",
     "mostPopular": "Mest populær",
@@ -424,7 +424,7 @@
     "perMonth": "/måned",
     "billedYearly": "Faktureres ${total}/år",
     "talkToSales": "Snakk med salg",
-    "redirecting": "Videresender…",
+    "redirecting": "Et øyeblikk…",
     "currentPlan": "Nåværende abonnement",
     "getPlan": "Velg {plan}",
     "redirectNote": "Du blir videresendt til Stripe for å fullføre betalingen sikkert. Avbryt når som helst og behold tilgang til slutten av faktureringsperioden.",
@@ -436,15 +436,19 @@
     "errCheckoutUnexpected": "Uventet svar fra betaling. Prøv igjen.",
     "networkError": "Nettverksfeil. Prøv igjen.",
     "plans": {
+      "personalFeature1": "3 tilkoblede innbokser",
+      "personalFeature2": "120 forespørsler / minutt (2× burst)",
+      "personalFeature3": "Analyse",
+      "personalFeature4": "E-poststøtte",
       "soloFeature1": "Ubegrenset antall tilkoblede innbokser",
       "soloFeature2": "300 forespørsler / minutt (5× burst)",
-      "soloFeature3": "Full analyse (90 dagers historikk)",
+      "soloFeature3": "Full analyse",
       "soloFeature4": "E-poststøtte",
       "teamFeature1": "Alt i Pro",
       "teamFeature2": "Ubegrenset antall medlemmer med roller",
       "teamFeature3": "Et eget arbeidsområde per kunde eller virksomhet",
       "teamFeature4": "SSO (SAML / OIDC) + revisjonslogg",
-      "teamFeature5": "Full analyse (1 års historikk)",
+      "teamFeature5": "Full analyse",
       "teamFeature6": "Prioritert støtte"
     },
     "planIncludes": "Hva planen din inkluderer",
@@ -453,7 +457,7 @@
     "inboxesUnlimited": "Ubegrenset antall tilkoblede innbokser",
     "inboxesCount": "{count} tilkoblet akkurat nå",
     "grandfatheredTitle": "Ubegrensede innbokser, beholdt",
-    "grandfatheredBody": "Du var her allerede før innbokser ble en betalt grense, så kontoen din beholder ubegrenset antall tilkoblede innbokser gratis, permanent. Pro og Team er bare verdt det hvis du vil ha høyere burst-grense, lengre historikk eller teamfunksjoner.",
+    "grandfatheredBody": "Du var her allerede før innbokser ble en betalt grense, så kontoen din beholder ubegrenset antall tilkoblede innbokser gratis, permanent. Personal er ikke noe for deg, den planen har tak på tre innbokser. Av de betalte planene er det bare Pro og Team som er verdt det, hvis du vil ha høyere burst-grense eller teamfunksjoner.",
     "planChanged": "Du er nå på {plan}. Prisdifferansen kommer på neste faktura."
   },
   "security": {
@@ -519,7 +523,7 @@
     "sending": "Sender…",
     "sendInvite": "Send invitasjon",
     "rolesLockedHint": "Inviterte blir med som Medlem. Oppgrader til Team for å tildele Administrator- og Visningsroller.",
-    "inviteUpgradeHint": "Å invitere samarbeidspartnere er tilgjengelig på betalte planer. Oppgrader for å legge til medlemmer i dette arbeidsområdet.",
+    "inviteUpgradeHint": "Å invitere samarbeidspartnere krever Team-planen. Oppgrader til Team for å legge til medlemmer i dette arbeidsområdet.",
     "errInviteFailed": "Kunne ikke sende invitasjon.",
     "errRemoveFailed": "Kunne ikke fjerne medlem.",
     "errRoleFailed": "Kunne ikke oppdatere rolle.",
@@ -631,7 +635,7 @@
       "errors": {
         "csrf": "Denne siden har vært åpen for lenge. Last den inn på nytt og bestem deg igjen.",
         "role": "Bare en eier eller administrator av arbeidsområdet kan avgjøre denne utsendingen.",
-        "generic": "Avgjørelsen kunne ikke registreres. Ingenting ble sendt — prøv igjen."
+        "generic": "Avgjørelsen kunne ikke registreres. Ingenting ble sendt. Prøv igjen."
       }
     },
     "mode": {

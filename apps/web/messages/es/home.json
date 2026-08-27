@@ -53,7 +53,7 @@
       "0": {
         "tag": "Alcance",
         "h": "Diez herramientas enfocadas. Lo esencial, cubierto.",
-        "p": "Las herramientas cubren el trabajo diario — <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply) — además de herramientas específicas para organizar, eliminar, carpetas, borradores, programación, contactos y firmas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
+        "p": "Las herramientas cubren el trabajo diario: <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply), además de herramientas específicas para organizar, eliminar, carpetas, borradores, programación, contactos y firmas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
       },
       "1": {
         "tag": "Almacenamiento",
@@ -73,7 +73,7 @@
       "4": {
         "tag": "Acceso",
         "h": "OAuth 2.0 para agentes. Un clic para revocar.",
-        "p": "Somos MCP estándar (streamable-http) con OAuth 2.1, DCR y PKCE — sin dependencia de un proveedor. Funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI y cualquier cliente compatible con MCP. Los clientes OAuth se conectan automáticamente mediante código de autorización + PKCE; una clave de API limitada cubre los clientes sin OAuth y el acceso por scripts. Revoca cualquier conexión desde el panel con un clic."
+        "p": "Somos MCP estándar (streamable-http) con OAuth 2.1, DCR y PKCE, sin dependencia de un proveedor. Funciona con Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI y cualquier cliente compatible con MCP. Los clientes OAuth se conectan automáticamente mediante código de autorización + PKCE; una clave de API limitada cubre los clientes sin OAuth y el acceso por scripts. Revoca cualquier conexión desde el panel con un clic."
       },
       "5": {
         "tag": "Seguridad",
@@ -102,8 +102,8 @@
     },
     "tools": {
       "0": "Descubre todas las bandejas conectadas y sus IDs. Llama a esto primero, sin copiar y pegar UUIDs del panel.",
-      "1": "Leer correo: lista resúmenes recientes, obtén un mensaje completo por ID, lee hasta 50 por lotes o ejecuta una búsqueda independiente del proveedor — todo mediante el argumento action.",
-      "2": "Organizar correo: mueve, copia, elimina, marca o archiva — uno a uno, en lote o directamente desde una búsqueda.",
+      "1": "Leer correo: lista resúmenes recientes, obtén un mensaje completo por ID, lee hasta 50 por lotes o ejecuta una búsqueda independiente del proveedor, todo mediante el argumento action.",
+      "2": "Organizar correo: mueve, copia, elimina, marca o archiva, ya sea uno a uno, en lote o directamente desde una búsqueda.",
       "3": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail, Fastmail JMAP o SMTP: tu dominio, tu entregabilidad.",
       "4": "Gestiona carpetas (etiquetas en Gmail): lista, crea, renombra o elimina, y úsalas como destino de movimientos.",
       "5": "Borradores: lista, crea, actualiza y envía borradores guardados en la carpeta Drafts del proveedor.",
@@ -124,7 +124,7 @@
   "pricing": {
     "eyebrow": "Precios",
     "title": "El precio va por bandeja, no por uso.",
-    "sub": "Gratis conecta una bandeja. Pro conecta todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente.",
+    "sub": "Gratis conecta una bandeja. Personal conecta tres. Pro conecta todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente.",
     "perForever": "/para siempre",
     "perMonth": "/mes",
     "tiers": {
@@ -141,6 +141,18 @@
         ],
         "cta": "Empieza gratis"
       },
+      "personal": {
+        "name": "Personal",
+        "desc": "Tres buzones para una sola persona: el del trabajo, el personal y uno más.",
+        "features": [
+          "3 bandejas conectadas",
+          "Envíos programados y aprobaciones",
+          "Límite de ráfaga 2x más alto",
+          "Analíticas de uso",
+          "Soporte por correo"
+        ],
+        "cta": "Obtener Personal"
+      },
       "solo": {
         "name": "Pro",
         "desc": "Todos los buzones que tengas, en un solo agente. Trabajo, personal y cada proyecto paralelo.",
@@ -148,7 +160,7 @@
           "Bandejas conectadas ilimitadas",
           "Envíos programados y aprobaciones",
           "Límite de ráfaga 5x más alto",
-          "Analíticas de uso completas (historial de 90 días)",
+          "Analíticas de uso completas",
           "Soporte por correo"
         ],
         "cta": "Obtener Pro"
@@ -161,7 +173,7 @@
           "Miembros ilimitados con roles",
           "Un espacio de trabajo separado por cliente o negocio",
           "SSO (SAML / OIDC) y registro de auditoría",
-          "Analíticas de uso completas (historial de 1 año)",
+          "Analíticas de uso completas",
           "Soporte prioritario"
         ],
         "cta": "Obtener Team"
@@ -180,7 +192,7 @@
       },
       {
         "q": "¿Con qué clientes de IA funciona?",
-        "a": "Con cualquier cliente compatible con MCP. Somos un servidor MCP estándar streamable-http con OAuth 2.1, DCR y PKCE, así que la misma bandeja de entrada funciona en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat y más. Pega una sola URL de endpoint y ya estás conectado — sin tener que reconstruir nada para cada app."
+        "a": "Con cualquier cliente compatible con MCP. Somos un servidor MCP estándar streamable-http con OAuth 2.1, DCR y PKCE, así que la misma bandeja de entrada funciona en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat y más. Pega una sola URL de endpoint y ya estás conectado, sin tener que reconstruir nada para cada app."
       },
       {
         "q": "¿Qué proveedores de correo puedo conectar?",
@@ -192,11 +204,11 @@
       },
       {
         "q": "¿Es realmente gratis?",
-        "a": "Sí. El plan Gratis conecta una bandeja, para siempre y sin tarjeta, y tu agente dispone de todas las herramientas que publicamos sobre ella: leer, buscar, enviar, responder, programar y organizar. Pro es para cuando quieras un segundo buzón en el mismo agente, y Team para cuando otras personas necesiten acceso."
+        "a": "Sí. El plan Gratis conecta una bandeja, para siempre y sin tarjeta, y tu agente dispone de todas las herramientas que publicamos sobre ella: leer, buscar, enviar, responder, programar y organizar. Personal cuesta $5 al mes por un segundo y un tercer buzón en el mismo agente, Pro elimina el límite de bandejas por completo, y Team es para cuando otras personas necesiten acceso."
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",
-        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja — mover, copiar, marcar, archivar y eliminar. Nueve herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
+        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Nueve herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
       },
       {
         "q": "¿Cómo conecto una bandeja de entrada?",

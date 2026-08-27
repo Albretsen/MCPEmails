@@ -255,7 +255,7 @@
     },
     "editModal": {
       "title": "Edit access",
-      "sub": "Change what {name} can do and which inboxes it can reach. Takes effect immediately — no need to reconnect.",
+      "sub": "Change what {name} can do and which inboxes it can reach. Takes effect immediately, with no need to reconnect.",
       "cancel": "Cancel",
       "permissions": "Permissions",
       "inboxAccess": "Inbox access",
@@ -416,7 +416,7 @@
     "manageBilling": "Manage billing",
     "portalItem1": "View & download invoices",
     "portalItem2": "Update payment method",
-    "portalItem3": "Change or cancel plan",
+    "portalItem3": "Cancel your subscription",
     "monthly": "Monthly",
     "annual": "Annual (save ~20%)",
     "mostPopular": "Most popular",
@@ -424,7 +424,7 @@
     "perMonth": "/month",
     "billedYearly": "Billed ${total}/year",
     "talkToSales": "Talk to sales",
-    "redirecting": "Redirecting…",
+    "redirecting": "One moment…",
     "currentPlan": "Current plan",
     "getPlan": "Get {plan}",
     "redirectNote": "You'll be redirected to Stripe to complete payment securely. Cancel any time and keep access until the end of your billing period.",
@@ -436,15 +436,19 @@
     "errCheckoutUnexpected": "Unexpected response from checkout. Please try again.",
     "networkError": "Network error. Please try again.",
     "plans": {
+      "personalFeature1": "3 connected inboxes",
+      "personalFeature2": "120 requests / minute (2× burst)",
+      "personalFeature3": "Analytics",
+      "personalFeature4": "Email support",
       "soloFeature1": "Unlimited connected inboxes",
       "soloFeature2": "300 requests / minute (5× burst)",
-      "soloFeature3": "Full analytics (90-day history)",
+      "soloFeature3": "Full analytics",
       "soloFeature4": "Email support",
       "teamFeature1": "Everything in Pro",
       "teamFeature2": "Unlimited members with roles",
       "teamFeature3": "A separate workspace per client or business",
       "teamFeature4": "SSO (SAML / OIDC) + audit log",
-      "teamFeature5": "Full analytics (1-year history)",
+      "teamFeature5": "Full analytics",
       "teamFeature6": "Priority support"
     },
     "planIncludes": "What your plan includes",
@@ -453,7 +457,7 @@
     "inboxesUnlimited": "Unlimited connected inboxes",
     "inboxesCount": "{count} connected right now",
     "grandfatheredTitle": "Unlimited inboxes, kept",
-    "grandfatheredBody": "You were already here before inboxes became a paid limit, so your account keeps unlimited connected inboxes at no cost, permanently. Pro and Team are worth it only if you want the higher burst limit, longer history, or team features.",
+    "grandfatheredBody": "You were already here before inboxes became a paid limit, so your account keeps unlimited connected inboxes at no cost, permanently. The Personal plan tops out at three inboxes, so it would be a step down for you. Pro and Team are worth it only if you want the higher burst limit or team features.",
     "planChanged": "You are now on {plan}. The price difference appears on your next invoice."
   },
   "security": {
@@ -519,7 +523,7 @@
     "sending": "Sending…",
     "sendInvite": "Send invite",
     "rolesLockedHint": "Invites join as Member. Upgrade to Team to assign Admin and Viewer roles.",
-    "inviteUpgradeHint": "Inviting collaborators is available on paid plans. Upgrade to add members to this workspace.",
+    "inviteUpgradeHint": "Inviting collaborators needs the Team plan. Upgrade to add members to this workspace.",
     "errInviteFailed": "Failed to send invite.",
     "errRemoveFailed": "Failed to remove member.",
     "errRoleFailed": "Failed to update role.",
@@ -631,7 +635,7 @@
       "errors": {
         "csrf": "This page has been open too long. Reload it and decide again.",
         "role": "Only a workspace owner or admin can decide this send.",
-        "generic": "That decision could not be recorded. Nothing was sent — please try again."
+        "generic": "That decision could not be recorded. Nothing was sent. Please try again."
       }
     },
     "mode": {

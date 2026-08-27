@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "AI Email for Founders — Manage Customer Inbox with Claude",
+    "title": "AI Email for Founders: Manage Customer Inbox with Claude",
     "description": "Use Claude or another MCP client to triage and answer customer email. Read, draft, send, schedule, and organize Gmail or IMAP inboxes in one secure workflow."
   },
   "hero": {
@@ -104,7 +104,7 @@
       },
       {
         "q": "What does it cost while I am still small?",
-        "a": "Free, with one connected inbox and no card required. Pro at $29 a month connects every mailbox you own, and Team adds members, roles, and a separate workspace per client."
+        "a": "Free, with one connected inbox and no card required. Personal at $5 a month connects three mailboxes, Pro at $29 a month connects every mailbox you own, and Team adds members, roles, and a separate workspace per client."
       }
     ]
   },

@@ -2,13 +2,13 @@
   "gmail": {
     "meta": {
       "title": "Koble Gmail til Claude (og enhver AI)",
-      "description": "Koble Gmail til Claude, Cursor, ChatGPT og enhver MCP-klient med ett klikk via Google OAuth. La AI lese, sende, planlegge og organisere Gmail-en din — innbokser og verktøykall gratis."
+      "description": "Koble Gmail til Claude, Cursor, ChatGPT og enhver MCP-klient med ett klikk via Google OAuth. La AI lese, sende, planlegge og organisere Gmail-en din. 1 innboks gratis, for alltid."
     },
     "hero": {
       "eyebrow": "Gmail + AI",
-      "titleLine1": "Koble Gmail til Claude —",
+      "titleLine1": "Koble Gmail til Claude",
       "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-      "lead": "Gi AI-agenten din en ekte Gmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett klikks Google-pålogging — og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "lead": "Gi AI-agenten din en ekte Gmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett klikks Google-pålogging, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
       "ctaPrimary": "Koble til Gmail gratis",
       "ctaSecondary": "Les dokumentasjonen",
       "meta0": "1 innboks gratis, for alltid",
@@ -17,28 +17,28 @@
     },
     "method": {
       "title": "Slik kobler Gmail seg til: Google OAuth med ett klikk",
-      "body": "Gmail kobles til med <b>Google OAuth</b> — logg inn med Google, godkjenn lese- og sendetilgang, og du er tilkoblet. Ingen app-passord, ingen IMAP-innstillinger å grave fram. Trekk tilbake tilgangen når som helst fra Google-kontoen din eller mcpemails-dashbordet."
+      "body": "Gmail kobles til med <b>Google OAuth</b>: logg inn med Google, godkjenn lese- og sendetilgang, og du er tilkoblet. Ingen app-passord, ingen IMAP-innstillinger å grave fram. Trekk tilbake tilgangen når som helst fra Google-kontoen din eller mcpemails-dashbordet."
     },
     "verificationNote": {
       "title": "Dette viser Google deg",
-      "body": "Google viser et «Google har ikke verifisert denne appen»-skjermbilde for alle apper de ikke har gjennomgått — klikk <b>Avansert</b>, deretter <b>Gå til mcpemails.com</b> for å fortsette. Den gjennomgangen krever en betalt sikkerhetsvurdering fra tredjepart som vi har valgt å ikke kjøpe, så skjermbildet blir værende. Når postkassen først er tilkoblet, forblir den tilkoblet: tilgangen fornyes automatisk og opphører bare hvis du trekker den tilbake fra Google-kontoen din."
+      "body": "Google viser et «Google har ikke verifisert denne appen»-skjermbilde for alle apper de ikke har gjennomgått. Klikk <b>Avansert</b>, deretter <b>Gå til mcpemails.com</b> for å fortsette. Den gjennomgangen krever en betalt sikkerhetsvurdering fra tredjepart som vi har valgt å ikke kjøpe, så skjermbildet blir værende. Når postkassen først er tilkoblet, forblir den tilkoblet: tilgangen fornyes automatisk og opphører bare hvis du trekker den tilbake fra Google-kontoen din."
     },
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",
       "title": "En Gmail-innboks agenten faktisk kan bruke",
-      "sub": "Ni handlingsbaserte MCP-verktøy — ikke bare utkast. Agenten fullfører jobben inne i Gmail.",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Gmail.",
       "ctaPrimary": "Koble til Gmail gratis"
     },
     "capabilities": [
       {
         "tag": "Les",
         "h": "Les og søk i e-post",
-        "p": "List opp, les og søk på tvers av etiketter — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+        "p": "List opp, les og søk på tvers av etiketter: finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
       },
       {
         "tag": "Send",
         "h": "Send, svar og videresend",
-        "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Gmail, ikke som et utkast du fullfører for hånd."
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Gmail, ikke som et utkast du fullfører for hånd."
       },
       {
         "tag": "Planlegg",
@@ -48,7 +48,7 @@
       {
         "tag": "Organiser",
         "h": "Merk, arkiver og slett",
-        "p": "Hold innboksen ryddig — legg på etiketter, arkiver det som er håndtert, og slett på forespørsel."
+        "p": "Hold innboksen ryddig: legg på etiketter, arkiver det som er håndtert, og slett på forespørsel."
       }
     ],
     "how": {
@@ -80,39 +80,39 @@
   "fastmail": {
     "meta": {
       "title": "Koble Fastmail til Claude (og enhver AI)",
-      "description": "Koble Fastmail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Fastmail-en din — innbokser og verktøykall gratis."
+      "description": "Koble Fastmail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Fastmail-en din. 1 innboks gratis, for alltid."
     },
     "hero": {
       "eyebrow": "Fastmail + AI",
-      "titleLine1": "Koble Fastmail til Claude —",
+      "titleLine1": "Koble Fastmail til Claude",
       "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-      "lead": "Gi AI-agenten din en ekte Fastmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord — og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "lead": "Gi AI-agenten din en ekte Fastmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
       "ctaPrimary": "Koble til Fastmail gratis",
       "ctaSecondary": "Les dokumentasjonen",
       "meta0": "1 innboks gratis, for alltid",
-      "meta1": "App-passord — ingen OAuth-oppsett",
+      "meta1": "App-passord, ingen OAuth-oppsett",
       "meta2": "E-post hentes direkte, lagres aldri"
     },
     "method": {
       "title": "Slik kobler Fastmail seg til: et app-passord",
-      "body": "Fastmail kobles til via IMAP/SMTP med et <b>Fastmail-app-passord</b> — generer ett i Fastmail under Innstillinger → Personvern og sikkerhet → App-passord, lim det inn i mcpemails, og du er tilkoblet. Ingen OAuth-dans, ingen nettleser-popuper."
+      "body": "Fastmail kobles til via IMAP/SMTP med et <b>Fastmail-app-passord</b>: generer ett i Fastmail under Innstillinger → Personvern og sikkerhet → App-passord, lim det inn i mcpemails, og du er tilkoblet. Ingen OAuth-dans, ingen nettleser-popuper."
     },
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",
       "title": "En Fastmail-innboks agenten faktisk kan bruke",
-      "sub": "Ni handlingsbaserte MCP-verktøy — ikke bare utkast. Agenten fullfører jobben inne i Fastmail.",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Fastmail.",
       "ctaPrimary": "Koble til Fastmail gratis"
     },
     "capabilities": [
       {
         "tag": "Les",
         "h": "Les og søk i e-post",
-        "p": "List opp, les og søk på tvers av mapper — finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+        "p": "List opp, les og søk på tvers av mapper: finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
       },
       {
         "tag": "Send",
         "h": "Send, svar og videresend",
-        "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra Fastmail, ikke som et utkast du fullfører for hånd."
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Fastmail, ikke som et utkast du fullfører for hånd."
       },
       {
         "tag": "Planlegg",
@@ -122,7 +122,7 @@
       {
         "tag": "Organiser",
         "h": "Flytt, kopier, flagg, arkiver, slett",
-        "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
       }
     ],
     "how": {
@@ -158,17 +158,17 @@
   "icloud": {
     "meta": {
       "title": "Koble iCloud Mail til Claude (og enhver AI)",
-      "description": "Koble iCloud Mail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-spesifikt Apple-passord. La AI lese, sende, planlegge og organisere iCloud-e-posten din — gratis."
+      "description": "Koble iCloud til Claude, Cursor, ChatGPT og enhver MCP-klient med et Apple-app-passord. La AI lese, sende, planlegge og organisere iCloud Mail. 1 innboks gratis, for alltid."
     },
     "hero": {
       "eyebrow": "iCloud Mail + AI",
-      "titleLine1": "Koble iCloud Mail til Claude —",
+      "titleLine1": "Koble iCloud Mail til Claude",
       "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-      "lead": "Gi AI-agenten din en ekte iCloud-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et app-spesifikt Apple-passord — og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "lead": "Gi AI-agenten din en ekte iCloud-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et app-spesifikt Apple-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
       "ctaPrimary": "Koble til iCloud gratis",
       "ctaSecondary": "Les dokumentasjonen",
       "meta0": "1 innboks gratis, for alltid",
-      "meta1": "App-spesifikt passord — ingen OAuth",
+      "meta1": "App-spesifikt passord, ingen OAuth",
       "meta2": "E-post hentes direkte, lagres aldri"
     },
     "method": {
@@ -178,19 +178,19 @@
     "caps": {
       "eyebrow": "Hva AI-en din kan gjøre",
       "title": "En iCloud-innboks agenten faktisk kan bruke",
-      "sub": "Ni handlingsbaserte MCP-verktøy — ikke bare utkast. Agenten fullfører jobben inne i iCloud Mail.",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i iCloud Mail.",
       "ctaPrimary": "Koble til iCloud gratis"
     },
     "capabilities": [
       {
         "tag": "Les",
         "h": "Les og søk i e-post",
-        "p": "List opp, les og søk på tvers av mapper — finn en kvittering, oppsummer en tråd, eller hent det nyeste fra en avsender."
+        "p": "List opp, les og søk på tvers av mapper: finn en kvittering, oppsummer en tråd, eller hent det nyeste fra en avsender."
       },
       {
         "tag": "Send",
         "h": "Send, svar og videresend",
-        "p": "Skriv og send ekte meldinger, svar i tråden og videresend — direkte fra iCloud, ikke som et utkast du fullfører for hånd."
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra iCloud, ikke som et utkast du fullfører for hånd."
       },
       {
         "tag": "Planlegg",
@@ -200,7 +200,7 @@
       {
         "tag": "Organiser",
         "h": "Flytt, kopier, flagg, arkiver, slett",
-        "p": "Hold innboksen ryddig — legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
       }
     ],
     "how": {
@@ -236,7 +236,7 @@
   "yahoo": {
     "meta": {
       "title": "Koble Yahoo Mail til Claude (og enhver AI)",
-      "description": "Koble Yahoo Mail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Yahoo Mail. Innbokser og verktøykall er gratis."
+      "description": "Koble Yahoo Mail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Yahoo Mail. 1 innboks gratis, for alltid."
     },
     "hero": {
       "eyebrow": "Yahoo Mail + AI",
@@ -314,7 +314,7 @@
   "zoho": {
     "meta": {
       "title": "Koble Zoho Mail til Claude (og enhver AI)",
-      "description": "Koble Zoho Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere Zoho Mail. Innbokser og verktøykall er gratis."
+      "description": "Koble Zoho Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere Zoho Mail. 1 innboks gratis, for alltid."
     },
     "hero": {
       "eyebrow": "Zoho Mail + AI",
@@ -392,7 +392,7 @@
   "yandex": {
     "meta": {
       "title": "Koble Yandex Mail til Claude (og enhver AI)",
-      "description": "Koble Yandex Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere Yandex Mail. Innbokser og verktøykall er gratis."
+      "description": "Koble Yandex Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere Yandex Mail. 1 innboks gratis, for alltid."
     },
     "hero": {
       "eyebrow": "Yandex Mail + AI",

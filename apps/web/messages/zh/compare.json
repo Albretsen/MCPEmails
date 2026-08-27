@@ -19,17 +19,17 @@
       "coverage": {
         "tag": "覆盖范围",
         "h": "任意邮箱，不止 Gmail",
-        "p": "内置连接器通常只能连接一个邮箱——Gmail，有时还有 Outlook。它们无法接入 <b>Fastmail、iCloud、Yahoo、Zoho、Yandex</b> 或任何其他 <b>IMAP/SMTP</b> 账户。我们全部支持：Gmail 通过 OAuth 连接，其余通过应用专用密码或普通 IMAP 连接。"
+        "p": "内置连接器通常只能连接一个邮箱：Gmail，有时还有 Outlook。它们无法接入 <b>Fastmail、iCloud、Yahoo、Zoho、Yandex</b> 或任何其他 <b>IMAP/SMTP</b> 账户。我们全部支持：Gmail 通过 OAuth 连接，其余通过应用专用密码或普通 IMAP 连接。"
       },
       "actions": {
         "tag": "真实操作",
         "h": "可发送和定时，而非只生成草稿",
-        "p": "许多原生连接器只能<b>生成草稿</b>，你仍需自行打开并发送。我们的九个基于动作的工具可直接<b>发送、回复、转发、定时、移动、复制、标记、归档和删除</b>——AI 在收件箱内即可完成整件事。"
+        "p": "许多原生连接器只能<b>生成草稿</b>，你仍需自行打开并发送。我们的九个基于动作的工具可直接<b>发送、回复、转发、定时、移动、复制、标记、归档和删除</b>，AI 在收件箱内即可完成整件事。"
       },
       "portable": {
         "tag": "可迁移",
         "h": "一次配置，任意 AI 通用",
-        "p": "某厂商的内置连接器只能在该厂商的应用内使用。我们的服务器采用标准 streamable-http MCP，并支持 <b>OAuth 2.1 / DCR / PKCE</b>，因此同一个邮箱可在 <code>Claude</code>、<code>Cursor</code>、<code>VS Code</code>、<code>ChatGPT</code>、<code>n8n</code> 等中通用——无需为每个应用重新搭建。"
+        "p": "某厂商的内置连接器只能在该厂商的应用内使用。我们的服务器采用标准 streamable-http MCP，并支持 <b>OAuth 2.1 / DCR / PKCE</b>，因此同一个邮箱可在 <code>Claude</code>、<code>Cursor</code>、<code>VS Code</code>、<code>ChatGPT</code>、<code>n8n</code> 等中通用，无需为每个应用重新搭建。"
       }
     }
   },

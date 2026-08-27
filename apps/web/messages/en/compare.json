@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "AI Email Connectors vs MCP Server — Compare Capabilities",
+    "title": "AI Email Connectors vs MCP Server: Compare Capabilities",
     "description": "Compare native AI email connectors with an MCP email server: provider coverage, portable AI-client access, and real read, send, schedule, and organize actions."
   },
   "hero": {
@@ -19,17 +19,17 @@
       "coverage": {
         "tag": "Coverage",
         "h": "Every inbox, not just Gmail",
-        "p": "Built-in connectors typically reach one mailbox — Gmail, sometimes Outlook. They can't touch <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over OAuth, the rest over an app password or plain IMAP."
+        "p": "Built-in connectors typically reach one mailbox: Gmail, sometimes Outlook. They can't touch <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over OAuth, the rest over an app password or plain IMAP."
       },
       "actions": {
         "tag": "Real actions",
         "h": "Send and schedule, not just draft",
-        "p": "Many native connectors stop at <b>creating a draft</b> you still have to open and send. Our nine action-based tools <b>send, reply, forward, schedule, move, copy, flag, archive, and delete</b> directly — the agent finishes the job inside the inbox."
+        "p": "Many native connectors stop at <b>creating a draft</b> you still have to open and send. Our nine action-based tools <b>send, reply, forward, schedule, move, copy, flag, archive, and delete</b> directly, so the agent finishes the job inside the inbox."
       },
       "portable": {
         "tag": "Portable",
         "h": "One setup, every AI",
-        "p": "A vendor's built-in connector only works inside that vendor's app. Our server speaks standard streamable-http MCP with <b>OAuth 2.1 / DCR / PKCE</b>, so the same inbox works in <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code>, and more — no per-app rebuild."
+        "p": "A vendor's built-in connector only works inside that vendor's app. Our server speaks standard streamable-http MCP with <b>OAuth 2.1 / DCR / PKCE</b>, so the same inbox works in <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code>, and more, with no per-app rebuild."
       }
     }
   },

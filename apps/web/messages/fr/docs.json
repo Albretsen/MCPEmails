@@ -28,7 +28,7 @@
       "apikey": {
         "label": "Créez une clé API",
         "heading": "Générez un jeton bearer pour votre agent",
-        "body": "Dans Tableau de bord → Clés d'API, cliquez sur « Créer une clé ». Nommez-la, sélectionnez les portées dont votre agent a besoin — read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email et manage:automations — et copiez la clé. Elle n'est affichée qu'une seule fois."
+        "body": "Dans Tableau de bord → Clés d'API, cliquez sur « Créer une clé ». Nommez-la, sélectionnez les portées dont votre agent a besoin (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email ) et copiez la clé. Elle n'est affichée qu'une seule fois."
       },
       "addclient": {
         "label": "Ajoutez MCPEmails à votre agent",
@@ -60,10 +60,10 @@
     "infoTransport": "Transport : <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Auth : <b>Authorization: Bearer &lt;api-key&gt;</b>",
     "infoRateLimits": "Limites de débit : <b>100 req/min · 1 000/h · 10 000/jour</b> par clé, plus le plafond d'espace de travail de votre formule",
-    "infoFormat": "Format de réponse : <b>JSON-RPC 2.0</b> — les résultats réussis comportent aussi un objet typé <code>structuredContent</code>",
+    "infoFormat": "Format de réponse : <b>JSON-RPC 2.0</b> : les résultats réussis comportent aussi un objet typé <code>structuredContent</code>",
     "handshakeLabel": "Handshake d'initialisation",
     "pollingHeading": "Interrogation, pas push",
-    "pollingBody": "MCPEmails fonctionne uniquement en requête/réponse : chaque résultat provient d'un appel d'outil effectué par votre agent. <b>Il n'y a ni webhooks, ni notifications push, ni événements initiés par le serveur</b> — un e-mail entrant ne déclenche jamais un appel d'agent de lui-même. Pour réagir aux nouveaux messages, faites <b>interroger</b> votre agent périodiquement, p. ex. en appelant <code>email_read</code> avec <code>action: \"list\"</code> et <code>unread_only: true</code> à l'intervalle dont votre flux a besoin (attention aux limites de débit ci-dessus)."
+    "pollingBody": "MCPEmails fonctionne uniquement en requête/réponse : chaque résultat provient d'un appel d'outil effectué par votre agent. <b>Il n'y a ni webhooks, ni notifications push, ni événements initiés par le serveur</b> : un e-mail entrant ne déclenche jamais un appel d'agent de lui-même. Pour réagir aux nouveaux messages, faites <b>interroger</b> votre agent périodiquement, p. ex. en appelant <code>email_read</code> avec <code>action: \"list\"</code> et <code>unread_only: true</code> à l'intervalle dont votre flux a besoin (attention aux limites de débit ci-dessus)."
   },
   "operations": {
     "eyebrow": "Conçu pour le vrai travail de boîte mail",
@@ -106,13 +106,13 @@
     "howTitle": "Comment ça fonctionne en coulisses",
     "howP1": "claude.ai s'enregistre via <b>RFC 7591 Dynamic Client Registration</b>, donc vous ne préenregistrez jamais d'ID client.",
     "howP2": "L'autorisation utilise <b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636), donc aucun secret client n'est jamais transmis.",
-    "howP3": "Les jetons sont limités exactement aux autorisations que vous approuvez — <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> et <code>manage:automations</code>.",
+    "howP3": "Les jetons sont limités exactement aux autorisations que vous approuvez : <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> et <code>manage:automations</code>.",
     "noOauthNote": "<b>Vous utilisez un client sans prise en charge d'OAuth ?</b> Créez une clé API dans Tableau de bord → Clés API et passez-la comme jeton bearer. Les connexions par clé API et par OAuth utilisent le même point de terminaison MCP et le même catalogue d'outils."
   },
   "tools": {
     "eyebrow": "Référence des outils",
     "heading": "11 outils. Toutes les opérations e-mail dont votre agent a besoin.",
-    "sub": "<b>Cibler une boîte est facultatif.</b> Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement — pas besoin d’<code>inbox_id</code>. Avec plusieurs boîtes, passez <code>inbox_id</code> (l'UUID renvoyé par <code>inbox_list</code>) ou <code>inbox</code> (l'adresse e-mail de la boîte). La plupart des outils prennent un argument <code>action</code> qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.",
+    "sub": "<b>Cibler une boîte est facultatif.</b> Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement, sans avoir besoin d’<code>inbox_id</code>. Avec plusieurs boîtes, passez <code>inbox_id</code> (l'UUID renvoyé par <code>inbox_list</code>) ou <code>inbox</code> (l'adresse e-mail de la boîte). La plupart des outils prennent un argument <code>action</code> qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.",
     "noParams": "Aucun paramètre. Appelez avec un objet d'arguments vide :",
     "showExample": "Afficher l'exemple de requête et réponse",
     "hideExample": "Masquer l'exemple de requête et réponse",
@@ -128,16 +128,16 @@
       "title": "Lister les boîtes",
       "desc": "Renvoie toutes les boîtes auxquelles la clé API ou le jeton OAuth actuel a accès. Appelez-le en premier pour découvrir les valeurs inbox_id, afin de ne jamais copier-coller d'UUID depuis le tableau de bord. Chaque résultat inclut l'adresse e-mail, le fournisseur, une marque de service facultative (icloud/yahoo/zoho/yandex/generic/fastmail) et un objet capabilities décrivant les fonctionnalités prises en charge par cette boîte.",
       "params": {
-        "provider": "Filtre facultatif — ne renvoie que les boîtes servies par ce fournisseur. L'un de : gmail, fastmail, imap. Omettez-le pour lister toutes les boîtes auxquelles la clé a accès.",
+        "provider": "Filtre facultatif : ne renvoie que les boîtes servies par ce fournisseur. L'un de : gmail, fastmail, imap. Omettez-le pour lister toutes les boîtes auxquelles la clé a accès.",
         "include_capabilities": "Si chaque boîte inclut son objet capabilities (les fonctionnalités prises en charge). Par défaut true ; mettez false pour une liste compacte ne contenant que inbox_id, adresse e-mail, nom affiché, fournisseur et marque de service."
       }
     },
     "email_read": {
       "title": "Lire un e-mail",
-      "desc": "Lire, lister et rechercher des messages dans une boîte. Définissez action : 'list' pour des résumés de messages récents (les plus récents d'abord, avec filtrage par dossier/non lus et pagination), 'read' pour le contenu complet d'un message_id (corps texte, HTML assaini facultatif et pièces jointes), 'read_batch' pour récupérer jusqu'à 50 message_ids en un seul appel, 'search' pour des filtres structurés et indépendants du fournisseur (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), ou 'attachment' pour télécharger une seule pièce jointe (par attachment_index ou filename) en données base64 — jusqu'à 25 Mo. En lecture seule — ne modifie jamais rien. L'action 'search' est aussi débloquée seule par la portée plus restreinte search:email. Les corps longs sont renvoyés par fenêtres : vérifiez body_truncated, puis renvoyez body_next_offset comme body_offset pour continuer.",
+      "desc": "Lire, lister et rechercher des messages dans une boîte. Définissez action : 'list' pour des résumés de messages récents (les plus récents d'abord, avec filtrage par dossier/non lus et pagination), 'read' pour le contenu complet d'un message_id (corps texte, HTML assaini facultatif et pièces jointes), 'read_batch' pour récupérer jusqu'à 50 message_ids en un seul appel, 'search' pour des filtres structurés et indépendants du fournisseur (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), ou 'attachment' pour télécharger une seule pièce jointe (par attachment_index ou filename) en données base64, jusqu'à 25 Mo. En lecture seule : ne modifie jamais rien. L'action 'search' est aussi débloquée seule par la portée plus restreinte search:email. Les corps longs sont renvoyés par fenêtres : vérifiez body_truncated, puis renvoyez body_next_offset comme body_offset pour continuer.",
       "params": {
         "action": "Quelle opération effectuer : \"list\" (résumés de messages récents), \"read\" (contenu complet d'un message_id), \"read_batch\" (plusieurs message_ids), \"search\" (filtres structurés) ou \"attachment\" (télécharger une pièce jointe en base64). Détermine quels autres arguments s'appliquent.",
-        "inbox_id": "UUID de la boîte à lire. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour découvrir les ID de boîte.",
+        "inbox_id": "UUID de la boîte à lire. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour découvrir les ID de boîte.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "message_id": "ID de message du fournisseur à lire (action 'read' ou 'attachment'), issu d'un list ou search précédent.",
         "message_ids": "ID de message du fournisseur à lire (action 'read_batch'), issus d'un list ou search précédent. Max 50 par appel.",
@@ -158,7 +158,7 @@
         "cc": "Destinataire en copie (Cc) à faire correspondre (action 'search') : adresse e-mail, nom affiché ou fragment.",
         "subject": "Texte à faire correspondre dans l'objet (action 'search'). Les expressions de plusieurs mots sont prises telles quelles.",
         "body": "Texte libre à trouver dans le corps du message (action 'search'). (Sur Gmail, cela correspond à l'ensemble du message, pas seulement au corps.)",
-        "text": "Texte libre à faire correspondre n'importe où dans le message — en-têtes et corps (action 'search').",
+        "text": "Texte libre à faire correspondre n'importe où dans le message, en-têtes et corps (action 'search').",
         "unread": "Action 'search' : true = uniquement les messages non lus ; false = uniquement les lus ; omettez pour les deux.",
         "has_attachment": "Action 'search' : true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré ici).",
         "flagged": "Action 'search' : true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré ici).",
@@ -173,18 +173,18 @@
       "desc": "Déplacer, copier, marquer ou archiver des messages. Définissez action : 'move'/'move_batch' (vers un destination_folder_id), 'copy'/'copy_batch' (dupliquer dans un destination_folder_id, en laissant l'original en place ; IMAP, Outlook et Fastmail uniquement), 'flag' (définir lu/non lu/marqué via flag_action sur des message_ids), 'archive' (sortir de la boîte de réception, non destructif), ou 'search_and_move' (appliquer à chaque message correspondant à une recherche structurée, ce qui évite les ID de message obsolètes). Chaque action nécessite la portée correspondante : manage:folders pour les déplacements et les copies, send:email pour flag/archive. La suppression des messages a son propre outil email_delete.",
       "params": {
         "action": "Quelle opération effectuer : \"move\", \"move_batch\", \"copy\", \"copy_batch\", \"flag\", \"archive\" ou \"search_and_move\". Détermine quels autres arguments s'appliquent et quelle portée est requise.",
-        "inbox_id": "UUID de la boîte qui contient les messages. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox_id": "UUID de la boîte qui contient les messages. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "message_id": "ID de message du fournisseur pour une action sur un seul message (move, copy, archive), issu d'un list, read ou search précédent.",
         "message_ids": "ID de message du fournisseur pour une action par lot (move_batch, copy_batch, flag). Max 500 par appel.",
         "destination_folder_id": "Dossier de destination (move, move_batch, copy, copy_batch, search_and_move) : un alias canonique (inbox, sent, drafts, trash, archive, spam), un nom de dossier/libellé (p. ex. 'Receipts') ou un ID de dossier natif du fournisseur issu de l'action list de folder. Les noms et alias sont résolus automatiquement.",
-        "flag_action": "Pour l'action 'flag' : la modification à appliquer à chaque message — \"read\" ou \"unread\" pour définir le statut de lecture, ou \"flag\"/\"unflag\" pour ajouter ou retirer une étoile/un indicateur de suivi.",
+        "flag_action": "Pour l'action 'flag' : la modification à appliquer à chaque message : \"read\" ou \"unread\" pour définir le statut de lecture, ou \"flag\"/\"unflag\" pour ajouter ou retirer une étoile/un indicateur de suivi.",
         "from": "Expéditeur à faire correspondre (search_and_move) : adresse e-mail, nom affiché ou fragment.",
         "to": "Destinataire principal (To) à faire correspondre (search_and_move) : adresse e-mail, nom affiché ou fragment.",
         "cc": "Destinataire en copie (Cc) à faire correspondre (search_and_move) : adresse e-mail, nom affiché ou fragment.",
         "subject": "Texte à faire correspondre dans l'objet (search_and_move).",
         "body": "Texte libre à trouver dans le corps du message (search_and_move). (Sur Gmail, cela correspond à l'ensemble du message.)",
-        "text": "Texte libre à faire correspondre n'importe où dans le message — en-têtes et corps (search_and_move).",
+        "text": "Texte libre à faire correspondre n'importe où dans le message, en-têtes et corps (search_and_move).",
         "unread": "Actions de recherche : true = uniquement non lus ; false = uniquement lus ; omettez pour les deux.",
         "has_attachment": "Actions de recherche : true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré ici).",
         "flagged": "Actions de recherche : true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré ici).",
@@ -197,10 +197,10 @@
     },
     "email_delete": {
       "title": "Supprimer des e-mails",
-      "desc": "Supprimer des messages — son propre outil, distinct d'email_organize, car la suppression est destructive. Définissez action : 'delete'/'delete_batch' (Corbeille par défaut, ou permanent), ou 'search_and_delete' (supprimer chaque message correspondant à une recherche structurée — évite les ID de message obsolètes). Les suppressions vont à la Corbeille sauf si vous passez permanent : true, ce qui est irréversible. Chaque action nécessite la portée delete:email, et l'outil entier est signalé comme destructif à votre client MCP, qui gère la confirmation de l'utilisateur avant toute suppression.",
+      "desc": "Supprimer des messages, dans son propre outil, distinct d'email_organize, car la suppression est destructive. Définissez action : 'delete'/'delete_batch' (Corbeille par défaut, ou permanent), ou 'search_and_delete' (supprimer chaque message correspondant à une recherche structurée, ce qui évite les ID de message obsolètes). Les suppressions vont à la Corbeille sauf si vous passez permanent : true, ce qui est irréversible. Chaque action nécessite la portée delete:email, et l'outil entier est signalé comme destructif à votre client MCP, qui gère la confirmation de l'utilisateur avant toute suppression.",
       "params": {
         "action": "Quelle opération effectuer : \"delete\", \"delete_batch\" ou \"search_and_delete\". Détermine quels autres arguments s'appliquent.",
-        "inbox_id": "UUID de la boîte qui contient les messages. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox_id": "UUID de la boîte qui contient les messages. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "message_id": "ID de message du fournisseur pour une suppression unique (action 'delete'), issu d'un list, read ou search précédent.",
         "message_ids": "ID de message du fournisseur pour une suppression par lot (action 'delete_batch'). Max 500 par appel.",
@@ -210,7 +210,7 @@
         "cc": "Destinataire en copie (Cc) à faire correspondre (search_and_delete) : adresse e-mail, nom affiché ou fragment.",
         "subject": "Texte à faire correspondre dans l'objet (search_and_delete).",
         "body": "Texte libre à trouver dans le corps du message (search_and_delete). (Sur Gmail, cela correspond à l'ensemble du message.)",
-        "text": "Texte libre à faire correspondre n'importe où dans le message — en-têtes et corps (search_and_delete).",
+        "text": "Texte libre à faire correspondre n'importe où dans le message, en-têtes et corps (search_and_delete).",
         "unread": "Action de recherche : true = uniquement non lus ; false = uniquement lus ; omettez pour les deux.",
         "has_attachment": "Action de recherche : true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré ici).",
         "flagged": "Action de recherche : true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré ici).",
@@ -223,10 +223,10 @@
     },
     "email_compose": {
       "title": "Rédiger un e-mail",
-      "desc": "Envoyer un nouveau message ou répondre à des messages existants. Définissez action : 'send' pour un nouvel e-mail (to/subject/body, éventuellement cc/bcc/html_body/reply_to/attachments), 'reply' pour répondre à un message_id (les en-têtes de fil sont définis automatiquement ; éventuellement reply_all), ou 'forward' pour transférer un message_id à de nouveaux destinataires (en réattachant éventuellement les fichiers d'origine). La signature de la boîte est ajoutée automatiquement — sur les réponses et les transferts, elle se place après votre texte et avant le bloc cité, selon le mode de réponse de la signature ; passez include_signature: false pour la supprimer sur un message court ponctuel. Les trois sont irréversibles une fois envoyées.",
+      "desc": "Envoyer un nouveau message ou répondre à des messages existants. Définissez action : 'send' pour un nouvel e-mail (to/subject/body, éventuellement cc/bcc/html_body/reply_to/attachments), 'reply' pour répondre à un message_id (les en-têtes de fil sont définis automatiquement ; éventuellement reply_all), ou 'forward' pour transférer un message_id à de nouveaux destinataires (en réattachant éventuellement les fichiers d'origine). La signature de la boîte est ajoutée automatiquement : sur les réponses et les transferts, elle se place après votre texte et avant le bloc cité, selon le mode de réponse de la signature ; passez include_signature: false pour la supprimer sur un message court ponctuel. Les trois sont irréversibles une fois envoyées.",
       "params": {
         "action": "Quelle opération effectuer : \"send\", \"reply\" ou \"forward\". Détermine quels autres arguments s'appliquent.",
-        "inbox_id": "UUID de la boîte depuis laquelle envoyer. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox_id": "UUID de la boîte depuis laquelle envoyer. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "message_id": "ID de message du fournisseur du message d'origine (action 'reply' ou 'forward'), issu d'un list, read ou search précédent.",
         "to": "Adresses e-mail des destinataires (requis pour 'send' et 'forward'). Max 50.",
@@ -236,7 +236,7 @@
         "bcc": "Destinataires en copie cachée (send, forward). Par défaut [].",
         "html_body": "Version HTML du corps (multipart/alternative). L'appelant est responsable d'un HTML sûr.",
         "reply_to": "Adresse de l'en-tête Reply-To (action 'send').",
-        "reply_all": "Répondre à tous les destinataires d'origine — To + Cc (action 'reply'). Par défaut false.",
+        "reply_all": "Répondre à tous les destinataires d'origine, To + Cc (action 'reply'). Par défaut false.",
         "include_attachments": "Réattacher les pièces jointes du message d'origine (action 'forward'). Les fichiers dépassant le budget de 10 Mo sont omis. Par défaut false.",
         "include_signature": "Indique s'il faut ajouter la signature configurée de la boîte à ce message. Par défaut true ; mettez false pour envoyer ce seul message sans la signature.",
         "attachments": "Pièces jointes. Chaque élément : '{' filename, mime_type, data (base64) '}'. Max 20 éléments, 10 Mo au total.",
@@ -245,10 +245,10 @@
     },
     "folder": {
       "title": "Dossiers",
-      "desc": "Gérer les dossiers de la boîte (libellés sur Gmail). Définissez action : 'list' (chaque dossier avec son ID natif du fournisseur, son nom affiché, son type et ses nombres de messages — utilisez les ID comme argument folder lors du listage et comme destination de déplacement), 'create' (name), 'rename' (folder_id, new_name) ou 'delete' (folder_id — irréversible ; les messages qu'il contient peuvent être perdus selon le fournisseur). 'list' nécessite read:email ; create/rename/delete nécessitent manage:folders, et delete est signalé comme destructif à votre client MCP.",
+      "desc": "Gérer les dossiers de la boîte (libellés sur Gmail). Définissez action : 'list' (chaque dossier avec son ID natif du fournisseur, son nom affiché, son type et ses nombres de messages : utilisez les ID comme argument folder lors du listage et comme destination de déplacement), 'create' (name), 'rename' (folder_id, new_name) ou 'delete' (folder_id, irréversible ; les messages qu'il contient peuvent être perdus selon le fournisseur). 'list' nécessite read:email ; create/rename/delete nécessitent manage:folders, et delete est signalé comme destructif à votre client MCP.",
       "params": {
         "action": "Quelle opération effectuer : \"list\", \"create\", \"rename\" ou \"delete\". Détermine quels autres arguments s'appliquent et quelle portée est requise.",
-        "inbox_id": "UUID de la boîte dont les dossiers sont gérés. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox_id": "UUID de la boîte dont les dossiers sont gérés. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "name": "Nom du nouveau dossier ou libellé (action 'create'). 1–255 caractères.",
         "folder_id": "ID de dossier/libellé natif du fournisseur (action 'rename' ou 'delete'), issu de l'action list de folder.",
@@ -257,10 +257,10 @@
     },
     "draft": {
       "title": "Brouillons",
-      "desc": "Gérer les brouillons dans le dossier Drafts de la boîte. Définissez action : 'list' (brouillons enregistrés, chacun avec son draft_id, son objet, ses destinataires et sa date de création), 'create' (subject/body requis, éventuellement to/cc/bcc/html_body), 'update' (draft_id plus les champs à écraser) ou 'send' (draft_id — supprime le brouillon et l'envoie, irréversible). La signature de la boîte est intégrée à la création ou à la mise à jour du brouillon, elle est donc déjà présente dans le dossier Drafts et n'est pas réajoutée à l'envoi ; passez include_signature: false pour créer un brouillon sans elle. Sur les boîtes basées sur IMAP, un draft_id change à chaque mise à jour, utilisez donc toujours le plus récent ; Gmail et Outlook conservent un draft_id stable.",
+      "desc": "Gérer les brouillons dans le dossier Drafts de la boîte. Définissez action : 'list' (brouillons enregistrés, chacun avec son draft_id, son objet, ses destinataires et sa date de création), 'create' (subject/body requis, éventuellement to/cc/bcc/html_body), 'update' (draft_id plus les champs à écraser) ou 'send' (draft_id, supprime le brouillon et l'envoie, irréversible). La signature de la boîte est intégrée à la création ou à la mise à jour du brouillon, elle est donc déjà présente dans le dossier Drafts et n'est pas réajoutée à l'envoi ; passez include_signature: false pour créer un brouillon sans elle. Sur les boîtes basées sur IMAP, un draft_id change à chaque mise à jour, utilisez donc toujours le plus récent ; Gmail et Outlook conservent un draft_id stable.",
       "params": {
         "action": "Quelle opération effectuer : \"list\", \"create\", \"reply\", \"update\" ou \"send\". Détermine quels autres arguments s'appliquent.",
-        "inbox_id": "UUID de la boîte qui contient les brouillons. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox_id": "UUID de la boîte qui contient les brouillons. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "draft_id": "ID de brouillon du fournisseur (action 'update' ou 'send'), issu de l'action create, update ou list la plus récente. Sur les boîtes IMAP, il change après chaque mise à jour, utilisez donc toujours le plus récent.",
         "message_id": "ID du message source pour l'action 'reply', issu d'une action list, read ou search précédente.",
@@ -278,10 +278,10 @@
     },
     "schedule": {
       "title": "Envoi programmé",
-      "desc": "Programmer un e-mail pour une livraison ultérieure via une file d'attente côté serveur. Définissez action : 'create' (to/subject/body plus un horodatage send_at au format ISO 8601 — les destinataires et le corps sont validés immédiatement, et les envois invalides ne sont pas mis en file), 'list' (envois programmés en attente, les plus proches d'abord, éventuellement filtrés par boîte) ou 'cancel' (scheduled_send_id — seuls les envois encore 'pending' peuvent être annulés). Le distributeur s'exécute chaque minute, la livraison peut donc avoir lieu jusqu'à 60 secondes après send_at.",
+      "desc": "Programmer un e-mail pour une livraison ultérieure via une file d'attente côté serveur. Définissez action : 'create' (to/subject/body plus un horodatage send_at au format ISO 8601 : les destinataires et le corps sont validés immédiatement, et les envois invalides ne sont pas mis en file), 'list' (envois programmés en attente, les plus proches d'abord, éventuellement filtrés par boîte) ou 'cancel' (scheduled_send_id, seuls les envois encore 'pending' peuvent être annulés). Le distributeur s'exécute chaque minute, la livraison peut donc avoir lieu jusqu'à 60 secondes après send_at.",
       "params": {
         "action": "Quelle opération effectuer : \"create\", \"list\" ou \"cancel\". Détermine quels autres arguments s'appliquent.",
-        "inbox_id": "UUID de la boîte depuis laquelle envoyer (action 'create') ou par laquelle filtrer (action 'list'). Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox_id": "UUID de la boîte depuis laquelle envoyer (action 'create') ou par laquelle filtrer (action 'list'). Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "to": "Adresses e-mail des destinataires (action 'create'). Max 50.",
         "subject": "Objet de l'e-mail (action 'create'). Max 998 caractères.",
@@ -299,7 +299,7 @@
     },
     "contact_search": {
       "title": "Rechercher des contacts",
-      "desc": "Trouvez des correspondants par nom ou e-mail grâce à une analyse en direct de votre boîte — il n'y a pas de liste de contacts stockée. Chaque appel analyse une fenêtre récente de courrier correspondant et renvoie les personnes qui correspondent, triées par contact le plus récent, chacune avec son nom affiché, son e-mail, le nombre de messages correspondants et l'horodatage du dernier contact. Les nombres reflètent les messages correspondants dans cette fenêtre, pas tout votre historique, et rien n'est stocké entre les appels.",
+      "desc": "Trouvez des correspondants par nom ou e-mail grâce à une analyse en direct de votre boîte : il n'y a pas de liste de contacts stockée. Chaque appel analyse une fenêtre récente de courrier correspondant et renvoie les personnes qui correspondent, triées par contact le plus récent, chacune avec son nom affiché, son e-mail, le nombre de messages correspondants et l'horodatage du dernier contact. Les nombres reflètent les messages correspondants dans cette fenêtre, pas tout votre historique, et rien n'est stocké entre les appels.",
       "params": {
         "query": "Fragment de nom ou d'e-mail, comparé sans tenir compte de la casse au nom affiché et à l'adresse. Au moins 1 caractère.",
         "inbox_id": "Facultatif. Restreindre l'analyse en direct à une seule boîte. Omettez-le pour analyser les boîtes auxquelles la clé a accès (un nombre limité).",
@@ -325,15 +325,15 @@
     },
     "signature": {
       "title": "Signature",
-      "desc": "Lire ou configurer la signature e-mail de la boîte, qui est ajoutée côté serveur à chaque envoi, réponse, transfert, brouillon et message programmé. Définissez action : 'get' (renvoie le texte et le HTML de la signature actuelle, si elle est activée, le mode de réponse/transfert et sa source — 'manual', 'gmail_import' ou null) ou 'set' (écrire signature_text et/ou signature_html, et éventuellement signature_enabled et signature_reply_mode). Les signatures prennent en charge le HTML enrichi : gras, italique, titres, listes, couleurs, alignement, liens et images/logos hébergés référencés par des URL https, de sorte qu'un agent peut définir une signature entièrement mise en forme en passant signature_html. Le même éditeur enrichi est disponible dans le tableau de bord. Définir une signature marque sa source comme 'manual', ce qui remplace définitivement l'import automatique de Gmail pour cette boîte. 'get' nécessite read:email ; 'set' nécessite send:email.",
+      "desc": "Lire ou configurer la signature e-mail de la boîte, qui est ajoutée côté serveur à chaque envoi, réponse, transfert, brouillon et message programmé. Définissez action : 'get' (renvoie le texte et le HTML de la signature actuelle, si elle est activée, le mode de réponse/transfert et sa source, 'manual', 'gmail_import' ou null) ou 'set' (écrire signature_text et/ou signature_html, et éventuellement signature_enabled et signature_reply_mode). Les signatures prennent en charge le HTML enrichi : gras, italique, titres, listes, couleurs, alignement, liens et images/logos hébergés référencés par des URL https, de sorte qu'un agent peut définir une signature entièrement mise en forme en passant signature_html. Le même éditeur enrichi est disponible dans le tableau de bord. Définir une signature marque sa source comme 'manual', ce qui remplace définitivement l'import automatique de Gmail pour cette boîte. 'get' nécessite read:email ; 'set' nécessite send:email.",
       "params": {
         "action": "Quelle opération effectuer : \"get\" (lire la signature actuelle) ou \"set\" (l'écrire). Détermine quels autres arguments s'appliquent et quelle portée est requise.",
-        "inbox_id": "UUID de la boîte dont la signature est lue ou définie. Facultatif — résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox_id": "UUID de la boîte dont la signature est lue ou définie. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "signature_text": "Corps de signature en texte brut (action 'set'). Omettez-le pour ne rien changer ; passez une chaîne vide pour l'effacer. Si seul le texte est fourni, une version HTML est dérivée automatiquement à l'envoi.",
         "signature_html": "Corps de signature en HTML enrichi facultatif (action 'set'). Accepte la mise en forme (gras, italique, souligné, titres, listes, couleurs, alignement, liens) et des images hébergées via des balises <img> dont le src est une URL https (pas de base64 ni de CID) ; il est nettoyé à l'enregistrement. Omettez-le pour ne rien changer ; passez une chaîne vide pour l'effacer.",
         "signature_enabled": "Indique si la signature est ajoutée au courrier sortant (action 'set'). Par défaut true ; mettez false pour cesser de l'ajouter sans supprimer le texte.",
-        "signature_reply_mode": "Quand inclure la signature dans les réponses et les transferts (action 'set') : \"always\" (chaque réponse/transfert), \"first_only\" (par défaut — uniquement le premier message d'un fil, pour éviter la double signature) ou \"never\"."
+        "signature_reply_mode": "Quand inclure la signature dans les réponses et les transferts (action 'set') : \"always\" (chaque réponse/transfert), \"first_only\" (par défaut, uniquement le premier message d'un fil, pour éviter la double signature) ou \"never\"."
       }
     }
   },
@@ -407,8 +407,8 @@
     "perKeyHeading": "100 req / min · 1 000 / h · 10 000 / jour",
     "perKeyBody": "Appliqué par clé API quelle que soit la formule. En cas de dépassement, le serveur renvoie HTTP 429 avec le code d'erreur JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> et un champ <code>data.retry_after</code> (secondes). Respectez cette valeur avant de réessayer : il s'agit d'une courte pause réessayable.",
     "planTag": "Plafond par minute de la formule",
-    "planHeading": "Gratuit 60 / min · Pro 300 / min · Team 1 000 / min",
-    "planBody": "Une limite de pointe d'usage équitable par espace de travail, agrégée sur toutes vos clés API. En cas de dépassement, les appels renvoient le code d'erreur <code>-32003</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Pro et Team relèvent le plafond.",
+    "planHeading": "Gratuit 60 / min · Personal 120 / min · Pro 300 / min · Team 1 000 / min",
+    "planBody": "Une limite de pointe d'usage équitable par espace de travail, agrégée sur toutes vos clés API. En cas de dépassement, les appels renvoient le code d'erreur <code>-32003</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Personal, Pro et Team relèvent le plafond.",
     "capTag": "Plafond d'usage équitable",
     "capHeading": "Un arrêt, pas un backoff",
     "capBody": "Chaque espace de travail dispose d'un plafond d'usage équitable sur les actions facturables par période de facturation. Il se situe très au-dessus de l'usage réel et ne s'achète pas, mais un agent emballé peut l'atteindre. L'atteindre n'est pas une erreur JSON-RPC : l'appel renvoie HTTP 200 avec un résultat d'outil normal portant <code>isError: true</code> et un bloc <code>_meta[\"com.mcpemails/usage_limit\"]</code> contenant <code>error_code: \"usage_limit_reached\"</code> et <code>reset_at</code>. Il n'y a pas de <code>retry_after</code>, car réessayer ne peut pas réussir avant <code>reset_at</code>. Traitez cela comme un arrêt, pas comme un backoff.",
@@ -418,7 +418,7 @@
   },
   "cta": {
     "heading": "Prêt à connecter votre boîte de réception ?",
-    "sub": "Commencez avec la formule Gratuit : une boîte connectée, pour toujours et sans carte bancaire. Pro connecte toutes les boîtes que vous possédez, et Team ajoute des membres, des rôles et un espace de travail par client.",
+    "sub": "Commencez avec la formule Gratuit : une boîte connectée, pour toujours et sans carte bancaire. Personal en connecte trois pour 5 $ par mois, Pro connecte toutes les boîtes que vous possédez, et Team ajoute des membres, des rôles et un espace de travail par client.",
     "primary": "Commencer gratuitement",
     "secondary": "Voir les tarifs"
   },
@@ -464,7 +464,7 @@
     "hero": {
       "eyebrow": "Fournisseurs pris en charge",
       "heading": "Ce qui fonctionne, par fournisseur.",
-      "lead": "MCPEmails connecte Gmail, Fastmail et toute boîte IMAP (iCloud, Yahoo, Zoho, Yandex, générique). Tous les fournisseurs n'exposent pas les mêmes API — ce tableau montre exactement ce que chacun prend en charge aujourd'hui.",
+      "lead": "MCPEmails connecte Gmail, Fastmail et toute boîte IMAP (iCloud, Yahoo, Zoho, Yandex, générique). Tous les fournisseurs n'exposent pas les mêmes API : ce tableau montre exactement ce que chacun prend en charge aujourd'hui.",
       "ctaConnect": "Connecter une boîte",
       "ctaBack": "Retour aux docs"
     },
@@ -481,11 +481,11 @@
       "feature": "Fonctionnalité"
     },
     "notes": {
-      "gmail": "<b>Gmail — dossiers vs étiquettes :</b> Gmail utilise un système d'étiquettes plat plutôt que des dossiers hiérarchiques. « Déplacer » est implémenté comme l'ajout/la suppression d'étiquette. La copie native n'est pas disponible via l'API REST Gmail.",
-      "permanentDelete": "<b>Suppression définitive :</b> Gmail déplace vers la corbeille lors de la suppression — l'expunge définitif n'est pas exposé par leurs API. Les fournisseurs IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, générique) prennent en charge à la fois la corbeille et l'expunge définitif.",
-      "contacts_db": "<b>Recherche de contacts (analyse en direct) :</b> Tous les fournisseurs prennent en charge <code>contact_search</code>, qui trouve les correspondants correspondants grâce à une analyse en direct, basée uniquement sur les en-têtes, d'une fenêtre récente de votre courrier correspondant. Il n'existe aucune table de contacts — rien n'est stocké entre les appels, et les nombres reflètent uniquement les messages correspondants dans la fenêtre analysée.",
+      "gmail": "<b>Gmail, dossiers vs étiquettes :</b> Gmail utilise un système d'étiquettes plat plutôt que des dossiers hiérarchiques. « Déplacer » est implémenté comme l'ajout/la suppression d'étiquette. La copie native n'est pas disponible via l'API REST Gmail.",
+      "permanentDelete": "<b>Suppression définitive :</b> Gmail déplace vers la corbeille lors de la suppression : l'expunge définitif n'est pas exposé par leurs API. Les fournisseurs IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, générique) prennent en charge à la fois la corbeille et l'expunge définitif.",
+      "contacts_db": "<b>Recherche de contacts (analyse en direct) :</b> Tous les fournisseurs prennent en charge <code>contact_search</code>, qui trouve les correspondants correspondants grâce à une analyse en direct, basée uniquement sur les en-têtes, d'une fenêtre récente de votre courrier correspondant. Il n'existe aucune table de contacts : rien n'est stocké entre les appels, et les nombres reflètent uniquement les messages correspondants dans la fenêtre analysée.",
       "scheduling": "<b>Programmation :</b> Prise en charge pour tous les fournisseurs via la file <code>scheduled_sends</code>. Utilisez les actions <code>create</code>, <code>list</code> et <code>cancel</code> de l'outil <code>schedule</code>.",
-      "signatures": "<b>Signatures :</b> Une signature par boîte est ajoutée côté serveur à chaque envoi, réponse, transfert, brouillon et message programmé — cela fonctionne sur <b>tous</b> les fournisseurs. Les signatures prennent en charge la mise en forme HTML enrichie (gras, italique, titres, listes, couleurs, alignement, liens) et un logo/une image hébergés ; définissez-les dans l'éditeur enrichi du tableau de bord ou avec l'outil MCP <code>signature</code> (qui accepte <code>signature_html</code>). Les images sont référencées par des URL https hébergées et s'affichent chez tous les fournisseurs, même si certains clients (par ex. Gmail) peuvent les masquer jusqu'à ce que le destinataire clique sur « afficher les images » — c'est normal pour toute signature à images hébergées. Utilisez <code>signature_reply_mode</code> pour contrôler son affichage sur les réponses et les transferts. Par appel, passez <code>include_signature: false</code> sur <code>email_compose</code> ou <code>draft</code> pour l'ignorer."
+      "signatures": "<b>Signatures :</b> Une signature par boîte est ajoutée côté serveur à chaque envoi, réponse, transfert, brouillon et message programmé, et cela fonctionne sur <b>tous</b> les fournisseurs. Les signatures prennent en charge la mise en forme HTML enrichie (gras, italique, titres, listes, couleurs, alignement, liens) et un logo/une image hébergés ; définissez-les dans l'éditeur enrichi du tableau de bord ou avec l'outil MCP <code>signature</code> (qui accepte <code>signature_html</code>). Les images sont référencées par des URL https hébergées et s'affichent chez tous les fournisseurs, même si certains clients (par ex. Gmail) peuvent les masquer jusqu'à ce que le destinataire clique sur « afficher les images », ce qui est normal pour toute signature à images hébergées. Utilisez <code>signature_reply_mode</code> pour contrôler son affichage sur les réponses et les transferts. Par appel, passez <code>include_signature: false</code> sur <code>email_compose</code> ou <code>draft</code> pour l'ignorer."
     },
     "cta": {
       "heading": "Prêt à connecter votre boîte de réception ?",

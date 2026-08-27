@@ -19,17 +19,17 @@
       "coverage": {
         "tag": "Couverture",
         "h": "Chaque boîte, pas seulement Gmail",
-        "p": "Les connecteurs intégrés n'atteignent en général qu'une seule boîte — Gmail, parfois Outlook. Ils ne peuvent pas toucher <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via OAuth, le reste via un mot de passe d'application ou simplement IMAP."
+        "p": "Les connecteurs intégrés n'atteignent en général qu'une seule boîte : Gmail, parfois Outlook. Ils ne peuvent pas toucher <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via OAuth, le reste via un mot de passe d'application ou simplement IMAP."
       },
       "actions": {
         "tag": "Vraies actions",
         "h": "Envoyer et planifier, pas seulement des brouillons",
-        "p": "Beaucoup de connecteurs natifs s'arrêtent à la <b>création d'un brouillon</b> que vous devez encore ouvrir et envoyer. Nos neuf outils basés sur des actions <b>envoient, répondent, transfèrent, planifient, déplacent, copient, marquent, archivent et suppriment</b> directement — l'agent termine le travail dans la boîte."
+        "p": "Beaucoup de connecteurs natifs s'arrêtent à la <b>création d'un brouillon</b> que vous devez encore ouvrir et envoyer. Nos neuf outils basés sur des actions <b>envoient, répondent, transfèrent, planifient, déplacent, copient, marquent, archivent et suppriment</b> directement : l'agent termine le travail dans la boîte."
       },
       "portable": {
         "tag": "Portable",
         "h": "Une config, toutes les IA",
-        "p": "Le connecteur intégré d'un fournisseur ne fonctionne que dans l'app de ce fournisseur. Notre serveur parle le MCP streamable-http standard avec <b>OAuth 2.1 / DCR / PKCE</b>, si bien que la même boîte fonctionne dans <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> et plus — sans tout refaire pour chaque app."
+        "p": "Le connecteur intégré d'un fournisseur ne fonctionne que dans l'app de ce fournisseur. Notre serveur parle le MCP streamable-http standard avec <b>OAuth 2.1 / DCR / PKCE</b>, si bien que la même boîte fonctionne dans <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> et plus, sans tout refaire pour chaque app."
       }
     }
   },

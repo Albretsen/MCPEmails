@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Secure AI Email MCP Server — Gmail, IMAP & Claude",
+    "title": "Secure AI Email MCP Server for Gmail, IMAP & Claude",
     "description": "Connect Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls."
   },
   "nav": {
@@ -53,7 +53,7 @@
       "0": {
         "tag": "Scope",
         "h": "Ten focused tools. The essentials, covered.",
-        "p": "Tools cover the everyday work — <code>inbox_list</code>, <code>email_read</code> (list, read, search) and <code>email_compose</code> (send, reply) — plus focused tools for organizing, deleting, folders, drafts, scheduling, contacts, and signatures. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
+        "p": "Tools cover the everyday work: <code>inbox_list</code>, <code>email_read</code> (list, read, search) and <code>email_compose</code> (send, reply), plus focused tools for organizing, deleting, folders, drafts, scheduling, contacts, and signatures. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
       },
       "1": {
         "tag": "Storage",
@@ -63,7 +63,7 @@
       "2": {
         "tag": "Sending",
         "h": "You stay in control of every send.",
-        "p": "Messages go through Gmail, Fastmail, or your own SMTP server — never our mail relay. Turn on per-inbox approval to hold sends, replies, forwards, draft sends, and scheduled sends for dashboard review. Automated retries can reuse an idempotency key for 24 hours, and Gmail can send only from a provider-verified Send As identity."
+        "p": "Messages go through Gmail, Fastmail, or your own SMTP server, never our mail relay. Turn on per-inbox approval to hold sends, replies, forwards, draft sends, and scheduled sends for dashboard review. Automated retries can reuse an idempotency key for 24 hours, and Gmail can send only from a provider-verified Send As identity."
       },
       "3": {
         "tag": "Providers",
@@ -73,7 +73,7 @@
       "4": {
         "tag": "Access",
         "h": "OAuth 2.0 for agents. One click to revoke.",
-        "p": "We're standard MCP (streamable-http) with OAuth 2.1, DCR & PKCE — no vendor lock-in. Works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI, and any MCP-compatible client. OAuth clients connect automatically via authorization code + PKCE; a scoped API key covers clients without OAuth and scripted access. Revoke any connection from the dashboard in one click."
+        "p": "We're standard MCP (streamable-http) with OAuth 2.1, DCR & PKCE, so there is no vendor lock-in. Works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI, and any MCP-compatible client. OAuth clients connect automatically via authorization code + PKCE; a scoped API key covers clients without OAuth and scripted access. Revoke any connection from the dashboard in one click."
       },
       "5": {
         "tag": "Security",
@@ -103,10 +103,10 @@
     "tools": {
       "0": "Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard.",
       "1": "Read mail: list recent summaries, fetch a full message, batch-read up to 50, search across providers, extract readable attachment text, or save the original email as .eml.",
-      "2": "Organize mail: move, copy, delete, flag, or archive — one at a time, in bulk, or straight from a search. Long bulk runs report their status and can be cancelled from the dashboard.",
+      "2": "Organize mail: move, copy, delete, flag, or archive, whether one at a time, in bulk, or straight from a search. Long bulk runs report their status and can be cancelled from the dashboard.",
       "3": "Compose: send a new message, reply in-thread, or forward through Gmail API, Fastmail JMAP, or SMTP. Optional inbox approval holds outbound mail for dashboard review before it leaves.",
       "4": "Manage folders (labels on Gmail): list, create, rename, or delete, and use them as move destinations.",
-      "5": "Drafts: list, create, update, and send provider-stored drafts — including an unsent reply kept in the source conversation for review.",
+      "5": "Drafts: list, create, update, and send provider-stored drafts, including an unsent reply kept in the source conversation for review.",
       "6": "Schedule a message for a future time, list pending scheduled sends, and cancel them before they go out.",
       "7": "Find people by name or email with a live scan of recent matching mail. Nothing is stored."
     }
@@ -124,7 +124,7 @@
   "pricing": {
     "eyebrow": "Pricing",
     "title": "Priced by inbox, not by usage.",
-    "sub": "Free connects one inbox. Pro connects every mailbox you own. Team adds people, roles, and a separate workspace per client.",
+    "sub": "Free connects one inbox. Personal connects three. Pro connects every mailbox you own. Team adds people, roles, and a separate workspace per client.",
     "perForever": "/forever",
     "perMonth": "/month",
     "tiers": {
@@ -141,6 +141,18 @@
         ],
         "cta": "Start free"
       },
+      "personal": {
+        "name": "Personal",
+        "desc": "Three mailboxes for one person: work, personal, and one more.",
+        "features": [
+          "3 connected inboxes",
+          "Scheduled sends and approvals",
+          "2x higher burst rate limit",
+          "Usage analytics",
+          "Email support"
+        ],
+        "cta": "Get Personal"
+      },
       "solo": {
         "name": "Pro",
         "desc": "Every mailbox you own, in one agent. Work, personal, and each side business.",
@@ -148,7 +160,7 @@
           "Unlimited connected inboxes",
           "Scheduled sends and approvals",
           "5x higher burst rate limit",
-          "Full usage analytics (90-day history)",
+          "Full usage analytics",
           "Email support"
         ],
         "cta": "Get Pro"
@@ -161,7 +173,7 @@
           "Unlimited members with roles",
           "A separate workspace per client or business",
           "SSO (SAML / OIDC) and audit log",
-          "Full usage analytics (1-year history)",
+          "Full usage analytics",
           "Priority support"
         ],
         "cta": "Get Team"
@@ -180,7 +192,7 @@
       },
       {
         "q": "Which AI clients does it work with?",
-        "a": "Any MCP-compatible client. We're a standard streamable-http MCP server with OAuth 2.1, DCR and PKCE, so the same inbox works in Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat and more. Paste one endpoint URL and you're connected — no per-app rebuild."
+        "a": "Any MCP-compatible client. We're a standard streamable-http MCP server with OAuth 2.1, DCR and PKCE, so the same inbox works in Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat and more. Paste one endpoint URL and you're connected, with no per-app rebuild."
       },
       {
         "q": "Which email providers can I connect?",
@@ -192,11 +204,11 @@
       },
       {
         "q": "Is it really free?",
-        "a": "Yes. The free plan connects one inbox, forever, with no card required, and your agent gets every tool we ship against it: read, search, send, reply, schedule and organise. Pro is for when you want a second mailbox on the same agent, and Team is for when other people need in."
+        "a": "Yes. The free plan connects one inbox, forever, with no card required, and your agent gets every tool we ship against it: read, search, send, reply, schedule and organise. Personal is $5 a month for a second and third mailbox on the same agent, Pro removes the inbox limit entirely, and Team is for when other people need in."
       },
       {
         "q": "What can the AI actually do with my inbox?",
-        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox — move, copy, flag, archive and delete. Nine action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
+        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox: move, copy, flag, archive and delete. Nine action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
       },
       {
         "q": "How do I connect an inbox?",
@@ -245,6 +257,6 @@
   "preview": {
     "eyebrow": "Product preview",
     "title": "See your whole MCP operation at a glance.",
-    "sub": "A real-time dashboard for every connected inbox, API key, and tool call — so you always know what your agents are doing."
+    "sub": "A real-time dashboard for every connected inbox, API key, and tool call, so you always know what your agents are doing."
   }
 }

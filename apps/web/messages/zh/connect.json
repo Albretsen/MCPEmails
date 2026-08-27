@@ -2,13 +2,13 @@
   "gmail": {
     "meta": {
       "title": "将 Gmail 连接到 Claude（及任意 AI）",
-      "description": "用 Google OAuth 一键将 Gmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Gmail——邮箱与工具调用免费。"
+      "description": "用 Google OAuth 一键将 Gmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Gmail，1 个收件箱永久免费。"
     },
     "hero": {
       "eyebrow": "Gmail + AI",
-      "titleLine1": "将 Gmail 连接到 Claude——",
+      "titleLine1": "将 Gmail 连接到 Claude，",
       "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Gmail 收件箱。用一键 Google 登录即可读取、搜索、发送、回复、定时与整理邮件——同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Gmail 收件箱。用一键 Google 登录即可读取、搜索、发送、回复、定时与整理邮件：同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
       "ctaPrimary": "免费连接 Gmail",
       "ctaSecondary": "阅读文档",
       "meta0": "1 个收件箱永久免费",
@@ -17,28 +17,28 @@
     },
     "method": {
       "title": "Gmail 如何连接：一键 Google OAuth",
-      "body": "Gmail 通过 <b>Google OAuth</b> 连接——用 Google 登录、授予读取与发送权限，即可完成连接。无需应用专用密码，也无需查找 IMAP 设置。你可随时在 Google 账户或 mcpemails 控制台中撤销访问权限。"
+      "body": "Gmail 通过 <b>Google OAuth</b> 连接：用 Google 登录、授予读取与发送权限，即可完成连接。无需应用专用密码，也无需查找 IMAP 设置。你可随时在 Google 账户或 mcpemails 控制台中撤销访问权限。"
     },
     "verificationNote": {
       "title": "Google 将会显示的内容",
-      "body": "对于任何未经其审核的应用，Google 都会显示「Google 尚未验证此应用」的提示页——点击<b>高级</b>，再点击<b>前往 mcpemails.com</b> 即可继续。通过该审核需要一份收费的第三方安全评估，我们选择不购买，因此该提示页会一直存在。连接完成后，邮箱会保持连接：访问权限会自动续期，只有当你在 Google 账号中撤销授权时才会中断。"
+      "body": "对于任何未经其审核的应用，Google 都会显示「Google 尚未验证此应用」的提示页，请点击<b>高级</b>，再点击<b>前往 mcpemails.com</b> 即可继续。通过该审核需要一份收费的第三方安全评估，我们选择不购买，因此该提示页会一直存在。连接完成后，邮箱会保持连接：访问权限会自动续期，只有当你在 Google 账号中撤销授权时才会中断。"
     },
     "caps": {
       "eyebrow": "你的 AI 能做什么",
       "title": "一个代理真正能用的 Gmail 收件箱",
-      "sub": "九个基于动作的 MCP 工具——不止草稿。代理在 Gmail 内即可完成整件事。",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 Gmail 内即可完成整件事。",
       "ctaPrimary": "免费连接 Gmail"
     },
     "capabilities": [
       {
         "tag": "读取",
         "h": "读取与搜索邮件",
-        "p": "跨标签列出、读取和搜索——找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+        "p": "跨标签列出、读取和搜索：找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
       },
       {
         "tag": "发送",
         "h": "发送、回复与转发",
-        "p": "撰写并发送真实邮件、在会话中回复并转发——直接从 Gmail 完成，而不是留下需要你手动发送的草稿。"
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 Gmail 完成，而不是留下需要你手动发送的草稿。"
       },
       {
         "tag": "定时",
@@ -48,7 +48,7 @@
       {
         "tag": "整理",
         "h": "标记、归档与删除",
-        "p": "保持收件箱整洁——添加标签、归档已处理的邮件，或按需删除。"
+        "p": "保持收件箱整洁：添加标签、归档已处理的邮件，或按需删除。"
       }
     ],
     "how": {
@@ -80,39 +80,39 @@
   "fastmail": {
     "meta": {
       "title": "将 Fastmail 连接到 Claude（及任意 AI）",
-      "description": "用应用专用密码将 Fastmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Fastmail——邮箱与工具调用免费。"
+      "description": "用应用专用密码将 Fastmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Fastmail，1 个收件箱永久免费。"
     },
     "hero": {
       "eyebrow": "Fastmail + AI",
-      "titleLine1": "将 Fastmail 连接到 Claude——",
+      "titleLine1": "将 Fastmail 连接到 Claude，",
       "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Fastmail 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件——同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Fastmail 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件：同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
       "ctaPrimary": "免费连接 Fastmail",
       "ctaSecondary": "阅读文档",
       "meta0": "1 个收件箱永久免费",
-      "meta1": "应用专用密码——无需 OAuth 配置",
+      "meta1": "应用专用密码，无需 OAuth 配置",
       "meta2": "邮件实时获取，绝不存储"
     },
     "method": {
       "title": "Fastmail 如何连接：应用专用密码",
-      "body": "Fastmail 通过 IMAP/SMTP 使用<b>Fastmail 应用专用密码</b>连接——在 Fastmail 的「设置 → 隐私与安全 → 应用专用密码」中生成一个，粘贴到 mcpemails 即可连接。无需 OAuth 流程，也没有浏览器弹窗。"
+      "body": "Fastmail 通过 IMAP/SMTP 使用<b>Fastmail 应用专用密码</b>连接：在 Fastmail 的「设置 → 隐私与安全 → 应用专用密码」中生成一个，粘贴到 mcpemails 即可连接。无需 OAuth 流程，也没有浏览器弹窗。"
     },
     "caps": {
       "eyebrow": "你的 AI 能做什么",
       "title": "一个代理真正能用的 Fastmail 收件箱",
-      "sub": "九个基于动作的 MCP 工具——不止草稿。代理在 Fastmail 内即可完成整件事。",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 Fastmail 内即可完成整件事。",
       "ctaPrimary": "免费连接 Fastmail"
     },
     "capabilities": [
       {
         "tag": "读取",
         "h": "读取与搜索邮件",
-        "p": "跨文件夹列出、读取和搜索——找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+        "p": "跨文件夹列出、读取和搜索：找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
       },
       {
         "tag": "发送",
         "h": "发送、回复与转发",
-        "p": "撰写并发送真实邮件、在会话中回复并转发——直接从 Fastmail 完成，而不是留下需要你手动发送的草稿。"
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 Fastmail 完成，而不是留下需要你手动发送的草稿。"
       },
       {
         "tag": "定时",
@@ -122,7 +122,7 @@
       {
         "tag": "整理",
         "h": "移动、复制、标记、归档、删除",
-        "p": "保持收件箱整洁——将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
       }
     ],
     "how": {
@@ -158,17 +158,17 @@
   "icloud": {
     "meta": {
       "title": "将 iCloud 邮件连接到 Claude（及任意 AI）",
-      "description": "用 Apple App 专用密码将 iCloud 邮件连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 iCloud 邮件——免费。"
+      "description": "用 Apple App 专用密码将 iCloud 邮件连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 iCloud 邮件，1 个收件箱永久免费。"
     },
     "hero": {
       "eyebrow": "iCloud 邮件 + AI",
-      "titleLine1": "将 iCloud 邮件连接到 Claude——",
+      "titleLine1": "将 iCloud 邮件连接到 Claude，",
       "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-      "lead": "几分钟即可为你的 AI 代理接入一个真正的 iCloud 收件箱。用一个 Apple App 专用密码即可读取、搜索、发送、回复、定时与整理邮件——同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 iCloud 收件箱。用一个 Apple App 专用密码即可读取、搜索、发送、回复、定时与整理邮件：同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
       "ctaPrimary": "免费连接 iCloud",
       "ctaSecondary": "阅读文档",
       "meta0": "1 个收件箱永久免费",
-      "meta1": "App 专用密码——无需 OAuth",
+      "meta1": "App 专用密码，无需 OAuth",
       "meta2": "邮件实时获取，绝不存储"
     },
     "method": {
@@ -178,19 +178,19 @@
     "caps": {
       "eyebrow": "你的 AI 能做什么",
       "title": "一个代理真正能用的 iCloud 收件箱",
-      "sub": "九个基于动作的 MCP 工具——不止草稿。代理在 iCloud 邮件内即可完成整件事。",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 iCloud 邮件内即可完成整件事。",
       "ctaPrimary": "免费连接 iCloud"
     },
     "capabilities": [
       {
         "tag": "读取",
         "h": "读取与搜索邮件",
-        "p": "跨文件夹列出、读取和搜索——找到一张收据、总结一个会话，或拉取某发件人的最新邮件。"
+        "p": "跨文件夹列出、读取和搜索：找到一张收据、总结一个会话，或拉取某发件人的最新邮件。"
       },
       {
         "tag": "发送",
         "h": "发送、回复与转发",
-        "p": "撰写并发送真实邮件、在会话中回复并转发——直接从 iCloud 完成，而不是留下需要你手动发送的草稿。"
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 iCloud 完成，而不是留下需要你手动发送的草稿。"
       },
       {
         "tag": "定时",
@@ -200,7 +200,7 @@
       {
         "tag": "整理",
         "h": "移动、复制、标记、归档、删除",
-        "p": "保持收件箱整洁——将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
       }
     ],
     "how": {
@@ -236,7 +236,7 @@
   "yahoo": {
     "meta": {
       "title": "将 Yahoo Mail 连接到 Claude（及任意 AI）",
-      "description": "用应用专用密码将 Yahoo Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Yahoo Mail，邮箱与工具调用免费。"
+      "description": "用应用专用密码将 Yahoo Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Yahoo Mail，1 个收件箱永久免费。"
     },
     "hero": {
       "eyebrow": "Yahoo Mail + AI",
@@ -314,7 +314,7 @@
   "zoho": {
     "meta": {
       "title": "将 Zoho Mail 连接到 Claude（及任意 AI）",
-      "description": "用应用专用密码通过 IMAP 将 Zoho Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Zoho Mail，邮箱与工具调用免费。"
+      "description": "用应用专用密码通过 IMAP 将 Zoho Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Zoho Mail，1 个收件箱永久免费。"
     },
     "hero": {
       "eyebrow": "Zoho Mail + AI",
@@ -392,7 +392,7 @@
   "yandex": {
     "meta": {
       "title": "将 Yandex Mail 连接到 Claude（及任意 AI）",
-      "description": "用应用专用密码通过 IMAP 将 Yandex Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Yandex Mail，邮箱与工具调用免费。"
+      "description": "用应用专用密码通过 IMAP 将 Yandex Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Yandex Mail，1 个收件箱永久免费。"
     },
     "hero": {
       "eyebrow": "Yandex Mail + AI",

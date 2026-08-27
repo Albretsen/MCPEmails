@@ -19,17 +19,17 @@
       "coverage": {
         "tag": "Cobertura",
         "h": "Cualquier bandeja, no solo Gmail",
-        "p": "Los conectores integrados suelen alcanzar solo un buzón — Gmail, a veces Outlook. No pueden tocar <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni ninguna otra cuenta <b>IMAP/SMTP</b>. Nosotros los conectamos todos: Gmail por OAuth y el resto con una contraseña de aplicación o IMAP simple."
+        "p": "Los conectores integrados suelen alcanzar solo un buzón: Gmail y, a veces, Outlook. No pueden tocar <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni ninguna otra cuenta <b>IMAP/SMTP</b>. Nosotros los conectamos todos: Gmail por OAuth y el resto con una contraseña de aplicación o IMAP simple."
       },
       "actions": {
         "tag": "Acciones reales",
         "h": "Envía y programa, no solo borradores",
-        "p": "Muchos conectores nativos se detienen en <b>crear un borrador</b> que aún tienes que abrir y enviar. Nuestras nueve herramientas basadas en acciones <b>envían, responden, reenvían, programan, mueven, copian, marcan, archivan y eliminan</b> directamente — el agente termina el trabajo dentro de la bandeja."
+        "p": "Muchos conectores nativos se detienen en <b>crear un borrador</b> que aún tienes que abrir y enviar. Nuestras nueve herramientas basadas en acciones <b>envían, responden, reenvían, programan, mueven, copian, marcan, archivan y eliminan</b> directamente, así el agente termina el trabajo dentro de la bandeja."
       },
       "portable": {
         "tag": "Portátil",
         "h": "Una configuración, cualquier IA",
-        "p": "El conector integrado de un proveedor solo funciona dentro de la app de ese proveedor. Nuestro servidor habla MCP streamable-http estándar con <b>OAuth 2.1 / DCR / PKCE</b>, así que la misma bandeja funciona en <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> y más — sin rehacerlo por cada app."
+        "p": "El conector integrado de un proveedor solo funciona dentro de la app de ese proveedor. Nuestro servidor habla MCP streamable-http estándar con <b>OAuth 2.1 / DCR / PKCE</b>, así que la misma bandeja funciona en <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> y más, sin rehacerlo por cada app."
       }
     }
   },
