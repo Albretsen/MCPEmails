@@ -111,3 +111,17 @@ Deno.test("plan display names cover every enforced plan", () => {
     assert(typeof PLAN_DISPLAY_NAMES[plan] === "string", `missing display name for ${plan}`);
   }
 });
+
+Deno.test("ceiling message names Personal by the name it is sold under", () => {
+  // `personal` is the one internal id that matches its display name, which
+  // makes a missing map entry almost invisible: the fallback prints the raw
+  // slug, so the sentence degrades from "Personal plan" to "personal plan" and
+  // reads as a typo rather than a bug. Assert the capital.
+  const text = buildUsageLimitText("personal", 1, 2, "2026-09-01T00:00:00Z", ORIGIN);
+  assertIncludes(text, "Personal plan", "personal renders as Personal");
+  assert(!text.includes("personal plan"), "the raw slug must not reach the reader");
+  assert(PLAN_DISPLAY_NAMES.personal === "Personal", "Personal needs its own display name entry");
+  // Mirror of planDisplayName in apps/web/src/lib/stripe/plans.ts. Both halves
+  // of the product show a plan name; they must show the same one.
+  assert(PLAN_DISPLAY_NAMES.solo === "Pro" && PLAN_DISPLAY_NAMES.pro === "Team", "the two drifted ids must keep their sold names");
+});

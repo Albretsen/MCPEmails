@@ -141,3 +141,125 @@ test('every legacy price id is listed once and only once', () => {
     }
   }
 });
+
+// ---------------------------------------------------------------------------
+// Personal, added 2026-08-27. The tier sits between Free and Pro and is the
+// first internal id that matches its own display name, which is exactly why it
+// needs its own assertions: the generic loops above iterate Object.values(PLANS)
+// and stay green whatever the fourth entry actually contains.
+// ---------------------------------------------------------------------------
+
+test('Personal ships at the numbers it was signed off at', () => {
+  const personal = PLANS.personal;
+  assert.equal(personal.id, 'personal');
+  assert.equal(personal.name, 'Personal');
+  assert.equal(personal.monthlyPriceCents, 500);
+  assert.equal(personal.yearlyPriceCents, 4800);
+  // Twelve months less 20%, the same discount Pro and Team advertise. If the
+  // monthly price ever moves, the yearly one has to move with it or the
+  // pricing page prints a discount that is not the one being charged.
+  assert.equal(personal.yearlyPriceCents, personal.monthlyPriceCents * 12 * 0.8);
+
+  assert.equal(personal.limits.maxInboxes, 3);
+  assert.equal(personal.limits.maxMembers, 1);
+  assert.equal(personal.limits.maxRequestsPerMinute, 120);
+  assert.equal(personal.limits.analyticsRetentionDays, 30);
+  assert.equal(personal.limits.maxMonthlyToolCalls, 25_000);
+  // A paid plan the customer cannot cancel themselves is a support ticket
+  // waiting to happen, and in several jurisdictions a legal problem.
+  assert.equal(personal.limits.billingPortalEnabled, true);
+  assert.equal(personal.limits.analyticsEnabled, true);
+  assert.equal(personal.limits.teamRolesEnabled, false);
+  assert.equal(personal.limits.ssoEnabled, false);
+  assert.equal(personal.limits.auditLogEnabled, false);
+  assert.equal(personal.limits.supportTier, 'email');
+
+  // Nothing else moved. Inserting a tier must not reprice the ones already sold.
+  assert.equal(PLANS.free.limits.maxInboxes, 1);
+  assert.equal(PLANS.solo.monthlyPriceCents, 2900);
+  assert.equal(PLANS.solo.yearlyPriceCents, 27600);
+  assert.equal(PLANS.pro.monthlyPriceCents, 7900);
+  assert.equal(PLANS.pro.yearlyPriceCents, 75600);
+});
+
+test('the ladder is ordered Free, Personal, Pro, Team', () => {
+  // The pricing page renders columns in Object.values(PLANS) order, so the
+  // position of the key in the object literal IS the marketing layout. Moving
+  // it produces a page that reads $0, $29, $5, $79 and nothing errors.
+  assert.deepEqual(Object.keys(PLANS), ['free', 'personal', 'solo', 'pro']);
+
+  const monthly = Object.values(PLANS).map((plan) => plan.monthlyPriceCents);
+  assert.deepEqual(monthly, [0, 500, 2900, 7900]);
+  for (let i = 1; i < monthly.length; i += 1) {
+    assert.ok(monthly[i] > monthly[i - 1], 'the ladder must ascend in price');
+  }
+});
+
+test('every plan renders under the name it is sold as, Personal included', () => {
+  // planDisplayName falls back to capitalising the slug, and 'personal'
+  // capitalises to 'Personal', so asserting the string alone would pass even if
+  // the plan had been dropped from the catalogue entirely. Assert the name
+  // comes OUT of the catalogue, and that the catalogue holds the right word.
+  assert.equal(PLANS.personal.name, 'Personal');
+  for (const plan of Object.values(PLANS)) {
+    assert.equal(planDisplayName(plan.id), plan.name, `${plan.id} must render as its catalogue name`);
+  }
+  assert.equal(planDisplayName('personal'), 'Personal');
+  assert.notEqual(planDisplayName('solo'), 'Solo');
+});
+
+test('a grandfathered user on Personal keeps unlimited inboxes', () => {
+  // The one that silently costs a customer money: 176 accounts hold
+  // `unlimited_inboxes`, and it must widen Personal's three exactly as it
+  // widens Free's one. A grandfathered user who buys Personal for the analytics
+  // or the burst rate must not be quietly cut down to three mailboxes.
+  const grandfathered = resolvePlanLimits('personal', { unlimitedInboxes: true });
+  assert.equal(grandfathered.maxInboxes, Infinity);
+
+  // It lifts the inbox cap and nothing else: they are still a Personal account.
+  assert.equal(grandfathered.maxMembers, 1);
+  assert.equal(grandfathered.maxRequestsPerMinute, 120);
+  assert.equal(grandfathered.analyticsRetentionDays, 30);
+  assert.equal(grandfathered.maxMonthlyToolCalls, 25_000);
+  assert.equal(grandfathered.supportTier, 'email');
+  assert.equal(grandfathered.teamRolesEnabled, false);
+});
+
+test('a Personal user without the grandfather is capped at three inboxes', () => {
+  assert.equal(resolvePlanLimits('personal').maxInboxes, 3);
+  assert.equal(resolvePlanLimits('personal', { unlimitedInboxes: false }).maxInboxes, 3);
+  // The comp is a Team grant, so it overrides the plan wholesale rather than
+  // widening Personal in place.
+  assert.equal(resolvePlanLimits('personal', { compedScale: true }).maxInboxes, Infinity);
+  assert.equal(resolvePlanLimits('personal', { compedScale: true }).maxMembers, Infinity);
+});
+
+test('both Personal prices reverse-resolve to the Personal plan', async () => {
+  // plans.ts reads the price ids from the environment at module load, so this
+  // needs a fresh module instance rather than the one imported at the top.
+  process.env.STRIPE_PRICE_PERSONAL_MONTHLY = 'price_personal_monthly_fixture';
+  process.env.STRIPE_PRICE_PERSONAL_YEARLY = 'price_personal_yearly_fixture';
+  // The `?personal-prices` suffix is a cache-buster for Node's ESM loader: it
+  // keys the module map by URL, so the query gives a second, freshly evaluated
+  // instance that reads the env set above. It is a runtime-only specifier, and
+  // tsc resolves it as a literal path and cannot find it. The cast keeps the
+  // real module types, so nothing below this line is untyped.
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?personal-prices')) as typeof import('./plans.ts');
+
+  const monthly = fresh.getPlanByStripePriceId('price_personal_monthly_fixture');
+  assert.ok(monthly, 'the Personal monthly price must map to a plan');
+  assert.equal(monthly.plan.id, 'personal');
+  assert.equal(monthly.interval, 'month');
+
+  const yearly = fresh.getPlanByStripePriceId('price_personal_yearly_fixture');
+  assert.ok(yearly, 'the Personal yearly price must map to a plan');
+  assert.equal(yearly.plan.id, 'personal');
+  assert.equal(yearly.interval, 'year');
+
+  // Personal is new, so it has no pre-repricing subscriptions to carry.
+  assert.deepEqual(PLANS.personal.legacyStripePriceIds, []);
+
+  delete process.env.STRIPE_PRICE_PERSONAL_MONTHLY;
+  delete process.env.STRIPE_PRICE_PERSONAL_YEARLY;
+});

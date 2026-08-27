@@ -189,3 +189,97 @@ test('the 402 body is machine-readable and leaks no internal plan slug', async (
     assert.ok(!body.error.includes(slug), `error sentence leaks the internal slug "${slug}": ${body.error}`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Personal, added 2026-08-27. Free is one inbox and the paid tiers above it are
+// unlimited, so Personal is the FIRST plan whose cap is a number greater than
+// one. Everything below exercises that middle ground, which no existing case
+// could reach: `currentCount >= maxInboxes` with maxInboxes neither 1 nor
+// Infinity.
+// ---------------------------------------------------------------------------
+
+test('a Personal workspace gets exactly three inboxes', async () => {
+  const room = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'personal', comped_scale: false, unlimited_inboxes: false },
+      inboxCount: 2,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(room.atLimit, false, 'the third mailbox must be allowed');
+  assert.equal(room.maxInboxes, 3);
+  assert.equal(room.currentCount, 2);
+  assert.equal(room.plan, 'personal');
+  assert.equal(room.planName, 'Personal');
+  assert.equal(room.unlimitedInboxes, false);
+
+  const full = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'personal', comped_scale: false, unlimited_inboxes: false },
+      inboxCount: 3,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(full.atLimit, true, 'the fourth mailbox must be refused');
+  assert.equal(full.maxInboxes, 3);
+  assert.equal(full.currentCount, 3);
+});
+
+test('a grandfathered user on Personal is not capped at three', async () => {
+  // A pre-repricing account that buys Personal for the burst rate or the 30-day
+  // analytics must keep the unlimited inboxes it was promised. Capping it would
+  // be a downgrade the customer just started paying for.
+  const result = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'personal', comped_scale: false, unlimited_inboxes: true },
+      inboxCount: 9,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(result.atLimit, false);
+  assert.equal(result.maxInboxes, null);
+  assert.equal(result.unlimitedInboxes, true);
+  assert.equal(result.currentCount, 9);
+  assert.equal(result.planName, 'Personal');
+});
+
+test('the Personal 402 body pluralises its allowance and names the tier', async () => {
+  const capped = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'personal', comped_scale: false, unlimited_inboxes: false },
+      inboxCount: 3,
+    }),
+    WORKSPACE,
+  );
+  const body = inboxLimitErrorBody(capped);
+
+  assert.equal(body.error_code, 'inbox_limit_reached');
+  assert.equal(body.plan, 'personal');
+  assert.equal(body.plan_name, 'Personal');
+  assert.equal(body.current_count, 3);
+  assert.equal(body.max_inboxes, 3);
+  assert.equal(body.upgrade_url, '/pricing');
+  // The singular branch of that sentence would read "includes 3 connected
+  // inbox", which is the shape of thing nobody notices until a customer does.
+  assert.ok(
+    body.error.includes('3 connected inboxes'),
+    `the fallback sentence must state the real allowance: ${body.error}`,
+  );
+  for (const slug of ['personal', 'solo', 'pro', 'free']) {
+    assert.ok(!body.error.includes(slug), `error sentence leaks the internal slug "${slug}": ${body.error}`);
+  }
+});
+
+test('a reconnect is exempt on Personal too, not only on Free', async () => {
+  // Same trap as Free, one tier up: a Personal workspace sitting at 3 of 3 has
+  // three mailboxes whose credentials will all rotate eventually.
+  const supabase = fakeSupabase({
+    effectivePlan: { plan: 'personal', comped_scale: false, unlimited_inboxes: false },
+    inboxCount: 3,
+    existingEmails: ['third@example.com'],
+  });
+
+  assert.equal((await checkInboxLimit(supabase, WORKSPACE)).atLimit, true);
+  assert.equal(await inboxExistsForEmail(supabase, WORKSPACE, 'third@example.com'), true);
+  assert.equal(await inboxExistsForEmail(supabase, WORKSPACE, 'fourth@example.com'), false);
+});

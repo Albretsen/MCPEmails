@@ -19,3 +19,19 @@ test('keeps plan and interval through the pricing handoff', () => {
     '/signup?redirect=%2Fdashboard%2Fsettings%3Fupgrade%3Dpro%26interval%3Dyear',
   );
 });
+
+test('Personal is a paid plan the pricing CTA can actually hand off', () => {
+  // PAID_PLANS is an allowlist, so a tier missing from it produces a CTA that
+  // parses to null and does nothing at all: no error, no checkout, no clue.
+  assert.deepEqual(parseUpgradeIntent('personal', 'month'), { planId: 'personal', interval: 'month' });
+  assert.deepEqual(parseUpgradeIntent('personal', 'year'), { planId: 'personal', interval: 'year' });
+  assert.equal(parseUpgradeIntent('personal', 'quarter'), null);
+
+  const destination = upgradeDestination('personal', false);
+  assert.equal(destination, '/dashboard/settings?upgrade=personal&interval=month');
+  assert.equal(pricingUpgradeHref('personal', false, true), destination);
+  assert.equal(
+    pricingUpgradeHref('personal', false, false),
+    '/signup?redirect=%2Fdashboard%2Fsettings%3Fupgrade%3Dpersonal%26interval%3Dmonth',
+  );
+});
