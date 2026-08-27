@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Priser for AI-e-post-MCP-server, Gratis, Pro og Team",
-    "description": "Gratis kobler til én innboks. Pro kobler til alle innboksene dine for $29 i måneden. Team legger til medlemmer, roller, SSO og et eget arbeidsområde per kunde."
+    "title": "Priser for AI-e-post-MCP-server, Gratis, Personal, Pro og Team",
+    "description": "Gratis kobler til én innboks. Personal kobler til tre for $5. Pro kobler til alle innboksene dine for $29. Team legger til medlemmer, roller og SSO."
   },
   "hero": {
     "eyebrow": "Priser",
     "titleLine1": "Én innboks, gratis.",
-    "titleLine2": "Alle innboksene, $29.",
-    "lead": "Koble til en postkasse én gang, så kan agenten lese, søke, organisere, skrive, planlegge og sende. Gratis dekker én innboks. Pro dekker alle postkassene du eier. Team legger til folk, roller og et eget arbeidsområde per kunde."
+    "titleLine2": "Tre innbokser, $5.",
+    "lead": "Koble til en postkasse én gang, så kan agenten lese, søke, organisere, skrive, planlegge og sende. Gratis dekker én innboks. Personal dekker tre for $5 i måneden. Pro dekker alle postkassene du eier. Team legger til folk, roller og et eget arbeidsområde per kunde."
   },
   "billing": {
     "monthly": "Månedlig",
@@ -33,6 +33,18 @@
         "Fellesskapsstøtte"
       ]
     },
+    "personal": {
+      "name": "Personal",
+      "desc": "Tre postkasser for én person: jobb, privat og én til.",
+      "cta": "Få Personal",
+      "features": [
+        "3 tilkoblede innbokser",
+        "Planlagte sendinger og godkjenninger",
+        "2x høyere burst-grense",
+        "Bruksanalyse",
+        "E-poststøtte"
+      ]
+    },
     "solo": {
       "name": "Pro",
       "desc": "Alle postkassene du eier, i én agent. Jobb, privat og hvert sideprosjekt.",
@@ -41,7 +53,7 @@
         "Ubegrenset antall tilkoblede innbokser",
         "Planlagte sendinger og godkjenninger",
         "5x høyere burst-grense",
-        "Full bruksanalyse (90-dagers historikk)",
+        "Full bruksanalyse",
         "E-poststøtte"
       ]
     },
@@ -54,7 +66,7 @@
         "Ubegrenset antall medlemmer med roller",
         "Et eget arbeidsområde per kunde eller virksomhet",
         "SSO (SAML / OIDC) og revisjonslogg",
-        "Full bruksanalyse (1-års historikk)",
+        "Full bruksanalyse",
         "Prioritert støtte"
       ]
     }
@@ -68,6 +80,7 @@
     "title": "Alt side om side.",
     "featureCol": "Funksjon",
     "free": "Gratis",
+    "personal": "Personal",
     "solo": "Pro",
     "team": "Team",
     "sections": {
@@ -96,7 +109,6 @@
         "label": "Analyse og sikkerhet",
         "rows": {
           "dashboard": "Dashbord for bruksanalyse",
-          "history": "Analysehistorikk",
           "roles": "Teamroller og arbeidsområder",
           "sso": "SSO (SAML / OIDC)",
           "audit": "Revisjonslogg"
@@ -122,13 +134,12 @@
     "values": {
       "unlimited": "Ubegrenset",
       "oneInbox": "1 innboks",
+      "threeInboxes": "3 innbokser",
       "ownerOnly": "Bare deg",
       "burstFree": "60 / min",
+      "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
-      "burstPro": "1 000 / min",
-      "history7": "7 dager",
-      "history90": "90 dager",
-      "history1y": "1 år"
+      "burstPro": "1 000 / min"
     }
   },
   "faq": {
@@ -137,7 +148,7 @@
     "items": [
       {
         "q": "Hva får jeg på gratisplanen?",
-        "a": "Én tilkoblet innboks, for alltid, uten kort. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende. Når du vil ha postkasse nummer to på samme agent, er det Pro."
+        "a": "Én tilkoblet innboks, for alltid, uten kort. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende. Når du vil ha postkasse nummer to eller tre på samme agent, er det Personal, til $5 i måneden."
       },
       {
         "q": "Hva regnes som et MCP-kall?",
@@ -148,8 +159,12 @@
         "a": "E-posten agenten din leser lagres aldri: brødtekst, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten, uten at noe beholdes mellom kall. Vi lagrer ditt krypterte OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler. Det eneste unntaket er en melding du ber oss om å planlegge til senere. Den lagrer vi frem til den er sendt, og beholder deretter en oppføring for historikken din."
       },
       {
-        "q": "Hva er forskjellen mellom Pro og Team?",
-        "a": "Pro er for én person med ubegrenset antall innbokser: alle postkassene du eier i én agent, et tak på 300 forespørsler per minutt, 90-dagers brukshistorikk og e-poststøtte. Team er for flere enn én person: ubegrenset antall medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO (SAML / OIDC), revisjonslogg, 1-års historikk og prioritert støtte."
+        "q": "Hva er forskjellen mellom Personal, Pro og Team?",
+        "a": "Personal er for én person med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt, bruksanalyse og e-poststøtte. Pro er den samme ene personen helt uten innboksgrense, et tak på 300 forespørsler per minutt, full bruksanalyse og e-poststøtte. Team er for flere enn én person: ubegrenset antall medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO (SAML / OIDC), revisjonslogg og prioritert støtte."
+      },
+      {
+        "q": "Hva om jeg trenger en fjerde innboks?",
+        "a": "Personal dekker tre tilkoblede innbokser. En fjerde betyr at du må over på Pro til $29 i måneden, og det er et reelt hopp. Det er verdt det når du faktisk kjører fire eller flere postkasser gjennom én agent, for Pro har ingen innboksgrense i det hele tatt. Ligger du så vidt over tre, og det hoppet ikke fungerer for deg, si fra til oss på hello@mcpemails.com."
       },
       {
         "q": "Kan jeg endre eller si opp planen min?",
@@ -157,7 +172,7 @@
       },
       {
         "q": "Hvordan fungerer årsrabatten?",
-        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Pro koster $276 i året ($23 i måneden) og Team koster $756 i året ($63 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
+        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Personal koster $48 i året ($4 i måneden), Pro koster $276 i året ($23 i måneden) og Team koster $756 i året ($63 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
@@ -175,7 +190,7 @@
   },
   "ctaBand": {
     "title": "Klar til å gi agenten din en innboks?",
-    "sub": "Start på Gratis: én innboks, uten kort. Legg til alle de andre postkassene dine med Pro, for $29 i måneden.",
+    "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $5 i måneden med Personal, og alle postkassene du eier koster $29 med Pro.",
     "ctaPrimary": "Kom i gang gratis",
     "ctaSecondary": "Les dokumentasjonen"
   }

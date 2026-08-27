@@ -2,13 +2,13 @@
   "gmail": {
     "meta": {
       "title": "Conecta Gmail a Claude (y a cualquier IA)",
-      "description": "Conecta Gmail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con un clic mediante Google OAuth. Deja que la IA lea, envíe, programe y organice tu Gmail — bandejas y llamadas gratis."
+      "description": "Conecta Gmail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con un clic mediante Google OAuth. Deja que la IA lea, envíe, programe y organice tu Gmail. Una bandeja gratis, para siempre."
     },
     "hero": {
       "eyebrow": "Gmail + IA",
-      "titleLine1": "Conecta Gmail a Claude —",
+      "titleLine1": "Conecta Gmail a Claude",
       "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-      "lead": "Dale a tu agente de IA una bandeja Gmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con el inicio de sesión de Google con un clic — y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+      "lead": "Dale a tu agente de IA una bandeja Gmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con el inicio de sesión de Google con un clic, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
       "ctaPrimary": "Conecta Gmail gratis",
       "ctaSecondary": "Lee la documentación",
       "meta0": "1 bandeja gratis, para siempre",
@@ -17,7 +17,7 @@
     },
     "method": {
       "title": "Cómo se conecta Gmail: Google OAuth con un clic",
-      "body": "Gmail se conecta con <b>Google OAuth</b> — inicia sesión con Google, aprueba el acceso de lectura y envío, y quedas conectado. Sin contraseña de aplicación ni ajustes IMAP que rastrear. Revoca el acceso cuando quieras desde tu cuenta de Google o el panel de mcpemails."
+      "body": "Gmail se conecta con <b>Google OAuth</b>: inicia sesión con Google, aprueba el acceso de lectura y envío, y quedas conectado. Sin contraseña de aplicación ni ajustes IMAP que rastrear. Revoca el acceso cuando quieras desde tu cuenta de Google o el panel de mcpemails."
     },
     "verificationNote": {
       "title": "Lo que verás en Google",
@@ -26,19 +26,19 @@
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
       "title": "Una bandeja Gmail que tu agente puede usar de verdad",
-      "sub": "Nueve herramientas MCP basadas en acciones — no solo borradores. Tu agente termina el trabajo dentro de Gmail.",
+      "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de Gmail.",
       "ctaPrimary": "Conecta Gmail gratis"
     },
     "capabilities": [
       {
         "tag": "Leer",
         "h": "Leer y buscar correo",
-        "p": "Lista, lee y busca entre etiquetas — encuentra esa factura, resume un hilo o saca lo último de un remitente."
+        "p": "Lista, lee y busca entre etiquetas: encuentra esa factura, resume un hilo o saca lo último de un remitente."
       },
       {
         "tag": "Enviar",
         "h": "Enviar, responder y reenviar",
-        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Gmail, no como un borrador que terminas a mano."
+        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, todo directamente desde Gmail, no como un borrador que terminas a mano."
       },
       {
         "tag": "Programar",
@@ -48,7 +48,7 @@
       {
         "tag": "Organizar",
         "h": "Etiquetar, archivar y eliminar",
-        "p": "Mantén la bandeja ordenada — aplica etiquetas, archiva lo ya resuelto y elimina cuando se pida."
+        "p": "Mantén la bandeja ordenada: aplica etiquetas, archiva lo ya resuelto y elimina cuando se pida."
       }
     ],
     "how": {
@@ -80,39 +80,39 @@
   "fastmail": {
     "meta": {
       "title": "Conecta Fastmail a Claude (y a cualquier IA)",
-      "description": "Conecta Fastmail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Fastmail — bandejas y llamadas gratis."
+      "description": "Conecta Fastmail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Fastmail. Una bandeja gratis, para siempre."
     },
     "hero": {
       "eyebrow": "Fastmail + IA",
-      "titleLine1": "Conecta Fastmail a Claude —",
+      "titleLine1": "Conecta Fastmail a Claude",
       "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-      "lead": "Dale a tu agente de IA una bandeja Fastmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación — y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+      "lead": "Dale a tu agente de IA una bandeja Fastmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
       "ctaPrimary": "Conecta Fastmail gratis",
       "ctaSecondary": "Lee la documentación",
       "meta0": "1 bandeja gratis, para siempre",
-      "meta1": "Contraseña de aplicación — sin OAuth",
+      "meta1": "Contraseña de aplicación, sin OAuth",
       "meta2": "El correo se obtiene en vivo, nunca se almacena"
     },
     "method": {
       "title": "Cómo se conecta Fastmail: una contraseña de aplicación",
-      "body": "Fastmail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Fastmail</b> — genera una en Fastmail en Configuración → Privacidad y seguridad → Contraseñas de aplicación, pégala en mcpemails y listo. Sin trámite de OAuth ni ventanas emergentes."
+      "body": "Fastmail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Fastmail</b>: genera una en Fastmail en Configuración → Privacidad y seguridad → Contraseñas de aplicación, pégala en mcpemails y listo. Sin trámite de OAuth ni ventanas emergentes."
     },
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
       "title": "Una bandeja Fastmail que tu agente puede usar de verdad",
-      "sub": "Nueve herramientas MCP basadas en acciones — no solo borradores. Tu agente termina el trabajo dentro de Fastmail.",
+      "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de Fastmail.",
       "ctaPrimary": "Conecta Fastmail gratis"
     },
     "capabilities": [
       {
         "tag": "Leer",
         "h": "Leer y buscar correo",
-        "p": "Lista, lee y busca entre carpetas — encuentra esa factura, resume un hilo o saca lo último de un remitente."
+        "p": "Lista, lee y busca entre carpetas: encuentra esa factura, resume un hilo o saca lo último de un remitente."
       },
       {
         "tag": "Enviar",
         "h": "Enviar, responder y reenviar",
-        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde Fastmail, no como un borrador que terminas a mano."
+        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, todo directamente desde Fastmail, no como un borrador que terminas a mano."
       },
       {
         "tag": "Programar",
@@ -122,7 +122,7 @@
       {
         "tag": "Organizar",
         "h": "Mover, copiar, marcar, archivar, eliminar",
-        "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida."
+        "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida."
       }
     ],
     "how": {
@@ -158,17 +158,17 @@
   "icloud": {
     "meta": {
       "title": "Conecta iCloud Mail a Claude (y a cualquier IA)",
-      "description": "Conecta iCloud Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña específica de aplicación de Apple. Deja que la IA lea, envíe, programe y organice tu correo de iCloud — gratis."
+      "description": "Conecta iCloud Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña específica de aplicación de Apple. Deja que la IA lea, envíe, programe y organice tu correo de iCloud. Una bandeja gratis, para siempre."
     },
     "hero": {
       "eyebrow": "iCloud Mail + IA",
-      "titleLine1": "Conecta iCloud Mail a Claude —",
+      "titleLine1": "Conecta iCloud Mail a Claude",
       "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-      "lead": "Dale a tu agente de IA una bandeja iCloud real en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña específica de aplicación de Apple — y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+      "lead": "Dale a tu agente de IA una bandeja iCloud real en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña específica de aplicación de Apple, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
       "ctaPrimary": "Conecta iCloud gratis",
       "ctaSecondary": "Lee la documentación",
       "meta0": "1 bandeja gratis, para siempre",
-      "meta1": "Contraseña específica de aplicación — sin OAuth",
+      "meta1": "Contraseña específica de aplicación, sin OAuth",
       "meta2": "El correo se obtiene en vivo, nunca se almacena"
     },
     "method": {
@@ -178,19 +178,19 @@
     "caps": {
       "eyebrow": "Lo que tu IA puede hacer",
       "title": "Una bandeja iCloud que tu agente puede usar de verdad",
-      "sub": "Nueve herramientas MCP basadas en acciones — no solo borradores. Tu agente termina el trabajo dentro de iCloud Mail.",
+      "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de iCloud Mail.",
       "ctaPrimary": "Conecta iCloud gratis"
     },
     "capabilities": [
       {
         "tag": "Leer",
         "h": "Leer y buscar correo",
-        "p": "Lista, lee y busca entre carpetas — encuentra un recibo, resume un hilo o saca lo último de un remitente."
+        "p": "Lista, lee y busca entre carpetas: encuentra un recibo, resume un hilo o saca lo último de un remitente."
       },
       {
         "tag": "Enviar",
         "h": "Enviar, responder y reenviar",
-        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía — directamente desde iCloud, no como un borrador que terminas a mano."
+        "p": "Redacta y envía mensajes reales, responde en el hilo y reenvía, todo directamente desde iCloud, no como un borrador que terminas a mano."
       },
       {
         "tag": "Programar",
@@ -200,7 +200,7 @@
       {
         "tag": "Organizar",
         "h": "Mover, copiar, marcar, archivar, eliminar",
-        "p": "Mantén la bandeja ordenada — archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida."
+        "p": "Mantén la bandeja ordenada: archiva correo en carpetas, marca lo importante, archiva el resto o elimina cuando se pida."
       }
     ],
     "how": {
@@ -236,7 +236,7 @@
   "yahoo": {
     "meta": {
       "title": "Conecta Yahoo Mail a Claude (y a cualquier IA)",
-      "description": "Conecta Yahoo Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Yahoo Mail. Las bandejas y las llamadas a herramientas son gratis."
+      "description": "Conecta Yahoo Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Yahoo Mail. Una bandeja gratis, para siempre."
     },
     "hero": {
       "eyebrow": "Yahoo Mail + IA",
@@ -314,7 +314,7 @@
   "zoho": {
     "meta": {
       "title": "Conecta Zoho Mail a Claude (y a cualquier IA)",
-      "description": "Conecta Zoho Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Zoho Mail. Las bandejas y las llamadas a herramientas son gratis."
+      "description": "Conecta Zoho Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Zoho Mail. Una bandeja gratis, para siempre."
     },
     "hero": {
       "eyebrow": "Zoho Mail + IA",
@@ -392,7 +392,7 @@
   "yandex": {
     "meta": {
       "title": "Conecta Yandex Mail a Claude (y a cualquier IA)",
-      "description": "Conecta Yandex Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Yandex Mail. Las bandejas y las llamadas a herramientas son gratis."
+      "description": "Conecta Yandex Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Yandex Mail. Una bandeja gratis, para siempre."
     },
     "hero": {
       "eyebrow": "Yandex Mail + IA",

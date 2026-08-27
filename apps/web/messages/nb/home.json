@@ -53,7 +53,7 @@
       "0": {
         "tag": "Omfang",
         "h": "Ti fokuserte verktøy. Det essensielle, dekket.",
-        "p": "Verktøy dekker det daglige arbeidet — <code>inbox_list</code>, <code>email_read</code> (list, read, search) og <code>email_compose</code> (send, reply) — pluss fokuserte verktøy for organisering, sletting, mapper, utkast, planlegging, kontakter og signaturer. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
+        "p": "Verktøy dekker det daglige arbeidet: <code>inbox_list</code>, <code>email_read</code> (list, read, search) og <code>email_compose</code> (send, reply), pluss fokuserte verktøy for organisering, sletting, mapper, utkast, planlegging, kontakter og signaturer. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
       },
       "1": {
         "tag": "Lagring",
@@ -73,7 +73,7 @@
       "4": {
         "tag": "Tilgang",
         "h": "OAuth 2.0 for agenter. Ett klikk for å trekke tilbake.",
-        "p": "Vi er standard MCP (streamable-http) med OAuth 2.1, DCR og PKCE — ingen leverandørlåsing. Fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI og enhver MCP-kompatibel klient. OAuth-klienter kobler til automatisk via authorization code + PKCE; en begrenset API-nøkkel dekker klienter uten OAuth og skriptet tilgang. Trekk tilbake enhver tilkobling fra dashbordet med ett klikk."
+        "p": "Vi er standard MCP (streamable-http) med OAuth 2.1, DCR og PKCE, uten leverandørlåsing. Fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI og enhver MCP-kompatibel klient. OAuth-klienter kobler til automatisk via authorization code + PKCE; en begrenset API-nøkkel dekker klienter uten OAuth og skriptet tilgang. Trekk tilbake enhver tilkobling fra dashbordet med ett klikk."
       },
       "5": {
         "tag": "Sikkerhet",
@@ -102,8 +102,8 @@
     },
     "tools": {
       "0": "Oppdag alle tilkoblede innbokser og ID-ene deres. Kall dette først, ingen kopiering av UUID fra dashbordet.",
-      "1": "Les e-post: list opp nylige sammendrag, hent en hel melding etter ID, batch-les opptil 50, eller kjør et leverandøruavhengig søk — alt via action-argumentet.",
-      "2": "Organiser e-post: flytt, kopier, slett, flagg eller arkiver — én om gangen, i bulk eller rett fra et søk.",
+      "1": "Les e-post: list opp nylige sammendrag, hent en hel melding etter ID, batch-les opptil 50, eller kjør et leverandøruavhengig søk, alt via action-argumentet.",
+      "2": "Organiser e-post: flytt, kopier, slett, flagg eller arkiver, én om gangen, i bulk eller rett fra et søk.",
       "3": "Skriv: send en ny melding, svar i tråden eller videresend. Sendes gjennom Gmail API, Fastmail JMAP eller SMTP: ditt domene, din leveringsdyktighet.",
       "4": "Administrer mapper (etiketter på Gmail): list opp, opprett, gi nytt navn eller slett, og bruk dem som flyttemål.",
       "5": "Utkast: list opp, opprett, oppdater og send utkast lagret i leverandørens Drafts-mappe.",
@@ -124,7 +124,7 @@
   "pricing": {
     "eyebrow": "Priser",
     "title": "Prisen følger innboksene, ikke bruken.",
-    "sub": "Gratis kobler til én innboks. Pro kobler til alle postkassene du eier. Team legger til folk, roller og et eget arbeidsområde per kunde.",
+    "sub": "Gratis kobler til én innboks. Personal kobler til tre. Pro kobler til alle postkassene du eier. Team legger til folk, roller og et eget arbeidsområde per kunde.",
     "perForever": "/for alltid",
     "perMonth": "/måned",
     "tiers": {
@@ -141,6 +141,18 @@
         ],
         "cta": "Start gratis"
       },
+      "personal": {
+        "name": "Personal",
+        "desc": "Tre postkasser for én person: jobb, privat og én til.",
+        "features": [
+          "3 tilkoblede innbokser",
+          "Planlagte sendinger og godkjenninger",
+          "2x høyere burst-grense",
+          "Bruksanalyse",
+          "E-poststøtte"
+        ],
+        "cta": "Velg Personal"
+      },
       "solo": {
         "name": "Pro",
         "desc": "Alle postkassene du eier, i én agent. Jobb, privat og hvert sideprosjekt.",
@@ -148,7 +160,7 @@
           "Ubegrenset antall tilkoblede innbokser",
           "Planlagte sendinger og godkjenninger",
           "5x høyere burst-grense",
-          "Full bruksanalyse (90 dagers historikk)",
+          "Full bruksanalyse",
           "E-poststøtte"
         ],
         "cta": "Velg Pro"
@@ -161,7 +173,7 @@
           "Ubegrenset antall medlemmer med roller",
           "Et eget arbeidsområde per kunde eller virksomhet",
           "SSO (SAML / OIDC) og revisjonslogg",
-          "Full bruksanalyse (1 års historikk)",
+          "Full bruksanalyse",
           "Prioritert støtte"
         ],
         "cta": "Velg Team"
@@ -180,7 +192,7 @@
       },
       {
         "q": "Hvilke AI-klienter fungerer det med?",
-        "a": "Alle MCP-kompatible klienter. Vi er en standard streamable-http MCP-server med OAuth 2.1, DCR og PKCE, så den samme innboksen fungerer i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat og flere. Lim inn én endepunkt-URL, så er du tilkoblet — ingen ombygging per app."
+        "a": "Alle MCP-kompatible klienter. Vi er en standard streamable-http MCP-server med OAuth 2.1, DCR og PKCE, så den samme innboksen fungerer i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat og flere. Lim inn én endepunkt-URL, så er du tilkoblet, uten ombygging per app."
       },
       {
         "q": "Hvilke e-postleverandører kan jeg koble til?",
@@ -192,11 +204,11 @@
       },
       {
         "q": "Er det virkelig gratis?",
-        "a": "Ja. Gratisplanen kobler til én innboks, for alltid og uten kort, og agenten din får alle verktøyene vi leverer mot den: lese, søke, sende, svare, planlegge og organisere. Pro er for når du vil ha postkasse nummer to på samme agent, og Team for når andre folk skal inn."
+        "a": "Ja. Gratisplanen kobler til én innboks, for alltid og uten kort, og agenten din får alle verktøyene vi leverer mot den: lese, søke, sende, svare, planlegge og organisere. Personal koster $5 i måneden for postkasse nummer to og tre på samme agent, Pro fjerner innboksgrensen helt, og Team er for når andre folk skal inn."
       },
       {
         "q": "Hva kan AI-en faktisk gjøre med innboksen min?",
-        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen — flytte, kopiere, flagge, arkivere og slette. Ni action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
+        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen: flytte, kopiere, flagge, arkivere og slette. Ni action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
       },
       {
         "q": "Hvordan kobler jeg til en innboks?",
@@ -245,6 +257,6 @@
   "preview": {
     "eyebrow": "Produktforhåndsvisning",
     "title": "Se hele MCP-driften din med ett blikk.",
-    "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall – så du alltid vet hva agentene dine gjør."
+    "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør."
   }
 }

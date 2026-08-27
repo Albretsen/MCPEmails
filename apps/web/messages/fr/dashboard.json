@@ -416,7 +416,7 @@
     "manageBilling": "Gérer la facturation",
     "portalItem1": "Voir et télécharger les factures",
     "portalItem2": "Mettre à jour le moyen de paiement",
-    "portalItem3": "Changer ou annuler la formule",
+    "portalItem3": "Annuler l'abonnement",
     "monthly": "Mensuel",
     "annual": "Annuel (économisez ~20 %)",
     "mostPopular": "Le plus populaire",
@@ -424,7 +424,7 @@
     "perMonth": "/mois",
     "billedYearly": "Facturé {total} $/an",
     "talkToSales": "Parler aux ventes",
-    "redirecting": "Redirection…",
+    "redirecting": "Un instant…",
     "currentPlan": "Formule actuelle",
     "getPlan": "Choisir {plan}",
     "redirectNote": "Vous serez redirigé vers Stripe pour finaliser le paiement en toute sécurité. Annulez à tout moment et conservez l'accès jusqu'à la fin de votre période de facturation.",
@@ -436,15 +436,19 @@
     "errCheckoutUnexpected": "Réponse inattendue du paiement. Veuillez réessayer.",
     "networkError": "Erreur réseau. Veuillez réessayer.",
     "plans": {
+      "personalFeature1": "3 boîtes connectées",
+      "personalFeature2": "120 requêtes / minute (2× en pointe)",
+      "personalFeature3": "Analytique",
+      "personalFeature4": "Support par e-mail",
       "soloFeature1": "Boîtes connectées illimitées",
       "soloFeature2": "300 requêtes / minute (5× en pointe)",
-      "soloFeature3": "Analytique complète (historique de 90 jours)",
+      "soloFeature3": "Analytique complète",
       "soloFeature4": "Support par e-mail",
       "teamFeature1": "Tout ce que contient Pro",
       "teamFeature2": "Membres illimités avec rôles",
       "teamFeature3": "Un espace de travail distinct par client ou activité",
       "teamFeature4": "SSO (SAML / OIDC) + journal d'audit",
-      "teamFeature5": "Analytique complète (historique d'un an)",
+      "teamFeature5": "Analytique complète",
       "teamFeature6": "Support prioritaire"
     },
     "planIncludes": "Ce que votre formule inclut",
@@ -453,7 +457,7 @@
     "inboxesUnlimited": "Boîtes connectées illimitées",
     "inboxesCount": "{count} connectées actuellement",
     "grandfatheredTitle": "Boîtes illimitées, conservées",
-    "grandfatheredBody": "Vous étiez déjà là avant que les boîtes ne deviennent une limite payante, donc votre compte conserve des boîtes connectées illimitées sans frais, de façon permanente. Pro et Team ne valent le coup que si vous voulez la limite de pointe supérieure, un historique plus long ou les fonctionnalités d'équipe.",
+    "grandfatheredBody": "Vous étiez déjà là avant que les boîtes ne deviennent une limite payante, donc votre compte conserve des boîtes connectées illimitées sans frais, de façon permanente. Aucune formule payante n'ajoutera de boîtes à ce que vous avez déjà : Pro ne vaut le coup que pour la limite de pointe supérieure, et Team pour les fonctionnalités d'équipe.",
     "planChanged": "Vous êtes maintenant sur {plan}. La différence de prix apparaîtra sur votre prochaine facture."
   },
   "security": {
@@ -519,7 +523,7 @@
     "sending": "Envoi…",
     "sendInvite": "Envoyer l'invitation",
     "rolesLockedHint": "Les invités rejoignent en tant que Membre. Passez à Team pour attribuer les rôles Administrateur et Lecteur.",
-    "inviteUpgradeHint": "L'invitation de collaborateurs est disponible sur les formules payantes. Passez à une formule supérieure pour ajouter des membres à cet espace de travail.",
+    "inviteUpgradeHint": "L'invitation de collaborateurs nécessite la formule Team. Passez à Team pour ajouter des membres à cet espace de travail.",
     "errInviteFailed": "Échec de l'envoi de l'invitation.",
     "errRemoveFailed": "Échec de la suppression du membre.",
     "errRoleFailed": "Échec de la mise à jour du rôle.",
@@ -631,7 +635,7 @@
       "errors": {
         "csrf": "Cette page est ouverte depuis trop longtemps. Rechargez-la et décidez à nouveau.",
         "role": "Seul un propriétaire ou un administrateur de l'espace peut trancher cet envoi.",
-        "generic": "Cette décision n'a pas pu être enregistrée. Rien n'a été envoyé — réessayez."
+        "generic": "Cette décision n'a pas pu être enregistrée. Rien n'a été envoyé. Réessayez."
       }
     },
     "mode": {

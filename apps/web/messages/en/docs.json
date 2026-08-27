@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "MCP Email Server Documentation — Gmail, IMAP & OAuth",
+    "title": "MCP Email Server Documentation: Gmail, IMAP & OAuth",
     "description": "Set up mcpemails with Gmail or IMAP, connect Claude and other MCP clients with OAuth or an API key, and use the complete email tool reference."
   },
   "hero": {
@@ -28,7 +28,7 @@
       "apikey": {
         "label": "Create an API key",
         "heading": "Generate a bearer token for your agent",
-        "body": "In Dashboard → API Keys, click \"Create key\". Name it, select the scopes your agent needs — read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email, and manage:automations — and copy the key. It is shown only once."
+        "body": "In Dashboard → API Keys, click \"Create key\". Name it, select the scopes your agent needs (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email, and manage:automations), then copy the key. It is shown only once."
       },
       "addclient": {
         "label": "Add MCPEmails to your agent",
@@ -60,15 +60,15 @@
     "infoTransport": "Transport: <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Auth: <b>Authorization: Bearer &lt;api-key&gt;</b>",
     "infoRateLimits": "Rate limits: <b>100 req/min · 1,000/hr · 10,000/day</b> per key, plus your plan's workspace ceiling",
-    "infoFormat": "Response format: <b>JSON-RPC 2.0</b> — successful results also carry a typed <code>structuredContent</code> object",
+    "infoFormat": "Response format: <b>JSON-RPC 2.0</b>. Successful results also carry a typed <code>structuredContent</code> object",
     "handshakeLabel": "Initialize handshake",
     "pollingHeading": "Polling, not push",
-    "pollingBody": "MCPEmails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b> — an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread_only: true</code> at whatever interval your workflow needs (mind the rate limits above)."
+    "pollingBody": "MCPEmails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b>, so an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread_only: true</code> at whatever interval your workflow needs (mind the rate limits above)."
   },
   "operations": {
     "eyebrow": "Built for real inbox work",
     "heading": "More control, without more tool clutter.",
-    "sub": "These are provider-aware capabilities of the same compact, action-based MCP interface — not a separate tool catalogue for every edge case.",
+    "sub": "These are provider-aware capabilities of the same compact, action-based MCP interface, not a separate tool catalogue for every edge case.",
     "approval": {
       "heading": "Server-enforced send approval",
       "body": "Enable approval per inbox in the dashboard to hold sends, replies, forwards, draft sends, and scheduled sends. The agent receives a pending result; a workspace member approves or rejects it in the dashboard before anything is sent."
@@ -106,13 +106,13 @@
     "howTitle": "How it works under the hood",
     "howP1": "claude.ai registers itself via <b>RFC 7591 Dynamic Client Registration</b>, so you never pre-register a client ID.",
     "howP2": "Authorization uses <b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636), so no client secret is ever transmitted.",
-    "howP3": "Tokens are scoped to exactly the permissions you approve — <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code>, and <code>manage:automations</code>.",
+    "howP3": "Tokens are scoped to exactly the permissions you approve: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code>, and <code>manage:automations</code>.",
     "noOauthNote": "<b>Using a client without OAuth support?</b> Create an API key in Dashboard → API Keys and pass it as a bearer token. API key and OAuth connections use the same MCP endpoint and the same tool catalogue."
   },
   "tools": {
     "eyebrow": "Tool reference",
     "heading": "11 tools. Every email operation your agent needs.",
-    "sub": "<b>Targeting an inbox is optional.</b> When your key has exactly one inbox, every per-inbox tool auto-resolves it — no <code>inbox_id</code> needed. With multiple inboxes, pass either <code>inbox_id</code> (the UUID from <code>inbox_list</code>) or <code>inbox</code> (the inbox's email address). Most tools take an <code>action</code> argument that selects the operation; the badges show the scope(s) each one needs, and <code>tools/list</code> only returns the tools your key (or OAuth token) is scoped for. Click \"Show example\" to see a full request and response.",
+    "sub": "<b>Targeting an inbox is optional.</b> When your key has exactly one inbox, every per-inbox tool auto-resolves it, with no <code>inbox_id</code> needed. With multiple inboxes, pass either <code>inbox_id</code> (the UUID from <code>inbox_list</code>) or <code>inbox</code> (the inbox's email address). Most tools take an <code>action</code> argument that selects the operation; the badges show the scope(s) each one needs, and <code>tools/list</code> only returns the tools your key (or OAuth token) is scoped for. Click \"Show example\" to see a full request and response.",
     "noParams": "No parameters. Call with an empty arguments object:",
     "showExample": "Show example request & response",
     "hideExample": "Hide example request & response",
@@ -128,16 +128,16 @@
       "title": "List Inboxes",
       "desc": "Returns every inbox the current API key or OAuth token can access. Call this first to discover inbox_id values, so you never copy-paste UUIDs from the dashboard. Each result includes the email address, provider, optional service brand (icloud/yahoo/zoho/yandex/generic/fastmail), a capabilities object, and a versioned compatibility profile. The profile labels each normalized operation exact, different, or unavailable so an agent can choose a portable workflow without hiding provider differences.",
       "params": {
-        "provider": "Optional filter — return only inboxes served by this provider. One of: gmail, fastmail, imap. Omit to list every inbox the key can access.",
+        "provider": "Optional filter: return only inboxes served by this provider. One of: gmail, fastmail, imap. Omit to list every inbox the key can access.",
         "include_capabilities": "Whether each inbox includes its capabilities object and compatibility profile. Default true; set false for a compact list of just inbox_id, email address, display name, provider, and service brand."
       }
     },
     "email_read": {
       "title": "Read Email",
-      "desc": "Read, list, and search messages in an inbox. Set action: 'list' for recent message summaries (newest first, with folder/unread filtering and pagination), 'read' for the full content of one message_id (text body, optional sanitized HTML and attachments), 'read_batch' to fetch up to 50 message_ids in one call, 'search' for structured, provider-agnostic filters (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), 'attachment' to download a single attachment (by attachment_index or filename), returned in the MCP-native content block for its type (image/audio/embedded resource) — up to 25 MB, 'extract' to return readable text from one selected attachment without returning its bytes, or 'original' to download the complete provider-stored MIME message as a portable .eml file — up to 25 MB. Original messages are returned as a saveable resource, never rendered or sanitized as model text. Extraction is transient and supports text, JSON, CSV/TSV, HTML, and best-effort text-layer PDF extraction; it does not perform OCR or execute embedded code. Read-only — never changes anything. The 'search' action is also unlocked on its own by the narrower search:email scope. Long bodies come back in windows: check body_truncated, then pass body_next_offset back as body_offset to continue.",
+      "desc": "Read, list, and search messages in an inbox. Set action: 'list' for recent message summaries (newest first, with folder/unread filtering and pagination), 'read' for the full content of one message_id (text body, optional sanitized HTML and attachments), 'read_batch' to fetch up to 50 message_ids in one call, 'search' for structured, provider-agnostic filters (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), 'attachment' to download a single attachment (by attachment_index or filename), returned in the MCP-native content block for its type (image/audio/embedded resource), up to 25 MB, 'extract' to return readable text from one selected attachment without returning its bytes, or 'original' to download the complete provider-stored MIME message as a portable .eml file, up to 25 MB. Original messages are returned as a saveable resource, never rendered or sanitized as model text. Extraction is transient and supports text, JSON, CSV/TSV, HTML, and best-effort text-layer PDF extraction; it does not perform OCR or execute embedded code. Read-only: never changes anything. The 'search' action is also unlocked on its own by the narrower search:email scope. Long bodies come back in windows: check body_truncated, then pass body_next_offset back as body_offset to continue.",
       "params": {
         "action": "Which operation to perform: \"list\" (recent message summaries), \"read\" (full content of one message_id), \"read_batch\" (several message_ids), \"search\" (structured filters), \"attachment\" (download one attachment as base64), \"extract\" (read one attachment as text, without returning its bytes), or \"original\" (download one complete provider-stored MIME message as a .eml file). Determines which other arguments apply.",
-        "inbox_id": "UUID of the inbox to read from. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to discover inbox IDs.",
+        "inbox_id": "UUID of the inbox to read from. Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to discover inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
         "message_id": "Provider message ID to read (actions 'read', 'attachment', or 'original'), from a prior list or search.",
         "message_ids": "Provider message IDs to read (action 'read_batch'), from a prior list or search. Max 50 per call.",
@@ -158,7 +158,7 @@
         "cc": "Carbon-copy (Cc) recipient to match (action 'search'): email address, display name, or fragment.",
         "subject": "Text to match in the subject line (action 'search'). Multi-word phrases are matched as-is.",
         "body": "Free text to find in the message body (action 'search'). (On Gmail this matches the whole message, not body-only.)",
-        "text": "Free text to match anywhere in the message — headers and body (action 'search').",
+        "text": "Free text to match anywhere in the message, in headers and body (action 'search').",
         "unread": "Action 'search': true = only unread messages; false = only read messages; omit for either.",
         "has_attachment": "Action 'search': true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
         "flagged": "Action 'search': true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
@@ -173,18 +173,18 @@
       "desc": "Move, copy, flag, or archive messages. Set action: 'move'/'move_batch' (relocate to a destination_folder_id), 'copy'/'copy_batch' (duplicate into a destination_folder_id, leaving the original in place; IMAP, Outlook and Fastmail only), 'flag' (set read/unread/flagged via flag_action on message_ids), 'archive' (move out of the Inbox, non-destructive), or 'search_and_move' (apply to every message matching a structured search, which avoids stale message IDs). On Gmail, move adds the destination label and removes INBOX; other labels remain, and native copy is unavailable. Each action needs the scope that matches it: manage:folders for moves and copies, send:email for flag/archive. Deleting messages lives in its own email_delete tool.",
       "params": {
         "action": "Which operation to perform: \"move\", \"move_batch\", \"copy\", \"copy_batch\", \"flag\", \"archive\", or \"search_and_move\". Determines which other arguments apply and which scope is required.",
-        "inbox_id": "UUID of the inbox that owns the messages. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
+        "inbox_id": "UUID of the inbox that owns the messages. Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
         "message_id": "Provider message ID for a single-message action (move, copy, archive), from a prior list, read, or search.",
         "message_ids": "Provider message IDs for a batch action (move_batch, copy_batch, flag). Max 500 per call.",
         "destination_folder_id": "Destination folder (move, move_batch, copy, copy_batch, search_and_move): a canonical alias (inbox, sent, drafts, trash, archive, spam), a folder/label name (e.g. 'Receipts'), or a provider-native folder ID from the folder list action. Names and aliases are resolved automatically.",
-        "flag_action": "For action 'flag': the change to apply to every message — \"read\" or \"unread\" to set read status, or \"flag\"/\"unflag\" to add or remove a star/follow-up flag.",
+        "flag_action": "For action 'flag': the change to apply to every message: \"read\" or \"unread\" to set read status, or \"flag\"/\"unflag\" to add or remove a star/follow-up flag.",
         "from": "Sender to match (search_and_move): email address, display name, or fragment.",
         "to": "Primary (To) recipient to match (search_and_move): email address, display name, or fragment.",
         "cc": "Carbon-copy (Cc) recipient to match (search_and_move): email address, display name, or fragment.",
         "subject": "Text to match in the subject line (search_and_move).",
         "body": "Free text to find in the message body (search_and_move). (On Gmail this matches the whole message.)",
-        "text": "Free text to match anywhere in the message — headers and body (search_and_move).",
+        "text": "Free text to match anywhere in the message, in headers and body (search_and_move).",
         "unread": "Search actions: true = only unread; false = only read; omit for either.",
         "has_attachment": "Search actions: true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
         "flagged": "Search actions: true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
@@ -197,10 +197,10 @@
     },
     "email_delete": {
       "title": "Delete Email",
-      "desc": "Delete messages — its own tool, separate from email_organize, because deleting is destructive. Set action: 'delete'/'delete_batch' (Trash by default, or permanent), or 'search_and_delete' (delete every message matching a structured search — avoids stale message IDs). Deletes go to Trash unless you pass permanent: true, which is irreversible. Every action needs the delete:email scope, and the whole tool is flagged as destructive to your MCP client, which handles user confirmation before anything is removed.",
+      "desc": "Delete messages: its own tool, separate from email_organize, because deleting is destructive. Set action: 'delete'/'delete_batch' (Trash by default, or permanent), or 'search_and_delete' (delete every message matching a structured search, which avoids stale message IDs). Deletes go to Trash unless you pass permanent: true, which is irreversible. Every action needs the delete:email scope, and the whole tool is flagged as destructive to your MCP client, which handles user confirmation before anything is removed.",
       "params": {
         "action": "Which operation to perform: \"delete\", \"delete_batch\", or \"search_and_delete\". Determines which other arguments apply.",
-        "inbox_id": "UUID of the inbox that owns the messages. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
+        "inbox_id": "UUID of the inbox that owns the messages. Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
         "message_id": "Provider message ID for a single delete (action 'delete'), from a prior list, read, or search.",
         "message_ids": "Provider message IDs for a batch delete (action 'delete_batch'). Max 500 per call.",
@@ -210,7 +210,7 @@
         "cc": "Carbon-copy (Cc) recipient to match (search_and_delete): email address, display name, or fragment.",
         "subject": "Text to match in the subject line (search_and_delete).",
         "body": "Free text to find in the message body (search_and_delete). (On Gmail this matches the whole message.)",
-        "text": "Free text to match anywhere in the message — headers and body (search_and_delete).",
+        "text": "Free text to match anywhere in the message, in headers and body (search_and_delete).",
         "unread": "Search action: true = only unread; false = only read; omit for either.",
         "has_attachment": "Search action: true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
         "flagged": "Search action: true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
@@ -223,10 +223,10 @@
     },
     "email_compose": {
       "title": "Compose Email",
-      "desc": "Send new mail or respond to existing messages. Set action: 'send' for a new email (to/subject/body, optional cc/bcc/html_body/reply_to/attachments), 'reply' to answer a message_id (threading headers are set automatically; optional reply_all), or 'forward' a message_id to new recipients (optionally re-attaching the original files). The inbox's signature is appended automatically — on replies and forwards it sits after your text and before the quoted block, governed by the signature's reply mode; pass include_signature: false to suppress it for a single terse message. To retry automated sends safely, provide one idempotency_key per logical email and reuse it only for the same request within 24 hours. All three are irreversible once sent.",
+      "desc": "Send new mail or respond to existing messages. Set action: 'send' for a new email (to/subject/body, optional cc/bcc/html_body/reply_to/attachments), 'reply' to answer a message_id (threading headers are set automatically; optional reply_all), or 'forward' a message_id to new recipients (optionally re-attaching the original files). The inbox's signature is appended automatically. On replies and forwards it sits after your text and before the quoted block, governed by the signature's reply mode; pass include_signature: false to suppress it for a single terse message. To retry automated sends safely, provide one idempotency_key per logical email and reuse it only for the same request within 24 hours. All three are irreversible once sent.",
       "params": {
         "action": "Which operation to perform: \"send\", \"reply\", or \"forward\". Determines which other arguments apply.",
-        "inbox_id": "UUID of the inbox to send from. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
+        "inbox_id": "UUID of the inbox to send from. Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
         "message_id": "Provider message ID of the original message (action 'reply' or 'forward'), from a prior list, read, or search.",
         "to": "Recipient email addresses (required for 'send' and 'forward'). Max 50.",
@@ -236,7 +236,7 @@
         "bcc": "BCC recipients (send, forward). Default [].",
         "html_body": "HTML version of the body (multipart/alternative). Caller is responsible for safe HTML.",
         "reply_to": "Reply-To header address (action 'send').",
-        "reply_all": "Reply to all original recipients — To + Cc (action 'reply'). Default false.",
+        "reply_all": "Reply to all original recipients: To + Cc (action 'reply'). Default false.",
         "include_attachments": "Re-attach the original message's attachments (action 'forward'). Files over the 10 MB budget are omitted. Default false.",
         "include_signature": "Whether to append the inbox's configured signature to this message. Default true; set false to send this one message without the signature.",
         "attachments": "File attachments. Each item: '{' filename, mime_type, data (base64) '}'. Max 20 items, 10 MB total.",
@@ -245,10 +245,10 @@
     },
     "folder": {
       "title": "Folders & Labels",
-      "desc": "Manage mailbox folders or Gmail labels. The action name and parameters use 'folder' for cross-provider compatibility, but Gmail returns and manages labels (type: 'label'), not folders. Set action: 'list' (every folder or label with its provider-native ID, display name, type, and message counts — use the IDs as the folder argument when listing mail and as a move destination), 'create' (name), 'rename' (folder_id, new_name), or 'delete' (folder_id — irreversible; messages inside may be lost depending on the provider). 'list' needs read:email; create/rename/delete need manage:folders, and delete is flagged as destructive to your MCP client.",
+      "desc": "Manage mailbox folders or Gmail labels. The action name and parameters use 'folder' for cross-provider compatibility, but Gmail returns and manages labels (type: 'label'), not folders. Set action: 'list' (every folder or label with its provider-native ID, display name, type, and message counts; use the IDs as the folder argument when listing mail and as a move destination), 'create' (name), 'rename' (folder_id, new_name), or 'delete' (folder_id, irreversible; messages inside may be lost depending on the provider). 'list' needs read:email; create/rename/delete need manage:folders, and delete is flagged as destructive to your MCP client.",
       "params": {
         "action": "Which operation to perform: \"list\", \"create\", \"rename\", or \"delete\". Determines which other arguments apply and which scope is required.",
-        "inbox_id": "UUID of the inbox whose folders to manage. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
+        "inbox_id": "UUID of the inbox whose folders to manage. Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
         "name": "Name of the new folder or label (action 'create'). 1–255 characters.",
         "folder_id": "Provider-native folder/label ID (action 'rename' or 'delete'), from the folder list action.",
@@ -257,10 +257,10 @@
     },
     "draft": {
       "title": "Drafts",
-      "desc": "Manage draft messages in the inbox's Drafts folder. Set action: 'list' (saved drafts, each with its draft_id, subject, recipients, and created timestamp), 'create' (subject/body required, optional to/cc/bcc/html_body), 'reply' (message_id/body required, optional reply_all — creates an unsent reply in the source conversation), 'update' (draft_id plus the fields to overwrite), or 'send' (draft_id — removes the draft and sends it, irreversible). Reply drafts require both manage:drafts and read:email but never send mail. The inbox's signature is embedded when the draft is created or updated, so it is already present in the Drafts folder and is not re-appended on send; pass include_signature: false to create a draft without it. On IMAP-backed inboxes a draft_id changes on every update, so always use the latest one; Gmail and Outlook keep a stable draft_id.",
+      "desc": "Manage draft messages in the inbox's Drafts folder. Set action: 'list' (saved drafts, each with its draft_id, subject, recipients, and created timestamp), 'create' (subject/body required, optional to/cc/bcc/html_body), 'reply' (message_id/body required, optional reply_all; creates an unsent reply in the source conversation), 'update' (draft_id plus the fields to overwrite), or 'send' (draft_id; removes the draft and sends it, irreversible). Reply drafts require both manage:drafts and read:email but never send mail. The inbox's signature is embedded when the draft is created or updated, so it is already present in the Drafts folder and is not re-appended on send; pass include_signature: false to create a draft without it. On IMAP-backed inboxes a draft_id changes on every update, so always use the latest one; Gmail and Outlook keep a stable draft_id.",
       "params": {
         "action": "Which operation to perform: \"list\", \"create\", \"reply\", \"update\", or \"send\". Determines which other arguments apply.",
-        "inbox_id": "UUID of the inbox that owns the drafts. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
+        "inbox_id": "UUID of the inbox that owns the drafts. Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
         "draft_id": "Provider draft ID (action 'update' or 'send'), from the most recent create, update, or list action. On IMAP inboxes it changes after every update, so always use the latest one.",
         "message_id": "Source message ID for action 'reply', from a prior list, read, or search action.",
@@ -278,10 +278,10 @@
     },
     "schedule": {
       "title": "Scheduled Send",
-      "desc": "Schedule mail for future delivery via a server-side queue. Set action: 'create' (to/subject/body plus a send_at ISO 8601 timestamp — recipients and body are validated immediately, and invalid sends are not queued), 'list' (pending scheduled sends, earliest first, optionally filtered by inbox), or 'cancel' (scheduled_send_id — only sends still 'pending' can be cancelled). The dispatcher runs every minute, so delivery may be up to 60 seconds after send_at.",
+      "desc": "Schedule mail for future delivery via a server-side queue. Set action: 'create' (to/subject/body plus a send_at ISO 8601 timestamp; recipients and body are validated immediately, and invalid sends are not queued), 'list' (pending scheduled sends, earliest first, optionally filtered by inbox), or 'cancel' (scheduled_send_id; only sends still 'pending' can be cancelled). The dispatcher runs every minute, so delivery may be up to 60 seconds after send_at.",
       "params": {
         "action": "Which operation to perform: \"create\", \"list\", or \"cancel\". Determines which other arguments apply.",
-        "inbox_id": "UUID of the inbox to send from (action 'create') or to filter by (action 'list'). Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
+        "inbox_id": "UUID of the inbox to send from (action 'create') or to filter by (action 'list'). Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
         "to": "Recipient email addresses (action 'create'). Max 50.",
         "subject": "Email subject line (action 'create'). Max 998 characters.",
@@ -299,7 +299,7 @@
     },
     "contact_search": {
       "title": "Search Contacts",
-      "desc": "Find correspondents by name or email with a live scan of your mailbox — there is no stored contact list. Each call scans a recent window of matching mail and returns the people who match, sorted by most-recently-contacted, each with display name, email, matched-message count, and last-contacted timestamp. Counts reflect matched messages in that window, not your full history, and nothing is stored between calls.",
+      "desc": "Find correspondents by name or email with a live scan of your mailbox: there is no stored contact list. Each call scans a recent window of matching mail and returns the people who match, sorted by most-recently-contacted, each with display name, email, matched-message count, and last-contacted timestamp. Counts reflect matched messages in that window, not your full history, and nothing is stored between calls.",
       "params": {
         "query": "Name or email fragment, matched case-insensitively against display name and address. At least 1 character.",
         "inbox_id": "Optional. Restrict the live scan to one inbox. Omit to scan the inboxes the key can access (a bounded number).",
@@ -325,15 +325,15 @@
     },
     "signature": {
       "title": "Signature",
-      "desc": "Read or configure the inbox's email signature, which is appended server-side on every send, reply, forward, draft, and scheduled message. Set action: 'get' (returns the current signature text and HTML, whether it is enabled, the reply/forward mode, and its source — 'manual', 'gmail_import', or null) or 'set' (write signature_text and/or signature_html, and optionally signature_enabled and signature_reply_mode). Signatures support rich HTML: bold, italic, headings, lists, colors, alignment, links, and hosted logo/images referenced as https URLs, so an agent can set a fully formatted signature by passing signature_html. The same rich editor is available in the dashboard. Setting a signature marks its source as 'manual', which permanently overrides Gmail auto-import for that inbox. 'get' needs read:email; 'set' needs send:email.",
+      "desc": "Read or configure the inbox's email signature, which is appended server-side on every send, reply, forward, draft, and scheduled message. Set action: 'get' (returns the current signature text and HTML, whether it is enabled, the reply/forward mode, and its source: 'manual', 'gmail_import', or null) or 'set' (write signature_text and/or signature_html, and optionally signature_enabled and signature_reply_mode). Signatures support rich HTML: bold, italic, headings, lists, colors, alignment, links, and hosted logo/images referenced as https URLs, so an agent can set a fully formatted signature by passing signature_html. The same rich editor is available in the dashboard. Setting a signature marks its source as 'manual', which permanently overrides Gmail auto-import for that inbox. 'get' needs read:email; 'set' needs send:email.",
       "params": {
         "action": "Which operation to perform: \"get\" (read the current signature) or \"set\" (write it). Determines which other arguments apply and which scope is required.",
-        "inbox_id": "UUID of the inbox whose signature to read or set. Optional — auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
+        "inbox_id": "UUID of the inbox whose signature to read or set. Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
         "inbox": "Email address of the inbox to use, as a friendly alternative to inbox_id. Optional; ignored if inbox_id is given.",
         "signature_text": "Plain-text signature body (action 'set'). Omit to leave unchanged; pass an empty string to clear it. If only text is given, an HTML version is derived automatically on send.",
         "signature_html": "Optional rich HTML signature body (action 'set'). Accepts formatting (bold, italic, underline, headings, lists, colors, alignment, links) and hosted images via <img> tags whose src is an https URL (no base64 or CID); it is sanitized on save. Omit to leave unchanged; pass an empty string to clear it.",
         "signature_enabled": "Whether the signature is appended to outgoing mail (action 'set'). Default true; set false to stop appending without deleting the text.",
-        "signature_reply_mode": "When to include the signature on replies and forwards (action 'set'): \"always\" (every reply/forward), \"first_only\" (default — only the first message in a thread, avoiding double-signing), or \"never\"."
+        "signature_reply_mode": "When to include the signature on replies and forwards (action 'set'): \"always\" (every reply/forward), \"first_only\" (the default, only the first message in a thread, avoiding double-signing), or \"never\"."
       }
     }
   },
@@ -407,8 +407,8 @@
     "perKeyHeading": "100 req / min · 1,000 / hr · 10,000 / day",
     "perKeyBody": "Enforced per API key regardless of plan. When exceeded, the server returns HTTP 429 with JSON-RPC error code <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> and a <code>data.retry_after</code> field (seconds). Respect that value before retrying: this is a short, retryable pause.",
     "planTag": "Plan per-minute ceiling",
-    "planHeading": "Free 60 / min · Pro 300 / min · Team 1,000 / min",
-    "planBody": "A per-workspace fair-use burst limit, aggregated across all your API keys. When exceeded, calls return error code <code>-32003</code> with <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> and a <code>data.retry_after</code> countdown (seconds). Pro and Team raise the ceiling.",
+    "planHeading": "Free 60 / min · Personal 120 / min · Pro 300 / min · Team 1,000 / min",
+    "planBody": "A per-workspace fair-use burst limit, aggregated across all your API keys. When exceeded, calls return error code <code>-32003</code> with <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> and a <code>data.retry_after</code> countdown (seconds). Personal, Pro and Team raise the ceiling.",
     "capTag": "Fair-use ceiling",
     "capHeading": "A stop, not a backoff",
     "capBody": "Every workspace has a fair-use ceiling on billable actions per billing period. It sits far above real usage and is not something you buy your way past, but a runaway agent can reach it. Hitting it is not a JSON-RPC error: the call returns HTTP 200 with a normal tool result carrying <code>isError: true</code> and a <code>_meta[\"com.mcpemails/usage_limit\"]</code> block with <code>error_code: \"usage_limit_reached\"</code> and <code>reset_at</code>. There is no <code>retry_after</code>, because retrying cannot succeed before <code>reset_at</code>. Treat it as a stop, not a backoff.",
@@ -418,13 +418,13 @@
   },
   "cta": {
     "heading": "Ready to connect your inbox?",
-    "sub": "Start on the Free plan: one connected inbox, forever, no card required. Pro connects every mailbox you own, and Team adds members, roles, and a workspace per client.",
+    "sub": "Start on the Free plan: one connected inbox, forever, no card required. Personal connects three mailboxes, Pro connects every mailbox you own, and Team adds members, roles, and a workspace per client.",
     "primary": "Get started free",
     "secondary": "See pricing"
   },
   "providers": {
     "meta": {
-      "title": "Supported Email Providers for MCP — Gmail, iCloud & IMAP",
+      "title": "Supported Email Providers for MCP: Gmail, iCloud & IMAP",
       "description": "See mcpemails support and capabilities for Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, and generic IMAP/SMTP inboxes."
     },
     "labels": {
@@ -464,7 +464,7 @@
     "hero": {
       "eyebrow": "Provider support",
       "heading": "What works, per provider.",
-      "lead": "MCPEmails connects Gmail, Fastmail, and any IMAP inbox (iCloud, Yahoo, Zoho, Yandex, generic). Not every provider exposes the same APIs — this table shows exactly what each one supports today.",
+      "lead": "MCPEmails connects Gmail, Fastmail, and any IMAP inbox (iCloud, Yahoo, Zoho, Yandex, generic). Not every provider exposes the same APIs, so this table shows exactly what each one supports today.",
       "ctaConnect": "Connect an inbox",
       "ctaBack": "Back to docs"
     },
@@ -481,11 +481,11 @@
       "feature": "Feature"
     },
     "notes": {
-      "gmail": "<b>Gmail — folders vs labels:</b> Gmail uses a flat label system rather than hierarchical folders. \"Move\" is implemented as label add/remove. Native copy is not available via the Gmail REST API.",
-      "permanentDelete": "<b>Permanent delete:</b> Gmail moves to Trash when you delete — permanent expunge is not exposed by their APIs. IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.",
-      "contacts_db": "<b>Contact search (live scan):</b> All providers support <code>contact_search</code>, which finds matching correspondents with a live, header-only scan of a recent window of your matching mail. There is no contacts table — nothing is stored between calls, and counts reflect only matched messages in the scanned window.",
-      "scheduling": "<b>Scheduling:</b> Supported for all providers via a server-side <code>scheduled_sends</code> queue. Use the <code>schedule</code> tool's <code>create</code>, <code>list</code>, and <code>cancel</code> actions. Delivery uses each provider's existing send path — no provider-native scheduling API is required.",
-      "signatures": "<b>Signatures:</b> A per-inbox signature is appended server-side on every send, reply, forward, draft, and scheduled message — this works on <b>all</b> providers. Signatures support rich HTML formatting (bold, italic, headings, lists, colors, alignment, links) and a hosted logo/image; set them in the dashboard rich editor or via the <code>signature</code> MCP tool (which accepts <code>signature_html</code>). Images are referenced as hosted https URLs and render across every provider, though some clients (e.g. Gmail) may hide them until the recipient clicks \"display images\" — that is normal for any hosted-image signature. Use <code>signature_reply_mode</code> to control whether the signature appears on replies and forwards. Per call, pass <code>include_signature: false</code> on <code>email_compose</code> or <code>draft</code> to skip it."
+      "gmail": "<b>Gmail folders vs labels:</b> Gmail uses a flat label system rather than hierarchical folders. \"Move\" is implemented as label add/remove. Native copy is not available via the Gmail REST API.",
+      "permanentDelete": "<b>Permanent delete:</b> Gmail moves to Trash when you delete, and permanent expunge is not exposed by their APIs. IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.",
+      "contacts_db": "<b>Contact search (live scan):</b> All providers support <code>contact_search</code>, which finds matching correspondents with a live, header-only scan of a recent window of your matching mail. There is no contacts table: nothing is stored between calls, and counts reflect only matched messages in the scanned window.",
+      "scheduling": "<b>Scheduling:</b> Supported for all providers via a server-side <code>scheduled_sends</code> queue. Use the <code>schedule</code> tool's <code>create</code>, <code>list</code>, and <code>cancel</code> actions. Delivery uses each provider's existing send path, so no provider-native scheduling API is required.",
+      "signatures": "<b>Signatures:</b> A per-inbox signature is appended server-side on every send, reply, forward, draft, and scheduled message. This works on <b>all</b> providers. Signatures support rich HTML formatting (bold, italic, headings, lists, colors, alignment, links) and a hosted logo/image; set them in the dashboard rich editor or via the <code>signature</code> MCP tool (which accepts <code>signature_html</code>). Images are referenced as hosted https URLs and render across every provider, though some clients (e.g. Gmail) may hide them until the recipient clicks \"display images\", which is normal for any hosted-image signature. Use <code>signature_reply_mode</code> to control whether the signature appears on replies and forwards. Per call, pass <code>include_signature: false</code> on <code>email_compose</code> or <code>draft</code> to skip it."
     },
     "cta": {
       "heading": "Ready to connect your inbox?",

@@ -53,7 +53,7 @@
       "0": {
         "tag": "Périmètre",
         "h": "Dix outils ciblés. L'essentiel, couvert.",
-        "p": "Les outils couvrent le travail quotidien — <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply) — ainsi que des outils ciblés pour organiser, supprimer, gérer les dossiers, les brouillons, la planification, les contacts et les signatures. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
+        "p": "Les outils couvrent le travail quotidien : <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply), ainsi que des outils ciblés pour organiser, supprimer, gérer les dossiers, les brouillons, la planification, les contacts et les signatures. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
       },
       "1": {
         "tag": "Stockage",
@@ -73,7 +73,7 @@
       "4": {
         "tag": "Accès",
         "h": "OAuth 2.0 pour les agents. Révocation en un clic.",
-        "p": "Nous sommes du MCP standard (streamable-http) avec OAuth 2.1, DCR et PKCE — sans dépendance à un fournisseur. Compatible avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI et tout client compatible MCP. Les clients OAuth se connectent automatiquement via le code d'autorisation + PKCE ; une clé API limitée couvre les clients sans OAuth et l'accès par script. Révoquez n'importe quelle connexion depuis le tableau de bord en un clic."
+        "p": "Nous sommes du MCP standard (streamable-http) avec OAuth 2.1, DCR et PKCE, sans dépendance à un fournisseur. Compatible avec Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI et tout client compatible MCP. Les clients OAuth se connectent automatiquement via le code d'autorisation + PKCE ; une clé API limitée couvre les clients sans OAuth et l'accès par script. Révoquez n'importe quelle connexion depuis le tableau de bord en un clic."
       },
       "5": {
         "tag": "Sécurité",
@@ -102,8 +102,8 @@
     },
     "tools": {
       "0": "Découvrez toutes les boîtes connectées et leurs ID. Appelez ceci en premier, sans copier-coller d'UUID depuis le tableau de bord.",
-      "1": "Lire le courrier : listez les résumés récents, récupérez un message complet par ID, lisez jusqu'à 50 par lot ou lancez une recherche indépendante du fournisseur — le tout via l'argument action.",
-      "2": "Organiser le courrier : déplacez, copiez, supprimez, marquez ou archivez — un à la fois, en masse ou directement depuis une recherche.",
+      "1": "Lire le courrier : listez les résumés récents, récupérez un message complet par ID, lisez jusqu'à 50 par lot ou lancez une recherche indépendante du fournisseur, le tout via l'argument action.",
+      "2": "Organiser le courrier : déplacez, copiez, supprimez, marquez ou archivez : un à la fois, en masse ou directement depuis une recherche.",
       "3": "Rédiger : envoyez un nouveau message, répondez dans le fil ou transférez. Expédié par l'API Gmail, Fastmail JMAP ou SMTP : votre domaine, votre délivrabilité.",
       "4": "Gérez les dossiers (libellés sur Gmail) : listez, créez, renommez ou supprimez, et utilisez-les comme destinations de déplacement.",
       "5": "Brouillons : listez, créez, mettez à jour et envoyez les brouillons stockés dans le dossier Drafts du fournisseur.",
@@ -124,7 +124,7 @@
   "pricing": {
     "eyebrow": "Tarifs",
     "title": "Un tarif par boîte, pas à l'usage.",
-    "sub": "Gratuit connecte une boîte. Pro connecte toutes les boîtes que vous possédez. Team ajoute des personnes, des rôles et un espace de travail distinct par client.",
+    "sub": "Gratuit connecte une boîte. Personal en connecte trois. Pro connecte toutes les boîtes que vous possédez. Team ajoute des personnes, des rôles et un espace de travail distinct par client.",
     "perForever": "/pour toujours",
     "perMonth": "/mois",
     "tiers": {
@@ -141,6 +141,18 @@
         ],
         "cta": "Commencer gratuitement"
       },
+      "personal": {
+        "name": "Personal",
+        "desc": "Trois boîtes pour une seule personne : le travail, le personnel et une de plus.",
+        "features": [
+          "3 boîtes connectées",
+          "Envois programmés et validations",
+          "Limite de pointe 2x plus élevée",
+          "Analytique d'usage",
+          "Support par e-mail"
+        ],
+        "cta": "Choisir Personal"
+      },
       "solo": {
         "name": "Pro",
         "desc": "Toutes vos boîtes, dans un seul agent. Le travail, le personnel et chaque activité annexe.",
@@ -148,7 +160,7 @@
           "Boîtes connectées illimitées",
           "Envois programmés et validations",
           "Limite de pointe 5x plus élevée",
-          "Analytique d'usage complète (historique de 90 jours)",
+          "Analytique d'usage complète",
           "Support par e-mail"
         ],
         "cta": "Choisir Pro"
@@ -161,7 +173,7 @@
           "Membres illimités avec rôles",
           "Un espace de travail distinct par client ou activité",
           "SSO (SAML / OIDC) et journal d'audit",
-          "Analytique d'usage complète (historique d'un an)",
+          "Analytique d'usage complète",
           "Support prioritaire"
         ],
         "cta": "Choisir Team"
@@ -180,7 +192,7 @@
       },
       {
         "q": "Avec quels clients IA fonctionne-t-il ?",
-        "a": "Avec n'importe quel client compatible MCP. Nous sommes un serveur MCP standard (streamable-http) avec OAuth 2.1, DCR et PKCE : la même boîte de réception fonctionne donc dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat et bien d'autres. Collez une seule URL de point de terminaison et vous êtes connecté — aucune reconfiguration pour chaque application."
+        "a": "Avec n'importe quel client compatible MCP. Nous sommes un serveur MCP standard (streamable-http) avec OAuth 2.1, DCR et PKCE : la même boîte de réception fonctionne donc dans Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat et bien d'autres. Collez une seule URL de point de terminaison et vous êtes connecté : aucune reconfiguration pour chaque application."
       },
       {
         "q": "Quels fournisseurs d'e-mail puis-je connecter ?",
@@ -192,11 +204,11 @@
       },
       {
         "q": "Est-ce vraiment gratuit ?",
-        "a": "Oui. L'offre gratuite connecte une boîte, pour toujours et sans carte bancaire, et votre agent dispose de tous les outils que nous publions sur elle : lire, chercher, envoyer, répondre, programmer et organiser. Pro sert dès que vous voulez une deuxième boîte sur le même agent, et Team dès que d'autres personnes doivent y accéder."
+        "a": "Oui. L'offre gratuite connecte une boîte, pour toujours et sans carte bancaire, et votre agent dispose de tous les outils que nous publions sur elle : lire, chercher, envoyer, répondre, programmer et organiser. Personal coûte 5 $ par mois pour une deuxième et une troisième boîte sur le même agent, Pro supprime entièrement la limite de boîtes, et Team sert dès que d'autres personnes doivent y accéder."
       },
       {
         "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",
-        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception — déplacer, copier, marquer, archiver et supprimer. Neuf outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
+        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Neuf outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
       },
       {
         "q": "Comment connecter une boîte de réception ?",
@@ -245,6 +257,6 @@
   "preview": {
     "eyebrow": "Aperçu du produit",
     "title": "Visualisez toute votre opération MCP en un coup d'œil.",
-    "sub": "Un tableau de bord en temps réel pour chaque boîte connectée, clé d'API et appel d'outil — pour toujours savoir ce que font vos agents."
+    "sub": "Un tableau de bord en temps réel pour chaque boîte connectée, clé d'API et appel d'outil, pour toujours savoir ce que font vos agents."
   }
 }

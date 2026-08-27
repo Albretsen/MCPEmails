@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "AI Email MCP Server Pricing, Free, Pro and Team Plans",
-    "description": "Free connects one inbox. Pro connects every inbox you own for $29 a month. Team adds members, roles, SSO, and a separate workspace per client."
+    "title": "AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans",
+    "description": "Free connects one inbox. Personal connects three for $5 a month. Pro connects every inbox you own for $29. Team adds members, roles and SSO."
   },
   "hero": {
     "eyebrow": "Pricing",
     "titleLine1": "One inbox, free.",
-    "titleLine2": "Every inbox, $29.",
-    "lead": "Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox. Pro covers every mailbox you own. Team adds people, roles, and a separate workspace per client."
+    "titleLine2": "Three inboxes, $5.",
+    "lead": "Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox. Personal covers three for $5 a month. Pro covers every mailbox you own. Team adds people, roles, and a separate workspace per client."
   },
   "billing": {
     "monthly": "Monthly",
@@ -33,6 +33,18 @@
         "Community support"
       ]
     },
+    "personal": {
+      "name": "Personal",
+      "desc": "Three mailboxes for one person: work, personal, and one more.",
+      "cta": "Get Personal",
+      "features": [
+        "3 connected inboxes",
+        "Scheduled sends and approvals",
+        "2x higher burst rate limit",
+        "Usage analytics",
+        "Email support"
+      ]
+    },
     "solo": {
       "name": "Pro",
       "desc": "Every mailbox you own, in one agent. Work, personal, and each side business.",
@@ -41,7 +53,7 @@
         "Unlimited connected inboxes",
         "Scheduled sends and approvals",
         "5x higher burst rate limit",
-        "Full usage analytics (90-day history)",
+        "Full usage analytics",
         "Email support"
       ]
     },
@@ -54,7 +66,7 @@
         "Unlimited members with roles",
         "A separate workspace per client or business",
         "SSO (SAML / OIDC) and audit log",
-        "Full usage analytics (1-year history)",
+        "Full usage analytics",
         "Priority support"
       ]
     }
@@ -68,6 +80,7 @@
     "title": "Everything side by side.",
     "featureCol": "Feature",
     "free": "Free",
+    "personal": "Personal",
     "solo": "Pro",
     "team": "Team",
     "sections": {
@@ -96,7 +109,6 @@
         "label": "Analytics & security",
         "rows": {
           "dashboard": "Usage analytics dashboard",
-          "history": "Analytics history",
           "roles": "Team roles & workspaces",
           "sso": "SSO (SAML / OIDC)",
           "audit": "Audit log"
@@ -122,13 +134,12 @@
     "values": {
       "unlimited": "Unlimited",
       "oneInbox": "1 inbox",
+      "threeInboxes": "3 inboxes",
       "ownerOnly": "Just you",
       "burstFree": "60 / min",
+      "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
-      "burstPro": "1,000 / min",
-      "history7": "7 days",
-      "history90": "90 days",
-      "history1y": "1 year"
+      "burstPro": "1,000 / min"
     }
   },
   "faq": {
@@ -137,7 +148,7 @@
     "items": [
       {
         "q": "What do I get on the free plan?",
-        "a": "One connected inbox, forever, with no card. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send. When you want a second mailbox on the same agent, that is Pro."
+        "a": "One connected inbox, forever, with no card. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send. When you want a second or third mailbox on the same agent, that is Personal, at $5 a month."
       },
       {
         "q": "What counts as an MCP call?",
@@ -148,8 +159,12 @@
         "a": "The email your agent reads is never stored: bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent, with nothing persisted between calls. We store your encrypted OAuth token or app password so we can authenticate future requests. The one exception is a message you ask us to schedule for later. We store it until it is sent, and keep a record afterwards for your history."
       },
       {
-        "q": "What's the difference between Pro and Team?",
-        "a": "Pro is one person with unlimited inboxes: every mailbox you own on a single agent, a 300 requests/minute ceiling, 90-day usage history, and email support. Team is for more than one person: unlimited members with roles, a separate workspace per client or business, SSO (SAML / OIDC), an audit log, 1-year history, and priority support."
+        "q": "What's the difference between Personal, Pro and Team?",
+        "a": "Personal is one person with three connected inboxes, a 120 requests/minute ceiling, usage analytics, and email support. Pro is still one person, with no inbox limit at all, a 300 requests/minute ceiling, full usage analytics, and email support. Team is for more than one person: unlimited members with roles, a separate workspace per client or business, SSO (SAML / OIDC), an audit log, and priority support."
+      },
+      {
+        "q": "What if I need a fourth inbox?",
+        "a": "Personal covers three connected inboxes. A fourth means moving to Pro at $29 a month, and that is a real step up. It is worth it once you genuinely run four or more mailboxes through one agent, because Pro has no inbox limit at all. If you are sitting just over three and that jump does not work for you, tell us at hello@mcpemails.com."
       },
       {
         "q": "Can I change or cancel my plan?",
@@ -157,7 +172,7 @@
       },
       {
         "q": "How does the annual discount work?",
-        "a": "Paying annually saves about 20% versus monthly: Pro is $276 a year ($23 a month) and Team is $756 a year ($63 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
+        "a": "Paying annually saves about 20% versus monthly: Personal is $48 a year ($4 a month), Pro is $276 a year ($23 a month) and Team is $756 a year ($63 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
       },
       {
         "q": "What email providers are supported?",
@@ -175,7 +190,7 @@
   },
   "ctaBand": {
     "title": "Ready to give your agent an inbox?",
-    "sub": "Start on Free: one inbox, no card required. Add every other mailbox you own on Pro, for $29 a month.",
+    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $5 a month, and Pro covers every mailbox you own for $29.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs"
   }

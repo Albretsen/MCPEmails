@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Precios",
-    "description": "Gratis conecta una bandeja. Pro conecta todas tus bandejas por $29 al mes. Team añade miembros, roles, SSO y un espacio de trabajo por cliente."
+    "title": "Precios del servidor MCP de correo con IA: planes Gratis, Personal, Pro y Team",
+    "description": "Gratis conecta una bandeja. Personal, tres por $5 al mes. Pro, todas tus bandejas por $29. Team añade miembros, roles, SSO y un espacio por cliente."
   },
   "hero": {
     "eyebrow": "Precios",
     "titleLine1": "Una bandeja, gratis.",
-    "titleLine2": "Todas tus bandejas, $29.",
-    "lead": "Conecta un buzón una vez y tu agente podrá leer, buscar, organizar, redactar, programar y enviar. Gratis cubre una bandeja. Pro cubre todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente."
+    "titleLine2": "Tres bandejas, $5.",
+    "lead": "Conecta un buzón una vez y tu agente podrá leer, buscar, organizar, redactar, programar y enviar. Gratis cubre una bandeja. Personal cubre tres por $5 al mes. Pro cubre todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente."
   },
   "billing": {
     "monthly": "Mensual",
@@ -33,6 +33,18 @@
         "Soporte de la comunidad"
       ]
     },
+    "personal": {
+      "name": "Personal",
+      "desc": "Tres buzones para una sola persona: el del trabajo, el personal y uno más.",
+      "cta": "Obtener Personal",
+      "features": [
+        "3 bandejas conectadas",
+        "Envíos programados y aprobaciones",
+        "Límite de ráfaga 2x más alto",
+        "Analíticas de uso",
+        "Soporte por correo"
+      ]
+    },
     "solo": {
       "name": "Pro",
       "desc": "Todos los buzones que tengas, en un solo agente. Trabajo, personal y cada proyecto paralelo.",
@@ -41,7 +53,7 @@
         "Bandejas conectadas ilimitadas",
         "Envíos programados y aprobaciones",
         "Límite de ráfaga 5x más alto",
-        "Analíticas de uso completas (historial de 90 días)",
+        "Analíticas de uso completas",
         "Soporte por correo"
       ]
     },
@@ -54,7 +66,7 @@
         "Miembros ilimitados con roles",
         "Un espacio de trabajo separado por cliente o negocio",
         "SSO (SAML / OIDC) y registro de auditoría",
-        "Analíticas de uso completas (historial de 1 año)",
+        "Analíticas de uso completas",
         "Soporte prioritario"
       ]
     }
@@ -68,6 +80,7 @@
     "title": "Todo lado a lado.",
     "featureCol": "Característica",
     "free": "Gratis",
+    "personal": "Personal",
     "solo": "Pro",
     "team": "Team",
     "sections": {
@@ -96,7 +109,6 @@
         "label": "Analíticas y seguridad",
         "rows": {
           "dashboard": "Panel de analíticas de uso",
-          "history": "Historial de analíticas",
           "roles": "Roles de equipo y espacios de trabajo",
           "sso": "SSO (SAML / OIDC)",
           "audit": "Registro de auditoría"
@@ -122,13 +134,12 @@
     "values": {
       "unlimited": "Ilimitado",
       "oneInbox": "1 bandeja",
+      "threeInboxes": "3 bandejas",
       "ownerOnly": "Solo tú",
       "burstFree": "60 / min",
+      "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
-      "burstPro": "1.000 / min",
-      "history7": "7 días",
-      "history90": "90 días",
-      "history1y": "1 año"
+      "burstPro": "1.000 / min"
     }
   },
   "faq": {
@@ -137,7 +148,7 @@
     "items": [
       {
         "q": "¿Qué incluye el plan gratuito?",
-        "a": "Una bandeja conectada, para siempre y sin tarjeta. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar. Cuando quieras un segundo buzón en el mismo agente, eso es Pro."
+        "a": "Una bandeja conectada, para siempre y sin tarjeta. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar. Cuando quieras un segundo o un tercer buzón en el mismo agente, eso es Personal, por $5 al mes."
       },
       {
         "q": "¿Qué cuenta como una llamada MCP?",
@@ -148,8 +159,12 @@
         "a": "El correo que lee tu agente nunca se almacena: los cuerpos, los asuntos, los adjuntos y el contenido de los hilos se obtienen en vivo desde tu proveedor y se devuelven directamente al agente, sin que nada se persista entre llamadas. Almacenamos tu token de OAuth cifrado o tu contraseña de aplicación para poder autenticar peticiones futuras. La única excepción es un mensaje que nos pides programar para más tarde: lo almacenamos hasta que se envía y luego guardamos un registro para tu historial."
       },
       {
-        "q": "¿Cuál es la diferencia entre Pro y Team?",
-        "a": "Pro es para una persona con bandejas ilimitadas: todos los buzones que tengas en un solo agente, un techo de 300 peticiones por minuto, historial de uso de 90 días y soporte por correo. Team es para más de una persona: miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML / OIDC), registro de auditoría, historial de 1 año y soporte prioritario."
+        "q": "¿Cuál es la diferencia entre Personal, Pro y Team?",
+        "a": "Personal es para una sola persona con tres bandejas conectadas, un techo de 120 peticiones por minuto, analíticas de uso y soporte por correo. Pro es esa misma persona sin ningún límite de bandejas, con un techo de 300 peticiones por minuto, analíticas de uso completas y soporte por correo. Team es para más de una persona: miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML / OIDC), registro de auditoría y soporte prioritario."
+      },
+      {
+        "q": "¿Y si necesito una cuarta bandeja?",
+        "a": "Personal cubre tres bandejas conectadas. Una cuarta significa pasar a Pro, por $29 al mes, y ese es un salto real. Vale la pena cuando de verdad manejas cuatro o más buzones desde un solo agente, porque Pro no tiene ningún límite de bandejas. Si te quedas justo por encima de tres y ese salto no te encaja, escríbenos a hello@mcpemails.com."
       },
       {
         "q": "¿Puedo cambiar o cancelar mi plan?",
@@ -157,7 +172,7 @@
       },
       {
         "q": "¿Cómo funciona el descuento anual?",
-        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Pro cuesta $276 al año ($23 al mes) y Team cuesta $756 al año ($63 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
+        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Personal cuesta $48 al año ($4 al mes), Pro cuesta $276 al año ($23 al mes) y Team cuesta $756 al año ($63 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
@@ -175,7 +190,7 @@
   },
   "ctaBand": {
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
-    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Añade todos los demás buzones que tengas con Pro, por $29 al mes.",
+    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $5 al mes con Personal, y todos los buzones que tengas cuestan $29 con Pro.",
     "ctaPrimary": "Empieza gratis",
     "ctaSecondary": "Lee la documentación"
   }

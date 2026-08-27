@@ -19,17 +19,17 @@
       "coverage": {
         "tag": "Dekning",
         "h": "Hver innboks, ikke bare Gmail",
-        "p": "Innebygde koblinger når vanligvis bare én postkasse — Gmail, av og til Outlook. De kan ikke nå <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> eller noen annen <b>IMAP/SMTP</b>-konto. Vi kobler til alle: Gmail via OAuth, resten via et app-passord eller vanlig IMAP."
+        "p": "Innebygde koblinger når vanligvis bare én postkasse: Gmail, av og til Outlook. De kan ikke nå <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> eller noen annen <b>IMAP/SMTP</b>-konto. Vi kobler til alle: Gmail via OAuth, resten via et app-passord eller vanlig IMAP."
       },
       "actions": {
         "tag": "Ekte handlinger",
         "h": "Send og planlegg, ikke bare utkast",
-        "p": "Mange innebygde koblinger stopper ved å <b>lage et utkast</b> som du fortsatt må åpne og sende. Våre ni handlingsbaserte verktøy <b>sender, svarer, videresender, planlegger, flytter, kopierer, flagger, arkiverer og sletter</b> direkte — agenten fullfører jobben inne i innboksen."
+        "p": "Mange innebygde koblinger stopper ved å <b>lage et utkast</b> som du fortsatt må åpne og sende. Våre ni handlingsbaserte verktøy <b>sender, svarer, videresender, planlegger, flytter, kopierer, flagger, arkiverer og sletter</b> direkte, så agenten fullfører jobben inne i innboksen."
       },
       "portable": {
         "tag": "Flyttbar",
         "h": "Ett oppsett, alle AI-er",
-        "p": "En leverandørs innebygde kobling virker bare i den leverandørens app. Vår server snakker standard streamable-http MCP med <b>OAuth 2.1 / DCR / PKCE</b>, så samme innboks virker i <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> og flere — uten ombygging per app."
+        "p": "En leverandørs innebygde kobling virker bare i den leverandørens app. Vår server snakker standard streamable-http MCP med <b>OAuth 2.1 / DCR / PKCE</b>, så samme innboks virker i <code>Claude</code>, <code>Cursor</code>, <code>VS Code</code>, <code>ChatGPT</code>, <code>n8n</code> og flere, uten ombygging per app."
       }
     }
   },

@@ -2,13 +2,13 @@
   "gmail": {
     "meta": {
       "title": "Connect Gmail to Claude, Cursor & MCP Clients",
-      "description": "Connect Gmail to Claude, Cursor, ChatGPT and any MCP client in one click with Google OAuth. Let AI read, send, schedule and organize your Gmail — inboxes and tool calls free."
+      "description": "Connect Gmail to Claude, Cursor, ChatGPT and any MCP client in one click with Google OAuth. Let AI read, send, schedule and organize your Gmail. One inbox free, forever."
     },
     "hero": {
       "eyebrow": "Gmail + AI",
-      "titleLine1": "Connect Gmail to Claude —",
+      "titleLine1": "Connect Gmail to Claude,",
       "titleLine2": "and Cursor, ChatGPT, any MCP client",
-      "lead": "Give your AI agent a real Gmail inbox in minutes. Read, search, send, reply, schedule and organize mail with one-click Google sign-in — and use the same inbox in every MCP client, not just one.",
+      "lead": "Give your AI agent a real Gmail inbox in minutes. Read, search, send, reply, schedule and organize mail with one-click Google sign-in, and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect Gmail free",
       "ctaSecondary": "Read the docs",
       "meta0": "1 inbox free, forever",
@@ -17,28 +17,28 @@
     },
     "method": {
       "title": "How Gmail connects: one-click Google OAuth",
-      "body": "Gmail connects with <b>Google OAuth</b> — sign in with Google, approve read and send access, and you're connected. No app password, no IMAP settings to dig up. Revoke access anytime from your Google account or the mcpemails dashboard."
+      "body": "Gmail connects with <b>Google OAuth</b>. Sign in with Google, approve read and send access, and you're connected. No app password, no IMAP settings to dig up. Revoke access anytime from your Google account or the mcpemails dashboard."
     },
     "verificationNote": {
       "title": "What Google will show you",
-      "body": "Google shows a “Google hasn't verified this app” screen for any app it has not reviewed — click <b>Advanced</b>, then <b>Go to mcpemails.com</b> to continue. That review requires a paid third-party security assessment we have chosen not to buy, so the screen is here to stay. Once connected, the inbox stays connected: access renews automatically and stops only if you revoke it from your Google account."
+      "body": "Google shows a “Google hasn't verified this app” screen for any app it has not reviewed. Click <b>Advanced</b>, then <b>Go to mcpemails.com</b> to continue. That review requires a paid third-party security assessment we have chosen not to buy, so the screen is here to stay. Once connected, the inbox stays connected: access renews automatically and stops only if you revoke it from your Google account."
     },
     "caps": {
       "eyebrow": "What your AI can do",
       "title": "A Gmail inbox your agent can actually use",
-      "sub": "Nine action-based MCP tools — not just drafts. Your agent finishes the job inside Gmail.",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Gmail.",
       "ctaPrimary": "Connect Gmail free"
     },
     "capabilities": [
       {
         "tag": "Read",
         "h": "Read & search mail",
-        "p": "List, read and search across labels — find that invoice, summarize a thread, or pull the latest from a sender."
+        "p": "List, read and search across labels to find that invoice, summarize a thread, or pull the latest from a sender."
       },
       {
         "tag": "Send",
         "h": "Send, reply & forward",
-        "p": "Compose and send real messages, reply in-thread, and forward — directly from Gmail, not as a draft you finish by hand."
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Gmail, not as a draft you finish by hand."
       },
       {
         "tag": "Schedule",
@@ -48,7 +48,7 @@
       {
         "tag": "Organize",
         "h": "Label, archive & delete",
-        "p": "Keep the inbox tidy — apply labels, archive what's handled, and delete on request."
+        "p": "Keep the inbox tidy: apply labels, archive what's handled, and delete on request."
       }
     ],
     "how": {
@@ -80,39 +80,39 @@
   "fastmail": {
     "meta": {
       "title": "Connect Fastmail to Claude, Cursor & MCP Clients",
-      "description": "Connect Fastmail to Claude, Cursor, ChatGPT and any MCP client with an app password. Let AI read, send, schedule and organize your Fastmail — inboxes and tool calls free."
+      "description": "Connect Fastmail to Claude, Cursor, ChatGPT and any MCP client with an app password. Let AI read, send, schedule and organize your Fastmail. One inbox free, forever."
     },
     "hero": {
       "eyebrow": "Fastmail + AI",
-      "titleLine1": "Connect Fastmail to Claude —",
+      "titleLine1": "Connect Fastmail to Claude,",
       "titleLine2": "and Cursor, ChatGPT, any MCP client",
-      "lead": "Give your AI agent a real Fastmail inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password — and use the same inbox in every MCP client, not just one.",
+      "lead": "Give your AI agent a real Fastmail inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect Fastmail free",
       "ctaSecondary": "Read the docs",
       "meta0": "1 inbox free, forever",
-      "meta1": "App password — no OAuth setup",
+      "meta1": "App password, no OAuth setup",
       "meta2": "Email fetched live, never stored"
     },
     "method": {
       "title": "How Fastmail connects: an app password",
-      "body": "Fastmail connects over IMAP/SMTP using a <b>Fastmail app password</b> — generate one in Fastmail under Settings → Privacy & Security → App passwords, paste it into mcpemails, and you're connected. No OAuth dance, no browser pop-ups."
+      "body": "Fastmail connects over IMAP/SMTP using a <b>Fastmail app password</b>. Generate one in Fastmail under Settings → Privacy & Security → App passwords, paste it into mcpemails, and you're connected. No OAuth dance, no browser pop-ups."
     },
     "caps": {
       "eyebrow": "What your AI can do",
       "title": "A Fastmail inbox your agent can actually use",
-      "sub": "Nine action-based MCP tools — not just drafts. Your agent finishes the job inside Fastmail.",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Fastmail.",
       "ctaPrimary": "Connect Fastmail free"
     },
     "capabilities": [
       {
         "tag": "Read",
         "h": "Read & search mail",
-        "p": "List, read and search across folders — find that invoice, summarize a thread, or pull the latest from a sender."
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
       },
       {
         "tag": "Send",
         "h": "Send, reply & forward",
-        "p": "Compose and send real messages, reply in-thread, and forward — directly from Fastmail, not as a draft you finish by hand."
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Fastmail, not as a draft you finish by hand."
       },
       {
         "tag": "Schedule",
@@ -122,7 +122,7 @@
       {
         "tag": "Organize",
         "h": "Move, copy, flag, archive, delete",
-        "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request."
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
       }
     ],
     "how": {
@@ -158,17 +158,17 @@
   "icloud": {
     "meta": {
       "title": "Connect iCloud Mail to Claude, Cursor & MCP Clients",
-      "description": "Connect iCloud Mail to Claude, Cursor, ChatGPT and any MCP client with an Apple app-specific password. Let AI read, send, schedule and organize your iCloud email — free."
+      "description": "Connect iCloud Mail to Claude, Cursor, ChatGPT and any MCP client with an app-specific password. Let AI read, send and organize your iCloud mail. One inbox free, forever."
     },
     "hero": {
       "eyebrow": "iCloud Mail + AI",
-      "titleLine1": "Connect iCloud Mail to Claude —",
+      "titleLine1": "Connect iCloud Mail to Claude,",
       "titleLine2": "and Cursor, ChatGPT, any MCP client",
-      "lead": "Give your AI agent a real iCloud inbox in minutes. Read, search, send, reply, schedule and organize mail with an Apple app-specific password — and use the same inbox in every MCP client, not just one.",
+      "lead": "Give your AI agent a real iCloud inbox in minutes. Read, search, send, reply, schedule and organize mail with an Apple app-specific password, and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect iCloud free",
       "ctaSecondary": "Read the docs",
       "meta0": "1 inbox free, forever",
-      "meta1": "App-specific password — no OAuth",
+      "meta1": "App-specific password, no OAuth",
       "meta2": "Email fetched live, never stored"
     },
     "method": {
@@ -178,19 +178,19 @@
     "caps": {
       "eyebrow": "What your AI can do",
       "title": "An iCloud inbox your agent can actually use",
-      "sub": "Nine action-based MCP tools — not just drafts. Your agent finishes the job inside iCloud Mail.",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside iCloud Mail.",
       "ctaPrimary": "Connect iCloud free"
     },
     "capabilities": [
       {
         "tag": "Read",
         "h": "Read & search mail",
-        "p": "List, read and search across folders — find a receipt, summarize a thread, or pull the latest from a sender."
+        "p": "List, read and search across folders to find a receipt, summarize a thread, or pull the latest from a sender."
       },
       {
         "tag": "Send",
         "h": "Send, reply & forward",
-        "p": "Compose and send real messages, reply in-thread, and forward — directly from iCloud, not as a draft you finish by hand."
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from iCloud, not as a draft you finish by hand."
       },
       {
         "tag": "Schedule",
@@ -200,7 +200,7 @@
       {
         "tag": "Organize",
         "h": "Move, copy, flag, archive, delete",
-        "p": "Keep the inbox tidy — file mail into folders, flag what matters, archive the rest, or delete on request."
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
       }
     ],
     "how": {
@@ -236,7 +236,7 @@
   "yahoo": {
     "meta": {
       "title": "Connect Yahoo Mail to Claude, Cursor & MCP Clients",
-      "description": "Connect Yahoo Mail to Claude, Cursor, ChatGPT and any MCP client with an app password. Let AI read, send, schedule and organize your Yahoo Mail. Inboxes and tool calls are free."
+      "description": "Connect Yahoo Mail to Claude, Cursor, ChatGPT and any MCP client with an app password. Let AI read, send, schedule and organize your Yahoo Mail. One inbox free, forever."
     },
     "hero": {
       "eyebrow": "Yahoo Mail + AI",
@@ -314,7 +314,7 @@
   "zoho": {
     "meta": {
       "title": "Connect Zoho Mail to Claude, Cursor & MCP Clients",
-      "description": "Connect Zoho Mail to Claude, Cursor, ChatGPT and any MCP client over IMAP with an app password. Let AI read, send, schedule and organize your Zoho Mail. Inboxes and tool calls are free."
+      "description": "Connect Zoho Mail to Claude, Cursor, ChatGPT and any MCP client over IMAP with an app password. Let AI read, send and organize your Zoho Mail. One inbox free, forever."
     },
     "hero": {
       "eyebrow": "Zoho Mail + AI",
@@ -392,7 +392,7 @@
   "yandex": {
     "meta": {
       "title": "Connect Yandex Mail to Claude, Cursor & MCP Clients",
-      "description": "Connect Yandex Mail to Claude, Cursor, ChatGPT and any MCP client over IMAP with an app password. Let AI read, send, schedule and organize your Yandex Mail. Inboxes and tool calls are free."
+      "description": "Connect Yandex Mail to Claude, Cursor, ChatGPT and any MCP client over IMAP with an app password. Let AI read, send and organize your Yandex Mail. One inbox free, forever."
     },
     "hero": {
       "eyebrow": "Yandex Mail + AI",

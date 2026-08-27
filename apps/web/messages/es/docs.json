@@ -28,7 +28,7 @@
       "apikey": {
         "label": "Crea una clave de API",
         "heading": "Genera un token bearer para tu agente",
-        "body": "En Panel → Claves de API, haz clic en «Crear clave». Ponle nombre, selecciona los ámbitos que tu agente necesita — read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email y manage:automations — y copia la clave. Solo se muestra una vez."
+        "body": "En Panel → Claves de API, haz clic en «Crear clave». Ponle nombre, selecciona los ámbitos que tu agente necesita (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email y manage:automations) y copia la clave. Solo se muestra una vez."
       },
       "addclient": {
         "label": "Añade MCPEmails a tu agente",
@@ -60,7 +60,7 @@
     "infoTransport": "Transporte: <b>Streamable HTTP</b> (MCP 2025-06-18)",
     "infoAuth": "Autenticación: <b>Authorization: Bearer &lt;api-key&gt;</b>",
     "infoRateLimits": "Límites de tasa: <b>100 pet/min · 1.000/h · 10.000/día</b> por clave, más el límite del espacio de trabajo de tu plan",
-    "infoFormat": "Formato de respuesta: <b>JSON-RPC 2.0</b> — los resultados correctos también incluyen un objeto tipado <code>structuredContent</code>",
+    "infoFormat": "Formato de respuesta: <b>JSON-RPC 2.0</b>. Los resultados correctos también incluyen un objeto tipado <code>structuredContent</code>",
     "handshakeLabel": "Handshake de inicialización",
     "pollingHeading": "Sondeo, no push",
     "pollingBody": "MCPEmails es solo de petición/respuesta: cada resultado proviene de una llamada a una herramienta que hace tu agente. <b>No hay webhooks, notificaciones push ni eventos iniciados por el servidor</b>: un correo entrante nunca activa por sí solo una llamada del agente. Para reaccionar al correo nuevo, haz que tu agente <b>sondee</b> de forma periódica, p. ej. llamando a <code>email_read</code> con <code>action: \"list\"</code> y <code>unread_only: true</code> al intervalo que necesite tu flujo (ten en cuenta los límites de tasa anteriores)."
@@ -106,13 +106,13 @@
     "howTitle": "Cómo funciona internamente",
     "howP1": "claude.ai se registra a sí mismo mediante el <b>Registro dinámico de clientes RFC 7591</b>, así que nunca pre-registras un ID de cliente.",
     "howP2": "La autorización usa <b>Código de autorización OAuth 2.0 + PKCE</b> (RFC 7636), así que nunca se transmite ningún secreto de cliente.",
-    "howP3": "Los tokens se limitan exactamente a los permisos que apruebas — <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> y <code>manage:automations</code>.",
+    "howP3": "Los tokens se limitan exactamente a los permisos que apruebas: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> y <code>manage:automations</code>.",
     "noOauthNote": "<b>¿Usas un cliente sin soporte de OAuth?</b> Crea una clave de API en Panel → Claves de API y pásala como token bearer. Las conexiones por clave de API y por OAuth usan el mismo endpoint MCP y el mismo catálogo de herramientas."
   },
   "tools": {
     "eyebrow": "Referencia de herramientas",
     "heading": "11 herramientas. Todas las operaciones de correo que tu agente necesita.",
-    "sub": "<b>Indicar una bandeja es opcional.</b> Cuando tu clave tiene exactamente una bandeja, cada herramienta por bandeja la resuelve automáticamente — no hace falta <code>inbox_id</code>. Con varias bandejas, pasa <code>inbox_id</code> (el UUID de <code>inbox_list</code>) o <code>inbox</code> (la dirección de la bandeja). La mayoría de las herramientas toman un argumento <code>action</code> que selecciona la operación; las insignias muestran los permisos que necesita cada una, y <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token OAuth) tiene permiso. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
+    "sub": "<b>Indicar una bandeja es opcional.</b> Cuando tu clave tiene exactamente una bandeja, cada herramienta por bandeja la resuelve automáticamente, así que no hace falta <code>inbox_id</code>. Con varias bandejas, pasa <code>inbox_id</code> (el UUID de <code>inbox_list</code>) o <code>inbox</code> (la dirección de la bandeja). La mayoría de las herramientas toman un argumento <code>action</code> que selecciona la operación; las insignias muestran los permisos que necesita cada una, y <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token OAuth) tiene permiso. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
     "noParams": "Sin parámetros. Llama con un objeto de argumentos vacío:",
     "showExample": "Mostrar petición y respuesta de ejemplo",
     "hideExample": "Ocultar petición y respuesta de ejemplo",
@@ -128,16 +128,16 @@
       "title": "Listar bandejas",
       "desc": "Devuelve todas las bandejas a las que la clave API u OAuth actual tiene acceso. Llama a esta primero para descubrir los valores de inbox_id, así nunca copias UUID desde el panel. Cada resultado incluye la dirección de correo, el proveedor, una marca de servicio opcional (icloud/yahoo/zoho/yandex/generic/fastmail) y un objeto capabilities que describe qué funciones admite esa bandeja.",
       "params": {
-        "provider": "Filtro opcional — devuelve solo las bandejas servidas por este proveedor. Uno de: gmail, fastmail, imap. Omítelo para listar todas las bandejas a las que la clave tiene acceso.",
+        "provider": "Filtro opcional: devuelve solo las bandejas servidas por este proveedor. Uno de: gmail, fastmail, imap. Omítelo para listar todas las bandejas a las que la clave tiene acceso.",
         "include_capabilities": "Si cada bandeja incluye su objeto capabilities (qué funciones admite). Por defecto true; ponlo en false para una lista compacta con solo inbox_id, dirección de correo, nombre visible, proveedor y marca de servicio."
       }
     },
     "email_read": {
       "title": "Leer correo",
-      "desc": "Lee, lista y busca mensajes en una bandeja. Define action: 'list' para resúmenes de mensajes recientes (más nuevos primero, con filtro por carpeta/no leídos y paginación), 'read' para el contenido completo de un message_id (cuerpo de texto, HTML saneado opcional y adjuntos), 'read_batch' para obtener hasta 50 message_ids en una sola llamada, 'search' para filtros estructurados e independientes del proveedor (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), o 'attachment' para descargar un único adjunto (por attachment_index o filename) como datos base64 — hasta 25 MB. Solo lectura — nunca cambia nada. La acción 'search' también se desbloquea por sí sola con el permiso más limitado search:email. Los cuerpos largos se devuelven por ventanas: revisa body_truncated y reenvía body_next_offset como body_offset para continuar.",
+      "desc": "Lee, lista y busca mensajes en una bandeja. Define action: 'list' para resúmenes de mensajes recientes (más nuevos primero, con filtro por carpeta/no leídos y paginación), 'read' para el contenido completo de un message_id (cuerpo de texto, HTML saneado opcional y adjuntos), 'read_batch' para obtener hasta 50 message_ids en una sola llamada, 'search' para filtros estructurados e independientes del proveedor (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), o 'attachment' para descargar un único adjunto (por attachment_index o filename) como datos base64, hasta 25 MB. Solo lectura: nunca cambia nada. La acción 'search' también se desbloquea por sí sola con el permiso más limitado search:email. Los cuerpos largos se devuelven por ventanas: revisa body_truncated y reenvía body_next_offset como body_offset para continuar.",
       "params": {
         "action": "Qué operación realizar: \"list\" (resúmenes de mensajes recientes), \"read\" (contenido completo de un message_id), \"read_batch\" (varios message_ids), \"search\" (filtros estructurados) o \"attachment\" (descargar un adjunto como base64). Determina qué otros argumentos se aplican.",
-        "inbox_id": "UUID de la bandeja desde la que leer. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para descubrir los IDs de bandeja.",
+        "inbox_id": "UUID de la bandeja desde la que leer. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para descubrir los IDs de bandeja.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "message_id": "ID de mensaje del proveedor a leer (action 'read' o 'attachment'), de un list o search previo.",
         "message_ids": "IDs de mensaje del proveedor a leer (action 'read_batch'), de un list o search previo. Máx. 50 por llamada.",
@@ -158,7 +158,7 @@
         "cc": "Destinatario en copia (Cc) a coincidir (action 'search'): dirección de correo, nombre visible o fragmento.",
         "subject": "Texto a coincidir en el asunto (action 'search'). Las frases de varias palabras se coinciden tal cual.",
         "body": "Texto libre a encontrar en el cuerpo del mensaje (action 'search'). (En Gmail esto coincide con todo el mensaje, no solo el cuerpo.)",
-        "text": "Texto libre a coincidir en cualquier parte del mensaje — cabeceras y cuerpo (action 'search').",
+        "text": "Texto libre a coincidir en cualquier parte del mensaje: cabeceras y cuerpo (action 'search').",
         "unread": "Action 'search': true = solo mensajes no leídos; false = solo leídos; omítelo para ambos.",
         "has_attachment": "Action 'search': true = solo mensajes con adjunto. No admitido en IMAP genérico (se ignora ahí).",
         "flagged": "Action 'search': true = solo mensajes marcados/destacados. No admitido en Outlook/Graph (se ignora ahí).",
@@ -173,18 +173,18 @@
       "desc": "Mueve, copia, marca o archiva mensajes. Define action: 'move'/'move_batch' (a un destination_folder_id), 'copy'/'copy_batch' (duplica en un destination_folder_id, dejando el original en su lugar; solo IMAP, Outlook y Fastmail), 'flag' (establece leído/no leído/destacado mediante flag_action sobre message_ids), 'archive' (saca de la bandeja de entrada, no destructivo), o 'search_and_move' (aplica a cada mensaje que coincida con una búsqueda estructurada, lo que evita IDs de mensaje obsoletos). Cada acción necesita el permiso que le corresponde: manage:folders para mover y copiar, send:email para flag/archive. Eliminar mensajes vive en su propia herramienta email_delete.",
       "params": {
         "action": "Qué operación realizar: \"move\", \"move_batch\", \"copy\", \"copy_batch\", \"flag\", \"archive\" o \"search_and_move\". Determina qué otros argumentos se aplican y qué permiso se requiere.",
-        "inbox_id": "UUID de la bandeja que contiene los mensajes. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox_id": "UUID de la bandeja que contiene los mensajes. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "message_id": "ID de mensaje del proveedor para una acción de un solo mensaje (move, copy, archive), de un list, read o search previo.",
         "message_ids": "IDs de mensaje del proveedor para una acción por lotes (move_batch, copy_batch, flag). Máx. 500 por llamada.",
         "destination_folder_id": "Carpeta de destino (move, move_batch, copy, copy_batch, search_and_move): un alias canónico (inbox, sent, drafts, trash, archive, spam), un nombre de carpeta/etiqueta (p. ej. 'Receipts') o un ID de carpeta nativo del proveedor de la acción list de folder. Los nombres y alias se resuelven automáticamente.",
-        "flag_action": "Para action 'flag': el cambio a aplicar a cada mensaje — \"read\" o \"unread\" para fijar el estado de lectura, o \"flag\"/\"unflag\" para añadir o quitar una estrella/marca de seguimiento.",
+        "flag_action": "Para action 'flag': el cambio a aplicar a cada mensaje: \"read\" o \"unread\" para fijar el estado de lectura, o \"flag\"/\"unflag\" para añadir o quitar una estrella/marca de seguimiento.",
         "from": "Remitente a coincidir (search_and_move): dirección de correo, nombre visible o fragmento.",
         "to": "Destinatario principal (To) a coincidir (search_and_move): dirección de correo, nombre visible o fragmento.",
         "cc": "Destinatario en copia (Cc) a coincidir (search_and_move): dirección de correo, nombre visible o fragmento.",
         "subject": "Texto a coincidir en el asunto (search_and_move).",
         "body": "Texto libre a encontrar en el cuerpo del mensaje (search_and_move). (En Gmail esto coincide con todo el mensaje.)",
-        "text": "Texto libre a coincidir en cualquier parte del mensaje — cabeceras y cuerpo (search_and_move).",
+        "text": "Texto libre a coincidir en cualquier parte del mensaje: cabeceras y cuerpo (search_and_move).",
         "unread": "Acciones de búsqueda: true = solo no leídos; false = solo leídos; omítelo para ambos.",
         "has_attachment": "Acciones de búsqueda: true = solo mensajes con adjunto. No admitido en IMAP genérico (se ignora ahí).",
         "flagged": "Acciones de búsqueda: true = solo mensajes marcados/destacados. No admitido en Outlook/Graph (se ignora ahí).",
@@ -197,10 +197,10 @@
     },
     "email_delete": {
       "title": "Eliminar correo",
-      "desc": "Elimina mensajes — su propia herramienta, separada de email_organize, porque eliminar es destructivo. Define action: 'delete'/'delete_batch' (Papelera por defecto, o permanente), o 'search_and_delete' (elimina cada mensaje que coincida con una búsqueda estructurada — evita IDs de mensaje obsoletos). Las eliminaciones van a la Papelera salvo que pases permanent: true, que es irreversible. Cada acción necesita el permiso delete:email, y toda la herramienta se marca como destructiva ante tu cliente MCP, que gestiona la confirmación del usuario antes de eliminar nada.",
+      "desc": "Elimina mensajes. Es su propia herramienta, separada de email_organize, porque eliminar es destructivo. Define action: 'delete'/'delete_batch' (Papelera por defecto, o permanente), o 'search_and_delete' (elimina cada mensaje que coincida con una búsqueda estructurada, evita IDs de mensaje obsoletos). Las eliminaciones van a la Papelera salvo que pases permanent: true, que es irreversible. Cada acción necesita el permiso delete:email, y toda la herramienta se marca como destructiva ante tu cliente MCP, que gestiona la confirmación del usuario antes de eliminar nada.",
       "params": {
         "action": "Qué operación realizar: \"delete\", \"delete_batch\" o \"search_and_delete\". Determina qué otros argumentos se aplican.",
-        "inbox_id": "UUID de la bandeja que contiene los mensajes. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox_id": "UUID de la bandeja que contiene los mensajes. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "message_id": "ID de mensaje del proveedor para una eliminación individual (action 'delete'), de un list, read o search previo.",
         "message_ids": "IDs de mensaje del proveedor para una eliminación por lotes (action 'delete_batch'). Máx. 500 por llamada.",
@@ -210,7 +210,7 @@
         "cc": "Destinatario en copia (Cc) a coincidir (search_and_delete): dirección de correo, nombre visible o fragmento.",
         "subject": "Texto a coincidir en el asunto (search_and_delete).",
         "body": "Texto libre a encontrar en el cuerpo del mensaje (search_and_delete). (En Gmail esto coincide con todo el mensaje.)",
-        "text": "Texto libre a coincidir en cualquier parte del mensaje — cabeceras y cuerpo (search_and_delete).",
+        "text": "Texto libre a coincidir en cualquier parte del mensaje: cabeceras y cuerpo (search_and_delete).",
         "unread": "Acción de búsqueda: true = solo no leídos; false = solo leídos; omítelo para ambos.",
         "has_attachment": "Acción de búsqueda: true = solo mensajes con adjunto. No admitido en IMAP genérico (se ignora ahí).",
         "flagged": "Acción de búsqueda: true = solo mensajes marcados/destacados. No admitido en Outlook/Graph (se ignora ahí).",
@@ -223,10 +223,10 @@
     },
     "email_compose": {
       "title": "Redactar correo",
-      "desc": "Envía correo nuevo o responde a mensajes existentes. Define action: 'send' para un correo nuevo (to/subject/body, opcionalmente cc/bcc/html_body/reply_to/attachments), 'reply' para responder a un message_id (las cabeceras de hilo se establecen automáticamente; opcionalmente reply_all), o 'forward' para reenviar un message_id a nuevos destinatarios (opcionalmente readjuntando los archivos originales). La firma de la bandeja se añade automáticamente — en respuestas y reenvíos va después de tu texto y antes del bloque citado, regida por el modo de respuesta de la firma; pasa include_signature: false para suprimirla en un único mensaje escueto. Las tres son irreversibles una vez enviadas.",
+      "desc": "Envía correo nuevo o responde a mensajes existentes. Define action: 'send' para un correo nuevo (to/subject/body, opcionalmente cc/bcc/html_body/reply_to/attachments), 'reply' para responder a un message_id (las cabeceras de hilo se establecen automáticamente; opcionalmente reply_all), o 'forward' para reenviar un message_id a nuevos destinatarios (opcionalmente readjuntando los archivos originales). La firma de la bandeja se añade automáticamente: en respuestas y reenvíos va después de tu texto y antes del bloque citado, regida por el modo de respuesta de la firma; pasa include_signature: false para suprimirla en un único mensaje escueto. Las tres son irreversibles una vez enviadas.",
       "params": {
         "action": "Qué operación realizar: \"send\", \"reply\" o \"forward\". Determina qué otros argumentos se aplican.",
-        "inbox_id": "UUID de la bandeja desde la que enviar. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox_id": "UUID de la bandeja desde la que enviar. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "message_id": "ID de mensaje del proveedor del mensaje original (action 'reply' o 'forward'), de un list, read o search previo.",
         "to": "Direcciones de correo de los destinatarios (obligatorio para 'send' y 'forward'). Máx. 50.",
@@ -236,7 +236,7 @@
         "bcc": "Destinatarios en copia oculta (send, forward). Por defecto [].",
         "html_body": "Versión HTML del cuerpo (multipart/alternative). Quien llama es responsable de un HTML seguro.",
         "reply_to": "Dirección de la cabecera Reply-To (action 'send').",
-        "reply_all": "Responder a todos los destinatarios originales — To + Cc (action 'reply'). Por defecto false.",
+        "reply_all": "Responder a todos los destinatarios originales, To + Cc (action 'reply'). Por defecto false.",
         "include_attachments": "Readjuntar los adjuntos del mensaje original (action 'forward'). Los archivos que superen el presupuesto de 10 MB se omiten. Por defecto false.",
         "include_signature": "Si añadir la firma configurada de la bandeja a este mensaje. Por defecto true; ponlo en false para enviar este único mensaje sin la firma.",
         "attachments": "Archivos adjuntos. Cada elemento: '{' filename, mime_type, data (base64) '}'. Máx. 20 elementos, 10 MB en total.",
@@ -245,10 +245,10 @@
     },
     "folder": {
       "title": "Carpetas",
-      "desc": "Gestiona las carpetas del buzón (etiquetas en Gmail). Define action: 'list' (cada carpeta con su ID nativo del proveedor, nombre visible, tipo y recuentos de mensajes — usa los IDs como argumento folder al listar correo y como destino de movimientos), 'create' (name), 'rename' (folder_id, new_name) o 'delete' (folder_id — irreversible; los mensajes que contenga pueden perderse según el proveedor). 'list' necesita read:email; create/rename/delete necesitan manage:folders, y delete se marca como destructivo ante tu cliente MCP.",
+      "desc": "Gestiona las carpetas del buzón (etiquetas en Gmail). Define action: 'list' (cada carpeta con su ID nativo del proveedor, nombre visible, tipo y recuentos de mensajes; usa los IDs como argumento folder al listar correo y como destino de movimientos), 'create' (name), 'rename' (folder_id, new_name) o 'delete' (folder_id, irreversible; los mensajes que contenga pueden perderse según el proveedor). 'list' necesita read:email; create/rename/delete necesitan manage:folders, y delete se marca como destructivo ante tu cliente MCP.",
       "params": {
         "action": "Qué operación realizar: \"list\", \"create\", \"rename\" o \"delete\". Determina qué otros argumentos se aplican y qué permiso se requiere.",
-        "inbox_id": "UUID de la bandeja cuyas carpetas se gestionan. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox_id": "UUID de la bandeja cuyas carpetas se gestionan. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "name": "Nombre de la nueva carpeta o etiqueta (action 'create'). 1–255 caracteres.",
         "folder_id": "ID de carpeta/etiqueta nativo del proveedor (action 'rename' o 'delete'), de la acción list de folder.",
@@ -257,10 +257,10 @@
     },
     "draft": {
       "title": "Borradores",
-      "desc": "Gestiona los borradores en la carpeta Drafts de la bandeja. Define action: 'list' (borradores guardados, cada uno con su draft_id, asunto, destinatarios y fecha de creación), 'create' (subject/body obligatorios, opcionalmente to/cc/bcc/html_body), 'update' (draft_id más los campos a sobrescribir) o 'send' (draft_id — elimina el borrador y lo envía, irreversible). La firma de la bandeja se incrusta cuando el borrador se crea o se actualiza, así que ya está presente en la carpeta Drafts y no se vuelve a añadir al enviar; pasa include_signature: false para crear un borrador sin ella. En bandejas basadas en IMAP un draft_id cambia en cada actualización, así que usa siempre el más reciente; Gmail y Outlook mantienen un draft_id estable.",
+      "desc": "Gestiona los borradores en la carpeta Drafts de la bandeja. Define action: 'list' (borradores guardados, cada uno con su draft_id, asunto, destinatarios y fecha de creación), 'create' (subject/body obligatorios, opcionalmente to/cc/bcc/html_body), 'update' (draft_id más los campos a sobrescribir) o 'send' (draft_id, elimina el borrador y lo envía, irreversible). La firma de la bandeja se incrusta cuando el borrador se crea o se actualiza, así que ya está presente en la carpeta Drafts y no se vuelve a añadir al enviar; pasa include_signature: false para crear un borrador sin ella. En bandejas basadas en IMAP un draft_id cambia en cada actualización, así que usa siempre el más reciente; Gmail y Outlook mantienen un draft_id estable.",
       "params": {
         "action": "Qué operación realizar: \"list\", \"create\", \"reply\", \"update\" o \"send\". Determina qué otros argumentos se aplican.",
-        "inbox_id": "UUID de la bandeja que contiene los borradores. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox_id": "UUID de la bandeja que contiene los borradores. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "draft_id": "ID de borrador del proveedor (action 'update' o 'send'), de la acción create, update o list más reciente. En bandejas IMAP cambia tras cada actualización, así que usa siempre el más reciente.",
         "message_id": "ID del mensaje de origen para la acción 'reply', obtenido de una acción list, read o search previa.",
@@ -278,10 +278,10 @@
     },
     "schedule": {
       "title": "Envío programado",
-      "desc": "Programa correo para entrega futura mediante una cola en el servidor. Define action: 'create' (to/subject/body más una marca de tiempo send_at en ISO 8601 — los destinatarios y el cuerpo se validan de inmediato, y los envíos inválidos no se encolan), 'list' (envíos programados pendientes, los más próximos primero, opcionalmente filtrados por bandeja) o 'cancel' (scheduled_send_id — solo se pueden cancelar los envíos que sigan 'pending'). El despachador se ejecuta cada minuto, por lo que la entrega puede ocurrir hasta 60 segundos después de send_at.",
+      "desc": "Programa correo para entrega futura mediante una cola en el servidor. Define action: 'create' (to/subject/body más una marca de tiempo send_at en ISO 8601; los destinatarios y el cuerpo se validan de inmediato, y los envíos inválidos no se encolan), 'list' (envíos programados pendientes, los más próximos primero, opcionalmente filtrados por bandeja) o 'cancel' (scheduled_send_id, solo se pueden cancelar los envíos que sigan 'pending'). El despachador se ejecuta cada minuto, por lo que la entrega puede ocurrir hasta 60 segundos después de send_at.",
       "params": {
         "action": "Qué operación realizar: \"create\", \"list\" o \"cancel\". Determina qué otros argumentos se aplican.",
-        "inbox_id": "UUID de la bandeja desde la que enviar (action 'create') o por la que filtrar (action 'list'). Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox_id": "UUID de la bandeja desde la que enviar (action 'create') o por la que filtrar (action 'list'). Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "to": "Direcciones de correo de los destinatarios (action 'create'). Máx. 50.",
         "subject": "Asunto del correo (action 'create'). Máx. 998 caracteres.",
@@ -299,7 +299,7 @@
     },
     "contact_search": {
       "title": "Buscar contactos",
-      "desc": "Encuentra correspondientes por nombre o correo con un escaneo en vivo de tu buzón — no hay una lista de contactos almacenada. Cada llamada escanea una ventana reciente de correo coincidente y devuelve las personas que coinciden, ordenadas por contacto más reciente, cada una con nombre visible, correo, recuento de mensajes coincidentes y marca de tiempo del último contacto. Los recuentos reflejan los mensajes coincidentes en esa ventana, no todo tu historial, y nada se almacena entre llamadas.",
+      "desc": "Encuentra correspondientes por nombre o correo con un escaneo en vivo de tu buzón: no hay una lista de contactos almacenada. Cada llamada escanea una ventana reciente de correo coincidente y devuelve las personas que coinciden, ordenadas por contacto más reciente, cada una con nombre visible, correo, recuento de mensajes coincidentes y marca de tiempo del último contacto. Los recuentos reflejan los mensajes coincidentes en esa ventana, no todo tu historial, y nada se almacena entre llamadas.",
       "params": {
         "query": "Fragmento de nombre o correo, coincidido sin distinguir mayúsculas/minúsculas con el nombre visible y la dirección. Al menos 1 carácter.",
         "inbox_id": "Opcional. Restringe el escaneo en vivo a una bandeja. Omítelo para escanear las bandejas a las que la clave tiene acceso (un número acotado).",
@@ -325,15 +325,15 @@
     },
     "signature": {
       "title": "Firma",
-      "desc": "Lee o configura la firma de correo de la bandeja, que se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado. Define action: 'get' (devuelve el texto y el HTML actuales de la firma, si está habilitada, el modo de respuesta/reenvío y su origen — 'manual', 'gmail_import' o null) o 'set' (escribe signature_text o signature_html, y opcionalmente signature_enabled y signature_reply_mode). Las firmas admiten HTML enriquecido: negrita, cursiva, encabezados, listas, colores, alineación, enlaces e imágenes/logotipos alojados referenciados como URLs https, de modo que un agente puede establecer una firma con formato completo pasando signature_html. El mismo editor enriquecido está disponible en el panel. Establecer una firma marca su origen como 'manual', lo que anula de forma permanente la importación automática de Gmail para esa bandeja. 'get' necesita read:email; 'set' necesita send:email.",
+      "desc": "Lee o configura la firma de correo de la bandeja, que se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado. Define action: 'get' (devuelve el texto y el HTML actuales de la firma, si está habilitada, el modo de respuesta/reenvío y su origen, que es 'manual', 'gmail_import' o null) o 'set' (escribe signature_text o signature_html, y opcionalmente signature_enabled y signature_reply_mode). Las firmas admiten HTML enriquecido: negrita, cursiva, encabezados, listas, colores, alineación, enlaces e imágenes/logotipos alojados referenciados como URLs https, de modo que un agente puede establecer una firma con formato completo pasando signature_html. El mismo editor enriquecido está disponible en el panel. Establecer una firma marca su origen como 'manual', lo que anula de forma permanente la importación automática de Gmail para esa bandeja. 'get' necesita read:email; 'set' necesita send:email.",
       "params": {
         "action": "Qué operación realizar: \"get\" (leer la firma actual) o \"set\" (escribirla). Determina qué otros argumentos se aplican y qué permiso se requiere.",
-        "inbox_id": "UUID de la bandeja cuya firma se va a leer o establecer. Opcional — se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox_id": "UUID de la bandeja cuya firma se va a leer o establecer. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "signature_text": "Cuerpo de la firma en texto plano (action 'set'). Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo. Si solo se indica el texto, al enviar se deriva automáticamente una versión HTML.",
         "signature_html": "Cuerpo opcional de la firma en HTML enriquecido (action 'set'). Admite formato (negrita, cursiva, subrayado, encabezados, listas, colores, alineación, enlaces) e imágenes alojadas mediante etiquetas <img> cuyo src sea una URL https (sin base64 ni CID); se sanea al guardar. Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo.",
         "signature_enabled": "Si la firma se añade al correo saliente (action 'set'). Por defecto true; ponlo en false para dejar de añadirla sin borrar el texto.",
-        "signature_reply_mode": "Cuándo incluir la firma en respuestas y reenvíos (action 'set'): \"always\" (cada respuesta/reenvío), \"first_only\" (por defecto — solo el primer mensaje de un hilo, evitando firmar por duplicado) o \"never\"."
+        "signature_reply_mode": "Cuándo incluir la firma en respuestas y reenvíos (action 'set'): \"always\" (cada respuesta/reenvío), \"first_only\" (por defecto, solo el primer mensaje de un hilo, evitando firmar por duplicado) o \"never\"."
       }
     }
   },
@@ -407,8 +407,8 @@
     "perKeyHeading": "100 pet / min · 1.000 / h · 10.000 / día",
     "perKeyBody": "Aplicados por clave de API independientemente del plan. Cuando se superan, el servidor devuelve HTTP 429 con el código de error JSON-RPC <code>-32003</code>, <code>data.error_code: \"rate_limit_exceeded\"</code> y un campo <code>data.retry_after</code> (segundos). Respeta ese valor antes de reintentar: es una pausa breve y reintentable.",
     "planTag": "Tope por minuto del plan",
-    "planHeading": "Gratis 60 / min · Pro 300 / min · Team 1.000 / min",
-    "planBody": "Un límite de ráfaga de uso justo por espacio de trabajo, agregado entre todas tus claves de API. Cuando se supera, las llamadas devuelven el código de error <code>-32003</code> con <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> y una cuenta atrás <code>data.retry_after</code> (segundos). Pro y Team elevan el tope.",
+    "planHeading": "Gratis 60 / min · Personal 120 / min · Pro 300 / min · Team 1.000 / min",
+    "planBody": "Un límite de ráfaga de uso justo por espacio de trabajo, agregado entre todas tus claves de API. Cuando se supera, las llamadas devuelven el código de error <code>-32003</code> con <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> y una cuenta atrás <code>data.retry_after</code> (segundos). Personal, Pro y Team elevan el tope.",
     "capTag": "Techo de uso justo",
     "capHeading": "Una parada, no un retroceso",
     "capBody": "Cada espacio de trabajo tiene un techo de uso justo de acciones facturables por periodo de facturación. Está muy por encima del uso real y no es algo que se compre, pero un agente descontrolado puede alcanzarlo. Alcanzarlo no es un error JSON-RPC: la llamada devuelve HTTP 200 con un resultado de herramienta normal que lleva <code>isError: true</code> y un bloque <code>_meta[\"com.mcpemails/usage_limit\"]</code> con <code>error_code: \"usage_limit_reached\"</code> y <code>reset_at</code>. No hay <code>retry_after</code>, porque reintentar no puede funcionar antes de <code>reset_at</code>. Trátalo como una parada, no como un retroceso.",
@@ -418,7 +418,7 @@
   },
   "cta": {
     "heading": "¿Listo para conectar tu bandeja de entrada?",
-    "sub": "Empieza en el plan Gratis: una bandeja conectada, para siempre y sin tarjeta. Pro conecta todos los buzones que tengas, y Team añade miembros, roles y un espacio de trabajo por cliente.",
+    "sub": "Empieza en el plan Gratis: una bandeja conectada, para siempre y sin tarjeta. Personal conecta tres buzones, Pro conecta todos los que tengas, y Team añade miembros, roles y un espacio de trabajo por cliente.",
     "primary": "Empieza gratis",
     "secondary": "Ver precios"
   },
@@ -464,7 +464,7 @@
     "hero": {
       "eyebrow": "Soporte de proveedores",
       "heading": "Qué funciona, por proveedor.",
-      "lead": "MCPEmails conecta Gmail, Fastmail y cualquier bandeja IMAP (iCloud, Yahoo, Zoho, Yandex, genérica). No todos los proveedores exponen las mismas APIs — esta tabla muestra exactamente qué admite hoy cada uno.",
+      "lead": "MCPEmails conecta Gmail, Fastmail y cualquier bandeja IMAP (iCloud, Yahoo, Zoho, Yandex, genérica). No todos los proveedores exponen las mismas APIs, y esta tabla muestra exactamente qué admite hoy cada uno.",
       "ctaConnect": "Conectar una bandeja",
       "ctaBack": "Volver a la documentación"
     },
@@ -481,11 +481,11 @@
       "feature": "Característica"
     },
     "notes": {
-      "gmail": "<b>Gmail — carpetas vs etiquetas:</b> Gmail usa un sistema plano de etiquetas en lugar de carpetas jerárquicas. «Mover» se implementa como añadir/quitar etiquetas. La copia nativa no está disponible a través de la API REST de Gmail.",
-      "permanentDelete": "<b>Eliminación permanente:</b> Gmail mueve a la Papelera cuando eliminas — el expunge permanente no lo exponen sus APIs. Los proveedores IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, genérico) admiten tanto la papelera como el expunge definitivo.",
-      "contacts_db": "<b>Búsqueda de contactos (escaneo en vivo):</b> Todos los proveedores admiten <code>contact_search</code>, que encuentra corresponsales coincidentes con un escaneo en vivo, solo de encabezados, de una ventana reciente de tu correo coincidente. No hay ninguna tabla de contactos — no se almacena nada entre llamadas, y los recuentos reflejan solo los mensajes coincidentes en la ventana escaneada.",
+      "gmail": "<b>Gmail (carpetas vs etiquetas):</b> Gmail usa un sistema plano de etiquetas en lugar de carpetas jerárquicas. «Mover» se implementa como añadir/quitar etiquetas. La copia nativa no está disponible a través de la API REST de Gmail.",
+      "permanentDelete": "<b>Eliminación permanente:</b> Gmail mueve a la Papelera cuando eliminas, y el expunge permanente no lo exponen sus APIs. Los proveedores IMAP (Fastmail, iCloud, Yahoo, Zoho, Yandex, genérico) admiten tanto la papelera como el expunge definitivo.",
+      "contacts_db": "<b>Búsqueda de contactos (escaneo en vivo):</b> Todos los proveedores admiten <code>contact_search</code>, que encuentra corresponsales coincidentes con un escaneo en vivo, solo de encabezados, de una ventana reciente de tu correo coincidente. No hay ninguna tabla de contactos: no se almacena nada entre llamadas, y los recuentos reflejan solo los mensajes coincidentes en la ventana escaneada.",
       "scheduling": "<b>Programación:</b> Compatible con todos los proveedores a través de la cola <code>scheduled_sends</code>. Usa las acciones <code>create</code>, <code>list</code> y <code>cancel</code> de la herramienta <code>schedule</code>.",
-      "signatures": "<b>Firmas:</b> Una firma por bandeja se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado — esto funciona en <b>todos</b> los proveedores. Las firmas admiten formato HTML enriquecido (negrita, cursiva, encabezados, listas, colores, alineación, enlaces) y un logotipo/imagen alojados; configúralas en el editor enriquecido del panel o con la herramienta MCP <code>signature</code> (que acepta <code>signature_html</code>). Las imágenes se referencian como URLs https alojadas y se muestran en todos los proveedores, aunque algunos clientes (p. ej. Gmail) pueden ocultarlas hasta que el destinatario pulse «mostrar imágenes» — esto es normal en cualquier firma con imágenes alojadas. Usa <code>signature_reply_mode</code> para controlar si aparece en respuestas y reenvíos. Por llamada, pasa <code>include_signature: false</code> en <code>email_compose</code> o <code>draft</code> para omitirla."
+      "signatures": "<b>Firmas:</b> Una firma por bandeja se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado, y esto funciona en <b>todos</b> los proveedores. Las firmas admiten formato HTML enriquecido (negrita, cursiva, encabezados, listas, colores, alineación, enlaces) y un logotipo/imagen alojados; configúralas en el editor enriquecido del panel o con la herramienta MCP <code>signature</code> (que acepta <code>signature_html</code>). Las imágenes se referencian como URLs https alojadas y se muestran en todos los proveedores, aunque algunos clientes (p. ej. Gmail) pueden ocultarlas hasta que el destinatario pulse «mostrar imágenes», lo cual es normal en cualquier firma con imágenes alojadas. Usa <code>signature_reply_mode</code> para controlar si aparece en respuestas y reenvíos. Por llamada, pasa <code>include_signature: false</code> en <code>email_compose</code> o <code>draft</code> para omitirla."
     },
     "cta": {
       "heading": "¿Listo para conectar tu bandeja de entrada?",
