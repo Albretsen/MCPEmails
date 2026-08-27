@@ -104,7 +104,7 @@ Une limitation honnête : il n’y a pas de webhooks. Le serveur ne vous pousse 
 
 ## Limites de débit pour l’accès scripté
 
-Si vous pilotez le serveur depuis une tâche cron ou une boucle d’agent serrée, faites attention aux limites. Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et 10 000 par jour**, sur tous les forfaits. À cela s’ajoute un plafond de pic par espace de travail fixé par votre forfait : 60/min sur Free, 300/min sur Pro (29 $/mois), 1 000/min sur Team (79 $/mois). Voyez la [page des tarifs](/pricing) pour le détail complet.
+Si vous pilotez le serveur depuis une tâche cron ou une boucle d’agent serrée, faites attention aux limites. Chaque clé API est plafonnée à **100 requêtes par minute, 1 000 par heure et 10 000 par jour**, sur tous les forfaits. À cela s’ajoute un plafond de pic par espace de travail fixé par votre forfait : 60/min sur Gratuit, 120/min sur Personal (5 $/mois), 300/min sur Pro (29 $/mois), 1 000/min sur Team (79 $/mois). Voyez la [page des tarifs](/pricing) pour le détail complet.
 
 Quand vous atteignez une limite de débit, le serveur renvoie une erreur réessayable (code \`-32003\`) avec \`data.retry_after\` en secondes. Respectez-la — patientez d’autant et réessayez. Tout n’est pas réessayable pour autant : si vous épuisez l’allocation mensuelle d’actions de votre formule, l’appel renvoie un résultat d’outil normal avec \`isError: true\` et un bloc \`_meta["com.mcpemails/usage_limit"]\`, sans \`retry_after\`, et aucun réessai ne débloque cela avant \`reset_at\`. Et ne réessayez jamais à l’aveugle un envoi de \`email_compose\` sur un échec générique ; vous enverriez des doublons. Vérifiez d’abord s’il est réellement parti.
 

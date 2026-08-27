@@ -104,7 +104,7 @@ Una limitación honesta: no hay webhooks. El servidor no te envía el correo nue
 
 ## Límites de tasa para el acceso por scripts
 
-Si manejas el servidor desde un trabajo de cron o un bucle de agente apretado, ten en cuenta los límites. Cada API key está limitada a **100 peticiones por minuto, 1.000 por hora y 10.000 por día**, en todos los planes. Por encima de eso hay un techo de ráfaga por espacio de trabajo que fija tu plan: 60/min en Free, 300/min en Pro ($29/month) y 1.000/min en Team ($79/month). Consulta la [página de precios](/pricing) para el desglose completo.
+Si manejas el servidor desde un trabajo de cron o un bucle de agente apretado, ten en cuenta los límites. Cada API key está limitada a **100 peticiones por minuto, 1.000 por hora y 10.000 por día**, en todos los planes. Por encima de eso hay un techo de ráfaga por espacio de trabajo que fija tu plan: 60/min en Gratis, 120/min en Personal (5 $/mes), 300/min en Pro (29 $/mes) y 1.000/min en Team (79 $/mes). Consulta la [página de precios](/pricing) para el desglose completo.
 
 Cuando alcanzas un límite de tasa, el servidor devuelve un error que se puede reintentar (código \`-32003\`) con \`data.retry_after\` en segundos. Respétalo: espera ese tiempo y vuelve a intentarlo. Pero no todo es reintentable: si agotas la asignación mensual de acciones de tu plan, la llamada devuelve un resultado de herramienta normal con \`isError: true\` y un bloque \`_meta["com.mcpemails/usage_limit"]\`, sin \`retry_after\`, y ningún reintento lo resuelve antes de \`reset_at\`. Y nunca reintentes a ciegas un envío de \`email_compose\` ante un fallo genérico; dispararás duplicados. Comprueba primero si de verdad se envió.
 

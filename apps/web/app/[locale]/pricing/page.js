@@ -42,7 +42,7 @@ export default async function PricingPage({ params }) {
     ? t('meta.description')
     : 'Simple, transparent pricing for AI agents that read and send email. Free plan available. No card required.';
   // Emits the real plan catalogue as Product + Offers, so an assistant asked
-  // what mcpemails costs reads the same three tiers a visitor sees.
+  // what mcpemails costs reads the same four tiers a visitor sees.
   const jsonLd = pricingJsonLd(locale, { title, description });
 
   return (

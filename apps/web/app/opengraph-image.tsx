@@ -121,7 +121,7 @@ export default function OpengraphImage() {
           }}
         >
           <div style={{ display: 'flex', gap: 14 }}>
-            {['Unlimited, free', 'No card required', 'Email never stored'].map((label) => (
+            {['Free to start', 'No card required', 'Email never stored'].map((label) => (
               <div
                 key={label}
                 style={{

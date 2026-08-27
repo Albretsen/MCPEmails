@@ -110,5 +110,5 @@ Ici, la rapidité ne vient pas de raccourcis sur la sécurité. L’e-mail est r
 
 ## Pour conclure
 
-C’est tout : une connexion de boîte de réception, un endpoint, une poignée d’outils. Le forfait Gratuit connecte une boîte, ne coûte rien et ne demande pas de carte ; Pro connecte toutes les boîtes que vous possédez — consultez les [tarifs](/pricing). Prêt à l’essayer ? [Commencez gratuitement](/signup), connectez votre boîte de réception et collez l’endpoint dans votre agent.`,
+C’est tout : une connexion de boîte de réception, un endpoint, une poignée d’outils. Le forfait Gratuit connecte une boîte, ne coûte rien et ne demande pas de carte ; Personal est à 5 $/mois pour trois boîtes, et Pro connecte toutes celles que vous possédez : consultez les [tarifs](/pricing). Prêt à l’essayer ? [Commencez gratuitement](/signup), connectez votre boîte de réception et collez l’endpoint dans votre agent.`,
 };

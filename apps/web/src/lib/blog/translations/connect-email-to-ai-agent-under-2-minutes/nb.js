@@ -110,5 +110,5 @@ Farten her kommer ikke av å ta snarveier på sikkerhet. E-post hentes live ved 
 
 ## Oppsummering
 
-Det er hele greia: én innbokskobling, ett endepunkt, en håndfull verktøy. Gratisnivået kobler til én innboks, koster ingenting og krever ikke kort; Pro kobler til alle postkassene du eier — sjekk [priser](/pricing). Klar til å prøve? [Start gratis](/signup), koble til innboksen din, og lim endepunktet inn i agenten din.`,
+Det er hele greia: én innbokskobling, ett endepunkt, en håndfull verktøy. Gratisnivået kobler til én innboks, koster ingenting og krever ikke kort; Personal koster $5 per måned for opptil tre innbokser, og Pro kobler til alle postkassene du eier. Se [priser](/pricing). Klar til å prøve? [Start gratis](/signup), koble til innboksen din, og lim endepunktet inn i agenten din.`,
 };

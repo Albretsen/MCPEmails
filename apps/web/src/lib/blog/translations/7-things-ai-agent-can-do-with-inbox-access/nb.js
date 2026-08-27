@@ -73,7 +73,7 @@ Dette syr sammen de andre: \`email_read\` (handlingen search, så list) for å s
 
 ## Hva dette koster og hvor grensene ligger
 
-Alle sju fungerer på [Gratis-planen](/pricing), som koster $0 og kobler til én innboks med 60 forespørsler per minutt. Pro ($29/month) kobler til alle postkassene du eier og hever burst-grensen til 300 forespørsler per minutt; Team ($79/month) legger til medlemmer med roller, et eget arbeidsområde per kunde, SSO og 1 000 forespørsler per minutt. Én innboks holder lenge for et ukentlig sammendrag; i det øyeblikket du vil ha både jobb og privat i samme agent, er det Pro.
+Alle sju fungerer på [Gratis-planen](/pricing), som koster $0 og kobler til én innboks med 60 forespørsler per minutt. Personal ($5 per måned) kobler til opptil tre innbokser og hever burst-grensen til 120 forespørsler per minutt; Pro ($29 per måned) kobler til alle postkassene du eier og hever den til 300; Team ($79 per måned) legger til medlemmer med roller, et eget arbeidsområde per kunde, SSO og 1 000 forespørsler per minutt. Én innboks holder lenge for et ukentlig sammendrag; i det øyeblikket du vil ha både jobb og privat i samme agent, er det Personal til $5 per måned, og Pro først når du passerer tre innbokser.
 
 Når du først treffer en grense, returnerer serveren en feil du kan prøve på nytt, med \`data.retry_after\` i sekunder. Respekter den. Og prøv aldri blindt på nytt en \`email_compose\`-sending automatisk, for et nytt forsøk etter en timeout kan bety at to kopier av samme melding havner i noens innboks.
 

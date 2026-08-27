@@ -36,7 +36,7 @@ Setup is genuinely quick. In claude.ai you go to **Customize → Connectors → 
 
 **The honest trade-offs:** it's a third-party service in your auth path (you can revoke from the dashboard in one click, but you're trusting the host's security model). And there are no webhooks. To react to new mail, Claude has to poll — call \`email_read\` with \`action: list\` and \`unread_only: true\` on a schedule. Push notifications don't exist in MCP. Any tool that claims real-time email reactions is either polling under the hood or storing your mail.
 
-The Free tier is $0 forever with one connected inbox and a 60-request/minute burst limit. Pro ($29/month) connects every mailbox you own and raises the burst limit; Team adds members and roles. Cost is rarely the deciding factor here.
+The Free tier is $0 forever with one connected inbox and a 60-request/minute burst limit. Personal ($5/month) connects up to three inboxes and raises the burst limit; Pro ($29/month) connects every mailbox you own; Team adds members and roles. Cost is rarely the deciding factor here.
 
 ## Option 2: A DIY / self-hosted MCP server
 

@@ -30,7 +30,7 @@ The code runs on your hardware. No third party ever sits between your agent and 
 
 ### It's free in dollars
 
-No subscription. The Gmail API itself is free at any volume an agent will hit. If your time is cheap relative to $29/month, the math favors rolling your own.
+No subscription. The Gmail API itself is free at any volume an agent will hit. If your time is cheap relative to $5/month (or $29/month once you need unlimited inboxes), the math favors rolling your own.
 
 ### You can bend it to anything
 
@@ -88,7 +88,7 @@ This is the real trade-off, and I won't dress it up. With a hosted server, your 
 
 ## What it costs in dollars
 
-MCP Emails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 7-day analytics and community support. [Pro is $29/month](/pricing) (unlimited connected inboxes, 300 req/min, 90-day analytics, email support), and Team is $79/month (members with roles, a separate workspace per client, SSO, and audit logs). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
+MCP Emails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 7-day analytics and community support. [Personal is $5/month](/pricing) (up to three connected inboxes, 120 req/min, 30-day analytics, email support), Pro is $29/month (unlimited connected inboxes, 300 req/min, 90-day analytics), and Team is $79/month (members with roles, a separate workspace per client, SSO, and audit logs). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
 
 ## So which should you pick?
 

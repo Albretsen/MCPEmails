@@ -129,25 +129,24 @@ Notes:
 
 ## Pricing
 
-The value metric is **connected inboxes**. Free connects one mailbox, Pro connects every mailbox you own, and Team adds people, roles, and a separate workspace per client. Annual billing saves about 20%.
+The value metric is **connected inboxes**. Free connects one mailbox, Personal connects up to three, Pro connects every mailbox you own, and Team adds people, roles, and a separate workspace per client. Annual billing saves about 20%.
 
-| | **Free** | **Pro** | **Team** |
-| --- | --- | --- | --- |
-| Price | $0 | $29/mo · $276/yr ($23/mo) | $79/mo · $756/yr ($63/mo) |
-| Connected inboxes | 1 | Unlimited | Unlimited |
-| API keys | Unlimited | Unlimited | Unlimited |
-| Members | 1 (owner only) | 1 (owner only) | Unlimited, with roles |
-| Fair‑use rate limit | 60 req/min | 300 req/min | 1,000 req/min |
-| Analytics retention | 7 days | 90 days | 1 year |
-| Team roles & workspaces | — | — | ✅ |
-| SSO (SAML/OIDC) + audit log | — | — | ✅ |
-| Support | Community | Email | Priority |
+| | **Free** | **Personal** | **Pro** | **Team** |
+| --- | --- | --- | --- | --- |
+| Price | $0 | $5/mo · $48/yr ($4/mo) | $29/mo · $276/yr ($23/mo) | $79/mo · $756/yr ($63/mo) |
+| Connected inboxes | 1 | 3 | Unlimited | Unlimited |
+| API keys | Unlimited | Unlimited | Unlimited | Unlimited |
+| Members | 1 (owner only) | 1 (owner only) | 1 (owner only) | Unlimited, with roles |
+| Fair‑use rate limit | 60 req/min | 120 req/min | 300 req/min | 1,000 req/min |
+| Team roles & workspaces | No | No | No | ✅ |
+| SSO (SAML/OIDC) + audit log | No | No | No | ✅ |
+| Support | Community | Email | Email | Priority |
 
 Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Rate limits are retryable: they come back as JSON-RPC error `-32003` with `data.retry_after` in seconds.
 
 Every workspace additionally has a **fair-use ceiling** on billable actions per billing period. It is an abuse guard, not a plan feature: it sits far above any observed real usage, is never shown to customers, and cannot be bought past. Hitting it is not retryable and not a JSON-RPC error: it comes back as a normal tool result with `isError: true` and a `_meta["com.mcpemails/usage_limit"]` block, and clears at `reset_at`.
 
-Internal plan ids predate the names: `solo` is sold as **Pro** and `pro` is sold as **Team**. Every user who existed before the 2026-08-19 repricing keeps unlimited inboxes for free, permanently. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
+Internal plan ids predate the names: `solo` is sold as **Pro** and `pro` is sold as **Team**. The newer `personal` id is the only one that matches its display name, **Personal**. Every user who existed before the 2026-08-19 repricing keeps unlimited inboxes for free, permanently. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
 
 ## Architecture
 
@@ -242,7 +241,7 @@ Feature‑dependent:
 | `OUTLOOK_CLIENT_ID` / `OUTLOOK_CLIENT_SECRET` / `OUTLOOK_TENANT_ID` | Outlook OAuth (`Mail.Read`, `Mail.Send`, `Mail.ReadWrite`, `offline_access`) |
 | `NEXT_PUBLIC_OAUTH_VERIFICATION_PENDING` | Shows the unverified‑app warning until Google/Microsoft verification completes |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Billing |
-| `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`solo` = Pro, `pro` = Team) |
+| `STRIPE_PRICE_PERSONAL_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`personal` = Personal, `solo` = Pro, `pro` = Team) |
 
 > Fastmail and other IMAP providers connect via app password and need no OAuth credentials.
 

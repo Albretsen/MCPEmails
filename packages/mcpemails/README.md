@@ -4,7 +4,7 @@ Email for AI agents. Read, search, send, organize, draft and schedule email acro
 
 This package is a **stdio bridge**. [MCP Emails](https://mcpemails.com) is a hosted MCP server that speaks JSON-RPC over HTTPS, and many MCP clients can only launch a local command and talk over stdin/stdout. `mcpemails` sits between the two: it forwards every JSON-RPC message from your client to `https://mcpemails.com/api/mcp` and writes every response straight back. It adds nothing to the protocol.
 
-Works with Gmail, Outlook, Fastmail, and any IMAP/SMTP mailbox you connect at [mcpemails.com](https://mcpemails.com).
+Works with Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, and any IMAP/SMTP mailbox you connect at [mcpemails.com](https://mcpemails.com).
 
 ## Quick start
 

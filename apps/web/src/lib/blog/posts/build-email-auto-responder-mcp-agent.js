@@ -94,7 +94,7 @@ If you want a message to stop showing up as unread once you've replied, read it 
 
 ## Rate limits, and why you never blind-retry a send
 
-Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, regardless of plan. Your workspace also has a burst ceiling by tier — **60 req/min on Free, 300 on Pro, 1,000 on Team** (see [pricing](/pricing)). A polite poll-and-reply loop lives well inside that, but a misbehaving one can trip it.
+Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, regardless of plan. Your workspace also has a burst ceiling by tier: **60 req/min on Free, 120 on Personal, 300 on Pro, 1,000 on Team** (see [pricing](/pricing)). A polite poll-and-reply loop lives well inside that, but a misbehaving one can trip it.
 
 When you hit a rate limit, the server returns a retryable error (code \`-32003\`) carrying \`data.retry_after\` in seconds. Honor it. Sleep for that long, then continue.
 
@@ -157,5 +157,5 @@ If I were shipping this for a real inbox tomorrow, I'd start small and boring:
 
 That's a system you can actually trust, and it generalizes. The same loop with a different prompt becomes a triage bot, a lead router, or a notifier. For the broader menu of what an agent can do once it's wired in, see [7 things an AI agent can do with inbox access](/blog/7-things-ai-agent-can-do-with-inbox-access). If you're still deciding whether to hand an agent send access at all, [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) is worth your time before you ship.
 
-Ready to build it? Create a scoped API key and read the tool reference in [the docs](/docs), or [start free](/signup) — Free connects one inbox, and Pro connects every mailbox you own.`,
+Ready to build it? Create a scoped API key and read the tool reference in [the docs](/docs), or [start free](/signup): Free connects one inbox, Personal ($5/month) connects up to three, and Pro connects every mailbox you own.`,
 };
