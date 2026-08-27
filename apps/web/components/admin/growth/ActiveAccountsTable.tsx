@@ -82,9 +82,11 @@ function daysAgo(value: string) {
 function sortValue(row: RosterRow, key: SortKey): string | number {
   switch (key) {
     case 'account': return (row.owner_email ?? row.workspace_name).toLowerCase();
-    // Ordered by commercial interest rather than alphabetically: paying first,
-    // then comped, then free, so a sort by plan surfaces revenue.
-    case 'plan': return row.is_comped ? 1 : row.plan === 'pro' ? 3 : row.plan === 'solo' ? 2 : 0;
+    // Ordered by commercial interest rather than alphabetically, so a sort by
+    // plan surfaces revenue: paying first and by descending price (Team, then
+    // Pro, then Personal), then comped, then free. The numbers only encode
+    // relative order, nothing reads them as a value.
+    case 'plan': return row.is_comped ? 1 : row.plan === 'pro' ? 4 : row.plan === 'solo' ? 3 : row.plan === 'personal' ? 2 : 0;
     case 'last_active': return new Date(row.last_active_at).getTime();
     case 'active_days': return row.active_days;
     case 'sessions': return row.sessions;
@@ -233,7 +235,7 @@ export function ActiveAccountsTable({ rows }: { rows: RosterRow[] }) {
                   {row.is_internal && <span className="growth-tag is-internal">internal</span>}
                   {row.is_comped
                     ? <span className="growth-tag is-comped">comped</span>
-                    : <span className="growth-tag">{row.plan === 'pro' ? 'Team' : row.plan === 'solo' ? 'Pro' : 'Free'}</span>}
+                    : <span className="growth-tag">{row.plan === 'pro' ? 'Team' : row.plan === 'solo' ? 'Pro' : row.plan === 'personal' ? 'Personal' : 'Free'}</span>}
                 </td>
                 <td>{daysAgo(row.last_active_at) === 0 ? 'today' : `${daysAgo(row.last_active_at)}d ago`}</td>
                 <td>{row.active_days}</td>

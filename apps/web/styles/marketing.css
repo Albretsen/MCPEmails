@@ -478,8 +478,9 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .featured-col.tbl-check, .featured-col.tbl-dash, .featured-col.tbl-val {
   background: rgba(37,71,229,0.03);
 }
-/* Highlight the pro column in tbody */
-.comparison-tbl tbody tr:not(.tbl-section-head) td:nth-child(3) {
+/* Highlight the pro column in tbody (col 1 is the feature label, then
+   Free, Personal, Pro, Team) */
+.comparison-tbl tbody tr:not(.tbl-section-head) td:nth-child(4) {
   background: rgba(37, 71, 229, 0.03);
 }
 

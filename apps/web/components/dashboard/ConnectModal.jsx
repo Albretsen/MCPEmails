@@ -192,6 +192,49 @@ export function ConnectModal({
   const limitMaxInboxes = serverLimit?.maxInboxes ?? maxInboxes;
   const limitUpgradeUrl = serverLimit?.upgradeUrl ?? '/pricing';
 
+  // Which plan this panel should sell, and therefore which copy it carries.
+  //
+  // The cheapest plan that actually clears the cap just hit. Free stops at one
+  // inbox, so Personal (three, $5) clears it, and sending someone to $29 Pro
+  // to add a second mailbox would price the upgrade far above the problem.
+  // Personal itself stops at three, so from there only Pro (unlimited) is a
+  // way forward, and offering Personal to a Personal subscriber would sell
+  // them the plan they are already on.
+  //
+  // Derived from the cap rather than from a plan id because that number is the
+  // server's own, counted at the moment of the refusal, so it stays right even
+  // when the plan changed in another tab. An unknown cap means the Free
+  // assumption, which is what the "connects one inbox" heading already says.
+  //
+  // The grandfathered cohort has no cap at all and never reaches this panel,
+  // so nobody holding unlimited inboxes can be routed at Personal from here.
+  const capTargetsPersonal = (limitMaxInboxes ?? 1) <= 1;
+  const upgradeCopy = capTargetsPersonal
+    ? {
+        plan: 'personal',
+        titleKey: 'connect.personalUpgradeTitle',
+        bodyKey: 'connect.personalUpgradeBody',
+        ctaKey: 'connect.personalUpgradeCta',
+        featureKeys: [
+          'connect.personalFeatureInboxes',
+          'connect.personalFeatureRateLimit',
+          'connect.featureTeam',
+          'connect.featureSupport',
+        ],
+      }
+    : {
+        plan: 'solo',
+        titleKey: 'connect.upgradeTitle',
+        bodyKey: 'connect.upgradeBody',
+        ctaKey: 'connect.viewUpgradeOptions',
+        featureKeys: [
+          'connect.featureInboxes',
+          'connect.featureRateLimit',
+          'connect.featureTeam',
+          'connect.featureSupport',
+        ],
+      };
+
   // ── Provider categories ─────────────────────────────────────────────────────
 
   const isPreset = isBrandedImapService(provider);
@@ -507,7 +550,7 @@ export function ConnectModal({
                     color: 'var(--fg-1)',
                     marginBottom: 4,
                   }}>
-                    {tr('connect.upgradeTitle')}
+                    {tr(upgradeCopy.titleKey)}
                   </div>
                   <div style={{
                     fontFamily: 'var(--font-sans)',
@@ -515,20 +558,15 @@ export function ConnectModal({
                     color: 'var(--fg-3)',
                     lineHeight: 1.5,
                   }}>
-                    {tr('connect.upgradeBody')}
+                    {tr(upgradeCopy.bodyKey)}
                   </div>
                 </div>
               </div>
 
-              {/* Feature highlights. Unlimited inboxes leads: it is the thing
-                  they were just blocked on, and the rest is supporting detail. */}
-              {[
-                'connect.featureInboxes',
-                'connect.featureRateLimit',
-                'connect.featureHistory',
-                'connect.featureTeam',
-                'connect.featureSupport',
-              ].map(fKey => (
+              {/* Feature highlights. The inbox count leads in both variants: it
+                  is the thing they were just blocked on, and the rest is
+                  supporting detail. */}
+              {upgradeCopy.featureKeys.map(fKey => (
                 <div key={fKey} style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -991,11 +1029,21 @@ export function ConnectModal({
 
         {/* Footer */}
         <div className="modal-foot">
-          {/* Plan limit reached: go straight to Stripe Checkout for Pro monthly.
-              /dashboard/settings?upgrade=solo&interval=month is consumed by
-              BillingSection, which starts checkout on mount, so this is one
-              click from blocked to card form. The pricing page stays available
-              as the secondary link for anyone who wants to compare first. */}
+          {/* Plan limit reached: go straight to Stripe Checkout for Personal
+              monthly. /dashboard/settings?upgrade=personal&interval=month is
+              consumed by BillingSection, which starts checkout on mount, so
+              this is one click from blocked to card form.
+
+              Personal, not Pro: the cap this panel answers is the Free plan's
+              single inbox, and the cheapest plan that clears it is Personal at
+              $5. Sending someone to $29 Pro to add a second mailbox prices the
+              upgrade well above the problem. Anyone who genuinely needs
+              unlimited mailboxes finds Pro through "Compare all plans", which
+              stays as the secondary link.
+
+              Only a capped account ever sees this panel, and the grandfathered
+              cohort has no cap, so nobody who already holds unlimited inboxes
+              can be routed at Personal from here. */}
           {showLimitPanel && (
             <>
               <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
@@ -1016,7 +1064,7 @@ export function ConnectModal({
                 {tr('connect.comparePlans')}
               </a>
               <a
-                href={upgradeDestination('solo', false)}
+                href={upgradeDestination(upgradeCopy.plan, false)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1034,7 +1082,7 @@ export function ConnectModal({
                 }}
               >
                 <Icon name="zap" size={13} color="#fff" />
-                {tr('connect.viewUpgradeOptions')}
+                {tr(upgradeCopy.ctaKey)}
               </a>
             </>
           )}
