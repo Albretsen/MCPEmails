@@ -7,9 +7,10 @@ import { safeDiagnosticPhase } from '@/lib/email/connection-config';
  * second audit log or storing mailbox/credential data.
  */
 /** Plan+interval a checkout targeted. Never a Stripe price id or amount. */
-export type BillingTargetCategory = 'solo_month' | 'solo_year' | 'pro_month' | 'pro_year';
+export type BillingTargetCategory =
+  | 'personal_month' | 'personal_year' | 'solo_month' | 'solo_year' | 'pro_month' | 'pro_year';
 /** The plan a user was on when a paywall / portal event fired. */
-export type BillingPlanCategory = 'free' | 'solo' | 'pro';
+export type BillingPlanCategory = 'free' | 'personal' | 'solo' | 'pro';
 /** Where a signed-in user saw the plans. */
 export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
 

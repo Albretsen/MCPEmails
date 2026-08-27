@@ -1,4 +1,4 @@
-const PAID_PLANS = new Set(['solo', 'pro']);
+const PAID_PLANS = new Set(['personal', 'solo', 'pro']);
 const BILLING_INTERVALS = new Set(['month', 'year']);
 
 /** Return a checkout intent only when both URL values are explicitly allowed. */
