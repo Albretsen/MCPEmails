@@ -20,6 +20,7 @@ import {
   fetchUsageVolume,
   fetchUtilizationBands,
 } from '@/lib/analytics/growth-queries';
+import { planDisplayName } from '@/lib/stripe/plans';
 import { formatCount } from '../charts';
 import { MixBars, SectionError, Section, StatCard } from './shared';
 
@@ -40,8 +41,9 @@ export async function MixSection({ days }: { days: number }) {
     ? [
         { name: 'Free', count: revenue.free_workspaces },
         { name: 'Comped', count: revenue.comped_workspaces },
-        { name: 'Paying (Agent)', count: revenue.paying_solo },
-        { name: 'Paying (Scale)', count: revenue.paying_scale },
+        { name: `Paying (${planDisplayName('personal')})`, count: revenue.paying_personal },
+        { name: `Paying (${planDisplayName('solo')})`, count: revenue.paying_solo },
+        { name: `Paying (${planDisplayName('pro')})`, count: revenue.paying_scale },
       ].filter((row) => row.count > 0)
     : [];
 

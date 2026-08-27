@@ -36,6 +36,7 @@ import {
 } from '@/lib/analytics/growth-queries';
 import { GMAIL_OAUTH_USER_CAP } from '@/lib/analytics/growth-types';
 import type { GmailCapSummaryRow, GrowthDailyRow } from '@/lib/analytics/growth-types';
+import { planDisplayName } from '@/lib/stripe/plans';
 import { NO_DATA, formatCount, formatPercent, ratio } from '../charts';
 import {
   BarList,
@@ -174,7 +175,7 @@ export async function KioskBoard() {
             money && money.paying_workspaces === 0
               ? <>Next milestone. <strong>{money.free_workspaces}</strong> free workspaces to convert.</>
               : money
-                ? <><strong>{money.paying_solo}</strong> Agent, <strong>{money.paying_scale}</strong> Scale</>
+                ? <><strong>{money.paying_personal}</strong> {planDisplayName('personal')}, <strong>{money.paying_solo}</strong> {planDisplayName('solo')}, <strong>{money.paying_scale}</strong> {planDisplayName('pro')}</>
                 : 'Revenue counts unavailable'
           }
         />

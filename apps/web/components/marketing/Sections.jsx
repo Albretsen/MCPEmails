@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { MBtn, MIcon } from '../MarketingPrimitives';
 import { CLIENT_LOGOS, MCP_CLIENT_BRANDS } from '../dashboard/clientLogos';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
+import { createClient } from '@/lib/supabase/client';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -665,6 +666,77 @@ export function Quote() {
   );
 }
 
+/**
+ * True when the signed-in visitor holds the permanent `unlimited_inboxes`
+ * grandfather grant, and the Personal card must therefore be hidden.
+ *
+ * Every pre-repricing account keeps unlimited inboxes for free, so for that
+ * cohort Personal (three inboxes, $5) is a paid downgrade. The checkout API
+ * refuses it with a 409 and the dashboard already hides it; this keeps the
+ * marketing pages from advertising a purchase the server will reject.
+ *
+ * `/` and `/pricing` are public and CDN-cached, so the entitlement CANNOT be
+ * resolved on the server without making the page per-user for everybody. It is
+ * read client-side after hydration through the same browser Supabase client
+ * these pages already use to resolve the session, against the row-level
+ * "select own entitlement" policy on `user_usage_entitlements`. No endpoint
+ * exposes the flag over HTTP, and adding one would create a new public surface
+ * for a purely cosmetic decision.
+ *
+ * Fails OPEN in every uncertain case (anonymous visitor, no entitlement row,
+ * network or policy error): the 409 is the real protection, and hiding the
+ * card from someone who could legitimately buy it costs a sale.
+ *
+ * @param {import('@supabase/supabase-js').User | null | undefined} knownUser
+ *   The already-resolved visitor, or `undefined` to resolve it here.
+ */
+export function useHidePersonalPlan(knownUser) {
+  const [entitledUserId, setEntitledUserId] = useState(null);
+  const [ownUser, setOwnUser] = useState(null);
+  const resolveOwnUser = knownUser === undefined;
+
+  // Callers that already track the session (the pricing page, for its nav)
+  // hand it over; the home page teaser has none, so it resolves its own.
+  useEffect(() => {
+    if (!resolveOwnUser) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await createClient().auth.getUser();
+        if (!cancelled) setOwnUser(data?.user ?? null);
+      } catch {
+        /* stay anonymous, which shows the card */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [resolveOwnUser]);
+
+  const userId = (resolveOwnUser ? ownUser : knownUser)?.id ?? null;
+
+  useEffect(() => {
+    if (!userId) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await createClient()
+          .from('user_usage_entitlements')
+          .select('unlimited_inboxes')
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (cancelled || error) return;
+        if (data?.unlimited_inboxes === true) setEntitledUserId(userId);
+      } catch {
+        /* leave the card visible */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // Derived rather than stored, so signing out or switching account falls back
+  // to showing the card without a synchronous setState inside the effect.
+  return userId !== null && entitledUserId === userId;
+}
+
 /* ============== PRICING ============== */
 /**
  * @param {{ onGetStarted?: () => void, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
@@ -680,12 +752,25 @@ export function Pricing({ onGetStarted, stripePrices }) {
   //
   // Pro carries the accent: unlimited inboxes for one person is the upgrade
   // almost everyone actually wants, and Team only pays off once other people
-  // are involved.
-  const tiers = [
-    { msgKey: 'free', priceKey: 'free', price: '$0',  per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
-    { msgKey: 'solo', priceKey: 'solo', price: '$29', per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('solo', false, false) },
-    { msgKey: 'team', priceKey: 'pro',  price: '$79', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
+  // are involved. Personal sits between Free and Pro for the large group who
+  // need two or three mailboxes and nothing else.
+  //
+  // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Team".
+  // `personal` is the only id that matches its own display name.
+  const allTiers = [
+    { msgKey: 'free',     priceKey: 'free',     price: '$0',  per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
+    { msgKey: 'personal', priceKey: 'personal', price: '$5',  per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('personal', false, false) },
+    { msgKey: 'solo',     priceKey: 'solo',     price: '$29', per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('solo', false, false) },
+    { msgKey: 'team',     priceKey: 'pro',      price: '$79', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
   ];
+
+  // Grandfathered visitors already have unlimited inboxes for free, so Personal
+  // would be a paid downgrade. Resolved after hydration, defaulting to visible,
+  // so anonymous visitors and the cached HTML keep all four cards. Dropping the
+  // card also switches the grid to its three-column layout, so the remaining
+  // cards fill the row instead of leaving a hole where Personal was.
+  const hidePersonal = useHidePersonalPlan();
+  const tiers = hidePersonal ? allTiers.filter((tier) => tier.priceKey !== 'personal') : allTiers;
   return (
     <section className="section" id="pricing">
       <div className="container">
@@ -694,7 +779,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
           <h2>{t('pricing.title')}</h2>
           <p className="sub">{t('pricing.sub')}</p>
         </div>
-        <div className="price-grid">
+        <div className={'price-grid' + (hidePersonal ? ' price-grid-3' : '')}>
           {tiers.map((tier) => {
             const liveMonthlyCents = stripePrices?.[tier.priceKey]?.monthlyCents;
             const livePrice =

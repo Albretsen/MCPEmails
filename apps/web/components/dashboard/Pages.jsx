@@ -42,6 +42,7 @@ const PROVIDER_LABELS = {
  */
 export const PLAN_DISPLAY_NAMES = {
   free: 'Free',
+  personal: 'Personal',
   solo: 'Pro',
   pro: 'Team',
 };
@@ -53,6 +54,27 @@ export function planDisplayName(planId) {
     PLAN_DISPLAY_NAMES[planId] ??
     planId.charAt(0).toUpperCase() + planId.slice(1)
   );
+}
+
+/**
+ * The plan ladder, cheapest first.
+ *
+ * Taken from the key order of PLAN_DISPLAY_NAMES, which mirrors
+ * `Object.values(PLANS)` in src/lib/stripe/plans.ts (free, personal, solo,
+ * pro). Deriving it here rather than writing a second literal list means a new
+ * tier only has to be added in one place in this file, and it can never end up
+ * ranked in an order the catalogue disagrees with. Keep both in catalogue
+ * order.
+ */
+export const PLAN_LADDER = Object.keys(PLAN_DISPLAY_NAMES);
+
+/**
+ * Position of a plan on the ladder. Returns -1 for anything not in the
+ * catalogue (the legacy 'enterprise' rows), which callers must treat as "no
+ * self-service upgrade exists", never as the bottom of the ladder.
+ */
+export function planRank(planId) {
+  return PLAN_LADDER.indexOf(planId ?? 'free');
 }
 
 // Mirrors the server-side Compatibility Profile contract. The dashboard does
@@ -3948,6 +3970,15 @@ function DeleteAccountSection({ email }) {
  */
 const BILLING_PLANS = [
   {
+    id: 'personal',
+    name: PLAN_DISPLAY_NAMES.personal,
+    monthlyPrice: 5,
+    yearlyMonthlyPrice: 4,      // effective monthly cost when billed yearly ($48/yr)
+    yearlyAnnualTotal: 48,
+    featureKeys: ['billing.plans.personalFeature1', 'billing.plans.personalFeature2', 'billing.plans.personalFeature3', 'billing.plans.personalFeature4'],
+    highlighted: false,
+  },
+  {
     id: 'solo',
     name: PLAN_DISPLAY_NAMES.solo,
     monthlyPrice: 29,
@@ -3973,9 +4004,13 @@ const BILLING_PLANS = [
 /**
  * BillingSection: shows the current plan and upgrade options.
  *
- * For free-plan workspaces it renders the Pro and Team upgrade cards. For
- * paid-plan workspaces it shows the active plan and a link to the Stripe
- * customer portal.
+ * Every account sees cards for the tiers ABOVE the one it holds, and a paid
+ * account additionally sees its subscription summary and the Stripe portal
+ * link. The two are stacked, not exclusive: the portal on this Stripe account
+ * cannot offer a plan list, so hiding the cards from every paying customer
+ * left a capped Personal subscriber with no upgrade path in the product at
+ * all. Top of the ladder (Team, a comped grant, or a legacy 'enterprise' row)
+ * sees the portal alone.
  *
  * It used to open with a live meter of MCP calls against a monthly allowance.
  * That is gone: volume is not what a plan buys any more, so the summary now
@@ -3983,7 +4018,8 @@ const BILLING_PLANS = [
  * positively for the grandfathered cohort rather than leaving them guessing.
  *
  * Props:
- *   currentPlan:  'free' | 'solo' | 'pro' | 'enterprise' from workspaces.plan
+ *   currentPlan:  'free' | 'personal' | 'solo' | 'pro' | 'enterprise' from
+ *                 workspaces.plan, already resolved to 'pro' for a comped grant.
  *   maxInboxes:   number | null. null means unlimited, which is also how a
  *                 grandfathered free account arrives here.
  *   inboxCount:   inboxes connected right now.
@@ -4044,6 +4080,10 @@ function BillingSection({
   const handleUpgrade = async (planId, checkoutInterval = interval) => {
     if (upgrading) return;
     setUpgrading(planId);
+    // An in-place price swap ends in a reload. Clearing the busy state first
+    // would re-enable every button for the split second before the page goes,
+    // which is long enough to fire a second swap.
+    let reloading = false;
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -4067,24 +4107,61 @@ function BillingSection({
         window.location.href = data.url;
       } else if (data?.changed === true) {
         // An existing subscriber switched plan or interval. There is no hosted
-        // page for that: the price changed in place, so reload to pick up the
-        // new plan once the webhook has projected it.
+        // page for that: the price changed in place, so the only feedback is
+        // ours to give. Say what happened and what it costs, THEN reload to
+        // pick up the new plan. Reloading in the same tick used to destroy the
+        // toast before it was ever painted, so a successful $29 upgrade looked
+        // like a page that flickered and did nothing.
+        reloading = true;
         toast({
           message: t('billing.planChanged', { plan: data.plan }),
           variant: 'success',
         });
-        window.location.reload();
+        // Also gives the subscription.updated webhook a moment to project the
+        // new plan, so the reloaded page usually already shows it.
+        window.setTimeout(() => window.location.reload(), 2500);
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
       }
     } catch {
       toast({ message: t('billing.networkError'), variant: 'error' });
     } finally {
-      setUpgrading(null);
+      if (!reloading) setUpgrading(null);
     }
   };
 
-  const isOnPaidPlan = currentPlan === 'solo' || currentPlan === 'pro' || currentPlan === 'enterprise';
+  const isOnPaidPlan =
+    currentPlan === 'personal' ||
+    currentPlan === 'solo' ||
+    currentPlan === 'pro' ||
+    currentPlan === 'enterprise';
+
+  // GRANDFATHERING. The pre-repricing cohort is stored with plan = 'free' but
+  // already holds unlimited inboxes permanently, so Personal (three inboxes)
+  // is a paid DOWNGRADE for them and must never be offered. Pro and Team stay
+  // on offer: those buy members, team roles, SSO, the audit log and a support
+  // tier, none of which the grandfather grant includes.
+  const offeredPlans = grandfathered
+    ? BILLING_PLANS.filter(plan => plan.id !== 'personal')
+    : BILLING_PLANS;
+
+  // The tiers this customer can actually move UP to.
+  //
+  // Personal is the first paid tier with a hard inbox cap, so a paying customer
+  // now has somewhere left to go. This section used to be a binary: paid plans
+  // got the portal and nothing else, and the upgrade cards existed only on the
+  // free branch. A Personal customer who hit three inboxes therefore had no
+  // upgrade path anywhere in the product, and the Stripe portal cannot supply
+  // one (see app/api/stripe/checkout/route.ts: Stripe silently drops
+  // features.subscription_update.products on this account).
+  //
+  // An unrecognised plan ranks -1 (legacy 'enterprise') and is treated as
+  // having no self-service move, exactly as before.
+  const currentRank = planRank(currentPlan);
+  const upgradablePlans =
+    currentRank === -1
+      ? []
+      : offeredPlans.filter(plan => planRank(plan.id) > currentRank);
 
   // A paid-plan CTA on the pricing page is a direct request to begin Stripe
   // Checkout. The URL carries only a validated plan and interval; remove it
@@ -4095,12 +4172,18 @@ function BillingSection({
     // Consume the intent even when we do not act on it, so a refresh cannot
     // retry.
     window.history.replaceState(window.history.state, '', '/dashboard/settings');
-    // Someone already on a paid plan (including a comped grant, which resolves
-    // to an effective paid plan) must never be dropped into Checkout straight
-    // off a URL parameter. The page's own upgrade cards are hidden for them;
-    // this effect used to bypass that and could open a real payment for
-    // access they already have.
-    if (isOnPaidPlan) return;
+    // Act on the intent only when it names a tier this account is actually
+    // offered, which is the same test the cards below render from. That one
+    // check covers every case that must not open a payment off a URL: the plan
+    // already held, a downgrade, a comped grant (which resolves to an effective
+    // 'pro' and so has nothing above it), a legacy plan, and ?upgrade=personal
+    // arriving for a grandfathered account that already has unlimited inboxes
+    // for nothing.
+    //
+    // It deliberately no longer refuses every paid plan: `?upgrade=solo` sent
+    // from a Personal customer's inbox-cap prompt is the intended path, and it
+    // used to be discarded in silence onto a page with no cards at all.
+    if (!upgradablePlans.some(plan => plan.id === upgradeIntent.planId)) return;
     setInterval(upgradeIntent.interval);
     handleUpgrade(upgradeIntent.planId, upgradeIntent.interval);
   // Intent is parsed and validated by DashboardApp. This effect must run once.
@@ -4190,7 +4273,7 @@ function BillingSection({
           </div>
         )}
 
-        {isOnPaidPlan ? (
+        {isOnPaidPlan && (
           /* Paid plan: show active subscription summary + portal button */
           <div style={{
             padding: '16px',
@@ -4271,8 +4354,14 @@ function BillingSection({
               ))}
             </div>
           </div>
-        ) : (
-          /* Free plan: show upgrade cards */
+        )}
+
+        {upgradablePlans.length > 0 && (
+          /* Anything left above this account on the ladder gets a card.
+             For a free account that is the whole ladder, exactly as before. For
+             a paying one the cards sit ALONGSIDE the portal box rather than
+             instead of it, because the portal on this Stripe account cannot
+             offer a plan list at all. */
           <>
             {/* Interval toggle */}
             <div style={{ display: 'flex', gap: 0, alignSelf: 'flex-start', borderRadius: 8, border: '1px solid var(--border-1)', overflow: 'hidden' }}>
@@ -4299,7 +4388,7 @@ function BillingSection({
 
             {/* Plan upgrade cards */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              {BILLING_PLANS.map(plan => {
+              {upgradablePlans.map(plan => {
                 // Custom-priced plans (Enterprise) never show a numeric price.
                 const isCustom = plan.monthlyPrice === null;
 
@@ -4322,13 +4411,18 @@ function BillingSection({
                     : plan.yearlyAnnualTotal;
 
                 const price = interval === 'year' ? yearlyMonthlyPrice : monthlyPrice;
+                // Belt and braces: upgradablePlans already excludes the plan
+                // being held, so this should never be true.
                 const isCurrentPlanMatch = currentPlan === plan.id;
                 const isLoading = upgrading === plan.id;
                 return (
                   <div
                     key={plan.id}
                     style={{
-                      flex: '1 1 220px',
+                      // 180px, not 220: with a third tier in the ladder three
+                      // cards have to share the 640px card, and a 220 basis
+                      // wrapped Team onto an orphan row of its own.
+                      flex: '1 1 180px',
                       padding: '16px',
                       borderRadius: 10,
                       border: plan.highlighted
@@ -4418,15 +4512,21 @@ function BillingSection({
               })}
             </div>
 
-            <p style={{
-              margin: 0,
-              fontFamily: 'var(--font-sans)',
-              fontSize: 12,
-              color: 'var(--fg-3)',
-              lineHeight: 1.5,
-            }}>
-              {t('billing.redirectNote')}
-            </p>
+            {/* "You'll be redirected to Stripe to complete payment" is true
+                only for a first subscription. An existing subscriber's price is
+                swapped in place on the subscription they already have, so this
+                promise would be a lie to exactly the people it is shown to. */}
+            {!isOnPaidPlan && (
+              <p style={{
+                margin: 0,
+                fontFamily: 'var(--font-sans)',
+                fontSize: 12,
+                color: 'var(--fg-3)',
+                lineHeight: 1.5,
+              }}>
+                {t('billing.redirectNote')}
+              </p>
+            )}
             <p style={{ fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5, marginTop: 4 }}>
               {t('billing.customNote')} <a href="mailto:sales@mcpemails.com" style={{ color: 'var(--brand)', fontWeight: 600 }}>{t('billing.contactUs')}</a>.
             </p>

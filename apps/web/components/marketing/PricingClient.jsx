@@ -3,21 +3,23 @@
 import { useEffect, useState, Fragment } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Nav, Footer } from './Sections';
+import { Nav, Footer, useHidePersonalPlan } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import { createClient } from '@/lib/supabase/client';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
-// The value metric is CONNECTED INBOXES. Free is one inbox, Pro is every inbox
-// you own, Team adds people. The action ceiling is a silent abuse guard and is
-// deliberately absent from this page (see src/lib/stripe/plans.ts).
+// The value metric is CONNECTED INBOXES. Free is one inbox, Personal is three
+// for one person, Pro is every inbox you own, Team adds people. The action
+// ceiling is a silent abuse guard and is deliberately absent from this page
+// (see src/lib/stripe/plans.ts).
 //
 // NOTE: the "Pro" tier keeps the internal key `solo` and "Team" keeps `pro`, so
 // live Stripe prices (keyed by plan id) resolve correctly. Only the display
-// names changed. User-facing copy (name, desc, cta, features) is read from the
-// `pricing` message bundle via `plans.<key>.*`.
+// names changed. `personal` is the one id that matches its own display name.
+// User-facing copy (name, desc, cta, features) is read from the `pricing`
+// message bundle via `plans.<key>.*`.
 
 const PLANS = [
   {
@@ -25,6 +27,15 @@ const PLANS = [
     monthly: 0,
     annual: 0,
     perKey: 'card.perForever',
+    featured: false,
+    ctaHref: '/signup',
+    ctaPrimary: false,
+  },
+  {
+    key: 'personal',
+    monthly: 5,
+    annual: 4,         // effective monthly when billed yearly ($48/yr)
+    perKey: 'card.perMonth',
     featured: false,
     ctaHref: '/signup',
     ctaPrimary: false,
@@ -53,65 +64,68 @@ const PLANS = [
 // Plan-availability matrix only. Labels (section + feature names) and string
 // values are resolved from the message bundle by key.
 
+// Column order is the ladder order: free, personal, solo ("Pro"), pro ("Team").
+// EVERY row must carry all four keys. A missing key renders an empty cell
+// instead of failing the build, so new rows have to be checked by eye.
+
 const TABLE_SECTIONS = [
   {
     key: 'usage',
     rows: [
-      { key: 'inboxes',  free: 'values.oneInbox',  solo: 'values.unlimited', pro: 'values.unlimited' },
-      { key: 'keys',     free: 'values.unlimited', solo: 'values.unlimited', pro: 'values.unlimited' },
-      // Pro is deliberately single-seat: sharing inboxes with other people is
-      // what Team is for.
-      { key: 'members',  free: 'values.ownerOnly', solo: 'values.ownerOnly', pro: 'values.unlimited' },
-      { key: 'burst',    free: 'values.burstFree', solo: 'values.burstSolo', pro: 'values.burstPro' },
+      { key: 'inboxes',  free: 'values.oneInbox',  personal: 'values.threeInboxes', solo: 'values.unlimited', pro: 'values.unlimited' },
+      { key: 'keys',     free: 'values.unlimited', personal: 'values.unlimited',    solo: 'values.unlimited', pro: 'values.unlimited' },
+      // Personal and Pro are deliberately single-seat: sharing inboxes with
+      // other people is what Team is for.
+      { key: 'members',  free: 'values.ownerOnly', personal: 'values.ownerOnly',     solo: 'values.ownerOnly', pro: 'values.unlimited' },
+      { key: 'burst',    free: 'values.burstFree', personal: 'values.burstPersonal', solo: 'values.burstSolo', pro: 'values.burstPro' },
     ],
   },
   {
     key: 'providers',
     rows: [
-      { key: 'gmail',       free: true, solo: true, pro: true },
-      { key: 'fastmail',    free: true, solo: true, pro: true },
-      { key: 'appPassword', free: true, solo: true, pro: true },
-      { key: 'imap',        free: true, solo: true, pro: true },
+      { key: 'gmail',       free: true, personal: true, solo: true, pro: true },
+      { key: 'fastmail',    free: true, personal: true, solo: true, pro: true },
+      { key: 'appPassword', free: true, personal: true, solo: true, pro: true },
+      { key: 'imap',        free: true, personal: true, solo: true, pro: true },
     ],
   },
   {
     key: 'mcpTools',
     // MCP tool names are not translated; render the raw names verbatim.
     rows: [
-      { name: 'inbox_list',     free: true, solo: true, pro: true },
-      { name: 'email_read',     free: true, solo: true, pro: true },
-      { name: 'email_organize', free: true, solo: true, pro: true },
-      { name: 'email_compose',  free: true, solo: true, pro: true },
-      { name: 'folder',         free: true, solo: true, pro: true },
-      { name: 'draft',          free: true, solo: true, pro: true },
-      { name: 'schedule',       free: true, solo: true, pro: true },
-      { name: 'contact_search', free: true, solo: true, pro: true },
+      { name: 'inbox_list',     free: true, personal: true, solo: true, pro: true },
+      { name: 'email_read',     free: true, personal: true, solo: true, pro: true },
+      { name: 'email_organize', free: true, personal: true, solo: true, pro: true },
+      { name: 'email_compose',  free: true, personal: true, solo: true, pro: true },
+      { name: 'folder',         free: true, personal: true, solo: true, pro: true },
+      { name: 'draft',          free: true, personal: true, solo: true, pro: true },
+      { name: 'schedule',       free: true, personal: true, solo: true, pro: true },
+      { name: 'contact_search', free: true, personal: true, solo: true, pro: true },
     ],
   },
   {
     key: 'analytics',
     rows: [
-      { key: 'dashboard', free: true,                 solo: true,                pro: true },
-      { key: 'history',   free: 'values.history7',    solo: 'values.history90',  pro: 'values.history1y' },
-      { key: 'roles',     free: false,                solo: false,               pro: true },
-      { key: 'sso',       free: false,                solo: false,               pro: true },
-      { key: 'audit',     free: false,                solo: false,               pro: true },
+      { key: 'dashboard', free: true,              personal: true,                 solo: true,               pro: true },
+      { key: 'roles',     free: false,             personal: false,                solo: false,              pro: true },
+      { key: 'sso',       free: false,             personal: false,                solo: false,              pro: true },
+      { key: 'audit',     free: false,             personal: false,                solo: false,              pro: true },
     ],
   },
   {
     key: 'privacy',
     rows: [
-      { key: 'neverStored', free: true,  solo: true,  pro: true },
-      { key: 'encrypted',   free: true,  solo: true,  pro: true },
-      { key: 'soc2',        free: false, solo: false, pro: true },
+      { key: 'neverStored', free: true,  personal: true,  solo: true,  pro: true },
+      { key: 'encrypted',   free: true,  personal: true,  solo: true,  pro: true },
+      { key: 'soc2',        free: false, personal: false, solo: false, pro: true },
     ],
   },
   {
     key: 'support',
     rows: [
-      { key: 'community', free: true,  solo: true,  pro: true },
-      { key: 'email',     free: false, solo: true,  pro: true },
-      { key: 'priority',  free: false, solo: false, pro: true },
+      { key: 'community', free: true,  personal: true,  solo: true,  pro: true },
+      { key: 'email',     free: false, personal: true,  solo: true,  pro: true },
+      { key: 'priority',  free: false, personal: false, solo: false, pro: true },
     ],
   },
 ];
@@ -144,9 +158,16 @@ function BillingToggle({ annual, onChange }) {
  */
 function PlanCards({ annual, stripePrices, user }) {
   const t = useTranslations('pricing');
+  // Grandfathered visitors keep unlimited inboxes for free, so Personal is a
+  // paid downgrade for them and checkout answers 409. The check resolves after
+  // hydration and defaults to visible, so the cached anonymous page is exactly
+  // what it was. When it does resolve, the card is dropped and the grid moves
+  // to its three-column layout rather than leaving an empty cell.
+  const hidePersonal = useHidePersonalPlan(user);
+  const plans = hidePersonal ? PLANS.filter(p => p.key !== 'personal') : PLANS;
   return (
-    <div className="price-grid">
-      {PLANS.map(plan => {
+    <div className={'price-grid' + (hidePersonal ? ' price-grid-3' : '')}>
+      {plans.map(plan => {
         // Derive live prices from Stripe, falling back to static plan values.
         const liveMonthlyCents = stripePrices?.[plan.key]?.monthlyCents;
         const liveYearlyCents = stripePrices?.[plan.key]?.yearlyCents;
@@ -245,6 +266,7 @@ function ComparisonTable() {
           <tr>
             <th className="feat-col">{t('comparison.featureCol')}</th>
             <th>{t('comparison.free')}</th>
+            <th>{t('comparison.personal')}</th>
             <th>{t('comparison.solo')}</th>
             <th className="featured-col">{t('comparison.team')}</th>
           </tr>
@@ -253,7 +275,7 @@ function ComparisonTable() {
           {TABLE_SECTIONS.map(section => (
             <Fragment key={section.key}>
               <tr className="tbl-section-head">
-                <td colSpan={4}>{t(`comparison.sections.${section.key}.label`)}</td>
+                <td colSpan={5}>{t(`comparison.sections.${section.key}.label`)}</td>
               </tr>
               {section.rows.map(row => {
                 // MCP tool rows carry a raw `name`; all others reference a
@@ -265,6 +287,7 @@ function ComparisonTable() {
                   <tr key={row.name || row.key}>
                     <td className="feat-name">{featureLabel}</td>
                     <TableCell value={cell(row.free)} />
+                    <TableCell value={cell(row.personal)} />
                     <TableCell value={cell(row.solo)} />
                     <TableCell value={cell(row.pro)} />
                   </tr>
