@@ -101,15 +101,16 @@ Dans les deux cas, vous révoquez n'importe quelle connexion depuis le tableau d
 
 Réponse courte : oui, et l'article [est-il sûr de donner à un agent IA un accès à la messagerie](/blog/is-it-safe-to-give-ai-agent-email-access) expose l'argumentaire complet. Le modèle détient des capacités à scopes définis, pas votre mot de passe ; les identifiants sont chiffrés ; rien n'est stocké ; l'envoi reste sur votre fournisseur ; l'accès se révoque en un clic.
 
-Côté limites de débit, chaque clé API est plafonnée à 100 requests/min, 1 000/hour et 10 000/day sur tous les forfaits. Il existe aussi un plafond de pointe par espace de travail qui évolue avec votre forfait — 60/min sur Gratuit, 300/min sur Pro, 1 000/min sur Team. Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi via \`email_compose\` — vous enverriez des doublons.
+Côté limites de débit, chaque clé API est plafonnée à 100 requêtes/min, 1 000/heure et 10 000/jour sur tous les forfaits. Il existe aussi un plafond de pointe par espace de travail qui évolue avec votre forfait : 60/min sur Gratuit, 120/min sur Personal, 300/min sur Pro, 1 000/min sur Team. Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi via \`email_compose\` : vous enverriez des doublons.
 
 ## Tarifs
 
 Les forfaits sont facturés au nombre de boîtes connectées. Les clés API sont illimitées à tous les niveaux, et les forfaits diffèrent aussi sur la limite de pointe, la rétention des analyses, les fonctionnalités d'équipe et le support.
 
-- **Free — $0 forever.** Sans carte. 60 req/min, analyses sur 7 jours, support communautaire.
-- **Pro, $29/month** (ou $276/year, soit $23/month). Boîtes connectées illimitées, 300 req/min, analyses sur 90 jours, support par e-mail.
-- **Team, $79/month** (ou $756/year, soit $63/month). Tout ce que contient Pro, plus des membres avec rôles, un espace de travail distinct par client ou activité, SSO avec SAML/OIDC plus journal d'audit, 1 000 req/min, analyses sur 1 an, support prioritaire.
+- **Gratuit, 0 $ pour toujours.** Sans carte. Une boîte connectée, 60 req/min, analyses sur 7 jours, support communautaire.
+- **Personal, 5 $/mois** (ou 48 $/an, soit 4 $/mois). Jusqu'à trois boîtes connectées, 120 req/min, analyses sur 30 jours, support par e-mail.
+- **Pro, 29 $/mois** (ou 276 $/an, soit 23 $/mois). Boîtes connectées illimitées, 300 req/min, analyses sur 90 jours, support par e-mail.
+- **Team, 79 $/mois** (ou 756 $/an, soit 63 $/mois). Tout ce que contient Pro, plus des membres avec rôles, un espace de travail distinct par client ou activité, SSO avec SAML/OIDC plus journal d'audit, 1 000 req/min, analyses sur 1 an, support prioritaire.
 
 Détail complet sur la [page des tarifs](/pricing).
 

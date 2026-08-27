@@ -98,7 +98,7 @@ No. La conexión con Gmail usa Google OAuth, así que tu contraseña nunca sale 
 
 ## Conclusión
 
-Eso es todo: un inicio de sesión de Google, una URL de endpoint, y Claude puede leer, buscar y enviar tu correo real, sin almacenarlo nunca. El nivel Gratis no cuesta nada, no necesita tarjeta y conecta una bandeja; Pro conecta todos los buzones que tengas (consulta [precios](/pricing)).
+Eso es todo: un inicio de sesión de Google, una URL de endpoint, y Claude puede leer, buscar y enviar tu correo real, sin almacenarlo nunca. El nivel Gratis no cuesta nada, no necesita tarjeta y conecta una bandeja; Personal cuesta 5 $/mes y conecta hasta tres; Pro conecta todos los buzones que tengas (consulta [precios](/pricing)).
 
 ¿Listo? [Conecta tu Gmail gratis](/signup), pega el endpoint en Claude y pídele que te resuma el correo no leído.`,
 };

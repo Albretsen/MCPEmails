@@ -111,7 +111,7 @@ One honest limitation: there are no webhooks. The server doesn't push you new ma
 
 ## Rate limits for scripted access
 
-If you're driving the server from a cron job or a tight agent loop, mind the limits. Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, on every plan. On top of that there's a per-workspace burst ceiling set by your plan: 60/min on Free, 300/min on Pro ($29/month), 1,000/min on Team ($79/month). See the [pricing page](/pricing) for the full breakdown.
+If you're driving the server from a cron job or a tight agent loop, mind the limits. Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, on every plan. On top of that there's a per-workspace burst ceiling set by your plan: 60/min on Free, 120/min on Personal ($5/month), 300/min on Pro ($29/month), 1,000/min on Team ($79/month). See the [pricing page](/pricing) for the full breakdown.
 
 When you hit a rate limit the server returns a retryable error (code \`-32003\`) with \`data.retry_after\` in seconds. Honor it — back off for that long and try again. Not everything is retryable, though: if you exhaust your plan's monthly action allowance, the call returns a normal tool result with \`isError: true\` and a \`_meta["com.mcpemails/usage_limit"]\` block, there is no \`retry_after\`, and no amount of retrying clears it before \`reset_at\`. And never blind-retry an \`email_compose\` send on a generic failure; you'll fire duplicates. Check whether it actually sent first.
 

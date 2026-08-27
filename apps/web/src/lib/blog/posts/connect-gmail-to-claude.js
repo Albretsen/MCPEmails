@@ -106,7 +106,7 @@ No. The Gmail connection uses Google OAuth, so your password never leaves Google
 
 ## Wrap-up
 
-That's the whole thing: one Google sign-in, one endpoint URL, and Claude can read, search, and send your real mail — without ever storing it. The Free tier costs nothing, needs no card, and connects one inbox; Pro connects every mailbox you own (see [pricing](/pricing)).
+That's the whole thing: one Google sign-in, one endpoint URL, and Claude can read, search, and send your real mail, without ever storing it. The Free tier costs nothing, needs no card, and connects one inbox; Personal is $5/month for up to three inboxes, and Pro connects every mailbox you own (see [pricing](/pricing)).
 
 Ready? [Connect your Gmail free](/signup), paste the endpoint into Claude, and ask it to summarize your unread mail.`,
 };

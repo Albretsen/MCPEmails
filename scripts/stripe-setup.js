@@ -8,23 +8,26 @@
  * Usage:
  *   STRIPE_SECRET_KEY=sk_test_... node scripts/stripe-setup.js
  *
- * What it creates (the 2026-08-19 catalogue; the value metric is connected
- * inboxes, so there are exactly two paid tiers and no usage add-on):
- *   - Product "MCPEmails Pro"  → price $29/mo  +  $276/yr
- *   - Product "MCPEmails Team" → price $79/mo  +  $756/yr
+ * What it creates (the 2026-08-27 catalogue; the value metric is connected
+ * inboxes, so every tier is priced on mailboxes and there is no usage add-on):
+ *   - Product "MCPEmails Personal" → price  $5/mo  +   $48/yr
+ *   - Product "MCPEmails Pro"      → price $29/mo  +  $276/yr
+ *   - Product "MCPEmails Team"     → price $79/mo  +  $756/yr
  *
  * The env var names lag the customer-facing names by one rename and are kept
  * that way so no environment has to be re-keyed: Pro writes STRIPE_PRICE_SOLO_*
  * and Team writes STRIPE_PRICE_PRO_*, matching the `solo` and `pro` plan ids in
- * the database. There is no Enterprise tier: this script used to provision one,
- * and nothing has ever read STRIPE_PRICE_ENTERPRISE_*.
+ * the database. Personal is the one tier whose env vars, plan id and display
+ * name all agree: it writes STRIPE_PRICE_PERSONAL_* for the `personal` plan id.
+ * There is no Enterprise tier: this script used to provision one, and nothing
+ * has ever read STRIPE_PRICE_ENTERPRISE_*.
  *
  * Prices are created with tax_behavior=exclusive so Stripe Tax can be switched
  * on later without a price migration. (It is off today: the account holds no
  * tax registrations, so it would calculate zero everywhere.)
  *
  * After running, commit nothing — the .env.local changes are local only.
- * Add the same four STRIPE_PRICE_* vars to your Vercel project via the
+ * Add the same six STRIPE_PRICE_* vars to your Vercel project via the
  * Vercel dashboard or `vercel env add`.
  *
  * Safe to run multiple times: if a product with the same name already
@@ -54,6 +57,16 @@ if (!SECRET_KEY || SECRET_KEY === 'sk_test_placeholder') {
 const ENV_FILE = path.resolve(__dirname, '../apps/web/.env.local');
 
 const PRODUCTS = [
+  {
+    // Sold as "Personal"; internal plan id `personal`, the one id that matches
+    // its own display name.
+    name: 'MCPEmails Personal',
+    description: 'Up to three connected inboxes for one person, at a personal price.',
+    prices: [
+      { unit_amount: 500,   currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_PERSONAL_MONTHLY' },
+      { unit_amount: 4800,  currency: 'usd', interval: 'year',  envVar: 'STRIPE_PRICE_PERSONAL_YEARLY' },
+    ],
+  },
   {
     // Sold as "Pro"; internal plan id `solo`, hence the SOLO env vars.
     name: 'MCPEmails Pro',
@@ -233,8 +246,8 @@ async function main() {
   console.log('  Next steps:');
   console.log('  1. Add your real STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to .env.local');
   console.log('  2. Set up the Stripe webhook (see Documents/Human-Input/STRIPE_SETUP_NEEDED.md §5)');
-  console.log('  3. Add all four STRIPE_PRICE_* vars to Vercel: https://vercel.com/dashboard');
-  console.log('     (Pro = STRIPE_PRICE_SOLO_*, Team = STRIPE_PRICE_PRO_*)');
+  console.log('  3. Add all six STRIPE_PRICE_* vars to Vercel: https://vercel.com/dashboard');
+  console.log('     (Personal = STRIPE_PRICE_PERSONAL_*, Pro = STRIPE_PRICE_SOLO_*, Team = STRIPE_PRICE_PRO_*)');
   console.log('  4. Restart your dev server.\n');
 }
 

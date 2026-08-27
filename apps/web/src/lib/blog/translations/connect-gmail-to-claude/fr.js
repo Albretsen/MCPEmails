@@ -98,7 +98,7 @@ Non. La connexion Gmail utilise Google OAuth, donc votre mot de passe ne quitte 
 
 ## Pour conclure
 
-C'est tout : une connexion Google, une URL d'endpoint, et Claude peut lire, rechercher et envoyer vos vrais e-mails — sans jamais les stocker. Le niveau Gratuit ne coûte rien, ne nécessite aucune carte et connecte une boîte ; Pro connecte toutes les boîtes que vous possédez (voir [tarifs](/pricing)).
+C'est tout : une connexion Google, une URL d'endpoint, et Claude peut lire, rechercher et envoyer vos vrais e-mails, sans jamais les stocker. Le niveau Gratuit ne coûte rien, ne nécessite aucune carte et connecte une boîte ; Personal est à 5 $/mois pour trois boîtes, et Pro connecte toutes celles que vous possédez (voir [tarifs](/pricing)).
 
 Prêt ? [Connectez votre Gmail gratuitement](/signup), collez l'endpoint dans Claude, et demandez-lui de résumer vos e-mails non lus.`,
 };

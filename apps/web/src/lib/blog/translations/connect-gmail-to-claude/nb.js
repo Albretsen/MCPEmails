@@ -98,7 +98,7 @@ Nei. Gmail-tilkoblingen bruker Google OAuth, så passordet ditt forlater aldri G
 
 ## Oppsummering
 
-Det er hele greia: én Google-innlogging, én endepunkt-URL, og Claude kan lese, søke og sende den ekte posten din — uten noensinne å lagre den. Alle abonnementer er ubegrensede på innbokser, kall og nøkler, og Free-nivået koster ingenting og krever ikke kort (se [priser](/pricing) hvis du trenger høyere burst-grenser eller SSO).
+Det er hele greia: én Google-innlogging, én endepunkt-URL, og Claude kan lese, søke og sende den ekte posten din, uten noensinne å lagre den. Gratisnivået koster ingenting, krever ikke kort og kobler til én innboks; Personal koster $5 per måned for opptil tre, og Pro kobler til alle postkassene du eier (se [priser](/pricing)).
 
 Klar? [Koble til Gmailen din gratis](/signup), lim inn endepunktet i Claude, og be den oppsummere den uleste posten din.`,
 };

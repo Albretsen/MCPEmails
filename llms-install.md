@@ -10,7 +10,7 @@ The user must create the key themselves at <https://mcpemails.com/dashboard/keys
 
 Ask them to paste it. Do not try to generate, guess or retrieve a key yourself, and do not write the key anywhere except the MCP settings file in step 2.
 
-If the user has no account yet, tell them to sign up at <https://mcpemails.com> and connect an inbox (Gmail, Outlook, Fastmail, or any IMAP/SMTP mailbox) before creating the key.
+If the user has no account yet, tell them to sign up at <https://mcpemails.com> and connect an inbox (Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, or any IMAP/SMTP mailbox) before creating the key.
 
 Suggest they scope the key to what they actually want the agent to do. A key issued with read scopes only cannot send or delete mail regardless of what any agent asks for.
 
