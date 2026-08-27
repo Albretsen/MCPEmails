@@ -10,22 +10,27 @@
  * the customer, and was never reachable as a paywall, so it has been demoted to
  * a silent abuse ceiling that never appears in customer-facing copy.
  *
- * Three tiers: Free (1 inbox), Pro (unlimited inboxes, one person), Team
- * (unlimited inboxes, several people, separate workspaces per client).
+ * Four tiers: Free (1 inbox), Personal (3 inboxes, one person), Pro (unlimited
+ * inboxes, one person), Team (unlimited inboxes, several people, separate
+ * workspaces per client).
  *
  * The internal ids stay `free` / `solo` / `pro` so `workspaces.plan` needs no
- * data migration. Only the display names moved:
+ * data migration, and `personal` was added later as the only id whose display
+ * name matches it. The display names are:
  *
- *   free -> "Free"
- *   solo -> "Pro"    (was "Agent", before that "Solo")
- *   pro  -> "Team"   (was "Scale", before that "Team")
+ *   free     -> "Free"
+ *   personal -> "Personal"
+ *   solo     -> "Pro"    (was "Agent", before that "Solo")
+ *   pro      -> "Team"   (was "Scale", before that "Team")
  *
  * Price IDs come from environment variables so test and production can differ:
  *
- *   STRIPE_PRICE_SOLO_MONTHLY=price_...   (Pro monthly)
- *   STRIPE_PRICE_SOLO_YEARLY=price_...    (Pro yearly)
- *   STRIPE_PRICE_PRO_MONTHLY=price_...    (Team monthly)
- *   STRIPE_PRICE_PRO_YEARLY=price_...     (Team yearly)
+ *   STRIPE_PRICE_PERSONAL_MONTHLY=price_...   (Personal monthly)
+ *   STRIPE_PRICE_PERSONAL_YEARLY=price_...    (Personal yearly)
+ *   STRIPE_PRICE_SOLO_MONTHLY=price_...       (Pro monthly)
+ *   STRIPE_PRICE_SOLO_YEARLY=price_...        (Pro yearly)
+ *   STRIPE_PRICE_PRO_MONTHLY=price_...        (Team monthly)
+ *   STRIPE_PRICE_PRO_YEARLY=price_...         (Team yearly)
  *
  * GRANDFATHERING. Every user who existed before the repricing keeps unlimited
  * inboxes at no cost, permanently. That protection is user-level and lives in
@@ -36,7 +41,7 @@
 // ---------------------------------------------------------------------------
 // Plan identifiers: must match the `plan` column values in `workspaces`.
 // ---------------------------------------------------------------------------
-export type PlanId = 'free' | 'solo' | 'pro';
+export type PlanId = 'free' | 'personal' | 'solo' | 'pro';
 
 // ---------------------------------------------------------------------------
 // Billing interval
@@ -161,6 +166,41 @@ export const PLANS: Record<PlanId, Plan> = {
     highlighted: false,
   },
 
+  // "Personal" tier; the only internal id that matches its display name.
+  personal: {
+    id: 'personal',
+    name: 'Personal',
+    description: 'Three mailboxes for one person: work, personal, and one more.',
+    limits: {
+      maxInboxes: 3,
+      maxDailyBurstCalls: Infinity,
+      maxMonthlyToolCalls: 25_000,
+      maxApiKeys: Infinity,
+      maxMembers: 1,
+      billingPortalEnabled: true,
+      analyticsEnabled: true,
+      maxRequestsPerMinute: 120,
+      analyticsRetentionDays: 30,
+      teamRolesEnabled: false,
+      ssoEnabled: false,
+      auditLogEnabled: false,
+      supportTier: 'email',
+    },
+    monthlyPriceCents: 500,
+    yearlyPriceCents: 4800,
+    stripePriceIdMonthly: process.env.STRIPE_PRICE_PERSONAL_MONTHLY ?? null,
+    stripePriceIdYearly: process.env.STRIPE_PRICE_PERSONAL_YEARLY ?? null,
+    legacyStripePriceIds: [],
+    features: [
+      '3 connected inboxes',
+      'Scheduled sends and approvals',
+      '2x higher burst rate limit',
+      'Usage analytics (30-day history)',
+      'Email support',
+    ],
+    highlighted: false,
+  },
+
   // "Pro" tier; internal id stays `solo`.
   solo: {
     id: 'solo',
@@ -253,9 +293,9 @@ export function getPlanLimits(planId: string): PlanLimits {
 
 // ---------------------------------------------------------------------------
 // Helper: user-facing display name for a plan slug stored in `workspaces.plan`.
-// The DB stores internal ids ('free' | 'solo' | 'pro'); customers only ever see
-// "Free", "Pro", and "Team". Use this everywhere a plan is shown to a user so
-// the dashboard never leaks an internal id.
+// The DB stores internal ids ('free' | 'personal' | 'solo' | 'pro'); customers
+// only ever see "Free", "Personal", "Pro", and "Team". Use this everywhere a
+// plan is shown to a user so the dashboard never leaks an internal id.
 // ---------------------------------------------------------------------------
 export function planDisplayName(planId: string | null | undefined): string {
   if (!planId) return PLANS.free.name;

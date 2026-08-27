@@ -10,13 +10,37 @@ import {
 } from '@/lib/analytics/billing-funnel';
 
 /**
+ * The purchasable plan ids: every plan in the catalogue except `free`.
+ *
+ * Derived from PLANS rather than listed literally so adding a tier cannot leave
+ * this route silently refusing to sell it. `enterprise` is not in the catalogue
+ * and is therefore still rejected, as before.
+ *
+ * NAMING TRAP: these are internal ids, not display names. `solo` is sold as
+ * "Pro" and `pro` is sold as "Team"; `personal` is the one id that matches its
+ * own name. Use plan.name for anything a customer reads.
+ */
+type PurchasablePlanId = Exclude<PlanId, 'free'>;
+
+const PURCHASABLE_PLAN_IDS: readonly PurchasablePlanId[] = (
+  Object.keys(PLANS) as PlanId[]
+).filter((id): id is PurchasablePlanId => id !== 'free');
+
+function isPurchasablePlanId(value: unknown): value is PurchasablePlanId {
+  return (
+    typeof value === 'string' &&
+    (PURCHASABLE_PLAN_IDS as readonly string[]).includes(value)
+  );
+}
+
+/**
  * POST /api/stripe/checkout
  *
  * Creates a Stripe Checkout session for upgrading the authenticated user's
  * workspace to a paid plan.
  *
  * Request body:
- *   planId   : 'solo' | 'pro'
+ *   planId   : any purchasable plan id ('personal' | 'solo' | 'pro')
  *   interval : 'month' | 'year'
  *
  * Response (200):
@@ -63,9 +87,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { planId, interval } = body as Record<string, unknown>;
 
-  if (planId !== 'solo' && planId !== 'pro') {
+  if (!isPurchasablePlanId(planId)) {
     return NextResponse.json(
-      { error: 'planId must be "solo" or "pro".' },
+      {
+        error: `planId must be one of: ${PURCHASABLE_PLAN_IDS.map((id) => `"${id}"`).join(', ')}.`,
+      },
       { status: 400 },
     );
   }
@@ -78,7 +104,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // ── 3. Resolve the target Stripe price ID ─────────────────────────────────
-  const plan = PLANS[planId as PlanId];
+  const plan = PLANS[planId];
   const priceId =
     interval === 'year' ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly;
 
@@ -137,7 +163,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // and pay for what they were given for nothing.
   const { data: entitlement } = await supabase
     .from('user_usage_entitlements')
-    .select('kind, expires_at')
+    .select('kind, expires_at, unlimited_inboxes')
     .eq('user_id', user.id)
     .maybeSingle();
 
@@ -153,6 +179,31 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         error:
           'Your account already has full access at no charge. ' +
           'Contact us if you need to change it.',
+        error_code: 'subscription_not_self_service',
+      },
+      { status: 409 },
+    );
+  }
+
+  // GRANDFATHERING (2026-08-19 repricing). The pre-repricing cohort keeps
+  // unlimited connected inboxes permanently, and that grant lives in
+  // user_usage_entitlements while they stay stored as plan 'free' with no
+  // subscription. So a POST of {planId:'personal'} from one of them passes
+  // every other check in this route and charges $5/mo for THREE inboxes: a paid
+  // DOWNGRADE. The dashboard already hides the Personal card for them, but a
+  // stale tab, a cached bundle, or a shared ?upgrade=personal link defeats a
+  // client-side rule, and this is the money path.
+  //
+  // Only Personal is refused. Pro and Team stay purchasable, because they buy
+  // members, team roles, SSO, the audit log and a support tier, none of which
+  // the grandfather grant includes.
+  if (planId === 'personal' && entitlement?.unlimited_inboxes === true) {
+    await recordCheckoutStarted(workspace.id, target, 'subscription_exists');
+    return NextResponse.json(
+      {
+        error:
+          'Your account already has unlimited inboxes at no charge, so ' +
+          `${plan.name} would be a downgrade. Contact us if you need to change it.`,
         error_code: 'subscription_not_self_service',
       },
       { status: 409 },

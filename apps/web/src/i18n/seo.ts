@@ -61,7 +61,7 @@ export const OG_LOCALE: Record<string, string> = {
  * publishing both as sibling Offers reads as two competing prices.
  */
 function planOffers(url: string) {
-  return (['free', 'solo', 'pro'] as const).map((id) => {
+  return (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
     const plan = PLANS[id];
     const price = (plan.monthlyPriceCents / 100).toString();
     return {
@@ -153,7 +153,7 @@ export function homeJsonLd(
  *
  * Assistants asked "how much is mcpemails" answer from whatever is machine
  * readable, and until now that was a lone free Offer on the home page. Emitting
- * the real three-tier catalogue here is the difference between being described
+ * the real four-tier catalogue here is the difference between being described
  * accurately and being described as free-and-unlimited.
  */
 export function pricingJsonLd(

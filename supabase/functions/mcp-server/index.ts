@@ -1008,6 +1008,7 @@ async function authenticateRequest(
  */
 const PLAN_REQUESTS_PER_MINUTE: Record<string, number> = {
   free: 60,
+  personal: 120,
   solo: 300,
   pro: 1_000,
   enterprise: 1_000,
@@ -1020,6 +1021,15 @@ const DEFAULT_REQUESTS_PER_MINUTE = PLAN_REQUESTS_PER_MINUTE.free;
  * Launch-era ceilings preserved for grandfathered ("legacy") workspaces. Keep
  * this map frozen at the launch values even if PLAN_REQUESTS_PER_MINUTE is
  * lowered for new signups later, so legacy users keep their current plan.
+ *
+ * Plans introduced after launch are deliberately absent. `personal` is one: no
+ * workspace was ever grandfathered onto a plan that did not exist yet, so a
+ * grandfathered workspace can only read `personal` here by being moved onto it
+ * today, and a plan sold today belongs at today's ceiling, not a launch-era
+ * one. Absence is handled at the lookup in checkPlanQuota: a grandfathered
+ * workspace whose plan is missing here falls through to the live map, so buying
+ * Personal gets the 120 it pays for instead of the free 60. See the comment
+ * there before changing either side.
  */
 const LEGACY_REQUESTS_PER_MINUTE: Record<string, number> = {
   free: 60,
@@ -1099,10 +1109,19 @@ async function checkPlanQuota(
   // exempt grandfathered workspaces — see the workspaces.grandfathered column.
   const grandfathered = compedScale ||
     ((workspace as { grandfathered?: boolean }).grandfathered ?? false);
-  const rpmMap = grandfathered
-    ? LEGACY_REQUESTS_PER_MINUTE
-    : PLAN_REQUESTS_PER_MINUTE;
-  const perMinuteLimit = rpmMap[plan] ?? DEFAULT_REQUESTS_PER_MINUTE;
+  // The legacy map WINS wherever it has an entry, which is its whole purpose: a
+  // grandfathered workspace must never be lowered to a ceiling we cut for new
+  // signups later. A MISS is a different case and must not resolve to the free
+  // default. Plans created after the grandfather date (personal, and anything
+  // added next) are deliberately not in the frozen map, so a grandfathered
+  // workspace that buys one would otherwise be throttled to 60 while paying for
+  // its plan's real ceiling. Falling through to the live map gives it the
+  // number it bought. Do not "fix" this by seeding new plans into the legacy
+  // map: that would freeze a launch-era value for a plan that has no launch-era
+  // history. Unknown plan ids still land on DEFAULT_REQUESTS_PER_MINUTE.
+  const legacyLimit = grandfathered ? LEGACY_REQUESTS_PER_MINUTE[plan] : undefined;
+  const perMinuteLimit = legacyLimit ?? PLAN_REQUESTS_PER_MINUTE[plan] ??
+    DEFAULT_REQUESTS_PER_MINUTE;
 
   // 2. Count the workspace's calls in the trailing 60s window.
   const windowStart = new Date(Date.now() - PLAN_RPM_WINDOW_MS).toISOString();
@@ -1679,6 +1698,7 @@ async function writeActionUsage(
  * ceiling is consulted. */
 const SHADOW_ACTION_CAPS: Record<string, number> = {
   free: 5_000,
+  personal: 25_000,
   solo: 100_000,
   pro: 500_000,
 };

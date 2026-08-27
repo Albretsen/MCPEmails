@@ -43,7 +43,7 @@ export async function primaryWorkspaceId(
 }
 
 export function billingTarget(
-  planId: 'solo' | 'pro',
+  planId: 'personal' | 'solo' | 'pro',
   interval: 'month' | 'year',
 ): BillingTargetCategory {
   return `${planId}_${interval}` as BillingTargetCategory;
@@ -51,7 +51,7 @@ export function billingTarget(
 
 /** Normalise any stored plan slug to the bounded category vocabulary. */
 export function planCategory(plan: string | null | undefined): BillingPlanCategory {
-  return plan === 'solo' || plan === 'pro' ? plan : 'free';
+  return plan === 'personal' || plan === 'solo' || plan === 'pro' ? plan : 'free';
 }
 
 async function record(event: ProductFunnelEvent): Promise<void> {

@@ -214,6 +214,7 @@ export type GrowthRevenueRow = {
   comped_workspaces: number;
   comped_owners: number;
   free_workspaces: number;
+  paying_personal: number;
   paying_solo: number;
   paying_scale: number;
 };

@@ -43,7 +43,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe/client';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { getPlanByStripePriceId, type PlanId } from '@/lib/stripe/plans';
+import { getPlanByStripePriceId, PLANS, type PlanId } from '@/lib/stripe/plans';
 import {
   billingTarget,
   primaryWorkspaceId,
@@ -235,11 +235,21 @@ async function handleCheckoutSessionCompleted(
   if (session.mode !== 'subscription') return;
 
   const userId = session.metadata?.user_id ?? null;
-  const planId = session.metadata?.plan_id as PlanId | undefined;
 
-  if (!planId || (planId !== 'solo' && planId !== 'pro')) {
+  // Accept any purchasable plan in the catalogue, derived rather than listed.
+  // A hardcoded ('solo' | 'pro') list here was the bug that would take a
+  // Personal customer's money and then leave them on free: the metadata is
+  // rejected, this handler returns early, and no plan is ever written.
+  // `free` is not purchasable, so it stays rejected along with any unknown id.
+  const rawPlanId = session.metadata?.plan_id;
+  const planId: PlanId | undefined =
+    typeof rawPlanId === 'string' && rawPlanId !== 'free' && rawPlanId in PLANS
+      ? (rawPlanId as PlanId)
+      : undefined;
+
+  if (!planId) {
     console.error(
-      `[stripe-webhook] checkout.session.completed bad/missing plan_id "${planId}" (session ${session.id})`,
+      `[stripe-webhook] checkout.session.completed bad/missing plan_id "${rawPlanId}" (session ${session.id})`,
     );
     return;
   }
@@ -451,7 +461,10 @@ interface ApplyUserPlanOptions {
   /** The Stripe subscription id, if any. */
   subscriptionId?: string | null;
   /**
-   * Plan to grant the user: 'free' | 'solo' | 'pro'.
+   * Plan to grant the user: 'free' or any catalogue plan id
+   * ('personal' | 'solo' | 'pro'). The value is written to `user_billing.plan`
+   * (plain text) and projected onto `workspaces.plan`, whose CHECK constraint
+   * allows 'personal' as of migration 20260827100000.
    * `null` is a sentinel meaning "do not change the plan" — used when a
    * subscription is on an unknown/archived price we cannot map: we still want to
    * sync the customer/subscription linkage and raw status, but must not change
