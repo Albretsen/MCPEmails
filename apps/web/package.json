@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "test:analytics": "node --test src/lib/analytics.test.mjs",
-    "test:billing": "node --test src/lib/billing/upgrade-intent.test.mjs",
+    "test:billing": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/billing/upgrade-intent.test.mjs src/lib/analytics/billing-funnel.test.ts",
     "test:plans": "node --test --experimental-strip-types src/lib/stripe/plans.test.ts",
     "test:inbox-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-inbox-limit.test.ts",
     "test:seo": "node --test src/lib/blog/seo.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs",
