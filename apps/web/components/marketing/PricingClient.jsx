@@ -228,6 +228,12 @@ function PlanCards({ annual, stripePrices, user }) {
                 {t(`plans.${plan.key}.cta`)}
               </a>
             ) : (
+              /* A paid CTA points straight at GET /api/stripe/checkout/start,
+                 which authenticates and 303s to Stripe in one request. It used
+                 to point at /dashboard/settings?upgrade=, which server-rendered
+                 and hydrated the entire dashboard before a client effect could
+                 begin checkout. Keep this a plain <a>: a next/link <Link> would
+                 prefetch the checkout route. */
               <a
                 className={'btn btn-lg ' + (plan.ctaPrimary ? 'btn-primary' : 'btn-secondary')}
                 href={pricingUpgradeHref(plan.key, annual, Boolean(user))}

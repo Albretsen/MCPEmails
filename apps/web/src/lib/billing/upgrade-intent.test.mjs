@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseUpgradeIntent, pricingUpgradeHref, upgradeDestination } from './upgrade-intent.mjs';
+import {
+  checkoutStartHref,
+  parseUpgradeIntent,
+  pricingUpgradeHref,
+  upgradeDestination,
+} from './upgrade-intent.mjs';
 
 test('accepts only supported paid-plan checkout intents', () => {
   assert.deepEqual(parseUpgradeIntent('solo', 'month'), { planId: 'solo', interval: 'month' });
@@ -10,13 +15,39 @@ test('accepts only supported paid-plan checkout intents', () => {
   assert.equal(parseUpgradeIntent('enterprise', 'year'), null);
 });
 
-test('keeps plan and interval through the pricing handoff', () => {
-  const destination = upgradeDestination('pro', true);
-  assert.equal(destination, '/dashboard/settings?upgrade=pro&interval=year');
-  assert.equal(pricingUpgradeHref('pro', true, true), destination);
+test('the buy CTA points at the direct checkout route, not the dashboard', () => {
+  // The whole point of the route: a buy click must not pay for a dashboard
+  // render before it can reach Stripe.
+  assert.equal(
+    checkoutStartHref('pro', true),
+    '/api/stripe/checkout/start?plan=pro&interval=year',
+  );
+  assert.equal(
+    checkoutStartHref('personal', false),
+    '/api/stripe/checkout/start?plan=personal&interval=month',
+  );
+  assert.equal(pricingUpgradeHref('pro', true, true), checkoutStartHref('pro', true));
+});
+
+test('anonymous buy intent survives signup and still lands on checkout', () => {
   assert.equal(
     pricingUpgradeHref('pro', true, false),
-    '/signup?redirect=%2Fdashboard%2Fsettings%3Fupgrade%3Dpro%26interval%3Dyear',
+    '/signup?redirect=%2Fapi%2Fstripe%2Fcheckout%2Fstart%3Fplan%3Dpro%26interval%3Dyear',
+  );
+  assert.equal(
+    pricingUpgradeHref('personal', false, false),
+    '/signup?redirect=%2Fapi%2Fstripe%2Fcheckout%2Fstart%3Fplan%3Dpersonal%26interval%3Dmonth',
+  );
+});
+
+test('the legacy ?upgrade= destination still resolves', () => {
+  // Old links are already out in the world (emails, shared URLs, cached
+  // marketing HTML, the sidebar upsell). BillingSection still honours them, so
+  // this helper must keep producing exactly the shape parseUpgradeIntent reads.
+  assert.equal(upgradeDestination('pro', true), '/dashboard/settings?upgrade=pro&interval=year');
+  assert.equal(
+    upgradeDestination('personal', false),
+    '/dashboard/settings?upgrade=personal&interval=month',
   );
 });
 
@@ -26,12 +57,8 @@ test('Personal is a paid plan the pricing CTA can actually hand off', () => {
   assert.deepEqual(parseUpgradeIntent('personal', 'month'), { planId: 'personal', interval: 'month' });
   assert.deepEqual(parseUpgradeIntent('personal', 'year'), { planId: 'personal', interval: 'year' });
   assert.equal(parseUpgradeIntent('personal', 'quarter'), null);
-
-  const destination = upgradeDestination('personal', false);
-  assert.equal(destination, '/dashboard/settings?upgrade=personal&interval=month');
-  assert.equal(pricingUpgradeHref('personal', false, true), destination);
   assert.equal(
-    pricingUpgradeHref('personal', false, false),
-    '/signup?redirect=%2Fdashboard%2Fsettings%3Fupgrade%3Dpersonal%26interval%3Dmonth',
+    pricingUpgradeHref('personal', false, true),
+    '/api/stripe/checkout/start?plan=personal&interval=month',
   );
 });
