@@ -19,11 +19,22 @@
  *    minutes, so a five minute tick costs at most one round trip and usually
  *    costs nothing at all.
  *
- * 3. IT RELOADS THE PAGE ONCE A DAY. A soft refresh cannot recover from a
- *    stale bundle after a deploy, and a Chromium tab left running for a month
- *    accumulates enough to be worth resetting. Doing it at a fixed interval
- *    from load, rather than at a wall-clock hour, avoids every kiosk in the
- *    world reloading on the same second if this is ever run on more than one.
+ * 3. IT RELOADS ITSELF WHEN THE SITE IS DEPLOYED. On the same tick it asks
+ *    production which build production is running, and hard reloads when that
+ *    is no longer the build this tab booted with. This is the part that was
+ *    missing on 2026-08-29: the money tiles shipped and the panel on the wall
+ *    kept showing the previous board, because `router.refresh()` re-renders
+ *    server components into a client that is still running yesterday's
+ *    bundle. A wall display cannot be asked to notice this itself; nobody is
+ *    looking at it, and being a day stale while looking perfectly healthy is
+ *    the worst failure this screen has.
+ *
+ * 4. IT RELOADS THE PAGE ONCE A DAY REGARDLESS. A Chromium tab left running
+ *    for a month accumulates enough to be worth resetting, and it is the
+ *    backstop for the deploy check above ever failing quietly. Doing it at a
+ *    fixed interval from load, rather than at a wall-clock hour, avoids every
+ *    kiosk in the world reloading on the same second if this is ever run on
+ *    more than one.
  *
  * The clock is rendered here rather than on the server because a
  * server-rendered time would freeze at whatever moment the page last
@@ -37,7 +48,14 @@ import { useRouter } from 'next/navigation';
 const REFRESH_MS = 5 * 60 * 1000;
 const HARD_RELOAD_MS = 24 * 60 * 60 * 1000;
 
-export function KioskLive({ generatedAt }: { generatedAt: string }) {
+export function KioskLive({
+  generatedAt,
+  deployment,
+}: {
+  generatedAt: string;
+  /** The build this page was rendered by. See app/api/kiosk/version. */
+  deployment: string;
+}) {
   const router = useRouter();
   const [now, setNow] = useState<Date | null>(null);
 
@@ -60,13 +78,40 @@ export function KioskLive({ generatedAt }: { generatedAt: string }) {
   }, []);
 
   useEffect(() => {
-    const soft = setInterval(() => router.refresh(), REFRESH_MS);
+    // The token lives in this page's own query string, and the version route
+    // is behind the same door as the page. Reusing the search string verbatim
+    // means an operator viewing the board on a real session (no `?k=`) is
+    // still authorised, by their session, exactly as they are for the page.
+    const search = window.location.search;
+
+    async function tick() {
+      try {
+        const response = await fetch(`/api/kiosk/version${search}`, { cache: 'no-store' });
+        if (response.ok) {
+          const { deployment: live } = (await response.json()) as { deployment?: string };
+          // Reload, not refresh: a new bundle is the one thing a soft refresh
+          // cannot pick up, which is the whole reason this check exists.
+          if (live && live !== deployment) {
+            window.location.reload();
+            return;
+          }
+        }
+      } catch {
+        // Offline, or production is mid-deploy and briefly unreachable. Fall
+        // through to the soft refresh: the previous frame stays on the wall
+        // and the next tick tries again. A network blip must never blank the
+        // board or put it into a reload loop.
+      }
+      router.refresh();
+    }
+
+    const soft = setInterval(tick, REFRESH_MS);
     const hard = setTimeout(() => window.location.reload(), HARD_RELOAD_MS);
     return () => {
       clearInterval(soft);
       clearTimeout(hard);
     };
-  }, [router]);
+  }, [router, deployment]);
 
   return (
     <div className="kiosk-head-right">
