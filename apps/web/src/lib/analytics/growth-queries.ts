@@ -48,6 +48,9 @@ import type {
   GrowthClientMixRow,
   GrowthUtilizationBandRow,
   GrowthUsageVolumeRow,
+  GrowthUpgradePressureRow,
+  GrowthInboxBandRow,
+  GrowthChannelRow,
 } from '@/lib/analytics/growth-types';
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
 import { internalAccountMatchers } from '@/lib/analytics/internal-accounts';
@@ -69,6 +72,7 @@ export const GROWTH_TAGS = {
   errors: 'growth:errors',
   inventory: 'growth:inventory',
   accounts: 'growth:accounts',
+  revenue: 'growth:revenue',
 } as const;
 
 /**
@@ -107,7 +111,7 @@ const clampWeeks = (weeks: number) => clampInt(weeks, 1, MAX_WEEKS);
  * so two calls that differ only in a captured `p_days` would otherwise collide
  * on one cache entry and silently serve each other's rows.
  */
-async function cachedSection<T>(
+export async function cachedSection<T>(
   keyParts: string[],
   tag: string,
   load: () => Promise<T>,
@@ -370,4 +374,39 @@ export async function fetchBillingFunnel(): Promise<GrowthResult<BillingFunnelRo
 export async function refreshGrowthData(): Promise<void> {
   'use server';
   revalidateTag(GROWTH_TAG, { expire: 0 });
+}
+
+/**
+ * The population the INBOX paywall can actually reach.
+ *
+ * Takes the free cap from the canonical plan table rather than writing it in
+ * SQL, the same convention as `fetchUtilizationBands`, so a pricing change
+ * moves this panel with it. `Infinity` is sent as 1 rather than dropped: the
+ * free plan having an unlimited inbox allowance would mean there is no paywall
+ * to measure, and a missing argument would silently fall back to the SQL
+ * default instead of saying so.
+ */
+export async function fetchUpgradePressure(): Promise<GrowthResult<GrowthUpgradePressureRow>> {
+  const cap = resolvePlanLimits('free').maxInboxes;
+  return rpcSingleRow<GrowthUpgradePressureRow>('growth_upgrade_pressure', GROWTH_TAGS.inventory, {
+    p_free_inbox_cap: Number.isFinite(cap) ? cap : 1,
+  });
+}
+
+/** Live workspaces by inbox count, split by whether the cap can reach them. */
+export async function fetchInboxDistribution(): Promise<GrowthResult<GrowthInboxBandRow[]>> {
+  return rpcRows<GrowthInboxBandRow>('growth_inbox_distribution', GROWTH_TAGS.inventory);
+}
+
+/**
+ * Signups by first-touch channel, and what each channel did next.
+ *
+ * Clamped to 90 days by the caller for the same reason every other windowed
+ * read is: `activity_log` is purged at 90, so the `returned` column would be
+ * divided into a decaying denominator beyond that.
+ */
+export async function fetchAcquisitionChannels(days: number): Promise<GrowthResult<GrowthChannelRow[]>> {
+  return rpcRows<GrowthChannelRow>('growth_acquisition_channels', GROWTH_TAGS.funnel, {
+    p_days: clampDays(days),
+  });
 }

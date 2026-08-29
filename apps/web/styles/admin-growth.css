@@ -7,14 +7,17 @@
 .growth-page { max-width: 1440px; margin: 0 auto; padding: 42px 32px 64px; color: var(--fg-1); }
 
 /* ---------- Header and toolbar ---------- */
-.growth-header { display: flex; justify-content: space-between; gap: 24px; align-items: start; margin-bottom: 22px; }
+.growth-header { display: flex; justify-content: space-between; gap: 20px 24px; align-items: end; flex-wrap: wrap; margin-bottom: 14px; }
 .growth-title { margin: 0; font-size: 30px; letter-spacing: -0.025em; }
-.growth-subtitle, .growth-definition { color: var(--fg-3); font-size: 14px; line-height: 1.55; }
-.growth-subtitle { margin: 7px 0 0; }
-.growth-definition { margin: 0; max-width: 360px; }
+.growth-subtitle, .growth-definition { color: var(--fg-3); font-size: 13.5px; line-height: 1.55; }
+.growth-subtitle { margin: 6px 0 0; }
+/* The privacy and caching contract. One paragraph across the full width rather
+   than a column beside the title: it is read once and then never again, and as
+   a sidebar it took a third of the first screen forever. */
+.growth-definition { margin: 0 0 24px; max-width: 900px; font-size: 13px; }
 .growth-definition strong { color: var(--fg-2); }
 
-.growth-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 26px; }
+.growth-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .growth-windows { display: inline-flex; border: 1px solid var(--border-1); border-radius: 9px; overflow: hidden; background: var(--bg-surface); }
 .growth-windows a { padding: 6px 13px; font-size: 13px; color: var(--fg-3); text-decoration: none; border-right: 1px solid var(--border-1); }
 .growth-windows a:last-child { border-right: 0; }
@@ -22,11 +25,16 @@
 .growth-windows a[aria-current="true"] { color: var(--fg-on-brand); background: var(--brand); }
 .growth-refresh { padding: 6px 13px; font-size: 13px; border-radius: 9px; border: 1px solid var(--border-1); background: var(--bg-surface); color: var(--fg-2); cursor: pointer; }
 .growth-refresh:hover { color: var(--fg-1); border-color: var(--border-2); }
-.growth-stamp { color: var(--fg-4); font-size: 12px; margin-left: auto; }
 
 /* ---------- Stat cards ---------- */
 .growth-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 30px; }
 .growth-stat-grid.is-five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.growth-stat-grid.is-six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+/* The pulse strip is read first and read fast, so its cards are tighter than
+   the ones inside sections and its values are the largest type on the page. */
+.growth-pulse { margin-bottom: 34px; }
+.growth-pulse .growth-stat { padding: 14px 15px; }
+.growth-pulse .growth-stat-value { font-size: 26px; }
 .growth-stat { border: 1px solid var(--border-1); background: var(--bg-surface); border-radius: 12px; padding: 16px 18px; text-align: left; }
 .growth-stat-label { color: var(--fg-3); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .045em; display: flex; align-items: center; gap: 6px; }
 /* The chevron sits top-right on a clickable card, so the dot's panel opens
@@ -82,6 +90,18 @@
 .growth-info-panel code { font-size: 11.5px; background: var(--bg-sunken); padding: 1px 4px; border-radius: 4px; }
 .growth-split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
 .growth-note { color: var(--fg-4); font-size: 12px; margin: 9px 0 0; line-height: 1.5; }
+
+/* ---------- Attention flags ---------- */
+/* A line, not a card. These appear only when something needs looking at, and a
+   card that is absent most weeks leaves a hole in a grid; a list simply is not
+   there. Tint plus a left rule rather than coloured text: the --red-700 /
+   --amber-700 inks are tuned for light surfaces and go muddy on dark, while
+   the --*-100 tints ARE re-tokenised for both. */
+.growth-flags { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.growth-flags li { font-size: 13px; line-height: 1.5; color: var(--fg-2); padding: 9px 13px; border-radius: 9px; border-left: 3px solid var(--border-2); background: var(--bg-sunken); }
+.growth-flags li.is-bad { border-left-color: var(--red-500); background: var(--red-100); }
+.growth-flags li.is-warn { border-left-color: var(--amber-500); background: var(--amber-100); }
+.growth-flags strong { color: var(--fg-1); }
 
 /* ---------- Gmail OAuth cap card ---------- */
 /* Compact by design. This is an operational ceiling worth watching, not a
@@ -170,7 +190,9 @@
 .growth-table-roster tr.is-muted td { color: var(--fg-4); }
 .growth-table-roster tr.is-muted .growth-account { color: var(--fg-3); }
 .growth-account { display: block; color: var(--fg-1); font-weight: 550; }
-.growth-account-sub { display: block; color: var(--fg-4); font-size: 11.5px; margin-top: 2px; }
+.growth-account-sub { display: block; color: var(--fg-4); font-size: 11.5px; margin-top: 2px; font-weight: 400; }
+/* A numeric cell carrying its own denominator or unit underneath. */
+.growth-table td .growth-account-sub { font-variant-numeric: tabular-nums; }
 .growth-tag { display: inline-block; margin-left: 5px; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--bg-sunken); color: var(--fg-3); }
 .growth-tag.is-comped { background: var(--amber-100); color: var(--fg-2); }
 .growth-tag.is-internal { background: var(--bg-sunken); color: var(--fg-4); }
@@ -210,13 +232,103 @@
 .growth-figure dd { margin: 5px 0 0; font-size: 19px; font-weight: 620; letter-spacing: -.02em; }
 .growth-drawer-def { color: var(--fg-3); font-size: 13px; line-height: 1.6; border-top: 1px solid var(--border-1); padding-top: 16px; margin-top: 20px; }
 
-@media (max-width: 1100px) { .growth-stat-grid.is-five { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 850px) {
-  .growth-page { padding: 28px 18px; }
+/* ==========================================================================
+   Responsive
+   ==========================================================================
+   Three breakpoints, each doing one job.
+
+   1100  The six-across pulse strip cannot hold six readable cards on a laptop
+         half-screen, so it steps to three.
+    900  Two-column splits become one, and the header stacks.
+    620  PHONE. This is where the page used to fall apart: at 375px the roster
+         had nine columns behind a horizontal scrollbar nobody discovers, the
+         hover panels were 340px wide inside a 343px content box, and the mix
+         rows were a four-column grid squeezed into a phone. Tables marked
+         .growth-table-cards stop being tables and become stacked rows with
+         their header text supplied by data-label. The roster is deliberately
+         NOT one of them: it is a nine-column comparison view, it scrolls
+         sideways on purpose, and stacking ninety cells per account would make
+         it unreadable rather than more readable. */
+
+@media (max-width: 1100px) {
+  .growth-stat-grid.is-five { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .growth-stat-grid.is-six { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .growth-page { padding: 28px 18px 48px; }
   .growth-header { display: block; }
-  .growth-definition { margin-top: 16px; }
-  .growth-stat-grid, .growth-stat-grid.is-five { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .growth-toolbar { margin-top: 16px; }
+  .growth-title { font-size: 25px; }
   .growth-split { grid-template-columns: 1fr; }
-  .growth-stamp { margin-left: 0; width: 100%; }
   .growth-drawer { width: 100vw; }
+  .growth-section { margin-top: 28px; }
+}
+
+@media (max-width: 620px) {
+  .growth-page { padding: 20px 14px 40px; }
+  .growth-stat-grid,
+  .growth-stat-grid.is-five,
+  .growth-stat-grid.is-six { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 22px; }
+  .growth-stat { padding: 12px 13px; border-radius: 10px; }
+  .growth-pulse .growth-stat { padding: 12px 13px; }
+  .growth-stat-label { font-size: 10.5px; letter-spacing: .04em; }
+  .growth-stat-value,
+  .growth-pulse .growth-stat-value { font-size: 21px; margin: 6px 0 2px; gap: 6px; }
+  .growth-delta { font-size: 11.5px; }
+  .growth-stat-detail { font-size: 11px; }
+  .growth-stat-spark { margin-top: 8px; }
+
+  /* A 340px panel does not fit a 347px content box, and an absolutely
+     positioned one cannot reflow its way out. Pin it to the viewport width and
+     let it start at the card's left edge in both alignments; a tooltip that
+     overflows the screen is worse than one that is not where you expected. */
+  .growth-info-panel { max-width: calc(100vw - 40px); width: max-content; }
+  .growth-info-end .growth-info-panel,
+  .growth-stat .growth-info-panel { left: auto; right: 0; }
+
+  .growth-toolbar { gap: 8px; }
+  .growth-windows { flex: 1; }
+  .growth-windows a { flex: 1; text-align: center; padding: 8px 8px; }
+  .growth-refresh { padding: 8px 14px; }
+
+  /* Ranked mix lists drop the share column: the bar already shows the share,
+     and the number was the first thing to collide at this width. */
+  .growth-mix li { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; }
+  .growth-mix-bar { grid-column: 1 / -1; order: 3; }
+  .growth-mix-share { display: none; }
+
+  .growth-cap-facts { gap: 14px 22px; }
+  .growth-section h2 { font-size: 16px; }
+  .growth-flags li { font-size: 12.5px; padding: 8px 11px; }
+
+  /* Card-mode tables. Each row becomes a block, each cell carries its own
+     label, and nothing scrolls sideways. */
+  .growth-table-cards { border: 0; background: none; overflow: visible; }
+  .growth-table-cards table,
+  .growth-table-cards thead,
+  .growth-table-cards tbody,
+  .growth-table-cards tr,
+  .growth-table-cards td { display: block; width: auto; }
+  /* Hidden, not removed: the header text is still what data-label repeats, and
+     a screen reader following the table semantics keeps working. */
+  .growth-table-cards thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+  .growth-table-cards tr { border: 1px solid var(--border-1); border-radius: 10px; background: var(--bg-surface); padding: 11px 13px; margin-bottom: 8px; }
+  .growth-table-cards tr:last-child { margin-bottom: 0; }
+  .growth-table-cards td { border: 0; padding: 3px 0; text-align: left !important; display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
+  .growth-table-cards td::before { content: attr(data-label); color: var(--fg-3); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; flex: none; }
+  /* The first cell is the row's identity, so it gets the full width and no
+     label: repeating "Customer" above every email is noise. */
+  .growth-table-cards td:first-child { display: block; padding-bottom: 7px; margin-bottom: 5px; border-bottom: 1px solid var(--border-1); }
+  .growth-table-cards td:first-child::before { content: none; }
+  .growth-table-cards td .growth-account-sub { display: inline; margin: 0 0 0 6px; }
+  .growth-table-cards td:first-child .growth-account-sub { display: block; margin: 3px 0 0; }
+  .growth-table-cards .growth-empty { display: block; text-align: center; }
+  .growth-table-cards td .growth-code-cell { justify-content: flex-end; }
+
+  /* The roster stays a table and keeps its horizontal scroll, but the reserved
+     height is for ten two-line rows on a wide screen and is far too tall here. */
+  .growth-table-wrap.is-paged { min-height: 0; }
+  .growth-controls-count { margin-left: 0; width: 100%; }
+  .growth-search { max-width: none; }
 }
