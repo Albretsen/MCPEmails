@@ -358,6 +358,16 @@ body { background: var(--bg-page); }
 .input:focus { border-color: var(--brand); box-shadow: var(--shadow-focus); }
 .input.mono { font-family: var(--font-mono); font-size: 13px; }
 
+/* Bare buttons that carry only inline styles (a modal's close X, a disclosure
+   toggle, the password reveal) had no focus style of their own, so they fell
+   back to the browser's default ring while every neighbouring control focuses
+   with --shadow-focus. This is that token, applied to the plain ones. */
+.plain-focus:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: 6px;
+}
+
 /* === Provider chips (radio cards) === */
 .provider-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .provider-chip {

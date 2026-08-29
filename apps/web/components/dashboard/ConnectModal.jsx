@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent } from '@/lib/analytics.mjs';
@@ -106,10 +106,22 @@ const TRANSPORT_ERROR_CODES = new Set([
  * A single trailing `:<digits>` is a port. Anything with more colons is a bare
  * IPv6 literal and is left alone; a bracketed literal (`[::1]:993`) is
  * unwrapped explicitly.
+ *
+ * Whatever happens, the returned `host` is a hostname on its own: no scheme,
+ * no userinfo, and never a colon or a port glued to the end. That matters
+ * because the server's `isValidHost` accepts almost anything with a dot in it,
+ * so a host field still carrying `:` or `:99999` is sent to DNS and comes back
+ * as "could not reach that server", which points the user at the wrong thing.
+ *
+ * `portError` is `'range'` when the user typed something in port position that
+ * is not a usable port (0, or above 65535). The digits are dropped from the
+ * host either way; the flag is what lets the caller say why.
+ *
+ * @returns {{ host: string, port: number|null, portError: 'range'|null }}
  */
 export function splitHostPort(raw) {
   let value = String(raw ?? '').trim();
-  if (!value) return { host: '', port: null };
+  if (!value) return { host: '', port: null, portError: null };
   // imaps:// imap:// https:// ssl:// ...
   value = value.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
   // Anything after the authority is a path, query or fragment.
@@ -118,17 +130,29 @@ export function splitHostPort(raw) {
   const at = value.lastIndexOf('@');
   if (at >= 0) value = value.slice(at + 1);
 
-  const bracketed = value.match(/^\[([^\]]+)\](?::(\d{1,5}))?$/);
+  // `[::1]`, `[::1]:993`, and the half-typed `[::1]:`.
+  const bracketed = value.match(/^\[([^\]]+)\](?::(\d*))?$/);
   if (bracketed) {
-    const port = bracketed[2] ? Number(bracketed[2]) : null;
-    return { host: bracketed[1], port: port && port <= 65535 ? port : null };
+    if (!bracketed[2]) return { host: bracketed[1], port: null, portError: null };
+    const port = Number(bracketed[2]);
+    if (!port || port > 65535) return { host: bracketed[1], port: null, portError: 'range' };
+    return { host: bracketed[1], port, portError: null };
   }
 
-  const match = value.match(/^([^:]+):(\d{1,5})$/);
-  if (!match) return { host: value, port: null };
+  // A lone trailing colon is a port the user has not finished typing: they
+  // typed `host.com:` and tabbed away. Drop it silently and say nothing; there
+  // is no mistake to report yet, only an unfinished one.
+  const trailingColon = value.match(/^([^:]+):$/);
+  if (trailingColon) return { host: trailingColon[1], port: null, portError: null };
+
+  // Unbounded digits, not `\d{1,5}`: a six-digit port has to be recognised as a
+  // port in order to be reported as an impossible one. Capping the pattern at
+  // five is what used to leave `imap.example.com:99999` glued together.
+  const match = value.match(/^([^:]+):(\d+)$/);
+  if (!match) return { host: value, port: null, portError: null };
   const port = Number(match[2]);
-  if (!port || port > 65535) return { host: value, port: null };
-  return { host: match[1], port };
+  if (!port || port > 65535) return { host: match[1], port: null, portError: 'range' };
+  return { host: match[1], port, portError: null };
 }
 
 /**
@@ -168,6 +192,10 @@ const PROVIDERS = [
   // shown LAST, greyed out / non-selectable with a "coming soon" flag until it ships.
   { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook', disabled: true },
 ];
+
+/** Everything the focus trap treats as a stop inside the dialog. */
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** The server-side route that initiates the OAuth flow for each provider. */
 const OAUTH_ROUTES = {
@@ -262,6 +290,12 @@ export function ConnectModal({
   // a failure the field is focused with its contents selected: the next
   // keystroke overwrites it.
   const passwordRef = useRef(null);
+  // Armed only by a rejected credential, and spent by the first focus that
+  // follows. Selecting on EVERY focus meant that clicking back into the field
+  // to fix one character of a 16-character app password destroyed the value on
+  // the next keystroke, which is unrecoverable when the field is dots.
+  const selectPasswordOnFocus = useRef(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   /**
    * Advanced settings (generic IMAP only): ports, security modes and the
@@ -288,6 +322,12 @@ export function ConnectModal({
   // rather than silently applied to a field that may be out of sight.
   // Shape: { protocol: 'imap' | 'smtp', port: number }.
   const [portNote, setPortNote] = useState(null);
+  // Set when the digits in a host field could not be a port (0, or above
+  // 65535). They are stripped off the host either way, so without this the
+  // user would watch their text change with no explanation, and the submit
+  // would quietly use the default port instead of the one they meant.
+  // Shape: 'imap' | 'smtp' | null.
+  const [portRangeError, setPortRangeError] = useState(null);
   // When the user clicks outside the modal (the scrim) after typing
   // credentials, show a discard confirmation instead of closing outright so
   // an accidental click doesn't wipe what they entered.
@@ -417,6 +457,16 @@ export function ConnectModal({
       setAdvancedOpen(true);
       setPortNote({ protocol, port: parsed.port });
     }
+    // An impossible port is named on the spot. The alternative is what the
+    // field used to do: keep the digits on the hostname, hand the whole string
+    // to DNS, and answer with "could not reach that server", which sends the
+    // user hunting for a network fault that does not exist.
+    if (parsed.portError === 'range') {
+      setPortNote(null);
+      setPortRangeError(protocol);
+    } else if (portRangeError === protocol) {
+      setPortRangeError(null);
+    }
     return parsed;
   };
 
@@ -425,6 +475,60 @@ export function ConnectModal({
     setFormError(message);
     setErrorDetail(null);
     setErrorDetailOpen(false);
+  };
+
+  // ── Step 1: the provider radiogroup ────────────────────────────────────────
+
+  /** Chip DOM nodes, so arrow keys can move focus as well as selection. */
+  const chipRefs = useRef({});
+  /** Outlook is not selectable yet, so it is not part of the arrow order. */
+  const selectableProviders = PROVIDERS.filter(p => !p.disabled);
+
+  const selectProviderAt = index => {
+    const count = selectableProviders.length;
+    const next = selectableProviders[((index % count) + count) % count];
+    if (!next) return;
+    setProvider(next.k);
+    chipRefs.current[next.k]?.focus();
+  };
+
+  /**
+   * Radiogroup keyboard behaviour. The group is one tab stop (see the roving
+   * tabIndex below) and the arrows move within it, which is what a screen
+   * reader user is told to expect the moment they hear "radio group". Space
+   * has to be prevented too, or it selects the chip and scrolls the modal.
+   */
+  const handleChipKeyDown = (event, p) => {
+    if (p.disabled) return;
+    const current = selectableProviders.findIndex(item => item.k === provider);
+    const from = current === -1 ? 0 : current;
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        setProvider(p.k);
+        break;
+      case 'ArrowRight':
+      case 'ArrowDown':
+        event.preventDefault();
+        selectProviderAt(from + 1);
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        event.preventDefault();
+        selectProviderAt(from - 1);
+        break;
+      case 'Home':
+        event.preventDefault();
+        selectProviderAt(0);
+        break;
+      case 'End':
+        event.preventDefault();
+        selectProviderAt(selectableProviders.length - 1);
+        break;
+      default:
+        break;
+    }
   };
 
   // ── Step 1: provider selected ──────────────────────────────────────────────
@@ -514,6 +618,13 @@ export function ConnectModal({
       // they typed must not be thrown away.
       const imapParsed = normalizeHostField('imap');
       const smtpParsed = normalizeHostField('smtp');
+      // Digits that cannot be a port were just stripped off a host field.
+      // Submitting anyway would connect on the default port, which is not what
+      // the user asked for, so stop and say what was wrong with the number.
+      if (imapParsed.portError === 'range' || smtpParsed.portError === 'range') {
+        showError(tr('connect.errorPortRange'));
+        return;
+      }
       const imapHost = imapParsed.host.toLowerCase();
       const smtpHost = smtpParsed.host.toLowerCase();
       const imapPort = Number(imapParsed.port ?? form.imapPort);
@@ -591,6 +702,10 @@ export function ConnectModal({
         // failures: stealing focus when the fix is a host or a port would move
         // the user away from the field they need.
         if (code === 'auth_failed' && passwordRef.current) {
+          // Arm the one-shot select first: taking focus fires the focus
+          // handler, which spends the flag, so the contents are selected
+          // exactly once per rejection and never on an ordinary click-back.
+          selectPasswordOnFocus.current = true;
           passwordRef.current.focus();
           passwordRef.current.select();
         }
@@ -639,10 +754,13 @@ export function ConnectModal({
     );
 
   /**
-   * Close guard for the scrim (outside click). If the user has unsaved input,
-   * surface a discard confirmation rather than closing immediately.
+   * The one way out of this modal. Every close affordance goes through here:
+   * the scrim, the header X and the Escape key all put the same typed
+   * credentials at risk, so they all get the same discard confirmation. The X
+   * used to call onClose directly, which threw away a filled-in form without
+   * asking.
    */
-  const handleScrimClose = () => {
+  const requestClose = () => {
     if (hasUnsavedInput()) {
       setConfirmingClose(true);
       return;
@@ -650,17 +768,99 @@ export function ConnectModal({
     onClose();
   };
 
+  // ── Dialog behaviour: focus restore, Escape, focus trap ────────────────────
+
+  const dialogRef = useRef(null);
+  const confirmRef = useRef(null);
+  /** The element that opened the modal, so focus can be handed back to it. */
+  const openerRef = useRef(null);
+
+  useEffect(() => {
+    openerRef.current = document.activeElement;
+    // Put focus inside the dialog. Step 2 autofocuses a field, so this only
+    // does anything on the provider step, where focus would otherwise still be
+    // on the page behind and Escape would never reach the handler below.
+    const node = dialogRef.current;
+    if (node && !node.contains(document.activeElement)) node.focus();
+    return () => {
+      const opener = openerRef.current;
+      // Only restore to something still in the document: the trigger row can
+      // be gone by the time we close (a successful connect re-renders it).
+      if (opener && typeof opener.focus === 'function' && document.contains(opener)) {
+        opener.focus();
+      }
+    };
+  }, []);
+
+  // When the discard confirmation opens, move focus into it. Without this the
+  // trap below would be guarding a dialog that focus is not actually inside.
+  useEffect(() => {
+    if (!confirmingClose) return;
+    const first = confirmRef.current?.querySelector('button');
+    if (first) first.focus();
+  }, [confirmingClose]);
+
+  /**
+   * Escape closes (through the same discard guard), and Tab is confined to the
+   * dialog. Without the trap a keyboard user tabs straight out of the modal
+   * into the dashboard behind it, which is still fully interactive.
+   *
+   * The confirmation, when open, is the dialog that owns the keyboard: Escape
+   * dismisses it back to the form rather than closing everything.
+   */
+  const handleDialogKeyDown = event => {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      if (confirmingClose) {
+        setConfirmingClose(false);
+      } else {
+        requestClose();
+      }
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const container = confirmingClose ? confirmRef.current : dialogRef.current;
+    if (!container) return;
+    const items = Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR))
+      .filter(el => el.offsetParent !== null || el === document.activeElement);
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    // Backwards off the first stop wraps to the last. So does backwards from
+    // the dialog container itself, which is where focus sits on open: without
+    // this, one Shift+Tab on the provider step left the modal entirely.
+    if (event.shiftKey && (active === first || !items.includes(active))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (active === last || !container.contains(active))) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="scrim" onClick={handleScrimClose}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 468 }}>
+    <div className="scrim" onClick={requestClose} onKeyDown={handleDialogKeyDown}>
+      <div
+        className="modal"
+        ref={dialogRef}
+        onClick={e => e.stopPropagation()}
+        style={{ width: 468 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cm-title"
+        // Focus target on open, so the dialog is announced and Escape works
+        // from the provider step, which autofocuses nothing.
+        tabIndex={-1}
+      >
 
         {/* Header */}
         <div className="modal-h">
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
             <div>
-              <h2 style={{ margin: 0 }}>
+              <h2 id="cm-title" style={{ margin: 0 }}>
                 {showLimitPanel
                   ? tr('connect.titleLimitReached')
                   : isReconnect
@@ -682,8 +882,13 @@ export function ConnectModal({
               </div>
             </div>
             <button
-              onClick={onClose}
+              type="button"
+              // Same guard as the scrim and Escape: this discards exactly the
+              // same typed credentials, so it cannot be the one way out that
+              // skips the confirmation.
+              onClick={requestClose}
               aria-label={tr('connect.close')}
+              className="plain-focus"
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -773,13 +978,17 @@ export function ConnectModal({
                 {PROVIDERS.map(p => (
                   <div
                     key={p.k}
+                    ref={el => { chipRefs.current[p.k] = el; }}
                     className={'provider-chip' + (provider === p.k ? ' sel' : '') + (p.disabled ? ' disabled' : '')}
                     onClick={() => { if (!p.disabled) setProvider(p.k); }}
                     role="radio"
                     aria-checked={provider === p.k}
                     aria-disabled={p.disabled || undefined}
-                    tabIndex={p.disabled ? -1 : 0}
-                    onKeyDown={e => { if (!p.disabled && (e.key === 'Enter' || e.key === ' ')) setProvider(p.k); }}
+                    // Roving tab stop: the group is one stop, not eight. Only
+                    // the checked chip is tabbable and the arrows move from
+                    // there, which is the behaviour role="radiogroup" promises.
+                    tabIndex={!p.disabled && provider === p.k ? 0 : -1}
+                    onKeyDown={e => handleChipKeyDown(e, p)}
                     title={p.disabled ? tr('connect.comingSoon') : undefined}
                     style={p.disabled ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
                   >
@@ -934,7 +1143,16 @@ export function ConnectModal({
 
           {/* ─── Step 2: Credentials form ───────────────────────────────────── */}
           {!showLimitPanel && step === 2 && (
-            <>
+            // A real form, so Enter submits from the email, host and username
+            // fields too. It used to work only from the password box, because
+            // that box had the only keydown handler. The submit button stays in
+            // the footer outside the form and keeps its own onClick, so the
+            // existing path is untouched; the hidden submit below is what makes
+            // implicit submission fire.
+            <form
+              onSubmit={e => { e.preventDefault(); if (!submitting) handleAppPasswordSubmit(); }}
+              style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+            >
               {isReconnect && (
                 <div
                   role="note"
@@ -1059,7 +1277,7 @@ export function ConnectModal({
                       type="text"
                       placeholder="imap.example.com"
                       value={form.imapHost}
-                      onChange={e => { setPortNote(null); setForm(prev => ({ ...prev, imapHost: e.target.value })); }}
+                      onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, imapHost: e.target.value })); }}
                       onBlur={() => normalizeHostField('imap')}
                       readOnly={isReconnect}
                       aria-readonly={isReconnect || undefined}
@@ -1072,6 +1290,11 @@ export function ConnectModal({
                         {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'IMAP' })}
                       </span>
                     )}
+                    {portRangeError === 'imap' && (
+                      <span role="alert" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)' }}>
+                        {tr('connect.errorPortRange')}
+                      </span>
+                    )}
                   </div>
 
                   <div className="field">
@@ -1082,7 +1305,7 @@ export function ConnectModal({
                       type="text"
                       placeholder="smtp.example.com"
                       value={form.smtpHost}
-                      onChange={e => { setPortNote(null); setForm(prev => ({ ...prev, smtpHost: e.target.value })); }}
+                      onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, smtpHost: e.target.value })); }}
                       onBlur={() => normalizeHostField('smtp')}
                       readOnly={isReconnect}
                       aria-readonly={isReconnect || undefined}
@@ -1092,36 +1315,80 @@ export function ConnectModal({
                         {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'SMTP' })}
                       </span>
                     )}
+                    {portRangeError === 'smtp' && (
+                      <span role="alert" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)' }}>
+                        {tr('connect.errorPortRange')}
+                      </span>
+                    )}
                   </div>
                 </>
               )}
 
               <div className="field">
                 <label htmlFor="cm-password">{isGeneric ? tr('connect.passwordLabel') : tr('connect.appPasswordLabel')}</label>
-                <input
-                  id="cm-password"
-                  ref={passwordRef}
-                  className="input"
-                  type="password"
-                  // The old placeholder was "••••-••••-••••-••••", which asserts a
-                  // dashed four-group shape. Only Apple's app-specific password
-                  // looks like that; Yahoo's and Yandex's are unbroken strings and
-                  // the generic connector takes an ordinary password. Showing a
-                  // format that is wrong for most of the form invites users to
-                  // retype the credential into that shape.
-                  placeholder=""
-                  value={form.password}
-                  onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
-                  onKeyDown={e => { if (e.key === 'Enter' && !submitting) handleAppPasswordSubmit(); }}
-                  // A password that was rejected is replaced, not edited, and
-                  // the value is dots so there is nothing to position a caret
-                  // in. Selecting on focus means one paste or one keystroke
-                  // overwrites it, instead of appending to a wrong credential
-                  // the user cannot see.
-                  onFocus={e => e.target.select()}
-                  autoComplete="current-password"
-                  autoFocus={isReconnect}
-                />
+                {/* An app password is 16+ characters typed or pasted blind. With
+                    no way to read it back, a single wrong character is not
+                    correctable, only replaceable, so the field gets a reveal
+                    toggle like every other credential box in the product. */}
+                <div style={{ position: 'relative', display: 'flex' }}>
+                  <input
+                    id="cm-password"
+                    ref={passwordRef}
+                    className="input"
+                    style={{ flex: 1, paddingRight: 40, minWidth: 0 }}
+                    type={passwordVisible ? 'text' : 'password'}
+                    // The old placeholder was "••••-••••-••••-••••", which asserts a
+                    // dashed four-group shape. Only Apple's app-specific password
+                    // looks like that; Yahoo's and Yandex's are unbroken strings and
+                    // the generic connector takes an ordinary password. Showing a
+                    // format that is wrong for most of the form invites users to
+                    // retype the credential into that shape.
+                    placeholder=""
+                    value={form.password}
+                    onChange={e => {
+                      // Once they are typing a replacement, a later click back
+                      // into the field is an edit, not a retry: stop the select.
+                      selectPasswordOnFocus.current = false;
+                      setForm(prev => ({ ...prev, password: e.target.value }));
+                    }}
+                    // A password that was REJECTED is replaced, not edited, so
+                    // that one case still hands the field back selected and one
+                    // keystroke overwrites it. It no longer fires on every focus:
+                    // doing that wiped the value of anyone who clicked back in to
+                    // correct a character.
+                    onFocus={e => {
+                      if (!selectPasswordOnFocus.current) return;
+                      selectPasswordOnFocus.current = false;
+                      e.target.select();
+                    }}
+                    autoComplete="current-password"
+                    autoFocus={isReconnect}
+                  />
+                  <button
+                    type="button"
+                    className="plain-focus"
+                    onClick={() => setPasswordVisible(v => !v)}
+                    aria-label={passwordVisible ? tr('connect.hidePassword') : tr('connect.showPassword')}
+                    aria-pressed={passwordVisible}
+                    style={{
+                      position: 'absolute',
+                      right: 4,
+                      top: 0,
+                      height: 36,
+                      width: 32,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--fg-3)',
+                      padding: 0,
+                    }}
+                  >
+                    <Icon name={passwordVisible ? 'eyeoff' : 'eye'} size={15} />
+                  </button>
+                </div>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                   {isGeneric ? tr('connect.passwordHint') : tr('connect.appPasswordHint', { provider: providerLabel() })}
                 </span>
@@ -1166,7 +1433,15 @@ export function ConnectModal({
                     type="button"
                     onClick={() => setAdvancedOpen(open => !open)}
                     aria-expanded={advancedOpen}
-                    aria-controls="cm-advanced"
+                    // No aria-controls: the panel is only in the DOM while it
+                    // is open, so the id it pointed at was absent exactly when
+                    // the attribute mattered, and a reference to nothing is
+                    // worse than no reference. Keeping the panel mounted and
+                    // hidden instead would put a fieldset of ports into the
+                    // form for every mailbox that never needs it, which is the
+                    // thing the disclosure exists to avoid. aria-expanded on
+                    // the button is the part that carries the state.
+                    className="plain-focus"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -1315,7 +1590,10 @@ export function ConnectModal({
                         type="button"
                         onClick={() => setErrorDetailOpen(open => !open)}
                         aria-expanded={errorDetailOpen}
-                        aria-controls="cm-error-detail"
+                        // Same call as the Advanced toggle: the detail block is
+                        // conditionally rendered, so aria-controls pointed at an
+                        // id that did not exist while the disclosure was shut.
+                        className="plain-focus"
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -1371,7 +1649,13 @@ export function ConnectModal({
                   )}
                 </div>
               )}
-            </>
+
+              {/* The form's default button. Hidden because the visible submit
+                  lives in the footer, outside the form; without a default
+                  button a browser will not submit on Enter from a form with
+                  several fields. */}
+              <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
+            </form>
           )}
 
         </div>
@@ -1480,6 +1764,7 @@ export function ConnectModal({
         >
           <div
             className="modal"
+            ref={confirmRef}
             onClick={e => e.stopPropagation()}
             style={{ width: 380 }}
             role="dialog"
