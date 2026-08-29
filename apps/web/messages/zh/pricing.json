@@ -37,6 +37,7 @@
       "name": "Personal",
       "desc": "一个人的三个邮箱：工作、私人，再加一个。",
       "cta": "获取 Personal",
+      "ctaGrandfathered": "你已拥有无限量收件箱",
       "features": [
         "3 个已连接收件箱",
         "定时发送与发送审批",

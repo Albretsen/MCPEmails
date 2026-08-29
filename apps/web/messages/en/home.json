@@ -151,7 +151,8 @@
           "Usage analytics",
           "Email support"
         ],
-        "cta": "Get Personal"
+        "cta": "Get Personal",
+        "ctaGrandfathered": "You already have unlimited inboxes"
       },
       "solo": {
         "name": "Pro",

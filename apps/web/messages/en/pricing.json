@@ -37,6 +37,7 @@
       "name": "Personal",
       "desc": "Three mailboxes for one person: work, personal, and one more.",
       "cta": "Get Personal",
+      "ctaGrandfathered": "You already have unlimited inboxes",
       "features": [
         "3 connected inboxes",
         "Scheduled sends and approvals",

@@ -3,7 +3,7 @@
 import { useEffect, useState, Fragment } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Nav, Footer, useHidePersonalPlan } from './Sections';
+import { Nav, Footer, PlanCtaStatus, useGrandfatheredUnlimited } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import { createClient } from '@/lib/supabase/client';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
@@ -159,15 +159,15 @@ function BillingToggle({ annual, onChange }) {
 function PlanCards({ annual, stripePrices, user }) {
   const t = useTranslations('pricing');
   // Grandfathered visitors keep unlimited inboxes for free, so Personal is a
-  // paid downgrade for them and checkout answers 409. The check resolves after
-  // hydration and defaults to visible, so the cached anonymous page is exactly
-  // what it was. When it does resolve, the card is dropped and the grid moves
-  // to its three-column layout rather than leaving an empty cell.
-  const hidePersonal = useHidePersonalPlan(user);
-  const plans = hidePersonal ? PLANS.filter(p => p.key !== 'personal') : PLANS;
+  // paid downgrade for them and checkout answers 409. They still see the card:
+  // the hero and the comparison table both describe Personal, so removing only
+  // the card made the page argue with itself. Just its CTA becomes a status.
+  // The check resolves after hydration and defaults to false, so the cached
+  // anonymous page and the first client render are exactly what they were.
+  const grandfathered = useGrandfatheredUnlimited(user);
   return (
-    <div className={'price-grid' + (hidePersonal ? ' price-grid-3' : '')}>
-      {plans.map(plan => {
+    <div className="price-grid">
+      {PLANS.map(plan => {
         // Derive live prices from Stripe, falling back to static plan values.
         const liveMonthlyCents = stripePrices?.[plan.key]?.monthlyCents;
         const liveYearlyCents = stripePrices?.[plan.key]?.yearlyCents;
@@ -215,7 +215,11 @@ function PlanCards({ annual, stripePrices, user }) {
                 <li key={f}><MIcon name="check" size={14} color="var(--mint-600)" />{f}</li>
               ))}
             </ul>
-            {plan.key === 'free' ? (
+            {grandfathered && plan.key === 'personal' ? (
+              <PlanCtaStatus minHeight={44}>
+                {t('plans.personal.ctaGrandfathered')}
+              </PlanCtaStatus>
+            ) : plan.key === 'free' ? (
               <a
                 className={'btn btn-lg ' + (plan.ctaPrimary ? 'btn-primary' : 'btn-secondary')}
                 href={user ? '/dashboard' : plan.ctaHref}

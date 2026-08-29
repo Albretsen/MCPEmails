@@ -668,12 +668,15 @@ export function Quote() {
 
 /**
  * True when the signed-in visitor holds the permanent `unlimited_inboxes`
- * grandfather grant, and the Personal card must therefore be hidden.
+ * grandfather grant.
  *
  * Every pre-repricing account keeps unlimited inboxes for free, so for that
  * cohort Personal (three inboxes, $5) is a paid downgrade. The checkout API
- * refuses it with a 409 and the dashboard already hides it; this keeps the
- * marketing pages from advertising a purchase the server will reject.
+ * refuses it with a 409 and the dashboard hides it there. The public marketing
+ * pages still SHOW the card (the hero and the comparison table both describe
+ * Personal, so removing only the card contradicted the rest of the page); they
+ * swap its buy link for a plain, non-interactive line saying the visitor
+ * already has unlimited inboxes.
  *
  * `/` and `/pricing` are public and CDN-cached, so the entitlement CANNOT be
  * resolved on the server without making the page per-user for everybody. It is
@@ -684,13 +687,13 @@ export function Quote() {
  * for a purely cosmetic decision.
  *
  * Fails OPEN in every uncertain case (anonymous visitor, no entitlement row,
- * network or policy error): the 409 is the real protection, and hiding the
- * card from someone who could legitimately buy it costs a sale.
+ * network or policy error): the 409 is the real protection, and withholding
+ * the buy link from someone who could legitimately buy it costs a sale.
  *
  * @param {import('@supabase/supabase-js').User | null | undefined} knownUser
  *   The already-resolved visitor, or `undefined` to resolve it here.
  */
-export function useHidePersonalPlan(knownUser) {
+export function useGrandfatheredUnlimited(knownUser) {
   const [entitledUserId, setEntitledUserId] = useState(null);
   const [ownUser, setOwnUser] = useState(null);
   const resolveOwnUser = knownUser === undefined;
@@ -705,7 +708,7 @@ export function useHidePersonalPlan(knownUser) {
         const { data } = await createClient().auth.getUser();
         if (!cancelled) setOwnUser(data?.user ?? null);
       } catch {
-        /* stay anonymous, which shows the card */
+        /* stay anonymous, which shows the normal buy CTA */
       }
     })();
     return () => { cancelled = true; };
@@ -726,15 +729,48 @@ export function useHidePersonalPlan(knownUser) {
         if (cancelled || error) return;
         if (data?.unlimited_inboxes === true) setEntitledUserId(userId);
       } catch {
-        /* leave the card visible */
+        /* leave the normal buy CTA in place */
       }
     })();
     return () => { cancelled = true; };
   }, [userId]);
 
   // Derived rather than stored, so signing out or switching account falls back
-  // to showing the card without a synchronous setState inside the effect.
+  // to the normal buy CTA without a synchronous setState inside the effect.
   return userId !== null && entitledUserId === userId;
+}
+
+/**
+ * The Personal card's call to action for a visitor who already holds the
+ * grandfathered unlimited-inbox grant. Plain text, not a link or a button:
+ * there is nothing here to activate, so there must be nothing focusable
+ * either. A check mark and muted type keep it reading as a status rather than
+ * a greyed-out button that invites a click. `minHeight` matches the button it
+ * replaces so the card does not resize when the entitlement resolves.
+ *
+ * @param {{ children: React.ReactNode, minHeight: number }} props
+ */
+export function PlanCtaStatus({ children, minHeight }) {
+  return (
+    <p
+      style={{
+        margin: 0,
+        minHeight,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        textAlign: 'center',
+        fontFamily: 'var(--font-sans)',
+        fontSize: 13.5,
+        lineHeight: 1.45,
+        color: 'var(--fg-3)',
+      }}
+    >
+      <MIcon name="check" size={14} color="var(--mint-600)" />
+      {children}
+    </p>
+  );
 }
 
 /* ============== PRICING ============== */
@@ -765,12 +801,12 @@ export function Pricing({ onGetStarted, stripePrices }) {
   ];
 
   // Grandfathered visitors already have unlimited inboxes for free, so Personal
-  // would be a paid downgrade. Resolved after hydration, defaulting to visible,
-  // so anonymous visitors and the cached HTML keep all four cards. Dropping the
-  // card also switches the grid to its three-column layout, so the remaining
-  // cards fill the row instead of leaving a hole where Personal was.
-  const hidePersonal = useHidePersonalPlan();
-  const tiers = hidePersonal ? allTiers.filter((tier) => tier.priceKey !== 'personal') : allTiers;
+  // would be a paid downgrade for them. Every visitor still sees all four
+  // cards; only the Personal CTA changes, into a plain status line. Resolved
+  // after hydration and defaulting to false, so the cached anonymous HTML and
+  // the first client render both carry the ordinary buy link.
+  const grandfathered = useGrandfatheredUnlimited();
+  const tiers = allTiers;
   return (
     <section className="section" id="pricing">
       <div className="container">
@@ -779,7 +815,7 @@ export function Pricing({ onGetStarted, stripePrices }) {
           <h2>{t('pricing.title')}</h2>
           <p className="sub">{t('pricing.sub')}</p>
         </div>
-        <div className={'price-grid' + (hidePersonal ? ' price-grid-3' : '')}>
+        <div className="price-grid">
           {tiers.map((tier) => {
             const liveMonthlyCents = stripePrices?.[tier.priceKey]?.monthlyCents;
             const livePrice =
@@ -803,13 +839,19 @@ export function Pricing({ onGetStarted, stripePrices }) {
                     <li key={f}><MIcon name="check" size={14} color="var(--mint-600)"/>{f}</li>
                   ))}
                 </ul>
-                <a
-                  className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
-                  href={tier.ctaHref}
-                  onClick={tier.priceKey === 'free' ? onGetStarted : undefined}
-                >
-                  {t(`pricing.tiers.${tier.msgKey}.cta`)}
-                </a>
+                {grandfathered && tier.priceKey === 'personal' ? (
+                  <PlanCtaStatus minHeight={36}>
+                    {t('pricing.tiers.personal.ctaGrandfathered')}
+                  </PlanCtaStatus>
+                ) : (
+                  <a
+                    className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
+                    href={tier.ctaHref}
+                    onClick={tier.priceKey === 'free' ? onGetStarted : undefined}
+                  >
+                    {t(`pricing.tiers.${tier.msgKey}.cta`)}
+                  </a>
+                )}
               </div>
             );
           })}

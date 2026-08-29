@@ -151,7 +151,8 @@
           "使用分析",
           "邮件支持"
         ],
-        "cta": "获取 Personal"
+        "cta": "获取 Personal",
+        "ctaGrandfathered": "你已拥有无限量收件箱"
       },
       "solo": {
         "name": "Pro",
