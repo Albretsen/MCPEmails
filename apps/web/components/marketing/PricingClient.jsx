@@ -277,8 +277,8 @@ function ComparisonTable() {
             <th className="feat-col">{t('comparison.featureCol')}</th>
             <th>{t('comparison.free')}</th>
             <th>{t('comparison.personal')}</th>
-            <th>{t('comparison.solo')}</th>
-            <th className="featured-col">{t('comparison.team')}</th>
+            <th className="featured-col">{t('comparison.solo')}</th>
+            <th>{t('comparison.team')}</th>
           </tr>
         </thead>
         <tbody>
@@ -366,8 +366,15 @@ export default function PricingClient({ stripePrices }) {
       <section className="pricing-page-hero">
         <div className="container">
           <div className="eye-label">{t('hero.eyebrow')}</div>
+          {/* The second line has to name the price the Personal card is
+              actually showing. The toggle defaults to annual, so an
+              unconditional "$5" headline sat directly above a $4 card. Both
+              strings keep the same short declarative shape, and the yearly one
+              quotes the annual total (matching the card's "Billed $48/year")
+              rather than a per-month figure stripped of its commitment. */}
           <h1 className="pricing-page-h1">
-            {t('hero.titleLine1')}<br />{t('hero.titleLine2')}
+            {t('hero.titleLine1')}<br />
+            {annual ? t('hero.titleLine2Yearly') : t('hero.titleLine2')}
           </h1>
           <p className="pricing-page-lead">
             {t('hero.lead')}

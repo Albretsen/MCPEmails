@@ -475,11 +475,8 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 .tbl-check svg { display: inline-block; vertical-align: middle; }
 .tbl-dash span { color: var(--fg-4); font-size: 16px; }
 .tbl-val { font-family: var(--font-sans); font-size: 14px; color: var(--fg-2); }
-.featured-col.tbl-check, .featured-col.tbl-dash, .featured-col.tbl-val {
-  background: rgba(37,71,229,0.03);
-}
-/* Highlight the pro column in tbody (col 1 is the feature label, then
-   Free, Personal, Pro, Team) */
+/* Highlight the Pro column in tbody (col 1 is the feature label, then
+   Free, Personal, Pro, Team), matching thead th.featured-col. */
 .comparison-tbl tbody tr:not(.tbl-section-head) td:nth-child(4) {
   background: rgba(37, 71, 229, 0.03);
 }
