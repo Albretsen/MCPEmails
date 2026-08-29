@@ -112,12 +112,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (!validation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
-    // AUTH_FAILED means the mail server rejected the credentials. Surface a
-    // structured error_code so the client can distinguish a credential
-    // rejection from other 422 causes (missing/invalid fields, bad host,
-    // etc.). Network/TLS errors keep their own messages without error_code.
-    const body: Record<string, string> = { error: validation.message };
-    if (validation.code === 'AUTH_FAILED') body.error_code = 'auth_failed';
+    // Every validator code is surfaced, not just AUTH_FAILED, and in the same
+    // lower-cased form the SMTP branch below already uses. A timeout or a TLS
+    // failure is the case where the machine-readable code matters most: the fix
+    // is a port or security mode in Advanced settings, and the client opens
+    // that section only when it can tell a transport failure from a credential
+    // one. Sending no code left those failures indistinguishable from a bad
+    // password, which is the one cause Advanced settings cannot fix.
+    const body: Record<string, string> = {
+      error: validation.message,
+      error_code: validation.code.toLowerCase(),
+    };
     // AUTH_FAILED used to be skipped here on the theory that a wrong password
     // is user-driven noise. That reasoning does not survive contact with the
     // numbers: auth failures are the single largest bucket of generic IMAP

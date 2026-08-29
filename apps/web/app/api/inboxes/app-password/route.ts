@@ -148,14 +148,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (!validation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
-    // AUTH_FAILED means the mail server rejected the credentials (wrong app
-    // password / account-level auth issue). Surface a structured error_code so
-    // the client can distinguish a credential rejection from other 422 causes
-    // (bad input, unsupported provider, etc.). All other error codes retain
-    // their own messages with no extra error_code (network / TLS / protocol
-    // errors are handled separately and the message is already actionable).
-    const body: Record<string, string> = { error: validation.message };
-    if (validation.code === 'AUTH_FAILED') body.error_code = 'auth_failed';
+    // Every validator code is surfaced in the same lower-cased form the SMTP
+    // branch below uses, not AUTH_FAILED alone. The message being "actionable"
+    // was never the point: the client picks a short headline from the code and
+    // decides whether the fix lives in Advanced settings, and a timeout or TLS
+    // failure with no code reads to it exactly like a rejected password.
+    const body: Record<string, string> = {
+      error: validation.message,
+      error_code: validation.code.toLowerCase(),
+    };
     // Every failure is recorded, AUTH_FAILED included. Skipping it used to look
     // like the right call (a wrong password is user-driven noise), but it left
     // a service that rejects *every* login indistinguishable from a typo, and

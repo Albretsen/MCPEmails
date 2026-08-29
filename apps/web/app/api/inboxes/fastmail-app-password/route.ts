@@ -46,9 +46,8 @@ const FASTMAIL_IMAP_PORT = 993;
  * keeping parity with the generic provider message.
  */
 const FASTMAIL_AUTH_FAILED_MESSAGE =
-  'The mail server rejected these credentials. Make sure you are using a ' +
-  'Fastmail app password (not your main Fastmail password). Custom-domain ' +
-  'accounts may also require a separate IMAP username.';
+  'Fastmail needs an app password, not your main password. ' +
+  'Custom domains may also need a separate IMAP username.';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // 1. Verify the user is authenticated.
@@ -118,13 +117,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (!validation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
-    // AUTH_FAILED → Fastmail-specific message with app-password hint; include
-    // a structured error_code so the client can distinguish a credential
-    // rejection from other 422s (missing fields, network errors, etc.).
+    // AUTH_FAILED keeps the Fastmail-specific message with its app-password
+    // hint; every other code keeps the validator's own message. The code itself
+    // is always sent, lower-cased, matching the SMTP branch below: the client
+    // needs it to tell a timeout or a TLS failure (fixable in Advanced
+    // settings) from a rejected credential (not fixable there).
     const isAuthFailed = validation.code === 'AUTH_FAILED';
     const userMessage = isAuthFailed ? FASTMAIL_AUTH_FAILED_MESSAGE : validation.message;
-    const body: Record<string, string> = { error: userMessage };
-    if (isAuthFailed) body.error_code = 'auth_failed';
+    const body: Record<string, string> = {
+      error: userMessage,
+      error_code: validation.code.toLowerCase(),
+    };
     // Fastmail is the clearest case against skipping AUTH_FAILED here: it has
     // 6 connect attempts and 0 successes, every one of them an auth failure,
     // and because this branch dropped exactly those rows there was nothing on

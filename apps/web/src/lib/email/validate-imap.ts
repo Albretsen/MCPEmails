@@ -38,7 +38,12 @@ export interface ImapCredential {
 }
 
 export const IMAP_VALIDATION_MESSAGES: Record<ImapValidationErrorCode, string> = {
-  AUTH_FAILED: 'The mail server rejected these credentials. Check the username and password — some hosts use a separate login username (not your email address), and providers with 2-step verification require an app password.',
+  // This text is now disclosure detail, not the headline: the client leads with
+  // its own short sentence keyed off AUTH_FAILED and puts this behind "What to
+  // check". So it carries only the two fixes that are not already implied by
+  // "the server rejected these credentials", and the app-password hint stays,
+  // because a missing app password is the most common cause of this failure.
+  AUTH_FAILED: 'Some hosts need a separate login username instead of your email address, and providers with 2-step verification need an app password.',
   CONNECTION_REFUSED: 'Could not connect to the mail server. Please check the host and try again.',
   CONNECTION_TIMEOUT: 'The connection to the mail server timed out. Please try again.',
   TLS_HANDSHAKE_FAILED: 'Could not establish a secure connection to the mail server. Check that the selected security mode matches the port.',

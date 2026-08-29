@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
-import { upgradeDestination } from '@/lib/billing/upgrade-intent.mjs';
+import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
 import {
   IMAP_PRESETS,
   GENERIC_IMAP_DEFAULTS,
@@ -53,6 +53,83 @@ const APP_PASSWORD_URLS = {
   yandex: 'https://id.yandex.com/security/app-passwords',
   fastmail: 'https://app.fastmail.com/settings/security/apppw',
 };
+
+/**
+ * One short sentence per failure, chosen by the route's `error_code`.
+ *
+ * The routes answer with three-line paragraphs of troubleshooting prose, which
+ * is genuinely useful text that nobody reads when it is the first thing on
+ * screen after a failed submit. The headline below leads instead, and the
+ * route's own message moves behind the "What to check" disclosure.
+ */
+const ERROR_HEADLINE_KEYS = {
+  auth_failed: 'connect.errorAuthShort',
+  auth_mechanism_unsupported: 'connect.errorAuthMechanismShort',
+  connection_refused: 'connect.errorUnreachableShort',
+  connection_timeout: 'connect.errorTimeoutShort',
+  tls_handshake_failed: 'connect.errorSecurityShort',
+  // Both protocol errors share a headline: from the user's side they are the
+  // same event, a server that answered with something we could not parse. The
+  // route's own message, which names the protocol, sits in the disclosure.
+  imap_protocol_error: 'connect.errorProtocolShort',
+  smtp_protocol_error: 'connect.errorProtocolShort',
+  login_already_connected: 'connect.errorLoginTakenShort',
+};
+
+/**
+ * Failures whose fix lives in Advanced settings (port / security mode). When
+ * one of these comes back, the section is opened so the fields the user has to
+ * change are actually on screen.
+ */
+const TRANSPORT_ERROR_CODES = new Set([
+  'connection_refused',
+  'connection_timeout',
+  'tls_handshake_failed',
+  // A malformed IMAP greeting is almost always plaintext against 993 or
+  // implicit TLS against 143, so the fix is a port or a security mode and the
+  // section holding both has to be open.
+  'imap_protocol_error',
+  'smtp_protocol_error',
+  'auth_mechanism_unsupported',
+]);
+
+/**
+ * Split a host field into a host and, when present, the port the user typed
+ * into it.
+ *
+ * People copy their provider's documented settings verbatim, and providers
+ * document them as `imap.example.com:993`. They also paste whole URLs. Both
+ * used to be submitted as a hostname, which resolves to nothing and fails in
+ * the `tcp` phase with an error about the host being unreachable, several
+ * steps away from the actual mistake.
+ *
+ * A single trailing `:<digits>` is a port. Anything with more colons is a bare
+ * IPv6 literal and is left alone; a bracketed literal (`[::1]:993`) is
+ * unwrapped explicitly.
+ */
+export function splitHostPort(raw) {
+  let value = String(raw ?? '').trim();
+  if (!value) return { host: '', port: null };
+  // imaps:// imap:// https:// ssl:// ...
+  value = value.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
+  // Anything after the authority is a path, query or fragment.
+  value = value.split(/[/?#]/)[0];
+  // user@host, which a pasted URL can carry.
+  const at = value.lastIndexOf('@');
+  if (at >= 0) value = value.slice(at + 1);
+
+  const bracketed = value.match(/^\[([^\]]+)\](?::(\d{1,5}))?$/);
+  if (bracketed) {
+    const port = bracketed[2] ? Number(bracketed[2]) : null;
+    return { host: bracketed[1], port: port && port <= 65535 ? port : null };
+  }
+
+  const match = value.match(/^([^:]+):(\d{1,5})$/);
+  if (!match) return { host: value, port: null };
+  const port = Number(match[2]);
+  if (!port || port > 65535) return { host: value, port: null };
+  return { host: match[1], port };
+}
 
 /**
  * ConnectModal.jsx: inbox connection modal.
@@ -177,6 +254,40 @@ export function ConnectModal({
   const [serverLimit, setServerLimit] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  // The long-form troubleshooting text that used to lead the alert. It is kept,
+  // but behind a disclosure, so the first thing the user reads is one sentence.
+  const [errorDetail, setErrorDetail] = useState(null);
+  const [errorDetailOpen, setErrorDetailOpen] = useState(false);
+  // A rejected password is replaced far more often than it is edited, so after
+  // a failure the field is focused with its contents selected: the next
+  // keystroke overwrites it.
+  const passwordRef = useRef(null);
+
+  /**
+   * Advanced settings (generic IMAP only): ports, security modes and the
+   * optional login username. Collapsed by default because they are noise for
+   * nearly every mailbox, but NEVER collapsed over a value that differs from
+   * the default. A reconnect carrying port 143, STARTTLS or a separate login
+   * username opens the section on mount, so nothing the user is about to
+   * submit is hidden from them.
+   */
+  const [advancedOpen, setAdvancedOpen] = useState(() => {
+    const imapPort = Number(reconnect?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort);
+    const smtpPort = Number(reconnect?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort);
+    const imapSecurity = reconnect?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls');
+    const smtpSecurity = reconnect?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls');
+    return (
+      imapPort !== GENERIC_IMAP_DEFAULTS.imapPort ||
+      smtpPort !== GENERIC_IMAP_DEFAULTS.smtpPort ||
+      imapSecurity !== 'tls' ||
+      smtpSecurity !== GENERIC_IMAP_DEFAULTS.smtpSecurity ||
+      Boolean(reconnect?.username)
+    );
+  });
+  // Set when a port was lifted out of a host field, so the move is announced
+  // rather than silently applied to a field that may be out of sight.
+  // Shape: { protocol: 'imap' | 'smtp', port: number }.
+  const [portNote, setPortNote] = useState(null);
   // When the user clicks outside the modal (the scrim) after typing
   // credentials, show a discard confirmation instead of closing outright so
   // an accidental click doesn't wipe what they entered.
@@ -267,12 +378,53 @@ export function ConnectModal({
   };
 
   const setPort = (protocol, value) => {
+    // Any deliberate edit of a port field supersedes the "moved your port here"
+    // note, which is only ever about the value that was just lifted for them.
+    setPortNote(null);
     const implied = securityForPort(protocol, Number(value));
     setForm(prev => ({
       ...prev,
       [protocol === 'imap' ? 'imapPort' : 'smtpPort']: value,
       ...(implied ? { [protocol === 'imap' ? 'imapSecurity' : 'smtpSecurity']: implied } : {}),
     }));
+  };
+
+  /**
+   * Lift a pasted port (or a pasted URL) out of a host field and into the
+   * matching port field.
+   *
+   * Runs on blur rather than on every keystroke: reacting mid-typing would move
+   * "9" into the port box while the user is still typing "993". It also runs
+   * once more on submit, so a port typed into the host is never discarded even
+   * if the field never lost focus.
+   *
+   * Returns the resolved { host, port } so the submit path can use the values
+   * without waiting for a re-render.
+   */
+  const normalizeHostField = protocol => {
+    const key = protocol === 'imap' ? 'imapHost' : 'smtpHost';
+    const parsed = splitHostPort(form[key]);
+    // Reconnect locks the server fields: nothing to rewrite, and the stored
+    // host is the row's identity.
+    if (isReconnect) return parsed;
+    if (parsed.host !== form[key]) {
+      setForm(prev => ({ ...prev, [key]: parsed.host }));
+    }
+    if (parsed.port !== null) {
+      // Reuse the port setter so the security mode still follows a standard
+      // port, exactly as if the value had been typed into the port field.
+      setPort(protocol, String(parsed.port));
+      setAdvancedOpen(true);
+      setPortNote({ protocol, port: parsed.port });
+    }
+    return parsed;
+  };
+
+  /** Replace the alert with a single sentence and no expandable detail. */
+  const showError = message => {
+    setFormError(message);
+    setErrorDetail(null);
+    setErrorDetailOpen(false);
   };
 
   // ── Step 1: provider selected ──────────────────────────────────────────────
@@ -312,7 +464,7 @@ export function ConnectModal({
   // ── Step 2: credentials submission ─────────────────────────────────────────
 
   const handleAppPasswordSubmit = async () => {
-    setFormError(null);
+    showError(null);
 
     const email = form.email.trim().toLowerCase();
     // Branded app-password providers issue tokens that never contain
@@ -327,11 +479,11 @@ export function ConnectModal({
       : normalizeAppPassword(form.password);
 
     if (!email || !email.includes('@')) {
-      setFormError(tr('connect.errorEmailRequired'));
+      showError(tr('connect.errorEmailRequired'));
       return;
     }
     if (!appPassword) {
-      setFormError(tr('connect.errorPasswordRequired'));
+      showError(tr('connect.errorPasswordRequired'));
       return;
     }
 
@@ -356,24 +508,35 @@ export function ConnectModal({
         body.yandexAccountType = yandexAccountType;
       }
     } else {
-      // Generic IMAP/SMTP.
-      const imapHost = form.imapHost.trim().toLowerCase();
-      const smtpHost = form.smtpHost.trim().toLowerCase();
-      const imapPort = Number(form.imapPort);
-      const smtpPort = Number(form.smtpPort);
+      // Generic IMAP/SMTP. Parse the host fields once more here: blur normally
+      // does this, but a user who pastes and immediately clicks Connect (or
+      // submits from the password field) never blurs the host, and the port
+      // they typed must not be thrown away.
+      const imapParsed = normalizeHostField('imap');
+      const smtpParsed = normalizeHostField('smtp');
+      const imapHost = imapParsed.host.toLowerCase();
+      const smtpHost = smtpParsed.host.toLowerCase();
+      const imapPort = Number(imapParsed.port ?? form.imapPort);
+      const smtpPort = Number(smtpParsed.port ?? form.smtpPort);
       if (!imapHost || !smtpHost) {
-        setFormError(tr('connect.errorHostRequired'));
+        showError(tr('connect.errorHostRequired'));
         return;
       }
       if (!imapPort || !smtpPort) {
-        setFormError(tr('connect.errorPortRequired'));
+        showError(tr('connect.errorPortRequired'));
         return;
       }
       endpoint = '/api/inboxes/imap';
       // Optional: a login username distinct from the email address. Blank means
       // the server authenticates with the email address.
       const username = form.username.trim();
-      body = { email, username, appPassword, imapHost, imapPort, smtpHost, smtpPort, imapSecurity: form.imapSecurity, smtpSecurity: form.smtpSecurity };
+      // A port lifted out of a host field on this very click has not reached
+      // `form` yet, so derive the security mode from the port that is actually
+      // being submitted. Otherwise a pasted `imap.example.com:143` would be
+      // sent with implicit TLS and fail the handshake.
+      const imapSecurity = (imapParsed.port !== null ? securityForPort('imap', imapPort) : null) ?? form.imapSecurity;
+      const smtpSecurity = (smtpParsed.port !== null ? securityForPort('smtp', smtpPort) : null) ?? form.smtpSecurity;
+      body = { email, username, appPassword, imapHost, imapPort, smtpHost, smtpPort, imapSecurity, smtpSecurity };
     }
 
     setSubmitting(true);
@@ -396,7 +559,7 @@ export function ConnectModal({
         // sentences come from the message catalogue.
         if (data.error_code === 'inbox_limit_reached') {
           setLastFailure({ code: null, count: 0 });
-          setFormError(null);
+          showError(null);
           setServerLimit({
             planName: typeof data.plan_name === 'string' ? data.plan_name : planName,
             inboxCount: typeof data.current_count === 'number' ? data.current_count : null,
@@ -408,8 +571,29 @@ export function ConnectModal({
         const code = data.error_code ?? 'connection_failed';
         const count = lastFailure.code === code ? lastFailure.count + 1 : 1;
         setLastFailure({ code, count });
-        const recovery = count >= 2 ? ' Repeating the same attempt is unlikely to help. Recheck the username, app-password requirements, and security mode before trying again.' : '';
-        setFormError((data.error ?? tr('connect.errorConnectionFailed')) + recovery);
+
+        // One sentence leads. The route's own paragraph is real diagnostic
+        // detail, so it is kept, but folded into "What to check" underneath
+        // together with the second-attempt advice.
+        setFormError(tr(ERROR_HEADLINE_KEYS[code] ?? 'connect.errorConnectionFailed'));
+        const details = [];
+        if (typeof data.error === 'string' && data.error.trim()) details.push(data.error.trim());
+        if (count >= 2) details.push(tr('connect.errorRepeatHint'));
+        setErrorDetail(details.length > 0 ? details.join(' ') : null);
+        setErrorDetailOpen(false);
+
+        // A port/security failure is fixed in Advanced settings, so put those
+        // fields on screen rather than leaving the fix behind a closed section.
+        if (isGeneric && TRANSPORT_ERROR_CODES.has(code)) setAdvancedOpen(true);
+
+        // A rejected credential is almost always replaced wholesale rather than
+        // edited, so hand the field back ready to overwrite. Only for auth
+        // failures: stealing focus when the fix is a host or a port would move
+        // the user away from the field they need.
+        if (code === 'auth_failed' && passwordRef.current) {
+          passwordRef.current.focus();
+          passwordRef.current.select();
+        }
         return;
       }
 
@@ -423,7 +607,7 @@ export function ConnectModal({
       const optimisticLabel = email.split('@')[0] || email;
       onConnect({ provider: optimisticProvider, address: email, label: optimisticLabel });
     } catch {
-      setFormError(tr('connect.errorNetwork'));
+      showError(tr('connect.errorNetwork'));
     } finally {
       setSubmitting(false);
     }
@@ -431,7 +615,7 @@ export function ConnectModal({
 
   const handleBackToProviders = () => {
     setStep(1);
-    setFormError(null);
+    showError(null);
   };
 
   /**
@@ -858,98 +1042,56 @@ export function ConnectModal({
                 </>
               )}
 
+              {/* The common path: the two hosts, nothing else. Ports, security
+                  modes and the optional login username are protocol detail that
+                  99% of mailboxes never need, and having them inline (with two
+                  unlabelled TLS/STARTTLS selects bracketing the host rows, so
+                  neither obviously belonged to IMAP or to SMTP) is what made
+                  this form read as a wall of settings. They now live in
+                  Advanced settings, below the password. */}
               {isGeneric && (
                 <>
                   <div className="field">
-                    <label htmlFor="cm-username">{tr('connect.usernameLabel')}</label>
+                    <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>
                     <input
-                      id="cm-username"
+                      id="cm-imap-host"
                       className="input"
                       type="text"
-                      placeholder={tr('connect.usernamePlaceholder')}
-                      value={form.username}
-                      onChange={e => setForm(prev => ({ ...prev, username: e.target.value }))}
-                      autoComplete="username"
-                      // Locked on reconnect: this was the root cause of the
-                      // wrong-mailbox bug — a blank username field autofilled with
-                      // another account's saved login. Identity stays fixed.
+                      placeholder="imap.example.com"
+                      value={form.imapHost}
+                      onChange={e => { setPortNote(null); setForm(prev => ({ ...prev, imapHost: e.target.value })); }}
+                      onBlur={() => normalizeHostField('imap')}
                       readOnly={isReconnect}
                       aria-readonly={isReconnect || undefined}
                     />
                     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                      {tr('connect.usernameHint')}
+                      {tr('connect.hostPasteHint')}
                     </span>
+                    {portNote?.protocol === 'imap' && (
+                      <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)' }}>
+                        {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'IMAP' })}
+                      </span>
+                    )}
                   </div>
+
                   <div className="field">
-                    <label htmlFor="cm-imap-security">{tr('connect.imapSecurityLabel')}</label>
-                    <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setSecurity('imap', e.target.value)} disabled={isReconnect}>
-                      <option value="tls">{tr('connect.securityTls')}</option>
-                      <option value="starttls">{tr('connect.securityStarttls')}</option>
-                    </select>
-                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                      {tr('connect.securityPortNote')}
-                    </span>
-                  </div>
-                  <div className="field host-port-row">
-                    <div style={{ flex: 1 }}>
-                      <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>
-                      <input
-                        id="cm-imap-host"
-                        className="input"
-                        type="text"
-                        placeholder="imap.example.com"
-                        value={form.imapHost}
-                        onChange={e => setForm(prev => ({ ...prev, imapHost: e.target.value }))}
-                        readOnly={isReconnect}
-                        aria-readonly={isReconnect || undefined}
-                      />
-                    </div>
-                    <div className="port-field">
-                      <label htmlFor="cm-imap-port">{tr('connect.imapPortLabel')}</label>
-                      <input
-                        id="cm-imap-port"
-                        className="input"
-                        type="number"
-                        value={form.imapPort}
-                        onChange={e => setPort('imap', e.target.value)}
-                        readOnly={isReconnect}
-                        aria-readonly={isReconnect || undefined}
-                      />
-                    </div>
-                  </div>
-                  <div className="field host-port-row">
-                    <div style={{ flex: 1 }}>
-                      <label htmlFor="cm-smtp-host">{tr('connect.smtpHostLabel')}</label>
-                      <input
-                        id="cm-smtp-host"
-                        className="input"
-                        type="text"
-                        placeholder="smtp.example.com"
-                        value={form.smtpHost}
-                        onChange={e => setForm(prev => ({ ...prev, smtpHost: e.target.value }))}
-                        readOnly={isReconnect}
-                        aria-readonly={isReconnect || undefined}
-                      />
-                    </div>
-                    <div className="port-field">
-                      <label htmlFor="cm-smtp-port">{tr('connect.smtpPortLabel')}</label>
-                      <input
-                        id="cm-smtp-port"
-                        className="input"
-                        type="number"
-                        value={form.smtpPort}
-                        onChange={e => setPort('smtp', e.target.value)}
-                        readOnly={isReconnect}
-                        aria-readonly={isReconnect || undefined}
-                      />
-                    </div>
-                  </div>
-                  <div className="field">
-                    <label htmlFor="cm-smtp-security">{tr('connect.smtpSecurityLabel')}</label>
-                    <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setSecurity('smtp', e.target.value)} disabled={isReconnect}>
-                      <option value="tls">{tr('connect.securityTls')}</option>
-                      <option value="starttls">{tr('connect.securityStarttls')}</option>
-                    </select>
+                    <label htmlFor="cm-smtp-host">{tr('connect.smtpHostLabel')}</label>
+                    <input
+                      id="cm-smtp-host"
+                      className="input"
+                      type="text"
+                      placeholder="smtp.example.com"
+                      value={form.smtpHost}
+                      onChange={e => { setPortNote(null); setForm(prev => ({ ...prev, smtpHost: e.target.value })); }}
+                      onBlur={() => normalizeHostField('smtp')}
+                      readOnly={isReconnect}
+                      aria-readonly={isReconnect || undefined}
+                    />
+                    {portNote?.protocol === 'smtp' && (
+                      <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)' }}>
+                        {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'SMTP' })}
+                      </span>
+                    )}
                   </div>
                 </>
               )}
@@ -958,6 +1100,7 @@ export function ConnectModal({
                 <label htmlFor="cm-password">{isGeneric ? tr('connect.passwordLabel') : tr('connect.appPasswordLabel')}</label>
                 <input
                   id="cm-password"
+                  ref={passwordRef}
                   className="input"
                   type="password"
                   // The old placeholder was "••••-••••-••••-••••", which asserts a
@@ -970,6 +1113,12 @@ export function ConnectModal({
                   value={form.password}
                   onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
                   onKeyDown={e => { if (e.key === 'Enter' && !submitting) handleAppPasswordSubmit(); }}
+                  // A password that was rejected is replaced, not edited, and
+                  // the value is dots so there is nothing to position a caret
+                  // in. Selecting on focus means one paste or one keystroke
+                  // overwrites it, instead of appending to a wrong credential
+                  // the user cannot see.
+                  onFocus={e => e.target.select()}
                   autoComplete="current-password"
                   autoFocus={isReconnect}
                 />
@@ -1005,6 +1154,142 @@ export function ConnectModal({
                 )}
               </div>
 
+              {/* ── Advanced settings (generic IMAP only) ──────────────────
+                  Closed by default, but opened automatically whenever it holds
+                  a value that differs from the default, whenever a port is
+                  lifted out of a host field, and whenever a failure comes back
+                  that can only be fixed in here. Nothing that is about to be
+                  submitted is ever hidden. */}
+              {isGeneric && (
+                <div style={{ borderTop: '1px solid var(--border-1)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => setAdvancedOpen(open => !open)}
+                    aria-expanded={advancedOpen}
+                    aria-controls="cm-advanced"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'transparent',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: 'var(--fg-2)',
+                      width: 'fit-content',
+                    }}
+                  >
+                    <span style={{
+                      display: 'inline-flex',
+                      transform: advancedOpen ? 'rotate(90deg)' : 'none',
+                      transition: 'transform 120ms ease',
+                    }}>
+                      <Icon name="chevron" size={13} />
+                    </span>
+                    {tr('connect.advancedToggle')}
+                  </button>
+
+                  {advancedOpen && (
+                    <div id="cm-advanced" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5 }}>
+                        {tr('connect.advancedHint')}
+                      </span>
+
+                      <div className="field">
+                        <label htmlFor="cm-username">{tr('connect.usernameLabel')}</label>
+                        <input
+                          id="cm-username"
+                          className="input"
+                          type="text"
+                          placeholder={tr('connect.usernamePlaceholder')}
+                          value={form.username}
+                          onChange={e => setForm(prev => ({ ...prev, username: e.target.value }))}
+                          autoComplete="username"
+                          // Locked on reconnect: this was the root cause of the
+                          // wrong-mailbox bug — a blank username field autofilled with
+                          // another account's saved login. Identity stays fixed.
+                          readOnly={isReconnect}
+                          aria-readonly={isReconnect || undefined}
+                        />
+                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                          {tr('connect.usernameHint')}
+                        </span>
+                      </div>
+
+                      {/* Each control sits under the protocol it belongs to.
+                          Previously the two security selects sat at opposite
+                          ends of the form and neither said which half it
+                          governed. */}
+                      <fieldset style={{ border: '1px solid var(--border-1)', borderRadius: 8, padding: 12, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', padding: '0 6px' }}>
+                          {tr('connect.imapSectionLabel')}
+                        </legend>
+                        <div className="field">
+                          <label htmlFor="cm-imap-security">{tr('connect.imapSecurityLabel')}</label>
+                          <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setSecurity('imap', e.target.value)} disabled={isReconnect}>
+                            <option value="tls">{tr('connect.securityTls')}</option>
+                            <option value="starttls">{tr('connect.securityStarttls')}</option>
+                          </select>
+                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                            {tr('connect.securityPortNote')}
+                          </span>
+                        </div>
+                        <div className="field">
+                          <label htmlFor="cm-imap-port">{tr('connect.imapPortLabel')}</label>
+                          <input
+                            id="cm-imap-port"
+                            className="input"
+                            type="number"
+                            value={form.imapPort}
+                            onChange={e => setPort('imap', e.target.value)}
+                            readOnly={isReconnect}
+                            aria-readonly={isReconnect || undefined}
+                          />
+                        </div>
+                      </fieldset>
+
+                      <fieldset style={{ border: '1px solid var(--border-1)', borderRadius: 8, padding: 12, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', padding: '0 6px' }}>
+                          {tr('connect.smtpSectionLabel')}
+                        </legend>
+                        <div className="field">
+                          <label htmlFor="cm-smtp-security">{tr('connect.smtpSecurityLabel')}</label>
+                          <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setSecurity('smtp', e.target.value)} disabled={isReconnect}>
+                            <option value="tls">{tr('connect.securityTls')}</option>
+                            <option value="starttls">{tr('connect.securityStarttls')}</option>
+                          </select>
+                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                            {tr('connect.securityPortNote')}
+                          </span>
+                        </div>
+                        <div className="field">
+                          <label htmlFor="cm-smtp-port">{tr('connect.smtpPortLabel')}</label>
+                          <input
+                            id="cm-smtp-port"
+                            className="input"
+                            type="number"
+                            value={form.smtpPort}
+                            onChange={e => setPort('smtp', e.target.value)}
+                            readOnly={isReconnect}
+                            aria-readonly={isReconnect || undefined}
+                          />
+                        </div>
+                      </fieldset>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* One sentence, then a disclosure. The alert used to open with
+                  the route's whole troubleshooting paragraph plus an appended
+                  recovery sentence, which is more text than anyone reads at the
+                  moment a connection just failed. The detail is still here, and
+                  the app-password guidance (the single most common cause of a
+                  rejection on every branded provider) is one click away with
+                  its generator link. */}
               {formError && (
                 <div
                   role="alert"
@@ -1017,9 +1302,73 @@ export function ConnectModal({
                     fontSize: 13,
                     color: 'var(--red-700)',
                     lineHeight: 1.5,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
                   }}
                 >
-                  {formError}
+                  <span>{formError}</span>
+
+                  {(errorDetail || (!isGeneric && APP_PASSWORD_URLS[provider])) && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setErrorDetailOpen(open => !open)}
+                        aria-expanded={errorDetailOpen}
+                        aria-controls="cm-error-detail"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          background: 'transparent',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          fontFamily: 'var(--font-sans)',
+                          fontSize: 12.5,
+                          fontWeight: 500,
+                          color: 'var(--red-700)',
+                          textDecoration: 'underline',
+                          width: 'fit-content',
+                        }}
+                      >
+                        <span style={{
+                          display: 'inline-flex',
+                          transform: errorDetailOpen ? 'rotate(90deg)' : 'none',
+                          transition: 'transform 120ms ease',
+                        }}>
+                          <Icon name="chevron" size={12} />
+                        </span>
+                        {tr('connect.errorWhatToCheck')}
+                      </button>
+
+                      {errorDetailOpen && (
+                        <div id="cm-error-detail" style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12.5, lineHeight: 1.55 }}>
+                          {!isGeneric && (
+                            <span>{tr(HINT_KEYS[provider] ?? 'connect.hintGeneric')}</span>
+                          )}
+                          {errorDetail && <span>{errorDetail}</span>}
+                          {!isGeneric && APP_PASSWORD_URLS[provider] && (
+                            <a
+                              href={APP_PASSWORD_URLS[provider]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                color: 'var(--red-700)',
+                                width: 'fit-content',
+                              }}
+                            >
+                              <Icon name="key" size={12} />
+                              {tr('connect.openAppPasswordPage', { provider: providerLabel() })}
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </>
@@ -1030,9 +1379,11 @@ export function ConnectModal({
         {/* Footer */}
         <div className="modal-foot">
           {/* Plan limit reached: go straight to Stripe Checkout for Personal
-              monthly. /dashboard/settings?upgrade=personal&interval=month is
-              consumed by BillingSection, which starts checkout on mount, so
-              this is one click from blocked to card form.
+              monthly. /api/stripe/checkout/start creates the session server
+              side and redirects to Stripe, so this is one click from blocked
+              to card form with no dashboard render in between. It must stay a
+              plain anchor: a next/link prefetch would open checkout sessions
+              for people who never clicked.
 
               Personal, not Pro: the cap this panel answers is the Free plan's
               single inbox, and the cheapest plan that clears it is Personal at
@@ -1064,7 +1415,7 @@ export function ConnectModal({
                 {tr('connect.comparePlans')}
               </a>
               <a
-                href={upgradeDestination(upgradeCopy.plan, false)}
+                href={checkoutStartHref(upgradeCopy.plan, false)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
