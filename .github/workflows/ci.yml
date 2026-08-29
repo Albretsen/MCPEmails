@@ -32,6 +32,22 @@ jobs:
       - name: Run TypeScript type check
         run: cd apps/web && npx tsc --noEmit
 
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # 22, not 20: every test:* script runs TypeScript sources through
+          # `node --test --experimental-strip-types`, which does not exist on 20.
+          # Running these on 20 is why they were never in CI.
+          node-version: '22'
+          cache: 'npm'
+      - run: npm install
+      - name: Run unit tests
+        run: cd apps/web && npm test
+
   build:
     name: Build Check
     runs-on: ubuntu-latest
