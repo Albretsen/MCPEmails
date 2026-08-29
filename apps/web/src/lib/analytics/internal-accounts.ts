@@ -42,9 +42,37 @@ function configuredInternalEmails(): Set<string> {
   );
 }
 
+/**
+ * Plus-addressed variants of a listed address are the same person.
+ *
+ * `bjellanda+test@gmail.com` is an alias of `bjellanda@gmail.com`, not a
+ * second human, and it is how our own test accounts get made. Matching only
+ * the exact string let one of those through as an external customer: it had
+ * completed a live 100% off checkout, so the kiosk's checkout funnel reported
+ * two people as having paid us when one of them was us. The list stays a list
+ * of real addresses and the aliasing is handled here, because asking whoever
+ * adds the next test account to also remember to list its alias is how the
+ * same wrong number comes back.
+ *
+ * Only the tag is stripped, and only against addresses we have already
+ * declared internal. Gmail's dot-insensitivity is deliberately NOT emulated:
+ * it is Gmail-specific, and folding `a.b@` into `ab@` across every provider
+ * would silently merge accounts belonging to different people.
+ */
 export function isInternalAccount(email: string | null): boolean {
   if (!email) return false;
   const normalized = email.trim().toLowerCase();
   if (INTERNAL_DOMAINS.some((domain) => normalized.endsWith(domain))) return true;
-  return configuredInternalEmails().has(normalized);
+  const configured = configuredInternalEmails();
+  return configured.has(normalized) || configured.has(withoutPlusTag(normalized));
+}
+
+/** `name+anything@host` becomes `name@host`. Anything else is returned as is. */
+function withoutPlusTag(email: string): string {
+  const at = email.lastIndexOf('@');
+  if (at <= 0) return email;
+  const local = email.slice(0, at);
+  const plus = local.indexOf('+');
+  if (plus <= 0) return email;
+  return `${local.slice(0, plus)}${email.slice(at)}`;
 }

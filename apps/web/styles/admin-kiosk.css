@@ -170,6 +170,7 @@
   font-variant-numeric: tabular-nums;
   color: var(--fg-1);
 }
+.kiosk-big-value.is-long { font-size: clamp(21px, 4.4dvh, 48px); }
 .kiosk-big-suffix { font-size: 0.42em; font-weight: 550; color: var(--fg-3); margin-left: 0.12em; letter-spacing: 0; }
 .kiosk-trend {
   font-size: clamp(10px, 1.6dvh, 16px);

@@ -36,6 +36,7 @@ export {
   NO_DATA,
   clamp,
   formatCount,
+  formatMoney,
   formatPercent,
   ratio,
   share,

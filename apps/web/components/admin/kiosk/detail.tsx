@@ -13,25 +13,30 @@
  * Like the board, aggregates only. No workspace names, no owner addresses.
  */
 
+import Link from 'next/link';
 import {
   fetchClientMix,
   fetchErrorBreakdown,
   fetchEngagementBands,
   fetchRetentionCurve,
 } from '@/lib/analytics/growth-queries';
-import { NO_DATA, formatCount, ratio } from '../charts';
-import { BarList, Tile, TileError } from './primitives';
+import { fetchCheckoutFunnel, fetchRecurringRevenue } from '@/lib/analytics/kiosk-revenue';
+import type { CheckoutFunnel } from '@/lib/analytics/kiosk-revenue';
+import { NO_DATA, formatCount, formatMoney, ratio } from '../charts';
+import { BarList, FactRow, Tile, TileError } from './primitives';
 import { KIOSK_WINDOW_DAYS } from './board';
 
 /** Weeks of the retention curve to show. Twelve is one quarter. */
 const RETENTION_WEEKS = 12;
 
 export async function KioskDetail() {
-  const [retention, bands, clients, errors] = await Promise.all([
+  const [retention, bands, clients, errors, checkout, recurring] = await Promise.all([
     fetchRetentionCurve(RETENTION_WEEKS),
     fetchEngagementBands(KIOSK_WINDOW_DAYS),
     fetchClientMix(),
     fetchErrorBreakdown(KIOSK_WINDOW_DAYS),
+    fetchCheckoutFunnel(),
+    fetchRecurringRevenue(KIOSK_WINDOW_DAYS),
   ]);
 
   return (
@@ -41,7 +46,7 @@ export async function KioskDetail() {
           <h2>Supporting detail</h2>
           <p>External accounts only where the metric supports it. All dates UTC.</p>
         </div>
-        <a href="/admin/growth">Open the full growth page</a>
+        <Link href="/admin/growth">Open the full growth page</Link>
       </header>
 
       {/* Retention as a table rather than a curve. Below the fold it is being
@@ -76,6 +81,94 @@ export async function KioskDetail() {
         </Tile>
       ) : (
         <TileError label="Retention after first value" message={retention.error} />
+      )}
+
+      {/* The checkout funnel in full, because the board above only has room
+          for the two rungs of it that matter most. Counted in distinct
+          workspaces and all-time: a handful of checkouts a year would show as
+          zeros in any window short enough to be interesting.
+
+          "Abandoned" is the row to read first. It is the only stage where
+          someone had already decided to pay us and did not, which makes it the
+          one number here with a fix attached rather than a strategy. */}
+      {checkout.ok ? (
+        <Tile
+          label="Checkout funnel"
+          aside={checkout.data.lastCompletedAt ? `last sale ${daysAgo(checkout.data.lastCompletedAt)}` : 'no sale yet'}
+        >
+          <table className="kiosk-table">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th className="is-num">Workspaces</th>
+                <th className="is-num">Of viewers</th>
+              </tr>
+            </thead>
+            <tbody>
+              {checkoutStages(checkout.data).map((row) => (
+                <tr key={row.label}>
+                  <td>{row.label}</td>
+                  <td className="is-num">{formatCount(row.value)}</td>
+                  <td className="is-num">{row.share ? ratio(row.value, checkout.data.pricingViewed) : NO_DATA}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <FactRow
+            facts={[
+              { label: 'Portal opened', value: checkout.data.portalOpened },
+              { label: 'Create failed', value: checkout.data.checkoutFailed },
+              { label: 'Ours, excluded', value: checkout.data.internalExcluded },
+            ]}
+          />
+        </Tile>
+      ) : (
+        <TileError label="Checkout funnel" message={checkout.error} />
+      )}
+
+      {/* Which tier the money is actually in. The board above shows one total;
+          this says whether that total is one Team seat or twenty Personal
+          ones, which is the question the 2026-08-19 repricing was a bet on.
+          Comped subscriptions are real accounts with no money in them, so they
+          are a fact underneath rather than a row in the table. */}
+      {recurring.ok ? (
+        <Tile
+          label="Where the money is"
+          aside={`${formatMoney(recurring.data.arrMinor, recurring.data.currency)} a year`}
+        >
+          {recurring.data.byPlan.length === 0 ? (
+            <p className="kiosk-empty">No paid subscription is live.</p>
+          ) : (
+            <table className="kiosk-table">
+              <thead>
+                <tr>
+                  <th>Plan</th>
+                  <th className="is-num">Customers</th>
+                  <th className="is-num">Per month</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recurring.data.byPlan.map((row) => (
+                  <tr key={row.label}>
+                    <td>{row.label}</td>
+                    <td className="is-num">{formatCount(row.customers)}</td>
+                    <td className="is-num">{formatMoney(row.mrrMinor, recurring.data.currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <FactRow
+            facts={[
+              { label: 'Comped', value: recurring.data.compedCustomers },
+              { label: 'Payment failing', value: recurring.data.atRiskCustomers },
+              { label: 'Leaving', value: recurring.data.leavingCustomers },
+              { label: 'Ours, excluded', value: recurring.data.internalCustomers },
+            ]}
+          />
+        </Tile>
+      ) : (
+        <TileError label="Where the money is" message={recurring.error} />
       )}
 
       {bands.ok ? (
@@ -144,4 +237,30 @@ export async function KioskDetail() {
       )}
     </section>
   );
+}
+
+/**
+ * The checkout stages as table rows.
+ *
+ * "Started a checkout" and everything after it is shown as a share of the
+ * people who looked at the plans, not of every signup: the question this table
+ * answers is what happens to intent once it exists, and dividing by the whole
+ * estate would bury a 60% abandonment rate under a small percentage.
+ */
+function checkoutStages(funnel: CheckoutFunnel) {
+  return [
+    { label: 'Looked at the plans', value: funnel.pricingViewed, share: false },
+    { label: 'Started a checkout', value: funnel.checkoutStarted, share: true },
+    { label: 'Abandoned on Stripe', value: funnel.abandoned, share: true },
+    { label: 'Paid', value: funnel.checkoutCompleted, share: true },
+  ];
+}
+
+/** Whole days since an ISO timestamp, phrased for a wall. */
+function daysAgo(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (!Number.isFinite(days) || days < 0) return 'just now';
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  return `${days} days ago`;
 }
