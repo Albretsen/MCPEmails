@@ -435,6 +435,17 @@
     "errCheckoutFailed": "No se pudo iniciar el pago. Inténtalo de nuevo.",
     "errCheckoutUnexpected": "Respuesta inesperada del pago. Inténtalo de nuevo.",
     "networkError": "Error de red. Inténtalo de nuevo.",
+    "checkoutError": {
+      "comped": "Tu cuenta ya tiene acceso completo sin coste. Escríbenos si necesitas cambiarlo.",
+      "grandfathered_personal": "Ya tienes bandejas conectadas ilimitadas sin coste, así que Personal sería un paso atrás para ti. Escríbenos si necesitas cambiarlo.",
+      "plan_not_self_service": "Tu plan se gestiona de forma manual. Contacta con soporte para cambiarlo.",
+      "already_on_plan": "Ya estás en este plan.",
+      "already_on_plan_interval": "Ya estás en este plan y con esta periodicidad de facturación.",
+      "price_not_configured": "Este plan no se puede contratar ahora mismo. Inténtalo más tarde o contacta con soporte.",
+      "workspace_not_found": "No hemos encontrado tu espacio de trabajo. Recarga la página e inténtalo de nuevo.",
+      "invalid_plan": "Ese enlace de cambio de plan no es válido. Elige un plan más abajo.",
+      "invalid_interval": "Ese enlace de cambio de plan no es válido. Elige un plan más abajo."
+    },
     "plans": {
       "personalFeature1": "3 bandejas conectadas",
       "personalFeature2": "120 peticiones / minuto (ráfaga 2×)",

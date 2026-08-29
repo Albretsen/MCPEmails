@@ -435,6 +435,17 @@
     "errCheckoutFailed": "Kunne ikke starte betaling. Prøv igjen.",
     "errCheckoutUnexpected": "Uventet svar fra betaling. Prøv igjen.",
     "networkError": "Nettverksfeil. Prøv igjen.",
+    "checkoutError": {
+      "comped": "Kontoen din har allerede full tilgang uten kostnad. Ta kontakt hvis du vil endre det.",
+      "grandfathered_personal": "Du har allerede ubegrenset antall innbokser gratis, så Personal ville vært et steg ned for deg. Ta kontakt hvis du vil endre det.",
+      "plan_not_self_service": "Abonnementet ditt administreres manuelt. Kontakt support for å endre det.",
+      "already_on_plan": "Du er allerede på dette abonnementet.",
+      "already_on_plan_interval": "Du er allerede på dette abonnementet og faktureringsintervallet.",
+      "price_not_configured": "Dette abonnementet kan ikke kjøpes akkurat nå. Prøv igjen senere, eller kontakt support.",
+      "workspace_not_found": "Vi fant ikke arbeidsområdet ditt. Last inn siden på nytt og prøv igjen.",
+      "invalid_plan": "Denne oppgraderingslenken er ikke gyldig. Velg et abonnement nedenfor.",
+      "invalid_interval": "Denne oppgraderingslenken er ikke gyldig. Velg et abonnement nedenfor."
+    },
     "plans": {
       "personalFeature1": "3 tilkoblede innbokser",
       "personalFeature2": "120 forespørsler / minutt (2× burst)",
