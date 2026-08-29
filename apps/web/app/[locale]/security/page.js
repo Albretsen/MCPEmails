@@ -51,6 +51,9 @@ export default async function SecurityPage({ params }) {
   const richTags = {
     b: (c) => <strong>{c}</strong>,
     c: (c) => <code>{c}</code>,
+    // Some strings use the long <code> form used everywhere else in the app.
+    // Without this handler next-intl throws FORMATTING_ERROR and the page dies.
+    code: (c) => <code>{c}</code>,
   };
   return (
     <div>
