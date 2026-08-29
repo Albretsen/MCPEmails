@@ -112,3 +112,50 @@ Deno.test("no message instructs the model to do anything", () => {
     }
   }
 });
+
+// ── an action that was sent but did not land ─────────────────────────────────
+//
+// "requires an 'action' argument and none was given" is a true sentence for a
+// caller that sent nothing and a false one for a caller that sent an action in
+// the wrong shape or the wrong place — which is most of them. A self-correcting
+// error message can afford to be terse; it cannot afford to be wrong about what
+// the caller did.
+
+Deno.test("an action of the wrong type is not reported as a missing one", () => {
+  const text = buildUnknownActionText("email_read", null, ["list", "read", "search"], {
+    kind: "wrong_type",
+    received: "object",
+  });
+  assertIncludes(text, "'action' of type object", "what was actually sent");
+  assert(!text.includes("none was given"), `it was given, just not as a string: ${text}`);
+  assertIncludes(text, "list, read, search", "the whole enum, which is still the remedy");
+});
+
+Deno.test("an action nested under a wrapper key is reported where it actually is", () => {
+  // {"arguments": {"action": "list"}} — the model composed the JSON-RPC
+  // envelope rather than the tool's arguments.
+  const text = buildUnknownActionText("email_read", null, ["list", "read", "search"], {
+    kind: "nested",
+    container: "arguments",
+    value: "list",
+  });
+  assertIncludes(text, "'list'", "the action it did send");
+  assertIncludes(text, "'arguments'", "the key it sent it under");
+  assertIncludes(text, "top level", "where the selector is read");
+  assert(!text.includes("none was given"), `it was given, just not at the top level: ${text}`);
+});
+
+Deno.test("a genuinely absent action still reads as absent", () => {
+  const text = buildUnknownActionText("email_read", null, ["list", "read", "search"]);
+  assertIncludes(text, "requires an 'action' argument and none was given", "unchanged wording");
+});
+
+Deno.test("a misplaced-action message echoes no more of the caller's value than any other", () => {
+  const text = buildUnknownActionText("folder", null, ["list", "create"], {
+    kind: "nested",
+    container: "x".repeat(500),
+    value: "y".repeat(500),
+  });
+  assert(!text.includes("x".repeat(50)), `the container name must be truncated: ${text}`);
+  assert(!text.includes("y".repeat(50)), `the action value must be truncated: ${text}`);
+});

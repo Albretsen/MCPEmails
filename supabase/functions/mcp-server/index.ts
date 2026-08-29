@@ -92,11 +92,14 @@ import {
 } from "./triage-engine.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
 import {
+  type ActionMisplacement,
   buildInvalidArgumentsText,
   buildUnknownActionText,
 } from "./invalid-arguments-message.ts";
 import {
   type ActionArgumentIndex,
+  allowsLenientArguments,
+  buildIgnoredArgumentsNote,
   type ExtraArgumentReview,
   neutralDefaultOf,
   reviewExtraArguments,
@@ -104,7 +107,9 @@ import {
 } from "./consolidated-arguments.ts";
 import { buildUsageLimitText, USAGE_LIMIT_SUPPORT_EMAIL } from "./usage-limit-message.ts";
 import {
+  DATE_INPUT_EXAMPLES,
   isIsoDateOrDateTime,
+  normalizeDateOrDateTime,
   type NormalizedSearch,
   parseIsoDate,
   SEARCH_FIELD_DESCRIPTIONS,
@@ -112,6 +117,21 @@ import {
   toGraphSearch,
   toImapSearch,
 } from "./search-translate.ts";
+import {
+  BULK_WALL_CLOCK_BUDGET_MS,
+  type BulkPartialFields,
+  bulkPartialFields,
+  type BulkStopReason,
+  createWorkBudget,
+  remainingIds as idsNotYetProcessed,
+  type WorkBudget,
+} from "./bulk-budget.ts";
+import { ImapSession } from "./imap-session.ts";
+import {
+  groupImapIdsByFolder,
+  type ImapFolderGroup,
+  runImapFolderGroups,
+} from "./imap-bulk-groups.ts";
 
 // ---------------------------------------------------------------------------
 // Supabase service-role client
@@ -767,11 +787,18 @@ async function completeOutboundIdempotency(
   logStatus: "success" | "error",
   logErrorCode: string | null,
   approvalId?: string,
+  /** See {@link isPartialToolResult}: a partial must not be filed as done. */
+  partial = false,
 ): Promise<void> {
   if (!claim || claim.kind !== "proceed") return;
   // An unhandled failure may happen after provider acceptance; preserve the
   // conservative unknown state rather than making a subsequent retry send again.
-  const status = approvalId ? "pending_approval" : logStatus === "success" ? "succeeded"
+  // A budget-stopped partial takes the same conservative state for the mirror
+  // reason: some of the work landed, the rest did not, and "succeeded" would
+  // make a retry a no-op that silently abandons the remainder.
+  const status = approvalId ? "pending_approval"
+    : partial ? "unknown"
+    : logStatus === "success" ? "succeeded"
     : (logErrorCode === "provider_error" || logErrorCode === "-32603") ? "unknown"
     : "failed";
   const { error } = await supabase.from("outbound_idempotency")
@@ -799,6 +826,36 @@ async function completeApprovedOutboundIdempotency(
   if (error) console.error("[mcp-server] idempotency_approval_complete_failed", { approval_id: approvalId, error: error.message });
 }
 
+/**
+ * Did this tool result stop short of the work it was asked to do?
+ *
+ * Read off `structuredContent` rather than the text, for the same reason
+ * `pendingApprovalIdFromToolResult` does: the JSON is the contract, the prose
+ * is not.
+ *
+ * This exists for one reason, and it is a sharp edge worth stating plainly. A
+ * budget-stopped bulk operation returns `logStatus: "success"` — correctly, the
+ * work it did really happened. But `completeOutboundIdempotency` derives its
+ * ledger status from `logStatus`, so a partial would be filed as `succeeded`,
+ * and a caller that retried the SAME request with the SAME idempotency_key to
+ * finish the job would be told "this logical request was already processed, the
+ * mailbox was not changed again" and would stop. The remaining messages would
+ * never be deleted, and nothing would say so. Recording a partial as `unknown`
+ * instead gives that retry the honest answer ("a prior submission may have
+ * reached the provider; check the mailbox") and leaves the caller free to act.
+ *
+ * The resumed call is a different request — a different `message_ids` list — so
+ * it produces a different request digest and is neither collapsed as a replay
+ * nor mistaken for the original. Reusing the key on the resumed call is a
+ * `conflict`, which is the right answer to "same key, different arguments".
+ */
+function isPartialToolResult(response: JsonRpcSuccessResponse | JsonRpcErrorResponse): boolean {
+  if (!("result" in response) || !response.result || typeof response.result !== "object") return false;
+  const structured = (response.result as { structuredContent?: unknown }).structuredContent;
+  if (!structured || typeof structured !== "object") return false;
+  return (structured as Record<string, unknown>).partial === true;
+}
+
 /** Extracts the approval snapshot identity without depending on text formatting. */
 function pendingApprovalIdFromToolResult(response: JsonRpcSuccessResponse | JsonRpcErrorResponse): string | undefined {
   if (!("result" in response) || !response.result || typeof response.result !== "object") return undefined;
@@ -808,6 +865,32 @@ function pendingApprovalIdFromToolResult(response: JsonRpcSuccessResponse | Json
   return payload.status === "pending_approval" && typeof payload.approval_id === "string"
     ? payload.approval_id
     : undefined;
+}
+
+/**
+ * Append a server note to a successful tool result.
+ *
+ * The note goes in its OWN content block rather than into the JSON payload.
+ * `content[0].text` is the serialized `structuredContent`, so a trailing
+ * sentence appended to it would stop the block parsing as JSON for every client
+ * that reads it that way; and `structuredContent` itself is described by an
+ * outputSchema, several of which are `additionalProperties: false`, so an
+ * unannounced `notes` key would fail a strict client's own validation. A second
+ * TextContent block is spec-legal, is what a model reads anyway, and changes
+ * neither contract.
+ *
+ * Only successful results are annotated. A failure already carries its own
+ * explanation and a note about an argument that was dropped on the way to it
+ * would only compete with it.
+ */
+function appendResultNote(
+  response: JsonRpcSuccessResponse | JsonRpcErrorResponse,
+  note: string,
+): void {
+  if (!("result" in response) || !response.result || typeof response.result !== "object") return;
+  const result = response.result as { content?: unknown; isError?: unknown };
+  if (result.isError === true || !Array.isArray(result.content)) return;
+  result.content.push({ type: "text", text: note });
 }
 
 /**
@@ -4407,6 +4490,45 @@ const BULK_RESULT_SCHEMA = {
     failed: { type: "integer" },
     operation: { type: "string" },
     inbox_id: { type: "string" },
+    // Present only when the run stopped before processing every id. Declared
+    // rather than left to `additionalProperties` because a client that renders
+    // a bulk result from this schema must be able to show "unfinished" — for a
+    // delete, a partial that looks like a completion is the worst outcome the
+    // tool has.
+    partial: {
+      type: "boolean",
+      description:
+        "True when the operation did NOT process every message it was given. " +
+        "succeeded/failed describe only what was attempted; remaining_message_ids " +
+        "lists what was left untouched.",
+    },
+    stopped_reason: {
+      type: "string",
+      enum: ["cancelled", "time_budget"],
+      description:
+        "'cancelled' — a person stopped the run from the dashboard. " +
+        "'time_budget' — the server stopped on its own wall-clock limit so the " +
+        "result could be returned before the client timed out. Neither is an error.",
+    },
+    total_requested: { type: "integer" },
+    remaining: { type: "integer" },
+    remaining_message_ids: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "Messages that were NOT processed and are unchanged. These exact ids, " +
+        "not a repeat of the original search, are what a follow-up call should use.",
+    },
+    continuation: {
+      type: "object",
+      properties: {
+        tool: { type: "string" },
+        action: { type: "string" },
+        message_ids: { type: "array", items: { type: "string" } },
+      },
+      additionalProperties: true,
+    },
+    partial_notice: { type: "string" },
     results: {
       type: "array",
       items: {
@@ -5750,7 +5872,19 @@ function validateInputSchema(schema: InputSchema, value: unknown, path = "argume
     if (schema.format === "uuid" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) add("format", "must be a UUID");
     if (schema.format === "date-time" && (Number.isNaN(Date.parse(value)) || !/(?:Z|[+-]\d{2}:\d{2})$/i.test(value))) add("format", "must be an ISO 8601 date-time with timezone");
     if (schema.format === ISO_DATE_OR_DATE_TIME && !isIsoDateOrDateTime(value)) {
-      add("format", "must be an ISO 8601 date such as 2026-06-01 or a date-time such as 2026-06-01T09:00:00 (a value with no timezone is read as UTC)");
+      // Reached only for a value normalizeDateArguments could not read, which
+      // now means one with more than one reading rather than one with unusual
+      // punctuation. Naming shapes that work is the whole remedy, so the
+      // examples come from the parser itself and cannot promise more than it
+      // takes. Day-first dates are called out by name because they are the
+      // commonest rejected shape and the reason is not guessable: "01-08-2026"
+      // is refused for being ambiguous, not for being wrong.
+      add(
+        "format",
+        `must be a date or date-time with the year first, such as ${DATE_INPUT_EXAMPLES} ` +
+        `(a value with no timezone is read as UTC; a day-first date such as 01-08-2026 ` +
+        `has two readings and is not accepted)`,
+      );
     }
   }
   if (typeof value === "number") {
@@ -5821,6 +5955,102 @@ function validateInputSchema(schema: InputSchema, value: unknown, path = "argume
     }
   }
   return errors;
+}
+
+/**
+ * Work out whether a caller that failed the `action` check actually sent one.
+ *
+ * Two shapes account for nearly all of it. The selector arrives as something
+ * other than a string ({"action": {"name": "list"}}), or the whole argument
+ * object arrives wrapped one level down ({"arguments": {"action": "list"}},
+ * {"input": …}, {"params": …}) because the model composed the JSON-RPC envelope
+ * rather than the tool's arguments. Only ONE level is searched, and only for a
+ * value that is a real member of this tool's enum: a deeper or speculative
+ * search would start inventing an intent from a field that just happens to be
+ * called `action` (automation's own `rule_action` is renamed precisely to keep
+ * those two apart).
+ */
+function findMisplacedAction(
+  argsObj: Record<string, unknown>,
+  validActions: readonly string[],
+): ActionMisplacement | undefined {
+  if ("action" in argsObj && typeof argsObj["action"] !== "string") {
+    return { kind: "wrong_type", received: inputSchemaValueType(argsObj["action"]) };
+  }
+  if ("action" in argsObj) return undefined; // a string, just not one of ours
+  for (const [key, value] of Object.entries(argsObj)) {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) continue;
+    const nested = (value as Record<string, unknown>)["action"];
+    if (typeof nested === "string" && validActions.includes(nested)) {
+      return { kind: "nested", container: key, value: nested };
+    }
+  }
+  return undefined;
+}
+
+/** One `since` / `before` value that was rewritten into canonical form. */
+interface NormalizedDateArgument {
+  /** Dotted path, e.g. `since`, for the operator log. */
+  path: string;
+  /** What the caller sent. Ours to log: it is a date, not message content. */
+  from: string;
+  /** The canonical value validation and the query builders will see. */
+  to: string;
+}
+
+/**
+ * Rewrite every date argument the schema declares into the one shape the
+ * `date-or-date-time` format accepts, IN PLACE, before validation runs.
+ *
+ * The alternative was to relax the format check and normalise inside each
+ * handler, which would have put the accept-list in four places (email_search,
+ * email_search_and_move, email_search_and_delete, the triage runner) and left
+ * the published schema promising something different from what the server does.
+ * Doing it here means the format check still sees exactly one shape, so it
+ * keeps rejecting genuinely ambiguous values, and every consumer downstream —
+ * search-translate's Gmail/IMAP/Graph formatters included — receives a value it
+ * already understood before this function existed.
+ *
+ * Values that cannot be normalised are left untouched so the validator reports
+ * them, with its own message naming shapes that do work.
+ *
+ * `now` is threaded through so that a request whose `since` and `before` are
+ * both relative resolves both against ONE instant. Resolving them against two
+ * reads of the clock is how a window ends up inverted at midnight.
+ */
+function normalizeDateArguments(
+  schema: InputSchema,
+  value: unknown,
+  now: Date,
+  path = "",
+): NormalizedDateArgument[] {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return [];
+  const properties = schema.properties && typeof schema.properties === "object" && !Array.isArray(schema.properties)
+    ? schema.properties as Record<string, InputSchema>
+    : {};
+  const object = value as Record<string, unknown>;
+  const changed: NormalizedDateArgument[] = [];
+  for (const [key, propertySchema] of Object.entries(properties)) {
+    if (!(key in object)) continue;
+    const child = object[key];
+    const childPath = path === "" ? key : `${path}.${key}`;
+    if (propertySchema?.format === ISO_DATE_OR_DATE_TIME && typeof child === "string") {
+      const canonical = normalizeDateOrDateTime(child, now);
+      if (canonical !== null && canonical !== child.trim()) {
+        object[key] = canonical;
+        changed.push({ path: childPath, from: child, to: canonical });
+      }
+      continue;
+    }
+    // Nested objects are walked so a date nested under a declared sub-schema is
+    // normalised too. An object with no declared properties (automation's
+    // free-form `filter`) has nothing to walk; that path is normalised in
+    // buildNormalizedSearch instead, which is where a stored filter is read.
+    if (child !== null && typeof child === "object" && !Array.isArray(child)) {
+      changed.push(...normalizeDateArguments(propertySchema, child, now, childPath));
+    }
+  }
+  return changed;
 }
 
 /**
@@ -6230,6 +6460,61 @@ const INBOX_SELECT_COLUMNS =
  */
 function imapAuthUser(inbox: InboxRow): string {
   return inbox.imap_username || inbox.email_address;
+}
+
+/**
+ * Does this inbox talk IMAP?
+ *
+ * Mirrors the `default:` arm every provider switch in this file uses — Gmail
+ * and Outlook have their own HTTP APIs, everything else (including every named
+ * IMAP service variant, Fastmail among them) goes over IMAP. Written as one
+ * predicate so the session-reuse call sites cannot drift from the dispatch
+ * switches they have to agree with.
+ */
+function isImapInbox(inbox: InboxRow): boolean {
+  return inbox.provider !== "gmail" && inbox.provider !== "outlook";
+}
+
+/**
+ * A shared IMAP session for one tool call, or null for a provider that has no
+ * IMAP connection to share. Callers must `close()` it on every exit path.
+ */
+function imapSessionFor(inbox: InboxRow): ImapSession<ImapClient> | null {
+  return isImapInbox(inbox) ? new ImapSession(imapSessionOpener(inbox)) : null;
+}
+
+/**
+ * Builds a reusable IMAP connect thunk for {@link ImapSession}, with the stored
+ * password decrypted ONCE for the whole session.
+ *
+ * The decrypt was already hoisted out of the per-group loop inside each bulk
+ * helper, but every helper still did its own, and `readImapMessage` did one per
+ * message — so a 50-id `email_read_batch` performed fifty AES-GCM unwraps on
+ * top of its fifty handshakes. Memoising it here, at the session boundary, means
+ * one decrypt per tool call no matter how many folders, groups or messages the
+ * call touches, and a mid-run reconnect after {@link ImapSession.invalidate}
+ * does not redo the key derivation either.
+ *
+ * Throws the `imap_auth_failed` sentinel the callers already map, so a bad
+ * credential surfaces identically whether it fails at decrypt or at AUTH.
+ */
+function imapSessionOpener(inbox: InboxRow): () => Promise<ImapClient> {
+  let cachedPassword: string | null = null;
+  return async () => {
+    if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+      throw new Error("imap_auth_failed");
+    }
+    if (cachedPassword === null) {
+      cachedPassword = await decryptStoredToken(inbox.imap_password);
+    }
+    return await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
+      email: imapAuthUser(inbox),
+      password: cachedPassword,
+    });
+  };
 }
 
 /**
@@ -7984,6 +8269,17 @@ async function readImapMessage(
   markAsRead: boolean,
   attachmentBudgetBytes: number = ATTACHMENT_DATA_BUDGET,
   selectOnlyIndex?: number,
+  /**
+   * Reuse the caller's connection instead of opening one.
+   *
+   * `email_read_batch` calls this in a loop, so without a shared session a
+   * 50-id batch performed fifty TCP+TLS+AUTH handshakes and fifty SELECTs to
+   * read fifty messages that usually all live in INBOX. That, not the FETCHes,
+   * was the batch-read tail. When omitted the old connect-per-read behaviour is
+   * kept, which is right for the single-message callers (email_read, the
+   * reply/forward quoting paths) that only ever read one.
+   */
+  sharedSession?: ImapSession<ImapClient>,
 ): Promise<ReadEmailResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -7992,18 +8288,10 @@ async function readImapMessage(
   if (!Number.isFinite(uid) || uid <= 0) {
     throw new Error("message_not_found");
   }
-  const password = await decryptStoredToken(inbox.imap_password);
 
-  let client: ImapClient | null = null;
+  const session = sharedSession ?? new ImapSession(imapSessionOpener(inbox));
   try {
-    client = await ImapClient.connect({
-      host: inbox.imap_host,
-      port: inbox.imap_port,
-      security: inbox.imap_security ?? "tls",
-      email: imapAuthUser(inbox),
-      password,
-    });
-    await client.selectMailbox(imapFolderName(folder));
+    const client = await session.select(imapFolderName(folder));
 
     const msg = await client.fetchMessageRaw(uid);
     if (!msg) throw new Error("message_not_found");
@@ -8065,9 +8353,17 @@ async function readImapMessage(
     };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    // A failed read may have left the socket mid-response, so drop the
+    // connection rather than carry a possibly-desynchronised one into the next
+    // read of a shared batch. "message_not_found" is the exception: we raised
+    // it ourselves from an empty FETCH, the protocol exchange completed
+    // normally, and a batch of stale ids must not reconnect once per id.
+    if (!(err instanceof Error && err.message === "message_not_found")) {
+      await session.invalidate();
+    }
     throw err;
   } finally {
-    if (client) await client.logout().catch(() => {});
+    if (!sharedSession) await session.close();
   }
 }
 
@@ -8089,21 +8385,25 @@ async function searchImapMessages(
   limit: number,
   offset: number,
   includeFolders: string[],
+  /**
+   * Reuse the caller's connection instead of opening one.
+   *
+   * `search_and_move` / `search_and_delete` are ONE logical operation that used
+   * to pay the IMAP connect cost at least twice: once here, then again in the
+   * bulk helper after this connection had been closed. Handing the same session
+   * to both halves removes the second handshake — and, more importantly, stops
+   * the pair from churning connections against providers that cap how many an
+   * account may hold at once (see imap-session.ts).
+   */
+  sharedSession?: ImapSession<ImapClient>,
 ): Promise<SearchEmailsResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
   }
-  const password = await decryptStoredToken(inbox.imap_password);
 
-  let client: ImapClient | null = null;
+  const session = sharedSession ?? new ImapSession(imapSessionOpener(inbox));
   try {
-    client = await ImapClient.connect({
-      host: inbox.imap_host,
-      port: inbox.imap_port,
-      security: inbox.imap_security ?? "tls",
-      email: imapAuthUser(inbox),
-      password,
-    });
+    const client = await session.client();
 
     // Explicit includeFolders entries are user/agent-supplied tokens (e.g.
     // "sent", "archive") and need imapFolderName's canonical-alias mapping.
@@ -8138,7 +8438,7 @@ async function searchImapMessages(
     let total = 0;
     const candidates: Array<{ folder: string; summary: ImapMessageSummary }> = [];
     for (const folder of folders) {
-      await client.selectMailbox(folder);
+      await session.select(folder);
       const allUids = await client.uidSearch(criteria);
       total += allUids.length;
       const candidateUids = allUids
@@ -8174,7 +8474,9 @@ async function searchImapMessages(
     }
     const previews = new Map<string, ImapMessageSummary>();
     for (const [folder, uids] of pageByFolder) {
-      await client.selectMailbox(folder);
+      // Usually a no-op: the preview pass almost always re-selects the mailbox
+      // the ranking pass left selected, and the session elides that SELECT.
+      await session.select(folder);
       const summaries = await client.fetchSummaries(uids);
       for (const summary of summaries) previews.set(`${folder}\u0000${summary.uid}`, summary);
     }
@@ -8209,9 +8511,12 @@ async function searchImapMessages(
     };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    // The search failed mid-exchange; do not hand a possibly-desynchronised
+    // socket to the act phase of a search_and_* call.
+    await session.invalidate();
     throw err;
   } finally {
-    if (client) await client.logout().catch(() => {});
+    if (!sharedSession) await session.close();
   }
 }
 
@@ -9627,6 +9932,13 @@ async function readOneMessage(
       /** Builds the `*_continue` sentence for this caller's tool shape. */
       recovery: (nextOffset: number, html: boolean) => string;
     };
+    /**
+     * An IMAP connection to reuse instead of opening one per read. Only
+     * `email_read_batch` passes it, and it is the whole batch-read fix: fifty
+     * reads used to mean fifty TCP+TLS+AUTH handshakes. Ignored by the Gmail and
+     * Outlook readers, which have no connection to share.
+     */
+    imap_session?: ImapSession<ImapClient>;
   },
 ): Promise<ReadEmailResult> {
   const attachmentBudgetBytes = opts.attachment_max_bytes ?? ATTACHMENT_DATA_BUDGET;
@@ -9664,6 +9976,7 @@ async function readOneMessage(
         opts.mark_as_read,
         attachmentBudgetBytes,
         selectOnlyIndex,
+        opts.imap_session,
       );
       break;
     default:
@@ -10678,90 +10991,134 @@ async function executeReadEmails(
   let bodyBudgetRemaining = BATCH_BODY_RESPONSE_CHARS;
   let messagesLeft = messageIds.length;
 
-  for (const messageId of messageIds) {
-    const allowance = batchBodyAllowance(
-      perMessageBodyCap,
-      bodyBudgetRemaining,
-      messagesLeft,
-    );
-    messagesLeft--;
+  // ── Wall-clock budget and one shared IMAP connection ─────────────────────
+  // This loop is why email_read_batch's tail looked the way it did: it calls
+  // readOneMessage serially, and on IMAP each of those opened its own
+  // connection, so a 50-id batch performed 50 TCP+TLS+AUTH handshakes plus 50
+  // SELECTs and 50 password decrypts to read 50 messages. One session collapses
+  // that to one handshake, one decrypt and (for ids in a single folder) one
+  // SELECT. The budget then guarantees an answer even when a batch of very
+  // large messages is slow anyway.
+  const budget = createWorkBudget();
+  const session = imapSessionFor(inbox);
+  // Ids the budget ran out before reaching. Reported, not silently dropped —
+  // "here are 31 of your 50" with no mention of the other 19 is how a model
+  // ends up believing it has read mail it has not seen.
+  let unread: string[] = [];
 
-    let readResult: ReadEmailResult;
-    try {
-      readResult = await readOneMessage(inbox, messageId, {
-        include_html: includeHtml,
-        include_attachments: includeAttachments,
-        mark_as_read: markAsRead,
-        body_window: {
-          // No batch-level offsets: continuing a specific message inside a
-          // 50-id call is a single read of that id, which is what the
-          // continuation sentence tells the model to do. One shared offset
-          // across 50 different-length bodies would be meaningless, and per-id
-          // offsets would be a parameter shape no model would drive correctly.
-          offset: 0,
-          html_offset: 0,
-          max_chars: allowance,
-          recovery: (next, html) => singleReadContinuation(messageId, next, html),
-        },
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-
-      // Auth failure is fatal for the whole batch — every read would fail.
-      const isAuthFailure =
-        message === "gmail_auth_failed" ||
-        message === "outlook_auth_failed" ||
-        message === "fastmail_auth_failed" ||
-        message === "imap_auth_failed";
-      if (isAuthFailure) {
-        return authFailedResult(inbox.provider, inbox.id, "access");
+  try {
+    for (let i = 0; i < messageIds.length; i++) {
+      const messageId = messageIds[i];
+      // Indexed rather than `indexOf`, so the remainder is the position in the
+      // loop and not a search that would be wrong the moment ids repeated.
+      if (budget.exhausted()) {
+        unread = messageIds.slice(i);
+        break;
       }
+      const allowance = batchBodyAllowance(
+        perMessageBodyCap,
+        bodyBudgetRemaining,
+        messagesLeft,
+      );
+      messagesLeft--;
 
-      if (message === "message_not_found") {
-        errors.push({
-          message_id: messageId,
-          error:
-            "Message not found. The message may have been deleted or the ID is stale — " +
-            "call email_list or email_search to get current message IDs.",
+      let readResult: ReadEmailResult;
+      try {
+        readResult = await readOneMessage(inbox, messageId, {
+          include_html: includeHtml,
+          include_attachments: includeAttachments,
+          mark_as_read: markAsRead,
+          body_window: {
+            // No batch-level offsets: continuing a specific message inside a
+            // 50-id call is a single read of that id, which is what the
+            // continuation sentence tells the model to do. One shared offset
+            // across 50 different-length bodies would be meaningless, and per-id
+            // offsets would be a parameter shape no model would drive correctly.
+            offset: 0,
+            html_offset: 0,
+            max_chars: allowance,
+            recovery: (next, html) => singleReadContinuation(messageId, next, html),
+          },
+          imap_session: session ?? undefined,
         });
-      } else {
-        console.error("[mcp-server] email_read_batch: provider_error", {
-          inbox_id: inboxId,
-          provider: inbox.provider,
-          message_id: messageId,
-          error: message,
-        });
-        errors.push({ message_id: messageId, error: `Provider error: ${message}` });
-      }
-      continue;
-    }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
 
-    // Enforce the shared attachment budget across the batch: once exceeded,
-    // omit further attachment data (keep metadata) and mark it.
-    if (includeAttachments && readResult.attachments.length > 0) {
-      for (const att of readResult.attachments) {
-        if (att.data === null) continue; // already omitted by the reader
-        if (att.size_bytes <= attachmentBudgetRemaining) {
-          attachmentBudgetRemaining -= att.size_bytes;
+        // Auth failure is fatal for the whole batch — every read would fail.
+        const isAuthFailure =
+          message === "gmail_auth_failed" ||
+          message === "outlook_auth_failed" ||
+          message === "fastmail_auth_failed" ||
+          message === "imap_auth_failed";
+        if (isAuthFailure) {
+          return authFailedResult(inbox.provider, inbox.id, "access");
+        }
+
+        if (message === "message_not_found") {
+          errors.push({
+            message_id: messageId,
+            error:
+              "Message not found. The message may have been deleted or the ID is stale — " +
+              "call email_list or email_search to get current message IDs.",
+          });
         } else {
-          att.data = null;
+          console.error("[mcp-server] email_read_batch: provider_error", {
+            inbox_id: inboxId,
+            provider: inbox.provider,
+            message_id: messageId,
+            error: message,
+          });
+          errors.push({ message_id: messageId, error: `Provider error: ${message}` });
+        }
+        continue;
+      }
+
+      // Enforce the shared attachment budget across the batch: once exceeded,
+      // omit further attachment data (keep metadata) and mark it.
+      if (includeAttachments && readResult.attachments.length > 0) {
+        for (const att of readResult.attachments) {
+          if (att.data === null) continue; // already omitted by the reader
+          if (att.size_bytes <= attachmentBudgetRemaining) {
+            attachmentBudgetRemaining -= att.size_bytes;
+          } else {
+            att.data = null;
+          }
         }
       }
+
+      // Spend what this message actually emitted. A short body hands the unspent
+      // remainder to the messages after it rather than wasting it.
+      bodyBudgetRemaining -= (readResult.body_text?.length ?? 0) +
+        (readResult.body_html?.length ?? 0);
+
+      messages.push(readResult);
     }
-
-    // Spend what this message actually emitted. A short body hands the unspent
-    // remainder to the messages after it rather than wasting it.
-    bodyBudgetRemaining -= (readResult.body_text?.length ?? 0) +
-      (readResult.body_html?.length ?? 0);
-
-    messages.push(readResult);
+  } finally {
+    if (session) await session.close();
   }
+
+  // A read is not destructive, so the partial wording is about completeness
+  // rather than safety: the risk here is a model summarising "the inbox" from
+  // a batch it does not realise was truncated.
+  const partial = unread.length > 0
+    ? bulkPartialFields({
+      operation: "email_read_batch",
+      total: messageIds.length,
+      succeeded: messages.length,
+      failed: errors.length,
+      remainingIds: unread,
+      reason: "time_budget",
+      budgetMs: budget.totalMs,
+    })
+    : null;
 
   return {
     result: {
       // Same untrusted-content marking as email_read: bodies are returned
       // verbatim on purpose, so the marker is the mitigation.
-      ...jsonOk(markUntrusted({ messages, errors } as unknown as Record<string, unknown>)),
+      ...jsonOk(markUntrusted(
+        { ...(partial ?? {}), messages, errors } as unknown as Record<string, unknown>,
+      )),
       isError: false,
     },
     logStatus: "success",
@@ -14164,24 +14521,36 @@ function buildNormalizedSearch(
   if (args["has_attachment"] === true) search.has_attachment = true;
   if (args["flagged"] === true) search.flagged = true;
 
-  // Dates: validate by parsing; keep the raw ISO string on success.
+  // Dates: normalise, then validate by parsing; keep the canonical string.
+  //
+  // A tool call has already been through normalizeDateArguments, so this is a
+  // no-op for it. The path that needs it is the unattended triage runner: an
+  // automation's `filter` is a free-form object the tool schema does not
+  // describe, so a stored "7 days ago" or "2026-08-01 10:00:00" reaches here
+  // untouched. Both dates resolve against ONE `now`, so a relative window can
+  // never invert by straddling midnight.
+  const now = new Date();
   const since = str("since");
   if (since) {
+    const canonical = normalizeDateOrDateTime(since, now);
+    if (canonical === null) return { ok: false, badDate: "since" };
     try {
-      parseIsoDate(since);
+      parseIsoDate(canonical);
     } catch {
       return { ok: false, badDate: "since" };
     }
-    search.since = since;
+    search.since = canonical;
   }
   const before = str("before");
   if (before) {
+    const canonical = normalizeDateOrDateTime(before, now);
+    if (canonical === null) return { ok: false, badDate: "before" };
     try {
-      parseIsoDate(before);
+      parseIsoDate(canonical);
     } catch {
       return { ok: false, badDate: "before" };
     }
-    search.before = before;
+    search.before = canonical;
   }
 
   // Legacy free-text query → raw escape hatch.
@@ -14204,7 +14573,10 @@ function invalidSearchDateError(
     result: {
       content: [{
         type: "text",
-        text: `Invalid date for '${field}': expected ISO 8601 (e.g. 2026-06-01).`,
+        text:
+          `Invalid date for '${field}': it has no single reading. Accepted ` +
+          `values put the year first, e.g. ${DATE_INPUT_EXAMPLES}. A day-first ` +
+          `date such as 01-08-2026 is ambiguous and is not accepted.`,
       }],
       isError: true,
     },
@@ -16598,6 +16970,94 @@ interface BulkOpResult {
   succeeded: string[];
   failed: { id: string; error: string }[];
   cancelled?: boolean;
+  /**
+   * Set when the helper stopped before processing every id it was given.
+   * `cancelled` (the pre-existing flag) stays true for BOTH reasons so the
+   * dashboard's partial-completion handling is unchanged; this says WHICH,
+   * because "a human pressed Stop" and "the mailbox is bigger than one call"
+   * need opposite responses from the model and from us.
+   */
+  stoppedReason?: BulkStopReason;
+}
+
+/**
+ * Options every provider bulk helper accepts: a shared IMAP session to reuse
+ * and the call's remaining wall-clock allowance.
+ *
+ * Passed as one object rather than two positional parameters because these
+ * helpers already take four, and a `null` in the wrong slot on a DELETE path is
+ * not a mistake worth leaving available.
+ */
+interface BulkRunOptions {
+  /**
+   * Reused connection for IMAP inboxes. Omitted by callers that only ever
+   * touch one folder group and by the triage runner, which does one id at a
+   * time; those keep the old connect-per-call behaviour.
+   */
+  session?: ImapSession<ImapClient>;
+  /** Stop cleanly and report a partial once this is spent. */
+  budget?: WorkBudget;
+}
+
+/**
+ * Should this helper stop before starting the next unit of work?
+ *
+ * Combines the two cooperative stop signals so no call site can accidentally
+ * honour one and not the other. Order matters: the budget is a local clock
+ * check and free, the cancellation check is a Postgres round-trip, so a
+ * budget-exhausted run does not pay for a database call it will ignore.
+ */
+async function bulkStopSignal(
+  opts: BulkRunOptions | undefined,
+  runId: string | null,
+  succeeded: number,
+  failed: number,
+): Promise<BulkStopReason | null> {
+  if (opts?.budget?.exhausted()) return "time_budget";
+  if (await shouldStopBulkRun(runId, succeeded + failed, succeeded, failed)) return "cancelled";
+  return null;
+}
+
+/**
+ * How often a per-message loop may ask Postgres whether it has been cancelled.
+ *
+ * The IMAP helpers check once per FOLDER GROUP, which is a handful of times per
+ * call. Gmail and Outlook have no bulk endpoint this server can use (see
+ * `gmailBulkMove`), so they loop per message and were checking once per MESSAGE
+ * — a full `UPDATE … RETURNING` round-trip between every provider call. On a
+ * 500-id move that is 500 extra database round-trips interleaved with 500 HTTP
+ * requests, and it was pure overhead: a human who presses Stop does not need
+ * sub-second latency on it.
+ *
+ * Two seconds bounds the wasted work after a cancel at roughly one second of
+ * provider calls while removing ~99% of the round-trips.
+ */
+const BULK_CANCEL_POLL_INTERVAL_MS = 2_000;
+
+/**
+ * A per-message stop check for the providers that have to loop.
+ *
+ * The budget half is a local clock read and runs on EVERY item, because that is
+ * what makes the wall-clock guarantee tight. The cancellation half is throttled
+ * to {@link BULK_CANCEL_POLL_INTERVAL_MS}. Progress counters still ride the
+ * throttled write, so the dashboard sees them advance in steps rather than
+ * continuously — which is what a progress bar wants anyway.
+ */
+function makeBulkStopCheck(
+  opts: BulkRunOptions | undefined,
+  runId: string | null,
+): (succeeded: number, failed: number) => Promise<BulkStopReason | null> {
+  let lastPollAt = 0;
+  return async (succeeded: number, failed: number) => {
+    if (opts?.budget?.exhausted()) return "time_budget";
+    if (!runId) return null;
+    const now = Date.now();
+    if (now - lastPollAt < BULK_CANCEL_POLL_INTERVAL_MS) return null;
+    lastPollAt = now;
+    return await shouldStopBulkRun(runId, succeeded + failed, succeeded, failed)
+      ? "cancelled"
+      : null;
+  };
 }
 
 /**
@@ -16627,7 +17087,23 @@ async function finishBulkRun(runId: string | null, total: number, result: BulkOp
   if (!runId) return;
   const processed = result.succeeded.length + result.failed.length;
   const status = result.cancelled ? "cancelled_partial" : result.failed.length ? "completed_with_errors" : "completed";
-  await supabase.from("bulk_runs").update({ status, processed, succeeded: result.succeeded.length, failed: result.failed.length, completed_at: new Date().toISOString() }).eq("id", runId);
+  // A budget stop and a user cancellation both land on `cancelled_partial`,
+  // because that is what the status column's CHECK constraint allows and what
+  // the dashboard already renders for "stopped with some work done". They are
+  // told apart by `error_code`, which is free text and needs no migration: an
+  // operator looking at a run wants to know whether a human stopped it or the
+  // mailbox was simply bigger than one call, and those call for opposite
+  // responses. `time_budget_exhausted` is not a failure — the run's status
+  // stays `cancelled_partial`, never `failed`.
+  const errorCode = result.stoppedReason === "time_budget" ? "time_budget_exhausted" : null;
+  await supabase.from("bulk_runs").update({
+    status,
+    processed,
+    succeeded: result.succeeded.length,
+    failed: result.failed.length,
+    completed_at: new Date().toISOString(),
+    ...(errorCode ? { error_code: errorCode } : {}),
+  }).eq("id", runId);
 }
 
 async function failBulkRun(runId: string | null, errorCode: string): Promise<void> {
@@ -16706,6 +17182,41 @@ async function resolveBulkArgs(
 }
 
 /**
+ * The partial-result fields for a bulk run, or `undefined` when it finished.
+ *
+ * Kept in one place so every bulk tool describes an unfinished run the same
+ * way. The remainder is computed by SUBTRACTING what was attempted from what
+ * was asked for rather than by remembering a position, because the IMAP helpers
+ * process by source folder and can legitimately finish group three before group
+ * two — a positional cursor would then report the wrong remainder, and on a
+ * delete that means telling the user messages are gone when they are not.
+ */
+function partialFieldsFor(
+  operation: string,
+  requestedIds: string[],
+  result: BulkOpResult,
+  budget?: WorkBudget,
+  permanent?: boolean,
+): BulkPartialFields | undefined {
+  if (!result.cancelled) return undefined;
+  const leftover = idsNotYetProcessed(requestedIds, result.succeeded, result.failed);
+  if (leftover.length === 0) return undefined;
+  return bulkPartialFields({
+    operation,
+    total: requestedIds.length,
+    succeeded: result.succeeded.length,
+    failed: result.failed.length,
+    remainingIds: leftover,
+    // Default to the time budget only when nothing said otherwise: an older
+    // helper that sets `cancelled` without a reason is a user cancellation,
+    // which is what that flag exclusively meant before budgets existed.
+    reason: result.stoppedReason ?? "cancelled",
+    permanent,
+    budgetMs: budget?.totalMs ?? BULK_WALL_CLOCK_BUDGET_MS,
+  });
+}
+
+/**
  * Builds the standard JSON-RPC result for a bulk operation.
  * logStatus is "success" when at least one message succeeded (partial success
  * is still success from the operator's perspective); "error" when all failed.
@@ -16716,6 +17227,15 @@ function formatBulkResult(
   operation: string,
   inboxId: string,
   extra?: Record<string, unknown>,
+  /**
+   * Present only when the run stopped early. Emitted BEFORE `results` so the
+   * "this did not finish" statement is the first thing a reader (model or
+   * human) meets, rather than a flag buried under a 500-element array. A
+   * partial is still `logStatus: "success"` — the work that happened, happened,
+   * and calling it an error would make the model discard the succeeded list,
+   * which on a delete is the one piece of information nobody can reconstruct.
+   */
+  partial?: BulkPartialFields,
 ): {
   result: { content: { type: string; text: string }[] };
   logStatus: "success" | "error";
@@ -16771,6 +17291,7 @@ function formatBulkResult(
       failed: failed.length,
       operation,
       inbox_id: inboxId,
+      ...(partial ?? {}),
       ...extra,
       results,
     }),
@@ -16781,207 +17302,122 @@ function formatBulkResult(
 
 // ── IMAP bulk helpers ─────────────────────────────────────────────────────────
 
+/**
+ * The ONE way this server runs a per-source-folder IMAP bulk operation.
+ *
+ * A thin adapter over `imap-bulk-groups.ts`: it supplies this file's id codec,
+ * folder-name resolver, error classification and session, and the extracted
+ * loop supplies the grouping, the connection reuse and the cooperative stop.
+ * The loop lives in its own module because index.ts cannot be imported by a
+ * test, and "every UID went to the mailbox it belongs to" and "a budget stop
+ * reports an exact remainder" are the two properties in this change that most
+ * need one.
+ */
+function imapBulkByFolderGroup(
+  inbox: InboxRow,
+  messageIds: string[],
+  runId: string | null,
+  opts: BulkRunOptions | undefined,
+  apply: (client: ImapClient, group: ImapFolderGroup) => Promise<void>,
+): Promise<BulkOpResult> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    return Promise.resolve({
+      succeeded: [],
+      failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })),
+    });
+  }
+
+  const { groups, failed } = groupImapIdsByFolder(messageIds, decodeImapId);
+
+  // Borrow the caller's session when it has one, so the search phase's
+  // connection is reused by the act phase of a search_and_* call. Otherwise own
+  // a private one for the duration of this helper — which still collapses every
+  // folder group onto a single handshake.
+  const borrowed = opts?.session;
+  const session = borrowed ?? new ImapSession(imapSessionOpener(inbox));
+
+  return (async () => {
+    try {
+      return await runImapFolderGroups<ImapClient>({
+        groups,
+        preFailed: failed,
+        session,
+        folderName: imapFolderName,
+        apply,
+        stop: (succeeded, failedCount) =>
+          bulkStopSignal(opts, runId, succeeded, failedCount),
+        classifyError: (err) =>
+          err instanceof ImapAuthError
+            ? "imap_auth_failed"
+            : err instanceof Error
+            ? err.message
+            : String(err),
+      });
+    } finally {
+      if (!borrowed) await session.close();
+    }
+  })();
+}
+
 /** Groups IMAP message IDs by source folder and runs a bulk UID MOVE per group. */
-async function imapBulkMove(
+function imapBulkMove(
   inbox: InboxRow,
   messageIds: string[],
   destinationFolderId: string,
   runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
-  }
-
-  const groups = new Map<string, { uid: number; messageId: string }[]>();
-  const failed: { id: string; error: string }[] = [];
-  for (const messageId of messageIds) {
-    const { folder, uid } = decodeImapId(messageId);
-    if (!Number.isFinite(uid) || uid <= 0) {
-      failed.push({ id: messageId, error: "invalid_message_id" });
-      continue;
-    }
-    const g = groups.get(folder);
-    if (g) g.push({ uid, messageId });
-    else groups.set(folder, [{ uid, messageId }]);
-  }
-
-  const succeeded: string[] = [];
-
-  let password: string;
-  try {
-    password = await decryptStoredToken(inbox.imap_password);
-  } catch {
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
-  }
-
-  for (const [folder, items] of groups) {
-    if (await shouldStopBulkRun(runId, succeeded.length + failed.length, succeeded.length, failed.length)) return { succeeded, failed, cancelled: true };
-    let client: ImapClient | null = null;
-    try {
-      client = await ImapClient.connect({
-        host: inbox.imap_host,
-        port: inbox.imap_port,
-        security: inbox.imap_security ?? "tls",
-        email: imapAuthUser(inbox),
-        password,
-      });
-      await client.selectMailbox(imapFolderName(folder));
-      await client.uidMove(items.map((i) => i.uid), destinationFolderId);
-      for (const item of items) succeeded.push(item.messageId);
-    } catch (err) {
-      const msg = err instanceof ImapAuthError
-        ? "imap_auth_failed"
-        : err instanceof Error ? err.message : String(err);
-      for (const item of items) failed.push({ id: item.messageId, error: msg });
-    } finally {
-      if (client) await client.logout().catch(() => {});
-    }
-  }
-
-  return { succeeded, failed };
+  return imapBulkByFolderGroup(inbox, messageIds, runId, opts, (client, group) =>
+    client.uidMove(group.items.map((i) => i.uid), destinationFolderId));
 }
 
 /**
  * Groups IMAP message IDs by source folder and runs a bulk UID COPY per group,
  * leaving the source messages in place.
  */
-async function imapBulkCopy(
+function imapBulkCopy(
   inbox: InboxRow,
   messageIds: string[],
   destinationFolderId: string,
+  runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
-  }
-
-  const groups = new Map<string, { uid: number; messageId: string }[]>();
-  const failed: { id: string; error: string }[] = [];
-  for (const messageId of messageIds) {
-    const { folder, uid } = decodeImapId(messageId);
-    if (!Number.isFinite(uid) || uid <= 0) {
-      failed.push({ id: messageId, error: "invalid_message_id" });
-      continue;
-    }
-    const g = groups.get(folder);
-    if (g) g.push({ uid, messageId });
-    else groups.set(folder, [{ uid, messageId }]);
-  }
-
-  const succeeded: string[] = [];
-
-  let password: string;
-  try {
-    password = await decryptStoredToken(inbox.imap_password);
-  } catch {
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
-  }
-
-  for (const [folder, items] of groups) {
-    let client: ImapClient | null = null;
-    try {
-      client = await ImapClient.connect({
-        host: inbox.imap_host,
-        port: inbox.imap_port,
-        security: inbox.imap_security ?? "tls",
-        email: imapAuthUser(inbox),
-        password,
-      });
-      await client.selectMailbox(imapFolderName(folder));
-      await client.uidCopy(items.map((i) => i.uid), destinationFolderId);
-      for (const item of items) succeeded.push(item.messageId);
-    } catch (err) {
-      const msg = err instanceof ImapAuthError
-        ? "imap_auth_failed"
-        : err instanceof Error ? err.message : String(err);
-      for (const item of items) failed.push({ id: item.messageId, error: msg });
-    } finally {
-      if (client) await client.logout().catch(() => {});
-    }
-  }
-
-  return { succeeded, failed };
+  return imapBulkByFolderGroup(inbox, messageIds, runId, opts, (client, group) =>
+    client.uidCopy(group.items.map((i) => i.uid), destinationFolderId));
 }
 
 /** Groups IMAP message IDs by source folder and runs bulk delete per group. */
-async function imapBulkDelete(
+function imapBulkDelete(
   inbox: InboxRow,
   messageIds: string[],
   permanent: boolean,
+  runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
-  }
-
-  const groups = new Map<string, { uid: number; messageId: string }[]>();
-  const failed: { id: string; error: string }[] = [];
-  for (const messageId of messageIds) {
-    const { folder, uid } = decodeImapId(messageId);
-    if (!Number.isFinite(uid) || uid <= 0) {
-      failed.push({ id: messageId, error: "invalid_message_id" });
-      continue;
+  return imapBulkByFolderGroup(inbox, messageIds, runId, opts, async (client, group) => {
+    const uids = group.items.map((i) => i.uid);
+    if (permanent) {
+      await client.uidStore(uids, ["\\Deleted"], "add");
+      await client.uidExpunge(uids);
+    } else {
+      // Resolve the trash mailbox via the same imapFolderName resolver the
+      // single-message delete path uses for mailbox names, so servers with a
+      // namespaced/localized trash (e.g. INBOX.Trash) work instead of failing
+      // on a raw "Trash" literal. uidMove falls back to COPY+EXPUNGE if MOVE
+      // is unsupported.
+      await client.uidMove(uids, imapFolderName("TRASH"));
     }
-    const g = groups.get(folder);
-    if (g) g.push({ uid, messageId });
-    else groups.set(folder, [{ uid, messageId }]);
-  }
-
-  const succeeded: string[] = [];
-
-  let password: string;
-  try {
-    password = await decryptStoredToken(inbox.imap_password);
-  } catch {
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
-  }
-
-  for (const [folder, items] of groups) {
-    let client: ImapClient | null = null;
-    try {
-      client = await ImapClient.connect({
-        host: inbox.imap_host,
-        port: inbox.imap_port,
-        security: inbox.imap_security ?? "tls",
-        email: imapAuthUser(inbox),
-        password,
-      });
-      await client.selectMailbox(imapFolderName(folder));
-      const uids = items.map((i) => i.uid);
-      if (permanent) {
-        await client.uidStore(uids, ["\\Deleted"], "add");
-        await client.uidExpunge(uids);
-      } else {
-        // Resolve the trash mailbox via the same imapFolderName resolver the
-        // single-message delete path uses for mailbox names, so servers with a
-        // namespaced/localized trash (e.g. INBOX.Trash) work instead of failing
-        // on a raw "Trash" literal. uidMove falls back to COPY+EXPUNGE if MOVE
-        // is unsupported.
-        await client.uidMove(uids, imapFolderName("TRASH"));
-      }
-      for (const item of items) succeeded.push(item.messageId);
-    } catch (err) {
-      const msg = err instanceof ImapAuthError
-        ? "imap_auth_failed"
-        : err instanceof Error ? err.message : String(err);
-      for (const item of items) failed.push({ id: item.messageId, error: msg });
-    } finally {
-      if (client) await client.logout().catch(() => {});
-    }
-  }
-
-  return { succeeded, failed };
+  });
 }
 
 /** Groups IMAP message IDs by source folder and runs a bulk UID STORE per group. */
-async function imapBulkFlag(
+function imapBulkFlag(
   inbox: InboxRow,
   messageIds: string[],
   action: string,
   runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
-  }
-
   let imapFlags: string[];
   let mode: "add" | "remove";
   switch (action) {
@@ -16990,56 +17426,14 @@ async function imapBulkFlag(
     case "flag":   imapFlags = ["\\Flagged"]; mode = "add";    break;
     case "unflag": imapFlags = ["\\Flagged"]; mode = "remove"; break;
     default:
-      return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "invalid_action" })) };
-  }
-
-  const groups = new Map<string, { uid: number; messageId: string }[]>();
-  const failed: { id: string; error: string }[] = [];
-  for (const messageId of messageIds) {
-    const { folder, uid } = decodeImapId(messageId);
-    if (!Number.isFinite(uid) || uid <= 0) {
-      failed.push({ id: messageId, error: "invalid_message_id" });
-      continue;
-    }
-    const g = groups.get(folder);
-    if (g) g.push({ uid, messageId });
-    else groups.set(folder, [{ uid, messageId }]);
-  }
-
-  const succeeded: string[] = [];
-
-  let password: string;
-  try {
-    password = await decryptStoredToken(inbox.imap_password);
-  } catch {
-    return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })) };
-  }
-
-  for (const [folder, items] of groups) {
-    if (await shouldStopBulkRun(runId, succeeded.length + failed.length, succeeded.length, failed.length)) return { succeeded, failed, cancelled: true };
-    let client: ImapClient | null = null;
-    try {
-      client = await ImapClient.connect({
-        host: inbox.imap_host,
-        port: inbox.imap_port,
-        security: inbox.imap_security ?? "tls",
-        email: imapAuthUser(inbox),
-        password,
+      return Promise.resolve({
+        succeeded: [],
+        failed: messageIds.map((id) => ({ id, error: "invalid_action" })),
       });
-      await client.selectMailbox(imapFolderName(folder));
-      await client.uidStore(items.map((i) => i.uid), imapFlags, mode);
-      for (const item of items) succeeded.push(item.messageId);
-    } catch (err) {
-      const msg = err instanceof ImapAuthError
-        ? "imap_auth_failed"
-        : err instanceof Error ? err.message : String(err);
-      for (const item of items) failed.push({ id: item.messageId, error: msg });
-    } finally {
-      if (client) await client.logout().catch(() => {});
-    }
   }
 
-  return { succeeded, failed };
+  return imapBulkByFolderGroup(inbox, messageIds, runId, opts, (client, group) =>
+    client.uidStore(group.items.map((i) => i.uid), imapFlags, mode));
 }
 
 // ── Gmail bulk helpers ────────────────────────────────────────────────────────
@@ -17055,12 +17449,15 @@ async function gmailBulkMove(
   messageIds: string[],
   destinationLabelId: string,
   runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   const accessToken = await withFreshGmailToken(inbox);
+  const stopCheck = makeBulkStopCheck(opts, runId);
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
   for (const messageId of messageIds) {
-    if (await shouldStopBulkRun(runId, succeeded.length + failed.length, succeeded.length, failed.length)) return { succeeded, failed, cancelled: true };
+    const stop = await stopCheck(succeeded.length, failed.length);
+    if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
     const r = await fetch(
       `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/modify`,
       {
@@ -17094,8 +17491,14 @@ async function gmailBulkDelete(
   inbox: InboxRow,
   messageIds: string[],
   permanent: boolean,
+  runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   const accessToken = await withFreshGmailToken(inbox);
+  // The delete paths had no stop check at all — a 500-id search_and_delete ran
+  // to completion or until the isolate died, whichever came first, which is
+  // exactly the call the production tail said was being abandoned by clients.
+  const stopCheck = makeBulkStopCheck(opts, runId);
 
   if (permanent) {
     // Gmail messages.batchDelete returns 204 with no per-id body and silently
@@ -17104,6 +17507,10 @@ async function gmailBulkDelete(
     const permSucceeded: string[] = [];
     const permFailed: { id: string; error: string }[] = [];
     for (const messageId of messageIds) {
+      const stop = await stopCheck(permSucceeded.length, permFailed.length);
+      if (stop) {
+        return { succeeded: permSucceeded, failed: permFailed, cancelled: true, stoppedReason: stop };
+      }
       const r = await fetch(
         `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}`,
         { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` } },
@@ -17126,6 +17533,8 @@ async function gmailBulkDelete(
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
   for (const messageId of messageIds) {
+    const stop = await stopCheck(succeeded.length, failed.length);
+    if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
     const r = await fetch(
       `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/trash`,
       { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } },
@@ -17155,6 +17564,7 @@ async function gmailBulkFlag(
   messageIds: string[],
   action: string,
   runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   let addLabelIds: string[];
   let removeLabelIds: string[];
@@ -17167,10 +17577,12 @@ async function gmailBulkFlag(
       return { succeeded: [], failed: messageIds.map((id) => ({ id, error: "invalid_action" })) };
   }
   const accessToken = await withFreshGmailToken(inbox);
+  const stopCheck = makeBulkStopCheck(opts, runId);
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
   for (const messageId of messageIds) {
-    if (await shouldStopBulkRun(runId, succeeded.length + failed.length, succeeded.length, failed.length)) return { succeeded, failed, cancelled: true };
+    const stop = await stopCheck(succeeded.length, failed.length);
+    if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
     const r = await fetch(
       `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/modify`,
       {
@@ -17201,12 +17613,15 @@ async function outlookBulkMove(
   messageIds: string[],
   destinationFolderId: string,
   runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   const accessToken = await withFreshOutlookToken(inbox);
+  const stopCheck = makeBulkStopCheck(opts, runId);
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
   for (const messageId of messageIds) {
-    if (await shouldStopBulkRun(runId, succeeded.length + failed.length, succeeded.length, failed.length)) return { succeeded, failed, cancelled: true };
+    const stop = await stopCheck(succeeded.length, failed.length);
+    if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
     const r = await fetch(
       `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/move`,
       {
@@ -17234,11 +17649,16 @@ async function outlookBulkCopy(
   inbox: InboxRow,
   messageIds: string[],
   destinationFolderId: string,
+  runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   const accessToken = await withFreshOutlookToken(inbox);
+  const stopCheck = makeBulkStopCheck(opts, runId);
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
   for (const messageId of messageIds) {
+    const stop = await stopCheck(succeeded.length, failed.length);
+    if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
     const r = await fetch(
       `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/copy`,
       {
@@ -17266,11 +17686,16 @@ async function outlookBulkDelete(
   inbox: InboxRow,
   messageIds: string[],
   permanent: boolean,
+  runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   const accessToken = await withFreshOutlookToken(inbox);
+  const stopCheck = makeBulkStopCheck(opts, runId);
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
   for (const messageId of messageIds) {
+    const stop = await stopCheck(succeeded.length, failed.length);
+    if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
     const encodedId = encodeURIComponent(messageId);
     let r: Response;
     if (permanent) {
@@ -17308,8 +17733,10 @@ async function outlookBulkFlag(
   messageIds: string[],
   action: string,
   runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   const accessToken = await withFreshOutlookToken(inbox);
+  const stopCheck = makeBulkStopCheck(opts, runId);
   let patch: Record<string, unknown>;
   switch (action) {
     case "read":   patch = { isRead: true };                        break;
@@ -17322,7 +17749,8 @@ async function outlookBulkFlag(
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
   for (const messageId of messageIds) {
-    if (await shouldStopBulkRun(runId, succeeded.length + failed.length, succeeded.length, failed.length)) return { succeeded, failed, cancelled: true };
+    const stop = await stopCheck(succeeded.length, failed.length);
+    if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
     const r = await fetch(
       `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}`,
       {
@@ -17450,14 +17878,16 @@ function runBulkDeleteOnIds(
   inbox: InboxRow,
   messageIds: string[],
   permanent: boolean,
+  runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   switch (inbox.provider) {
     case "gmail":
-      return gmailBulkDelete(inbox, messageIds, permanent);
+      return gmailBulkDelete(inbox, messageIds, permanent, runId, opts);
     case "outlook":
-      return outlookBulkDelete(inbox, messageIds, permanent);
+      return outlookBulkDelete(inbox, messageIds, permanent, runId, opts);
     default: // imap and all IMAP service variants
-      return imapBulkDelete(inbox, messageIds, permanent);
+      return imapBulkDelete(inbox, messageIds, permanent, runId, opts);
   }
 }
 
@@ -17476,14 +17906,15 @@ function runBulkFlagOnIds(
   messageIds: string[],
   action: string,
   runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   switch (inbox.provider) {
     case "gmail":
-      return gmailBulkFlag(inbox, messageIds, action, runId);
+      return gmailBulkFlag(inbox, messageIds, action, runId, opts);
     case "outlook":
-      return outlookBulkFlag(inbox, messageIds, action, runId);
+      return outlookBulkFlag(inbox, messageIds, action, runId, opts);
     default: // imap and all IMAP service variants
-      return imapBulkFlag(inbox, messageIds, action, runId);
+      return imapBulkFlag(inbox, messageIds, action, runId, opts);
   }
 }
 
@@ -17492,14 +17923,15 @@ function runBulkMoveOnIds(
   messageIds: string[],
   resolvedDestination: string,
   runId: string | null = null,
+  opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   switch (inbox.provider) {
     case "gmail":
-      return gmailBulkMove(inbox, messageIds, resolvedDestination, runId);
+      return gmailBulkMove(inbox, messageIds, resolvedDestination, runId, opts);
     case "outlook":
-      return outlookBulkMove(inbox, messageIds, resolvedDestination, runId);
+      return outlookBulkMove(inbox, messageIds, resolvedDestination, runId, opts);
     default: // imap and all IMAP service variants
-      return imapBulkMove(inbox, messageIds, resolvedDestination, runId);
+      return imapBulkMove(inbox, messageIds, resolvedDestination, runId, opts);
   }
 }
 
@@ -17564,6 +17996,15 @@ async function executeBulkPlanRequest(
     };
   }
 
+  // DELIBERATELY no wall-clock budget on this path, unlike the direct bulk
+  // tools. `BulkExecutionOutcome` carries counts and an error code and no id
+  // list, so a budget stop here could report "140 succeeded" with no way to say
+  // which 360 were left — and the plan would be marked executed, so nobody
+  // would ever come back for them. Silently abandoning part of an approved plan
+  // is worse than being slow. The connection reuse inside the IMAP helpers
+  // still applies here and is the part of the speedup that needs no new shape.
+  // Giving this path a budget means first widening BulkExecutionOutcome and the
+  // card's completion copy to carry a remainder.
   const result = isDelete
     ? await runBulkDeleteOnIds(inbox, request.message_ids, request.permanent)
     : await runBulkMoveOnIds(inbox, request.message_ids, request.destination_id!);
@@ -17686,10 +18127,13 @@ async function executeBulkMove(
     });
   }
 
+  // The act phase gets the whole call's wall-clock allowance: these handlers
+  // take ids the caller already has, so there is no search phase to share with.
+  const budget = createWorkBudget();
   const runId = await startBulkRun(apiKey, inbox, "move_batch", messageIds.length);
   let bulkResult: BulkOpResult;
   try {
-    bulkResult = await runBulkMoveOnIds(inbox, messageIds, resolvedDest, runId);
+    bulkResult = await runBulkMoveOnIds(inbox, messageIds, resolvedDest, runId, { budget });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await failBulkRun(runId, "provider_error");
@@ -17725,6 +18169,7 @@ async function executeBulkMove(
       run_id: runId,
       status: bulkResult.cancelled ? "cancelled_partial" : bulkResult.failed.length ? "completed_with_errors" : "completed",
     },
+    partialFieldsFor("email_move_batch", messageIds, bulkResult, budget),
   );
 }
 
@@ -17798,14 +18243,17 @@ async function executeBulkCopy(
     };
   }
 
+  // The act phase gets the whole call's wall-clock allowance: these handlers
+  // take ids the caller already has, so there is no search phase to share with.
+  const budget = createWorkBudget();
   let bulkResult: BulkOpResult;
   try {
     switch (inbox.provider) {
       case "outlook":
-        bulkResult = await outlookBulkCopy(inbox, messageIds, resolvedDest);
+        bulkResult = await outlookBulkCopy(inbox, messageIds, resolvedDest, null, { budget });
         break;
       default: // imap and all IMAP service variants
-        bulkResult = await imapBulkCopy(inbox, messageIds, resolvedDest);
+        bulkResult = await imapBulkCopy(inbox, messageIds, resolvedDest, null, { budget });
         break;
     }
   } catch (err) {
@@ -17834,6 +18282,7 @@ async function executeBulkCopy(
     "email_copy_batch",
     inbox.id,
     { destination_folder_id: destinationFolderId },
+    partialFieldsFor("email_copy_batch", messageIds, bulkResult, budget),
   );
 }
 
@@ -17885,9 +18334,12 @@ async function executeBulkDelete(
     });
   }
 
+  // The act phase gets the whole call's wall-clock allowance: these handlers
+  // take ids the caller already has, so there is no search phase to share with.
+  const budget = createWorkBudget();
   let bulkResult: BulkOpResult;
   try {
-    bulkResult = await runBulkDeleteOnIds(inbox, messageIds, permanent);
+    bulkResult = await runBulkDeleteOnIds(inbox, messageIds, permanent, null, { budget });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[mcp-server] email_delete_batch: provider_error", {
@@ -17914,6 +18366,7 @@ async function executeBulkDelete(
     "email_delete_batch",
     inbox.id,
     { permanent },
+    partialFieldsFor("email_delete_batch", messageIds, bulkResult, budget, permanent),
   );
 }
 
@@ -17957,10 +18410,13 @@ async function executeBulkFlag(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.flags) return unsupportedFeatureError("flags", inbox.provider);
 
+  // The act phase gets the whole call's wall-clock allowance: these handlers
+  // take ids the caller already has, so there is no search phase to share with.
+  const budget = createWorkBudget();
   const runId = await startBulkRun(apiKey, inbox, "flag", messageIds.length);
   let bulkResult: BulkOpResult;
   try {
-    bulkResult = await runBulkFlagOnIds(inbox, messageIds, action, runId);
+    bulkResult = await runBulkFlagOnIds(inbox, messageIds, action, runId, { budget });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[mcp-server] email_flag: provider_error", {
@@ -17993,6 +18449,7 @@ async function executeBulkFlag(
       run_id: runId,
       status: bulkResult.cancelled ? "cancelled_partial" : bulkResult.failed.length ? "completed_with_errors" : "completed",
     },
+    partialFieldsFor("email_flag", messageIds, bulkResult, budget),
   );
 }
 
@@ -18106,153 +18563,189 @@ async function executeSearchAndMove(
     };
   }
 
-  // ── Run search to collect message IDs ─────────────────────────────────────
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS)
-  );
-
-  let searchResult: SearchEmailsResult;
+  // ── One wall-clock budget for the whole call ─────────────────────────────
+  // Search and act spend from the SAME pot. Before this, the search phase had
+  // its own 30s ceiling and the act phase had none at all, so one logical
+  // operation could legitimately run for minutes — past every MCP client's
+  // patience — and the client would abandon it with no idea what had happened
+  // to the mailbox. See bulk-budget.ts.
+  const budget = createWorkBudget();
+  // One authenticated IMAP connection shared by the search and the act phase.
+  // These two halves used to open (and close) one each; on providers that cap
+  // simultaneous connections per account that churn is what triggers the
+  // 5s/10s connect back-off behind the worst of the tail.
+  const session = imapSessionFor(inbox);
   try {
-    let searchPromise: Promise<SearchEmailsResult>;
-    switch (inbox.provider) {
-      case "gmail":
-        searchPromise = searchGmailMessages(inbox, search, limit, 0, includeFolders);
-        break;
-      case "outlook":
-        searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
-        break;
-      case "imap":
-        searchPromise = searchImapMessages(inbox, search, limit, 0, includeFolders);
-        break;
-      default:
+    // ── Run search to collect message IDs ─────────────────────────────────────
+    // The search may not eat the whole call. `searchPhaseMs` holds back a
+    // reserve so the act phase always gets a usable slice — a search_and_delete
+    // that spends 25s searching and then reports "0 of 500 deleted" is honest
+    // but useless, and worse than what this replaced.
+    const searchBudgetMs = budget.searchPhaseMs(SEARCH_TIMEOUT_MS);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("search_timeout")), searchBudgetMs)
+    );
+
+    let searchResult: SearchEmailsResult;
+    try {
+      let searchPromise: Promise<SearchEmailsResult>;
+      switch (inbox.provider) {
+        case "gmail":
+          searchPromise = searchGmailMessages(inbox, search, limit, 0, includeFolders);
+          break;
+        case "outlook":
+          searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
+          break;
+        case "imap":
+          searchPromise = searchImapMessages(
+            inbox, search, limit, 0, includeFolders, session ?? undefined,
+          );
+          break;
+        default:
+          return {
+            result: {
+              content: [{
+                type: "text",
+                text:
+                  `Provider '${inbox.provider}' is not yet supported by email_search_and_move. ` +
+                  "Supported providers: gmail, outlook, fastmail, imap.",
+              }],
+              isError: true,
+            },
+            logStatus: "error",
+            logErrorCode: "provider_error",
+          };
+      }
+      searchResult = await Promise.race([searchPromise, timeoutPromise]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message === "search_timeout") {
         return {
           result: {
             content: [{
-              type: "text",
-              text:
-                `Provider '${inbox.provider}' is not yet supported by email_search_and_move. ` +
-                "Supported providers: gmail, outlook, fastmail, imap.",
-            }],
+            type: "text",
+            text: `Search timed out after ${Math.round(searchBudgetMs / 1000)} seconds ` +
+              "and nothing was changed. Try a simpler or more specific query, or narrow " +
+              "it with include_folders.",
+          }],
             isError: true,
           },
           logStatus: "error",
-          logErrorCode: "provider_error",
+          logErrorCode: "search_timeout",
         };
-    }
-    searchResult = await Promise.race([searchPromise, timeoutPromise]);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (message === "search_timeout") {
+      }
+      console.error("[mcp-server] email_search_and_move: search_error", {
+        inbox_id: inboxId,
+        provider: inbox.provider,
+        error: message,
+      });
       return {
         result: {
-          content: [{ type: "text", text: "Search timed out after 30 seconds. Try a simpler or more specific query." }],
+          content: [{ type: "text", text: `Provider error while searching: ${message}. Please try again in a moment.` }],
           isError: true,
         },
         logStatus: "error",
-        logErrorCode: "search_timeout",
+        logErrorCode: "provider_error",
       };
     }
-    console.error("[mcp-server] email_search_and_move: search_error", {
-      inbox_id: inboxId,
-      provider: inbox.provider,
-      error: message,
-    });
-    return {
-      result: {
-        content: [{ type: "text", text: `Provider error while searching: ${message}. Please try again in a moment.` }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
-  }
 
-  const messageIds = searchResult.messages.map((m) => m.id);
+    const messageIds = searchResult.messages.map((m) => m.id);
 
-  // ── MCP Apps: plan instead of execute ────────────────────────────────────
-  // After the search, so `match_count` is the EXACT number of resolved ids
-  // rather than a provider estimate (contract §3), and before the zero-match
-  // early return, so a search that matched nothing still renders a card saying
-  // so instead of an unrenderable result.
-  //
-  // The plan freezes these ids. It deliberately does NOT store the search:
-  // re-running it at execute time could match messages that arrived in the
-  // intervening minutes, which is the exact surprise this feature prevents.
-  if (await shouldPlanBulkOperation(inbox)) {
-    return await createBulkPlan(bulkDepsFor(apiKey), bulkCallerFor(apiKey), {
-      action: "search_and_move",
-      inbox: { id: inbox.id, email_address: inbox.email_address, provider: inbox.provider },
-      message_ids: messageIds,
-      destination_id: resolvedDest,
-      destination_label: destinationFolderId,
-      search: search as unknown as Record<string, unknown>,
-      folder: includeFolders.length > 0 ? includeFolders.join(", ") : null,
-      capped: messageIds.length >= limit,
-      limit,
-      sample: planSampleFromSearch(searchResult.messages),
-    });
-  }
+    // ── MCP Apps: plan instead of execute ────────────────────────────────────
+    // After the search, so `match_count` is the EXACT number of resolved ids
+    // rather than a provider estimate (contract §3), and before the zero-match
+    // early return, so a search that matched nothing still renders a card saying
+    // so instead of an unrenderable result.
+    //
+    // The plan freezes these ids. It deliberately does NOT store the search:
+    // re-running it at execute time could match messages that arrived in the
+    // intervening minutes, which is the exact surprise this feature prevents.
+    if (await shouldPlanBulkOperation(inbox)) {
+      return await createBulkPlan(bulkDepsFor(apiKey), bulkCallerFor(apiKey), {
+        action: "search_and_move",
+        inbox: { id: inbox.id, email_address: inbox.email_address, provider: inbox.provider },
+        message_ids: messageIds,
+        destination_id: resolvedDest,
+        destination_label: destinationFolderId,
+        search: search as unknown as Record<string, unknown>,
+        folder: includeFolders.length > 0 ? includeFolders.join(", ") : null,
+        capped: messageIds.length >= limit,
+        limit,
+        sample: planSampleFromSearch(searchResult.messages),
+      });
+    }
 
-  if (messageIds.length === 0) {
-    return {
-      result: jsonOk({
-        succeeded: 0,
-        failed: 0,
-        operation: "email_search_and_move",
-        inbox_id: inboxId,
+    if (messageIds.length === 0) {
+      return {
+        result: jsonOk({
+          succeeded: 0,
+          failed: 0,
+          operation: "email_search_and_move",
+          inbox_id: inboxId,
+          destination_folder_id: destinationFolderId,
+          destination_type: organizationItemType(inbox),
+          provider_semantics: moveProviderSemantics(inbox),
+          query,
+          results: [],
+        }),
+        logStatus: "success",
+        logErrorCode: null,
+      };
+    }
+
+    // ── Apply bulk move to search results ─────────────────────────────────────
+    // 'search_and_move' is already one of the operations `bulk_runs` accepts, but
+    // this path used to run without a run id, so a search-and-move was invisible
+    // in the dashboard and ignored the cooperative cancel signal that
+    // `shouldStopBulkRun` reads. Threading the run id through gives it the same
+    // observability and mid-flight cancellation as email_move_batch.
+    const runId = await startBulkRun(apiKey, inbox, "search_and_move", messageIds.length);
+    let bulkResult: BulkOpResult;
+    try {
+      bulkResult = await runBulkMoveOnIds(inbox, messageIds, resolvedDest, runId, {
+        session: session ?? undefined,
+        budget,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await failBulkRun(runId, "provider_error");
+      console.error("[mcp-server] email_search_and_move: move_error", {
+        inbox_id: inbox.id,
+        provider: inbox.provider,
+        error: message,
+      });
+      return {
+        result: {
+          content: [{ type: "text", text: `Provider error during move: ${message}. Please try again in a moment.` }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "provider_error",
+      };
+    }
+
+    await finishBulkRun(runId, messageIds.length, bulkResult);
+
+    return formatBulkResult(
+      bulkResult.succeeded,
+      bulkResult.failed,
+      "email_search_and_move",
+      inbox.id,
+      {
         destination_folder_id: destinationFolderId,
         destination_type: organizationItemType(inbox),
         provider_semantics: moveProviderSemantics(inbox),
         query,
-        results: [],
-      }),
-      logStatus: "success",
-      logErrorCode: null,
-    };
-  }
-
-  // ── Apply bulk move to search results ─────────────────────────────────────
-  // 'search_and_move' is already one of the operations `bulk_runs` accepts, but
-  // this path used to run without a run id, so a search-and-move was invisible
-  // in the dashboard and ignored the cooperative cancel signal that
-  // `shouldStopBulkRun` reads. Threading the run id through gives it the same
-  // observability and mid-flight cancellation as email_move_batch.
-  const runId = await startBulkRun(apiKey, inbox, "search_and_move", messageIds.length);
-  let bulkResult: BulkOpResult;
-  try {
-    bulkResult = await runBulkMoveOnIds(inbox, messageIds, resolvedDest, runId);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    await failBulkRun(runId, "provider_error");
-    console.error("[mcp-server] email_search_and_move: move_error", {
-      inbox_id: inbox.id,
-      provider: inbox.provider,
-      error: message,
-    });
-    return {
-      result: {
-        content: [{ type: "text", text: `Provider error during move: ${message}. Please try again in a moment.` }],
-        isError: true,
       },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
+      partialFieldsFor("email_search_and_move", messageIds, bulkResult, budget),
+    );
+  } finally {
+    // A leaked IMAP connection counts against the account's simultaneous-
+    // connection cap until the server times it out, which is exactly what
+    // makes the NEXT call slow. Closed on every exit path, including the
+    // plan branch and every early return above.
+    if (session) await session.close();
   }
-
-  await finishBulkRun(runId, messageIds.length, bulkResult);
-
-  return formatBulkResult(
-    bulkResult.succeeded,
-    bulkResult.failed,
-    "email_search_and_move",
-    inbox.id,
-    {
-      destination_folder_id: destinationFolderId,
-      destination_type: organizationItemType(inbox),
-      provider_semantics: moveProviderSemantics(inbox),
-      query,
-    },
-  );
 }
 
 /**
@@ -18319,129 +18812,169 @@ async function executeSearchAndDelete(
     return permanentDeleteUnsupportedError(inbox.provider);
   }
 
-  // ── Run search to collect message IDs ─────────────────────────────────────
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS)
-  );
-
-  let searchResult: SearchEmailsResult;
+  // ── One wall-clock budget for the whole call ─────────────────────────────
+  // Search and act spend from the SAME pot. Before this, the search phase had
+  // its own 30s ceiling and the act phase had none at all, so one logical
+  // operation could legitimately run for minutes — past every MCP client's
+  // patience — and the client would abandon it with no idea what had happened
+  // to the mailbox. See bulk-budget.ts.
+  const budget = createWorkBudget();
+  // One authenticated IMAP connection shared by the search and the act phase.
+  // These two halves used to open (and close) one each; on providers that cap
+  // simultaneous connections per account that churn is what triggers the
+  // 5s/10s connect back-off behind the worst of the tail.
+  const session = imapSessionFor(inbox);
   try {
-    let searchPromise: Promise<SearchEmailsResult>;
-    switch (inbox.provider) {
-      case "gmail":
-        searchPromise = searchGmailMessages(inbox, search, limit, 0, includeFolders);
-        break;
-      case "outlook":
-        searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
-        break;
-      case "imap":
-        searchPromise = searchImapMessages(inbox, search, limit, 0, includeFolders);
-        break;
-      default:
+    // ── Run search to collect message IDs ─────────────────────────────────────
+    // The search may not eat the whole call. `searchPhaseMs` holds back a
+    // reserve so the act phase always gets a usable slice — a search_and_delete
+    // that spends 25s searching and then reports "0 of 500 deleted" is honest
+    // but useless, and worse than what this replaced.
+    const searchBudgetMs = budget.searchPhaseMs(SEARCH_TIMEOUT_MS);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("search_timeout")), searchBudgetMs)
+    );
+
+    let searchResult: SearchEmailsResult;
+    try {
+      let searchPromise: Promise<SearchEmailsResult>;
+      switch (inbox.provider) {
+        case "gmail":
+          searchPromise = searchGmailMessages(inbox, search, limit, 0, includeFolders);
+          break;
+        case "outlook":
+          searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
+          break;
+        case "imap":
+          searchPromise = searchImapMessages(
+            inbox, search, limit, 0, includeFolders, session ?? undefined,
+          );
+          break;
+        default:
+          return {
+            result: {
+              content: [{
+                type: "text",
+                text:
+                  `Provider '${inbox.provider}' is not yet supported by email_search_and_delete. ` +
+                  "Supported providers: gmail, outlook, fastmail, imap.",
+              }],
+              isError: true,
+            },
+            logStatus: "error",
+            logErrorCode: "provider_error",
+          };
+      }
+      searchResult = await Promise.race([searchPromise, timeoutPromise]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message === "search_timeout") {
         return {
           result: {
             content: [{
-              type: "text",
-              text:
-                `Provider '${inbox.provider}' is not yet supported by email_search_and_delete. ` +
-                "Supported providers: gmail, outlook, fastmail, imap.",
-            }],
+            type: "text",
+            text: `Search timed out after ${Math.round(searchBudgetMs / 1000)} seconds ` +
+              "and nothing was changed. Try a simpler or more specific query, or narrow " +
+              "it with include_folders.",
+          }],
             isError: true,
           },
           logStatus: "error",
-          logErrorCode: "provider_error",
+          logErrorCode: "search_timeout",
         };
-    }
-    searchResult = await Promise.race([searchPromise, timeoutPromise]);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (message === "search_timeout") {
+      }
+      console.error("[mcp-server] email_search_and_delete: search_error", {
+        inbox_id: inboxId,
+        provider: inbox.provider,
+        error: message,
+      });
       return {
         result: {
-          content: [{ type: "text", text: "Search timed out after 30 seconds. Try a simpler or more specific query." }],
+          content: [{ type: "text", text: `Provider error while searching: ${message}. Please try again in a moment.` }],
           isError: true,
         },
         logStatus: "error",
-        logErrorCode: "search_timeout",
+        logErrorCode: "provider_error",
       };
     }
-    console.error("[mcp-server] email_search_and_delete: search_error", {
-      inbox_id: inboxId,
-      provider: inbox.provider,
-      error: message,
-    });
-    return {
-      result: {
-        content: [{ type: "text", text: `Provider error while searching: ${message}. Please try again in a moment.` }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
-  }
 
-  const messageIds = searchResult.messages.map((m) => m.id);
+    const messageIds = searchResult.messages.map((m) => m.id);
 
-  // MCP Apps: plan instead of execute. See the matching comment in
-  // executeSearchAndMove — the ids are frozen here, the search is not stored.
-  if (await shouldPlanBulkOperation(inbox)) {
-    return await createBulkPlan(bulkDepsFor(apiKey), bulkCallerFor(apiKey), {
-      action: "search_and_delete",
-      inbox: { id: inbox.id, email_address: inbox.email_address, provider: inbox.provider },
-      message_ids: messageIds,
-      permanent,
-      search: search as unknown as Record<string, unknown>,
-      folder: includeFolders.length > 0 ? includeFolders.join(", ") : null,
-      capped: messageIds.length >= limit,
-      limit,
-      sample: planSampleFromSearch(searchResult.messages),
-    });
-  }
-
-  if (messageIds.length === 0) {
-    return {
-      result: jsonOk({
-        succeeded: 0,
-        failed: 0,
-        operation: "email_search_and_delete",
-        inbox_id: inboxId,
+    // MCP Apps: plan instead of execute. See the matching comment in
+    // executeSearchAndMove — the ids are frozen here, the search is not stored.
+    if (await shouldPlanBulkOperation(inbox)) {
+      return await createBulkPlan(bulkDepsFor(apiKey), bulkCallerFor(apiKey), {
+        action: "search_and_delete",
+        inbox: { id: inbox.id, email_address: inbox.email_address, provider: inbox.provider },
+        message_ids: messageIds,
         permanent,
-        query,
-        results: [],
-      }),
-      logStatus: "success",
-      logErrorCode: null,
-    };
-  }
+        search: search as unknown as Record<string, unknown>,
+        folder: includeFolders.length > 0 ? includeFolders.join(", ") : null,
+        capped: messageIds.length >= limit,
+        limit,
+        sample: planSampleFromSearch(searchResult.messages),
+      });
+    }
 
-  // ── Apply bulk delete to search results ───────────────────────────────────
-  let bulkResult: BulkOpResult;
-  try {
-    bulkResult = await runBulkDeleteOnIds(inbox, messageIds, permanent);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] email_search_and_delete: delete_error", {
-      inbox_id: inbox.id,
-      provider: inbox.provider,
-      error: message,
-    });
-    return {
-      result: {
-        content: [{ type: "text", text: `Provider error during delete: ${message}. Please try again in a moment.` }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
-  }
+    if (messageIds.length === 0) {
+      return {
+        result: jsonOk({
+          succeeded: 0,
+          failed: 0,
+          operation: "email_search_and_delete",
+          inbox_id: inboxId,
+          permanent,
+          query,
+          results: [],
+        }),
+        logStatus: "success",
+        logErrorCode: null,
+      };
+    }
 
-  return formatBulkResult(
-    bulkResult.succeeded,
-    bulkResult.failed,
-    "email_search_and_delete",
-    inbox.id,
-    { permanent, query },
-  );
+    // ── Apply bulk delete to search results ───────────────────────────────────
+    let bulkResult: BulkOpResult;
+    try {
+      bulkResult = await runBulkDeleteOnIds(inbox, messageIds, permanent, null, {
+        session: session ?? undefined,
+        budget,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[mcp-server] email_search_and_delete: delete_error", {
+        inbox_id: inbox.id,
+        provider: inbox.provider,
+        error: message,
+      });
+      return {
+        result: {
+          content: [{ type: "text", text: `Provider error during delete: ${message}. Please try again in a moment.` }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "provider_error",
+      };
+    }
+
+    return formatBulkResult(
+      bulkResult.succeeded,
+      bulkResult.failed,
+      "email_search_and_delete",
+      inbox.id,
+      { permanent, query },
+      // `permanent` is threaded in so the partial notice can say "permanently
+      // deleted" rather than "moved to Trash". On a partial that distinction is
+      // the difference between "the rest are still recoverable" and "the rest
+      // are gone", and a reader must not have to infer it from another field.
+      partialFieldsFor("email_search_and_delete", messageIds, bulkResult, budget, permanent),
+    );
+  } finally {
+    // A leaked IMAP connection counts against the account's simultaneous-
+    // connection cap until the server times it out, which is exactly what
+    // makes the NEXT call slow. Closed on every exit path, including the
+    // plan branch and every early return above.
+    if (session) await session.close();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -21843,6 +22376,11 @@ async function handleToolsCall(
     const actionSpec = action ? consolidated.actions[action] : undefined;
     if (!actionSpec) {
       const validActions = Object.keys(consolidated.actions);
+      // Distinguish "no action" from "an action that did not land where the
+      // selector is read". A caller told "none was given" when it plainly gave
+      // one has no way to work out what to change, and that is 37 of the 54
+      // action rejections in the last 30 days.
+      const misplacement = findMisplacedAction(argsObj, validActions);
       await writeActivityLog({
         workspaceId: apiKey.workspace_id,
         apiKeyId: apiKey.id,
@@ -21870,7 +22408,7 @@ async function handleToolsCall(
       });
       return invalidArgumentsResult(
         id,
-        buildUnknownActionText(toolName, action, validActions),
+        buildUnknownActionText(toolName, action, validActions, misplacement),
         { tool: toolName, action, valid_actions: validActions },
       );
     }
@@ -21886,14 +22424,23 @@ async function handleToolsCall(
     // action refused the whole call, which was the largest error class on the
     // product; see the header of consolidated-arguments.ts for the numbers.
     //
-    // Only the arguments that provably assert nothing are dropped: the value
-    // sent is the very default the published schema declares, so the schema has
-    // already promised that sending it and omitting it are the same request.
-    // Anything that could have narrowed, redirected or altered the result stays
-    // exactly where the caller put it and still fails validation below, because
-    // running a call with a filter quietly removed hands back a plausible
-    // answer to a question the caller never asked, and neither the model nor
-    // the user can see that it happened.
+    // Two tiers of extra argument are dropped, and they are dropped for
+    // different reasons.
+    //
+    // INERT, everywhere including the destructive actions: the value sent is
+    // the very default the published schema declares, so the schema has already
+    // promised that sending it and omitting it are the same request. Nothing is
+    // lost and there is nothing to disclose.
+    //
+    // MISPLACED, only on the read-only actions listed in LENIENT_ACTIONS: the
+    // argument could have narrowed the result, so it is dropped AND reported in
+    // the result text (see the note appended after dispatch). Running a call
+    // with a filter quietly removed hands back a plausible answer to a question
+    // the caller never asked; saying which filter went unapplied is what stops
+    // that from being invisible, and it is the reason this is confined to reads
+    // that can simply be made again. On every write action a misplaced argument
+    // still fails validation below and the refusal names the action it belongs
+    // to.
     //
     // Deleting the keys in place mirrors the rename pass further down: handlers
     // read this same object, so the dropped argument must be gone before
@@ -21901,19 +22448,26 @@ async function handleToolsCall(
     // dispatch.
     const argumentIndex = CONSOLIDATED_ARGUMENT_INDEX[toolName];
     if (argumentIndex) {
-      extraArguments = reviewExtraArguments(argumentIndex, action as string, argsObj);
+      extraArguments = reviewExtraArguments(
+        argumentIndex,
+        action as string,
+        argsObj,
+        allowsLenientArguments(toolName, action as string),
+      );
       for (const property of extraArguments.ignorable) delete argsObj[property];
-      if (extraArguments.ignorable.length > 0) {
+      for (const entry of extraArguments.ignoredMisplaced) delete argsObj[entry.property];
+      if (extraArguments.ignorable.length > 0 || extraArguments.ignoredMisplaced.length > 0) {
         // Logged rather than persisted: this call is about to succeed, and
         // activity_log.error_details is the value-free payload of a REJECTED
         // call. Bending it to cover a success would break every query that
         // treats a row with error_details as an error. The property names are
         // ours, not the caller's, so they are safe to print.
-        console.info("[mcp-server] tools/call: ignored_inert_arguments", {
+        console.info("[mcp-server] tools/call: ignored_extra_arguments", {
           key_id: apiKey.id,
           tool_name: toolName,
           action,
-          properties: extraArguments.ignorable,
+          inert: extraArguments.ignorable,
+          misplaced: extraArguments.ignoredMisplaced.map((entry) => entry.property),
         });
       }
     }
@@ -21962,6 +22516,28 @@ async function handleToolsCall(
         key_scopes: apiKey.scopes,
       },
     );
+  }
+
+  // ── Canonicalise date arguments ───────────────────────────────────────────
+  // `since` / `before` were the second largest rejection signature on the
+  // product: 414 calls in 30 days across 40 workspaces, refused for punctuation
+  // rather than for meaning ("2026-08-01 10:00:00", "2026-08", "7 days ago").
+  // Every unambiguous shape is rewritten here into the one the schema's
+  // `date-or-date-time` format accepts, so the format check below sees a
+  // canonical value and every ambiguous shape (a day-first "01-08-2026", prose)
+  // still fails it. In place, for the same reason the extra-argument drop is in
+  // place: the handlers, the idempotency digest and the query builders all read
+  // this object. See normalizeDateArguments.
+  if (rawArgs !== null && typeof rawArgs === "object" && !Array.isArray(rawArgs)) {
+    const normalizedDates = normalizeDateArguments(tool.inputSchema, rawArgs, new Date());
+    if (normalizedDates.length > 0) {
+      console.info("[mcp-server] tools/call: normalized_date_arguments", {
+        key_id: apiKey.id,
+        tool_name: toolName,
+        action: selectedAction,
+        dates: normalizedDates,
+      });
+    }
   }
 
   // Validate at the server boundary.  The schema is part of our public MCP
@@ -22497,6 +23073,19 @@ async function handleToolsCall(
 
   const durationMs = Date.now() - startMs;
 
+  // Disclose any argument leniency dropped. This is not optional bookkeeping:
+  // dropping a filter instead of refusing the call is only defensible because
+  // the result says which filter went unapplied, so a caller that meant it can
+  // see that this answer is wider than the question. Attached after dispatch
+  // because it belongs on the result the model reads, and only to a successful
+  // one — see appendResultNote.
+  if (extraArguments && selectedAction && extraArguments.ignoredMisplaced.length > 0) {
+    appendResultNote(
+      toolResult,
+      buildIgnoredArgumentsNote(toolName, selectedAction, extraArguments.ignoredMisplaced),
+    );
+  }
+
   await completeOutboundIdempotency(
     idempotencyClaim,
     dispatchName,
@@ -22504,6 +23093,7 @@ async function handleToolsCall(
     logStatus,
     logErrorCode,
     pendingApprovalIdFromToolResult(toolResult),
+    isPartialToolResult(toolResult),
   );
 
   // Prefer the inbox the tool actually resolved (handles email aliases and

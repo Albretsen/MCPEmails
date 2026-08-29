@@ -17,6 +17,9 @@
 
 import {
   type ActionArgumentIndex,
+  allowsLenientArguments,
+  buildIgnoredArgumentsNote,
+  LENIENT_ACTIONS,
   neutralDefaultOf,
   reviewExtraArguments,
   withOwningActions,
@@ -262,4 +265,183 @@ Deno.test("only absence-equivalent defaults are recorded as inert", () => {
   assertEquals(neutralDefaultOf({ type: "array", default: ["INBOX"] }).present, false, "a named folder list");
   assertEquals(neutralDefaultOf({ type: "string" }).present, false, "no default at all");
   assertEquals(neutralDefaultOf("not a schema").present, false, "not an object");
+});
+
+// ── leniency ─────────────────────────────────────────────────────────────────
+//
+// Refusing every misplaced argument was still the largest error class on the
+// product, and fewer than half of those refusals were followed by a successful
+// call — so on the READ-ONLY actions a misplaced argument is now dropped, the
+// call runs, and the result says which argument went unapplied. The tests below
+// are about the two edges of that: the drop must never reach an action that
+// writes, and it must never happen without the disclosure that justifies it.
+
+Deno.test("a read-only action runs without a sibling's argument instead of failing", () => {
+  // `email_read {action: "list", subject: "invoice"}` — 478 of these a month.
+  const review = reviewExtraArguments(
+    EMAIL_READ,
+    "list",
+    { action: "list", subject: "invoice", since: "2026-08-01" },
+    true,
+  );
+  assertEquals(review.misplaced, [], "nothing refused");
+  assertEquals(
+    review.ignoredMisplaced,
+    [
+      { property: "subject", owners: ["search"] },
+      { property: "since", owners: ["search"] },
+    ],
+    "dropped, each with its owning action recorded for the note",
+  );
+});
+
+Deno.test("an argument no action declares is still refused under leniency", () => {
+  // A typo is a real bug in the caller. Guessing at `sbuject` is how it becomes
+  // a filter that was silently never applied, which leniency must not enable:
+  // the review declines to claim it, so additionalProperties still rejects it.
+  const review = reviewExtraArguments(
+    EMAIL_READ,
+    "list",
+    { action: "list", sbuject: "invoice" },
+    true,
+  );
+  assertEquals(review.ignoredMisplaced, [], "not dropped");
+  assertEquals(review.misplaced, [], "not claimed either");
+  assertEquals(review.ignorable, [], "and certainly not inert");
+});
+
+Deno.test("without leniency the same call is refused exactly as before", () => {
+  const review = reviewExtraArguments(EMAIL_READ, "list", { action: "list", subject: "invoice" });
+  assertEquals(review.ignoredMisplaced, [], "nothing dropped");
+  assertEquals(review.misplaced, [{ property: "subject", owners: ["search"] }], "refused");
+});
+
+Deno.test("an inert argument is dropped whether or not leniency applies", () => {
+  // The schema's own default already promised that sending it and omitting it
+  // are the same request, so this tier is not a judgement call and does not
+  // depend on how dangerous the action is.
+  for (const lenient of [false, true]) {
+    const review = reviewExtraArguments(
+      EMAIL_READ,
+      "search",
+      { action: "search", include_html: false },
+      lenient,
+    );
+    assertEquals(review.ignorable, ["include_html"], `inert, lenient=${lenient}`);
+    assertEquals(review.ignoredMisplaced, [], `not the misplaced tier, lenient=${lenient}`);
+  }
+});
+
+Deno.test("every action that can change a mailbox is strict", () => {
+  // The allowlist is the safety boundary, so it is asserted by name rather than
+  // by trusting that nobody will append to it. A search_and_delete that ran
+  // with a filter quietly removed is not recoverable by calling again.
+  for (const [tool, action] of [
+    ["email_delete", "delete"],
+    ["email_delete", "delete_batch"],
+    ["email_delete", "search_and_delete"],
+    ["email_organize", "move"],
+    ["email_organize", "move_batch"],
+    ["email_organize", "search_and_move"],
+    ["email_organize", "flag"],
+    ["email_compose", "send"],
+    ["email_compose", "reply"],
+    ["email_compose", "forward"],
+    ["folder", "create"],
+    ["folder", "rename"],
+    ["folder", "delete"],
+    ["draft", "create"],
+    ["draft", "update"],
+    ["draft", "send"],
+    ["draft", "delete"],
+    ["schedule", "create"],
+    ["schedule", "cancel"],
+    ["automation", "create"],
+    ["automation", "update"],
+    ["automation", "enable"],
+    ["automation", "delete"],
+    // A dry run, but the one read whose consequences outlive the call: it is
+    // what a caller decides to enable an unattended rule on.
+    ["automation", "preview"],
+    ["signature", "set"],
+  ]) {
+    assert(
+      !allowsLenientArguments(tool, action),
+      `${tool} action '${action}' must refuse a misplaced argument, not drop it`,
+    );
+  }
+});
+
+Deno.test("a destructive action still refuses, with the owning action named", () => {
+  // The end-to-end shape for email_delete: nothing is dropped, and the message
+  // is the corrected-retry one rather than a bare "not allowed".
+  const index: ActionArgumentIndex = {
+    allowedByAction: {
+      delete: ["action", "inbox_id", "message_id"],
+      search_and_delete: ["action", "inbox_id", "subject", "since"],
+    },
+    ownersByProperty: { message_id: ["delete"], subject: ["search_and_delete"], since: ["search_and_delete"] },
+    neutralDefaults: {},
+  };
+  const review = reviewExtraArguments(
+    index,
+    "delete",
+    { action: "delete", message_id: "abc", subject: "invoice" },
+    allowsLenientArguments("email_delete", "delete"),
+  );
+  assertEquals(review.ignoredMisplaced, [], "a delete drops nothing");
+  assertEquals(review.misplaced, [{ property: "subject", owners: ["search_and_delete"] }], "refused");
+});
+
+Deno.test("the read-only allowlist covers the actions the errors actually came from", () => {
+  for (const action of ["list", "search", "read", "read_batch"]) {
+    assert(allowsLenientArguments("email_read", action), `email_read '${action}' is lenient`);
+  }
+  assert(allowsLenientArguments("folder", "list"), "folder list is lenient");
+  assert(!allowsLenientArguments("no_such_tool", "list"), "an unknown tool is never lenient");
+  assert(!allowsLenientArguments("email_read", "no_such_action"), "an unknown action is never lenient");
+  // Nothing may be lenient that is not spelled out here.
+  assertEquals(LENIENT_ACTIONS.email_delete, [], "email_delete has no lenient action");
+  assertEquals(LENIENT_ACTIONS.email_compose, [], "email_compose has no lenient action");
+  assertEquals(LENIENT_ACTIONS.email_organize, [], "email_organize has no lenient action");
+});
+
+Deno.test("the note names every dropped argument and where it belongs", () => {
+  // The disclosure is the entire justification for dropping rather than
+  // refusing, so it must survive any rewording: the caller has to be able to
+  // see that this answer is wider than the question it asked.
+  const review = reviewExtraArguments(
+    EMAIL_READ,
+    "list",
+    { action: "list", subject: "invoice", since: "2026-08-01" },
+    true,
+  );
+  const note = buildIgnoredArgumentsNote("email_read", "list", review.ignoredMisplaced);
+  for (const needle of ["email_read", "'list'", "'subject'", "'since'", "'search'", "not applied"]) {
+    assert(note.includes(needle), `expected ${JSON.stringify(needle)} in ${JSON.stringify(note)}`);
+  }
+});
+
+Deno.test("a note about one argument reads as one argument", () => {
+  const note = buildIgnoredArgumentsNote("email_read", "list", [
+    { property: "subject", owners: ["search"] },
+  ]);
+  assert(note.includes("It was not applied"), `singular phrasing: ${note}`);
+  assert(!note.includes("They were"), `no plural leakage: ${note}`);
+});
+
+Deno.test("the note instructs the model to do nothing", () => {
+  // Same doctrine as every other string this server puts in front of a model:
+  // an imperative from inside a tool response is indistinguishable from the
+  // operator injecting a prompt. State what happened.
+  const note = buildIgnoredArgumentsNote("email_read", "search", [
+    { property: "folder", owners: ["list"] },
+    { property: "unread_only", owners: ["list"] },
+  ]);
+  for (const imperative of ["you should", "you must", "please ", "retry with", "use the", "instead use", "call the"]) {
+    assert(
+      !note.toLowerCase().includes(imperative),
+      `note must not instruct the model (${imperative}): ${note}`,
+    );
+  }
 });

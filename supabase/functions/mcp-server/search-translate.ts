@@ -219,6 +219,220 @@ export function isIsoDateOrDateTime(value: string): boolean {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Date normalization
+//
+// isIsoDateOrDateTime above is the CONTRACT: one shape, no ambiguity, an
+// unambiguous instant. Models do not write to a contract, they write what the
+// user said, and in the 30 days to 2026-08-29 that cost 414 hard rejections of
+// `since` / `before` across 40 workspaces — the second largest error class on
+// the product, and one where fewer than half the callers ever recovered.
+//
+// Nothing about the contract changes here. What changes is that a value the
+// caller clearly meant is TRANSLATED into the contract before it is checked,
+// rather than refused for its punctuation. The test for admission is that the
+// shape has exactly one reading:
+//
+//   ADMITTED    Year-first calendar dates in any separator ("2026/08/01",
+//               "2026-8-1"), a truncated one ("2026-08" = the 1st, "2026" =
+//               Jan 1, which is what ISO 8601 truncation already means), the
+//               space-instead-of-T datetime every SQL console and log line
+//               emits, epoch seconds or milliseconds, and the handful of
+//               relative English phrases models actually emit ("today",
+//               "7 days ago", "last month", "30d").
+//
+//   REFUSED     Anything where two readings exist. "01-08-2026" is the 1st of
+//               August to most of the world and the 8th of January to the rest,
+//               and there is no signal in the string to choose between them —
+//               so it stays an error, and the error names shapes that work.
+//               Prose dates ("June 1 2026") stay refused for the same reason
+//               `new Date` is not trusted here: it accepts them by guessing.
+//
+// Relative expressions resolve against a caller-supplied `now`, never against
+// an implicit clock, so the resolution is deterministic under test and every
+// arithmetic step below is UTC. A relative DAY resolves to a bare date rather
+// than to an instant: "7 days ago" as a `since` means the whole of that day,
+// and pinning it to the current wall-clock time would silently drop the morning
+// of it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Examples of what `since` / `before` accept, used verbatim in the rejection a
+ * caller reads. Kept beside the parser so the message cannot promise a shape
+ * the parser does not take.
+ */
+export const DATE_INPUT_EXAMPLES =
+  '"2026-06-01", "2026-06-01T09:00:00Z", "2026-06", "today", "7 days ago" or "30d"';
+
+/** `YYYY-MM-DD` for the UTC calendar day `d` falls on. */
+function utcDateString(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/** `YYYY-MM-DDTHH:MM:SSZ` — the canonical instant shape, milliseconds dropped. */
+function utcDateTimeString(d: Date): string {
+  return d.toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
+/** UTC midnight of the calendar day `d` falls on. */
+function utcMidnight(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
+
+/**
+ * Shift by whole UTC months, clamping the day rather than rolling over.
+ * `Date.UTC(y, m - 1, 31)` on the 31st of March lands in March again, which
+ * would turn "last month" into "three days ago" once a year.
+ */
+function shiftUtcMonths(d: Date, months: number): Date {
+  const absolute = d.getUTCMonth() + months;
+  const year = d.getUTCFullYear() + Math.floor(absolute / 12);
+  const month = ((absolute % 12) + 12) % 12;
+  const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(year, month, Math.min(d.getUTCDate(), lastDayOfMonth)));
+}
+
+/** Zero-pad a 1- or 2-digit numeric field. */
+function pad2(value: string): string {
+  return value.length === 1 ? `0${value}` : value;
+}
+
+/**
+ * Build `YYYY-MM-DD` from already-separated fields, returning null when the
+ * fields do not name a real day. The range check is the parse: "2026-02-31"
+ * has a perfectly good shape and no existence.
+ */
+function calendarDate(year: string, month: string, day: string): string | null {
+  const candidate = `${year}-${pad2(month)}-${pad2(day)}`;
+  return isIsoDateOrDateTime(candidate) ? candidate : null;
+}
+
+/** Relative units, in the spellings models actually emit. */
+const RELATIVE_UNIT_ALIASES: Record<string, "hour" | "day" | "week" | "month" | "year"> = {
+  h: "hour", hour: "hour", hours: "hour",
+  d: "day", day: "day", days: "day",
+  w: "week", week: "week", weeks: "week",
+  month: "month", months: "month",
+  y: "year", year: "year", years: "year",
+  // `m` is deliberately absent: it is minutes as often as months, and this
+  // module's whole rule is that an ambiguous shape stays an error.
+};
+
+/** Apply `-count` of `unit` to `now`, at the granularity the unit implies. */
+function shiftRelative(
+  now: Date,
+  unit: "hour" | "day" | "week" | "month" | "year",
+  count: number,
+): string {
+  // An hour offset is the only one that names a time of day, so it is the only
+  // one that returns an instant. Everything coarser returns the calendar day,
+  // because "since 7 days ago" means from the start of that day.
+  if (unit === "hour") return utcDateTimeString(new Date(now.getTime() - count * 3_600_000));
+  const midnight = utcMidnight(now);
+  switch (unit) {
+    case "day": return utcDateString(new Date(midnight.getTime() - count * 86_400_000));
+    case "week": return utcDateString(new Date(midnight.getTime() - count * 7 * 86_400_000));
+    case "month": return utcDateString(shiftUtcMonths(midnight, -count));
+    case "year": return utcDateString(shiftUtcMonths(midnight, -count * 12));
+  }
+}
+
+/** Epoch seconds vs milliseconds. 1e11 seconds is the year 5138; nothing a
+ * caller means by a date is above it, and every millisecond value since 1973
+ * is. */
+const EPOCH_MILLISECOND_THRESHOLD = 1e11;
+
+/**
+ * Translate a caller's date into the one shape `isIsoDateOrDateTime` accepts,
+ * or return null when the value has no single reading.
+ *
+ * A value that is ALREADY in contract is returned untouched, offset and all:
+ * "2026-06-01T09:00:00+02:00" already names one instant and rewriting it to UTC
+ * would only make the caller's own value unrecognisable in an error message.
+ *
+ * @param now the instant relative expressions resolve against. Passed in rather
+ *            than read from the clock so the resolution is testable and so one
+ *            request cannot resolve `since` and `before` against two instants.
+ */
+export function normalizeDateOrDateTime(input: string, now: Date = new Date()): string | null {
+  const s = input.trim();
+  if (s === "") return null;
+
+  // Already canonical (including a well-shaped impossibility like "2026-13-01",
+  // which isIsoDateOrDateTime rejects and which must stay rejected).
+  if (ISO_DATE_OR_DATE_TIME_RE.test(s)) return isIsoDateOrDateTime(s) ? s : null;
+
+  // Epoch seconds or milliseconds. Nine digits is the floor so that a bare year
+  // ("2026") and a bare month ("2026-08" once stripped) cannot be swallowed.
+  const epoch = /^\d{9,14}$/.exec(s);
+  if (epoch) {
+    const value = Number(s);
+    const d = new Date(value >= EPOCH_MILLISECOND_THRESHOLD ? value : value * 1000);
+    return Number.isNaN(d.getTime()) ? null : utcDateTimeString(d);
+  }
+
+  // Year-first calendar dates: any of `-` or `/` as the separator, either
+  // padded or not. Year-first is what makes these unambiguous; a day-first or
+  // month-first shape never reaches this function's accept list.
+  const ymd = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/.exec(s);
+  if (ymd) return calendarDate(ymd[1], ymd[2], ymd[3]);
+
+  // ISO 8601 truncation: a month means its first day, a year means January 1st.
+  const ym = /^(\d{4})[-/](\d{1,2})$/.exec(s);
+  if (ym) return calendarDate(ym[1], ym[2], "01");
+  const y = /^(\d{4})$/.exec(s);
+  if (y) {
+    const year = Number(y[1]);
+    return year >= 1970 && year <= 2999 ? calendarDate(y[1], "01", "01") : null;
+  }
+
+  // A date-time whose separator is a space rather than `T`, which is what every
+  // SQL console, log line and spreadsheet emits, plus unpadded fields and an
+  // optional fractional second and zone.
+  const spaced =
+    /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T](\d{1,2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?\s*(Z|[+-]\d{2}:?\d{2})?$/i
+      .exec(s);
+  if (spaced) {
+    const date = calendarDate(spaced[1], spaced[2], spaced[3]);
+    if (!date) return null;
+    const time = `${pad2(spaced[4])}:${spaced[5]}:${spaced[6] ?? "00"}`;
+    const zone = spaced[7] ? spaced[7].toUpperCase() : "Z";
+    const candidate = `${date}T${time}${zone}`;
+    return isIsoDateOrDateTime(candidate) ? candidate : null;
+  }
+
+  // ── Relative expressions ────────────────────────────────────────────────
+  // Matched on a lowercased, whitespace-collapsed copy so "  Last  Week " and
+  // "last week" are the same phrase.
+  const phrase = s.toLowerCase().replace(/\s+/g, " ");
+
+  if (phrase === "now") return utcDateTimeString(now);
+  if (phrase === "today") return utcDateString(now);
+  if (phrase === "yesterday") return shiftRelative(now, "day", 1);
+  if (phrase === "tomorrow") return utcDateString(new Date(utcMidnight(now).getTime() + 86_400_000));
+
+  // "last week" / "past month" / "a year ago" — a bare unit means one of it.
+  const bareUnit = /^(?:the )?(?:last|past|previous) (week|month|year|day)$/.exec(phrase) ??
+    /^an? (week|month|year|day) ago$/.exec(phrase);
+  if (bareUnit) return shiftRelative(now, RELATIVE_UNIT_ALIASES[bareUnit[1]], 1);
+
+  // "7 days ago" / "last 7 days" / "past 3 months".
+  const counted = /^(\d{1,4}) ([a-z]+) ago$/.exec(phrase) ??
+    /^(?:the )?(?:last|past) (\d{1,4}) ([a-z]+)$/.exec(phrase);
+  if (counted) {
+    const unit = RELATIVE_UNIT_ALIASES[counted[2]];
+    return unit ? shiftRelative(now, unit, Number(counted[1])) : null;
+  }
+
+  // The shorthand form: "30d", "-7d", "24h". A sign is accepted and ignored —
+  // both "30d" and "-30d" mean thirty days back, and no caller has ever meant
+  // a date thirty days into the future by either.
+  const shorthand = /^[+-]?(\d{1,4}) ?(h|d|w|y)$/.exec(phrase);
+  if (shorthand) return shiftRelative(now, RELATIVE_UNIT_ALIASES[shorthand[2]], Number(shorthand[1]));
+
+  return null;
+}
+
 /** Gmail date format: YYYY/MM/DD (UTC calendar date). */
 export function formatGmailDate(input: string): string {
   const d = parseIsoDate(input);
@@ -440,7 +654,7 @@ export const SEARCH_FIELD_DESCRIPTIONS: Record<string, string> = {
   unread: "true = only unread messages; false = only read messages; omit for either.",
   has_attachment: "true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
   flagged: "true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
-  since: "ISO 8601 date or date-time; return messages received on/after (>=) this instant. A value with no timezone is read as UTC. E.g. \"2026-06-01\", \"2026-06-01T09:00:00\" or \"2026-06-01T09:00:00Z\".",
-  before: "ISO 8601 date or date-time; return messages received strictly before (<) this instant. A value with no timezone is read as UTC. E.g. \"2026-07-01\" or \"2026-07-01T00:00:00\".",
+  since: "ISO 8601 date or date-time; return messages received on/after (>=) this instant. A value with no timezone is read as UTC. E.g. \"2026-06-01\", \"2026-06-01T09:00:00\" or \"2026-06-01T09:00:00Z\". Also accepts \"2026-06\", \"today\", \"7 days ago\" and \"30d\".",
+  before: "ISO 8601 date or date-time; return messages received strictly before (<) this instant. A value with no timezone is read as UTC. E.g. \"2026-07-01\" or \"2026-07-01T00:00:00\". Also accepts \"2026-07\", \"today\" and \"30d\".",
   raw: "Escape hatch: a provider-native query appended to the structured criteria. Ignored on Fastmail (JMAP).",
 };
