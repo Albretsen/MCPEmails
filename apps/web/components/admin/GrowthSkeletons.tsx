@@ -15,7 +15,18 @@
  */
 
 function Block({ width, height = 14, radius = 6 }: { width?: number | string; height?: number; radius?: number }) {
-  return <span className="growth-sk" aria-hidden="true" style={{ width: width ?? '100%', height, borderRadius: radius }} />;
+  // `maxWidth: 100%` on every block, not just the wide ones: a skeleton is a
+  // placeholder for text, and a fixed pixel width that outruns a phone viewport
+  // scrolls the whole page sideways for the second before the real content
+  // arrives. Found at 390px, where the 420px section-description block pushed
+  // the document to 434px.
+  return (
+    <span
+      className="growth-sk"
+      aria-hidden="true"
+      style={{ width: width ?? '100%', maxWidth: '100%', height, borderRadius: radius }}
+    />
+  );
 }
 
 /** One stat card placeholder, including the sparkline strip below the number. */

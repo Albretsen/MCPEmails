@@ -311,13 +311,28 @@
   .growth-stat-detail { font-size: 11px; }
   .growth-stat-spark { margin-top: 8px; }
 
-  /* A 340px panel does not fit a 347px content box, and an absolutely
-     positioned one cannot reflow its way out. Pin it to the viewport width and
-     let it start at the card's left edge in both alignments; a tooltip that
-     overflows the screen is worse than one that is not where you expected. */
-  .growth-info-panel { max-width: calc(100vw - 40px); width: max-content; }
+  /* On a phone the explanation becomes a bottom sheet.
+     An absolutely positioned panel is anchored to its dot, so however narrow it
+     is made it still starts wherever the dot happens to sit and runs off one
+     edge or the other. Worse, it is only `visibility: hidden` when closed, and
+     a hidden element still contributes scrollable overflow: forty of these at
+     350px wide were silently pushing the document to 596px and giving the whole
+     page a horizontal scrollbar that nothing visible explained.
+     `position: fixed` leaves the dot's coordinate space entirely, so the panel
+     always fits and never contributes page overflow. It also suits the input:
+     there is no hover on a touchscreen, so these open on tap through
+     :focus-within, and a sheet is what a tapped explanation should look like. */
+  .growth-info-panel {
+    position: fixed;
+    inset: auto 12px 12px 12px;
+    width: auto;
+    max-width: none;
+    box-shadow: var(--shadow-4);
+    font-size: 13px;
+  }
+  /* The desktop alignment overrides have nothing left to align. */
   .growth-info-end .growth-info-panel,
-  .growth-stat .growth-info-panel { left: auto; right: 0; }
+  .growth-stat .growth-info-panel { left: 12px; right: 12px; }
 
   .growth-toolbar { gap: 8px; }
   .growth-windows { flex: 1; }
