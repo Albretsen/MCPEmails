@@ -93,6 +93,18 @@ export function buildInvalidArgumentsText(
   ].join(" ");
 }
 
+/** How `action` was sent, when it was sent but could not be used. */
+export type ActionMisplacement =
+  /** `action` was present at the top level but was not a string. */
+  | { kind: "wrong_type"; received: string }
+  /**
+   * No usable top-level `action`, but one of the arguments is an object that
+   * carries one. Models nest the whole call under a wrapper key often enough
+   * ({"arguments": {"action": "list"}}, {"input": {...}}) that "none was given"
+   * is a false statement to the one caller most likely to read it.
+   */
+  | { kind: "nested"; container: string; value: string };
+
 /**
  * Builds the rejection text for a consolidated tool whose `action` selector was
  * missing or unrecognised.
@@ -102,14 +114,27 @@ export function buildInvalidArgumentsText(
  * the enum, not a path. The valid actions are listed in full: this is the one
  * error where naming the allowed values is the entire remedy, and the model
  * that hit it has already proved it does not have them to hand.
+ *
+ * `misplacement` refines the opening sentence when the caller DID send an
+ * action and it simply did not land where the selector is read. "none was
+ * given" is a lie to that caller, and a lie is the one thing a self-correcting
+ * error message cannot afford.
  */
 export function buildUnknownActionText(
   toolName: string,
   action: string | null,
   validActions: readonly string[],
+  misplacement?: ActionMisplacement,
 ): string {
   const valid = validActions.join(", ");
-  const opening = action === null
+  const opening = misplacement?.kind === "nested"
+    ? `${toolName} was given no 'action' of its own; the only one in the call ` +
+      `is '${echo(misplacement.value)}' nested inside '${echo(misplacement.container)}', ` +
+      `where it selects nothing. Arguments go at the top level.`
+    : misplacement?.kind === "wrong_type"
+    ? `${toolName} was given an 'action' of type ${echo(misplacement.received)}; ` +
+      `it takes one of the strings below.`
+    : action === null
     ? `${toolName} requires an 'action' argument and none was given.`
     : `${toolName} has no action '${echo(action)}'.`;
   return [

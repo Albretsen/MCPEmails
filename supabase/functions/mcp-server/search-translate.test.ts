@@ -31,10 +31,12 @@
 // ---------------------------------------------------------------------------
 
 import {
+  DATE_INPUT_EXAMPLES,
   formatGmailDate,
   formatImapDate,
   formatUtcDateTime,
   isIsoDateOrDateTime,
+  normalizeDateOrDateTime,
   parseIsoDate,
   toGmailQuery,
   toGraphSearch,
@@ -262,4 +264,137 @@ Deno.test("the UTC pinning assertions are not an artefact of the host zone", () 
   const naive = parseIsoDate("2026-03-15T12:00:00");
   assertEquals(naive.getUTCHours(), 12, `UTC hour under ${zone}`);
   assertEquals(naive.getUTCDate(), 15, `UTC day under ${zone}`);
+});
+
+// ── date normalization ───────────────────────────────────────────────────────
+//
+// The contract above is unchanged: one shape reaches the query builders. What
+// these assert is the translation layer in front of it, which took 414 calls a
+// month that were refused for punctuation and turned them into the canonical
+// shape — and, just as importantly, which shapes it still refuses because they
+// have two readings.
+//
+// Every relative case resolves against a FIXED `now` so the expected values are
+// literals rather than a re-implementation of the arithmetic under test.
+
+/** A Thursday, mid-month, mid-year: no month-end or year-end edge to hide in. */
+const NOW = new Date("2026-08-13T15:42:09Z");
+
+function assertNormalizes(input: string, expected: string): void {
+  assertEquals(normalizeDateOrDateTime(input, NOW), expected, `normalize ${JSON.stringify(input)}`);
+  const canonical = normalizeDateOrDateTime(input, NOW);
+  assert(
+    canonical !== null && isIsoDateOrDateTime(canonical),
+    `normalized ${JSON.stringify(input)} must satisfy the published format`,
+  );
+}
+
+Deno.test("a value already in contract is returned untouched, offset included", () => {
+  // Rewriting an explicit offset to UTC would only make the caller's own value
+  // unrecognisable in an error message; it already names one instant.
+  assertNormalizes("2026-06-01", "2026-06-01");
+  assertNormalizes("2026-06-01T09:00:00", "2026-06-01T09:00:00");
+  assertNormalizes("2026-06-01T09:00:00Z", "2026-06-01T09:00:00Z");
+  assertNormalizes("2026-06-01T09:00:00.123Z", "2026-06-01T09:00:00.123Z");
+  assertNormalizes("2026-06-01T09:00:00+02:00", "2026-06-01T09:00:00+02:00");
+  // Trimmed, but otherwise the same string.
+  assertNormalizes("  2026-06-01  ", "2026-06-01");
+});
+
+Deno.test("a space instead of T is the same instant, pinned to UTC", () => {
+  // What every SQL console, log line and spreadsheet export emits.
+  assertNormalizes("2026-08-01 10:00:00", "2026-08-01T10:00:00Z");
+  assertNormalizes("2026-08-01 10:00", "2026-08-01T10:00:00Z");
+  assertNormalizes("2026-08-01 10:00:00.500", "2026-08-01T10:00:00Z");
+  assertNormalizes("2026-08-01 10:00:00Z", "2026-08-01T10:00:00Z");
+  assertNormalizes("2026-08-01 10:00:00+02:00", "2026-08-01T10:00:00+02:00");
+  // Unpadded fields, with either separator.
+  assertNormalizes("2026-8-1T9:05", "2026-08-01T09:05:00Z");
+});
+
+Deno.test("year-first calendar dates normalize whatever the separator", () => {
+  assertNormalizes("2026/08/01", "2026-08-01");
+  assertNormalizes("2026/8/1", "2026-08-01");
+  assertNormalizes("2026-8-1", "2026-08-01");
+});
+
+Deno.test("a truncated date means the first instant it can mean", () => {
+  // Exactly what ISO 8601 truncation already means, so nothing is being guessed.
+  assertNormalizes("2026-08", "2026-08-01");
+  assertNormalizes("2026/08", "2026-08-01");
+  assertNormalizes("2026", "2026-01-01");
+});
+
+Deno.test("epoch seconds and milliseconds are told apart by magnitude", () => {
+  // 1e11 seconds is the year 5138; nothing a caller means by a date is above it.
+  assertNormalizes("1786000000", "2026-08-06T07:06:40Z");
+  assertNormalizes("1786000000000", "2026-08-06T07:06:40Z");
+  // A bare year must never be read as an epoch: four digits is below the floor.
+  assertNormalizes("2026", "2026-01-01");
+});
+
+Deno.test("the relative expressions models actually emit resolve against one now", () => {
+  assertNormalizes("today", "2026-08-13");
+  assertNormalizes("Today", "2026-08-13");
+  assertNormalizes("yesterday", "2026-08-12");
+  assertNormalizes("tomorrow", "2026-08-14");
+  assertNormalizes("7 days ago", "2026-08-06");
+  assertNormalizes("last 7 days", "2026-08-06");
+  assertNormalizes("last week", "2026-08-06");
+  assertNormalizes("last month", "2026-07-13");
+  assertNormalizes("last year", "2025-08-13");
+  assertNormalizes("3 months ago", "2026-05-13");
+  assertNormalizes("30d", "2026-07-14");
+  assertNormalizes("-7d", "2026-08-06");
+  assertNormalizes("2w", "2026-07-30");
+  // Only an hour offset names a time of day, so only it returns an instant.
+  assertNormalizes("24h", "2026-08-12T15:42:09Z");
+  assertNormalizes("now", "2026-08-13T15:42:09Z");
+});
+
+Deno.test("a relative day means the whole day, not this moment on it", () => {
+  // "since 7 days ago" that resolved to 15:42 would silently drop the morning
+  // of the day the caller named.
+  assertEquals(normalizeDateOrDateTime("7 days ago", NOW), "2026-08-06", "start of day");
+});
+
+Deno.test("a month shift clamps the day instead of rolling into the next month", () => {
+  // Date.UTC(y, m - 1, 31) on the 31st of March lands back in March, which
+  // would turn "last month" into "three days ago" once a year.
+  const march31 = new Date("2026-03-31T12:00:00Z");
+  assertEquals(normalizeDateOrDateTime("last month", march31), "2026-02-28", "February has no 31st");
+  const jan31 = new Date("2026-01-31T12:00:00Z");
+  assertEquals(normalizeDateOrDateTime("1 month ago", jan31), "2025-12-31", "and the year rolls back");
+});
+
+Deno.test("an ambiguous or unreadable value is still refused", () => {
+  for (const input of [
+    "01-08-2026",       // the 1st of August, or the 8th of January
+    "08/01/2026",       // same ambiguity, other separator
+    "June 1 2026",      // prose: `new Date` accepts it by guessing
+    "next tuesday",     // no fixed meaning
+    "2026-13-01",       // well-shaped, and no such month
+    "2026-08-01T25:00", // well-shaped, and no such hour
+    "5 fortnights ago", // a unit we do not carry
+    "30m",              // minutes or months: the one shorthand left out
+    "",
+    "   ",
+    "soon",
+  ]) {
+    assertEquals(normalizeDateOrDateTime(input, NOW), null, `refused: ${JSON.stringify(input)}`);
+  }
+});
+
+Deno.test("the examples in the rejection are all shapes the parser takes", () => {
+  // The message a caller reads must not promise a shape that then fails.
+  const quoted = DATE_INPUT_EXAMPLES.match(/"([^"]+)"/g) ?? [];
+  assert(quoted.length >= 5, `the examples list should carry several: ${DATE_INPUT_EXAMPLES}`);
+  for (const example of quoted) {
+    const value = example.slice(1, -1);
+    const canonical = normalizeDateOrDateTime(value, NOW);
+    assert(
+      canonical !== null && isIsoDateOrDateTime(canonical),
+      `the rejection offers ${example}, which must normalize`,
+    );
+  }
 });

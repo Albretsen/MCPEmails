@@ -27,9 +27,7 @@
 //               Running the call without it returns mail the caller did not
 //               ask for, and neither the model nor the user has any way to
 //               notice: the result looks like a perfectly good answer to a
-//               question nobody asked. These stay refused, and the refusal now
-//               names the action each argument does belong to, which is the
-//               one fact that turns a dead end into a corrected retry.
+//               question nobody asked.
 //
 // The line between them is drawn mechanically, never by taste: see
 // isAbsenceEquivalent. A property whose default expresses a positive selection
@@ -37,6 +35,26 @@
 // who sends `folder: "INBOX"` to `search` means to restrict the search to the
 // inbox, and silently widening a search back to every folder is exactly the
 // invisible semantic change this module exists to prevent.
+//
+// ── Why MISPLACED is no longer always a refusal ─────────────────────────────
+//
+// Refusing every misplaced argument was still the largest error class on the
+// product: 882 rejections across 42 workspaces in the 30 days to 2026-08-29,
+// and fewer than half of them were followed by a successful call, so most were
+// not a corrected retry but an abandoned task. The reasoning above holds — a
+// dropped filter really does produce a plausible answer to a question nobody
+// asked — but it assumed the only two options were "refuse" and "drop in
+// silence". There is a third: drop it, run the call, and SAY SO in the result.
+// The failure mode the refusal existed to prevent is invisibility, not the
+// drop, and a note in the response makes it visible to the one reader who can
+// act on it.
+//
+// That is only safe where being wrong is cheap. So leniency is granted per
+// (tool, action) by an explicit allowlist, LENIENT_ACTIONS below, holding
+// exactly the read-only actions. A read that answered a slightly wider question
+// than intended costs one more read; a move, send or delete that did cannot be
+// taken back, and there the refusal is still the right answer. See
+// LENIENT_ACTIONS for the list and for what is deliberately absent from it.
 //
 // Pure and dependency-free so the classification can be tested without booting
 // the server, for the same reason as invalid-arguments-message.ts.
@@ -69,8 +87,69 @@ export interface MisplacedArgument {
 export interface ExtraArgumentReview {
   /** Sibling arguments that provably cannot change the outcome. */
   ignorable: string[];
-  /** Sibling arguments that could have changed the outcome. */
+  /**
+   * Sibling arguments that COULD have changed the outcome and were dropped
+   * anyway, because the selected action is on LENIENT_ACTIONS. Every one of
+   * these must be named in the result the caller reads; that disclosure is the
+   * entire reason dropping them is acceptable.
+   */
+  ignoredMisplaced: MisplacedArgument[];
+  /** Sibling arguments that could have changed the outcome, and were refused. */
   misplaced: MisplacedArgument[];
+}
+
+/**
+ * The (tool, action) pairs where a misplaced sibling argument is dropped and
+ * disclosed rather than refused.
+ *
+ * Every entry is READ-ONLY: it fetches mail and changes nothing. The worst case
+ * for a wrongly widened read is a larger result set and one wasted call, and
+ * the note in the response says which filter went unapplied, so the model can
+ * narrow and call again knowing exactly what happened.
+ *
+ * DELIBERATELY ABSENT, and not to be added without a different argument than
+ * "it would fix more errors":
+ *
+ *   email_organize   move / move_batch / copy / copy_batch / flag / archive /
+ *                    search_and_move. search_and_move acts on everything a
+ *                    filter matches, so a dropped filter is the difference
+ *                    between moving one thread and moving an inbox.
+ *   email_delete     every action, for the same reason with no undo.
+ *   email_compose    send / reply / forward. Mail cannot be unsent, and a
+ *                    dropped `cc` or `include_signature` is not recoverable
+ *                    by calling again.
+ *   folder           create / rename / delete.
+ *   draft            every write, `send` above all.
+ *   schedule         create queues a real send.
+ *   automation       every write: a rule runs unattended, so a dropped filter
+ *                    keeps costing after the call that dropped it returns.
+ *   signature        set overwrites the stored signature.
+ *
+ * Those all keep the strict behaviour and the refusal that names the owning
+ * action. Note that INERT arguments (`ignorable`) are still dropped everywhere,
+ * on destructive actions included: the published schema's own default says
+ * sending one is identical to omitting it, which is a promise the server made
+ * to the caller before the call, not a judgement made about it afterwards.
+ */
+export const LENIENT_ACTIONS: Readonly<Record<string, readonly string[]>> = {
+  email_read: ["list", "read", "read_batch", "search", "attachment", "extract", "original"],
+  email_organize: [],
+  email_delete: [],
+  email_compose: [],
+  folder: ["list"],
+  draft: ["list"],
+  schedule: ["list"],
+  // 'preview' is a dry run and changes nothing, but its whole purpose is to
+  // decide whether to ENABLE a rule that then runs unattended. A preview of a
+  // wider filter than the caller wrote is the one read whose consequences are
+  // not confined to the call that made it, so it stays strict.
+  automation: ["list", "get", "runs"],
+  signature: ["get"],
+};
+
+/** Whether a misplaced argument may be dropped for this tool's action. */
+export function allowsLenientArguments(toolName: string, action: string): boolean {
+  return LENIENT_ACTIONS[toolName]?.includes(action) ?? false;
 }
 
 /** The error shape the server's schema validator produces. */
@@ -127,14 +206,25 @@ export function neutralDefaultOf(propertySchema: unknown): { present: boolean; v
  * tool entirely) are NOT returned here. They belong to the schema's
  * `additionalProperties: false` rule, which already names them one by one, and
  * guessing at an unknown name is how a typo becomes a silently ignored filter.
+ * That distinction is the reason leniency is safe to grant at all: an unknown
+ * name is a real bug in the caller and still fails, while a sibling action's
+ * name is a known property used in the wrong place.
+ *
+ * @param lenient whether the selected action is on LENIENT_ACTIONS. Passed in
+ *                rather than looked up here because this function is given an
+ *                index, not a tool name, and the caller is the only one that
+ *                knows both. Defaults to false so the strict reading is what a
+ *                caller gets by forgetting to ask for the other one.
  */
 export function reviewExtraArguments(
   index: ActionArgumentIndex,
   action: string,
   args: Record<string, unknown>,
+  lenient = false,
 ): ExtraArgumentReview {
   const allowed = new Set(index.allowedByAction[action] ?? []);
   const ignorable: string[] = [];
+  const ignoredMisplaced: MisplacedArgument[] = [];
   const misplaced: MisplacedArgument[] = [];
   for (const property of Object.keys(args)) {
     if (allowed.has(property)) continue;
@@ -147,9 +237,10 @@ export function reviewExtraArguments(
       ignorable.push(property);
       continue;
     }
-    misplaced.push({ property, owners: owners.filter((owner) => owner !== action) });
+    const entry = { property, owners: owners.filter((owner) => owner !== action) };
+    (lenient ? ignoredMisplaced : misplaced).push(entry);
   }
-  return { ignorable, misplaced };
+  return { ignorable, ignoredMisplaced, misplaced };
 }
 
 /** "action 'search'" / "actions 'search' or 'read'", for the message below. */
@@ -195,4 +286,40 @@ export function withOwningActions<T extends SchemaErrorLike>(
         ownerPhrase(entry.owners),
     };
   });
+}
+
+/**
+ * The sentence a caller reads in an otherwise successful result when leniency
+ * dropped one of its arguments.
+ *
+ * This is the whole justification for dropping instead of refusing, so it is
+ * not optional and it is not vague: it names the tool, the action that ran,
+ * every argument that went unapplied and where each one belongs. A caller that
+ * meant the filter can see it was not applied and narrow; a caller that sent it
+ * by reflex loses nothing.
+ *
+ * Declarative, never imperative, for the reason set out in
+ * invalid-arguments-message.ts: an instruction addressed to a model from inside
+ * a tool response is mechanically indistinguishable from the server operator
+ * injecting a prompt. "were not applied" is a fact about what happened; what to
+ * do about it is the model's call.
+ */
+export function buildIgnoredArgumentsNote(
+  toolName: string,
+  action: string,
+  ignored: readonly MisplacedArgument[],
+): string {
+  const clauses = ignored.map((entry) =>
+    entry.owners.length > 0
+      ? `'${entry.property}' (an argument of ${ownerPhrase(entry.owners)})`
+      : `'${entry.property}'`
+  );
+  const list = clauses.length === 1
+    ? clauses[0]
+    : `${clauses.slice(0, -1).join(", ")} and ${clauses[clauses.length - 1]}`;
+  return (
+    `Note: ${toolName} ran action '${action}', which does not accept ${list}. ` +
+    `${clauses.length === 1 ? "It was" : "They were"} not applied, so this ` +
+    `result does not reflect ${clauses.length === 1 ? "it" : "them"}.`
+  );
 }
