@@ -9,6 +9,7 @@ export type ImapValidationErrorCode =
   | 'AUTH_FAILED'
   | 'CONNECTION_REFUSED'
   | 'CONNECTION_TIMEOUT'
+  | 'HOST_NOT_FOUND'
   | 'TLS_HANDSHAKE_FAILED'
   | 'IMAP_PROTOCOL_ERROR';
 
@@ -35,19 +36,38 @@ export interface ImapCredential {
   password: string;
   /** Defaults to implicit TLS so every existing preset keeps its behavior. */
   security?: MailSecurity;
+  /**
+   * Overrides the default socket timeout. Transport autodetection gives its
+   * first attempt the full budget and its guesses less, because a guess only
+   * runs after something already failed and the user is waiting on it.
+   */
+  timeoutMs?: number;
 }
 
+/**
+ * Disclosure text, one sentence per failure. The client leads with its own
+ * short localised headline keyed off the code and folds this in behind "What to
+ * check", so each entry's job is to name the next thing to do, not to restate
+ * the headline.
+ *
+ * These used to be one guess about credentials shown for every failure ("some
+ * hosts need a separate login username… providers with 2-step verification need
+ * an app password"), printed even when the real problem was that we never
+ * reached the server at all. Each code now says what actually happened. The
+ * transport codes also account for the retries: by the time one of them reaches
+ * a user, the standard alternatives have already been tried, so telling them to
+ * change the port would be telling them to repeat work we just did.
+ */
 export const IMAP_VALIDATION_MESSAGES: Record<ImapValidationErrorCode, string> = {
-  // This text is now disclosure detail, not the headline: the client leads with
-  // its own short sentence keyed off AUTH_FAILED and puts this behind "What to
-  // check". So it carries only the two fixes that are not already implied by
-  // "the server rejected these credentials", and the app-password hint stays,
-  // because a missing app password is the most common cause of this failure.
-  AUTH_FAILED: 'Some hosts need a separate login username instead of your email address, and providers with 2-step verification need an app password.',
-  CONNECTION_REFUSED: 'Could not connect to the mail server. Please check the host and try again.',
-  CONNECTION_TIMEOUT: 'The connection to the mail server timed out. Please try again.',
-  TLS_HANDSHAKE_FAILED: 'Could not establish a secure connection to the mail server. Check that the selected security mode matches the port.',
-  IMAP_PROTOCOL_ERROR: 'An unexpected IMAP error occurred. Please try again.',
+  // The one failure where the transport is known-good: the server spoke IMAP
+  // and turned the login down. So this is the only message that talks about
+  // credentials, and it is honest that the connection itself worked.
+  AUTH_FAILED: 'The server accepted the connection and rejected the login. If your provider uses 2-step verification, it needs an app password rather than your normal one. A few hosts also issue a separate login username.',
+  CONNECTION_REFUSED: 'Nothing is listening for mail on that server. Check the host name against the settings your provider published.',
+  CONNECTION_TIMEOUT: 'The server never answered, on any of the standard mail ports. That usually means the host name is wrong, or a firewall is blocking the connection.',
+  HOST_NOT_FOUND: 'That server name does not exist. Check it for a typo: it is the mail host from your provider, which is often different from your website address.',
+  TLS_HANDSHAKE_FAILED: 'The server would not start an encrypted session on any standard mail port. If your provider gave you a non-standard port, enter it under Advanced settings.',
+  IMAP_PROTOCOL_ERROR: 'The server answered with something that is not IMAP. Check that the host is the IMAP host rather than a webmail or website address.',
 };
 
 function readLine(socket: net.Socket): Promise<string> {
@@ -212,7 +232,7 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
     timeoutHandle = setTimeout(() => {
       activeSocket?.destroy();
       resolve({ ok: false, code: 'CONNECTION_TIMEOUT', message: IMAP_VALIDATION_MESSAGES.CONNECTION_TIMEOUT, phase });
-    }, IMAP_VALIDATION_TIMEOUT_MS);
+    }, cred.timeoutMs ?? IMAP_VALIDATION_TIMEOUT_MS);
   });
 
   const attempt = (async (): Promise<ImapValidationResult> => {
@@ -266,6 +286,10 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
     } catch (caught) {
       const error = caught as NodeJS.ErrnoException;
       if (error.code === 'ECONNREFUSED') return { ok: false, code: 'CONNECTION_REFUSED', message: IMAP_VALIDATION_MESSAGES.CONNECTION_REFUSED, phase };
+      // A name that does not resolve fails identically on every port, so it is
+      // separated from the generic protocol error: it must not be retried, and
+      // "that server name does not exist" is the only useful thing to say.
+      if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN') return { ok: false, code: 'HOST_NOT_FOUND', message: IMAP_VALIDATION_MESSAGES.HOST_NOT_FOUND, phase };
       const tlsError = phase === 'tls' || error.code?.startsWith('ERR_TLS') || error.code?.includes('CERT');
       return tlsError
         ? { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: IMAP_VALIDATION_MESSAGES.TLS_HANDSHAKE_FAILED, phase }

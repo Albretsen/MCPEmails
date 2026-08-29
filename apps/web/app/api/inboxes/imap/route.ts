@@ -7,6 +7,7 @@ import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { normalizeSecurity } from '@/lib/email/connection-config';
+import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -20,6 +21,12 @@ import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
  *
  * Stored with provider = 'imap', service = 'generic'. The edge function infers
  * implicit-TLS vs STARTTLS for sending from smtp_port (587 → STARTTLS).
+ *
+ * The submitted port/security pair is a starting point, not a verdict. When an
+ * attempt fails without ever establishing a usable session, the standard
+ * alternatives are tried automatically and whichever combination works is what
+ * gets persisted (see lib/email/transport-autodetect.ts for the policy, and in
+ * particular for why a rejected password is never retried).
  *
  * Body: { email, username?, appPassword, imapHost, imapPort, smtpHost, smtpPort }
  *
@@ -100,15 +107,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // 5. Validate the credential against the supplied IMAP server.
-  const validation = await validateImapCredential({
-    host: imapHost,
-    port: imapPort,
-    email,
-    username: username || undefined,
-    password: appPassword,
-    security: imapSecurity,
-  });
+  // 5. Validate the credential against the supplied IMAP server, falling back
+  //    through the standard transports when the submitted one never gets far
+  //    enough to present a credential. Twelve consecutive hand-made attempts
+  //    against one host, alternating 993/TLS and 143/STARTTLS, is what this
+  //    replaces; the loop does the same alternation in seconds and stops the
+  //    moment a server actually answers, including when it answers "no".
+  const imapDetection = await detectTransport(
+    transportPlan('imap', { port: imapPort, security: imapSecurity }),
+    (candidate, timeoutMs) =>
+      validateImapCredential({
+        host: imapHost,
+        port: candidate.port,
+        email,
+        username: username || undefined,
+        password: appPassword,
+        security: candidate.security,
+        timeoutMs,
+      })
+  );
+  const validation = imapDetection.result;
+  // Persist what worked, not what was asked for: leaving the user's guess on
+  // the row would send every later sync back to the port that failed.
+  const resolvedImapPort = validation.ok ? imapDetection.candidate.port : imapPort;
+  const resolvedImapSecurity = validation.ok ? imapDetection.candidate.security : imapSecurity;
 
   if (!validation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
@@ -149,6 +171,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       imapHost,
       imapPort,
       imapSecurity,
+      // How many transports were tried before giving up. A failure at one
+      // attempt is a credential or a name that does not resolve; a failure at
+      // three means every standard transport was exhausted, which is the row
+      // that says the host itself is the problem.
+      attempts: imapDetection.attempts,
       workspaceId,
     });
     return NextResponse.json(body, { status: 422 });
@@ -156,14 +183,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Authenticate to SMTP without sending a message. This verifies outbound
   // capability while preserving the existing read-only validation semantics.
-  const smtpValidation = await validateSmtpCredential({
-    host: smtpHost,
-    port: smtpPort,
-    email,
-    username: username || undefined,
-    password: appPassword,
-    security: smtpSecurity,
-  });
+  const smtpDetection = await detectTransport(
+    transportPlan('smtp', { port: smtpPort, security: smtpSecurity }),
+    (candidate, timeoutMs) =>
+      validateSmtpCredential({
+        host: smtpHost,
+        port: candidate.port,
+        email,
+        username: username || undefined,
+        password: appPassword,
+        security: candidate.security,
+        timeoutMs,
+      })
+  );
+  const smtpValidation = smtpDetection.result;
+  const resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : smtpPort;
+  const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : smtpSecurity;
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
     // An inbox that authenticates over IMAP but fails on SMTP is a distinct and
@@ -178,6 +213,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       smtpHost,
       smtpPort,
       smtpSecurity,
+      attempts: smtpDetection.attempts,
       workspaceId,
     });
     return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
@@ -224,14 +260,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       service: 'generic',
       email_address: email,
       imap_host: imapHost,
-      imap_port: imapPort,
+      imap_port: resolvedImapPort,
       imap_tls: true,
-      imap_security: imapSecurity,
+      imap_security: resolvedImapSecurity,
       imap_username: username || null,
       smtp_host: smtpHost,
-      smtp_port: smtpPort,
+      smtp_port: resolvedSmtpPort,
       smtp_tls: true,
-      smtp_security: smtpSecurity,
+      smtp_security: resolvedSmtpSecurity,
       imap_password: encryptedPassword,
       oauth_access_token: null,
       oauth_refresh_token: null,
@@ -261,7 +297,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'generic_imap', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
-  return NextResponse.json({ success: true });
+  // Tell the client when the settings it submitted are not the ones now stored,
+  // so the dashboard can say so rather than silently disagreeing with the form
+  // the user is still looking at.
+  return NextResponse.json({
+    success: true,
+    transport_adjusted: imapDetection.adjusted || smtpDetection.adjusted,
+    imap_port: resolvedImapPort,
+    imap_security: resolvedImapSecurity,
+    smtp_port: resolvedSmtpPort,
+    smtp_security: resolvedSmtpSecurity,
+  });
 }
 
 /** Basic hostname sanity check: non-empty, no spaces, has a dot. */

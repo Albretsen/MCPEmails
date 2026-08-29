@@ -109,6 +109,44 @@ export async function recordPortalOpened(
 }
 
 /**
+ * The inbox-cap upgrade panel was shown to a user trying to connect an inbox.
+ *
+ * `paywall_reached` already exists on this table, written by
+ * `record_usage_limit_event` when the action cap refuses a billable MCP call.
+ * That is a different surface with a different meaning, so these rows carry
+ * `connection_type = 'first_connect'`: the cap that blocked this user was the
+ * connected-inbox cap, and the thing it blocked was a first connect. The
+ * action-cap rows leave the column NULL, which keeps the two separable in
+ * `billing_funnel_by_workspace` without a schema change.
+ *
+ * `outcome` is `started`, not `success`: showing someone a price is the start
+ * of an upgrade decision, not the successful completion of anything. The
+ * category is the plan they were on when they hit the wall, which is what makes
+ * "Free users who saw the panel and bought" answerable at all.
+ *
+ * Not deduped server-side. Re-opening the connect modal after hitting the cap
+ * is a genuine second attempt to add an inbox, and collapsing those would erase
+ * exactly the repeated intent that distinguishes a blocked power user from
+ * someone who wandered past the panel once. The per-modal-open guard on the
+ * client is what stops a render loop from inflating it.
+ */
+export async function recordInboxPaywallReached(workspaceId: string | null): Promise<void> {
+  if (!workspaceId) return;
+  const db = createServiceRoleClient();
+  // Read the plan server-side rather than trusting the browser with it: the
+  // beacon carries no body at all, so there is nothing for a caller to forge.
+  const { data, error } = await db.from('workspaces').select('plan').eq('id', workspaceId).maybeSingle();
+  if (error) console.error('[billing-funnel] paywall plan lookup failed', { error: error.message });
+  await record({
+    workspaceId,
+    stage: 'paywall_reached',
+    outcome: 'started',
+    category: planCategory(data?.plan),
+    connectionType: 'first_connect',
+  });
+}
+
+/**
  * A signed-in user looked at the plans.
  *
  * Deduped to one row per workspace / surface / UTC day so a refresh loop or a

@@ -13,6 +13,7 @@ export type SmtpValidationResult =
         | 'AUTH_MECHANISM_UNSUPPORTED'
         | 'CONNECTION_REFUSED'
         | 'CONNECTION_TIMEOUT'
+        | 'HOST_NOT_FOUND'
         | 'TLS_HANDSHAKE_FAILED'
         | 'SMTP_PROTOCOL_ERROR';
       message: string;
@@ -33,10 +34,13 @@ export interface SmtpCredential {
   username?: string;
   password: string;
   security: MailSecurity;
+  /** See ImapCredential.timeoutMs: shorter for an autodetection retry. */
+  timeoutMs?: number;
 }
 
 export const SMTP_AUTH_FAILED_MESSAGE =
-  'The SMTP server rejected these credentials. Check the username and app password.';
+  'Reading this mailbox works, but the outgoing server rejected the same login. ' +
+  'Some hosts issue a separate SMTP username, and some require the mailbox to be authorised for sending before it will accept one.';
 
 /**
  * Distinct from AUTH_FAILED on purpose: the server refused the *mechanism*, so
@@ -53,9 +57,17 @@ export const SMTP_MECHANISM_UNSUPPORTED_MESSAGE =
  * serves STARTTLS on 587 and does not listen on 465 at all, so an implicit-TLS
  * attempt there hangs until it times out.
  */
+/**
+ * Every standard submission port has already been tried by the time this text
+ * is shown (see email/transport-autodetect.ts), so the old advice to "try 587
+ * with STARTTLS instead" would now be asking the user to repeat what we just
+ * did. What is left is genuinely outside the app.
+ */
 export const SMTP_TIMEOUT_MESSAGE =
-  'The SMTP connection timed out. If this is port 465, try port 587 with STARTTLS instead. ' +
-  'Some hosts, Microsoft Exchange among them, do not offer implicit TLS on 465.';
+  'The outgoing server never answered, on 465, 587 or 25. That is usually a wrong host name, or a network that blocks outgoing mail.';
+
+export const SMTP_HOST_NOT_FOUND_MESSAGE =
+  'That outgoing server name does not exist. Check it for a typo: it is the SMTP host from your provider.';
 
 /**
  * SASL mechanisms this client can perform. Both carry the password over the
@@ -184,7 +196,7 @@ export async function validateSmtpCredential(cred: SmtpCredential): Promise<Smtp
   let phase: ConnectionPhase = 'tcp';
   let timer: NodeJS.Timeout | undefined;
   const timeout = new Promise<SmtpValidationResult>((resolve) => {
-    timer = setTimeout(() => { active?.destroy(); resolve({ ok: false, code: 'CONNECTION_TIMEOUT', message: SMTP_TIMEOUT_MESSAGE, phase }); }, SMTP_VALIDATION_TIMEOUT_MS);
+    timer = setTimeout(() => { active?.destroy(); resolve({ ok: false, code: 'CONNECTION_TIMEOUT', message: SMTP_TIMEOUT_MESSAGE, phase }); }, cred.timeoutMs ?? SMTP_VALIDATION_TIMEOUT_MS);
   });
   const attempt = (async (): Promise<SmtpValidationResult> => {
     try {
@@ -253,9 +265,11 @@ export async function validateSmtpCredential(cred: SmtpCredential): Promise<Smtp
       };
     } catch (caught) {
       const error = caught as NodeJS.ErrnoException;
-      if (error.code === 'ECONNREFUSED') return { ok: false, code: 'CONNECTION_REFUSED', message: 'Could not connect to the SMTP server.', phase };
-      if (phase === 'tls' || error.code?.startsWith('ERR_TLS') || error.code?.includes('CERT')) return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: 'Could not establish a secure SMTP connection.', phase };
-      return { ok: false, code: 'SMTP_PROTOCOL_ERROR', message: 'An unexpected SMTP error occurred.', phase };
+      if (error.code === 'ECONNREFUSED') return { ok: false, code: 'CONNECTION_REFUSED', message: 'Nothing is listening for outgoing mail on that server. Check the SMTP host.', phase };
+      // Not retryable on another port: DNS has no answer regardless of port.
+      if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN') return { ok: false, code: 'HOST_NOT_FOUND', message: SMTP_HOST_NOT_FOUND_MESSAGE, phase };
+      if (phase === 'tls' || error.code?.startsWith('ERR_TLS') || error.code?.includes('CERT')) return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: 'The outgoing server would not start an encrypted session on any standard submission port. If your provider gave you a non-standard port, enter it under Advanced settings.', phase };
+      return { ok: false, code: 'SMTP_PROTOCOL_ERROR', message: 'The outgoing server answered with something that is not SMTP. Check that the host is the SMTP host rather than a webmail or website address.', phase };
     }
   })();
   try { return await Promise.race([attempt, timeout]); }

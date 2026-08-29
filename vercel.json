@@ -8,6 +8,15 @@
     "app/api/stripe/webhook/route.ts": {
       "maxDuration": 30
     },
+    "app/api/inboxes/imap/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/inboxes/app-password/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/inboxes/fastmail-app-password/route.ts": {
+      "maxDuration": 60
+    },
     "app/auth/gmail/callback/route.ts": {
       "maxDuration": 15
     },
