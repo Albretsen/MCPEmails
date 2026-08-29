@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
-import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, planDisplayName } from './Pages';
+import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, planDisplayName, PLAN_LADDER } from './Pages';
 import { ConnectModal } from './ConnectModal';
+import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
 import { trackProductEvent } from '@/lib/analytics.mjs';
@@ -41,6 +42,42 @@ function readQuery(searchParams, key) {
 }
 
 /**
+ * localStorage key remembering the last purchase confirmation that was shown.
+ *
+ * The confirmation panel is normally one-shot because the mount effect strips
+ * `?checkout=success` from the URL. That is not quite enough on its own: a
+ * browser session restore, or a "duplicate tab", replays the ORIGINAL URL with
+ * the params still on it, which would re-congratulate someone on a purchase
+ * they made days ago. This marker closes that hole.
+ *
+ * Scoped by plan and expiring after a day so a genuine later purchase (an
+ * upgrade from Personal to Pro, or a resubscribe) is still confirmed.
+ */
+const CHECKOUT_ACK_KEY = 'mcpe-checkout-ack';
+const CHECKOUT_ACK_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** True when this exact plan purchase has already been confirmed recently. */
+function checkoutAlreadyAcknowledged(planId) {
+  try {
+    const raw = localStorage.getItem(CHECKOUT_ACK_KEY);
+    if (!raw) return false;
+    const [ackedPlan, ackedAt] = raw.split(':');
+    return ackedPlan === planId && Date.now() - Number(ackedAt) < CHECKOUT_ACK_TTL_MS;
+  } catch {
+    return false;
+  }
+}
+
+/** Record that this plan purchase has been confirmed. */
+function rememberCheckoutAcknowledged(planId) {
+  try {
+    localStorage.setItem(CHECKOUT_ACK_KEY, `${planId}:${Date.now()}`);
+  } catch {
+    /* localStorage unavailable: the URL strip is still the primary guard */
+  }
+}
+
+/**
  * DashboardApp: exported dashboard root.
  *
  * Wraps everything in <ToastProvider> so that any component in the tree
@@ -62,6 +99,7 @@ export function DashboardApp(props) {
  */
 function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, inboxesGrandfathered = false, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const tr = useTranslations('dashboardChrome');
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const firstrun = readQuery(searchParams, "firstrun") === "1";
@@ -103,7 +141,24 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   }, []);
   // Make workspace stateful so that a rename (PATCH /api/workspaces/[id])
   // is immediately reflected in the sidebar name + breadcrumb without a page reload.
-  const [workspace, setWorkspace] = useState(serverWorkspace ?? null);
+  const [editedWorkspace, setWorkspace] = useState(serverWorkspace ?? null);
+
+  /**
+   * The workspace as displayed: locally edited fields, but the plan always as
+   * the server last reported it.
+   *
+   * The plan is the one field this component must never hold stale. After a
+   * Stripe checkout the browser can arrive before the webhook has updated
+   * `workspaces.plan`, and the confirmation panel asks for a refetch; that
+   * refetch changes the `serverWorkspace` prop, but state initialised once from
+   * a prop would keep the sidebar on the old plan forever. Deriving it here
+   * rather than syncing it in an effect means a rename in flight is never
+   * clobbered and there are no cascading renders.
+   */
+  const workspace =
+    editedWorkspace && serverWorkspace && editedWorkspace.plan !== serverWorkspace.plan
+      ? { ...editedWorkspace, plan: serverWorkspace.plan }
+      : editedWorkspace;
 
   // Initialise from server-fetched data; fallback to empty array so the
   // empty-state UI renders correctly on first run or when fetch fails.
@@ -117,8 +172,23 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // (identity pre-filled and locked; only the password is re-entered).
   const [reconnectInbox, setReconnectInbox] = useState(null);
   const [showCommand, setShowCommand] = useState(false);
+  // { planId, interval } while the post-checkout confirmation panel is open.
+  const [checkoutSuccess, setCheckoutSuccess] = useState(null);
   const [onboardingClient, setOnboardingClient] = useState(returnedOnboardingClient);
   const [guideResumeKey, setGuideResumeKey] = useState(0);
+
+  /**
+   * Refetch this route's server data.
+   *
+   * Used by the post-checkout confirmation panel: Stripe redirects the browser
+   * and delivers `checkout.session.completed` on its own schedule, so the plan
+   * on the workspace row can still be the old one when the dashboard renders.
+   * A refresh re-runs the server component and brings back the updated plan and
+   * inbox allowance without a full page load.
+   */
+  const refreshServerData = useCallback(() => {
+    router.refresh();
+  }, [router]);
 
   useEffect(() => {
     if (!firstrun) return;
@@ -237,26 +307,56 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Show success / cancelled toast when returning from Stripe Checkout.
-  // Stripe appends ?checkout=success&plan=<planId> or ?checkout=cancelled to the URL.
+  // Confirm the purchase when returning from Stripe Checkout.
+  // Stripe appends ?checkout=success&plan=<planId> or ?checkout=cancelled.
+  //
+  // A four second toast in the bottom right corner is not a purchase
+  // confirmation. It fires only once the dynamic server render and hydration
+  // have both finished, it lands diagonally opposite everything the buyer is
+  // reading, and this effect then strips the params, so after those four
+  // seconds nothing in the product acknowledges the payment at all. Success
+  // now opens a persistent panel instead; a cancelled checkout is still just a
+  // toast, because nothing happened and nothing needs acknowledging.
   useEffect(() => {
     const checkoutParam = readQuery(searchParams, 'checkout');
     if (!checkoutParam) return;
     if (checkoutParam === 'success') {
       const planParam = readQuery(searchParams, 'plan');
-      const planLabel = planParam ? planParam.charAt(0).toUpperCase() + planParam.slice(1) : tr('app.checkoutSuccessPlanFallback');
-      toast({
-        message: tr('app.checkoutSuccess', { plan: planLabel }),
-        variant: 'success',
-      });
+      // Only a real paid tier opens the panel. An unrecognised value means a
+      // hand-edited or stale URL, so fall back to the old toast rather than
+      // congratulating someone on a plan that does not exist.
+      const isPaidPlan = !!planParam && planParam !== 'free' && PLAN_LADDER.includes(planParam);
+      if (isPaidPlan && !checkoutAlreadyAcknowledged(planParam)) {
+        // The interval is not in the return URL today. When the checkout route
+        // starts appending it, the panel picks it up and shows price and
+        // renewal date; until then it renders without those two rows.
+        const intervalParam = readQuery(searchParams, 'interval');
+        // The return URL is a one-shot signal that only exists on the client,
+        // and the panel is an overlay: deriving it during render instead would
+        // put a server render that shows nothing against a client render that
+        // shows a dialog, which is a hydration mismatch.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCheckoutSuccess({
+          planId: planParam,
+          interval: intervalParam === 'month' || intervalParam === 'year' ? intervalParam : null,
+        });
+        rememberCheckoutAcknowledged(planParam);
+      } else if (!isPaidPlan) {
+        toast({
+          message: tr('app.checkoutSuccess', { plan: tr('app.checkoutSuccessPlanFallback') }),
+          variant: 'success',
+        });
+      }
     } else if (checkoutParam === 'cancelled') {
       toast({ message: tr('app.checkoutCancelled'), variant: 'info' });
     }
-    // Clean up the query params from the URL without a reload.
+    // Clean up the query params from the URL without a reload, so a refresh
+    // does not replay the confirmation.
     try {
       const url = new URL(window.location.href);
       url.searchParams.delete('checkout');
       url.searchParams.delete('plan');
+      url.searchParams.delete('interval');
       window.history.replaceState({}, '', url.toString());
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -669,6 +769,25 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           planName={planDisplayName(workspace?.plan)}
           inboxCount={inboxes.length}
           maxInboxes={planLimits?.maxInboxes ?? null}
+        />
+      )}
+
+      {/* Purchase confirmation on return from Stripe. Rendered after the
+          connect modal so that "Connect another inbox" hands straight over to
+          it. `livePlan` is the server's view of the workspace, which may still
+          lag the purchase; the panel resolves that itself. */}
+      {checkoutSuccess && (
+        <CheckoutSuccessPanel
+          planId={checkoutSuccess.planId}
+          interval={checkoutSuccess.interval}
+          livePlan={serverWorkspace?.plan ?? null}
+          maxInboxes={planLimits?.maxInboxes ?? null}
+          inboxCount={inboxes.length}
+          stripePrices={stripePrices}
+          onRefreshPlan={refreshServerData}
+          onConnectInbox={() => { setCheckoutSuccess(null); setRoute('inboxes'); setShowConnect(true); }}
+          onViewBilling={() => { setCheckoutSuccess(null); setRoute('settings'); }}
+          onDismiss={() => setCheckoutSuccess(null)}
         />
       )}
 
