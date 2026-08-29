@@ -117,48 +117,54 @@ export async function RetentionSection() {
         />
       </section>
 
-      <div className="growth-split">
-        <div className="growth-panel">
-          {curveResult.ok ? (
-            <LineChart
-              title="Retention curve, percent still using a mailbox"
-              data={curve.map((point) => ({
-                label: `W${point.week_index}`,
-                values: [point.eligible ? Math.round((point.retained / point.eligible) * 100) : 0],
-              }))}
-              series={[{ key: 'retained', name: 'Still active (%)' }]}
-              unit="percent"
-              footnote={thinTailFootnote(curve)}
-            />
-          ) : (
-            <div className="growth-error"><strong>Curve unavailable.</strong><code>{curveResult.error}</code></div>
-          )}
-        </div>
-
-        <div className="growth-panel">
-          {cohortResult.ok ? (
-            <CohortHeatmap
-              title="Retention by signup week"
-              subtitle="Rows are signup weeks, columns are weeks since. Week 0 is the signup week itself."
-              rows={cohortRows.map(({ label, size, values }) => ({ label, size, values }))}
-            />
-          ) : (
-            <div className="growth-error"><strong>Cohorts unavailable.</strong><code>{cohortResult.error}</code></div>
-          )}
-        </div>
-      </div>
-
-      {bandsResult.ok && (
-        <div style={{ marginTop: 18 }}>
-          <MixBars
-            title="Active days per workspace, last 28 days"
-            unit="workspaces"
-            rows={bandsResult.data
-              .filter((band) => band.metric === 'active_days')
-              .map((band) => ({ name: `${band.band} day(s)`, count: band.workspaces }))}
-          />
-        </div>
+      {/* The curve is the whole section. The cohort grid answers a different
+          and slower question ("is retention improving cohort over cohort?"),
+          and at 12 rows by 12 columns over cohorts of 1 to 61 workspaces it is
+          mostly noise on a weekly read, so it moved behind a disclosure with
+          the habit bar rather than sitting beside the curve competing with it. */}
+      {curveResult.ok ? (
+        <LineChart
+          title="Retention curve, percent still using a mailbox"
+          data={curve.map((point) => ({
+            label: `W${point.week_index}`,
+            values: [point.eligible ? Math.round((point.retained / point.eligible) * 100) : 0],
+          }))}
+          series={[{ key: 'retained', name: 'Still active (%)' }]}
+          unit="percent"
+          footnote={thinTailFootnote(curve)}
+        />
+      ) : (
+        <div className="growth-error"><strong>Curve unavailable.</strong><code>{curveResult.error}</code></div>
       )}
+
+      <details className="growth-raw">
+        <summary>Show cohorts and the habit distribution</summary>
+        <div className="growth-split">
+          <div className="growth-panel">
+            {cohortResult.ok ? (
+              <CohortHeatmap
+                title="Retention by signup week"
+                subtitle="Rows are signup weeks, columns are weeks since. Week 0 is the signup week itself."
+                rows={cohortRows.map(({ label, size, values }) => ({ label, size, values }))}
+              />
+            ) : (
+              <div className="growth-error"><strong>Cohorts unavailable.</strong><code>{cohortResult.error}</code></div>
+            )}
+          </div>
+          {bandsResult.ok ? (
+            <MixBars
+              title="Active days per workspace, last 28 days"
+              unit="workspaces"
+              rows={bandsResult.data
+                .filter((band) => band.metric === 'active_days')
+                .map((band) => ({ name: `${band.band} day(s)`, count: band.workspaces }))}
+            />
+          ) : (
+            <div className="growth-error"><strong>Habit bands unavailable.</strong><code>{bandsResult.error}</code></div>
+          )}
+        </div>
+      </details>
+
     </Section>
   );
 }

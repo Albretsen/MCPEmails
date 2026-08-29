@@ -282,3 +282,66 @@ export type GrowthUsageVolumeRow = {
   cap_rejections: number;
   total_workspaces: number;
 };
+
+/**
+ * The population the INBOX paywall can actually reach.
+ * `growth_upgrade_pressure(p_free_inbox_cap)`.
+ *
+ * The page measured the action cap in four places and the inbox cap in none,
+ * which is why it reported no upgrade pressure at all while 59 workspaces were
+ * standing at the inbox ceiling. Since the 2026-08-19 repricing the inbox count
+ * IS the value metric; the action cap survives only as a silent abuse ceiling.
+ *
+ * "Capped" = a live free workspace whose owner holds neither the permanent
+ * grandfather from migration 20260819170500 nor an unexpired comped
+ * entitlement: exactly the set `checkInboxLimit` enforces against.
+ *
+ * `grandfathered_over_free` is revenue permanently forgone, not a bug: those
+ * workspaces hold more inboxes than Free allows and never will be charged for
+ * them. It is reported so a conversion rate is never computed against a
+ * population that cannot convert.
+ */
+export type GrowthUpgradePressureRow = {
+  capped_workspaces: number;
+  /** Capped workspaces already holding the free cap, so the next connect is refused. */
+  at_ceiling: number;
+  /** Of those, the ones that had already performed a mailbox operation. The number to act on. */
+  at_ceiling_activated: number;
+  capped_activated: number;
+  grandfathered_workspaces: number;
+  grandfathered_over_free: number;
+  comped_workspaces: number;
+  paid_workspaces: number;
+};
+
+/**
+ * Live workspaces by inbox count, split by whether the cap can reach them.
+ * `growth_inbox_distribution()`. Always four bands, empty ones included.
+ */
+export type GrowthInboxBandRow = {
+  band: string;
+  band_index: number;
+  /** Free, not grandfathered, not comped: the cap applies. */
+  capped: number;
+  /** Free but grandfathered or comped: the cap can never apply. */
+  exempt: number;
+  paid: number;
+};
+
+/**
+ * Signups by first-touch channel and what each channel did next.
+ * `growth_acquisition_channels(p_days)`.
+ *
+ * Attribution only exists from 2026-08-05 and lands null on roughly a third of
+ * signups, so unattributed workspaces come back as their own `unattributed`
+ * row rather than being dropped: the rows must sum to the signup count or they
+ * will eventually be read as if they did.
+ */
+export type GrowthChannelRow = {
+  source: string;
+  signups: number;
+  activated: number;
+  /** Active on more than one UTC day: the page's single definition of "returned". */
+  returned: number;
+  paying: number;
+};
