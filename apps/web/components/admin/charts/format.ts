@@ -80,3 +80,29 @@ export function slugify(value: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 48) || 'chart';
 }
+
+/**
+ * Money, from minor units, for a display read across a room.
+ *
+ * Cents are shown below a hundred and hidden above it. A first month's MRR of
+ * $3.58 rounded to "$4" is a visible lie about a number that small, and a
+ * five-figure ARR quoted to the cent is noise nobody can read from four metres
+ * away. Whole amounts never show ".00" at any size.
+ */
+export function formatMoney(minorUnits: number, currency = 'usd'): string {
+  if (!Number.isFinite(minorUnits)) return NO_DATA;
+  const major = minorUnits / 100;
+  const whole = Number.isInteger(major);
+  const digits = whole || Math.abs(major) >= 100 ? 0 : 2;
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    }).format(major);
+  } catch {
+    // An unknown currency code must not blank a tile that has a real number in it.
+    return `${formatCount(Math.round(major))} ${currency.toUpperCase()}`;
+  }
+}

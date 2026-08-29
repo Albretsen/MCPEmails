@@ -36,8 +36,10 @@ import {
 } from '@/lib/analytics/growth-queries';
 import { GMAIL_OAUTH_USER_CAP } from '@/lib/analytics/growth-types';
 import type { GmailCapSummaryRow, GrowthDailyRow } from '@/lib/analytics/growth-types';
-import { planDisplayName } from '@/lib/stripe/plans';
-import { NO_DATA, formatCount, formatPercent, ratio } from '../charts';
+import { fetchCheckoutFunnel, fetchRecurringRevenue } from '@/lib/analytics/kiosk-revenue';
+import type { CheckoutFunnel } from '@/lib/analytics/kiosk-revenue';
+import type { RevenueSummary } from '@/lib/analytics/revenue-math';
+import { NO_DATA, formatCount, formatMoney, formatPercent, ratio } from '../charts';
 import {
   BarList,
   BigNumber,
@@ -76,16 +78,19 @@ const FUNNEL_DAYS = 400;
 export async function KioskBoard() {
   const days = KIOSK_WINDOW_DAYS;
 
-  const [daily, lifecycle, revenue, funnel, bands, gmail, providers, usage] = await Promise.all([
-    fetchDailyMetrics(DAILY_DAYS),
-    fetchLifecycleCounts(),
-    fetchRevenueCounts(),
-    fetchActivationFunnel(FUNNEL_DAYS),
-    fetchEngagementBands(days),
-    fetchGmailCapSummary(),
-    fetchProviderMix(),
-    fetchUsageVolume(days),
-  ]);
+  const [daily, lifecycle, revenue, funnel, bands, gmail, providers, usage, recurring, checkout] =
+    await Promise.all([
+      fetchDailyMetrics(DAILY_DAYS),
+      fetchLifecycleCounts(),
+      fetchRevenueCounts(),
+      fetchActivationFunnel(FUNNEL_DAYS),
+      fetchEngagementBands(days),
+      fetchGmailCapSummary(),
+      fetchProviderMix(),
+      fetchUsageVolume(days),
+      fetchRecurringRevenue(days),
+      fetchCheckoutFunnel(),
+    ]);
 
   const rows = daily.ok ? daily.data : [];
   const current = rows.slice(-days);
@@ -99,6 +104,7 @@ export async function KioskBoard() {
   const life = lifecycle.ok ? lifecycle.data : null;
   const money = revenue.ok ? revenue.data : null;
   const volume = usage.ok ? usage.data : null;
+  const mrr = recurring.ok ? recurring.data : null;
 
   const activeNow = life?.active_28d ?? latest?.active_28d ?? 0;
   const returning = returningWorkspaces(bands.ok ? bands.data : []);
@@ -158,36 +164,59 @@ export async function KioskBoard() {
         )}
       </Tile>
 
-      {/* Paying, not "paid": a comp lands on the same `plan` column as a
-          purchase, and so does our own 100%-off test subscription, so anything
-          counting that column reports both as revenue. The tile is dashed while
-          the number is zero, because a solid frame around a nought reads as a
-          result rather than as the open goal it is.
+      {/* THE MONEY TILE. It replaced a plain count of paying customers on
+          2026-08-29, the day the count stopped being zero, because a count
+          cannot tell a $5 month from a $79 one and the whole point of the
+          repricing was that those are different outcomes.
 
-          The excluded internal accounts are named in the caption, not in the
-          aside. The board is a fixed 960x600 logical viewport, the aside is
-          `white-space: nowrap`, and this tile is only three of twelve columns
-          wide: a second clause up there squeezes the label into an ellipsis.
-          The caption is the one line here that may wrap. */}
-      <Tile
-        label="Paying customers"
-        aside={money ? `${money.comped_workspaces} comped` : undefined}
-        span={3}
-        tone={(money?.paying_workspaces ?? 0) > 0 ? 'good' : 'goal'}
-      >
-        <BigNumber
-          value={money?.paying_workspaces ?? 0}
-          caption={
-            money && money.paying_workspaces === 0
-              ? money.internal_paying_workspaces > 0
-                ? <>Next milestone. <strong>{money.free_workspaces}</strong> free to convert, <strong>{money.internal_paying_workspaces}</strong> of ours not counted.</>
-                : <>Next milestone. <strong>{money.free_workspaces}</strong> free workspaces to convert.</>
-              : money
-                ? <><strong>{money.paying_personal}</strong> {planDisplayName('personal')}, <strong>{money.paying_solo}</strong> {planDisplayName('solo')}, <strong>{money.paying_scale}</strong> {planDisplayName('pro')}</>
-                : 'Revenue counts unavailable'
-          }
+          PRICED FROM STRIPE, NOT FROM OUR PRICE TABLE. A comped account is a
+          live subscription carrying a 100% off coupon, so priced from `plan`
+          it reads as full revenue and priced from Stripe it correctly reads as
+          nothing. Yearly is divided by twelve rather than booked in the month
+          it lands: our first sale was a year up front, and showing $43 of MRR
+          would report thirty times the truth and then appear to lose it all
+          the month after. See revenue-math.ts.
+
+          THE ASIDE IS A TRIAGE SLOT, not a label. A failing card and a
+          subscription already set to stop are the two things worth walking
+          over for, and they say so there in priority order; when neither is
+          true it falls back to the annual figure. Payments that are failing
+          stay IN the MRR figure, because the app still entitles them through
+          dunning and dropping them on the first bounce would paint a collapse
+          that has not happened.
+
+          A FAILED READ IS NOT A ZERO. Every other tile here renders TileError
+          when its query fails; the tile this replaced used to fall back to
+          `?? 0` and print a confident nought under a "Paying customers" label.
+          That is the single worst thing this board can display: it is the
+          number someone walks past to check, zero is a plausible value for it,
+          and nothing distinguished "nobody has paid" from "the query did not
+          answer". Stripe being down must read as Stripe being down. */}
+      {recurring.ok && mrr ? (
+        <Tile
+          label="Recurring revenue"
+          aside={revenueAside(mrr)}
+          span={3}
+          tone={revenueTone(mrr)}
+        >
+          <BigNumber
+            value={formatMoney(mrr.mrrMinor, mrr.currency)}
+            suffix="/mo"
+            // The prior period is derived, not stored: today's MRR less what
+            // arrived and left inside the window. That is exact while nobody
+            // has upgraded or downgraded, which is true today and is noted in
+            // revenue-math.ts as the thing to revisit once it is not.
+            trend={mrr.netNewMrrMinor === 0 ? null : trend(mrr.mrrMinor, mrr.mrrMinor - mrr.netNewMrrMinor, 'up')}
+            caption={revenueCaption(mrr, money)}
+          />
+        </Tile>
+      ) : (
+        <TileError
+          label="Recurring revenue"
+          message={recurring.ok ? 'Stripe returned no subscriptions.' : recurring.error}
+          span={3}
         />
-      </Tile>
+      )}
 
       {/* ---- Row 3: the two panels worth standing still for ---- */}
 
@@ -207,7 +236,7 @@ export async function KioskBoard() {
 
       {funnel.ok ? (
         <Tile label="Road to a paying customer" aside="every signup, ever" span={5}>
-          <FunnelSteps steps={milestoneSteps(funnel.data, returning, volume?.cap_hit_workspaces ?? 0, money?.paying_workspaces ?? 0)} />
+          <FunnelSteps steps={milestoneSteps(funnel.data, returning, checkout.ok ? checkout.data : null, mrr)} />
         </Tile>
       ) : (
         <TileError label="Road to a paying customer" message={funnel.error} span={5} />
@@ -364,22 +393,46 @@ function weeklyBuckets(rows: GrowthDailyRow[], weeks: number): { label: string; 
 /**
  * The milestone ladder, ending at the step that is actually in play.
  *
- * The last two rungs come from outside the activation funnel on purpose: the
+ * The last three rungs come from outside the activation funnel on purpose: the
  * funnel stops at first value, and the interesting question now is what
- * happens after it. "Came back" is the step the product currently loses people
- * on, and "Hit a plan limit" is the step nobody has reached yet, which is
- * precisely why a checkout has never been started.
+ * happens after it.
+ *
+ * WHY "HIT A PLAN LIMIT" IS GONE. It was the right rung when actions were the
+ * value metric. Since the 2026-08-19 repricing the paywall is the inbox count,
+ * the action ceiling is a silent abuse guard nobody is meant to reach, and
+ * `paywall_reached` has never once fired, so the rung was a permanent zero
+ * measuring a paywall that no longer exists. The two rungs that replace it
+ * measure the paywall that does: looking at the plans, and getting as far as
+ * Stripe's checkout page.
+ *
+ * THE ABANDONMENT NOTE IS THE POINT OF THE PANEL. Everything above it is
+ * about getting people to want the product. The gap between "started a
+ * checkout" and "paid" is the only step where someone had already decided to
+ * pay and we lost them anyway, and it is the only number here that can be
+ * fixed in an afternoon.
+ *
+ * TWO SEAMS TO KNOW ABOUT, both marked in the notes rather than hidden. The
+ * first three rungs come from the activation RPC and count every workspace
+ * including our own; the pricing and checkout rungs are filtered in Node and
+ * exclude ours, because the owner's dashboard visits and live test purchases
+ * are a large share of every billing event ever recorded and left in they
+ * would turn the pricing rung into a measure of our own browsing. Our accounts
+ * are roughly a twentieth of signups, so the ladder still reads true; the
+ * cleaner fix is to teach `growth_activation_funnel` the same exclusion.
+ *
+ * The second seam is the window: the pricing and checkout rungs are all-time,
+ * "came back" is the rolling 28 days. Mixing windows in a funnel is
+ * defensible, doing it without saying which rung changed measure is not.
  */
 function milestoneSteps(
   funnel: { stage: string; workspaces: number }[],
   returning: number,
-  capHit: number,
-  paying: number,
+  checkout: CheckoutFunnel | null,
+  mrr: RevenueSummary | null,
 ) {
   const stage = (name: string) => funnel.find((row) => row.stage === name)?.workspaces ?? 0;
-  // The last three rungs are measured over the rolling window, not all time,
-  // so each one says so. Mixing windows in a funnel is defensible; doing it
-  // without labelling which rung changed measure is not.
+  const paid = checkout?.checkoutCompleted ?? 0;
+  const stillPaying = mrr?.payingCustomers ?? 0;
   return [
     { label: 'Signed up', value: stage('signup') },
     { label: 'Connected an inbox', value: stage('inbox_connected') },
@@ -390,16 +443,97 @@ function milestoneSteps(
       note: returning === 0 ? 'nobody yet' : `2+ days, last ${KIOSK_WINDOW_DAYS}d`,
     },
     {
-      label: 'Hit a plan limit',
-      value: capHit,
-      note: capHit === 0 ? 'nobody has met the paywall' : `last ${KIOSK_WINDOW_DAYS}d`,
+      label: 'Looked at the plans',
+      value: checkout?.pricingViewed ?? 0,
+      note: checkout ? 'signed in, ever' : 'unavailable',
+    },
+    {
+      label: 'Started a checkout',
+      value: checkout?.checkoutStarted ?? 0,
+      note: !checkout
+        ? 'unavailable'
+        : checkout.abandoned > 0
+          ? `${checkout.abandoned} left without paying`
+          : 'none abandoned',
     },
     {
       label: 'Paid',
-      value: paying,
-      note: paying === 0 ? 'the first one is still out there' : 'thank you',
+      value: paid,
+      note: paid === 0
+        ? 'the first one is still out there'
+        // Ever-paid against still-paying: with the counts this small, one
+        // cancellation is the whole retention story and hiding it behind a
+        // single number would be the flattering choice.
+        : stillPaying === paid ? 'all still paying' : `${stillPaying} still paying`,
     },
   ];
+}
+
+/**
+ * The tone and the aside of the money tile.
+ *
+ * Ordered by what someone should do about it: a card that is failing outranks
+ * a subscription winding down, which outranks the fact that the headline is
+ * only counting one currency, which outranks the annual figure.
+ *
+ * Every branch is kept to two or three words. The aside is `white-space:
+ * nowrap` in a tile three of twelve columns wide, so a longer phrase does not
+ * wrap, it eats the label: "Recurring revenue" becomes "Recurring rev...".
+ */
+function revenueTone(mrr: RevenueSummary): 'good' | 'warn' | 'bad' | 'goal' {
+  if (mrr.atRiskCustomers > 0) return 'bad';
+  if (mrr.leavingCustomers > 0) return 'warn';
+  return mrr.mrrMinor > 0 ? 'good' : 'goal';
+}
+
+function revenueAside(mrr: RevenueSummary): string {
+  if (mrr.atRiskCustomers > 0) {
+    return `${mrr.atRiskCustomers} failing`;
+  }
+  if (mrr.leavingCustomers > 0) return `${mrr.leavingCustomers} leaving`;
+  if (mrr.otherCurrencies.length > 0) {
+    return `plus ${mrr.otherCurrencies.map((code) => code.toUpperCase()).join('/')}`;
+  }
+  return mrr.mrrMinor > 0 ? `${formatMoney(mrr.arrMinor, mrr.currency)}/yr` : 'nobody yet';
+}
+
+/**
+ * One line under the money.
+ *
+ * Zero revenue gets the milestone framing and the size of the pool still to
+ * convert, because "$0" on its own says nothing about whether that is a
+ * problem. Any revenue at all gets the customer count, the average, and what
+ * moved in the window, since the average is the number that says whether the
+ * repricing is landing on the tiers it was aimed at.
+ */
+function revenueCaption(mrr: RevenueSummary, counts: { free_workspaces: number } | null) {
+  if (mrr.payingCustomers === 0) {
+    return (
+      <>
+        Next milestone.{' '}
+        {counts ? <><strong>{formatCount(counts.free_workspaces)}</strong> free workspaces to convert</> : 'No paid subscription is live'}
+        {mrr.compedCustomers > 0 ? `, ${mrr.compedCustomers} comped` : ''}.
+      </>
+    );
+  }
+  return (
+    <>
+      <strong>{formatCount(mrr.payingCustomers)}</strong> paying,{' '}
+      {formatMoney(mrr.arpaMinor, mrr.currency)} each. {movement(mrr)}
+    </>
+  );
+}
+
+/** What arrived and what left inside the window, in words rather than a delta. */
+function movement(mrr: RevenueSummary): string {
+  const gained = formatMoney(mrr.newMrrMinor, mrr.currency);
+  const lost = formatMoney(mrr.churnedMrrMinor, mrr.currency);
+  if (mrr.newCustomers > 0 && mrr.churnedCustomers > 0) {
+    return `${gained} won and ${lost} lost in ${KIOSK_WINDOW_DAYS}d.`;
+  }
+  if (mrr.newCustomers > 0) return `${gained} of it arrived in the last ${KIOSK_WINDOW_DAYS}d.`;
+  if (mrr.churnedCustomers > 0) return `${lost} lost in the last ${KIOSK_WINDOW_DAYS}d.`;
+  return `Unchanged for ${KIOSK_WINDOW_DAYS} days.`;
 }
 
 /** Provider ids as a person would say them. */

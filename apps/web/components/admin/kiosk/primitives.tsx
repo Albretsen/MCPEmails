@@ -82,11 +82,17 @@ export function BigNumber({
   sparkColor?: string;
 }) {
   const tone = trendTone(trend);
+  const text = typeof value === 'number' ? formatCount(value) : value;
+  // The row does not wrap and its children do not shrink, so a long headline
+  // pushes the trend badge off the tile instead of being made to fit. Counts
+  // never get there; the money tile can, once MRR needs a thousands separator
+  // beside a currency symbol and a "/mo". Long values step down a size.
+  const long = text.length >= 7;
   return (
     <div className="kiosk-big">
       <div className="kiosk-big-row">
-        <span className="kiosk-big-value">
-          {typeof value === 'number' ? formatCount(value) : value}
+        <span className={`kiosk-big-value${long ? ' is-long' : ''}`}>
+          {text}
           {suffix && <span className="kiosk-big-suffix">{suffix}</span>}
         </span>
         {trend && tone && (
