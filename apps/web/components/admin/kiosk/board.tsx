@@ -159,10 +159,16 @@ export async function KioskBoard() {
       </Tile>
 
       {/* Paying, not "paid": a comp lands on the same `plan` column as a
-          purchase, so anything counting that column reports comps as revenue.
-          The tile is dashed while the number is zero, because a solid frame
-          around a nought reads as a result rather than as the open goal it
-          is. */}
+          purchase, and so does our own 100%-off test subscription, so anything
+          counting that column reports both as revenue. The tile is dashed while
+          the number is zero, because a solid frame around a nought reads as a
+          result rather than as the open goal it is.
+
+          The excluded internal accounts are named in the caption, not in the
+          aside. The board is a fixed 960x600 logical viewport, the aside is
+          `white-space: nowrap`, and this tile is only three of twelve columns
+          wide: a second clause up there squeezes the label into an ellipsis.
+          The caption is the one line here that may wrap. */}
       <Tile
         label="Paying customers"
         aside={money ? `${money.comped_workspaces} comped` : undefined}
@@ -173,7 +179,9 @@ export async function KioskBoard() {
           value={money?.paying_workspaces ?? 0}
           caption={
             money && money.paying_workspaces === 0
-              ? <>Next milestone. <strong>{money.free_workspaces}</strong> free workspaces to convert.</>
+              ? money.internal_paying_workspaces > 0
+                ? <>Next milestone. <strong>{money.free_workspaces}</strong> free to convert, <strong>{money.internal_paying_workspaces}</strong> of ours not counted.</>
+                : <>Next milestone. <strong>{money.free_workspaces}</strong> free workspaces to convert.</>
               : money
                 ? <><strong>{money.paying_personal}</strong> {planDisplayName('personal')}, <strong>{money.paying_solo}</strong> {planDisplayName('solo')}, <strong>{money.paying_scale}</strong> {planDisplayName('pro')}</>
                 : 'Revenue counts unavailable'

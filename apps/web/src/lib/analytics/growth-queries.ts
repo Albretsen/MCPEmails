@@ -253,9 +253,22 @@ export async function fetchActiveWorkspaces(days: number): Promise<GrowthResult<
   return rpcRows<GrowthActiveWorkspaceRow>('growth_active_workspaces', GROWTH_TAGS.accounts, { p_days: clampDays(days) });
 }
 
-/** Paying versus comped versus free, with comps kept out of the revenue number. */
+/**
+ * Paying versus comped versus free, with comps and our own accounts kept out
+ * of the revenue number.
+ *
+ * The internal list crosses into SQL for the same reason it does in the
+ * retention curve: this RPC returns aggregates, so there is nothing left to
+ * filter on the way back. Without it the headline paying figure counted our
+ * own 100%-off test account as a customer, which is the one number on this
+ * page nobody should have to second-guess.
+ */
 export async function fetchRevenueCounts(): Promise<GrowthResult<GrowthRevenueRow>> {
-  return rpcSingleRow<GrowthRevenueRow>('growth_revenue_counts', GROWTH_TAGS.funnel);
+  const internal = internalAccountMatchers();
+  return rpcSingleRow<GrowthRevenueRow>('growth_revenue_counts', GROWTH_TAGS.funnel, {
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
 }
 
 /** Active inboxes by provider, with app-password connections named by service. */
