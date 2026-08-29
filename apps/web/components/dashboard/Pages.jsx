@@ -4190,6 +4190,49 @@ function BillingSection({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upgradeIntent]);
 
+  // Report back from GET /api/stripe/checkout/start.
+  //
+  // The fast buy path never renders this page on the way to Stripe, so when it
+  // refuses (a comped grant, a grandfathered account asking for Personal, an
+  // unconfigured price) or when it swaps an existing subscriber's price in
+  // place, it lands the buyer here carrying the reason on the URL. Without this
+  // a refusal would arrive as a billing screen that silently did nothing, which
+  // reads as a broken product at the worst possible moment.
+  //
+  // Params are consumed once and stripped, exactly like ?upgrade= above, so a
+  // refresh or a back button cannot replay the toast.
+  const statusParamsHandled = useRef(false);
+  useEffect(() => {
+    if (statusParamsHandled.current) return;
+    statusParamsHandled.current = true;
+
+    const params = new URLSearchParams(window.location.search);
+    const checkoutError = params.get('checkout_error');
+    const billingChanged = params.get('billing') === 'changed';
+    if (!checkoutError && !billingChanged) return;
+
+    window.history.replaceState(window.history.state, '', '/dashboard/settings');
+
+    if (billingChanged) {
+      toast({
+        message: t('billing.planChanged', { plan: planDisplayName(params.get('plan')) }),
+        variant: 'success',
+      });
+      return;
+    }
+
+    // One key per refusal reason, falling back to the generic checkout failure
+    // for any reason the message bundle does not name yet. A missing key must
+    // degrade to a real sentence, never to a raw key path on a billing screen.
+    const key = `billing.checkoutError.${checkoutError}`;
+    toast({
+      message: t.has(key) ? t(key) : t('billing.errCheckoutFailed'),
+      variant: 'error',
+    });
+  // Runs once on mount: the URL is read directly, not from a prop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Display label for the current plan. "free" is translated; the paid tiers use
   // their customer-facing names, never the internal ids ('solo' / 'pro').
   const planKey = currentPlan ?? 'free';

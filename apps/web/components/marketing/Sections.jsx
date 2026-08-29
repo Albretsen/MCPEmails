@@ -783,8 +783,14 @@ export function Pricing({ onGetStarted, stripePrices }) {
   // bundle; `priceKey` indexes the live Stripe prices map (Team is `pro` there).
   // Paid links intentionally go through /signup even for signed-in visitors.
   // Auth middleware immediately forwards an existing session to the preserved
-  // dashboard checkout intent, while new visitors keep that intent through
-  // Google, GitHub, magic-link, or password authentication.
+  // checkout intent, while new visitors keep that intent through Google,
+  // GitHub, magic-link, or password authentication.
+  //
+  // That intent is now GET /api/stripe/checkout/start, which redirects to
+  // Stripe on the first request. It used to be /dashboard/settings?upgrade=,
+  // which rendered and hydrated the whole dashboard before a client effect
+  // could even begin checkout. These must stay plain <a> hrefs: a next/link
+  // <Link> would prefetch the checkout route.
   //
   // Pro carries the accent: unlimited inboxes for one person is the upgrade
   // almost everyone actually wants, and Team only pays off once other people

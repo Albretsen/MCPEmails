@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
 import { sectionToPath } from './routes';
 import { planDisplayName } from '@/lib/stripe/plans';
+import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
 
 /* Sidebar.jsx: left nav with mobile-collapsible drawer support. */
 
@@ -185,7 +186,15 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
                   <span className="ws-meta"><span className="ws-name">{tr('sidebar.newWorkspace')}</span></span>
                 </button>
               ) : (
-                <a href="/dashboard/settings?upgrade=pro&interval=month" className="ws-menu-item ws-menu-upsell">
+                /* Extra workspaces are a Team feature, and Team is the plan
+                   whose internal id is `pro`, so `pro` is the right id here
+                   even though the menu sells it under the Team name.
+
+                   Plain anchor on purpose: /api/stripe/checkout/start creates
+                   a Stripe Checkout session as a side effect of the GET, so a
+                   next/link prefetch would open sessions for people who only
+                   opened this menu. */
+                <a href={checkoutStartHref('pro', false)} className="ws-menu-item ws-menu-upsell">
                   <span className="ws-glyph sm plus" aria-hidden="true"><Icon name="zap" size={13} color="var(--brand)" /></span>
                   <span className="ws-meta">
                     <span className="ws-name">{tr('sidebar.newWorkspace')}</span>
