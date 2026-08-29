@@ -134,7 +134,7 @@
   },
   "cta": {
     "title": "Des questions sur tout cela ?",
-    "sub": "Demandez-moi ce que vous voulez. Je suis la seule personne aux commandes, et je réponds à chaque message.",
+    "sub": "Demandez-moi ce que vous voulez. Je suis Asgeir Albretsen, et je réponds moi-même à chaque message.",
     "contactBtn": "Écrire à security@",
     "privacyBtn": "Lire la politique de confidentialité"
   },
@@ -143,5 +143,11 @@
     "p1": "MCP Emails est open source sous AGPL-3.0, et le service hébergé exécute exactement le même serveur MCP que vous pouvez auto-héberger. Cela signifie que « les e-mails sont récupérés en direct et jamais stockés » est quelque chose que vous pouvez vérifier en l'exécutant et en observant le réseau, et non quelque chose que vous devez croire sur parole.",
     "p2": "L'auto-hébergement privilégie IMAP/SMTP : connectez n'importe quelle boîte mail avec un mot de passe d'application, et vos identifiants sont chiffrés sous une clé que vous seul détenez. Une seule commande met en route toute la stack sur votre propre machine.",
     "cta": "Lire le guide d'auto-hébergement"
+  },
+  "operator": {
+    "title": "Qui est aux commandes",
+    "p1": "Une seule personne : moi. Je suis Asgeir Albretsen et j'opère sous le nom d'Albretsen Consulting, une entreprise individuelle norvégienne (enkeltpersonforetak), numéro d'organisation 926 646 753, basée à Bergen, en Norvège. Les commits sont les miens eux aussi, sous <gh>github.com/Albretsen</gh>, si bien que le nom affiché sur cette page et le nom associé au code ne sont qu'un seul et même nom. Vous trouverez plus de détails sur la <about>page « À propos »</about>, et l'identification juridique complète figure dans les <terms>conditions</terms>.",
+    "p2": "Que tout repose sur une seule personne est un risque réel, et la réponse n'est pas de promettre que je serai toujours là. MCPEmails est public sous AGPL-3.0 et le service hébergé exécute ce même code, donc si j'arrête, ou si vous cessez simplement de me faire confiance, vous pouvez cloner le dépôt et l'exécuter sur votre propre infrastructure avec vos propres clés. <selfhostpage>Le guide d'auto-hébergement</selfhostpage> décrit toute la procédure. Je préfère être une personne identifiée que vous pouvez joindre et que vous pouvez quitter, plutôt qu'un fournisseur anonyme à qui vous ne pouvez que faire confiance.",
+    "p3": "Les messages de support et de sécurité ne passent par aucune file d'attente. Ils arrivent chez moi, et je réponds moi-même à chaque message."
   }
 }

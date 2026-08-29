@@ -238,11 +238,13 @@
     "linkTerms": "Vilkår",
     "copyright": "© 2026 mcpemails.",
     "legal": "E-post hentes i sanntid, lagres aldri · Legitimasjon kryptert ved lagring",
+    "legalEntity": "MCPEmails er en tjeneste fra Albretsen Consulting (enkeltpersonforetak), organisasjonsnummer 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norge.",
     "contactLabel": "Kontakt",
     "mcpLabel": "MCP-endepunkt",
     "copy": "Kopier",
     "copied": "Kopiert",
     "copyAria": "Kopier {label}",
+    "linkAbout": "Om",
     "linkSecurity": "Sikkerhet",
     "linkSelfHost": "Selvhosting",
     "linkFounders": "For gründere"

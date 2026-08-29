@@ -9,7 +9,7 @@ import { routing } from './routing';
  * its own namespaces (dashboard, auth, ...), so those are intentionally not
  * loaded here.
  */
-const MARKETING_NAMESPACES = ['home', 'pricing', 'docs', 'privacy', 'terms', 'security', 'selfHosting', 'blog', 'compare', 'connect', 'forFounders'] as const;
+const MARKETING_NAMESPACES = ['home', 'pricing', 'docs', 'privacy', 'terms', 'security', 'selfHosting', 'about', 'blog', 'compare', 'connect', 'forFounders'] as const;
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;

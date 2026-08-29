@@ -660,7 +660,23 @@ export function Quote() {
     <section className="quote">
       <div className="container">
         <div className="text">&ldquo;{t('quote.text')}&rdquo;</div>
-        <div className="who"><strong>Asgeir Albretsen</strong> · {t('quote.role')}</div>
+        <div className="who">
+          {/* The name is the site's only claim that a real person is behind this;
+              linking it to /about is what makes that claim checkable. */}
+          <Link
+            href="/about"
+            style={{
+              color: 'inherit',
+              textDecoration: 'underline',
+              textDecorationColor: 'var(--border-2)',
+              textUnderlineOffset: '3px',
+            }}
+          >
+            <strong>Asgeir Albretsen</strong>
+          </Link>
+          {' · '}
+          {t('quote.role')}
+        </div>
       </div>
     </section>
   );
@@ -1035,6 +1051,7 @@ export function Footer() {
           </div>
           <div>
             <p className="footer-heading">{t('footer.companyHeading')}</p>
+            <Link href="/about">{t('footer.linkAbout')}</Link>
             <Link href="/security">{t('footer.linkSecurity')}</Link>
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
@@ -1044,6 +1061,14 @@ export function Footer() {
           <span>{t('footer.copyright')}</span>
           <span>{t('footer.legal')}</span>
         </div>
+        {/*
+          Service-provider identification, required on every page by the
+          Norwegian ehandelsloven § 8. The authoritative version (register,
+          VAT status, contact) lives on /privacy and /terms; this line is the
+          "easily and permanently accessible" pointer to it. Keep it in sync
+          with the COMPANY_* constants in those two pages.
+        */}
+        <p className="legal-entity">{t('footer.legalEntity')}</p>
       </div>
     </footer>
   );

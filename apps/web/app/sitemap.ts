@@ -25,6 +25,7 @@ const MARKETING_PAGES: {
   { path: '/native-connectors-vs-mcp', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/self-hosting', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/security', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.6 },
+  { path: '/about', lastModified: '2026-08-29', changeFrequency: 'yearly', priority: 0.5 },
   { path: '/for/founders', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/connect/gmail', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/connect/fastmail', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },

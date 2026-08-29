@@ -11,9 +11,10 @@
   },
   "whoWeAre": {
     "title": "1. Who We Are",
-    "p1": "{companyName} (\"MCPEmails\", \"we\", \"us\", or \"our\") operates the MCPEmails service available at <b>mcpemails.com</b>, including all dashboard pages, API endpoints, and the Model Context Protocol (MCP) server that AI agents use to access connected email accounts.",
+    "p1": "The MCPEmails service at <b>mcpemails.com</b> is operated by {companyName}, a Norwegian sole proprietorship (enkeltpersonforetak) owned and run by {ownerName}, trading as \"MCPEmails\". In this policy, \"MCPEmails\", \"we\", \"us\", and \"our\" all mean {companyName}. The service includes all dashboard pages, API endpoints, and the Model Context Protocol (MCP) server that AI agents use to access connected email accounts.",
     "p2": "For the purposes of applicable data protection law (including the EU General Data Protection Regulation, \"GDPR\"), MCPEmails is the data controller for account and usage data. For email content, we act as a data processor on your behalf: we transmit content you authorise us to retrieve, and we do not store it.",
-    "p3": "Our registered address is: {companyAddress}. You can reach our privacy team at <email></email>."
+    "p3": "Service provider identification: {companyName} is a sole proprietorship (enkeltpersonforetak) established in Norway and operated by {ownerName}. It is entered in {register}, the Norwegian Central Coordinating Register for Legal Entities operated by Brønnøysundregistrene, under organisation number <b>{orgNumber}</b>. Our registered address is {companyAddress}.",
+    "p4": "{companyName} is not currently registered in the Norwegian VAT register (Merverdiavgiftsregisteret). You can reach us about privacy at <email></email>."
   },
   "dataWeCollect": {
     "title": "2. Data We Collect",
@@ -228,13 +229,14 @@
     "emailLabel": "Email",
     "securityLabel": "Security issues",
     "postalLabel": "Postal address",
+    "postalValue": "{companyName} (organisation number {orgNumber}), {companyAddress}",
     "responseLabel": "Response time",
     "responseValue": "We respond to all privacy requests within 30 days"
   },
   "cta": {
     "title": "Questions about your data?",
-    "sub": "Our privacy team is here to help. Email us and we will respond within 30 days.",
-    "contactBtn": "Contact privacy team",
+    "sub": "Email us about anything in this policy and we will respond within 30 days.",
+    "contactBtn": "Contact us about privacy",
     "termsBtn": "Read our Terms"
   }
 }

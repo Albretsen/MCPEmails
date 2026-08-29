@@ -37,6 +37,7 @@ const PRIVACY_EMAIL = 'privacy@mcpemails.com';
 const REPO_URL = 'https://github.com/Albretsen/MCPEmails';
 const SELFHOST_URL = 'https://github.com/Albretsen/MCPEmails/tree/main/self-host';
 const LICENSE_URL = 'https://github.com/Albretsen/MCPEmails/blob/main/LICENSE';
+const MAINTAINER_URL = 'https://github.com/Albretsen';
 const GOOGLE_POLICY_URL = 'https://developers.google.com/terms/api-services-user-data-policy';
 
 /* ─── Page ───────────────────────────────────────────────────── */
@@ -234,6 +235,29 @@ export default async function SecurityPage({ params }) {
                 ))}
               </ul>
               <p>{t.rich('report.safeHarbor', richTags)}</p>
+            </LegalSection>
+
+            {/* Who runs this */}
+            <LegalSection id="who-runs-this" title={t('operator.title')}>
+              <p>
+                {t.rich('operator.p1', {
+                  ...richTags,
+                  gh: (c) => (
+                    <a href={MAINTAINER_URL} target="_blank" rel="noopener noreferrer">
+                      <code>{c}</code>
+                    </a>
+                  ),
+                  about: (c) => <a href="/about">{c}</a>,
+                  terms: (c) => <a href="/terms">{c}</a>,
+                })}
+              </p>
+              <p>
+                {t.rich('operator.p2', {
+                  ...richTags,
+                  selfhostpage: (c) => <a href="/self-hosting">{c}</a>,
+                })}
+              </p>
+              <p style={{ margin: 0 }}>{t('operator.p3')}</p>
             </LegalSection>
 
           </div>

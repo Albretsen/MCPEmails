@@ -11,7 +11,8 @@
   },
   "agreement": {
     "title": "1. Aksept av disse vilkårene",
-    "p1": "Disse vilkårene for bruk («Vilkårene») utgjør en juridisk bindende avtale mellom deg («du» eller «Bruker») og {company} («MCPEmails», «vi», «oss» eller «vår»), og regulerer din tilgang til og bruk av MCPEmails-tjenesten, inkludert nettstedet på <b>mcpemails.com</b>, dashbordet, API-endepunktet for Model Context Protocol (MCP), og all tilhørende programvare og dokumentasjon (samlet kalt «Tjenesten»).",
+    "p1": "Disse vilkårene for bruk («Vilkårene») utgjør en juridisk bindende avtale mellom deg («du» eller «Bruker») og {company}, et norsk enkeltpersonforetak med organisasjonsnummer <b>{orgNumber}</b>, eid og drevet av {owner} og med forretningsnavnet «MCPEmails» («MCPEmails», «vi», «oss» eller «vår»). Vilkårene regulerer din tilgang til og bruk av MCPEmails-tjenesten, inkludert nettstedet på <b>mcpemails.com</b>, dashbordet, API-endepunktet for Model Context Protocol (MCP), og all tilhørende programvare og dokumentasjon (samlet kalt «Tjenesten»). Avtalen din er inngått med {company}; «MCPEmails» er et forretningsnavn, ikke en egen juridisk enhet.",
+    "p1b": "Opplysninger om tjenesteyteren: {company}, organisasjonsnummer {orgNumber}, registrert i {register} (som drives av Brønnøysundregistrene). Registrert adresse: {companyAddress}. {company} er per i dag ikke registrert i Merverdiavgiftsregisteret. Juridiske henvendelser: <email></email>.",
     "p2": "Ved å opprette en konto, akseptere disse Vilkårene eller bruke en hvilken som helst del av Tjenesten, bekrefter du at du er minst 16 år gammel (eller den laveste alderen for digitalt samtykke i din jurisdiksjon, dersom denne er høyere), at du har rettslig handleevne til å inngå en bindende avtale, og at du samtykker til å være bundet av disse Vilkårene og vår <privacy>Personvernerklæring</privacy>, som ved henvisning inngår som en del av disse Vilkårene.",
     "p3": "Dersom du aksepterer disse Vilkårene på vegne av et selskap eller en annen juridisk enhet, innestår og garanterer du for at du har fullmakt til å binde den enheten, og i så fall viser «du» til den enheten.",
     "p4": "Dersom du ikke samtykker til disse Vilkårene, må du ikke opprette en konto eller bruke Tjenesten."
@@ -143,7 +144,7 @@
     "h91": "9.1 Lovvalg",
     "p91": "Disse Vilkårene og enhver tvist som oppstår av eller i forbindelse med dem eller Tjenesten skal reguleres av og tolkes i samsvar med lovene i <b>Norge</b>, uten hensyn til dets lovvalgsregler. FN-konvensjonen om kontrakter for internasjonale løsørekjøp kommer ikke til anvendelse.",
     "h92": "9.2 Verneting",
-    "p92": "Ethvert søksmål eller enhver rettsforfølgning relatert til disse Vilkårene eller Tjenesten skal anlegges utelukkende ved domstolene i <b>Oslo, Norge</b>. Du samtykker til den personlige jurisdiksjonen til disse domstolene og fraskriver deg enhver innsigelse mot verneting.",
+    "p92": "Ethvert søksmål eller enhver rettsforfølgning relatert til disse Vilkårene eller Tjenesten skal anlegges utelukkende ved domstolene i <b>Bergen, Norge</b>. Du samtykker til den personlige jurisdiksjonen til disse domstolene og fraskriver deg enhver innsigelse mot verneting.",
     "h93": "9.3 Forbrukerrettigheter (EØS/Storbritannia)",
     "p93": "Ingenting i disse Vilkårene påvirker lovbestemte rettigheter du måtte ha som forbruker etter lovene i ditt bostedsland, som ikke kan utelukkes eller begrenses ved avtale. Dersom du er en forbruker bosatt i Den europeiske union, kan du også sende inn en klage gjennom EUs nettbaserte plattform for tvisteløsning på <odr>ec.europa.eu/consumers/odr</odr>.",
     "h94": "9.4 Uformell løsning",
@@ -172,18 +173,19 @@
   },
   "contact": {
     "title": "11. Kontakt oss",
-    "intro": "Dersom du har spørsmål om disse Vilkårene eller trenger å nå vårt juridiske team:",
+    "intro": "Hvis du har spørsmål om disse vilkårene eller trenger å ta kontakt om dem:",
     "legalLabel": "Juridiske henvendelser",
     "privacyLabel": "Personvernspørsmål",
     "securityLabel": "Sikkerhetsrapporter",
     "postalLabel": "Postadresse",
+    "postalValue": "{companyName} (organisasjonsnummer {orgNumber}), {companyAddress}",
     "responseLabel": "Responstid",
     "responseValue": "Vi svarer på alle juridiske henvendelser innen 14 virkedager"
   },
   "cta": {
     "title": "Spørsmål om disse Vilkårene?",
-    "sub": "Vårt juridiske team hjelper deg gjerne. Ta kontakt, så svarer vi innen 14 virkedager.",
-    "contactBtn": "Kontakt det juridiske teamet",
+    "sub": "Ta kontakt om hva som helst i disse vilkårene, så svarer vi innen 14 virkedager.",
+    "contactBtn": "Kontakt oss om vilkårene",
     "privacyBtn": "Les vår Personvernerklæring"
   }
 }

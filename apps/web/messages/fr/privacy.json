@@ -11,9 +11,10 @@
   },
   "whoWeAre": {
     "title": "1. Qui nous sommes",
-    "p1": "{companyName} (« MCPEmails », « nous » ou « notre ») exploite le service MCPEmails disponible à l'adresse <b>mcpemails.com</b>, y compris toutes les pages du tableau de bord, les points de terminaison de l'API et le serveur Model Context Protocol (MCP) que les agents IA utilisent pour accéder aux comptes de messagerie connectés.",
+    "p1": "Le service MCPEmails disponible à l'adresse <b>mcpemails.com</b> est exploité par {companyName}, une entreprise individuelle norvégienne (enkeltpersonforetak) détenue et dirigée par {ownerName}, exerçant sous le nom commercial « MCPEmails ». Dans la présente politique, « MCPEmails », « nous » et « notre » désignent {companyName}. Le service comprend toutes les pages du tableau de bord, les points de terminaison de l'API et le serveur Model Context Protocol (MCP) que les agents IA utilisent pour accéder aux comptes de messagerie connectés.",
     "p2": "Aux fins de la législation applicable en matière de protection des données (y compris le Règlement général sur la protection des données de l'UE, le « RGPD »), MCPEmails est le responsable du traitement des données de compte et d'utilisation. Concernant le contenu des e-mails, nous agissons en tant que sous-traitant pour votre compte : nous transmettons le contenu que vous nous autorisez à récupérer, et nous ne le stockons pas.",
-    "p3": "Notre adresse enregistrée est : {companyAddress}. Vous pouvez joindre notre équipe chargée de la confidentialité à l'adresse <email></email>."
+    "p3": "Identification du prestataire de services : {companyName} est une entreprise individuelle (enkeltpersonforetak) établie en Norvège et dirigée par {ownerName}. Elle est inscrite à l'{register}, le registre central norvégien des entités juridiques tenu par Brønnøysundregistrene, sous le numéro d'organisation <b>{orgNumber}</b>. Notre adresse enregistrée est {companyAddress}.",
+    "p4": "{companyName} n'est pas actuellement inscrite au registre norvégien de la TVA (Merverdiavgiftsregisteret). Vous pouvez nous contacter au sujet de la confidentialité à l'adresse <email></email>."
   },
   "dataWeCollect": {
     "title": "2. Données que nous collectons",
@@ -228,13 +229,14 @@
     "emailLabel": "E-mail",
     "securityLabel": "Problèmes de sécurité",
     "postalLabel": "Adresse postale",
+    "postalValue": "{companyName} (numéro d'organisation {orgNumber}), {companyAddress}",
     "responseLabel": "Délai de réponse",
     "responseValue": "Nous répondons à toutes les demandes relatives à la confidentialité dans un délai de 30 jours"
   },
   "cta": {
     "title": "Des questions sur vos données ?",
-    "sub": "Notre équipe chargée de la confidentialité est là pour vous aider. Écrivez-nous et nous répondrons dans un délai de 30 jours.",
-    "contactBtn": "Contacter l'équipe confidentialité",
+    "sub": "Écrivez-nous au sujet de n'importe quel point de cette politique et nous répondrons sous 30 jours.",
+    "contactBtn": "Nous contacter sur la confidentialité",
     "termsBtn": "Lire nos Conditions"
   }
 }
