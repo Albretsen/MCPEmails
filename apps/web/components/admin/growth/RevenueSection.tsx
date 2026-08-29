@@ -34,7 +34,8 @@ import { InfoDot } from '../InfoDot';
 import { SectionError, Section, StatCard } from './shared';
 
 const DATE_FORMAT = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-const MONTH_FORMAT = new Intl.DateTimeFormat('en', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+// Four-digit year: "Aug 26" on a month axis reads as the 26th of August.
+const MONTH_FORMAT = new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 function day(iso: string | null): string {
   if (!iso) return NO_DATA;

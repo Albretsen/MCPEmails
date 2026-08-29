@@ -137,6 +137,14 @@
 
 /* ---------- Tables ---------- */
 .growth-table-wrap { overflow-x: auto; border: 1px solid var(--border-1); border-radius: 12px; background: var(--bg-surface); }
+/* An absolutely positioned hover panel still contributes scrollable overflow to
+   its clipping ancestor, so a table inside `overflow-x: auto` grows a scrollbar
+   for a tooltip that is not even visible, and then clips the tooltip when it
+   is. Tables marked .growth-table-cards are four to six columns and stack into
+   cards below 900px, so they never need to scroll sideways and can let the
+   panel escape. The nine-column account roster keeps the scroll and does not
+   carry hover panels in its body. */
+.growth-table-wrap.growth-table-cards { overflow: visible; }
 /* A collapsed roster page holds its height even when the last page is short,
    so paging through does not make the rest of the page jump. Sized to ten
    two-line rows plus the header, and left as a minimum rather than padded with
@@ -263,6 +271,30 @@
   .growth-split { grid-template-columns: 1fr; }
   .growth-drawer { width: 100vw; }
   .growth-section { margin-top: 28px; }
+
+  /* Card-mode tables. Each row becomes a block, each cell carries its own
+     label, and nothing scrolls sideways. */
+  .growth-table-cards { border: 0; background: none; overflow: visible; }
+  .growth-table-cards table,
+  .growth-table-cards thead,
+  .growth-table-cards tbody,
+  .growth-table-cards tr,
+  .growth-table-cards td { display: block; width: auto; }
+  /* Hidden, not removed: the header text is still what data-label repeats, and
+     a screen reader following the table semantics keeps working. */
+  .growth-table-cards thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+  .growth-table-cards tr { border: 1px solid var(--border-1); border-radius: 10px; background: var(--bg-surface); padding: 11px 13px; margin-bottom: 8px; }
+  .growth-table-cards tr:last-child { margin-bottom: 0; }
+  .growth-table-cards td { border: 0; padding: 3px 0; text-align: left !important; display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
+  .growth-table-cards td::before { content: attr(data-label); color: var(--fg-3); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; flex: none; }
+  /* The first cell is the row's identity, so it gets the full width and no
+     label: repeating "Customer" above every email is noise. */
+  .growth-table-cards td:first-child { display: block; padding-bottom: 7px; margin-bottom: 5px; border-bottom: 1px solid var(--border-1); }
+  .growth-table-cards td:first-child::before { content: none; }
+  .growth-table-cards td .growth-account-sub { display: inline; margin: 0 0 0 6px; }
+  .growth-table-cards td:first-child .growth-account-sub { display: block; margin: 3px 0 0; }
+  .growth-table-cards .growth-empty { display: block; text-align: center; }
+  .growth-table-cards td .growth-code-cell { justify-content: flex-end; }
 }
 
 @media (max-width: 620px) {
@@ -301,30 +333,6 @@
   .growth-cap-facts { gap: 14px 22px; }
   .growth-section h2 { font-size: 16px; }
   .growth-flags li { font-size: 12.5px; padding: 8px 11px; }
-
-  /* Card-mode tables. Each row becomes a block, each cell carries its own
-     label, and nothing scrolls sideways. */
-  .growth-table-cards { border: 0; background: none; overflow: visible; }
-  .growth-table-cards table,
-  .growth-table-cards thead,
-  .growth-table-cards tbody,
-  .growth-table-cards tr,
-  .growth-table-cards td { display: block; width: auto; }
-  /* Hidden, not removed: the header text is still what data-label repeats, and
-     a screen reader following the table semantics keeps working. */
-  .growth-table-cards thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
-  .growth-table-cards tr { border: 1px solid var(--border-1); border-radius: 10px; background: var(--bg-surface); padding: 11px 13px; margin-bottom: 8px; }
-  .growth-table-cards tr:last-child { margin-bottom: 0; }
-  .growth-table-cards td { border: 0; padding: 3px 0; text-align: left !important; display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
-  .growth-table-cards td::before { content: attr(data-label); color: var(--fg-3); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; flex: none; }
-  /* The first cell is the row's identity, so it gets the full width and no
-     label: repeating "Customer" above every email is noise. */
-  .growth-table-cards td:first-child { display: block; padding-bottom: 7px; margin-bottom: 5px; border-bottom: 1px solid var(--border-1); }
-  .growth-table-cards td:first-child::before { content: none; }
-  .growth-table-cards td .growth-account-sub { display: inline; margin: 0 0 0 6px; }
-  .growth-table-cards td:first-child .growth-account-sub { display: block; margin: 3px 0 0; }
-  .growth-table-cards .growth-empty { display: block; text-align: center; }
-  .growth-table-cards td .growth-code-cell { justify-content: flex-end; }
 
   /* The roster stays a table and keeps its horizontal scroll, but the reserved
      height is for ten two-line rows on a wide screen and is far too tall here. */
