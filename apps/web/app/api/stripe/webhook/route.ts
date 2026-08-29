@@ -30,6 +30,14 @@
  *   already processed for that customer, so a redelivered stale event can never
  *   clobber a newer correct state.
  *
+ * Purchase confirmation email:
+ *   `checkout.session.completed` also triggers a one-time confirmation email to
+ *   the purchaser, sent through Resend (see
+ *   src/lib/email/purchase-confirmation.ts). It is scheduled with `after()` so
+ *   it runs post-response, is idempotent per Checkout session, and can never
+ *   fail the webhook. No other event sends mail: see the long comment at the
+ *   end of handleCheckoutSessionCompleted for why.
+ *
  * Security:
  *   Every request is verified against STRIPE_WEBHOOK_SECRET using the raw body.
  *   This handler uses the service-role Supabase client (bypasses RLS).
@@ -37,13 +45,20 @@
  * References:
  *   src/lib/stripe/plans.ts  (plan catalogue, getPlanByStripePriceId)
  *   src/lib/stripe/client.ts (stripe SDK instance)
+ *   src/lib/email/purchase-confirmation.ts (confirmation email composer + sender)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe/client';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { getPlanByStripePriceId, PLANS, type PlanId } from '@/lib/stripe/plans';
+import {
+  getPlanByStripePriceId,
+  PLANS,
+  type BillingInterval,
+  type PlanId,
+} from '@/lib/stripe/plans';
+import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
 import {
   billingTarget,
   primaryWorkspaceId,
@@ -269,6 +284,9 @@ async function handleCheckoutSessionCompleted(
   let currentPeriodEnd: number | null = null;
   let currentPeriodStart: number | null = null;
   let resolvedPlan: PlanId | 'free' = planId;
+  // Resolved from the price the customer actually subscribed to; the checkout
+  // metadata is only the fallback.
+  let resolvedInterval: BillingInterval | null = null;
 
   if (subscriptionId) {
     try {
@@ -285,6 +303,7 @@ async function handleCheckoutSessionCompleted(
       const resolved = getPlanByStripePriceId(priceId);
       if (resolved) {
         resolvedPlan = resolved.plan.id;
+        resolvedInterval = resolved.interval;
       } else if (priceId) {
         console.error(
           `[stripe-webhook] checkout.session.completed: price "${priceId}" on sub ${subscriptionId} does not map to a known plan; using metadata plan_id "${planId}" (session ${session.id})`,
@@ -322,15 +341,80 @@ async function handleCheckoutSessionCompleted(
     source: 'checkout.session.completed',
   });
 
+  if (resolvedPlan === 'free') return;
+  // Re-bind to a const: `resolvedPlan` is a `let`, and TypeScript discards the
+  // non-'free' narrowing for a `let` captured by the `after()` closure below.
+  const purchasedPlan: Exclude<PlanId, 'free'> = resolvedPlan;
+
+  // The price the customer actually subscribed to is authoritative; the
+  // checkout metadata is only a fallback for a session whose subscription we
+  // could not retrieve.
+  const interval: BillingInterval =
+    resolvedInterval ?? (session.metadata?.interval === 'year' ? 'year' : 'month');
+
   // Close the billing funnel. Only an entitled outcome counts as a completed
   // checkout: an `incomplete` subscription resolves to `free` above and is a
   // failed payment, which must not read as revenue in the funnel.
-  if (userId && resolvedPlan !== 'free') {
-    const interval = session.metadata?.interval === 'year' ? 'year' : 'month';
+  if (userId) {
     const service = createServiceRoleClient();
     await recordCheckoutCompleted(
       await primaryWorkspaceId(service, userId),
-      billingTarget(resolvedPlan, interval),
+      billingTarget(purchasedPlan, interval),
+    );
+  }
+
+  // ── Purchase confirmation email ──────────────────────────────────────────
+  //
+  // WHY ONLY HERE. `checkout.session.completed` is the one event that means "a
+  // human just bought this". It fires exactly once per Checkout session and is
+  // never emitted again for that purchase. `customer.subscription.updated`, by
+  // contrast, fires on every renewal, every upgrade and downgrade, every
+  // payment-method change, every dunning status transition and every proration,
+  // so confirming from there would mail a customer on a monthly cadence
+  // forever. `customer.subscription.created` overlaps this event for the same
+  // purchase (different event id, so the ledger would NOT dedupe it) and also
+  // fires for subscriptions we create outside Checkout, such as the comped
+  // 100%-off grants, which must not receive a purchase confirmation. Hence:
+  // checkout.session.completed, and nothing else.
+  //
+  // A customer who cancels and later subscribes again completes a genuinely new
+  // Checkout session and is correctly confirmed a second time.
+  //
+  // IDEMPOTENCY. Stripe-side only, and that is sufficient on its own:
+  //   1. `stripe_webhook_events` rejects a redelivered event id, and this send
+  //      is the LAST thing the handler does, after every write that could
+  //      throw. The only path that removes a ledger row is the catch block in
+  //      POST, which can no longer be reached once we get here, so a Stripe
+  //      retry of this event is always skipped as a duplicate before any code
+  //      in this function runs.
+  //   2. Stripe emits `checkout.session.completed` exactly once per Checkout
+  //      session, and no other event type reaches this send, so there is no
+  //      second event that could confirm the same purchase.
+  //   3. `sendPurchaseConfirmationEmail` makes exactly one Resend call and
+  //      never retries, so it cannot duplicate a delivered mail on its own, and
+  //      that call carries a Resend Idempotency-Key derived from this session
+  //      id as a second layer.
+  //
+  // CONTAINMENT. The send runs in `after()`, so it is scheduled outside this
+  // handler's try/catch and executes only after the 200 has gone back to
+  // Stripe. It cannot delay the response into a Stripe timeout, it cannot roll
+  // the ledger row back, and `sendPurchaseConfirmationEmail` is written never to
+  // throw, so a bounced or failed email can never cost a customer their plan.
+  const recipient = session.customer_details?.email ?? session.customer_email ?? null;
+  if (recipient) {
+    after(() =>
+      sendPurchaseConfirmationEmail({
+        to: recipient,
+        planId: purchasedPlan,
+        interval,
+        amountTotalCents: session.amount_total ?? null,
+        currency: session.currency ?? null,
+        sessionId: session.id,
+      }),
+    );
+  } else {
+    console.error(
+      `[stripe-webhook] checkout.session.completed ${session.id}: no email on the session; confirmation email skipped.`,
     );
   }
 }
