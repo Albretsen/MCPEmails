@@ -435,6 +435,17 @@
     "errCheckoutFailed": "Échec du démarrage du paiement. Veuillez réessayer.",
     "errCheckoutUnexpected": "Réponse inattendue du paiement. Veuillez réessayer.",
     "networkError": "Erreur réseau. Veuillez réessayer.",
+    "checkoutError": {
+      "comped": "Votre compte bénéficie déjà d'un accès complet sans frais. Contactez-nous si vous souhaitez le modifier.",
+      "grandfathered_personal": "Vous avez déjà des boîtes connectées illimitées sans frais, donc Personal serait un retour en arrière pour vous. Contactez-nous si vous souhaitez le modifier.",
+      "plan_not_self_service": "Votre formule est gérée manuellement. Contactez le support pour la modifier.",
+      "already_on_plan": "Vous êtes déjà sur cette formule.",
+      "already_on_plan_interval": "Vous êtes déjà sur cette formule et cette périodicité de facturation.",
+      "price_not_configured": "Cette formule n'est pas disponible à l'achat pour le moment. Réessayez plus tard ou contactez le support.",
+      "workspace_not_found": "Nous n'avons pas trouvé votre espace de travail. Rechargez la page et réessayez.",
+      "invalid_plan": "Ce lien de changement de formule n'est pas valide. Choisissez une formule ci-dessous.",
+      "invalid_interval": "Ce lien de changement de formule n'est pas valide. Choisissez une formule ci-dessous."
+    },
     "plans": {
       "personalFeature1": "3 boîtes connectées",
       "personalFeature2": "120 requêtes / minute (2× en pointe)",

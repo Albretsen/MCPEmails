@@ -435,6 +435,17 @@
     "errCheckoutFailed": "启动结账失败。请重试。",
     "errCheckoutUnexpected": "结账返回意外响应。请重试。",
     "networkError": "网络错误。请重试。",
+    "checkoutError": {
+      "comped": "你的账户已经免费享有全部功能。如需调整，请联系我们。",
+      "grandfathered_personal": "你已经免费拥有无限量连接收件箱，所以 Personal 对你来说反而是降级。如需调整，请联系我们。",
+      "plan_not_self_service": "你的套餐由我们手动管理。如需变更，请联系客服。",
+      "already_on_plan": "你已经在使用该套餐。",
+      "already_on_plan_interval": "你已经在使用该套餐和该计费周期。",
+      "price_not_configured": "该套餐目前无法购买。请稍后再试，或联系客服。",
+      "workspace_not_found": "未能找到你的工作区。请刷新页面后重试。",
+      "invalid_plan": "该升级链接无效。请在下方选择套餐。",
+      "invalid_interval": "该升级链接无效。请在下方选择套餐。"
+    },
     "plans": {
       "personalFeature1": "3 个已连接收件箱",
       "personalFeature2": "120 次请求／分钟（2× 突发）",
@@ -458,7 +469,7 @@
     "inboxesCount": "当前已连接 {count} 个",
     "grandfatheredTitle": "无限量收件箱，予以保留",
     "grandfatheredBody": "在收件箱数量成为付费限制之前你就已经在这里了，因此你的账户永久免费保留无限量连接收件箱。现在共有四个套餐，但其中按收件箱数量分档的那些对你毫无意义。只有当你需要更高的突发限额或团队功能时，Pro 和 Team 才值得考虑。",
-    "planChanged": "您已切换到 {plan}。差价将显示在下一张账单中。"
+    "planChanged": "你已切换到 {plan}。差价将显示在下一张账单中。"
   },
   "security": {
     "title": "安全",

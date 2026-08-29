@@ -435,6 +435,17 @@
     "errCheckoutFailed": "Failed to start checkout. Please try again.",
     "errCheckoutUnexpected": "Unexpected response from checkout. Please try again.",
     "networkError": "Network error. Please try again.",
+    "checkoutError": {
+      "comped": "Your account already has full access at no charge. Contact us if you need to change it.",
+      "grandfathered_personal": "You already have unlimited inboxes at no charge, so Personal would be a downgrade. Contact us if you need to change it.",
+      "plan_not_self_service": "Your plan is managed manually. Contact support to change it.",
+      "already_on_plan": "You are already on this plan.",
+      "already_on_plan_interval": "You are already on this plan and billing interval.",
+      "price_not_configured": "This plan cannot be purchased right now. Please try again later, or contact support.",
+      "workspace_not_found": "We could not find your workspace. Reload the page and try again.",
+      "invalid_plan": "That upgrade link is not valid. Pick a plan below.",
+      "invalid_interval": "That upgrade link is not valid. Pick a plan below."
+    },
     "plans": {
       "personalFeature1": "3 connected inboxes",
       "personalFeature2": "120 requests / minute (2× burst)",
