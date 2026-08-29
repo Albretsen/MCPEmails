@@ -395,6 +395,38 @@ export async function runCheckout(input: {
       allow_promotion_codes: true,
       // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
+      // ── Presentation ────────────────────────────────────────────────────
+      //
+      // ENGLISH IS PINNED, deliberately. Left to itself Stripe localises its
+      // own chrome from the buyer's browser (Accept-Language), but the things
+      // it renders from OUR data cannot follow: the product name and
+      // description on the line item live once, in English, on the Stripe
+      // Product. A Norwegian browser therefore produced a page that said
+      // "Abonner pa MCPEmails Personal / 48,00 USD per ar" directly above an
+      // English sentence about connected inboxes, in two different voices.
+      //
+      // One language beats a half-translated one. This is not a claim that the
+      // product is English-only: the marketing site is still served in five
+      // locales. It is a claim that the checkout page has one copy deck, and
+      // that deck is written in English. The day the Stripe Products carry
+      // translated names and descriptions, pass the site locale through here
+      // instead (Stripe accepts 'nb', 'de', 'fr', 'es' among others).
+      locale: 'en',
+      // The two moments the hosted page leaves room for our own voice. Both
+      // are plain sentences in the same register as the pricing page: no
+      // exclamation marks, no urgency, no upsell.
+      custom_text: {
+        // Sits directly above the subscribe button, where the hesitation is.
+        submit: {
+          message:
+            'Cancel any time from your dashboard. Questions before you buy: hello@mcpemails.com',
+        },
+        // Shown while Stripe hands the buyer back to us, covering the redirect.
+        after_submit: {
+          message:
+            'Taking you back to mcpemails.com to connect your inboxes.',
+        },
+      },
       // Pass USER context through to the subscription for the webhook handler.
       // The subscription is tied to the user; the webhook resolves the owner
       // from user_id (or the customer) and propagates to all owned workspaces.
