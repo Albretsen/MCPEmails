@@ -166,7 +166,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // ── 3. Out-of-order guard ──────────────────────────────────────────────────
   // Ignore this event if a NEWER event for the same customer was already
   // processed (Stripe redelivery of a stale event must not clobber newer state).
-  if (customerIdForEvent) {
+  //
+  // `checkout.session.completed` is EXEMPT, deliberately. The guard exists to
+  // stop a redelivered subscription event from overwriting newer subscription
+  // state, and this event is not that kind of event: it is the record that a
+  // human completed a purchase, it is emitted exactly once per Checkout session,
+  // and it is the sole trigger for the purchase confirmation email and the
+  // `checkout_completed` funnel row.
+  //
+  // Stripe emits `customer.subscription.created` for the same purchase, in
+  // parallel, with a second-granularity `created` timestamp that can land one
+  // second LATER than the checkout event. If that sibling wins the race into the
+  // ledger, the checkout event reads as "stale" and returns here — so the
+  // customer is charged, keeps their plan (the sibling projects it), and
+  // silently receives no confirmation and leaves no completed-checkout row.
+  // The two events on the one real Personal purchase (2026-08-29 11:20:45Z)
+  // share a timestamp to the second and escaped this only because the
+  // comparison is strictly greater-than.
+  //
+  // Exempting it is safe: it writes the plan its own session paid for, and the
+  // per-event-id ledger above still makes a redelivery a no-op.
+  if (customerIdForEvent && event.type !== 'checkout.session.completed') {
     const { data: newer } = await supabase
       .from('stripe_webhook_events')
       .select('event_id')
