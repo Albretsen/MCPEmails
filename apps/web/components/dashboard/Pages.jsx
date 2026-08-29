@@ -4002,6 +4002,49 @@ const BILLING_PLANS = [
 ];
 
 /**
+ * Format a Stripe amount for display.
+ *
+ * Stripe reports money in the currency's smallest unit, which is NOT always
+ * 1/100 of a unit (JPY has no minor unit at all), so the divisor comes from
+ * Intl rather than from a hardcoded 100. Falls back to a plain decimal if the
+ * runtime rejects the currency code, because a confirmation dialog that cannot
+ * render its own number is worse than an unstyled one.
+ */
+function formatMoney(cents, currency, locale) {
+  const code = (currency || 'usd').toUpperCase();
+  try {
+    const fmt = new Intl.NumberFormat(locale || 'en', {
+      style: 'currency',
+      currency: code,
+    });
+    const digits = fmt.resolvedOptions().maximumFractionDigits ?? 2;
+    return fmt.format(cents / Math.pow(10, digits));
+  } catch {
+    return `${(cents / 100).toFixed(2)} ${code}`;
+  }
+}
+
+/**
+ * A Unix-seconds timestamp as a plain calendar date in the user's locale.
+ *
+ * Deliberately NOT named formatDate: this file already has one, taking an ISO
+ * string, and a second module-level declaration of that name would silently
+ * replace it everywhere.
+ */
+function formatRenewalDate(unixSeconds, locale) {
+  if (!unixSeconds) return null;
+  try {
+    return new Intl.DateTimeFormat(locale || 'en', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(new Date(unixSeconds * 1000));
+  } catch {
+    return null;
+  }
+}
+
+/**
  * BillingSection: shows the current plan and upgrade options.
  *
  * Every account sees cards for the tiers ABOVE the one it holds, and a paid
@@ -4043,6 +4086,15 @@ function BillingSection({
   const [upgrading, setUpgrading] = useState(null); // planId while loading
   const [openingPortal, setOpeningPortal] = useState(false);
   const automaticUpgradeStarted = useRef(false);
+  const { locale } = useAppLocale();
+  // The quote an existing subscriber must accept before their live
+  // subscription is re-priced: { planId, planName, interval, preview }.
+  // Null whenever no dialog is open. See handleUpgrade.
+  const [pendingChange, setPendingChange] = useState(null);
+  const [confirmingChange, setConfirmingChange] = useState(false);
+  // An upgrade Stripe accepted but could not collect: the card needs 3DS or
+  // failed. Carries the hosted invoice URL the customer can pay it at.
+  const [paymentRequired, setPaymentRequired] = useState(null);
   const { toast } = useToast();
 
   // Billing funnel: record that this user actually saw the plans.
@@ -4077,13 +4129,25 @@ function BillingSection({
     }
   };
 
+  /**
+   * Step one of buying anything from this screen.
+   *
+   * For an account with no subscription this is unchanged: the server answers
+   * with a Stripe Checkout URL and the buyer goes to the hosted page, which
+   * states the price and takes their explicit action before any money moves.
+   *
+   * For an existing subscriber there is no hosted page, because the price is
+   * swapped on the subscription they already have. The server therefore
+   * refuses to act on the first request and answers with a QUOTE instead. That
+   * quote goes into a dialog, and only if the customer accepts it does
+   * `confirmPlanChange` send the second request that actually charges them.
+   * One click used to be enough to re-price a live subscription with the
+   * amount never shown.
+   */
   const handleUpgrade = async (planId, checkoutInterval = interval) => {
     if (upgrading) return;
     setUpgrading(planId);
-    // An in-place price swap ends in a reload. Clearing the busy state first
-    // would re-enable every button for the split second before the page goes,
-    // which is long enough to fire a second swap.
-    let reloading = false;
+    let handingOff = false;
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -4103,30 +4167,106 @@ function BillingSection({
       }
 
       if (typeof data?.url === 'string') {
-        // Redirect to Stripe Checkout hosted page
+        // Redirect to Stripe Checkout hosted page. The browser is leaving, so
+        // the busy state must stay on until it does.
+        handingOff = true;
         window.location.href = data.url;
-      } else if (data?.changed === true) {
-        // An existing subscriber switched plan or interval. There is no hosted
-        // page for that: the price changed in place, so the only feedback is
-        // ours to give. Say what happened and what it costs, THEN reload to
-        // pick up the new plan. Reloading in the same tick used to destroy the
-        // toast before it was ever painted, so a successful $29 upgrade looked
-        // like a page that flickered and did nothing.
-        reloading = true;
-        toast({
-          message: t('billing.planChanged', { plan: data.plan }),
-          variant: 'success',
+      } else if (data?.confirmation_required === true) {
+        // Nothing has changed and nothing has been charged. Show the numbers.
+        setPendingChange({
+          planId: data.plan_id ?? planId,
+          planName: data.plan,
+          interval: data.interval ?? checkoutInterval,
+          preview: data.preview ?? null,
         });
-        // Also gives the subscription.updated webhook a moment to project the
-        // new plan, so the reloaded page usually already shows it.
-        window.setTimeout(() => window.location.reload(), 2500);
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
       }
     } catch {
       toast({ message: t('billing.networkError'), variant: 'error' });
     } finally {
-      if (!reloading) setUpgrading(null);
+      if (!handingOff) setUpgrading(null);
+    }
+  };
+
+  /**
+   * Step two: the customer has seen the amount and said yes.
+   *
+   * This is the only call in the product that can charge a card without a
+   * hosted Stripe page, and it exists only as the direct result of a click on
+   * the confirm button in the dialog.
+   */
+  const confirmPlanChange = async () => {
+    if (!pendingChange || confirmingChange) return;
+    setConfirmingChange(true);
+    // An applied change ends in a reload. Clearing the busy state first would
+    // re-enable the button for the split second before the page goes, which is
+    // long enough to fire a second swap.
+    let reloading = false;
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: pendingChange.planId,
+          interval: pendingChange.interval,
+          confirm: true,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const message =
+          typeof data?.error === 'string'
+            ? data.error
+            : t('billing.errCheckoutFailed');
+        toast({ message, variant: 'error' });
+        setPendingChange(null);
+        return;
+      }
+
+      if (data?.changed === true) {
+        // Paid and applied. Say what happened and what it cost, THEN reload to
+        // pick up the new plan. Reloading in the same tick used to destroy the
+        // toast before it was ever painted, so a successful $29 upgrade looked
+        // like a page that flickered and did nothing.
+        reloading = true;
+        setPendingChange(null);
+        const paid =
+          typeof data.amount_paid_cents === 'number' && data.amount_paid_cents > 0
+            ? formatMoney(data.amount_paid_cents, data.currency, locale)
+            : null;
+        toast({
+          message: paid
+            ? t('billing.planChangedCharged', { plan: data.plan, amount: paid })
+            : t('billing.planChanged', { plan: data.plan }),
+          variant: 'success',
+        });
+        // Also gives the subscription.updated webhook a moment to project the
+        // new plan, so the reloaded page usually already shows it.
+        window.setTimeout(() => window.location.reload(), 2500);
+      } else if (data?.payment_required === true) {
+        // Stripe is holding the change until the invoice is paid. The customer
+        // is still on the plan they already paid for, and saying so plainly
+        // matters more than anything else on this screen: they must not walk
+        // away believing they upgraded.
+        setPendingChange(null);
+        setPaymentRequired({
+          planName: data.plan,
+          invoiceUrl: typeof data.invoice_url === 'string' ? data.invoice_url : null,
+        });
+      } else {
+        toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
+        setPendingChange(null);
+      }
+    } catch {
+      toast({ message: t('billing.networkError'), variant: 'error' });
+    } finally {
+      if (!reloading) {
+        setConfirmingChange(false);
+        setUpgrading(null);
+      }
     }
   };
 
@@ -4208,8 +4348,10 @@ function BillingSection({
 
     const params = new URLSearchParams(window.location.search);
     const checkoutError = params.get('checkout_error');
-    const billingChanged = params.get('billing') === 'changed';
-    if (!checkoutError && !billingChanged) return;
+    const billingStatus = params.get('billing');
+    const billingChanged = billingStatus === 'changed';
+    const billingPaymentRequired = billingStatus === 'payment_required';
+    if (!checkoutError && !billingChanged && !billingPaymentRequired) return;
 
     window.history.replaceState(window.history.state, '', '/dashboard/settings');
 
@@ -4217,6 +4359,20 @@ function BillingSection({
       toast({
         message: t('billing.planChanged', { plan: planDisplayName(params.get('plan')) }),
         variant: 'success',
+      });
+      return;
+    }
+
+    if (billingPaymentRequired) {
+      // Unreachable today: only a confirmed change can end here, and the
+      // redirecting entry point never confirms one. It is handled anyway, as a
+      // toast rather than the dialog, because no invoice URL survives a
+      // redirect and the half that matters is "you were NOT upgraded".
+      toast({
+        message: t('billing.paymentRequiredToast', {
+          plan: planDisplayName(params.get('plan')),
+        }),
+        variant: 'error',
       });
       return;
     }
@@ -4575,6 +4731,271 @@ function BillingSection({
             </p>
           </>
         )}
+      </div>
+
+      {pendingChange && (
+        <PlanChangeDialog
+          change={pendingChange}
+          currentPlanName={planDisplay}
+          locale={locale}
+          busy={confirmingChange}
+          onConfirm={confirmPlanChange}
+          onCancel={() => {
+            if (confirmingChange) return;
+            setPendingChange(null);
+            setUpgrading(null);
+          }}
+        />
+      )}
+
+      {paymentRequired && (
+        <PaymentRequiredDialog
+          planName={paymentRequired.planName}
+          invoiceUrl={paymentRequired.invoiceUrl}
+          onClose={() => setPaymentRequired(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * The confirmation an existing subscriber sees before their live subscription
+ * is re-priced.
+ *
+ * This dialog is the entire reason the checkout API answers a plan change with
+ * a quote instead of performing it. A first-time buyer gets Stripe's hosted
+ * page, which names the amount and takes a deliberate action before any money
+ * moves. A subscriber has a card on file and never sees that page, so without
+ * this they got a plan change, and a changed bill, off one click on a button
+ * whose only text was "Get Team".
+ *
+ * It states four things, in the order a person actually asks them: what they
+ * are moving to, what leaves their card now, what was credited back for the
+ * plan they are leaving, and what it costs from the next renewal on.
+ *
+ * `change.preview` is null when Stripe could not price the change. The dialog
+ * still appears; it simply says the exact prorated amount will be on the
+ * invoice rather than inventing a figure.
+ */
+/** One label/value line of the plan-change summary. */
+function SummaryRow({ label, value, strong = false }) {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      gap: 16,
+      fontFamily: 'var(--font-sans)',
+    }}>
+      <span style={{ fontSize: 12.5, color: 'var(--fg-3)' }}>{label}</span>
+      <span style={{
+        fontSize: strong ? 15 : 13,
+        fontWeight: strong ? 700 : 500,
+        color: 'var(--fg-1)',
+        textAlign: 'right',
+      }}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function PlanChangeDialog({ change, currentPlanName, locale, busy, onConfirm, onCancel }) {
+  const t = useTranslations('dashboard');
+  const { preview } = change;
+
+  const dueNow =
+    preview && preview.amountDueNowCents > 0
+      ? formatMoney(preview.amountDueNowCents, preview.currency, locale)
+      : null;
+  const credit =
+    preview && preview.creditCents > 0
+      ? formatMoney(preview.creditCents, preview.currency, locale)
+      : null;
+  const recurring =
+    preview && preview.recurringCents > 0
+      ? formatMoney(preview.recurringCents, preview.currency, locale)
+      : null;
+  const renewalDate = preview ? formatRenewalDate(preview.nextRenewalAt, locale) : null;
+
+  const intervalLabel =
+    change.interval === 'year' ? t('billing.perYearWord') : t('billing.perMonthWord');
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 200,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0,0,0,0.45)',
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
+    >
+      <div
+        className="card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="plan-change-title"
+        style={{
+          width: 440,
+          maxWidth: 'calc(100vw - 32px)',
+          background: 'var(--surface)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+          borderRadius: 12,
+        }}
+        onKeyDown={(e) => { if (e.key === 'Escape' && !busy) onCancel(); }}
+      >
+        <div className="card-h">
+          <div>
+            <div className="title" id="plan-change-title" style={{ fontSize: 15 }}>
+              {t('billing.confirmTitle', { plan: change.planName })}
+            </div>
+            <div className="sub" style={{ marginTop: 4 }}>
+              {t('billing.confirmSub', { from: currentPlanName, to: change.planName })}
+            </div>
+          </div>
+        </div>
+
+        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{
+            padding: '14px 16px',
+            background: 'var(--bg-sunken)',
+            border: '1px solid var(--border-1)',
+            borderRadius: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}>
+            {credit && <SummaryRow label={t('billing.confirmCredit')} value={`- ${credit}`} />}
+            <SummaryRow
+              label={t('billing.confirmDueNow')}
+              value={dueNow ?? (preview ? formatMoney(0, preview.currency, locale) : t('billing.confirmAmountUnknown'))}
+              strong
+            />
+            {recurring && (
+              <div style={{ paddingTop: 10, borderTop: '1px solid var(--border-1)' }}>
+                <SummaryRow
+                  label={t('billing.confirmThen')}
+                  value={`${recurring} ${intervalLabel}`}
+                />
+              </div>
+            )}
+            {renewalDate && <SummaryRow label={t('billing.confirmRenews')} value={renewalDate} />}
+          </div>
+
+          <p style={{
+            margin: 0,
+            fontFamily: 'var(--font-sans)',
+            fontSize: 12,
+            color: 'var(--fg-3)',
+            lineHeight: 1.5,
+          }}>
+            {preview ? t('billing.confirmNote') : t('billing.confirmNoteNoPreview')}
+          </p>
+
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <Btn variant="secondary" onClick={onCancel} disabled={busy}>
+              {t('billing.confirmCancel')}
+            </Btn>
+            <Btn variant="primary" onClick={onConfirm} disabled={busy}>
+              {busy
+                ? t('billing.confirming')
+                : dueNow
+                  ? t('billing.confirmPay', { amount: dueNow })
+                  : t('billing.confirmChange')}
+            </Btn>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Shown when Stripe accepted the plan change but could not collect for it,
+ * which in practice means a card that needs 3DS authentication or one that
+ * failed.
+ *
+ * The subscription is UNCHANGED and Stripe is holding the swap as a pending
+ * update, so the single most important thing on this screen is that the
+ * customer does not walk away believing they upgraded. The invoice link is
+ * what completes it: paying it makes Stripe apply the held change by itself.
+ */
+function PaymentRequiredDialog({ planName, invoiceUrl, onClose }) {
+  const t = useTranslations('dashboard');
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 200,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0,0,0,0.45)',
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-required-title"
+        style={{
+          width: 420,
+          maxWidth: 'calc(100vw - 32px)',
+          background: 'var(--surface)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+          borderRadius: 12,
+        }}
+      >
+        <div className="card-h" style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <Icon name="alert-triangle" size={18} color="var(--amber-700)" style={{ marginTop: 2, flexShrink: 0 }} />
+          <div>
+            <div className="title" id="payment-required-title" style={{ fontSize: 15 }}>
+              {t('billing.paymentRequiredTitle')}
+            </div>
+            <div className="sub" style={{ marginTop: 4 }}>
+              {t('billing.paymentRequiredSub', { plan: planName })}
+            </div>
+          </div>
+        </div>
+
+        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p style={{
+            margin: 0,
+            fontFamily: 'var(--font-sans)',
+            fontSize: 12.5,
+            color: 'var(--fg-2)',
+            lineHeight: 1.5,
+          }}>
+            {t('billing.paymentRequiredBody')}
+          </p>
+
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <Btn variant="secondary" onClick={onClose}>
+              {t('billing.paymentRequiredClose')}
+            </Btn>
+            {invoiceUrl && (
+              <a
+                className="btn btn-primary"
+                href={invoiceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textAlign: 'center', justifyContent: 'center' }}
+              >
+                {t('billing.paymentRequiredPay')}
+              </a>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -444,7 +444,8 @@
       "price_not_configured": "该套餐目前无法购买。请稍后再试，或联系客服。",
       "workspace_not_found": "未能找到你的工作区。请刷新页面后重试。",
       "invalid_plan": "该升级链接无效。请在下方选择套餐。",
-      "invalid_interval": "该升级链接无效。请在下方选择套餐。"
+      "invalid_interval": "该升级链接无效。请在下方选择套餐。",
+      "plan_change_failed": "无法变更你的套餐。未产生任何扣款。请重试。"
     },
     "plans": {
       "personalFeature1": "3 个已连接收件箱",
@@ -469,7 +470,29 @@
     "inboxesCount": "当前已连接 {count} 个",
     "grandfatheredTitle": "无限量收件箱，予以保留",
     "grandfatheredBody": "在收件箱数量成为付费限制之前你就已经在这里了，因此你的账户永久免费保留无限量连接收件箱。现在共有四个套餐，但其中按收件箱数量分档的那些对你毫无意义。只有当你需要更高的突发限额或团队功能时，Pro 和 Team 才值得考虑。",
-    "planChanged": "你已切换到 {plan}。差价将显示在下一张账单中。"
+    "planChanged": "你已切换到 {plan}。",
+    "perMonthWord": "每月",
+    "perYearWord": "每年",
+    "confirmTitle": "切换到 {plan}？",
+    "confirmSub": "你正从 {from} 切换到 {to}。费用如下。",
+    "confirmCredit": "未使用时间的抵扣",
+    "confirmDueNow": "今日扣款",
+    "confirmThen": "此后",
+    "confirmRenews": "下次续费",
+    "confirmAmountUnknown": "将显示在账单上",
+    "confirmNote": "现在从你已保存的银行卡扣款，按本期剩余时间按比例计算。你的续费日期不变。",
+    "confirmNoteNoPreview": "我们无法提前计算此次变更的金额。你的银行卡将按本期剩余时间按比例扣除差额，具体金额会显示在账单上。你的续费日期不变。",
+    "confirmPay": "确认并支付 {amount}",
+    "confirmChange": "确认变更",
+    "confirmCancel": "取消",
+    "confirming": "扣款中…",
+    "planChangedCharged": "你已切换到 {plan}。已从你的银行卡扣款 {amount}。",
+    "paymentRequiredTitle": "支付未完成",
+    "paymentRequiredSub": "你尚未切换到 {plan}。",
+    "paymentRequiredBody": "你的银行需要验证这笔支付，或银行卡被拒绝。你当前的套餐没有变化，也没有扣款。支付这张未结账单后，变更会自动生效。",
+    "paymentRequiredPay": "支付账单",
+    "paymentRequiredClose": "关闭",
+    "paymentRequiredToast": "支付未完成，你仍在 {plan}。打开账单门户支付未结账单。"
   },
   "security": {
     "title": "安全",

@@ -37,12 +37,13 @@ import { runCheckout, type CheckoutReason } from '@/lib/stripe/checkout-core';
  *  3. It is not linked with <Link>. The CTAs are plain <a> elements to an API
  *     path, which the Next.js router does not prefetch.
  *
- * The one genuinely non-idempotent thing the core does from a GET is the
- * in-place price swap for an existing subscriber. That is deliberate and
- * pre-existing: it is guarded by `hasEntitledSubscription`, it is a no-op when
- * the price already matches, and Stripe's own proration means a repeat is not a
- * repeat charge. In practice existing subscribers reach checkout through the
- * dashboard's POST path anyway.
+ * NOTHING THIS ROUTE DOES MOVES MONEY. It creates at most a Stripe Checkout
+ * Session, a hosted page the buyer must still complete. The one branch of the
+ * core that charges a card without a hosted page, the in-place price swap for
+ * an existing subscriber, requires `confirmChange` and this route never passes
+ * it: a subscriber is sent to the billing screen to be shown the amount and
+ * decide. A GET that re-priced a live subscription would be one prefetch, one
+ * link unfurl, or one back button away from changing someone's bill.
  */
 
 /** A Stripe session URL must never be stored by a browser, CDN, or proxy. */
@@ -85,11 +86,33 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return noStore(NextResponse.redirect(outcome.url, 303));
   }
 
+  if (outcome.kind === 'confirmation_required') {
+    // An existing subscriber. The change is available but must be agreed to
+    // with its price in view, and a 303 cannot show anyone a price. Hand the
+    // intent to the billing screen, which re-asks the core for the quote and
+    // puts it in a dialog. `upgrade` is the parameter BillingSection already
+    // honours for exactly this, so no new client contract is invented here.
+    return statusRedirect(request, {
+      upgrade: outcome.planId,
+      interval: outcome.interval,
+    });
+  }
+
+  // `changed` and `payment_required` are unreachable from this route: both are
+  // behind `confirmChange`, which only the dashboard's POST ever sets. They are
+  // handled anyway so that a future caller passing it cannot land on the
+  // generic error redirect and tell a customer their successful upgrade failed.
   if (outcome.kind === 'changed') {
-    // No hosted page exists for an in-place price swap: the change already
-    // happened. Land on billing so the dashboard can confirm what it cost.
     return statusRedirect(request, {
       billing: 'changed',
+      plan: outcome.planId,
+      interval: outcome.interval,
+    });
+  }
+
+  if (outcome.kind === 'payment_required') {
+    return statusRedirect(request, {
+      billing: 'payment_required',
       plan: outcome.planId,
       interval: outcome.interval,
     });
