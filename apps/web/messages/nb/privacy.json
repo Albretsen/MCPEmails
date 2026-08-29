@@ -11,9 +11,10 @@
   },
   "whoWeAre": {
     "title": "1. Hvem vi er",
-    "p1": "{companyName} (\"MCPEmails\", \"vi\", \"oss\" eller \"vår\") driver MCPEmails-tjenesten som er tilgjengelig på <b>mcpemails.com</b>, inkludert alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
+    "p1": "MCPEmails-tjenesten på <b>mcpemails.com</b> drives av {companyName}, et norsk enkeltpersonforetak eid og drevet av {ownerName}, som opptrer under forretningsnavnet «MCPEmails». I denne erklæringen viser «MCPEmails», «vi», «oss» og «vår» alle til {companyName}. Tjenesten omfatter alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
     "p2": "I henhold til gjeldende personvernlovgivning (inkludert EUs personvernforordning, \"GDPR\") er MCPEmails behandlingsansvarlig for konto- og bruksdata. For e-postinnhold opptrer vi som databehandler på dine vegne: vi overfører innhold du gir oss tillatelse til å hente, og vi lagrer det ikke.",
-    "p3": "Vår registrerte adresse er: {companyAddress}. Du kan nå personvernteamet vårt på <email></email>."
+    "p3": "Opplysninger om tjenesteyteren: {companyName} er et enkeltpersonforetak etablert i Norge og drevet av {ownerName}. Foretaket er registrert i {register}, som drives av Brønnøysundregistrene, med organisasjonsnummer <b>{orgNumber}</b>. Vår registrerte adresse er {companyAddress}.",
+    "p4": "{companyName} er per i dag ikke registrert i Merverdiavgiftsregisteret. Du kan kontakte oss om personvern på <email></email>."
   },
   "dataWeCollect": {
     "title": "2. Data vi samler inn",
@@ -228,13 +229,14 @@
     "emailLabel": "E-post",
     "securityLabel": "Sikkerhetsproblemer",
     "postalLabel": "Postadresse",
+    "postalValue": "{companyName} (organisasjonsnummer {orgNumber}), {companyAddress}",
     "responseLabel": "Responstid",
     "responseValue": "Vi svarer på alle personvernforespørsler innen 30 dager"
   },
   "cta": {
     "title": "Spørsmål om dataene dine?",
-    "sub": "Personvernteamet vårt er her for å hjelpe. Send oss en e-post, så svarer vi innen 30 dager.",
-    "contactBtn": "Kontakt personvernteamet",
+    "sub": "Send oss en e-post om hva som helst i denne erklæringen, så svarer vi innen 30 dager.",
+    "contactBtn": "Kontakt oss om personvern",
     "termsBtn": "Les vilkårene våre"
   }
 }

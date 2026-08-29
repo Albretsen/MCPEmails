@@ -134,7 +134,7 @@
   },
   "cta": {
     "title": "Spørsmål om noe av dette?",
-    "sub": "Spør meg om hva som helst. Jeg er den eneste som driver dette, og jeg svarer på hver melding.",
+    "sub": "Spør meg om hva som helst. Jeg heter Asgeir Albretsen, og jeg svarer på hver melding selv.",
     "contactBtn": "Send e-post til security@",
     "privacyBtn": "Les personvernerklæringen"
   },
@@ -143,5 +143,11 @@
     "p1": "MCP Emails er åpen kildekode under AGPL-3.0, og den hostede tjenesten kjører nøyaktig den samme MCP-serveren som du kan selvhoste. Det betyr at \"e-post hentes i sanntid og lagres aldri\" er noe du kan verifisere ved å kjøre den og se på nettverkstrafikken, ikke noe du må ta på tro.",
     "p2": "Selvhosting er IMAP/SMTP-først: koble til hvilken som helst postkasse med et app-passord, og legitimasjonen din krypteres under en nøkkel bare du har. Én kommando starter hele stacken på din egen maskin.",
     "cta": "Les selvhosting-guiden"
+  },
+  "operator": {
+    "title": "Hvem som driver dette",
+    "p1": "Én person: meg. Jeg heter Asgeir Albretsen og driver dette som Albretsen Consulting, et norsk enkeltpersonforetak med organisasjonsnummer 926 646 753, med adresse i Bergen. Commitene er også mine, under <gh>github.com/Albretsen</gh>, så navnet på denne siden og navnet på koden er det samme. Mer om dette finner du på <about>om-siden</about>, og den fullstendige juridiske identifikasjonen står i <terms>vilkårene</terms>.",
+    "p2": "At alt hviler på én person, er en reell risiko, og svaret er ikke et løfte om at jeg alltid kommer til å være her. MCPEmails er offentlig tilgjengelig under AGPL-3.0, og den hostede tjenesten kjører nøyaktig den samme koden, så hvis jeg slutter, eller du rett og slett slutter å stole på meg, kan du klone repoet og kjøre det på din egen infrastruktur med dine egne nøkler. <selfhostpage>Selvhosting-guiden</selfhostpage> er hele fremgangsmåten. Jeg vil heller være en navngitt person du kan nå og gå fra, enn en anonym leverandør du bare kan stole på.",
+    "p3": "Support- og sikkerhetshenvendelser går ikke gjennom en kø. De kommer til meg, og jeg svarer på hver melding selv."
   }
 }

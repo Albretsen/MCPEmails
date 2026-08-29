@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "title": "About: the person behind MCPEmails",
+    "description": "MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway, through Albretsen Consulting, a registered Norwegian sole proprietorship."
+  },
+  "hero": {
+    "eyebrow": "About",
+    "title": "Who is asking for your inbox",
+    "lead": "Connecting MCPEmails means letting an AI agent reach your mail, so it is fair to ask who runs the service on the other end. It is one person, working under a registered business, on code you can read. This page exists so you can check that rather than take my word for it."
+  },
+  "who": {
+    "title": "1. Who I am",
+    "p1": "My name is Asgeir Albretsen. I am a software developer in Bergen, Norway, with a BSc in Computer Technology (datateknologi) from the University of Bergen. I build and run MCPEmails myself.",
+    "p2": "The working history behind the name:",
+    "thPeriod": "Period",
+    "thRole": "Role",
+    "rows": [
+      { "period": "Aug 2019 to Feb 2022", "role": "App Developer at Chess.com" },
+      { "period": "Feb 2022 to Jan 2023", "role": "Software QA Engineer at GlobeTech (contract)" },
+      { "period": "Jan 2023 to Sep 2024", "role": "IT consulting at BI Norwegian Business School" },
+      { "period": "Sep 2024 to today", "role": "Software developer, full time" }
+    ],
+    "p3": "I am still employed full time as a software developer. I do not name that employer here: listing them beside a product they have nothing to do with would read as an endorsement they never gave. MCPEmails is separate from the job, independent and self funded, and built in my own time.",
+    "linksIntro": "You do not have to take that on trust either. The same person, in three places you can check:",
+    "linkGithubNote": "the code, including this product",
+    "linkSiteNote": "personal site",
+    "linkLinkedinNote": "the work history above"
+  },
+  "why": {
+    "title": "2. Why I built this",
+    "p1": "I wanted my own agents working my inbox. Every option I looked at wanted a copy of my mail first: sync it, index it, keep it in someone else's database for as long as the account exists. For a mailbox that holds invoices, contracts, and password resets, that is a large permanent trade for a convenience I only wanted some of the time.",
+    "p2": "So I built the version I was willing to use myself. Mail is fetched live when your agent asks for it and dropped when the response is sent, so there is no stored copy here to leak. The one sensitive thing kept is the mailbox credential, encrypted at rest, because the next call you ask for needs it. I run my own mail through it every day."
+  },
+  "trusting": {
+    "title": "3. What you are actually trusting",
+    "intro": "Three separate things, worth naming separately, because they fail in different ways.",
+    "points": [
+      "<b>A named person.</b> Me. Not a support alias, not a brand with nobody visible behind it. If something goes wrong, you know whose name is on it.",
+      "<b>A registered business.</b> MCPEmails is operated by Albretsen Consulting, a Norwegian sole proprietorship registered in Enhetsregisteret at Brønnøysundregistrene. A sole proprietorship carries personal liability, so the name is attached in the legal sense too, not just the moral one.",
+      "<b>Code you can read.</b> The server is public on GitHub under AGPL-3.0, and the hosted service runs that same code. Every claim on this site is a claim the source can contradict."
+    ],
+    "entityTitle": "Legal entity",
+    "entityName": "Albretsen Consulting (enkeltpersonforetak)",
+    "entityOrgNo": "Organisation number 926 646 753",
+    "entityAddress": "Håsteins gate 9, 5160 Laksevåg, Norway",
+    "entityRegistry": "Registered in Enhetsregisteret, Brønnøysundregistrene",
+    "entityNote": "Full legal identification is set out in the <terms>terms of service</terms> and the <privacy>privacy policy</privacy>."
+  },
+  "busFactor": {
+    "title": "4. What happens if I am hit by a bus",
+    "p1": "One person running an email service is a real risk, and it would be dishonest to write a page like this without saying so. I could fall ill, lose interest, or be hit by a bus. A hosted service with a single operator and closed source would leave you with agents wired into something nobody maintains, and a support address nobody reads.",
+    "p2": "That is what the licence is for. MCPEmails is open source under AGPL-3.0, and the hosted service runs the same server you can clone. If I stop, you clone the repository, bring the stack up with one command, point your agent at your own instance, and carry on. Your credentials are yours, your mail was never stored here in the first place, and the tools your agent already knows keep the same names. There is nothing of yours held in a database of mine to be stranded in.",
+    "p3": "That is as far as an honest one person business can go: not a promise that I will always be here, but a way out that does not depend on my being here. It is worth walking the self-host path once while everything is fine, so you know it works before you ever need it.",
+    "ctaSelfHost": "Read the self-hosting guide",
+    "ctaSource": "Read the source"
+  },
+  "contact": {
+    "title": "5. How to reach me",
+    "p1": "There is no support queue and nobody to route your message to. It arrives with me, and I answer it.",
+    "points": [
+      "<hello>hello@mcpemails.com</hello> for anything about the product, an account, billing, or a bug. I aim to reply within one business day.",
+      "<securityEmail>security@mcpemails.com</securityEmail> for a vulnerability report. I aim to acknowledge those within 24 hours, and the full disclosure process, including safe harbour, is on the <security>security page</security>.",
+      "I am in Bergen, Norway, so a message sent late in the North American day is usually answered the next morning, European time."
+    ]
+  },
+  "cta": {
+    "title": "Still deciding whether to hand this a mailbox?",
+    "sub": "Read what the service touches and what it keeps, or skip me entirely and run it yourself.",
+    "primary": "How your email is handled",
+    "secondary": "Run it yourself"
+  },
+  "portraitAlt": "Asgeir Albretsen"
+}

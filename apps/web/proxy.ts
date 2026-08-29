@@ -33,6 +33,7 @@ const MARKETING_PATHS = new Set([
   '/terms',
   '/security',
   '/self-hosting',
+  '/about',
   '/native-connectors-vs-mcp',
   '/for/founders',
 ]);

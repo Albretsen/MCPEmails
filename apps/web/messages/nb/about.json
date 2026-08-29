@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "title": "Om: personen bak MCPEmails",
+    "description": "MCPEmails er bygget og driftet av Asgeir Albretsen, programvareutvikler i Bergen, gjennom Albretsen Consulting, et registrert enkeltpersonforetak."
+  },
+  "hero": {
+    "eyebrow": "Om",
+    "title": "Hvem er det som ber om innboksen din",
+    "lead": "Å koble til MCPEmails betyr å gi en AI-agent tilgang til e-posten din, så det er rimelig å spørre hvem som driver tjenesten i den andre enden. Det er én person, i et registrert foretak, med kode du kan lese. Denne siden finnes for at du skal kunne sjekke det selv, i stedet for å ta meg på ordet."
+  },
+  "who": {
+    "title": "1. Hvem jeg er",
+    "p1": "Jeg heter Asgeir Albretsen. Jeg er programvareutvikler i Bergen, med bachelor i datateknologi fra Universitetet i Bergen. Jeg bygger og drifter MCPEmails selv.",
+    "p2": "Arbeidshistorikken bak navnet:",
+    "thPeriod": "Periode",
+    "thRole": "Rolle",
+    "rows": [
+      { "period": "Aug. 2019 til feb. 2022", "role": "App-utvikler i Chess.com" },
+      { "period": "Feb. 2022 til jan. 2023", "role": "Software QA Engineer i GlobeTech (på kontrakt)" },
+      { "period": "Jan. 2023 til sep. 2024", "role": "IT-konsulent ved Handelshøyskolen BI" },
+      { "period": "Sep. 2024 til i dag", "role": "Programvareutvikler, fulltid" }
+    ],
+    "p3": "Jeg er fortsatt ansatt i full stilling som programvareutvikler. Jeg navngir ikke arbeidsgiveren her: å sette dem ved siden av et produkt de ikke har noe med å gjøre, ville framstått som en anbefaling de aldri har gitt. MCPEmails er atskilt fra jobben, uavhengig og selvfinansiert, og bygget på min egen fritid.",
+    "linksIntro": "Det trenger du heller ikke ta på tro. Samme person, tre steder du kan sjekke:",
+    "linkGithubNote": "koden, inkludert dette produktet",
+    "linkSiteNote": "personlig nettsted",
+    "linkLinkedinNote": "arbeidshistorikken over"
+  },
+  "why": {
+    "title": "2. Hvorfor jeg bygget dette",
+    "p1": "Jeg ville ha mine egne agenter til å jobbe i innboksen min. Alle alternativene jeg så på ville ha en kopi av e-posten min først: synkronisere den, indeksere den, beholde den i en annens database så lenge kontoen finnes. For en innboks som rommer fakturaer, kontrakter og passordtilbakestillinger, er det en stor og varig pris å betale for en bekvemmelighet jeg bare ville ha av og til.",
+    "p2": "Så jeg bygget versjonen jeg selv var villig til å bruke. E-post hentes i sanntid når agenten din spør etter den, og forkastes når svaret er sendt, så det finnes ingen lagret kopi her som kan lekke. Det ene sensitive som beholdes, er legitimasjonen til postkassen din, kryptert ved lagring, fordi det neste kallet du ber om, trenger den. Jeg kjører min egen e-post gjennom den hver dag."
+  },
+  "trusting": {
+    "title": "3. Hva du faktisk stoler på",
+    "intro": "Tre atskilte ting, verdt å navngi hver for seg, fordi de svikter på ulike måter.",
+    "points": [
+      "<b>En navngitt person.</b> Meg. Ikke en support-adresse, ikke en merkevare uten synlige folk bak. Går noe galt, vet du hvem som har navnet sitt på det.",
+      "<b>Et registrert foretak.</b> MCPEmails drives av Albretsen Consulting, et enkeltpersonforetak registrert i Enhetsregisteret hos Brønnøysundregistrene. Et enkeltpersonforetak innebærer personlig ansvar, så navnet henger ved i juridisk forstand også, ikke bare moralsk.",
+      "<b>Kode du kan lese.</b> Serveren er offentlig på GitHub under AGPL-3.0, og den driftede tjenesten kjører den samme koden. Enhver påstand på dette nettstedet er en påstand kildekoden kan motbevise."
+    ],
+    "entityTitle": "Juridisk enhet",
+    "entityName": "Albretsen Consulting (enkeltpersonforetak)",
+    "entityOrgNo": "Organisasjonsnummer 926 646 753",
+    "entityAddress": "Håsteins gate 9, 5160 Laksevåg, Norge",
+    "entityRegistry": "Registrert i Enhetsregisteret, Brønnøysundregistrene",
+    "entityNote": "Fullstendig juridisk identifikasjon står i <terms>vilkårene</terms> og <privacy>personvernerklæringen</privacy>."
+  },
+  "busFactor": {
+    "title": "4. Hva skjer hvis jeg blir påkjørt av en buss",
+    "p1": "Én person som driver en e-posttjeneste, er en reell risiko, og det ville vært uærlig å skrive en side som denne uten å si det. Jeg kan bli syk, miste interessen eller bli påkjørt av en buss. En driftet tjeneste med én operatør og lukket kildekode ville etterlatt deg med agenter koblet til noe ingen vedlikeholder, og en supportadresse ingen leser.",
+    "p2": "Det er derfor lisensen finnes. MCPEmails er åpen kildekode under AGPL-3.0, og den driftede tjenesten kjører den samme serveren du kan klone. Slutter jeg, kloner du repoet, starter stacken med én kommando, peker agenten din mot din egen instans og fortsetter. Legitimasjonen er din, e-posten din ble aldri lagret her til å begynne med, og verktøyene agenten din allerede kjenner beholder de samme navnene. Det ligger ingenting av ditt i noen database hos meg som kan bli stående igjen.",
+    "p3": "Så langt kan en ærlig enmannsbedrift strekke seg: ikke et løfte om at jeg alltid er her, men en vei ut som ikke avhenger av at jeg er det. Det er verdt å prøve selvhosting én gang mens alt fungerer som det skal, så du vet at det virker før du noen gang trenger det.",
+    "ctaSelfHost": "Les selvhosting-guiden",
+    "ctaSource": "Les kildekoden"
+  },
+  "contact": {
+    "title": "5. Slik når du meg",
+    "p1": "Det finnes ingen supportkø og ingen å videresende meldingen din til. Den kommer til meg, og jeg svarer på den.",
+    "points": [
+      "<hello>hello@mcpemails.com</hello> for alt om produktet, en konto, fakturering eller en feil. Jeg tar sikte på å svare innen én virkedag.",
+      "<securityEmail>security@mcpemails.com</securityEmail> for sårbarhetsrapporter. Slike rapporter tar jeg sikte på å bekrefte innen 24 timer, og hele rapporteringsprosessen, inkludert trygg havn, står på <security>sikkerhetssiden</security>.",
+      "Jeg er i Bergen, så en melding sendt sent på dagen i Nord-Amerika blir vanligvis besvart neste morgen, europeisk tid."
+    ]
+  },
+  "cta": {
+    "title": "Fortsatt i tvil om du skal gi dette en innboks?",
+    "sub": "Les hva tjenesten berører og hva den beholder, eller hopp over meg helt og kjør den selv.",
+    "primary": "Slik håndteres e-posten din",
+    "secondary": "Kjør den selv"
+  },
+  "portraitAlt": "Asgeir Albretsen"
+}

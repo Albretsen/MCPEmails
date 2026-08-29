@@ -11,7 +11,8 @@
   },
   "agreement": {
     "title": "1. Acceptation des présentes conditions",
-    "p1": "Les présentes conditions d'utilisation (« Conditions ») constituent un accord juridiquement contraignant entre vous (« vous » ou l'« Utilisateur ») et {company} (« MCPEmails », « nous » ou « notre »), régissant votre accès au service MCPEmails et votre utilisation de celui-ci, y compris le site web à l'adresse <b>mcpemails.com</b>, le tableau de bord, le point de terminaison de l'API Model Context Protocol (MCP), ainsi que tous les logiciels et la documentation associés (collectivement, le « Service »).",
+    "p1": "Les présentes conditions d'utilisation (« Conditions ») constituent un accord juridiquement contraignant entre vous (« vous » ou l'« Utilisateur ») et {company}, une entreprise individuelle norvégienne (enkeltpersonforetak) portant le numéro d'organisation <b>{orgNumber}</b>, détenue et dirigée par {owner} et exerçant sous le nom commercial « MCPEmails » (« MCPEmails », « nous » ou « notre »). Elles régissent votre accès au service MCPEmails et votre utilisation de celui-ci, y compris le site web à l'adresse <b>mcpemails.com</b>, le tableau de bord, le point de terminaison de l'API Model Context Protocol (MCP), ainsi que tous les logiciels et la documentation associés (collectivement, le « Service »). Votre contrat est conclu avec {company} ; « MCPEmails » est un nom commercial et non une entité juridique distincte.",
+    "p1b": "Identification du prestataire de services : {company}, numéro d'organisation {orgNumber}, inscrite à l'{register} (le registre central norvégien des entités juridiques, tenu par Brønnøysundregistrene). Adresse enregistrée : {companyAddress}. {company} n'est pas actuellement inscrite au registre norvégien de la TVA (Merverdiavgiftsregisteret). Demandes juridiques : <email></email>.",
     "p2": "En créant un compte, en acceptant les présentes Conditions ou en utilisant toute partie du Service, vous confirmez que vous êtes âgé d'au moins 16 ans (ou de l'âge minimum du consentement numérique dans votre juridiction, s'il est supérieur), que vous avez la capacité juridique de conclure un accord contraignant, et que vous acceptez d'être lié par les présentes Conditions et par notre <privacy>Politique de confidentialité</privacy>, qui est intégrée aux présentes Conditions par référence.",
     "p3": "Si vous acceptez les présentes Conditions au nom d'une société ou d'une autre entité juridique, vous déclarez et garantissez que vous avez le pouvoir d'engager cette entité, auquel cas « vous » désigne cette entité.",
     "p4": "Si vous n'acceptez pas les présentes Conditions, ne créez pas de compte et n'utilisez pas le Service."
@@ -143,7 +144,7 @@
     "h91": "9.1 Droit applicable",
     "p91": "Les présentes Conditions et tout litige découlant de ou en lien avec celles-ci ou le Service seront régis et interprétés conformément au droit de la <b>Norvège</b>, sans égard à ses règles de conflit de lois. La Convention des Nations Unies sur les contrats de vente internationale de marchandises ne s'applique pas.",
     "h92": "9.2 Juridiction",
-    "p92": "Toute action ou procédure judiciaire relative aux présentes Conditions ou au Service sera portée exclusivement devant les tribunaux d’<b>Oslo, Norvège</b>. Vous consentez à la compétence personnelle de ces tribunaux et renoncez à toute objection quant au for.",
+    "p92": "Toute action ou procédure judiciaire relative aux présentes Conditions ou au Service sera portée exclusivement devant les tribunaux de <b>Bergen, Norvège</b>. Vous consentez à la compétence personnelle de ces tribunaux et renoncez à toute objection quant au for.",
     "h93": "9.3 Droits des consommateurs (EEE/Royaume-Uni)",
     "p93": "Rien dans les présentes Conditions n'affecte les droits légaux dont vous pouvez disposer en tant que consommateur en vertu des lois de votre pays de résidence et qui ne peuvent être exclus ou limités par contrat. Si vous êtes un consommateur résidant dans l'Union européenne, vous pouvez également soumettre une réclamation via la plateforme de règlement en ligne des litiges de l'UE à l'adresse <odr>ec.europa.eu/consumers/odr</odr>.",
     "h94": "9.4 Résolution informelle",
@@ -172,18 +173,19 @@
   },
   "contact": {
     "title": "11. Nous contacter",
-    "intro": "Si vous avez des questions sur les présentes Conditions ou si vous devez joindre notre équipe juridique :",
+    "intro": "Si vous avez des questions sur ces Conditions ou si vous souhaitez nous contacter à leur sujet :",
     "legalLabel": "Demandes juridiques",
     "privacyLabel": "Questions de confidentialité",
     "securityLabel": "Signalements de sécurité",
     "postalLabel": "Adresse postale",
+    "postalValue": "{companyName} (numéro d'organisation {orgNumber}), {companyAddress}",
     "responseLabel": "Délai de réponse",
     "responseValue": "Nous répondons à toutes les demandes juridiques dans un délai de 14 jours ouvrables"
   },
   "cta": {
     "title": "Des questions sur ces Conditions ?",
-    "sub": "Notre équipe juridique est ravie de vous aider. Contactez-nous et nous répondrons dans un délai de 14 jours ouvrables.",
-    "contactBtn": "Contacter l'équipe juridique",
+    "sub": "Contactez-nous au sujet de n'importe quel point de ces Conditions et nous répondrons sous 14 jours ouvrables.",
+    "contactBtn": "Nous contacter sur les Conditions",
     "privacyBtn": "Lire notre Politique de confidentialité"
   }
 }

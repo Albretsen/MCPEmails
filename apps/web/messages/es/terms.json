@@ -11,7 +11,8 @@
   },
   "agreement": {
     "title": "1. Aceptación de estos Términos",
-    "p1": "Estos Términos del servicio (\"Términos\") constituyen un acuerdo legalmente vinculante entre tú (\"tú\" o \"Usuario\") y {company} (\"MCPEmails\", \"nosotros\", \"nos\" o \"nuestro\"), que rige tu acceso y uso del servicio MCPEmails, incluido el sitio web en <b>mcpemails.com</b>, el panel, el endpoint de API de Model Context Protocol (MCP) y todo el software y la documentación relacionados (colectivamente, el \"Servicio\").",
+    "p1": "Estos Términos del servicio (\"Términos\") constituyen un acuerdo legalmente vinculante entre tú (\"tú\" o \"Usuario\") y {company}, una empresa individual noruega (enkeltpersonforetak) con número de organización <b>{orgNumber}</b>, propiedad de {owner} y gestionada por él, que opera bajo el nombre comercial \"MCPEmails\" (\"MCPEmails\", \"nosotros\", \"nos\" o \"nuestro\"). Rigen tu acceso y uso del servicio MCPEmails, incluido el sitio web en <b>mcpemails.com</b>, el panel, el endpoint de API de Model Context Protocol (MCP) y todo el software y la documentación relacionados (colectivamente, el \"Servicio\"). Tu contrato es con {company}; \"MCPEmails\" es un nombre comercial, no una entidad jurídica independiente.",
+    "p1b": "Identificación del prestador del servicio: {company}, número de organización {orgNumber}, inscrita en {register} (el Registro Central Coordinador de Entidades Jurídicas de Noruega, gestionado por Brønnøysundregistrene). Dirección registrada: {companyAddress}. {company} no está actualmente inscrita en el registro noruego del IVA (Merverdiavgiftsregisteret). Consultas legales: <email></email>.",
     "p2": "Al crear una cuenta, aceptar estos Términos o usar cualquier parte del Servicio, confirmas que tienes al menos 16 años (o la edad mínima de consentimiento digital en tu jurisdicción, si es mayor), que tienes la capacidad legal para celebrar un acuerdo vinculante y que aceptas quedar vinculado por estos Términos y por nuestra <privacy>Política de privacidad</privacy>, que se incorpora a estos Términos por referencia.",
     "p3": "Si aceptas estos Términos en nombre de una empresa u otra entidad legal, declaras y garantizas que tienes autoridad para vincular a esa entidad, en cuyo caso \"tú\" se refiere a esa entidad.",
     "p4": "Si no estás de acuerdo con estos Términos, no crees una cuenta ni uses el Servicio."
@@ -143,7 +144,7 @@
     "h91": "9.1 Ley aplicable",
     "p91": "Estos Términos y cualquier disputa que surja de o en relación con ellos o el Servicio se regirán e interpretarán de acuerdo con las leyes de <b>Noruega</b>, sin tener en cuenta sus disposiciones sobre conflicto de leyes. La Convención de las Naciones Unidas sobre los Contratos de Compraventa Internacional de Mercaderías no se aplica.",
     "h92": "9.2 Jurisdicción",
-    "p92": "Cualquier acción o procedimiento legal relacionado con estos Términos o el Servicio se interpondrá exclusivamente ante los tribunales de <b>Oslo, Noruega</b>. Consientes la jurisdicción personal de esos tribunales y renuncias a cualquier objeción sobre la sede.",
+    "p92": "Cualquier acción o procedimiento legal relacionado con estos Términos o el Servicio se interpondrá exclusivamente ante los tribunales de <b>Bergen, Noruega</b>. Consientes la jurisdicción personal de esos tribunales y renuncias a cualquier objeción sobre la sede.",
     "h93": "9.3 Derechos del consumidor (EEE/RU)",
     "p93": "Nada en estos Términos afecta a los derechos legales que puedas tener como consumidor según las leyes de tu país de residencia que no puedan excluirse ni limitarse por contrato. Si eres un consumidor residente en la Unión Europea, también puedes presentar una reclamación a través de la plataforma de Resolución de Litigios en Línea de la UE en <odr>ec.europa.eu/consumers/odr</odr>.",
     "h94": "9.4 Resolución informal",
@@ -172,18 +173,19 @@
   },
   "contact": {
     "title": "11. Contáctanos",
-    "intro": "Si tienes preguntas sobre estos Términos o necesitas contactar a nuestro equipo legal:",
+    "intro": "Si tienes preguntas sobre estos Términos o necesitas ponerte en contacto acerca de ellos:",
     "legalLabel": "Consultas legales",
     "privacyLabel": "Preguntas de privacidad",
     "securityLabel": "Informes de seguridad",
     "postalLabel": "Dirección postal",
+    "postalValue": "{companyName} (número de organización {orgNumber}), {companyAddress}",
     "responseLabel": "Tiempo de respuesta",
     "responseValue": "Respondemos a todas las consultas legales en un plazo de 14 días hábiles"
   },
   "cta": {
     "title": "¿Preguntas sobre estos Términos?",
-    "sub": "Nuestro equipo legal estará encantado de ayudar. Contáctanos y responderemos en un plazo de 14 días hábiles.",
-    "contactBtn": "Contactar al equipo legal",
+    "sub": "Escríbenos sobre cualquier punto de estos Términos y responderemos en un plazo de 14 días hábiles.",
+    "contactBtn": "Contactar sobre los Términos",
     "privacyBtn": "Lee nuestra Política de privacidad"
   }
 }

@@ -11,9 +11,10 @@
   },
   "whoWeAre": {
     "title": "1. 我们是谁",
-    "p1": "{companyName}（“MCPEmails”、“我们”或“我们的”）运营在 <b>mcpemails.com</b> 提供的 MCPEmails 服务，包括所有仪表盘页面、API 端点，以及 AI 智能体用于访问已连接电子邮件账户的 Model Context Protocol（MCP）服务器。",
+    "p1": "在 <b>mcpemails.com</b> 提供的 MCPEmails 服务由 {companyName} 运营，该企业是一家挪威独资企业（enkeltpersonforetak），由 {ownerName} 拥有并经营，以“MCPEmails”作为商号开展业务。在本政策中，“MCPEmails”、“我们”和“我们的”均指 {companyName}。该服务包括所有仪表盘页面、API 端点，以及 AI 智能体用于访问已连接电子邮件账户的 Model Context Protocol（MCP）服务器。",
     "p2": "就适用的数据保护法律（包括欧盟《通用数据保护条例》，即“GDPR”）而言，MCPEmails 是账户和使用数据的数据控制者。对于邮件内容，我们代表你充当数据处理者：我们传输你授权我们检索的内容，且我们不存储它。",
-    "p3": "我们的注册地址为：{companyAddress}。你可以通过 <email></email> 联系我们的隐私团队。"
+    "p3": "服务提供者标识：{companyName} 是在挪威设立、由 {ownerName} 经营的独资企业（enkeltpersonforetak）。该企业已在 {register}（由 Brønnøysundregistrene 运营的挪威法律实体中央协调登记册）登记，组织机构号为 <b>{orgNumber}</b>。我们的注册地址为 {companyAddress}。",
+    "p4": "{companyName} 目前未在挪威增值税登记册（Merverdiavgiftsregisteret）中登记。如有隐私相关问题，你可以通过 <email></email> 联系我们。"
   },
   "dataWeCollect": {
     "title": "2. 我们收集的数据",
@@ -228,13 +229,14 @@
     "emailLabel": "邮箱",
     "securityLabel": "安全问题",
     "postalLabel": "邮寄地址",
+    "postalValue": "{companyName}（组织机构号 {orgNumber}），{companyAddress}",
     "responseLabel": "响应时间",
     "responseValue": "我们会在 30 天内回复所有隐私请求"
   },
   "cta": {
     "title": "对你的数据有疑问？",
-    "sub": "我们的隐私团队随时为你提供帮助。给我们发邮件，我们将在 30 天内回复。",
-    "contactBtn": "联系隐私团队",
+    "sub": "本政策中的任何内容，都可以发邮件问我们，我们会在 30 天内回复。",
+    "contactBtn": "就隐私问题联系我们",
     "termsBtn": "阅读我们的条款"
   }
 }

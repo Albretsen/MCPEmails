@@ -11,7 +11,8 @@
   },
   "agreement": {
     "title": "1. Agreement to These Terms",
-    "p1": "These Terms of Service (\"Terms\") constitute a legally binding agreement between you (\"you\" or \"User\") and {company} (\"MCPEmails\", \"we\", \"us\", or \"our\"), governing your access to and use of the MCPEmails service, including the website at <b>mcpemails.com</b>, the dashboard, the Model Context Protocol (MCP) API endpoint, and all related software and documentation (collectively, the \"Service\").",
+    "p1": "These Terms of Service (\"Terms\") constitute a legally binding agreement between you (\"you\" or \"User\") and {company}, a Norwegian sole proprietorship (enkeltpersonforetak) with organisation number <b>{orgNumber}</b>, owned and operated by {owner} and trading as \"MCPEmails\" (\"MCPEmails\", \"we\", \"us\", or \"our\"). They govern your access to and use of the MCPEmails service, including the website at <b>mcpemails.com</b>, the dashboard, the Model Context Protocol (MCP) API endpoint, and all related software and documentation (collectively, the \"Service\"). Your contract is with {company}; \"MCPEmails\" is a trading name, not a separate legal entity.",
+    "p1b": "Service provider identification: {company}, organisation number {orgNumber}, entered in {register} (the Norwegian Central Coordinating Register for Legal Entities, operated by Brønnøysundregistrene). Registered address: {companyAddress}. {company} is not currently registered in the Norwegian VAT register (Merverdiavgiftsregisteret). Legal enquiries: <email></email>.",
     "p2": "By creating an account, accepting these Terms, or using any part of the Service, you confirm that you are at least 16 years of age (or the minimum age of digital consent in your jurisdiction, if higher), that you have the legal capacity to enter into a binding agreement, and that you agree to be bound by these Terms and our <privacy>Privacy Policy</privacy>, which is incorporated into these Terms by reference.",
     "p3": "If you are accepting these Terms on behalf of a company or other legal entity, you represent and warrant that you have the authority to bind that entity, in which case \"you\" refers to that entity.",
     "p4": "If you do not agree to these Terms, do not create an account or use the Service."
@@ -143,7 +144,7 @@
     "h91": "9.1 Governing law",
     "p91": "These Terms and any dispute arising out of or in connection with them or the Service shall be governed by and construed in accordance with the laws of <b>Norway</b>, without regard to its conflict-of-law provisions. The United Nations Convention on Contracts for the International Sale of Goods does not apply.",
     "h92": "9.2 Jurisdiction",
-    "p92": "Any legal action or proceeding relating to these Terms or the Service shall be brought exclusively in the courts of <b>Oslo, Norway</b>. You consent to the personal jurisdiction of those courts and waive any objection to venue.",
+    "p92": "Any legal action or proceeding relating to these Terms or the Service shall be brought exclusively in the courts of <b>Bergen, Norway</b>. You consent to the personal jurisdiction of those courts and waive any objection to venue.",
     "h93": "9.3 Consumer rights (EEA/UK)",
     "p93": "Nothing in these Terms affects any statutory rights you may have as a consumer under the laws of your country of residence that cannot be excluded or limited by contract. If you are a consumer resident in the European Union, you may also submit a complaint through the EU Online Dispute Resolution platform at <odr>ec.europa.eu/consumers/odr</odr>.",
     "h94": "9.4 Informal resolution",
@@ -172,18 +173,19 @@
   },
   "contact": {
     "title": "11. Contact Us",
-    "intro": "If you have questions about these Terms or need to reach our legal team:",
+    "intro": "If you have questions about these Terms or need to get in touch about them:",
     "legalLabel": "Legal enquiries",
     "privacyLabel": "Privacy questions",
     "securityLabel": "Security reports",
     "postalLabel": "Postal address",
+    "postalValue": "{companyName} (organisation number {orgNumber}), {companyAddress}",
     "responseLabel": "Response time",
     "responseValue": "We respond to all legal enquiries within 14 business days"
   },
   "cta": {
     "title": "Questions about these Terms?",
-    "sub": "Our legal team is happy to help. Reach out and we will respond within 14 business days.",
-    "contactBtn": "Contact legal team",
+    "sub": "Reach out about anything in these Terms and we will respond within 14 business days.",
+    "contactBtn": "Contact us about these Terms",
     "privacyBtn": "Read our Privacy Policy"
   }
 }

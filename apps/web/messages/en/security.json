@@ -134,7 +134,7 @@
   },
   "cta": {
     "title": "Questions about any of this?",
-    "sub": "Ask me anything. I'm the only person running this, and I answer every message.",
+    "sub": "Ask me anything. I'm Asgeir Albretsen, and I answer every message myself.",
     "contactBtn": "Email security@",
     "privacyBtn": "Read the privacy policy"
   },
@@ -143,5 +143,11 @@
     "p1": "MCP Emails is open source under AGPL-3.0, and the hosted service runs the exact same MCP server you can self-host. That means \"email is fetched live and never stored\" is something you can verify by running it and watching the network, not something you have to take on faith.",
     "p2": "Self-hosting is IMAP/SMTP-first: connect any mailbox with an app password, and your credentials are encrypted under a key only you hold. One command brings the whole stack up on your own machine.",
     "cta": "Read the self-hosting guide"
+  },
+  "operator": {
+    "title": "Who runs this",
+    "p1": "One person: me. I'm Asgeir Albretsen, operating as Albretsen Consulting, a Norwegian sole proprietorship (enkeltpersonforetak), organisation number 926 646 753, based in Bergen, Norway. The commits are mine too, under <gh>github.com/Albretsen</gh>, so the name on this page and the name on the code are the same one. There is more detail on the <about>about page</about>, and the full legal identification is in the <terms>terms</terms>.",
+    "p2": "Everything resting on one person is a real risk, and the answer is not a promise that I will always be here. MCPEmails is public under AGPL-3.0 and the hosted service runs that same code, so if I stop, or you simply stop trusting me, you can clone the repository and run it on your own infrastructure with your own keys. <selfhostpage>The self-hosting guide</selfhostpage> is the whole procedure. I would rather be a named person you can reach and can leave than an anonymous vendor you can only trust.",
+    "p3": "Support and security mail does not go through a queue. It comes to me, and I answer every message myself."
   }
 }

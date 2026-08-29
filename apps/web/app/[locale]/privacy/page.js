@@ -34,8 +34,17 @@ export async function generateMetadata({ params }) {
 /* ─── Section data ───────────────────────────────────────────── */
 
 const CONTACT_EMAIL = 'privacy@mcpemails.com';
-const COMPANY_NAME = 'MCPEmails';
-const COMPANY_ADDRESS = 'Oslo, Norway';
+
+/* Service-provider identification required by the Norwegian ehandelsloven § 8:
+   legal name, geographic address, the register we are enrolled in, and our
+   organisation number. These values must match our entry in Enhetsregisteret,
+   so do not edit them without checking brreg.no first. "MCPEmails" is only the
+   trading name of the service; the legal person is Albretsen Consulting. */
+const COMPANY_NAME = 'Albretsen Consulting';
+const COMPANY_OWNER = 'Asgeir Albretsen';
+const COMPANY_ORG_NUMBER = '926 646 753';
+const COMPANY_REGISTER = 'Enhetsregisteret';
+const COMPANY_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
 
 /* ─── Page ───────────────────────────────────────────────────── */
 
@@ -77,13 +86,24 @@ export default async function PrivacyPage({ params }) {
               <p>
                 {t.rich('whoWeAre.p1', {
                   companyName: COMPANY_NAME,
+                  ownerName: COMPANY_OWNER,
                   b: (c) => <strong>{c}</strong>,
                 })}
               </p>
               <p>{t('whoWeAre.p2')}</p>
               <p>
                 {t.rich('whoWeAre.p3', {
+                  companyName: COMPANY_NAME,
+                  ownerName: COMPANY_OWNER,
+                  orgNumber: COMPANY_ORG_NUMBER,
+                  register: COMPANY_REGISTER,
                   companyAddress: COMPANY_ADDRESS,
+                  b: (c) => <strong>{c}</strong>,
+                })}
+              </p>
+              <p>
+                {t.rich('whoWeAre.p4', {
+                  companyName: COMPANY_NAME,
                   email: () => <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
                 })}
               </p>
@@ -330,7 +350,13 @@ export default async function PrivacyPage({ params }) {
                 </div>
                 <div className="legal-contact-row">
                   <strong>{t('contact.postalLabel')}</strong>
-                  <span>{COMPANY_NAME}, {COMPANY_ADDRESS}</span>
+                  <span>
+                    {t('contact.postalValue', {
+                      companyName: COMPANY_NAME,
+                      orgNumber: COMPANY_ORG_NUMBER,
+                      companyAddress: COMPANY_ADDRESS,
+                    })}
+                  </span>
                 </div>
                 <div className="legal-contact-row">
                   <strong>{t('contact.responseLabel')}</strong>

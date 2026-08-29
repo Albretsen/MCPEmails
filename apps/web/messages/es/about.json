@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "title": "Acerca de: la persona detrás de MCPEmails",
+    "description": "MCPEmails está creado y operado por Asgeir Albretsen, desarrollador de software en Bergen (Noruega), a través de Albretsen Consulting, una empresa individual noruega registrada."
+  },
+  "hero": {
+    "eyebrow": "Acerca de",
+    "title": "Quién te está pidiendo tu bandeja de entrada",
+    "lead": "Conectar MCPEmails significa dejar que un agente de IA acceda a tu correo, así que es razonable preguntar quién opera el servicio al otro lado. Es una sola persona, bajo una empresa registrada, con código que puedes leer. Esta página existe para que lo compruebes tú mismo, en lugar de creerme sin más."
+  },
+  "who": {
+    "title": "1. Quién soy",
+    "p1": "Me llamo Asgeir Albretsen. Soy desarrollador de software en Bergen (Noruega), con un grado en Tecnología Informática (datateknologi) por la Universidad de Bergen. Construyo y opero MCPEmails yo mismo.",
+    "p2": "La trayectoria laboral detrás del nombre:",
+    "thPeriod": "Periodo",
+    "thRole": "Puesto",
+    "rows": [
+      { "period": "Ago 2019 a feb 2022", "role": "Desarrollador de apps en Chess.com" },
+      { "period": "Feb 2022 a ene 2023", "role": "Ingeniero de QA de software en GlobeTech (contrato)" },
+      { "period": "Ene 2023 a sep 2024", "role": "Consultoría informática en BI Norwegian Business School" },
+      { "period": "Sep 2024 hasta hoy", "role": "Desarrollador de software, jornada completa" }
+    ],
+    "p3": "Sigo empleado a jornada completa como desarrollador de software. No nombro aquí a ese empleador: ponerlo junto a un producto con el que no tiene nada que ver se leería como un respaldo que nunca ha dado. MCPEmails está separado de ese trabajo: es independiente, autofinanciado y construido en mi tiempo libre.",
+    "linksIntro": "Tampoco tienes que creerlo sin más. La misma persona, en tres sitios que puedes comprobar:",
+    "linkGithubNote": "el código, incluido este producto",
+    "linkSiteNote": "sitio personal",
+    "linkLinkedinNote": "la trayectoria de arriba"
+  },
+  "why": {
+    "title": "2. Por qué lo construí",
+    "p1": "Quería que mis propios agentes trabajaran en mi bandeja de entrada. Todas las opciones que miré querían antes una copia de mi correo: sincronizarlo, indexarlo y guardarlo en la base de datos de otro mientras exista la cuenta. Para un buzón que contiene facturas, contratos y restablecimientos de contraseña, eso es un intercambio grande y permanente a cambio de una comodidad que solo quería a ratos.",
+    "p2": "Así que construí la versión que yo mismo estaba dispuesto a usar. El correo se obtiene en vivo cuando tu agente lo pide y se descarta al enviar la respuesta, de modo que aquí no hay ninguna copia guardada que pueda filtrarse. Lo único sensible que se conserva es la credencial del buzón, cifrada en reposo, porque la siguiente llamada que pidas la necesita. Yo paso mi propio correo por él todos los días."
+  },
+  "trusting": {
+    "title": "3. En qué estás confiando realmente",
+    "intro": "Tres cosas distintas, que conviene nombrar por separado, porque fallan de maneras distintas.",
+    "points": [
+      "<b>Una persona con nombre.</b> Yo. No un alias de soporte ni una marca sin nadie visible detrás. Si algo sale mal, sabes de quién es el nombre que hay encima.",
+      "<b>Una empresa registrada.</b> MCPEmails lo opera Albretsen Consulting, una empresa individual noruega (enkeltpersonforetak) inscrita en el Enhetsregisteret, el Registro Central Coordinador de Entidades Jurídicas de Noruega, gestionado por Brønnøysundregistrene. Una empresa individual conlleva responsabilidad personal, así que el nombre queda ligado también en sentido legal, no solo moral.",
+      "<b>Código que puedes leer.</b> El servidor es público en GitHub bajo AGPL-3.0, y el servicio alojado ejecuta ese mismo código. Cualquier afirmación de este sitio es una afirmación que el código fuente puede desmentir."
+    ],
+    "entityTitle": "Entidad legal",
+    "entityName": "Albretsen Consulting (enkeltpersonforetak)",
+    "entityOrgNo": "Número de organización 926 646 753",
+    "entityAddress": "Håsteins gate 9, 5160 Laksevåg, Noruega",
+    "entityRegistry": "Inscrita en el Enhetsregisteret (registro central noruego de entidades jurídicas), Brønnøysundregistrene",
+    "entityNote": "La identificación legal completa figura en los <terms>términos del servicio</terms> y en la <privacy>política de privacidad</privacy>."
+  },
+  "busFactor": {
+    "title": "4. Qué pasa si me atropella un autobús",
+    "p1": "Que una sola persona opere un servicio de correo es un riesgo real, y sería deshonesto escribir una página como esta sin decirlo. Podría enfermar, perder el interés o ser atropellado por un autobús. Un servicio alojado con un único operador y código cerrado te dejaría con agentes conectados a algo que nadie mantiene y una dirección de soporte que nadie lee.",
+    "p2": "Para eso está la licencia. MCPEmails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta el mismo servidor que puedes clonar. Si lo dejo, clonas el repositorio, levantas el stack con un solo comando, apuntas tu agente a tu propia instancia y sigues. Tus credenciales son tuyas, tu correo nunca se almacenó aquí para empezar, y las herramientas que tu agente ya conoce conservan los mismos nombres. No hay nada tuyo guardado en una base de datos mía que pueda quedarse ahí varado.",
+    "p3": "Hasta ahí puede llegar honestamente un negocio de una sola persona: no una promesa de que siempre estaré, sino una salida que no depende de que yo esté. Vale la pena recorrer el camino del auto-alojamiento una vez mientras todo va bien, para saber que funciona antes de necesitarlo.",
+    "ctaSelfHost": "Leer la guía de auto-alojamiento",
+    "ctaSource": "Leer el código fuente"
+  },
+  "contact": {
+    "title": "5. Cómo contactarme",
+    "p1": "No hay cola de soporte ni nadie a quien derivar tu mensaje. Llega a mí, y yo lo respondo.",
+    "points": [
+      "<hello>hello@mcpemails.com</hello> para cualquier cosa sobre el producto, una cuenta, la facturación o un error. Procuro responder en un día laborable.",
+      "<securityEmail>security@mcpemails.com</securityEmail> para informar de una vulnerabilidad. Procuro acusar recibo en 24 horas, y todo el proceso de divulgación, incluido el puerto seguro, está en la <security>página de seguridad</security>.",
+      "Estoy en Bergen (Noruega), así que un mensaje enviado al final del día en Norteamérica suele responderse a la mañana siguiente, hora europea."
+    ]
+  },
+  "cta": {
+    "title": "¿Todavía dudas si darle un buzón a esto?",
+    "sub": "Lee qué toca el servicio y qué conserva, o sáltame por completo y ejecútalo tú mismo.",
+    "primary": "Cómo se trata tu correo",
+    "secondary": "Ejecútalo tú mismo"
+  },
+  "portraitAlt": "Asgeir Albretsen"
+}

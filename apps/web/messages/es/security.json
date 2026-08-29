@@ -134,7 +134,7 @@
   },
   "cta": {
     "title": "¿Tienes preguntas sobre algo de esto?",
-    "sub": "Pregúntame lo que quieras. Soy la única persona que lleva esto, y respondo cada mensaje.",
+    "sub": "Pregúntame lo que quieras. Soy Asgeir Albretsen, y respondo cada mensaje personalmente.",
     "contactBtn": "Escribir a security@",
     "privacyBtn": "Leer la política de privacidad"
   },
@@ -143,5 +143,11 @@
     "p1": "MCP Emails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta exactamente el mismo servidor MCP que tú puedes auto-alojar. Eso significa que \"el correo se obtiene en vivo y nunca se almacena\" es algo que puedes verificar ejecutándolo y observando la red, no algo que tengas que aceptar por fe.",
     "p2": "El auto-alojamiento prioriza IMAP/SMTP: conecta cualquier buzón con una contraseña de aplicación, y tus credenciales se cifran bajo una clave que solo tú posees. Un solo comando levanta todo el stack en tu propia máquina.",
     "cta": "Lee la guía de auto-alojamiento"
+  },
+  "operator": {
+    "title": "Quién lleva esto",
+    "p1": "Una sola persona: yo. Soy Asgeir Albretsen y opero como Albretsen Consulting, una empresa individual noruega (enkeltpersonforetak), número de organización 926 646 753, con sede en Bergen, Noruega. Los commits también son míos, bajo <gh>github.com/Albretsen</gh>, así que el nombre de esta página y el nombre del código son el mismo. Hay más detalle en la <about>página «Acerca de»</about>, y la identificación legal completa está en los <terms>términos</terms>.",
+    "p2": "Que todo dependa de una sola persona es un riesgo real, y la respuesta no es prometer que siempre estaré aquí. MCPEmails es público bajo AGPL-3.0 y el servicio alojado ejecuta ese mismo código, así que si lo dejo, o si simplemente dejas de confiar en mí, puedes clonar el repositorio y ejecutarlo en tu propia infraestructura con tus propias claves. <selfhostpage>La guía de auto-alojamiento</selfhostpage> es el procedimiento completo. Prefiero ser una persona con nombre a la que puedes escribir y a la que puedes dejar, que un proveedor anónimo en el que solo puedes confiar.",
+    "p3": "El correo de soporte y de seguridad no pasa por ninguna cola. Llega a mí, y respondo cada mensaje personalmente."
   }
 }

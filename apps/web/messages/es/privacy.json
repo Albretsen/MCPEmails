@@ -11,9 +11,10 @@
   },
   "whoWeAre": {
     "title": "1. Quiénes somos",
-    "p1": "{companyName} (\"MCPEmails\", \"nosotros\", \"nos\" o \"nuestro\") opera el servicio MCPEmails disponible en <b>mcpemails.com</b>, incluidas todas las páginas del panel, los endpoints de API y el servidor de Model Context Protocol (MCP) que los agentes de IA usan para acceder a las cuentas de correo conectadas.",
+    "p1": "El servicio MCPEmails disponible en <b>mcpemails.com</b> es operado por {companyName}, una empresa individual noruega (enkeltpersonforetak) propiedad de {ownerName} y gestionada por él, que opera bajo el nombre comercial \"MCPEmails\". En esta política, \"MCPEmails\", \"nosotros\", \"nos\" y \"nuestro\" se refieren a {companyName}. El servicio incluye todas las páginas del panel, los endpoints de API y el servidor de Model Context Protocol (MCP) que los agentes de IA usan para acceder a las cuentas de correo conectadas.",
     "p2": "A los efectos de la legislación aplicable de protección de datos (incluido el Reglamento General de Protección de Datos de la UE, \"RGPD\"), MCPEmails es el responsable del tratamiento de los datos de cuenta y de uso. Para el contenido del correo, actuamos como encargado del tratamiento en tu nombre: transmitimos el contenido que nos autorizas a recuperar y no lo almacenamos.",
-    "p3": "Nuestra dirección registrada es: {companyAddress}. Puedes contactar a nuestro equipo de privacidad en <email></email>."
+    "p3": "Identificación del prestador del servicio: {companyName} es una empresa individual (enkeltpersonforetak) establecida en Noruega y gestionada por {ownerName}. Está inscrita en {register}, el Registro Central Coordinador de Entidades Jurídicas de Noruega, gestionado por Brønnøysundregistrene, con el número de organización <b>{orgNumber}</b>. Nuestra dirección registrada es {companyAddress}.",
+    "p4": "{companyName} no está actualmente inscrita en el registro noruego del IVA (Merverdiavgiftsregisteret). Puedes contactarnos sobre privacidad en <email></email>."
   },
   "dataWeCollect": {
     "title": "2. Datos que recopilamos",
@@ -228,13 +229,14 @@
     "emailLabel": "Correo",
     "securityLabel": "Problemas de seguridad",
     "postalLabel": "Dirección postal",
+    "postalValue": "{companyName} (número de organización {orgNumber}), {companyAddress}",
     "responseLabel": "Tiempo de respuesta",
     "responseValue": "Respondemos a todas las solicitudes de privacidad en un plazo de 30 días"
   },
   "cta": {
     "title": "¿Preguntas sobre tus datos?",
-    "sub": "Nuestro equipo de privacidad está aquí para ayudar. Escríbenos y responderemos en un plazo de 30 días.",
-    "contactBtn": "Contactar al equipo de privacidad",
+    "sub": "Escríbenos sobre cualquier punto de esta política y responderemos en un plazo de 30 días.",
+    "contactBtn": "Contactar sobre privacidad",
     "termsBtn": "Lee nuestros Términos"
   }
 }
