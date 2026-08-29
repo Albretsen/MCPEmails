@@ -444,7 +444,8 @@
       "price_not_configured": "Este plan no se puede contratar ahora mismo. Inténtalo más tarde o contacta con soporte.",
       "workspace_not_found": "No hemos encontrado tu espacio de trabajo. Recarga la página e inténtalo de nuevo.",
       "invalid_plan": "Ese enlace de cambio de plan no es válido. Elige un plan más abajo.",
-      "invalid_interval": "Ese enlace de cambio de plan no es válido. Elige un plan más abajo."
+      "invalid_interval": "Ese enlace de cambio de plan no es válido. Elige un plan más abajo.",
+      "plan_change_failed": "No hemos podido cambiar tu plan. No se ha cobrado nada. Inténtalo de nuevo."
     },
     "plans": {
       "personalFeature1": "3 bandejas conectadas",
@@ -469,7 +470,29 @@
     "inboxesCount": "{count} conectadas ahora mismo",
     "grandfatheredTitle": "Bandejas ilimitadas, conservadas",
     "grandfatheredBody": "Ya estabas aquí antes de que las bandejas pasaran a ser un límite de pago, así que tu cuenta conserva bandejas conectadas ilimitadas sin coste, de forma permanente. Los planes de pago solo valen la pena si quieres el límite de ráfaga más alto o funciones de equipo: Pro para ti solo, Team para trabajar con más personas.",
-    "planChanged": "Ahora estás en {plan}. La diferencia de precio aparecerá en tu próxima factura."
+    "planChanged": "Ya estás en {plan}.",
+    "perMonthWord": "al mes",
+    "perYearWord": "al año",
+    "confirmTitle": "¿Cambiar a {plan}?",
+    "confirmSub": "Vas a pasar de {from} a {to}. Esto es lo que cuesta.",
+    "confirmCredit": "Crédito por tiempo no usado",
+    "confirmDueNow": "Se cobra hoy",
+    "confirmThen": "Después",
+    "confirmRenews": "Próxima renovación",
+    "confirmAmountUnknown": "Aparecerá en tu factura",
+    "confirmNote": "Se cobra ahora a la tarjeta que tienes guardada, prorrateado por el tiempo que queda de este periodo. Tu fecha de renovación no cambia.",
+    "confirmNoteNoPreview": "No hemos podido calcular el importe por adelantado. Se cobrará a tu tarjeta la diferencia prorrateada por el tiempo que queda de este periodo, y el importe exacto aparecerá en tu factura. Tu fecha de renovación no cambia.",
+    "confirmPay": "Confirmar y pagar {amount}",
+    "confirmChange": "Confirmar cambio",
+    "confirmCancel": "Cancelar",
+    "confirming": "Cobrando…",
+    "planChangedCharged": "Ya estás en {plan}. Se han cobrado {amount} a tu tarjeta.",
+    "paymentRequiredTitle": "El pago no se ha completado",
+    "paymentRequiredSub": "No has pasado a {plan}.",
+    "paymentRequiredBody": "Tu banco necesita autorizar el pago, o la tarjeta ha sido rechazada. Tu plan actual no ha cambiado y no se te ha cobrado nada. Paga la factura pendiente y el cambio se aplicará automáticamente.",
+    "paymentRequiredPay": "Pagar factura",
+    "paymentRequiredClose": "Cerrar",
+    "paymentRequiredToast": "El pago no se ha completado, así que sigues en {plan}. Abre el portal de facturación para pagar la factura pendiente."
   },
   "security": {
     "title": "Seguridad",

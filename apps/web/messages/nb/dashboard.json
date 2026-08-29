@@ -444,7 +444,8 @@
       "price_not_configured": "Dette abonnementet kan ikke kjøpes akkurat nå. Prøv igjen senere, eller kontakt support.",
       "workspace_not_found": "Vi fant ikke arbeidsområdet ditt. Last inn siden på nytt og prøv igjen.",
       "invalid_plan": "Denne oppgraderingslenken er ikke gyldig. Velg et abonnement nedenfor.",
-      "invalid_interval": "Denne oppgraderingslenken er ikke gyldig. Velg et abonnement nedenfor."
+      "invalid_interval": "Denne oppgraderingslenken er ikke gyldig. Velg et abonnement nedenfor.",
+      "plan_change_failed": "Kunne ikke endre planen din. Ingenting ble belastet. Prøv igjen."
     },
     "plans": {
       "personalFeature1": "3 tilkoblede innbokser",
@@ -469,7 +470,29 @@
     "inboxesCount": "{count} tilkoblet akkurat nå",
     "grandfatheredTitle": "Ubegrensede innbokser, beholdt",
     "grandfatheredBody": "Du var her allerede før innbokser ble en betalt grense, så kontoen din beholder ubegrenset antall tilkoblede innbokser gratis, permanent. Personal er ikke noe for deg, den planen har tak på tre innbokser. Av de betalte planene er det bare Pro og Team som er verdt det, hvis du vil ha høyere burst-grense eller teamfunksjoner.",
-    "planChanged": "Du er nå på {plan}. Prisdifferansen kommer på neste faktura."
+    "planChanged": "Du er nå på {plan}.",
+    "perMonthWord": "per måned",
+    "perYearWord": "per år",
+    "confirmTitle": "Bytte til {plan}?",
+    "confirmSub": "Du bytter fra {from} til {to}. Dette koster det.",
+    "confirmCredit": "Kreditt for ubrukt tid",
+    "confirmDueNow": "Belastes i dag",
+    "confirmThen": "Deretter",
+    "confirmRenews": "Neste fornyelse",
+    "confirmAmountUnknown": "Vises på fakturaen",
+    "confirmNote": "Belastes nå på kortet ditt, forholdsmessig for tiden som gjenstår av perioden. Fornyelsesdatoen din endres ikke.",
+    "confirmNoteNoPreview": "Vi klarte ikke å beregne prisen på forhånd. Kortet ditt belastes den forholdsmessige differansen for tiden som gjenstår av perioden, og det nøyaktige beløpet står på fakturaen. Fornyelsesdatoen din endres ikke.",
+    "confirmPay": "Bekreft og betal {amount}",
+    "confirmChange": "Bekreft endring",
+    "confirmCancel": "Avbryt",
+    "confirming": "Belaster…",
+    "planChangedCharged": "Du er nå på {plan}. {amount} ble belastet kortet ditt.",
+    "paymentRequiredTitle": "Betalingen ble ikke fullført",
+    "paymentRequiredSub": "Du er ikke flyttet til {plan}.",
+    "paymentRequiredBody": "Banken din må godkjenne betalingen, eller kortet ble avvist. Planen din er uendret, og du er ikke belastet. Betal den åpne fakturaen, så gjennomføres endringen automatisk.",
+    "paymentRequiredPay": "Betal faktura",
+    "paymentRequiredClose": "Lukk",
+    "paymentRequiredToast": "Betalingen ble ikke fullført, så du er fortsatt på {plan}. Åpne faktureringsportalen for å betale den utestående fakturaen."
   },
   "security": {
     "title": "Sikkerhet",

@@ -444,7 +444,8 @@
       "price_not_configured": "This plan cannot be purchased right now. Please try again later, or contact support.",
       "workspace_not_found": "We could not find your workspace. Reload the page and try again.",
       "invalid_plan": "That upgrade link is not valid. Pick a plan below.",
-      "invalid_interval": "That upgrade link is not valid. Pick a plan below."
+      "invalid_interval": "That upgrade link is not valid. Pick a plan below.",
+      "plan_change_failed": "Could not change your plan. Nothing was charged. Please try again."
     },
     "plans": {
       "personalFeature1": "3 connected inboxes",
@@ -469,7 +470,29 @@
     "inboxesCount": "{count} connected right now",
     "grandfatheredTitle": "Unlimited inboxes, kept",
     "grandfatheredBody": "You were already here before inboxes became a paid limit, so your account keeps unlimited connected inboxes at no cost, permanently. The Personal plan tops out at three inboxes, so it would be a step down for you. Pro and Team are worth it only if you want the higher burst limit or team features.",
-    "planChanged": "You are now on {plan}. The price difference appears on your next invoice."
+    "planChanged": "You are now on {plan}.",
+    "perMonthWord": "per month",
+    "perYearWord": "per year",
+    "confirmTitle": "Switch to {plan}?",
+    "confirmSub": "You are moving from {from} to {to}. Here is what it costs.",
+    "confirmCredit": "Credit for unused time",
+    "confirmDueNow": "Charged today",
+    "confirmThen": "Then",
+    "confirmRenews": "Next renewal",
+    "confirmAmountUnknown": "Shown on your invoice",
+    "confirmNote": "Charged now to your card on file, prorated for the time left in this period. Your renewal date does not change.",
+    "confirmNoteNoPreview": "We could not price this change in advance. Your card on file is charged the prorated difference for the time left in this period, and the exact amount appears on your invoice. Your renewal date does not change.",
+    "confirmPay": "Confirm and pay {amount}",
+    "confirmChange": "Confirm change",
+    "confirmCancel": "Cancel",
+    "confirming": "Charging…",
+    "planChangedCharged": "You are now on {plan}. {amount} was charged to your card.",
+    "paymentRequiredTitle": "Payment not completed",
+    "paymentRequiredSub": "You have not been moved to {plan}.",
+    "paymentRequiredBody": "Your bank needs to authorise the payment, or the card was declined. Your current plan is unchanged and you have not been charged. Pay the open invoice and the change is applied automatically.",
+    "paymentRequiredPay": "Pay invoice",
+    "paymentRequiredClose": "Close",
+    "paymentRequiredToast": "Payment was not completed, so you are still on {plan}. Open the billing portal to pay the outstanding invoice."
   },
   "security": {
     "title": "Security",

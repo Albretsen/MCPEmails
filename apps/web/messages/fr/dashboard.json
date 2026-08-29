@@ -444,7 +444,8 @@
       "price_not_configured": "Cette formule n'est pas disponible à l'achat pour le moment. Réessayez plus tard ou contactez le support.",
       "workspace_not_found": "Nous n'avons pas trouvé votre espace de travail. Rechargez la page et réessayez.",
       "invalid_plan": "Ce lien de changement de formule n'est pas valide. Choisissez une formule ci-dessous.",
-      "invalid_interval": "Ce lien de changement de formule n'est pas valide. Choisissez une formule ci-dessous."
+      "invalid_interval": "Ce lien de changement de formule n'est pas valide. Choisissez une formule ci-dessous.",
+      "plan_change_failed": "Impossible de changer votre offre. Rien n'a été débité. Veuillez réessayer."
     },
     "plans": {
       "personalFeature1": "3 boîtes connectées",
@@ -469,7 +470,29 @@
     "inboxesCount": "{count} connectées actuellement",
     "grandfatheredTitle": "Boîtes illimitées, conservées",
     "grandfatheredBody": "Vous étiez déjà là avant que les boîtes ne deviennent une limite payante, donc votre compte conserve des boîtes connectées illimitées sans frais, de façon permanente. Aucune formule payante n'ajoutera de boîtes à ce que vous avez déjà : Pro ne vaut le coup que pour la limite de pointe supérieure, et Team pour les fonctionnalités d'équipe.",
-    "planChanged": "Vous êtes maintenant sur {plan}. La différence de prix apparaîtra sur votre prochaine facture."
+    "planChanged": "Vous êtes maintenant sur {plan}.",
+    "perMonthWord": "par mois",
+    "perYearWord": "par an",
+    "confirmTitle": "Passer à {plan} ?",
+    "confirmSub": "Vous passez de {from} à {to}. Voici ce que cela coûte.",
+    "confirmCredit": "Avoir pour le temps non utilisé",
+    "confirmDueNow": "Débité aujourd'hui",
+    "confirmThen": "Ensuite",
+    "confirmRenews": "Prochain renouvellement",
+    "confirmAmountUnknown": "Indiqué sur votre facture",
+    "confirmNote": "Débité maintenant sur votre carte enregistrée, au prorata du temps restant sur cette période. Votre date de renouvellement ne change pas.",
+    "confirmNoteNoPreview": "Nous n'avons pas pu calculer le montant à l'avance. Votre carte est débitée de la différence au prorata du temps restant sur cette période, et le montant exact figure sur votre facture. Votre date de renouvellement ne change pas.",
+    "confirmPay": "Confirmer et payer {amount}",
+    "confirmChange": "Confirmer le changement",
+    "confirmCancel": "Annuler",
+    "confirming": "Débit en cours…",
+    "planChangedCharged": "Vous êtes maintenant sur {plan}. {amount} ont été débités de votre carte.",
+    "paymentRequiredTitle": "Paiement non abouti",
+    "paymentRequiredSub": "Vous n'êtes pas passé à {plan}.",
+    "paymentRequiredBody": "Votre banque doit autoriser le paiement, ou la carte a été refusée. Votre offre actuelle est inchangée et vous n'avez pas été débité. Réglez la facture ouverte et le changement sera appliqué automatiquement.",
+    "paymentRequiredPay": "Payer la facture",
+    "paymentRequiredClose": "Fermer",
+    "paymentRequiredToast": "Le paiement n'a pas abouti, vous êtes donc toujours sur {plan}. Ouvrez le portail de facturation pour régler la facture en attente."
   },
   "security": {
     "title": "Sécurité",

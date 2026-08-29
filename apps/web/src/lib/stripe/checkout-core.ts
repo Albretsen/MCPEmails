@@ -1,3 +1,5 @@
+import type Stripe from 'stripe';
+
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
@@ -86,14 +88,81 @@ export type CheckoutReason =
   | 'plan_change_failed'
   | 'stripe_session_failed';
 
+/**
+ * What an in-place plan change will cost, quoted BEFORE anything is changed.
+ *
+ * Every amount is in the smallest unit of `currency`, exactly as Stripe reports
+ * it, and is the answer to a different question the buyer is entitled to have
+ * answered before they agree to anything:
+ *
+ *   amountDueNowCents  what leaves their card the moment they confirm
+ *   creditCents        the unused remainder of the plan they are leaving
+ *   recurringCents     what the new plan costs every period from the renewal on
+ *   nextRenewalAt      when that first full period is billed
+ *
+ * Computed from Stripe's own invoice preview rather than from the catalogue, so
+ * the number shown is the number charged: a mid-cycle upgrade is neither a full
+ * period nor a difference of list prices, and only Stripe knows the proration.
+ */
+export interface PlanChangePreview {
+  /** Lowercase ISO currency code, as Stripe reports it. */
+  currency: string;
+  /** Charged immediately on confirmation. Zero when credit covers the change. */
+  amountDueNowCents: number;
+  /** Credit for the unused remainder of the current plan, as a positive number. */
+  creditCents: number;
+  /** The new plan's own price, per period, from the next renewal onwards. */
+  recurringCents: number;
+  /** Unix seconds. Null when Stripe reports no period on the subscription. */
+  nextRenewalAt: number | null;
+}
+
 export type CheckoutOutcome =
   /** A hosted Stripe Checkout page is waiting at `url`. */
   | { kind: 'checkout'; url: string }
   /**
-   * An existing subscriber's price was swapped in place. There is no hosted
-   * page for this: the change already happened.
+   * An existing subscriber asked for a different plan. NOTHING has been
+   * changed and nothing has been charged: this is the quote, and the caller
+   * must come back with `confirmChange: true` to act on it.
+   *
+   * `preview` is null when Stripe could not price the change. That is not a
+   * refusal, it only means the confirmation has to be worded without an exact
+   * figure; the change itself is still available.
    */
-  | { kind: 'changed'; planId: PurchasablePlanId; planName: string; interval: BillingInterval }
+  | {
+      kind: 'confirmation_required';
+      planId: PurchasablePlanId;
+      planName: string;
+      interval: BillingInterval;
+      preview: PlanChangePreview | null;
+    }
+  /**
+   * An existing subscriber's price was swapped in place and the proration was
+   * invoiced and paid. There is no hosted page for this: the change is done.
+   */
+  | {
+      kind: 'changed';
+      planId: PurchasablePlanId;
+      planName: string;
+      interval: BillingInterval;
+      /** What was actually collected. Null if Stripe returned no invoice. */
+      amountPaidCents: number | null;
+      currency: string | null;
+    }
+  /**
+   * The swap was accepted by Stripe but the money was not: the card needs 3DS
+   * authentication, or it failed. The subscription is UNCHANGED and held as a
+   * Stripe pending update, which Stripe applies by itself once the invoice at
+   * `invoiceUrl` is paid. The customer keeps the plan they already paid for
+   * until then, which is the whole point of routing it this way.
+   */
+  | {
+      kind: 'payment_required';
+      planId: PurchasablePlanId;
+      planName: string;
+      interval: BillingInterval;
+      invoiceUrl: string | null;
+    }
   /** Nothing was created. `message`/`errorCode` are the legacy JSON payload. */
   | {
       kind: 'error';
@@ -102,6 +171,66 @@ export type CheckoutOutcome =
       message: string;
       errorCode?: 'subscription_not_self_service';
     };
+
+/**
+ * Quote an in-place plan change without making one.
+ *
+ * `invoices.createPreview` is a pure read: it prices the change against the
+ * live subscription and creates nothing. A failure here must never block the
+ * change, so every error resolves to null and the caller words the
+ * confirmation without a figure.
+ */
+async function previewPlanChange(args: {
+  subscription: Stripe.Subscription;
+  itemId: string;
+  priceId: string;
+}): Promise<PlanChangePreview | null> {
+  const { subscription, itemId, priceId } = args;
+
+  try {
+    const customerId =
+      typeof subscription.customer === 'string'
+        ? subscription.customer
+        : subscription.customer.id;
+
+    const [preview, price] = await Promise.all([
+      stripe.invoices.createPreview({
+        customer: customerId,
+        subscription: subscription.id,
+        subscription_details: {
+          items: [{ id: itemId, price: priceId }],
+          // Must match the swap below, or the quote prices a different event
+          // from the one the button performs.
+          proration_behavior: 'always_invoice',
+        },
+      }),
+      stripe.prices.retrieve(priceId),
+    ]);
+
+    // Proration credit arrives as negative invoice lines (the unused remainder
+    // of the old price). Summing them is what lets the dialog show the discount
+    // rather than only the net, which is the difference between "you are being
+    // charged $62.41" and "you are being charged $62.41, $16.59 already
+    // credited back".
+    const creditCents = preview.lines.data
+      .filter((line) => line.amount < 0)
+      .reduce((sum, line) => sum + Math.abs(line.amount), 0);
+
+    return {
+      currency: preview.currency,
+      amountDueNowCents: preview.amount_due,
+      creditCents,
+      recurringCents: price.unit_amount ?? 0,
+      nextRenewalAt: subscription.items.data[0]?.current_period_end ?? null,
+    };
+  } catch (err) {
+    console.error(
+      '[checkout] plan change preview failed:',
+      err instanceof Error ? err.message : String(err),
+    );
+    return null;
+  }
+}
 
 function fail(
   reason: CheckoutReason,
@@ -118,10 +247,17 @@ function fail(
  * `planId` and `interval` arrive unvalidated (a JSON body from one caller, a
  * query string from the other) and are validated here, so neither entry point
  * can widen what is purchasable.
+ *
+ * `confirmChange` is the consent gate on the one branch that can move money
+ * without a hosted Stripe page. It defaults to false, so a caller that has not
+ * been updated cannot change anyone's billing by accident: the worst it can do
+ * is ask for a quote. Only pass true in response to a person confirming the
+ * amount they were shown.
  */
 export async function runCheckout(input: {
   planId: unknown;
   interval: unknown;
+  confirmChange?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -136,6 +272,9 @@ export async function runCheckout(input: {
 
   // ── 2. Validate the requested plan and interval ───────────────────────────
   const { planId, interval } = input;
+  // Strictly `=== true`: a truthy string from a query parameter must not be
+  // able to stand in for a person clicking Confirm.
+  const confirmChange = input.confirmChange === true;
 
   if (!isPurchasablePlanId(planId)) {
     return fail(
@@ -277,8 +416,8 @@ export async function runCheckout(input: {
       entitledStatuses.includes(billing.subscription_status));
 
   if (hasEntitledSubscription) {
-    await recordAttempt('subscription_exists');
     if (billing!.plan === planId) {
+      await recordAttempt('subscription_exists');
       return fail('already_on_plan', 409, `You are already on the ${plan.name} plan.`);
     }
     // Different paid plan or interval: change the price on the existing
@@ -295,6 +434,7 @@ export async function runCheckout(input: {
     if (!subscriptionId) {
       // Entitled with no subscription id is a comped or manually seeded plan.
       // Those are not ours to re-price from a self-service button.
+      await recordAttempt('subscription_exists');
       return fail(
         'plan_not_self_service',
         409,
@@ -312,6 +452,7 @@ export async function runCheckout(input: {
       }
 
       if (currentItem.price.id === priceId) {
+        await recordAttempt('subscription_exists');
         return fail(
           'already_on_plan_interval',
           409,
@@ -319,18 +460,89 @@ export async function runCheckout(input: {
         );
       }
 
-      // `create_prorations` puts the adjustment on the next invoice instead of
-      // charging the card the moment the button is pressed, so an upgrade
-      // never produces a surprise immediate charge.
-      await stripe.subscriptions.update(subscriptionId, {
+      // ── The consent gate ───────────────────────────────────────────────────
+      //
+      // Everything above this line is a read. Below it, a card gets charged.
+      //
+      // A first-time buyer gets Stripe's hosted page, which states the amount
+      // and takes an explicit action before any money moves. An existing
+      // subscriber has a card on file and no hosted page, so without this gate
+      // a single click on "Get Team" both changed their plan and their bill,
+      // with the amount never once shown to them. Quote first, act only on the
+      // way back.
+      //
+      // Nothing is recorded here: the funnel counts attempts, and asking the
+      // price is not one. The row is written below, on the confirmed pass,
+      // exactly once per completed decision.
+      if (!confirmChange) {
+        return {
+          kind: 'confirmation_required',
+          planId,
+          planName: plan.name,
+          interval,
+          preview: await previewPlanChange({
+            subscription,
+            itemId: currentItem.id,
+            priceId,
+          }),
+        };
+      }
+
+      await recordAttempt('subscription_exists');
+
+      // `always_invoice` invoices and charges the proration NOW, at the moment
+      // access changes. The old `create_prorations` deferred it to the next
+      // invoice, which meant a subscriber could upgrade, use the higher tier,
+      // and cancel before the proration was ever collected: access granted for
+      // up to a month, billed for none of it.
+      //
+      // `pending_if_incomplete` decides what happens when that charge does not
+      // succeed. Stripe holds the swap as a PENDING UPDATE and leaves the
+      // subscription on the price it has, so an unpaid upgrade grants nothing;
+      // Stripe applies it by itself the moment the invoice is paid. The
+      // alternatives were both wrong here: the default `allow_incomplete`
+      // upgrades first and chases the money afterwards (the same hole in a new
+      // place), and `error_if_incomplete` throws away the invoice, which would
+      // make every 3DS card in the EU and UK an outright failure with nothing
+      // to authenticate against.
+      //
+      // Pending updates accept only a subset of parameters, so the metadata
+      // this call used to write is gone. Nothing read it: `user_id` is already
+      // on the subscription from `subscription_data` at creation and survives
+      // untouched, and the webhook resolves the plan from the price id.
+      const updated = await stripe.subscriptions.update(subscriptionId, {
         items: [{ id: currentItem.id, price: priceId }],
-        proration_behavior: 'create_prorations',
-        metadata: { user_id: user.id, plan_id: planId, interval },
+        proration_behavior: 'always_invoice',
+        payment_behavior: 'pending_if_incomplete',
+        expand: ['latest_invoice'],
       });
 
-      // The subscription.updated webhook projects the new plan onto
-      // user_billing and every workspace the user owns.
-      return { kind: 'changed', planId, planName: plan.name, interval };
+      const latestInvoice =
+        updated.latest_invoice && typeof updated.latest_invoice === 'object'
+          ? updated.latest_invoice
+          : null;
+
+      if (updated.pending_update) {
+        // Held, not applied. The plan the customer already paid for is intact.
+        return {
+          kind: 'payment_required',
+          planId,
+          planName: plan.name,
+          interval,
+          invoiceUrl: latestInvoice?.hosted_invoice_url ?? null,
+        };
+      }
+
+      // Paid and applied. The subscription.updated webhook projects the new
+      // plan onto user_billing and every workspace the user owns.
+      return {
+        kind: 'changed',
+        planId,
+        planName: plan.name,
+        interval,
+        amountPaidCents: latestInvoice?.amount_paid ?? null,
+        currency: latestInvoice?.currency ?? null,
+      };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('[checkout] plan change failed:', message);
