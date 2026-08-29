@@ -35,12 +35,16 @@ export async function MixSection({ days }: { days: number }) {
 
   // Never a plan mix built from the `plan` column: it reads 'pro' for a comp as
   // well as a purchase. Comped accounts get their own row so the paying row
-  // cannot quietly absorb them.
+  // cannot quietly absorb them, and so does an internal account on a paid plan:
+  // the paying rows exclude it, and a row of its own is the difference between
+  // excluded and disappeared. Internal accounts on the free plan stay inside
+  // Free, which is a population count rather than a revenue one.
   const revenue = revenueResult.ok ? revenueResult.data : null;
   const planRows = revenue
     ? [
         { name: 'Free', count: revenue.free_workspaces },
         { name: 'Comped', count: revenue.comped_workspaces },
+        { name: 'Internal (paid plan)', count: revenue.internal_paying_workspaces },
         { name: `Paying (${planDisplayName('personal')})`, count: revenue.paying_personal },
         { name: `Paying (${planDisplayName('solo')})`, count: revenue.paying_solo },
         { name: `Paying (${planDisplayName('pro')})`, count: revenue.paying_scale },
@@ -127,8 +131,12 @@ export async function MixSection({ days }: { days: number }) {
             <StatCard
               label="Paying customers"
               value={revenue?.paying_workspaces ?? 0}
-              detail={revenue ? `${revenue.comped_workspaces} comped, not revenue` : 'Revenue counts unavailable'}
-              explain="A paid plan whose owner holds no comped entitlement. Comps write the same plan column as a purchase, so counting that column alone reports them as revenue."
+              detail={revenue
+                ? revenue.internal_paying_workspaces > 0
+                  ? `${revenue.comped_workspaces} comped and ${revenue.internal_paying_workspaces} internal, not revenue`
+                  : `${revenue.comped_workspaces} comped, not revenue`
+                : 'Revenue counts unavailable'}
+              explain="A paid plan whose owner is external and holds no comped entitlement. Comps write the same plan column as a purchase, so counting that column alone reports them, and our own test accounts, as revenue. An external 100%-off Stripe discount is still counted: no amount or coupon is stored locally."
             />
           </section>
         </Section>

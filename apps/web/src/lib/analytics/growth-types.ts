@@ -202,11 +202,19 @@ export type GrowthActiveWorkspaceRow = {
 };
 
 /**
- * Revenue counts with comped accounts excluded. `growth_revenue_counts()`.
+ * Revenue counts with comped and internal accounts excluded.
+ * `growth_revenue_counts(p_internal_emails, p_internal_domains)`.
  *
  * `workspaces.plan` reads 'pro' for both a purchase and a comp, because both
  * paths write the same column. Counting that as revenue is how this page came
- * to claim "5 paid workspaces" while the true paying count was zero.
+ * to claim "5 paid workspaces" while the true paying count was zero, and how
+ * it read "1 paying customer" on 2026-08-29 when the row was our own test
+ * account on a 100%-off subscription.
+ *
+ * KNOWN GAP, deliberately not papered over: the Stripe webhook stores no
+ * amount and no coupon, so a 100%-off discount held by an EXTERNAL account is
+ * indistinguishable from a real payment here. Only comps granted as a
+ * `comped_scale` entitlement, and accounts that are ours, are excluded.
  */
 export type GrowthRevenueRow = {
   paying_workspaces: number;
@@ -217,6 +225,10 @@ export type GrowthRevenueRow = {
   paying_personal: number;
   paying_solo: number;
   paying_scale: number;
+  /** Live workspaces owned by one of our own accounts, on any plan. */
+  internal_workspaces: number;
+  /** The internal subset on a paid plan: what the paying counters now drop. */
+  internal_paying_workspaces: number;
 };
 
 /** Top failing tools. `growth_error_breakdown(p_days)`. */

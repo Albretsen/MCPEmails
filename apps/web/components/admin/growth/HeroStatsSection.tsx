@@ -101,19 +101,29 @@ export async function HeroStatsSection({ days }: { days: number }) {
 
       {/* Paying, not "paid". `workspaces.plan` reads 'pro' for a comp as well
           as a purchase, so counting the column made this card claim five paid
-          workspaces while the true number of paying customers was zero. Comps
-          are reported beside it, quietly, because they are not revenue. */}
+          workspaces while the true number of paying customers was zero, and
+          later claim one paying customer when the row was our own test account
+          on a 100%-off subscription. Comps and our own accounts are reported
+          beside it, quietly, because neither is revenue. */}
       <StatCard
         label="Paying customers"
         value={revenue?.paying_workspaces ?? 0}
         detail={revenue
-          ? `${revenue.comped_workspaces} comped, ${revenue.free_workspaces} free`
+          ? [
+              `${revenue.comped_workspaces} comped`,
+              ...(revenue.internal_paying_workspaces > 0
+                ? [`${revenue.internal_paying_workspaces} internal on a paid plan`]
+                : []),
+              `${revenue.free_workspaces} free`,
+            ].join(', ')
           : 'Revenue counts unavailable'}
         explain={
           <>
-            Workspaces on a paid plan whose owner does <strong>not</strong> hold a comped entitlement.
-            A comp lands on the same <code>plan</code> column as a purchase, so anything counting that
-            column alone reports comps as revenue.
+            Workspaces on a paid plan whose owner is external and does <strong>not</strong> hold a
+            comped entitlement. A comp lands on the same <code>plan</code> column as a purchase, so
+            anything counting that column alone reports comps, and our own test accounts, as revenue.
+            A 100%-off Stripe discount on an external account is still counted here: the webhook
+            stores no amount or coupon, so nothing in the database can see it.
           </>
         }
       />
