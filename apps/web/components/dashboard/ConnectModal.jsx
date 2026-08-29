@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent } from '@/lib/analytics.mjs';
+import { useInboxPaywallView } from '@/lib/analytics/use-inbox-paywall.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
 import {
@@ -17,6 +18,7 @@ import {
   securityForPort,
   normalizeAppPassword,
 } from '@/lib/email-providers/imap-presets';
+import { prefillFromEmail } from '@/lib/email-providers/host-presets';
 
 /**
  * Zoho serves personal (@zohomail.com) and organization (paid custom-domain)
@@ -73,6 +75,10 @@ const ERROR_HEADLINE_KEYS = {
   // route's own message, which names the protocol, sits in the disclosure.
   imap_protocol_error: 'connect.errorProtocolShort',
   smtp_protocol_error: 'connect.errorProtocolShort',
+  // A name that does not resolve. Kept out of TRANSPORT_ERROR_CODES below: no
+  // port or security mode can fix a hostname that does not exist, so opening
+  // Advanced settings would point at the wrong field.
+  host_not_found: 'connect.errorHostNotFoundShort',
   login_already_connected: 'connect.errorLoginTakenShort',
 };
 
@@ -296,6 +302,10 @@ export function ConnectModal({
   // the next keystroke, which is unrecoverable when the field is dots.
   const selectPasswordOnFocus = useRef(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  // Set when the address the user typed identified a known mail provider and we
+  // filled the server fields in for them. Shape:
+  // { label, requiresAppPassword, appPasswordHelpUrl }.
+  const [hostPrefill, setHostPrefill] = useState(null);
 
   /**
    * Advanced settings (generic IMAP only): ports, security modes and the
@@ -338,6 +348,16 @@ export function ConnectModal({
   // The server's numbers win when present: they were counted at the moment of
   // the refusal, the prop's were counted at page load.
   const showLimitPanel = atInboxLimit || serverLimit !== null;
+
+  // Record the panel being shown, once per modal-open. Both routes into it are
+  // counted (the prop's up-front gate and the 402 fallback) because both put
+  // the same price in front of the same user; the row itself does not separate
+  // them, since the 402 path already leaves an `inbox_connection` /
+  // `plan_limit` failure of its own to join against. A reconnect never reaches
+  // the panel and is excluded at the source rather than relied on to be
+  // impossible.
+  useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReached: serverLimit !== null });
+
   const limitPlanName = serverLimit?.planName ?? planName;
   const limitInboxCount = serverLimit?.inboxCount ?? inboxCount;
   const limitMaxInboxes = serverLimit?.maxInboxes ?? maxInboxes;
@@ -396,6 +416,42 @@ export function ConnectModal({
   // gated and unsupported here, so it is not offered.
   const usesAppPassword =
     isPreset || isGeneric || provider === 'fastmail';
+
+  /**
+   * Fill the server fields in from the address, when we recognise the provider.
+   *
+   * The generic form asks for two hostnames, two ports and two security modes,
+   * and a user who does not have them in front of them has no way to produce
+   * them except by guessing. The production record is exactly that: twelve
+   * consecutive attempts against one host with the port and security mode
+   * alternating between the two standard pairs. Every entry in the lookup table
+   * is a provider that produced repeated failures like it.
+   *
+   * Only ever fills EMPTY fields. A host the user typed came from their
+   * provider's own documentation and is better than our table by definition,
+   * and silently rewriting it would be the same class of bug as a browser
+   * autofilling the wrong login.
+   */
+  const applyEmailPrefill = () => {
+    if (!isGeneric || isReconnect) return;
+    const match = prefillFromEmail(form.email.trim());
+    if (!match) { setHostPrefill(null); return; }
+    if (form.imapHost.trim() || form.smtpHost.trim()) return;
+    setForm(prev => ({
+      ...prev,
+      imapHost: match.imapHost,
+      imapPort: match.imapPort,
+      imapSecurity: match.imapSecurity,
+      smtpHost: match.smtpHost,
+      smtpPort: match.smtpPort,
+      smtpSecurity: match.smtpSecurity,
+    }));
+    setHostPrefill({
+      label: match.label,
+      requiresAppPassword: match.requiresAppPassword,
+      appPasswordHelpUrl: match.appPasswordHelpUrl,
+    });
+  };
 
   /**
    * Keep the transport security and the port consistent in the generic form.
@@ -564,6 +620,19 @@ export function ConnectModal({
     if (isGeneric) return tr('connect.genericLabel');
     return tr('connect.providerInboxFallback');
   };
+
+  /**
+   * Where to send someone whose login was refused, and the name to call the
+   * provider while doing it.
+   *
+   * The branded cards know this from the card that was clicked. The generic
+   * form did not, so a Yahoo or iCloud mailbox connected through it got the
+   * same "check your password" as everything else, when the actual answer is
+   * that the account password cannot work at all and an app password has to be
+   * generated first. The address is enough to know which of those it is.
+   */
+  const appPasswordUrl = isGeneric ? (hostPrefill?.appPasswordHelpUrl ?? null) : (APP_PASSWORD_URLS[provider] ?? null);
+  const appPasswordProvider = isGeneric ? (hostPrefill?.label ?? providerLabel()) : providerLabel();
 
   // ── Step 2: credentials submission ─────────────────────────────────────────
 
@@ -1219,6 +1288,10 @@ export function ConnectModal({
                   placeholder="you@example.com"
                   value={form.email}
                   onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
+                  // On blur rather than on change: reacting mid-typing would
+                  // match a half-typed domain and fill the server fields with
+                  // someone else's provider.
+                  onBlur={applyEmailPrefill}
                   autoComplete="email"
                   // Reconnect: the address is the row's identity — never change it,
                   // and lock it so the browser can't autofill another saved login.
@@ -1226,6 +1299,16 @@ export function ConnectModal({
                   aria-readonly={isReconnect || undefined}
                   autoFocus={!isReconnect}
                 />
+                {isGeneric && hostPrefill && (
+                  <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)' }}>
+                    {tr('connect.hostPrefillNote', { provider: hostPrefill.label })}
+                  </span>
+                )}
+                {isGeneric && hostPrefill?.requiresAppPassword && (
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                    {tr('connect.hostPrefillAppPassword', { provider: hostPrefill.label })}
+                  </span>
+                )}
               </div>
 
               {provider === 'yandex' && (
@@ -1584,7 +1667,7 @@ export function ConnectModal({
                 >
                   <span>{formError}</span>
 
-                  {(errorDetail || (!isGeneric && APP_PASSWORD_URLS[provider])) && (
+                  {(errorDetail || appPasswordUrl) && (
                     <>
                       <button
                         type="button"
@@ -1626,9 +1709,9 @@ export function ConnectModal({
                             <span>{tr(HINT_KEYS[provider] ?? 'connect.hintGeneric')}</span>
                           )}
                           {errorDetail && <span>{errorDetail}</span>}
-                          {!isGeneric && APP_PASSWORD_URLS[provider] && (
+                          {appPasswordUrl && (
                             <a
-                              href={APP_PASSWORD_URLS[provider]}
+                              href={appPasswordUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               style={{
@@ -1640,7 +1723,7 @@ export function ConnectModal({
                               }}
                             >
                               <Icon name="key" size={12} />
-                              {tr('connect.openAppPasswordPage', { provider: providerLabel() })}
+                              {tr('connect.openAppPasswordPage', { provider: appPasswordProvider })}
                             </a>
                           )}
                         </div>

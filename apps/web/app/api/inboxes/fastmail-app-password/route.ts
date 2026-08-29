@@ -6,6 +6,7 @@ import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib/plans/check-inbox-limit';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
+import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -108,12 +109,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // 5. Validate via IMAP before persisting anything.
-  const validation = await validateImapCredential({
-    host: FASTMAIL_IMAP_HOST,
-    port: FASTMAIL_IMAP_PORT,
-    email,
-    password: appPassword,
-  });
+  // Fastmail's documented transport leads; the standard alternatives are only
+  // reached when it never gets far enough to present the credential, e.g. a
+  // network that blocks 993. A refused app password stops here.
+  const imapDetection = await detectTransport(
+    transportPlan('imap', { port: FASTMAIL_IMAP_PORT, security: 'tls' }),
+    (candidate, timeoutMs) =>
+      validateImapCredential({
+        host: FASTMAIL_IMAP_HOST,
+        port: candidate.port,
+        email,
+        password: appPassword,
+        security: candidate.security,
+        timeoutMs,
+      })
+  );
+  const validation = imapDetection.result;
+  const resolvedImapPort = validation.ok ? imapDetection.candidate.port : FASTMAIL_IMAP_PORT;
+  const resolvedImapSecurity = validation.ok ? imapDetection.candidate.security : 'tls';
 
   if (!validation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
@@ -146,7 +159,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(body, { status: 422 });
   }
 
-  const smtpValidation = await validateSmtpCredential({ host: 'smtp.fastmail.com', port: 465, email, password: appPassword, security: 'tls' });
+  const smtpDetection = await detectTransport(
+    transportPlan('smtp', { port: 465, security: 'tls' }),
+    (candidate, timeoutMs) =>
+      validateSmtpCredential({ host: 'smtp.fastmail.com', port: candidate.port, email, password: appPassword, security: candidate.security, timeoutMs })
+  );
+  const smtpValidation = smtpDetection.result;
+  const resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : 465;
+  const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : 'tls';
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
     await captureError(new Error(smtpValidation.message), {
@@ -207,13 +227,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       service: 'fastmail',
       email_address: email,
       imap_host: FASTMAIL_IMAP_HOST,
-      imap_port: FASTMAIL_IMAP_PORT,
+      imap_port: resolvedImapPort,
       imap_tls: true,
-      imap_security: 'tls',
+      imap_security: resolvedImapSecurity,
       smtp_host: 'smtp.fastmail.com',
-      smtp_port: 465,
+      smtp_port: resolvedSmtpPort,
       smtp_tls: true,
-      smtp_security: 'tls',
+      smtp_security: resolvedSmtpSecurity,
       imap_password: encryptedPassword,
       // OAuth fields are NULL for app-password connections.
       oauth_access_token: null,

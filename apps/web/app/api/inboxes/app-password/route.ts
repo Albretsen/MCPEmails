@@ -7,6 +7,7 @@ import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { yandexLoginUsername } from '@/lib/email/connection-config';
+import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -138,13 +139,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // 5. Validate the credential against the provider's IMAP server. The SASL
   //    login uses the override when supplied (mirrors the edge function's
   //    imap_username || email_address resolution), otherwise the email address.
-  const validation = await validateImapCredential({
-    host: imapHost,
-    port: preset.imapPort,
-    email,
-    username: loginUsername ?? undefined,
-    password: appPassword,
-  });
+  //    The preset's transport is the documented one, so it leads; the standard
+  //    alternatives are only reached when it fails without ever presenting the
+  //    credential (a network that blocks 993, say). A rejected password, which
+  //    is what nearly every failure here actually is, stops immediately rather
+  //    than spending two more logins against the provider's lockout counter.
+  const imapDetection = await detectTransport(
+    transportPlan('imap', { port: preset.imapPort, security: 'tls' }),
+    (candidate, timeoutMs) =>
+      validateImapCredential({
+        host: imapHost,
+        port: candidate.port,
+        email,
+        username: loginUsername ?? undefined,
+        password: appPassword,
+        security: candidate.security,
+        timeoutMs,
+      })
+  );
+  const validation = imapDetection.result;
+  const resolvedImapPort = validation.ok ? imapDetection.candidate.port : preset.imapPort;
+  const resolvedImapSecurity = validation.ok ? imapDetection.candidate.security : 'tls';
 
   if (!validation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
@@ -173,20 +188,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       service,
       phase: validation.phase,
       detail: validation.detail ?? null,
+      attempts: imapDetection.attempts,
       workspaceId,
     });
     return NextResponse.json(body, { status: 422 });
   }
 
 
-  const smtpValidation = await validateSmtpCredential({
-    host: smtpHost,
-    port: preset.smtpPort,
-    email,
-    username: loginUsername ?? undefined,
-    password: appPassword,
-    security: preset.smtpSecurity,
-  });
+  const smtpDetection = await detectTransport(
+    transportPlan('smtp', { port: preset.smtpPort, security: preset.smtpSecurity }),
+    (candidate, timeoutMs) =>
+      validateSmtpCredential({
+        host: smtpHost,
+        port: candidate.port,
+        email,
+        username: loginUsername ?? undefined,
+        password: appPassword,
+        security: candidate.security,
+        timeoutMs,
+      })
+  );
+  const smtpValidation = smtpDetection.result;
+  const resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : preset.smtpPort;
+  const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : preset.smtpSecurity;
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
     // The IMAP half of this route records every failure; the SMTP half
@@ -199,6 +223,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       service,
       phase: `smtp_${smtpValidation.phase}`,
       detail: smtpValidation.detail ?? null,
+      attempts: smtpDetection.attempts,
       workspaceId,
     });
     return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
@@ -249,13 +274,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // null restores the default of authenticating with the email address.
       imap_username: loginUsername,
       imap_host: imapHost,
-      imap_port: preset.imapPort,
+      imap_port: resolvedImapPort,
       imap_tls: true,
-      imap_security: 'tls',
+      imap_security: resolvedImapSecurity,
       smtp_host: smtpHost,
-      smtp_port: preset.smtpPort,
+      smtp_port: resolvedSmtpPort,
       smtp_tls: true,
-      smtp_security: preset.smtpSecurity,
+      smtp_security: resolvedSmtpSecurity,
       imap_password: encryptedPassword,
       oauth_access_token: null,
       oauth_refresh_token: null,

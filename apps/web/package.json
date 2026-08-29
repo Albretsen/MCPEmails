@@ -7,16 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
-    "test:analytics": "node --test src/lib/analytics.test.mjs",
+    "test:analytics": "node --test src/lib/analytics.test.mjs src/lib/analytics/inbox-paywall.test.mjs",
     "test:billing": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/billing/upgrade-intent.test.mjs src/lib/analytics/billing-funnel.test.ts",
     "test:plans": "node --test --experimental-strip-types src/lib/stripe/plans.test.ts",
     "test:inbox-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-inbox-limit.test.ts",
     "test:seo": "node --test src/lib/blog/seo.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs",
-    "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts src/lib/email-providers/imap-presets.test.ts",
+    "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts src/lib/email/transport-autodetect.test.ts src/lib/email-providers/imap-presets.test.ts src/lib/email-providers/host-presets.test.ts",
     "test:growth": "node --test --experimental-strip-types src/lib/analytics/growth-metrics.test.mjs",
     "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs",
     "test:purchase-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/purchase-confirmation.test.ts",
-    "test": "npm run test:analytics && npm run test:billing && npm run test:plans && npm run test:inbox-limit && npm run test:seo && npm run test:connections && npm run test:growth && npm run test:sanitizer && npm run test:purchase-email"
+    "test": "npm run test:analytics && npm run test:billing && npm run test:plans && npm run test:inbox-limit && npm run test:seo && npm run test:connections && npm run test:growth && npm run test:revenue && npm run test:sanitizer && npm run test:purchase-email",
+    "test:revenue": "node --test --experimental-strip-types src/lib/analytics/revenue-math.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
