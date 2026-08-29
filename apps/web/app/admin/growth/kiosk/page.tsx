@@ -28,6 +28,7 @@
  */
 
 import { Suspense } from 'react';
+import { currentDeployment } from '@/lib/admin/deployment';
 import { requireKioskAccess } from '@/lib/admin/require-kiosk';
 import { KioskBoard, KIOSK_WINDOW_DAYS } from '../../../../components/admin/kiosk/board';
 import { KioskDetail } from '../../../../components/admin/kiosk/detail';
@@ -77,7 +78,7 @@ export default async function GrowthKioskPage({
           <h1 className="kiosk-wordmark">
             MCP Emails <em>Growth · last {KIOSK_WINDOW_DAYS} days</em>
           </h1>
-          <KioskLive generatedAt={generatedAt} />
+          <KioskLive generatedAt={generatedAt} deployment={currentDeployment()} />
         </header>
 
         {/* One boundary for the whole board, not one per tile. A wall display
