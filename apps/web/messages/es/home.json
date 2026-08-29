@@ -151,7 +151,8 @@
           "Analíticas de uso",
           "Soporte por correo"
         ],
-        "cta": "Obtener Personal"
+        "cta": "Obtener Personal",
+        "ctaGrandfathered": "Ya tienes bandejas ilimitadas"
       },
       "solo": {
         "name": "Pro",

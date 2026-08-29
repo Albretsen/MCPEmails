@@ -151,7 +151,8 @@
           "Bruksanalyse",
           "E-poststøtte"
         ],
-        "cta": "Velg Personal"
+        "cta": "Velg Personal",
+        "ctaGrandfathered": "Du har allerede ubegrenset antall innbokser"
       },
       "solo": {
         "name": "Pro",

@@ -37,6 +37,7 @@
       "name": "Personal",
       "desc": "Tre postkasser for én person: jobb, privat og én til.",
       "cta": "Få Personal",
+      "ctaGrandfathered": "Du har allerede ubegrenset antall innbokser",
       "features": [
         "3 tilkoblede innbokser",
         "Planlagte sendinger og godkjenninger",

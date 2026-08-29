@@ -5,9 +5,11 @@ import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
 import { PLANS, type PlanId, type BillingInterval } from '@/lib/stripe/plans';
 import {
   billingTarget,
-  primaryWorkspaceId,
   recordCheckoutStarted,
 } from '@/lib/analytics/billing-funnel';
+
+/** The failure vocabulary `recordCheckoutStarted` accepts, without a new import. */
+type CheckoutFailure = Parameters<typeof recordCheckoutStarted>[2];
 
 /**
  * The purchasable plan ids: every plan in the catalogue except `free`.
@@ -103,34 +105,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // ── 3. Resolve the target Stripe price ID ─────────────────────────────────
-  const plan = PLANS[planId];
-  const priceId =
-    interval === 'year' ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly;
-
-  const target = billingTarget(planId, interval);
-
-  if (!priceId) {
-    // An unset STRIPE_PRICE_* env var makes a plan silently unbuyable, which is
-    // indistinguishable from disinterest unless it is recorded here.
-    await recordCheckoutStarted(
-      await primaryWorkspaceId(supabase, user.id),
-      target,
-      'price_not_configured',
-    );
-    return NextResponse.json(
-      {
-        error:
-          `Stripe price ID for ${planId}/${interval} is not configured. ` +
-          'Please try again later or contact support.',
-      },
-      { status: 503 },
-    );
-  }
-
-  // ── 4. Resolve the user's primary workspace (for a display label only) ────
-  // The subscription is tied to the USER, not this workspace; we only read the
-  // workspace to give the Stripe customer a friendly name.
+  // ── 3. Resolve the user's primary workspace ───────────────────────────────
+  // Resolved BEFORE the Stripe price lookup, deliberately. Every funnel row
+  // needs a workspace id (`product_funnel_events.workspace_id` is NOT NULL), so
+  // a checkout attempt that dies on an unconfigured price has nothing to attach
+  // its trace to until this has run. Nothing below may return before it.
+  //
+  // The subscription itself is tied to the USER, not this workspace; the
+  // display name only gives the Stripe customer a friendly label.
   const { data: workspace, error: wsError } = await supabase
     .from('workspaces')
     .select('id, display_name')
@@ -144,6 +126,46 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       { error: 'Workspace not found.' },
       { status: 404 },
+    );
+  }
+
+  // The one and only `checkout_started` writer for this request.
+  //
+  // Created here, above the price lookup, so no exit below can leave an attempt
+  // untraced: a misconfiguration MUST show up in the data. The `recorded` latch
+  // makes a second call a no-op, so a successful checkout can only ever produce
+  // one row no matter how the branches below evolve.
+  //
+  // The attempt is not written eagerly with a provisional outcome: the view
+  // over this table reads `outcome = 'success'` as "a checkout was started" and
+  // `outcome = 'failure'` as "it never got off the ground", so each request
+  // writes its row once, at the first point its outcome is known.
+  const target = billingTarget(planId, interval);
+  let recorded = false;
+  const recordAttempt = async (failure?: CheckoutFailure): Promise<void> => {
+    if (recorded) return;
+    recorded = true;
+    // recordCheckoutStarted swallows its own errors: analytics must never be
+    // able to fail a payment.
+    await recordCheckoutStarted(workspace.id, target, failure);
+  };
+
+  // ── 4. Resolve the target Stripe price ID ─────────────────────────────────
+  const plan = PLANS[planId];
+  const priceId =
+    interval === 'year' ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly;
+
+  if (!priceId) {
+    // An unset STRIPE_PRICE_* env var makes a plan silently unbuyable, which is
+    // indistinguishable from disinterest unless it is recorded here.
+    await recordAttempt('price_not_configured');
+    return NextResponse.json(
+      {
+        error:
+          `Stripe price ID for ${planId}/${interval} is not configured. ` +
+          'Please try again later or contact support.',
+      },
+      { status: 503 },
     );
   }
 
@@ -173,7 +195,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       new Date(entitlement.expires_at) > new Date());
 
   if (hasCompedGrant) {
-    await recordCheckoutStarted(workspace.id, target, 'subscription_exists');
+    await recordAttempt('subscription_exists');
     return NextResponse.json(
       {
         error:
@@ -198,7 +220,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // members, team roles, SSO, the audit log and a support tier, none of which
   // the grandfather grant includes.
   if (planId === 'personal' && entitlement?.unlimited_inboxes === true) {
-    await recordCheckoutStarted(workspace.id, target, 'subscription_exists');
+    await recordAttempt('subscription_exists');
     return NextResponse.json(
       {
         error:
@@ -218,7 +240,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       entitledStatuses.includes(billing.subscription_status));
 
   if (hasEntitledSubscription) {
-    await recordCheckoutStarted(workspace.id, target, 'subscription_exists');
+    await recordAttempt('subscription_exists');
     if (billing!.plan === planId) {
       return NextResponse.json(
         { error: `You are already on the ${plan.name} plan.` },
@@ -302,7 +324,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     customerId = result.customerId;
   } catch (err) {
     console.error('[checkout] getOrCreateStripeCustomer failed:', err);
-    await recordCheckoutStarted(workspace.id, target, 'stripe_error');
+    await recordAttempt('stripe_error');
     return NextResponse.json(
       { error: 'Failed to create Stripe customer. Please try again.' },
       { status: 500 },
@@ -366,12 +388,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // The user is now on Stripe's hosted page. A `checkout_completed` event
     // that never follows this one is the abandonment signal.
-    await recordCheckoutStarted(workspace.id, target);
+    await recordAttempt();
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[checkout] stripe.checkout.sessions.create failed:', message);
-    await recordCheckoutStarted(workspace.id, target, 'stripe_error');
+    await recordAttempt('stripe_error');
     return NextResponse.json(
       { error: 'Failed to create checkout session. Please try again.' },
       { status: 500 },

@@ -151,7 +151,8 @@
           "Analytique d'usage",
           "Support par e-mail"
         ],
-        "cta": "Choisir Personal"
+        "cta": "Choisir Personal",
+        "ctaGrandfathered": "Vous avez déjà des boîtes illimitées"
       },
       "solo": {
         "name": "Pro",

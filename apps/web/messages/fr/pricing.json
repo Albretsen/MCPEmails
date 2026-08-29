@@ -37,6 +37,7 @@
       "name": "Personal",
       "desc": "Trois boîtes pour une seule personne : le travail, le personnel et une de plus.",
       "cta": "Choisir Personal",
+      "ctaGrandfathered": "Vous avez déjà des boîtes illimitées",
       "features": [
         "3 boîtes connectées",
         "Envois programmés et validations",

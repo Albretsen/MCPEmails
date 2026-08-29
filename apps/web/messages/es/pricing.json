@@ -37,6 +37,7 @@
       "name": "Personal",
       "desc": "Tres buzones para una sola persona: el del trabajo, el personal y uno más.",
       "cta": "Obtener Personal",
+      "ctaGrandfathered": "Ya tienes bandejas ilimitadas",
       "features": [
         "3 bandejas conectadas",
         "Envíos programados y aprobaciones",
