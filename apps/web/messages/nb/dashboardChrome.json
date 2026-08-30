@@ -4,6 +4,8 @@
     "inboxLimitReached": "Du har nådd innboksgrensen på {plan}. Oppgrader for å koble til flere postkasser.",
     "tokenExchangeFailed": "Kunne ikke koble til innboksen. Token-utvekslingen med leverandøren mislyktes. Prøv igjen.",
     "connectionCancelled": "Tilkobling av innboks avbrutt.",
+    "adminConsentRequired": "Organisasjonen din må godkjenne postkassetilgang før du kan koble til Outlook. Microsoft hindrer ansatte i å godkjenne det selv.",
+    "adminConsentAction": "Send til IT-ansvarlig",
     "connectionFailed": "Tilkobling av innboks mislyktes ({error}). Prøv igjen.",
     "checkoutSuccess": "Velkommen til {plan}. Abonnementet ditt aktiveres nå; dette kan ta et øyeblikk.",
     "checkoutSuccessPlanFallback": "det nye abonnementet ditt",

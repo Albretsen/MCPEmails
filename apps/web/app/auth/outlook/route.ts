@@ -4,6 +4,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { randomBytes } from 'crypto';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { OUTLOOK_SCOPES, shouldForceConsent } from '@/lib/email-providers/outlook-oauth';
 
 /**
  * GET /auth/outlook
@@ -41,22 +42,13 @@ import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 const OUTLOOK_AUTH_ENDPOINT =
   'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
 
-// NOTE: Mail.ReadWrite is a superset of Mail.Read and is required for all
-// mailbox-mutating Graph ops (mark read/unread, flag, move, archive, copy,
-// delete, draft create/update, folder create/rename/delete). Mail.Send is NOT
-// covered by ReadWrite and must be requested separately.
-// IMPORTANT: Existing Outlook inboxes connected before this change must
-// RECONNECT (re-consent) to receive the widened scope — a silent token refresh
-// will NOT grant Mail.ReadWrite. `prompt=consent` (set in the authorize call)
-// ensures reconnection re-prompts for the new scope.
-const OUTLOOK_SCOPES = [
-  'Mail.ReadWrite',
-  'Mail.Send',
-  'offline_access',
-  'openid',
-  'profile',
-  'email',
-];
+// IMPORTANT: Existing Outlook inboxes connected before the scope widening must
+// RECONNECT (re-consent) to receive Mail.ReadWrite: a silent token refresh will
+// NOT grant it. The reconnect path sets `prompt=consent` so reconnection
+// re-prompts for the new scope. A first connect deliberately does not.
+//
+// The scope list and both of those decisions live in `outlook-oauth.ts` so they
+// can be unit tested; do not re-declare them here.
 
 export async function GET(request: Request): Promise<NextResponse> {
   const supabase = await createClient();
@@ -134,15 +126,17 @@ export async function GET(request: Request): Promise<NextResponse> {
     redirect_uri: redirectUri,
     response_type: 'code',
     scope: OUTLOOK_SCOPES.join(' '),
-    // Microsoft does not use access_type=offline; instead offline_access is
-    // listed as a scope above. prompt=consent forces the consent screen on
-    // every authorization, which is required to obtain a new refresh token
-    // on reconnection flows.
-    prompt: 'consent',
     response_mode: 'query',
     state,
   });
 
+  // A reconnect is exactly the case where we already know which address we are
+  // reattaching, which is why the login hint doubles as the reconnect signal.
+  const isReconnect = loginHint !== null;
+
+  if (shouldForceConsent(isReconnect)) {
+    params.set('prompt', 'consent');
+  }
   if (loginHint) {
     params.set('login_hint', loginHint);
   }

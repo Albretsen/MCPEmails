@@ -4,6 +4,8 @@
     "inboxLimitReached": "你在 {plan} 套餐上已达收件箱数量上限。升级套餐即可连接更多邮箱。",
     "tokenExchangeFailed": "无法连接收件箱。与提供商的令牌交换失败。请重试。",
     "connectionCancelled": "收件箱连接已取消。",
+    "adminConsentRequired": "你的组织必须先批准邮箱访问权限，你才能连接 Outlook。Microsoft 不允许员工自行批准。",
+    "adminConsentAction": "发送给你的 IT 管理员",
     "connectionFailed": "收件箱连接失败（{error}）。请重试。",
     "checkoutSuccess": "欢迎使用 {plan}。您的订阅正在激活中，这可能需要一点时间。",
     "checkoutSuccessPlanFallback": "您的新套餐",

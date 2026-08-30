@@ -6,6 +6,7 @@ import { exchangeOutlookCode } from '@/lib/email-providers/outlook';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
+import { classifyMicrosoftAuthError } from '@/lib/email-providers/outlook-oauth';
 
 /**
  * GET /auth/outlook/callback
@@ -57,15 +58,33 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const error = searchParams.get('error');
   const serviceClientForFailure = createServiceRoleClient();
 
-  // 1. Handle user denial: Microsoft sends error=access_denied.
-  if (error === 'access_denied') {
+  // 1. Classify whatever Microsoft reported. The three outcomes are deliberately
+  //    kept apart because they mean completely different things to the person:
+  //
+  //    admin_consent_required — their organisation's policy refused before they
+  //      were ever shown a consent screen. Since late 2025 the Microsoft-managed
+  //      default consent policy excludes Mail.Read / Mail.ReadWrite from what an
+  //      end user may consent to, so this is the normal outcome for a Microsoft
+  //      365 employee. Only an administrator can clear it.
+  //    cancelled — they saw the screen and declined.
+  //    oauth_error — anything else.
+  //
+  //    Recording the first as `provider_denied` would read in the funnel as
+  //    people rejecting the product, when they were never offered the choice.
+  const providerError = classifyMicrosoftAuthError(error, searchParams.get('error_description'));
+
+  if (providerError === 'admin_consent_required') {
+    await recordOAuthCallbackFailure(serviceClientForFailure, state, 'outlook', 'consent_required');
+    return redirectWithError('admin_consent_required');
+  }
+
+  if (providerError === 'cancelled') {
     await recordOAuthCallbackFailure(serviceClientForFailure, state, 'outlook', 'provider_denied');
     await recordDeniedAuthorization(state);
     return NextResponse.redirect(`${DASHBOARD_INBOXES}?error=cancelled`);
   }
 
-  // Surface any other OAuth error from Microsoft.
-  if (error) {
+  if (providerError) {
     await recordOAuthCallbackFailure(serviceClientForFailure, state, 'outlook', 'unknown');
     return redirectWithError('oauth_error');
   }

@@ -4,6 +4,8 @@
     "inboxLimitReached": "Vous avez atteint la limite de boîtes sur {plan}. Passez à la formule supérieure pour en connecter davantage.",
     "tokenExchangeFailed": "Impossible de connecter la boîte. L'échange de jeton avec le fournisseur a échoué. Veuillez réessayer.",
     "connectionCancelled": "Connexion de la boîte annulée.",
+    "adminConsentRequired": "Votre organisation doit autoriser l'accès à la boîte avant que vous puissiez connecter Outlook. Microsoft empêche les employés de l'autoriser eux-mêmes.",
+    "adminConsentAction": "Envoyer à votre administrateur informatique",
     "connectionFailed": "Échec de la connexion de la boîte ({error}). Veuillez réessayer.",
     "checkoutSuccess": "Bienvenue dans {plan}. Votre abonnement s'active maintenant ; cela peut prendre un moment.",
     "checkoutSuccessPlanFallback": "votre nouvelle formule",

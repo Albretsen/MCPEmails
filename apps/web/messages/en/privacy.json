@@ -70,7 +70,11 @@
       "does not use Google user data to develop, improve, or train generalised or non-personalised AI or machine-learning models;",
       "does not allow humans to read Google user data unless (a) you give explicit consent for specific messages, (b) it is necessary for security purposes such as investigating abuse, (c) it is required to comply with applicable law, or (d) the data has been aggregated and anonymised."
     ],
-    "googleP3": "As described in Section 2.5, email content retrieved from the Gmail API is streamed through to your agent in the same request and is never stored, cached, or logged by MCPEmails."
+    "googleP3": "As described in Section 2.5, email content retrieved from the Gmail API is streamed through to your agent in the same request and is never stored, cached, or logged by MCPEmails.",
+    "microsoftTitle": "3.8 Microsoft APIs: mailbox access and revoking it",
+    "microsoftP1": "When you connect an Outlook or Microsoft 365 mailbox, Microsoft asks you to approve a specific, named set of permissions: reading and organising your mail, and sending mail on your behalf. We use that access only to run the features you ask an AI agent to perform on your mailbox, such as reading, searching, organising, drafting and sending. We do not use it to build a copy of your mailbox, and we never use mail content, or anything derived from it, for advertising or marketing.",
+    "microsoftRevokeP": "You can withdraw this access at any time, directly with Microsoft and without asking us. For a personal Microsoft account, use <personal>Microsoft account permissions</personal>. For a work or school account, use <work>My Apps</work>. Revoking access there immediately stops us being able to reach that mailbox.",
+    "microsoftDisconnectP": "Disconnecting the inbox in your MCPEmails dashboard has the same effect from our side and additionally deletes the stored credentials for that mailbox. You can do either one first; you do not have to do both."
   },
   "dataRetention": {
     "title": "4. Data Retention",

@@ -4,6 +4,8 @@
     "inboxLimitReached": "You're at the inbox limit on {plan}. Upgrade to connect more mailboxes on the same agent.",
     "tokenExchangeFailed": "Could not connect inbox. Token exchange with the provider failed. Please try again.",
     "connectionCancelled": "Inbox connection cancelled.",
+    "adminConsentRequired": "Your organisation has to approve mailbox access before you can connect Outlook. Microsoft blocks employees from approving it themselves.",
+    "adminConsentAction": "Send to your IT admin",
     "connectionFailed": "Inbox connection failed ({error}). Please try again.",
     "checkoutSuccess": "Welcome to {plan}. Your subscription is activating now; this may take a moment.",
     "checkoutSuccessPlanFallback": "your new plan",
