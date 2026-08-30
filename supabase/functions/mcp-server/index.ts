@@ -21,6 +21,10 @@ import {
   windowBody,
 } from "./body-window.ts";
 import {
+  SUBJECT_MAX_CHARS,
+  subjectHeaderLineError,
+} from "./subject-header.ts";
+import {
   type LabelTargetKind,
   labelTargetFor,
   mergeOutlookCategories,
@@ -2655,7 +2659,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           minimum: 0,
           maximum: BODY_MAX_CHARS_CEILING,
           description:
-            "Body chars per message. Default 8000 here, 2000 on read_batch. 0 returns headers only.",
+            "Body chars per message. Default 8000 here, 2000 on read_batch. " +
+            "0 returns headers only: a complete answer with no continuation to follow.",
         },
       },
       required: ["message_id"],
@@ -2716,7 +2721,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           minimum: 0,
           maximum: BODY_MAX_CHARS_CEILING,
           description:
-            "Body chars per message. Default 8000 here, 2000 on read_batch. 0 returns headers only.",
+            "Body chars per message. Default 8000 here, 2000 on read_batch. " +
+            "0 returns headers only: a complete answer with no continuation to follow.",
         },
       },
       required: ["message_ids"],
@@ -3371,8 +3377,16 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         subject: {
           type: "string",
           minLength: 1,
-          maxLength: 998,
-          description: "Subject line, sent as-is with no prefix added.",
+          // 989, not 998: RFC 5322's 998 is the whole HEADER LINE, and
+          // "Subject: " already spends nine of it. This is a necessary bound
+          // only — a shorter non-ASCII subject can still overflow once RFC 2047
+          // encoded — so the exact octet check runs in the handler too. See
+          // subject-header.ts.
+          maxLength: SUBJECT_MAX_CHARS,
+          description:
+            "Subject line, sent as-is with no prefix added. The limit is the " +
+            "998-octet header line, so a non-ASCII subject (RFC 2047 encoded) " +
+            "must be shorter than this in characters.",
         },
         body: {
           type: "string",
@@ -3662,6 +3676,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         subject: {
           type: "string",
+          minLength: 1,
+          // A draft is a message waiting to be sent, so it is held to the same
+          // header-line limit as a send. See email_send / subject-header.ts.
+          maxLength: SUBJECT_MAX_CHARS,
           description: "Draft subject line.",
         },
         body: {
@@ -3752,6 +3770,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         subject: {
           type: "string",
+          minLength: 1,
+          maxLength: SUBJECT_MAX_CHARS,
           description: "Updated subject line. Optional — omit to keep the draft's existing subject.",
         },
         body: {
@@ -4179,8 +4199,11 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         subject: {
           type: "string",
           minLength: 1,
-          maxLength: 998,
-          description: "Subject line.",
+          // See email_send: the 998-octet limit is on the header LINE.
+          maxLength: SUBJECT_MAX_CHARS,
+          description:
+            "Subject line. The limit is the 998-octet header line, so a " +
+            "non-ASCII subject (RFC 2047 encoded) must be shorter in characters.",
         },
         body: {
           type: "string",
@@ -4384,7 +4407,11 @@ const LEGACY_TOOLS: ToolDefinition[] = [
 const BODY_CONTINUATION_SCHEMA = {
   body_truncated: {
     type: "boolean",
-    description: "True when body_text stops short of body_total_chars.",
+    description:
+      "True when body_text stops short of body_total_chars AND a further " +
+      "window exists. It is never true without a body_next_offset that " +
+      "advances past body_offset, so following body_continue always " +
+      "terminates; body_max_chars: 0 reports false.",
   },
   body_offset: { type: "integer", description: "Where this window starts." },
   body_total_chars: { type: "integer", description: "Length of the whole plain-text body." },
@@ -13670,35 +13697,25 @@ async function executeSendEmail(
   const bccRaw = args["bcc"];
   const bcc: string[] = Array.isArray(bccRaw) ? (bccRaw as string[]) : [];
 
-  // subject (required, 1–998 chars)
+  // subject (required, and its ENCODED header line must fit RFC 5322's 998
+  // octets — see subject-header.ts. The old check counted characters against
+  // 998, which let a 998-character subject through; "Subject: " made the line
+  // 1007 octets, the transport folded it, and the delivered subject came back
+  // with a space injected AND the message duplicated in Sent. This rejects
+  // before transmission, so nothing lands.)
   const subjectRaw = args["subject"];
-  if (typeof subjectRaw !== "string" || subjectRaw.trim().length === 0) {
+  const subjectError = subjectHeaderLineError("email_send", subjectRaw);
+  if (subjectError !== null) {
     return {
       result: {
-        content: [{
-          type: "text",
-          text: "email_send: subject is required and must be a non-empty string.",
-        }],
+        content: [{ type: "text", text: subjectError }],
         isError: true,
       },
       logStatus: "error",
       logErrorCode: "-32602",
     };
   }
-  if (subjectRaw.length > 998) {
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: "email_send: subject must not exceed 998 characters (RFC 5322 limit).",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "-32602",
-    };
-  }
-  const subject = subjectRaw;
+  const subject = subjectRaw as string;
 
   // body (required, non-empty)
   const bodyRaw = args["body"];
@@ -20054,14 +20071,18 @@ async function executeCreateDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const subject = typeof args["subject"] === "string" && args["subject"].length > 0
-    ? args["subject"] : null;
-  if (!subject) {
+  // A draft is a message waiting to be sent, so its subject is held to the same
+  // encoded header-line limit as a send: catching it here means the model finds
+  // out while it can still edit the draft, not at draft.send. See
+  // subject-header.ts.
+  const draftSubjectError = subjectHeaderLineError("draft_create", args["subject"]);
+  if (draftSubjectError !== null) {
     return {
-      result: { content: [{ type: "text", text: "draft_create: subject is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: draftSubjectError }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
+  const subject = args["subject"] as string;
   const body = typeof args["body"] === "string" && args["body"].length > 0
     ? args["body"] : null;
   if (!body) {
@@ -20166,6 +20187,20 @@ async function executeUpdateDraft(
   // (A caller changing only the body shouldn't have to resend the subject.) When
   // omitted we resolve the existing subject below, after the inbox is resolved.
   const subjectProvided = typeof args["subject"] === "string";
+  // When one IS supplied it faces the same encoded header-line limit as a send:
+  // an update is how an over-long subject would otherwise reach a draft that
+  // draft_create already refuses. See subject-header.ts.
+  // (An explicit "" still clears the subject, as it always did; only a subject
+  // that cannot be transmitted is refused.)
+  if (subjectProvided && (args["subject"] as string).trim().length > 0) {
+    const updateSubjectError = subjectHeaderLineError("draft_update", args["subject"]);
+    if (updateSubjectError !== null) {
+      return {
+        result: { content: [{ type: "text", text: updateSubjectError }], isError: true },
+        logStatus: "error", logErrorCode: "-32602",
+      };
+    }
+  }
   const subject = subjectProvided ? (args["subject"] as string) : null;
   // `body` is REQUIRED on every update — there is nothing to preserve because the
   // caller must always supply the full body. `html_body` is optional; omitting it
@@ -20989,21 +21024,18 @@ async function executeScheduleSend(
   const cc: string[] = Array.isArray(args["cc"]) ? (args["cc"] as string[]) : [];
   const bcc: string[] = Array.isArray(args["bcc"]) ? (args["bcc"] as string[]) : [];
 
-  // subject (required, 1–998 chars)
+  // subject (required, and its ENCODED header line must fit 998 octets — the
+  // same check as email_send, because this is the same message sent later. See
+  // subject-header.ts.)
   const subjectRaw = args["subject"];
-  if (typeof subjectRaw !== "string" || subjectRaw.trim().length === 0) {
+  const subjectError = subjectHeaderLineError("schedule_create", subjectRaw);
+  if (subjectError !== null) {
     return {
-      result: { content: [{ type: "text", text: "schedule_create: subject is required and must be a non-empty string." }], isError: true },
+      result: { content: [{ type: "text", text: subjectError }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
-  if (subjectRaw.length > 998) {
-    return {
-      result: { content: [{ type: "text", text: "schedule_create: subject must not exceed 998 characters." }], isError: true },
-      logStatus: "error", logErrorCode: "-32602",
-    };
-  }
-  const subject = subjectRaw;
+  const subject = subjectRaw as string;
 
   // body (required)
   const bodyRaw = args["body"];
