@@ -74,6 +74,11 @@ import {
 } from "./text-extract.ts";
 import { neutralizeMaybe, neutralizeText } from "./text-safety.ts";
 import {
+  sanitizeEmailHtml,
+  sanitizeSignatureHtml,
+  sanitizeSignatureHtmlSafe,
+} from "./signature-sanitizer.ts";
+import {
   handleTriageDispatch,
   type TriageAction,
   TRIAGE_ACTION_OPERATIONS,
@@ -127,11 +132,6 @@ import {
   type WorkBudget,
 } from "./bulk-budget.ts";
 import { ImapSession } from "./imap-session.ts";
-import {
-  EMAIL_HTML_POLICY,
-  sanitizeHtml,
-  SIGNATURE_HTML_POLICY,
-} from "./html-sanitizer.ts";
 import {
   groupImapIdsByFolder,
   type ImapFolderGroup,
@@ -9025,46 +9025,16 @@ function signatureHtmlToText(html: string): string {
     .trim();
 }
 
-/**
- * Sanitize an email BODY for return as `body_html`.
- *
- * Delegates to the shared allow-list tokenizer. This used to be a hand-written
- * regex deny-list; it was bypassable by every payload documented at the top of
- * html-sanitizer.ts, including two that defeated its own stated policy (an
- * unquoted `src=https://...` and any `srcset`, both of which sailed through
- * the "no external src" rule and fired a tracking pixel).
- *
- * EMAIL POLICY: no external image source survives, in any spelling. A body is
- * written by a stranger, so a remote image is a read receipt. Only `cid:`
- * (already inside this message) and base64 raster `data:` images are kept.
- *
- * PURE: no I/O.
- */
-function sanitizeEmailHtml(html: string): string {
-  return sanitizeHtml(html, EMAIL_HTML_POLICY);
-}
-
-/**
- * Sanitize per-inbox SIGNATURE HTML (defense-in-depth for the MCP `signature`
- * tool path and the send-time injection).
- *
- * Same tokenizer as sanitizeEmailHtml, different policy object, and the
- * difference is exactly one line of configuration: a signature KEEPS
- * `https:` image `src`, because a hosted logo is the point of a rich
- * signature and the author is the account owner rather than a stranger.
- * Non-https sources (http:, data:, ftp:) are still dropped.
- *
- * The authoritative signature sanitizer is the web app's sanitizeSignatureHtml
- * (apps/web/src/lib/sanitizeSignatureHtml.js) run on save; this Deno pass is a
- * belt-and-suspenders layer so anything written via the MCP tool or already
- * sitting in the DB is scrubbed before it ships in outgoing mail. Idempotent.
- *
- * PURE: no I/O.
- */
-function sanitizeSignatureHtml(html: string): string {
-  return sanitizeHtml(html, SIGNATURE_HTML_POLICY);
-}
-
+// sanitizeEmailHtml and sanitizeSignatureHtml both used to live here, as
+// hand-written regex deny-lists. Both were bypassable, and the email one broke
+// its own stated policy: an UNQUOTED `src=https://...` and any `srcset` walked
+// straight through the "no external src" rule and fired a tracking pixel on
+// every HTML mail an agent read.
+//
+// They now share ONE allow-list tokenizer in ./signature-sanitizer.ts, imported
+// at the top of this file, differing only by the policy object they pass it.
+// See that module's header for the payloads that defeated the old construction
+// and for why the two policies differ where they do.
 // ---------------------------------------------------------------------------
 // email_read — shared output types
 // ---------------------------------------------------------------------------
@@ -11203,8 +11173,13 @@ function composeSignatureBlocks(
   // rows written before the tool-side sanitizer, or via any other write path)
   // before it is wrapped in the mcpemails-signature div. Idempotent on
   // already-clean HTML; https images and formatting survive.
+  //
+  // The *Safe variant on purpose: the sanitizer throws on output over 100KB,
+  // and failing an entire send over an oversized signature would be a worse
+  // outcome than sending without one. Every write path uses the throwing
+  // version, so this only ever bites on rows written before that was true.
   const html = storedHtml
-    ? sanitizeSignatureHtml(storedHtml)
+    ? sanitizeSignatureHtmlSafe(storedHtml)
     : escapeSignatureHtml(storedText).replace(/\n/g, "<br>\n");
 
   // Guard against a signature that strips down to nothing. The check has to be
@@ -21543,8 +21518,18 @@ async function executeSetSignature(
       };
     }
     // Sanitize before persisting (defense in depth alongside the web app's
-    // DOMPurify pass). Keeps https images + formatting, strips scripts/handlers.
-    update["signature_html"] = sanitizeSignatureHtml(args["signature_html"] as string);
+    // DOMPurify pass). Keeps https images + formatting, strips everything that
+    // is not on the allow-list. The throw is only reachable if the allow-listed
+    // rebuild of a <=50000-char input somehow exceeds 100KB; surface it as an
+    // argument error rather than letting it 500 the tool call.
+    try {
+      update["signature_html"] = sanitizeSignatureHtml(args["signature_html"] as string);
+    } catch {
+      return {
+        result: { content: [{ type: "text", text: "signature_set: signature_html could not be sanitized because it is too large." }], isError: true },
+        logStatus: "error", logErrorCode: "-32602",
+      };
+    }
   }
 
   if ("signature_enabled" in args) {
