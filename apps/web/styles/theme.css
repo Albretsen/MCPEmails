@@ -1,7 +1,20 @@
 /* theme.css: dark-mode token overrides + shared helpers.
    Activated by setting `data-theme="dark"` on <html>. */
 
-html[data-theme="dark"] {
+/* `.kiosk` is here so the wall board is dark in the FIRST PAINT rather than
+   after hydration.
+
+   The kiosk pins itself to dark regardless of the visitor's stored preference,
+   but it used to do that in a `useEffect`, which cannot run until React has
+   hydrated. The Pi's stored `mcpe-theme` is "light", so every reload painted
+   the whole board white and only flipped to dark once hydration finished: a
+   full-screen white flash on a dark wall, on a Pi 4, several times an hour
+   whenever deploys were landing. Custom properties inherit, so declaring them
+   on the board's own root element covers everything inside it, and this sheet
+   is render-blocking, so it applies before anything is drawn. The effect in
+   KioskLive is left alone: it still pins the document outside the board. */
+html[data-theme="dark"],
+.kiosk {
   --bg-page:     #0B1020;     /* ink-900 */
   --bg-surface:  #131932;     /* slightly elevated */
   --bg-sunken:   #1B2244;     /* code blocks, wells */
