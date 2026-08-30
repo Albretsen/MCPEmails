@@ -579,7 +579,19 @@
     "removeDialogBody": "<b>{name}</b> 将失去对此工作区的访问权限，且其 API 密钥将立即被撤销。",
     "cancel": "取消",
     "removing": "正在移除…",
-    "removeMemberBtn": "移除成员"
+    "removeMemberBtn": "移除成员",
+    "leaveTitle": "退出工作区",
+    "leaveSub": "将自己从此工作区移除。你在其中的 API 密钥会被吊销。",
+    "leaveWorkspace": "退出工作区",
+    "leaveDialogTitle": "确认退出此工作区？",
+    "leaveDialogBody": "你将失去对 <b>{workspace}</b> 的访问权限，你在其中的 API 密钥会立即被吊销。之后需要由所有者或管理员重新邀请你。",
+    "leaving": "正在退出…",
+    "errLeaveFailed": "退出工作区失败。",
+    "resendInvite": "重新发送",
+    "resendInviteAria": "向 {email} 重新发送邀请",
+    "resending": "正在发送…",
+    "errResendFailed": "重新发送邀请失败。",
+    "inviteNotDelivered": "邮件未送达，请重新发送。"
   },
   "approvals": {
     "review": {

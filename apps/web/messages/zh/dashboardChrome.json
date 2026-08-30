@@ -63,7 +63,12 @@
     "densitySpacious": "宽松",
     "firstRunTitle": "欢迎使用 mcpemails",
     "firstRunBody": "连接您的第一个收件箱，不到一分钟即可获得可用的 MCP 端点。",
-    "firstRunCta": "连接收件箱"
+    "firstRunCta": "连接收件箱",
+    "inviteSentNotDelivered": "已为 {email} 创建邀请，但邮件未能发送。请在待处理的邀请上点击“重新发送”。",
+    "inviteResent": "已向 {email} 重新发送邀请。",
+    "inviteResendFailed": "重新发送邀请失败。",
+    "workspaceLeaveFailed": "退出工作区失败。",
+    "insufficientRole": "你没有权限在此工作区连接收件箱。"
   },
   "sidebar": {
     "planSuffix": "{plan} 套餐",

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { checkMemberLimit } from '@/lib/plans/check-member-limit';
 import { sendInviteEmail } from '@/lib/email/send-invite';
+import { canManageWorkspace, fetchWorkspaceRole } from '@/lib/workspace/roles';
 
 /**
  * POST /api/workspaces/invite
@@ -83,26 +84,53 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const emailPattern = escapeLikePattern(normalizedEmail);
 
   // 3. Verify caller's membership and role (owner or admin may invite).
-  const { data: callerMember, error: memberError } = await supabase
-    .from('workspace_members')
-    .select('role')
-    .eq('workspace_id', workspaceId)
-    .eq('user_id', user.id)
-    .single();
-
-  if (memberError || !callerMember) {
+  const callerRole = await fetchWorkspaceRole(supabase, workspaceId, user.id);
+  if (!callerRole) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
-  if (callerMember.role !== 'owner' && callerMember.role !== 'admin') {
+  if (!canManageWorkspace(callerRole)) {
     return NextResponse.json(
       { error: 'Only workspace owners and admins can send invites.' },
       { status: 403 },
     );
   }
 
-  // 4. Check plan seat limit.
+  // 4. Check the plan seat limit.
+  //
+  //    THE LIMIT CHECK MUST USE THE REQUEST-SCOPED USER CLIENT. checkMemberLimit
+  //    reads the plan from the `effective_workspace_plan(uuid)` RPC, whose WHERE
+  //    clause ends `AND w.id = ANY(public.my_workspace_ids())`, and
+  //    my_workspace_ids() is derived from auth.uid(). A service-role client has
+  //    no auth.uid(), so the RPC returned zero rows, the plan silently fell back
+  //    to 'free', maxMembers became 1, and every workspace (which always has an
+  //    owner) read as already at its cap. Live effect before this fix: a paying
+  //    Team workspace got a 403 telling it to upgrade its free plan, on every
+  //    invite. Every other caller of a check*Limit helper already passes the
+  //    user client (see api-keys/route.ts and inboxes/imap/route.ts); this was
+  //    the one that did not.
+  //
+  //    The service-role client below is still correct for the steps that
+  //    genuinely have to bypass RLS: the invite dedupe lookup (rows the caller
+  //    cannot SELECT), the users lookup by email, and the insert.
+  const memberLimit = await checkMemberLimit(supabase, workspaceId);
+
+  // An unresolvable plan is an error, not a free plan. Answering 403 "upgrade
+  // your plan" when the truth is "we could not read your plan" is what made the
+  // service-role bug above invisible for as long as it lived: the message was
+  // plausible, so it read as a billing state rather than a defect.
+  if (!memberLimit.resolved) {
+    console.error('[invite] Could not resolve the workspace plan:', memberLimit.reason);
+    return NextResponse.json(
+      {
+        error: 'Could not read this workspace\u2019s plan, so the invite was not sent. Please try again.',
+        error_code: 'plan_unresolved',
+      },
+      { status: 500 },
+    );
+  }
+
   const service = createServiceRoleClient();
-  const memberLimit = await checkMemberLimit(service, workspaceId);
+
   if (memberLimit.atLimit) {
     return NextResponse.json(
       {
@@ -110,6 +138,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         error_code: 'member_limit_reached',
         current_count: memberLimit.currentCount,
         max_members: memberLimit.maxMembers,
+        upgrade_url: '/pricing',
+      },
+      { status: 403 },
+    );
+  }
+
+  // 4b. Admin and Viewer are a Team-plan capability. The dashboard already
+  //     hides the role selector when the plan does not include them
+  //     (MembersPage's `teamRolesEnabled` gate), but hiding a control is not
+  //     enforcement: a workspace that downgrades off Team, or any caller
+  //     posting JSON directly, could still hand out roles the plan does not
+  //     include. On such a plan the only assignable role is `member`.
+  if (!memberLimit.teamRolesEnabled && role !== 'member') {
+    return NextResponse.json(
+      {
+        error: 'Assigning the Admin and Viewer roles needs the Team plan. On this plan collaborators join as Member.',
+        error_code: 'team_roles_not_available',
         upgrade_url: '/pricing',
       },
       { status: 403 },
@@ -198,8 +243,31 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to create invite.' }, { status: 500 });
   }
 
-  // 11. Send invite email. Fail gracefully: the invite row exists; the user
-  //     can resend from the dashboard if the email bounces.
+  // 11. Send the invite email.
+  //
+  //     A failed send does NOT roll the invite row back, and does not fail the
+  //     request. Both alternatives were weighed:
+  //
+  //       Roll the row back. A retry would then be a clean re-invite, needing
+  //       no new endpoint. It also throws away a real invite the admin created,
+  //       loses the audit trail of it, and (because the raw token exists only
+  //       in this function's scope) means a send that actually SUCCEEDED but
+  //       reported a transport error would leave a live accept link pointing at
+  //       a row that no longer exists.
+  //
+  //       Keep the row and make resending real. Chosen. The row is the record
+  //       of intent; the email is a delivery attempt against it. What was
+  //       broken was not the row, it was that "the admin can resend" was
+  //       written in this comment and implemented nowhere: the natural retry
+  //       (invite the same address again) hits the pending-invite check in step
+  //       5 and gets a 409, so a single Resend outage locked that address out
+  //       for the full 7-day expiry with an undeliverable token.
+  //
+  //     So: the row stays, POST /api/workspaces/invite-resend/[id] mints a
+  //     fresh token and tries again, and this response reports honestly whether
+  //     the email left the building so the dashboard can flag the invite and
+  //     put the Resend action in front of the admin immediately.
+  let emailDelivered = true;
   try {
     await sendInviteEmail({
       to: normalizedEmail,
@@ -209,8 +277,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       rawToken,
     });
   } catch (emailErr) {
+    emailDelivered = false;
     console.error('[invite] Email send failed:', emailErr);
-    // Don't return 500: the invite record is stored; admin can resend.
   }
 
   return NextResponse.json(
@@ -220,6 +288,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       role: invite.role,
       expiresAt: invite.expires_at,
       createdAt: invite.created_at,
+      emailDelivered,
     },
     { status: 201 },
   );

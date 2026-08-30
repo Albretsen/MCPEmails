@@ -283,6 +283,11 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     } else if (errorParam === 'token_exchange_failed') {
       toast({ message: tr('app.tokenExchangeFailed'), variant: 'error' });
       setRouteState('inboxes');
+    } else if (errorParam === 'insufficient_role') {
+      // The provider OAuth callbacks redirect here when a workspace VIEWER
+      // completes a connect flow. Read-only members cannot attach a mailbox.
+      toast({ message: tr('app.insufficientRole'), variant: 'error' });
+      setRouteState('inboxes');
     } else if (errorParam === 'cancelled') {
       toast({ message: tr('app.connectionCancelled'), variant: 'info' });
       setRouteState('inboxes');
@@ -675,8 +680,34 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       role:      data.role,
       expiresAt: data.expiresAt,
       createdAt: data.createdAt,
+      // The invite row is stored even when Resend refuses the send, so a 201
+      // is not proof the person was told. Carry the server's verdict onto the
+      // row so MembersPage can flag it and put Resend in front of the admin
+      // now, rather than after seven days of silence.
+      emailDelivered: data.emailDelivered !== false,
     }, ...xs]);
-    toast({ message: tr('app.inviteSent', { email }), variant: 'success' });
+    if (data.emailDelivered === false) {
+      toast({ message: tr('app.inviteSentNotDelivered', { email }), variant: 'warning' });
+    } else {
+      toast({ message: tr('app.inviteSent', { email }), variant: 'success' });
+    }
+  };
+
+  /** Re-send a pending invite via POST /api/workspaces/invite-resend/[id]. */
+  const onResendInvite = async (inviteId) => {
+    const res = await fetch(`/api/workspaces/invite-resend/${inviteId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workspaceId: workspace.id }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? tr('app.inviteResendFailed'));
+    // The resend mints a NEW token and a fresh 7-day window, so the row's
+    // expiry moves and its delivery flag is cleared.
+    setPendingInvites(xs => xs.map(x => (
+      x.id === inviteId ? { ...x, expiresAt: data.expiresAt ?? x.expiresAt, emailDelivered: true } : x
+    )));
+    toast({ message: tr('app.inviteResent', { email: data.email ?? '' }), variant: 'success' });
   };
 
   /** Cancel a pending invite via DELETE /api/workspaces/invite/[token]. */
@@ -724,6 +755,22 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     toast({ message: tr('app.roleUpdated'), variant: 'success' });
   };
 
+  /**
+   * Leave the active workspace via POST /api/workspaces/[id]/leave.
+   *
+   * A full reload rather than a local state edit: the member has just removed
+   * themselves from the workspace every panel on this screen is reading, and
+   * the server has cleared the active-workspace cookie, so the correct next
+   * view is whatever the dashboard loader resolves for them now (their own
+   * workspace, or the next one they belong to).
+   */
+  const onLeaveWorkspace = async () => {
+    const res = await fetch(`/api/workspaces/${workspace.id}/leave`, { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? tr('app.workspaceLeaveFailed'));
+    window.location.href = '/dashboard';
+  };
+
   return (
     <div className="shell" data-screen-label={"Dashboard / " + route}>
       <Sidebar
@@ -748,7 +795,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
-        {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} />}
+        {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}

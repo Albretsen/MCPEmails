@@ -13,6 +13,7 @@ import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { explainAuthFailure } from '@/lib/email/auth-failure';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { canManageInboxes, fetchWorkspaceRole, insufficientRoleBody } from '@/lib/workspace/roles';
 import {
   IMAP_PRESETS,
   isBrandedImapService,
@@ -57,6 +58,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
+  // 2b. Membership is not permission. resolveActiveWorkspaceId only proves the
+  //     caller belongs to this workspace, and connecting a mailbox attaches a
+  //     live credential that every other member of the workspace can then use
+  //     through the MCP server. A real `viewer` member of somebody else's
+  //     workspace was proven against production to get past authorization on
+  //     the sibling generic-IMAP route, which answered 422 on credential
+  //     validation: an answer from well beyond the point where it should have
+  //     been refused. This route had the identical gap (the same membership-
+  //     only check, no role consulted). Viewers are read-only.
+  //     This runs before any funnel event and before any network
+  //     call to a mail host, so a refused caller costs nothing and leaves no
+  //     trace that would count as a real connection attempt.
+  const callerRole = await fetchWorkspaceRole(supabase, workspaceId, user.id);
+  if (!canManageInboxes(callerRole)) {
+    return NextResponse.json(
+      insufficientRoleBody('Workspace viewers cannot connect an inbox.'),
+      { status: 403 },
+    );
+  }
+
   const db = createServiceRoleClient();
 
   // 3. Parse and validate the request body.

@@ -22,6 +22,8 @@ function hashToken(raw: string): string {
  *   P0003  invite_expired          → 410
  *   P0004  invite_email_mismatch   → 403
  *   P0005  already_a_member        → 409
+ *   P0006  workspace_seat_limit    → 403
+ *   P0007  workspace_unavailable   → 410
  */
 export async function POST(
   _request: NextRequest,
@@ -84,6 +86,28 @@ export async function POST(
       return NextResponse.json(
         { error: 'You are already a member of this workspace.' },
         { status: 409 },
+      );
+    }
+    // Both of these are re-checks the RPC performs at REDEMPTION time, because
+    // an invite is live for 7 days and the conditions that made it legitimate
+    // can lapse inside that window: the workspace can downgrade off the Team
+    // plan (seats are a Team capability) or be deleted outright. Mapped
+    // explicitly so neither falls through to the generic 500 below, which is
+    // what an unmapped sentinel does.
+    if (msg.includes('workspace_seat_limit')) {
+      return NextResponse.json(
+        {
+          error: 'This workspace has no seat available. Its owner needs the Team plan to add collaborators.',
+          error_code: 'member_limit_reached',
+          upgrade_url: '/pricing',
+        },
+        { status: 403 },
+      );
+    }
+    if (msg.includes('workspace_unavailable')) {
+      return NextResponse.json(
+        { error: 'This workspace no longer exists.', error_code: 'workspace_unavailable' },
+        { status: 410 },
       );
     }
 

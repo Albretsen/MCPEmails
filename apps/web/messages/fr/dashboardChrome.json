@@ -63,7 +63,12 @@
     "densitySpacious": "Spacieuse",
     "firstRunTitle": "Bienvenue sur mcpemails",
     "firstRunBody": "Connectez votre première boîte pour obtenir un point de terminaison MCP fonctionnel en moins d'une minute.",
-    "firstRunCta": "Connecter une boîte"
+    "firstRunCta": "Connecter une boîte",
+    "inviteSentNotDelivered": "Invitation créée pour {email}, mais l'e-mail n'a pas pu être envoyé. Utilisez Renvoyer sur l'invitation en attente.",
+    "inviteResent": "Invitation renvoyée à {email}.",
+    "inviteResendFailed": "Impossible de renvoyer l'invitation.",
+    "workspaceLeaveFailed": "Impossible de quitter l'espace de travail.",
+    "insufficientRole": "Vous n'avez pas l'autorisation de connecter une boîte mail dans cet espace de travail."
   },
   "sidebar": {
     "planSuffix": "formule {plan}",

@@ -63,7 +63,12 @@
     "densitySpacious": "Spacious",
     "firstRunTitle": "Welcome to mcpemails",
     "firstRunBody": "Connect your first inbox to get a working MCP endpoint in under a minute.",
-    "firstRunCta": "Connect inbox"
+    "firstRunCta": "Connect inbox",
+    "inviteSentNotDelivered": "Invite created for {email}, but the email could not be sent. Use Resend on the pending invite.",
+    "inviteResent": "Invite resent to {email}.",
+    "inviteResendFailed": "Failed to resend the invite.",
+    "workspaceLeaveFailed": "Failed to leave the workspace.",
+    "insufficientRole": "You do not have permission to connect an inbox in this workspace."
   },
   "sidebar": {
     "planSuffix": "{plan} plan",
