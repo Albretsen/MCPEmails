@@ -17,6 +17,11 @@
  */
 
 import { connectGuardedTcp } from "./host-guard.ts";
+import {
+  connectViaMailProxy,
+  type MailProxyConfig,
+  readMailProxyConfig,
+} from "./mail-proxy.ts";
 
 export class SmtpAuthError extends Error {
   constructor(message: string) {
@@ -80,20 +85,21 @@ const SMTP_TIMEOUT_MS = 20_000;
  * Total submission attempts, each on a brand new connection.
  *
  * WHY THIS EXISTS. This function runs on Supabase Edge Functions, whose
- * outbound traffic leaves from a rotating pool of AWS addresses. Several mail
- * hosts blocklist AWS ranges wholesale for submission (Domeneshop answers
- * RCPT TO with `550 [ACR04] Amazon AWS IP <addr> may not use this server`)
- * and because the pool rotates, the SAME message to the SAME recipient
- * succeeds or fails depending on which address the invocation happened to get.
- * On 2026-08-30 one inbox saw three rejections and one success inside five
- * minutes with nothing else different.
+ * outbound traffic leaves from Amazon's address pool. A growing number of mail
+ * hosts refuse submission from those ranges outright, and the refusal is about
+ * the address rather than the mail: proved against Domeneshop on 2026-08-30 by
+ * running the identical unauthenticated sequence from a Norwegian line (550
+ * relay not permitted) and from AWS (550 [ACR04] Amazon AWS IP ... may not use
+ * this server), on both 465 and 587.
  *
- * A second attempt on a fresh connection is the cheapest thing that can help,
- * and it is free of the usual retry hazard: this only ever fires before DATA,
- * where duplicate delivery is impossible. It is deliberately ONE extra attempt
- * rather than many: a new connection from the same warm isolate may well reuse
- * the same egress address, so the reliable escape is the caller retrying later
- * (a new isolate, a new address), which {@link SmtpNotSentError} now permits.
+ * So the second attempt is not the same attempt again. It goes through the
+ * mail proxy, from an address that is not Amazon's, which is the only thing
+ * that can change the answer. Where no proxy is configured the second attempt
+ * is another direct dial, which still catches an ordinary transient refusal.
+ *
+ * Two attempts is enough because they are qualitatively different, not because
+ * two rolls beat one. Both fire only before DATA, where duplicate delivery is
+ * impossible.
  */
 const SMTP_SUBMIT_ATTEMPTS = 2;
 
@@ -111,9 +117,12 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
     throw new Error("SMTP send: no recipients");
   }
 
+  const proxy = readMailProxyConfig();
   for (let attempt = 1; attempt <= SMTP_SUBMIT_ATTEMPTS; attempt++) {
     try {
-      await submitOnce(cfg, msg);
+      // Direct first: most hosts accept us, and a proxy that is down must not
+      // take out sending for everyone it was never needed for.
+      await submitOnce(cfg, msg, attempt > 1 ? proxy : null);
       return;
     } catch (err) {
       // Anything else (an auth failure, or a failure after the message bytes
@@ -133,14 +142,18 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
  * {@link SmtpNotSentError}; failures after that point pass through unchanged,
  * because from there on we genuinely cannot tell whether the message landed.
  */
-async function submitOnce(cfg: SmtpConfig, msg: SmtpMessage): Promise<void> {
+async function submitOnce(
+  cfg: SmtpConfig,
+  msg: SmtpMessage,
+  proxy: MailProxyConfig | null,
+): Promise<void> {
   // Flipped the instant the server answers DATA with 354: the next byte we
   // write is the message itself, and no failure past here is safe to retry.
   let dataAccepted = false;
 
   let conn: Deno.Conn;
   try {
-    conn = await connectWithTimeout(cfg);
+    conn = await connectWithTimeout(cfg, proxy);
   } catch (err) {
     // Not one byte of the message existed on the wire.
     throw new SmtpNotSentError(errorText(err), true);
@@ -418,8 +431,17 @@ class SmtpSession {
  * See host-guard.ts, a mirror of apps/web/src/lib/email/host-guard.ts. A change
  * to either must be made to the other.
  */
-async function openGuardedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn> {
-  const tcp = await connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "smtp" });
+async function openGuardedSmtpConn(
+  cfg: SmtpConfig,
+  proxy: MailProxyConfig | null,
+): Promise<Deno.Conn> {
+  // Both branches return a plain TCP socket and the TLS upgrade below is
+  // identical for either, which is the point: the proxy carries ciphertext and
+  // the certificate is still checked against cfg.host, so a tunnelled session
+  // is exactly as private as a direct one. See mail-proxy.ts.
+  const tcp = proxy
+    ? await connectViaMailProxy({ host: cfg.host, port: cfg.port, protocol: "smtp", config: proxy })
+    : await connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "smtp" });
   if (cfg.security !== "tls") return tcp;
 
   let tls: Deno.TlsConn;
@@ -450,8 +472,11 @@ async function openGuardedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn> {
  * guard used for reads); on timeout, close the socket if it lands late and
  * surface a clean, no-retry-safe error.
  */
-async function connectWithTimeout(cfg: SmtpConfig): Promise<Deno.Conn> {
-  const connectPromise = openGuardedSmtpConn(cfg);
+async function connectWithTimeout(
+  cfg: SmtpConfig,
+  proxy: MailProxyConfig | null,
+): Promise<Deno.Conn> {
+  const connectPromise = openGuardedSmtpConn(cfg, proxy);
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(
