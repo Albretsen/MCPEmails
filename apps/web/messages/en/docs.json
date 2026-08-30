@@ -474,6 +474,10 @@
       "planned": "Planned (not yet shipped)",
       "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</b> all connect over the same IMAP/SMTP transport (Fastmail and iCloud use an app-specific password) and share an identical feature set, including IMAP search syntax. The columns are shown separately for clarity."
     },
+    "profiles": {
+      "title": "Compatibility profiles",
+      "body": "Every inbox reports a versioned profile to an MCP agent: <code>exact</code> means the normalized operation keeps its meaning, <code>different</code> means the provider uses documented alternative semantics, and <code>unavailable</code> means MCP Emails will not silently weaken the request. Profiles describe connector behavior without inspecting or storing mail."
+    },
     "ariaSupported": "Supported",
     "ariaNotSupported": "Not supported",
     "plannedBadge": "planned",

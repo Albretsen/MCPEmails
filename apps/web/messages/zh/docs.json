@@ -474,6 +474,10 @@
       "planned": "计划中（尚未上线）",
       "imapNote": "<b>Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP</b> 全部通过同一个 IMAP/SMTP 传输连接（Fastmail 和 iCloud 使用应用专用密码），并共享完全相同的功能集，包括 IMAP 搜索语法。这些列分开展示只是为了清晰。"
     },
+    "profiles": {
+      "title": "兼容性配置文件",
+      "body": "每个收件箱都会向 MCP 智能体报告一个带版本号的配置文件：<code>exact</code> 表示规范化后的操作保持原有含义，<code>different</code> 表示服务商使用有文档记录的替代语义，<code>unavailable</code> 表示 MCP Emails 不会在你不知情的情况下削弱该请求。配置文件只描述连接器的行为，不会检查或存储邮件。"
+    },
     "ariaSupported": "支持",
     "ariaNotSupported": "不支持",
     "plannedBadge": "计划中",
