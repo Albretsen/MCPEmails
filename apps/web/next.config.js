@@ -185,6 +185,16 @@ const nextConfig = {
       {
         source: '/(.*)',
         headers: [
+          {
+            // Two years, matching the HSTS preload-list requirement. This was
+            // declared in the repo-root vercel.json, which Vercel never loads
+            // (Root Directory is apps/web), so production has been serving
+            // Vercel's bare `max-age=63072000` with neither directive. Only www
+            // resolves besides the apex and it already redirects to HTTPS, so
+            // includeSubDomains is safe.
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
@@ -198,6 +208,18 @@ const nextConfig = {
           { key: 'X-Permitted-Cross-Domain-Policies',  value: 'none' },
         ],
       },
+    ];
+  },
+
+  // ---------------------------------------------------------------------------
+  // Redirects
+  // ---------------------------------------------------------------------------
+  // /home is a legacy path that never existed in this app. It 404s today
+  // because the redirect declaring it lived in the same dead repo-root
+  // vercel.json as the HSTS value above.
+  async redirects() {
+    return [
+      { source: '/home', destination: '/', permanent: true },
     ];
   },
 };

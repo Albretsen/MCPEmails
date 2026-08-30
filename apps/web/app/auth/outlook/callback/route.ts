@@ -9,6 +9,20 @@ import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/anal
 import { clientGuidePath } from '@/lib/onboarding/state';
 import { classifyMicrosoftAuthError } from '@/lib/email-providers/outlook-oauth';
 
+// ---------------------------------------------------------------------------
+// Route config
+// ---------------------------------------------------------------------------
+
+/**
+ * The OAuth code exchange is an outbound call to Microsoft plus a handful
+ * of database writes; 15s is generous but bounded.
+ *
+ * Declared here rather than in a `functions` block in vercel.json: the Vercel
+ * project's Root Directory is apps/web, so a repo-root vercel.json is never
+ * loaded and its maxDuration values silently do nothing.
+ */
+export const maxDuration = 15;
+
 /**
  * GET /auth/outlook/callback
  *

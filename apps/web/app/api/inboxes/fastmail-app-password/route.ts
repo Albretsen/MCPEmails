@@ -14,6 +14,20 @@ import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { canManageInboxes, fetchWorkspaceRole, insufficientRoleBody } from '@/lib/workspace/roles';
 
+// ---------------------------------------------------------------------------
+// Route config
+// ---------------------------------------------------------------------------
+
+/**
+ * Validating the app password requires a live IMAP round trip to Fastmail
+ * before anything is persisted, which can be slow.
+ *
+ * Declared here rather than in a `functions` block in vercel.json: the Vercel
+ * project's Root Directory is apps/web, so a repo-root vercel.json is never
+ * loaded and its maxDuration values silently do nothing.
+ */
+export const maxDuration = 60;
+
 /**
  * POST /api/inboxes/fastmail-app-password
  *

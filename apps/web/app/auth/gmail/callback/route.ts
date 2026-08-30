@@ -9,6 +9,20 @@ import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/anal
 import { clientGuidePath } from '@/lib/onboarding/state';
 import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
 
+// ---------------------------------------------------------------------------
+// Route config
+// ---------------------------------------------------------------------------
+
+/**
+ * The OAuth code exchange is an outbound call to Google plus a handful of
+ * database writes; 15s is generous but bounded.
+ *
+ * Declared here rather than in a `functions` block in vercel.json: the Vercel
+ * project's Root Directory is apps/web, so a repo-root vercel.json is never
+ * loaded and its maxDuration values silently do nothing.
+ */
+export const maxDuration = 15;
+
 /**
  * GET /auth/gmail/callback
  *
