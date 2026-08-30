@@ -73,6 +73,7 @@ import {
   stripHtmlToText,
 } from "./text-extract.ts";
 import { neutralizeMaybe, neutralizeText } from "./text-safety.ts";
+import { normalizeResponseContentMeta } from "./content-meta.ts";
 import {
   sanitizeEmailHtml,
   sanitizeSignatureHtml,
@@ -24368,7 +24369,12 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   // ── Route to method handler ───────────────────────────────────────────────
-  const response = await routeMethod(rpcRequest, apiKey, ctx);
+  // Every method result leaves through here, so the `_meta` guard sits here too
+  // rather than in each handler that builds a content block — see
+  // content-meta.ts for why a single null `_meta` costs the entire result.
+  const response = normalizeResponseContentMeta(
+    await routeMethod(rpcRequest, apiKey, ctx),
+  );
   return jsonResponse(response);
 }
 
