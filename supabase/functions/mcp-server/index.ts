@@ -79,6 +79,14 @@ import {
   runBulkTool,
   shouldPlanForMode,
 } from "./mcp-app-bulk.ts";
+import {
+  computeReplyRecipients,
+  draftIsSendable,
+  draftNoRecipientsMessage,
+  ownAddressSet,
+  type RecipientAddress,
+  replyNoRecipientsMessage,
+} from "./recipient-rules.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
 import {
   normalizePreview,
@@ -3804,6 +3812,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     description:
       "Send a previously saved draft. The draft is removed from the Drafts folder after sending. " +
       "This action is irreversible — use carefully. " +
+      "The draft must already have at least one address in to, cc or bcc: a draft with none is " +
+      "refused and left untouched, so add the recipient with draft_update first. " +
       "Always pass the MOST RECENT draft_id (from draft_create, the latest draft_update, or draft_list): " +
       "on IMAP-backed inboxes the id changes on every update, and a stale id will fail with a not-found error.",
     requiredScope: "manage:drafts",
@@ -5577,7 +5587,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       send: {
         legacy: "draft_send",
         scope: "send:email",
-        hint: "send draft_id and remove it from Drafts",
+        hint: "send draft_id (needs a to/cc/bcc) and remove it from Drafts",
       },
       delete: {
         legacy: "draft_delete",
@@ -7591,6 +7601,25 @@ function formatAddressEntry(a: EmailAddressEntry): string {
   return a.name ? `${a.name} <${a.email}>` : a.email;
 }
 
+/**
+ * Every address that IS this inbox, for reply-recipient filtering.
+ *
+ * A reply must not be addressed back to the account itself on a multi-party
+ * thread, and "the account itself" is a SET, not one string: an IMAP inbox may
+ * authenticate as one address (`imap_username`) while sending as another
+ * (`email_address`), and mail addressed to either one is still mail to the
+ * user. Passed to computeReplyRecipients, which also owns the rule for what
+ * happens when the filter removes everybody.
+ */
+function inboxOwnAddresses(inbox: InboxRow): Set<string> {
+  return ownAddressSet([inbox.email_address, inbox.imap_username]);
+}
+
+/** recipient-rules.ts leaves `name` optional; this file's entries always have one. */
+function toEmailAddressEntry(a: RecipientAddress): EmailAddressEntry {
+  return { name: a.name ?? "", email: a.email };
+}
+
 // ---------------------------------------------------------------------------
 // Gmail provider — email_list
 // ---------------------------------------------------------------------------
@@ -8788,27 +8817,22 @@ async function replyImapMessage(
   const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
   const ccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
 
-  const self = inbox.email_address.toLowerCase();
-  let recipients: EmailAddressEntry[];
-  if (params.replyAll) {
-    const seen = new Set<string>();
-    recipients = [];
-    for (const a of [...fromAddrs, ...toAddrs, ...ccAddrs]) {
-      const key = a.email.toLowerCase();
-      if (!a.email || key === self || seen.has(key)) continue;
-      seen.add(key);
-      recipients.push(a);
-    }
-    recipients = recipients.slice(0, 50);
-  } else {
-    recipients = fromAddrs.slice(0, 1);
+  // Recipient selection (including the self-addressed fallback) lives in
+  // recipient-rules.ts so this path, the Gmail/Outlook reply paths, draft_reply
+  // and the approval summary cannot drift apart again.
+  const resolvedReply = computeReplyRecipients({
+    from: fromAddrs,
+    to: toAddrs,
+    cc: ccAddrs,
+    ownAddresses: inboxOwnAddresses(inbox),
+    replyAll: params.replyAll,
+  });
+  if (!resolvedReply.ok) {
+    throw new Error(replyNoRecipientsMessage("email_reply"));
   }
-
-  if (recipients.length === 0) {
-    throw new Error(
-      "email_reply: could not determine reply recipients from original message.",
-    );
-  }
+  const recipients: EmailAddressEntry[] = resolvedReply.recipients.map(
+    toEmailAddressEntry,
+  );
 
   const references = [origReferences, origMessageId].filter(Boolean).join(" ").trim();
   const messageId = crypto.randomUUID();
@@ -11944,31 +11968,23 @@ async function replyGmailMessage(
     : origRfc5322MessageId;
 
   // ── Step 2: Resolve reply recipients ─────────────────────────────────────
-  let replyAddresses: string[];
-  if (params.replyAll) {
-    const fromEntry = parseEmailAddress(hdrs["from"] ?? "");
-    const toEntries = parseAddressList(hdrs["to"] ?? "");
-    const ccEntries = parseAddressList(hdrs["cc"] ?? "");
-    // Exclude the sending inbox address from the recipient list.
-    const everyone = [fromEntry, ...toEntries, ...ccEntries]
-      .filter((e) => e.email && e.email !== inbox.email_address);
-    replyAddresses = everyone.slice(0, 50).map((e) =>
-      e.name ? `${encodeMimeHeaderValue(e.name)} <${e.email}>` : e.email
-    );
-  } else {
-    const fromEntry = parseEmailAddress(hdrs["from"] ?? "");
-    replyAddresses = fromEntry.email ? [
-      fromEntry.name
-        ? `${encodeMimeHeaderValue(fromEntry.name)} <${fromEntry.email}>`
-        : fromEntry.email,
-    ] : [];
+  // One shared rule for every reply path (see recipient-rules.ts): the sender,
+  // plus To and Cc when reply_all is set, minus this inbox's own addresses,
+  // except when that filter would leave nobody at all - self-addressed mail
+  // replies to itself rather than erroring.
+  const resolvedReply = computeReplyRecipients({
+    from: [parseEmailAddress(hdrs["from"] ?? "")],
+    to: parseAddressList(hdrs["to"] ?? ""),
+    cc: parseAddressList(hdrs["cc"] ?? ""),
+    ownAddresses: inboxOwnAddresses(inbox),
+    replyAll: params.replyAll,
+  });
+  if (!resolvedReply.ok) {
+    throw new Error(replyNoRecipientsMessage("email_reply"));
   }
-
-  if (replyAddresses.length === 0) {
-    throw new Error(
-      "email_reply: could not determine reply recipients from original message headers.",
-    );
-  }
+  const replyAddresses: string[] = resolvedReply.recipients.map((e) =>
+    e.name ? `${encodeMimeHeaderValue(e.name)} <${e.email}>` : e.email
+  );
 
   // ── Step 3: Build reply subject ───────────────────────────────────────────
   const replySubject = /^re:/i.test(origSubject.trim())
@@ -12139,32 +12155,25 @@ async function replyOutlookMessage(
 
   // ── Step 2: Resolve reply recipients ─────────────────────────────────────
   type GraphRecipient = { emailAddress?: { name?: string; address?: string } };
-  let toRecipients: GraphRecipient[];
-
-  if (params.replyAll) {
-    const fromAddr = origMsg.from?.emailAddress;
-    const allTo = origMsg.toRecipients ?? [];
-    const allCc = origMsg.ccRecipients ?? [];
-    const everyone: GraphRecipient[] = [
-      ...(fromAddr ? [{ emailAddress: fromAddr }] : []),
-      ...allTo,
-      ...allCc,
-    ].filter(
-      (r) => r.emailAddress?.address && r.emailAddress.address !== inbox.email_address,
-    );
-    toRecipients = everyone.slice(0, 50);
-  } else {
-    const fromAddr = origMsg.from?.emailAddress;
-    toRecipients = fromAddr?.address
-      ? [{ emailAddress: fromAddr }]
-      : [];
+  const fromGraph = (r: GraphRecipient) => ({
+    name: r.emailAddress?.name ?? "",
+    email: r.emailAddress?.address ?? "",
+  });
+  // Same shared rule as the Gmail and IMAP reply paths (recipient-rules.ts),
+  // including the self-addressed fallback.
+  const resolvedReply = computeReplyRecipients({
+    from: origMsg.from?.emailAddress ? [fromGraph({ emailAddress: origMsg.from.emailAddress })] : [],
+    to: (origMsg.toRecipients ?? []).map(fromGraph),
+    cc: (origMsg.ccRecipients ?? []).map(fromGraph),
+    ownAddresses: inboxOwnAddresses(inbox),
+    replyAll: params.replyAll,
+  });
+  if (!resolvedReply.ok) {
+    throw new Error(replyNoRecipientsMessage("email_reply"));
   }
-
-  if (toRecipients.length === 0) {
-    throw new Error(
-      "email_reply: could not determine reply recipients from original message.",
-    );
-  }
+  const toRecipients: GraphRecipient[] = resolvedReply.recipients.map((r) => ({
+    emailAddress: { ...(r.name ? { name: r.name } : {}), address: r.email },
+  }));
 
   // ── Step 3: Build and send the reply ─────────────────────────────────────
   const body = params.htmlBody
@@ -13245,7 +13254,12 @@ async function executeReplyToEmail(
       };
     }
 
+    // The reply paths throw replyNoRecipientsMessage("email_reply") when the
+    // source message has no From, To or Cc at all; surface it verbatim rather
+    // than flattening it into a generic provider error. The startsWith arm
+    // keeps older wording matching if any path still throws it.
     if (
+      message === replyNoRecipientsMessage("email_reply") ||
       message.startsWith(
         "email_reply: could not determine reply recipients",
       )
@@ -13428,19 +13442,22 @@ async function resolveApprovalSummaryFields(
       if (operation === "email_forward") {
         return { subject: makeForwardSubject(origSubject) };
       }
-      // Mirrors the reply-recipient rule in reply{Gmail,Outlook,Imap}Message:
-      // the original sender, plus its To and Cc when reply_all is set, minus
-      // this inbox's own address. Reply-To is deliberately ignored here because
-      // the send paths ignore it too — the summary must describe what will
-      // actually happen, not what arguably should.
-      const entries = payload.reply_all === true
-        ? [original.from, ...original.to, ...original.cc]
-        : [original.from];
+      // Runs the SAME rule the send paths run (recipient-rules.ts), so the card
+      // a reviewer approves lists the addresses the send will actually use,
+      // self-addressed fallback included. Reply-To is deliberately ignored here
+      // because the send paths ignore it too: the summary must describe what
+      // will actually happen, not what arguably should.
+      const resolvedReply = computeReplyRecipients({
+        from: [original.from],
+        to: original.to,
+        cc: original.cc,
+        ownAddresses: inboxOwnAddresses(inbox),
+        replyAll: payload.reply_all === true,
+      });
       return {
-        to: entries
-          .filter((entry) => entry && entry.email && entry.email !== inbox.email_address)
-          .slice(0, 50)
-          .map(formatAddressEntry),
+        to: resolvedReply.ok
+          ? resolvedReply.recipients.map(toEmailAddressEntry).map(formatAddressEntry)
+          : [],
         subject: /^re:/i.test(origSubject.trim()) ? origSubject : `Re: ${origSubject}`,
       };
     }
@@ -19165,6 +19182,24 @@ interface DraftContent {
   references?: string;
 }
 
+/**
+ * MIME for a draft that is being STORED, not sent.
+ *
+ * A draft may legitimately have no recipient yet (that is the whole point of a
+ * draft), so an empty To list must produce a message with NO To header. Until
+ * 2026-08-30 these paths passed `[inbox.email_address]` instead, which made a
+ * recipientless draft look addressed to the account owner in the stored MIME
+ * while draft_create still reported `"to": []`. draft_send then transmitted it,
+ * and the mail arrived at the owner: nobody chose that recipient, the fallback
+ * did. The recipient REQUIREMENT lives at send time (draftIsSendable), not
+ * here.
+ */
+function buildDraftMime(params: MimeMessageParams): string {
+  const mime = buildMimeMessage(params);
+  // buildMimeMessage always writes a To line; drop it when it is empty.
+  return params.to.length ? mime : mime.replace(/^To:[ \t]*\r?\n/m, "");
+}
+
 // ── IMAP draft helpers ────────────────────────────────────────────────────────
 
 async function imapListDrafts(
@@ -19312,9 +19347,9 @@ async function imapCreateDraft(
     ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
     : inbox.email_address;
 
-  const mime = buildMimeMessage({
+  const mime = buildDraftMime({
     from,
-    to: params.to.length ? params.to : [inbox.email_address],
+    to: params.to,
     cc: params.cc.length ? params.cc : undefined,
     // Persist BCC into the draft MIME so imapSendDraft can recover the BCC
     // recipients later. Stripped from the transmitted copy at send time.
@@ -19401,9 +19436,9 @@ async function imapUpdateDraft(
     ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
     : inbox.email_address;
 
-  const mime = buildMimeMessage({
+  const mime = buildDraftMime({
     from,
-    to: params.to.length ? params.to : [inbox.email_address],
+    to: params.to,
     cc: params.cc.length ? params.cc : undefined,
     // Persist BCC into the draft MIME so imapSendDraft can recover the BCC
     // recipients later. Stripped from the transmitted copy at send time.
@@ -19521,7 +19556,12 @@ async function imapSendDraft(
     .map((a) => a.email)
     .filter(Boolean);
 
-  if (recipients.length === 0) throw new Error("draft_has_no_recipients");
+  // Same gate as the Gmail/Outlook pre-flight in executeSendDraft, applied here
+  // because this path already holds the draft's own MIME. Nothing has been
+  // transmitted at this point and the draft is still in Drafts untouched.
+  if (!draftIsSendable({ to: recipients })) {
+    throw new Error("draft_has_no_recipients");
+  }
 
   // Step 3: Send via SMTP. The BCC addresses parsed above are included in the
   // envelope (RCPT TO via `recipients`), but the transmitted message body MUST
@@ -19710,9 +19750,9 @@ async function gmailCreateDraft(
     ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
     : inbox.email_address;
 
-  const mime = buildMimeMessage({
+  const mime = buildDraftMime({
     from,
-    to: params.to.length ? params.to : [inbox.email_address],
+    to: params.to,
     cc: params.cc.length ? params.cc : undefined,
     subject: params.subject,
     textBody: params.body,
@@ -19757,9 +19797,9 @@ async function gmailUpdateDraft(
     ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
     : inbox.email_address;
 
-  const mime = buildMimeMessage({
+  const mime = buildDraftMime({
     from,
-    to: params.to.length ? params.to : [inbox.email_address],
+    to: params.to,
     cc: params.cc.length ? params.cc : undefined,
     subject: params.subject,
     textBody: params.body,
@@ -20194,11 +20234,15 @@ async function executeCreateReplyDraft(
       const original = await response.json() as GmailMessageMeta & { threadId?: string };
       const headers: Record<string, string> = {};
       for (const h of original.payload?.headers ?? []) headers[h.name.toLowerCase()] = h.value;
-      const people = replyAll
-        ? [parseEmailAddress(headers.from ?? ""), ...parseAddressList(headers.to ?? ""), ...parseAddressList(headers.cc ?? "")]
-        : [parseEmailAddress(headers.from ?? "")];
-      const seen = new Set<string>();
-      to = people.filter((person) => person.email && person.email.toLowerCase() !== inbox.email_address.toLowerCase() && !seen.has(person.email.toLowerCase()) && !!seen.add(person.email.toLowerCase())).slice(0, 50).map(formatAddressEntry);
+      const resolvedReply = computeReplyRecipients({
+        from: [parseEmailAddress(headers.from ?? "")],
+        to: parseAddressList(headers.to ?? ""),
+        cc: parseAddressList(headers.cc ?? ""),
+        ownAddresses: inboxOwnAddresses(inbox),
+        replyAll,
+      });
+      if (!resolvedReply.ok) throw new Error("reply_recipients_not_found");
+      to = resolvedReply.recipients.map(toEmailAddressEntry).map(formatAddressEntry);
       subject = /^re:/i.test((headers.subject ?? "").trim()) ? headers.subject : `Re: ${headers.subject ?? "(no subject)"}`;
       inReplyTo = headers["message-id"] ?? "";
       references = [headers.references, inReplyTo].filter(Boolean).join(" ");
@@ -20217,9 +20261,15 @@ async function executeCreateReplyDraft(
         if (!source) throw new Error("message_not_found");
         const parsed = parseEmail(source.raw);
         const headers = parsed.headers;
-        const people = replyAll ? [...parseAddressList(decodeEncodedWords(getHeader(headers, "from") ?? "")), ...parseAddressList(decodeEncodedWords(getHeader(headers, "to") ?? "")), ...parseAddressList(decodeEncodedWords(getHeader(headers, "cc") ?? ""))] : parseAddressList(decodeEncodedWords(getHeader(headers, "from") ?? ""));
-        const seen = new Set<string>();
-        to = people.filter((person) => person.email && person.email.toLowerCase() !== inbox.email_address.toLowerCase() && !seen.has(person.email.toLowerCase()) && !!seen.add(person.email.toLowerCase())).slice(0, 50).map(formatAddressEntry);
+        const resolvedReply = computeReplyRecipients({
+          from: parseAddressList(decodeEncodedWords(getHeader(headers, "from") ?? "")),
+          to: parseAddressList(decodeEncodedWords(getHeader(headers, "to") ?? "")),
+          cc: parseAddressList(decodeEncodedWords(getHeader(headers, "cc") ?? "")),
+          ownAddresses: inboxOwnAddresses(inbox),
+          replyAll,
+        });
+        if (!resolvedReply.ok) throw new Error("reply_recipients_not_found");
+        to = resolvedReply.recipients.map(toEmailAddressEntry).map(formatAddressEntry);
         const rawSubject = decodeEncodedWords(getHeader(headers, "subject") ?? "(no subject)");
         subject = /^re:/i.test(rawSubject.trim()) ? rawSubject : `Re: ${rawSubject}`;
         inReplyTo = getHeader(headers, "message-id") ?? "";
@@ -20239,7 +20289,7 @@ async function executeCreateReplyDraft(
     const message = error instanceof Error ? error.message : String(error);
     if (message === "gmail_auth_failed" || message === "outlook_auth_failed" || message === "imap_auth_failed") return authFailedResult(inbox.provider, inbox.id, "access");
     if (message === "message_not_found") return { result: { content: [{ type: "text", text: "draft_reply: the source message was not found in this inbox." }], isError: true }, logStatus: "error", logErrorCode: "message_not_found" };
-    if (message === "reply_recipients_not_found") return { result: { content: [{ type: "text", text: "draft_reply: could not determine a reply recipient from the source message." }], isError: true }, logStatus: "error", logErrorCode: "invalid_recipient" };
+    if (message === "reply_recipients_not_found") return { result: { content: [{ type: "text", text: replyNoRecipientsMessage("draft_reply") }], isError: true }, logStatus: "error", logErrorCode: "invalid_recipient" };
     console.error("[mcp-server] draft_reply: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
     return { result: { content: [{ type: "text", text: `Failed to create reply draft for ${inbox.provider} inbox: ${message}` }], isError: true }, logStatus: "error", logErrorCode: "provider_error" };
   }
@@ -20568,6 +20618,48 @@ async function executeSendDraft(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
 
+  // ── Pre-flight: a draft with no recipients must not be handed to a provider.
+  //
+  // email_send refuses an empty `to` before it touches the network; draft_send
+  // did not, and on 2026-08-30 a draft created with no to/cc/bcc was accepted
+  // by Gmail's drafts.send and delivered to the account owner. What an empty
+  // recipient set does is the provider's choice, and it is only benign by
+  // accident. So the two send paths now agree: no recipients, no transmission.
+  //
+  // Gmail and Outlook are checked here with one cheap metadata read. The IMAP
+  // path checks inside imapSendDraft, which already has the draft's MIME in
+  // hand and stops before SMTP, so it needs no extra round trip.
+  if (inbox.provider === "gmail" || inbox.provider === "outlook") {
+    let stored: DraftContent | null;
+    try {
+      stored = inbox.provider === "gmail"
+        ? await gmailGetDraft(inbox, draftId)
+        : await outlookGetDraft(inbox, draftId);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message === "gmail_auth_failed" || message === "outlook_auth_failed") {
+        return authFailedResult(inbox.provider, inbox.id, "access");
+      }
+      console.error("[mcp-server] draft_send: preflight_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
+      return {
+        result: { content: [{ type: "text", text: `draft_send: could not read draft ${draftId} to check its recipients. Nothing was sent; retry shortly.` }], isError: true },
+        logStatus: "error", logErrorCode: "provider_error",
+      };
+    }
+    if (!stored) {
+      return {
+        result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId, "send") }], isError: true },
+        logStatus: "error", logErrorCode: "draft_not_found",
+      };
+    }
+    if (!draftIsSendable(stored)) {
+      return {
+        result: { content: [{ type: "text", text: draftNoRecipientsMessage(draftId) }], isError: true },
+        logStatus: "error", logErrorCode: "draft_has_no_recipients",
+      };
+    }
+  }
+
   // A provider draft is mutable, so queue the send operation itself and do
   // not invoke the provider's draft-send endpoint until dashboard approval.
   // The dispatcher uses its internal-only marker to execute this same request
@@ -20609,7 +20701,7 @@ async function executeSendDraft(
     }
     if (message === "draft_has_no_recipients") {
       return {
-        result: { content: [{ type: "text", text: "draft_send: the draft has no recipients. Add at least one To address via draft_update before sending." }], isError: true },
+        result: { content: [{ type: "text", text: draftNoRecipientsMessage(draftId) }], isError: true },
         logStatus: "error", logErrorCode: "draft_has_no_recipients",
       };
     }
