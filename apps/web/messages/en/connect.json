@@ -478,5 +478,10 @@
       "ctaPrimary": "Connect Yandex free",
       "ctaSecondary": "Read the docs"
     }
+  },
+  "matrix": {
+    "intro": "Comparing providers first?",
+    "label": "See the email provider compatibility matrix",
+    "href": "/docs/providers"
   }
 }

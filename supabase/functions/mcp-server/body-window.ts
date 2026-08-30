@@ -183,6 +183,21 @@ export interface WindowBodyOptions {
  *                                 model asked for a specific window, so it gets
  *                                 a positive "you have now seen all N
  *                                 characters" rather than an ambiguous silence.
+ *   * headers only (maxChars 0)   truncated:false plus total, and NEVER a
+ *                                 continuation. See below.
+ *
+ * THE INVARIANT: a continuation is only ever emitted when it ADVANCES, i.e.
+ * `*_next_offset` is strictly greater than the `*_offset` that produced it.
+ * The documented contract is "when it says truncated, call again with
+ * next_offset as offset", so a next offset equal to the current one is an
+ * infinite loop by construction: the agent is obeying the contract and can
+ * never terminate. That was live behaviour for `body_max_chars: 0`, which cut
+ * at 0, found 0 < total, and advertised a resume at offset 0 for ever.
+ *
+ * `body_max_chars: 0` is documented as "returns headers only", and headers-only
+ * is a COMPLETE answer to what was asked, not a truncated one. It reports the
+ * total (so the model can see a body exists and re-read with a real window)
+ * and nothing to continue.
  */
 export function windowBody(
   body: string | null,
@@ -199,17 +214,45 @@ export function windowBody(
   if (start > total) start = total;
   start = cutBoundary(body, start);
 
-  const end = cutBoundary(body, Math.min(total, start + Math.max(0, maxChars)));
-  const text = body.slice(start, end);
-  const truncated = end < total;
-
   const fields: Record<string, string | number | boolean> = {};
+
+  // Headers only. Deliberately asked for no body at all, so there is no cut to
+  // report and nothing to resume: an empty window is the whole answer.
+  if (Math.max(0, Math.floor(maxChars)) === 0) {
+    if (total > 0) {
+      fields[`${prefix}_truncated`] = false;
+      fields[`${prefix}_total_chars`] = total;
+      if (start > 0) fields[`${prefix}_offset`] = start;
+    }
+    return { text: "", fields, emitted: 0 };
+  }
+
+  let end = cutBoundary(body, Math.min(total, start + Math.max(0, maxChars)));
+  // A one-unit window landing inside a surrogate pair backs off to `start`,
+  // which would emit nothing while more remains: the same non-advancing
+  // continuation by a different route. Take the whole pair instead; one code
+  // unit over a tiny budget is cheaper than a loop that cannot end.
+  if (end <= start && start < total) end = Math.min(total, start + 2);
+
+  const text = body.slice(start, end);
+  // `end > start` is the invariant, asserted rather than assumed: no path may
+  // hand back the offset it was given.
+  const truncated = end < total && end > start;
+
   if (truncated) {
     fields[`${prefix}_truncated`] = true;
     fields[`${prefix}_offset`] = start;
     fields[`${prefix}_total_chars`] = total;
     fields[`${prefix}_next_offset`] = end;
     fields[`${prefix}_continue`] = recovery(end);
+  } else if (end < total) {
+    // Unreachable given the guard above, and kept as a fail-safe: if some
+    // future edit produces a window that cannot advance, say so honestly
+    // (there is more, here is the total) rather than emitting a resume point
+    // that loops.
+    fields[`${prefix}_truncated`] = false;
+    fields[`${prefix}_offset`] = start;
+    fields[`${prefix}_total_chars`] = total;
   } else if (start > 0) {
     fields[`${prefix}_truncated`] = false;
     fields[`${prefix}_offset`] = start;

@@ -19,6 +19,10 @@ import {
   normalizeAppPassword,
 } from '@/lib/email-providers/imap-presets';
 import { prefillFromEmail } from '@/lib/email-providers/host-presets';
+import {
+  identifyAppPasswordProvider,
+  checkAppPasswordShape,
+} from '@/lib/email-providers/app-password';
 
 /**
  * Zoho serves personal (@zohomail.com) and organization (paid custom-domain)
@@ -42,18 +46,54 @@ const HINT_KEYS = {
 };
 
 /**
- * Where each app-password provider actually generates the credential. These are
- * deep links to the generator, not to a help article: the top recorded failure
- * across every app-password provider is a plain `NO [AUTHENTICATIONFAILED]`,
- * i.e. the user submitted their normal account password, so the shortest route
- * to the right page is the thing most likely to change the outcome.
+ * Where the credential is actually generated, and what one looks like, now
+ * comes from `lib/email-providers/app-password` rather than from a table here.
+ *
+ * The links themselves are unchanged (deep links to the generator, not to a
+ * help article: the shortest route to the right page is the thing most likely
+ * to change the outcome). What changed is who can reach them. This table was
+ * keyed by the logo the user clicked, so the generic IMAP form -- the largest
+ * failure bucket by far, 156 rejected logins across 38 workspaces -- got
+ * nothing at all, even for an address that plainly says @yahoo.com. The policy
+ * lookup answers from the address and the mail host too, so the guidance no
+ * longer depends on which door the user came through.
  */
-const APP_PASSWORD_URLS = {
-  icloud: 'https://account.apple.com/account/manage',
-  yahoo: 'https://login.yahoo.com/myaccount/security/app-password',
-  zoho: 'https://accounts.zoho.com/home#security/device_pass',
-  yandex: 'https://id.yandex.com/security/app-passwords',
-  fastmail: 'https://app.fastmail.com/settings/security/apppw',
+
+/** Per-provider "what it is called and where it lives" copy, in dashboardChrome. */
+const APP_PASSWORD_STEP_KEYS = {
+  icloud: 'connect.appPasswordStepsIcloud',
+  yahoo: 'connect.appPasswordStepsYahoo',
+  zoho: 'connect.appPasswordStepsZoho',
+  yandex: 'connect.appPasswordStepsYandex',
+  fastmail: 'connect.appPasswordStepsFastmail',
+};
+
+/**
+ * A rejected login is 72.9% of every connection failure, and it is not one
+ * failure: it is at least four, with four different fixes. The routes classify
+ * which one it was (see lib/email/auth-failure.ts) and send back a reason; each
+ * reason gets its own headline and its own next step, instead of one sentence
+ * about checking the password that is wrong advice in three of the four cases.
+ *
+ * `app_password_length` has no server counterpart. It is decided in the browser
+ * before anything is sent, because a half-pasted token is visible without
+ * asking a mail server to reject it.
+ */
+const AUTH_REASON_HEADLINE_KEYS = {
+  imap_disabled: 'connect.errorAuthImapDisabled',
+  app_password_required: 'connect.errorAuthAppPassword',
+  account_password_used: 'connect.errorAuthAccountPassword',
+  app_password_length: 'connect.errorAuthAppPasswordLength',
+  login_username_required: 'connect.errorAuthLoginName',
+};
+
+/** The one thing to do next, per reason. Sits in "What to check". */
+const AUTH_REASON_DETAIL_KEYS = {
+  imap_disabled: 'connect.imapDisabledDetail',
+  app_password_required: 'connect.appPasswordRequiredDetail',
+  account_password_used: 'connect.appPasswordAccountDetail',
+  app_password_length: 'connect.appPasswordLengthDetail',
+  login_username_required: 'connect.loginNameDetail',
 };
 
 /**
@@ -114,10 +154,11 @@ const TRANSPORT_ERROR_CODES = new Set([
  * unwrapped explicitly.
  *
  * Whatever happens, the returned `host` is a hostname on its own: no scheme,
- * no userinfo, and never a colon or a port glued to the end. That matters
- * because the server's `isValidHost` accepts almost anything with a dot in it,
- * so a host field still carrying `:` or `:99999` is sent to DNS and comes back
- * as "could not reach that server", which points the user at the wrong thing.
+ * no userinfo, and never a colon or a port glued to the end. The server now
+ * rejects those outright (lib/email/host-guard.ts treats `:`, `@` and `/` as
+ * smuggling characters and refuses the request), so splitting here is what
+ * turns a pasted `imap.example.com:993` into a working connection instead of a
+ * 422 the user has to decode.
  *
  * `portError` is `'range'` when the user typed something in port position that
  * is not a usable port (0, or above 65535). The digits are dropped from the
@@ -296,6 +337,18 @@ export function ConnectModal({
   // a failure the field is focused with its contents selected: the next
   // keystroke overwrites it.
   const passwordRef = useRef(null);
+  /**
+   * The error alert, so it can be scrolled to when it appears.
+   *
+   * The alert renders at the bottom of a form that is taller than the modal
+   * body, and the submit button lives in the fixed footer. So pressing Connect
+   * on a long form (Advanced settings open, or simply a small window) set an
+   * error 300px below the fold and, from the user's side, did nothing at all.
+   * That is the same dead end the retry numbers describe, and it is worse for
+   * the pre-submit shape warning, which has no request and therefore not even a
+   * spinner to show that the click registered.
+   */
+  const errorAlertRef = useRef(null);
   // Armed only by a rejected credential, and spent by the first focus that
   // follows. Selecting on EVERY focus meant that clicking back into the field
   // to fix one character of a 16-character app password destroyed the value on
@@ -306,6 +359,20 @@ export function ConnectModal({
   // filled the server fields in for them. Shape:
   // { label, requiresAppPassword, appPasswordHelpUrl }.
   const [hostPrefill, setHostPrefill] = useState(null);
+  // Which of the credential situations the last rejection was, from the route's
+  // `auth_reason` (or decided here, before submitting, for a password that
+  // cannot be this provider's app password). Null whenever the last failure was
+  // not about a credential at all.
+  const [authReason, setAuthReason] = useState(null);
+  // The exact secret we have already warned about the shape of.
+  //
+  // The shape rule is evidence, not a gate. It is right often enough to be
+  // worth saying before a doomed request is sent and a failed login is counted
+  // against the account, but a provider can change its format tomorrow, and a
+  // client-side rule that cannot be overridden would then lock out every user
+  // of that provider. So it speaks once and then gets out of the way: pressing
+  // Connect a second time on the same value submits it.
+  const shapeWarnedFor = useRef(null);
 
   /**
    * Advanced settings (generic IMAP only): ports, security modes and the
@@ -436,6 +503,16 @@ export function ConnectModal({
     if (!isGeneric || isReconnect) return;
     const match = prefillFromEmail(form.email.trim());
     if (!match) { setHostPrefill(null); return; }
+    // Recognising the provider and filling the fields are two different things,
+    // and only the second one is unsafe to repeat. This used to return before
+    // recording the match, so anyone who typed their host BEFORE their address
+    // (which the tab order does not prevent) lost the provider guidance
+    // entirely, on exactly the providers whose password rules are the problem.
+    setHostPrefill({
+      label: match.label,
+      requiresAppPassword: match.requiresAppPassword,
+      appPasswordHelpUrl: match.appPasswordHelpUrl,
+    });
     if (form.imapHost.trim() || form.smtpHost.trim()) return;
     setForm(prev => ({
       ...prev,
@@ -446,11 +523,6 @@ export function ConnectModal({
       smtpPort: match.smtpPort,
       smtpSecurity: match.smtpSecurity,
     }));
-    setHostPrefill({
-      label: match.label,
-      requiresAppPassword: match.requiresAppPassword,
-      appPasswordHelpUrl: match.appPasswordHelpUrl,
-    });
   };
 
   /**
@@ -531,6 +603,10 @@ export function ConnectModal({
     setFormError(message);
     setErrorDetail(null);
     setErrorDetailOpen(false);
+    // The credential explanation belongs to one rejection. Leaving it behind
+    // would attach "your normal password will not work here" to the next
+    // failure, which may be a hostname.
+    setAuthReason(null);
   };
 
   // ── Step 1: the provider radiogroup ────────────────────────────────────────
@@ -631,8 +707,31 @@ export function ConnectModal({
    * that the account password cannot work at all and an app password has to be
    * generated first. The address is enough to know which of those it is.
    */
-  const appPasswordUrl = isGeneric ? (hostPrefill?.appPasswordHelpUrl ?? null) : (APP_PASSWORD_URLS[provider] ?? null);
-  const appPasswordProvider = isGeneric ? (hostPrefill?.label ?? providerLabel()) : providerLabel();
+  /**
+   * The provider this attempt is really against, whichever door the user came
+   * through: the branded card they clicked, or, in the generic form, whatever
+   * the address and the mail host identify. Recomputed each render rather than
+   * stored, so it is right from the first character of a recognised domain
+   * instead of only after the email field loses focus.
+   */
+  const activePolicy = identifyAppPasswordProvider({
+    service: isGeneric ? null : provider,
+    email: form.email,
+    host: isGeneric ? form.imapHost : null,
+  });
+  const appPasswordUrl = activePolicy?.helpUrl ?? null;
+  const appPasswordProvider = activePolicy?.label ?? providerLabel();
+  /** Named guidance for the credential, when we know what this provider calls it. */
+  const appPasswordStepsKey = activePolicy ? APP_PASSWORD_STEP_KEYS[activePolicy.provider] : null;
+  /**
+   * True when this mailbox takes a generated app password rather than the
+   * account password. It is a property of the PROVIDER, not of which form the
+   * user is standing in, so the generic form says "App password" too once the
+   * address has identified one. Leaving the generic label and its "use your
+   * mailbox password" hint in place there contradicted the provider guidance
+   * printed directly underneath it.
+   */
+  const needsAppPassword = Boolean(activePolicy?.requiresAppPassword);
 
   // ── Step 2: credentials submission ─────────────────────────────────────────
 
@@ -640,16 +739,22 @@ export function ConnectModal({
     showError(null);
 
     const email = form.email.trim().toLowerCase();
-    // Branded app-password providers issue tokens that never contain
-    // whitespace, but they display them in groups and copy-paste readily drags
-    // in a stray space, newline or non-breaking space. Those characters travel
-    // inside the SASL token and come back as an ordinary credential rejection,
-    // so the user is told to fix a password that was already right. The generic
-    // connector is excluded: there the value is a real account password and a
-    // space in it may well be deliberate.
-    const appPassword = isGeneric
-      ? form.password.trim()
-      : normalizeAppPassword(form.password);
+    // App-password providers issue tokens that never contain whitespace, but
+    // they display them in groups and copy-paste readily drags in a stray
+    // space, newline or non-breaking space. Those characters travel inside the
+    // SASL token and come back as an ordinary credential rejection, so the user
+    // is told to fix a password that was already right.
+    //
+    // The test is what the credential IS, not which form it was typed into. A
+    // generic-form mailbox whose address identifies iCloud is being given an
+    // Apple app-specific password, displayed in four groups, and stripping the
+    // spaces out of it is as right there as on the branded card. A generic
+    // mailbox we cannot identify keeps its whitespace: that value is a real
+    // account password and a space in it may well be deliberate.
+    const appPassword =
+      isGeneric && !activePolicy?.requiresAppPassword
+        ? form.password.trim()
+        : normalizeAppPassword(form.password);
 
     if (!email || !email.includes('@')) {
       showError(tr('connect.errorEmailRequired'));
@@ -719,6 +824,34 @@ export function ConnectModal({
       body = { email, username, appPassword, imapHost, imapPort, smtpHost, smtpPort, imapSecurity, smtpSecurity };
     }
 
+    // Last gate before the network call, and deliberately last: a missing host
+    // or an impossible port is a structural problem with the form, and talking
+    // about the password while one of those is outstanding points at the wrong
+    // field.
+    //
+    // A secret that cannot be this provider's app password is worth naming
+    // before the request rather than after it. The attempt would fail anyway,
+    // but it would fail expensively: the provider counts it as a bad login, and
+    // several of them lock the account after a handful. The recorded average is
+    // 3.9 failed attempts per affected workspace and the worst case is 24.
+    //
+    // It speaks once. `shapeWarnedFor` remembers the value it objected to, so a
+    // second Connect on the same string goes through and the rule can never be
+    // the thing that stops a valid-but-unusual credential from connecting.
+    const shape = checkAppPasswordShape(activePolicy, appPassword);
+    if (shape.ok === false && shapeWarnedFor.current !== appPassword) {
+      shapeWarnedFor.current = appPassword;
+      const shapeReason = shape.problem === 'account_password' ? 'account_password_used' : 'app_password_length';
+      setAuthReason(shapeReason);
+      setFormError(tr(AUTH_REASON_HEADLINE_KEYS[shapeReason], { provider: appPasswordProvider }));
+      setErrorDetail(tr('connect.appPasswordTryAnyway'));
+      // Nothing else is on screen to explain this, and unlike a server
+      // rejection the user has not yet been told anything, so the detail leads
+      // rather than hiding behind a disclosure.
+      setErrorDetailOpen(true);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const response = await fetch(endpoint, {
@@ -755,21 +888,49 @@ export function ConnectModal({
         // One sentence leads. The route's own paragraph is real diagnostic
         // detail, so it is kept, but folded into "What to check" underneath
         // together with the second-attempt advice.
-        setFormError(tr(ERROR_HEADLINE_KEYS[code] ?? 'connect.errorConnectionFailed'));
+        // A rejected login now says WHICH rejection it was. The routes classify
+        // it (lib/email/auth-failure.ts) and send a reason; an older route, or
+        // a reason this build does not know, falls back to the generic
+        // credential headline exactly as before.
+        const reason =
+          code === 'auth_failed' && AUTH_REASON_HEADLINE_KEYS[data.auth_reason]
+            ? data.auth_reason
+            : null;
+        setAuthReason(reason);
+        setFormError(
+          reason
+            ? tr(AUTH_REASON_HEADLINE_KEYS[reason], { provider: appPasswordProvider })
+            : tr(ERROR_HEADLINE_KEYS[code] ?? 'connect.errorConnectionFailed')
+        );
         const details = [];
-        if (typeof data.error === 'string' && data.error.trim()) details.push(data.error.trim());
+        // The route's own sentence is English-only (it is the validator's
+        // message, not a catalogue key). When we have a classified reason the
+        // disclosure already carries a localised sentence that says more, so
+        // the untranslated one is dropped rather than stacked on top of it.
+        if (!reason && typeof data.error === 'string' && data.error.trim()) details.push(data.error.trim());
         if (count >= 2) details.push(tr('connect.errorRepeatHint'));
         setErrorDetail(details.length > 0 ? details.join(' ') : null);
-        setErrorDetailOpen(false);
+        // Open on a classified credential failure: that is the case where the
+        // next step and the link to the generator are the whole point, and
+        // leaving them one click away is what left people retyping.
+        setErrorDetailOpen(Boolean(reason));
 
         // A port/security failure is fixed in Advanced settings, so put those
         // fields on screen rather than leaving the fix behind a closed section.
         if (isGeneric && TRANSPORT_ERROR_CODES.has(code)) setAdvancedOpen(true);
 
-        // A rejected credential is almost always replaced wholesale rather than
-        // edited, so hand the field back ready to overwrite. Only for auth
-        // failures: stealing focus when the fix is a host or a port would move
-        // the user away from the field they need.
+        // A login name the server did not recognise is fixed in a different
+        // field, and that field lives inside a collapsed section. Open it,
+        // rather than selecting a password that may be perfectly good.
+        if (reason === 'login_username_required' && isGeneric) {
+          setAdvancedOpen(true);
+          return;
+        }
+
+        // Otherwise: a rejected credential is almost always replaced wholesale
+        // rather than edited, so hand the field back ready to overwrite. Only
+        // for auth failures: stealing focus when the fix is a host or a port
+        // would move the user away from the field they need.
         if (code === 'auth_failed' && passwordRef.current) {
           // Arm the one-shot select first: taking focus fires the focus
           // handler, which spends the flag, so the contents are selected
@@ -836,6 +997,20 @@ export function ConnectModal({
     }
     onClose();
   };
+
+  // Bring a new error into view. `nearest` scrolls the minimum distance, which
+  // keeps the password field on screen as well: on this form the two are close
+  // enough to fit together even with Advanced settings open.
+  // `lastFailure` is in the dependency list as well as the message: two
+  // identical rejections in a row produce the same sentence, and without a
+  // value that changes every time, the second one would not scroll back to an
+  // alert the user had scrolled away from.
+  useEffect(() => {
+    if (!formError) return;
+    // Instant, not smooth: a smooth scroll is silently dropped in a background
+    // tab and is the wrong call for a message the user is waiting on anyway.
+    errorAlertRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [formError, lastFailure]);
 
   // ── Dialog behaviour: focus restore, Escape, focus trap ────────────────────
 
@@ -1188,7 +1363,7 @@ export function ConnectModal({
 
               {/* App-password providers: guidance + a link straight to the page
                   that generates the credential. */}
-              {(isPreset || provider === 'fastmail') && (
+              {(isPreset || provider === 'fastmail') && appPasswordUrl && (
                 <p style={{
                   margin: '12px 0 0',
                   fontFamily: 'var(--font-sans)',
@@ -1198,7 +1373,7 @@ export function ConnectModal({
                 }}>
                   {tr(HINT_KEYS[provider])}{' '}
                   <a
-                    href={APP_PASSWORD_URLS[provider]}
+                    href={appPasswordUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: 'var(--brand)' }}
@@ -1408,7 +1583,7 @@ export function ConnectModal({
               )}
 
               <div className="field">
-                <label htmlFor="cm-password">{isGeneric ? tr('connect.passwordLabel') : tr('connect.appPasswordLabel')}</label>
+                <label htmlFor="cm-password">{needsAppPassword ? tr('connect.appPasswordLabel') : tr('connect.passwordLabel')}</label>
                 {/* An app password is 16+ characters typed or pasted blind. With
                     no way to read it back, a single wrong character is not
                     correctable, only replaceable, so the field gets a reveal
@@ -1473,18 +1648,31 @@ export function ConnectModal({
                   </button>
                 </div>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                  {isGeneric ? tr('connect.passwordHint') : tr('connect.appPasswordHint', { provider: providerLabel() })}
+                  {needsAppPassword
+                    ? tr('connect.appPasswordHint', { provider: appPasswordProvider })
+                    : tr('connect.passwordHint')}
                 </span>
+                {/* What this provider calls the credential, where it lives,
+                    and what one looks like, said BEFORE the password is typed.
+                    This is the half the generic form never had: the branded
+                    cards got it because a logo was clicked, while someone
+                    typing me@yahoo.com into the generic form got nothing, and
+                    the generic form is where 156 of the rejected logins are. */}
+                {appPasswordStepsKey && needsAppPassword && (
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5 }}>
+                    {tr(appPasswordStepsKey)}
+                  </span>
+                )}
                 {/* The link to generate the credential only ever existed on the
                     provider-selection step, so by the time the user was actually
                     looking at the password box it was gone. Every app-password
                     provider's dominant failure is a bare
-                    `NO [AUTHENTICATIONFAILED]` — the account password submitted
-                    in place of an app password — so the link belongs here, next
+                    `NO [AUTHENTICATIONFAILED]`, the account password submitted
+                    in place of an app password, so the link belongs here, next
                     to the field it is about. */}
-                {!isGeneric && APP_PASSWORD_URLS[provider] && (
+                {appPasswordUrl && (
                   <a
-                    href={APP_PASSWORD_URLS[provider]}
+                    href={appPasswordUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -1499,7 +1687,7 @@ export function ConnectModal({
                     }}
                   >
                     <Icon name="key" size={12} />
-                    {tr('connect.openAppPasswordPage', { provider: providerLabel() })}
+                    {tr('connect.openAppPasswordPage', { provider: appPasswordProvider })}
                   </a>
                 )}
               </div>
@@ -1651,6 +1839,7 @@ export function ConnectModal({
               {formError && (
                 <div
                   role="alert"
+                  ref={errorAlertRef}
                   style={{
                     padding: '10px 12px',
                     background: 'var(--red-100)',
@@ -1705,7 +1894,19 @@ export function ConnectModal({
 
                       {errorDetailOpen && (
                         <div id="cm-error-detail" style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12.5, lineHeight: 1.55 }}>
-                          {!isGeneric && (
+                          {/* The one thing to do next, for the specific
+                              rejection this was. Ahead of everything else,
+                              because in three of the four credential cases the
+                              generic provider hint below is not the fix.
+                              The provider's "what it is called and where it
+                              lives" copy is deliberately NOT repeated here: it
+                              is already printed beside the password field, and
+                              for a login-name or IMAP-disabled failure it is
+                              not the next step at all. */}
+                          {authReason && AUTH_REASON_DETAIL_KEYS[authReason] && (
+                            <span>{tr(AUTH_REASON_DETAIL_KEYS[authReason], { provider: appPasswordProvider })}</span>
+                          )}
+                          {!isGeneric && !authReason && (
                             <span>{tr(HINT_KEYS[provider] ?? 'connect.hintGeneric')}</span>
                           )}
                           {errorDetail && <span>{errorDetail}</span>}

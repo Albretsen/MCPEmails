@@ -331,9 +331,119 @@ Deno.test("body_max_chars is clamped, and absent means the caller's default", ()
   );
 });
 
-Deno.test("body_max_chars 0 is headers only, and still says where the body starts", () => {
+// ── 5. A continuation must advance, or it must not be offered ──────────────
+//
+// The tool description teaches: "when the response says body_truncated, call
+// again with body_next_offset as body_offset". A next offset equal to the
+// offset that produced it therefore is not a hint, it is a non-terminating
+// loop the agent has been instructed to walk. Reproduced in production on
+// 1a0527dde6f1cc6b with body_max_chars: 0, which answered
+// body_truncated: true / body_next_offset: 0 for ever.
+
+Deno.test("body_max_chars 0 is headers only: a complete answer, with nothing to continue", () => {
   const w = readWindow("d".repeat(4_000), 0, 0);
-  assertEquals(w.text, "", "no body");
-  assertEquals(w.fields.body_truncated, true, "which is a truncation and is reported as one");
-  assertEquals(w.fields.body_next_offset, 0, "and the whole body is still one call away");
+  assertEquals(w.text, "", "no body, as asked");
+  assertEquals(w.fields.body_truncated, false, "headers-only is complete, not truncated");
+  assertEquals(w.fields.body_next_offset, undefined, "an offset of 0 here loops for ever");
+  assertEquals(w.fields.body_continue, undefined, "and no sentence telling the agent to walk it");
+  assertEquals(w.fields.body_total_chars, 4_000, "the total still tells the model a body exists");
+  assertEquals(w.emitted, 0, "nothing spent against any budget");
+});
+
+Deno.test("body_max_chars 0 on an html body is headers only too", () => {
+  const w = windowBody("<p>" + "h".repeat(4_000) + "</p>", {
+    offset: 0,
+    maxChars: 0,
+    prefix: "body_html",
+    recovery: (n) => singleReadContinuation("m1", n, true),
+  });
+  assertEquals(w.text, "", "no html body");
+  assertEquals(w.fields.body_html_truncated, false, "identical structure, identical contract");
+  assertEquals(w.fields.body_html_next_offset, undefined, "no non-advancing resume point");
+  assertEquals(w.fields.body_html_continue, undefined, "no recovery sentence to chase");
+  assert(typeof w.fields.body_html_total_chars === "number", "the total is still reported");
+});
+
+Deno.test("body_max_chars 0 on an empty body reports nothing at all", () => {
+  const w = readWindow("", 0, 0);
+  assertEquals(w.text, "", "nothing there");
+  assertEquals(Object.keys(w.fields).length, 0, "no body, no truncation story to tell");
+});
+
+Deno.test("a truncated window's next offset is always strictly greater than its own offset", () => {
+  const body = "n".repeat(50_000);
+  for (const maxChars of [1, 2, 7, 100, 999, 8_000]) {
+    for (const offset of [0, 1, 13, 4_999]) {
+      const w = windowBody(body, {
+        offset,
+        maxChars,
+        prefix: "body",
+        recovery: (n) => singleReadContinuation("m1", n, false),
+      });
+      if (w.fields.body_truncated !== true) continue;
+      const next = Number(w.fields.body_next_offset);
+      const at = Number(w.fields.body_offset);
+      assert(next > at, `next offset ${next} must advance past ${at} (maxChars ${maxChars})`);
+    }
+  }
+});
+
+Deno.test("a one-character window on a body that opens with an emoji still advances", () => {
+  // The other route to a non-advancing continuation: the cut backs off the
+  // surrogate pair, lands back on `start`, and emits nothing while more
+  // remains. The pair has to come along rather than the offset standing still.
+  const body = "\u{1F600}tail";
+  const w = windowBody(body, { offset: 0, maxChars: 1, prefix: "body", recovery: (n) => `body_offset: ${n}` });
+  assertEquals(w.text, "\u{1F600}", "the whole character, not half of one and not none of it");
+  assert(Number(w.fields.body_next_offset) > 0, "and the walk moves on");
+});
+
+Deno.test("walking a body at a tiny window size terminates", () => {
+  // The property the production loop violated, asserted directly: with any
+  // legitimate window size, following the documented contract must finish.
+  const body = "abc\u{1F600}def\u{1F600}ghij".repeat(40);
+  for (const maxChars of [1, 2, 3, 5]) {
+    let offset = 0;
+    let rebuilt = "";
+    let steps = 0;
+    while (steps < 5_000) {
+      const w = windowBody(body, {
+        offset,
+        maxChars,
+        prefix: "body",
+        recovery: (n) => `body_offset: ${n}`,
+      });
+      rebuilt += w.text ?? "";
+      steps++;
+      if (w.fields.body_truncated !== true) break;
+      const next = Number(w.fields.body_next_offset);
+      assert(next > offset, `window of ${maxChars} failed to advance from ${offset}`);
+      offset = next;
+    }
+    assertEquals(rebuilt, body, `walk at maxChars ${maxChars} reconstructs the body`);
+    assert(steps < 5_000, `walk at maxChars ${maxChars} terminated`);
+  }
+});
+
+Deno.test("walking an html body to completion terminates the same way", () => {
+  const body = "<p>" + "x".repeat(20_000) + "</p>";
+  let offset = 0;
+  let rebuilt = "";
+  let steps = 0;
+  while (steps < 100) {
+    const w = windowBody(body, {
+      offset,
+      maxChars: SINGLE_READ_BODY_CHARS,
+      prefix: "body_html",
+      recovery: (n) => singleReadContinuation("m1", n, true),
+    });
+    rebuilt += w.text ?? "";
+    steps++;
+    if (w.fields.body_html_truncated !== true) break;
+    const next = Number(w.fields.body_html_offset);
+    assert(Number(w.fields.body_html_next_offset) > next, "every html window advances");
+    offset = Number(w.fields.body_html_next_offset);
+  }
+  assertEquals(rebuilt, body, "the html body reassembles exactly");
+  assertEquals(steps, 3, "20,006 characters at 8,000 is three windows");
 });

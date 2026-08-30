@@ -15,25 +15,22 @@
 import '../styles/theme.css';
 import '../styles/colors_and_type.css';
 import '../styles/marketing.css';
+import { THEME_BOOTSTRAP_SCRIPT } from '../src/lib/theme-bootstrap';
 
 export default function GlobalError({ reset }) {
   return (
     <html lang="en">
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var t = localStorage.getItem("mcpe-theme") || "light";
-                  document.documentElement.setAttribute("data-theme", t);
-                } catch(e) {
-                  document.documentElement.setAttribute("data-theme", "light");
-                }
-              })();
-            `,
-          }}
-        />
+        {/*
+          Same theme bootstrap as the root layout, which this screen replaces.
+          It is allowed by a SHA-256 in `script-src`, NOT by the per-request
+          nonce — and that is deliberate: this route is the one thing Next
+          prerenders to static HTML at build time (.next/server/app/_global-error.html),
+          when no request and therefore no nonce exists. A hash is the only
+          mechanism that works in both the prerendered and the live-rendered
+          copy of this page. See src/lib/theme-bootstrap.ts.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body>
         <div className="auth-shell">

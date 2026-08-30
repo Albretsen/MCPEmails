@@ -424,8 +424,8 @@
   },
   "providers": {
     "meta": {
-      "title": "Leverandørstøtte",
-      "description": "Se hvilke e-postleverandører MCPEmails støtter og hvilke funksjoner som er tilgjengelige per leverandør: Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP."
+      "title": "E-postleverandører for AI-agenter (Gmail, iCloud, Yahoo, Zoho)",
+      "description": "Hvilke e-postleverandører som fungerer med en AI-agent over MCP, og hva som skal til for å koble til hver enkelt: OAuth eller app-passord, IMAP- og SMTP-verter og porter, TLS eller STARTTLS, hva som vanligvis feiler, og hva agenten kan gjøre når tilkoblingen er på plass. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 og generisk IMAP."
     },
     "labels": {
       "generic": "Generic IMAP"
@@ -462,9 +462,9 @@
       "Search": "Søk"
     },
     "hero": {
-      "eyebrow": "Leverandørstøtte",
-      "heading": "Hva som fungerer, per leverandør.",
-      "lead": "MCPEmails kobler til Gmail, Fastmail og enhver IMAP-innboks (iCloud, Yahoo, Zoho, Yandex, generisk). Ikke alle leverandører eksponerer de samme API-ene. Denne tabellen viser nøyaktig hva hver av dem støtter i dag.",
+      "eyebrow": "Kompatibilitetsmatrise",
+      "heading": "E-postleverandører og AI-agenter: hva som fungerer",
+      "lead": "Hva en AI-agent faktisk kan gjøre med hver e-postleverandør, og hva som skal til for å koble til. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 og alle generiske IMAP-postkasser. Hver rad er kontrollert mot koblingene som kjører i produksjon.",
       "ctaConnect": "Koble til en innboks",
       "ctaBack": "Tilbake til dokumentasjonen"
     },
@@ -492,6 +492,50 @@
       "sub": "Gratis-plan: én tilkoblet innboks, for alltid og uten kort.",
       "primary": "Kom i gang gratis",
       "secondary": "Les dokumentasjonen"
+    },
+    "verified": {
+      "label": "Sist kontrollert",
+      "date": "30. august 2026",
+      "note": "Verter, porter, innloggingsmetoder og feilmåter ble kontrollert mot de aktive koblingene denne datoen."
+    },
+    "connection": {
+      "title": "Slik kobler hver leverandør til",
+      "lead": "Innloggingsmetode, e-postverter og transportsikkerhet, og feilen som faktisk koster folk ettermiddagen. Velg en leverandør for oppsett steg for steg.",
+      "columns": {
+        "provider": "Leverandør",
+        "auth": "Innlogging",
+        "imap": "IMAP (innkommende)",
+        "smtp": "SMTP (utgående)",
+        "breaks": "Hva som vanligvis feiler"
+      },
+      "auth": {
+        "googleOauth": "Google OAuth",
+        "microsoftOauth": "Microsoft OAuth",
+        "appPassword": "App-passord",
+        "mailboxPassword": "Postkassepassord"
+      },
+      "api": "Leverandør-API, ikke IMAP",
+      "unavailable": "Ikke tilgjengelig ennå",
+      "varies": "Innstillingene til verten din",
+      "breaks": {
+        "gmail": "Ingenting i transportlaget: Gmail kobler til over Gmail-API-et, ikke IMAP. Begrensningene er semantiske. Gmail har etiketter i stedet for mapper, ingen innebygd kopiering og ingen permanent sletting.",
+        "fastmail": "Det vanlige kontopassordet blir avvist direkte. Fastmail utsteder et app-passord på 16 tegn, og å sende inn innloggingspassordet i stedet er den vanligste enkeltårsaken til en mislykket tilkobling.",
+        "icloud": "Tofaktorautentisering må være på før Apple genererer et app-passord. Apple viser passordet som fire blokker med bindestrek mellom; bindestrekene er bare visning og fjernes før innloggingen sendes.",
+        "yahoo": "Yahoo tillater høyst 5 samtidige tilkoblinger. Avvisningsteksten, «Incorrect username or password», nevner begge deler med vilje og sier ikke hvilken av dem som var feil.",
+        "zoho": "IMAP-tilgang er slått av som standard og må aktiveres først. Zoho driver dessuten seks regionale datasentre, og betalte postkasser på eget domene ligger på imappro/smtppro i stedet for imap/smtp, så riktig vert avhenger både av region og kontotype.",
+        "yandex": "Yandex implementerer ikke RFC 4959 SASL-IR, så den innebygde innloggingsformen kommer tilbake som en kommandosyntaksfeil i stedet for en passordfeil. Både «IMAP» og «App-passord og OAuth-token» må slås på, og Yandex 360-kontoer på eget domene kan logge inn med et brukernavn som ikke er e-postadressen.",
+        "outlook": "Microsofts standard samtykkeregler for leietakere utelater Mail.ReadWrite fra tillatelsene en sluttbruker kan godkjenne, så en Microsoft 365-ansatt blir avvist før et samtykkevindu i det hele tatt vises. Bare en administrator kan åpne det, og derfor kan ikke Microsoft 365 for bedrifter kobles til av den som eier postkassen.",
+        "generic": "En port og en sikkerhetsmodus som ikke stemmer overens. Å velge STARTTLS mens porten fortsatt er 993 åpner en ukryptert forbindelse mot en lytter som bare snakker TLS, og tilkoblingen går rett i tidsavbrudd. Mislykkede transporter forsøkes nå automatisk på den andre standardkombinasjonen."
+      },
+      "notes": {
+        "autodetect": "<b>Automatisk transportvalg:</b> en tilkobling som aldri fikk en økt i gang, prøves på nytt på den andre standardtransporten (IMAP <code>993</code>/TLS og <code>143</code>/STARTTLS; SMTP <code>465</code>/TLS, <code>587</code>/STARTTLS og <code>25</code>). Et avvist passord prøves aldri på nytt, fordi hvert forsøk teller mot leverandørens egen utestenging.",
+        "authMechanism": "<b>Innloggingsmekanisme:</b> de fleste servere tar <code>AUTH PLAIN</code> i én runde. Servere som bare tilbyr GSSAPI, NTLM og LOGIN, der Microsoft Exchange er det vanlige tilfellet, svarer med <code>504 5.7.4</code>, og klienten faller selv tilbake på <code>AUTH LOGIN</code>.",
+        "otherHosts": "<b>Andre verter:</b> IONOS, Hostinger, OVH, OVH Hosted Exchange, DreamHost, Titan Email, Namecheap Private Email, Migadu, InMotion Hosting, OpenSRS, GMX og mail.com gjenkjennes ut fra adressen eller e-postverten du skriver inn, og verter, porter og transportsikkerhet fylles ut for deg."
+      }
+    },
+    "capabilities": {
+      "title": "Hva agenten kan gjøre når den er tilkoblet",
+      "lead": "Operasjonene en MCP-klient kan utføre per leverandør: lese, søke, sende, svare, videresende, flytte, flagge, mapper, utkast, planlagt sending og vedlegg."
     }
   }
 }

@@ -4,6 +4,7 @@ import { decryptToken } from '@/lib/crypto';
 import { withFreshGmailToken, verifyGmailAccess, InboxAuthError } from '@/lib/email-providers/gmail';
 import { withFreshOutlookToken, verifyOutlookAccess, OutlookAuthError } from '@/lib/email-providers/outlook';
 import { openImapSession, McpEmailsError, ImapAuthError } from '@/lib/email/imap';
+import { guardMailHost } from '@/lib/email/host-guard';
 import type { Tables } from '@/types/database.types';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -78,8 +79,27 @@ export async function POST(
 
   try {
     if (isAppPassword) {
+      // SSRF guard on a STORED host. The row was written by a request body, and
+      // rows predating the guard were never checked at all; a name that was a
+      // real mail host when it was saved can also be repointed at 127.0.0.1 or
+      // 169.254.169.254 afterwards, and this button is a user-triggered way to
+      // make the function dial it.
+      //
+      // Answered as a 422 rather than by flipping the inbox to 'error': a DNS
+      // answer is transient, and a momentary bad resolution must not persist a
+      // permanent failure onto an inbox that is otherwise fine.
+      const guard = await guardMailHost(inbox.imap_host!, {
+        protocol: 'imap',
+        port: inbox.imap_port ?? 993,
+      });
+      if (!guard.ok) {
+        return NextResponse.json({ error: guard.message, error_code: guard.code }, { status: 422 });
+      }
       const session = await openImapSession({
         host: inbox.imap_host!,
+        // Dial the address the guard approved, not the name: re-resolving here
+        // would reopen the rebinding window the check just closed.
+        pinnedAddress: guard.address,
         port: inbox.imap_port ?? 993,
         email: inbox.email_address,
         authMethod: 'PLAIN',

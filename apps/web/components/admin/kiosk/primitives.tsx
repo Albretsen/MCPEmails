@@ -22,7 +22,11 @@
  */
 
 import type { ReactNode } from 'react';
-import { NO_DATA, formatCount } from '../charts';
+// Imported from the leaf module rather than the `../charts` barrel. The barrel
+// re-exports every chart component, and this file is now pulled into the
+// client bundle by the health tile, which would drag all of them with it for
+// the sake of two pure functions.
+import { NO_DATA, formatCount } from '../charts/format';
 
 /** A framed tile. Everything on the board sits in one of these. */
 export function Tile({

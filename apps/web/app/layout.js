@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
 import AcquisitionCapture from '../components/analytics/AcquisitionCapture';
+import { THEME_BOOTSTRAP_SCRIPT } from '../src/lib/theme-bootstrap';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 // This value is generated in Google Search Console. It is public by design
@@ -54,20 +55,19 @@ export default async function RootLayout({ children }) {
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var t = localStorage.getItem("mcpe-theme") || "light";
-                  document.documentElement.setAttribute("data-theme", t);
-                } catch(e) {
-                  document.documentElement.setAttribute("data-theme", "light");
-                }
-              })();
-            `,
-          }}
-        />
+        {/*
+          Sets data-theme before first paint so a dark-theme visitor never sees
+          a white flash. It carries no `nonce`: `script-src` allows it by the
+          SHA-256 of THEME_BOOTSTRAP_SCRIPT (see src/lib/csp.ts), which the
+          proxy computes from this same constant on every request.
+
+          Do NOT inline the script text here, reformat it, or wrap the
+          expression in anything that adds whitespace. The browser hashes the
+          exact bytes React writes between the tags; one stray newline and the
+          script is silently blocked, which shows up as a theme flash on every
+          page and nothing else.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>

@@ -1,12 +1,19 @@
 // ---------------------------------------------------------------------------
 // Email HTML sanitizer — dependency-free, two layers, no innerHTML anywhere.
 //
-// Provenance: layer 1 is a direct port of
-// `apps/web/src/lib/sanitizeSignatureHtmlServer.js`. That module is
-// dependency-free *by design*: its DOMPurify-based sibling drags in jsdom,
-// whose ESM-only transitive deps blew up at request time and 500'd every
-// signature save in production. Adding a sanitizer dependency here would also
-// blow the bundle budget (findings Q3/Q4), so the same discipline applies.
+// Provenance: layer 1 was ported from the regex pass that used to live in
+// `apps/web/src/lib/sanitizeSignatureHtmlServer.js`. NOTE that the source has
+// since moved on: those regexes turned out to be bypassable (quote-instead-of-
+// space before an on*= handler, a leading space or an HTML entity inside a
+// javascript: URL, style-based schemes) and that module is now an allow-list
+// tokenizer. Layer 1 here is kept as-is deliberately — it is a cheap
+// pre-filter, NOT the security boundary; layer 2 below is. Do not treat the
+// regexes as sufficient on their own if you ever reuse them elsewhere.
+//
+// That module is dependency-free *by design*: its DOMPurify-based sibling drags
+// in jsdom, whose ESM-only transitive deps blew up at request time and 500'd
+// every signature save in production. Adding a sanitizer dependency here would
+// also blow the bundle budget (findings Q3/Q4), so the same discipline applies.
 //
 // Layer 1 alone is a deny-list, which is the weaker construction. Email bodies
 // are more hostile than signatures (a reply or forward quotes inbound mail

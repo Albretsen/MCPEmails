@@ -78,15 +78,18 @@ export function KioskLive({
   }, []);
 
   useEffect(() => {
-    // The token lives in this page's own query string, and the version route
-    // is behind the same door as the page. Reusing the search string verbatim
-    // means an operator viewing the board on a real session (no `?k=`) is
-    // still authorised, by their session, exactly as they are for the page.
-    const search = window.location.search;
-
+    // No query string, deliberately. This used to forward the page's own
+    // `?k=` to the version route, which meant the shared secret was written
+    // into an access log every five minutes forever. Since 2026-08-30 the
+    // token is exchanged once at the door for an HttpOnly cookie scoped to
+    // this route and the board's (see src/lib/admin/kiosk-cookie.ts, audit
+    // finding F-06), so the fetch below carries the credential in a header the
+    // browser attaches itself and nothing has to be pasted into the URL. An
+    // operator viewing the board on a real session is authorised by that
+    // session here exactly as they are for the page, same as before.
     async function tick() {
       try {
-        const response = await fetch(`/api/kiosk/version${search}`, { cache: 'no-store' });
+        const response = await fetch('/api/kiosk/version', { cache: 'no-store' });
         if (response.ok) {
           const { deployment: live } = (await response.json()) as { deployment?: string };
           // Reload, not refresh: a new bundle is the one thing a soft refresh
