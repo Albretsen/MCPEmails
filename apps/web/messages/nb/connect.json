@@ -466,5 +466,10 @@
       "ctaPrimary": "Koble til Yandex gratis",
       "ctaSecondary": "Les dokumentasjonen"
     }
+  },
+  "matrix": {
+    "intro": "Vil du sammenligne leverandører først?",
+    "label": "Se kompatibilitetsmatrisen for e-postleverandører",
+    "href": "/docs/providers"
   }
 }

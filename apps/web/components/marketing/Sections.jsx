@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import { MBtn, MIcon } from '../MarketingPrimitives';
 import { CLIENT_LOGOS, MCP_CLIENT_BRANDS } from '../dashboard/clientLogos';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
@@ -935,31 +935,48 @@ export function Faq() {
 
 /* ============== LANGUAGE SWITCHER ============== */
 /**
- * Minimal locale switcher. Only the home page is localized for now, so each
- * option links to the home page in that language. As more routes are
- * localized, swap these anchors for next-intl's locale-aware Link.
+ * Locale switcher, in the footer of every marketing page.
+ *
+ * It used to hardcode each option to that locale's HOME page, which was true
+ * when only the home page was localized. Every route under app/[locale] is
+ * localized now, so it was both a UX bug (switching language from /pricing
+ * dumped you on the Spanish home page) and the site's largest SEO problem:
+ * five links on ~110 pages meant 317 of 560 internal links landed on just
+ * four translated home pages, starving every other page of internal signal.
+ *
+ * Each option now points at the CURRENT page in that locale, which is also
+ * exactly the URL the page already declares as its hreflang alternate.
+ * `usePathname` here is next-intl's, so it returns the path with the locale
+ * prefix already stripped ("/pricing" on both / and /es/pricing).
  */
 function LanguageSwitcher() {
   const t = useTranslations('home');
   const locale = useLocale();
-  const options = [
-    { code: 'en', href: '/' },
-    { code: 'nb', href: '/nb' },
-    { code: 'es', href: '/es' },
-    { code: 'fr', href: '/fr' },
-    { code: 'zh', href: '/zh' },
-  ];
+  // Falls back to the home path if the router has not resolved a pathname,
+  // so the statically rendered HTML never ships an empty href.
+  const pathname = usePathname() || '/';
+  const codes = ['en', 'nb', 'es', 'fr', 'zh'];
+  /*
+    Built by hand rather than with next-intl's `locale` prop, which always
+    emits the prefix: under localePrefix 'as-needed' that produced /en/pricing,
+    a 307 to /pricing. A redirect hop on every page, on a URL that does not
+    match the hreflang the page declares for itself, is the thing this change
+    exists to avoid.
+  */
+  const hrefFor = (code) =>
+    code === 'en' ? pathname : `/${code}${pathname === '/' ? '' : pathname}`;
   return (
     <div className="lang-switch" aria-label={t('languageSwitcher.label')}>
       <MIcon name="globe" size={13} color="var(--fg-3)" />
-      {options.map((o) => (
+      {codes.map((code) => (
         <a
-          key={o.code}
-          href={o.href}
-          className={"lang-opt" + (locale === o.code ? " active" : "")}
-          aria-current={locale === o.code ? 'true' : undefined}
+          key={code}
+          href={hrefFor(code)}
+          className={"lang-opt" + (locale === code ? " active" : "")}
+          aria-current={locale === code ? 'true' : undefined}
+          hrefLang={code}
         >
-          {t(`languageSwitcher.${o.code}`)}
+          {t(`languageSwitcher.${code}`)}
         </a>
       ))}
     </div>

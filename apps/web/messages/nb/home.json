@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Koble Gmail, iCloud og IMAP til Claude",
-    "description": "Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Fastmail, iCloud og IMAP. Outlook er under utvikling. Gratis, ingen lagring."
+    "title": "Koble Gmail, iCloud og IMAP til Claude",
+    "description": "Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Fastmail, iCloud og IMAP. Gratis."
   },
   "nav": {
     "features": "Funksjoner",

@@ -1,12 +1,12 @@
 {
   "meta": {
-    "title": "文档",
+    "title": "邮件 MCP 服务器文档：Gmail、IMAP 与 OAuth",
     "description": "几分钟内开始使用 MCPEmails。面向 Gmail 和 IMAP 智能体的快速入门指南、工具参考和示例响应。"
   },
   "hero": {
     "eyebrow": "文档",
-    "titleLine1": "四步即可让你的智能体",
-    "titleLine2": "拥有一个收件箱。",
+    "titleLine1": "四步将 Gmail 或 IMAP",
+    "titleLine2": "连接到 Claude。",
     "lead": "连接任意电子邮件账户，把一个 URL 粘贴到支持 OAuth 的 MCP 客户端中并授权。不支持 OAuth 的客户端则改用 API 密钥。下方提供完整的工具参考和连接指南。",
     "ctaQuickStart": "快速开始",
     "ctaOAuth": "OAuth（claude.ai）",
@@ -424,8 +424,8 @@
   },
   "providers": {
     "meta": {
-      "title": "服务商支持",
-      "description": "查看 MCPEmails 支持哪些电子邮件服务商，以及各服务商分别可用哪些功能：Gmail、Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP。"
+      "title": "面向 AI 代理的邮箱服务商兼容性对照表",
+      "description": "哪些邮箱服务商可以通过 MCP 与 AI 代理配合使用，以及逐个连接时需要什么：OAuth 还是专用应用密码、IMAP 与 SMTP 主机和端口、TLS 还是 STARTTLS、常见的失败原因，以及连接后代理能做什么。涵盖 Gmail、Fastmail、iCloud Mail、Yahoo Mail、Zoho Mail、Yandex Mail、Microsoft 365 与通用 IMAP。"
     },
     "labels": {
       "generic": "通用 IMAP"
@@ -462,10 +462,10 @@
       "Search": "搜索"
     },
     "hero": {
-      "eyebrow": "服务商支持",
-      "heading": "各服务商分别支持什么。",
-      "lead": "MCPEmails 连接 Gmail、Fastmail 以及任何 IMAP 收件箱（iCloud、Yahoo、Zoho、Yandex、通用）。并非每个服务商都提供相同的 API，此表精确展示了每一个服务商目前支持的内容。",
-      "ctaConnect": "连接一个收件箱",
+      "eyebrow": "兼容性对照表",
+      "heading": "面向 AI 代理的邮箱服务商兼容性",
+      "lead": "AI 代理在每家邮箱服务商上到底能做什么，以及连接一个邮箱需要什么。涵盖 Gmail、Fastmail、iCloud Mail、Yahoo Mail、Zoho Mail、Yandex Mail、Microsoft 365 以及任何通用 IMAP 邮箱。每一行都对照生产环境中运行的连接器核实过。",
+      "ctaConnect": "连接邮箱",
       "ctaBack": "返回文档"
     },
     "legend": {
@@ -492,6 +492,50 @@
       "sub": "免费套餐：一个已连接收件箱，永久免费，无需信用卡。",
       "primary": "免费开始使用",
       "secondary": "阅读文档"
+    },
+    "verified": {
+      "label": "最后核实",
+      "date": "2026 年 8 月 30 日",
+      "note": "主机、端口、登录方式与失败情形均已在该日期对照在线连接器重新核实。"
+    },
+    "connection": {
+      "title": "各家服务商如何连接",
+      "lead": "登录方式、邮件主机与传输安全性，以及真正让人搭上一下午的那个故障。选一家服务商即可查看逐步设置。",
+      "columns": {
+        "provider": "服务商",
+        "auth": "登录方式",
+        "imap": "IMAP（接收）",
+        "smtp": "SMTP（发送）",
+        "breaks": "常见故障"
+      },
+      "auth": {
+        "googleOauth": "Google OAuth",
+        "microsoftOauth": "Microsoft OAuth",
+        "appPassword": "专用应用密码",
+        "mailboxPassword": "邮箱密码"
+      },
+      "api": "服务商 API，不走 IMAP",
+      "unavailable": "尚未开放",
+      "varies": "你的主机商设置",
+      "breaks": {
+        "gmail": "传输层没有问题：Gmail 走的是 Gmail API 而非 IMAP。限制在语义上：Gmail 用标签而不是文件夹，没有原生复制，也不支持彻底删除。",
+        "fastmail": "普通账户密码会被直接拒绝。Fastmail 会生成一个 16 位的应用密码，而提交登录密码是连接失败最常见的单一原因。",
+        "icloud": "必须先开启双因素认证，Apple 才会生成专用应用密码。Apple 会把密码显示为四组带连字符的字符；连字符只是显示用的，发送登录前会被去掉。",
+        "yahoo": "Yahoo 最多只允许 5 个并发连接。它的拒绝提示“Incorrect username or password”是故意把两者一起列出的，并不会告诉你错的是哪一个。",
+        "zoho": "Zoho 默认关闭 IMAP 访问，需要先手动开启。Zoho 还运营六个区域数据中心，付费的自有域名邮箱位于 imappro/smtppro 而非 imap/smtp，因此正确的主机同时取决于区域和账户类型。",
+        "yandex": "Yandex 未实现 RFC 4959 SASL-IR，因此内联登录形式返回的是命令语法错误，而不是凭据错误。需同时开启“IMAP”和“应用密码与 OAuth 令牌”，而 Yandex 360 自有域名账户的登录名可能并非邮箱地址。",
+        "outlook": "Microsoft 默认的租户同意策略把 Mail.ReadWrite 排除在终端用户可批准的权限之外，所以 Microsoft 365 的员工还没看到授权页面就已被拒绝。只有管理员能解除，这也是企业 Microsoft 365 无法由邮箱主人自行连接的原因。",
+        "generic": "端口与安全模式对不上。端口仍为 993 却选了 STARTTLS，会对一个只说 TLS 的监听端口开启明文连接，连接只会一直等到超时。现在失败的传输会自动换另一种标准组合重试。"
+      },
+      "notes": {
+        "autodetect": "<b>传输自动检测：</b>若一次连接始终未能建立会话，会换到另一种标准传输重试（IMAP <code>993</code>/TLS 与 <code>143</code>/STARTTLS；SMTP <code>465</code>/TLS、<code>587</code>/STARTTLS 与 <code>25</code>）。被拒绝的密码从不重试，因为每次尝试都会计入服务商自己的锁定。",
+        "authMechanism": "<b>登录机制：</b>大多数服务器可以一次往返完成 <code>AUTH PLAIN</code>。只声明 GSSAPI、NTLM 和 LOGIN 的服务器（最常见的是 Microsoft Exchange）会回应 <code>504 5.7.4</code>，客户端会自行回退到 <code>AUTH LOGIN</code>。",
+        "otherHosts": "<b>其他主机商：</b>IONOS、Hostinger、OVH、OVH Hosted Exchange、DreamHost、Titan Email、Namecheap Private Email、Migadu、InMotion Hosting、OpenSRS、GMX 和 mail.com 会根据你输入的地址或邮件主机自动识别，并为你填好主机、端口和传输安全性。"
+      }
+    },
+    "capabilities": {
+      "title": "连接后代理能做什么",
+      "lead": "MCP 客户端在每家服务商上可执行的操作：读取、搜索、发送、回复、转发、移动、标记、文件夹、草稿、定时发送与附件。"
     }
   }
 }
