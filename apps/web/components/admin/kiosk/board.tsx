@@ -39,7 +39,7 @@ import type { GmailCapSummaryRow, GrowthDailyRow } from '@/lib/analytics/growth-
 import { fetchCheckoutFunnel, fetchRecurringRevenue } from '@/lib/analytics/kiosk-revenue';
 import type { CheckoutFunnel } from '@/lib/analytics/kiosk-revenue';
 import type { RevenueSummary } from '@/lib/analytics/revenue-math';
-import { NO_DATA, formatCount, formatMoney, formatPercent, ratio } from '../charts';
+import { NO_DATA, formatCount, formatMoney, ratio } from '../charts';
 import {
   BarList,
   BigNumber,
@@ -51,6 +51,7 @@ import {
   TileError,
   type Trend,
 } from './primitives';
+import { KioskHealthTile } from './KioskHealth';
 
 /** The board's reporting window. Fixed: a wall display has no controls. */
 export const KIOSK_WINDOW_DAYS = 28;
@@ -113,9 +114,12 @@ export async function KioskBoard() {
   const newThisWindow = sum(current, 'new_workspaces');
   const activationsThisWindow = sum(current, 'value_activations');
 
+  // Feeds the long-run baseline in the live health tile, and nothing else.
+  // The failure COUNT that used to sit beside it went with the 28 day
+  // reliability headline: over four weeks it is a number nobody can act on,
+  // and the actionable version, failures in the last hour, is in that tile.
   const calls = sum(current, 'calls');
   const successes = sum(current, 'successes');
-  const errors = sum(current, 'errors');
 
   return (
     <>
@@ -134,21 +138,57 @@ export async function KioskBoard() {
         )}
       </Tile>
 
-      {/* Retention, stated as a count rather than a rate. "22% retained" over a
-          denominator this small swings by ten points when one person opens
-          their laptop; "12 came back" does not, and it is the number anyone
-          actually wants when they glance at the wall. */}
-      <Tile label="Came back" aside={`${days}d`} span={3} tone={returning > 0 ? 'good' : 'default'}>
-        <BigNumber
-          value={returning}
-          trend={null}
-          caption={
-            oneAndDone === null
-              ? <>Workspaces active on <strong>2 or more</strong> days</>
-              : <>Active on <strong>2 or more</strong> days. {oneAndDone} tried once and left.</>
-          }
+      {/* THE SUBSCRIBER COUNT. It took this slot from a "Came back" tile on
+          2026-08-30, and the swap is worth stating because losing a retention
+          number from a wall board is not obviously an improvement.
+
+          It is, for one reason: that tile's number was already on this screen.
+          "Came back" is rung four of the milestone funnel two tiles over, with
+          the same definition and the same value, so the board was spending a
+          quarter of its headline row restating a rung of its own funnel. The
+          one thing it said that the funnel did not, the one-and-done count,
+          moved into that rung's note.
+
+          What replaces it cannot be derived from anything else here. MRR beside
+          it is the money, and money is not people: one Team seat and sixteen
+          Personal ones are the same headline and completely different
+          businesses, and the 2026-08-19 repricing was a bet on which of those
+          we would become. It is also the number anyone actually asks for out
+          loud, which for a wall display is most of the argument.
+
+          COMPS ARE NOT SUBSCRIBERS AND ARE NOT HIDDEN. A comped account is a
+          live subscription on a paid price with a 100% off coupon: a real
+          person using the product, contributing nothing. Counting them here
+          would inflate the only number on the board that is supposed to be
+          uninflatable, so they sit in the aside instead. */}
+      {recurring.ok && mrr ? (
+        <Tile
+          label="Paying subscribers"
+          aside={mrr.compedCustomers > 0 ? `${mrr.compedCustomers} comped` : 'paid plans'}
+          span={3}
+          tone={mrr.payingCustomers > 0 ? 'good' : 'goal'}
+        >
+          <BigNumber
+            value={mrr.payingCustomers}
+            // Derived the same way the MRR trend is: today's count less what
+            // arrived and plus what left inside the window. Exact, and exact
+            // for the same reason, since a plan change moves money without
+            // moving the headcount.
+            trend={
+              mrr.newCustomers === 0 && mrr.churnedCustomers === 0
+                ? null
+                : trend(mrr.payingCustomers, mrr.payingCustomers - mrr.newCustomers + mrr.churnedCustomers, 'up')
+            }
+            caption={subscriberCaption(mrr, money)}
+          />
+        </Tile>
+      ) : (
+        <TileError
+          label="Paying subscribers"
+          message={recurring.ok ? 'Stripe returned no subscriptions.' : recurring.error}
+          span={3}
         />
-      </Tile>
+      )}
 
       <Tile label="Value activations" aside={`${days}d`} span={3}>
         {daily.ok ? (
@@ -236,7 +276,9 @@ export async function KioskBoard() {
 
       {funnel.ok ? (
         <Tile label="Road to a paying customer" aside="every signup, ever" span={5}>
-          <FunnelSteps steps={milestoneSteps(funnel.data, returning, checkout.ok ? checkout.data : null, mrr)} />
+          <FunnelSteps
+            steps={milestoneSteps(funnel.data, { returning, oneAndDone }, checkout.ok ? checkout.data : null, mrr)}
+          />
         </Tile>
       ) : (
         <TileError label="Road to a paying customer" message={funnel.error} span={5} />
@@ -250,18 +292,21 @@ export async function KioskBoard() {
         <TileError label="Gmail OAuth headroom" message={gmail.error} span={3} className="kiosk-strip" />
       )}
 
-      <Tile
-        label="Reliability"
-        aside={`${days}d`}
-        span={3}
-        className="kiosk-strip"
-        tone={calls > 0 && successes / calls < 0.95 ? 'warn' : 'default'}
-      >
-        <BigNumber
-          value={calls > 0 ? formatPercent(successes / calls, 1) : NO_DATA}
-          caption={<>{formatCount(errors)} failed of {formatCount(calls)} calls</>}
-        />
-      </Tile>
+      {/* LIVE, not 28 days. The tile that used to be here divided 28 days of
+          successes by 28 days of calls, which is a fair summary of a quarter
+          and useless as an alarm: an endpoint that has answered nothing since
+          breakfast still reads 99% on it, in calm grey, because twenty eight
+          days of history cannot move in a morning. The long-run figure is
+          still worth having and is now a fact under the headline; the headline
+          is the last hour, refreshed on its own 45 second clock rather than the
+          board's five minute one. See components/admin/kiosk/KioskHealth.tsx.
+
+          It is the one client component on the board, and the one tile that is
+          also allowed to paint the rest of the screen. */}
+      <KioskHealthTile
+        baselineRate={calls > 0 ? successes / calls : null}
+        baselineDays={days}
+      />
 
       <Tile label="Work done for customers" aside={`${days}d`} span={3} className="kiosk-strip">
         <BigNumber
@@ -426,10 +471,17 @@ function weeklyBuckets(rows: GrowthDailyRow[], weeks: number): { label: string; 
  */
 function milestoneSteps(
   funnel: { stage: string; workspaces: number }[],
-  returning: number,
+  /**
+   * The retention pair. It used to be a headline tile of its own; when the
+   * subscriber count took that slot the one-and-done half had nowhere else to
+   * live, and it is the half worth keeping, because "12 came back" and "12
+   * came back out of 60" are different sentences about the same product.
+   */
+  retention: { returning: number; oneAndDone: number | null },
   checkout: CheckoutFunnel | null,
   mrr: RevenueSummary | null,
 ) {
+  const { returning, oneAndDone } = retention;
   const stage = (name: string) => funnel.find((row) => row.stage === name)?.workspaces ?? 0;
   const paid = checkout?.checkoutCompleted ?? 0;
   const stillPaying = mrr?.payingCustomers ?? 0;
@@ -440,7 +492,11 @@ function milestoneSteps(
     {
       label: 'Came back',
       value: returning,
-      note: returning === 0 ? 'nobody yet' : `2+ days, last ${KIOSK_WINDOW_DAYS}d`,
+      note: returning === 0
+        ? 'nobody yet'
+        : oneAndDone === null
+          ? `2+ days, last ${KIOSK_WINDOW_DAYS}d`
+          : `2+ days; ${oneAndDone} tried once and left`,
     },
     {
       label: 'Looked at the plans',
@@ -502,9 +558,13 @@ function revenueAside(mrr: RevenueSummary): string {
  *
  * Zero revenue gets the milestone framing and the size of the pool still to
  * convert, because "$0" on its own says nothing about whether that is a
- * problem. Any revenue at all gets the customer count, the average, and what
- * moved in the window, since the average is the number that says whether the
- * repricing is landing on the tiers it was aimed at.
+ * problem. Any revenue at all gets the average and what moved in the window,
+ * since the average is the number that says whether the repricing is landing
+ * on the tiers it was aimed at.
+ *
+ * The customer COUNT used to lead this line and no longer does: it is the
+ * headline of the tile immediately to the left, and a wall display has no room
+ * to print the same number twice in adjacent tiles.
  */
 function revenueCaption(mrr: RevenueSummary, counts: { free_workspaces: number } | null) {
   if (mrr.payingCustomers === 0) {
@@ -518,8 +578,38 @@ function revenueCaption(mrr: RevenueSummary, counts: { free_workspaces: number }
   }
   return (
     <>
-      <strong>{formatCount(mrr.payingCustomers)}</strong> paying,{' '}
-      {formatMoney(mrr.arpaMinor, mrr.currency)} each. {movement(mrr)}
+      <strong>{formatMoney(mrr.arpaMinor, mrr.currency)}</strong> each. {movement(mrr)}
+    </>
+  );
+}
+
+/**
+ * One line under the subscriber count: which tiers those people are on.
+ *
+ * The tier mix is the whole reason a count is worth wall space beside the
+ * money. Two subscribers on Personal and two on Team are the same headline
+ * here and a six times difference in what the business is; the plan labels are
+ * the only thing on the board that tells them apart, and the alternative
+ * (repeating ARPA, which is one tile to the right) tells nobody anything.
+ *
+ * Capped at three plans. There are four tiers and the caption is two lines of
+ * clamped text in a tile three of twelve columns wide, so a fourth would push
+ * the first out of view rather than appear beneath it.
+ */
+function subscriberCaption(mrr: RevenueSummary, counts: { free_workspaces: number } | null) {
+  if (mrr.payingCustomers === 0) {
+    return counts
+      ? <>Nobody yet. <strong>{formatCount(counts.free_workspaces)}</strong> free workspaces to convert.</>
+      : <>Nobody is on a paid plan yet.</>;
+  }
+  const mix = mrr.byPlan
+    .slice(0, 3)
+    .map((plan) => `${plan.label} ${formatCount(plan.customers)}`)
+    .join(', ');
+  return (
+    <>
+      {mix || 'Plan unknown'}
+      {mrr.compedCustomers > 0 ? `, plus ${mrr.compedCustomers} comped` : ''}.
     </>
   );
 }

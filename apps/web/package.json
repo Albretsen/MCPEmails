@@ -14,9 +14,10 @@
     "test:seo": "node --test src/lib/blog/seo.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs",
     "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts src/lib/email/transport-autodetect.test.ts src/lib/email-providers/imap-presets.test.ts src/lib/email-providers/host-presets.test.ts src/lib/email-providers/outlook-oauth.test.ts",
     "test:growth": "node --test --experimental-strip-types src/lib/analytics/growth-metrics.test.mjs",
+    "test:health": "node --test --experimental-strip-types src/lib/analytics/health-math.test.ts",
     "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs",
     "test:purchase-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/purchase-confirmation.test.ts",
-    "test": "npm run test:analytics && npm run test:billing && npm run test:plans && npm run test:inbox-limit && npm run test:seo && npm run test:connections && npm run test:growth && npm run test:revenue && npm run test:sanitizer && npm run test:purchase-email",
+    "test": "npm run test:analytics && npm run test:billing && npm run test:plans && npm run test:inbox-limit && npm run test:seo && npm run test:connections && npm run test:growth && npm run test:health && npm run test:revenue && npm run test:sanitizer && npm run test:purchase-email",
     "test:revenue": "node --test --experimental-strip-types src/lib/analytics/revenue-math.test.ts src/lib/analytics/internal-accounts.test.ts src/lib/analytics/cash-math.test.ts"
   },
   "dependencies": {
