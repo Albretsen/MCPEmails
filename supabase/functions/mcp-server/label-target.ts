@@ -213,3 +213,136 @@ export function permanentFlagsAllowKeyword(
   const lowered = keyword.toLowerCase();
   return permanentFlags.some((f) => f.toLowerCase() === lowered);
 }
+
+// ---------------------------------------------------------------------------
+// Folder / label ADDRESSING
+//
+// The other half of the same idea: not "what does a label become on this
+// provider", but "which existing folder did the caller mean". Every
+// folder-taking argument in the connector (`email_read action:list`'s `folder`,
+// `email_read action:search`'s `include_folders`, `email_organize`'s
+// `destination_folder_id`) documents the same three spellings - a provider id,
+// a display name, or one of the aliases below - and before this section only
+// the move path honoured all three. `email_read action:list` demanded the raw
+// provider id, so an agent that created "Receipts" by name and then tried to
+// list it dead-ended on Gmail's "Invalid label: Receipts".
+//
+// So the matching rule lives here, pure and shared, and the callers differ only
+// in WHERE the folder listing comes from. Case-insensitive on names, because
+// that is what the move path has always done and one behaviour is worth more
+// than the marginally stricter one.
+// ---------------------------------------------------------------------------
+
+/** One folder (Gmail: label) as `folder action: list` reports it. */
+export interface FolderReference {
+  /** Provider-native id. On IMAP the mailbox name IS the id. */
+  id: string;
+  /** Display name. */
+  name: string;
+}
+
+/** The aliases every folder argument accepts, in the order the tool docs list them. */
+export const FOLDER_ALIAS_TOKENS = [
+  "inbox",
+  "sent",
+  "drafts",
+  "trash",
+  "archive",
+  "spam",
+] as const;
+
+export type FolderResolution =
+  | { ok: true; id: string; matched: "id" | "name" | "alias" }
+  | { ok: false; code: "folder_required" | "folder_not_found"; error: string };
+
+export interface FolderResolutionContext {
+  /**
+   * Canonical names an already-matched alias may wear in the listing (e.g. the
+   * alias "trash" against a mailbox literally named "Trash"). Supplied by the
+   * caller because the alias table is provider vocabulary, not matching logic.
+   */
+  aliasNames?: readonly string[];
+  /** Provider slug, for copy that names it ("this gmail inbox"). */
+  provider?: string | null;
+  /** What the provider calls the thing. Defaults to the Gmail/other split. */
+  itemNoun?: "folder" | "label";
+  /** One extra sentence appended before the "call folder action: list" nudge. */
+  hint?: string | null;
+}
+
+/** What the provider calls its organisation primitive. */
+function folderNoun(ctx: FolderResolutionContext): "folder" | "label" {
+  return ctx.itemNoun ?? (ctx.provider === "gmail" ? "label" : "folder");
+}
+
+/**
+ * The message an agent gets when a folder value matches nothing.
+ *
+ * THE POINT OF THIS FUNCTION is what it does NOT say. The old path ended in
+ * "Provider error while listing inbox: Gmail API error: Invalid label: X.
+ * Please try again in a moment." - a permanent naming mismatch dressed up as a
+ * transient fault, so the agent retried a call that could never work. This one
+ * names the value, names the three accepted spellings, points at the call that
+ * lists them, and says plainly that waiting will not help.
+ */
+export function folderNotFoundMessage(
+  value: string,
+  ctx: FolderResolutionContext = {},
+): string {
+  const noun = folderNoun(ctx);
+  const where = ctx.provider ? `this ${ctx.provider} inbox` : "this inbox";
+  return (
+    `No ${noun} matching "${value}" exists in ${where}. ` +
+    `A folder argument accepts a ${noun} id, the exact ${noun} name ` +
+    `(case-insensitive), or one of the aliases ${FOLDER_ALIAS_TOKENS.join(", ")}. ` +
+    (ctx.hint ? `${ctx.hint} ` : "") +
+    `Call folder action: list on this inbox to see the ids and names it actually has, ` +
+    `then reissue the call with one of them. This is a permanent naming mismatch, ` +
+    `not a temporary fault: the same value will keep failing until it changes.`
+  );
+}
+
+/**
+ * Matches a user-supplied folder value against a folder listing.
+ *
+ * Order (identical to what the move path has always done, which is the point):
+ *   1. exact provider id;
+ *   2. display name, case-insensitively;
+ *   3. the canonical names of an alias the caller already matched;
+ *   4. nothing -> a STRUCTURED failure, never a throw and never a silent
+ *      pass-through of the unmatched value to the provider.
+ */
+export function resolveFolderReference(
+  value: string,
+  folders: readonly FolderReference[],
+  ctx: FolderResolutionContext = {},
+): FolderResolution {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return {
+      ok: false,
+      code: "folder_required",
+      error: `A ${folderNoun(ctx)} is required: pass an id, a name, or one of the ` +
+        `aliases ${FOLDER_ALIAS_TOKENS.join(", ")}.`,
+    };
+  }
+
+  const byId = folders.find((f) => f.id === trimmed);
+  if (byId) return { ok: true, id: byId.id, matched: "id" };
+
+  const lower = trimmed.toLowerCase();
+  const byName = folders.find((f) => f.name.toLowerCase() === lower);
+  if (byName) return { ok: true, id: byName.id, matched: "name" };
+
+  const aliasNames = (ctx.aliasNames ?? []).map((a) => a.toLowerCase());
+  if (aliasNames.length > 0) {
+    const byAlias = folders.find((f) => aliasNames.includes(f.name.toLowerCase()));
+    if (byAlias) return { ok: true, id: byAlias.id, matched: "alias" };
+  }
+
+  return {
+    ok: false,
+    code: "folder_not_found",
+    error: folderNotFoundMessage(trimmed, ctx),
+  };
+}

@@ -21,6 +21,13 @@
  * It is behind the same door as the board itself. The deployment id is not
  * much of a secret, but this is an admin surface and the cost of keeping it
  * closed is one line.
+ *
+ * In practice that door is now the kiosk cookie, not `?k=`: the board polls
+ * this route with no query string at all and the browser attaches the cookie
+ * it was issued at bootstrap (src/lib/admin/kiosk-cookie.ts, audit finding
+ * F-06 — a token in a query string is a token in an access log, and this route
+ * is the one the display hits every five minutes for years). The `?k=` read
+ * below is kept only so the endpoint can still be checked by hand with curl.
  */
 
 import { currentDeployment } from '@/lib/admin/deployment';

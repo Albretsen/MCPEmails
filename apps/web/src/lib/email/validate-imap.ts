@@ -42,6 +42,22 @@ export interface ImapCredential {
    * runs after something already failed and the user is waiting on it.
    */
   timeoutMs?: number;
+  /**
+   * The IP address to actually dial, as approved by `guardMailHost`.
+   *
+   * Anti-SSRF, and specifically anti-DNS-rebinding: the guard resolved `host`
+   * and checked every address it got back, but handing the NAME to
+   * `net.connect` here would resolve it a SECOND time, and a hostile resolver
+   * only has to answer the first lookup with a public address and the second
+   * with 127.0.0.1. Dialling the address the guard approved closes that window.
+   * `host` is still used verbatim as the TLS servername, so certificate
+   * validation is unchanged: the certificate must match the name the user
+   * typed, not the address we resolved it to.
+   *
+   * Optional so nothing breaks if a caller forgets, but every route that takes
+   * a host from a request MUST set it.
+   */
+  pinnedAddress?: string;
 }
 
 /**
@@ -199,6 +215,8 @@ function socketWrite(socket: net.Socket, data: string): Promise<void> {
 
 function connectTcp(host: string, port: number, onSocket: (socket: net.Socket) => void): Promise<net.Socket> {
   return new Promise((resolve, reject) => {
+    // `host` is already the pinned address when the caller supplied one; see
+    // ImapCredential.pinnedAddress.
     const socket = net.connect({ host, port });
     onSocket(socket);
     socket.once('connect', () => { socket.removeListener('error', reject); resolve(socket); });
@@ -206,9 +224,13 @@ function connectTcp(host: string, port: number, onSocket: (socket: net.Socket) =
   });
 }
 
-function connectTls(host: string, port: number, onSocket: (socket: net.Socket) => void): Promise<tls.TLSSocket> {
+function connectTls(host: string, port: number, servername: string, onSocket: (socket: net.Socket) => void): Promise<tls.TLSSocket> {
   return new Promise((resolve, reject) => {
-    const socket = tls.connect({ host, port, servername: host, rejectUnauthorized: true });
+    // `host` is the address dialled, `servername` the name the certificate must
+    // match. Splitting them is what lets the pinned address be an IP without
+    // weakening certificate validation: Node's checkServerIdentity prefers
+    // `servername` over `host`.
+    const socket = tls.connect({ host, port, servername, rejectUnauthorized: true });
     onSocket(socket);
     socket.once('secureConnect', () => { socket.removeListener('error', reject); resolve(socket); });
     socket.once('error', reject);
@@ -238,17 +260,19 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
   const attempt = (async (): Promise<ImapValidationResult> => {
     try {
       const security = cred.security ?? 'tls';
+      // The address to dial. Falls back to the name only when no guard ran.
+      const dialHost = cred.pinnedAddress || cred.host;
       let socket: net.Socket;
       if (security === 'tls') {
         phase = 'tls';
-        socket = await connectTls(cred.host, cred.port, (value) => { activeSocket = value; });
+        socket = await connectTls(dialHost, cred.port, cred.host, (value) => { activeSocket = value; });
         phase = 'greeting';
         if (!(await readLine(socket)).startsWith('* OK')) {
           return { ok: false, code: 'IMAP_PROTOCOL_ERROR', message: IMAP_VALIDATION_MESSAGES.IMAP_PROTOCOL_ERROR, phase };
         }
       } else {
         phase = 'tcp';
-        socket = await connectTcp(cred.host, cred.port, (value) => { activeSocket = value; });
+        socket = await connectTcp(dialHost, cred.port, (value) => { activeSocket = value; });
         phase = 'greeting';
         if (!(await readLine(socket)).startsWith('* OK')) {
           return { ok: false, code: 'IMAP_PROTOCOL_ERROR', message: IMAP_VALIDATION_MESSAGES.IMAP_PROTOCOL_ERROR, phase };

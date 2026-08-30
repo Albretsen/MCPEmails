@@ -7,7 +7,7 @@
  * someone walking past a 10 inch panel, so it shows twelve numbers, fills the
  * screen exactly once, and has no controls at all.
  *
- * Three constraints shape it.
+ * Four constraints shape it.
  *
  * ONE SCREEN. Everything that matters fits in 100dvh with no scrolling, at any
  * aspect ratio, without a media query (see admin-kiosk.css for how). Scrolling
@@ -25,14 +25,26 @@
  * to dark, and states in words when a panel could not load, because a blank
  * tile on a wall reads as a zero and a zero here would send someone off to
  * investigate a query timeout as if it were a collapse in usage.
+ *
+ * THE FOURTH CONSTRAINT, added 2026-08-30: IT HAS TO NOTICE AN OUTAGE. Every
+ * number above is a business metric that moves in weeks, and a board made only
+ * of those can sit on a wall looking immaculate while the product it reports on
+ * has not answered a request since breakfast. The health provider wrapping
+ * everything below polls a dedicated uncached endpoint every 45 seconds and
+ * owns three things: a banner across the top, a tile in the supporting strip,
+ * and a state class on this root that tints the whole screen. It is the only
+ * part of the board allowed to shout, and the only part that renders nothing
+ * at all when it has nothing to say.
  */
 
 import { Suspense } from 'react';
 import { currentDeployment } from '@/lib/admin/deployment';
 import { requireKioskAccess } from '@/lib/admin/require-kiosk';
+import { fetchSystemHealth } from '@/lib/analytics/kiosk-health';
 import { KioskBoard, KIOSK_WINDOW_DAYS } from '../../../../components/admin/kiosk/board';
 import { KioskDetail } from '../../../../components/admin/kiosk/detail';
 import { KioskLive } from '../../../../components/admin/kiosk/KioskLive';
+import { KioskAlarm, KioskHealthProvider } from '../../../../components/admin/kiosk/KioskHealth';
 import '../../../../styles/admin-kiosk.css';
 
 export const metadata = {
@@ -55,9 +67,10 @@ export const viewport = {
 };
 
 /**
- * The board reads live counters and a token from the query string, so it can
- * never be prerendered. The underlying RPCs are still cached for ten minutes
- * each, which is what actually keeps this cheap to render every five.
+ * The board reads live counters and a per-request credential (a cookie, or a
+ * `?k=` bootstrap on the very first load), so it can never be prerendered. The
+ * underlying RPCs are still cached for ten minutes each, which is what actually
+ * keeps this cheap to render every five.
  */
 export const dynamic = 'force-dynamic';
 
@@ -71,14 +84,30 @@ export default async function GrowthKioskPage({
 
   const generatedAt = new Date().toISOString();
 
+  // Awaited in the shell rather than streamed in a boundary like the board
+  // below it, because the provider has to wrap everything to own the root
+  // element's alarm class, and a provider cannot be handed its initial value by
+  // a child. It costs the first paint a handful of indexed counts (see
+  // kiosk-health.ts) and buys a hard reload that is never briefly unjudged: a
+  // board that renders green for a second before admitting an outage is a board
+  // someone will walk past at exactly the wrong second.
+  const health = await fetchSystemHealth();
+
   return (
-    <div className="kiosk">
+    <KioskHealthProvider initial={health}>
       <div className="kiosk-board">
         <header className="kiosk-head">
-          <h1 className="kiosk-wordmark">
-            MCP Emails <em>Growth · last {KIOSK_WINDOW_DAYS} days</em>
-          </h1>
-          <KioskLive generatedAt={generatedAt} deployment={currentDeployment()} />
+          <div className="kiosk-head-top">
+            <h1 className="kiosk-wordmark">
+              MCP Emails <em>Growth · last {KIOSK_WINDOW_DAYS} days</em>
+            </h1>
+            <KioskLive generatedAt={generatedAt} deployment={currentDeployment()} />
+          </div>
+          {/* Inside the header, not in a grid row of its own. The header row is
+              `auto` and everything below it is a fraction of the remainder, so
+              the banner appearing squeezes the board rather than pushing a row
+              off the bottom of the screen. */}
+          <KioskAlarm />
         </header>
 
         {/* One boundary for the whole board, not one per tile. A wall display
@@ -95,7 +124,7 @@ export default async function GrowthKioskPage({
       <Suspense fallback={null}>
         <KioskDetail />
       </Suspense>
-    </div>
+    </KioskHealthProvider>
   );
 }
 

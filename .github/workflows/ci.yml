@@ -17,8 +17,55 @@ concurrency:
 # Re-add them once the eslint flat config is fixed and local Supabase is wired
 # (enable pg_cron in supabase/config.toml). Production RLS is enforced directly
 # on the database, independent of CI.
+#
+# NOTE (2026-08-30): the Dependency Audit job below was added as finding F-05 of
+# the Google ADA-CASA pre-submission audit. The gap it closes: with no audit
+# step, `npm audit` had drifted to 8 high and 1 moderate advisory, every one of
+# them with a published fix, and nothing in this pipeline would ever have said
+# so. CASA is an ANNUAL reassessment, so a one-off cleanup would simply have
+# drifted back before the next one; the job is here to make the drift visible
+# the week it starts. SAST lives in its own workflow (codeql.yml) because it
+# runs on a schedule as well as on pull requests.
 
 jobs:
+  # Fails the build on any high or critical advisory in the dependency tree.
+  #
+  # WHY THE REPO ROOT AND NOT `cd apps/web`. apps/web is an npm workspace
+  # (see the root package.json "workspaces": ["apps/*"]) and has no lockfile of
+  # its own — the root package-lock.json is the single resolved tree for the
+  # whole monorepo. Verified 2026-08-30 that both report the identical nine
+  # advisories. Running it here is also the only reliable option: `npm audit`
+  # inside apps/web works locally only because a previous install happened to
+  # leave an apps/web/node_modules behind, which a fresh CI checkout does not
+  # have. (apps/web also carries a stale pnpm-lock.yaml from a one-off pnpm
+  # run; nothing reads it, and npm audit ignores it.)
+  #
+  # WHY NO `npm install`. `npm audit` resolves the tree from package-lock.json
+  # and asks the registry about it, so it needs no node_modules at all. That
+  # makes this the fastest job in the pipeline and keeps a red audit from being
+  # confused with a broken install.
+  #
+  # WHY NOT `--omit=dev`. The tempting argument is that only shipped code is
+  # attackable, so dev dependencies are noise. That is wrong here for two
+  # reasons. First, a compromised build-time dependency runs inside this
+  # workflow and on the maintainer's laptop, with reach into the same
+  # deployment credentials as the production code — the dev/prod split is a
+  # split in what the package does, not in what it can touch. Second, and
+  # concretely: as of 2026-08-30 `--omit=dev` hides exactly one of the nine
+  # current advisories (brace-expansion, high), so adopting it would have
+  # started this job's life by quietly suppressing a finding it exists to
+  # report. Audit everything the lockfile installs.
+  audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: npm audit (fails on high or critical)
+        run: npm audit --audit-level=high
+
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
@@ -47,6 +94,38 @@ jobs:
       - run: npm install
       - name: Run unit tests
         run: cd apps/web && npm test
+
+  # The edge function is a separate runtime with a separate test suite, and
+  # until now nothing ran it. That mattered more than it looked: the MCP server
+  # is where mail credentials are decrypted and where every mailbox operation
+  # is actually performed, and its suite is the larger of the two (341 tests to
+  # the web app's handful). Two of the security fixes prepared for the CASA
+  # AL1 assessment — the signature-HTML allowlist and the SSRF host guard —
+  # exist as deliberate Node/Deno twins whose whole contract is that the two
+  # implementations stay identical. Each twin carries a drift check that fails
+  # when they diverge, which is worth nothing if no CI job ever runs it.
+  deno:
+    name: Edge Function Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          # Match the version the functions are developed against; Deno's
+          # minor releases have changed type-checking strictness before.
+          deno-version: v2.x
+      - name: Type check the edge function
+        run: deno check supabase/functions/mcp-server/index.ts
+      - name: Run edge function tests
+        # Withholding --allow-net is deliberate: a test that quietly starts
+        # depending on the network fails here rather than becoming flaky in CI
+        # later. host-guard.test.ts has two tests that resolve real hostnames,
+        # and they are gated behind this env var precisely so that this job can
+        # skip them; they run locally, where a developer can see a live DNS
+        # failure for what it is. --allow-env is what lets the gate be read.
+        env:
+          HOST_GUARD_SKIP_NETWORK_TESTS: '1'
+        run: deno test --allow-read --allow-env supabase/functions/mcp-server/
 
   build:
     name: Build Check

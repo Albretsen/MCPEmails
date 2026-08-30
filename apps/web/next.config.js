@@ -154,11 +154,32 @@ const nextConfig = {
   },
 
   // ---------------------------------------------------------------------------
-  // Security headers (local development)
+  // Security headers
   // ---------------------------------------------------------------------------
-  // In production these headers are set by vercel.json. The rules below apply
-  // the same policy during local development so the security posture is
-  // consistent across all environments.
+  // These are the REAL production headers, not a local-development mirror. The
+  // comment here used to say "in production these headers are set by
+  // vercel.json"; that is false and was worth checking rather than believing.
+  // The Vercel project's Root Directory is apps/web (see .vercel/project.json),
+  // and Vercel only reads a vercel.json found inside the Root Directory — the
+  // one at the repo root is never loaded. Production proves it: mcpemails.com
+  // returns `strict-transport-security: max-age=63072000` (Vercel's default),
+  // not the `; includeSubDomains; preload` that the root vercel.json asks for.
+  // Everything below is what actually ships.
+  //
+  // The Content-Security-Policy is deliberately NOT here any more. It carries a
+  // per-request nonce now, so it is built and set in proxy.ts (see src/lib/csp.ts).
+  // It must not also be emitted from this file: two Content-Security-Policy
+  // headers are enforced as an intersection, so a second, static, nonce-less
+  // policy would have to allow 'unsafe-inline' to let the framework's inline
+  // scripts through — reintroducing exactly the hole this removed, and showing
+  // up as `unsafe-inline` in any header scan an assessor runs.
+  //
+  // proxy.ts's matcher covers every HTML document. It skips /_next/static,
+  // /_next/image, favicon.ico and bare image/font files, which therefore no
+  // longer carry a CSP. That is an accepted, small loss: those paths serve
+  // first-party static assets only (public/ holds SVG, one PNG and llms.txt —
+  // no user-supplied content), CSP does not govern the execution of a .js file
+  // fetched as a script, and nosniff + X-Frame-Options still apply to them.
   async headers() {
     return [
       {
@@ -171,12 +192,8 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          {
-            key: 'Content-Security-Policy',
-            // 'unsafe-eval' is required by React in development mode for call-stack
-            // reconstruction. It is intentionally absent from the production CSP in vercel.json.
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://avatars.githubusercontent.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com; font-src 'self' https://fonts.gstatic.com; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self';",
-          },
+          // Content-Security-Policy is set per request in proxy.ts — see the
+          // block comment above this headers() function before adding it back.
           { key: 'Cross-Origin-Opener-Policy',         value: 'same-origin' },
           { key: 'X-Permitted-Cross-Domain-Policies',  value: 'none' },
         ],

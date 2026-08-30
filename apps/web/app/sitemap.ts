@@ -21,7 +21,10 @@ const MARKETING_PAGES: {
   { path: '', lastModified: '2026-08-27', changeFrequency: 'weekly', priority: 1.0 },
   { path: '/pricing', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.9 },
   { path: '/docs', lastModified: '2026-08-27', changeFrequency: 'weekly', priority: 0.8 },
-  { path: '/docs/providers', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.6 },
+  // The provider compatibility matrix: the page written to be cited, and the
+  // one whose value depends on being re-verified, hence the higher priority
+  // and the visible last-verified date on the page itself.
+  { path: '/docs/providers', lastModified: '2026-08-30', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/native-connectors-vs-mcp', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/self-hosting', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/security', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.6 },

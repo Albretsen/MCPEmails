@@ -1140,3 +1140,48 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 @media (max-width: 720px) {
   .founder-prompts, .founder-does-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Provider compatibility matrix (/docs/providers) ────────────────────────
+   Two tables on one page: how each provider connects, then what the agent can
+   do once it has. Both live inside .comparison-wrap, which already scrolls on
+   its own axis, so the page body never scrolls sideways on a phone. */
+.providers-verified {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin: 0 0 22px; padding: 6px 12px 6px 10px;
+  border: 1px solid var(--border-1); border-radius: 99px;
+  background: var(--bg-sunken);
+  font-family: var(--font-sans); font-size: 13px; color: var(--fg-3);
+}
+.providers-verified b { color: var(--fg-1); font-weight: 600; }
+.providers-verified-dot {
+  width: 7px; height: 7px; border-radius: 99px;
+  background: var(--mint-600); flex: none;
+}
+.providers-h2 {
+  font-family: var(--font-sans); font-size: clamp(22px, 3vw, 28px);
+  line-height: 1.2; letter-spacing: -0.02em; font-weight: 600;
+  color: var(--fg-1); margin: 0 0 8px;
+}
+.providers-sub {
+  font-family: var(--font-sans); font-size: 15px; line-height: 1.6;
+  color: var(--fg-3); max-width: 760px; margin: 0 0 24px;
+}
+/* Prose cell: the failure descriptions are sentences, not glyphs, so they get
+   a reading measure and top alignment rather than the centred treatment the
+   capability ticks use. */
+.providers-conn-tbl td { vertical-align: top; }
+/* Two rules the shared .comparison-tbl carries for the pricing grid have to be
+   undone here. Its cells are centred, which is right for a column of ticks and
+   wrong for hostnames and sentences; and it tints the fourth column to mark the
+   Pro plan, which in this table is simply SMTP. */
+.providers-conn-tbl .tbl-val,
+.providers-conn-tbl thead th { text-align: left; }
+.providers-conn-tbl tbody tr:not(.tbl-section-head) td:nth-child(4) {
+  background: transparent;
+}
+.providers-breaks {
+  font-family: var(--font-sans); font-size: 13px; line-height: 1.55;
+  color: var(--fg-3); min-width: 300px; max-width: 460px;
+}
+.providers-conn-tbl .feat-name a { color: var(--fg-1); font-weight: 600; }
+.providers-conn-tbl .feat-name a:hover { text-decoration: underline; }

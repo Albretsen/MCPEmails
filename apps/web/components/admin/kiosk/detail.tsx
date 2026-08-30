@@ -22,6 +22,8 @@ import {
 } from '@/lib/analytics/growth-queries';
 import { fetchCheckoutFunnel, fetchRecurringRevenue } from '@/lib/analytics/kiosk-revenue';
 import type { CheckoutFunnel } from '@/lib/analytics/kiosk-revenue';
+import { fetchRecentIncidents } from '@/lib/analytics/kiosk-health';
+import type { MonitorIncident } from '@/lib/analytics/kiosk-health';
 import { NO_DATA, formatCount, formatMoney, ratio } from '../charts';
 import { BarList, FactRow, Tile, TileError } from './primitives';
 import { KIOSK_WINDOW_DAYS } from './board';
@@ -30,13 +32,14 @@ import { KIOSK_WINDOW_DAYS } from './board';
 const RETENTION_WEEKS = 12;
 
 export async function KioskDetail() {
-  const [retention, bands, clients, errors, checkout, recurring] = await Promise.all([
+  const [retention, bands, clients, errors, checkout, recurring, incidents] = await Promise.all([
     fetchRetentionCurve(RETENTION_WEEKS),
     fetchEngagementBands(KIOSK_WINDOW_DAYS),
     fetchClientMix(),
     fetchErrorBreakdown(KIOSK_WINDOW_DAYS),
     fetchCheckoutFunnel(),
     fetchRecurringRevenue(KIOSK_WINDOW_DAYS),
+    fetchRecentIncidents(),
   ]);
 
   return (
@@ -205,6 +208,52 @@ export async function KioskDetail() {
         <TileError label="MCP client on first success" message={clients.error} />
       )}
 
+      {/* THE OUTAGE LOG. The board above answers "is it up right now", which is
+          the only question worth asking while it is down and a useless one the
+          rest of the time. This answers the one somebody actually walks over to
+          ask: whether this morning's blip was the fourth this week or the first
+          since June.
+
+          It is also the only durable record on either half of this page.
+          `activity_log` is purged at 90 days and the raw run history is noise,
+          but an incident row is a deduplicated, human-sized fact about a time
+          the product stopped working, kept for as long as the table is.
+
+          "Runs" is the strike count, and it is the column that says whether an
+          entry was worth waking up for: one strike on a retryable class is
+          somebody else's network, and the row is here for completeness rather
+          than for blame. */}
+      <Tile
+        label="Outage log"
+        aside={incidentAside(incidents)}
+        tone={incidents.some((row) => row.status === 'open') ? 'bad' : 'default'}
+      >
+        {incidents.length === 0 ? (
+          <p className="kiosk-empty">The synthetic monitor has never opened an incident.</p>
+        ) : (
+          <table className="kiosk-table">
+            <thead>
+              <tr>
+                <th>What failed</th>
+                <th>Cause</th>
+                <th className="is-num">Runs</th>
+                <th className="is-num">When</th>
+              </tr>
+            </thead>
+            <tbody>
+              {incidents.map((incident) => (
+                <tr key={incident.fingerprint}>
+                  <td>{incident.failedStep}</td>
+                  <td>{incident.failureClass.replace(/_/g, ' ')}</td>
+                  <td className="is-num">{formatCount(incident.consecutiveFailures)}</td>
+                  <td className="is-num">{incidentWhen(incident)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Tile>
+
       {errors.ok ? (
         <Tile label="What is failing" aside={`${KIOSK_WINDOW_DAYS}d`}>
           {errors.data.length === 0 ? (
@@ -254,6 +303,31 @@ function checkoutStages(funnel: CheckoutFunnel) {
     { label: 'Abandoned on Stripe', value: funnel.abandoned, share: true },
     { label: 'Paid', value: funnel.checkoutCompleted, share: true },
   ];
+}
+
+/**
+ * The outage log's aside.
+ *
+ * "0 open" is not the same sentence as "all resolved" even though it is the
+ * same fact: a number beside a red word reads as a count of something bad, and
+ * this tile's happy state should not be the one that looks like a tally.
+ */
+function incidentAside(incidents: MonitorIncident[]): string {
+  if (incidents.length === 0) return 'never';
+  const open = incidents.filter((row) => row.status === 'open').length;
+  return open === 0 ? 'all resolved' : `${open} open`;
+}
+
+/**
+ * When an incident happened, or the fact that it has not finished.
+ *
+ * An open incident deliberately does not get a date. It gets the word "OPEN",
+ * because the one thing a reader must not do with this table is scan a column
+ * of dates and conclude that everything in it is over.
+ */
+function incidentWhen(incident: MonitorIncident): string {
+  if (incident.status === 'open') return 'OPEN';
+  return daysAgo(incident.resolvedAt ?? incident.lastFailureAt);
 }
 
 /** Whole days since an ISO timestamp, phrased for a wall. */

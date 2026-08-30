@@ -1,0 +1,79 @@
+name: CodeQL
+
+# Static analysis (SAST) for the whole repository: the Next.js app under
+# apps/web, the Deno edge functions under supabase/functions, the npm bridge in
+# packages/mcpemails and the scripts. Added 2026-08-30 as finding F-05 of the
+# Google ADA-CASA pre-submission audit, which wants evidence that source is
+# scanned for injection, path traversal, unsafe deserialization and the rest of
+# that family on an ongoing basis, not once by hand before an assessment.
+#
+# WHY CODEQL RATHER THAN A THIRD-PARTY SCANNER. It is first-party to the host we
+# already use, needs no account, no token and no vendor in the supply chain, and
+# is free on public repositories — which this one is
+# (github.com/Albretsen/MCPEmails, AGPL-3.0). Nothing else clears that bar
+# without adding a dependency we would then have to justify to the same audit.
+#
+# WHY ITS OWN WORKFLOW AND NOT A JOB IN ci.yml. Two reasons. The database build
+# and query run take minutes rather than seconds, and ci.yml is the loop a human
+# waits on before merging. And this needs a `schedule` trigger, which ci.yml
+# (pull_request only) does not have: most new alerts here will come from CodeQL
+# shipping new queries against unchanged code, so a scanner that only ever runs
+# on a diff goes quiet exactly when nobody is touching the risky files.
+
+on:
+  pull_request:
+    branches: [main]
+  # Deliberately NOT `push`. Every push to a PR branch would re-run a
+  # multi-minute analysis for a result the pull_request run already produces.
+  schedule:
+    # Mondays 04:17 UTC. The odd minute is the standard advice for scheduled
+    # workflows: GitHub drops or delays jobs queued on the hour, when everyone
+    # else's cron fires.
+    - cron: '17 4 * * 1'
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  # Least privilege, spelled out rather than inherited: read the code, write
+  # findings to the Security tab, and nothing else. `actions: read` is required
+  # by the analyze step to attribute results to this workflow run.
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze JavaScript/TypeScript
+    runs-on: ubuntu-latest
+    # A scan that hangs must not hold a PR open indefinitely; the normal run is
+    # a few minutes.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          # One language covers everything we ship: .ts/.tsx/.js/.mjs across the
+          # Next app, the Deno functions and the scripts.
+          languages: javascript-typescript
+          # `queries:` is deliberately unset, which selects CodeQL's default
+          # suite (the security queries tuned for a low false-positive rate).
+          # The alternatives, security-extended and security-and-quality, trade
+          # a large increase in noise for a small number of extra findings, and
+          # an alert list nobody trusts is an alert list nobody reads — that is
+          # precisely the failure mode that got the Lint job deleted from ci.yml
+          # in the first place. Revisit once the default suite has come back
+          # clean for a few quarters running.
+
+      # No autobuild/build step: JavaScript and TypeScript are analysed straight
+      # from source, so CodeQL never needs `npm install` here. That also means
+      # this job cannot be broken by the dependency advisories the audit job in
+      # ci.yml is currently reporting.
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript-typescript'

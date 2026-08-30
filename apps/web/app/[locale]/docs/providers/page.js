@@ -1,5 +1,5 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { metaAlternates, localePath, OG_LOCALE } from '@/i18n/seo';
+import { metaAlternates, localePath, OG_LOCALE, pageJsonLd } from '@/i18n/seo';
 import ProvidersClient from '../../../../components/marketing/ProvidersClient';
 
 export async function generateMetadata({ params }) {
@@ -31,5 +31,24 @@ export async function generateMetadata({ params }) {
 export default async function ProvidersPage({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <ProvidersClient />;
+
+  // WebPage + BreadcrumbList. This page is written to be the thing other
+  // people cite rather than re-research, so it has to be machine readable:
+  // it had no structured data at all before.
+  const t = await getTranslations({ locale, namespace: 'docs' });
+  const jsonLd = pageJsonLd(locale, {
+    path: '/docs/providers',
+    title: t('providers.meta.title'),
+    description: t('providers.meta.description'),
+  });
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProvidersClient />
+    </>
+  );
 }

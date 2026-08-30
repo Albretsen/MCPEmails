@@ -1,0 +1,105 @@
+# Automated dependency updates. Added 2026-08-30 as finding F-05 of the Google
+# ADA-CASA pre-submission audit.
+#
+# WHY THIS EXISTS AT ALL. The Dependency Audit job in .github/workflows/ci.yml
+# tells us when the tree has rotted; it does nothing to stop the rot. Without an
+# updater, every advisory becomes a manual chore that competes with product
+# work, and the observed result was 8 high and 1 moderate advisory outstanding,
+# all with published fixes. CASA reassesses annually, so the goal is a pipeline
+# that carries itself between assessments rather than a cleanup that has to be
+# repeated by hand each August.
+#
+# WHY DEPENDABOT AND NOT RENOVATE. Renovate is the more configurable of the two
+# and its grouping and scheduling options are genuinely better. It is also a
+# GitHub App that needs installing, authorising against this org, and keeping
+# authorised — one more third party with write access to a repository whose
+# security posture is the thing being assessed. Dependabot is already present on
+# every GitHub repository, needs no app install, no token and no vendor review,
+# and its security-update path is wired directly to the same advisory database
+# the audit job queries. For a single-maintainer repo with three package
+# manifests, Renovate's extra power buys nothing that would pay for that.
+
+version: 2
+
+updates:
+  # ---------------------------------------------------------------------------
+  # npm, repository root.
+  #
+  # ONE ENTRY COVERS apps/web TOO, and that is deliberate rather than an
+  # oversight. The root package.json declares "workspaces": ["apps/*"], so
+  # apps/web has no lockfile of its own and every dependency it resolves lives
+  # in the root package-lock.json. Dependabot understands npm workspaces: it
+  # edits apps/web/package.json and the root lockfile together, in one pull
+  # request that actually installs. A second entry pointed at /apps/web would be
+  # worse than redundant — it would open a duplicate PR for every bump, and it
+  # would find the stale apps/web/pnpm-lock.yaml left over from a one-off pnpm
+  # run and start proposing pnpm updates against a tree nothing installs with.
+  #
+  # apps/mcp-app is inside the same workspace glob and is therefore covered as
+  # well. packages/mcpemails is not a workspace, but it has zero dependencies
+  # (it is a dependency-free stdio bridge), so there is nothing there to update.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '05:00'
+      timezone: Europe/Oslo
+    # Enough headroom for the grouped PR plus a few majors, without turning the
+    # PR list into someone else's inbox. Security updates are NOT counted
+    # against this limit by Dependabot, so a flood of routine bumps can never
+    # crowd out an advisory fix.
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore(deps)
+      include: scope
+    groups:
+      # One PR a week for the boring half of the work. Patch and minor bumps of
+      # a pinned-by-caret tree are individually uninteresting and collectively a
+      # daily notification habit that gets muted — and a muted updater is the
+      # same as no updater.
+      #
+      # `applies-to: version-updates` is the load-bearing line: it scopes this
+      # group to the scheduled sweep only. Dependabot security updates are a
+      # separate stream, they ignore the weekly schedule, and leaving them
+      # ungrouped means an advisory arrives as its own PR the day it is
+      # published, with its own changelog and its own revert.
+      routine:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+    # Majors stay ungrouped and unsuppressed. Next.js 16 and Supabase move fast
+    # enough that a major is a real piece of work and deserves its own PR.
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions used by the workflows themselves.
+  #
+  # This is the supply chain that has our deployment credentials in scope, so it
+  # is not an afterthought: a compromised or abandoned action runs with whatever
+  # the workflow's `permissions:` block grants it, and codeql.yml grants
+  # security-events: write. The actions here are pinned to major tags (@v3, @v4)
+  # rather than commit SHAs; this entry is what moves those tags forward when a
+  # new major lands, and what will surface an action that has stopped being
+  # maintained.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '05:00'
+      timezone: Europe/Oslo
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: chore(ci)
+    groups:
+      actions:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
