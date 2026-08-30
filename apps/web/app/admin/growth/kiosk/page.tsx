@@ -67,9 +67,10 @@ export const viewport = {
 };
 
 /**
- * The board reads live counters and a token from the query string, so it can
- * never be prerendered. The underlying RPCs are still cached for ten minutes
- * each, which is what actually keeps this cheap to render every five.
+ * The board reads live counters and a per-request credential (a cookie, or a
+ * `?k=` bootstrap on the very first load), so it can never be prerendered. The
+ * underlying RPCs are still cached for ten minutes each, which is what actually
+ * keeps this cheap to render every five.
  */
 export const dynamic = 'force-dynamic';
 

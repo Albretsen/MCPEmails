@@ -8,7 +8,9 @@ import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { normalizeSecurity } from '@/lib/email/connection-config';
 import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
+import { guardMailHost } from '@/lib/email/host-guard';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
+import { explainAuthFailure } from '@/lib/email/auth-failure';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
@@ -86,11 +88,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!appPassword) {
     return NextResponse.json({ error: 'A password is required.' }, { status: 422 });
   }
-  if (!isValidHost(imapHost) || !isValidHost(smtpHost)) {
-    return NextResponse.json({ error: 'A valid IMAP and SMTP host is required.' }, { status: 422 });
+
+  // SSRF guard. This is the only route where the mail host is fully attacker-
+  // controlled, and before the guard existed the check was "non-empty, no
+  // spaces, has a dot" — which 127.0.0.1, 10.0.0.7 and 169.254.169.254 all
+  // pass. See lib/email/host-guard.ts for the full policy and for why the
+  // returned ADDRESS, not the name, is what the validators below dial.
+  //
+  // It runs before the plan check and before any funnel event on purpose: a
+  // refused host must cost nothing and leave no trace that could be counted as
+  // a real connection attempt.
+  const imapGuard = await guardMailHost(imapHost, { protocol: 'imap', port: imapPort });
+  if (!imapGuard.ok) {
+    // Same 422 + { error, error_code } contract every other validation failure
+    // on this route uses, so the dashboard's existing error handling applies
+    // unchanged (an unrecognised code falls back to its generic headline and
+    // shows `error` under "What to check").
+    return NextResponse.json({ error: imapGuard.message, error_code: imapGuard.code }, { status: 422 });
   }
-  if (!isValidPort(imapPort) || !isValidPort(smtpPort)) {
-    return NextResponse.json({ error: 'IMAP and SMTP ports must be between 1 and 65535.' }, { status: 422 });
+  const smtpGuard = await guardMailHost(smtpHost, { protocol: 'smtp', port: smtpPort });
+  if (!smtpGuard.ok) {
+    return NextResponse.json({ error: smtpGuard.message, error_code: smtpGuard.code }, { status: 422 });
   }
 
   // 4. Enforce the plan inbox cap for brand-new addresses only.
@@ -118,6 +136,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     (candidate, timeoutMs) =>
       validateImapCredential({
         host: imapHost,
+        pinnedAddress: imapGuard.address,
         port: candidate.port,
         email,
         username: username || undefined,
@@ -145,6 +164,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error: validation.message,
       error_code: validation.code.toLowerCase(),
     };
+    // A rejected login is 72.9% of every connection failure here, and until now
+    // every one of them produced the same "check your password". Which of the
+    // four unrelated situations behind it this actually is decides what the
+    // dashboard tells the user to do next, so the sub-case travels with the
+    // code. Only an enum and the provider's public name cross the wire: the
+    // server's own rejection text stays on this side (see auth-failure.ts).
+    const authFailure =
+      validation.code === 'AUTH_FAILED'
+        ? explainAuthFailure({
+            detail: validation.detail,
+            email,
+            host: imapHost,
+            secret: appPassword,
+            usernameProvided: Boolean(username),
+          })
+        : null;
+    if (authFailure) Object.assign(body, authFailure.fields);
     // AUTH_FAILED used to be skipped here on the theory that a wrong password
     // is user-driven noise. That reasoning does not survive contact with the
     // numbers: auth failures are the single largest bucket of generic IMAP
@@ -164,6 +200,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       reason: validation.code,
       phase: validation.phase,
       detail: validation.detail ?? null,
+      // Which sub-case the rejection was classified as. This is the field that
+      // makes the fix measurable: "did naming the app-password case reduce
+      // repeat attempts" cannot be answered from a bare AUTH_FAILED count.
+      authReason: authFailure?.reason ?? null,
       // The host/port/security combination is what distinguishes a genuinely
       // unreachable server from the port/security mismatch that produced most
       // of these failures, and it was the field whose absence made the earlier
@@ -188,6 +228,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     (candidate, timeoutMs) =>
       validateSmtpCredential({
         host: smtpHost,
+        pinnedAddress: smtpGuard.address,
         port: candidate.port,
         email,
         username: username || undefined,
@@ -201,6 +242,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : smtpSecurity;
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    // Same treatment on the send half: an IMAP login that worked and an SMTP
+    // login that did not is still a credential story, and the user is owed the
+    // same specific answer rather than a second generic one.
+    const smtpAuthFailure =
+      smtpValidation.code === 'AUTH_FAILED'
+        ? explainAuthFailure({
+            detail: smtpValidation.detail,
+            email,
+            host: smtpHost,
+            secret: appPassword,
+            usernameProvided: Boolean(username),
+          })
+        : null;
     // An inbox that authenticates over IMAP but fails on SMTP is a distinct and
     // more interesting failure than either half alone, and it had no diagnostic
     // record at all: the funnel counted it, nothing said why.
@@ -210,13 +264,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       reason: smtpValidation.code,
       phase: `smtp_${smtpValidation.phase}`,
       detail: smtpValidation.detail ?? null,
+      authReason: smtpAuthFailure?.reason ?? null,
       smtpHost,
       smtpPort,
       smtpSecurity,
       attempts: smtpDetection.attempts,
       workspaceId,
     });
-    return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
+    return NextResponse.json(
+      {
+        error: smtpValidation.message,
+        error_code: smtpValidation.code.toLowerCase(),
+        ...(smtpAuthFailure?.fields ?? {}),
+      },
+      { status: 422 },
+    );
   }
 
   // 6. Defense-in-depth: reject if another active inbox in this workspace
@@ -308,13 +370,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     smtp_port: resolvedSmtpPort,
     smtp_security: resolvedSmtpSecurity,
   });
-}
-
-/** Basic hostname sanity check: non-empty, no spaces, has a dot. */
-function isValidHost(host: string): boolean {
-  return host.length > 0 && host.length <= 253 && !/\s/.test(host) && host.includes('.');
-}
-
-function isValidPort(port: number): boolean {
-  return Number.isInteger(port) && port >= 1 && port <= 65535;
 }

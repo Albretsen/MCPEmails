@@ -120,6 +120,17 @@ export interface ImapConfig {
    * Transmitted over the TLS-encrypted socket only.
    */
   appPassword?: string;
+  /**
+   * The IP address to dial, as approved by `guardMailHost` (lib/email/host-guard).
+   *
+   * Anti-SSRF. `host` here comes off a stored inbox row rather than a request
+   * body, but the row was written by a request body, and a name that was public
+   * when it was saved can be repointed at 127.0.0.1 or 169.254.169.254 later.
+   * Callers guard the stored host and pass the approved address through, so the
+   * socket lands where the check looked. `host` stays the TLS servername, so
+   * certificate validation is unchanged.
+   */
+  pinnedAddress?: string;
 }
 
 export interface ImapMessage {
@@ -650,11 +661,16 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
     new Promise<tls.TLSSocket>((resolve, reject) => {
       const s = tls.connect(
         {
-          host: config.host,
+          // The guard-approved address when there is one; the name otherwise.
+          // Dialling the address rather than re-resolving the name is what stops
+          // a DNS answer changing between the check and the connect.
+          host: config.pinnedAddress || config.host,
           port: config.port,
           // Implicit TLS (no STARTTLS); server must speak TLS from the first byte.
           rejectUnauthorized: true,
-          // servername for SNI
+          // SNI, and the name the certificate must match. Always the hostname,
+          // never the pinned address: checkServerIdentity prefers `servername`,
+          // so pinning an IP does not weaken validation.
           servername: config.host,
         },
         () => resolve(s)
