@@ -15,4 +15,9 @@ USER deno
 
 EXPOSE 8000
 
+# Serve only the static schema surface. This image exists so MCP directories
+# can boot the server and read `tools/list` with no Supabase project and no
+# credentials behind it. tools/call is refused in this mode.
+ENV MCP_INTROSPECTION_ONLY=1
+
 CMD ["deno", "run", "--allow-net", "--allow-env", "mcp-server/index.ts"]

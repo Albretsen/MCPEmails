@@ -142,8 +142,23 @@ import {
 // isolation is enforced in application code (inbox_ids allowlist), not RLS.
 // ---------------------------------------------------------------------------
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// Introspection mode. MCP directories (Glama) build this repo's root
+// Dockerfile and boot the server in an empty sandbox with no Supabase project
+// behind it, purely to read `tools/list`. Without a URL `createClient` throws
+// at module load and the container exits 1, which is why the Glama quality
+// score has never been evaluated, which in turn blocks the awesome-list PRs
+// that require a Glama grade.
+//
+// Off unless MCP_INTROSPECTION_ONLY=1, which only the Dockerfile sets.
+// Production sets SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, so the fallbacks
+// below never apply there. The non-introspection fallback stays empty on
+// purpose: a production deploy missing its env must still fail loudly.
+const INTROSPECTION_ONLY = Deno.env.get("MCP_INTROSPECTION_ONLY") === "1";
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ??
+  (INTROSPECTION_ONLY ? "http://127.0.0.1:1" : "");
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
+  (INTROSPECTION_ONLY ? "introspection-placeholder" : "");
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
@@ -277,6 +292,56 @@ interface ApiKeyRow {
   created_at: string;
   internalApprovalDispatch?: boolean;
 }
+
+/**
+ * The only methods reachable when MCP_INTROSPECTION_ONLY=1.
+ *
+ * All of them return static, already-public schema: the same tool and prompt
+ * definitions published in the README, on /docs and in the npm package.
+ * `tools/call` is deliberately absent, so an introspection container cannot
+ * reach a mailbox even if it somehow had credentials.
+ */
+const INTROSPECTABLE_METHODS = new Set<string>([
+  "initialize",
+  "tools/list",
+  "resources/list",
+  "resources/templates/list",
+  "prompts/list",
+  "ping",
+]);
+
+/**
+ * Synthetic key used only in introspection mode.
+ *
+ * It carries every scope on purpose: `tools/list` filters the surface by scope,
+ * so a narrower key would show a directory scanner fewer than the full tool
+ * surface and get the server graded on an incomplete one. It is safe because it
+ * is never checked against the database, and because only INTROSPECTABLE_METHODS
+ * can be routed with it.
+ */
+const INTROSPECTION_API_KEY: ApiKeyRow = {
+  id: "00000000-0000-0000-0000-000000000000",
+  workspace_id: "00000000-0000-0000-0000-000000000000",
+  name: "introspection",
+  key_prefix: "mcpe_introspection",
+  key_hash: "",
+  scopes: [
+    "read:email",
+    "search:email",
+    "send:email",
+    "manage:folders",
+    "delete:email",
+    "manage:drafts",
+    "manage:contacts",
+    "schedule:email",
+    "manage:automations",
+  ],
+  inbox_ids: null,
+  expires_at: null,
+  last_used_at: null,
+  deleted_at: null,
+  created_at: new Date(0).toISOString(),
+};
 
 interface JsonRpcRequest {
   jsonrpc: string;
@@ -17839,6 +17904,9 @@ async function shouldPlanBulkOperation(inbox: InboxRow): Promise<boolean> {
  */
 async function keyReviewCardGates(apiKey: ApiKeyRow): Promise<ReviewCardGates> {
   const denied: ReviewCardGates = { outbound: false, bulk: false };
+  // Introspection mode has no database to ask. Return the plain pre-MCP-Apps
+  // surface immediately rather than attempting a connection that cannot succeed.
+  if (INTROSPECTION_ONLY) return denied;
   if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) return denied;
   let query = supabase
     .from("inboxes")
@@ -24296,6 +24364,23 @@ async function handleRequest(req: Request): Promise<Response> {
     }
     console.log(`[mcp-server] notification received: ${rpcRequest.method}`);
     return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
+  // ── Introspection mode (opt-in, never on in production) ──────────────────
+  // Serves the static tool surface to a directory scanner that has no API key
+  // and no database. Strictly schema reads: `tools/call` is refused, so this
+  // path can never touch a mailbox. See INTROSPECTION_ONLY above.
+  if (INTROSPECTION_ONLY) {
+    if (!INTROSPECTABLE_METHODS.has(rpcRequest.method)) {
+      return jsonResponse(jsonRpcErrorBody(
+        requestId,
+        RPC_METHOD_NOT_FOUND,
+        "This server is running in introspection mode. Only schema methods are available.",
+      ));
+    }
+    return jsonResponse(
+      await routeMethod(rpcRequest, INTROSPECTION_API_KEY, ctx),
+    );
   }
 
   // ── Authenticate API key ──────────────────────────────────────────────────
