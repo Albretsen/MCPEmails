@@ -64,11 +64,18 @@
 .kiosk-head {
   grid-column: 1 / -1;
   display: flex;
+  flex-direction: column;
+  gap: calc(var(--kiosk-gap) * 0.7);
+  padding: 0 clamp(2px, 0.4vw, 8px) calc(var(--kiosk-gap) * 0.6);
+  border-bottom: 1px solid var(--border-1);
+}
+/* The wordmark row. Its own element since 2026-08-30, because the header now
+   also holds the alarm banner and the two stack rather than sit side by side. */
+.kiosk-head-top {
+  display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 clamp(2px, 0.4vw, 8px) calc(var(--kiosk-gap) * 0.6);
-  border-bottom: 1px solid var(--border-1);
 }
 .kiosk-wordmark {
   margin: 0;
@@ -116,6 +123,134 @@
 @media (prefers-reduced-motion: reduce) {
   .kiosk-live::before { animation: none; }
 }
+
+
+/* ---------- The alarm ---------- */
+
+/* The only element on the board allowed to shout, and the only one that
+   renders nothing at all most of the time.
+
+   THERE IS NO GREEN STATE ON PURPOSE. A permanent "all systems operational"
+   bar is read once, on the day it ships, and is wallpaper by the end of the
+   week; a bar that has never been seen before is read every time it appears.
+   The healthy case proves itself through the pulsing dot in the header and the
+   live reliability tile in the strip, both of which carry a number rather than
+   a reassurance.
+
+   IT LIVES IN THE HEADER, whose grid row is `auto`, so appearing costs the
+   four rows below it a little height each rather than pushing the last one off
+   the bottom of a screen that is defined as being exactly one screen tall.
+
+   SIZED TO BE READ FROM THE DOORWAY. The headline is roughly the size of a
+   tile's headline number, which is the largest type on the board, because the
+   failure this is guarding against is somebody walking past a display full of
+   immaculate growth numbers while the product answers nothing. */
+.kiosk-alarm {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(8px, 1.2vw, 20px);
+  padding: clamp(5px, 1dvh, 12px) clamp(10px, 1.2vw, 20px);
+  border-radius: var(--kiosk-radius);
+  border: 1px solid transparent;
+  min-width: 0;
+}
+.kiosk-alarm-headline {
+  font-size: clamp(17px, 3.4dvh, 38px);
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.kiosk-alarm-reason {
+  flex: 1;
+  min-width: 0;
+  font-size: clamp(10px, 1.7dvh, 18px);
+  line-height: 1.3;
+  /* Two lines maximum. The reason strings are one sentence by construction
+     (see health-math.ts) but a long failing-step name can still wrap, and the
+     banner growing a third line starts eating the board it sits above. */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.kiosk-alarm-since {
+  font-size: clamp(10px, 1.6dvh, 17px);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+.kiosk-alarm.is-down {
+  background: color-mix(in srgb, var(--kiosk-bad) 26%, transparent);
+  border-color: color-mix(in srgb, var(--kiosk-bad) 70%, transparent);
+  color: var(--fg-1);
+  /* Slow, wide and low contrast rather than a blink. A blinking bar on a panel
+     somebody sits near all day gets covered with a sticky note within a week;
+     a breathing glow is impossible to miss from across the room and tolerable
+     from a metre away. */
+  animation: kiosk-alarm-breathe 2.6s ease-in-out infinite;
+}
+.kiosk-alarm.is-down .kiosk-alarm-headline { color: var(--kiosk-bad); }
+
+.kiosk-alarm.is-degraded,
+.kiosk-alarm.is-unknown {
+  background: color-mix(in srgb, var(--kiosk-warn) 18%, transparent);
+  border-color: color-mix(in srgb, var(--kiosk-warn) 55%, transparent);
+  color: var(--fg-2);
+}
+.kiosk-alarm.is-degraded .kiosk-alarm-headline,
+.kiosk-alarm.is-unknown .kiosk-alarm-headline { color: var(--kiosk-warn); }
+
+@keyframes kiosk-alarm-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+  50%      { box-shadow: 0 0 clamp(14px, 2.4dvh, 34px) color-mix(in srgb, var(--kiosk-bad) 45%, transparent); }
+}
+
+/* The whole room, not just the banner. An outage should be legible from the
+   colour of the screen before any word on it has been read. */
+.kiosk.is-health-down {
+  background:
+    radial-gradient(120% 90% at 50% -20%, color-mix(in srgb, var(--kiosk-bad) 30%, transparent), transparent 62%),
+    var(--bg-page);
+}
+.kiosk.is-health-degraded,
+.kiosk.is-health-unknown {
+  background:
+    radial-gradient(120% 90% at 50% -20%, color-mix(in srgb, var(--kiosk-warn) 20%, transparent), transparent 62%),
+    var(--bg-page);
+}
+
+/* The header's proof-of-life dot follows the verdict. It is the one thing on
+   the board that moves, so leaving it green under a red banner would be the
+   single most confusing pixel on the screen. */
+.kiosk.is-health-down .kiosk-live::before {
+  background: var(--kiosk-bad);
+  animation-name: kiosk-pulse-bad;
+}
+.kiosk.is-health-degraded .kiosk-live::before,
+.kiosk.is-health-unknown .kiosk-live::before {
+  background: var(--kiosk-warn);
+  animation-name: kiosk-pulse-warn;
+}
+@keyframes kiosk-pulse-bad {
+  0%   { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.55); }
+  70%  { box-shadow: 0 0 0 0.62em rgba(229, 72, 77, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0); }
+}
+@keyframes kiosk-pulse-warn {
+  0%   { box-shadow: 0 0 0 0 rgba(240, 165, 62, 0.5); }
+  70%  { box-shadow: 0 0 0 0.62em rgba(240, 165, 62, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(240, 165, 62, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-alarm.is-down { animation: none; }
+}
+
+/* On a short viewport the supporting strip is hidden (see the media query
+   further down), which would take the live reliability tile with it. The
+   banner is what has to survive, and it does, because it is in the header. */
 
 /* ---------- Tiles ---------- */
 
