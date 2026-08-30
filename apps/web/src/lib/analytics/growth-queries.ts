@@ -362,17 +362,24 @@ export async function fetchBillingFunnel(): Promise<GrowthResult<BillingFunnelRo
 }
 
 /**
- * Server action behind the page's Refresh button.
+ * Called by the Refresh route handler (app/admin/growth/refresh/route.ts).
+ *
+ * Not a Server Action: it was one originally, bound directly to the page's
+ * <form action={...}>, but Next's per-build action-ID lookup failed to
+ * recognize it on every submission in production (verified live 2026-08-30 —
+ * `UnrecognizedActionError`, reproducing on a freshly loaded page against a
+ * stable, unchanged deployment, so it was not a deploy-skew race). This is the
+ * only 'use server' function in the app, which points at that pairing rather
+ * than anything about the revalidation call itself. A plain route handler
+ * sidesteps the action manifest entirely: it is addressed by URL, not a
+ * build-generated hash.
  *
  * `{ expire: 0 }` rather than a named profile such as 'max': the operator
  * pressed Refresh because they want to see the new numbers now, and an expiry
  * of zero is what makes Next treat the page as revalidated immediately instead
  * of serving one more stale render while it rebuilds in the background.
- * `revalidateTag` (not `updateTag`) so this stays callable from a route handler
- * as well as from a form action.
  */
 export async function refreshGrowthData(): Promise<void> {
-  'use server';
   revalidateTag(GROWTH_TAG, { expire: 0 });
 }
 
