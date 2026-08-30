@@ -147,7 +147,7 @@ import {
   validateTriageFilter,
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
-import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
+import { sendViaSmtp, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
 import { MailHostBlockedError } from "./host-guard.ts";
 import {
   type ActionMisplacement,
@@ -315,6 +315,68 @@ function authFailedResult(
     },
     logStatus: "error",
     logErrorCode: "auth_failed",
+  };
+}
+
+/**
+ * Error code for a send the provider refused before receiving any of it.
+ *
+ * Deliberately distinct from `provider_error`. That code means "we do not know
+ * whether this was delivered" and carries a do-not-retry warning everywhere it
+ * appears; this one means the opposite, and three things key off the
+ * difference: the text handed to the agent, the idempotency ledger (which
+ * releases the key instead of consuming it, see completeOutboundIdempotency),
+ * and the activity log, where these are worth counting separately because a
+ * run of them is a host refusing our egress address rather than a mail bug.
+ */
+const PROVIDER_NOT_SENT_ERROR_CODE = "provider_not_sent";
+
+/**
+ * Standard tool result for {@link SmtpNotSentError}: the mail server hung up or
+ * refused before DATA, so the message provably does not exist anywhere.
+ *
+ * The text says the two things an agent cannot work out for itself. First that
+ * there is nothing to reconcile: no delivery, no Sent copy, the draft (if any)
+ * untouched, so it should not go hunting through folders. Second that a retry
+ * is safe and is the right next move, which is the exact opposite of what
+ * `provider_error` tells it. Without the second sentence an agent does what one
+ * did on 2026-08-30: correctly concludes it must not retry, and asks the user
+ * to go and send the mail by hand.
+ *
+ * The server's own refusal text is quoted because for a pre-DATA rejection it
+ * is a protocol reply about the envelope, not message content, and it is the
+ * only clue that distinguishes "this host blocks our sending address" from
+ * "this recipient does not exist".
+ */
+function notSentResult(
+  operation: string,
+  provider: string,
+  inboxId: string,
+  reason: string,
+): ToolErrorResult {
+  console.warn(`[mcp-server] ${operation}: provider_not_sent`, {
+    inbox_id: inboxId,
+    provider,
+    error: reason,
+  });
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text:
+          `The mail server refused this message before any of it was ` +
+          `transmitted, so nothing was sent: there is no delivery, no copy in ` +
+          `Sent, and any draft is untouched. Reason given: ${reason}. ` +
+          `Retrying is safe and will not duplicate anything, and the same ` +
+          `idempotency_key may be reused. If retries keep failing this way, ` +
+          `the mail host is refusing the sending connection rather than the ` +
+          `message, and the user should ask their mail provider to allow ` +
+          `submission from MCP Emails.`,
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: PROVIDER_NOT_SENT_ERROR_CODE,
   };
 }
 
@@ -975,6 +1037,33 @@ async function completeOutboundIdempotency(
   resultSnapshot: Record<string, unknown> | null = null,
 ): Promise<void> {
   if (!claim || claim.kind !== "proceed") return;
+
+  // A submission the provider refused before it had the message is the one
+  // failure we can be certain about, and certainty here has to be spent, not
+  // hoarded. Settling it in ANY state consumes the key: `unknown` and `failed`
+  // both replay on the next attempt, so the caller's correct move (retry the
+  // identical request with the identical key) comes back as "already
+  // processed" and the mail is stranded with no way to send it. That is not
+  // theoretical: on 2026-08-30 an inbox whose host blocks our egress range hit
+  // exactly this, and the retry only went through once the caller invented a
+  // fresh key. So release the key instead: delete the ledger row, and the next
+  // attempt claims it clean and actually sends. Safe precisely because nothing
+  // was transmitted, which is the whole content of SmtpNotSentError.
+  if (logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE) {
+    const { error: releaseError } = await supabase.from("outbound_idempotency")
+      .delete()
+      .eq("api_key_id", apiKeyId)
+      .eq("operation", operation)
+      .eq("key_digest", claim.keyDigest)
+      .eq("request_digest", claim.requestDigest);
+    // A failed release is not fatal: the row stays `processing` and expires in
+    // 24h. Log it, because until then this key answers "already in progress".
+    if (releaseError) {
+      console.error("[mcp-server] idempotency_release_failed", { operation, error: releaseError.message });
+    }
+    return;
+  }
+
   // An unhandled failure may happen after provider acceptance; preserve the
   // conservative unknown state rather than making a subsequent retry send again.
   // A budget-stopped partial takes the same conservative state for the mirror
@@ -1020,6 +1109,9 @@ async function completeApprovedOutboundIdempotency(
   logStatus: "success" | "error",
   logErrorCode: string | null,
 ): Promise<void> {
+  // PROVIDER_NOT_SENT_ERROR_CODE falls through to "failed" rather than
+  // "unknown" on purpose: nothing was transmitted, so there is nothing for the
+  // user to reconcile before approving a fresh attempt.
   const status = logStatus === "success" ? "succeeded"
     : (logErrorCode === "provider_error" || logErrorCode === "-32603") ? "unknown"
     : "failed";
@@ -13119,6 +13211,11 @@ async function executeForwardEmail(
       };
     }
 
+    // Provably never transmitted: say so, and let the caller retry.
+    if (err instanceof SmtpNotSentError) {
+      return notSentResult("email_forward", inbox.provider, inboxId, message);
+    }
+
     // Unknown provider error — do not include raw error detail.
     console.error("[mcp-server] email_forward: provider_error", {
       inbox_id: inboxId,
@@ -13495,6 +13592,11 @@ async function executeReplyToEmail(
         logStatus: "error",
         logErrorCode: "message_not_found",
       };
+    }
+
+    // Provably never transmitted: say so, and let the caller retry.
+    if (err instanceof SmtpNotSentError) {
+      return notSentResult("email_reply", inbox.provider, inboxId, message);
     }
 
     // Unknown provider error — do not include raw error detail.
@@ -14281,6 +14383,11 @@ async function executeSendEmail(
 
     if (isAuthFailure) {
       return authFailedResult(inbox.provider, inbox.id, "access");
+    }
+
+    // Provably never transmitted: say so, and let the caller retry.
+    if (err instanceof SmtpNotSentError) {
+      return notSentResult("email_send", inbox.provider, inboxId, message);
     }
 
     // Unknown provider error — log it but do NOT include raw error detail
@@ -21291,6 +21398,11 @@ async function executeSendDraft(
         logStatus: "error", logErrorCode: "quota_exceeded",
       };
     }
+    // Provably never transmitted: say so, and let the caller retry.
+    if (err instanceof SmtpNotSentError) {
+      return notSentResult("draft_send", inbox.provider, inbox.id, message);
+    }
+
     console.error("[mcp-server] draft_send: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
     return {
       result: {
@@ -24052,6 +24164,17 @@ async function handleToolsCall(
 
 const MAX_DISPATCH_BATCH = 50;
 
+/**
+ * How long past its due time a scheduled send may keep being retried after a
+ * provable non-send.
+ *
+ * Long enough to ride out a transient egress block (the dispatcher runs each
+ * minute), short enough that a permanently misconfigured host fails visibly
+ * instead of retrying all day. A deferred row keeps its place in the queue, so
+ * the cost of the window is one connection attempt per minute.
+ */
+const SCHEDULED_SEND_DEFER_WINDOW_MS = 15 * 60 * 1000;
+
 // A row that has been in 'sending' longer than this is considered stale: the
 // dispatch invocation that claimed it crashed mid-flight.  We do NOT reset it
 // to 'pending' — the email may already have been (partially) sent before the
@@ -24115,7 +24238,9 @@ async function handleScheduledDispatch(): Promise<Response> {
   // oldest-due messages are dispatched first.
   const { data: rows, error: fetchErr } = await supabase
     .from("scheduled_sends")
-    .select("id, inbox_id, payload, payload_encrypted")
+    // send_at comes back so a provable non-send can be deferred within a
+    // bounded window rather than failed outright (see the catch below).
+    .select("id, inbox_id, payload, payload_encrypted, send_at")
     .eq("status", "pending")
     .lte("send_at", now)
     .order("send_at", { ascending: true })
@@ -24139,6 +24264,7 @@ async function handleScheduledDispatch(): Promise<Response> {
 
   let dispatched = 0;
   let errored = 0;
+  let deferred = 0;
 
   for (const row of pending) {
     // Optimistic lock: atomically transition pending → sending so a
@@ -24225,7 +24351,16 @@ async function handleScheduledDispatch(): Promise<Response> {
           dispatchedResult.logStatus,
           dispatchedResult.logErrorCode,
         );
-        if (dispatchedResult.logStatus !== "success") throw new Error(`approved ${approval.operation} failed: ${dispatchedResult.logErrorCode ?? "unknown"}`);
+        if (dispatchedResult.logStatus !== "success") {
+          // Rebuild the non-send signal the handler swallowed when it turned
+          // the error into a tool result, so the catch below can defer this
+          // row instead of failing it. Same reasoning as the interactive path:
+          // nothing was transmitted, so a retry is free of consequence.
+          if (dispatchedResult.logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE) {
+            throw new SmtpNotSentError(`approved ${approval.operation} was refused before transmission`, true);
+          }
+          throw new Error(`approved ${approval.operation} failed: ${dispatchedResult.logErrorCode ?? "unknown"}`);
+        }
         await supabase.from("scheduled_sends").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
         dispatched++;
         continue;
@@ -24291,6 +24426,35 @@ async function handleScheduledDispatch(): Promise<Response> {
       dispatched++;
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
+
+      // A mail server that refused the message before receiving any of it has
+      // not consumed anything: the row can go back on the queue and the next
+      // cron tick will try again from a fresh isolate, which for the egress
+      // blocks this guards against is usually a different address. Terminal
+      // "error" here would be a lie AND a loss, since nobody is watching an
+      // unattended send to notice and retry it by hand.
+      //
+      // Bounded by wall clock rather than an attempt counter, which the table
+      // has no column for. The dispatcher runs each minute, so this is roughly
+      // that many attempts before the row is failed for real with the
+      // provider's own words attached.
+      const dueMs = row.send_at ? Date.parse(row.send_at as string) : Number.NaN;
+      const withinDeferWindow = Number.isFinite(dueMs) &&
+        Date.now() - dueMs < SCHEDULED_SEND_DEFER_WINDOW_MS;
+      if (err instanceof SmtpNotSentError && err.retryable && withinDeferWindow) {
+        console.warn(`[dispatch] scheduled_send ${row.id} deferred (nothing sent):`, detail);
+        await supabase
+          .from("scheduled_sends")
+          .update({
+            status: "pending",
+            error_detail: `deferred, nothing was sent: ${detail}`.slice(0, 1000),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", row.id);
+        deferred++;
+        continue;
+      }
+
       console.error(
         `[dispatch] scheduled_send ${row.id} failed:`,
         detail,
@@ -24311,10 +24475,10 @@ async function handleScheduledDispatch(): Promise<Response> {
   }
 
   console.log(
-    `[dispatch] Done: dispatched=${dispatched} errored=${errored} total=${pending.length}`,
+    `[dispatch] Done: dispatched=${dispatched} errored=${errored} deferred=${deferred} total=${pending.length}`,
   );
   return new Response(
-    JSON.stringify({ dispatched, errored, total: pending.length }),
+    JSON.stringify({ dispatched, errored, deferred, total: pending.length }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
 }
