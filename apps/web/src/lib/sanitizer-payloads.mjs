@@ -1,10 +1,11 @@
 // ---------------------------------------------------------------------------
 // The shared payload corpus.
 //
-// This file is imported by BOTH test suites: the Node one next to it and the
-// Deno one at supabase/functions/mcp-server/html-sanitizer.test.ts, which reads
-// it across the repo purely as a test fixture (nothing shipped imports it, so
-// the edge bundle is untouched).
+// This file is imported by BOTH test suites: the Node one at
+// sanitizeSignatureHtml.test.mjs and the Deno one at
+// supabase/functions/mcp-server/signature-sanitizer.test.ts, which reads it
+// across the repo purely as a test fixture (nothing shipped imports it, so the
+// edge bundle is untouched).
 //
 // One corpus, two runtimes, compared output-for-output. The two sanitizers are
 // hand-ported twins, and a hand-ported twin drifts: the honest way to know they

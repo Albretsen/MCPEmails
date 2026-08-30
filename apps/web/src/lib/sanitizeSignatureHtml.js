@@ -15,7 +15,10 @@
 // ---------------------------------------------------------------------------
 
 import createDOMPurify from "dompurify";
-import { sanitizeSignatureHtml as sanitizeSignatureHtmlServer } from "./sanitizeSignatureHtmlServer.js";
+import {
+  sanitizeSignatureHtml as sanitizeSignatureHtmlServer,
+  sanitizeStyleAttribute,
+} from "./sanitizeSignatureHtmlServer.js";
 
 /**
  * Maximum length of the sanitized output, in bytes-ish (JS string length).
@@ -90,12 +93,14 @@ const FORBID_TAGS = [
 // default handling; the hook re-checks the two attributes we care about.
 const ALLOWED_URI_REGEXP = /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i;
 
-// Inline `style` properties that must never survive. Anything matching these
-// (by property name or a poisoned value) is dropped from the style attribute.
-// We keep benign presentational properties (color, font-*, text-align, width,
-// height, background-color, etc.).
-const FORBIDDEN_STYLE_PROP = /^(position|behavior|-moz-binding)$/i;
-const FORBIDDEN_STYLE_VALUE = /expression\s*\(|url\s*\(\s*['"]?\s*javascript:/i;
+// Inline `style` filtering is NOT done here any more. It used to be a
+// property/value deny-list local to this file, which meant the browser preview
+// and the server (the authority on what is stored) disagreed about which
+// declarations survive — and the deny-list had the same shape of hole as the
+// old regex sanitizer: `url(javascript:…)` was covered, `\75 rl(javascript:…)`
+// and `&#117;rl(javascript:…)` were not. Both sides now call the one
+// allow-list implementation in sanitizeSignatureHtmlServer.js, so the preview
+// shows exactly what will be saved.
 
 let hooksRegistered = false;
 let browserDOMPurify = null;
@@ -138,9 +143,9 @@ function registerHooks(DOMPurify) {
       }
     }
 
-    // Scrub dangerous inline style properties while keeping benign formatting.
+    // Filter inline styles through the shared allow-list (see the note above).
     if (node.hasAttribute("style")) {
-      const cleaned = sanitizeStyle(node.getAttribute("style") || "");
+      const cleaned = sanitizeStyleAttribute(node.getAttribute("style") || "");
       if (cleaned) {
         node.setAttribute("style", cleaned);
       } else {
@@ -148,25 +153,6 @@ function registerHooks(DOMPurify) {
       }
     }
   });
-}
-
-/** Filter an inline style string to a safe subset of declarations. */
-function sanitizeStyle(style) {
-  return style
-    .split(";")
-    .map((decl) => decl.trim())
-    .filter(Boolean)
-    .filter((decl) => {
-      const idx = decl.indexOf(":");
-      if (idx === -1) return false;
-      const prop = decl.slice(0, idx).trim();
-      const value = decl.slice(idx + 1).trim();
-      if (!prop || !value) return false;
-      if (FORBIDDEN_STYLE_PROP.test(prop)) return false;
-      if (FORBIDDEN_STYLE_VALUE.test(decl)) return false;
-      return true;
-    })
-    .join("; ");
 }
 
 /**

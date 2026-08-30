@@ -1,21 +1,11 @@
 // ---------------------------------------------------------------------------
-// sanitizeSignatureHtmlServer — dependency-free ALLOW-LIST signature sanitizer
-// for Node route handlers
+// signature-sanitizer — ALLOW-LIST signature HTML sanitizer (Deno / edge)
 // ---------------------------------------------------------------------------
 //
-// WHY THIS MODULE HAS NO DEPENDENCIES (do not "fix" it by importing DOMPurify):
-// isomorphic-dompurify needs jsdom on the server, and jsdom's transitive deps
-// (@asamuzakjp/css-color -> @csstools/css-calc) ship ESM-only. Under Next's
-// server runtime on Vercel they are require()d as externals and crash with
-// ERR_REQUIRE_ESM at request time, which 500'd every signature_html save in
-// production. Nothing about that has changed, so this module carries its own
-// tokenizer rather than any parser package. NEVER import the DOMPurify
-// sanitizer (./sanitizeSignatureHtml.js) from a Node route handler.
-//
-// WHY IT IS NO LONGER A REGEX DENY-LIST:
-// This used to be a pile of strip-the-bad-thing regexes ported from the edge
-// function. Every one of them was bypassable, and four bypasses were
-// demonstrated against the shipped version:
+// This is the send-time and MCP-tool-time pass over per-inbox signature HTML.
+// It used to live inline in index.ts as a stack of strip-the-bad-thing regexes.
+// Every one of those regexes was bypassable, and four bypasses were
+// demonstrated against the shipped web-app twin of the same code:
 //
 //   <img/src="https://a/b"onerror=alert(1)>   the on*= regex required
 //                                             whitespace before the handler,
@@ -29,6 +19,10 @@
 //                                             only the raw bytes
 //   <div style="background:url(javascript:alert(1))">   not covered at all
 //
+// This copy was WORSE than the web one, because it ran a single pass instead of
+// iterating to a fixpoint, so `<scr<script>ipt>alert(1)</script>` survived here
+// as well: removing the inner `<script>` glued `<scr` and `ipt>` back together.
+//
 // Patching those regexes only ever buys time until the next quirk, because a
 // deny-list has to enumerate every way a browser can be surprised. This module
 // now TOKENIZES the input the way the HTML spec says a browser does and rebuilds
@@ -38,38 +32,35 @@
 // Text is emitted with < and > escaped and attribute values are re-encoded, so
 // the output cannot be re-parsed into markup that was not in the tree.
 //
-// That construction also kills the nested-tag evasion `<scr<script>ipt>` for
-// free. In the spec's tag-name state `<` is an ordinary name character, so a
-// browser reads ONE start tag named `scr<script` — it does not reassemble a
+// That construction also kills the nested-tag evasion for free. In the spec's
+// tag-name state `<` is an ordinary name character, so a browser reads
+// `<scr<script>` as ONE start tag named `scr<script` — it does not reassemble a
 // script element. We read it the same way, the allow-list drops the unknown
 // tag, and the leftover `ipt>` is escaped as text. There is no strip-and-rescan
-// step left for a payload to exploit, which is why (unlike the old code) there
-// is no fixpoint loop here: one pass is the whole story.
-//
-// This pass is one layer of three, not the only defense:
-//   1. THIS pass gates what is stored (the PATCH route at
-//      apps/web/app/api/inboxes/[id]/route.ts).
-//   2. The dashboard preview re-sanitizes with real DOMPurify in the browser
-//      before any dangerouslySetInnerHTML render (./sanitizeSignatureHtml.js,
-//      which delegates to this module whenever there is no window, and which
-//      now shares this module's style policy so preview and storage agree).
-//   3. The edge function re-sanitizes at send time before HTML is injected
-//      into outgoing mail.
+// step left for a payload to exploit, which is why the fixpoint loop is gone:
+// one pass is the whole story.
 //
 // TWIN IMPLEMENTATION. The identical sanitizer exists in two places on purpose:
-//   - apps/web/src/lib/sanitizeSignatureHtmlServer.js        (this file, Node)
-//   - supabase/functions/mcp-server/signature-sanitizer.ts   (Deno)
-// They cannot share a module — two runtimes, two build systems — and the policy
-// tables below are the actual contract. Keep them identical; the Deno suite has
-// a drift test that reads this file and fails if they diverge, for the same
-// reason text-safety.ts does.
+//   - apps/web/src/lib/sanitizeSignatureHtmlServer.js        (Next.js, Node)
+//   - supabase/functions/mcp-server/signature-sanitizer.ts   (this file, Deno)
+// They cannot share a module — two runtimes, two build systems — and the Node
+// side additionally must stay dependency-free because jsdom's ESM-only
+// transitive deps crash Next's server runtime with ERR_REQUIRE_ESM (that
+// incident 500'd every signature save in production). The policy tables below
+// are the actual contract: keep them identical in both files. The suite in
+// signature-sanitizer.test.ts runs the same attack corpus as the Node suite and
+// includes a drift check that reads the Node file, in the same spirit as
+// text-safety.ts.
+//
+// Kept out of index.ts for the same reason as text-safety.ts and
+// usage-limit-message.ts: it is a pure function with a real test suite, and
+// index.ts cannot be imported by a test without booting the whole server.
 //
 // Signature-tuned, as before: https-hosted <img> logos are KEPT (that is the
 // whole point of rich signatures); http:, data:, ftp: and every other scheme is
 // stripped, and an <img> without a usable https source is removed outright.
 //
-// Same public API as the DOMPurify module so the PATCH route's error handling
-// is unchanged: throws on non-string input and on output > 100KB.
+// PURE: no I/O.
 // ---------------------------------------------------------------------------
 
 export const SIGNATURE_HTML_MAX_LENGTH = 100 * 1024;
@@ -83,8 +74,7 @@ export const SIGNATURE_HTML_MAX_LENGTH = 100 * 1024;
 export const EMAIL_HTML_MAX_LENGTH = 512 * 1024;
 
 // ---------------------------------------------------------------------------
-// POLICY TABLES — ported from the DOMPurify config in ./sanitizeSignatureHtml.js
-// (ALLOWED_TAGS / ALLOWED_ATTR). Keep these identical to the Deno twin.
+// POLICY TABLES — keep identical to the Node twin.
 // ---------------------------------------------------------------------------
 
 /** Elements that survive. Everything else is dropped (see KEEP-CONTENT below). */
@@ -135,7 +125,7 @@ const ALLOWED_TARGETS = new Set(["_blank", "_self", "_parent", "_top"]);
  * serialises as two siblings instead of an ever-deepening nest. Cosmetic, not a
  * security property.
  */
-const AUTO_CLOSE = {
+const AUTO_CLOSE: Record<string, Set<string>> = {
   p: new Set(["p", "div", "ul", "ol", "table", "blockquote", "h1", "h2", "h3", "h4", "hr"]),
   li: new Set(["li"]),
   td: new Set(["td", "th", "tr"]),
@@ -252,9 +242,28 @@ const SAFE_HREF = /^(?:https?:|mailto:)/;
  * forking the tokenizer is how the email and signature rules drifted apart in
  * the first place, back when both were regex deny-lists.
  */
+export interface SanitizerPolicy {
+  /** Used in the error message when output exceeds maxLength. */
+  label: string;
+  allowedTags: Set<string>;
+  allowedAttr: Set<string>;
+  /** Allowed inline CSS properties, or null to drop `style` outright. */
+  allowedStyleProps: Set<string> | null;
+  isAllowedHref(probe: string): boolean;
+  isAllowedSrc(probe: string): boolean;
+  /**
+   * Drop an `<img>` that ended up with no usable src?
+   *
+   * TRUE for signatures: a logo that cannot load is just a broken image.
+   * FALSE for email: every external src is stripped by policy, so requiring one
+   * would delete every image in every message along with its alt text, and the
+   * alt text is often the only description of the image a reader ever gets.
+   */
+  requireImgSrc: boolean;
+  maxLength: number;
+}
 
-/** @type {SanitizerPolicy} */
-export const SIGNATURE_POLICY = {
+export const SIGNATURE_POLICY: SanitizerPolicy = {
   label: "sanitizeSignatureHtml",
   allowedTags: SIGNATURE_ALLOWED_TAGS,
   allowedAttr: SIGNATURE_ALLOWED_ATTR,
@@ -267,8 +276,7 @@ export const SIGNATURE_POLICY = {
   maxLength: SIGNATURE_HTML_MAX_LENGTH,
 };
 
-/** @type {SanitizerPolicy} */
-export const EMAIL_POLICY = {
+export const EMAIL_POLICY: SanitizerPolicy = {
   label: "sanitizeEmailHtml",
   allowedTags: EMAIL_ALLOWED_TAGS,
   allowedAttr: EMAIL_ALLOWED_ATTR,
@@ -279,7 +287,7 @@ export const EMAIL_POLICY = {
   maxLength: EMAIL_HTML_MAX_LENGTH,
 };
 
-const NAMED_ENTITIES = {
+const NAMED_ENTITIES: Record<string, string> = {
   amp: "&", AMP: "&", lt: "<", LT: "<", gt: ">", GT: ">",
   quot: '"', QUOT: '"', apos: "'",
   nbsp: "\u00a0", NonBreakingSpace: "\u00a0", ensp: "\u2002", emsp: "\u2003",
@@ -313,9 +321,9 @@ const ENTITY_PATTERN =
  * Numeric references are decoded with OR without the trailing semicolon,
  * because browsers do (a missing semicolon is a parse error, not a refusal).
  */
-function decodeEntities(value) {
+function decodeEntities(value: string): string {
   if (value.indexOf("&") === -1) return value;
-  return value.replace(ENTITY_PATTERN, (match, body) => {
+  return value.replace(ENTITY_PATTERN, (match: string, body: string) => {
     if (body[0] === "#") {
       const hex = body[1] === "x" || body[1] === "X";
       const digits = (hex ? body.slice(2) : body.slice(1)).replace(/;$/, "");
@@ -337,12 +345,12 @@ function decodeEntities(value) {
  * entity in text can never become a tag — the browser decodes it into character
  * data long after tokenization — so there is nothing to normalise here.
  */
-function escapeText(value) {
+function escapeText(value: string): string {
   return value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /** Attribute values are fully re-encoded, since we decoded them on the way in. */
-function escapeAttr(value) {
+function escapeAttr(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -356,6 +364,7 @@ function escapeAttr(value) {
 // ---------------------------------------------------------------------------
 
 /** C0 controls and DEL, which browsers strip out of a URL before resolving it. */
+// deno-lint-ignore no-control-regex
 const URL_CONTROL_CHARS = /[\u0000-\u001f\u007f]/g;
 
 /**
@@ -367,29 +376,28 @@ const URL_CONTROL_CHARS = /[\u0000-\u001f\u007f]/g;
  * it: `java\nscript:` navigates just fine. Bypass #2 (a leading space inside
  * the quoted value) dies on the trim.
  */
-function normalizeUrlValue(raw) {
+function normalizeUrlValue(raw: string): string | null {
   const decoded = decodeEntities(raw);
   if (RESIDUAL_ENTITY.test(decoded)) return null;
   return decoded.replace(URL_CONTROL_CHARS, "").trim();
 }
 
 /** Whitespace-free lowercase form used for the scheme test only. */
-function urlProbe(value) {
+function urlProbe(value: string): string {
   return value.replace(/\s+/g, "").toLowerCase();
 }
 
-/**
- * Filter an inline style string down to allowed properties with allowed values.
- * Exported so the browser DOMPurify hook can enforce the exact same policy and
- * the stored HTML matches what the preview showed.
- */
-export function sanitizeStyleAttribute(style, allowedProps = ALLOWED_STYLE_PROPS) {
+/** Filter an inline style string down to allowed properties with allowed values. */
+export function sanitizeStyleAttribute(
+  style: string,
+  allowedProps: Set<string> | null = ALLOWED_STYLE_PROPS,
+): string {
   if (allowedProps === null) return "";
   if (typeof style !== "string" || style === "") return "";
   const decoded = decodeEntities(style);
   if (RESIDUAL_ENTITY.test(decoded)) return "";
 
-  const kept = [];
+  const kept: string[] = [];
   for (const declaration of decoded.split(";")) {
     const split = declaration.indexOf(":");
     if (split === -1) continue;
@@ -419,14 +427,17 @@ export function sanitizeStyleAttribute(style, allowedProps = ALLOWED_STYLE_PROPS
 /**
  * Apply the attribute policy to one element.
  *
- * @returns {Array<[string, string]>|null} The attributes to emit, or null when
- *   the element itself must be dropped (an <img> with no usable https source,
- *   matching the DOMPurify hook's node.remove()).
+ * Returns the attributes to emit, or null when the element itself must be
+ * dropped (an <img> with no usable https source).
  */
-function filterAttributes(tag, attrs, policy) {
-  const kept = [];
-  const seen = new Set();
-  let relValue = null;
+function filterAttributes(
+  tag: string,
+  attrs: Array<[string, string]>,
+  policy: SanitizerPolicy,
+): Array<[string, string]> | null {
+  const kept: Array<[string, string]> = [];
+  const seen = new Set<string>();
+  let relValue: string | null = null;
   let blankTarget = false;
   let imgHasSrc = false;
 
@@ -442,9 +453,9 @@ function filterAttributes(tag, attrs, policy) {
       if (url === null) continue;
       const probe = urlProbe(url);
       if (name === "href") {
-        // Ported from the DOMPurify hook: http(s) and mailto only. Relative
-        // hrefs go too — a signature links to somewhere real, and a bare
-        // relative URL in outgoing mail resolves against the reader's client.
+        // http(s) and mailto only. Relative hrefs go too — a signature links to
+        // somewhere real, and a bare relative URL in outgoing mail resolves
+        // against whatever the reader's client happens to be.
         if (!policy.isAllowedHref(probe)) continue;
       } else {
         // https ONLY, so a signature can never leak over plaintext http or
@@ -486,8 +497,7 @@ function filterAttributes(tag, attrs, policy) {
   }
 
   // target="_blank" without noopener hands the opened page a window.opener
-  // handle back into the tab that rendered the mail. Force it, as the DOMPurify
-  // hook does.
+  // handle back into the tab that rendered the mail.
   if (blankTarget) {
     kept.push(["rel", "noopener noreferrer"]);
   } else if (relValue) {
@@ -502,11 +512,11 @@ function filterAttributes(tag, attrs, policy) {
 // Tokenizer
 // ---------------------------------------------------------------------------
 
-function isAsciiAlpha(ch) {
+function isAsciiAlpha(ch: string): boolean {
   return (ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z");
 }
 
-function isTagWhitespace(ch) {
+function isTagWhitespace(ch: string): boolean {
   return ch === " " || ch === "\t" || ch === "\n" || ch === "\r" || ch === "\f";
 }
 
@@ -518,7 +528,7 @@ function isTagWhitespace(ch) {
  * is exactly why `<scr<script>ipt>` is a single unknown tag here, as it is in a
  * browser, instead of something a strip-and-rescan pass can reassemble.
  */
-function readTagName(source, start) {
+function readTagName(source: string, start: number): { name: string; next: number } {
   let i = start;
   let name = "";
   while (i < source.length) {
@@ -528,6 +538,13 @@ function readTagName(source, start) {
     i += 1;
   }
   return { name: name.toLowerCase(), next: i };
+}
+
+interface ParsedAttributes {
+  attrs: Array<[string, string]>;
+  next: number;
+  selfClosing: boolean;
+  closed: boolean;
 }
 
 /**
@@ -541,8 +558,8 @@ function readTagName(source, start) {
  * of bypass #1: once a quoted value ends, the very next character can start the
  * next attribute name (`src="…"onerror=…`).
  */
-function parseAttributes(source, start) {
-  const attrs = [];
+function parseAttributes(source: string, start: number): ParsedAttributes {
+  const attrs: Array<[string, string]> = [];
   let i = start;
   let selfClosing = false;
   let closed = false;
@@ -602,7 +619,7 @@ function parseAttributes(source, start) {
 }
 
 /** Skip a raw-text element's body: no nesting, the first matching end tag wins. */
-function skipRawText(source, from, name) {
+function skipRawText(source: string, from: number, name: string): number {
   const lower = source.toLowerCase();
   const needle = `</${name}`;
   let idx = lower.indexOf(needle, from);
@@ -618,7 +635,7 @@ function skipRawText(source, from, name) {
 }
 
 /** Skip a normal element and everything inside it, honouring nesting. */
-function skipElementWithContent(source, from, name) {
+function skipElementWithContent(source: string, from: number, name: string): number {
   const lower = source.toLowerCase();
   let depth = 1;
   let i = from;
@@ -649,7 +666,7 @@ function skipElementWithContent(source, from, name) {
   return source.length;
 }
 
-function serializeStartTag(name, attrs) {
+function serializeStartTag(name: string, attrs: Array<[string, string]>): string {
   let out = `<${name}`;
   for (const [key, value] of attrs) out += ` ${key}="${escapeAttr(value)}"`;
   return `${out}>`;
@@ -659,9 +676,9 @@ function serializeStartTag(name, attrs) {
  * Tokenize `html` and rebuild it from the allow-list. Single pass: nothing is
  * ever stripped and rescanned, so there is no evasion window between passes.
  */
-function rebuildFromAllowList(html, policy) {
-  const out = [];
-  const stack = [];
+function rebuildFromAllowList(html: string, policy: SanitizerPolicy): string {
+  const out: string[] = [];
+  const stack: string[] = [];
   const len = html.length;
   let i = 0;
 
@@ -771,11 +788,8 @@ function rebuildFromAllowList(html, policy) {
  * strand the agent on a message it can do nothing about. Oversize output is
  * truncated at a tag boundary instead, which is safe here because the result is
  * read, never stored or re-sent.
- *
- * @param {string} dirtyHtml
- * @returns {string}
  */
-export function sanitizeEmailHtml(dirtyHtml) {
+export function sanitizeEmailHtml(dirtyHtml: string): string {
   if (typeof dirtyHtml !== "string" || dirtyHtml === "") return "";
   const clean = rebuildFromAllowList(dirtyHtml, EMAIL_POLICY);
   if (clean.length <= EMAIL_HTML_MAX_LENGTH) return clean;
@@ -786,15 +800,14 @@ export function sanitizeEmailHtml(dirtyHtml) {
 }
 
 /**
- * Sanitize untrusted signature HTML without any DOM dependency.
+ * Sanitize untrusted signature HTML.
  *
- * @param {string} dirtyHtml Raw HTML from the editor / API client.
- * @returns {string} Sanitized HTML (may be empty).
- * @throws {Error} If input is not a string, or if the sanitized result exceeds
- *   SIGNATURE_HTML_MAX_LENGTH (~100 KB) — callers should surface this as a
- *   validation error rather than store truncated markup.
+ * Same contract as the Node twin: throws on non-string input and on output
+ * larger than SIGNATURE_HTML_MAX_LENGTH, because truncating HTML mid-tag would
+ * store broken markup. Use `sanitizeSignatureHtmlSafe` on paths where a throw
+ * would cost the user something they did not ask to risk (see below).
  */
-export function sanitizeSignatureHtml(dirtyHtml) {
+export function sanitizeSignatureHtml(dirtyHtml: string): string {
   if (typeof dirtyHtml !== "string") {
     throw new Error("sanitizeSignatureHtml: input must be a string");
   }
@@ -811,4 +824,22 @@ export function sanitizeSignatureHtml(dirtyHtml) {
   return clean;
 }
 
-export default sanitizeSignatureHtml;
+/**
+ * Non-throwing variant for the SEND path.
+ *
+ * At send time we are re-sanitizing HTML that is already stored, as a
+ * belt-and-suspenders pass before it is injected into outgoing mail. A throw
+ * there would fail the whole send over a signature, which is a far worse
+ * outcome than sending without one — so an oversize or non-string value yields
+ * an empty signature block instead. Every write path (the web PATCH route and
+ * the MCP signature tool) uses the throwing version, so this branch is
+ * effectively unreachable for anything written after this change; it exists for
+ * rows written before it.
+ */
+export function sanitizeSignatureHtmlSafe(dirtyHtml: string): string {
+  try {
+    return sanitizeSignatureHtml(dirtyHtml);
+  } catch {
+    return "";
+  }
+}
