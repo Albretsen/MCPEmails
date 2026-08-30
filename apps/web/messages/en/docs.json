@@ -424,8 +424,8 @@
   },
   "providers": {
     "meta": {
-      "title": "Supported Email Providers for MCP: Gmail, iCloud & IMAP",
-      "description": "See mcpemails support and capabilities for Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, and generic IMAP/SMTP inboxes."
+      "title": "Email provider compatibility for AI agents (Gmail, iCloud, Yahoo, Zoho)",
+      "description": "Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 and generic IMAP."
     },
     "labels": {
       "generic": "Generic IMAP"
@@ -462,9 +462,9 @@
       "Search": "Search"
     },
     "hero": {
-      "eyebrow": "Provider support",
-      "heading": "What works, per provider.",
-      "lead": "MCPEmails connects Gmail, Fastmail, and any IMAP inbox (iCloud, Yahoo, Zoho, Yandex, generic). Not every provider exposes the same APIs, so this table shows exactly what each one supports today.",
+      "eyebrow": "Compatibility matrix",
+      "heading": "Email provider compatibility for AI agents",
+      "lead": "What an AI agent can actually do with each email provider, and what it takes to connect one. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 and any generic IMAP inbox. Every row is checked against the connectors that run in production.",
       "ctaConnect": "Connect an inbox",
       "ctaBack": "Back to docs"
     },
@@ -492,6 +492,50 @@
       "sub": "Free plan: one connected inbox, forever, no card required.",
       "primary": "Get started free",
       "secondary": "Read the docs"
+    },
+    "verified": {
+      "label": "Last verified",
+      "date": "30 August 2026",
+      "note": "Hosts, ports, sign-in methods and failure modes re-checked against the live connectors on this date."
+    },
+    "connection": {
+      "title": "How each provider connects",
+      "lead": "Sign-in method, mail hosts and transport security, and the failure that actually costs people their afternoon. Pick a provider for the step-by-step setup.",
+      "columns": {
+        "provider": "Provider",
+        "auth": "Sign-in",
+        "imap": "IMAP (incoming)",
+        "smtp": "SMTP (outgoing)",
+        "breaks": "What commonly breaks"
+      },
+      "auth": {
+        "googleOauth": "Google OAuth",
+        "microsoftOauth": "Microsoft OAuth",
+        "appPassword": "App-specific password",
+        "mailboxPassword": "Mailbox password"
+      },
+      "api": "Provider API, no IMAP",
+      "unavailable": "Not yet available",
+      "varies": "Your host’s settings",
+      "breaks": {
+        "gmail": "Nothing at the transport layer: Gmail connects over the Gmail API rather than IMAP. The limits are semantic. Gmail has labels instead of folders, no native copy, and no permanent expunge.",
+        "fastmail": "The ordinary account password is refused outright. Fastmail issues a 16-character app password, and submitting the login password instead is the most common single cause of a failed connection.",
+        "icloud": "Two-factor authentication has to be on before Apple will generate an app-specific password. Apple displays that password as four hyphenated blocks; the hyphens are display only and are stripped before the login is sent.",
+        "yahoo": "Yahoo accepts at most 5 simultaneous connections. Its rejection text, “Incorrect username or password”, names both halves on purpose and will not tell you which one was wrong.",
+        "zoho": "IMAP access ships switched off and has to be enabled first. Zoho also runs six regional data centres, and paid custom-domain mailboxes live on imappro/smtppro rather than imap/smtp, so the right host depends on both region and account type.",
+        "yandex": "Yandex does not implement RFC 4959 SASL-IR, so the inline login form comes back as a command syntax error rather than a credential error. Both “IMAP” and “App passwords and OAuth tokens” have to be switched on, and Yandex 360 custom-domain accounts may sign in with a login name that is not the address.",
+        "outlook": "Microsoft’s default tenant consent policy excludes Mail.ReadWrite from the permissions an end user may approve, so a Microsoft 365 employee is refused before a consent screen ever appears. Only an administrator can clear that, which is why business Microsoft 365 cannot be connected by the person who owns the mailbox.",
+        "generic": "A port and a security mode that disagree. Choosing STARTTLS while the port stays 993 opens a plaintext socket to a TLS-only listener, and the connection just times out. Failed transports are now retried automatically on the other standard combination."
+      },
+      "notes": {
+        "autodetect": "<b>Transport autodetect:</b> a connection that never established a session is retried on the other standard transport (IMAP <code>993</code>/TLS and <code>143</code>/STARTTLS; SMTP <code>465</code>/TLS, <code>587</code>/STARTTLS and <code>25</code>). A rejected password is never retried, because re-sending it counts against the provider’s own lockout.",
+        "authMechanism": "<b>Login mechanism:</b> most servers take <code>AUTH PLAIN</code> in a single round trip. Servers that advertise only GSSAPI, NTLM and LOGIN, with Microsoft Exchange the common case, answer it with <code>504 5.7.4</code>, and the client falls back to <code>AUTH LOGIN</code> on its own.",
+        "otherHosts": "<b>Other hosts:</b> IONOS, Hostinger, OVH, OVH Hosted Exchange, DreamHost, Titan Email, Namecheap Private Email, Migadu, InMotion Hosting, OpenSRS, GMX and mail.com are recognised from the address or the mail host you type, and their hosts, ports and transport security are filled in for you."
+      }
+    },
+    "capabilities": {
+      "title": "What the agent can do once connected",
+      "lead": "The operations an MCP client can perform per provider: read, search, send, reply, forward, move, flag, folders, drafts, scheduled send and attachments."
     }
   }
 }
