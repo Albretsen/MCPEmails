@@ -12,11 +12,13 @@
     "test:plans": "node --test --experimental-strip-types src/lib/stripe/plans.test.ts",
     "test:inbox-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-inbox-limit.test.ts",
     "test:seo": "node --test src/lib/blog/seo.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs",
-    "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts src/lib/email/transport-autodetect.test.ts src/lib/email-providers/imap-presets.test.ts src/lib/email-providers/host-presets.test.ts src/lib/email-providers/outlook-oauth.test.ts",
+    "test:connections": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/connection-config.test.ts src/lib/email/transport-autodetect.test.ts src/lib/email/auth-failure.test.ts src/lib/email-providers/imap-presets.test.ts src/lib/email-providers/host-presets.test.ts src/lib/email-providers/app-password.test.ts src/lib/email-providers/outlook-oauth.test.ts",
+    "test:host-guard": "node --test --experimental-strip-types src/lib/email/host-guard.test.ts",
     "test:growth": "node --test --experimental-strip-types src/lib/analytics/growth-metrics.test.mjs",
+    "test:health": "node --test --experimental-strip-types src/lib/analytics/health-math.test.ts",
     "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs",
     "test:purchase-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/purchase-confirmation.test.ts",
-    "test": "npm run test:analytics && npm run test:billing && npm run test:plans && npm run test:inbox-limit && npm run test:seo && npm run test:connections && npm run test:growth && npm run test:revenue && npm run test:sanitizer && npm run test:purchase-email",
+    "test": "npm run test:analytics && npm run test:billing && npm run test:plans && npm run test:inbox-limit && npm run test:seo && npm run test:connections && npm run test:host-guard && npm run test:growth && npm run test:health && npm run test:revenue && npm run test:sanitizer && npm run test:purchase-email",
     "test:revenue": "node --test --experimental-strip-types src/lib/analytics/revenue-math.test.ts src/lib/analytics/internal-accounts.test.ts src/lib/analytics/cash-math.test.ts"
   },
   "dependencies": {
@@ -32,13 +34,13 @@
     "@tiptap/react": "^3.27.3",
     "@tiptap/starter-kit": "^3.27.3",
     "@vercel/analytics": "^2.0.1",
-    "dompurify": "^3.4.7",
+    "dompurify": "^3.4.14",
     "he": "^1.2.0",
     "isomorphic-dompurify": "^2.15.0",
     "jsdom": "^26.0.0",
-    "mailparser": "^3.7.0",
+    "mailparser": "^3.9.17",
     "mime-types": "^2.1.35",
-    "next": "^16.2.6",
+    "next": "^16.3.3",
     "next-intl": "^4.13.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -54,7 +56,7 @@
     "@types/react": "19.2.15",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.2.6",
+    "eslint-config-next": "^16.3.3",
     "typescript": "^6.0.3"
   }
 }
