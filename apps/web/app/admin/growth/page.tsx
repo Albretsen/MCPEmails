@@ -37,7 +37,6 @@
 
 import { Suspense } from 'react';
 import { requireAdmin } from '@/lib/admin/require-admin';
-import { refreshGrowthData } from '@/lib/analytics/growth-queries';
 import {
   SkeletonChart,
   SkeletonSplitChart,
@@ -105,7 +104,7 @@ export default async function GrowthAnalyticsPage({
               </a>
             ))}
           </nav>
-          <form action={refreshGrowthData}>
+          <form action="/admin/growth/refresh" method="POST">
             <button type="submit" className="growth-refresh">Refresh</button>
           </form>
         </div>
