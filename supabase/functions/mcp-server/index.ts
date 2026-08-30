@@ -31,6 +31,15 @@ import {
   permanentFlagsAllowKeyword,
 } from "./label-target.ts";
 import {
+  type GmailRelocationPlan,
+  gmailRelocationPlan,
+  gmailRelocationSemantics,
+} from "./gmail-move-labels.ts";
+import {
+  searchSweepLimitFields,
+  type SearchSweepLimitFields,
+} from "./search-sweep-limit.ts";
+import {
   invalidArgumentAuditDetails,
   type InvalidArgumentAuditDetails,
 } from "./validation-observability.ts";
@@ -4562,6 +4571,42 @@ const BULK_RESULT_SCHEMA = {
       additionalProperties: true,
     },
     partial_notice: { type: "string" },
+    // ── search_and_move / search_and_delete truncation (F8) ─────────────────
+    // A SECOND, independent way one of these calls can be incomplete: the
+    // `limit` bounded the search, so ids were never handed to the act phase at
+    // all. `partial`/`remaining_message_ids` above describe the act phase
+    // running out of wall clock; these describe the search running out of
+    // window. A call can carry both. Declared rather than left to
+    // additionalProperties so a client can render "did not finish" from either.
+    match_count: {
+      type: "integer",
+      description: "How many messages the search returned, i.e. the most this call could act on.",
+    },
+    limit: { type: "integer", description: "The limit that bounded the search." },
+    limit_reached: {
+      type: "boolean",
+      description:
+        "True when the search filled its window and stopped counting. On its own " +
+        "it does not prove more mail exists; has_more is that claim.",
+    },
+    has_more: {
+      type: "boolean",
+      description:
+        "True when messages matching the query were left UNTOUCHED because of the " +
+        "limit. Check this before reporting the sweep complete: re-run until it is false.",
+    },
+    total_matches: {
+      type: "integer",
+      description: "Provider's total match count when it supplies one.",
+    },
+    total_matches_is_estimate: {
+      type: "boolean",
+      description: "True when total_matches is a provider estimate (Gmail) rather than a count.",
+    },
+    limit_notice: {
+      type: "string",
+      description: "Present only when has_more: plain-language statement of what was left behind.",
+    },
     results: {
       type: "array",
       items: {
@@ -4935,6 +4980,21 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       destination_folder_id: { type: "string" },
       destination_type: { type: "string", enum: ["folder", "label"] },
       provider_semantics: { type: "string" },
+      // Gmail only, and present ONLY when true: the message was in Trash (or
+      // Spam) and the move took it out, so it is no longer scheduled for
+      // permanent deletion. Absence means "not a restore, or not knowable".
+      restored_from_trash: {
+        type: "boolean",
+        description:
+          "True when the moved message was in Trash and has been un-trashed as part " +
+          "of the move. Omitted when the move was not a restore.",
+      },
+      restored_from_spam: {
+        type: "boolean",
+        description:
+          "True when the moved message was in Spam and has been un-spammed as part " +
+          "of the move. Omitted when the move was not a restore.",
+      },
     },
     required: ["success", "message_id", "operation", "inbox_id", "destination_folder_id", "destination_type", "provider_semantics"],
     additionalProperties: false,
@@ -5333,8 +5393,11 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     description:
       "Move, copy, flag or archive messages in one inbox. Get message ids from " +
       "email_read first. On Gmail a move adds the destination label and removes " +
-      "INBOX, leaving other labels in place. Needs manage:folders; deleting is " +
-      "the separate email_delete tool.",
+      "INBOX, leaving other labels in place; moving a message OUT of Trash or " +
+      "Spam into a real label also clears TRASH/SPAM, so it is a genuine restore " +
+      "rather than a labelled message still queued for deletion. search_and_move " +
+      "is bounded by limit: check has_more before reporting a mailbox fully " +
+      "swept. Needs manage:folders; deleting is the separate email_delete tool.",
     // 'search_and_move' relocates every message matching a caller-supplied
     // query, so one wrong filter empties an inbox into a folder nobody expects;
     // that is the bulk, non-additive case this file's destructive-action
@@ -5380,7 +5443,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       search_and_move: {
         legacy: "email_search_and_move",
         scope: "manage:folders",
-        hint: "move everything matching a search, the only action the search filters apply to",
+        hint: "move everything matching a search (the only action the search filters apply to), up to limit; the result's has_more says whether matches were left behind",
       },
     },
   },
@@ -5390,7 +5453,8 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "Delete messages in one inbox. Flagged DESTRUCTIVE so your MCP client can " +
       "ask for confirmation first. Deleted mail goes to Trash and stays " +
       "recoverable unless you pass permanent: true, which is irreversible. " +
-      "Needs the delete:email scope.",
+      "search_and_delete is bounded by limit: check has_more before reporting a " +
+      "mailbox fully swept. Needs the delete:email scope.",
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     actions: {
       delete: {
@@ -5406,7 +5470,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       search_and_delete: {
         legacy: "email_search_and_delete",
         scope: "delete:email",
-        hint: "every message matching a search",
+        hint: "every message matching a search, up to limit; the result's has_more says whether matches were left behind",
       },
     },
   },
@@ -14789,11 +14853,27 @@ function organizationItemType(inbox: InboxRow): "folder" | "label" {
   return inbox.provider === "gmail" ? "label" : "folder";
 }
 
-/** Explain the mutation in provider terms, especially Gmail's label model. */
-function moveProviderSemantics(inbox: InboxRow): string {
-  return inbox.provider === "gmail"
-    ? "Added the destination label and removed INBOX; any other labels remain unchanged."
-    : "Relocated the message to the destination folder.";
+/**
+ * Explain the mutation in provider terms, especially Gmail's label model.
+ *
+ * The Gmail wording is DERIVED from the same pure plan the write uses
+ * (`gmail-move-labels.ts`), so the sentence cannot drift away from the labels
+ * actually sent.
+ *
+ * This is the CURRENT-LABELS-UNKNOWN form, used by the bulk paths, which do not
+ * read each message before modifying it: it describes the write conditionally
+ * ("removed TRASH and SPAM if either was set") rather than claiming a restore it
+ * did not verify. `executeMoveEmail` knows the labels, so it calls
+ * `gmailRelocationSemantics` with its own plan and gets the definite wording.
+ */
+function moveProviderSemantics(
+  inbox: InboxRow,
+  resolvedDestination: string | null,
+): string {
+  if (inbox.provider !== "gmail") {
+    return "Relocated the message to the destination folder.";
+  }
+  return gmailRelocationSemantics(gmailRelocationPlan(null, resolvedDestination));
 }
 
 /**
@@ -16274,12 +16354,22 @@ async function executeArchiveEmail(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
 
+  let gmailPlan: GmailRelocationPlan | null = null;
   try {
     switch (inbox.provider) {
-      case "gmail":
-        // Gmail archive = remove INBOX label; message stays accessible via All Mail.
-        await gmailModifyLabels(inbox, messageId, [], ["INBOX"]);
+      case "gmail": {
+        // Gmail archive = remove INBOX; the message stays reachable in All Mail.
+        //
+        // TRASH/SPAM come off too, for the same reason a move clears them: on a
+        // trashed message "remove INBOX" changed nothing at all, reported
+        // success, and left the ~30-day purge clock running. "Archive" means
+        // keep it out of my inbox, which is incompatible with pending deletion.
+        // Same pure plan as the move path (destination null = archive).
+        const currentLabelIds = await gmailMessageLabelIds(inbox, messageId);
+        gmailPlan = gmailRelocationPlan(currentLabelIds, null);
+        await gmailModifyLabels(inbox, messageId, gmailPlan.addLabelIds, gmailPlan.removeLabelIds);
         break;
+      }
       case "outlook":
         await outlookArchiveEmail(inbox, messageId);
         break;
@@ -16298,7 +16388,17 @@ async function executeArchiveEmail(
     inbox_id: inbox.id,
   };
   return {
-    result: { ...jsonOk(flagResult as unknown as Record<string, unknown>), isError: false },
+    result: {
+      ...jsonOk({
+        ...(flagResult as unknown as Record<string, unknown>),
+        ...(gmailPlan
+          ? { provider_semantics: gmailRelocationSemantics(gmailPlan) }
+          : {}),
+        ...(gmailPlan?.restoredFromTrash === true ? { restored_from_trash: true } : {}),
+        ...(gmailPlan?.restoredFromSpam === true ? { restored_from_spam: true } : {}),
+      }),
+      isError: false,
+    },
     logStatus: "success",
     logErrorCode: null,
   };
@@ -16346,25 +16446,63 @@ async function imapMoveEmail(
 // ── Gmail helper ─────────────────────────────────────────────────────────────
 
 /**
- * Gmail "move": add the destination label and remove INBOX.
+ * Reads a Gmail message's current label ids, best-effort.
+ *
+ * Used only to REPORT what a relocation did (`restored_from_trash`), never to
+ * decide it: `gmailRelocationPlan` produces the same write with or without this,
+ * because removing a label a message does not carry is a no-op on Gmail. So a
+ * failure here degrades the response's precision and nothing else, and must not
+ * fail the move: `format=minimal` returns ids only, no headers, no body.
+ */
+async function gmailMessageLabelIds(
+  inbox: InboxRow,
+  messageId: string,
+): Promise<string[] | null> {
+  try {
+    const accessToken = await withFreshGmailToken(inbox);
+    const resp = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${
+        encodeURIComponent(messageId)
+      }?format=minimal`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!resp.ok) return null;
+    const body = (await resp.json()) as { labelIds?: unknown };
+    if (!Array.isArray(body.labelIds)) return null;
+    return body.labelIds.filter((l): l is string => typeof l === "string");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Gmail "move": add the destination label, remove INBOX, and clear TRASH/SPAM
+ * unless the destination IS Trash or Spam.
+ *
+ * Gmail's flat label model has no folders, so without a source-folder hint an
+ * arbitrary source label cannot be removed: a message already filed under
+ * "Receipts" keeps that label, and the move behaves as an additional filing.
+ * That is documented and expected.
+ *
+ * TRASH and SPAM are the exception, and the reason this function grew a
+ * pre-read. They are not filing labels, they are pending-deletion states with a
+ * ~30-day purge clock. Before 2026-08-30 a move of a trashed message added the
+ * destination label, left TRASH in place and returned success: the label showed
+ * up in Gmail, the user believed the message was restored, and Gmail purged it a
+ * month later. Restoring a message out of Trash into a real label is now an
+ * actual restore. See gmail-move-labels.ts.
+ *
+ * Returns the plan so the handler can report the un-trash.
  */
 async function gmailMoveEmail(
   inbox: InboxRow,
   messageId: string,
   destinationLabelId: string,
-): Promise<void> {
-  // NOTE: This "move" assumes the message currently lives in INBOX — it adds the
-  // destination label and removes the INBOX label. Gmail's flat label model has
-  // no folders, so without a source-folder hint we cannot remove an arbitrary
-  // source label; if the message is NOT in INBOX this effectively acts as a
-  // copy (the destination label is added, but the original label remains). A
-  // general source-folder move is impossible here without knowing the source.
-  const addLabelIds = [destinationLabelId];
-  // Gmail rejects requests that add and remove the same label ("Cannot both add
-  // and remove the same label", HTTP 400). When moving back into the inbox the
-  // destination IS "INBOX", so drop any id that appears in both lists.
-  const removeLabelIds = ["INBOX"].filter((id) => !addLabelIds.includes(id));
-  await gmailModifyLabels(inbox, messageId, addLabelIds, removeLabelIds);
+): Promise<GmailRelocationPlan> {
+  const currentLabelIds = await gmailMessageLabelIds(inbox, messageId);
+  const plan = gmailRelocationPlan(currentLabelIds, destinationLabelId);
+  await gmailModifyLabels(inbox, messageId, plan.addLabelIds, plan.removeLabelIds);
+  return plan;
 }
 
 // ── Outlook helpers ───────────────────────────────────────────────────────────
@@ -16471,10 +16609,13 @@ async function executeMoveEmail(
   }
 
   // ── Per-provider dispatch ────────────────────────────────────────────────
+  // Gmail hands back the label plan it executed so the result can state whether
+  // this was a restore out of Trash rather than an ordinary filing.
+  let gmailPlan: GmailRelocationPlan | null = null;
   try {
     switch (inbox.provider) {
       case "gmail":
-        await gmailMoveEmail(inbox, messageId, resolvedDest);
+        gmailPlan = await gmailMoveEmail(inbox, messageId, resolvedDest);
         break;
       case "outlook":
         await outlookMoveEmail(inbox, messageId, resolvedDest);
@@ -16496,7 +16637,14 @@ async function executeMoveEmail(
         inbox_id: inbox.id,
         destination_folder_id: destinationFolderId,
         destination_type: organizationItemType(inbox),
-        provider_semantics: moveProviderSemantics(inbox),
+        provider_semantics: gmailPlan
+          ? gmailRelocationSemantics(gmailPlan)
+          : moveProviderSemantics(inbox, resolvedDest),
+        // Emitted only when the labels were readable and this really was a
+        // restore, so a caller can distinguish "filed a live message" from
+        // "pulled a message back from pending deletion" without re-reading it.
+        ...(gmailPlan?.restoredFromTrash === true ? { restored_from_trash: true } : {}),
+        ...(gmailPlan?.restoredFromSpam === true ? { restored_from_spam: true } : {}),
       }),
       isError: false,
     },
@@ -17342,10 +17490,17 @@ function imapBulkFlag(
 // ── Gmail bulk helpers ────────────────────────────────────────────────────────
 
 /**
- * Gmail bulk move: per-message messages.modify — adds destination label, removes INBOX.
+ * Gmail bulk move: per-message messages.modify with the shared relocation plan.
  * batchModify returns 200 with no per-id body and silently skips invalid ids, so
  * we loop per message to report accurate succeeded/failed lists.
  * Maps 401 → "gmail_auth_failed".
+ *
+ * The plan is computed ONCE, with `null` for the current labels: this path
+ * deliberately does not GET each message first, because the write is identical
+ * either way (removing a label a message does not carry is a no-op) and a
+ * pre-read would double the request count of a 500-id sweep. What it costs is
+ * per-message restore reporting, which the operation-level `provider_semantics`
+ * covers with the conditional wording. See gmail-move-labels.ts.
  */
 async function gmailBulkMove(
   inbox: InboxRow,
@@ -17356,6 +17511,7 @@ async function gmailBulkMove(
 ): Promise<BulkOpResult> {
   const accessToken = await withFreshGmailToken(inbox);
   const stopCheck = makeBulkStopCheck(opts, runId);
+  const plan = gmailRelocationPlan(null, destinationLabelId);
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
   for (const messageId of messageIds) {
@@ -17367,8 +17523,8 @@ async function gmailBulkMove(
         method: "POST",
         headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          addLabelIds: [destinationLabelId],
-          removeLabelIds: ["INBOX"],
+          addLabelIds: plan.addLabelIds,
+          removeLabelIds: plan.removeLabelIds,
         }),
       },
     );
@@ -18068,7 +18224,7 @@ async function executeBulkMove(
     {
       destination_folder_id: destinationFolderId,
       destination_type: organizationItemType(inbox),
-      provider_semantics: moveProviderSemantics(inbox),
+      provider_semantics: moveProviderSemantics(inbox, resolvedDest),
       run_id: runId,
       status: bulkResult.cancelled ? "cancelled_partial" : bulkResult.failed.length ? "completed_with_errors" : "completed",
     },
@@ -18554,6 +18710,21 @@ async function executeSearchAndMove(
 
     const messageIds = searchResult.messages.map((m) => m.id);
 
+    // ── Did the SEARCH leave matches behind? (F8) ────────────────────────────
+    // Distinct from the wall-clock partial below: this is "the limit stopped the
+    // search", not "the budget stopped the act phase". A sweep that matched
+    // three and moved one used to be byte-identical to one that finished.
+    const sweepLimit = (processed: number): SearchSweepLimitFields =>
+      searchSweepLimitFields({
+        verb: "move",
+        matched: messageIds.length,
+        limit,
+        processed,
+        totalMatches: searchResult.total,
+        totalIsEstimate: searchResult.total_is_estimate,
+        providerHasMore: searchResult.has_more,
+      });
+
     // ── MCP Apps: plan instead of execute ────────────────────────────────────
     // After the search, so `match_count` is the EXACT number of resolved ids
     // rather than a provider estimate (contract §3), and before the zero-match
@@ -18587,8 +18758,9 @@ async function executeSearchAndMove(
           inbox_id: inboxId,
           destination_folder_id: destinationFolderId,
           destination_type: organizationItemType(inbox),
-          provider_semantics: moveProviderSemantics(inbox),
+          provider_semantics: moveProviderSemantics(inbox, resolvedDest),
           query,
+          ...sweepLimit(0),
           results: [],
         }),
         logStatus: "success",
@@ -18637,8 +18809,9 @@ async function executeSearchAndMove(
       {
         destination_folder_id: destinationFolderId,
         destination_type: organizationItemType(inbox),
-        provider_semantics: moveProviderSemantics(inbox),
+        provider_semantics: moveProviderSemantics(inbox, resolvedDest),
         query,
+        ...sweepLimit(bulkResult.succeeded.length),
       },
       partialFieldsFor("email_search_and_move", messageIds, bulkResult, budget),
     );
@@ -18803,6 +18976,21 @@ async function executeSearchAndDelete(
 
     const messageIds = searchResult.messages.map((m) => m.id);
 
+    // ── Did the SEARCH leave matches behind? (F8) ────────────────────────────
+    // The identical hazard to search_and_move, one degree worse: a half-finished
+    // delete sweep that looks complete is a user believing mail is gone when it
+    // is still sitting in the mailbox (or the reverse, on a re-run).
+    const sweepLimit = (processed: number): SearchSweepLimitFields =>
+      searchSweepLimitFields({
+        verb: "delete",
+        matched: messageIds.length,
+        limit,
+        processed,
+        totalMatches: searchResult.total,
+        totalIsEstimate: searchResult.total_is_estimate,
+        providerHasMore: searchResult.has_more,
+      });
+
     // MCP Apps: plan instead of execute. See the matching comment in
     // executeSearchAndMove — the ids are frozen here, the search is not stored.
     if (await shouldPlanBulkOperation(inbox)) {
@@ -18828,6 +19016,7 @@ async function executeSearchAndDelete(
           inbox_id: inboxId,
           permanent,
           query,
+          ...sweepLimit(0),
           results: [],
         }),
         logStatus: "success",
@@ -18864,7 +19053,7 @@ async function executeSearchAndDelete(
       bulkResult.failed,
       "email_search_and_delete",
       inbox.id,
-      { permanent, query },
+      { permanent, query, ...sweepLimit(bulkResult.succeeded.length) },
       // `permanent` is threaded in so the partial notice can say "permanently
       // deleted" rather than "moved to Trash". On a partial that distinction is
       // the difference between "the rest are still recoverable" and "the rest
