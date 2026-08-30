@@ -63,7 +63,12 @@
     "densitySpacious": "Espaciosa",
     "firstRunTitle": "Te damos la bienvenida a mcpemails",
     "firstRunBody": "Conecta tu primera bandeja de entrada para obtener un endpoint MCP funcional en menos de un minuto.",
-    "firstRunCta": "Conectar bandeja de entrada"
+    "firstRunCta": "Conectar bandeja de entrada",
+    "inviteSentNotDelivered": "Se creó la invitación para {email}, pero no se pudo enviar el correo. Usa Reenviar en la invitación pendiente.",
+    "inviteResent": "Invitación reenviada a {email}.",
+    "inviteResendFailed": "No se pudo reenviar la invitación.",
+    "workspaceLeaveFailed": "No se pudo salir del espacio de trabajo.",
+    "insufficientRole": "No tienes permiso para conectar un buzón en este espacio de trabajo."
   },
   "sidebar": {
     "planSuffix": "plan {plan}",

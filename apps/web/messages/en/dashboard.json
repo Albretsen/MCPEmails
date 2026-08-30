@@ -579,7 +579,19 @@
     "removeDialogBody": "<b>{name}</b> will lose access to this workspace and their API keys will be revoked immediately.",
     "cancel": "Cancel",
     "removing": "Removing…",
-    "removeMemberBtn": "Remove member"
+    "removeMemberBtn": "Remove member",
+    "leaveTitle": "Leave workspace",
+    "leaveSub": "Remove yourself from this workspace. Your API keys for it are revoked.",
+    "leaveWorkspace": "Leave workspace",
+    "leaveDialogTitle": "Leave this workspace?",
+    "leaveDialogBody": "You will lose access to <b>{workspace}</b>, and your API keys for it will be revoked immediately. An owner or admin would have to invite you back.",
+    "leaving": "Leaving…",
+    "errLeaveFailed": "Failed to leave the workspace.",
+    "resendInvite": "Resend",
+    "resendInviteAria": "Resend the invite to {email}",
+    "resending": "Resending…",
+    "errResendFailed": "Failed to resend the invite.",
+    "inviteNotDelivered": "Email not delivered. Resend it."
   },
   "approvals": {
     "review": {

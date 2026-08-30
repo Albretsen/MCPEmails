@@ -6188,10 +6188,13 @@ export function MembersPage({
   planLimits,
   userRole,
   currentUserId,
+  workspaceName,
   onInvite,
   onCancelInvite,
+  onResendInvite,
   onRemove,
   onChangeRole,
+  onLeave,
 }) {
   const t = useTranslations('dashboard');
   const { toast } = useToast();
@@ -6209,6 +6212,13 @@ export function MembersPage({
   // Role-change in-flight
   const [changingRole, setChangingRole] = useState(null); // userId or null
 
+  // Invite resend in-flight (invite id or null).
+  const [resending, setResending] = useState(null);
+
+  // Confirm-leave dialog state.
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [leaving,      setLeaving]      = useState(false);
+
   const canManage = userRole === 'owner' || userRole === 'admin';
   // Inviting members is a paid capability: Free is single-user (maxMembers: 1),
   // so once the owner fills the only seat there are no invites. Paid plans are
@@ -6220,6 +6230,12 @@ export function MembersPage({
   // allowed but roles aren't (e.g. Agent), everyone joins as a plain Member.
   const teamRolesEnabled = planLimits?.teamRolesEnabled ?? false;
   const canChangeRoles = userRole === 'owner' && teamRolesEnabled;
+  // Anyone but the owner can walk out. The owner cannot: ownership transfer
+  // does not exist, so a workspace whose owner left would have nobody who can
+  // delete it, manage its billing or change its roles. The server enforces the
+  // same rule (POST /api/workspaces/[id]/leave); this only hides a control that
+  // would always fail.
+  const canLeave = Boolean(onLeave) && userRole !== 'owner';
 
   const handleInviteSubmit = async (e) => {
     e.preventDefault();
@@ -6265,6 +6281,31 @@ export function MembersPage({
       await onCancelInvite(inviteId);
     } catch (err) {
       toast({ message: err.message ?? t('members.errCancelFailed'), variant: 'error' });
+    }
+  };
+
+  const handleResendInvite = async (inviteId) => {
+    if (resending) return;
+    setResending(inviteId);
+    try {
+      await onResendInvite(inviteId);
+    } catch (err) {
+      toast({ message: err.message ?? t('members.errResendFailed'), variant: 'error' });
+    } finally {
+      setResending(null);
+    }
+  };
+
+  const handleLeaveConfirm = async () => {
+    if (leaving) return;
+    setLeaving(true);
+    try {
+      await onLeave();
+      setConfirmLeave(false);
+    } catch (err) {
+      toast({ message: err.message ?? t('members.errLeaveFailed'), variant: 'error' });
+    } finally {
+      setLeaving(false);
     }
   };
 
@@ -6461,7 +6502,22 @@ export function MembersPage({
               <tbody>
                 {pendingInvites.map(inv => (
                   <tr key={inv.id}>
-                    <td style={{ color: 'var(--fg-1)', fontWeight: 500 }}>{inv.email}</td>
+                    <td style={{ color: 'var(--fg-1)', fontWeight: 500 }}>
+                      {inv.email}
+                      {/* A stored invite whose email never left the building is
+                          indistinguishable from a delivered one on the row
+                          alone, and the recipient has no way to tell us. The
+                          POST response reports delivery, so say so here rather
+                          than letting the admin wait seven days for an accept
+                          that cannot arrive. Session-scoped: the invite table
+                          has no column for delivery state, so a reload loses
+                          the flag. Resend is on every row for that reason. */}
+                      {inv.emailDelivered === false && (
+                        <div style={{ marginTop: 2, fontSize: 12, fontWeight: 400, color: 'var(--amber-600, #d97706)' }}>
+                          {t('members.inviteNotDelivered')}
+                        </div>
+                      )}
+                    </td>
                     <td><RoleBadge role={inv.role} /></td>
                     <td style={{ color: 'var(--fg-3)', fontSize: 13 }}>
                       {new Date(inv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -6470,6 +6526,16 @@ export function MembersPage({
                       {new Date(inv.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </td>
                     <td className="right">
+                      <Btn
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleResendInvite(inv.id)}
+                        disabled={resending === inv.id}
+                        aria-label={t('members.resendInviteAria', { email: inv.email })}
+                        title={t('members.resendInvite')}
+                      >
+                        {resending === inv.id ? t('members.resending') : t('members.resendInvite')}
+                      </Btn>
                       <Btn
                         variant="ghost"
                         size="sm"
@@ -6483,6 +6549,52 @@ export function MembersPage({
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Leave workspace (everyone except the owner) ──────────────────────── */}
+      {canLeave && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="card-h">
+            <div>
+              <div className="title">{t('members.leaveTitle')}</div>
+              <div className="sub">{t('members.leaveSub')}</div>
+            </div>
+            <Btn variant="secondary" onClick={() => setConfirmLeave(true)}>
+              {t('members.leaveWorkspace')}
+            </Btn>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm-leave dialog ─────────────────────────────────────────────── */}
+      {confirmLeave && (
+        <div className="scrim" onClick={() => { if (!leaving) setConfirmLeave(false); }}>
+          <div
+            className="modal"
+            onClick={e => e.stopPropagation()}
+            style={{ width: 420 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="leave-workspace-dialog-title"
+          >
+            <div className="modal-h">
+              <h2 id="leave-workspace-dialog-title">{t('members.leaveDialogTitle')}</h2>
+            </div>
+            <div className="modal-body">
+              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--fg-2)', lineHeight: 1.6 }}>
+                {t.rich('members.leaveDialogBody', { ...RICH, workspace: workspaceName || '' })}
+              </p>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
+                <Btn variant="secondary" onClick={() => { if (!leaving) setConfirmLeave(false); }} disabled={leaving}>
+                  {t('members.cancel')}
+                </Btn>
+                <Btn variant="destructive" onClick={handleLeaveConfirm} disabled={leaving}>
+                  {leaving ? t('members.leaving') : t('members.leaveWorkspace')}
+                </Btn>
+              </div>
+            </div>
           </div>
         </div>
       )}

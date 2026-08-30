@@ -579,7 +579,19 @@
     "removeDialogBody": "<b>{name}</b> perderá el acceso a este espacio de trabajo y sus claves de API se revocarán de inmediato.",
     "cancel": "Cancelar",
     "removing": "Eliminando…",
-    "removeMemberBtn": "Eliminar miembro"
+    "removeMemberBtn": "Eliminar miembro",
+    "leaveTitle": "Salir del espacio de trabajo",
+    "leaveSub": "Elimínate de este espacio de trabajo. Se revocarán tus claves de API en él.",
+    "leaveWorkspace": "Salir del espacio de trabajo",
+    "leaveDialogTitle": "¿Salir de este espacio de trabajo?",
+    "leaveDialogBody": "Perderás el acceso a <b>{workspace}</b> y tus claves de API en él se revocarán de inmediato. Un propietario o administrador tendría que volver a invitarte.",
+    "leaving": "Saliendo…",
+    "errLeaveFailed": "No se pudo salir del espacio de trabajo.",
+    "resendInvite": "Reenviar",
+    "resendInviteAria": "Reenviar la invitación a {email}",
+    "resending": "Reenviando…",
+    "errResendFailed": "No se pudo reenviar la invitación.",
+    "inviteNotDelivered": "Correo no entregado. Reenvíalo."
   },
   "approvals": {
     "review": {

@@ -7,6 +7,10 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { getActiveApiKeyNames, isApiKeyNameTaken } from '@/lib/api-keys/unique-name';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+// The scope vocabulary and the viewer allow-list live in one module now: the
+// demotion path in workspaces/members/[userId] enforces the same allow-list on
+// keys that already exist, and three hand-kept copies is where they drift.
+import { VALID_SCOPES, VIEWER_SCOPES, isValidScope, type Scope } from '@/lib/api-keys/scopes';
 
 /**
  * POST /api/api-keys
@@ -34,40 +38,6 @@ import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
  *   Documents/Architecture/api-key-management.md §1 (format), §4.1 (creation flow)
  */
 
-// Must match the scopes the MCP server enforces (supabase/functions/mcp-server
-// gates each tool on a requiredScope). Kept in sync with the OAuth authorize
-// flow's VALID_SCOPES so dashboard- and OAuth-issued keys behave identically.
-//
-// search:email is vestigial — no tool requires it (read:email already gates
-// email_read's search action) — but it is retained for parity and backward
-// compatibility with keys/consents already issued with it.
-const VALID_SCOPES = [
-  'read:email',
-  'search:email',
-  'send:email',
-  'manage:folders',
-  'delete:email',
-  'manage:drafts',
-  'manage:contacts',
-  'schedule:email',
-  'manage:automations',
-] as const;
-
-/**
- * Scopes available to workspace viewers (read-only).
- *
- * manage:automations is deliberately NOT here. An automation is a standing,
- * unattended write capability: it moves, labels, marks read, forwards or drafts
- * on a schedule with nobody watching. That is strictly more power than any
- * interactive write scope, not less, so it cannot belong to the read-only tier.
- */
-const VIEWER_SCOPES = new Set(['read:email', 'search:email']);
-
-type Scope = (typeof VALID_SCOPES)[number];
-
-function isValidScope(s: unknown): s is Scope {
-  return typeof s === 'string' && (VALID_SCOPES as readonly string[]).includes(s);
-}
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();

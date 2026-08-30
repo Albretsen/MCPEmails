@@ -579,7 +579,19 @@
     "removeDialogBody": "<b>{name}</b> vil miste tilgang til dette arbeidsområdet, og API-nøklene deres vil bli opphevet umiddelbart.",
     "cancel": "Avbryt",
     "removing": "Fjerner…",
-    "removeMemberBtn": "Fjern medlem"
+    "removeMemberBtn": "Fjern medlem",
+    "leaveTitle": "Forlat arbeidsområdet",
+    "leaveSub": "Fjern deg selv fra dette arbeidsområdet. API-nøklene dine her blir tilbakekalt.",
+    "leaveWorkspace": "Forlat arbeidsområdet",
+    "leaveDialogTitle": "Forlate dette arbeidsområdet?",
+    "leaveDialogBody": "Du mister tilgangen til <b>{workspace}</b>, og API-nøklene dine der blir tilbakekalt umiddelbart. En eier eller administrator må invitere deg på nytt.",
+    "leaving": "Forlater…",
+    "errLeaveFailed": "Kunne ikke forlate arbeidsområdet.",
+    "resendInvite": "Send på nytt",
+    "resendInviteAria": "Send invitasjonen til {email} på nytt",
+    "resending": "Sender…",
+    "errResendFailed": "Kunne ikke sende invitasjonen på nytt.",
+    "inviteNotDelivered": "E-posten kom ikke fram. Send den på nytt."
   },
   "approvals": {
     "review": {

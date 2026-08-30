@@ -11,6 +11,12 @@ import {
   runTolerantly,
   selectTolerantly,
 } from '@/lib/approvals/columns';
+import {
+  canManageInboxes,
+  canManageWorkspace,
+  fetchWorkspaceRole,
+  insufficientRoleBody,
+} from '@/lib/workspace/roles';
 import type { Database } from '@/types/database.types';
 
 type InboxUpdate = Database['public']['Tables']['inboxes']['Update'];
@@ -105,6 +111,22 @@ export async function DELETE(
   }
 
   const workspaceId = inbox.workspace_id;
+
+  // 2b. Membership is not permission. Step 2 only proves the caller belongs to
+  //     the inbox's workspace, and this handler revokes the provider OAuth
+  //     grant and soft-deletes the mailbox for EVERYONE in that workspace. A
+  //     real `viewer` member of somebody else's workspace was proven to reach
+  //     this point against production (a random id answered 404 "Inbox not
+  //     found", which is the answer of a route that never consulted role; a
+  //     real id would have destroyed the connection). Viewers are read-only.
+  //     See lib/workspace/roles.ts for where the inbox line is drawn and why.
+  const callerRole = await fetchWorkspaceRole(supabase, workspaceId, user.id);
+  if (!canManageInboxes(callerRole)) {
+    return NextResponse.json(
+      insufficientRoleBody('Workspace viewers cannot disconnect an inbox.'),
+      { status: 403 },
+    );
+  }
 
   // 3. Best-effort provider revocation for OAuth inboxes. App-password inboxes
   //    (imap_host set, no OAuth token) have nothing to revoke. Prefer the
@@ -358,6 +380,33 @@ export async function PATCH(
   }
 
   const workspaceId = inbox.workspace_id;
+
+  // 2b. Role gate. Two levels, because this handler writes two very different
+  //     kinds of setting through one body:
+  //
+  //     - Signature fields are operational, so any operator (owner, admin or
+  //       member) may edit them. A viewer may not: it is a write, and the
+  //       signature is appended to every message the workspace sends.
+  //     - `send_review_mode` / `send_approval_required` govern the outbound
+  //       APPROVAL GATE. Switching review off removes the human check on every
+  //       send from this mailbox, and deciding an approval is owner/admin-only
+  //       by design (see the SECURITY note in lib/approvals/decide.ts). A
+  //       member who could turn review off could approve their own sends by
+  //       abolishing approval, so that pair requires canManageWorkspace.
+  const callerRole = await fetchWorkspaceRole(supabase, workspaceId, user.id);
+  if (!canManageInboxes(callerRole)) {
+    return NextResponse.json(
+      insufficientRoleBody('Workspace viewers cannot change inbox settings.'),
+      { status: 403 },
+    );
+  }
+  const touchesReviewGate = 'send_review_mode' in input || 'send_approval_required' in input;
+  if (touchesReviewGate && !canManageWorkspace(callerRole)) {
+    return NextResponse.json(
+      insufficientRoleBody('Only workspace owners and admins can change the send review setting.'),
+      { status: 403 },
+    );
+  }
 
   // 3. Signature edits pin the signature as user-owned; approval is independent.
   const now = new Date().toISOString();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
+import { VALID_SCOPES, VIEWER_SCOPES, isValidScope, type Scope } from '@/lib/api-keys/scopes';
 
 /**
  * PATCH /api/api-keys/[id]
@@ -35,37 +36,6 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
  *   Documents/Architecture/api-key-management.md §4 (lifecycle)
  */
 
-// Must match the scopes the MCP server enforces and the OAuth authorize flow's
-// VALID_SCOPES. Kept in sync with app/api/api-keys/route.ts. search:email is
-// vestigial (read:email already covers search) but retained for parity and
-// backward compatibility.
-const VALID_SCOPES = [
-  'read:email',
-  'search:email',
-  'send:email',
-  'manage:folders',
-  'delete:email',
-  'manage:drafts',
-  'manage:contacts',
-  'schedule:email',
-  'manage:automations',
-] as const;
-
-/**
- * Scopes available to workspace viewers (read-only).
- *
- * manage:automations is deliberately NOT here. An automation is a standing,
- * unattended write capability: it moves, labels, marks read, forwards or drafts
- * on a schedule with nobody watching. That is strictly more power than any
- * interactive write scope, not less, so it cannot belong to the read-only tier.
- */
-const VIEWER_SCOPES = new Set(['read:email', 'search:email']);
-
-type Scope = (typeof VALID_SCOPES)[number];
-
-function isValidScope(s: unknown): s is Scope {
-  return typeof s === 'string' && (VALID_SCOPES as readonly string[]).includes(s);
-}
 
 export async function PATCH(
   request: NextRequest,

@@ -63,7 +63,12 @@
     "densitySpacious": "Romslig",
     "firstRunTitle": "Velkommen til mcpemails",
     "firstRunBody": "Koble til din første innboks for å få et fungerende MCP-endepunkt på under ett minutt.",
-    "firstRunCta": "Koble til innboks"
+    "firstRunCta": "Koble til innboks",
+    "inviteSentNotDelivered": "Invitasjonen til {email} ble opprettet, men e-posten kunne ikke sendes. Bruk Send på nytt på den ventende invitasjonen.",
+    "inviteResent": "Invitasjonen ble sendt på nytt til {email}.",
+    "inviteResendFailed": "Kunne ikke sende invitasjonen på nytt.",
+    "workspaceLeaveFailed": "Kunne ikke forlate arbeidsområdet.",
+    "insufficientRole": "Du har ikke tillatelse til å koble til en innboks i dette arbeidsområdet."
   },
   "sidebar": {
     "planSuffix": "{plan}-abonnement",
