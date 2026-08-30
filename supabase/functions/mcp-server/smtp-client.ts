@@ -25,6 +25,33 @@ export class SmtpAuthError extends Error {
   }
 }
 
+/**
+ * A submission that provably transmitted nothing.
+ *
+ * SMTP hands us one clean dividing line: until the server answers DATA with
+ * 354 it has not been given a single byte of the message, so every failure
+ * before that point (a refused connection, a rejected MAIL FROM, a rejected
+ * RCPT TO) means the mail was NOT sent. Past that line the outcome is
+ * genuinely unknown and callers must stay conservative.
+ *
+ * The distinction is not cosmetic. Callers treat a generic send failure as
+ * "may or may not have been delivered", which forbids a retry and strands the
+ * message; this error tells them the opposite, and that a retry is safe.
+ *
+ * `retryable` narrows it further: a rejection naming the RECIPIENT address
+ * (enhanced status 5.1.x) fails identically no matter how often it is tried,
+ * while a rejection naming this SENDER (an IP-reputation or policy block) can
+ * succeed from a different egress address.
+ */
+export class SmtpNotSentError extends Error {
+  readonly retryable: boolean;
+  constructor(message: string, retryable: boolean) {
+    super(message);
+    this.name = "SmtpNotSentError";
+    this.retryable = retryable;
+  }
+}
+
 export type SmtpSecurity = "tls" | "starttls";
 
 export interface SmtpConfig {
@@ -49,13 +76,75 @@ export interface SmtpMessage {
 const EHLO_DOMAIN = "mcpemails.com";
 const SMTP_TIMEOUT_MS = 20_000;
 
-/** Establish a connection, authenticate, and submit one message. */
+/**
+ * Total submission attempts, each on a brand new connection.
+ *
+ * WHY THIS EXISTS. This function runs on Supabase Edge Functions, whose
+ * outbound traffic leaves from a rotating pool of AWS addresses. Several mail
+ * hosts blocklist AWS ranges wholesale for submission (Domeneshop answers
+ * RCPT TO with `550 [ACR04] Amazon AWS IP <addr> may not use this server`)
+ * and because the pool rotates, the SAME message to the SAME recipient
+ * succeeds or fails depending on which address the invocation happened to get.
+ * On 2026-08-30 one inbox saw three rejections and one success inside five
+ * minutes with nothing else different.
+ *
+ * A second attempt on a fresh connection is the cheapest thing that can help,
+ * and it is free of the usual retry hazard: this only ever fires before DATA,
+ * where duplicate delivery is impossible. It is deliberately ONE extra attempt
+ * rather than many: a new connection from the same warm isolate may well reuse
+ * the same egress address, so the reliable escape is the caller retrying later
+ * (a new isolate, a new address), which {@link SmtpNotSentError} now permits.
+ */
+const SMTP_SUBMIT_ATTEMPTS = 2;
+
+/** Breathing room between submission attempts. */
+const SMTP_RETRY_DELAY_MS = 400;
+
+/**
+ * Submit one message, retrying only where a retry provably cannot duplicate it.
+ *
+ * See {@link SMTP_SUBMIT_ATTEMPTS} for why a retry is needed at all, and
+ * {@link SmtpNotSentError} for the DATA dividing line that makes it safe.
+ */
 export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<void> {
   if (msg.recipients.length === 0) {
     throw new Error("SMTP send: no recipients");
   }
 
-  let conn: Deno.Conn = await connectWithTimeout(cfg);
+  for (let attempt = 1; attempt <= SMTP_SUBMIT_ATTEMPTS; attempt++) {
+    try {
+      await submitOnce(cfg, msg);
+      return;
+    } catch (err) {
+      // Anything else (an auth failure, or a failure after the message bytes
+      // went out) is either deterministic or indeterminate. Neither may be
+      // retried here. The last attempt rethrows for the same reason.
+      const last = attempt === SMTP_SUBMIT_ATTEMPTS;
+      if (last || !(err instanceof SmtpNotSentError) || !err.retryable) throw err;
+      await new Promise((resolve) => setTimeout(resolve, SMTP_RETRY_DELAY_MS));
+    }
+  }
+}
+
+/**
+ * One connection, one submission attempt.
+ *
+ * Every failure raised before the server accepts DATA is re-thrown as
+ * {@link SmtpNotSentError}; failures after that point pass through unchanged,
+ * because from there on we genuinely cannot tell whether the message landed.
+ */
+async function submitOnce(cfg: SmtpConfig, msg: SmtpMessage): Promise<void> {
+  // Flipped the instant the server answers DATA with 354: the next byte we
+  // write is the message itself, and no failure past here is safe to retry.
+  let dataAccepted = false;
+
+  let conn: Deno.Conn;
+  try {
+    conn = await connectWithTimeout(cfg);
+  } catch (err) {
+    // Not one byte of the message existed on the wire.
+    throw new SmtpNotSentError(errorText(err), true);
+  }
 
   const session = new SmtpSession(conn);
   try {
@@ -94,18 +183,45 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
       // 250 = accepted, 251 = forwarded.
       const r = await session.commandRaw(`RCPT TO:<${rcpt}>`);
       if (r.code !== 250 && r.code !== 251) {
-        throw new Error(`SMTP RCPT TO <${rcpt}> rejected: ${r.code} ${r.text}`);
+        throw new SmtpNotSentError(
+          `SMTP RCPT TO <${rcpt}> rejected: ${r.code} ${r.text}`,
+          !isRecipientAddressRejection(r),
+        );
       }
     }
 
     await session.command("DATA", 354);
+    dataAccepted = true;
     await session.writeData(msg.rawMessage);
     await session.expect(250);
 
     await session.commandRaw("QUIT");
+  } catch (err) {
+    if (err instanceof SmtpAuthError || err instanceof SmtpNotSentError) throw err;
+    // Already classified, or past the point of no return.
+    if (dataAccepted) throw err;
+    throw new SmtpNotSentError(errorText(err), true);
   } finally {
     session.close();
   }
+}
+
+function errorText(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+/**
+ * True when the server blamed the RECIPIENT address rather than us.
+ *
+ * RFC 3463 reserves the 5.1.x enhanced-status class for "bad destination
+ * address": no such mailbox, bad syntax, ambiguity. Those verdicts are a property
+ * of the address and repeat identically on every attempt, so retrying only
+ * spends the caller's time. Rejections aimed at the sender (5.7.x policy, or
+ * the bare-code IP blocks that reputation filters emit) carry no such class and
+ * stay retryable.
+ */
+export function isRecipientAddressRejection(reply: SmtpReply): boolean {
+  return /\b5\.1\.\d+\b/.test(reply.text);
 }
 
 export interface SmtpReply {

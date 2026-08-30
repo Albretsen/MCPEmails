@@ -63,6 +63,11 @@ export const ERROR_CODE_EXPLANATIONS: Record<string, ErrorExplanation> = {
     detail: 'The upstream mail provider returned an error or behaved unexpectedly. Transient at low rates; a sustained rate against one provider is a real incident.',
     blame: 'provider',
   },
+  provider_not_sent: {
+    title: 'Refused before sending',
+    detail: 'The mail server rejected the submission before it received any of the message, so nothing was delivered and the caller was told a retry is safe. Almost always the host refusing our sending address rather than anything about the mail: several providers blocklist the cloud ranges these functions run from, and because the egress address rotates the same message can fail and then succeed minutes later. A run of these against one host means that host is refusing us, not that mail is breaking.',
+    blame: 'provider',
+  },
   inbox_not_found: {
     title: 'Inbox not found',
     detail: 'The call named an inbox id that does not exist or is not reachable by this key. Commonly a stale client still using an inbox the user has since disconnected.',
