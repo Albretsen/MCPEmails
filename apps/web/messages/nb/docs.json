@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Dokumentasjon",
+    "title": "Dokumentasjon for e-post-MCP-server: Gmail, IMAP og OAuth",
     "description": "Kom i gang med MCPEmails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail- og IMAP-agenter."
   },
   "hero": {
     "eyebrow": "Dokumentasjon",
-    "titleLine1": "Agenten din har en innboks",
+    "titleLine1": "Koble Gmail eller IMAP til Claude",
     "titleLine2": "på fire steg.",
     "lead": "Koble til hvilken som helst e-postkonto, lim inn én URL i en OAuth-kompatibel MCP-klient og godkjenn. Klienter uten OAuth bruker en API-nøkkel i stedet. Full verktøyreferanse og tilkoblingsveiledning nedenfor.",
     "ctaQuickStart": "Hurtigstart",

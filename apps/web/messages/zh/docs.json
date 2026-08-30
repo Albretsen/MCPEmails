@@ -1,12 +1,12 @@
 {
   "meta": {
-    "title": "文档",
+    "title": "邮件 MCP 服务器文档：Gmail、IMAP 与 OAuth",
     "description": "几分钟内开始使用 MCPEmails。面向 Gmail 和 IMAP 智能体的快速入门指南、工具参考和示例响应。"
   },
   "hero": {
     "eyebrow": "文档",
-    "titleLine1": "四步即可让你的智能体",
-    "titleLine2": "拥有一个收件箱。",
+    "titleLine1": "四步将 Gmail 或 IMAP",
+    "titleLine2": "连接到 Claude。",
     "lead": "连接任意电子邮件账户，把一个 URL 粘贴到支持 OAuth 的 MCP 客户端中并授权。不支持 OAuth 的客户端则改用 API 密钥。下方提供完整的工具参考和连接指南。",
     "ctaQuickStart": "快速开始",
     "ctaOAuth": "OAuth（claude.ai）",

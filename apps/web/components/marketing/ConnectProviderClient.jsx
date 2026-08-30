@@ -41,6 +41,16 @@ export default function ConnectProviderClient({ provider }) {
             {t('hero.titleLine1')}<br />{t('hero.titleLine2')}
           </h1>
           <p className="pricing-page-lead">{t('hero.lead')}</p>
+          {/*
+            Direct answer to the question the search query actually asks
+            ("can Claude use iCloud Mail?"). These pages rank between 4.7 and
+            9.2 for provider queries and were returning zero clicks: the
+            snippet had nothing quotable to pull. Optional per provider, so
+            pages without an `answer` string render exactly as before.
+          */}
+          {t.has('hero.answer') && (
+            <p className="pricing-page-answer">{t('hero.answer')}</p>
+          )}
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
             <a className="btn btn-primary btn-lg" href="/signup">{t('hero.ctaPrimary')}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('hero.ctaSecondary')}</Link>
@@ -148,6 +158,19 @@ export default function ConnectProviderClient({ provider }) {
               </div>
             ))}
           </div>
+          {/*
+            Exact-match link to the long-form guide for this provider. The
+            product page and the guide used to compete for the same query and
+            neither ranked; the guide now owns the instructional phrase and
+            this link is what tells Google they are a pair rather than
+            duplicates. Optional per provider.
+          */}
+          {t.has('guide.href') && (
+            <p className="how-guide-link">
+              {t('guide.intro')}{' '}
+              <Link href={t('guide.href')}>{t('guide.label')}</Link>
+            </p>
+          )}
         </div>
       </section>
 

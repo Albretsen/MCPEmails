@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · 将 Gmail、iCloud 与 IMAP 连接到 Claude",
-    "description": "让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Fastmail、iCloud 和 IMAP 邮件。Outlook 正在开发中。免费，不存储任何邮件。"
+    "title": "将 Gmail、iCloud 与 IMAP 连接到 Claude",
+    "description": "让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。"
   },
   "nav": {
     "features": "功能",
