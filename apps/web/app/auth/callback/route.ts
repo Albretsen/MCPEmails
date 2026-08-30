@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { acquisitionFromParams } from '@/lib/acquisition-context.mjs';
 
+// ---------------------------------------------------------------------------
+// Route config
+// ---------------------------------------------------------------------------
+
+/**
+ * The Supabase code-for-session exchange is an outbound call plus a
+ * handful of database writes; 15s is generous but bounded.
+ *
+ * Declared here rather than in a `functions` block in vercel.json: the Vercel
+ * project's Root Directory is apps/web, so a repo-root vercel.json is never
+ * loaded and its maxDuration values silently do nothing.
+ */
+export const maxDuration = 15;
+
 /**
  * GET /auth/callback
  *

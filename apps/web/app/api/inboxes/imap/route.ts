@@ -15,6 +15,21 @@ import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { canManageInboxes, fetchWorkspaceRole, insufficientRoleBody } from '@/lib/workspace/roles';
 
+// ---------------------------------------------------------------------------
+// Route config
+// ---------------------------------------------------------------------------
+
+/**
+ * Connecting a custom IMAP/SMTP account probes several host/port/security
+ * combinations (see lib/email/transport-autodetect.ts); a slow or unresponsive
+ * mail server can push a single attempt into the tens of seconds.
+ *
+ * Declared here rather than in a `functions` block in vercel.json: the Vercel
+ * project's Root Directory is apps/web, so a repo-root vercel.json is never
+ * loaded and its maxDuration values silently do nothing.
+ */
+export const maxDuration = 60;
+
 /**
  * POST /api/inboxes/imap
  *

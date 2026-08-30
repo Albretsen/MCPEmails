@@ -22,6 +22,20 @@ import {
   DEFAULT_ZOHO_ACCOUNT_TYPE,
 } from '@/lib/email-providers/imap-presets';
 
+// ---------------------------------------------------------------------------
+// Route config
+// ---------------------------------------------------------------------------
+
+/**
+ * Validating the app password requires a live IMAP round trip to the
+ * provider before anything is persisted, which can be slow.
+ *
+ * Declared here rather than in a `functions` block in vercel.json: the Vercel
+ * project's Root Directory is apps/web, so a repo-root vercel.json is never
+ * loaded and its maxDuration values silently do nothing.
+ */
+export const maxDuration = 60;
+
 /**
  * POST /api/inboxes/app-password
  *
