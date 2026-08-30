@@ -21,6 +21,10 @@ const RICH = {
  */
 export default function ConnectProviderClient({ provider }) {
   const t = useTranslations(`connect.${provider}`);
+  // Shared across all six provider pages: the back-link to the compatibility
+  // matrix is the same sentence on each, so it lives once at `connect.matrix`
+  // rather than six times under `connect.<provider>`.
+  const tShared = useTranslations('connect');
 
   const capabilities = t.raw('capabilities');
   const steps = t.raw('steps');
@@ -171,6 +175,15 @@ export default function ConnectProviderClient({ provider }) {
               <Link href={t('guide.href')}>{t('guide.label')}</Link>
             </p>
           )}
+          {/*
+            Back-link to the compatibility matrix. Every provider row over there
+            links down to one of these pages; this is the other half of that
+            pair, and it is what makes the matrix a hub rather than a leaf.
+          */}
+          <p className="how-guide-link">
+            {tShared('matrix.intro')}{' '}
+            <Link href={tShared('matrix.href')}>{tShared('matrix.label')}</Link>
+          </p>
         </div>
       </section>
 

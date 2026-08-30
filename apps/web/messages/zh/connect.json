@@ -466,5 +466,10 @@
       "ctaPrimary": "免费连接 Yandex",
       "ctaSecondary": "阅读文档"
     }
+  },
+  "matrix": {
+    "intro": "想先比较各家服务商？",
+    "label": "查看邮箱服务商兼容性对照表",
+    "href": "/docs/providers"
   }
 }

@@ -466,5 +466,10 @@
       "ctaPrimary": "Conecta Yandex gratis",
       "ctaSecondary": "Lee la documentación"
     }
+  },
+  "matrix": {
+    "intro": "¿Prefieres comparar proveedores primero?",
+    "label": "Consulta la matriz de compatibilidad de proveedores de correo",
+    "href": "/docs/providers"
   }
 }
