@@ -474,6 +474,10 @@
       "planned": "Planlagt (ikke lansert ennå)",
       "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP</b> kobler alle til over den samme IMAP/SMTP-transporten (Fastmail og iCloud bruker et app-spesifikt passord) og deler et identisk funksjonssett, inkludert IMAP-søkesyntaks. Kolonnene vises hver for seg for tydelighetens skyld."
     },
+    "profiles": {
+      "title": "Kompatibilitetsprofiler",
+      "body": "Hver innboks rapporterer en versjonert profil til en MCP-agent: <code>exact</code> betyr at den normaliserte operasjonen beholder betydningen sin, <code>different</code> betyr at leverandøren bruker dokumenterte alternative semantikker, og <code>unavailable</code> betyr at MCP Emails ikke svekker forespørselen i det stille. Profilene beskriver hvordan koblingen oppfører seg, uten å inspisere eller lagre e-post."
+    },
     "ariaSupported": "Støttet",
     "ariaNotSupported": "Ikke støttet",
     "plannedBadge": "planlagt",
