@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server';
-
 /**
  * A real 404 for any /api path that matches no route.
  *
@@ -39,12 +37,29 @@ import { NextResponse } from 'next/server';
  * PRECEDENCE. A catch-all is the lowest-priority match in the App Router, so
  * every real route, static (`/api/usage`) or dynamic (`/api/workspaces/[id]`),
  * continues to win. This only ever answers paths that would otherwise have
- * reached nothing.
+ * reached nothing. Verified against a production build: /api/usage still 401s,
+ * /api/workspaces/active and /api/api-keys/<id> still 405 on a wrong method,
+ * /api/kiosk/version still serves its own 404, and page routes are untouched.
+ *
+ * WHY THE OPTIONAL FORM ([[...]] RATHER THAN [...]). A required catch-all does
+ * not match a bare `/api`, which left that one path reaching no function and
+ * therefore still exhibiting the exact defect above. The optional form covers
+ * it. There is no app/api/route.ts for it to collide with, and only one dynamic
+ * segment may sit directly under app/api, which the regression test asserts.
  */
 
-/** Same body and status for every method: the path does not exist. */
-function unmatched(): NextResponse {
-  return NextResponse.json(
+/**
+ * Same body and status for every method: the path does not exist.
+ *
+ * A plain Response rather than NextResponse.json, deliberately. Nothing here
+ * needs the Next wrapper, and staying on the Web API keeps this module
+ * importable by a bare `node --test` run, which is what lets the regression
+ * test in src/lib/api/unmatched-api-route.test.ts call these handlers
+ * directly. (`next/server` has no package exports entry, so a test importing
+ * it outside the bundler dies on ERR_MODULE_NOT_FOUND.)
+ */
+function unmatched(): Response {
+  return Response.json(
     { error: 'Not found.' },
     {
       status: 404,
