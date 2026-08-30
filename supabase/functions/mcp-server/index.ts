@@ -163,6 +163,18 @@ import {
   type ImapFolderGroup,
   runImapFolderGroups,
 } from "./imap-bulk-groups.ts";
+import { dedupeMessageIds } from "./message-id-dedupe.ts";
+import {
+  type InboxSelectorConflict,
+  inboxSelectorConflictMessage,
+  inboxSelectorOutcome,
+} from "./inbox-selector.ts";
+import { unsupportedFeatureMessage } from "./unsupported-feature-remedy.ts";
+import {
+  buildReplayEnvelope,
+  idempotencyResultSnapshot,
+  noNewEffectPhrase,
+} from "./idempotency-replay.ts";
 
 // ---------------------------------------------------------------------------
 // Supabase service-role client
@@ -684,7 +696,7 @@ function acceptsIdempotencyKey(operation: string): boolean {
 
 type IdempotencyClaim =
   | { kind: "proceed"; keyDigest: string; requestDigest: string; key: string }
-  | { kind: "replay"; key: string; status: "succeeded" | "failed" | "unknown" | "pending_approval" | "approval_approved"; approvalId?: string }
+  | { kind: "replay"; key: string; status: "succeeded" | "failed" | "unknown" | "pending_approval" | "approval_approved"; approvalId?: string; result?: Record<string, unknown> | null }
   | { kind: "processing"; key: string }
   | { kind: "conflict"; key: string }
   | { kind: "invalid"; message: string }
@@ -707,6 +719,38 @@ async function idempotencyDigest(value: string): Promise<string> {
   const hmacKey = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const signature = await crypto.subtle.sign("HMAC", hmacKey, new TextEncoder().encode(value));
   return Array.from(new Uint8Array(signature)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Reads back the stored snapshot of the original result for a replay.
+ *
+ * Fetched in its own query, deliberately, rather than added to the SELECT in
+ * `claimOutboundIdempotency`. That select's failure path returns
+ * `idempotency_unavailable`, which REFUSES the operation — so if the edge
+ * function ever ran ahead of migration 20260830120000 (the column this reads),
+ * widening that select would stop every keyed send outright. Here the worst
+ * case is a replay that is exactly as unhelpful as it was before the fix.
+ */
+async function readIdempotencyResultSnapshot(
+  apiKeyId: string,
+  operation: string,
+  keyDigest: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const { data, error } = await supabase
+      .from("outbound_idempotency")
+      .select("result_snapshot")
+      .eq("api_key_id", apiKeyId)
+      .eq("operation", operation)
+      .eq("key_digest", keyDigest)
+      .maybeSingle();
+    if (error || !data) return null;
+    const snapshot = (data as { result_snapshot?: unknown }).result_snapshot;
+    if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) return null;
+    return snapshot as Record<string, unknown>;
+  } catch {
+    return null;
+  }
 }
 
 async function claimOutboundIdempotency(
@@ -775,7 +819,14 @@ async function claimOutboundIdempotency(
         }
         return { kind: "replay", key, status: "pending_approval", approvalId: existing.approval_id };
       }
-      return { kind: "replay", key, status: existing.status as "succeeded" | "failed" | "unknown" };
+      return {
+        kind: "replay",
+        key,
+        status: existing.status as "succeeded" | "failed" | "unknown",
+        // The whole point of a retry after a dropped connection: hand back the
+        // message_id the caller lost, not just the fact that it happened.
+        result: await readIdempotencyResultSnapshot(apiKey.id, operation, keyDigest),
+      };
     }
 
     const { error: insertError } = await supabase.from("outbound_idempotency").insert({
@@ -804,7 +855,12 @@ async function claimOutboundIdempotency(
     if (raced.status === "pending_approval") {
       return { kind: "replay", key, status: "pending_approval", approvalId: raced.approval_id ?? undefined };
     }
-    return { kind: "replay", key, status: raced.status as "succeeded" | "failed" | "unknown" };
+    return {
+      kind: "replay",
+      key,
+      status: raced.status as "succeeded" | "failed" | "unknown",
+      result: await readIdempotencyResultSnapshot(apiKey.id, operation, keyDigest),
+    };
   } catch (error) {
     console.error("[mcp-server] idempotency_claim_failed", { operation, key_id: apiKey.id, error: error instanceof Error ? error.message : String(error) });
     return { kind: "unavailable" };
@@ -820,6 +876,11 @@ async function completeOutboundIdempotency(
   approvalId?: string,
   /** See {@link isPartialToolResult}: a partial must not be filed as done. */
   partial = false,
+  /**
+   * Identity/outcome fields of the original result, for a later replay to hand
+   * back. Never content — see idempotency-replay.ts for what survives.
+   */
+  resultSnapshot: Record<string, unknown> | null = null,
 ): Promise<void> {
   if (!claim || claim.kind !== "proceed") return;
   // An unhandled failure may happen after provider acceptance; preserve the
@@ -832,12 +893,32 @@ async function completeOutboundIdempotency(
     : logStatus === "success" ? "succeeded"
     : (logErrorCode === "provider_error" || logErrorCode === "-32603") ? "unknown"
     : "failed";
-  const { error } = await supabase.from("outbound_idempotency")
-    .update({ status, completed_at: new Date().toISOString(), ...(approvalId ? { approval_id: approvalId } : {}) })
-    .eq("api_key_id", apiKeyId)
-    .eq("operation", operation)
-    .eq("key_digest", claim.keyDigest)
-    .eq("request_digest", claim.requestDigest);
+  // An approval-dispatched send is not finished here: its real outcome is
+  // recorded later by completeApprovedOutboundIdempotency, which does not pass
+  // through this function. Storing the pending-approval envelope as "the
+  // result" would leave a later replay reporting status: succeeded beside a
+  // result that says pending_approval, so that path stores nothing.
+  const snapshot = approvalId ? null : resultSnapshot;
+  const settle = (patch: Record<string, unknown>) =>
+    supabase.from("outbound_idempotency")
+      .update({ status, completed_at: new Date().toISOString(), ...(approvalId ? { approval_id: approvalId } : {}), ...patch })
+      .eq("api_key_id", apiKeyId)
+      .eq("operation", operation)
+      .eq("key_digest", claim.keyDigest)
+      .eq("request_digest", claim.requestDigest);
+
+  const { error } = await settle(snapshot ? { result_snapshot: snapshot } : {});
+  if (error && snapshot) {
+    // The snapshot column arrived in migration 20260830120000. If this function
+    // is ever live against a database that has not taken it, the record must
+    // still be settled: leaving it `processing` would tell every subsequent
+    // retry "already in progress" and wedge the key for 24 hours. Losing the
+    // replay payload is the acceptable half of that trade.
+    console.error("[mcp-server] idempotency_snapshot_write_failed", { operation, error: error.message });
+    const { error: retryError } = await settle({});
+    if (retryError) console.error("[mcp-server] idempotency_complete_failed", { operation, error: retryError.message });
+    return;
+  }
   if (error) console.error("[mcp-server] idempotency_complete_failed", { operation, error: error.message });
 }
 
@@ -885,6 +966,22 @@ function isPartialToolResult(response: JsonRpcSuccessResponse | JsonRpcErrorResp
   const structured = (response.result as { structuredContent?: unknown }).structuredContent;
   if (!structured || typeof structured !== "object") return false;
   return (structured as Record<string, unknown>).partial === true;
+}
+
+/**
+ * The part of a tool result worth storing for a later idempotent replay.
+ *
+ * Reads `structuredContent` for the same reason its two neighbours do: the
+ * JSON is the contract and the prose is not. The filtering — ids and outcome
+ * kept, recipients and subject dropped — lives in idempotency-replay.ts.
+ */
+function replaySnapshotFromToolResult(
+  response: JsonRpcSuccessResponse | JsonRpcErrorResponse,
+): Record<string, unknown> | null {
+  if (!("result" in response) || !response.result || typeof response.result !== "object") return null;
+  return idempotencyResultSnapshot(
+    (response.result as { structuredContent?: unknown }).structuredContent,
+  );
 }
 
 /** Extracts the approval snapshot identity without depending on text formatting. */
@@ -2479,15 +2576,16 @@ const INBOX_ID_PROPERTY = {
   format: "uuid",
   description:
     "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass " +
-    "this or `inbox`; omit both and the error lists every inbox_id.",
+    "this or `inbox` — not both, unless they name the same inbox; omit both " +
+    "and the error lists every inbox_id.",
 } as const;
 
 /** Shared `inbox` property — the email-address alternative to `inbox_id`. */
 const INBOX_PROPERTY = {
   type: "string",
   description:
-    "Inbox email address; an alternative to inbox_id, which wins when both " +
-    "are given.",
+    "Inbox email address; an alternative to inbox_id. Pass one or the other: " +
+    "if both are given and they name different inboxes the call is refused.",
 } as const;
 
 /**
@@ -3131,7 +3229,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           items: { type: "string" },
           minItems: 1,
           maxItems: 500,
-          description: "Provider-native message ids to move.",
+          description:
+            "Provider-native message ids to move. Duplicates are removed, " +
+            "first occurrence kept, so succeeded counts distinct messages.",
         },
         destination_folder_id: {
           type: "string",
@@ -3166,7 +3266,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           maxItems: 500,
           description:
             "Provider-native message IDs to copy (from email_list, email_read, or email_search). " +
-            "Maximum 500 IDs per call.",
+            "Maximum 500 IDs per call. Duplicates are removed, first occurrence " +
+            "kept, so succeeded counts distinct messages.",
         },
         destination_folder_id: {
           type: "string",
@@ -3200,7 +3301,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           items: { type: "string" },
           minItems: 1,
           maxItems: 500,
-          description: "Provider-native message ids to delete.",
+          description:
+            "Provider-native message ids to delete. Duplicates are removed, " +
+            "first occurrence kept, so succeeded counts distinct messages.",
         },
         permanent: {
           type: "boolean",
@@ -3238,7 +3341,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           minItems: 1,
           maxItems: 500,
           description:
-            "Provider-native message IDs to update. Maximum 500 IDs per call.",
+            "Provider-native message IDs to update. Maximum 500 IDs per call. " +
+            "Duplicates are removed, first occurrence kept, so succeeded counts " +
+            "distinct messages.",
         },
         action: {
           type: "string",
@@ -6473,8 +6578,10 @@ function unsupportedFeatureError(
           error: "unsupported_feature",
           feature,
           provider,
-          message:
-            `The '${feature}' feature is not supported for provider '${provider}'.`,
+          // Structured fields are unchanged; only the prose gains the "here is
+          // what to do instead" clause that the permanent-delete refusal
+          // already had. See unsupported-feature-remedy.ts.
+          message: unsupportedFeatureMessage(feature, provider),
         }),
       }],
     },
@@ -6938,6 +7045,23 @@ async function resolveInbox(
 }
 
 /**
+ * The outcome of resolving a tool call's inbox arguments.
+ *
+ * Named rather than repeated inline because `selector_conflict` carries a
+ * payload the other failures do not: a refusal that could not name BOTH
+ * mailboxes would leave the caller unable to tell which of its two arguments
+ * was wrong. See inbox-selector.ts.
+ */
+type InboxResolution =
+  | { ok: true; inbox: InboxRow }
+  | {
+      ok: false;
+      reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+      inboxes?: InboxRow[];
+      conflict?: InboxSelectorConflict;
+    };
+
+/**
  * Resolve an inbox for a tool call from the `inbox_id` / `inbox` arguments,
  * with two ergonomic conveniences:
  *   1. Auto-resolve: when the API key can access exactly one inbox and neither
@@ -6947,15 +7071,13 @@ async function resolveInbox(
  *
  * Returns `{ ok: true, inbox }` on success, or `{ ok: false, reason }` where
  * reason is "not_found" (no match), "ambiguous" (>1 accessible inbox and none
- * specified), or "none" (the key can access no inbox at all).
+ * specified), "selector_conflict" (both arguments given, naming DIFFERENT
+ * inboxes), or "none" (the key can access no inbox at all).
  */
 async function resolveInboxArg(
   args: Record<string, unknown>,
   apiKey: ApiKeyRow,
-): Promise<
-  | { ok: true; inbox: InboxRow }
-  | { ok: false; reason: "not_found" | "ambiguous" | "none"; inboxes?: InboxRow[] }
-> {
+): Promise<InboxResolution> {
   const resolved = await resolveInboxArgInner(args, apiKey);
   // Record the inbox this request actually resolved so the tools/call dispatcher
   // can log it (the raw arguments alone don't reveal an alias- or auto-resolved
@@ -6982,10 +7104,7 @@ async function resolveInboxArg(
 async function resolveInboxArgInner(
   args: Record<string, unknown>,
   apiKey: ApiKeyRow,
-): Promise<
-  | { ok: true; inbox: InboxRow }
-  | { ok: false; reason: "not_found" | "ambiguous" | "none"; inboxes?: InboxRow[] }
-> {
+): Promise<InboxResolution> {
   const UUID_RE =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -7040,15 +7159,36 @@ async function resolveInboxArgInner(
     return { ok: true, inbox };
   };
 
+  // One selector resolves to one inbox row, whichever form it took.
+  const resolveOne = async (raw: string): Promise<InboxRow | null> => {
+    if (UUID_RE.test(raw)) return await resolveInbox(raw, apiKey);
+    if (raw.includes("@")) {
+      const byEmail = await resolveByEmail(raw);
+      return byEmail.ok ? byEmail.inbox : null;
+    }
+    return null;
+  };
+
   if (rawInboxId) {
-    if (UUID_RE.test(rawInboxId)) {
-      const inbox = await resolveInbox(rawInboxId, apiKey);
-      return inbox ? { ok: true, inbox } : { ok: false, reason: "not_found" };
+    const fromInboxId = await resolveOne(rawInboxId);
+    // Only pay for the second lookup when there is a second selector to check.
+    // `inbox_id` alone keeps exactly the query it always ran.
+    const fromInbox = rawInbox ? await resolveOne(rawInbox) : null;
+    const outcome = inboxSelectorOutcome(
+      rawInboxId,
+      rawInbox,
+      fromInboxId,
+      fromInbox,
+    );
+    if (outcome.kind === "not_found") return { ok: false, reason: "not_found" };
+    if (outcome.kind === "conflict") {
+      // A stale inbox_id paired with the address the user just named used to
+      // resolve silently to the stale one. Refuse instead of guessing.
+      return { ok: false, reason: "selector_conflict", conflict: outcome.conflict };
     }
-    if (rawInboxId.includes("@")) {
-      return await resolveByEmail(rawInboxId);
-    }
-    return { ok: false, reason: "not_found" };
+    return fromInboxId
+      ? { ok: true, inbox: fromInboxId }
+      : { ok: false, reason: "not_found" };
   }
 
   if (rawInbox) {
@@ -7088,8 +7228,9 @@ async function resolveInboxArgInner(
  */
 function inboxResolutionError(
   failure: {
-    reason: "not_found" | "ambiguous" | "none";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
     inboxes?: InboxRow[];
+    conflict?: InboxSelectorConflict;
   },
   _toolName: string,
 ): ToolErrorResult {
@@ -7130,6 +7271,32 @@ function inboxResolutionError(
         "not need to call any other tool first:\n" + lines;
       structuredContent = { inboxes };
       errorCode = "inbox_ambiguous";
+      break;
+    }
+    case "selector_conflict": {
+      // Both selectors were given and they named different mailboxes. The
+      // structured content repeats both sides so a client can act on it
+      // without parsing prose.
+      const conflict = failure.conflict;
+      text = conflict
+        ? inboxSelectorConflictMessage(conflict)
+        : "inbox_id and inbox name different inboxes. Retry with only one of them.";
+      if (conflict) {
+        structuredContent = {
+          error: "inbox_selector_conflict",
+          inbox_id: conflict.inbox_id,
+          inbox: conflict.inbox,
+          resolved_from_inbox_id: {
+            inbox_id: conflict.resolved_from_inbox_id.id,
+            email_address: conflict.resolved_from_inbox_id.email_address,
+          },
+          resolved_from_inbox: {
+            inbox_id: conflict.resolved_from_inbox.id,
+            email_address: conflict.resolved_from_inbox.email_address,
+          },
+        };
+      }
+      errorCode = "inbox_selector_conflict";
       break;
     }
     case "none":
@@ -17354,7 +17521,12 @@ async function resolveBulkArgs(
     };
   }
 
-  const messageIds = (rawIds as string[]).map((id) => id.trim());
+  // Duplicates are removed, first occurrence kept — the same contract
+  // email_read_batch has always documented and applied. Before this, a
+  // move_batch of [A, B, A] reported `succeeded: 3` and listed A twice while
+  // only two messages had moved, so `succeeded` overstated the mailbox change
+  // by the number of repeats. See message-id-dedupe.ts.
+  const messageIds = dedupeMessageIds(rawIds as string[]);
 
   const resolved = await resolveInboxArg(args, apiKey);
   if (!resolved.ok) {
@@ -23090,29 +23262,22 @@ async function handleToolsCall(
   // Telling a caller that its retried MOVE sent no email is confusing at best,
   // so the noun is chosen from the operation rather than hardcoded.
   const isMutationOperation = IDEMPOTENT_MUTATION_OPERATIONS.has(dispatchName);
-  const noNewEffect = isMutationOperation
-    ? "The mailbox was not changed again by this retry."
-    : "No new email was sent.";
+  const noNewEffect = noNewEffectPhrase(isMutationOperation);
 
   if (idempotencyClaim && idempotencyClaim.kind !== "proceed") {
     let payload: Record<string, unknown>;
     if (idempotencyClaim.kind === "replay") {
-      payload = {
-        idempotency_key: idempotencyClaim.key,
-        idempotent_replay: true,
+      // The envelope repeats the original outcome, so a caller that lost the
+      // first response to a dropped connection recovers its message_id here
+      // instead of being told only that it already happened. See
+      // idempotency-replay.ts.
+      payload = buildReplayEnvelope({
+        key: idempotencyClaim.key,
         status: idempotencyClaim.status,
-        ...(idempotencyClaim.approvalId ? { approval_id: idempotencyClaim.approvalId } : {}),
-        message: idempotencyClaim.status === "pending_approval"
-          ? "This email has not been sent. It is awaiting dashboard approval; approve or reject the returned approval_id. After rejection, retry this exact request with the same idempotency_key to create a fresh approval."
-          : idempotencyClaim.status === "approval_approved"
-          ? "This email was approved and is queued for delivery. No new email was sent by this retry."
-          : idempotencyClaim.status === "unknown"
-          ? `A prior submission may have reached the provider. ${noNewEffect} ` +
-            (isMutationOperation
-              ? "Check the mailbox before taking further action."
-              : "Check Sent before taking further action.")
-          : `This logical request was already processed. ${noNewEffect}`,
-      };
+        approvalId: idempotencyClaim.approvalId,
+        result: idempotencyClaim.result,
+        isMutation: isMutationOperation,
+      });
       logStatus = "success";
       logErrorCode = null;
     } else if (idempotencyClaim.kind === "processing") {
@@ -23525,6 +23690,7 @@ async function handleToolsCall(
     logErrorCode,
     pendingApprovalIdFromToolResult(toolResult),
     isPartialToolResult(toolResult),
+    replaySnapshotFromToolResult(toolResult),
   );
 
   // Prefer the inbox the tool actually resolved (handles email aliases and
