@@ -10,6 +10,11 @@ import {
 } from "./imap-client.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
 import {
+  base64ToUtf8,
+  downloadContentBlocks,
+  exceedsInlineBudget,
+} from "./download-content-blocks.ts";
+import {
   batchBodyAllowance,
   BATCH_BODY_RESPONSE_CHARS,
   BATCH_READ_BODY_CHARS,
@@ -2862,12 +2867,13 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     name: "email_attachment",
     title: "Download Attachment",
     description:
-      "Download a single attachment from an email. The file is returned in the " +
-      "MCP-native content block for its type — `image` for images, `audio` for " +
-      "audio, otherwise an embedded `resource` (decoded text for text/*, else a " +
-      "base64 `blob`) — so clients can preview or save it directly. Metadata " +
-      "(filename, mime_type, size_bytes, attachment_index) is also returned as " +
-      "structuredContent. Select the attachment by `attachment_index` (0-based, " +
+      "Download a single attachment from an email. The bytes are always returned " +
+      "base64-encoded as `data` in structuredContent, alongside the metadata " +
+      "(filename, mime_type, size_bytes, attachment_index). Images and audio " +
+      "additionally come back in the MCP-native `image`/`audio` content block, and " +
+      "text/* files additionally as an embedded `resource` with decoded text, so " +
+      "clients can preview them directly; for every other type `data` is the file. " +
+      "Select the attachment by `attachment_index` (0-based, " +
       "matching the order in email_read's `attachments` list) or by `filename`. " +
       "When the message has exactly one attachment you may omit both. Use this " +
       "instead of email_read with include_attachments when you only need one file. " +
@@ -2944,8 +2950,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     description:
       "Download one email as a complete .eml file (message/rfc822). This returns " +
       "the complete MIME representation currently stored by the provider, including " +
-      "headers, body structure, inline content, and attachments. It is returned as " +
-      "an MCP embedded resource for saving, not as rendered or sanitized message text. " +
+      "headers, body structure, inline content, and attachments. The .eml is returned " +
+      "base64-encoded as `data` in structuredContent, with `sha256` over the same " +
+      "bytes so a caller can verify what it decoded; it is a saveable file, not " +
+      "rendered or sanitized message text. " +
       "Read-only and does not mark the message as read. One message may be up to 25 MB.",
     requiredScope: "read:email",
     inputSchema: {
@@ -5569,7 +5577,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       original: {
         legacy: "email_original",
         scope: "read:email",
-        hint: "the whole stored message as an .eml resource",
+        hint: "the whole stored message as a base64 .eml, with its sha256",
       },
     },
   },
@@ -8404,14 +8412,6 @@ function bytesToBase64(bytes: Uint8Array): string {
   return out;
 }
 
-/** Decode a standard (not URL-safe) base64 string to a UTF-8 string. */
-function base64ToUtf8(b64: string): string {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-}
-
 /** Text returned by attachment extraction is deliberately capped: it is useful
  * to an agent but must not turn a single document into an unbounded context dump. */
 const EXTRACTION_MAX_BYTES = 10 * 1024 * 1024;
@@ -10515,6 +10515,34 @@ async function executeReadEmail(
 /** A complete .eml can be larger than a normal read, but must remain bounded. */
 const ORIGINAL_MESSAGE_MAX_BYTES = 25 * 1024 * 1024;
 
+/**
+ * Per-attachment download cap for email_attachment. Larger than the 10 MB
+ * whole-message include_attachments budget because a dedicated download fetches
+ * exactly one file, so a bigger ceiling is safe.
+ *
+ * This is also the ceiling on base64 inlined into a tool result: email_attachment
+ * has put the selected file's base64 in `structuredContent.data` (and in the text
+ * block mirroring it) up to this size in production all along.
+ */
+const SINGLE_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024;
+
+/**
+ * What email_original will actually return.
+ *
+ * The .eml used to ride in an EmbeddedResource `blob`, which the client never
+ * receives (see download-content-blocks.ts), so the bytes now ride base64-inlined
+ * in the JSON payload instead. That makes two separate ceilings apply: how much
+ * we are willing to pull off the provider, and how much we are willing to inline.
+ * Taking the lower of the two established constants keeps one number in play, so
+ * the pre-fetch refusal, the post-read backstop and the `max_bytes` we report to
+ * the caller can never disagree, and raising the download budget alone can never
+ * silently start producing a result too large to ship.
+ */
+const ORIGINAL_DOWNLOAD_CEILING = Math.min(
+  ORIGINAL_MESSAGE_MAX_BYTES,
+  SINGLE_ATTACHMENT_MAX_BYTES,
+);
+
 interface OriginalMessage {
   bytes: Uint8Array;
   /** The backend that supplied the MIME representation, for audit-friendly metadata. */
@@ -10712,17 +10740,17 @@ async function executeReadOriginal(
         error: "original_too_large",
         message_id: messageId,
         size_bytes: sizeBytes,
-        max_bytes: ORIGINAL_MESSAGE_MAX_BYTES,
+        max_bytes: ORIGINAL_DOWNLOAD_CEILING,
         message: sizeBytes === null
-          ? `The original message exceeds the ${ORIGINAL_MESSAGE_MAX_BYTES}-byte download limit.`
-          : `The original message is ${sizeBytes} bytes, exceeding the ${ORIGINAL_MESSAGE_MAX_BYTES}-byte download limit.`,
+          ? `The original message exceeds the ${ORIGINAL_DOWNLOAD_CEILING}-byte download limit.`
+          : `The original message is ${sizeBytes} bytes, exceeding the ${ORIGINAL_DOWNLOAD_CEILING}-byte download limit.`,
       }),
       "original_too_large",
     );
 
   let original: OriginalMessage;
   try {
-    original = await readOriginalMessage(inbox, messageId, ORIGINAL_MESSAGE_MAX_BYTES);
+    original = await readOriginalMessage(inbox, messageId, ORIGINAL_DOWNLOAD_CEILING);
   } catch (err) {
     // Checked before the string comparisons below because this one carries the
     // observed size with it.
@@ -10752,28 +10780,33 @@ async function executeReadOriginal(
   // declared size, so reaching this line means the provider sent no
   // Content-Length and we could not decide earlier. It keeps the contract
   // honest; it cannot be relied on to save the isolate.
-  if (original.bytes.length > ORIGINAL_MESSAGE_MAX_BYTES) {
+  if (exceedsInlineBudget(original.bytes.length, ORIGINAL_DOWNLOAD_CEILING)) {
     return originalTooLargeError(original.bytes.length);
   }
 
   const filename = "original-message.eml";
+  const mimeType = "message/rfc822";
+  const uri = `mcpemails://inbox/${inbox.id}/message/${encodeURIComponent(messageId)}/original.eml`;
+  const data = bytesToBase64(original.bytes);
   const metadata = {
     message_id: messageId,
     inbox_id: inbox.id,
     provider: original.provider,
     filename,
-    mime_type: "message/rfc822",
+    mime_type: mimeType,
     size_bytes: original.bytes.length,
     sha256: await sha256Hex(original.bytes),
     content_disposition: "attachment",
+    // The .eml itself, base64. It used to travel as an EmbeddedResource `blob`,
+    // which the client never receives, so the payload now rides in the JSON
+    // alongside its own metadata the way email_attachment's has always done.
+    // `sha256` above is taken over exactly these bytes, so a caller that decodes
+    // `data` can verify it reassembled the message intact.
+    data,
   };
-  const uri = `mcpemails://inbox/${inbox.id}/message/${encodeURIComponent(messageId)}/original.eml`;
   return {
     result: {
-      content: [
-        { type: "resource", resource: { uri, name: filename, mimeType: "message/rfc822", blob: bytesToBase64(original.bytes) } },
-        { type: "text", text: JSON.stringify(metadata) },
-      ],
+      content: downloadContentBlocks({ uri, filename, mimeType, data }, metadata),
       structuredContent: metadata,
       isError: false,
     },
@@ -10785,13 +10818,6 @@ async function executeReadOriginal(
 // ---------------------------------------------------------------------------
 // email_attachment — download a single attachment
 // ---------------------------------------------------------------------------
-
-/**
- * Per-attachment download cap for email_attachment. Larger than the 10 MB
- * whole-message include_attachments budget because a dedicated download fetches
- * exactly one file, so a bigger ceiling is safe.
- */
-const SINGLE_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024;
 
 /**
  * Executes the `email_attachment` tool end-to-end.
@@ -11066,11 +11092,13 @@ async function executeReadAttachment(
   // can render/save the file instead of treating a base64 blob as model text:
   //   image/*  → ImageContent      audio/*  → AudioContent
   //   text/*   → EmbeddedResource (decoded `text`)
-  //   else     → EmbeddedResource (`blob`, base64)
+  //   else     → no typed block at all; see download-content-blocks.ts for why
+  //              an EmbeddedResource `blob` cannot be used here.
   // The MCP-native block lets capable clients render/save the file directly.
   // Keep the documented base64 payload in JSON too: many MCP clients expose
   // only text and structuredContent, where metadata-only results make the
-  // attachment action unusable.
+  // attachment action unusable. That mirror is also what makes dropping the
+  // blob block lossless: `data` below is the very base64 the blob carried.
   const meta = {
     message_id: messageId,
     inbox_id: inboxId,
@@ -11082,47 +11110,23 @@ async function executeReadAttachment(
     data: selected.data,
   };
 
-  const mt = selected.mime_type.toLowerCase();
   // Synthetic, informative URI identifying this attachment (any scheme is valid
   // per the MCP resource spec; clients use it as an opaque identifier).
   const uri =
     `mcpemails://inbox/${inboxId}/message/${encodeURIComponent(messageId)}` +
     `/attachment/${selectedIndex}/${encodeURIComponent(selected.filename)}`;
 
-  let payloadBlock: Record<string, unknown>;
-  if (mt.startsWith("image/")) {
-    payloadBlock = { type: "image", data: selected.data, mimeType: selected.mime_type };
-  } else if (mt.startsWith("audio/")) {
-    payloadBlock = { type: "audio", data: selected.data, mimeType: selected.mime_type };
-  } else if (mt.startsWith("text/")) {
-    payloadBlock = {
-      type: "resource",
-      resource: {
-        uri,
-        name: selected.filename,
-        mimeType: selected.mime_type,
-        text: base64ToUtf8(selected.data),
-      },
-    };
-  } else {
-    payloadBlock = {
-      type: "resource",
-      resource: {
-        uri,
-        name: selected.filename,
-        mimeType: selected.mime_type,
-        blob: selected.data,
-      },
-    };
-  }
-
   return {
     result: {
-      content: [
-        payloadBlock,
-        // Backwards-compat text block mirroring structuredContent.
-        { type: "text", text: JSON.stringify(meta) },
-      ],
+      content: downloadContentBlocks(
+        {
+          uri,
+          filename: selected.filename,
+          mimeType: selected.mime_type,
+          data: selected.data,
+        },
+        meta,
+      ),
       structuredContent: meta,
       isError: false,
     },
