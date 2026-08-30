@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeOutlookCode } from '@/lib/email-providers/outlook';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
 import { classifyMicrosoftAuthError } from '@/lib/email-providers/outlook-oauth';
@@ -132,6 +133,30 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const expectedRedirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/auth/outlook/callback`;
   if (oauthState.redirect_uri !== expectedRedirectUri) {
     return redirectWithError('redirect_uri_mismatch');
+  }
+
+  // 6b. Membership is not permission. Everything above proves the callback came
+  //     from the same authenticated browser that started the flow; none of it
+  //     says the caller may attach a mailbox to `oauthState.workspace_id`. A
+  //     workspace VIEWER is read-only, and connecting a mailbox hands every
+  //     other member of that workspace a live credential through the MCP
+  //     server. Refused here, BEFORE the code is exchanged, so no tokens are
+  //     ever minted for a connection that will not be made.
+  //
+  //     This surface answers with a redirect rather than JSON, so the refusal
+  //     follows the file's existing convention (redirectWithError) instead of
+  //     inventing a second one. The dashboard falls back to its generic
+  //     connection-failed toast for a code it does not recognise, and a
+  //     dedicated string is wired up for this one.
+  const callerRole = await fetchWorkspaceRole(supabase, oauthState.workspace_id, user.id);
+  if (!canManageInboxes(callerRole)) {
+    // Deliberately NOT recorded as a funnel failure. product_funnel_events
+    // constrains error_category to a fixed list that has no value for this,
+    // and folding a refused viewer into an existing one would count an
+    // authorization refusal as a connection attempt that went wrong. Same
+    // reasoning as the SSRF host guard on the generic IMAP route: a request
+    // we decline up front should leave no trace that reads as real demand.
+    return redirectWithError(INSUFFICIENT_ROLE_REDIRECT_CODE);
   }
 
   // 6. Exchange the authorization code for tokens.
