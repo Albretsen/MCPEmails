@@ -191,6 +191,39 @@ export default async function PrivacyPage({ params }) {
                 ))}
               </ul>
               <p>{t('howWeUseData.googleP3')}</p>
+
+              {/* Microsoft APIs Terms of Use section 5(e) requires that a privacy
+                  statement link users to Microsoft's own revocation pages, with a
+                  clear indication that access can be withdrawn there at any time.
+                  Both links are listed because they cover different account types:
+                  account.live.com serves personal Microsoft accounts and
+                  myapps.microsoft.com serves work and school accounts. */}
+              <h4>{t('howWeUseData.microsoftTitle')}</h4>
+              <p>{t('howWeUseData.microsoftP1')}</p>
+              <p>
+                {t.rich('howWeUseData.microsoftRevokeP', {
+                  ...richTags,
+                  personal: (c) => (
+                    <a
+                      href="https://account.live.com/consent/Manage"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {c}
+                    </a>
+                  ),
+                  work: (c) => (
+                    <a
+                      href="https://myapps.microsoft.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {c}
+                    </a>
+                  ),
+                })}
+              </p>
+              <p>{t('howWeUseData.microsoftDisconnectP')}</p>
             </LegalSection>
 
             {/* 4 - Data retention */}

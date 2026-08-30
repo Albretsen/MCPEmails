@@ -30,6 +30,9 @@ export type ProductFunnelEvent = {
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'
+    // Blocked by the provider's own consent policy before the user could
+    // answer. Distinct from provider_denied, which is the user saying no.
+    | 'consent_required'
     | 'price_not_configured' | 'subscription_exists' | 'stripe_error' | 'no_customer';
   /** Coarse protocol phase only; never a host, address, credential, or response. */
   phase?: string;
@@ -75,7 +78,7 @@ export async function recordOAuthCallbackFailure(
   db: SupabaseClient,
   state: string | null,
   provider: 'gmail' | 'outlook',
-  errorCategory: 'provider_denied' | 'unknown'
+  errorCategory: 'provider_denied' | 'consent_required' | 'unknown'
 ): Promise<void> {
   if (!state) return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

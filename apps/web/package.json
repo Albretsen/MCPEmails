@@ -12,7 +12,7 @@
     "test:plans": "node --test --experimental-strip-types src/lib/stripe/plans.test.ts",
     "test:inbox-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-inbox-limit.test.ts",
     "test:seo": "node --test src/lib/blog/seo.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs",
-    "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts src/lib/email/transport-autodetect.test.ts src/lib/email-providers/imap-presets.test.ts src/lib/email-providers/host-presets.test.ts",
+    "test:connections": "node --test --experimental-strip-types src/lib/email/connection-config.test.ts src/lib/email/transport-autodetect.test.ts src/lib/email-providers/imap-presets.test.ts src/lib/email-providers/host-presets.test.ts src/lib/email-providers/outlook-oauth.test.ts",
     "test:growth": "node --test --experimental-strip-types src/lib/analytics/growth-metrics.test.mjs",
     "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs",
     "test:purchase-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/purchase-confirmation.test.ts",

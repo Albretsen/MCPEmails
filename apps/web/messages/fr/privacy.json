@@ -70,7 +70,11 @@
       "n'utilise pas les données utilisateur de Google pour développer, améliorer ou entraîner des modèles d'IA ou d'apprentissage automatique généralisés ou non personnalisés ;",
       "ne permet pas à des humains de lire les données utilisateur de Google, sauf si (a) vous donnez votre consentement explicite pour des messages spécifiques, (b) cela est nécessaire à des fins de sécurité telles que l'investigation d'abus, (c) cela est requis pour se conformer à la loi applicable, ou (d) les données ont été agrégées et anonymisées."
     ],
-    "googleP3": "Comme décrit à la section 2.5, le contenu d'e-mail récupéré via l'API Gmail est acheminé vers votre agent dans la même requête et n'est jamais stocké, mis en cache ni journalisé par MCPEmails."
+    "googleP3": "Comme décrit à la section 2.5, le contenu d'e-mail récupéré via l'API Gmail est acheminé vers votre agent dans la même requête et n'est jamais stocké, mis en cache ni journalisé par MCPEmails.",
+    "microsoftTitle": "3.8 API Microsoft : accès à la boîte et révocation",
+    "microsoftP1": "Lorsque vous connectez une boîte Outlook ou Microsoft 365, Microsoft vous demande d'approuver un ensemble d'autorisations précis et nommé : lire et organiser votre courrier, et envoyer du courrier en votre nom. Nous utilisons cet accès uniquement pour exécuter les fonctions que vous demandez à un agent IA d'effectuer sur votre boîte, comme lire, rechercher, organiser, rédiger et envoyer. Nous ne l'utilisons pas pour constituer une copie de votre boîte, et nous n'utilisons jamais le contenu des messages, ni rien qui en dérive, à des fins publicitaires ou marketing.",
+    "microsoftRevokeP": "Vous pouvez retirer cet accès à tout moment, directement auprès de Microsoft et sans nous le demander. Pour un compte Microsoft personnel, utilisez <personal>Autorisations du compte Microsoft</personal>. Pour un compte professionnel ou scolaire, utilisez <work>Mes applications</work>. La révocation y met immédiatement fin à notre accès à cette boîte.",
+    "microsoftDisconnectP": "Déconnecter la boîte depuis votre tableau de bord MCPEmails a le même effet de notre côté et supprime en plus les identifiants enregistrés pour cette boîte. Vous pouvez commencer par l'une ou l'autre ; il n'est pas nécessaire de faire les deux."
   },
   "dataRetention": {
     "title": "4. Conservation des données",

@@ -4,6 +4,8 @@
     "inboxLimitReached": "Has alcanzado el límite de bandejas en {plan}. Mejora tu plan para conectar más buzones.",
     "tokenExchangeFailed": "No se pudo conectar la bandeja de entrada. Falló el intercambio de token con el proveedor. Inténtalo de nuevo.",
     "connectionCancelled": "Conexión de la bandeja de entrada cancelada.",
+    "adminConsentRequired": "Tu organización debe aprobar el acceso al buzón antes de que puedas conectar Outlook. Microsoft impide que los empleados lo aprueben por su cuenta.",
+    "adminConsentAction": "Enviar a tu administrador de TI",
     "connectionFailed": "La conexión de la bandeja de entrada falló ({error}). Inténtalo de nuevo.",
     "checkoutSuccess": "Te damos la bienvenida a {plan}. Tu suscripción se está activando ahora; esto puede tardar un momento.",
     "checkoutSuccessPlanFallback": "tu nuevo plan",

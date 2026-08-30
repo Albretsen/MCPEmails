@@ -70,7 +70,11 @@
       "no usa los datos de usuario de Google para desarrollar, mejorar o entrenar modelos de IA o de aprendizaje automático generalizados o no personalizados;",
       "no permite que personas lean datos de usuario de Google a menos que (a) des consentimiento explícito para mensajes específicos, (b) sea necesario por motivos de seguridad como investigar abusos, (c) sea obligatorio para cumplir la legislación aplicable, o (d) los datos hayan sido agregados y anonimizados."
     ],
-    "googleP3": "Como se describe en la Sección 2.5, el contenido de correo recuperado de la API de Gmail se transmite hacia tu agente en la misma petición y MCPEmails nunca lo almacena, lo guarda en caché ni lo registra."
+    "googleP3": "Como se describe en la Sección 2.5, el contenido de correo recuperado de la API de Gmail se transmite hacia tu agente en la misma petición y MCPEmails nunca lo almacena, lo guarda en caché ni lo registra.",
+    "microsoftTitle": "3.8 API de Microsoft: acceso al buzón y cómo revocarlo",
+    "microsoftP1": "Cuando conectas un buzón de Outlook o Microsoft 365, Microsoft te pide que apruebes un conjunto de permisos concreto y detallado: leer y organizar tu correo, y enviar correo en tu nombre. Usamos ese acceso únicamente para ejecutar las funciones que pidas a un agente de IA sobre tu buzón, como leer, buscar, organizar, redactar y enviar. No lo usamos para crear una copia de tu buzón, y nunca usamos el contenido del correo, ni nada derivado de él, con fines publicitarios o de marketing.",
+    "microsoftRevokeP": "Puedes retirar este acceso en cualquier momento, directamente con Microsoft y sin pedírnoslo. Para una cuenta personal de Microsoft, usa <personal>Permisos de la cuenta Microsoft</personal>. Para una cuenta profesional o educativa, usa <work>Mis aplicaciones</work>. Al revocar el acceso allí, dejamos de poder acceder a ese buzón de inmediato.",
+    "microsoftDisconnectP": "Desconectar la bandeja de entrada en tu panel de MCPEmails tiene el mismo efecto por nuestra parte y además elimina las credenciales guardadas de ese buzón. Puedes hacer cualquiera de las dos primero; no es necesario hacer ambas."
   },
   "dataRetention": {
     "title": "4. Conservación de datos",
