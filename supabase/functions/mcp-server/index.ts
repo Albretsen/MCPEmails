@@ -25,10 +25,13 @@ import {
   subjectHeaderLineError,
 } from "./subject-header.ts";
 import {
+  type FolderReference,
+  folderNotFoundMessage,
   type LabelTargetKind,
   labelTargetFor,
   mergeOutlookCategories,
   permanentFlagsAllowKeyword,
+  resolveFolderReference,
 } from "./label-target.ts";
 import {
   type GmailRelocationPlan,
@@ -39,6 +42,11 @@ import {
   searchSweepLimitFields,
   type SearchSweepLimitFields,
 } from "./search-sweep-limit.ts";
+import {
+  FolderOperationError,
+  FolderTargetError,
+  mapFolderProviderFailure,
+} from "./folder-errors.ts";
 import {
   invalidArgumentAuditDetails,
   type InvalidArgumentAuditDetails,
@@ -2702,8 +2710,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           default: "INBOX",
           description:
-            "Folder to list, case-sensitive: 'INBOX', 'SENT', 'DRAFTS', 'TRASH', " +
-            "or provider-specific such as '[Gmail]/Spam'.",
+            "Folder to list: an alias (inbox, sent, drafts, trash, archive, spam), " +
+            "a folder or label name, or a folder id. Names and aliases resolve for " +
+            "you, case-insensitively, so a label you just created by name works here.",
         },
         unread_only: {
           type: "boolean",
@@ -3004,8 +3013,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           items: { type: "string" },
           default: [],
           description:
-            "Folders to search. IMAP covers INBOX only unless you name archive " +
-            "or sent folders; Gmail always searches everything.",
+            "Folders to search, each an alias, a folder or label name, or a folder " +
+            "id (names and aliases resolve for you). IMAP covers INBOX only unless " +
+            "you name archive or sent folders; Gmail always searches everything.",
         },
       },
       required: [],
@@ -9243,6 +9253,30 @@ async function executeListInbox(
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
+  // ── Folder addressing ─────────────────────────────────────────────────────
+  // `folder` documents the same three spellings the move path accepts (id,
+  // name, alias) but used to honour only the first: a Gmail label created by
+  // name listed fine under "Label_10" and failed under its own name. Resolve
+  // through the shared seam, strictly — an unmatched value is a permanent
+  // naming mismatch and must not reach the provider to come back as
+  // "Invalid label: X. Please try again in a moment."
+  let listFolder: string;
+  try {
+    listFolder = await resolveFolderId(inbox, folder.trim() ? folder : "INBOX", {
+      strict: true,
+    });
+  } catch (err) {
+    if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
+    const message = err instanceof Error ? err.message : String(err);
+    if (
+      message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" || message === "imap_auth_failed"
+    ) {
+      return authFailedResult(inbox.provider, inbox.id, "access");
+    }
+    throw err;
+  }
+
   // ── Provider dispatch ─────────────────────────────────────────────────────
   let listResult: ListInboxResult;
   try {
@@ -9250,7 +9284,7 @@ async function executeListInbox(
       case "gmail":
         listResult = await listGmailMessages(
           inbox,
-          folder,
+          listFolder,
           limit,
           offset,
           unreadOnly,
@@ -9259,7 +9293,7 @@ async function executeListInbox(
       case "outlook":
         listResult = await listOutlookMessages(
           inbox,
-          folder,
+          listFolder,
           limit,
           offset,
           unreadOnly,
@@ -9268,7 +9302,7 @@ async function executeListInbox(
       case "imap":
         listResult = await listImapMessages(
           inbox,
-          folder,
+          listFolder,
           limit,
           offset,
           unreadOnly,
@@ -9299,6 +9333,24 @@ async function executeListInbox(
 
     if (isAuthFailure) {
       return authFailedResult(inbox.provider, inbox.id, "access");
+    }
+
+    // A folder the provider itself calls invalid/nonexistent is PERMANENT. It
+    // should already have been caught by the strict resolution above; if the
+    // provider still says it, say so plainly rather than appending a retry hint
+    // to a call that can never succeed.
+    if (FOLDER_MISSING_RE.test(message)) {
+      return folderTargetErrorResult(
+        new FolderTargetError({
+          error: "folder_not_found",
+          provider: inbox.provider,
+          folder,
+          message: folderNotFoundMessage(folder, {
+            provider: inbox.provider,
+            itemNoun: organizationItemType(inbox),
+          }),
+        }),
+      );
     }
 
     console.error("[mcp-server] email_list: provider_error", {
@@ -14935,6 +14987,30 @@ async function executeSearchEmails(
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
 
+  // ── Folder addressing ─────────────────────────────────────────────────────
+  // `include_folders` takes folder NAMES and carried the same hazard as
+  // email_list's `folder`: a name Gmail does not recognise as a label id was
+  // forwarded verbatim and came back as "Invalid label". Resolve each entry
+  // through the shared seam so a name, an id and an alias all work — and so an
+  // entry that matches nothing fails as a permanent, named error.
+  const resolvedFolders: string[] = [];
+  try {
+    for (const f of includeFolders) {
+      if (!f.trim()) continue; // a blank entry scopes nothing; it is not an error
+      resolvedFolders.push(await resolveFolderId(inbox, f, { strict: true }));
+    }
+  } catch (err) {
+    if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
+    const message = err instanceof Error ? err.message : String(err);
+    if (
+      message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
+      message === "fastmail_auth_failed" || message === "imap_auth_failed"
+    ) {
+      return authFailedResult(inbox.provider, inbox.id, "access");
+    }
+    throw err;
+  }
+
   // ── Provider dispatch with 30-second timeout ──────────────────────────────
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS)
@@ -14950,7 +15026,7 @@ async function executeSearchEmails(
           search,
           limit,
           offset,
-          includeFolders,
+          resolvedFolders,
         );
         break;
       case "outlook":
@@ -14959,7 +15035,7 @@ async function executeSearchEmails(
           search,
           limit,
           offset,
-          includeFolders,
+          resolvedFolders,
         );
         break;
       case "imap":
@@ -14968,7 +15044,7 @@ async function executeSearchEmails(
           search,
           limit,
           offset,
-          includeFolders,
+          resolvedFolders,
         );
         break;
       default:
@@ -15352,9 +15428,19 @@ function listFoldersForProvider(inbox: InboxRow): Promise<FolderEntry[]> {
  *      immediately if it already exactly equals some FolderEntry.id.
  *   4. No match → return `nameOrId` unchanged (best-effort pass-through: it may
  *      already be a valid provider id we don't enumerate; if not, the provider
- *      rejects it and the existing "call folder_list" error guides the agent).
+ *      rejects it and the existing "call folder_list" error guides the agent),
+ *      UNLESS `opts.strict` is set, in which case step 4 throws a
+ *      {@link FolderTargetError}. Read paths (email_list, email_search) are
+ *      strict: passing an unmatched name through to Gmail produced
+ *      "Invalid label: X. Please try again in a moment." — a permanent failure
+ *      that read as transient. Write paths keep the pass-through so a valid
+ *      provider id we happen not to enumerate still works.
  */
-async function resolveFolderId(inbox: InboxRow, nameOrId: string): Promise<string> {
+async function resolveFolderId(
+  inbox: InboxRow,
+  nameOrId: string,
+  opts: { strict?: boolean } = {},
+): Promise<string> {
   const trimmed = nameOrId.trim();
   if (!trimmed) throw new Error("folder_required");
 
@@ -15379,41 +15465,178 @@ async function resolveFolderId(inbox: InboxRow, nameOrId: string): Promise<strin
         // moving into it behaves like email_archive (and never leaks the raw
         // TRYCREATE line). Other aliases fall back to the static name when
         // unmatched (the provider validates / the existing error guides).
+        //
+        // NEVER on a strict (read-side) resolution: `email_read action: list`
+        // asking for "archive" must not leave a mailbox behind as a side
+        // effect. Reads resolve or fail; only the move path may create.
         const isArchive = alias.aliases[0] === "archive";
         const resolvedName = await resolveImapAliasMailbox(
           inbox,
           alias,
-          { createIfMissing: isArchive },
+          { createIfMissing: isArchive && !opts.strict },
         );
-        return resolvedName ?? alias.imap;
+        if (resolvedName) return resolvedName;
+        if (opts.strict) {
+          throw new FolderTargetError({
+            error: "folder_not_found",
+            provider: inbox.provider,
+            folder: trimmed,
+            message: folderNotFoundMessage(trimmed, {
+              provider: inbox.provider,
+              itemNoun: "folder",
+              hint: `This mailbox advertises no ${alias.aliases[0]} folder and none is ` +
+                `named "${alias.imap}".`,
+            }),
+          });
+        }
+        return alias.imap;
       }
     }
   }
 
-  // ── List once and match by name (or accept an exact id) ─────────────────────
-  const folders = await listFoldersForProvider(inbox);
-
-  // If the input already is a valid provider id, accept it verbatim.
-  const byId = folders.find((f) => f.id === trimmed);
-  if (byId) return byId.id;
-
-  const lower = trimmed.toLowerCase();
-
+  // ── List once and match by id / name / alias-name ───────────────────────────
   // For a Fastmail (or fell-through) alias, also try matching the canonical
   // IMAP-style name (e.g. alias "trash" → mailbox named "Trash") so role-less
   // listings still resolve common folders.
-  const aliasNames = alias
-    ? new Set([alias.imap.toLowerCase(), ...alias.aliases.map((a) => a.toLowerCase())])
-    : null;
+  const folders = await folderReferencesForProvider(inbox);
+  const aliasNames = alias ? [alias.imap, ...alias.aliases] : [];
 
-  const byName = folders.find((f) => {
-    const fn = f.name.toLowerCase();
-    return fn === lower || (aliasNames?.has(fn) ?? false);
+  const match = resolveFolderReference(trimmed, folders, {
+    aliasNames,
+    provider: inbox.provider,
+    itemNoun: organizationItemType(inbox),
+    hint: gmailArchiveHint(inbox, alias),
   });
-  if (byName) return byName.id;
+  if (match.ok) return match.id;
 
-  // ── No match → best-effort pass-through (provider validates / rejects). ─────
+  // ── No match ────────────────────────────────────────────────────────────────
+  // Strict (read paths): a structured, permanent, actionable failure.
+  // Otherwise: best-effort pass-through (the provider validates / rejects).
+  if (opts.strict) {
+    throw new FolderTargetError({
+      error: match.code,
+      provider: inbox.provider,
+      folder: trimmed,
+      message: match.error,
+    });
+  }
   return trimmed;
+}
+
+/**
+ * How every provider spells "that folder is not there".
+ *
+ * Gmail says "Invalid label: X", Graph says the resource does not exist, IMAP
+ * answers "[TRYCREATE] Mailbox doesn't exist" or "[NONEXISTENT]". All of them
+ * are PERMANENT, which is the only reason this pattern exists: those messages
+ * used to be wrapped in "Please try again in a moment."
+ */
+const FOLDER_MISSING_RE =
+  /invalid label|nonexistent|no such mailbox|\[TRYCREATE\]|does ?not exist|doesn'?t exist/i;
+
+/**
+ * Gmail has no Archive label — archived mail is just mail without INBOX — so
+ * "archive" can never resolve there. Say that instead of listing the aliases
+ * back at an agent that used one correctly.
+ */
+function gmailArchiveHint(
+  inbox: InboxRow,
+  alias: CanonicalFolderAlias | undefined,
+): string | null {
+  if (inbox.provider !== "gmail" || alias?.aliases[0] !== "archive") return null;
+  return "Gmail has no Archive label: archiving there means removing INBOX, so archived " +
+    "mail is reachable through email_read action: search rather than a folder.";
+}
+
+/**
+ * The cheap half of {@link listFoldersForProvider}: ids and names only.
+ *
+ * Resolution needs to know which folders exist, not how much mail is in them,
+ * and the counts are the expensive part — a per-label GET on Gmail, a
+ * sequential STATUS per mailbox on IMAP. `folder action: list` still pays for
+ * them because a human is reading that output; addressing a folder should not.
+ */
+async function folderReferencesForProvider(inbox: InboxRow): Promise<FolderReference[]> {
+  switch (inbox.provider) {
+    case "gmail": {
+      const labels = await gmailListLabelRefs(inbox);
+      return labels.map((l) => ({ id: l.id, name: l.name }));
+    }
+    case "outlook": {
+      const accessToken = await withFreshOutlookToken(inbox);
+      const resp = await fetch(
+        "https://graph.microsoft.com/v1.0/me/mailFolders?$top=100&$select=id,displayName",
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      if (!resp.ok) {
+        if (resp.status === 401) throw new Error("outlook_auth_failed");
+        throw new Error(`Graph mailFolders failed: ${resp.statusText}`);
+      }
+      const data = (await resp.json()) as { value?: { id: string; displayName: string }[] };
+      return (data.value ?? []).map((f) => ({ id: f.id, name: f.displayName }));
+    }
+    default: {
+      // imap and all service variants: the mailbox name IS the id, and LIST
+      // alone answers the question (no STATUS round-trips).
+      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+        throw new Error("imap_auth_failed");
+      }
+      const password = await decryptStoredToken(inbox.imap_password);
+      let client: ImapClient | null = null;
+      try {
+        client = await ImapClient.connect({
+          host: inbox.imap_host,
+          port: inbox.imap_port,
+          security: inbox.imap_security ?? "tls",
+          email: imapAuthUser(inbox),
+          password,
+        });
+        const mailboxes = await client.listMailboxes();
+        return mailboxes.map((mb) => ({ id: mb.name, name: mb.name }));
+      } catch (err) {
+        if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+        throw err;
+      } finally {
+        if (client) await client.logout().catch(() => {});
+      }
+    }
+  }
+}
+
+/** Gmail labels.list, ids and names only — shared by resolution and folder_create. */
+async function gmailListLabelRefs(inbox: InboxRow): Promise<{ id: string; name: string }[]> {
+  const accessToken = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    throw new Error(`Gmail labels.list failed: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as { labels?: { id: string; name: string }[] };
+  return (data.labels ?? []).map((l) => ({ id: l.id, name: l.name }));
+}
+
+/**
+ * Renders a {@link FolderTargetError} as the tool result an agent sees.
+ *
+ * Structured like the permanent-delete refusal (a JSON body naming the error,
+ * the provider and the remedy) because that is the shape agents act on.
+ */
+function folderTargetErrorResult(err: FolderTargetError): {
+  result: { content: { type: string; text: string }[]; isError: true };
+  logStatus: "error";
+  logErrorCode: string;
+} {
+  return {
+    result: {
+      content: [{ type: "text", text: JSON.stringify(err.payload) }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: err.logErrorCode,
+  };
 }
 
 /**
@@ -15464,17 +15687,10 @@ async function executeListFolders(
   // ── Per-provider dispatch ──────────────────────────────────────────────────
   let folders: FolderEntry[];
   try {
-    switch (inbox.provider) {
-      case "gmail":
-        folders = await gmailListFolders(inbox);
-        break;
-      case "outlook":
-        folders = await outlookListFolders(inbox);
-        break;
-      default: // "imap" and all IMAP service variants
-        folders = await imapListFolders(inbox);
-        break;
-    }
+    // The counted listing: a human is reading this output, so it is worth the
+    // per-folder STATUS / labels.get fan-out. Folder ADDRESSING deliberately
+    // uses the cheap folderReferencesForProvider instead.
+    folders = await listFoldersForProvider(inbox);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const isAuth =
@@ -15516,6 +15732,51 @@ async function executeListFolders(
 // ---------------------------------------------------------------------------
 
 // ── folder_create helpers ──────────────────────────────────────────────────
+//
+// Every provider failure below goes through mapFolderProviderFailure, because
+// what these calls used to return was the raw status line: "Gmail labels.create
+// failed: Conflict". An agent cannot act on "Conflict" — it cannot even tell a
+// name collision from a bad minute — so it invents a variant name or retries
+// forever. The mapper names the cause when the provider stated one, hands back
+// the colliding folder's id so the caller can just use it, and stays silent
+// about causes the provider did not state.
+
+/**
+ * The human-readable detail from a provider error body, never the raw body.
+ *
+ * Gmail and Graph both answer `{ error: { message } }`. Anything else (HTML
+ * error page, empty body) yields null and the caller falls back to the status.
+ */
+async function folderErrorDetail(resp: Response): Promise<string | null> {
+  try {
+    const body = (await resp.json()) as { error?: { message?: string } };
+    const msg = body?.error?.message;
+    return typeof msg === "string" && msg.trim().length > 0 ? msg.trim().slice(0, 300) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The folder that already owns a name, or null if we cannot find out.
+ *
+ * This is what turns "Conflict" into a usable result: the error carries the
+ * existing id, so the caller's next step is to USE the folder rather than to
+ * ask what went wrong. Failing to look it up is never fatal — the mapper
+ * degrades to "call folder action: list".
+ */
+async function findFolderByName(
+  inbox: InboxRow,
+  name: string,
+): Promise<{ id: string; name: string } | null> {
+  try {
+    const refs = await folderReferencesForProvider(inbox);
+    const lower = name.trim().toLowerCase();
+    return refs.find((f) => f.name.toLowerCase() === lower) ?? null;
+  } catch {
+    return null;
+  }
+}
 
 async function imapCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
@@ -15531,7 +15792,23 @@ async function imapCreateFolder(inbox: InboxRow, name: string): Promise<{ id: st
       email: imapAuthUser(inbox),
       password,
     });
-    await client.createMailbox(name);
+    try {
+      await client.createMailbox(name);
+    } catch (err) {
+      if (err instanceof ImapAuthError) throw err;
+      const detail = err instanceof Error ? err.message : String(err);
+      // On IMAP the mailbox name IS its id, so a collision needs no lookup:
+      // the id the caller wants is the name they just tried.
+      const taken = /already\s*exists|\[ALREADYEXISTS\]/i.test(detail);
+      throw new FolderOperationError(mapFolderProviderFailure({
+        provider: inbox.provider,
+        operation: "create",
+        name,
+        detail,
+        existing: taken ? { id: name, name } : null,
+        itemNoun: "folder",
+      }));
+    }
     return { id: name, name };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -15556,7 +15833,21 @@ async function gmailCreateFolder(inbox: InboxRow, name: string): Promise<{ id: s
   );
   if (!resp.ok) {
     if (resp.status === 401) throw new Error("gmail_auth_failed");
-    throw new Error(`Gmail labels.create failed: ${resp.statusText}`);
+    const detail = await folderErrorDetail(resp);
+    // 409 is Gmail's "that label name is taken" — look up the label that has
+    // it so the error hands back an id instead of a dead end. (A reserved name
+    // like INBOX comes back 400 instead; the mapper recognises that shape.)
+    const existing = resp.status === 409 ? await findFolderByName(inbox, name) : null;
+    throw new FolderOperationError(mapFolderProviderFailure({
+      provider: "gmail",
+      operation: "create",
+      name,
+      status: resp.status,
+      statusText: resp.statusText,
+      detail,
+      existing,
+      itemNoun: "label",
+    }));
   }
   const data = (await resp.json()) as { id: string; name: string };
   return { id: data.id, name: data.name };
@@ -15578,7 +15869,18 @@ async function outlookCreateFolder(inbox: InboxRow, name: string): Promise<{ id:
   if (!resp.ok) {
     // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
     if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
-    throw new Error(`Graph mailFolders create failed: ${resp.statusText}`);
+    const detail = await folderErrorDetail(resp);
+    const existing = resp.status === 409 ? await findFolderByName(inbox, name) : null;
+    throw new FolderOperationError(mapFolderProviderFailure({
+      provider: "outlook",
+      operation: "create",
+      name,
+      status: resp.status,
+      statusText: resp.statusText,
+      detail,
+      existing,
+      itemNoun: "folder",
+    }));
   }
   const data = (await resp.json()) as { id: string; displayName: string };
   return { id: data.id, name: data.displayName };
@@ -15601,7 +15903,21 @@ async function imapRenameFolder(inbox: InboxRow, folderId: string, newName: stri
       email: imapAuthUser(inbox),
       password,
     });
-    await client.renameMailbox(folderId, newName);
+    try {
+      await client.renameMailbox(folderId, newName);
+    } catch (err) {
+      if (err instanceof ImapAuthError) throw err;
+      const detail = err instanceof Error ? err.message : String(err);
+      const taken = /already\s*exists|\[ALREADYEXISTS\]/i.test(detail);
+      throw new FolderOperationError(mapFolderProviderFailure({
+        provider: inbox.provider,
+        operation: "rename",
+        name: newName,
+        detail,
+        existing: taken ? { id: newName, name: newName } : null,
+        itemNoun: "folder",
+      }));
+    }
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
     throw err;
@@ -15626,7 +15942,18 @@ async function gmailRenameFolder(inbox: InboxRow, folderId: string, newName: str
   if (!resp.ok) {
     if (resp.status === 401) throw new Error("gmail_auth_failed");
     if (resp.status === 404) throw new Error("folder_not_found");
-    throw new Error(`Gmail labels.patch failed: ${resp.statusText}`);
+    const detail = await folderErrorDetail(resp);
+    const existing = resp.status === 409 ? await findFolderByName(inbox, newName) : null;
+    throw new FolderOperationError(mapFolderProviderFailure({
+      provider: "gmail",
+      operation: "rename",
+      name: newName,
+      status: resp.status,
+      statusText: resp.statusText,
+      detail,
+      existing,
+      itemNoun: "label",
+    }));
   }
 }
 
@@ -15647,7 +15974,18 @@ async function outlookRenameFolder(inbox: InboxRow, folderId: string, newName: s
     // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
     if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("folder_not_found");
-    throw new Error(`Graph mailFolders PATCH failed: ${resp.statusText}`);
+    const detail = await folderErrorDetail(resp);
+    const existing = resp.status === 409 ? await findFolderByName(inbox, newName) : null;
+    throw new FolderOperationError(mapFolderProviderFailure({
+      provider: "outlook",
+      operation: "rename",
+      name: newName,
+      status: resp.status,
+      statusText: resp.statusText,
+      detail,
+      existing,
+      itemNoun: "folder",
+    }));
   }
 }
 
@@ -15668,7 +16006,20 @@ async function imapDeleteFolder(inbox: InboxRow, folderId: string): Promise<void
       email: imapAuthUser(inbox),
       password,
     });
-    await client.deleteMailbox(folderId);
+    try {
+      await client.deleteMailbox(folderId);
+    } catch (err) {
+      if (err instanceof ImapAuthError) throw err;
+      const detail = err instanceof Error ? err.message : String(err);
+      if (FOLDER_MISSING_RE.test(detail)) throw new Error("folder_not_found");
+      throw new FolderOperationError(mapFolderProviderFailure({
+        provider: inbox.provider,
+        operation: "delete",
+        name: folderId,
+        detail,
+        itemNoun: "folder",
+      }));
+    }
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
     throw err;
@@ -15689,7 +16040,17 @@ async function gmailDeleteFolder(inbox: InboxRow, folderId: string): Promise<voi
   if (!resp.ok) {
     if (resp.status === 401) throw new Error("gmail_auth_failed");
     if (resp.status === 404) throw new Error("folder_not_found");
-    throw new Error(`Gmail labels.delete failed: ${resp.statusText}`);
+    // Gmail answers 400 for "you may not delete a system label" — the id IS
+    // the reserved name there ("INBOX", "SENT"), so the mapper recognises it.
+    throw new FolderOperationError(mapFolderProviderFailure({
+      provider: "gmail",
+      operation: "delete",
+      name: folderId,
+      status: resp.status,
+      statusText: resp.statusText,
+      detail: await folderErrorDetail(resp),
+      itemNoun: "label",
+    }));
   }
 }
 
@@ -15706,7 +16067,15 @@ async function outlookDeleteFolder(inbox: InboxRow, folderId: string): Promise<v
     // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
     if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("folder_not_found");
-    throw new Error(`Graph mailFolders delete failed: ${resp.statusText}`);
+    throw new FolderOperationError(mapFolderProviderFailure({
+      provider: "outlook",
+      operation: "delete",
+      name: folderId,
+      status: resp.status,
+      statusText: resp.statusText,
+      detail: await folderErrorDetail(resp),
+      itemNoun: "folder",
+    }));
   }
 }
 
@@ -15765,6 +16134,20 @@ function folderProviderError(
   inboxId: string,
   err: unknown,
 ): { result: { content: { type: string; text: string }[]; isError: boolean }; logStatus: "error"; logErrorCode: string } {
+  // Already mapped to a structured, actionable error by the provider helper:
+  // return it as-is (shaped like the permanent-delete refusal — a JSON body
+  // naming the error, the provider and the remedy) rather than flattening it
+  // back into prose.
+  if (err instanceof FolderOperationError) {
+    return {
+      result: {
+        content: [{ type: "text", text: JSON.stringify(err.payload) }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: err.logErrorCode,
+    };
+  }
   const message = err instanceof Error ? err.message : String(err);
   const isAuth =
     message === "gmail_auth_failed" ||
