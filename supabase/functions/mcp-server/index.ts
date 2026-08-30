@@ -128,6 +128,11 @@ import {
 } from "./bulk-budget.ts";
 import { ImapSession } from "./imap-session.ts";
 import {
+  EMAIL_HTML_POLICY,
+  sanitizeHtml,
+  SIGNATURE_HTML_POLICY,
+} from "./html-sanitizer.ts";
+import {
   groupImapIdsByFolder,
   type ImapFolderGroup,
   runImapFolderGroups,
@@ -9020,139 +9025,44 @@ function signatureHtmlToText(html: string): string {
     .trim();
 }
 
+/**
+ * Sanitize an email BODY for return as `body_html`.
+ *
+ * Delegates to the shared allow-list tokenizer. This used to be a hand-written
+ * regex deny-list; it was bypassable by every payload documented at the top of
+ * html-sanitizer.ts, including two that defeated its own stated policy (an
+ * unquoted `src=https://...` and any `srcset`, both of which sailed through
+ * the "no external src" rule and fired a tracking pixel).
+ *
+ * EMAIL POLICY: no external image source survives, in any spelling. A body is
+ * written by a stranger, so a remote image is a read receipt. Only `cid:`
+ * (already inside this message) and base64 raster `data:` images are kept.
+ *
+ * PURE: no I/O.
+ */
 function sanitizeEmailHtml(html: string): string {
-  let result = html;
-
-  // Remove dangerous block elements and their full content.
-  // The inner [\s\S]*? is non-greedy to avoid stripping too much in edge cases
-  // where two script tags appear on the same line.
-  for (const tag of [
-    "script",
-    "style",
-    "link",
-    "meta",
-    "iframe",
-    "object",
-    "embed",
-    "base",
-    "form",
-    "noscript",
-  ]) {
-    // Paired open+content+close: <tag ...>...</tag>
-    result = result.replace(
-      new RegExp(`<${tag}[\\s\\S]*?</${tag}>`, "gi"),
-      "",
-    );
-    // Self-closing variants: <tag ... />
-    result = result.replace(new RegExp(`<${tag}[^>]*/>`, "gi"), "");
-    // Orphaned opening tags (content already removed or tag was standalone):
-    result = result.replace(new RegExp(`<${tag}[^>]*>`, "gi"), "");
-  }
-
-  // Remove all event-handler attributes: onclick="...", onload='...', onerror=foo
-  result = result.replace(
-    /\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi,
-    "",
-  );
-
-  // Remove src attributes pointing to external URLs.
-  // data: URIs are allowed (inline images); http/https/ftp/etc. are stripped.
-  result = result.replace(
-    /\s+src\s*=\s*(?:"https?:[^"]*"|'https?:[^']*'|"ftp:[^"]*"|'ftp:[^']*')/gi,
-    "",
-  );
-
-  // Remove href="javascript:..." and href='javascript:...'
-  result = result.replace(
-    /\s+href\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi,
-    "",
-  );
-
-  // Remove interactive form elements to prevent UX-level injection.
-  result = result.replace(
-    /<(input|button|textarea|select)[^>]*(?:\/?>|>[\s\S]*?<\/\1>)/gi,
-    "",
-  );
-
-  return result;
+  return sanitizeHtml(html, EMAIL_HTML_POLICY);
 }
 
 /**
  * Sanitize per-inbox SIGNATURE HTML (defense-in-depth for the MCP `signature`
- * tool path and the send-time injection). Mirrors sanitizeEmailHtml's regex
- * structure but is signature-tuned:
+ * tool path and the send-time injection).
  *
- *   - Strips script/style/iframe/object/embed/form/svg blocks, base/meta/link,
- *     all on*= event handlers, and javascript: URLs.
- *   - UNLIKE sanitizeEmailHtml, it PRESERVES external `https:` image `src`
- *     (hosted logos are the whole point of rich signatures), while still
- *     removing non-https img src (http:, data:, ftp:) as an XSS / plaintext
- *     leak guard.
+ * Same tokenizer as sanitizeEmailHtml, different policy object, and the
+ * difference is exactly one line of configuration: a signature KEEPS
+ * `https:` image `src`, because a hosted logo is the point of a rich
+ * signature and the author is the account owner rather than a stranger.
+ * Non-https sources (http:, data:, ftp:) are still dropped.
  *
- * The authoritative signature sanitizer is the web app's DOMPurify-based
- * sanitizeSignatureHtml (apps/web/src/lib/sanitizeSignatureHtml.js) run on
- * save; this Deno pass is a belt-and-suspenders layer so anything written via
- * the MCP tool or already sitting in the DB is scrubbed before it ships in
- * outgoing mail. Idempotent: re-running on already-clean HTML is a no-op.
+ * The authoritative signature sanitizer is the web app's sanitizeSignatureHtml
+ * (apps/web/src/lib/sanitizeSignatureHtml.js) run on save; this Deno pass is a
+ * belt-and-suspenders layer so anything written via the MCP tool or already
+ * sitting in the DB is scrubbed before it ships in outgoing mail. Idempotent.
  *
  * PURE: no I/O.
  */
 function sanitizeSignatureHtml(html: string): string {
-  if (!html) return html;
-  let result = html;
-
-  // Remove dangerous block elements and their full content.
-  for (const tag of [
-    "script",
-    "style",
-    "link",
-    "meta",
-    "iframe",
-    "object",
-    "embed",
-    "base",
-    "form",
-    "noscript",
-    "svg",
-    "math",
-  ]) {
-    // Paired open+content+close: <tag ...>...</tag>
-    result = result.replace(
-      new RegExp(`<${tag}[\\s\\S]*?</${tag}>`, "gi"),
-      "",
-    );
-    // Self-closing variants: <tag ... />
-    result = result.replace(new RegExp(`<${tag}[^>]*/>`, "gi"), "");
-    // Orphaned opening/standalone tags:
-    result = result.replace(new RegExp(`<${tag}[^>]*>`, "gi"), "");
-  }
-
-  // Remove all event-handler attributes: onclick="...", onload='...', onerror=x
-  result = result.replace(
-    /\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi,
-    "",
-  );
-
-  // Remove href/src="javascript:..." (any quoting).
-  result = result.replace(
-    /\s+(?:href|src)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]+)/gi,
-    "",
-  );
-
-  // Drop non-https image sources. https: img src is intentionally KEPT (hosted
-  // logos); http:, data:, ftp: and other schemes are removed.
-  result = result.replace(
-    /\s+src\s*=\s*(?:"(?:http|ftp|data):[^"]*"|'(?:http|ftp|data):[^']*'|(?:http|ftp|data):[^\s>]+)/gi,
-    "",
-  );
-
-  // Remove interactive form elements.
-  result = result.replace(
-    /<(input|button|textarea|select)[^>]*(?:\/?>|>[\s\S]*?<\/\1>)/gi,
-    "",
-  );
-
-  return result;
+  return sanitizeHtml(html, SIGNATURE_HTML_POLICY);
 }
 
 // ---------------------------------------------------------------------------
