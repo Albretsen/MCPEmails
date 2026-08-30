@@ -399,6 +399,20 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   font-family: var(--font-sans); font-size: 18px; color: var(--fg-3);
   line-height: 1.6; max-width: 560px; margin: 0 0 32px;
 }
+/* Direct-answer paragraph under a connect-page hero lead. Deliberately quiet:
+   it exists so the page carries one self-contained, quotable answer near the
+   top for search snippets, without competing with the lead above it. */
+.pricing-page-answer {
+  font-family: var(--font-sans); font-size: 15.5px; color: var(--fg-3);
+  line-height: 1.65; max-width: 640px; margin: 0 0 28px;
+  padding-left: 14px; border-left: 2px solid var(--border-1);
+}
+/* Pointer from a connect page to its long-form guide, so the pair reads as
+   product page plus walkthrough rather than two pages chasing one query. */
+.how-guide-link {
+  margin: 28px 0 0; text-align: center; font-size: 15px; color: var(--fg-3);
+}
+.how-guide-link a { color: var(--cobalt-600); font-weight: 500; }
 .pricing-page-cards {
   padding: 56px 0 40px;
   background: var(--bg-page);
@@ -873,6 +887,7 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   .pricing-page-hero { padding: 48px 0 32px; }
   .pricing-page-h1 { font-size: clamp(28px, 7vw, 38px); }
   .pricing-page-lead { font-size: var(--fs-16); }
+  .pricing-page-answer { font-size: var(--fs-14); }
   .pricing-page-cards { padding: 40px 0 28px; }
 
   /* === Billing toggle === */

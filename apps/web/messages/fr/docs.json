@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Docs",
+    "title": "Documentation du serveur MCP e-mail : Gmail, IMAP et OAuth",
     "description": "Démarrez avec MCPEmails en quelques minutes. Guide de démarrage rapide, référence des outils et exemples de réponses pour les agents Gmail et IMAP."
   },
   "hero": {
     "eyebrow": "Documentation",
-    "titleLine1": "Votre agent a une boîte de réception",
+    "titleLine1": "Connectez Gmail ou IMAP à Claude",
     "titleLine2": "en quatre étapes.",
     "lead": "Connectez n'importe quel compte e-mail, collez une URL dans un client MCP compatible OAuth et autorisez. Les clients sans OAuth utilisent plutôt une clé API. Référence complète des outils et guide de connexion ci-dessous.",
     "ctaQuickStart": "Démarrage rapide",

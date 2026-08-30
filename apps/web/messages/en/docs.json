@@ -5,7 +5,7 @@
   },
   "hero": {
     "eyebrow": "Documentation",
-    "titleLine1": "Your agent has an inbox",
+    "titleLine1": "Connect Gmail or IMAP to Claude",
     "titleLine2": "in four steps.",
     "lead": "Connect any email account, paste one URL into an OAuth-capable MCP client and authorize. Clients without OAuth use an API key instead. Full tool reference and connection guide below.",
     "ctaQuickStart": "Quick start",

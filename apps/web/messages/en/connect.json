@@ -1,19 +1,20 @@
 {
   "gmail": {
     "meta": {
-      "title": "Connect Gmail to Claude, Cursor & MCP Clients",
-      "description": "Connect Gmail to Claude, Cursor, ChatGPT and any MCP client in one click with Google OAuth. Let AI read, send, schedule and organize your Gmail. One inbox free, forever."
+      "title": "Gmail MCP Server for Claude, Cursor and ChatGPT",
+      "description": "A hosted Gmail MCP server. Sign in with Google once, then read, search, send and schedule Gmail from Claude, Cursor or any MCP client. One inbox free."
     },
     "hero": {
       "eyebrow": "Gmail + AI",
-      "titleLine1": "Connect Gmail to Claude,",
-      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "titleLine1": "The Gmail MCP server",
+      "titleLine2": "for Claude, Cursor and ChatGPT",
       "lead": "Give your AI agent a real Gmail inbox in minutes. Read, search, send, reply, schedule and organize mail with one-click Google sign-in, and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect Gmail free",
       "ctaSecondary": "Read the docs",
       "meta0": "1 inbox free, forever",
       "meta1": "One-click Google sign-in (OAuth)",
-      "meta2": "Email fetched live, never stored"
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach Gmail on its own. mcpemails is a hosted MCP server that sits between them: you sign in with Google once, paste one URL into your MCP client, and Claude, Cursor or ChatGPT can then read, search, send, reply to and schedule your Gmail. One inbox is free, forever."
     },
     "method": {
       "title": "How Gmail connects: one-click Google OAuth",
@@ -75,6 +76,11 @@
       "sub": "Connect Gmail in minutes. One inbox free forever, no card required.",
       "ctaPrimary": "Connect Gmail free",
       "ctaSecondary": "Read the docs"
+    },
+    "guide": {
+      "intro": "Prefer a walkthrough with screenshots?",
+      "label": "How to connect Gmail to Claude",
+      "href": "/blog/connect-gmail-to-claude"
     }
   },
   "fastmail": {
@@ -157,19 +163,20 @@
   },
   "icloud": {
     "meta": {
-      "title": "Connect iCloud Mail to Claude, Cursor & MCP Clients",
-      "description": "Connect iCloud Mail to Claude, Cursor, ChatGPT and any MCP client with an app-specific password. Let AI read, send and organize your iCloud mail. One inbox free, forever."
+      "title": "iCloud MCP Server: Connect iCloud Mail to Claude",
+      "description": "Yes, Claude can use iCloud Mail. Connect it with an Apple app-specific password in two minutes, then read, search, send and organize mail from any MCP client."
     },
     "hero": {
       "eyebrow": "iCloud Mail + AI",
-      "titleLine1": "Connect iCloud Mail to Claude,",
-      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "titleLine1": "The iCloud MCP server",
+      "titleLine2": "for Claude, Cursor and ChatGPT",
       "lead": "Give your AI agent a real iCloud inbox in minutes. Read, search, send, reply, schedule and organize mail with an Apple app-specific password, and use the same inbox in every MCP client, not just one.",
       "ctaPrimary": "Connect iCloud free",
       "ctaSecondary": "Read the docs",
       "meta0": "1 inbox free, forever",
       "meta1": "App-specific password, no OAuth",
-      "meta2": "Email fetched live, never stored"
+      "meta2": "Email fetched live, never stored",
+      "answer": "Apple does not offer OAuth for iCloud Mail, so Claude cannot connect to it directly. mcpemails connects your iCloud inbox over IMAP using an Apple app-specific password, which lets Claude, Cursor or any MCP client read, search, send and organize that mail. Setup takes about two minutes and one inbox is free."
     },
     "method": {
       "title": "How iCloud connects: an app-specific password",
@@ -231,6 +238,11 @@
       "sub": "Connect iCloud Mail in minutes. One inbox free forever, no card required.",
       "ctaPrimary": "Connect iCloud free",
       "ctaSecondary": "Read the docs"
+    },
+    "guide": {
+      "intro": "Connecting Fastmail or another IMAP host too?",
+      "label": "How to connect iCloud, Fastmail, or any IMAP inbox to Claude",
+      "href": "/blog/connect-icloud-fastmail-imap-to-claude"
     }
   },
   "yahoo": {
