@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Docs",
+    "title": "Documentation du serveur MCP e-mail : Gmail, IMAP et OAuth",
     "description": "Démarrez avec MCPEmails en quelques minutes. Guide de démarrage rapide, référence des outils et exemples de réponses pour les agents Gmail et IMAP."
   },
   "hero": {
     "eyebrow": "Documentation",
-    "titleLine1": "Votre agent a une boîte de réception",
+    "titleLine1": "Connectez Gmail ou IMAP à Claude",
     "titleLine2": "en quatre étapes.",
     "lead": "Connectez n'importe quel compte e-mail, collez une URL dans un client MCP compatible OAuth et autorisez. Les clients sans OAuth utilisent plutôt une clé API. Référence complète des outils et guide de connexion ci-dessous.",
     "ctaQuickStart": "Démarrage rapide",
@@ -424,8 +424,8 @@
   },
   "providers": {
     "meta": {
-      "title": "Fournisseurs pris en charge",
-      "description": "Découvrez quels fournisseurs d'e-mail MCPEmails prend en charge et quelles fonctionnalités sont disponibles par fournisseur : Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex et IMAP générique."
+      "title": "Compatibilité des fournisseurs e-mail pour les agents IA",
+      "description": "Quels fournisseurs e-mail fonctionnent avec un agent IA via MCP, et ce qu’il faut pour connecter chacun : OAuth ou mot de passe d’application, hôtes et ports IMAP et SMTP, TLS ou STARTTLS, ce qui échoue le plus souvent, et ce que l’agent peut faire une fois connecté. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 et IMAP générique."
     },
     "labels": {
       "generic": "IMAP générique"
@@ -462,11 +462,11 @@
       "Search": "Recherche"
     },
     "hero": {
-      "eyebrow": "Fournisseurs pris en charge",
-      "heading": "Ce qui fonctionne, par fournisseur.",
-      "lead": "MCPEmails connecte Gmail, Fastmail et toute boîte IMAP (iCloud, Yahoo, Zoho, Yandex, générique). Tous les fournisseurs n'exposent pas les mêmes API : ce tableau montre exactement ce que chacun prend en charge aujourd'hui.",
-      "ctaConnect": "Connecter une boîte",
-      "ctaBack": "Retour aux docs"
+      "eyebrow": "Matrice de compatibilité",
+      "heading": "Compatibilité des fournisseurs e-mail pour les agents IA",
+      "lead": "Ce qu’un agent IA peut réellement faire avec chaque fournisseur e-mail, et ce qu’il faut pour en connecter un. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 et toute boîte IMAP générique. Chaque ligne est vérifiée face aux connecteurs en production.",
+      "ctaConnect": "Connecter une boîte mail",
+      "ctaBack": "Retour à la documentation"
     },
     "legend": {
       "supported": "Pris en charge",
@@ -492,6 +492,50 @@
       "sub": "Formule Gratuit : une boîte connectée, pour toujours et sans carte bancaire.",
       "primary": "Commencer gratuitement",
       "secondary": "Lire la documentation"
+    },
+    "verified": {
+      "label": "Dernière vérification",
+      "date": "30 août 2026",
+      "note": "Hôtes, ports, méthodes de connexion et modes d’échec revérifiés face aux connecteurs actifs à cette date."
+    },
+    "connection": {
+      "title": "Comment chaque fournisseur se connecte",
+      "lead": "Méthode de connexion, hôtes de messagerie et sécurité du transport, et la panne qui coûte vraiment un après-midi. Choisissez un fournisseur pour la configuration pas à pas.",
+      "columns": {
+        "provider": "Fournisseur",
+        "auth": "Connexion",
+        "imap": "IMAP (entrant)",
+        "smtp": "SMTP (sortant)",
+        "breaks": "Ce qui échoue le plus souvent"
+      },
+      "auth": {
+        "googleOauth": "OAuth Google",
+        "microsoftOauth": "OAuth Microsoft",
+        "appPassword": "Mot de passe d’application",
+        "mailboxPassword": "Mot de passe de la boîte"
+      },
+      "api": "API du fournisseur, sans IMAP",
+      "unavailable": "Pas encore disponible",
+      "varies": "Les réglages de votre hébergeur",
+      "breaks": {
+        "gmail": "Rien au niveau du transport : Gmail se connecte via l’API Gmail et non en IMAP. Les limites sont sémantiques. Gmail utilise des libellés plutôt que des dossiers, n’a pas de copie native et pas de suppression définitive.",
+        "fastmail": "Le mot de passe ordinaire du compte est refusé d’emblée. Fastmail génère un mot de passe d’application de 16 caractères, et envoyer celui de connexion à la place est la première cause unique d’échec de connexion.",
+        "icloud": "L’authentification à deux facteurs doit être activée avant qu’Apple ne génère un mot de passe d’application. Apple l’affiche en quatre blocs séparés par des tirets ; ces tirets ne sont qu’affichage et sont retirés avant l’envoi.",
+        "yahoo": "Yahoo accepte au plus 5 connexions simultanées. Son texte de refus, « Incorrect username or password », nomme les deux moitiés à dessein et ne dira pas laquelle était fausse.",
+        "zoho": "L’accès IMAP est désactivé par défaut et doit être activé d’abord. Zoho exploite aussi six centres de données régionaux, et les boîtes payantes sur domaine propre vivent sur imappro/smtppro plutôt que imap/smtp : le bon hôte dépend donc de la région et du type de compte.",
+        "yandex": "Yandex n’implémente pas RFC 4959 SASL-IR : la forme de connexion en ligne revient en erreur de syntaxe de commande, pas en erreur d’identifiants. Il faut activer à la fois « IMAP » et « mots de passe d’application et jetons OAuth », et les comptes Yandex 360 sur domaine propre peuvent se connecter avec un identifiant qui n’est pas l’adresse.",
+        "outlook": "La politique de consentement par défaut de Microsoft exclut Mail.ReadWrite des permissions qu’un utilisateur final peut approuver : un salarié sous Microsoft 365 est donc refusé avant même de voir un écran de consentement. Seul un administrateur peut le débloquer, et c’est pourquoi Microsoft 365 en entreprise ne peut pas être connecté par le propriétaire de la boîte.",
+        "generic": "Un port et un mode de sécurité qui ne s’accordent pas. Choisir STARTTLS alors que le port reste 993 ouvre une connexion en clair vers un service qui ne parle que TLS, et la connexion expire tout simplement. Les transports en échec sont désormais réessayés automatiquement sur l’autre combinaison standard."
+      },
+      "notes": {
+        "autodetect": "<b>Détection automatique du transport :</b> une connexion qui n’a jamais établi de session est réessayée sur l’autre transport standard (IMAP <code>993</code>/TLS et <code>143</code>/STARTTLS ; SMTP <code>465</code>/TLS, <code>587</code>/STARTTLS et <code>25</code>). Un mot de passe refusé n’est jamais réessayé, car chaque tentative compte pour le blocage du fournisseur.",
+        "authMechanism": "<b>Mécanisme de connexion :</b> la plupart des serveurs acceptent <code>AUTH PLAIN</code> en un aller-retour. Ceux qui n’annoncent que GSSAPI, NTLM et LOGIN, Microsoft Exchange en tête, répondent <code>504 5.7.4</code>, et le client bascule seul sur <code>AUTH LOGIN</code>.",
+        "otherHosts": "<b>Autres hébergeurs :</b> IONOS, Hostinger, OVH, OVH Hosted Exchange, DreamHost, Titan Email, Namecheap Private Email, Migadu, InMotion Hosting, OpenSRS, GMX et mail.com sont reconnus à partir de l’adresse ou de l’hôte que vous saisissez, et leurs hôtes, ports et sécurité de transport sont remplis pour vous."
+      }
+    },
+    "capabilities": {
+      "title": "Ce que l’agent peut faire une fois connecté",
+      "lead": "Les opérations qu’un client MCP peut effectuer par fournisseur : lire, rechercher, envoyer, répondre, transférer, déplacer, marquer, dossiers, brouillons, envoi programmé et pièces jointes."
     }
   }
 }

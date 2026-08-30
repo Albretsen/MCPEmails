@@ -21,6 +21,10 @@ const RICH = {
  */
 export default function ConnectProviderClient({ provider }) {
   const t = useTranslations(`connect.${provider}`);
+  // Shared across all six provider pages: the back-link to the compatibility
+  // matrix is the same sentence on each, so it lives once at `connect.matrix`
+  // rather than six times under `connect.<provider>`.
+  const tShared = useTranslations('connect');
 
   const capabilities = t.raw('capabilities');
   const steps = t.raw('steps');
@@ -41,6 +45,16 @@ export default function ConnectProviderClient({ provider }) {
             {t('hero.titleLine1')}<br />{t('hero.titleLine2')}
           </h1>
           <p className="pricing-page-lead">{t('hero.lead')}</p>
+          {/*
+            Direct answer to the question the search query actually asks
+            ("can Claude use iCloud Mail?"). These pages rank between 4.7 and
+            9.2 for provider queries and were returning zero clicks: the
+            snippet had nothing quotable to pull. Optional per provider, so
+            pages without an `answer` string render exactly as before.
+          */}
+          {t.has('hero.answer') && (
+            <p className="pricing-page-answer">{t('hero.answer')}</p>
+          )}
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
             <a className="btn btn-primary btn-lg" href="/signup">{t('hero.ctaPrimary')}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('hero.ctaSecondary')}</Link>
@@ -148,6 +162,28 @@ export default function ConnectProviderClient({ provider }) {
               </div>
             ))}
           </div>
+          {/*
+            Exact-match link to the long-form guide for this provider. The
+            product page and the guide used to compete for the same query and
+            neither ranked; the guide now owns the instructional phrase and
+            this link is what tells Google they are a pair rather than
+            duplicates. Optional per provider.
+          */}
+          {t.has('guide.href') && (
+            <p className="how-guide-link">
+              {t('guide.intro')}{' '}
+              <Link href={t('guide.href')}>{t('guide.label')}</Link>
+            </p>
+          )}
+          {/*
+            Back-link to the compatibility matrix. Every provider row over there
+            links down to one of these pages; this is the other half of that
+            pair, and it is what makes the matrix a hub rather than a leaf.
+          */}
+          <p className="how-guide-link">
+            {tShared('matrix.intro')}{' '}
+            <Link href={tShared('matrix.href')}>{tShared('matrix.label')}</Link>
+          </p>
         </div>
       </section>
 

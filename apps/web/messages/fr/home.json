@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "mcpemails · Connectez Gmail, iCloud et IMAP à Claude",
-    "description": "Donnez à Claude, Cursor ou tout client MCP un accès réel à votre boîte : lisez, envoyez, recherchez et organisez Gmail, Fastmail, iCloud et IMAP. Outlook est en cours de développement. Gratuit, sans stockage."
+    "title": "Connectez Gmail, iCloud et IMAP à Claude",
+    "description": "Donnez à Claude, Cursor ou tout client MCP un accès réel à votre boîte : lisez, envoyez, recherchez et organisez Gmail, Fastmail, iCloud et IMAP. Gratuit."
   },
   "nav": {
     "features": "Fonctionnalités",

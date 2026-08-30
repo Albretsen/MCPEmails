@@ -466,5 +466,10 @@
       "ctaPrimary": "Connecter Yandex gratuitement",
       "ctaSecondary": "Lire la documentation"
     }
+  },
+  "matrix": {
+    "intro": "Vous comparez d’abord les fournisseurs ?",
+    "label": "Voir la matrice de compatibilité des fournisseurs e-mail",
+    "href": "/docs/providers"
   }
 }

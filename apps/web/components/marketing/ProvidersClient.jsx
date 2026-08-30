@@ -28,6 +28,80 @@ const PROVIDERS = [
   { key: 'generic',  label: 'Generic IMAP' },
 ];
 
+// ---------------------------------------------------------------------------
+// Connection settings — how each provider is actually reached.
+//
+// This is the half of the matrix that the capability table below cannot carry:
+// a capability is the same sentence for every IMAP provider, while the way in
+// differs per provider and is where connections are actually lost. Every value
+// here is traceable to the code that uses it, and the comment on each row names
+// that file, because the whole point of this page is that it is checked rather
+// than remembered:
+//
+//   hosts, ports, transport   src/lib/email-providers/imap-presets.ts
+//                             src/lib/email-providers/host-presets.ts
+//   Gmail OAuth scopes        app/auth/gmail/route.ts
+//   Microsoft scopes/consent  src/lib/email-providers/outlook-oauth.ts
+//   generic transport pairs   src/lib/email/transport-autodetect.ts
+//
+// `imap`/`smtp` are null when the provider is not reached over IMAP at all.
+// ---------------------------------------------------------------------------
+
+const CONNECTION = [
+  {
+    // Gmail API, not IMAP: gmail.readonly, gmail.send, gmail.modify and
+    // gmail.settings.basic (app/auth/gmail/route.ts).
+    key: 'gmail', label: 'Gmail', href: '/connect/gmail',
+    auth: 'googleOauth', imap: null, smtp: null,
+  },
+  {
+    key: 'fastmail', label: 'Fastmail', href: '/connect/fastmail',
+    auth: 'appPassword',
+    imap: { host: 'imap.fastmail.com', port: '993', security: 'TLS' },
+    smtp: { host: 'smtp.fastmail.com', port: '465', security: 'TLS' },
+  },
+  {
+    key: 'icloud', label: 'iCloud Mail', href: '/connect/icloud',
+    auth: 'appPassword',
+    imap: { host: 'imap.mail.me.com', port: '993', security: 'TLS' },
+    smtp: { host: 'smtp.mail.me.com', port: '587', security: 'STARTTLS' },
+  },
+  {
+    key: 'yahoo', label: 'Yahoo Mail', href: '/connect/yahoo',
+    auth: 'appPassword',
+    imap: { host: 'imap.mail.yahoo.com', port: '993', security: 'TLS' },
+    smtp: { host: 'smtp.mail.yahoo.com', port: '465', security: 'TLS' },
+  },
+  {
+    // Global (.com) data centre, personal account. Five other regions and the
+    // imappro/smtppro organization hosts are resolved by zohoHosts().
+    key: 'zoho', label: 'Zoho Mail', href: '/connect/zoho',
+    auth: 'appPassword',
+    imap: { host: 'imap.zoho.com', port: '993', security: 'TLS' },
+    smtp: { host: 'smtp.zoho.com', port: '465', security: 'TLS' },
+  },
+  {
+    key: 'yandex', label: 'Yandex Mail', href: '/connect/yandex',
+    auth: 'appPassword',
+    imap: { host: 'imap.yandex.com', port: '993', security: 'TLS' },
+    smtp: { host: 'smtp.yandex.com', port: '465', security: 'TLS' },
+  },
+  {
+    // Built and scoped (OUTLOOK_SCOPES), but not connectable: the provider card
+    // is disabled in the connect modal, and the tenant consent policy described
+    // in the notes is why. Saying so is the honest row.
+    key: 'outlook', label: 'Microsoft 365 / Outlook', href: null,
+    auth: 'microsoftOauth', imap: null, smtp: null, unavailable: true,
+  },
+  {
+    // Both standard pairs, in the order transport-autodetect tries them.
+    key: 'generic', label: null, href: null,
+    auth: 'mailboxPassword',
+    imap: { host: null, port: '993 / 143', security: 'TLS / STARTTLS' },
+    smtp: { host: null, port: '465 / 587', security: 'TLS / STARTTLS' },
+  },
+];
+
 // true  = supported
 // false = not supported
 // 'planned' = on the roadmap, not yet shipped
@@ -38,44 +112,44 @@ const MATRIX = {
   original_message: {
     label: 'Download original (.eml)',
     section: 'Core',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   read: {
     label: 'Read email',
     section: 'Core',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   search: {
     label: 'Search',
     section: 'Core',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   send: {
     label: 'Send email',
     section: 'Core',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   reply: {
     label: 'Reply',
     section: 'Core',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   forward: {
     label: 'Forward',
     section: 'Core',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Flags & state ──────────────────────────────────────────────────────
   flags: {
     label: 'Read/unread + starred flags',
     section: 'Flags & state',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Folders & labels ───────────────────────────────────────────────────
@@ -83,47 +157,47 @@ const MATRIX = {
     label: 'Folders',
     section: 'Folders & labels',
     // Gmail uses labels, not folders
-    gmail: false, outlook: true, fastmail: true,
+    gmail: false, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   labels: {
     label: 'Labels / tags',
     section: 'Folders & labels',
-    gmail: true, outlook: false, fastmail: false,
+    gmail: true, fastmail: false,
     icloud: false, yahoo: false, zoho: false, yandex: false, generic: false,
   },
   move: {
     label: 'Move',
     section: 'Folders & labels',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   copy: {
     label: 'Copy',
     section: 'Folders & labels',
     // Gmail API has no native copy
-    gmail: false, outlook: true, fastmail: true,
+    gmail: false, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Delete ─────────────────────────────────────────────────────────────
   delete: {
     label: 'Delete / trash',
     section: 'Delete',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   permanent_delete: {
     label: 'Permanent delete (expunge)',
     section: 'Delete',
     // Gmail and Outlook support trash only (no direct expunge via API)
-    gmail: false, outlook: false, fastmail: true,
+    gmail: false, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Drafts ─────────────────────────────────────────────────────────────
   drafts: {
     label: 'Drafts (create / edit / send)',
     section: 'Drafts',
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Contacts ───────────────────────────────────────────────────────────
@@ -132,7 +206,7 @@ const MATRIX = {
     section: 'Contacts',
     // contact_search does a live, header-only scan of recent mail for every
     // provider — nothing is stored between calls.
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Scheduling ─────────────────────────────────────────────────────────
@@ -140,7 +214,7 @@ const MATRIX = {
     label: 'Scheduled send',
     section: 'Scheduling',
     // Shipped via server-side scheduled_sends queue (Task 17-18) for all providers
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Signatures ─────────────────────────────────────────────────────────
@@ -151,14 +225,14 @@ const MATRIX = {
     // scheduled message — works the same on every provider. Supports rich HTML
     // formatting and a hosted logo/image (https URLs; some clients image-block
     // by default). See providers.notes.signatures for the rendered copy.
-    gmail: true, outlook: true, fastmail: true,
+    gmail: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Search syntax ──────────────────────────────────────────────────────
   search_syntax: {
     label: 'Search syntax',
     section: 'Search',
-    gmail: 'Gmail', outlook: 'OData', fastmail: 'IMAP',
+    gmail: 'Gmail', fastmail: 'IMAP',
     icloud: 'IMAP', yahoo: 'IMAP', zoho: 'IMAP', yandex: 'IMAP', generic: 'IMAP',
   },
 };
@@ -218,6 +292,37 @@ function Cell({ value }) {
   );
 }
 
+/**
+ * One IMAP/SMTP cell: host on its own line, then port and transport security.
+ *
+ * A null endpoint means the provider is not reached over IMAP at all, which is
+ * two different statements: Gmail talks to a provider API, and Microsoft 365
+ * cannot be connected yet. A null host means the value is the user's own.
+ */
+function Transport({ endpoint, unavailable }) {
+  const t = useTranslations('docs');
+  if (!endpoint) {
+    return (
+      <td className="tbl-val" style={{ fontSize: 13, color: 'var(--fg-3)' }}>
+        {t(unavailable ? 'providers.connection.unavailable' : 'providers.connection.api')}
+      </td>
+    );
+  }
+  return (
+    <td className="tbl-val" style={{ fontSize: 13 }}>
+      <code style={{
+        fontFamily: 'var(--font-mono)', fontSize: 12,
+        color: 'var(--fg-1)', whiteSpace: 'nowrap',
+      }}>
+        {endpoint.host ?? t('providers.connection.varies')}
+      </code>
+      <div style={{ color: 'var(--fg-3)', fontSize: 12, marginTop: 3, whiteSpace: 'nowrap' }}>
+        {endpoint.port} · {endpoint.security}
+      </div>
+    </td>
+  );
+}
+
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default function ProvidersClient() {
@@ -247,6 +352,15 @@ export default function ProvidersClient() {
           <p className="pricing-page-lead">
             {t('providers.hero.lead')}
           </p>
+          {/*
+            The maintenance is the moat, so the date is on the page rather than
+            in a comment. It lives in the message bundle
+            (docs.providers.verified.date) so bumping it is one edit per locale.
+          */}
+          <p className="providers-verified" title={t('providers.verified.note')}>
+            <span className="providers-verified-dot" aria-hidden="true" />
+            {t('providers.verified.label')}: <b>{t('providers.verified.date')}</b>
+          </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <a className="btn btn-primary btn-lg" href="/signup">{t('providers.hero.ctaConnect')}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('providers.hero.ctaBack')}</Link>
@@ -254,9 +368,67 @@ export default function ProvidersClient() {
         </div>
       </section>
 
+      {/* Connection settings */}
+      <section className="section" style={{ paddingTop: 48, paddingBottom: 0 }}>
+        <div className="container">
+          <h2 className="providers-h2">{t('providers.connection.title')}</h2>
+          <p className="providers-sub">{t('providers.connection.lead')}</p>
+
+          <div className="comparison-wrap">
+            <table className="comparison-tbl providers-conn-tbl">
+              <thead>
+                <tr>
+                  <th className="feat-col" style={{ minWidth: 150 }}>{t('providers.connection.columns.provider')}</th>
+                  <th style={{ minWidth: 130 }}>{t('providers.connection.columns.auth')}</th>
+                  <th style={{ minWidth: 150 }}>{t('providers.connection.columns.imap')}</th>
+                  <th style={{ minWidth: 150 }}>{t('providers.connection.columns.smtp')}</th>
+                  <th style={{ minWidth: 300 }}>{t('providers.connection.columns.breaks')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CONNECTION.map((row) => (
+                  <tr key={row.key}>
+                    <td className="feat-name">
+                      {/*
+                        Each row links to its own setup page, and every one of
+                        those links back here. The pair is what makes this the
+                        hub rather than another leaf.
+                      */}
+                      {row.href
+                        ? <Link href={row.href}>{row.label}</Link>
+                        : (row.label ?? t('providers.labels.generic'))}
+                    </td>
+                    <td className="tbl-val" style={{ fontSize: 13 }}>
+                      {t(`providers.connection.auth.${row.auth}`)}
+                    </td>
+                    <Transport endpoint={row.imap} unavailable={row.unavailable} />
+                    <Transport endpoint={row.smtp} unavailable={row.unavailable} />
+                    <td className="tbl-val providers-breaks">
+                      {t(`providers.connection.breaks.${row.key}`)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{
+            marginTop: 24,
+            display: 'flex', flexDirection: 'column', gap: 10,
+            fontSize: 13, fontFamily: 'var(--font-sans)', color: 'var(--fg-3)', lineHeight: 1.6,
+          }}>
+            <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.autodetect', RICH)}</p>
+            <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.authMechanism', RICH)}</p>
+            <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.otherHosts', RICH)}</p>
+          </div>
+        </div>
+      </section>
+
       {/* Legend */}
       <section className="section" style={{ paddingTop: 48, paddingBottom: 0 }}>
         <div className="container">
+          <h2 className="providers-h2">{t('providers.capabilities.title')}</h2>
+          <p className="providers-sub">{t('providers.capabilities.lead')}</p>
           <div style={{
             display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center',
             fontSize: 13, fontFamily: 'var(--font-sans)', color: 'var(--fg-3)',
