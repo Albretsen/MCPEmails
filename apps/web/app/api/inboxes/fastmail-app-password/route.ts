@@ -7,7 +7,9 @@ import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
+import { guardMailHost } from '@/lib/email/host-guard';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
+import { explainAuthFailure } from '@/lib/email/auth-failure';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
@@ -39,6 +41,8 @@ import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 const FASTMAIL_IMAP_HOST = 'imap.fastmail.com';
 const FASTMAIL_IMAP_PORT = 993;
+const FASTMAIL_SMTP_HOST = 'smtp.fastmail.com';
+const FASTMAIL_SMTP_PORT = 465;
 
 /**
  * Fastmail-specific override for the AUTH_FAILED message; all other codes fall
@@ -108,6 +112,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
+  // SSRF guard. Both hosts are module constants, so this cannot reject a real
+  // request; it runs so that every route that opens a mail socket goes through
+  // one policy, and so the connection is pinned to the checked address rather
+  // than re-resolving imap.fastmail.com at connect time.
+  const imapGuard = await guardMailHost(FASTMAIL_IMAP_HOST, { protocol: 'imap', port: FASTMAIL_IMAP_PORT });
+  if (!imapGuard.ok) {
+    return NextResponse.json({ error: imapGuard.message, error_code: imapGuard.code }, { status: 422 });
+  }
+  const smtpGuard = await guardMailHost(FASTMAIL_SMTP_HOST, { protocol: 'smtp', port: FASTMAIL_SMTP_PORT });
+  if (!smtpGuard.ok) {
+    return NextResponse.json({ error: smtpGuard.message, error_code: smtpGuard.code }, { status: 422 });
+  }
+
   // 5. Validate via IMAP before persisting anything.
   // Fastmail's documented transport leads; the standard alternatives are only
   // reached when it never gets far enough to present the credential, e.g. a
@@ -117,6 +134,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     (candidate, timeoutMs) =>
       validateImapCredential({
         host: FASTMAIL_IMAP_HOST,
+        pinnedAddress: imapGuard.address,
         port: candidate.port,
         email,
         password: appPassword,
@@ -141,6 +159,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error: userMessage,
       error_code: validation.code.toLowerCase(),
     };
+    // The sub-case behind the rejection, so the dashboard can say which of the
+    // credential situations this is rather than repeating one sentence for all
+    // of them. Fastmail's app password is 16 lowercase characters, so an
+    // account password submitted here is visible in the string itself.
+    const authFailure = isAuthFailed
+      ? explainAuthFailure({
+          detail: validation.detail,
+          service: 'fastmail',
+          email,
+          secret: appPassword,
+        })
+      : null;
+    if (authFailure) Object.assign(body, authFailure.fields);
     // Fastmail is the clearest case against skipping AUTH_FAILED here: it has
     // 6 connect attempts and 0 successes, every one of them an auth failure,
     // and because this branch dropped exactly those rows there was nothing on
@@ -154,30 +185,48 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       reason: validation.code,
       phase: validation.phase,
       detail: validation.detail ?? null,
+      authReason: authFailure?.reason ?? null,
       workspaceId,
     });
     return NextResponse.json(body, { status: 422 });
   }
 
   const smtpDetection = await detectTransport(
-    transportPlan('smtp', { port: 465, security: 'tls' }),
+    transportPlan('smtp', { port: FASTMAIL_SMTP_PORT, security: 'tls' }),
     (candidate, timeoutMs) =>
-      validateSmtpCredential({ host: 'smtp.fastmail.com', port: candidate.port, email, password: appPassword, security: candidate.security, timeoutMs })
+      validateSmtpCredential({ host: FASTMAIL_SMTP_HOST, pinnedAddress: smtpGuard.address, port: candidate.port, email, password: appPassword, security: candidate.security, timeoutMs })
   );
   const smtpValidation = smtpDetection.result;
-  const resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : 465;
+  const resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : FASTMAIL_SMTP_PORT;
   const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : 'tls';
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    const smtpAuthFailure =
+      smtpValidation.code === 'AUTH_FAILED'
+        ? explainAuthFailure({
+            detail: smtpValidation.detail,
+            service: 'fastmail',
+            email,
+            secret: appPassword,
+          })
+        : null;
     await captureError(new Error(smtpValidation.message), {
       severity: 'low',
       route: 'api/inboxes/fastmail-app-password',
       reason: smtpValidation.code,
       phase: `smtp_${smtpValidation.phase}`,
       detail: smtpValidation.detail ?? null,
+      authReason: smtpAuthFailure?.reason ?? null,
       workspaceId,
     });
-    return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
+    return NextResponse.json(
+      {
+        error: smtpValidation.message,
+        error_code: smtpValidation.code.toLowerCase(),
+        ...(smtpAuthFailure?.fields ?? {}),
+      },
+      { status: 422 },
+    );
   }
 
   // 6. Defense-in-depth: reject if another active inbox in this workspace
@@ -230,7 +279,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       imap_port: resolvedImapPort,
       imap_tls: true,
       imap_security: resolvedImapSecurity,
-      smtp_host: 'smtp.fastmail.com',
+      smtp_host: FASTMAIL_SMTP_HOST,
       smtp_port: resolvedSmtpPort,
       smtp_tls: true,
       smtp_security: resolvedSmtpSecurity,

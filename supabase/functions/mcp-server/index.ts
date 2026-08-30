@@ -148,6 +148,7 @@ import {
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
 import { sendViaSmtp, SmtpAuthError } from "./smtp-client.ts";
+import { MailHostBlockedError } from "./host-guard.ts";
 import {
   type ActionMisplacement,
   buildInvalidArgumentsText,
@@ -24658,6 +24659,14 @@ const TRIAGE_PASSTHROUGH_ERROR_CODES = new Set([
 
 /** Reduce a thrown provider error to a short code. Never message content. */
 function providerErrorCode(error: unknown): string {
+  // The SSRF guard refused the mailbox's stored host. Worth its own code rather
+  // than a generic provider_error: an automation that starts failing this way
+  // is not a flaky server, it is a mail host that has moved onto a private
+  // address since it was connected, and the run history is where an operator
+  // would notice. The interactive tool paths surface the guard's own sentence
+  // verbatim through their existing provider_error catch; see
+  // MailHostBlockedError in host-guard.ts.
+  if (error instanceof MailHostBlockedError) return "mail_host_blocked";
   const message = error instanceof Error ? error.message : String(error);
   if (message.includes("auth_failed")) return "auth_failed";
   if (TRIAGE_PASSTHROUGH_ERROR_CODES.has(message)) return message;

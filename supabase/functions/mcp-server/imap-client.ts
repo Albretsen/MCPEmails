@@ -19,6 +19,7 @@
  */
 
 import { normalizeSnippetPreview } from "./text-extract.ts";
+import { connectGuardedTcp } from "./host-guard.ts";
 
 export class ImapAuthError extends Error {
   constructor(message: string) {
@@ -359,9 +360,48 @@ export class ImapClient {
    * {@link ImapAuthError} on genuine authentication failure (not retryable).
    */
   private static async connectOnce(cfg: ImapConnectConfig): Promise<ImapClient> {
-    let conn: Deno.TcpConn | Deno.TlsConn = cfg.security === "starttls"
-      ? await Deno.connect({ hostname: cfg.host, port: cfg.port })
-      : await Deno.connectTls({ hostname: cfg.host, port: cfg.port });
+    // SSRF guard. The host on this row was public when the mailbox was
+    // connected, but nothing stops its A record being repointed into a private
+    // range afterwards, and this line is where that would be cashed in. The
+    // guard resolves the name, refuses every non-public answer, and hands back
+    // the address it approved so the socket lands there rather than on a name
+    // that would be resolved a second time. See host-guard.ts, which is a
+    // mirror of apps/web/src/lib/email/host-guard.ts — change one, change both.
+    let conn: Deno.TcpConn | Deno.TlsConn = await connectGuardedTcp({
+      host: cfg.host,
+      port: cfg.port,
+      protocol: "imap",
+    });
+
+    if (cfg.security !== "starttls") {
+      // Implicit TLS on a PINNED address. Deno.connectTls cannot express this:
+      // its `hostname` is both the dial target and the certificate name, so
+      // pinning through it would check the certificate against an IP. startTls
+      // separates the two — the peer comes from the socket, the certificate
+      // name from this option — so the address stays pinned and certificate
+      // validation is untouched. The eager handshake keeps the failure at the
+      // connect step, where connectTls used to raise it.
+      const tcp = conn as Deno.TcpConn;
+      let tls: Deno.TlsConn;
+      try {
+        tls = await Deno.startTls(tcp, { hostname: cfg.host });
+      } catch (err) {
+        try {
+          tcp.close();
+        } catch { /* startTls may already have consumed the socket */ }
+        throw err;
+      }
+      try {
+        await tls.handshake();
+      } catch (err) {
+        try {
+          tls.close();
+        } catch { /* nothing was spoken on it */ }
+        throw err;
+      }
+      conn = tls;
+    }
+
     const client = new ImapClient(conn);
 
     // Server greeting: expect "* OK ...". A "* BYE" (or any non-OK greeting)

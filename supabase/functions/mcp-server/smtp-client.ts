@@ -16,6 +16,8 @@
  * Auth failures throw SmtpAuthError so callers can surface a reconnect prompt.
  */
 
+import { connectGuardedTcp } from "./host-guard.ts";
+
 export class SmtpAuthError extends Error {
   constructor(message: string) {
     super(message);
@@ -280,6 +282,51 @@ class SmtpSession {
 }
 
 /**
+ * Open the submission socket through the SSRF guard.
+ *
+ * The host comes off a stored inbox row, and nothing stops its A record being
+ * repointed into a private range after the mailbox was connected; this is the
+ * line where that would be cashed in. The guard resolves the name, refuses
+ * every non-public answer, and returns the address it approved so the socket
+ * lands there rather than on a name that would be resolved a second time.
+ *
+ * Implicit TLS is reached by dialling that pinned address and then upgrading
+ * with `Deno.startTls(conn, { hostname })`. `Deno.connectTls` cannot express
+ * this, because its single `hostname` is both the dial target and the
+ * certificate name: pinning through it would validate the certificate against
+ * an IP. Splitting the two keeps the address pinned with certificate
+ * validation completely intact. The handshake is forced here so that a TLS
+ * failure still lands inside the connect timeout below, as it did when this
+ * was `Deno.connectTls`.
+ *
+ * See host-guard.ts, a mirror of apps/web/src/lib/email/host-guard.ts. A change
+ * to either must be made to the other.
+ */
+async function openGuardedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn> {
+  const tcp = await connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "smtp" });
+  if (cfg.security !== "tls") return tcp;
+
+  let tls: Deno.TlsConn;
+  try {
+    tls = await Deno.startTls(tcp, { hostname: cfg.host });
+  } catch (err) {
+    try {
+      tcp.close();
+    } catch { /* startTls may already have consumed the socket */ }
+    throw err;
+  }
+  try {
+    await tls.handshake();
+  } catch (err) {
+    try {
+      tls.close();
+    } catch { /* nothing was spoken on it */ }
+    throw err;
+  }
+  return tls;
+}
+
+/**
  * Open the SMTP TCP/TLS connection with a bounded timeout. Deno.connect(Tls)
  * has no built-in connect timeout, so an unreachable/filtered submission port
  * would otherwise block until the OS connect timeout (~130s) and blow past the
@@ -288,9 +335,7 @@ class SmtpSession {
  * surface a clean, no-retry-safe error.
  */
 async function connectWithTimeout(cfg: SmtpConfig): Promise<Deno.Conn> {
-  const connectPromise = cfg.security === "tls"
-    ? Deno.connectTls({ hostname: cfg.host, port: cfg.port })
-    : Deno.connect({ hostname: cfg.host, port: cfg.port });
+  const connectPromise = openGuardedSmtpConn(cfg);
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(

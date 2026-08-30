@@ -8,7 +8,9 @@ import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { yandexLoginUsername } from '@/lib/email/connection-config';
 import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
+import { guardMailHost } from '@/lib/email/host-guard';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
+import { explainAuthFailure } from '@/lib/email/auth-failure';
 import { captureError } from '@/lib/errors/capture';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import {
@@ -121,6 +123,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const imapHost = zoho ? zoho.imapHost : preset.imapHost;
   const smtpHost = zoho ? zoho.smtpHost : preset.smtpHost;
 
+  // SSRF guard. Unlike the generic connector these hosts come from the preset
+  // registry rather than the request body, so this is not the route the attack
+  // lands on. It runs anyway for two reasons: the guard is the single place the
+  // policy lives, and duplicating "this one is safe because the constant is
+  // ours" across three routes is how the next preset gets added without one.
+  //
+  // The real payoff here is the second return value: `address` pins the socket
+  // to the address that was checked, so a poisoned or rebound DNS answer for
+  // imap.gmail.com cannot redirect an otherwise-legitimate connection.
+  const imapGuard = await guardMailHost(imapHost, { protocol: 'imap', port: preset.imapPort });
+  if (!imapGuard.ok) {
+    return NextResponse.json({ error: imapGuard.message, error_code: imapGuard.code }, { status: 422 });
+  }
+  const smtpGuard = await guardMailHost(smtpHost, { protocol: 'smtp', port: preset.smtpPort });
+  if (!smtpGuard.ok) {
+    return NextResponse.json({ error: smtpGuard.message, error_code: smtpGuard.code }, { status: 422 });
+  }
+
   // 4. Enforce the plan inbox cap for brand-new addresses only (reconnects reuse
   //    the existing row via upsert and must be allowed even at the cap).
   const alreadyConnected = await inboxExistsForEmail(supabase, workspaceId, email);
@@ -149,6 +169,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     (candidate, timeoutMs) =>
       validateImapCredential({
         host: imapHost,
+        pinnedAddress: imapGuard.address,
         port: candidate.port,
         email,
         username: loginUsername ?? undefined,
@@ -172,6 +193,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error: validation.message,
       error_code: validation.code.toLowerCase(),
     };
+    // Which of the credential situations this rejection actually is. The
+    // branded providers all mandate an app password, so a bare "wrong
+    // password" here is advice the user cannot act on: their account password
+    // will never authenticate, no matter how carefully they retype it.
+    // `loginUsername` counts as a supplied login (Yandex derives one), so an
+    // "unknown user" answer is not read as a missing one.
+    const authFailure =
+      validation.code === 'AUTH_FAILED'
+        ? explainAuthFailure({
+            detail: validation.detail,
+            service,
+            email,
+            host: imapHost,
+            secret: appPassword,
+            usernameProvided: Boolean(loginUsername),
+          })
+        : null;
+    if (authFailure) Object.assign(body, authFailure.fields);
     // Every failure is recorded, AUTH_FAILED included. Skipping it used to look
     // like the right call (a wrong password is user-driven noise), but it left
     // a service that rejects *every* login indistinguishable from a typo, and
@@ -188,6 +227,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       service,
       phase: validation.phase,
       detail: validation.detail ?? null,
+      // The sub-case, so the effect of naming it is measurable against the
+      // repeat-attempt count rather than against a bare AUTH_FAILED total.
+      authReason: authFailure?.reason ?? null,
       attempts: imapDetection.attempts,
       workspaceId,
     });
@@ -200,6 +242,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     (candidate, timeoutMs) =>
       validateSmtpCredential({
         host: smtpHost,
+        pinnedAddress: smtpGuard.address,
         port: candidate.port,
         email,
         username: loginUsername ?? undefined,
@@ -213,6 +256,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : preset.smtpSecurity;
   if (!smtpValidation.ok) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    const smtpAuthFailure =
+      smtpValidation.code === 'AUTH_FAILED'
+        ? explainAuthFailure({
+            detail: smtpValidation.detail,
+            service,
+            email,
+            host: smtpHost,
+            secret: appPassword,
+            usernameProvided: Boolean(loginUsername),
+          })
+        : null;
     // The IMAP half of this route records every failure; the SMTP half
     // recorded none, so a provider that reads fine but cannot send looked
     // identical to a clean success in app_errors.
@@ -223,10 +277,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       service,
       phase: `smtp_${smtpValidation.phase}`,
       detail: smtpValidation.detail ?? null,
+      authReason: smtpAuthFailure?.reason ?? null,
       attempts: smtpDetection.attempts,
       workspaceId,
     });
-    return NextResponse.json({ error: smtpValidation.message, error_code: smtpValidation.code.toLowerCase() }, { status: 422 });
+    return NextResponse.json(
+      {
+        error: smtpValidation.message,
+        error_code: smtpValidation.code.toLowerCase(),
+        ...(smtpAuthFailure?.fields ?? {}),
+      },
+      { status: 422 },
+    );
   }
 
   // 6. Defense-in-depth: reject if another active inbox in this workspace

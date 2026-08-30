@@ -36,6 +36,13 @@ export interface SmtpCredential {
   security: MailSecurity;
   /** See ImapCredential.timeoutMs: shorter for an autodetection retry. */
   timeoutMs?: number;
+  /**
+   * The IP address to dial, as approved by `guardMailHost`. See
+   * ImapCredential.pinnedAddress for why re-resolving `host` here would reopen
+   * the DNS-rebinding window the guard exists to close. `host` remains the TLS
+   * servername, so certificate validation is unchanged.
+   */
+  pinnedAddress?: string;
 }
 
 export const SMTP_AUTH_FAILED_MESSAGE =
@@ -177,9 +184,12 @@ function tcp(host: string, port: number, setSocket: (s: net.Socket) => void): Pr
     socket.once('connect', () => { socket.removeListener('error', reject); resolve(socket); }); socket.once('error', reject);
   });
 }
-function secure(host: string, port: number, setSocket: (s: net.Socket) => void): Promise<tls.TLSSocket> {
+function secure(host: string, port: number, servername: string, setSocket: (s: net.Socket) => void): Promise<tls.TLSSocket> {
   return new Promise((resolve, reject) => {
-    const socket = tls.connect({ host, port, servername: host, rejectUnauthorized: true }); setSocket(socket);
+    // `host` is the address dialled, `servername` the name the certificate must
+    // match. Node's checkServerIdentity prefers `servername`, so pinning an IP
+    // here does not weaken validation.
+    const socket = tls.connect({ host, port, servername, rejectUnauthorized: true }); setSocket(socket);
     socket.once('secureConnect', () => { socket.removeListener('error', reject); resolve(socket); }); socket.once('error', reject);
   });
 }
@@ -201,8 +211,10 @@ export async function validateSmtpCredential(cred: SmtpCredential): Promise<Smtp
   const attempt = (async (): Promise<SmtpValidationResult> => {
     try {
       let socket: net.Socket;
-      if (cred.security === 'tls') { phase = 'tls'; socket = await secure(cred.host, cred.port, (s) => { active = s; }); }
-      else { phase = 'tcp'; socket = await tcp(cred.host, cred.port, (s) => { active = s; }); }
+      // The address to dial. Falls back to the name only when no guard ran.
+      const dialHost = cred.pinnedAddress || cred.host;
+      if (cred.security === 'tls') { phase = 'tls'; socket = await secure(dialHost, cred.port, cred.host, (s) => { active = s; }); }
+      else { phase = 'tcp'; socket = await tcp(dialHost, cred.port, (s) => { active = s; }); }
       phase = 'greeting';
       if ((await readReply(socket)).code !== 220) return { ok: false, code: 'SMTP_PROTOCOL_ERROR', message: 'The SMTP server returned an unexpected greeting.', phase };
       socket.write('EHLO mcpemails.com\r\n');
