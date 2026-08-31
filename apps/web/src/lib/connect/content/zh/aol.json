@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "将 AOL Mail 连接到 Claude（及任意 AI）",
+    "description": "用应用专用密码通过 IMAP 将 AOL Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "AOL Mail + AI",
+    "titleLine1": "将 AOL Mail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 AOL Mail 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "应用专用密码，无需 OAuth 配置",
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "Claude 无法自行连接 AOL Mail。mcpemails 是一个托管 MCP 服务器，用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+  },
+  "method": {
+    "title": "AOL Mail 如何连接：IMAP 与应用专用密码",
+    "body": "AOL Mail 通过 IMAP/SMTP 连接，需要一个 <b>AOL 应用专用密码</b>。普通的 AOL 登录密码无法在邮件客户端中通过验证，所以这里登录被拒绝几乎总是因为缺少应用专用密码。先开启两步验证，在账户信息、账户安全中生成一个应用专用密码，再连同完整的 AOL 地址粘贴到 mcpemails。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+    },
+    {
+      "h": "生成 AOL 应用专用密码",
+      "p": "在 AOL Mail 中打开账户信息、账户安全，若未开启则先开启两步验证，然后生成一个应用专用密码。请立即复制，AOL 只显示一次。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，填入你的 AOL Mail 地址、下方的服务器地址和密码，安全连接收件箱。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 AOL Mail 收件箱",
+    "sub": "几分钟即可连接 AOL Mail。一个收件箱永久免费，无需信用卡。"
+  }
+}

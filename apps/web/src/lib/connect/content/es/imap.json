@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Conecta cualquier buzón IMAP a Claude (y a cualquier IA)",
+    "description": "Conecta cualquier buzón IMAP a Claude, Cursor, ChatGPT y a cualquier cliente MCP. Aporta tu servidor, puerto y contraseña, y deja que la IA lea, envíe, programe y organice el correo. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "IMAP + IA",
+    "titleLine1": "Conecta cualquier buzón IMAP a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA la bandeja que ya tienes, la aloje quien la aloje. Lee, busca, envía, responde, programa y organiza correo por IMAP y SMTP normales, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Cualquier servidor IMAP, sin configurar OAuth",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena",
+    "answer": "Claude no tiene cliente IMAP propio. mcpemails es un servidor MCP alojado que entra en tu servidor de correo por IMAP y SMTP con la dirección, el servidor y la contraseña que ya te dio tu proveedor, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Sirve cualquier servidor que hable IMAP y una bandeja es gratis."
+  },
+  "method": {
+    "title": "Cómo se conecta un buzón IMAP genérico",
+    "body": "Necesitas cuatro cosas: tu dirección, tu servidor de correo, tu contraseña y, si tu proveedor lo exige, una contraseña de aplicación. Escribe primero la dirección: mcpemails reconoce a los proveedores de hosting habituales y rellena los dos servidores, los dos puertos y los modos de seguridad. Si el transporte que prueba no responde, prueba el otro estándar por su cuenta, <b>993 o 143</b> para IMAP y <b>465 o 587</b> para SMTP, así nadie tiene que adivinar con STARTTLS."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+    },
+    {
+      "h": "Reúne tus ajustes de IMAP y SMTP",
+      "p": "Tu proveedor los publica, casi siempre como imap.tudominio.com y smtp.tudominio.com en los puertos 993 y 465. Si tu proveedor exige una contraseña de aplicación para clientes de correo, genérala ahora."
+    },
+    {
+      "h": "Pégalos en mcpemails",
+      "p": "Elige IMAP / SMTP, añade tu dirección, los dos servidores y la contraseña. Los puertos y los modos de seguridad están en Avanzado, con los valores estándar ya puestos."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA la bandeja que ya tienes",
+    "sub": "Conecta cualquier buzón IMAP en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://www.xfinity.com/support/articles/third-party-email-access",
+    "https://www.xfinity.com/support/articles/email-only-faqs"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Xfinity ID password",
+    "helpUrl": "https://www.xfinity.com/support/articles/third-party-email-access",
+    "usernameForm": "Your full comcast.net address, which is normally your Xfinity ID.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Comcast Xfinity Email to Claude via IMAP",
+    "description": "Connect Comcast Xfinity email to Claude and any MCP client over IMAP at imap.comcast.net:993. Third Party Access Security must be ticked or every login fails."
+  },
+  "hero": {
+    "eyebrow": "Comcast Xfinity + AI",
+    "titleLine1": "Connect Comcast Xfinity mail",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real comcast.net inbox. Read, search, send, reply, schedule and organise mail over IMAP with your Xfinity ID, in every MCP client rather than one.",
+    "answer": "Claude cannot reach a Comcast Xfinity mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.comcast.net on port 993, signing in with your full comcast.net address and your Xfinity ID password. Xfinity blocks all outside mail clients until you tick Third Party Access Security in Xfinity Email settings, so turn that on first or the correct password is still refused. Setup takes a couple of minutes and one inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Third party access must be on",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Xfinity connects: IMAP, once you unlock third party access",
+    "body": "Comcast serves IMAP at <code>imap.comcast.net</code> on port 993 over TLS and SMTP at <code>smtp.comcast.net</code> on port 465, also implicit TLS. The credential is your ordinary Xfinity ID password; there is no app password to generate. The obstacle is a setting rather than a secret. Xfinity keeps a switch called <b>Third Party Access Security</b> in the email settings, and it is only ticked for accounts that were already using an outside client. For everyone else it is off, and while it is off the server refuses every login from every client with an error that reads exactly like a wrong password. Turn it on once, in webmail, and the same credentials that were being rejected start working."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Tick Third Party Access Security in Xfinity Email",
+      "p": "Sign in to Xfinity Email at connect.xfinity.com, click the gear icon, choose <b>Settings</b>, then <b>Security</b>, and tick the box under <b>Third Party Access Security</b>. Xfinity warns you about the risk of outside clients as you do it. Nothing else on this page works until that box is ticked."
+    },
+    {
+      "h": "Enter your Xfinity ID and password in mcpemails",
+      "p": "Choose IMAP / SMTP, enter your full <code>@comcast.net</code> address and the password for that Xfinity ID. The Comcast hosts are prefilled. If your account uses two step verification, complete it in webmail first so the sign in is not still pending."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Third Party Access Security is off by default, and it can switch itself off again",
+      "p": "If you have never used Outlook, Apple Mail or Thunderbird with this mailbox, the box is unticked, and Comcast's own article says so. Users also report it turning itself off again after a forced password reset. So when a connection that worked yesterday starts failing today with an authentication error, check that box before you touch anything else. It is at connect.xfinity.com under the gear icon, Settings, then Security."
+    },
+    {
+      "h": "Former customers lose the mailbox unless they sign in to the website",
+      "p": "If you no longer buy Xfinity service, Comcast keeps the address only if you had signed in to the Xfinity Email website within the 90 days before disconnecting, and it stays alive only if you sign in there at least once every nine months. The requirement is worded around the Xfinity Email website, so do not assume that an agent polling over IMAP satisfies it. Sign in with a browser a couple of times a year."
+    },
+    {
+      "h": "No SPECIAL-USE and no MOVE on the Comcast front end",
+      "p": "The Dovecot front end at imap.comcast.net does not advertise SPECIAL-USE, so a client cannot ask which folder is Sent and which is Trash and must match them by name instead. It also omits MOVE and UIDPLUS, so filing a message runs as COPY, then STORE the deleted flag, then EXPUNGE, and the server does not report the id of the new copy. mcpemails does all of this for you; it is why a move on Comcast is not a single atomic operation."
+    },
+    {
+      "h": "The server advertises OAuth mechanisms you cannot use",
+      "p": "imap.comcast.net offers OAUTHBEARER and XOAUTH2 alongside PLAIN and LOGIN. Those OAuth mechanisms are for Comcast's own partners rather than for anyone who asks, and there is no self service page where a customer obtains a token. Password authentication with third party access switched on is the route available to you, and it is what mcpemails uses."
+    }
+  ],
+  "limits": [
+    "The Comcast SMTP host announces a maximum message size of about 35 MB, so a send with large attachments is refused before it leaves.",
+    "Folder roles are matched by name because SPECIAL-USE is not advertised, and moves fall back to COPY plus STORE plus EXPUNGE because MOVE is not implemented."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Comcast Xfinity email?",
+      "a": "Not directly. Claude has no built-in Comcast connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your comcast.net mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Comcast IMAP and SMTP settings?",
+      "a": "IMAP is imap.comcast.net on port 993 with implicit TLS. SMTP is smtp.comcast.net on port 465, also implicit TLS, with authentication required. The username is your full comcast.net address. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why does Xfinity reject my password in a mail client?",
+      "a": "Almost always because Third Party Access Security is switched off. Xfinity leaves it off for accounts that were not already using an outside mail client, and while it is off the server refuses correct credentials. Tick the box at connect.xfinity.com under the gear icon, then Settings, then Security, and try again."
+    },
+    {
+      "q": "Do I need an app password for Xfinity email?",
+      "a": "No. Comcast does not issue app specific passwords. A mail client signs in with the password for your Xfinity ID once third party access is enabled. If you see advice about generating an app password for comcast.net, it is describing a different provider's process and there is no such page in Xfinity settings."
+    },
+    {
+      "q": "Can I connect a comcast.net address after cancelling Xfinity?",
+      "a": "Only if the mailbox is still active. Comcast lets former customers keep the address if they signed in to the Xfinity Email website in the 90 days before disconnecting, and requires a sign in there at least once every nine months to keep it. A closed mailbox cannot be connected and cannot be recovered."
+    },
+    {
+      "q": "Is my Comcast mail stored on your servers?",
+      "a": "No. Messages are fetched live from Comcast over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Comcast Xfinity inbox",
+    "sub": "Tick third party access, connect in minutes. One inbox free forever, no card required."
+  }
+}

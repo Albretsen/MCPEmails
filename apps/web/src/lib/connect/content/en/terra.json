@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.terra.com.br/nossaterra/sala-de-imprensa/faq-clientes-terramail,fbd5387ca5d4564236664d5f8ed8bb94uwqbteac.html",
+    "https://www.getmailbird.com/setup/access-terra-com-br-via-imap-smtp",
+    "https://www.dinamize.com.br/blog/terra-encerra-atividades-de-e-mail-gratuito-atualize-seus-contatos/",
+    "https://www.validity.com/blog/terra-mails-free-email-service-closure/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Terra Mail password, on an active paid plan",
+    "helpUrl": null,
+    "usernameForm": "Your full address, including the domain: nome@terra.com.br.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Terra Mail Brazil to Claude: IMAP on a Paid Plan",
+    "description": "Connect a terra.com.br mailbox to Claude or any MCP client at imap.terra.com.br:993. Terra retired its free tier, so an active paid plan is required."
+  },
+  "hero": {
+    "eyebrow": "Terra Mail + AI",
+    "titleLine1": "Connect Terra Mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Terra inbox. Read, search, send, reply, schedule and organize mail over IMAP, on a Brazilian terra.com.br mailbox with an active paid plan.",
+    "answer": "Claude cannot reach Terra Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.terra.com.br on port 993, authenticating with your full address and your Terra Mail password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Terra retired its free mailboxes, so an address without an active paid Terra Mail package is blocked rather than merely limited, and Terra's non-Brazilian domains were shut down years ago and have no server at all. Only terra.com.br is still live. One inbox is free on mcpemails.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Active paid Terra Mail package",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Terra Mail connects: IMAP on terra.com.br, and nowhere else",
+    "body": "Terra serves IMAP at <code>imap.terra.com.br</code> on port 993 over implicit TLS, and SMTP at <code>smtp.terra.com.br</code> on port 465. Authentication is ordinary: the full address as the username and the mailbox password. There is no app password, no authorization code and no protocol switch buried in the webmail. The complications at Terra are about which mailboxes still exist. Terra closed its international mail domains, and separately stopped selling the unpriced packages that free <code>terra.com.br</code> mailboxes sat on, which left those accounts blocked until the customer takes a paid Terra Mail package. If your address is on a live Brazilian plan, the connection is one of the more straightforward ones in this region. If it is not, no client configuration will help, and the page explains below how to tell the two cases apart."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required."
+    },
+    {
+      "h": "Check that the Terra mailbox is on an active paid package",
+      "p": "Sign in to the Terra webmail. If the webmail itself refuses you or tells you the package needs updating, the mailbox is one of the accounts caught by the end of Terra's free tier and no mail client will connect until a paid Terra Mail package is active on it. If the webmail opens normally, the account is live and you can carry on."
+    },
+    {
+      "h": "Enter your address and password in mcpemails",
+      "p": "Choose IMAP / SMTP and enter the complete address, such as <code>nome@terra.com.br</code>, with the mailbox password. The Terra hosts and ports are prefilled and were confirmed from a live TLS connection. Terra issues no app-specific password, so if you have been hunting for one in the settings, there is nothing to find."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize the Terra mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Terra's free mailboxes were retired, and the block looks like a password failure",
+      "p": "Terra stopped offering its unpriced mail packages, and accounts that had been free for years were blocked rather than downgraded. Access is restored only by taking a paid Terra Mail package. The important part for anyone configuring a client is that this does not announce itself: the login is refused at the server in the same way a wrong password is. Long-standing Brazilian addresses, some of them decades old, stopped working with no change on the customer's side. Before you spend time on hostnames and ports, confirm the mailbox still opens in the Terra webmail."
+    },
+    {
+      "h": "Only terra.com.br still exists, and the other Terra domains have no server",
+      "p": "Terra ran mail on a family of country domains, including <code>terra.com</code>, <code>terra.com.ar</code>, <code>mi.terra.cl</code>, <code>terra.com.co</code>, <code>terra.com.mx</code>, <code>terra.com.pe</code>, <code>terra.com.ve</code> and <code>terra.com.ec</code>. Those services were discontinued and both the accounts and the stored messages became unreachable. The Brazilian <code>terra.com.br</code> domain was not part of that shutdown and is the one this page covers. If your address is on any of the others, there is no host to point a client at and no configuration that recovers the mail: it is gone rather than misconfigured."
+    },
+    {
+      "h": "The server offers IDLE but not UIDPLUS, which is an unusual pairing",
+      "p": "Terra's capability line includes <code>IDLE</code>, so a client can hold a connection open and be told about new mail rather than polling, which is better than several of its Brazilian neighbours manage. It omits <code>UIDPLUS</code> and <code>MOVE</code>. That combination has a practical consequence when filing mail: a move runs as a copy, a flag update and an expunge, and because UIDPLUS is missing the server does not report the new identifier of the copied message, so it has to be located by searching the destination folder afterwards. Filing works, it is just slower and less certain than on a server that returns the new UID."
+    }
+  ],
+  "limits": [
+    "A paid Terra Mail package is required. There is no free terra.com.br mailbox left to connect, and mcpemails cannot work around a block enforced at Terra's own server.",
+    "Because MOVE and UIDPLUS are both absent, filing a message is not atomic and the result has to be confirmed by a search. An interrupted operation can leave a message briefly present in two folders.",
+    "SPECIAL-USE is absent, so folders are matched by name rather than by role. On a Portuguese mailbox the names are usually Enviados, Rascunhos, Lixeira and Spam."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Terra Mail?",
+      "a": "Not directly. Claude has no built-in Terra connector and cannot open an IMAP connection by itself. Connecting an MCP server such as mcpemails to your terra.com.br mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the Terra IMAP and SMTP settings?",
+      "a": "IMAP is imap.terra.com.br on port 993 with implicit TLS. SMTP is smtp.terra.com.br on port 465, also implicit TLS. Log in with your complete terra.com.br address and the mailbox password. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Is Terra Mail still free?",
+      "a": "No. Terra stopped selling the unpriced packages that free mailboxes depended on, and those accounts are blocked until the customer takes a paid Terra Mail package. This affects the webmail as well as mail clients, so a mailbox you cannot open in a browser will not connect over IMAP either, regardless of the settings you use."
+    },
+    {
+      "q": "Why is my Terra password rejected?",
+      "a": "Check the plan before the password. A mailbox left behind by the end of Terra's free tier is refused at login in exactly the same way as a wrong password. If the webmail signs you in normally, the account is active and the likely causes are a mistyped address or a password changed elsewhere, since Terra issues no separate app password."
+    },
+    {
+      "q": "Can I connect a terra.com or terra.com.mx address?",
+      "a": "No. Terra's international mail domains were discontinued and the mailboxes and stored messages went with them. There is no server behind those addresses to authenticate against. Only the Brazilian terra.com.br service is still running, and it is the only one these settings apply to."
+    },
+    {
+      "q": "Is my Terra mail stored on your servers?",
+      "a": "No. Messages are fetched live from Terra over IMAP for each request and passed to your AI client. Credentials are encrypted at rest, and message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Terra inbox",
+    "sub": "Connect an active terra.com.br mailbox in minutes. One inbox free forever on mcpemails, no card required."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://help.earthlink.net/portal/en/kb/articles/email-server-settings",
+    "https://help.earthlink.net/portal/en/kb/articles/set-up-earthlink-email-on-a-new-mobile-device"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Email password",
+    "helpUrl": "https://help.earthlink.net/portal/en/kb/articles/email-server-settings",
+    "usernameForm": "Your full address, whichever legacy domain it uses: name@earthlink.net, name@mindspring.com, name@peoplepc.com or name@ix.netcom.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect EarthLink and Mindspring Mail to Claude",
+    "description": "Connect EarthLink email to Claude and any MCP client over IMAP at imap.earthlink.net:993. Your email password works; outgoing mail is a separate host."
+  },
+  "hero": {
+    "eyebrow": "EarthLink Mail + AI",
+    "titleLine1": "Connect an EarthLink inbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "EarthLink still runs its own mail servers, older than most of the internet and still answering. mcpemails connects one over IMAP so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach an EarthLink mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.earthlink.net on port 993, signing in with your full email address and your ordinary email password. EarthLink issues no app-specific passwords and has no client access switch to turn on, so the credential you already use is the credential that works, and the same settings cover the mindspring.com, peoplepc.com and ix.netcom.com addresses EarthLink still hosts. Outgoing mail uses a different hostname, smtpauth.earthlink.net on port 587. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your email password, no app password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How EarthLink connects: IMAP in, a separate authenticated SMTP out",
+    "body": "EarthLink publishes a single IMAP host for every domain it carries. <code>imap.earthlink.net</code> answers on port 993 over TLS, and the username is the whole address with its own domain intact, so a Mindspring or PeoplePC address goes in unchanged. Outgoing mail is the part people get wrong: it does not share the incoming name. Submission runs at <code>smtpauth.earthlink.net</code> on port <b>587</b> with STARTTLS, a hostname that exists because EarthLink historically ran a separate unauthenticated relay for customers on its own network and kept the authenticated one under its own name. EarthLink's documentation says to use your full email address and password on both, and there is no app password to create. POP is the one place the domains diverge: EarthLink documents per-domain POP hosts such as <code>pop.mindspring.com</code>, which is why some old setup guides look domain specific when the IMAP side is not."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Check the password on the mailbox itself, not the billing login",
+      "p": "Sign in to EarthLink webmail with the address you want to connect and confirm the password works there. EarthLink accounts often carry several mailboxes under one subscription, each with its own password, and the one on the account you pay with is not necessarily the one on the address you are connecting."
+    },
+    {
+      "h": "Enter the full address and that password",
+      "p": "In mcpemails choose IMAP / SMTP and enter the address exactly as it is written, <code>name@mindspring.com</code> included. The EarthLink hosts and ports below are prefilled and were verified from a live TLS connection, including the separate outgoing host on port 587."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "EarthLink advertises no usable SASL mechanism, and strict clients give up rather than log in",
+      "p": "The capability list EarthLink returns before login offers <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> and <code>AUTH=EL-VOICE</code>. The last two are EarthLink's own mechanisms and no ordinary mail client implements them. There is no <code>AUTH=PLAIN</code> and no <code>AUTH=LOGIN</code> in that list at all. A client written to pick a SASL mechanism from what the server advertises therefore finds nothing it can use and reports an authentication failure without ever sending a password. What actually works is the plain IMAP <code>LOGIN</code> command, which the server accepts because it does not advertise LOGINDISABLED. mcpemails falls back to it. This is the single most useful fact on this page and no other EarthLink settings guide mentions it."
+    },
+    {
+      "h": "The outgoing server is not imap or smtp dot earthlink dot net",
+      "p": "It is <code>smtpauth.earthlink.net</code>, on port 587 with STARTTLS rather than implicit TLS on 465. Guides that pattern-match from the incoming host, or that assume 465 because most providers use it, produce a configuration that connects for reading and silently fails on the first send. If mail arrives but nothing leaves, this is why."
+    },
+    {
+      "h": "No SASL-IR either, so authentication is a two-step exchange",
+      "p": "EarthLink does not advertise SASL-IR, so it rejects the one-step form that sends credentials with the AUTHENTICATE command. Combined with the mechanism list above, an authentication attempt against EarthLink can fail in two different ways that both look like a bad password. mcpemails retries the two-step exchange rather than treating the first refusal as final."
+    },
+    {
+      "h": "No IDLE, no MOVE, no SPECIAL-USE on this server",
+      "p": "The EarthLink IMAP service is old and it shows in its capability list. Without IDLE there is no push, so new mail is found by polling. Without MOVE, filing a message runs as COPY, then STORE the deleted flag, then EXPUNGE. Without SPECIAL-USE the server never says which folder is Sent or Trash, so those are matched by name. UIDPLUS is present, which at least means a copied message reports its new id."
+    }
+  ],
+  "limits": [
+    "EarthLink's SMTP host announces a maximum message size of 50 MB, so a send with larger attachments is refused before it leaves.",
+    "No IDLE support, so new mail is discovered by polling rather than pushed.",
+    "Moves are not atomic and folder roles are matched by name, because MOVE and SPECIAL-USE are not implemented on this server."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with EarthLink email?",
+      "a": "Not directly. Claude has no built-in EarthLink connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your earthlink.net or mindspring.com mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the EarthLink IMAP and SMTP settings?",
+      "a": "IMAP is imap.earthlink.net on port 993 with implicit TLS. Outgoing mail is smtpauth.earthlink.net on port 587 with STARTTLS and authentication required. Both were verified from a live TLS connection. EarthLink's own documentation says to use your full email address and email password on both."
+    },
+    {
+      "q": "Do mindspring.com and peoplepc.com addresses use the same settings?",
+      "a": "For IMAP, yes. EarthLink serves the legacy domains it acquired from the same imap.earthlink.net host, and the username is simply the full address with its own domain. POP is the exception: EarthLink documents per-domain POP hostnames such as pop.mindspring.com, which is why older guides look domain specific."
+    },
+    {
+      "q": "Does EarthLink need an app password?",
+      "a": "No. EarthLink issues no app-specific passwords and has no page for creating one. A mail client signs in with the password for that mailbox. If a correct password is still refused, the cause is usually the authentication mechanism rather than the credential, since EarthLink advertises no standard SASL mechanism before login."
+    },
+    {
+      "q": "Is my EarthLink mail stored on your servers?",
+      "a": "No. Messages are fetched live from EarthLink over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an EarthLink inbox",
+    "sub": "Your existing email password is all it takes. One inbox free forever, no card required."
+  }
+}

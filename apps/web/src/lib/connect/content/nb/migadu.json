@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Koble Migadu til Claude (og enhver AI)",
+    "description": "Koble Migadu til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Migadu + AI",
+    "titleLine1": "Koble Migadu til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Migadu-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke Migadu på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+  },
+  "method": {
+    "title": "Slik kobler Migadu seg til: IMAP og postkassepassordet ditt",
+    "body": "Migadu kobles til via IMAP/SMTP med <b>postkassepassordet</b>, som ikke er passordet til Migadu-administratorkontoen din. Sett eller nullstill det i Migadu-adminområdet under Mailboxes, og lim det inn i mcpemails sammen med adressen din. Alle Migadu-postkasser bruker de samme to vertene uansett domene, så det er ingenting å slå opp."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Sett et postkassepassord i Migadu",
+      "p": "I Migadu-adminområdet åpner du Mailboxes, velger postkassen og setter passordet. E-postklienter autentiserer med det passordet; admin-innloggingen din fungerer ikke."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, legg til Migadu-adressen din, vertene under og passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Migadu-innboks",
+    "sub": "Koble til Migadu på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

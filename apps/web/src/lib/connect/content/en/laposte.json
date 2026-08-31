@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "https://aide.laposte.net/contents/comment-parametrer-laposte-net-sur-mon-logiciel-de-messagerie-suite-a-l-arret-des-protocoles-en-clair-non-cryptes",
+    "https://postmaster.laposte.net/contents/comment-parametrer-et-activer-la-double-authentification-2fa-sur-un-compte-laposte-net"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Your laposte.net password",
+    "helpUrl": "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "usernameForm": "Your full address, including the domain: prenom.nom@laposte.net.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "La Poste.net IMAP Settings and Claude MCP Access",
+    "description": "Connect a laposte.net mailbox to Claude, Cursor and any MCP client at imap.laposte.net:993. Encrypted ports only since 2023, and a 15 MB cap on outgoing mail."
+  },
+  "hero": {
+    "eyebrow": "laposte.net + AI",
+    "titleLine1": "Connect your laposte.net inbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real laposte.net inbox. Read, search, send, reply, schedule and organize mail over IMAP with your ordinary laposte.net password.",
+    "answer": "Claude cannot reach a laposte.net mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.laposte.net on port 993, authenticating with your full address and your ordinary laposte.net password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. La Poste issues no app-specific password and there is no client-access toggle to find, but the mailbox accepts encrypted ports only and its outgoing size cap is unusually low. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your ordinary laposte.net password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How laposte.net connects: IMAP over TLS with the account password",
+    "body": "La Poste serves IMAP at <code>imap.laposte.net</code> on port 993 over implicit TLS. For outgoing mail, La Poste's own help pages document <code>smtp.laposte.net</code> on port 587 with TLS; port 465 with implicit TLS answers on the same host and is what mcpemails prefills, because a single implicitly encrypted connection is simpler to keep alive from a server. Authentication is your ordinary laposte.net password with the <b>full</b> address as the username. There is no app password to generate and no <b>autoriser les logiciels de messagerie</b> switch to find, which makes laposte.net one of the more straightforward French mailboxes to connect. The friction is elsewhere: the server is deliberately minimal, and La Poste turned off every unencrypted protocol in one go, which is still stranding clients configured years ago."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Check your laposte.net password still works in the webmail",
+      "p": "Sign in at laposte.net with the same address and password you plan to give mcpemails. This is worth thirty seconds because there is no separate mail credential to blame if it fails: if the webmail accepts it, the IMAP server will too."
+    },
+    {
+      "h": "Look at your security settings before you connect",
+      "p": "In the laposte.net webmail, open <b>Paramètres</b>, then <b>Sécurité</b>. That is where two-factor authentication is switched on and off. La Poste's own documentation for laposte.net two-factor authentication describes a push confirmation to a paired mobile device and does not document any application-password mechanism for mail software, so know which state your account is in before you troubleshoot a refused login."
+    },
+    {
+      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the full address such as prenom.nom@laposte.net, and enter the password. The La Poste hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Outgoing mail is capped at about 15 MB, the smallest cap of any major French provider",
+      "p": "<code>smtp.laposte.net</code> announces a maximum message size of 15,800,000 bytes. That is the encoded size of the whole message, and base64 inflates an attachment by roughly a third, so a 12 MB PDF is already too big to send. Ask an agent to forward a scanned document and you can get a hard SMTP rejection where the same message would go through Orange or Gmail without comment. If a send has to happen, put the file somewhere and send a link."
+    },
+    {
+      "h": "Every unencrypted port was switched off on 4 July 2023, and the error is not helpful",
+      "p": "La Poste disabled all cleartext communication on that date. Clients still pointed at the old plain ports get an <b>invalid command</b> style error rather than anything about encryption, so a configuration that worked for a decade suddenly reads as a broken account. The only supported combinations now are IMAP on 993, POP on 995 and SMTP on 587, all with SSL or TLS 1.2 as a minimum. If you are migrating a client's settings across to mcpemails, do not carry the old ports over."
+    },
+    {
+      "h": "No SASL-IR, and most client libraries assume it",
+      "p": "The laposte.net IMAP server does not advertise <code>SASL-IR</code>, so it rejects the one-step authentication that sends the credential along with the <code>AUTHENTICATE</code> command. A client that assumes SASL-IR gets a bare <code>BAD</code> with no explanation, which reads exactly like a wrong password. mcpemails detects that <code>BAD</code> and retries the two-step exchange, so it is handled for you, but it is why other IMAP tooling fails against laposte.net while working everywhere else."
+    },
+    {
+      "h": "No IDLE, no MOVE and no SPECIAL-USE on a French-named mailbox",
+      "p": "The banner is about as short as IMAP banners get: <code>* OK IMAP4 ready</code>. There is no <code>IDLE</code>, so new mail is discovered by polling rather than pushed. There is no <code>MOVE</code>, so filing a message runs as a copy, a flag update and an expunge. And there is no <code>SPECIAL-USE</code>, so Sent, Drafts and Trash are matched by name, which on a laposte.net mailbox usually means <b>Envoyés</b>, <b>Brouillons</b> and <b>Corbeille</b>. Name the folder explicitly if an agent cannot find it."
+    }
+  ],
+  "limits": [
+    "The 15 MB outgoing limit is the practical ceiling on anything your agent sends from this mailbox, attachments included.",
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "La Poste publishes no application-password mechanism for laposte.net mail clients, so if two-factor authentication blocks a client login there is no documented per-application credential to fall back on."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with laposte.net email?",
+      "a": "Not on its own. Claude has no built-in La Poste connector. Pointing an MCP server such as mcpemails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the laposte.net IMAP and SMTP settings?",
+      "a": "IMAP is imap.laposte.net on port 993 with implicit TLS. For outgoing mail La Poste documents smtp.laposte.net on port 587 with TLS; port 465 with implicit TLS answers on the same host and is what mcpemails uses. Log in with your complete address and your laposte.net password. Both hosts were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Does laposte.net need an app password?",
+      "a": "No. La Poste issues no app-specific passwords for laposte.net. Mail clients authenticate with the same password you use for the webmail, entered together with your full address. If that password is refused, check it in the webmail first, because there is no second credential that could be the problem."
+    },
+    {
+      "q": "Why can my mail client suddenly not connect to laposte.net?",
+      "a": "Most often because it is still configured for an unencrypted port. La Poste switched off all cleartext protocols on 4 July 2023 and clients on the old ports get an invalid command error rather than a clear message. Move the account to IMAP on 993 or POP on 995 and SMTP on 587, all with SSL or TLS."
+    },
+    {
+      "q": "Why did an attachment fail to send from laposte.net?",
+      "a": "The SMTP server caps a message at roughly 15.8 MB including encoding overhead, which is small compared with most providers. A file over about 11 MB on disk will usually exceed it once encoded. The rejection happens at submission time, so nothing is queued or partially delivered."
+    },
+    {
+      "q": "Is my laposte.net mail stored on your servers?",
+      "a": "No. Messages are fetched live from La Poste over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a laposte.net inbox",
+    "sub": "Connect laposte.net in minutes. One inbox free forever, no card required."
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Koble Namecheap Private Email til Claude (og enhver AI)",
+    "description": "Koble Namecheap Private Email til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Namecheap Private Email + AI",
+    "titleLine1": "Koble Namecheap Private Email til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Namecheap Private Email-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke Namecheap Private Email på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+  },
+  "method": {
+    "title": "Slik kobler Namecheap Private Email seg til: IMAP og postkassepassordet ditt",
+    "body": "Namecheap Private Email kobles til via IMAP/SMTP med <b>postkassepassordet</b>, det som ble satt da postkassen ble opprettet, ikke Namecheap-kontopassordet ditt. Begge vertene er <code>mail.privateemail.com</code> uansett domene. Har du ikke passordet, nullstiller du det i Private Email-kontrollpanelet."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Finn passordet til Private Email-postkassen",
+      "p": "Bruk passordet til selve postkassen, ikke Namecheap-kontopassordet. Du kan når som helst nullstille det i Private Email-kontrollpanelet."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, legg til Namecheap Private Email-adressen din, vertene under og passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Namecheap Private Email-innboks",
+    "sub": "Koble til Namecheap Private Email på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "https://www.infomaniak.com/en/support/faq/2429/configure-em-client-with-imap-email",
+    "https://www.infomaniak.com/en/support/faq/2855/manage-application-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Device password",
+    "helpUrl": "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "usernameForm": "Your full address, including the domain: name@yourdomain.ch.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Infomaniak Mail to Claude & MCP Clients",
+    "description": "Connect Infomaniak Mail to Claude, Cursor and any MCP client over IMAP at mail.infomaniak.com:993. Needs a device password, not your account password."
+  },
+  "hero": {
+    "eyebrow": "Infomaniak Mail + AI",
+    "titleLine1": "Connect Infomaniak Mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Infomaniak inbox. Read, search, send, reply, schedule and organize mail over IMAP with a device password generated for that address.",
+    "answer": "Claude cannot reach Infomaniak Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at mail.infomaniak.com on port 993, authenticating with a device password generated for that mail address rather than your Infomaniak account password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Infomaniak does not accept the account password over IMAP at all, and its separate application passwords are a different thing that will not work here. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Device password, not the account password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Infomaniak connects: IMAP and a device password",
+    "body": "Infomaniak serves IMAP at <code>mail.infomaniak.com</code> on port 993 with implicit TLS and SMTP at the same host on port 465. Both hostnames are shared across every Infomaniak Mail customer, including addresses on your own domain and on a kSuite plan, so there is no per-customer server to look up. Authentication is where Infomaniak differs from almost every other host in this category: your Infomaniak Manager password is not accepted by IMAP or SMTP. Each mail address issues its own <b>device passwords</b>, generated one per client under the address's Devices tab, at least sixteen characters long, shown once and revocable individually. Because they are separate credentials, enabling two-factor authentication on your Infomaniak account changes nothing for mail clients: device passwords keep working before and after."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Generate a device password for the address",
+      "p": "Open manager.infomaniak.com, go to Mail Service, click your domain, then the mail address itself. Open the Devices tab and choose Add a device. Leave the user as \"No user\" unless you deliberately want SMTP restrictions tied to a specific account, give it a name you will recognise later, and copy the generated password immediately. Infomaniak will not show it again."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, enter the full mail address, and paste the device password. The host mail.infomaniak.com and ports 993 and 465 are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "A device password is not the same thing as an application password",
+      "p": "Infomaniak issues two separate kinds of secondary credential and they are not interchangeable. <b>Application passwords</b>, created under your account security settings, authenticate tools and services against your Infomaniak account when two-factor authentication is on. <b>Device passwords</b>, created on the individual mail address, are what IMAP, POP and SMTP accept. Infomaniak's own documentation states plainly that an application password is not a device password and will not synchronise an email address. People who read \"app password\" on a generic setup guide reach for the wrong one, generate it successfully, and then cannot understand why the mailbox still refuses to log in."
+    },
+    {
+      "h": "Infomaniak does not advertise SASL-IR, and most clients assume it",
+      "p": "The IMAP server omits the SASL-IR capability, so it rejects the one-step authentication that sends credentials on the same line as the AUTHENTICATE command. A client that assumes SASL-IR gets a bare <code>BAD</code> with no explanation, which reads exactly like a wrong password. mcpemails detects that and retries the two-step exchange, so the connection succeeds here, but it is a frequent cause of failures with other IMAP tooling against Infomaniak."
+    },
+    {
+      "h": "The greeting carries no capability list",
+      "p": "Infomaniak's server answers with a bare <code>* OK IMAP4 ready</code> and nothing else, where most servers advertise their extensions in the greeting. A client that reads capabilities only from the banner concludes the server supports nothing and either downgrades to the crudest possible behaviour or gives up. The correct handling is to issue an explicit CAPABILITY command after the greeting and again after authentication, which is what mcpemails does."
+    }
+  ],
+  "limits": [
+    "The server does not advertise the MOVE extension, so moving a message is performed as copy, flag and expunge rather than one atomic command.",
+    "SPECIAL-USE is absent, so Sent, Drafts, Trash and Junk are matched by name. On a French-language mailbox those are usually Envoyes, Brouillons, Corbeille and Indesirables."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Infomaniak Mail?",
+      "a": "Not on its own. Claude has no built-in Infomaniak connector. Pointing an MCP server such as mcpemails at your Infomaniak address over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Infomaniak IMAP and SMTP settings?",
+      "a": "IMAP is mail.infomaniak.com on port 993 with implicit TLS. SMTP is mail.infomaniak.com on port 465, also implicit TLS, with authentication required. The username is your complete mail address and the password is a device password generated for that address. Both hosts were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why does my Infomaniak password not work?",
+      "a": "Because your Infomaniak Manager password is never accepted by IMAP or SMTP. Mail clients authenticate only with a device password created on the individual mail address, under its Devices tab in the Manager. If you generated an application password instead, that is a different credential and will not authenticate a mailbox."
+    },
+    {
+      "q": "Does turning on two-factor authentication break my mail client?",
+      "a": "No. Device passwords are independent of your account login, so IMAP, POP and SMTP behave the same before and after you enable two-factor authentication on the Infomaniak account. This is the reason Infomaniak insists on device passwords rather than allowing the account password over IMAP in the first place."
+    },
+    {
+      "q": "Can I revoke access without breaking my other devices?",
+      "a": "Yes. Each device password is separate, so you can create one for mcpemails, name it accordingly, and delete just that one later. Existing connections from your phone and desktop client keep working because they hold their own passwords."
+    },
+    {
+      "q": "Is my Infomaniak mail stored on your servers?",
+      "a": "No. Messages are fetched live from Infomaniak over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an Infomaniak inbox",
+    "sub": "Connect Infomaniak Mail in minutes. One inbox free forever, no card required."
+  }
+}

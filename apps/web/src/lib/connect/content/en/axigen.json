@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://www.axigen.com/documentation/configuring-the-imap-service-p1373439188",
+    "https://www.axigen.com/documentation/managing-service-listeners-p1373438963",
+    "https://www.axigen.com/documentation/lets-encrypt-support-p54493192",
+    "https://www.axigen.com/knowledgebase/List-of-Default-Ports-Required-by-Axigen_169.html",
+    "https://www.axigen.com/documentation/domains-accounts-p1373439545"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Account password",
+    "helpUrl": "https://www.axigen.com/documentation/configuring-the-imap-service-p1373439188",
+    "usernameForm": "The full account address as Axigen holds it, for example you@yourdomain.com. Axigen accounts are addressed with the domain they belong to, so a bare username is ambiguous on a multi-domain server.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Axigen Mail Server to Claude: IMAP Listener Setup",
+    "description": "Connect an Axigen mailbox to Claude, Cursor and ChatGPT over IMAP on 993. Where the service listeners live in WebAdmin, and why SSL is a per-listener checkbox."
+  },
+  "hero": {
+    "eyebrow": "Axigen + AI",
+    "titleLine1": "Connect an Axigen mailbox",
+    "titleLine2": "to Claude, Cursor and ChatGPT",
+    "lead": "You run the mail server, so the settings are yours to check rather than to look up. Point mcpemails at your Axigen host and Claude can read, search, send, reply, schedule and file mail in the accounts you already administer.",
+    "answer": "Claude cannot reach an Axigen server on its own. mcpemails is a hosted MCP server that connects to your Axigen install over IMAP at your own hostname, normally on port 993 with implicit TLS, authenticating with the account password Axigen already accepts from any mail client, so Claude, Cursor or any MCP client can read, search, send and organize that mail. There is no shared hostname to publish: the host is whatever your server answers to, it has to be reachable from the public internet, and the listener on 993 has to be serving a certificate that validates for that name. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "The account password from WebAdmin",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Axigen connects: service listeners in WebAdmin",
+    "body": "Axigen is a mail server you installed, so nobody can publish a hostname for it. What you can look up precisely is how it is configured, because Axigen keeps every protocol under a service with its own set of <b>listeners</b>. Open WebAdmin, which answers on port 9000 or 9443 over SSL, and go to the IMAP service. Out of the box Axigen creates listeners on <code>0.0.0.0</code> and <code>:::</code> for port 143, the plain IMAP port, and for port 993, used for implicit SSL/TLS. SMTP follows the same pattern with 25 for transfer and 465 for SMTPS. Each listener carries its own SSL Settings tab where encryption is switched on and a certificate is selected, so the state of port 993 is a property of that one listener rather than of the IMAP service as a whole. From Axigen X3 onwards, SSL certificates including Let's Encrypt ones are managed centrally in WebAdmin, and Axigen-managed Let's Encrypt certificates are renewed automatically 25 days before they expire; on older builds a listener points at a certificate file on disk instead. Credentials are the ordinary account password held in Axigen, the same one the account uses for WebMail. There is no separate app-password scheme to generate."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card, which is enough to test this against a real account on your own server."
+    },
+    {
+      "h": "Check the IMAP listeners in WebAdmin",
+      "p": "Sign in to Axigen WebAdmin and open the IMAP service. Confirm there is a listener on port 993, that its SSL Settings tab has encryption enabled, and that the certificate selected there matches the hostname you plan to use. While you are in the service, look at Flow Control and note the peer connection limits, because a hosted client arrives from one address."
+    },
+    {
+      "h": "Confirm the account may use IMAP, then add it",
+      "p": "Under Domains and Accounts, open the account or the account class it belongs to and check that IMAP is among the services it is allowed. Then add the inbox in mcpemails: choose IMAP / SMTP, enter your Axigen hostname, the full account address and its password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "A listener can hold port 993 with SSL switched off",
+      "p": "In Axigen, encryption belongs to the listener and not to the protocol. Each listener has an <b>Enable SSL for this listener</b> option, and nothing stops a listener from occupying 993 with that box unticked. The result is plain IMAP answering on the port everything treats as implicit TLS. A client opening a TLS handshake there gets a handshake failure or an unintelligible response rather than an authentication error, which sends people off checking passwords for an hour. Open the 993 listener in WebAdmin, look at its SSL Settings tab, and confirm both that SSL is on and that the certificate chosen is the one you renewed rather than the install default."
+    },
+    {
+      "h": "Peer connection limits count your whole integration as one client",
+      "p": "The IMAP service in Axigen has Flow Control settings that cap not only total connections but <b>peer connections</b> and peer connections per interval, meaning connections from a single remote address. A hosted MCP server arrives from a small set of egress addresses, so it looks to Axigen like one very busy peer rather than a floor full of users. If sessions are being dropped or refused under load while a desktop client on a different network works fine, raise the peer limits on the IMAP service before assuming anything is wrong with credentials. The service's Error Control section separately drops a connection after a set number of failed authentications, so a wrong password saved twice can turn into a refusal that outlives the typo."
+    },
+    {
+      "h": "Account classes decide which services an account may use at all",
+      "p": "Axigen lets you enable or disable IMAP, POP3, WebMail and RPOP per account so that service levels can be differentiated, and on most installs that decision is made once in an <b>account class</b> and inherited by every account in it rather than set on individual mailboxes. A class built for webmail-only users refuses IMAP no matter how correct the hostname, the port and the password are. Check the class before you check anything else, because the account screen can look perfectly healthy while the class behind it is what is answering."
+    }
+  ],
+  "limits": [
+    "Axigen binds each listener to an address, so reaching the server from a hosted MCP service means having an IMAP listener on an address the internet can route to. Where policy says mail never leaves the internal network, that policy wins and this hosted service is the wrong shape for you. mcpemails can be self-hosted instead, connecting to the same internal listener your desktop clients already use.",
+    "TLS validation is strict and there is no override. A self-signed certificate, an expired one, or one issued for a different name than the host you enter will be refused.",
+    "Outbound mail leaves through your own Axigen SMTP service, so deliverability is governed by your SPF, DKIM and DMARC records and the reputation of your sending address."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Axigen?",
+      "a": "Not on its own. Claude has no Axigen connector and cannot open an IMAP socket to a server you operate. Connecting an MCP server such as mcpemails to your Axigen host gives Claude read, search, send, reply, schedule and organize access to an account on it, and the same inbox then works from Cursor or ChatGPT as well."
+    },
+    {
+      "q": "What are the Axigen IMAP and SMTP settings?",
+      "a": "The hostname is your own server, so it cannot be published for you. The ports are Axigen's documented defaults: IMAP on 143, IMAP over implicit SSL on 993, SMTP on 25 and SMTPS on 465, with POP3 on 110 and 995 if it is enabled. Log in with the full account address and the account password."
+    },
+    {
+      "q": "Does Axigen need an app password?",
+      "a": "No. Axigen does not issue app-specific passwords. A mail client authenticates with the same account password used for WebMail, which is why an account whose password you do not know has to be reset in WebAdmin under Domains and Accounts rather than recovered."
+    },
+    {
+      "q": "Why is my Axigen login rejected when the password is right?",
+      "a": "Work down three layers. Confirm the account class permits IMAP, since a webmail-only class refuses it outright. Confirm the 993 listener has SSL enabled and a certificate that matches your hostname. Then check the IMAP service log, which records the failed authentication and the reason, rather than guessing from the client's side."
+    },
+    {
+      "q": "Where do I find the WebAdmin interface?",
+      "a": "Axigen serves WebAdmin on port 9000, or 9443 with SSL, at your server's hostname. It is a separate interface from WebMail, and it is where services, listeners, certificates, domains and accounts are configured. It is also not a mailbox, so the administrator login there is not a credential you can connect over IMAP."
+    },
+    {
+      "q": "Is my mail stored on your servers?",
+      "a": "No. Messages are fetched live from your Axigen server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an Axigen inbox",
+    "sub": "Point mcpemails at your own Axigen host. One inbox free forever, no card required."
+  }
+}

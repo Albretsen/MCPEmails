@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online",
+    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
+    "https://mc.merill.net/message/MC1163922",
+    "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "OAuth 2.0, with tenant admin consent",
+    "helpUrl": "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
+    "usernameForm": "A password field is not the problem. Exchange Online accepts only an OAuth 2.0 access token on IMAP, issued to an application your tenant administrator has consented to.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Microsoft 365 Email, IMAP and AI: The Real Blocker",
+    "description": "Microsoft 365 answers IMAP at outlook.office365.com:993, yet Basic auth is gone tenant-wide and mail scopes need admin consent, so mcpemails cannot connect it."
+  },
+  "hero": {
+    "eyebrow": "Microsoft 365 + AI",
+    "titleLine1": "Microsoft 365 mailboxes",
+    "titleLine2": "cannot be connected, and here is why",
+    "lead": "The server is reachable. The password is not the issue and neither is the port. What stops a Microsoft 365 mailbox reaching an MCP server is authorisation: Basic auth is gone, and mail permissions need your tenant administrator.",
+    "answer": "No, mcpemails cannot connect a Microsoft 365 mailbox, and the reason is authorisation rather than reachability. Exchange Online does answer IMAP at outlook.office365.com on port 993 and SMTP at smtp.office365.com on port 587, and a TLS handshake to either succeeds today. What fails is the login. Microsoft permanently removed Basic authentication for IMAP and POP in every Exchange Online tenant during 2022, and since 31 December 2022 nobody, including Microsoft support, can turn it back on, so no password or app password will ever authenticate. The only remaining route is OAuth 2.0, which requires a registered application whose Microsoft Graph mail permissions a tenant administrator has consented to, because Microsoft's managed default consent policy no longer lets an ordinary user approve mail scopes for themselves. mcpemails does not offer a Microsoft OAuth connection, so the honest answer is that this mailbox is not connectable here."
+  },
+  "method": {
+    "title": "How Microsoft 365 connects: OAuth only, and consent is the wall",
+    "body": "There are two separate gates and most write-ups collapse them into one. The first is authentication. Exchange Online's IMAP service still lists <code>AUTH=PLAIN</code> alongside <code>AUTH=XOAUTH2</code> in its capability line, which is a leftover of the protocol advertisement rather than a live option: Basic authentication was removed for IMAP, POP, EWS, ActiveSync and Remote PowerShell across all tenants and cannot be restored. Only <code>XOAUTH2</code> actually works, using an access token from the Microsoft identity platform. The second gate is consent. Getting that token means registering an application in Microsoft Entra ID and having its delegated Microsoft Graph mail permissions approved. In a rollout that began at the end of October 2025, Microsoft added <b>Mail.Read</b>, <b>Mail.ReadWrite</b> and the rest of the Exchange delegated scopes to the Microsoft-managed default consent policy, which means an ordinary user clicking through a consent screen now gets a request for admin approval instead of a working connection. A tenant administrator can grant consent, and many will not."
+  },
+  "setup": [
+    {
+      "h": "Create the free mcpemails account",
+      "p": "An email address and no card. One connected inbox is free forever. The next two steps decide which mailbox that is, because it will not be the Microsoft 365 one."
+    },
+    {
+      "h": "Choose a mailbox outside the tenant for the automated work",
+      "p": "Pick an address on a provider that accepts a password or an app password over IMAP: your own domain at Fastmail or Migadu, a personal Gmail account, a project mailbox. That account is what mcpemails connects, and it is where your agent reads, drafts, sends and files."
+    },
+    {
+      "h": "Route the relevant mail there, if your organisation allows it",
+      "p": "Forwarding is set per user in the Microsoft 365 admin center under Users, Active users, the user, then the Mail tab and Manage email forwarding. Check with whoever runs the tenant first. Automatic forwarding to external domains is blocked by default in Microsoft Defender's outbound spam filter policy, so an admin has to allow it before a single message leaves, and in a regulated organisation that answer is usually no."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and the agent has that inbox with read, search, send, reply, schedule and filing."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The IMAP host answers, advertises AUTH=PLAIN, and still refuses your password",
+      "p": "Open a TLS connection to outlook.office365.com on 993 and Exchange greets you with a service-ready banner and a capability line offering <code>AUTH=PLAIN</code>. That line is not a promise. Basic authentication is disabled at the service level in every tenant, so a password login returns an authentication failure that reads exactly like a wrong password, which is why people spend hours resetting credentials that were correct all along. The distinction worth holding on to: reachability is fine, authorisation is what is refused."
+    },
+    {
+      "h": "SMTP AUTH is a separate per-mailbox switch, and it is off by default",
+      "p": "Even for applications that do hold a valid OAuth token, client submission through <code>smtp.office365.com</code> depends on SMTP AUTH being enabled on that specific mailbox. Microsoft disabled it by default in tenants where it was not already in use, and it is set per mailbox rather than once for the organisation. Microsoft has also announced the retirement of Basic authentication for SMTP client submission and has moved the date more than once, so treat any deadline you read on a third-party page as provisional and check Microsoft's current announcement."
+    },
+    {
+      "h": "Admin consent is the gate, not the user, and not verified publisher status",
+      "p": "A user who clicks Accept on a consent screen for a mail-reading application sees a request for admin approval instead. Since the change that rolled out from late October 2025, the Exchange delegated permissions sit in the Microsoft-managed default policy, so even an application from a verified publisher cannot self-serve unless the tenant classified those permissions as low impact or an administrator granted tenant-wide consent to that specific app. Shared and delegated mailboxes make no difference, because the requirement is on the application rather than the mailbox."
+    },
+    {
+      "h": "Exchange Online does not advertise SPECIAL-USE on IMAP",
+      "p": "The IMAP service supports MOVE, UIDPLUS and IDLE but does not publish the SPECIAL-USE extension, so a client cannot ask which folder is the Sent or Junk folder and has to match names instead. In a tenant provisioned in German or French the folders are named in that language, and any tool that looks for the literal string Sent Items quietly finds nothing. Worth knowing before you blame the connector."
+    }
+  ],
+  "limits": [
+    "Automatic forwarding to an outside domain is blocked by default by Microsoft Defender's outbound spam filter policy. Routing tenant mail to a mailbox we can connect needs an administrator to allow it, and that is a real policy decision rather than a checkbox.",
+    "Everything on this page describes what is not possible today. If your tenant is already running a third-party mail integration, it is doing so through an application your administrator consented to, which is a different arrangement from a mailbox you connect yourself in a few minutes."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Microsoft 365 email?",
+      "a": "Not through mcpemails. Microsoft 365 mailboxes accept only OAuth 2.0 on IMAP, and the Microsoft Graph mail permissions an application needs require your tenant administrator to grant consent. We do not offer a Microsoft OAuth connection, so there is nothing here for your administrator to approve and we will not pretend otherwise."
+    },
+    {
+      "q": "What are the Microsoft 365 IMAP and SMTP settings?",
+      "a": "IMAP is outlook.office365.com on port 993 with implicit TLS. SMTP is smtp.office365.com on port 587 with STARTTLS, advertising a maximum message size of 150 MB. Both hosts were confirmed from a live TLS connection. The settings are correct and still will not get you in, because the service accepts only OAuth 2.0 tokens on those ports."
+    },
+    {
+      "q": "Why is my Microsoft 365 password rejected over IMAP?",
+      "a": "Because Basic authentication was removed from Exchange Online. Microsoft disabled it for IMAP, POP, EWS, ActiveSync and Remote PowerShell across all tenants in 2022. The password is almost certainly right. The server simply no longer has a mechanism that accepts one, whatever its capability line advertises."
+    },
+    {
+      "q": "Can my administrator turn Basic authentication back on?",
+      "a": "No. Re-enabling was possible until 31 December 2022 and that door is closed. Microsoft's documentation states that no one, including Microsoft support, can re-enable Basic authentication in a tenant. Any guide telling you to file a support request for it is out of date."
+    },
+    {
+      "q": "Could an admin grant consent and make this work?",
+      "a": "An administrator can grant tenant-wide consent to an application that requests Graph mail permissions, and that is how enterprise mail integrations are normally approved. It does not help here, because mcpemails has no Microsoft application for them to consent to. If your organisation needs an AI agent on tenant mailboxes, that is a conversation with whoever runs Entra ID."
+    },
+    {
+      "q": "Is the mailbox reachable at all from outside Microsoft?",
+      "a": "Yes, and it is worth separating the two ideas. The IMAP endpoint answers over TLS and returns a Microsoft Exchange IMAP4 service ready banner, so nothing is firewalled or offline. The block is entirely in authentication and consent policy. Diagnosing it as a network or hostname problem sends you in the wrong direction."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a mailbox it can sign in to",
+    "sub": "Your tenant stays untouched. Connect one IMAP inbox for the work you want automated, free forever."
+  }
+}

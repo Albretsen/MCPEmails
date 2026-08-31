@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter Mail.ru à Claude (et à toute IA)",
+    "description": "Connectez Mail.ru à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Mail.ru + IA",
+    "titleLine1": "Connectez Mail.ru à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Mail.ru en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un simple mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre Mail.ru tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment Mail.ru se connecte : IMAP et un mot de passe d'application",
+    "body": "Mail.ru se connecte via IMAP/SMTP avec un <b>mot de passe pour applications externes</b>. Le mot de passe du site web ne fonctionne pas depuis un client de messagerie. Créez-en un dans Mail.ru, section Sécurité, Mots de passe pour applications externes, puis collez-le dans mcpemails avec votre adresse Mail.ru. Mail.ru exige un numéro de téléphone sur le compte avant de le délivrer."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Créez un mot de passe pour applications externes",
+      "p": "Dans Mail.ru, ouvrez Sécurité et créez un mot de passe pour applications externes. C'est ce mot de passe dont mcpemails a besoin, pas celui du site."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Mail.ru, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Mail.ru à votre IA",
+    "sub": "Connectez Mail.ru en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

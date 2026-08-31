@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://kb.hosting.com/docs/accessing-e-mail-accounts-with-client-applications",
+    "https://hosting.com/blog/a-new-chapter-begins-a2-hosting/",
+    "https://www.prnewswire.com/news-releases/a2-hosting-becomes-hostingcom-with-aim-to-be-the-most-trusted-brand-in-hosting-302448950.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://kb.hosting.com/docs/accessing-e-mail-accounts-with-client-applications",
+    "usernameForm": "Your full email address, for example webmaster@yourdomain.com. Not your cPanel username and not your billing login.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect A2 Hosting Email to Claude and MCP Clients",
+    "description": "A2 Hosting (now hosting.com) mailboxes connect to Claude over IMAP on port 993. Use the full server name, such as mi3-ss78.a2hosting.com, to avoid SSL warnings."
+  },
+  "hero": {
+    "eyebrow": "A2 Hosting + AI",
+    "titleLine1": "Connect A2 Hosting email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real A2 Hosting mailbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you set on the mailbox in cPanel, in every MCP client rather than one.",
+    "answer": "Claude cannot reach an A2 Hosting mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, using the mail host your own account is on rather than a shared a2hosting.com address, so Claude, Cursor or any MCP client can read, search, send and organize that mail. A2 Hosting became hosting.com in April 2025 but the mail platform is unchanged: cPanel prints your exact host under Email Accounts, then Connect Devices. Authentication is the password set on the mailbox, not your control panel login, and one inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from cPanel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How A2 Hosting mail connects: your own server name, IMAP 993",
+    "body": "A2 Hosting rebranded as hosting.com in April 2025, and the mail platform did not move with the name. Shared and reseller accounts still run cPanel, and mailboxes still answer IMAP on port 993 and SMTP on 465, with 587 available for STARTTLS. There is no single a2hosting.com mail server to point a client at, because every account sits on its own machine. The knowledge base gives two forms that both work: <code>mail.yourdomain.com</code>, built from your own domain, and the full server name, which looks like <code>mi3-ss78.a2hosting.com</code> on the original A2 fleet or <code>sr10.supercp.com</code> on the supercp fleet. For a TLS connection the server name is the one that matters, because the shared certificate covers the server and not your domain. Log in with the full email address and the password set on that mailbox in cPanel."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
+    },
+    {
+      "h": "Read your real mail host out of cPanel",
+      "p": "Sign in at hosting.com, open cPanel for the hosting account, and go to Email, then <b>Email Accounts</b>. Click <b>Connect Devices</b> on the row for the address you want. The <b>Mail Client Manual Settings</b> block prints the exact secure incoming host for your account, which will be the server name rather than your domain, alongside ports 993 and 465. Copy that host verbatim."
+    },
+    {
+      "h": "Use the mailbox password, not the panel password",
+      "p": "IMAP authenticates against the password set on the email address itself. If you do not have it, click <b>Manage</b> next to the address in Email Accounts and set a new one. There is no separate app password to generate for A2 Hosting mail."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The shared certificate names the A2 server, never your domain",
+      "p": "<code>mail.yourdomain.com</code> usually resolves to the right machine, but the TLS handshake returns a certificate issued for the hosting.com server, not for your domain. A client that validates strictly rejects it, and the error reads like an attack rather than a config mistake. A2's own documentation is explicit about the remedy: for secure access, use the full server name in place of your domain name. Take it from Connect Devices, not from memory."
+    },
+    {
+      "h": "Two server-name families are live at once, and the rebrand renamed neither",
+      "p": "Accounts on the original A2 fleet have hosts like <code>mi3-ss78.a2hosting.com</code>, where the leading token is the datacentre. Accounts on the other fleet look like <code>sr10.supercp.com</code>. The move to hosting.com did not rename either family, so an <code>a2hosting.com</code> hostname you wrote down years ago is very likely still correct, and a <code>supercp.com</code> one is not a phishing artefact. Neither can be derived from your domain, which is why guessing fails here more often than at hosts with one naming scheme."
+    },
+    {
+      "h": "There is no A2 app password, whatever the third-party guides say",
+      "p": "Several popular walkthroughs tell you to generate an app password because two-factor authentication is enabled. That advice describes the cPanel and client-area login. IMAP and SMTP authenticate against the mailbox password directly, with no second factor and no app-password mechanism at all. If a mail login is refused, the mailbox password is genuinely wrong, so reset it in Email Accounts rather than hunting for a token that does not exist."
+    }
+  ],
+  "limits": [
+    "mcpemails works on the mailbox, not the hosting account. Aliases, forwarders, autoresponders and spam filters stay managed in cPanel and are not visible to your AI client.",
+    "Reseller and VPS accounts can sit on a hostname A2 does not publish anywhere in the knowledge base. The Connect Devices panel inside that account's own cPanel is the only authoritative source for it."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with A2 Hosting email?",
+      "a": "Not directly. Claude has no built-in connector for cPanel mail hosts. Connecting an MCP server such as mcpemails to your A2 Hosting mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials any desktop mail client would use."
+    },
+    {
+      "q": "What are the A2 Hosting IMAP and SMTP settings?",
+      "a": "IMAP is port 993 with implicit TLS and SMTP is port 465, with 587 available for STARTTLS. The host is specific to your account: either mail.yourdomain.com or the full server name such as mi3-ss78.a2hosting.com or sr10.supercp.com. A2 documents 143 and 25 or 2525 as the unencrypted equivalents, which you should not use."
+    },
+    {
+      "q": "Did the hosting.com rebrand change my email settings?",
+      "a": "No. A2 Hosting became hosting.com in April 2025, and existing customers keep their plans, servers and hostnames. Your a2hosting.com or supercp.com mail server name still resolves and still presents the same certificate. Only the branding on the website and the client area changed."
+    },
+    {
+      "q": "Why is my A2 Hosting email password rejected?",
+      "a": "Almost always because you used the cPanel or client-area password. IMAP checks the password set on the individual email address when it was created. Reset it from cPanel under Email Accounts by clicking Manage next to the address, then use that value. The username must be the whole address, not the part before the at sign."
+    },
+    {
+      "q": "Is my A2 Hosting mail stored on your servers?",
+      "a": "No. Messages are fetched live from your A2 Hosting server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an A2 Hosting inbox",
+    "sub": "Connect an A2 Hosting mailbox in minutes. One inbox free forever, no card required."
+  }
+}

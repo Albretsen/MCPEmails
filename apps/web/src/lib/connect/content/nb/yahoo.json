@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Koble Yahoo Mail til Claude (og enhver AI)",
+    "description": "Koble Yahoo Mail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Yahoo Mail. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Yahoo Mail + AI",
+    "titleLine1": "Koble Yahoo Mail til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Yahoo-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "App-passord, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Yahoo seg til: et app-passord",
+    "body": "Yahoo Mail kobles til via IMAP/SMTP med et <b>Yahoo-app-passord</b>. Slå på tostegsbekreftelse, generer et app-passord under Yahoo-kontosikkerhet, og lim det så inn i mcpemails sammen med Yahoo-adressen din. Ingen OAuth-dans, ingen nettleser-popuper."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Generer et Yahoo-app-passord",
+      "p": "Slå på tostegsbekreftelse, og generer så et app-passord under Yahoo-kontosikkerhet."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Legg til Yahoo-adressen din og app-passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Yahoo-innboks",
+    "sub": "Koble til Yahoo Mail på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

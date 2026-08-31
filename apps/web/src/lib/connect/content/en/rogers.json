@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.rogers.com/customer/support/article/update-email-settings",
+    "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "https://ca.help.yahoo.com/kb/rogers/SLN28681.html",
+    "https://business.shaw.ca/support/products/shaw-hosting-sunset"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Rogers Yahoo app password",
+    "helpUrl": "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "usernameForm": "Your full Rogers Yahoo address, normally name@rogers.com, entered whole.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Rogers Yahoo Email and Claude: The App Password Catch",
+    "description": "Rogers email runs on Yahoo. Connect rogers.com to Claude over IMAP at imap.broadband.rogers.com, but Rogers now says app password generation has ended."
+  },
+  "hero": {
+    "eyebrow": "Rogers Yahoo Mail + AI",
+    "titleLine1": "Connect a Rogers Yahoo inbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Rogers mail is Yahoo mail with a rogers.com name on it. mcpemails connects it over IMAP so your AI agent can read, search, send, reply and file that mail, provided your account can still produce an app password.",
+    "answer": "Claude cannot reach a Rogers Yahoo mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.broadband.rogers.com on port 993, authenticating with a Rogers Yahoo app password rather than the password you type into webmail. There is a real catch to check first: Rogers' own setup article now states that app password generation is no longer available, while Yahoo's Rogers help still documents the Create app password button, so open your account security page before you plan around this. If an app password exists or can still be created, one inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "App password, if yours can make one",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Rogers Yahoo Mail connects: IMAP, and the credential question",
+    "body": "Every rogers.com mailbox is a Yahoo mailbox behind a Rogers brand. The SMTP server we connected to answers with a <code>smtp.mail.yahoo.com</code> banner even though it is reached at <code>smtp.broadband.rogers.com</code>, and IMAP answers at <code>imap.broadband.rogers.com</code> on port 993 over TLS. That platform is a good one to automate against: it advertises MOVE, UIDPLUS, SPECIAL-USE, IDLE and SASL-IR, so folder roles are known, moves are atomic and new message ids come back on copy. The open question is not the transport, it is the credential. A mail client that cannot open Yahoo's own sign-in window needs an app password, and Rogers' current setup article says flatly that <b>app password generation is no longer available</b> and points at its Rogers Yahoo Mail change FAQs, while Yahoo's Rogers help section still describes creating one under External connections. Check your own account security page rather than either document."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Open the Rogers Yahoo account security page and look for app passwords",
+      "p": "Sign in with your <code>@rogers.com</code> address, open account security, and look under <b>External connections</b> for <b>Create app password</b>. If it is there, create one named <code>mcpemails</code> and copy the code; Yahoo shows it once. If the option is absent, that is Rogers' change rather than a fault, and a password based connection is not available on that account."
+    },
+    {
+      "h": "Enter the rogers.com address and the app password",
+      "p": "In mcpemails choose IMAP / SMTP, put the full rogers.com address in the username field and paste the app password. Do not use your Rogers Yahoo webmail password; it is refused at the IMAP layer. The hosts and ports below are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Rogers and Yahoo currently document opposite things about app passwords",
+      "p": "Rogers' own article on setting up Rogers Yahoo email opens with the line that app password generation is no longer available. Yahoo's Rogers help section, meanwhile, still walks you through creating one on the account security page and notes that an app password stays valid even after you change your main password. Both are live vendor pages. The practical reading is that Rogers is steering everyone to the native Rogers Yahoo sign-in window, existing app passwords keep working until deleted, and whether a new one can be created is decided on your account, not in the documentation. Look at the page before you conclude anything."
+    },
+    {
+      "h": "The OAuth mechanisms the server advertises are not open to you",
+      "p": "The Rogers IMAP host offers OAUTHBEARER and XOAUTH2 alongside PLAIN. Those are for the mail apps Rogers and Yahoo have registered, the ones that pop a Rogers Yahoo sign-in window inside the app. There is no self-service page where a customer obtains a token for their own use, so seeing OAuth in the capability list does not mean an alternative route exists if app passwords are closed off."
+    },
+    {
+      "h": "Rogers Business email is being decommissioned, and that is a different service",
+      "p": "Rogers has been shutting down legacy Rogers Business email and hosted domains and subdomains, starting in September 2025, with accounts disabled and their data permanently deleted. Its support material is explicit that this does not cover consumer <code>rogers.com</code> or <code>shaw.ca</code> addresses, which keep working. So a business mailbox on a hosted domain is on a deletion path and needs migrating, while a personal rogers.com address is not affected by that programme."
+    },
+    {
+      "h": "No new rogers.com or shaw.ca addresses are issued",
+      "p": "You can keep the consumer address you already have, but Rogers no longer creates new rogers.com or shaw.ca mailboxes. If you are planning a fresh address for an agent to work in, it cannot be on these domains, and the mailbox you connect has to be one that already exists."
+    }
+  ],
+  "limits": [
+    "The Yahoo SMTP host behind Rogers announces a maximum message size of about 39 MB, so a send with large attachments is refused before it leaves.",
+    "If your account can no longer produce an app password, mcpemails cannot connect it. There is no password-only fallback, and we are not one of the apps registered for the Rogers Yahoo OAuth window."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Rogers email?",
+      "a": "Not directly. Claude has no built-in Rogers connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your rogers.com mail, and the same connection works in Cursor, ChatGPT and other MCP clients. It depends on your account being able to use an app password."
+    },
+    {
+      "q": "What are the Rogers IMAP and SMTP settings?",
+      "a": "IMAP is imap.broadband.rogers.com on port 993 with implicit TLS and SMTP is smtp.broadband.rogers.com on port 465, also implicit TLS. Both were verified from a live TLS connection, and both are Yahoo infrastructure under Rogers names. The username is your full rogers.com address."
+    },
+    {
+      "q": "Can I still create a Rogers app password?",
+      "a": "It depends on your account, and the vendor documentation disagrees with itself. Rogers' setup article says app password generation is no longer available; Yahoo's Rogers help still describes the Create app password button under External connections. Open your Rogers Yahoo account security page and see which is true for you. An app password you already have keeps working until you delete it."
+    },
+    {
+      "q": "Is my Rogers business email affected?",
+      "a": "Legacy Rogers Business email and hosted domains have been on a decommission path since September 2025, with mailboxes disabled and data deleted. That programme is separate from consumer rogers.com and shaw.ca addresses, which continue to work. If your address is on a business hosted domain, move it before it is switched off rather than connecting it here."
+    },
+    {
+      "q": "Is my Rogers mail stored on your servers?",
+      "a": "No. Messages are fetched live over IMAP for each request and passed to your AI client. Credentials, the app password included, are encrypted at rest, and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Rogers Yahoo inbox",
+    "sub": "Check your app password first, then connect in minutes. One inbox free forever, no card required."
+  }
+}

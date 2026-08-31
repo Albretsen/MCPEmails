@@ -87,6 +87,7 @@
   "links": {
     "compare": "Comparar",
     "connectHeading": "Conectar",
+    "connectAll": "Todos los proveedores de correo",
     "connectImap": "Conectar cualquier bandeja IMAP",
     "connectGmail": "Conectar Gmail",
     "connectFastmail": "Conectar Fastmail",

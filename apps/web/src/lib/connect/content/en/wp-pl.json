@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://pomoc.wp.pl/jak-skonfigurowac-program-pocztowy",
+    "https://pomoc.wp.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "https://pomoc.wp.pl/wpkonto/hasla-do-aplikacji-zewnetrznej"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "WP account password, or a mail program password with two-step login",
+    "helpUrl": "https://pomoc.wp.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "usernameForm": "Your full address, such as name@wp.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "WP.pl Poczta in Claude: Enable IMAP First",
+    "description": "Connect WP.pl Poczta to Claude and any MCP client over IMAP at imap.wp.pl:993. IMAP must be enabled in Opcje first, and two-step login changes the password."
+  },
+  "hero": {
+    "eyebrow": "WP.pl Poczta + AI",
+    "titleLine1": "Connect your WP.pl mailbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "WP Poczta speaks IMAP once you turn it on. mcpemails connects the mailbox so your AI agent can read, search, send, reply and file mail from every MCP client rather than one app.",
+    "answer": "Claude cannot reach a WP.pl mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.wp.pl on port 993, signing in with your full address. Two things decide whether the login works: IMAP has to be enabled in the webmail under Opcje, on the IMAP/POP tab, and if you use two-step login then your ordinary password is refused and you have to create a mail program password instead. With those settled, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Enable IMAP in Opcje first",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How WP.pl connects: enable IMAP, then pick the right password",
+    "body": "WP serves IMAP at <code>imap.wp.pl</code> on port 993 with SSL and submission at <code>smtp.wp.pl</code> on port 465, also SSL, with SMTP authorisation required. The username is the whole address. Before any of that matters, client access has to be switched on: sign in to the webmail, open <b>Opcje</b>, go to the <b>IMAP/POP</b> tab and enable IMAP, described in WP's own help as the option that both downloads and sends messages. Which password you then use depends on one account setting. With two-step login off, the account password authenticates directly. With two-step login on, WP states that you do not sign in to mail programs with your browser password at all: for each program that uses IMAP or POP you create a separate <b>mail program password</b>. WP's help pages state no plan condition on any of this."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Enable IMAP under Opcje in WP Poczta",
+      "p": "Sign in to your WP mail in a browser, click <b>Opcje</b>, choose the <b>IMAP/POP</b> tab and switch on IMAP, the option WP describes as downloading and sending messages. POP is a separate switch on the same screen and you do not need it. Until IMAP is on, no client can log in and the failure looks like a bad password."
+    },
+    {
+      "h": "Decide which password the connection uses",
+      "p": "If two-step login is off, use your ordinary WP account password. If it is on, open the account security section, go to the <b>Two-step login</b> tab, find the mail program passwords section, choose <b>Create password</b>, and fill in the program name and device name WP asks for. The generated string appears once on screen. Create a separate one for each program you connect."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Enter the address and password in mcpemails under IMAP / SMTP, with the WP hosts prefilled, then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT and authorise."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "You cannot create a mail program password unless two-step login is on",
+      "p": "This catches people who want a per-application secret for safety. WP's help is specific: the button in the mail program passwords section stays inactive until two-step login is enabled with an app code or a security key. So there is no way to hand an agent a scoped credential while leaving the account on a single password, and no way to keep using the account password once two-step login is on. It is one setting that flips both behaviours at once, and turning two-step login off again invalidates the program passwords you made."
+    },
+    {
+      "h": "IMAP is off until you turn it on, and the error does not say so",
+      "p": "WP keeps client access behind the IMAP/POP tab in Opcje, and a mailbox that has only ever been used in the browser has it clear. While it is clear the server refuses correct credentials, which sends people round resetting a password that was never the problem. If your login fails on the first attempt, check this before anything else."
+    },
+    {
+      "h": "AUTH=PLAIN only, and no SASL-IR",
+      "p": "<code>imap.wp.pl</code> advertises <code>AUTH=PLAIN</code> and does not advertise SASL-IR, so it rejects the one-step authentication that sends credentials with the AUTHENTICATE command, and it offers nothing to clients hard-wired to the LOGIN mechanism. Both failures come back as a bare refusal that looks like bad credentials. mcpemails retries the two-step exchange, which is why a WP mailbox connects here after failing in other IMAP tooling."
+    },
+    {
+      "h": "MOVE and UIDPLUS are there, but SPECIAL-USE is not",
+      "p": "WP's server is more capable than most in this category: it implements MOVE, so filing a message is one atomic command, UIDPLUS, so the new id comes back, and IDLE, so new mail is pushed rather than polled. What it does not advertise is SPECIAL-USE, so nothing tells a client which folder is Sent, Drafts or Trash. On a Polish mailbox those carry their Polish names, so if an agent cannot find a folder, give it the name as it appears in webmail."
+    }
+  ],
+  "limits": [
+    "Folder roles are matched by name rather than announced by the server, because SPECIAL-USE is not advertised.",
+    "A per-application credential exists only if you enable two-step login. Without it, the connection holds your main account password."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with WP.pl email?",
+      "a": "Not directly. Claude has no built-in WP connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your wp.pl mail, and the same connection works in Cursor, ChatGPT and other MCP clients. IMAP has to be enabled on the mailbox first."
+    },
+    {
+      "q": "What are the WP.pl IMAP and SMTP settings?",
+      "a": "IMAP is imap.wp.pl on port 993 with SSL and SMTP is smtp.wp.pl on port 465, also SSL, with authorisation required. WP documents pop3.wp.pl on 995 as the POP alternative. Both of the hosts used here were verified from a live TLS connection. The username is your full email address."
+    },
+    {
+      "q": "How do I enable IMAP on WP Poczta?",
+      "a": "Sign in to the webmail, click Opcje, open the IMAP/POP tab and switch on IMAP, which WP describes as the option for downloading and sending messages. The change takes effect immediately. There is no separate approval step and WP's help attaches no plan requirement to it."
+    },
+    {
+      "q": "Does WP.pl have app passwords?",
+      "a": "It has mail program passwords, but only if two-step login is enabled. WP states that with two-step login on you do not use your browser password in a mail program, and that you create one password per program from the two-step login tab, naming the program and the device. With two-step login off, the create button is inactive and the account password is what authenticates."
+    },
+    {
+      "q": "Is my WP.pl mail stored on your servers?",
+      "a": "No. Messages are fetched live from WP over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a WP.pl inbox",
+    "sub": "Enable IMAP in Opcje, then connect. One inbox free forever, no card required."
+  }
+}

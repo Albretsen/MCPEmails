@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://help.yahoo.com/kb/SLN4075.html",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App password",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "Your full Yahoo address, including the domain: name@yahoo.com, or the ymail.com or rocketmail.com form you signed up with.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Yahoo Mail to Claude, Cursor & MCP Clients",
+    "description": "Connect Yahoo Mail to Claude, Cursor and any MCP client over IMAP port 993 with a Yahoo app password. Your account password will not work. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Yahoo Mail + AI",
+    "titleLine1": "Connect Yahoo Mail to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Yahoo inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "App password, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach Yahoo Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP on port 993, authenticating with a Yahoo app password created under External connections on your Account Security page, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Your ordinary Yahoo password is never accepted from a mail client. Setup takes a couple of minutes and one inbox is free, forever."
+  },
+  "method": {
+    "title": "How Yahoo connects: an app password",
+    "body": "Yahoo Mail connects over IMAP/SMTP using a <b>Yahoo app password</b>. Turn on two-step verification, generate an app password in Yahoo Account Security, then paste it into mcpemails with your Yahoo address. No OAuth dance, no browser pop-ups."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Generate a Yahoo app password",
+      "p": "Turn on two-step verification, then generate an app password in Yahoo Account Security."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Add your Yahoo address and the app password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The host Yahoo documents and the host we connect to are two names for one server",
+      "p": "Yahoo's own help article lists <code>imap.mail.yahoo.com</code>. The settings table on this page shows <code>export.imap.mail.yahoo.com</code>. Neither is wrong: both names are aliases onto the same <code>jimap.imap.mail.yahoo.com</code>, they resolve to the same addresses, and the certificate Yahoo presents is a wildcard on <code>*.imap.mail.yahoo.com</code> which covers both. We publish the name we opened a live TLS connection to. If an existing mail client of yours is configured with the documented name, leave it alone: it is talking to the same machine."
+    },
+    {
+      "h": "The app password lives under External connections, and it outlives your password change",
+      "p": "Yahoo generates app passwords on the Account Security page, under <b>External connections</b>: Create app password, name the app, Generate password. Yahoo shows it once. The part people miss is what happens afterwards. An app password stays valid even after you change your main Yahoo password, so changing your password does not revoke a mail client's access. The only way to cut a connection off at Yahoo's end is to delete that specific app password on the same screen."
+    },
+    {
+      "h": "Yahoo and AOL share a platform but not an account, and the credentials do not cross",
+      "p": "Addresses on ymail.com and rocketmail.com are ordinary Yahoo accounts and belong on this page. AOL Mail runs on the same underlying infrastructure, and <code>imap.aol.com</code> resolves through the same <code>yahoodns.net</code> service, but AOL has its own hostnames and its own account security page. An app password generated in a Yahoo account will not open an AOL mailbox, and vice versa. Connect an AOL address as AOL."
+    },
+    {
+      "h": "Yahoo's IMAP is more capable than most free mailboxes, which works in your favour",
+      "p": "When probed, Yahoo advertised <code>SASL-IR</code>, <code>MOVE</code>, <code>UIDPLUS</code>, <code>IDLE</code> and <code>SPECIAL-USE</code>. In practice that means a move is a single atomic command rather than a copy followed by a delete, and Sent, Drafts, Spam and Trash are identified by their <b>role</b> rather than by their names, so a renamed or non-English system folder still resolves correctly. It does not advertise <code>AUTH=LOGIN</code> on IMAP, only PLAIN and the OAuth mechanisms, so tooling hard-wired to the LOGIN mechanism fails at authentication even with a correct app password."
+    }
+  ],
+  "limits": [
+    "Yahoo's submission server announces a maximum message size of roughly 41 MB. Attachment reads through mcpemails are capped at 25 MB per request, so anything larger has to be fetched in Yahoo Mail itself.",
+    "App passwords do not expire and survive a change of your Yahoo password. Deleting the app password in Account Security is the only way to revoke access."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Yahoo Mail?",
+      "a": "Not directly. Claude has no built-in Yahoo connector. Connecting an MCP server such as mcpemails to your Yahoo mailbox over IMAP, using a Yahoo app password, gives Claude read, search, send, reply, schedule and organize access to it. The same connection then works unchanged from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Yahoo Mail IMAP and SMTP settings?",
+      "a": "IMAP is on port 993 with implicit TLS, and SMTP is smtp.mail.yahoo.com on port 465, also implicit TLS. Yahoo documents the incoming host as imap.mail.yahoo.com; the table on this page shows export.imap.mail.yahoo.com, which is an alias onto the same server and is the name we verified live. Log in with your full address and an app password."
+    },
+    {
+      "q": "Why does my Yahoo password get rejected?",
+      "a": "Because Yahoo does not accept your account password from a third-party mail application. You need an app password created on the Yahoo Account Security page under External connections. Copy it when it is shown, because Yahoo does not show it again. If an old app password stopped working, generate a new one rather than reusing it."
+    },
+    {
+      "q": "Do I need two-step verification to get a Yahoo app password?",
+      "a": "Yahoo creates app passwords on the Account Security page under External connections. If that option is not visible on your account, turn on two-step verification and look again: Yahoo has moved and re-gated this screen more than once over the years. Generate the password in a browser you have signed in from before, and not in a private window."
+    },
+    {
+      "q": "Is my Yahoo mail stored on your servers?",
+      "a": "No. Messages are fetched live from Yahoo over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained. Deleting the app password in Yahoo Account Security ends the connection at Yahoo's end immediately."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Yahoo inbox",
+    "sub": "Connect Yahoo Mail in minutes. One inbox free forever, no card required."
+  }
+}

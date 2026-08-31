@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://mailinabox.email/guide.html",
+    "https://github.com/mail-in-a-box/mailinabox",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mail user password",
+    "helpUrl": "https://mailinabox.email/guide.html",
+    "usernameForm": "The full address of a mail user created in the admin control panel, for example you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Mail-in-a-Box to Claude & MCP Clients",
+    "description": "Connect a Mail-in-a-Box mailbox to Claude, Cursor and ChatGPT over IMAP at box.yourdomain.com:993. Submission is 465, and fail2ban is why repeat failures lock you out."
+  },
+  "hero": {
+    "eyebrow": "Mail-in-a-Box + AI",
+    "titleLine1": "Connect Mail-in-a-Box to Claude,",
+    "titleLine2": "Cursor, ChatGPT and any MCP client",
+    "lead": "You set up your own box so nobody else would hold your mail. Adding an AI agent does not have to change that: mcpemails connects to your box over IMAP and fetches each message live, without storing any of it.",
+    "answer": "Claude cannot reach a Mail-in-a-Box server on its own. mcpemails is a hosted MCP server that connects to yours over IMAP on port 993, at the box hostname the setup guide tells you to use, which is normally box.yourdomain.com, authenticating with the password of a mail user created in the admin control panel. That lets Claude, Cursor or any MCP client read, search, send and organize the mail on your box. The box has to be reachable from the internet and holding a valid Let's Encrypt certificate, which the control panel provisions for you. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mail user password from the control panel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Mail-in-a-Box connects: the box hostname, not your domain",
+    "body": "Mail-in-a-Box installs Postfix, Dovecot, Nginx and a small admin control panel onto one Ubuntu machine, so the IMAP behaviour underneath is plain Dovecot. The part people get wrong is the hostname. The setup guide recommends naming the box <code>box</code> plus a dot plus your domain name, so <code>box.yourdomain.com</code>, and that is the name in the certificate and the name your mail clients should use. Your bare domain is where mail is addressed, not where clients connect. The documented firewall list is 22, 25, 53 for TCP and UDP, 80, 443, 465 for submission, 993 for IMAP, 995 for POP and 4190 for Sieve. Credentials are the mail user's own password, set under Mail then Users in the control panel; the control panel admin account is itself a mail user, so it does have a mailbox."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Get a real certificate from the control panel",
+      "p": "Sign into your box's admin control panel and open System then TLS (SSL) Certificates. A fresh box serves a self-signed certificate until you provision the free Let's Encrypt one from that page, and strict IMAP clients will refuse the self-signed one long after you stopped noticing the browser warning."
+    },
+    {
+      "h": "Confirm the mail user and its password",
+      "p": "Under Mail then Users, confirm the address exists and set a password you know. Then add the inbox in mcpemails: choose IMAP / SMTP, use <code>box.yourdomain.com</code> as the host, and enter the full address and that password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "fail2ban will ban you for testing a wrong password",
+      "p": "Mail-in-a-Box ships fail2ban switched on and watching the mail services, which is one of the reasons it is safe to put on the open internet. It also means that saving a connection two or three times with a typo in the password gets the connecting address banned, and every later attempt then times out or is refused rather than returning an authentication error. The symptom looks like the server going down. Get the password right first, and if you have already tripped it, clear the ban on the box before trying again."
+    },
+    {
+      "h": "Submission is 465 here, and 587 is not in the documented port list",
+      "p": "Most mail setup instructions on the internet reach for 587 with STARTTLS. Mail-in-a-Box's own guide lists 465 as the submission port among the ports that must be open, and does not list 587. Configure sending on 465 with implicit TLS and it works first time; assume 587 because that is what everything else uses and you get a connection that hangs rather than a clear error."
+    },
+    {
+      "h": "The box cannot share its name with a website you host elsewhere",
+      "p": "The guide is blunt that the box's name cannot be a domain you intend to serve a website on from another host, because the box wants to answer on 80 and 443 for its own certificate renewals and control panel. Operators who point <code>mail.yourdomain.com</code> at a CDN or a reverse proxy break Let's Encrypt renewal without breaking anything visible, and the IMAP certificate expires quietly weeks later."
+    }
+  ],
+  "limits": [
+    "Your box has to accept inbound connections on 993 from outside for a hosted MCP server to reach it. A Mail-in-a-Box on a home connection behind NAT, or one restricted by a cloud security group to your own address, cannot be connected. mcpemails is self-hostable if you would rather keep the IMAP session inside your own network.",
+    "Mail-in-a-Box expects to own DNS and TLS for the box hostname, so this works best on the standard, unmodified install. A heavily customised box may not present the certificate the control panel thinks it does."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Mail-in-a-Box?",
+      "a": "Not directly. Claude has no connector for a mail server you run yourself. Connecting an MCP server such as mcpemails to your box over IMAP gives Claude read, search, send, reply, schedule and organize access to the mailboxes on it, and the same inbox then works in Cursor or ChatGPT too."
+    },
+    {
+      "q": "What are the Mail-in-a-Box IMAP and SMTP settings?",
+      "a": "The host is your box hostname, normally box.yourdomain.com. IMAP is port 993 with implicit TLS. Submission is port 465 with implicit TLS, which is the port the official guide lists. Log in with the full email address of a mail user and that user's password."
+    },
+    {
+      "q": "Why does my Mail-in-a-Box password get rejected?",
+      "a": "Check that you are using a mail user rather than a name that only exists as an alias, since aliases have no password and no mailbox. If the password is right and connections still fail, fail2ban may have banned the connecting address after earlier failed attempts, which presents as a refused or timed out connection rather than a login error."
+    },
+    {
+      "q": "Do I have to expose my box to the internet?",
+      "a": "For the hosted service, yes: mcpemails connects inbound to port 993. That is the normal state for a Mail-in-a-Box anyway, since it has to accept mail on port 25 from the world. If you have deliberately restricted access to your own addresses, self-host mcpemails instead so the IMAP connection never leaves your network."
+    },
+    {
+      "q": "Is my mail stored on your servers?",
+      "a": "No. Messages are fetched live from your box over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained, which is the same reason you built the box in the first place."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Mail-in-a-Box inbox",
+    "sub": "Connect your own box in minutes. One inbox free forever, no card required."
+  }
+}

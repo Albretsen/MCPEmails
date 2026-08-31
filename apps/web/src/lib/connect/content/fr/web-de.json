@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter WEB.DE à Claude (et à toute IA)",
+    "description": "Connectez WEB.DE à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de votre compte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "WEB.DE + IA",
+    "titleLine1": "Connectez WEB.DE à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte WEB.DE en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de votre compte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de votre compte, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre WEB.DE tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment WEB.DE se connecte : IMAP et le mot de passe de votre compte",
+    "body": "WEB.DE se connecte via IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE, dans Paramètres e-mail, Récupération POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. Le courrier sortant passe par STARTTLS sur le port 587 plutôt que par TLS implicite sur le 465, et mcpemails le sélectionne pour vous."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Activez l'accès IMAP dans WEB.DE",
+      "p": "Dans WEB.DE, ouvrez Paramètres e-mail, Récupération POP3/IMAP, et autorisez POP3 et IMAP."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse WEB.DE, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte WEB.DE à votre IA",
+    "sub": "Connectez WEB.DE en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

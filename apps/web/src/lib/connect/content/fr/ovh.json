@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter OVH à Claude (et à toute IA)",
+    "description": "Connectez OVH à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "OVH + IA",
+    "titleLine1": "Connectez OVH à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte OVH en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre OVH tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment OVH se connecte : IMAP et le mot de passe de la boîte",
+    "body": "Une boîte OVH MX Plan se connecte via IMAP/SMTP avec le mot de passe de la boîte défini dans l'espace client OVH, et les deux serveurs sont <code>ssl0.ovh.net</code>. OVH Hosted Exchange est un service différent : ses serveurs ressemblent à <code>ex4.mail.ovh.net</code> et le courrier sortant passe par STARTTLS sur le port 587, jamais 465, ce qui explique que les valeurs par défaut de l'hébergement mutualisé restent bloquées. mcpemails reconnaît les deux et choisit la bonne combinaison."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Récupérez le mot de passe de votre boîte OVH",
+      "p": "Dans l'espace client OVH, ouvrez le service e-mail, choisissez l'adresse et modifiez son mot de passe. Copiez le serveur que OVH affiche pour cette boîte s'il n'est pas ssl0.ovh.net."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse OVH, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte OVH à votre IA",
+    "sub": "Connectez OVH en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

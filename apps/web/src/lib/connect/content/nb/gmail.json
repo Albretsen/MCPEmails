@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "title": "Koble Gmail til Claude (og enhver AI)",
+    "description": "Koble Gmail til Claude, Cursor, ChatGPT og enhver MCP-klient med ett klikk via Google OAuth. La AI lese, sende, planlegge og organisere Gmail-en din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Gmail + AI",
+    "titleLine1": "Koble Gmail til Claude",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Gmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett klikks Google-pålogging, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Google-pålogging med ett klikk (OAuth)",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Gmail seg til: Google OAuth med ett klikk",
+    "body": "Gmail kobles til med <b>Google OAuth</b>: logg inn med Google, godkjenn lese- og sendetilgang, og du er tilkoblet. Ingen app-passord, ingen IMAP-innstillinger å grave fram. Trekk tilbake tilgangen når som helst fra Google-kontoen din eller mcpemails-dashbordet."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Logg inn med Google",
+      "p": "Klikk Koble til Gmail, logg inn med Google-kontoen din, og godkjenn lese- og sendetilgang. Ingen app-passord eller IMAP-oppsett."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Gmail-innboks",
+    "sub": "Koble til Gmail på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter cPanel à Claude (et à toute IA)",
+    "description": "Connectez cPanel à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "cPanel + IA",
+    "titleLine1": "Connectez cPanel à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte cPanel en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre cPanel tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment cPanel se connecte : IMAP et le mot de passe de la boîte",
+    "body": "Une boîte cPanel, celle que vous consultez dans le webmail Roundcube ou Horde, se connecte via IMAP/SMTP avec le mot de passe défini dans cPanel, section Email Accounts. Pas de mot de passe d'application, pas d'OAuth. Le serveur est en général <code>mail.votredomaine.com</code>, et cPanel affiche les valeurs exactes dans Email Accounts, Connect Devices, sous Mail Client Manual Settings. Utilisez la colonne sécurisée SSL/TLS, pas celle en clair."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Relevez vos réglages dans cPanel",
+      "p": "Dans cPanel, ouvrez Email Accounts puis Connect Devices pour la boîte. Copiez les serveurs et ports IMAP et SMTP sécurisés depuis Mail Client Manual Settings. Si vous ignorez le mot de passe de la boîte, définissez-en un nouveau sur le même écran."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse cPanel, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte cPanel à votre IA",
+    "sub": "Connectez cPanel en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

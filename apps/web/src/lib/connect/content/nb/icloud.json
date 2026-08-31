@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Koble iCloud Mail til Claude (og enhver AI)",
+    "description": "Koble iCloud til Claude, Cursor, ChatGPT og enhver MCP-klient med et Apple-app-passord. La AI lese, sende, planlegge og organisere iCloud Mail. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "iCloud Mail + AI",
+    "titleLine1": "Koble iCloud Mail til Claude",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte iCloud-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et app-spesifikt Apple-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "App-spesifikt passord, ingen OAuth",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler iCloud seg til: et app-spesifikt passord",
+    "body": "iCloud Mail kobles til via IMAP/SMTP med et <b>app-spesifikt Apple-passord</b>. Generer ett på appleid.apple.com under Pålogging og sikkerhet → App-spesifikke passord (tofaktorautentisering kreves), og lim det så inn i mcpemails sammen med iCloud-adressen din."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Generer et app-spesifikt passord",
+      "p": "På appleid.apple.com går du til Pålogging og sikkerhet → App-spesifikke passord og oppretter ett (tofaktorautentisering må være på)."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Legg til iCloud-adressen din og det app-spesifikke passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en iCloud-innboks",
+    "sub": "Koble til iCloud Mail på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

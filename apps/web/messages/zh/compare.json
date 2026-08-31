@@ -87,6 +87,7 @@
   "links": {
     "compare": "对比",
     "connectHeading": "连接",
+    "connectAll": "全部邮箱服务商",
     "connectImap": "连接任意 IMAP 邮箱",
     "connectGmail": "连接 Gmail",
     "connectFastmail": "连接 Fastmail",

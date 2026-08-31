@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://comeinsidebox.com/naver-mail-imap-pop3/",
+    "https://servertrix.com/1879",
+    "https://www.clien.net/service/board/cm_iphonien/19011627",
+    "https://www.enterapps.kr/notice/?bmode=view&idx=168294489",
+    "https://www.getmailbird.com/setup/access-naver-com-via-imap-smtp"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Application password (애플리케이션 비밀번호)",
+    "helpUrl": "https://nid.naver.com/",
+    "usernameForm": "Your full address, including the domain: name@naver.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Naver Mail to Claude with an App Password",
+    "description": "Connect Naver Mail to Claude, Cursor or any MCP client over IMAP at imap.naver.com:993. Since June 2025 it needs two-step verification plus an app password."
+  },
+  "hero": {
+    "eyebrow": "Naver Mail + AI",
+    "titleLine1": "Connect Naver Mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Naver inbox. Read, search, send, reply, schedule and organize mail over IMAP with a Naver application password, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach Naver Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.naver.com on port 993, authenticating with a Naver application password (애플리케이션 비밀번호) rather than your account password. Since 24 June 2025 Naver has required two-step verification on the account plus an application password for every POP3, IMAP and SMTP connection, so the account password no longer authenticates any mail client at all. You also have to switch IMAP on inside Naver Mail settings, which is a separate control from the password. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Two-step verification plus app password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Naver Mail connects: IMAP, two-step verification and an application password",
+    "body": "Naver serves IMAP at <code>imap.naver.com</code> on port 993 over implicit TLS, and SMTP at <code>smtp.naver.com</code> on port 465. The hosts have been stable for years. What changed is the credential. On <b>24 June 2025</b> Naver made two-step verification and an application password mandatory for POP3, IMAP and SMTP access, and after a grace period that has since expired, mail clients holding the old account password stopped working entirely. Two separate things now have to be true. IMAP and SMTP have to be enabled inside Naver Mail's own settings, which is a per-mailbox switch. And your Naver ID has to have two-step verification turned on, because the application password screen only exists once it does. The application password is what you paste into a client; the account password is never used again for mail."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required. Two things get generated in the next steps: keep the tab open for the last one."
+    },
+    {
+      "h": "Enable IMAP/SMTP in Naver Mail settings",
+      "p": "Open Naver Mail and click 환경설정 (Settings) at the bottom left, then switch to the POP3/IMAP 설정 tab along the top and choose the IMAP/SMTP 설정 tab within it. Set IMAP/SMTP 사용 to 사용함 (use), then press 확인 to save. This is a mailbox-level switch and it does not enable anything on your Naver account; without it, imap.naver.com refuses the login no matter which password you send."
+    },
+    {
+      "h": "Turn on two-step verification and generate an application password",
+      "p": "Go to nid.naver.com, open 보안설정 (Security settings), and set up 2단계 인증 (two-step verification) if it is not already on, then click 관리 (manage). Inside, open 애플리케이션 비밀번호 관리 (application password management) and click 생성하기 (generate). Choose the direct-input option, name it something like mcpemails, and copy the password Naver shows you. In mcpemails, choose IMAP / SMTP, enter your full Naver address, and paste that application password rather than your Naver password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize the Naver mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Naver broke every existing client on purpose in 2025",
+      "p": "If you had Naver Mail working in Thunderbird, Apple Mail or a script and it stopped, nothing on your side changed. From 24 June 2025 Naver required two-step verification and an application password for POP3, IMAP and SMTP, ran a grace period for existing connections, and then closed it. The account password now fails at login with an ordinary authentication error, which is exactly what a stale password looks like, so the natural response is to retype the account password and watch it fail again. The fix is not a better password, it is a different kind of password."
+    },
+    {
+      "h": "Enabling IMAP and creating the application password are in two different products",
+      "p": "The protocol switch lives in Naver Mail under 환경설정. The application password lives in your Naver ID account at nid.naver.com, behind two-step verification. Doing one without the other produces the same authentication failure, and neither screen mentions the other. Most Naver connection problems are one of these two halves missing rather than anything to do with hostnames or ports."
+    },
+    {
+      "h": "The only mechanism Naver advertises is AUTH=PLAIN",
+      "p": "Naver's IMAP capability line offers <code>AUTH=PLAIN</code> and no <code>AUTH=LOGIN</code>. Clients and libraries hard-wired to the LOGIN mechanism, which is common in tooling written first against Exchange, are refused at the authentication step with an unhelpful error rather than falling back. The SMTP side accepts both PLAIN and LOGIN, so the sending half of the account can work in a client where the receiving half does not."
+    },
+    {
+      "h": "Naver Works is a different service and these settings do not apply",
+      "p": "Naver Works, the business suite sold to Korean companies, is not the same product as a personal <code>@naver.com</code> mailbox. It has its own administration, its own protocol controls and its own server names. If your address is on a company domain administered through Naver Works, take the hosts from that console rather than from this page, then connect the mailbox in mcpemails as a normal IMAP and SMTP account."
+    }
+  ],
+  "limits": [
+    "Naver does not advertise IDLE, so mail is polled rather than pushed. Your agent sees a new message the next time it checks the mailbox, not the instant it arrives.",
+    "Naver announces an append limit of about 40 MB on IMAP and its SMTP server accepts messages up to roughly 38 MB. A forward carrying attachments larger than that is refused at send time rather than queued.",
+    "An application password is tied to two-step verification. If you turn two-step verification off on the Naver account, the application password stops being valid and the connection drops."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Naver Mail?",
+      "a": "Not directly. Claude has no built-in Naver connector and cannot open an IMAP connection by itself. Connecting an MCP server such as mcpemails to your Naver mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the Naver IMAP and SMTP settings?",
+      "a": "IMAP is imap.naver.com on port 993 with implicit TLS. SMTP is smtp.naver.com on port 465, also implicit TLS. Log in with your full naver.com address and a Naver application password. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why does my Naver password not work anymore?",
+      "a": "Because Naver stopped accepting it. Since 24 June 2025, POP3, IMAP and SMTP require two-step verification on the account and an application password generated from your Naver ID. Connections that worked for years failed once the grace period ended. Generate an application password at nid.naver.com and use that instead."
+    },
+    {
+      "q": "How do I create a Naver application password?",
+      "a": "Sign in at nid.naver.com, open 보안설정, and enable 2단계 인증 if it is off. Click 관리 beside it, then open 애플리케이션 비밀번호 관리 and click 생성하기. Give the password a name so you can revoke it separately later, then copy it into the password field of your mail client or of mcpemails."
+    },
+    {
+      "q": "Do I still need to enable IMAP in Naver Mail settings?",
+      "a": "Yes. The application password is an account-level credential and the IMAP switch is a mailbox-level setting, and both are required. In Naver Mail open 환경설정, go to the POP3/IMAP 설정 tab, choose IMAP/SMTP 설정, set it to 사용함 and save. Skipping this leaves you with a valid password and a closed door."
+    },
+    {
+      "q": "Is my Naver mail stored on your servers?",
+      "a": "No. Messages are fetched live from Naver over IMAP for each request and passed to your AI client. Credentials are encrypted at rest, and message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Naver inbox",
+    "sub": "Connect Naver Mail in minutes with an application password. One inbox free forever, no card required."
+  }
+}

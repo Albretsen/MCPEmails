@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.getmailspring.com/setup/access-uol-com-br-via-imap-smtp",
+    "https://www.getmailbird.com/setup/access-uol-com-br-via-imap-smtp",
+    "https://learn.microsoft.com/pt-br/answers/questions/4469574/uol-mail-configurar-seu-e-mail",
+    "https://en.wikipedia.org/wiki/Brasil_Online"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "UOL password, with IMAP activated in webmail",
+    "helpUrl": null,
+    "usernameForm": "Your full address, name@uol.com.br. If that is refused, UOL also documents the login on its own, without the domain.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect UOL Mail to Claude over IMAP (Brazil)",
+    "description": "Connect a UOL mailbox to Claude, Cursor or any MCP client over IMAP at imap.uol.com.br:993. IMAP has to be activated in the UOL webmail settings first."
+  },
+  "hero": {
+    "eyebrow": "UOL Mail + AI",
+    "titleLine1": "Connect UOL Mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real UOL inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach UOL Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.uol.com.br on port 993, authenticating with your UOL password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. UOL ships mailboxes with IMAP switched off: you have to open the webmail settings and use Ativar IMAP before any client can log in, and until you do, a correct password is refused. Outgoing mail goes through smtps.uol.com.br on port 587 with STARTTLS, despite the host name. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "UOL password, IMAP activated first",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How UOL Mail connects: IMAP after you activate it, and an oddly named SMTP host",
+    "body": "UOL serves IMAP at <code>imap.uol.com.br</code> on port 993 over implicit TLS. The server behind it is Dovecot, which its greeting says outright. Submission is the part that trips people: the host is called <code>smtps.uol.com.br</code>, and the verified working configuration is port <b>587 with STARTTLS</b>, not implicit TLS on 465. The name promises one thing and the port does another. UOL mail is a paid service rather than a free webmail, sold either as part of a UOL subscription or as a standalone UOL Mail plan, and there is no app password scheme: your UOL password is the credential. What there is instead is a switch. IMAP is off until you turn it on in the webmail, and a client that arrives before you do gets an authentication failure rather than a message explaining the protocol is disabled."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required. Leave it open; the UOL side takes about a minute."
+    },
+    {
+      "h": "Activate IMAP in the UOL webmail",
+      "p": "Sign in to the UOL webmail, open Configurações (Settings), and use the Ativar IMAP option, then save the change. This is the step nearly every failed UOL connection is missing. Nothing about the resulting login error mentions IMAP being off, so people spend their time on the password and the ports instead."
+    },
+    {
+      "h": "Enter your address and password in mcpemails",
+      "p": "Choose IMAP / SMTP, then enter the mailbox address and your UOL password. The hosts and ports are prefilled and were confirmed from a live TLS connection. If the full address is refused at login, try the login name on its own without <code>@uol.com.br</code>: UOL documents the username in that shorter form and some of its mailboxes only accept it that way."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize the UOL mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The outgoing host is called smtps, and it is not implicit TLS",
+      "p": "Everything about the name <code>smtps.uol.com.br</code> suggests SMTP over implicit TLS on port 465, which is what the letter s in <code>smtps</code> conventionally means and what a lot of copied configurations assume. UOL's working submission service is on port <b>587 with STARTTLS</b>: the connection opens in the clear and is upgraded before authentication. A client pointed at 465 with implicit TLS typically hangs until it times out rather than returning a useful error, which is a much worse failure than a rejection. Use 587 and STARTTLS. mcpemails prefills it correctly."
+    },
+    {
+      "h": "IMAP is off until you activate it, and the error blames your password",
+      "p": "UOL does not enable IMAP on a new mailbox. Until you open the webmail settings and use Ativar IMAP, the server accepts the connection, accepts the login attempt and refuses the credentials. Nothing distinguishes it from a wrong password. This single setting accounts for more failed UOL client setups than hostnames, ports and TLS put together, and it has to be done from the webmail because there is no other place to reach it."
+    },
+    {
+      "h": "The username is not always the full address",
+      "p": "Most providers expect the whole address in the username field and UOL usually accepts it, but UOL's own client documentation describes the credential as the login without <code>@uol.com.br</code> appended. Where an older mailbox insists on the short form, the full address is rejected in exactly the way a bad password would be. If everything else is right and login still fails, switching between the two forms is a ten second test worth running before anything else."
+    },
+    {
+      "h": "BOL is the same platform and the settings are not interchangeable",
+      "p": "UOL also operates BOL, and the two run on visibly the same infrastructure: the same Dovecot server, the same message size ceiling, the same naming convention. That similarity invites copying settings from one to the other, and the crucial detail does not survive the copy. BOL's submission service is implicit TLS on port 465, while UOL's is STARTTLS on 587. Same company, same software, different transport. A BOL address needs the BOL hosts and the BOL port."
+    }
+  ],
+  "limits": [
+    "A UOL mailbox requires a paid UOL subscription or a standalone UOL Mail plan. There is no free tier to connect, and an expired subscription takes the IMAP access with it.",
+    "UOL's IMAP server advertises neither MOVE nor IDLE. Filing a message runs as copy, flag and expunge rather than one command, and new mail is discovered by polling rather than pushed to the connection.",
+    "The SMTP server accepts messages up to about 33 MB, which is lower than most modern providers. A forward carrying larger attachments is refused at send time."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with UOL Mail?",
+      "a": "Not directly. Claude has no built-in UOL connector and cannot open an IMAP connection by itself. Connecting an MCP server such as mcpemails to your UOL mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the UOL IMAP and SMTP settings?",
+      "a": "IMAP is imap.uol.com.br on port 993 with implicit TLS. Outgoing mail is smtps.uol.com.br on port 587 using STARTTLS, not implicit TLS, despite the host name. Log in with your UOL mailbox credentials. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why is my UOL password rejected?",
+      "a": "Almost always because IMAP has not been activated. Sign in to the UOL webmail, open Configurações, use Ativar IMAP and save. If the setting is already on, try the username without the domain part, since UOL documents the login in that form. UOL does not issue app passwords, so there is no third credential to look for."
+    },
+    {
+      "q": "Does UOL Mail need an app password?",
+      "a": "No. UOL has no app-specific password scheme and no per-client credential. Your ordinary UOL password authenticates IMAP and SMTP once the protocol is activated in the webmail. That also means the password in your mail client changes whenever you change your UOL password, so update the connection when you do."
+    },
+    {
+      "q": "Can I connect a free UOL email account?",
+      "a": "There is no free UOL mailbox to connect. UOL mail comes with a paid UOL subscription or with a standalone UOL Mail plan. The related BOL service does offer free accounts, but those are webmail only and cannot be reached over IMAP at all without upgrading."
+    },
+    {
+      "q": "Is my UOL mail stored on your servers?",
+      "a": "No. Messages are fetched live from UOL over IMAP for each request and passed to your AI client. Credentials are encrypted at rest, and message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a UOL inbox",
+    "sub": "Connect UOL Mail in minutes once IMAP is activated. One inbox free forever, no card required."
+  }
+}

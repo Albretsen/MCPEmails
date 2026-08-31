@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Connecter iCloud Mail à Claude (et à toute IA)",
+    "description": "Connectez iCloud Mail à Claude, Cursor, ChatGPT et tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser iCloud. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "iCloud Mail + IA",
+    "titleLine1": "Connectez iCloud Mail à Claude",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte iCloud en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un mot de passe d'application Apple, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application, pas d'OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment iCloud se connecte : un mot de passe d'application",
+    "body": "iCloud Mail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Apple</b>. Générez-en un sur appleid.apple.com sous Connexion et sécurité → Mots de passe pour application (l'authentification à deux facteurs est requise), puis collez-le dans mcpemails avec votre adresse iCloud."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Générez un mot de passe d'application",
+      "p": "Sur appleid.apple.com, allez dans Connexion et sécurité → Mots de passe pour application et créez-en un (l'authentification à deux facteurs doit être activée)."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Ajoutez votre adresse iCloud et le mot de passe d'application pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte iCloud à votre IA",
+    "sub": "Connectez iCloud Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

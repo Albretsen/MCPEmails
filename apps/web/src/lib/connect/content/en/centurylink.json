@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.centurylink.com/home/help/internet/email/how-to-set-up-your-email-server-settings-to-go-through-pop-and-smtp.html",
+    "https://www.centurylink.com/home/help/internet/email/setup-email-edit-settings-on-iphone.html",
+    "https://www.brightspeed.com/former-century-link-customers/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "CenturyLink email password",
+    "helpUrl": "https://www.centurylink.com/home/help/internet/email/how-to-set-up-your-email-server-settings-to-go-through-pop-and-smtp.html",
+    "usernameForm": "Your full address, whichever CenturyLink domain it uses: name@centurylink.net, name@centurytel.net or name@embarqmail.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect CenturyLink Email to Claude over IMAP",
+    "description": "Connect CenturyLink email to Claude and any MCP client over IMAP at mail.centurylink.net:993, SMTP on 587. Mailboxes unused for a year are deactivated and wiped."
+  },
+  "hero": {
+    "eyebrow": "CenturyLink + AI",
+    "titleLine1": "Connect CenturyLink email",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real centurylink.net inbox. Read, search, send, reply, schedule and organise mail over IMAP with your CenturyLink email password, in every MCP client rather than one.",
+    "answer": "Claude cannot reach a CenturyLink mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at mail.centurylink.net on port 993, with outgoing mail on smtp.centurylink.net port 587 using STARTTLS, signing in with your full address and your CenturyLink email password. Once it is connected, Claude, Cursor or any other MCP client can read, search, send, reply and organise that mail. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your CenturyLink email password works",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How CenturyLink connects: IMAP, STARTTLS on 587, and an old server",
+    "body": "CenturyLink serves IMAP at <code>mail.centurylink.net</code> on port 993 over TLS, and takes outgoing mail at <code>smtp.centurylink.net</code> on port 587 with STARTTLS. That split matters: incoming is implicit TLS, outgoing negotiates TLS after connecting, and port 25 is filtered by CenturyLink so it is not an alternative. There is no app password to create; the mailbox takes your ordinary CenturyLink email password with the full address as the username. The same settings cover <code>centurytel.net</code>, <code>embarqmail.com</code> and the other legacy domains CenturyLink absorbed. Behind the hostname is a Mail2World server, an older platform than the Dovecot and Yahoo systems most providers on this site run, and that shows up in what it can and cannot do."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Sign in at centurylink.net webmail first",
+      "p": "Open the CenturyLink home page and sign in to webmail with the address you are connecting. This confirms the password, and it also resets the inactivity clock: CenturyLink deactivates accounts that have gone unused for a year and deletes their contents."
+    },
+    {
+      "h": "Enter the full address in mcpemails",
+      "p": "Choose IMAP / SMTP and enter the whole address, including <code>@centurylink.net</code>, <code>@centurytel.net</code> or <code>@embarqmail.com</code>, with your email password. The hosts and the mixed 993 TLS plus 587 STARTTLS pairing are prefilled."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "This server offers AUTH=LOGIN and nothing else",
+      "p": "The CenturyLink IMAP host advertises a single SASL mechanism, LOGIN, and does not advertise SASL-IR. Most modern clients reach for PLAIN with the credentials sent alongside the AUTHENTICATE command, find no mechanism they were expecting, and either fall over or return an error that reads like bad credentials. mcpemails uses the step by step LOGIN exchange this server actually supports. It is why generic IMAP tooling that works everywhere else can fail here on the first command."
+    },
+    {
+      "h": "A year without signing in deletes the mailbox and everything in it",
+      "p": "CenturyLink states that accounts unused for a year are deactivated and their contents deleted. That is a shorter fuse than most providers and there is no recovery afterwards. If this is a secondary address you only ever read through an agent, sign in to CenturyLink webmail occasionally on purpose rather than assuming activity on the mailbox counts."
+    },
+    {
+      "h": "Brightspeed took over the internet service but not the mail",
+      "p": "If your CenturyLink service was transferred to Brightspeed, your email did not move with it. Brightspeed does not offer email, and centurylink.net mailboxes carry on being reached at centurylink.net with CenturyLink handling email support. Looking for these settings in a Brightspeed account is a dead end; the mailbox is still on the CenturyLink side."
+    },
+    {
+      "h": "No IDLE, no MOVE, and a small send limit",
+      "p": "The server advertises neither IDLE nor MOVE, so there is no push notification of new mail (we poll instead) and filing a message runs as COPY, then STORE the deleted flag, then EXPUNGE. CenturyLink also documents a 10 MB maximum outgoing message size and a 700 MB mailbox, both far below what most providers allow, so large attachments and a long unpruned archive both hit walls here sooner than you expect."
+    }
+  ],
+  "limits": [
+    "CenturyLink documents a 10 MB limit on outgoing messages, so sends with sizeable attachments are refused by CenturyLink.",
+    "The documented mailbox quota is 700 MB. A full mailbox stops accepting new mail, which looks like a delivery problem rather than a storage one.",
+    "There is no IMAP IDLE on this host, so new mail is picked up when your agent asks rather than pushed the moment it arrives."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with CenturyLink email?",
+      "a": "Not directly. Claude has no built-in CenturyLink connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your centurylink.net mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the CenturyLink IMAP and SMTP settings?",
+      "a": "IMAP is mail.centurylink.net on port 993 with implicit TLS. SMTP is smtp.centurylink.net on port 587 using STARTTLS, not implicit TLS, and port 25 is filtered by CenturyLink. The username is your full email address. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Do centurytel.net and embarqmail.com use the same settings?",
+      "a": "Yes. CenturyLink runs centurylink.net, centurytel.net, embarqmail.com and its other legacy domains on one platform with one set of hostnames. Use your full address as the username and nothing else on this page changes with the domain."
+    },
+    {
+      "q": "I am a Brightspeed customer now. Can I still connect this mailbox?",
+      "a": "Yes, if the mailbox is still alive. Brightspeed does not provide email, and former CenturyLink customers keep reaching their existing mailbox through CenturyLink, which also handles email support. The settings on this page are the ones to use, not anything from a Brightspeed account page."
+    },
+    {
+      "q": "Do I need an app password for CenturyLink?",
+      "a": "No. CenturyLink does not issue app specific passwords for mail clients. Sign in with the same email password you use on CenturyLink webmail, and use the full address as the username. If it is refused, confirm the password in webmail before changing anything in your client settings."
+    },
+    {
+      "q": "Is my CenturyLink mail stored on your servers?",
+      "a": "No. Messages are fetched live from CenturyLink over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a CenturyLink inbox",
+    "sub": "Connect a centurylink.net address in minutes. One inbox free forever, no card required."
+  }
+}

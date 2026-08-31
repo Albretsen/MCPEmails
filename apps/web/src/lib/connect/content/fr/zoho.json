@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Connecter Zoho Mail à Claude (et à toute IA)",
+    "description": "Connectez Zoho Mail à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Zoho. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Zoho Mail + IA",
+    "titleLine1": "Connectez Zoho Mail à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Zoho en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et un mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Zoho se connecte : IMAP et un mot de passe d'application",
+    "body": "Zoho Mail se connecte via IMAP/SMTP. Activez d'abord l'accès IMAP dans Zoho (il est désactivé par défaut), générez un mot de passe spécifique à l'application si vous utilisez l'authentification à deux facteurs, puis collez-le dans mcpemails avec votre adresse Zoho. mcpemails prend en charge toutes les régions de centres de données Zoho."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Activez IMAP et générez un mot de passe d'application",
+      "p": "Dans Zoho Mail, activez l'accès IMAP (Paramètres, Comptes de messagerie, Accès IMAP). Si vous utilisez l'authentification à deux facteurs, générez un mot de passe spécifique à l'application dans Zoho Account, Sécurité."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Ajoutez votre adresse Zoho et le mot de passe, et choisissez votre région Zoho si on vous le demande, pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Zoho à votre IA",
+    "sub": "Connectez Zoho Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

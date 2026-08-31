@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://docs.hostinger.com/emails/setup-devices",
+    "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "https://www.hostinger.com/support/5966022-how-to-get-email-account-configuration-details-for-titan-email-at-hostinger/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "usernameForm": "Your complete email address at your own domain, not your Hostinger account login.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Hostinger to Claude, Cursor & MCP Clients",
+    "description": "Connect Hostinger Email to Claude, Cursor and any MCP client over IMAP at imap.hostinger.com:993. Titan-based Business Email uses entirely different hosts."
+  },
+  "hero": {
+    "eyebrow": "Hostinger + AI",
+    "titleLine1": "Connect Hostinger to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Hostinger inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your mailbox password, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach Hostinger on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+  },
+  "method": {
+    "title": "How Hostinger connects: IMAP and your mailbox password",
+    "body": "Hostinger Email connects over IMAP/SMTP with the mailbox password you set in hPanel under Emails. There is no app password and no OAuth step. The hosts are <code>imap.hostinger.com</code> and <code>smtp.hostinger.com</code> for every domain, so there is nothing to look up."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Get your Hostinger mailbox password",
+      "p": "In hPanel, open Emails, pick the address and set or reset its password. That password is what mcpemails authenticates with."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, add your Hostinger address, the hosts below and the password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Hostinger has two mail platforms, and which one you have depends on when you bought",
+      "p": "<b>Hostinger Email</b> is Hostinger's own platform, documented at <code>imap.hostinger.com</code> on 993 and <code>smtp.hostinger.com</code> on 465, with <code>pop.hostinger.com</code> on 995 for POP3. Hostinger's <b>Business Email</b> and <b>Enterprise Email</b> plans are powered by Titan and answer on <code>imap.titan.email</code> and <code>smtp.titan.email</code> instead, where Hostinger documents 993 for IMAP and 465 or 587 for SMTP. Nothing about the address tells you which you have. hPanel does: open <b>Emails</b>, click <b>Manage</b> next to the domain and choose <b>Connect Apps & Devices</b>, which prints the values for the platform that mailbox is actually on. For a Titan mailbox, the same values also appear in Titan Webmail under Settings, then Configure 3rd party apps."
+    },
+    {
+      "h": "The mailbox password is not your hPanel login, and 2FA changes it again",
+      "p": "IMAP authenticates against the password set on the individual email address, which you set or reset in hPanel under <b>Emails</b> and the mailbox list. Your Hostinger account login, the one that manages hosting and billing, is a different credential and is rejected. Hostinger also documents that the password is the mailbox password <b>or an app password if the mailbox uses two-factor authentication</b>, so a mailbox with 2FA switched on needs the app password rather than the one you set. Both failures arrive as a plain authentication error."
+    },
+    {
+      "h": "The SMTP server caps a message at roughly 46 MB, which is smaller than most",
+      "p": "Hostinger's submission server advertises a maximum message size of 48,811,212 bytes, about 46 MB. That is the size of the encoded message, not of your file, and MIME encoding inflates an attachment by roughly a third, so the practical ceiling is closer to 34 MB of actual attachment. It is a noticeably lower limit than several other hosts advertise, and an agent that tries to forward a large attachment gets a hard refusal at submission time rather than a bounce later. Send a link instead when a file is near that size."
+    },
+    {
+      "h": "Hostinger Email omits MOVE, UIDPLUS and SPECIAL-USE",
+      "p": "The greeting advertises <code>SASL-IR</code>, <code>IDLE</code>, <code>LITERAL+</code>, <code>AUTH=PLAIN</code> and <code>AUTH=LOGIN</code>, but not MOVE, UIDPLUS or SPECIAL-USE. Moving a message is therefore performed as a copy, a flag update and an expunge rather than one atomic command, the identifier of the copy is not reported back and has to be found by searching the destination folder, and Sent, Drafts, Trash and Junk are matched by name rather than by role. If an agent cannot find your archive folder on a Hostinger mailbox, name the folder explicitly and it will."
+    }
+  ],
+  "limits": [
+    "Outgoing messages are capped at roughly 46 MB encoded, so an attachment much over about 34 MB is refused at submission.",
+    "Because MOVE is not advertised, a move is not atomic. If a connection drops part way through, a message can exist briefly in both folders.",
+    "Business and Enterprise Email plans run on Titan rather than Hostinger's own platform and use the Titan hostnames. Take the settings from Connect Apps and Devices for the mailbox you are connecting."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Hostinger email?",
+      "a": "Not on its own. Claude has no built-in Hostinger connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients rather than just one."
+    },
+    {
+      "q": "What are the Hostinger IMAP and SMTP settings?",
+      "a": "For Hostinger Email, IMAP is imap.hostinger.com on port 993 with SSL and SMTP is smtp.hostinger.com on port 465 with SSL, with 587 and STARTTLS documented as the outgoing alternative. The username is your full email address. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "How do I find my Hostinger email settings in hPanel?",
+      "a": "Open Emails in hPanel, click Manage next to the domain, and choose Connect Apps and Devices from the sidebar. That screen has guided tabs for individual applications and the raw server settings underneath. It prints the values for the platform your mailbox is actually on, which matters if you are on a Titan-based plan."
+    },
+    {
+      "q": "Why is my Hostinger email password rejected?",
+      "a": "Usually because you used your Hostinger account login rather than the password set on the email address itself. Reset the mailbox password in hPanel under Emails and try that. If the mailbox has two-factor authentication enabled, Hostinger requires an app password for mail clients instead, and the refusal looks identical to a wrong password."
+    },
+    {
+      "q": "What if my plan uses Titan Email?",
+      "a": "Then the Hostinger hostnames do not apply. Titan-powered Business and Enterprise Email mailboxes use imap.titan.email on 993 and smtp.titan.email on 465 or 587. Take the exact values from Connect Apps and Devices in hPanel, or from Settings, then Configure 3rd party apps, inside Titan Webmail."
+    },
+    {
+      "q": "Is my Hostinger mail stored on your servers?",
+      "a": "No. Messages are fetched live from Hostinger over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Hostinger inbox",
+    "sub": "Connect Hostinger in minutes. One inbox free forever, no card required."
+  }
+}

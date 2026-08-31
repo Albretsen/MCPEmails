@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://docs.rackspace.com/docs/set-up-multifactor-authentification-applications-for-cloud-office",
+    "https://docs.rackspace.com/docs/manage-multi-factor-authentication-for-rackspace-webmail",
+    "https://docs.rackspace.com/docs/configure-multi-factor-authentication"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password, or an app password with MFA",
+    "helpUrl": "https://docs.rackspace.com/docs/set-up-multifactor-authentification-applications-for-cloud-office",
+    "usernameForm": "Your full email address at your own domain. Rackspace uses the whole address as the login name, not a separate username.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Rackspace Email to Claude, Cursor & MCP Clients",
+    "description": "Connect Rackspace Email to Claude, Cursor and any MCP client over IMAP at secure.emailsrvr.com:993. The host is shared, never built from your own domain."
+  },
+  "hero": {
+    "eyebrow": "Rackspace Email + AI",
+    "titleLine1": "Connect Rackspace Email to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Rackspace Email inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your mailbox password, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach Rackspace Email on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+  },
+  "method": {
+    "title": "How Rackspace Email connects: IMAP and your mailbox password",
+    "body": "Rackspace Email connects over IMAP/SMTP with your mailbox password. Both hosts are <code>secure.emailsrvr.com</code> whatever your own domain is, and that is the part people miss: the mail host is not derived from your domain name. Set or reset the mailbox password in the Rackspace Cloud Office control panel."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Get your Rackspace mailbox password",
+      "p": "In the Cloud Office control panel, open the mailbox and set its password. Use the secure host, secure.emailsrvr.com, not the unencrypted one."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, add your Rackspace Email address, the hosts below and the password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The mail host is not derived from your domain, and that is unusual for a business mail product",
+      "p": "Rackspace Email serves every customer from <code>secure.emailsrvr.com</code>, for incoming and outgoing alike. <code>mail.yourdomain.com</code> is not a Rackspace name and does not exist unless you created it yourself. Because <code>emailsrvr.com</code> carries no Rackspace branding, people who find it in an old configuration frequently assume it is wrong and replace it with something that looks more plausible, at which point nothing connects. It is correct. Our probe completed a TLS handshake against it and the certificate names <code>secure.emailsrvr.com</code>."
+    },
+    {
+      "h": "Turning on multi-factor authentication is what silently retires your mailbox password",
+      "p": "Rackspace app passwords only exist once multi-factor authentication is on, and once it is on, the mailbox password stops working in anything that speaks IMAP or SMTP while continuing to work in webmail. That split is what makes it so confusing: you can log into webmail with the password your client is being refused for. Create an app password from the account security settings in Rackspace webmail or in the Cloud Office control panel, label it for the client it serves, and copy it immediately, because it is displayed once. Losing it means deleting the entry and generating a new one."
+    },
+    {
+      "h": "Rackspace sells three different mail products, and only one of them is on emailsrvr",
+      "p": "<b>Rackspace Email</b> is the standalone IMAP mailbox product and the one this page covers. Rackspace also sells <b>Hosted Exchange</b>, running Exchange on Rackspace's own infrastructure, and resells <b>Microsoft 365</b>, where the mailbox lives on Microsoft's servers under Microsoft's identity platform. Only Rackspace Email answers on <code>secure.emailsrvr.com</code>. We do not claim to connect a Microsoft 365 mailbox, because Microsoft's default tenant policy blocks an ordinary end user from consenting to third-party mail read and write access. If your webmail is Outlook on the web, that is the Microsoft product."
+    },
+    {
+      "h": "You are talking to a proxy, and the capabilities you see are the proxy's",
+      "p": "The IMAP greeting names a machine such as <code>proxy7.mail.iad3b.rsapps.net</code>, so connections land on a front-end tier rather than on the store holding your mail. That tier advertises a deliberately small capability set: <code>SASL-IR</code>, <code>IDLE</code>, <code>LITERAL+</code> and <code>AUTH=PLAIN</code>, with no <code>AUTH=LOGIN</code>, no MOVE, no UIDPLUS and no SPECIAL-USE. The missing <b>AUTH=LOGIN</b> is the one that bites: client libraries hard-wired to the LOGIN mechanism, common in tooling written against Exchange, fail at authentication rather than returning a useful error, while the SMTP side accepts both PLAIN and LOGIN. The same account can therefore succeed at sending and fail at reading in one client."
+    }
+  ],
+  "limits": [
+    "Because the server does not advertise MOVE or UIDPLUS, a move is performed as copy, flag and expunge, and it is not atomic.",
+    "Folders are matched by name rather than by role, since SPECIAL-USE is not advertised. A mailbox with renamed folders may need the target named explicitly.",
+    "Hosted Exchange and Microsoft 365 mailboxes sold by Rackspace are not on secure.emailsrvr.com, and Microsoft 365 mailboxes cannot be connected at all."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Rackspace Email?",
+      "a": "Not on its own. Claude has no built-in Rackspace connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and because it is plain IMAP the same mailbox is then available in Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Rackspace Email IMAP and SMTP settings?",
+      "a": "Both are secure.emailsrvr.com. IMAP is port 993 with SSL/TLS and SMTP is port 465, also SSL/TLS. The login name is your complete email address and the password is the mailbox password. The host is shared across all Rackspace Email customers rather than built from your domain, and it was confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my Rackspace password rejected in a mail client but fine in webmail?",
+      "a": "That specific pattern means multi-factor authentication is enabled on the mailbox. Rackspace keeps accepting the mailbox password on the web while requiring an app password for IMAP and SMTP. Generate one from the account security settings in webmail or the Cloud Office control panel and use it in place of the mailbox password."
+    },
+    {
+      "q": "How do I create a Rackspace app password?",
+      "a": "App passwords only appear once multi-factor authentication is switched on. With MFA enabled, open your account security settings in Rackspace webmail or in the Cloud Office control panel, find the app passwords area and create one, labelling it for the client it belongs to. It is shown once, so copy it straight away."
+    },
+    {
+      "q": "Is secure.emailsrvr.com really my server?",
+      "a": "Yes. emailsrvr.com is Rackspace's unbranded mail domain and secure.emailsrvr.com is the TLS endpoint every Rackspace Email customer uses. There is no per-domain hostname to look up, and replacing it with a name based on your own domain is the most common reason a Rackspace setup fails to connect at all."
+    },
+    {
+      "q": "Is my Rackspace mail stored on your servers?",
+      "a": "No. Messages are fetched live from Rackspace over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Rackspace Email inbox",
+    "sub": "Connect Rackspace Email in minutes. One inbox free forever, no card required."
+  }
+}

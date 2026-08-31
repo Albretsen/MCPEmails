@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "https://docs.mailcow.email/",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "usernameForm": "The full mailbox address exactly as it appears in the Mailboxes list, for example you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect mailcow to Claude, Cursor & MCP Clients",
+    "description": "Connect a mailcow mailbox to Claude, Cursor and ChatGPT over IMAP on 993. Why acme-mailcow only certifies MAILCOW_HOSTNAME and what SKIP_LETS_ENCRYPT breaks."
+  },
+  "hero": {
+    "eyebrow": "mailcow + AI",
+    "titleLine1": "Connect mailcow to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "mailcow already gives you Dovecot, Postfix and SOGo in one stack. Add an MCP server on top and your agent can read, search, send, reply, schedule and file mail in the mailboxes you host yourself.",
+    "answer": "Claude cannot reach a mailcow server on its own. mcpemails is a hosted MCP server that connects to your mailcow install over IMAP on port 993, at the hostname you set as MAILCOW_HOSTNAME in mailcow.conf, using the mailbox password from the Mailboxes list, so Claude, Cursor or any MCP client can read, search, send and organize that mail. There is no shared host: it is your server, it must be published to the internet, and you must connect using exactly the hostname on the certificate acme-mailcow issued. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from the mailcow UI",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How mailcow connects: MAILCOW_HOSTNAME on 993",
+    "body": "mailcow is a Docker Compose stack, and the mail half of it is Dovecot for IMAP and Postfix for submission, so the protocol behaviour is ordinary and well understood. What is specific to mailcow is the hostname. The stack has exactly one canonical name, <code>MAILCOW_HOSTNAME</code>, set in <code>mailcow.conf</code> at install time and never really changed afterwards, and that is the name to use as your IMAP and SMTP host. Dovecot answers on 993 with implicit TLS and 143 with STARTTLS. Postfix answers on 465 and 587. Credentials are the mailbox password you set under Mailboxes, not the admin password you use for the mailcow UI itself: those are separate accounts and the admin login is not a mailbox."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Read MAILCOW_HOSTNAME out of mailcow.conf",
+      "p": "On the host, <code>grep MAILCOW_HOSTNAME /opt/mailcow-dockerized/mailcow.conf</code>. That value, not the bare domain and not the machine's own name, is your IMAP and SMTP hostname, because it is the name acme-mailcow requested the certificate for."
+    },
+    {
+      "h": "Confirm the mailbox and its password",
+      "p": "In the mailcow UI, open Configuration then Mailboxes. Confirm the address is active and, if you do not know its password, set a new one there. Then add the inbox in mcpemails: choose IMAP / SMTP, enter the MAILCOW_HOSTNAME host and the mailbox credentials."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The certificate covers MAILCOW_HOSTNAME and almost nothing else",
+      "p": "acme-mailcow requests a certificate for <code>MAILCOW_HOSTNAME</code>, plus <code>autodiscover.</code> and <code>autoconfig.</code> for every mail domain you add, plus anything you listed in <code>ADDITIONAL_SAN</code>. Your bare apex domain is not on that list. Connecting to <code>yourdomain.com:993</code> therefore fails certificate validation even though the certificate is perfectly valid, because the name does not match. Use the MAILCOW_HOSTNAME value verbatim and the mismatch disappears."
+    },
+    {
+      "h": "SKIP_LETS_ENCRYPT leaves a snakeoil certificate that browsers hide from you",
+      "p": "If <code>SKIP_LETS_ENCRYPT=y</code> is set in <code>mailcow.conf</code>, or acme-mailcow never completed a challenge, the stack keeps serving the self-signed certificate it generated at install. Everyone clicked through the browser warning months ago and forgot, so nothing looks broken locally, but a client that validates properly refuses the connection. Check what is really on the wire with <code>openssl s_client -connect $MAILCOW_HOSTNAME:993</code> rather than trusting the UI."
+    },
+    {
+      "h": "Port 80 must stay reachable or the certificate quietly stops renewing",
+      "p": "mailcow's ACME client uses the HTTP-01 challenge and the documentation is explicit that mailcow must be available on port 80 for it to work. Operators who firewall 80 off after setup, or park a different web server in front of the stack, get an issued certificate that renews for a while and then does not. IMAP on 993 keeps working until the day it expires, and then every client fails at once. If you cannot leave 80 open, switch the deployment to a DNS-01 challenge instead."
+    },
+    {
+      "h": "Publishing a port on a private interface hides the server from everything outside",
+      "p": "The port bindings in <code>mailcow.conf</code> take an address as well as a port. A binding like <code>IMAPS_PORT=127.0.0.1:993</code> is a normal way to run mailcow behind a proxy, and it means <code>docker ps</code> shows the container healthy while nothing outside the host can open the port at all. Confirm reachability from a machine on a different network before assuming credentials are the problem."
+    }
+  ],
+  "limits": [
+    "A hosted MCP server has to open an inbound IMAP connection to your stack, so mailcow published only on a private interface or reachable only through a VPN cannot be connected this way. mcpemails can be self-hosted alongside mailcow if you would rather nothing external touched 993.",
+    "Sending is handled by your own Postfix, so message acceptance downstream depends entirely on your SPF, DKIM and DMARC records and on whether your IP is listed anywhere."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with mailcow?",
+      "a": "Not on its own. Claude has no mailcow connector and cannot open an IMAP session to a server you run. Connecting an MCP server such as mcpemails to your mailcow install gives Claude read, search, send, reply, schedule and organize access to the mailboxes on it, in whichever MCP client you use."
+    },
+    {
+      "q": "What are the mailcow IMAP and SMTP settings?",
+      "a": "The host is your MAILCOW_HOSTNAME, which you can read from mailcow.conf. IMAP is port 993 with implicit TLS, or 143 with STARTTLS. Submission is 465 with implicit TLS or 587 with STARTTLS. Log in with the full mailbox address and the password set for that mailbox in the mailcow UI."
+    },
+    {
+      "q": "Why is my mailcow login rejected?",
+      "a": "The most common cause is using the mailcow admin account rather than a mailbox. The admin login exists only for the web UI and has no IMAP mailbox behind it. Confirm you are using an address that appears under Configuration then Mailboxes, and that the mailbox is active rather than disabled."
+    },
+    {
+      "q": "Is mailcow the same as Dovecot?",
+      "a": "mailcow packages Dovecot as its IMAP server, along with Postfix, SOGo and Rspamd, in a Docker Compose stack with a web UI on top. Anything that is true of Dovecot's IMAP behaviour is true here, which is why our Dovecot page is worth reading if you need to change listeners or folder roles directly."
+    },
+    {
+      "q": "Is my mail stored on your servers?",
+      "a": "No. Messages are fetched live from your mailcow server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a mailcow inbox",
+    "sub": "Connect a mailbox from your own stack. One inbox free forever, no card required."
+  }
+}

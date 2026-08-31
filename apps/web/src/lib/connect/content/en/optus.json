@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.optus.com.au/support/email",
+    "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "OptusNet email password",
+    "helpUrl": "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434",
+    "usernameForm": "Optus says the address and username should always be entered in full, for example username@optusnet.com.au.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "OptusNet Email in Claude: What Actually Changed",
+    "description": "Connect an OptusNet mailbox to Claude and any MCP client over IMAP at mail.optusnet.com.au:993. Optus did not shut email down, but it changed the plan in 2025."
+  },
+  "hero": {
+    "eyebrow": "OptusNet Email + AI",
+    "titleLine1": "Connect your OptusNet inbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Despite what half the internet says, OptusNet email did not shut down. It moved onto a new plan with new terms in 2025 and closed to new signups. The mailbox you have still speaks IMAP.",
+    "answer": "Claude cannot reach an OptusNet mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at mail.optusnet.com.au on port 993, signing in with your address entered in full and your OptusNet email password. There is no app password to generate. Two facts matter before you build on it: Optus moved the service onto a new plan with new terms from May 2025 and requires the email plan to be linked to an eligible Optus service, and it is not accepting sign-ups for new OptusNet email. For an address you already have, one inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Email password, no app password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How OptusNet connects: one hostname, both directions",
+    "body": "Optus runs incoming and outgoing on the same name. <code>mail.optusnet.com.au</code> answers IMAP on port 993 with SSL/TLS, and submission on the same host takes port 587 with STARTTLS or port 465 with SSL/TLS. Optus's own guidance is that new mail clients should use 587 or 465 going forward, though it notes port 25 is still supported, and it says plainly that it encourages IMAP over POP3. The username is always the complete address. The credential is the mailbox password with nothing wrapped around it: Optus issues no app-specific passwords and there is no client access toggle hidden in the webmail. What Optus did change is commercial rather than technical, and the section below is the part worth reading before you point an agent at the mailbox."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Confirm the mailbox is on a current OptusNet email plan",
+      "p": "Sign in at <code>webmail.optusnet.com.au</code>. Since May 2025 the service has been supplied under a plan with new terms, and the plan Optus publishes must be linked to an eligible Optus service. If the mailbox is dormant because your Optus service ended, sort that out before you connect anything to it."
+    },
+    {
+      "h": "Enter the full address and the email password",
+      "p": "In mcpemails choose IMAP / SMTP and put the whole address in the username field, in Optus's own format <code>username@optusnet.com.au</code>. Use the password for that mailbox. The host and ports below are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The mailbox holds 500 MB, and that is the whole allowance",
+      "p": "The OptusNet Email plan Optus publishes lists 500 MB of storage. That is not a typo and it is not per folder. An assistant that files rather than deletes, or a mailbox that has been quietly accumulating attachments since the plan changed, hits that ceiling far sooner than anyone expects, and a full mailbox stops accepting mail. Check the usage before you hand the account to an agent, and prune regularly afterwards."
+    },
+    {
+      "h": "Optus did not shut OptusNet email down, whatever the headlines said",
+      "p": "A lot of pages published in 2025 announced the end of OptusNet email. Optus's own support page tells a different story: from February 2025 it wrote to customers about changes, and from May 2025 it began supplying the service under a published plan and new terms and conditions, describing the work as an investment in a more secure and modern service. What is true is that sign-up to new OptusNet email services is not available, and that the email plan must be linked to an eligible Optus service. Existing mailboxes were not switched off en masse."
+    },
+    {
+      "h": "Old mail clients were dropped on purpose",
+      "p": "Optus states that most customers see no change, but that older versions of some third-party clients, naming Outlook 2010, are no longer supported because they no longer receive updates and may not meet current encryption and security standards. So a setup that broke around the change and has been blamed on the server is more likely the client. mcpemails connects with current TLS, which is the side of that line you want to be on."
+    },
+    {
+      "h": "SPECIAL-USE and IDLE are there, MOVE and UIDPLUS are not",
+      "p": "This is an unusual combination and it changes what is cheap and what is not. Because SPECIAL-USE is advertised, the server tells a client which folder is Sent, Drafts, Trash and Junk, so no name guessing is needed. Because IDLE is advertised, new mail arrives by push. But MOVE is absent, so filing a message runs as COPY, then STORE the deleted flag, then EXPUNGE, and UIDPLUS is absent too, so the id of the new copy is not reported and has to be found by searching the destination folder."
+    }
+  ],
+  "limits": [
+    "500 MB of mailbox storage on the published OptusNet Email plan, and the plan must be linked to an eligible Optus service.",
+    "New OptusNet email addresses are not being issued, so only an existing mailbox can be connected.",
+    "Moves are not atomic, because MOVE and UIDPLUS are not implemented on this server."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with OptusNet email?",
+      "a": "Not directly. Claude has no built-in Optus connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your optusnet.com.au mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the OptusNet IMAP and SMTP settings?",
+      "a": "Both use mail.optusnet.com.au. IMAP is port 993 with SSL/TLS. Outgoing is port 587 with STARTTLS or port 465 with SSL/TLS, which is the combination we verified from a live TLS connection. Optus says the username should always be entered in full, as username@optusnet.com.au, and that it encourages IMAP over POP3."
+    },
+    {
+      "q": "Is Optus shutting down its email service?",
+      "a": "Not according to Optus. Its support page describes writing to customers from February 2025 about changes, and supplying OptusNet Email under a new plan and new terms from May 2025. What has stopped is new sign-ups: Optus says its focus is on customers with an existing OptusNet email and that sign-up to new services is not currently available."
+    },
+    {
+      "q": "Do I need an app password for OptusNet email?",
+      "a": "No. Optus issues no app-specific passwords and there is no separate switch to enable outside mail clients. The mailbox password authenticates directly. If a correct password is refused, look at whether the mailbox is still on an active plan linked to an eligible Optus service rather than hunting for a security page."
+    },
+    {
+      "q": "Is my OptusNet mail stored on your servers?",
+      "a": "No. Messages are fetched live from Optus over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an OptusNet inbox",
+    "sub": "Still running, still IMAP. One inbox free forever, no card required."
+  }
+}

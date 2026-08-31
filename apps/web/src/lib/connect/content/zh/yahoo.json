@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "将 Yahoo Mail 连接到 Claude（及任意 AI）",
+    "description": "用应用专用密码将 Yahoo Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Yahoo Mail，1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "Yahoo Mail + AI",
+    "titleLine1": "将 Yahoo Mail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Yahoo 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "应用专用密码，无需 OAuth 配置",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Yahoo 如何连接：应用专用密码",
+    "body": "Yahoo Mail 通过 IMAP/SMTP 使用 <b>Yahoo 应用专用密码</b>连接。先开启两步验证，在 Yahoo 账户安全设置中生成一个应用专用密码，再连同你的 Yahoo 地址一起粘贴到 mcpemails。无需 OAuth 流程，也没有浏览器弹窗。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+    },
+    {
+      "h": "生成 Yahoo 应用专用密码",
+      "p": "开启两步验证，然后在 Yahoo 账户安全设置中生成一个应用专用密码。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "填入你的 Yahoo 地址和应用专用密码，安全连接收件箱。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Yahoo 收件箱",
+    "sub": "几分钟即可连接 Yahoo 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

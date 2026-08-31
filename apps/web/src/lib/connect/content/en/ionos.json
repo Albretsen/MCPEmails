@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/",
+    "https://www.ionos.com/help/email/other-email-programs/setting-up-an-ionos-email-account-in-apple-mail/",
+    "https://www.ionos.com/help/office/setting-up-microsoft-365/migrating-emails-from-11-ionos-mail-accounts-to-office-365/",
+    "https://www.ionos.co.uk/help/email/mail-basic/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Email password",
+    "helpUrl": "https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/",
+    "usernameForm": "The full email address, for example john.doe@example.com. IONOS gives every address its own password.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect IONOS to Claude, Cursor & MCP Clients",
+    "description": "Connect IONOS email to Claude, Cursor and any MCP client over IMAP at imap.ionos.com:993. Every address has its own password, separate from your IONOS login."
+  },
+  "hero": {
+    "eyebrow": "IONOS + AI",
+    "titleLine1": "Connect IONOS to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real IONOS inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your mailbox password, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach IONOS on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+  },
+  "method": {
+    "title": "How IONOS connects: IMAP and your mailbox password",
+    "body": "IONOS connects over IMAP/SMTP with the <b>email password</b> you set in the IONOS control panel under Email, which is separate from your IONOS login. IONOS answers on both standard transports, 993 with TLS and 143 with STARTTLS, and guessing between them is the most common way an IONOS connection fails. mcpemails fills in a working pair and retries the other if the first does not answer, so a rejected login here really is the password."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Get your IONOS mailbox password",
+      "p": "In the IONOS control panel, open Email, pick the address and set or reset its password. It is not the password you use to sign in to IONOS itself."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, add your IONOS address, the hosts below and the password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "On IONOS the port is almost never the cause, and cycling ports wastes days",
+      "p": "This is the most useful thing we can tell you about IONOS, and it comes out of our own connection logs rather than any manual. One workspace made twelve consecutive failed attempts against <code>imap.ionos.com</code>, alternating between 993 with implicit TLS and 143 with STARTTLS on the assumption that one of the two transports was wrong. IONOS answers on both. The password was the problem the entire time. IONOS documents 993 for IMAP and 465 for SMTP, and offers 587 with STARTTLS as an outgoing alternative for networks that block 465, so the transport is genuinely flexible and genuinely not what refuses your login. If the server answers and then rejects you, treat it as a credential problem and go straight to the control panel."
+    },
+    {
+      "h": "Every IONOS address carries its own password, and it is not your IONOS login",
+      "p": "IONOS states plainly that each email address has its own password. The credential you use to sign in to IONOS itself, which is very often an email address too, authenticates the control panel and nothing else. Set or reset the mailbox password in the IONOS control panel under <b>Email</b>, by selecting the address and using the password option on it. Because both credentials look identical in a login form, this is the single most common IONOS connection failure, and it is exactly the failure the port-cycling above was mistaken for."
+    },
+    {
+      "h": "Microsoft 365 sold by IONOS is a Microsoft mailbox, not an IONOS one",
+      "p": "IONOS resells Microsoft 365 alongside its own Mail Basic and Mail Business products, and a large number of customers who think they have IONOS email actually have a Microsoft tenant with an IONOS invoice. Nothing on <code>imap.ionos.com</code> applies to those mailboxes: they live on Microsoft's servers and are administered from the Microsoft 365 Admin Center rather than the IONOS control panel. Microsoft's default tenant policy blocks an ordinary end user from consenting to third-party mail read and write access, which is set by Microsoft and by your tenant administrator. We do not claim to connect them. The tell is where your webmail takes you: Outlook on the web means Microsoft."
+    },
+    {
+      "h": "Every IONOS country brand, and every legacy 1&1 address, uses the same two hosts",
+      "p": "IONOS runs separate storefronts on ionos.de, ionos.co.uk, ionos.fr, ionos.es, ionos.it and ionos.com, and those exist for billing and marketing rather than because the mail platform is regional. IMAP is <code>imap.ionos.com</code> and SMTP is <code>smtp.ionos.com</code> whatever storefront sold you the mailbox. Third-party guides that still insist on region-specific names built from the old 1&1 brand pre-date the rebrand, and following them puts you on a hostname that does not answer. There is no regional host to hunt for."
+    }
+  ],
+  "limits": [
+    "Microsoft 365 mailboxes bought through IONOS cannot be connected. Microsoft's default tenant policy blocks end-user consent for third-party mail access.",
+    "mcpemails connects a mailbox. IONOS aliases, forwarders, catch-all rules and spam settings stay in the IONOS control panel and are not visible to your AI client."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with IONOS email?",
+      "a": "It works with an IONOS mailbox, the kind served by imap.ionos.com, once an MCP server such as mcpemails is connected to it over IMAP. Claude has no built-in IONOS connector. It does not work with a Microsoft 365 mailbox bought through IONOS, because Microsoft's default tenant policy blocks third-party mail access consent."
+    },
+    {
+      "q": "What are the IONOS IMAP and SMTP settings?",
+      "a": "IMAP is imap.ionos.com on port 993 with SSL/TLS and SMTP is smtp.ionos.com on port 465, also SSL/TLS. IONOS documents port 587 with STARTTLS as an outgoing alternative if your network blocks 465. The username is your complete email address. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Should I use IONOS port 993 or 143?",
+      "a": "Use 993 with implicit TLS, which is what IONOS documents. The reason this question comes up so often is that clients propose 143 automatically and IONOS answers there too, so people conclude the port is the variable when a login is refused. It is not. If the server answers and rejects the credentials, the password is what is wrong."
+    },
+    {
+      "q": "Why is my IONOS email password rejected?",
+      "a": "Because IONOS gives every email address its own password and you are probably using your IONOS account login instead. Open the IONOS control panel, go to Email, select the address and set a new password for it, then use that. If the address was migrated to Microsoft 365, it no longer exists on the IONOS mail servers at all."
+    },
+    {
+      "q": "Do IONOS UK, German and French accounts use different servers?",
+      "a": "No. The regional IONOS storefronts share one mail platform, and every mailbox uses imap.ionos.com and smtp.ionos.com regardless of which country site sold it. Guides showing region-specific hostnames built from the old 1&1 brand are out of date and those names will not connect."
+    },
+    {
+      "q": "Is my IONOS mail stored on your servers?",
+      "a": "No. Messages are fetched live from IONOS over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an IONOS inbox",
+    "sub": "Connect IONOS in minutes. One inbox free forever, no card required."
+  }
+}

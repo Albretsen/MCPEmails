@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter GMX à Claude (et à toute IA)",
+    "description": "Connectez GMX à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de votre compte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "GMX + IA",
+    "titleLine1": "Connectez GMX à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte GMX en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de votre compte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de votre compte, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre GMX tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment GMX se connecte : IMAP et le mot de passe de votre compte",
+    "body": "GMX se connecte via IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans GMX, dans Paramètres e-mail, Récupération POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe GMX. Si GMX vous demande de créer un mot de passe spécifique à l'application, utilisez celui-là. Les comptes allemands utilisent les serveurs .net, <code>imap.gmx.net</code> et <code>mail.gmx.net</code>."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Activez l'accès IMAP dans GMX",
+      "p": "Dans GMX, ouvrez Paramètres e-mail, Récupération POP3/IMAP, et autorisez POP3 et IMAP. GMX le désactive de nouveau si le compte reste longtemps inutilisé."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse GMX, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte GMX à votre IA",
+    "sub": "Connectez GMX en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

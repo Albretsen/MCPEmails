@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "title": "Connecter Gmail à Claude (et à toute IA)",
+    "description": "Connectez Gmail à Claude, Cursor, ChatGPT et tout client MCP en un clic avec Google OAuth. Laissez l'IA lire, envoyer, planifier et organiser Gmail. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Gmail + IA",
+    "titleLine1": "Connectez Gmail à Claude",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Gmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec une connexion Google en un clic, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Connexion Google en un clic (OAuth)",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Gmail se connecte : Google OAuth en un clic",
+    "body": "Gmail se connecte via <b>Google OAuth</b> : connectez-vous avec Google, approuvez l'accès en lecture et en envoi, et c'est connecté. Pas de mot de passe d'application, pas de paramètres IMAP à dénicher. Révoquez l'accès à tout moment depuis votre compte Google ou le tableau de bord mcpemails."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Connectez-vous avec Google",
+      "p": "Cliquez sur Connecter Gmail, connectez-vous avec votre compte Google et approuvez l'accès en lecture et en envoi. Pas de mot de passe d'application ni de configuration IMAP."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Gmail à votre IA",
+    "sub": "Connectez Gmail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

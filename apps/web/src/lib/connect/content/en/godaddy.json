@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "https://www.godaddy.com/help/my-workspace-email-is-moving-to-microsoft-365-32394",
+    "https://www.godaddy.com/help/configuring-mail-clients-with-cpanel-email-8861",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Email password",
+    "helpUrl": "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "usernameForm": "Your full address, including the domain: name@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect GoDaddy Email to Claude, Cursor & MCP",
+    "description": "Connect GoDaddy Professional Email to Claude and any MCP client over IMAP at imap.secureserver.net:993. GoDaddy-sold Microsoft 365 mailboxes cannot connect."
+  },
+  "hero": {
+    "eyebrow": "GoDaddy email + AI",
+    "titleLine1": "Connect GoDaddy email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real GoDaddy inbox. Read, search, send, reply, schedule and organize mail over IMAP, once you know which of GoDaddy's several mail products your address actually sits on.",
+    "answer": "Claude cannot reach a GoDaddy mailbox on its own. mcpemails is a hosted MCP server that connects GoDaddy Professional Email over IMAP at imap.secureserver.net on port 993, authenticating with your full address and that mailbox's own email password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. GoDaddy sells more than one mail product under the same brand, and a Microsoft 365 mailbox bought through GoDaddy is a Microsoft mailbox that we cannot connect, so check which one you have first. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "The mailbox's own email password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How GoDaddy connects: identify the product, then IMAP",
+    "body": "\"GoDaddy email\" is three or four different services sharing one brand, and they do not share settings. <b>Professional Email</b>, which GoDaddy sells under the Titan platform, is the current mainstream product and is documented by GoDaddy at <code>imap.secureserver.net</code> port 993 and <code>smtpout.secureserver.net</code> port 465, both with implicit TLS, using the address as the username and that mailbox's own password. The retired <b>Workspace Email</b> product used the same secureserver hostnames, which is why so many old guides on the web still show them. <b>Microsoft 365 from GoDaddy</b> is not a GoDaddy mailbox at all: it is a Microsoft tenant that GoDaddy resells and bills, living on Microsoft's own servers. And a mailbox created inside <b>cPanel Web Hosting</b> lives on your hosting server, not on secureserver, and uses that server's own hostname. Get the product right and the rest of the setup is two minutes."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Check which GoDaddy mail product you have",
+      "p": "Sign in to GoDaddy and open the Email & Office dashboard under My Products. The plan name on the tile is the answer. Professional Email is the Titan-based product and uses the secureserver hosts. Microsoft 365 opens Outlook on the web and is a Microsoft mailbox. If the address was created in cPanel under Email Accounts instead, its settings are the ones shown at yourdomain.com/webmail under Configure Mail Client, not the secureserver ones."
+    },
+    {
+      "h": "Get the mailbox password and allow external clients",
+      "p": "In the Email & Office dashboard, open Manage next to the address and set or reset its email password. This is the mailbox's own password, not your GoDaddy account login. If the login is still refused, check the mailbox's security settings for the third-party or external email client toggle, and note that Titan blocks external clients while two-factor authentication is switched on for that mailbox."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Add your address and password in mcpemails, then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "A Microsoft 365 mailbox bought from GoDaddy cannot be connected here",
+      "p": "GoDaddy resells Microsoft 365 and has been migrating its old Workspace Email customers onto it, so a large share of people who think they have \"a GoDaddy email\" now have a Microsoft mailbox with a GoDaddy invoice. Those mailboxes do not live on <code>imap.secureserver.net</code>; they live on Microsoft's servers and are governed by Microsoft's identity platform. Microsoft's default tenant policy blocks an ordinary end user from consenting to mail read and write access for a third-party application, and that block is set by Microsoft and by your tenant administrator, not by GoDaddy and not by us. We do not claim to connect those mailboxes. The tell is simple: if signing in to your webmail lands you in Outlook on the web, that is the Microsoft product."
+    },
+    {
+      "h": "Half the GoDaddy IMAP guides online are for a product that no longer exists",
+      "p": "Workspace Email has been retired and its customers moved to Microsoft 365, but the guides written for it are still the top results for \"GoDaddy IMAP settings\", and they show the secureserver hostnames. Confusingly, those hostnames are still correct, because GoDaddy's current Professional Email uses the same ones. So a migrated user follows a guide, enters settings that look right, and gets an authentication failure with no clue why: the settings were fine, the mailbox simply is not there any more."
+    },
+    {
+      "h": "Titan blocks external clients while 2FA is on for the mailbox",
+      "p": "GoDaddy Professional Email runs on Titan, which gates IMAP, POP and SMTP behind a third-party app access setting on the mailbox and refuses external client connections while two-factor authentication is enabled for that mailbox. The refusal surfaces as a login failure, so it is routinely mistaken for a wrong password. Check that toggle before you reset anything."
+    },
+    {
+      "h": "GoDaddy's IMAP server does not advertise SASL-IR",
+      "p": "The IMAP server behind <code>imap.secureserver.net</code> identifies itself as Fenix and omits the SASL-IR capability, so it rejects the one-step authentication that sends credentials on the same line as the AUTHENTICATE command. Clients that assume SASL-IR receive a bare <code>BAD</code> with no explanation, which reads exactly like bad credentials. mcpemails detects that and retries the two-step exchange, so the connection succeeds, but it is why other IMAP tooling fails against GoDaddy while working elsewhere."
+    }
+  ],
+  "limits": [
+    "Microsoft 365 mailboxes sold through GoDaddy cannot be connected. Microsoft's default tenant policy blocks end-user consent for third-party mail access.",
+    "cPanel hosting mailboxes are not on the secureserver hosts. Connect those with the hostname shown in cPanel's Configure Mail Client screen instead.",
+    "The server does not advertise the MOVE extension, so moving a message is performed as copy, flag and expunge rather than one atomic command."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with GoDaddy email?",
+      "a": "It works with GoDaddy Professional Email, the Titan-based product, once an MCP server such as mcpemails is connected to the mailbox over IMAP. Claude has no built-in GoDaddy connector. It does not work with a Microsoft 365 mailbox bought through GoDaddy, because Microsoft's default tenant policy blocks third-party mail access consent."
+    },
+    {
+      "q": "What are the GoDaddy IMAP and SMTP settings?",
+      "a": "For Professional Email, IMAP is imap.secureserver.net on port 993 with implicit TLS and SMTP is smtpout.secureserver.net on port 465, also implicit TLS. The username is your full email address and the password is that mailbox's own email password. Both hosts are documented by GoDaddy and were confirmed from a live TLS connection."
+    },
+    {
+      "q": "How do I tell whether I have Professional Email or Microsoft 365?",
+      "a": "Open My Products in your GoDaddy account and look at the Email & Office dashboard. The plan name is printed on the tile for each address. A quicker check: sign in to your webmail. If you land in Outlook on the web, it is Microsoft 365. If you land in the Titan webmail interface, it is Professional Email and the secureserver settings apply."
+    },
+    {
+      "q": "Why is my GoDaddy email password rejected?",
+      "a": "Three common causes, in this order. You are using your GoDaddy account login rather than the mailbox's own email password. Two-factor authentication is enabled on the mailbox, which makes Titan refuse external clients. Or the mailbox was migrated to Microsoft 365 and no longer exists on the secureserver hosts at all."
+    },
+    {
+      "q": "What about email addresses I created in cPanel hosting?",
+      "a": "Those are ordinary IMAP mailboxes on your own hosting server and can be connected, but not with the secureserver hostnames. Sign in at yourdomain.com/webmail, open Configure Mail Client, and use the manual settings shown there. The password is the one you set for that address under Email Accounts in cPanel."
+    },
+    {
+      "q": "Is my GoDaddy mail stored on your servers?",
+      "a": "No. Messages are fetched live from GoDaddy over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a GoDaddy inbox",
+    "sub": "Connect GoDaddy Professional Email in minutes. One inbox free forever, no card required."
+  }
+}

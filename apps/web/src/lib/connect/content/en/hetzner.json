@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "https://docs.hetzner.com/konsoleh/account-management/email/mailboxes/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "usernameForm": "Your full address, including the domain: info@your-domain.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Hetzner Mail to Claude & MCP Clients",
+    "description": "Connect a Hetzner Web Hosting mailbox to Claude, Cursor and any MCP client over IMAP at mail.your-server.de:993. One inbox free, forever, no card needed."
+  },
+  "hero": {
+    "eyebrow": "Hetzner mail + AI",
+    "titleLine1": "Connect your Hetzner mailbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real Hetzner inbox. Read, search, send, reply, schedule and organize mail over IMAP at mail.your-server.de, using the mailbox password you set in konsoleH.",
+    "answer": "Claude cannot reach a Hetzner mailbox on its own. mcpemails is a hosted MCP server that connects Hetzner Web Hosting mail over IMAP at mail.your-server.de on port 993, authenticating with your full email address and the mailbox password you set when creating the account in konsoleH, so Claude, Cursor or any MCP client can read, search, send and organize the mail. The hostname is literally mail.your-server.de for every customer, not a variant of your own domain. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password set in konsoleH",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Hetzner mail connects: IMAP at mail.your-server.de",
+    "body": "Hetzner's shared mail platform, the one behind Web Hosting and Managed Server plans administered through <b>konsoleH</b>, serves IMAP at <code>mail.your-server.de</code> on port 993 with implicit TLS and SMTP at the same host on port 465. That hostname is a literal string, identical for every Hetzner hosting customer, and Hetzner's own documentation writes it exactly that way. The username is the full mail address such as <code>info@your-domain.de</code>, and the password is the one entered in the two password fields when the mailbox was created in konsoleH. That mailbox password is a separate credential from the konsoleH login you use to administer the account. This page is about that hosted mailbox. A mail server you installed and run yourself on a Hetzner Cloud or dedicated machine is an entirely different situation, covered below."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Set or reset the mailbox password in konsoleH",
+      "p": "Log in to konsoleH, select the domain, and open E-Mail, then Mailboxes. Pick the address and enter a new password in both password fields if you do not have the current one. Note that the mailbox is created with only the local part before the at sign, but the full address is what you type as the username in any client."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, enter the full address, and paste the mailbox password. The host mail.your-server.de and ports 993 and 465 are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The hostname is not built from your domain",
+      "p": "The most common Hetzner setup failure is entering <code>mail.your-domain.de</code> with your actual domain substituted in, because that is how nearly every other host works. Hetzner does not do that. The string <code>mail.your-server.de</code> is the real hostname, shared by every hosting customer, and typing your own domain in its place produces either a DNS failure or a connection to some unrelated server that happens to answer on that name. Hetzner's documentation writes the literal hostname, and people read it as a placeholder."
+    },
+    {
+      "h": "A Hetzner Cloud or dedicated server is not this",
+      "p": "Hetzner sells two very different things that both get called \"Hetzner email\". Web Hosting and Managed Server plans include mailboxes on the shared platform described here. Cloud and dedicated servers include no mailbox at all: if you want mail on one, you install and run a mail server yourself, and the hostname, ports and credentials are whatever you configured. That is a self-hosted mail server that happens to sit at Hetzner, and it connects the same way any self-hosted server does. Worth knowing before you start: Hetzner blocks outbound SMTP on new cloud servers by default and unblocks it only on request, so a self-run mail server there cannot send until you ask them."
+    },
+    {
+      "h": "No MOVE, no UIDPLUS, and folders are matched by name",
+      "p": "The Dovecot build behind <code>mail.your-server.de</code> does not advertise the MOVE extension, so a move is carried out as a copy followed by a flag update and an expunge rather than one atomic command. UIDPLUS is absent too, so the destination UID of a copied message is not returned and must be located by searching. SPECIAL-USE is also missing, meaning Sent, Drafts, Trash and Junk are matched by their names. On a German-language mailbox those are frequently Gesendet, Entwuerfe, Papierkorb and Spam, so name the folder explicitly if an agent cannot find it."
+    }
+  ],
+  "limits": [
+    "Only mailboxes on Hetzner's hosted mail platform are covered here. A mail server you run yourself on a Hetzner Cloud or dedicated machine needs its own hostname and credentials.",
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Hetzner email?",
+      "a": "Not on its own. Claude has no built-in connector for Hetzner. Pointing an MCP server such as mcpemails at your Hetzner mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Hetzner IMAP and SMTP settings?",
+      "a": "Both are mail.your-server.de. IMAP uses port 993 with implicit TLS and SMTP uses port 465, also implicit TLS. The username is your complete email address and the password is the mailbox password from konsoleH. That host is a literal name shared by every Hetzner hosting customer and was confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my konsoleH password rejected by IMAP?",
+      "a": "Because it is the wrong credential. The konsoleH login administers the hosting account, while each mailbox carries its own password set at creation time in the Mailboxes screen. If nobody recorded it, open that screen and enter a new one in both password fields, then use the new one in the client."
+    },
+    {
+      "q": "Can I connect a mail server running on my Hetzner Cloud VPS?",
+      "a": "Yes, but not through this page's settings. A self-run mail server uses whatever hostname and credentials you configured for it, and mail.your-server.de is not it. Connect it as a generic IMAP server. Remember that Hetzner blocks outbound SMTP ports on new cloud servers until you ask support to unblock them."
+    },
+    {
+      "q": "Is my Hetzner mail stored on your servers?",
+      "a": "No. Messages are fetched live from Hetzner over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Hetzner inbox",
+    "sub": "Connect your Hetzner mailbox in minutes. One inbox free forever, no card required."
+  }
+}

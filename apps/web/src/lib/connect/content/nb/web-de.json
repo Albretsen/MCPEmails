@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Koble WEB.DE til Claude (og enhver AI)",
+    "description": "Koble WEB.DE til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med kontopassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "WEB.DE + AI",
+    "titleLine1": "Koble WEB.DE til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte WEB.DE-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og kontopassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kontopassordet ditt, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke WEB.DE på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+  },
+  "method": {
+    "title": "Slik kobler WEB.DE seg til: IMAP og kontopassordet ditt",
+    "body": "WEB.DE kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i WEB.DE under E-postinnstillinger, POP3/IMAP-henting, og koble så til med WEB.DE-adressen og passordet ditt. Utgående e-post går over STARTTLS på port 587 i stedet for implisitt TLS på 465, og mcpemails velger det for deg."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Slå på IMAP-tilgang i WEB.DE",
+      "p": "I WEB.DE åpner du E-postinnstillinger, POP3/IMAP-henting, og tillater POP3- og IMAP-tilgang."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, legg til WEB.DE-adressen din, vertene under og passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en WEB.DE-innboks",
+    "sub": "Koble til WEB.DE på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

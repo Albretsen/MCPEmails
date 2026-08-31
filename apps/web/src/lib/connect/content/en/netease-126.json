@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://jingyan.baidu.com/article/17bd8e526ddb4185aa2bb852.html",
+    "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "https://help.lunkr.cn/126-IMAP-Login-Tutorial/IMAP-Login-Tutorial-126.html",
+    "https://www.laifa.xin/en/youxiang/107-wangyi-163youxiang-netease-personal-email"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Client authorization code (客户端授权码)",
+    "helpUrl": "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "usernameForm": "Your full address, including the domain: name@126.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect 126.com Mail to Claude, Cursor and MCP",
+    "description": "Connect a NetEase 126.com mailbox to Claude or any MCP client over IMAP at imap.126.com:993. Uses its own authorization code, not the one from your 163 account."
+  },
+  "hero": {
+    "eyebrow": "126 Mail + AI",
+    "titleLine1": "Connect 126.com mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real 126.com mailbox. Read, search, send, reply, schedule and organize mail over IMAP with a NetEase authorization code issued for that mailbox, not for a sibling one.",
+    "answer": "Claude cannot reach a NetEase 126 mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.126.com on port 993, authenticating with the 16-character client authorization code (客户端授权码) NetEase issues for that mailbox rather than your password. Almost every English guide to NetEase mail is written for 163.com, and pointing a 126 address at the 163 hostnames fails as an authentication error rather than as a routing one, which sends people back to regenerating a code that was never wrong. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Its own 126 authorization code",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How 126 Mail connects: IMAP at its own hostnames, with its own code",
+    "body": "126.com is NetEase's second free mail domain, opened after the 163.com namespace filled up, and it is where a large share of Chinese personal addresses actually live. It runs on the same Coremail platform as 163.com and behaves the same way, but it is a different mailbox on different servers: IMAP at <code>imap.126.com</code> on port 993 over TLS, and SMTP at <code>smtp.126.com</code> on port 465. Two conditions have to hold before a client logs in. The client protocol must be switched on in the mailbox settings, which is what produces the <b>16-character authorization code</b> that replaces your password. And the client has to identify itself with the IMAP <code>ID</code> command before it authenticates, because NetEase refuses anonymous clients with an <code>Unsafe Login</code> message that has nothing to do with credentials. mcpemails does both."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required. Keep your phone to hand: NetEase asks you to send a verification SMS partway through the next step."
+    },
+    {
+      "h": "Turn on the client protocol at mail.126.com",
+      "p": "Sign in at mail.126.com, not at mail.163.com, even if you hold both. Open 设置 (Settings) and choose POP3/SMTP/IMAP. Switch the IMAP/SMTP service on and confirm in the popup. NetEase will offer its own 邮箱大师 client first; carry on past it. Until this service is on, imap.126.com refuses every login whatever password you send."
+    },
+    {
+      "h": "Send the verification SMS, then copy the code into mcpemails",
+      "p": "NetEase shows a QR code that composes a verification SMS on your phone, with a manual-send fallback underneath it. Send the message, wait a moment, then confirm you have sent it. The 16-character authorization code appears once and is never shown again. Copy it, choose IMAP / SMTP in mcpemails, enter your full 126 address, and paste the code into the password field. The 126 hosts are prefilled."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize that 126 mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "163 settings do not work for a 126 address, and the error hides that",
+      "p": "This is the one that costs 126 users the most time, and it is a side effect of documentation rather than of the service. The overwhelming majority of guides, sample configurations and Stack Overflow answers about NetEase mail were written for 163.com, so <code>imap.163.com</code> and <code>smtp.163.com</code> are what people copy. A <code>name@126.com</code> address presented to the 163 server is simply an account that does not exist there, and the server reports that as a failed login. Nothing in the message says you are at the wrong host. Before you regenerate a code, check that the hostnames actually say 126."
+    },
+    {
+      "h": "One NetEase login, several mailboxes, one code each",
+      "p": "NetEase runs 126.com alongside 163.com, yeah.net and 188.com, and lets you associate them so that several mailboxes are reachable from a single sign-in. That convenience makes people assume the credential is shared too. It is not. Each mailbox has its own client protocol switch, its own authorization code and its own hostnames, and a code minted for your 163 address authenticates nothing at imap.126.com. If you hold both, connect them in mcpemails as two separate inboxes with two separate codes."
+    },
+    {
+      "h": "A correct code can still be refused, for two unrelated reasons",
+      "p": "First, NetEase requires third-party clients to announce themselves with the IMAP <code>ID</code> command from RFC 2971 before authenticating. A client that skips it is refused with <code>Unsafe Login</code>, and NetEase drops a warning message into the mailbox as well. The referral address in that message is at yet another NetEase domain, which adds to the confusion. Second, the server's capability line advertises <code>AUTH=XOAUTH2</code> and nothing else, so a client picking a mechanism from the advertised list finds none it can use with a password and never attempts the plain <code>LOGIN</code> command that does work. Both look exactly like a bad authorization code. mcpemails handles both."
+    }
+  ],
+  "limits": [
+    "126's server does not advertise the MOVE extension, so each filing operation is a copy, a flag update and an expunge. Your agent will still file mail correctly, but a run over hundreds of messages takes noticeably longer than on a server with MOVE.",
+    "IDLE is not offered, so new mail is discovered by polling rather than pushed to the connection. An agent watching the mailbox sees a message on its next check, not on arrival.",
+    "The 126 hosts sit in mainland China, so every request from a client outside the country pays cross-border latency on each IMAP round trip. Large searches feel slower than the same search against a European or North American mailbox."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with 126.com mail?",
+      "a": "Not directly. Claude has no built-in NetEase connector and cannot open an IMAP connection by itself. Connecting an MCP server such as mcpemails to your 126 mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the 126.com IMAP and SMTP settings?",
+      "a": "IMAP is imap.126.com on port 993 with implicit TLS. SMTP is smtp.126.com on port 465. Log in with your full 126.com address and the 16-character client authorization code rather than your mailbox password. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Can I use my 163 authorization code for a 126 mailbox?",
+      "a": "No. They are separate mailboxes on separate hostnames, even when both are reachable from one NetEase sign-in. Each one issues its own code from its own settings screen, and each one has its own client protocol switch that has to be turned on. Generate a code at mail.126.com for the 126 address."
+    },
+    {
+      "q": "Where do I get the 126 authorization code?",
+      "a": "Sign in at mail.126.com, open 设置 then POP3/SMTP/IMAP, and switch the IMAP and SMTP service on. NetEase then asks you to send a verification SMS from the phone bound to the account. Once that is confirmed, the 16-character code is displayed a single time, so copy it before closing the dialog."
+    },
+    {
+      "q": "Is 126.com the same service as 163.com?",
+      "a": "It is the same company and the same Coremail platform, with the same authorization code flow and the same IMAP identification requirement, but it is a different mail domain with its own servers. Treat it as a separate provider when you configure a client, and read the hostnames carefully, because they differ by three characters."
+    },
+    {
+      "q": "Is my 126 mail stored on your servers?",
+      "a": "No. Messages are fetched live from NetEase over IMAP for each request and passed to your AI client. Credentials are encrypted at rest, and message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a 126 Mail inbox",
+    "sub": "Connect your 126.com mailbox in minutes with its own authorization code. One inbox free forever, no card required."
+  }
+}

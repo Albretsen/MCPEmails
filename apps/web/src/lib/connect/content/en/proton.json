@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "https://proton.me/support/smtp-submission",
+    "https://proton.me/support/email-forwarding",
+    "https://proton.me/mail/bridge"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "No remote login exists",
+    "helpUrl": "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "usernameForm": "There is nothing to enter here. Proton issues mail-client credentials only inside Proton Mail Bridge, and they are valid only against Bridge on the machine running it.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Proton Mail and Claude: Why Bridge Blocks Connection",
+    "description": "Proton Mail has no remote IMAP. IMAP exists only inside Proton Mail Bridge, a paid desktop app serving localhost, so no hosted MCP server can reach it."
+  },
+  "hero": {
+    "eyebrow": "Proton Mail + AI",
+    "titleLine1": "Proton Mail cannot be",
+    "titleLine2": "connected to a hosted MCP server",
+    "lead": "Proton has no IMAP server on the internet. The only IMAP that exists for a Proton mailbox runs on your own computer, inside Proton Mail Bridge, which is why every hosted tool hits the same wall.",
+    "answer": "No. Proton Mail exposes no IMAP, POP or SMTP endpoint that a client elsewhere can log into. The only way a mail client ever reaches Proton is Proton Mail Bridge, a desktop application available on paid Proton plans that decrypts your mail locally and serves IMAP and SMTP on localhost, meaning the loopback address of the machine it runs on. A hosted MCP server such as mcpemails runs on our infrastructure, not on your desk, and nothing on the internet can route to your localhost, so the connection is impossible rather than unimplemented. If you want an AI agent working on mail that reaches your Proton address, the honest options are Proton's paid auto-forwarding into a mailbox that does speak IMAP, which mcpemails connects free for one inbox, or Proton's send-only SMTP submission for outbound alone."
+  },
+  "method": {
+    "title": "How Proton Mail connects: locally, through Bridge, or not at all",
+    "body": "Proton's own support documentation is clear that third-party mail clients go through <b>Proton Mail Bridge</b>, and that Proton does not offer POP3 at all. Bridge runs on Windows, macOS and Linux, holds your keys, decrypts messages as they arrive on your machine and re-encrypts outgoing mail before handing it to Proton, then presents that plaintext view as an ordinary IMAP and SMTP server bound to the loopback interface. Your mail client connects to that local server with credentials Bridge generates for it. Those credentials are not your Proton password and they are not usable from anywhere else, because the server they authenticate against exists only while Bridge is running on that computer. Bridge requires a paid plan: Proton Mail Plus, Proton Unlimited, Proton Business and above. On Proton Free there is no client access of any kind."
+  },
+  "setup": [
+    {
+      "h": "Create the free mcpemails account",
+      "p": "An email address, no card. One connected inbox is free forever, and the next two steps decide which inbox that is."
+    },
+    {
+      "h": "Choose the mailbox that will carry the automated work",
+      "p": "Pick an address on a provider that runs a real IMAP server: a domain mailbox, a work account, Fastmail, Migadu, Gmail. That is the account mcpemails connects and the one your agent reads, sends, files and schedules from. Your Proton address stays exactly as it is."
+    },
+    {
+      "h": "Add a forwarding rule in Proton settings",
+      "p": "In Proton Mail on the web, open Settings, then All settings, then <b>Forward and auto-reply</b>, and choose Add forwarding rule. Pick the Proton address to forward from and the destination address, and leave the conditions empty to forward everything. Proton sends the destination a confirmation request that has to be accepted before anything flows. Read the next section first: forwarding to a non-Proton address changes the encryption picture."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and the agent works in the connected mailbox, including the copies arriving from Proton."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Bridge is bound to localhost, and that single fact is the whole blocker",
+      "p": "Bridge listens on the loopback address of the computer it runs on. Loopback traffic never leaves that machine, so there is no hostname a hosted service could resolve and no port it could reach, whatever credentials it holds. This is why every hosted assistant, MCP server and cloud automation tool stops at exactly the same place with Proton, and why the answer does not change if you upgrade your plan."
+    },
+    {
+      "h": "Bridge is not available on Proton Free",
+      "p": "People on the free plan often get as far as downloading Bridge before finding out. Bridge requires a paid Proton Mail plan, so on Proton Free there is no supported way to use any third-party mail client, local or otherwise. That includes Thunderbird and Apple Mail, not just automation tools."
+    },
+    {
+      "h": "Proton SMTP submission looks like the answer and cannot read a single message",
+      "p": "Proton offers SMTP submission on paid plans with custom domain addresses, authenticated with a token you generate in settings rather than your account password. Proton's documentation states it is for sending only, unlike the IMAP protocol used by third-party clients to fetch received mail. So an application can send as your Proton address and can never see the reply. For an agent that reads a thread before answering it, that is not a partial solution."
+    },
+    {
+      "h": "Forwarding out of Proton disables end-to-end encryption for that address",
+      "p": "Proton says so directly: mail forwarded to another Proton address stays end-to-end encrypted, and forwarding to a non-Proton address turns end-to-end encryption off for mail to and from the forwarding address. If your reason for using Proton is that Proton cannot read your mail, mirroring it into an ordinary mailbox gives that up for the mail you mirror. Forward a specific set of correspondence rather than the whole inbox, or do not forward at all."
+    }
+  ],
+  "limits": [
+    "Exposing Bridge to the internet through a tunnel or a port forward is not a supported configuration and we do not suggest it. Bridge is built to be reached by a client on the same machine, and putting a decrypted view of your mailbox on a public port undoes the reason you chose Proton.",
+    "A forwarded copy is a mirror, not the mailbox. Replies your agent sends leave from the other address, and nothing it does appears in your Proton threads, folders or labels."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Proton Mail?",
+      "a": "Not directly, and not through any hosted MCP server. Proton has no internet-facing IMAP endpoint, and the local Bridge application that provides IMAP is only reachable from the computer it runs on. The workable pattern is to forward the mail you want handled into a mailbox that does speak IMAP and connect that one instead."
+    },
+    {
+      "q": "What are the Proton Mail IMAP and SMTP settings?",
+      "a": "There is no public pair to publish. The IMAP and SMTP details for a Proton mailbox are generated by Proton Mail Bridge on your own computer and shown in the Bridge window, pointing at the loopback address with credentials specific to that installation. Any settings directory listing a Proton IMAP hostname you can reach from elsewhere is wrong."
+    },
+    {
+      "q": "Can I use Proton Mail Bridge with a hosted MCP server?",
+      "a": "No. Bridge serves IMAP on localhost, which by definition is reachable only from the machine Bridge is running on. A hosted server sits on different infrastructure with no route to your loopback interface. This is a networking fact rather than a policy we could waive."
+    },
+    {
+      "q": "Do I need a paid Proton plan to use IMAP?",
+      "a": "Yes. Bridge is the only route to IMAP or SMTP for a Proton mailbox and it requires a paid plan, Proton Mail Plus, Proton Unlimited, Proton Business or higher. Proton Free has no third-party client access at all, so a free account cannot connect Thunderbird, Apple Mail or anything else."
+    },
+    {
+      "q": "Can an AI at least send email from my Proton address?",
+      "a": "It can, through Proton's SMTP submission feature, which is available on paid plans with custom domain addresses and uses a token you generate in settings. It is submission only. Nothing using it can list, read or search your mailbox, so an agent could send on your behalf without ever seeing what arrived."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. For the mailboxes mcpemails does connect, messages are fetched live over IMAP for each request and passed to your AI client, with credentials encrypted at rest and message bodies not retained. We never hold Proton credentials at all, because there is no Proton connection to make."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an inbox it can reach",
+    "sub": "Proton stays private and unconnected. Point one IMAP mailbox at your agent instead, free forever."
+  }
+}

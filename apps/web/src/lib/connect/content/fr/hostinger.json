@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter Hostinger à Claude (et à toute IA)",
+    "description": "Connectez Hostinger à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Hostinger + IA",
+    "titleLine1": "Connectez Hostinger à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Hostinger en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre Hostinger tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment Hostinger se connecte : IMAP et le mot de passe de la boîte",
+    "body": "Hostinger Email se connecte via IMAP/SMTP avec le mot de passe de la boîte défini dans hPanel, section Emails. Pas de mot de passe d'application, pas d'étape OAuth. Les serveurs sont <code>imap.hostinger.com</code> et <code>smtp.hostinger.com</code> pour tous les domaines : il n'y a rien à chercher."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Récupérez le mot de passe de votre boîte Hostinger",
+      "p": "Dans hPanel, ouvrez Emails, choisissez l'adresse et définissez ou réinitialisez son mot de passe. C'est ce mot de passe que mcpemails utilise pour s'authentifier."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Hostinger, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Hostinger à votre IA",
+    "sub": "Connectez Hostinger en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

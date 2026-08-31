@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.telepolis.pl/tech/aplikacje/onet-wyciaga-wtyczke-nic-juz-nie-zrobisz-w-ten-sposob",
+    "https://webinsider.pl/newslog/onet-poczta-koniec-pop3-a-imap-tylko-w-platnych/",
+    "https://seohost.pl/pomoc/blokada-poczty-pop3-onet-poczta",
+    "https://www.instalki.pl/news/internet/korzystacie-jeszcze-z-poczty-onet-za-te-funkcje-trzeba-bedzie-placic/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Onet password, on a paid mail plan",
+    "helpUrl": "https://poczta.onet.pl/",
+    "usernameForm": "Your full address, including the domain: nazwa@onet.pl or nazwa@poczta.onet.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Onet Poczta IMAP: Paid Plans Only, and Claude Setup",
+    "description": "Onet Poczta moved IMAP behind paid plans and retired POP3 in March 2026. What still works at imap.poczta.onet.pl:993, and how to connect it to Claude."
+  },
+  "hero": {
+    "eyebrow": "Onet Poczta + AI",
+    "titleLine1": "Onet Poczta over IMAP,",
+    "titleLine2": "in Claude, Cursor, any MCP client",
+    "lead": "Onet moved mail-client access behind a paid plan in 2026. If your account has it, an AI agent can read, search, send, reply, schedule and organize the mailbox over IMAP.",
+    "answer": "Claude cannot reach an Onet mailbox on its own, and since 31 March 2026 neither can anything else on a free Onet account. Onet withdrew POP3 for everyone and moved IMAP into its paid mail packages, so a free account is now webmail and mobile app only. On a paid plan, or on one of the grandfathered perpetual accounts, mcpemails is a hosted MCP server that connects the mailbox over IMAP at imap.poczta.onet.pl on port 993 with your Onet password, giving Claude, Cursor or any MCP client read, search, send and organize access. One inbox on mcpemails is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Needs a paid Onet mail plan",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Onet connects: IMAP, but only if the account is entitled to it",
+    "body": "Onet serves IMAP at <code>imap.poczta.onet.pl</code> on port 993 over implicit TLS and SMTP submission at <code>smtp.poczta.onet.pl</code> on port 465. Both hosts are live and answer today, and the IMAP server advertises <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code> and <code>AUTH=XOAUTH2</code>. That the servers answer is not the same as your account being allowed to use them. From <b>31 March 2026</b> Onet withdrew POP3 support entirely, for every user without exception, and restricted IMAP to its paid mail packages, reported as <b>Poczta Plus</b> and <b>Poczta Standard</b>. Free accounts keep their mail; what they lose is the protocol. Holders of the old perpetual accounts (<b>konta wieczyste</b>) were exempted and keep IMAP at no charge. So the practical question for an Onet mailbox is not which host to use, it is which of those three categories the account falls into."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Check whether your Onet account is entitled to IMAP",
+      "p": "Sign in at poczta.onet.pl and look at the account's plan. A free account after March 2026 has no IMAP and no POP3, so no client will ever connect to it. A paid mail package restores IMAP. A perpetual account (<b>konto wieczyste</b>) keeps IMAP without paying. There is no toggle to find here: this is a billing state, not a setting."
+    },
+    {
+      "h": "Use your Onet password, and drop any POP3 configuration you still have",
+      "p": "Onet issues no app-specific password for mail clients; you authenticate with your Onet account password and the full address. If you are migrating settings from an old client, do not carry the POP3 host across. POP3 was withdrawn outright rather than deprecated, so nothing on port 995 will answer for you any more."
+    },
+    {
+      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the full address such as nazwa@onet.pl, and enter the password. The Onet hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "A free Onet account cannot be connected by anything, and the servers still answer",
+      "p": "This is the whole story for Onet in 2026 and it is genuinely confusing to diagnose, because <code>imap.poczta.onet.pl</code> is up, accepts a TLS connection and advertises its authentication mechanisms exactly as it always did. The gate is on the account, not the host. If yours is a free account, Outlook, Thunderbird, Apple Mail, the Android and iOS built-in clients and every hosted MCP server including this one are all in the same position: no protocol access. Onet's stated free route is the website and the official mobile app. Buying a mail package is the only thing that changes that."
+    },
+    {
+      "h": "POP3 is gone entirely, for paid accounts too",
+      "p": "The IMAP restriction and the POP3 withdrawal are two separate changes that landed on the same date, and people conflate them. Paying for a plan restores IMAP; it does not bring POP3 back. Onet retired POP3 for all users without exception. If you have an old client or a legacy integration that fetches over POP3, a paid plan will not rescue it and it has to move to IMAP."
+    },
+    {
+      "h": "Perpetual accounts were carved out, so two Onet mailboxes can behave differently",
+      "p": "Holders of <b>konta wieczyste</b> keep free IMAP access. That means two Onet addresses sitting side by side in the same client, both apparently free, can have different capabilities, and only one of them will connect. Before you troubleshoot a failing Onet connection against a working one, check that you are comparing accounts of the same type."
+    },
+    {
+      "h": "No IDLE and no MOVE, so filing and freshness both cost extra round trips",
+      "p": "Onet's IMAP banner advertises <code>SASL-IR</code> and <code>LITERAL+</code> but not <code>IDLE</code>, so new mail is discovered by polling rather than pushed on an open connection. It also omits <code>MOVE</code> and <code>UIDPLUS</code>, so filing a message runs as a copy, a flag update and an expunge, and the new UID of the copy is not reported back and has to be found by searching the destination folder. Neither is fatal, both make bulk organizing slower than it looks."
+    }
+  ],
+  "limits": [
+    "On a free Onet account there is nothing to connect. This is a provider restriction and no MCP server, ours included, can work around it.",
+    "SPECIAL-USE is absent, so Sent, Drafts and Trash are matched by name rather than by role. Name the folder in the instruction if an agent cannot find it.",
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Onet Poczta?",
+      "a": "Only if the account has IMAP, which since March 2026 means a paid Onet mail package or a grandfathered perpetual account. Given that, pointing an MCP server such as mcpemails at the mailbox gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Onet IMAP and SMTP settings?",
+      "a": "IMAP is imap.poczta.onet.pl on port 993 with implicit TLS. SMTP is smtp.poczta.onet.pl on port 465, also implicit TLS. The username is your complete address and the password is your Onet account password. Both hosts were confirmed from a live TLS connection, though a free account will still be refused at the authentication step."
+    },
+    {
+      "q": "Why did Outlook stop working with my Onet mail?",
+      "a": "Because of the 31 March 2026 change. Onet withdrew POP3 for every user and moved IMAP into its paid packages. If your Outlook profile used POP3, that protocol no longer exists at Onet at any price. If it used IMAP on a free account, the account no longer has protocol access and needs a paid plan."
+    },
+    {
+      "q": "Which Onet plan do I need for IMAP?",
+      "a": "Onet's paid mail packages, reported as Poczta Plus and Poczta Standard, restore IMAP access along with more storage and no operator advertising. Check the current plan list and pricing on Onet's own subscription page before buying, since the packages have changed once already."
+    },
+    {
+      "q": "Does Onet issue an app password?",
+      "a": "No. Onet does not publish an application-specific password mechanism for mail clients. Authentication is your ordinary Onet account password together with the full address. The server does advertise XOAUTH2, but there is no self-service way for an ordinary user to obtain a token for it."
+    },
+    {
+      "q": "Is my Onet mail stored on your servers?",
+      "a": "No. Messages are fetched live from Onet over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an Onet inbox",
+    "sub": "If your Onet plan includes IMAP, connect it in minutes. One inbox free forever, no card required."
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/settings/bindings/ipaddresses",
+    "https://help.smartertools.com/SmarterMail/current/Topics/SystemAdmin/Settings/ProtocolSettings",
+    "https://help.smartertools.com/SmarterMail/v16/Topics/SystemAdmin/Security/Advanced/AbuseDetection.aspx",
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/manage/currentblocks",
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/manage/userdefaults"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://help.smartertools.com/smartermail/current/topics/systemadmin/settings/bindings/ipaddresses",
+    "usernameForm": "The full mailbox address including the domain, for example you@yourdomain.com, since one SmarterMail server hosts many domains.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SmarterMail to Claude: IMAP Bindings and IDS Blocks",
+    "description": "Connect a SmarterMail mailbox to Claude, Cursor and ChatGPT over IMAP on 993. Where bindings set port encryption, and how IDS rules block a repeat client."
+  },
+  "hero": {
+    "eyebrow": "SmarterMail + AI",
+    "titleLine1": "Connect SmarterMail to Claude,",
+    "titleLine2": "Cursor, ChatGPT and any MCP client",
+    "lead": "SmarterMail already gives your users webmail, calendars and chat. An MCP server adds the one thing it cannot: an AI agent that reads, searches, sends, replies, schedules and files mail in the mailbox itself.",
+    "answer": "Claude cannot reach a SmarterMail server on its own. mcpemails is a hosted MCP server that connects to yours over IMAP at your own hostname, normally on port 993 with implicit TLS, using the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. SmarterMail is software you or your host runs, so there is no shared hostname: the server must be reachable from the internet, the mailbox must have IMAP in its Service Access settings, and SmarterMail's abuse detection must not be blocking the connecting address. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password, IMAP in Service Access",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How SmarterMail connects: bindings, protocol settings and Service Access",
+    "body": "Three screens in the system administrator interface decide whether an IMAP client can get in. <b>Settings, then Bindings</b> is where SmarterMail ties together the physical IP addresses on the server's network card, the ports used by SMTP, IMAP, POP, LDAP, XMPP and Submission, and the encryption applied to each of those ports, so it is the authoritative answer to what is listening where. <b>Settings, then Other Protocols</b> holds the IMAP behaviour: the banner, a command timeout that defaults to 30 minutes, a maximum of 8 bad commands before the session is dropped, a 1000 connection ceiling, the IDLE toggle and an option to refuse insecure authentication on unencrypted connections. <b>Service Access</b>, set on the user and inherited from domain and system defaults, decides whether that particular mailbox may use IMAP at all. Credentials are the ordinary mailbox password. SmarterMail has no app-password scheme."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. One inbox is free forever and no card is required."
+    },
+    {
+      "h": "Read the IMAP binding, do not assume it",
+      "p": "In the system administrator interface, open Settings then Bindings and find the IMAP rows. Note the IP address, the port and the encryption set on each one. On a Windows box with several addresses it is entirely normal for IMAP to be bound to one of them, and the public name may resolve to a different one."
+    },
+    {
+      "h": "Check Service Access on the mailbox, then add it",
+      "p": "Open the user and confirm IMAP is enabled in its Service Access settings. Then add the inbox in mcpemails: choose IMAP / SMTP, enter your SmarterMail hostname, the full mailbox address and its password. If you are a domain administrator rather than the system administrator, this is the screen you can reach yourself."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IDS rules block the address, and local clients are exempt so nobody notices",
+      "p": "SmarterMail's abuse detection ships enabled with rule types including <b>Denial of Service</b>, <b>Password Brute Force by IP</b> and <b>Password Brute Force by Email</b>, and it blocks the connecting address per protocol rather than refusing the login. The detail that makes this so confusing is the exemption list: loopback and the private ranges 10.x, 172.16 to 172.31 and 192.168.x are never blocked. So every test you run from inside the network succeeds, and only the external client is refused, which makes the problem look like the external client. Look under Manage, then IDS Blocks, filter for IMAP and see whether the address is listed. Unblocking there clears the current block but leaves the rule in place, so it will happen again. The durable fix is a whitelist entry for the address with the bypass brute force detection option enabled."
+    },
+    {
+      "h": "Service Access is inherited, and changing the default fixes nobody",
+      "p": "IMAP permission for a mailbox comes from Service Access on the user, which was seeded from the domain's defaults, which were seeded from the system's User Defaults. Editing a default only affects users created afterwards, so a policy change made two years ago left a long tail of accounts that still have IMAP switched off individually. The symptom is one mailbox failing while the domain looks correctly configured. There is a second tell: SmarterMail will not answer an IMAP Autodiscover request for a user whose account has IMAP disabled, even when IMAP is enabled for Autodiscover generally, so an automatic client setup that mysteriously offers only POP or Exchange ActiveSync is pointing at the same cause."
+    },
+    {
+      "h": "Other Protocols can refuse the login on 143 that 993 accepts",
+      "p": "The Other Protocols screen carries an option to disable insecure authentication methods on non-SSL connections. With it on, a plain login over unencrypted port 143 is refused while exactly the same credentials succeed on 993, which reads as an intermittent password problem when two clients are configured differently. The same screen sets a maximum of 8 bad commands before SmarterMail closes the session, and holds the IDLE toggle: switch IDLE off server-wide and clients that expect push notification quietly degrade to polling. None of these produce an error message that names the setting responsible, so it is worth reading the screen once rather than diagnosing from symptoms."
+    }
+  ],
+  "limits": [
+    "A hosted MCP server has to reach your SmarterMail box from outside. A server bound to an internal address only, or published just to your office range, cannot be connected this way. mcpemails is self-hostable if you would rather the IMAP session never left your network.",
+    "Certificate validation is strict, so the binding on 993 needs a certificate valid for the hostname you enter. SmarterMail on Windows commonly uses a certificate from the Windows certificate store, and one issued for the machine name rather than the mail hostname will be refused.",
+    "Only mail crosses this connection. SmarterMail's calendars, contacts, tasks and chat are served by its own web interface and by Exchange ActiveSync or EWS, not by IMAP."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with SmarterMail?",
+      "a": "Not on its own. Claude has no SmarterMail connector and cannot open an IMAP session to a server you or your host runs. Connecting an MCP server such as mcpemails to your SmarterMail hostname gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, and the same inbox then works from Cursor or ChatGPT."
+    },
+    {
+      "q": "What are the SmarterMail IMAP and SMTP settings?",
+      "a": "The hostname is your own server or your hosting provider's mail server. The ports are whatever the Bindings screen says, which on a default install is 143 and 993 for IMAP and 25 and 587 for sending. That screen is authoritative because SmarterMail lets an administrator move the ports and change the encryption on each one. Log in with the full mailbox address and its password."
+    },
+    {
+      "q": "Why is my SmarterMail login refused from one machine but not another?",
+      "a": "Look at IDS blocks first. SmarterMail's abuse detection blocks addresses per protocol after repeated failures or too many connections, and it automatically exempts loopback and private ranges, so anything on the local network is unaffected while an outside client is refused. The blocked addresses are listed under Manage, then IDS Blocks."
+    },
+    {
+      "q": "Does SmarterMail need an app password?",
+      "a": "No. SmarterMail has no app-specific password feature. Mail clients authenticate with the mailbox password. If the account has two-step authentication enabled for webmail, that applies to the browser sign-in and not to the IMAP session, so the mailbox password is still what a client uses."
+    },
+    {
+      "q": "Is my SmarterMail mail stored on your servers?",
+      "a": "No. Messages are fetched live from your SmarterMail server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a SmarterMail inbox",
+    "sub": "Connect a mailbox from your own SmarterMail server. One inbox free forever, no card required."
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://admin.migadu.com/mail/config-v1.1.xml",
+    "https://migadu.com/guides/identities/",
+    "https://migadu.com/api/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://migadu.com/guides/identities/",
+    "usernameForm": "The full address at your own domain, for example you@yourdomain.com. Migadu's autoconfig gives the whole address as the username for both IMAP and SMTP.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Migadu to Claude, Cursor & MCP Clients",
+    "description": "Connect Migadu to Claude, Cursor and any MCP client over IMAP at imap.migadu.com:993 with the per-mailbox password from the admin area, not your account login."
+  },
+  "hero": {
+    "eyebrow": "Migadu + AI",
+    "titleLine1": "Connect Migadu to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Migadu inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your mailbox password, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach Migadu on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+  },
+  "method": {
+    "title": "How Migadu connects: IMAP and your mailbox password",
+    "body": "Migadu connects over IMAP/SMTP with the <b>mailbox password</b>, which is not the password for your Migadu admin account. Set or reset it in the Migadu admin area under Mailboxes, then paste it into mcpemails with your address. Every Migadu mailbox uses the same two hosts whatever your domain is, so there is nothing to look up."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Set a mailbox password in Migadu",
+      "p": "In the Migadu admin area, open Mailboxes, pick the mailbox and set its password. Mail clients authenticate with that password; your admin login will not work."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, add your Migadu address, the hosts below and the password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The mailbox password and the Migadu account password are two different credentials",
+      "p": "Your Migadu account, the one you sign in to at admin.migadu.com, manages domains, mailboxes, forwardings and billing. It does not authenticate mail. Every mailbox carries its own password, set on the mailbox itself in the admin area under <b>Mailboxes</b>, and that is the only credential <code>imap.migadu.com</code> will accept. The confusion is easy to fall into because both logins look like an email address at your own domain. If a client is refused, open the mailbox in the admin area and set a fresh password rather than retyping your account one."
+    },
+    {
+      "h": "An alias has no password, so you cannot log in as one",
+      "p": "Migadu separates mailboxes, which hold mail and have credentials, from aliases, which only forward. An alias has nothing to authenticate with, so pointing a client at an alias address fails no matter what password you type. Migadu's answer is <b>identities</b>: in the admin area, open the mailbox and add an identity for the address, giving it its own password. Identities can be restricted to particular services such as POP, IMAP and ManageSieve, which makes them the closest thing Migadu has to an application-specific password. Giving an AI agent an identity limited to IMAP, rather than the mailbox password itself, is the tidier setup and it can be revoked on its own."
+    },
+    {
+      "h": "Migadu's IMAP server is IMAP4rev2 behind a proxy, and it advertises unusually little",
+      "p": "The greeting is <code>IMAP4rev2 IMAP4rev1 SASL-IR LITERAL- AUTH=PLAIN</code> followed by <code>Proxy Ready</code>, and that short list is the whole story. Migadu offers <b>AUTH=PLAIN</b> and nothing else, with no <code>AUTH=LOGIN</code>, so client libraries hard-wired to the LOGIN mechanism, which is common in tooling written against Exchange, fail at the authentication step rather than returning a useful error. The SMTP side accepts both PLAIN and LOGIN, so the two halves of one account can behave differently in the same client. Migadu is also one of the very few hosts advertising IMAP4rev2, which is newer than most client libraries expect. SASL-IR is present, so one-step authentication works normally."
+    },
+    {
+      "h": "No MOVE, no UIDPLUS, no SPECIAL-USE and no IDLE",
+      "p": "Migadu's advertised capability set omits four extensions that most hosts carry. Without <b>MOVE</b>, relocating a message is performed as a copy, a flag update and an expunge rather than one atomic command. Without <b>UIDPLUS</b>, the server does not report the new identifier of a copied message, so it has to be found by searching the destination. Without <b>SPECIAL-USE</b>, Sent, Drafts, Trash and Archive are matched by name rather than by role, so a mailbox whose folders were renamed needs the folder named explicitly. Without <b>IDLE</b>, there is no push channel at all. None of this stops the connection working, and mcpemails reads on demand rather than waiting on push, but it explains behaviour you will not see on other providers."
+    }
+  ],
+  "limits": [
+    "Because the server does not advertise MOVE, a move is not atomic. If a connection drops part way through, a message can briefly exist in both folders.",
+    "Folders are matched by name rather than by role, so a mailbox with renamed or non-English folder names may need the target folder named explicitly.",
+    "mcpemails connects a mailbox. Domains, forwardings, rewrites and Migadu's own send and receive quotas stay in the Migadu admin area."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Migadu?",
+      "a": "Not on its own. Claude has no built-in Migadu connector. Connecting an MCP server such as mcpemails to your Migadu mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and because the connection is plain IMAP the same mailbox is available in Cursor, ChatGPT and other MCP clients too."
+    },
+    {
+      "q": "What are the Migadu IMAP and SMTP settings?",
+      "a": "IMAP is imap.migadu.com on port 993 with implicit TLS, and SMTP is smtp.migadu.com on port 465, also implicit TLS. Migadu's own autoconfig file specifies the full email address as the username for both. Every Migadu mailbox uses these two hosts whatever domain your address ends in, and both were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my Migadu password rejected?",
+      "a": "Usually because you typed your Migadu account password instead of the mailbox password. They are separate credentials and both look like an email address, so the mistake is common. The other frequent cause is aiming at an alias rather than a mailbox: an alias has no password of its own and cannot be logged into. Set a mailbox password in the admin area and use that."
+    },
+    {
+      "q": "Does Migadu have app passwords?",
+      "a": "Not under that name, but identities do the same job. In the admin area, open the mailbox and create an identity for it with its own password, then restrict that identity to IMAP. Your client authenticates as the identity, and you can revoke it later without changing the mailbox password or disturbing anything else that uses the mailbox."
+    },
+    {
+      "q": "Can I connect a Migadu alias or send from one?",
+      "a": "You cannot log in as an alias, because it has no credentials. To send from an alias address, either create an identity for it with its own password, or enable the wildcard sender option on the mailbox so the mailbox credentials are allowed to send with the alias in the From header."
+    },
+    {
+      "q": "Is my Migadu mail stored on your servers?",
+      "a": "No. Messages are fetched live from Migadu over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Migadu inbox",
+    "sub": "Connect Migadu in minutes. One inbox free forever, no card required."
+  }
+}

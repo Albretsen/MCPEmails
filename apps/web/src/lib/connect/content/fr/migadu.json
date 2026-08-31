@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter Migadu à Claude (et à toute IA)",
+    "description": "Connectez Migadu à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Migadu + IA",
+    "titleLine1": "Connectez Migadu à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Migadu en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre Migadu tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment Migadu se connecte : IMAP et le mot de passe de la boîte",
+    "body": "Migadu se connecte via IMAP/SMTP avec le <b>mot de passe de la boîte</b>, qui n'est pas celui de votre compte d'administration Migadu. Définissez-le ou réinitialisez-le dans l'espace d'administration Migadu, section Mailboxes, puis collez-le dans mcpemails avec votre adresse. Toutes les boîtes Migadu utilisent les deux mêmes serveurs quel que soit votre domaine : il n'y a rien à chercher."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Définissez un mot de passe de boîte dans Migadu",
+      "p": "Dans l'espace d'administration Migadu, ouvrez Mailboxes, choisissez la boîte et définissez son mot de passe. Les clients de messagerie s'authentifient avec ce mot de passe ; votre identifiant d'administration ne fonctionne pas."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Migadu, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Migadu à votre IA",
+    "sub": "Connectez Migadu en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

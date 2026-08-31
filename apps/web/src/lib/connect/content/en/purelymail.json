@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://purelymail.com/docs/setup/technical",
+    "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "https://support.purelymail.com/support/solutions/articles/159000412945-how-to-create-an-app-password",
+    "https://purelymail.com/docs/users",
+    "https://purelymail.com/docs/features",
+    "https://purelymail.com/docs/deviceSetup",
+    "https://purelymail.com/pricing"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mailbox password (app password if 2FA is on)",
+    "helpUrl": "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "usernameForm": "The mailbox's full address, domain included: you@yourdomain.com, not the Purelymail account name you sign into the portal with.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Purelymail to Claude, Cursor & MCP Clients",
+    "description": "Connect Purelymail to Claude, Cursor, ChatGPT and any MCP client over IMAP at imap.purelymail.com:993 with your mailbox password. One inbox free, forever."
+  },
+  "hero": {
+    "eyebrow": "Purelymail + AI",
+    "titleLine1": "Connect Purelymail to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Purelymail inbox. Read, search, send, reply, schedule and organize mail over IMAP with the mailbox's own password, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach Purelymail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.purelymail.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Purelymail has no IMAP switch to find: you authenticate with the mailbox's full email address and that mailbox's own password, or an app password if the mailbox has two-factor authentication turned on. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password, or app password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Purelymail connects: IMAP and the mailbox's own password",
+    "body": "Purelymail serves IMAP at <code>imap.purelymail.com</code> on port 993 over TLS, and SMTP at <code>smtp.purelymail.com</code> on port 465, also implicit TLS. There is nothing to enable first. Purelymail treats IMAP, POP3 and SMTP as ordinary access and every mailbox has them from the moment it is created, which already puts it ahead of most webmail providers. What people get wrong here is <b>which credentials they type</b>. Purelymail keeps your <b>account</b>, the login for the management portal and the flat $10 a year bill, separate from your <b>users</b>, which are the mailboxes that actually send and receive. IMAP wants a user: the complete address including the domain, plus that user's own password. This is true whether the address sits on a shared Purelymail domain or on a custom domain you brought yourself, because the hostnames are the same for every customer."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. No card is required, and the free plan connects one inbox for as long as you want it."
+    },
+    {
+      "h": "Open the Users page in the Purelymail portal",
+      "p": "Sign in to the Purelymail account portal and click <b>User</b> in the top navigation. The address listed there is the username you will use, written out in full with its domain. The account name you signed up with is not a mailbox and will never authenticate over IMAP."
+    },
+    {
+      "h": "Add an app password if that user has 2FA, then connect",
+      "p": "If multi-factor authentication is on for that user, open the user, scroll to <b>App Passwords</b>, click <b>Add New</b>, give it a name and copy the code. Purelymail displays it once. Now choose IMAP / SMTP in mcpemails, enter the full address and that password. The hosts below are prefilled."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The portal login is not a mailbox login",
+      "p": "Purelymail deliberately splits the account that signs into the management portal and pays the bill from the users that hold mail. IMAP and SMTP accept only a user, and only in full: <code>you@yourdomain.com</code>, never a bare local part, and never the account name you picked at signup. The server answers a wrong account name and a wrong password with the same flat authentication failure, so this reads as a typo rather than a category error."
+    },
+    {
+      "h": "An alias or catch-all has no mailbox behind it to log into",
+      "p": "Purelymail lets you deliver <code>info@yourdomain.com</code> into an existing inbox with a routing rule, and a catch-all rule can absorb every address on a domain, with none of those addresses existing as users. Purelymail's own documentation is explicit that you do not need to create user accounts for them. They are delivery targets, not logins, so there is nothing to authenticate against. Connect the user the rule delivers into, and let your agent filter on the To header."
+    },
+    {
+      "h": "The app-password requirement is per mailbox, not per account",
+      "p": "Purelymail forces an app password only on users that have multi-factor authentication switched on, and MFA is configured individually on each user. One mailbox on your account can therefore connect with its ordinary password while another on the same domain rejects it. Check the individual user in the portal before assuming the password is wrong. App passwords live in that user's App Passwords section and are shown only once."
+    }
+  ],
+  "limits": [
+    "Purelymail's IMAP server does not advertise the SPECIAL-USE extension, so folders are matched by name rather than by role. Sent, Drafts, Junk and Trash resolve normally under Purelymail's default Roundcube naming, but a folder you renamed yourself may need to be named explicitly when you ask your agent to file something.",
+    "Purelymail's SMTP server advertises a maximum message size of roughly 51 MB. An agent forwarding a very large attachment is refused at submission rather than losing it quietly."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Purelymail?",
+      "a": "Not directly. Claude has no built-in Purelymail connector and cannot open an IMAP session by itself. Connecting an MCP server such as mcpemails to your Purelymail mailbox gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor, ChatGPT and any other MCP client rather than in one app only."
+    },
+    {
+      "q": "What are the Purelymail IMAP and SMTP settings?",
+      "a": "IMAP is imap.purelymail.com on port 993 with implicit TLS. SMTP is smtp.purelymail.com on port 465, also implicit TLS. Log in with the mailbox's full email address and that mailbox's password, or an app password if the user has two-factor authentication enabled. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Do I have to turn IMAP on in Purelymail first?",
+      "a": "No. Purelymail has no IMAP toggle and no paid tier that gates client access, so a mailbox is reachable the moment you create it. If a login fails, the cause is the credentials rather than a setting you have not found yet."
+    },
+    {
+      "q": "Why is my Purelymail password rejected?",
+      "a": "Three causes, in the order worth checking. You are using the Purelymail account name instead of the mailbox address. The address you entered is an alias or catch-all rule rather than a real user. Or that user has multi-factor authentication on, which means only an app password from its App Passwords section will authenticate."
+    },
+    {
+      "q": "Does this work with a custom domain on Purelymail?",
+      "a": "Yes. Purelymail charges nothing extra for users on domains you own, and custom-domain mailboxes use exactly the same imap.purelymail.com and smtp.purelymail.com hosts as addresses on the shared domains. Only the username changes."
+    },
+    {
+      "q": "Is my Purelymail mail stored on your servers?",
+      "a": "No. Messages are fetched live from Purelymail over IMAP for each request and passed to your AI client. Credentials are encrypted at rest; message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Purelymail inbox",
+    "sub": "Connect Purelymail in minutes. One inbox free forever, no card required."
+  }
+}

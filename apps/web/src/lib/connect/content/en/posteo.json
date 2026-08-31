@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://posteo.de/en/help/how-do-i-set-up-posteo-in-an-email-client-pop3-imap-and-smtp",
+    "https://posteo.de/en/help/activating-additional-email-account-protection",
+    "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "https://posteo.de/en/help/how-do-i-activate-inbound-encryption-with-my-public-pgp-key",
+    "https://posteo.de/en/help/how-do-i-activate-posteo-crypto-mail-storage"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Posteo password, or an app password",
+    "helpUrl": "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "usernameForm": "Your full Posteo address, whichever Posteo domain it ends in: name@posteo.de, name@posteo.net, name@posteo.org and the rest all authenticate against the same server.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Posteo to Claude, Cursor and MCP Clients",
+    "description": "Connect Posteo to Claude, Cursor and any MCP client over IMAP at posteo.de:993. Extra account protection makes an app password mandatory for every mail client."
+  },
+  "hero": {
+    "eyebrow": "Posteo + AI",
+    "titleLine1": "Connect Posteo to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Posteo inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than one, with a straight answer about what Posteo's encryption does and does not hide from an agent.",
+    "answer": "Claude cannot reach Posteo on its own. mcpemails is a hosted MCP server that connects it over IMAP at posteo.de on port 993, and SMTP at posteo.de on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. There is no imap. or smtp. prefix: the bare domain is the server for every Posteo address, whichever Posteo domain yours ends in. Authentication is your ordinary Posteo password unless you have switched on additional email account protection, after which IMAP, POP3 and SMTP accept only an app password created in your Posteo settings. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "App password once extra protection is on",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Posteo connects: one bare hostname, and a password that depends on one setting",
+    "body": "Posteo publishes a single server name for everything. IMAP is <code>posteo.de</code> on port 993 with SSL/TLS, or 143 with STARTTLS. POP3 is the same host on 995 or 110. SMTP is <code>posteo.de</code> on 465 or 587. Posteo accepts only encrypted connections, and it requires SMTP authentication even where a client marks the outgoing password as optional, so fill both fields. The username is your <b>complete</b> address. Posteo sells addresses on around twenty domains and <code>posteo.de</code> remains the server for all of them, so there is nothing per-domain to look up and no <code>imap.</code> hostname to guess. Which password you need is decided by one switch. By default your normal Posteo password works. Turn on <b>additional email account protection</b> under Password and security and Posteo stops accepting it over IMAP, POP3 and SMTP entirely, leaving only <b>app passwords</b>. Webmail carries on with the normal password either way."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, with no card. You get an MCP URL and a key at the end of it."
+    },
+    {
+      "h": "Create an app password in your Posteo settings",
+      "p": "Log in to Posteo webmail and open <b>Settings</b>, then <b>Password and security</b>, where app passwords are created and managed. Posteo requires each one to be at least 16 characters with at least one number and one capital letter, and you can hold up to five at a time. Name it for this connection so you know which to delete later. You can skip this if extra protection is off, but a credential you can revoke on its own is a better thing to hand a third party."
+    },
+    {
+      "h": "Add the mailbox in mcpemails",
+      "p": "Choose IMAP / SMTP and enter your full Posteo address, then the password. The host is prefilled as <code>posteo.de</code> for both directions, verified from a live TLS connection, and the outgoing password must be filled in as well as the incoming one because Posteo always authenticates submission."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Additional email account protection locks out the account password without warning a client",
+      "p": "This is the one that generates the support tickets. Once that setting is on, Posteo documents that access via IMAP, POP3 and SMTP is only possible with an app password, while webmail keeps accepting your normal password as before. From the outside it looks like the client broke on its own: the web login still works, so the password is obviously fine, and yet every device refuses. The fix is not a password reset. It is an app password from Password and security, entered in both the incoming and outgoing fields."
+    },
+    {
+      "h": "Crypto mail storage and inbound encryption sound alike and behave completely differently over IMAP",
+      "p": "Posteo offers two things people conflate. <b>Crypto mail storage</b> encrypts your mailbox at rest on Posteo's servers and is transparent to a client: you log in, the server decrypts, and IMAP works exactly as before, so an agent reads your mail normally. <b>Inbound encryption</b> is the opposite. It takes your public PGP or S/MIME key and encrypts every newly arriving message to it, whether or not the sender encrypted anything, and the result is ciphertext to every client without your private key, this one included. Posteo notes that it only affects new mail, does not encrypt headers, and with S/MIME leaves you unable to read your own mail in webmail. If you want an agent that can read your inbox, crypto mail storage is compatible with that and inbound encryption is not."
+    },
+    {
+      "h": "There is no imap.posteo.de, and no per-domain server",
+      "p": "Posteo addresses exist on roughly twenty domains, including posteo.net, posteo.org, posteo.eu, posteo.at and posteo.ch, and every one of them is served by the bare <code>posteo.de</code> hostname for IMAP, POP3 and SMTP alike. Clients that build a server name by prefixing your own domain, the usual autoconfiguration guess, end up looking for something that is not the documented server. Enter <code>posteo.de</code> by hand and use the full address as the username."
+    },
+    {
+      "h": "No MOVE and no UIDPLUS, so filing mail is a three-step operation",
+      "p": "Posteo's Dovecot server advertises IDLE and SASL-IR but neither MOVE nor UIDPLUS nor SPECIAL-USE. A move is therefore a COPY, a STORE of the \\Deleted flag and an EXPUNGE, and with no UIDPLUS the server never reports the new UID, so the copy has to be located again by searching the destination. That is correct but slower than on a server with MOVE, which shows when an agent reorganizes hundreds of messages at once. Missing SPECIAL-USE means folder roles come from names, and Posteo's defaults are the plain English Sent, Drafts and Trash."
+    }
+  ],
+  "limits": [
+    "Connecting a Posteo mailbox to an AI client means that AI provider reads the content of whatever it is asked to work with. mcpemails fetches mail live from Posteo for each request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you connect. Posteo's anonymous signup, anonymous payment and German hosting protect the relationship between you and Posteo. None of that follows a message into an AI vendor you connect yourself.",
+    "With inbound encryption switched on, an agent cannot read your mail at all. Messages arrive as PGP or S/MIME ciphertext, mcpemails holds no private key of yours, and only headers, dates and folder operations remain available.",
+    "Posteo's standard mailbox is small by modern standards, and a mailbox at its quota rejects incoming mail. An agent that files and flags does not free space; deleting and emptying Trash does."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Posteo?",
+      "a": "Not on its own. Claude has no Posteo connector and cannot speak IMAP. Pointing an MCP server such as mcpemails at your Posteo mailbox gives Claude read, search, send, reply, schedule and organize access, and the same connection then works from Cursor, ChatGPT and other MCP clients without setting it up a second time."
+    },
+    {
+      "q": "What are the Posteo IMAP and SMTP settings?",
+      "a": "IMAP is posteo.de on port 993 with SSL/TLS, or 143 with STARTTLS. SMTP is posteo.de on port 465 with SSL/TLS, or 587 with STARTTLS. POP3 is the same host on 995 or 110. The username is your full Posteo address on any Posteo domain, and SMTP authentication is always required. Both hosts were verified from a live TLS connection."
+    },
+    {
+      "q": "Does Posteo need an app password?",
+      "a": "Only if you have enabled additional email account protection. By default your ordinary Posteo password authenticates IMAP, POP3 and SMTP. With that protection on, only app passwords work for those protocols. They are created under Settings, Password and security, must be at least 16 characters with a number and a capital letter, and you can hold five at once."
+    },
+    {
+      "q": "Why did my Posteo mail client stop working when webmail still logs in?",
+      "a": "Almost certainly because additional email account protection was switched on. That setting blocks the account password for IMAP, POP3 and SMTP while leaving webmail untouched, which is exactly the pattern you are seeing. Create an app password in Settings under Password and security and put it in both the incoming and outgoing password fields."
+    },
+    {
+      "q": "Does Posteo's crypto mail storage stop my AI reading my mail?",
+      "a": "No. Crypto mail storage encrypts your mailbox at rest on Posteo's side and is decrypted transparently when you authenticate, so IMAP behaves normally and an agent reads your mail as usual. The feature that does make mail unreadable to a client is inbound encryption, which PGP or S/MIME encrypts every new message to your own public key."
+    },
+    {
+      "q": "Is my Posteo mail stored on your servers?",
+      "a": "No. Messages are fetched live from posteo.de over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained. The AI client you connect does receive the content of anything it reads, which is the separate question worth deciding on purpose."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Posteo inbox",
+    "sub": "Connect Posteo in minutes. One inbox free forever, no card required."
+  }
+}

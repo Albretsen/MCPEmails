@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Koble IONOS til Claude (og enhver AI)",
+    "description": "Koble IONOS til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "IONOS + AI",
+    "titleLine1": "Koble IONOS til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte IONOS-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke IONOS på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+  },
+  "method": {
+    "title": "Slik kobler IONOS seg til: IMAP og postkassepassordet ditt",
+    "body": "IONOS kobles til via IMAP/SMTP med <b>e-postpassordet</b> du setter i IONOS-kontrollpanelet under E-post, som er noe annet enn IONOS-innloggingen din. IONOS svarer på begge standardtransportene, 993 med TLS og 143 med STARTTLS, og å gjette mellom dem er den vanligste måten en IONOS-tilkobling feiler på. mcpemails fyller inn et par som fungerer og prøver det andre hvis det første ikke svarer, så en avvist innlogging her handler faktisk om passordet."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Hent IONOS-postkassepassordet",
+      "p": "I IONOS-kontrollpanelet åpner du E-post, velger adressen og setter eller nullstiller passordet. Det er ikke passordet du logger inn på IONOS med."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, legg til IONOS-adressen din, vertene under og passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en IONOS-innboks",
+    "sub": "Koble til IONOS på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

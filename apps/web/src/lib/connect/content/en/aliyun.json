@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.aliyun.com/zh/document_detail/36687.html",
+    "https://help.aliyun.com/zh/document_detail/444269.html",
+    "https://help.aliyun.com/document_detail/444380.html",
+    "https://help.aliyun.com/zh/document_detail/465546.html",
+    "https://help.aliyun.com/zh/document_detail/465307.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mailbox password, unless a client security password is switched on",
+    "helpUrl": "https://help.aliyun.com/zh/document_detail/444269.html",
+    "usernameForm": "Your full address, including the domain: name@aliyun.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Alibaba Mail (Aliyun) IMAP Settings for Claude",
+    "description": "Connect Alibaba Mail to Claude, Cursor or any MCP client over IMAP at imap.aliyun.com:993. The mailbox password works, unless a client security password is on."
+  },
+  "hero": {
+    "eyebrow": "Alibaba Mail + AI",
+    "titleLine1": "Connect Alibaba Mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Aliyun mailbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach Alibaba Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.aliyun.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Alibaba is the one large Chinese provider that does not force an authorization code: your ordinary mailbox password authenticates, provided POP/IMAP collection is switched on in mailbox settings. If you or your domain administrator have enabled the third-party client security password (三方客户端安全密码), that 16-character password replaces the mailbox password everywhere a client asks for one. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password, or client security password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Alibaba Mail connects: IMAP, and a password that depends on one setting",
+    "body": "Alibaba Mail serves IMAP at <code>imap.aliyun.com</code> on port 993 over implicit TLS, and SMTP at <code>smtp.aliyun.com</code> on port 465. Those two hosts belong to the personal <code>@aliyun.com</code> service. Alibaba Mail sold on your own domain is a separate enterprise product whose hostnames are shown in its own admin console, so take those from the console rather than from this page. Authentication is where Alibaba differs from every other large Chinese mail service. QQ, NetEase and Sina all refuse the account password outright and issue an authorization code instead. Alibaba does not: by default the <b>mailbox password</b> is what a client sends. The exception is the <b>三方客户端安全密码</b>, the third-party client security password. Once that is turned on, Alibaba generates a 16-character password for clients and the mailbox password stops working in them. A user can switch it on, and a domain administrator can force it on for the whole organisation, which is why two people at the same company can have contradictory experiences of the same server."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required. Keep the tab open: you will paste your Aliyun credentials into it in step three."
+    },
+    {
+      "h": "Switch on POP/IMAP collection in mailbox settings",
+      "p": "Sign in to the webmail, open 设置 (Settings) from the gear icon at the top right, go to 帐户设置 (Account settings) and then POP设置 (POP settings), and enable POP/IMAP代收功能, the POP and IMAP collection feature. On enterprise Alibaba Mail this permission belongs to the domain administrator rather than to you: Alibaba blocks third-party clients by default there, and the administrator grants POP3 or IMAP access per account before any client can log in."
+    },
+    {
+      "h": "Work out which password your account actually wants",
+      "p": "Open 设置, then 查看更多设置 (view more settings), then 账户与安全 (Account and security) and 账户安全 (Account safety), and look at 三方客户端登录安全管理, the third-party client login security section. If 三方客户端安全密码 is off, your mailbox password is the credential and there is nothing more to do. If it is on, or if you switch it on here, click 生成新密码 (generate new password), pass the mobile verification, and copy the 16-character password. Alibaba shows it once. Paste your full address and whichever of the two passwords applies into mcpemails; the hosts are prefilled."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize that Aliyun mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The IMAP server advertises no password mechanism at all",
+      "p": "Alibaba's IMAP banner lists <code>AUTH=EXTERNAL</code>, <code>AUTH=XOAUTH</code> and <code>AUTH=XOAUTH2</code>, and stops there. There is no <code>AUTH=PLAIN</code> and no <code>AUTH=LOGIN</code> in the capability line, so a client that chooses its authentication mechanism from what the server advertises finds nothing it can use with a password and gives up before it tries. What actually works is the plain IMAP <code>LOGIN</code> command on port 993, which the server accepts even though it never announces it. This is the reason careful IMAP libraries fail against <code>imap.aliyun.com</code> while connecting to everything else, and it looks like a credentials problem when it is not one. The SMTP side is the mirror image: it offers <code>PLAIN</code> and <code>LOGIN</code> normally, plus Alibaba's own <code>XALIOAUTH</code> mechanism, so the sending half of the same account behaves differently from the receiving half."
+    },
+    {
+      "h": "A domain administrator can flip the password requirement under you",
+      "p": "In the Alibaba Mail domain console, an administrator signed in as postmaster can open 安全管理 (security management), then 账号安全策略 (account security policy), and force 安全密码 on for everyone or for named departments and accounts. The moment that policy applies to your mailbox, the password sitting in your mail client stops working, with no warning and no change on your side. If a connection that has been running for months suddenly fails to authenticate, ask whether that policy was turned on before you start rechecking the password."
+    },
+    {
+      "h": "The security password is issued per device, up to ten, and shown once",
+      "p": "Alibaba treats these as device credentials rather than as one account credential. You can hold up to ten at a time, and the recommended practice is a separate one per device. Each is displayed once at creation and never again, so a lost one is replaced rather than recovered. Generate a dedicated password for mcpemails rather than reusing the one already in your phone: revoking a single password then affects only the thing it was issued to."
+    }
+  ],
+  "limits": [
+    "Alibaba's IMAP server does not implement the MOVE extension, so filing a message runs as a copy, a flag update and an expunge instead of one atomic command. The outcome is the same, but a large batch is three times the round trips.",
+    "SPECIAL-USE is absent, so folders are matched by name rather than by role. On a Chinese-language mailbox those names are 已发送 (Sent), 已删除 (Deleted), 草稿 (Drafts) and 垃圾邮件 (Spam). Name the target folder explicitly if your agent files something in an unexpected place.",
+    "imap.aliyun.com and smtp.aliyun.com are served from mainland China. A search across a large mailbox from outside the country carries cross-border round-trip latency on top of the usual IMAP round trips."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Alibaba Mail?",
+      "a": "Not directly. Claude has no built-in Aliyun connector and cannot open an IMAP connection by itself. Connecting an MCP server such as mcpemails to your Alibaba mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the Alibaba Mail IMAP and SMTP settings?",
+      "a": "IMAP is imap.aliyun.com on port 993 with implicit TLS. SMTP is smtp.aliyun.com on port 465, also implicit TLS. Log in with your full aliyun.com address. Both hosts were verified from a live TLS connection on the date shown on this page, and both belong to the personal service rather than to enterprise Alibaba Mail on a custom domain."
+    },
+    {
+      "q": "Does Alibaba Mail need an authorization code like QQ or 163?",
+      "a": "No, not by default. This is the main practical difference between Alibaba and the other large Chinese providers. Your mailbox password authenticates a client once POP and IMAP collection is enabled. Only if the third-party client security password feature has been switched on, by you or by your domain administrator, does a separate 16-character password become the credential."
+    },
+    {
+      "q": "Why is my Alibaba Mail password rejected?",
+      "a": "Three causes, in order of likelihood. POP and IMAP collection is still off in mailbox settings. Or you are on enterprise Alibaba Mail, where third-party clients are blocked until an administrator grants the account IMAP permission. Or the third-party client security password is enabled, in which case the mailbox password no longer works in any client and you need the generated one."
+    },
+    {
+      "q": "Can I connect Alibaba Mail on my own domain?",
+      "a": "Yes, but not at the hostnames on this page. Enterprise Alibaba Mail runs on its own server names, listed in the admin console for your domain. Take the incoming and outgoing hosts from there, then connect them in mcpemails as a normal IMAP and SMTP mailbox. The security password rules described here apply to those accounts too."
+    },
+    {
+      "q": "Is my Alibaba mail stored on your servers?",
+      "a": "No. Messages are fetched live from Alibaba Mail over IMAP for each request and passed to your AI client. Credentials are encrypted at rest, and message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an Alibaba Mail inbox",
+    "sub": "Connect Aliyun mail in minutes. One inbox free forever, no card required."
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Conecta Zoho Mail a Claude (y a cualquier IA)",
+    "description": "Conecta Zoho Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Zoho Mail. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "Zoho Mail + IA",
+    "titleLine1": "Conecta Zoho Mail a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja Zoho real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y una contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de aplicación, sin configurar OAuth",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Zoho: IMAP y una contraseña de aplicación",
+    "body": "Zoho Mail se conecta por IMAP/SMTP. Primero activa el acceso IMAP en Zoho (está desactivado por defecto), genera una contraseña específica de aplicación si usas autenticación de dos factores y luego pégala en mcpemails junto con tu dirección de Zoho. mcpemails admite todas las regiones de centros de datos de Zoho."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+    },
+    {
+      "h": "Activa IMAP y genera una contraseña de aplicación",
+      "p": "En Zoho Mail, activa el acceso IMAP (Configuración, Cuentas de correo, Acceso IMAP). Si usas autenticación de dos factores, genera una contraseña específica de aplicación en Cuenta de Zoho, Seguridad."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Añade tu dirección de Zoho y la contraseña, y elige tu región de Zoho si se te pide, para conectar la bandeja de forma segura."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja Zoho",
+    "sub": "Conecta Zoho Mail en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

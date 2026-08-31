@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.mail.com/pop-imap/index.html",
+    "https://support.mail.com/pop-imap/imap/index.html",
+    "https://support.mail.com/pop-imap/imap/server.html",
+    "https://support.mail.com/pop-imap/imap/outlook.html",
+    "https://support.mail.com/pop-imap/setup-emailprogram-fails.html",
+    "https://support.mail.com/security/2fa/index.html",
+    "https://support.mail.com/security/2fa/application-specific-passwords.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Account password (application-specific password if 2FA is on)",
+    "helpUrl": "https://support.mail.com/pop-imap/index.html",
+    "usernameForm": "Your full mail.com address exactly as it was issued, on whichever of the mail.com family domains it ends in, such as you@email.com or you@usa.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Mail.com to Claude, Cursor & MCP Clients",
+    "description": "Connect mail.com to Claude, Cursor, ChatGPT and any MCP client over IMAP at imap.mail.com:993. POP3/IMAP is a mail.com Premium feature, off by default."
+  },
+  "hero": {
+    "eyebrow": "Mail.com + AI",
+    "titleLine1": "Connect Mail.com to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real mail.com inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than just one, once client access is switched on.",
+    "answer": "Claude cannot reach mail.com on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.mail.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Two mail.com conditions come first: POP3, IMAP and SMTP are Premium features, and even on Premium the access starts switched off until you enable it under Email, Settings, POP3 and IMAP. Once it is on, connecting one inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Premium account, IMAP switched on",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How mail.com connects: Premium IMAP, switched on by hand",
+    "body": "mail.com serves IMAP at <code>imap.mail.com</code> on port 993 over TLS. For outgoing mail its help centre lists <code>smtp.mail.com</code> on port 587 with STARTTLS and then offers port 465 with SSL/TLS as an alternative, which is the one mcpemails uses. mail.com is run by 1&1 Mail and Media, the same group behind GMX and WEB.DE, and it inherits their house rule: <b>access from outside the browser is a paid feature and it starts turned off</b>. mail.com's own third-party applications page states that POP, IMAP and SMTP are Premium features only, and its troubleshooting page separately states that retrieval by POP3 or IMAP is switched off by default in your mailbox. A free mail.com address cannot be connected by this or any other mail client until the account is upgraded, and an upgraded one still needs the box ticked."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. No card is required, and the free plan connects one inbox for as long as you want it."
+    },
+    {
+      "h": "Switch POP3 and IMAP on in mail.com",
+      "p": "Sign in at mail.com and go to <b>Email</b>, then <b>Settings</b>, then <b>POP3 and IMAP</b>. Tick <b>Enable access to this account via POP3 and IMAP</b> and click <b>Save</b>. If that section is absent or will not save, the mailbox is still on the free plan, which carries no POP3, IMAP or SMTP at all."
+    },
+    {
+      "h": "Create an application-specific password if 2FA is on, then connect",
+      "p": "With two-factor authentication enabled, your ordinary mail.com password stops working in clients. Click the <b>profile icon</b>, then <b>Security Options</b>, then <b>Manage application-specific passwords</b>, then <b>Create new application-specific password</b>. mail.com shows it once. Now choose IMAP / SMTP in mcpemails and enter your full address, on whichever mail.com family domain it sits, with that password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IMAP is Premium, and the line that says so is easy to miss",
+      "p": "mail.com's help centre carries the restriction in one sentence on its third-party applications page: POP, IMAP and SMTP are Premium features only. There is no trial period, no partial access, and no message in the client that explains it: a free mailbox refuses the login the same way a wrong password does. Upgrading is the only route, and no MCP server, ours included, can work around it. This is the most common reason a mail.com connection fails."
+    },
+    {
+      "h": "Turning on two-factor authentication silently switches IMAP back off",
+      "p": "mail.com's two-factor documentation notes that after you enable 2FA, access by POP3 and IMAP has to be reactivated in the email settings. So a mailbox that was connected and working stops the moment you harden the account, and the toggle you set weeks ago is quietly clear again. Go back to <b>Email</b>, <b>Settings</b>, <b>POP3 and IMAP</b>, re-tick the box and save, then move the connection over to an application-specific password, because your normal password will no longer authenticate either."
+    },
+    {
+      "h": "Your address probably does not end in @mail.com",
+      "p": "mail.com offers a choice of over 100 domains at signup, so live mail.com mailboxes sit on addresses like <code>@email.com</code>, <code>@usa.com</code>, <code>@engineer.com</code> and <code>@dr.com</code>. Every one of them authenticates against <code>imap.mail.com</code>. Enter the address exactly as issued, domain included. The username is never just the part before the @, and the hostname does not shift to match your domain, so do not go looking for an imap.usa.com."
+    },
+    {
+      "h": "A dead connection may be a block that only webmail will show you",
+      "p": "mail.com's own troubleshooting warns that some errors, temporary account blocks in particular, do not render properly in a third-party client. The connection simply fails with nothing useful attached. Their instruction is to sign in at mail.com in a desktop browser and read the notice that appears right after login, which carries the real reason and the steps to clear it. If the credentials are right and IMAP is on, check webmail before changing another setting."
+    }
+  ],
+  "limits": [
+    "A free mail.com mailbox cannot be connected at all, by us or by any mail client, because POP3, IMAP and SMTP are reserved for Premium accounts.",
+    "mail.com's IMAP server data page also lists port 143, which is unencrypted unless the client negotiates STARTTLS. mcpemails connects on 993 with implicit TLS only and does not offer the plaintext port."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with mail.com?",
+      "a": "Not directly, and not at all on a free mail.com account. Claude has no built-in mail.com connector. On a Premium mailbox with POP3 and IMAP enabled, connecting an MCP server such as mcpemails gives Claude read, search, send, reply, schedule and organize access, and the same connection works in Cursor, ChatGPT and any other MCP client."
+    },
+    {
+      "q": "Do I need mail.com Premium to use IMAP?",
+      "a": "Yes. mail.com's help centre states plainly that POP, IMAP and SMTP are Premium features only, and directs free users to the upgrade page. The restriction is enforced at mail.com's own servers, so on the free plan the browser and the mail.com mobile apps are your only access."
+    },
+    {
+      "q": "What are the mail.com IMAP and SMTP settings?",
+      "a": "IMAP is imap.mail.com on port 993 with implicit TLS. For SMTP, mail.com documents smtp.mail.com on port 587 with STARTTLS and port 465 with SSL/TLS as an equivalent alternative; mcpemails uses 465. Log in with your full mail.com address and your account password, or an application-specific password if two-factor authentication is on."
+    },
+    {
+      "q": "My mail.com connection broke after I turned on two-factor authentication. Why?",
+      "a": "Because enabling 2FA resets client access. mail.com requires POP3 and IMAP to be reactivated in the email settings afterwards, and your ordinary password will no longer authenticate a client. Re-enable the setting under Email, Settings, POP3 and IMAP, then generate an application-specific password from Security Options and use that instead."
+    },
+    {
+      "q": "Does this work with @email.com, @usa.com and the other mail.com domains?",
+      "a": "Yes. mail.com issues addresses across more than 100 domains, and they are all the same mailbox platform behind one set of hostnames. Enter the address as issued and connect to imap.mail.com regardless of domain. The Premium requirement and the toggle apply identically on all of them."
+    },
+    {
+      "q": "Is my mail.com mail stored on your servers?",
+      "a": "No. Messages are fetched live from mail.com over IMAP for each request and passed to your AI client. Credentials are encrypted at rest; message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Mail.com inbox",
+    "sub": "Connect mail.com Premium in minutes. One inbox free forever on mcpemails, no card required."
+  }
+}

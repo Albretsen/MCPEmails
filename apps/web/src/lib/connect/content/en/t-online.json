@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
+    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passwort für E-Mail-Programme",
+    "helpUrl": "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "usernameForm": "Your full address, including the domain: name@t-online.de. Older accounts sometimes still authenticate with the 12-digit T-Online number, but the address is what Telekom documents today.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "T-Online Email in Claude: The Separate Mail Password",
+    "description": "Connect a T-Online mailbox to Claude and any MCP client at secureimap.t-online.de:993. Needs the separate Passwort für E-Mail-Programme, not the Telekom login."
+  },
+  "hero": {
+    "eyebrow": "T-Online + AI",
+    "titleLine1": "Connect your T-Online mailbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real Telekom inbox. Read, search, send, reply, schedule and organize mail over IMAP using the dedicated password Telekom issues for mail programs.",
+    "answer": "Claude cannot reach a T-Online mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at secureimap.t-online.de on port 993, authenticating with the separate Passwort für E-Mail-Programme that Telekom issues for mail clients rather than your Telekom login password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. If you have never created that password, no client has ever been able to log in to the mailbox and the failure looks like a typo. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Telekom mail-program password required",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How T-Online connects: IMAP and a second, separate password",
+    "body": "Telekom serves IMAP at <code>secureimap.t-online.de</code> on port 993 over implicit TLS, and SMTP submission at <code>securesmtp.t-online.de</code> on port 465. Both names sit in front of an IMAP proxy rather than a mailbox server you talk to directly, which explains several of the quirks below. The part almost everyone gets wrong is the credential. Telekom keeps two passwords on one account: the <b>Telekom Login</b> password, used for the Kundencenter and telekom.de, and a second <b>Passwort für E-Mail-Programme</b>, described in Telekom's own wording as being <b>für das Verwenden eines E-Mail-Programms</b>. Only the second one authenticates against <code>secureimap.t-online.de</code>. Telekom recommends the two never be the same, and on many accounts the mail-program password simply does not exist until somebody creates it."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Create the Passwort für E-Mail-Programme",
+      "p": "In the E-Mail Center at email.t-online.de, open <b>Menü</b>, then <b>Einstellungen</b>, then <b>Passwörter</b> in the left column. Under the heading <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b>, choose <b>E-Mail-Passwort ändern</b>, enter the new password twice and save. The same credential is reachable from the Kundencenter under <b>Profil</b>, then <b>Login-Daten und Passwörter</b>, then <b>weitere Passwörter</b>. Set it even if you think you already have one: on many accounts it has never been created."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, enter the full address such as name@t-online.de, and paste the mail-program password. The Telekom hosts and ports are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The Telekom login password is rejected, and that is by design",
+      "p": "This is the single most common T-Online connection failure and it produces an ordinary authentication error with nothing in it to tell you why. Telekom splits the account into a login password for telekom.de and the Kundencenter, and a separate <b>Passwort für E-Mail-Programme</b> for IMAP, POP3 and SMTP. The mail server accepts only the second one. Telekom explicitly advises that the two should differ, so even setting them to the same string is not the intended fix; create the mail-program password, then use it in both the incoming and the outgoing side of the connection."
+    },
+    {
+      "h": "The IMAP proxy advertises no AUTH mechanism at all before login",
+      "p": "The capability banner Telekom returns is <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. There is no <code>AUTH=PLAIN</code>, no <code>AUTH=LOGIN</code> and no <code>SASL-IR</code> in it. In practice the server expects the plain IMAP <code>LOGIN</code> command rather than a SASL <code>AUTHENTICATE</code> exchange. Client libraries that enumerate advertised SASL mechanisms and refuse to proceed when the list is empty give up before they ever send credentials, which is why some IMAP tooling reports T-Online as unreachable while Thunderbird connects to the same mailbox without complaint. mcpemails handles the bare LOGIN path, so this one is already dealt with for you."
+    },
+    {
+      "h": "No MOVE and no SPECIAL-USE, on a mailbox with German folder names",
+      "p": "The server does not advertise the IMAP <code>MOVE</code> extension, so filing a message is performed as a copy, a flag update and an expunge rather than one atomic command. It also omits <code>SPECIAL-USE</code>, which means Sent, Drafts, Trash and Junk are identified by name and not by role. A T-Online mailbox normally names them <b>Gesendet</b>, <b>Entwürfe</b>, <b>Papierkorb</b> and <b>Spam</b>, so if an agent cannot find your archive or sent folder, name it in the instruction."
+    },
+    {
+      "h": "Sending is capped at 50 MB per message",
+      "p": "<code>securesmtp.t-online.de</code> announces a maximum message size of 52,428,800 bytes. That is the size of the whole encoded message, so base64 attachments count roughly a third larger than their size on disk. An agent asked to forward a large attachment will get a hard SMTP rejection rather than a slow send."
+    }
+  ],
+  "limits": [
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "Telekom scopes the mail-program password to mail clients. It does not unlock the Kundencenter, and rotating your Telekom login password does not rotate it, so the two have to be maintained separately."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with T-Online email?",
+      "a": "Not on its own. Claude has no built-in Telekom or T-Online connector. Pointing an MCP server such as mcpemails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the T-Online IMAP and SMTP settings?",
+      "a": "IMAP is secureimap.t-online.de on port 993 with implicit TLS. SMTP is securesmtp.t-online.de on port 465, also implicit TLS. Log in with your full t-online.de address and the Passwort für E-Mail-Programme. Both hosts were confirmed from a live TLS connection and are shared across all T-Online mailboxes."
+    },
+    {
+      "q": "Why is my T-Online password rejected in an email program?",
+      "a": "Almost always because you entered the Telekom login password. Telekom issues a second credential, the Passwort für E-Mail-Programme, and only that one authenticates against the mail servers. Create or reset it in the E-Mail Center under Einstellungen, then Passwörter, or in the Kundencenter under Profil, then Login-Daten und Passwörter, then weitere Passwörter."
+    },
+    {
+      "q": "Where do I create the Passwort für E-Mail-Programme?",
+      "a": "Sign in to the E-Mail Center at email.t-online.de, open Menü, then Einstellungen, then Passwörter. The block headed E-Mail-Passwort, für das Verwenden eines E-Mail-Programms has a change button. Enter the new password twice and save it. Use that value in your mail client and in mcpemails, for both the incoming and the outgoing server."
+    },
+    {
+      "q": "Does this work with magenta.de and other Telekom mail domains?",
+      "a": "Any mailbox that lives in the Telekom E-Mail Center authenticates against the same secureimap.t-online.de and securesmtp.t-online.de hosts with the same mail-program password. What matters is that the mailbox is a Telekom E-Mail Center mailbox, not the text after the at sign."
+    },
+    {
+      "q": "Is my T-Online mail stored on your servers?",
+      "a": "No. Messages are fetched live from Telekom over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a T-Online inbox",
+    "sub": "Connect your Telekom mailbox in minutes. One inbox free forever, no card required."
+  }
+}

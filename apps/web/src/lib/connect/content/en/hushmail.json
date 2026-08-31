@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://help.hushmail.com/hc/en-us/articles/213269023-POP-IMAP-and-SMTP-server-hostnames-and-ports",
+    "https://help.hushmail.com/article/686-sign-in-to-desktop-and-mobile-email-applications-with-two-step-verification-security-code",
+    "https://help.hushmail.com/article/673-thunderbird-imap"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Hushmail password",
+    "helpUrl": "https://help.hushmail.com/article/686-sign-in-to-desktop-and-mobile-email-applications-with-two-step-verification-security-code",
+    "usernameForm": "Your full Hushmail address, including the domain, even when the field is labelled username.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Hushmail to Claude, Cursor and MCP Clients",
+    "description": "Connect Hushmail to Claude, Cursor and any MCP client over IMAP. Verified settings, IMAP needs a paid plan and its own access password. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Hushmail + AI",
+    "titleLine1": "Connect Hushmail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Hushmail inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client, with the two-step verification quirk that breaks most setups explained up front.",
+    "answer": "Claude cannot reach Hushmail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.hushmail.com on port 993, and SMTP at smtp.hushmail.com on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Authentication is your full Hushmail address and your Hushmail password, except that with two-step verification enabled the password field must contain your password, a space, and the 20-character security code from Preferences. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Password, plus 2SV security code",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Hushmail connects: IMAP and a concatenated security code",
+    "body": "Hushmail serves IMAP at <code>imap.hushmail.com</code> on port 993 with SSL, and SMTP at <code>smtp.hushmail.com</code> on port 465, with 587 documented as the fallback if 465 is filtered on your network. The username is always your <b>full email address</b>, even where a client labels the field \"username\", and that holds for custom-domain Hushmail accounts too. If two-step verification is off, the password is simply your Hushmail password. If it is on, Hushmail does not issue a separate app password: it expects your password and a 20-character security code in the <b>same field</b>, separated by a space."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, with no card. You get an MCP URL and a key at the end of it."
+    },
+    {
+      "h": "Collect your security code if two-step verification is on",
+      "p": "Sign into Hushmail webmail, open <b>Preferences</b> from the top-right menu, then the <b>Security</b> tab, and scroll to the section headed \"Using a desktop or mobile email application\". It shows a placeholder followed by a 20-letter code in four groups. If two-step verification is off, skip this step entirely and use your ordinary password."
+    },
+    {
+      "h": "Add the mailbox in mcpemails",
+      "p": "Choose IMAP / SMTP and enter your full Hushmail address. In the password field enter your Hushmail password, then a space, then the four code groups exactly as shown, spaces included and no trailing space. Hosts are prefilled at <code>imap.hushmail.com</code> and <code>smtp.hushmail.com</code>."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Two-step verification turns your password into password-plus-code",
+      "p": "This is the one that catches everybody. Hushmail does not issue app passwords. With two-step verification enabled, every IMAP and SMTP login expects <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> in a single field: your normal password, one space, then the 20-letter security code split into four groups by spaces. Get a group wrong, add a trailing space, or paste only the code and the server rejects you with an ordinary authentication failure that looks exactly like a bad password. The code lives in webmail under Preferences, Security tab."
+    },
+    {
+      "h": "Hushmail's IMAP server does not advertise SASL-IR",
+      "p": "The server answers with a bare <code>* OK IMAP4 ready</code> and offers only AUTH=PLAIN, with no SASL-IR capability. That means it rejects the one-step authentication that sends credentials along with the AUTHENTICATE command, and clients that assume SASL-IR get a naked BAD with no explanation, which reads like wrong credentials. mcpemails detects the BAD and retries the two-step exchange, so this is already handled, but it is why some IMAP tooling fails against Hushmail while working everywhere else."
+    },
+    {
+      "h": "Mail you send through SMTP lands in Sent as ciphertext",
+      "p": "Hushmail documents that when you send from a third-party client, your copy is saved to the Sent folder <b>encrypted</b>, even when the message itself went out unencrypted. So an agent asked to review what you sent last week will find encrypted blobs rather than readable text in that folder, while the same messages read fine in Hushmail webmail. Outbound messages sent via SMTP are also non-encrypted by default unless the recipient is a Hushmail user or already has a password set for encrypted delivery."
+    },
+    {
+      "h": "No MOVE and no SPECIAL-USE",
+      "p": "Hushmail's IMAP server supports UIDPLUS but advertises neither MOVE nor SPECIAL-USE, and does not offer IDLE. Moves fall back to COPY, STORE \\Deleted and EXPUNGE; folder roles are matched by name rather than by role; and there is no push, so new mail is noticed on the next poll rather than the instant it arrives."
+    }
+  ],
+  "limits": [
+    "Connecting a Hushmail mailbox to an AI client means that AI provider reads the message content. mcpemails fetches mail live from Hushmail per request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you connect. Hushmail is heavily used by therapists and clinics operating under a HIPAA business associate agreement. That agreement covers Hushmail, not a third-party AI vendor, so a mailbox carrying patient information is a decision to make with your own compliance obligations in front of you, not a default.",
+    "Encrypted Hushmail messages, including your own Sent copies written by a third-party client, are unreadable to an agent. It sees sender, subject and date, and can flag or file them, but not the body.",
+    "There is no scoped credential to hand over. Hushmail has no app passwords, so the stored secret is your account password, or your password concatenated with the two-step security code."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Hushmail?",
+      "a": "Not directly. Claude has no built-in Hushmail connector. Connecting an MCP server such as mcpemails to your Hushmail account over IMAP gives Claude read, search, send, reply, schedule and organize access, and the same connection works in Cursor and other MCP clients without repeating the setup."
+    },
+    {
+      "q": "What are the Hushmail IMAP and SMTP settings?",
+      "a": "IMAP is imap.hushmail.com on port 993 with SSL. SMTP is smtp.hushmail.com on port 465 with SSL, and Hushmail documents port 587 as an alternative if 465 is blocked. The username is your full Hushmail email address in every case. Both hosts were verified from a live TLS connection."
+    },
+    {
+      "q": "Why does Hushmail reject my password in an email client?",
+      "a": "Almost always two-step verification. Hushmail expects your password, then a space, then a 20-character security code, all typed into the one password field. Find the code in webmail under Preferences, then the Security tab, in the section about desktop and mobile email applications. Copy it with its internal spaces and do not leave a space at the end."
+    },
+    {
+      "q": "Does Hushmail issue app passwords?",
+      "a": "No. Where other providers give you a revocable app password, Hushmail gives you a security code that is appended to your existing password. It is tied to your two-step verification setup rather than to the individual client, so you cannot revoke access to one connected application without affecting the others."
+    },
+    {
+      "q": "Can my AI read encrypted Hushmail messages?",
+      "a": "No. Anything stored encrypted, which includes messages you sent through a third-party client, arrives over IMAP as ciphertext. mcpemails holds no decryption key for it. The agent can see the headers and can move or flag the message, but the content stays sealed and has to be read in Hushmail webmail."
+    },
+    {
+      "q": "Is my Hushmail mail stored on your servers?",
+      "a": "No. Messages are fetched live from imap.hushmail.com for each request and passed to your AI client. Credentials are encrypted at rest; message bodies are not retained. The AI client itself does receive whatever it reads, which is the part worth weighing before you connect a mailbox that carries confidential client correspondence."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Hushmail inbox",
+    "sub": "Connect Hushmail in minutes. One inbox free forever, no card required."
+  }
+}

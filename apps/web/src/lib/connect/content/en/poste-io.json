@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://poste.io/doc",
+    "https://help.time4vps.com/en/articles/374799-how-to-create-a-mail-server-using-poste-io-on-debian-ubuntu",
+    "https://gist.github.com/analogic/51fbe91b580d7913b72320f89bf994cc",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://poste.io/doc",
+    "usernameForm": "The full address of a mailbox created in the Poste.io admin interface, for example you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Poste.io to Claude: Dovecot IMAP in a Container",
+    "description": "Connect a Poste.io mailbox to Claude, Cursor and ChatGPT over IMAP on 993. The container hostname is your mail host, and why a reverse proxy hides a bad cert."
+  },
+  "hero": {
+    "eyebrow": "Poste.io + AI",
+    "titleLine1": "Connect Poste.io to Claude,",
+    "titleLine2": "Cursor, ChatGPT and any MCP client",
+    "lead": "One container, one hostname, a full mail server. Point mcpemails at it and an AI agent can read, search, send, reply, schedule and file mail in the mailboxes you created in the Poste.io admin interface.",
+    "answer": "Claude cannot reach a Poste.io server on its own. mcpemails is a hosted MCP server that connects to yours over IMAP on port 993, at the hostname you gave the container when you started it, using the password of a mailbox created in the Poste.io admin interface, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Poste.io runs Dovecot for IMAP inside the container, so the protocol behaviour is ordinary Dovecot. The container has to publish 993 to the internet and to be serving a certificate that validates for the hostname you connect to. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from the admin UI",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Poste.io connects: Dovecot on 993 inside the container",
+    "body": "Poste.io packages a complete mail server into a single Docker image, with <b>Dovecot</b> serving IMAP and POP3 and <b>Haraka</b> handling SMTP, behind one admin interface at <code>https://your-hostname/admin</code>. Because the IMAP side is Dovecot, everything on our Dovecot page about folder roles, namespace prefixes and certificate handling applies here too, with the difference that you configure it through the Poste.io UI rather than by editing <code>conf.d</code> files. The hostname matters more than anything else on this page: it is set with the <code>-h</code> flag when the container is created, for example <code>-h mail.example.com</code>, and that name is what the admin interface answers on, what Haraka uses when it greets other servers, and what the built-in Let's Encrypt certificate is issued for. Use it verbatim as your IMAP and SMTP host. The published ports are the usual set: 25, 143, 465, 587, 993 and 995, plus 80 and 443 for the web interface and 4190 for Sieve."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. One inbox is free forever and no card is required."
+    },
+    {
+      "h": "Confirm the container hostname and that 993 is published",
+      "p": "Run <code>docker inspect</code> on the container, or read your compose file, and note two things: the hostname the container was given, and whether <code>993</code> appears in the published port list. A container created without <code>-h</code> ends up named after its own ID, which is not a name anything can resolve or certify."
+    },
+    {
+      "h": "Check the certificate, then add the mailbox",
+      "p": "In the Poste.io admin interface, open the TLS certificate settings and confirm a Let's Encrypt certificate was actually issued rather than the self-signed one still being served. Then add the inbox in mcpemails: choose IMAP / SMTP, enter the container hostname, the full mailbox address and its password from the admin interface."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The padlock in your browser belongs to the proxy, not to port 993",
+      "p": "Poste.io is very often run behind Traefik, nginx or Caddy, and that arrangement hides the single most common failure. The proxy terminates HTTPS with a certificate it obtained itself, so the admin interface and webmail look perfectly secure. Meanwhile Poste.io's own Let's Encrypt request needs to answer an HTTP challenge on port 80 at the container, and if the proxy swallowed it, or the <code>/.well-known/</code> path was never forwarded through, the request never completed. Dovecot goes on serving the self-signed certificate it generated at install, and a strict IMAP client refuses to connect while every human on the system sees a green padlock and concludes the server is fine. Test what is actually on 993 with <code>openssl s_client -connect mail.yourdomain.com:993</code>. If you terminate TLS at the proxy and copy certificates into the container instead, turn Poste.io's internal Let's Encrypt off so the two do not overwrite each other."
+    },
+    {
+      "h": "Docker port publishing does not obey your host firewall",
+      "p": "This surprises people in both directions. Docker writes its own rules that are evaluated before the ones <code>ufw</code> manages, so a port you published with <code>-p 993:993</code> is open to the internet even though your firewall says it is closed. That is not a Poste.io fault, but it means the mail server is more exposed than the firewall implies. The other direction is quieter: a port that was never in the <code>-p</code> list is unreachable no matter how permissive the firewall is, because nothing is forwarding it into the container. If the container is healthy and connections still time out, count the published ports before you touch anything else."
+    },
+    {
+      "h": "The SMTP half is Haraka, so Postfix advice does not apply",
+      "p": "Almost every self-hosted mail article on the internet assumes Postfix. Poste.io does not use it. Sending is handled by Haraka, a Node.js SMTP server, so there is no <code>main.cf</code>, no <code>postconf</code>, no <code>postqueue</code> and no <code>mailq</code> inside the container, and the commands people paste from forum answers simply do not exist. Diagnose sending through the Poste.io interface and Haraka's own logs. The IMAP half is Dovecot and behaves exactly as documented there, which is the useful half of the split: <code>doveadm</code> works, and Dovecot's folder and namespace behaviour is what you would expect."
+    }
+  ],
+  "limits": [
+    "The container has to accept inbound connections on 993 from the internet for a hosted MCP server to reach it. A Poste.io running on a home server or a private network cannot be connected this way. mcpemails is self-hostable, so if you would rather nothing external touched the mail server you can run both inside the same network.",
+    "TLS validation is strict and cannot be bypassed. The self-signed certificate a fresh Poste.io generates will be refused, which is why provisioning a real one is a setup step rather than an optional polish.",
+    "Sending goes out through Haraka on your own IP address, so SPF, DKIM and DMARC records and your address reputation govern whether mail is accepted downstream."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Poste.io?",
+      "a": "Not on its own. Claude has no Poste.io connector and cannot open an IMAP session to a container you run. Connecting an MCP server such as mcpemails to your Poste.io hostname gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, and the same inbox then works from Cursor or ChatGPT."
+    },
+    {
+      "q": "What are the Poste.io IMAP and SMTP settings?",
+      "a": "The host is the hostname you gave the container, the same name you use for the admin interface. IMAP is 993 with implicit TLS or 143 with STARTTLS. Submission is 465 with implicit TLS or 587 with STARTTLS. Log in with the full mailbox address and the password set for that mailbox in the admin interface."
+    },
+    {
+      "q": "Is Poste.io built on Dovecot?",
+      "a": "Yes for IMAP and POP3. Poste.io bundles Dovecot for mailbox access and Haraka for SMTP into one Docker image with an admin interface over the top. Anything true of Dovecot's IMAP behaviour is true here, so our Dovecot page is the reference for folder roles, namespace prefixes and certificate handling."
+    },
+    {
+      "q": "Why is my Poste.io mailbox password rejected?",
+      "a": "Check that you are using a mailbox rather than an alias, since aliases forward and have no password of their own, and that you are not using the admin login unless that admin is also a real mailbox. If the credentials are certainly right, look at whether the connection is failing at TLS instead: a self-signed certificate on 993 produces a failure that many clients report as a login problem."
+    },
+    {
+      "q": "Is my mail stored on your servers?",
+      "a": "No. Messages are fetched live from your Poste.io container over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Poste.io inbox",
+    "sub": "Connect a mailbox from your own container. One inbox free forever, no card required."
+  }
+}

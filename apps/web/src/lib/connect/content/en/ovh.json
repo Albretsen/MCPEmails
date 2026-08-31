@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/how-to-configure-thunderbird-windows",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/email-pro/first-config",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
+    "usernameForm": "The full email address at your own domain. OVH specifies the complete address for both incoming and outgoing servers, on every one of its mail products.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect OVH to Claude, Cursor & MCP Clients",
+    "description": "Connect OVHcloud MX Plan mail to Claude and any MCP client over IMAP at ssl0.ovh.net:993. Email Pro and Hosted Exchange use different per-server hostnames."
+  },
+  "hero": {
+    "eyebrow": "OVH + AI",
+    "titleLine1": "Connect OVH to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real OVH inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your mailbox password, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach OVH on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+  },
+  "method": {
+    "title": "How OVH connects: IMAP and your mailbox password",
+    "body": "An OVH MX Plan mailbox connects over IMAP/SMTP with the mailbox password from the OVH control panel, and both hosts are <code>ssl0.ovh.net</code>. OVH Hosted Exchange is a different service: its hosts look like <code>ex4.mail.ovh.net</code> and outgoing mail runs over STARTTLS on port 587, never 465, which is why the shared-hosting defaults simply hang against it. mcpemails recognises both and picks the right pair."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Get your OVH mailbox password",
+      "p": "In the OVH control panel, open the email service, pick the address and change its password. Copy the mail host OVH shows for that mailbox if it is not ssl0.ovh.net."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, add your OVH address, the hosts below and the password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "OVH runs three mail products on three host patterns, and landing on the wrong one is the top failure here",
+      "p": "This is the OVH problem. <b>MX Plan</b>, the mailbox bundled with domains and web hosting, is documented at <code>ssl0.ovh.net</code> (OVH also lists <code>imap.mail.ovh.net</code> and <code>smtp.mail.ovh.net</code>), IMAP on 993 with SSL/TLS and SMTP on 465 with SSL/TLS. <b>Email Pro</b> answers on <code>pro</code> plus your server number plus <code>.mail.ovh.net</code>, IMAP 993 with SSL and SMTP on <b>587 with STARTTLS</b>. <b>Hosted Exchange</b> answers on <code>ex</code> plus your server number plus <code>.mail.ovh.net</code>, again IMAP 993 and SMTP 587 with STARTTLS. The three are not interchangeable in either direction. Pointing an Exchange or Email Pro mailbox at <code>ssl0.ovh.net</code> fails, and MX Plan on port 587 with STARTTLS is not where OVH documents it."
+    },
+    {
+      "h": "The Email Pro and Exchange hostnames contain a server number that cannot be guessed",
+      "p": "OVH does not give Email Pro and Hosted Exchange a shared hostname. Each service sits on a numbered machine, and the number is part of the name, which is why <code>ex4.mail.ovh.net</code> works for one customer and returns nothing for the next. OVH prints it in the OVHcloud Control Panel: open the service, go to the <b>General information</b> tab and read the <b>Connection</b> box. There is no way to derive it from your domain and no autodiscovery that will find it for you, so copy it from the panel before you start."
+    },
+    {
+      "h": "Nothing in your address tells you which OVH product you have",
+      "p": "All three products serve mail at your own domain, so <code>you@yourdomain.fr</code> looks identical whichever one it sits on. The answer is in the OVHcloud Control Panel under Web Cloud, where MX Plan appears under Emails, Email Pro has its own section, and Hosted Exchange has another. Check that first, because every other setting depends on it. If your OVH order was for Microsoft 365 rather than OVH's own Hosted Exchange, the mailbox is on Microsoft's servers under Microsoft's identity platform, and Microsoft's default tenant policy blocks end-user consent for third-party mail access. We do not claim to connect those."
+    },
+    {
+      "h": "MX Plan runs Dovecot without MOVE, UIDPLUS or SPECIAL-USE",
+      "p": "The <code>ssl0.ovh.net</code> greeting identifies itself as Dovecot and advertises <code>SASL-IR</code>, <code>IDLE</code>, <code>AUTH=PLAIN</code> and <code>AUTH=LOGIN</code>, but not MOVE, UIDPLUS or SPECIAL-USE. Moving a message is therefore performed as a copy, a flag update and an expunge rather than one atomic command, and the new identifier of the copy has to be found by searching the destination. Folders are matched by name rather than by role, which matters more on OVH than elsewhere because so many OVH mailboxes are French: an agent looking for Sent may need to be told the folder is called <code>Elements envoyes</code>, and Trash may be <code>Corbeille</code>."
+    }
+  ],
+  "limits": [
+    "Microsoft 365 mailboxes ordered through OVHcloud cannot be connected. Microsoft's default tenant policy blocks end-user consent for third-party mail access.",
+    "Email Pro and Hosted Exchange hostnames contain a per-service server number, so we cannot prefill them. Take the value from the Connection box in the OVHcloud Control Panel.",
+    "MX Plan does not advertise MOVE, so a move is not atomic. If a connection drops part way through, a message can exist briefly in both folders."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with OVH email?",
+      "a": "Not on its own. Claude has no built-in OVHcloud connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it. The one thing you must establish first is which OVH mail product the address belongs to, because the hostnames differ completely between them."
+    },
+    {
+      "q": "What are the OVH IMAP and SMTP settings?",
+      "a": "For MX Plan, OVH documents ssl0.ovh.net for both, IMAP on 993 with SSL/TLS and SMTP on 465 with SSL/TLS, and also lists imap.mail.ovh.net and smtp.mail.ovh.net as equivalents. Email Pro and Hosted Exchange instead use a numbered host of the form pro4.mail.ovh.net or ex4.mail.ovh.net, IMAP on 993 and SMTP on 587 with STARTTLS."
+    },
+    {
+      "q": "How do I know whether I have MX Plan, Email Pro or Hosted Exchange?",
+      "a": "Sign in to the OVHcloud Control Panel and open Web Cloud. MX Plan mailboxes are listed under Emails, and Email Pro and Hosted Exchange each have their own section in the left menu. The address itself gives nothing away, since all three serve mail at your own domain, so the panel is the only reliable answer."
+    },
+    {
+      "q": "Where do I find my OVH server number?",
+      "a": "Open the Email Pro or Hosted Exchange service in the OVHcloud Control Panel, select the General information tab and look at the Connection box. The number that appears there is the digit in your hostname, giving names such as pro4.mail.ovh.net or ex4.mail.ovh.net. It cannot be derived from your domain name."
+    },
+    {
+      "q": "Why does ssl0.ovh.net not work for my mailbox?",
+      "a": "Because your mailbox is probably not an MX Plan mailbox. ssl0.ovh.net serves MX Plan only. An Email Pro or Hosted Exchange mailbox answers on its own numbered host and will refuse or ignore a connection aimed at ssl0.ovh.net, which looks like a hang or a wrong password rather than a wrong server."
+    },
+    {
+      "q": "Is my OVH mail stored on your servers?",
+      "a": "No. Messages are fetched live from OVHcloud over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an OVH inbox",
+    "sub": "Connect OVH in minutes. One inbox free forever, no card required."
+  }
+}

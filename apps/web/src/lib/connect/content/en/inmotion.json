@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.inmotionhosting.com/support/email/email-client-configuration-email-over-ssl/",
+    "https://www.inmotionhosting.com/support/tools/email-configuration/",
+    "https://www.inmotionhosting.com/support/email/how-to-find-email-settings/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.inmotionhosting.com/support/email/email-client-configuration-email-over-ssl/",
+    "usernameForm": "Your full email address, for example info@yourdomain.com. Not your AMP login and not your cPanel username.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "InMotion Hosting Email to Claude over IMAP (MCP)",
+    "description": "InMotion secures mail on secureNN.inmotionhosting.com, where NN is your server number from AMP. Connect that mailbox to Claude over IMAP 993. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "InMotion Hosting + AI",
+    "titleLine1": "Connect InMotion Hosting email",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real InMotion mailbox. Read, search, send, reply, schedule and organize mail over IMAP on the secure hostname InMotion assigns to your server.",
+    "answer": "Claude cannot reach an InMotion Hosting mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. InMotion has no single shared mail server: for a secure connection you use your account's secure hostname, in the form secureNN.inmotionhosting.com, where NN is the server number shown in the technical details of your Account Management Panel. Authentication is the password set on the mailbox in cPanel, and one inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from cPanel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How InMotion mail connects: secureNN.inmotionhosting.com, IMAP 993",
+    "body": "InMotion runs cPanel, and mailboxes answer IMAP on port 993 with SMTP on 465 for TLS. Two hostnames work, and they are not interchangeable. <code>mail.yourdomain.com</code> is the non-secure form. For an encrypted session InMotion documents a dedicated secure hostname, <code>secureNN.inmotionhosting.com</code>, where NN is the number of the shared server your account lives on. Their certificate is issued for that name, so it is the one that validates. The number is not derivable from your domain; it is listed in your Account Management Panel under the account's technical details, and it also appears in cPanel's server information. The username is always the full email address, incoming and outgoing alike."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
+    },
+    {
+      "h": "Let InMotion's Email Configuration Tool tell you the settings",
+      "p": "InMotion publishes a public lookup at inmotionhosting.com/support/tools/email-configuration. Type the full email address and it returns the correct secure incoming and outgoing hostnames and ports for that specific account, with no login required. If you would rather read it from the panel, the server number is in <b>AMP</b> under the account's technical details, and cPanel shows it under Server Information."
+    },
+    {
+      "h": "Set the mailbox password in cPanel",
+      "p": "IMAP checks the password on the individual address, not your AMP login. In cPanel open <b>Email Accounts</b>, click <b>Manage</b> on the address, and set a password. Then enter it in mcpemails with the full address as the username and <code>secureNN.inmotionhosting.com</code> as the host."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "InMotion accounts carry three separate passwords, and only one authenticates mail",
+      "p": "Your <b>AMP</b> login is for billing and account management. Your <b>cPanel</b> login is for the hosting control panel. The <b>mailbox</b> password is set per email address when the address is created. They are three different credentials, and unlike hosts where the panel and the client area share a login, InMotion keeps AMP fully separate. People reach for the AMP password first because it is the one they type most often. It will never authenticate IMAP."
+    },
+    {
+      "h": "The NN in secureNN cannot be guessed, and a wrong one lands on a live stranger's server",
+      "p": "The secure hostname is numbered per shared server, so <code>secure22.inmotionhosting.com</code> and <code>secure45.inmotionhosting.com</code> are both real, working hosts belonging to different customers. Typing the wrong number does not produce a DNS failure that tells you something is off; it produces a valid TLS connection to a server your mailbox is not on, and then an authentication refusal that reads like a bad password. Get the number from AMP's technical details, not from a guide."
+    },
+    {
+      "h": "InMotion's own lookup tool removes the guesswork, and most people never find it",
+      "p": "Unusually among cPanel hosts, InMotion runs a public Email Configuration Tool that takes just an email address and returns the exact server settings for that account without a login. It resolves both the secure hostname and the ports in one step. If you are configuring mail for a client whose AMP credentials you do not have, this is the shortcut, and it is more reliable than any third-party settings page for InMotion."
+    }
+  ],
+  "limits": [
+    "Only use the secure hostname over TLS. The certificate is issued for secureNN.inmotionhosting.com, so mail.yourdomain.com on port 993 fails name validation even though it reaches the right machine.",
+    "If InMotion migrates your account to a different shared server, the NN changes. The symptom is a certificate presented for a server number you do not recognise, not an outage."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with InMotion Hosting email?",
+      "a": "Not directly. Claude has no InMotion connector. Connecting an MCP server such as mcpemails to your InMotion mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials a desktop mail client would use."
+    },
+    {
+      "q": "What are the InMotion Hosting IMAP and SMTP settings?",
+      "a": "Secure IMAP is port 993 and secure SMTP is port 465, both on your account's secure hostname in the form secureNN.inmotionhosting.com. The username is your full email address for both incoming and outgoing, and outgoing requires authentication. The unencrypted equivalents use mail.yourdomain.com, which you should not use."
+    },
+    {
+      "q": "How do I find my InMotion server number?",
+      "a": "Log in to the Account Management Panel and open the technical details for the hosting account. The server number is listed there, and cPanel repeats it under Server Information. You can also enter the email address into InMotion's public Email Configuration Tool, which returns the full secure hostname without any login."
+    },
+    {
+      "q": "Why is my InMotion email password rejected?",
+      "a": "Most often because it is your AMP or cPanel password rather than the mailbox password. Those are three separate credentials on InMotion. Reset the mailbox password from cPanel under Email Accounts by clicking Manage on the address. Check the server number too, since a wrong one connects successfully and then refuses the login."
+    },
+    {
+      "q": "Is my InMotion mail stored on your servers?",
+      "a": "No. Messages are fetched live from your InMotion server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an InMotion Hosting inbox",
+    "sub": "Connect an InMotion mailbox in minutes. One inbox free forever, no card required."
+  }
+}

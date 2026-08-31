@@ -1,0 +1,91 @@
+{
+  "_sources": [
+    "https://yandex.com/support/mail/mail-clients/others.html",
+    "https://yandex.com/support/id/authorization/app-passwords.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App password",
+    "helpUrl": "https://id.yandex.com/security/app-passwords",
+    "usernameForm": "Your full address, including the domain: name@yandex.com."
+  },
+  "meta": {
+    "title": "Connect Yandex Mail to Claude, Cursor & MCP Clients",
+    "description": "Connect Yandex Mail to Claude, Cursor and any MCP client over IMAP at imap.yandex.com:993. Verified settings, app password required. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Yandex Mail + AI",
+    "titleLine1": "Connect Yandex Mail to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Yandex inbox. Read, search, send, reply, schedule and organize mail over IMAP with a Yandex app password, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach Yandex Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.yandex.com on port 993, authenticating with a Yandex app password rather than your account password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Yandex requires you to switch the mailbox to app-password access before any mail client can log in; setup takes a couple of minutes and one inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "App password, not your account password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Yandex Mail connects: IMAP and an app password",
+    "body": "Yandex serves IMAP at <code>imap.yandex.com</code> on port 993 over TLS, and SMTP at <code>smtp.yandex.com</code> on port 465. Your ordinary Yandex password will not authenticate a mail client: you have to create an <b>app password</b> for mail, and turn on app-password access for the mailbox, before the login succeeds. Accounts on <code>yandex.ru</code> use the same hostnames, so the settings below are the same whichever domain your address ends in."
+  },
+  "setup": [
+    {
+      "h": "Turn on IMAP access in Yandex Mail",
+      "p": "Open Yandex Mail settings, go to Mail clients, and enable IMAP access. Yandex rejects client logins outright until this is on, and the failure looks exactly like a wrong password."
+    },
+    {
+      "h": "Create an app password for mail",
+      "p": "At id.yandex.com, open Security, then App passwords, and create one of type Mail. Yandex shows the password once. Copy it now; your ordinary account password will not work here."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, enter your full Yandex address, and paste the app password. The hosts below are prefilled."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yandex does not advertise SASL-IR, and most clients assume it",
+      "p": "Yandex's IMAP server omits the SASL-IR capability, so it rejects the one-step authentication that sends credentials along with the AUTHENTICATE command. Clients that assume SASL-IR get a bare BAD with no explanation, which reads like bad credentials. mcpemails detects the BAD and retries the two-step exchange, so this one is already handled for you, but it is why other IMAP tooling fails against Yandex while working everywhere else."
+    },
+    {
+      "h": "The account password never works, even without 2FA",
+      "p": "Yandex requires an app password for mail clients whether or not two-factor authentication is on. Most login failures against Yandex are this, not a typo."
+    },
+    {
+      "h": "yandex.com and yandex.ru share one set of hosts",
+      "p": "Addresses on either domain, and on Yandex 360 custom domains, authenticate against the same imap.yandex.com and smtp.yandex.com. There is no regional hostname to look up."
+    }
+  ],
+  "limits": [
+    "Yandex does not advertise the SPECIAL-USE extension, so folders are matched by name rather than by role. A mailbox whose folders were renamed in Russian may need the folder picked explicitly."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Yandex Mail?",
+      "a": "Not directly. Claude has no built-in Yandex connector. Connecting an MCP server such as mcpemails to your Yandex mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it."
+    },
+    {
+      "q": "What are the Yandex IMAP and SMTP settings?",
+      "a": "IMAP is imap.yandex.com on port 993 with implicit TLS. SMTP is smtp.yandex.com on port 465, also implicit TLS. Log in with your full email address and a Yandex app password. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why does my Yandex password get rejected?",
+      "a": "Two reasons, in this order: IMAP access is off in Yandex Mail settings under Mail clients, or you are using your account password instead of an app password. Yandex requires an app password for mail clients regardless of whether you use two-factor authentication."
+    },
+    {
+      "q": "Does this work with a Yandex 360 custom domain?",
+      "a": "Yes. Yandex 360 mailboxes on your own domain use the same imap.yandex.com and smtp.yandex.com hosts and the same app-password requirement."
+    },
+    {
+      "q": "Is my Yandex mail stored on your servers?",
+      "a": "No. Messages are fetched live from Yandex over IMAP for each request and passed to your AI client. Credentials are encrypted at rest; message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Yandex inbox",
+    "sub": "Connect Yandex Mail in minutes. One inbox free forever, no card required."
+  }
+}

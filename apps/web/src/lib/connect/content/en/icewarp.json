@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://docs.icewarp.com/Content/IceWarp-Server/Administration-Nodes/System%20Node/Services/Service%20Ports.htm",
+    "https://docs.icewarp.com/Content/IceWarp-Server/Administration-Nodes/System%20Node/Certificates/Certificates.htm",
+    "https://support.icewarp.com/hc/en-us/articles/16288796581393-How-to-use-Let-s-Encrypt-certificate-in-IceWarp",
+    "https://support.icewarp.com/hc/en-us/community/posts/15569043482257-how-to-disable-specific-service-for-specific-users"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://support.icewarp.com/hc/en-us/articles/46410555968145-How-to-configure-IceWarp-email-accounts-on-Windows-and-macOS",
+    "usernameForm": "The full address of the user account as it appears under the domain in the administration console, for example you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IceWarp to Claude: IMAP Service Ports and MCP Access",
+    "description": "Connect an IceWarp mailbox to Claude, Cursor and ChatGPT over IMAP on 993. Where the IMAP service lives in the admin console, and the Mailbox Type trap."
+  },
+  "hero": {
+    "eyebrow": "IceWarp + AI",
+    "titleLine1": "Connect IceWarp to Claude,",
+    "titleLine2": "Cursor, ChatGPT and any MCP client",
+    "lead": "IceWarp already runs your mail, calendars and chat. Adding an MCP server on top lets an AI agent work the mailbox itself: read, search, send, reply, schedule and file, with the same credentials any desktop client uses.",
+    "answer": "Claude cannot reach an IceWarp server on its own. mcpemails is a hosted MCP server that connects to your IceWarp install over IMAP at your own hostname, on port 993 with implicit TLS, using the mailbox password held in the IceWarp administration console, so Claude, Cursor or any MCP client can read, search, send and organize that mail. IceWarp is software you host, so there is no shared hostname to publish: the server must be resolvable and reachable from the internet, and the certificate on 993 must validate for the name you connect to. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from the console",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How IceWarp connects: the IMAP service under the System node",
+    "body": "IceWarp Server is administered from a console organised into nodes, and everything relevant to a mail client sits under two of them. <b>System</b> holds Services, where you double-click the IMAP service to change how it listens, and Certificates, where TLS material is issued and stored. <b>Domains and Accounts</b> holds the users. IceWarp's documented ports are 143 for IMAP and 993 for IMAP over SSL/TLS, with SMTP on 25, submission on 587 with STARTTLS and SMTPS on 465. Worth knowing before you pick: IceWarp's own port reference marks 465 as obsolete and steers you to 587 instead, which is the opposite of the advice most other mail servers give. Authentication is the mailbox password stored on the user account, the same credential used to sign in to IceWarp WebClient. There is no app-password mechanism to generate."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. One inbox is free forever and no card is asked for, which is enough to try this against a live IceWarp account."
+    },
+    {
+      "h": "Open the IMAP service in the administration console",
+      "p": "Go to the System node, then Services, and double-click IMAP. Confirm the service is running and that the secure port is 993. While you are in System, open Certificates and check which certificate is bound to the hostname you intend to hand to mcpemails."
+    },
+    {
+      "h": "Check the account's Mailbox Type, then add the inbox",
+      "p": "Under Domains and Accounts, open the user and look at the Options tab. The <code>Mailbox: Type</code> setting must be the combined IMAP and POP3 value rather than POP3 alone. Then add the inbox in mcpemails: choose IMAP / SMTP, enter your IceWarp hostname, the full address and the mailbox password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Mailbox Type is a setting with a POP3-only value, not a checkbox",
+      "p": "IceWarp does not give a user an IMAP on/off switch. It gives them a mailbox <b>type</b> on the account's Options tab, and one of the available values is POP3 rather than the combined IMAP and POP3. An account set that way answers on 110 and refuses IMAP, and because the change was made once during provisioning by whoever built the account template, nobody remembers it is there. The symptom is a single user who cannot connect while everyone else on the same server can. Check the type on the account before you check anything about the network."
+    },
+    {
+      "h": "POP3 and IMAP are one module, so you cannot stop one of them",
+      "p": "IceWarp runs POP3 and IMAP as a single module. Stopping or restarting it takes both protocols down together, which matters in two directions. If somebody disabled POP3 for security by stopping the service, IMAP went with it and nothing has been listening on 993 since. And when you restart the module to apply a port or certificate change, every POP3 client on the server drops at the same moment. Plan the restart rather than clicking it during the working day."
+    },
+    {
+      "h": "IceWarp issues its own certificates, so another web server on port 80 stops it",
+      "p": "Certificates are issued from System, then Certificates, then Add Certificate, choosing the free Let's Encrypt option and the domain. The condition attached is easy to break on a Windows box: the <b>IceWarp WebService itself</b> has to be the thing answering on ports 80 and 443, and the server's DNS record has to resolve publicly. IIS is installed and listening on 80 on a great many Windows servers by default, and a reverse proxy in front of IceWarp has the same effect, so the request fails and, more quietly, so does every automatic reissue afterwards. The existing certificate keeps working right up to its expiry date and then every strict client fails on the same morning. IceWarp also cannot issue wildcard certificates this way, so a hostname that is not named on the certificate will not validate no matter how well the rest is configured."
+    }
+  ],
+  "limits": [
+    "A hosted MCP server has to open an inbound connection to your IceWarp host, so a server published only on an internal network, or reachable only through a corporate VPN, cannot be connected this way. mcpemails is self-hostable if you want the IMAP session to stay inside the perimeter.",
+    "Certificate validation is strict and cannot be waived, so an expired certificate or one issued for a different name will be refused rather than accepted with a warning.",
+    "IceWarp's calendars, contacts and chat are not part of this. mcpemails speaks IMAP and SMTP, so it works with mail, not with the groupware features layered beside it."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with IceWarp?",
+      "a": "Not by itself. Claude has no IceWarp connector and cannot open an IMAP session to a server you run. Connecting an MCP server such as mcpemails to your IceWarp host gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, and the same inbox is then available in Cursor and ChatGPT."
+    },
+    {
+      "q": "What are the IceWarp IMAP and SMTP settings?",
+      "a": "The hostname is your own server. The ports are IceWarp's documented defaults: IMAP on 143, IMAP over SSL on 993, SMTP on 25, submission on 587 with STARTTLS and SMTPS on 465. IceWarp's own documentation flags 465 as obsolete and prefers 587. Log in with the full email address and the mailbox password."
+    },
+    {
+      "q": "Why can one IceWarp user connect over IMAP and another cannot?",
+      "a": "Almost always the Mailbox Type on the account. In the administration console, open the user, go to the Options tab and look at the mailbox type: if it says POP3 rather than the combined IMAP and POP3 value, that account has no IMAP service regardless of what the server is doing. It is a per-account setting, which is why it affects individuals rather than everyone."
+    },
+    {
+      "q": "Does IceWarp need an app password?",
+      "a": "No. IceWarp has no app-specific password scheme. Clients authenticate with the mailbox password stored on the user account, the same one used for WebClient. If nobody knows it, reset it on the account in the administration console rather than trying to recover it."
+    },
+    {
+      "q": "Is my IceWarp mail stored on your servers?",
+      "a": "No. Messages are fetched live from your IceWarp server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an IceWarp inbox",
+    "sub": "Connect a mailbox from your own IceWarp server. One inbox free forever, no card required."
+  }
+}

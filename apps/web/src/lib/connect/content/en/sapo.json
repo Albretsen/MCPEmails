@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "https://ajuda.sapo.pt/sapo-mail-premium-99980"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "SAPO password, on a Premium account",
+    "helpUrl": "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "usernameForm": "Your full address, including the domain: nome@sapo.pt.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SAPO Mail IMAP: Premium Only, and Claude MCP Setup",
+    "description": "SAPO restricts IMAP, POP and SMTP to Premium accounts. What that means for connecting imap.sapo.pt:993 to Claude, and what a free Base account can still do."
+  },
+  "hero": {
+    "eyebrow": "SAPO Mail + AI",
+    "titleLine1": "SAPO Mail over IMAP,",
+    "titleLine2": "in Claude, Cursor, any MCP client",
+    "lead": "SAPO puts mail-client access on its Premium tier. If your account has it, an AI agent can read, search, send, reply, schedule and organize the mailbox over IMAP.",
+    "answer": "Claude cannot reach a SAPO mailbox on its own, and on a free SAPO Base account neither can anything else: SAPO states in its own documentation that o acesso IMAP/POP está disponível apenas para contas Premium. On a Premium account, mcpemails is a hosted MCP server that connects the mailbox over IMAP at imap.sapo.pt on port 993 with your SAPO address and password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. There is no app password and no toggle to switch on: the gate is the plan. One inbox on mcpemails is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Needs a SAPO Premium account",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How SAPO connects: IMAP on a Premium account, nothing on a Base one",
+    "body": "SAPO serves IMAP at <code>imap.sapo.pt</code> on port 993 over implicit TLS and SMTP submission at <code>smtp.sapo.pt</code> on port 465, with authentication required. Its own configuration page words the hosts as <b>imap.sapo.pt para endereços terminados @sapo.pt</b>, and the credential as <b>o seu endereço de e-mail SAPO e a respetiva password</b>. There is no app-specific password and no per-mailbox client-access switch. The one thing that decides whether any of this works is the plan on the account. SAPO's help pages state the restriction directly: <b>O acesso por IMAP, POP e SMTP só está disponível para contas Premium.</b> A free Base account keeps its mail and its webmail at mail.sapo.pt and loses the protocols, which means every desktop and mobile mail client, and every hosted MCP server including this one."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Check whether the SAPO account is Base or Premium",
+      "p": "Sign in at mail.sapo.pt and look at the plan on the account. Base is the free tier and has no IMAP, POP or SMTP: it is webmail and the SAPO app only. Premium restores the protocols along with the larger mailbox and no advertising. This is a billing state and not a setting, so there is nothing in the mail options screen that will change it."
+    },
+    {
+      "h": "Use your SAPO address and password",
+      "p": "SAPO issues no application-specific password. The credential is your ordinary SAPO password with the complete address as the username, used on both the incoming and the outgoing side. If the webmail accepts it and the client does not, the account is almost certainly on the Base tier rather than Premium."
+    },
+    {
+      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the full address such as nome@sapo.pt, and enter the password. The SAPO hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The servers answer, the free account still cannot log in",
+      "p": "<code>imap.sapo.pt</code> is up, completes a TLS handshake and greets you with <code>Welcome to PTMail</code> regardless of who is asking. That makes the Premium restriction genuinely hard to diagnose, because every symptom points at credentials. If the SAPO webmail accepts your password and a mail client does not, stop testing the password. The plan is the difference. This applies identically to Outlook, Thunderbird, Apple Mail, the phone clients and every MCP server, ours included: no third-party tool can grant protocol access that the account does not have."
+    },
+    {
+      "h": "A dormant Base account stops receiving mail after 90 days",
+      "p": "SAPO hibernates free Base accounts that go unused for more than 90 days: <b>as contas Base inativas por mais de 90 dias são hibernadas, deixando de receber mensagens</b>, and content on a hibernated account may be removed. Premium accounts are never hibernated. This matters specifically for the tempting idea of creating a spare SAPO address to hand to an agent and then forgetting about it. A Base account you do not sign into stops being a working mailbox."
+    },
+    {
+      "h": "Only PLAIN on IMAP, both PLAIN and LOGIN on SMTP",
+      "p": "The IMAP banner offers <code>AUTH=PLAIN</code> and nothing else, with no <code>AUTH=LOGIN</code>. Client libraries hard-wired to the LOGIN mechanism, which is common in tooling written against Exchange, are refused at the authentication step with an error that reads like bad credentials. The SMTP side accepts both PLAIN and LOGIN, so the two halves of the same account can behave differently inside one client. mcpemails negotiates whatever each leg actually offers."
+    },
+    {
+      "h": "No MOVE and no SPECIAL-USE on a Portuguese-named mailbox",
+      "p": "The server does not advertise the IMAP <code>MOVE</code> extension, so filing a message runs as a copy, a flag update and an expunge rather than one atomic command. It omits <code>SPECIAL-USE</code> too, so Sent, Drafts and Trash are matched by name rather than by role. A Portuguese SAPO mailbox usually names them <b>Enviadas</b>, <b>Rascunhos</b> and <b>Lixo</b>, so name the folder explicitly if an agent cannot find it."
+    }
+  ],
+  "limits": [
+    "On a free SAPO Base account there is nothing to connect. This is a provider restriction and no MCP server, ours included, can work around it.",
+    "Outgoing messages are capped at roughly 30 MB of encoded message, so a large attachment forwarded by an agent can be rejected at the SMTP step.",
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with SAPO Mail?",
+      "a": "Only on a Premium account. SAPO restricts IMAP, POP and SMTP to Premium, so a free Base account cannot be connected by any mail client or MCP server. With Premium, pointing mcpemails at the mailbox gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor and ChatGPT."
+    },
+    {
+      "q": "What are the SAPO IMAP and SMTP settings?",
+      "a": "IMAP is imap.sapo.pt on port 993 with SSL. SMTP is smtp.sapo.pt on port 465 with SSL and authentication required. The username is your complete sapo.pt address and the password is your SAPO password. Both hosts were confirmed from a live TLS connection and match what SAPO publishes."
+    },
+    {
+      "q": "Why does Outlook no longer work with my SAPO address?",
+      "a": "Because IMAP and POP access moved to the Premium tier. SAPO's own help states that IMAP and POP are available only for Premium accounts. A free Base account keeps webmail at mail.sapo.pt and the SAPO app, and loses every protocol a desktop or mobile client would use."
+    },
+    {
+      "q": "Does SAPO issue an app password?",
+      "a": "No. SAPO publishes no application-specific password mechanism. Mail clients authenticate with the ordinary SAPO account password together with the complete address, on both the incoming and the outgoing server. If that password works in the webmail but not in a client, the cause is the account tier rather than the credential."
+    },
+    {
+      "q": "What happens to a SAPO account I stop using?",
+      "a": "Free Base accounts inactive for more than 90 days are hibernated and stop receiving messages, and their content may be removed. Accounts over their storage limit for more than 90 days are treated the same way. Premium accounts are not hibernated. Do not park an unused Base address as a dedicated agent mailbox."
+    },
+    {
+      "q": "Is my SAPO mail stored on your servers?",
+      "a": "No. Messages are fetched live from SAPO over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a SAPO inbox",
+    "sub": "If your SAPO account is Premium, connect it in minutes. One inbox free forever, no card required."
+  }
+}

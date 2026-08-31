@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.123-reg.co.uk/welcome-tsohost/",
+    "https://www.123-reg.co.uk/help",
+    "https://help.tsohost.com/knowledge-base/article/11676",
+    "https://support.titan.email/hc/en-us/articles/900006137746-Send-email-using-Post-SMTP-plugin-tsoHost-Users"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.123-reg.co.uk/help",
+    "usernameForm": "Your full email address, for example you@yourdomain.co.uk. Never your tsoHost or 123 Reg control panel login.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Tsohost Email to Claude After the 123 Reg Move",
+    "description": "Tsohost mailboxes still connect to Claude over IMAP on port 993. The brand moved to 123 Reg, so read your real mail host from cPanel under Connect Devices."
+  },
+  "hero": {
+    "eyebrow": "Tsohost + AI",
+    "titleLine1": "Connect Tsohost email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Tsohost mailbox. Read, search, send, reply, schedule and organize mail over IMAP, with the settings taken from the one screen that is still authoritative after two migrations.",
+    "answer": "Claude cannot reach a Tsohost mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993 and SMTP on 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. There is no shared tsohost.com mail server to point a client at: the host is built from your own domain or from your hosting server's name, and the authoritative copy of it is printed inside cPanel under Email Accounts, then Connect Devices. Authentication is the password set on that individual mailbox, never your control panel login. The tsoHost brand has been retired into 123 Reg, so start from the 123 Reg Control Panel. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from cPanel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Tsohost mail connects: your own hostname, and a brand that has moved",
+    "body": "Tsohost mailboxes are cPanel mailboxes. They answer IMAP on port 993 and SMTP on 465 over implicit TLS, with 143 and 587 as the STARTTLS equivalents, and the hostname is per-customer rather than shared: either <code>mail.yourdomain.co.uk</code>, built from your own domain, or the name of the server your account sits on. Neither is guessable, which is why every accurate answer starts in cPanel rather than in a settings table. The complication specific to Tsohost is that the brand no longer exists as a separate business. tsoHost has been folded into <b>123 Reg</b>: <code>tsohost.com</code> redirects to a 123 Reg welcome page, the old <code>help.tsohost.com</code> knowledge base redirects to 123 Reg's help centre, and 123 Reg tells tsoHost customers to sign in with their existing credentials and find their services under the <b>My products</b> tab of the 123 Reg Control Panel. Your mailboxes carry over. Your bookmarks and old article numbers do not."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Get into the cPanel that holds the mailbox",
+      "p": "Sign in at 123-reg.co.uk using your tsoHost credentials, open the <b>Control Panel</b>, and go to the <b>My products</b> tab. Find the hosting package the domain belongs to and open its cPanel. Some accounts still answer to a tsoHost Control Panel and some have already moved, and 123 Reg routes support differently for each, so note which one you land in before you need help."
+    },
+    {
+      "h": "Read the real host from Connect Devices",
+      "p": "In cPanel go to <b>Email</b>, then <b>Email Accounts</b>, and click <b>Connect Devices</b> on the row for the address. Scroll to <b>Mail Client Manual Settings</b> and use the <b>Secure SSL/TLS Settings</b> block, not the standard one. Copy the incoming server exactly as printed, with IMAP on 993 and SMTP on 465. If nobody has the mailbox password, click <b>Manage</b> beside the address and set a new one; cPanel mail has no app-password mechanism."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Add the mailbox in mcpemails with the full address and that password, then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Every Tsohost settings page you bookmarked has been redirected away",
+      "p": "This is the one that wastes an afternoon. Tsohost customers went through two moves in a row: the legacy tsoHost hosting platform was migrated onto cPanel, and then the tsoHost brand itself was retired into 123 Reg. Both changed where the truth lives. <code>help.tsohost.com</code> article links now answer with a redirect to 123 Reg's help centre rather than the article you saved, and any hostname copied out of a pre-cPanel tsoHost guide describes a platform your mailbox no longer runs on. The Connect Devices panel inside the cPanel your account opens today is the only source that reflects where the mailbox actually is."
+    },
+    {
+      "h": "A mailbox that logs in perfectly can still be the wrong mailbox",
+      "p": "cPanel will happily create and authenticate a mailbox on a server your domain's mail no longer routes to, and Tsohost sold Titan-powered email hosting alongside cPanel mail, with Titan publishing its own tsoHost-specific setup guidance. So check the domain's MX record first. If it points into Titan's infrastructure, your real mailbox is on Titan at <code>imap.titan.email</code>, and the cPanel account of the same name is an empty box that accepts your password and shows you nothing. An agent reporting an empty inbox on an address you know is busy is almost always this."
+    },
+    {
+      "h": "The certificate on mail.yourdomain.co.uk is issued only if that name resolves to the server",
+      "p": "cPanel's AutoSSL asks for a certificate covering your domain plus the service subdomains, <code>mail.</code>, <code>webmail.</code>, <code>cpanel.</code> and the rest, but it drops any of them that do not resolve to that server at the moment of issue. Plenty of Tsohost domains have DNS managed somewhere other than the hosting, and plenty had records rewritten during the migration, so <code>mail.yourdomain.co.uk</code> ends up unresolvable or resolving without a matching SAN. The handshake then presents the server's own hostname certificate, and a strict client refuses with a name mismatch that reads like an attack. The remedy is the server hostname from Connect Devices, not clicking through the warning."
+    },
+    {
+      "h": "Two migrations later, nobody remembers the mailbox password",
+      "p": "IMAP authenticates against the password set on the individual email address in cPanel, which is a different credential from the tsoHost or 123 Reg control panel login and different again from the cPanel account password. After a platform migration and a brand migration, that per-mailbox password is frequently the one thing nobody wrote down, and because the panel login still works people assume the mail password must match and blame the hostname instead. Reset it from <b>Manage</b> next to the address in Email Accounts."
+    }
+  ],
+  "limits": [
+    "mcpemails connects the mailbox, not the hosting account. Forwarders, aliases, autoresponders, spam filters and DNS all stay in cPanel and the 123 Reg Control Panel, and your AI client can neither see nor change them.",
+    "If the address turns out to be a Titan mailbox rather than a cPanel one, none of the settings here apply. Connect it as Titan instead, with Titan's own hosts and the mailbox password from the Titan control panel.",
+    "This page describes cPanel mail as it exists after the migration. Hostnames from the legacy tsoHost platform, before the cPanel move, no longer describe where your mailbox lives and will not resolve to it."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Tsohost email?",
+      "a": "Not directly. Claude has no built-in connector for cPanel mail hosts. Connecting an MCP server such as mcpemails to your Tsohost mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access, using the credentials a desktop mail client would use, and the same connection works from Cursor and ChatGPT."
+    },
+    {
+      "q": "What are the Tsohost IMAP and SMTP settings?",
+      "a": "IMAP is port 993 with implicit TLS and SMTP is port 465, with 143 and 587 as the STARTTLS equivalents. The hostname is specific to your account rather than shared, either mail.yourdomain.co.uk or your server's own name, and cPanel prints the correct one under Email Accounts, then Connect Devices, in the Secure SSL/TLS block. The username is always the complete email address."
+    },
+    {
+      "q": "Tsohost is now 123 Reg. Where do I find my email settings?",
+      "a": "Sign in at 123-reg.co.uk with your existing tsoHost credentials, open the Control Panel and use the My products tab to reach the hosting package. Open its cPanel, then Email Accounts, then Connect Devices for the address. Your mailboxes and their contents came across unchanged; only the brand, the login page and the help centre moved."
+    },
+    {
+      "q": "Why does my mail client warn about the certificate on mail.mydomain.co.uk?",
+      "a": "Because that name is not on the certificate the server presents. cPanel's AutoSSL only includes the mail subdomain when it resolves to the hosting server, and many Tsohost domains have DNS elsewhere or had records changed during the migration. Use the server hostname shown in Connect Devices instead of the mail prefix, and do not disable certificate validation to get past it."
+    },
+    {
+      "q": "My Tsohost mailbox connects but there is no mail in it. What is wrong?",
+      "a": "Check the domain's MX record. A cPanel mailbox exists and accepts logins whether or not the domain's mail is routed to that server, so a correct password on the wrong mailbox looks like an empty inbox. If MX points at Titan, the live mailbox is the Titan one and should be connected with Titan's hosts rather than your hosting server's."
+    },
+    {
+      "q": "Is my Tsohost mail stored on your servers?",
+      "a": "No. Messages are fetched live from your hosting server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained. The AI client you connect does receive the content of anything it reads, which is worth deciding deliberately for a business mailbox."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Tsohost inbox",
+    "sub": "Connect a Tsohost mailbox in minutes with the host from Connect Devices. One inbox free forever, no card required."
+  }
+}

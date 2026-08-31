@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "将 cPanel 连接到 Claude（及任意 AI）",
+    "description": "用邮箱密码通过 IMAP 将 cPanel 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "cPanel + AI",
+    "titleLine1": "将 cPanel 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 cPanel 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，无需 OAuth 配置",
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "Claude 无法自行连接 cPanel。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+  },
+  "method": {
+    "title": "cPanel 如何连接：IMAP 与邮箱密码",
+    "body": "cPanel 邮箱，也就是你在 Roundcube 或 Horde 网页邮箱里读的那个，通过 IMAP/SMTP 连接，使用在 cPanel 的 Email Accounts 中设置的密码。没有应用专用密码，也没有 OAuth。服务器通常是 <code>mail.yourdomain.com</code>，cPanel 会在 Email Accounts、Connect Devices 的 Mail Client Manual Settings 中给出准确数值。请使用加密的 SSL/TLS 那一列，不要用明文那列。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+    },
+    {
+      "h": "从 cPanel 中读取设置",
+      "p": "在 cPanel 中打开 Email Accounts，为该邮箱点击 Connect Devices。从 Mail Client Manual Settings 复制加密的 IMAP 与 SMTP 服务器和端口。如果不知道邮箱密码，可以在同一页面重新设置一个。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，填入你的 cPanel 地址、下方的服务器地址和密码，安全连接收件箱。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 cPanel 收件箱",
+    "sub": "几分钟即可连接 cPanel。一个收件箱永久免费，无需信用卡。"
+  }
+}

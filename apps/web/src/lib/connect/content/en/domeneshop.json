@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://domene.shop/faq?id=237",
+    "https://domene.shop/faq?id=331"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://domene.shop/faq?id=237",
+    "usernameForm": "Your full address, including the domain: name@yourdomain.no.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Domeneshop Email to Claude & MCP Clients",
+    "description": "Connect Domeneshop email to Claude, Cursor and any MCP client over IMAP at imap.domeneshop.no:993 with your mailbox password. One inbox free, forever."
+  },
+  "hero": {
+    "eyebrow": "Domeneshop + AI",
+    "titleLine1": "Connect Domeneshop email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Domeneshop inbox. Read, search, send, reply, schedule and organize mail over IMAP with the mailbox password you set in the Domeneshop control panel.",
+    "answer": "Claude cannot reach a Domeneshop mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.domeneshop.no on port 993, authenticating with your full email address and the password you chose for that mailbox in the Domeneshop control panel, so Claude, Cursor or any MCP client can read, search, send and organize the mail. There is no app password and no extra toggle to switch on at Domeneshop, but sending has a policy quirk covered below. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from the control panel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Domeneshop connects: IMAP and the mailbox password",
+    "body": "Domeneshop serves IMAP at <code>imap.domeneshop.no</code> on port 993 over implicit TLS, and SMTP submission at <code>smtp.domeneshop.no</code> on port 465. Every Domeneshop mailbox lives on the same pair of shared hostnames no matter which domain your address ends in, so there is nothing per-customer to look up. Authentication is the ordinary mailbox password: the one you set when you created the address under E-post in the Domeneshop control panel, entered together with the <b>full</b> address as the username. Domeneshop requires SMTP authentication with those same credentials; a client that leaves the outgoing username and password blank will connect and then fail to send."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Find or reset the mailbox password in Domeneshop",
+      "p": "Log in at domene.shop, open your domain, and go to E-post. Each address listed there has its own password, set when the address was created. If nobody remembers it, set a new one on that screen. Your Domeneshop account login is not the mailbox password and will not authenticate against IMAP."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, enter the full address such as post@yourdomain.no, and paste the mailbox password. The Domeneshop hosts and ports are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Domeneshop rejects SMTP submission from cloud networks with 550 [ACR04]",
+      "p": "This is the one that catches people out, and it is policy rather than a fault. Domeneshop documents <code>smtp.domeneshop.no</code> as a server for personal mail sent from your own PC, Mac, phone or tablet, and explicitly not for sending from cloud services, web servers, newsletters, marketing, mass mailings, other automated sending, or dedicated mail servers. A submission arriving from a cloud provider's IP range is refused permanently with a <code>550</code> reply carrying the code <code>[ACR04]</code>. Retrying from the same network never helps, and the message reads like an authentication problem even though your credentials are fine. mcpemails works around it with a <b>fallback egress route</b> that is not on a large cloud provider's ranges, so an ordinary human-scale send from your agent goes out. That fallback does not change Domeneshop's policy: bulk and automated mass sending through Domeneshop is still not allowed, and you should not build a newsletter on top of it."
+    },
+    {
+      "h": "The IMAP server advertises AUTH=PLAIN and nothing else",
+      "p": "Domeneshop's IMAP banner offers <code>AUTH=PLAIN</code> only, with no <code>AUTH=LOGIN</code>. Clients and libraries hard-wired to the LOGIN mechanism, which is common in tooling written against Exchange, get a refusal at the authentication step rather than a useful error. The SMTP side does accept both PLAIN and LOGIN, so the two halves of the same account can behave differently in the same client."
+    },
+    {
+      "h": "No MOVE, no UIDPLUS, and folders are matched by name",
+      "p": "The server does not advertise the IMAP MOVE extension, so moving a message is performed as a copy, a flag update and an expunge instead of one atomic command. It also omits UIDPLUS, so the new UID of a copied message is not reported back and has to be found by searching the destination folder. SPECIAL-USE is absent too, which means Sent, Drafts, Trash and Junk are identified by their names. On a Norwegian mailbox those names are often Sendt, Utkast, Slettet and Søppelpost, so if an agent cannot find your archive folder, name it explicitly."
+    }
+  ],
+  "limits": [
+    "Domeneshop's SMTP policy rules out bulk sending, newsletters and automated mass mailings. Use it for normal correspondence, not for campaigns.",
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Domeneshop email?",
+      "a": "Not on its own. Claude has no built-in connector for Domeneshop. Pointing an MCP server such as mcpemails at your Domeneshop mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Domeneshop IMAP and SMTP settings?",
+      "a": "IMAP is imap.domeneshop.no on port 993 with implicit TLS. SMTP is smtp.domeneshop.no on port 465, also implicit TLS. Log in with your complete email address and the mailbox password from the control panel. Both hosts were confirmed from a live TLS connection, and both are shared across all Domeneshop customers."
+    },
+    {
+      "q": "Why does sending fail with 550 [ACR04]?",
+      "a": "Domeneshop refuses SMTP submission from cloud and hosting IP ranges as an anti-abuse measure. The rejection is permanent and has nothing to do with your password. mcpemails routes affected sends through a fallback egress that is not on those ranges so ordinary sends complete. Bulk sending through Domeneshop remains against their stated policy."
+    },
+    {
+      "q": "Does Domeneshop need an app password?",
+      "a": "No. Domeneshop does not issue app-specific passwords. Mail clients authenticate with the password set for that individual mailbox under E-post in the control panel. That is a different credential from your Domeneshop account login, which is why the account password is rejected."
+    },
+    {
+      "q": "Is my Domeneshop mail stored on your servers?",
+      "a": "No. Messages are fetched live from Domeneshop over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Domeneshop inbox",
+    "sub": "Connect Domeneshop email in minutes. One inbox free forever, no card required."
+  }
+}

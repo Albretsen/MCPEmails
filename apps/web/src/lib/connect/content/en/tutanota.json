@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://tuta.com/blog/desktop-clients-tutanota",
+    "https://tuta.com/encryption",
+    "https://tuta.com/support",
+    "https://tuta.com/blog/tuta-release-update-february"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "No client protocol exists",
+    "helpUrl": "https://tuta.com/support",
+    "usernameForm": "There is nothing to enter. Tuta runs no IMAP, POP or SMTP service, so a Tuta address has no mail-client credential of any kind.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Tuta Mail and Claude: No IMAP, No SMTP, No Bridge",
+    "description": "Tuta runs no IMAP, POP or SMTP service by design, and ships no bridge, so no MCP server can connect a Tuta mailbox. The reason, and what you can do instead."
+  },
+  "hero": {
+    "eyebrow": "Tuta Mail + AI",
+    "titleLine1": "Tuta Mail has no IMAP",
+    "titleLine2": "or SMTP, and there is no bridge",
+    "lead": "Tuta, formerly Tutanota, runs none of the protocols a mail client or an MCP server needs, and unlike Proton it ships no local bridge to fake one. This page explains why, and what is actually available to you.",
+    "answer": "No, and there is no workaround. Tuta offers no IMAP, POP or SMTP access at all, so mcpemails cannot connect a Tuta mailbox and neither can Thunderbird, Apple Mail or any other client. This follows from how Tuta's encryption works: subject lines, bodies, attachments, contacts and calendar entries are all encrypted with a key that never leaves your device, and Tuta's servers hold only ciphertext. Standard IMAP assumes a server that can read subjects, sort, search and hand a client plaintext, which is precisely the capability Tuta removed. Unlike Proton there is no bridge application to run locally either, so if you want an AI agent working on mail, it has to be a mailbox on a provider that speaks IMAP, and mcpemails connects one of those free."
+  },
+  "method": {
+    "title": "How Tuta connects: through its own apps only",
+    "body": "Tuta reaches your mailbox through its web client, its desktop clients for Windows, macOS and Linux, and its mobile apps, over a proprietary encrypted protocol. There is no host to configure, no port and no password to generate for outside software. Tuta's own explanation is that supporting IMAP would only be possible if messages were downloaded and stored unencrypted on the device, which contradicts the promise that your data is end to end encrypted everywhere including on your own machine. The consequence for tooling is complete: read access, send access and search all travel over the same protocol, so there is no partial capability to expose. What Tuta does give you is a full export. Recent desktop clients export a single message as <code>.eml</code> or a whole mailbox as <code>.mbox</code> in one click, on all three desktop platforms, and that export is available on the free plan."
+  },
+  "setup": [
+    {
+      "h": "Create the free mcpemails account",
+      "p": "An email address, no card required. One connected inbox is free forever, and the next two steps decide what goes in it."
+    },
+    {
+      "h": "Pick the address you want an agent working on",
+      "p": "This is a real decision, not a formality. Choose a mailbox on a provider that runs IMAP: your own domain, a work account, Fastmail, Migadu, Gmail. Correspondence that belongs behind Tuta's encryption should stay in Tuta, and the mail you want triaged, answered and filed automatically lives in the connected account."
+    },
+    {
+      "h": "Move the archive across if you need history there",
+      "p": "In a Tuta desktop client, open a message and use the three dot menu to export it, or export the mailbox as <code>.mbox</code>. Import that file into the connectable account with its own import tool. The export is a snapshot taken at that moment, not a live link, so repeat it if you need it current."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and the agent has the connected mailbox with read, search, send, reply, schedule and filing."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tuta encrypts the subject line, so an IMAP server would have nothing to serve",
+      "p": "This is the part most explanations skip. IMAP is not only a transport: the server parses messages, returns envelope data including subject and sender, sorts and runs SEARCH on the contents. Tuta's servers hold ciphertext and never have the key, so an IMAP front end could return nothing more useful than opaque blobs, and every client feature built on server-side envelope and search would break. Encrypting only the body would have left IMAP possible, and Tuta chose the other way."
+    },
+    {
+      "h": "There is no Tuta bridge, and people arrive expecting one",
+      "p": "Proton solved the same encryption problem with a local desktop application that decrypts on your machine and serves IMAP to a client on the same computer. Tuta ships no equivalent. There is no supported component, official or otherwise, that turns a Tuta account into an IMAP endpoint on any machine, so the localhost trick that at least works for a desktop client with Proton does not exist here."
+    },
+    {
+      "h": "Settings directories publish Tuta hostnames that do not exist",
+      "p": "Search for Tuta or Tutanota IMAP settings and you will find pages listing a hostname, a port and an encryption method, generated by the same template those sites apply to every provider. No such server is running. A client pointed at one of those hosts fails at connection or at login, and the failure looks like a credential problem, which sends people hunting for an app password that was never possible to create."
+    },
+    {
+      "h": "A custom domain on Tuta is still a Tuta mailbox",
+      "p": "Paid plans let you use your own domain, with MX records pointing at Tuta. That gives you the address, not a server of your own, so there is no <code>mail.yourdomain.com</code> to authenticate against. The protocol situation is identical to a tutanota.com or tuta.com address."
+    }
+  ],
+  "limits": [
+    "There is no read-only middle ground. Listing, reading, searching and sending all depend on the same protocol Tuta does not run, so no reduced or safer form of access exists to offer you.",
+    "An exported mailbox is an archive. An agent working from imported .mbox history can search and quote it, but it will not see anything that arrived in Tuta afterwards and cannot reply inside a Tuta thread."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Tuta Mail?",
+      "a": "No. Claude has no Tuta connector and no MCP server can build one, because Tuta exposes no IMAP, POP or SMTP interface for anything to connect to. The practical answer is to keep Tuta for the mail you want encrypted and give your agent a separate mailbox on a provider that supports IMAP."
+    },
+    {
+      "q": "What are the Tuta IMAP and SMTP settings?",
+      "a": "There are none. Tuta operates no IMAP, POP or SMTP servers for user mailboxes, so there is no hostname, port or encryption setting to enter anywhere. Pages that list them are filling in a template. Tuta mail is reachable only through Tuta's own web, desktop and mobile clients."
+    },
+    {
+      "q": "Why does Tuta not support IMAP?",
+      "a": "Because of what Tuta encrypts. Subjects, bodies, attachments, contacts and calendars are encrypted with a key held on your device, so Tuta's servers cannot read any of it. Serving IMAP would mean either handing clients ciphertext they cannot use or storing mail unencrypted, which is the guarantee Tuta sells. Tuta has been explicit that it will not trade that away."
+    },
+    {
+      "q": "Is there a Tuta bridge like Proton Mail Bridge?",
+      "a": "No. Proton ships a desktop application that decrypts locally and offers IMAP to clients on the same computer. Tuta has no such component on any plan, so there is no local endpoint either. Third-party tools claiming to bridge Tuta are not built on any supported interface, and handing one your Tuta password gives it your mailbox."
+    },
+    {
+      "q": "Can I export my mail out of Tuta?",
+      "a": "Yes, and it is free. Tuta's desktop clients on Windows, macOS and Linux export a single message as .eml or the whole mailbox as .mbox from the message menu. That file imports into most other mail services, which is the route people take when they want history in an account that automation can reach."
+    },
+    {
+      "q": "What should I do if I want an AI agent handling my email?",
+      "a": "Run two addresses on purpose. Keep private correspondence in Tuta, where nothing automated can reach it, and use a separate IMAP mailbox for the mail you want an agent to triage, answer, schedule and file. mcpemails connects that second mailbox to Claude, Cursor or ChatGPT, one inbox free, and never sees the Tuta one."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an inbox it can actually open",
+    "sub": "Tuta stays sealed. Connect one IMAP mailbox for the work you want automated, free forever."
+  }
+}

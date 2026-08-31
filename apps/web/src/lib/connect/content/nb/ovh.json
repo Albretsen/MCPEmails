@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Koble OVH til Claude (og enhver AI)",
+    "description": "Koble OVH til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "OVH + AI",
+    "titleLine1": "Koble OVH til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte OVH-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke OVH på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+  },
+  "method": {
+    "title": "Slik kobler OVH seg til: IMAP og postkassepassordet ditt",
+    "body": "En OVH MX Plan-postkasse kobles til via IMAP/SMTP med postkassepassordet fra OVH-kontrollpanelet, og begge vertene er <code>ssl0.ovh.net</code>. OVH Hosted Exchange er en annen tjeneste: vertene ser ut som <code>ex4.mail.ovh.net</code>, og utgående e-post går over STARTTLS på port 587, aldri 465, som er grunnen til at standardverdiene for delt webhotell bare henger. mcpemails kjenner igjen begge og velger riktig par."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Hent OVH-postkassepassordet",
+      "p": "I OVH-kontrollpanelet åpner du e-posttjenesten, velger adressen og endrer passordet. Kopier e-postverten OVH viser for postkassen hvis den ikke er ssl0.ovh.net."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, legg til OVH-adressen din, vertene under og passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en OVH-innboks",
+    "sub": "Koble til OVH på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}
