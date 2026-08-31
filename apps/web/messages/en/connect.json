@@ -81,7 +81,7 @@
   "hub": {
     "meta": {
       "title": "Connect Any Email Provider to Claude & MCP Clients",
-      "description": "IMAP and SMTP settings for 106 email providers, each verified from a live connection, plus how to give Claude, Cursor or ChatGPT access to that mailbox."
+      "description": "IMAP and SMTP settings for {count} email providers, each verified from a live connection, plus how to give Claude, Cursor or ChatGPT access to that mailbox."
     },
     "breadcrumb": "Email providers",
     "eyebrow": "Every provider",

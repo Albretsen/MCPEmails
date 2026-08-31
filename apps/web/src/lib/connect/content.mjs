@@ -1,4 +1,5 @@
-import { PROVIDERS, getProvider, providerLocales } from './providers.mjs';
+import { getProvider, providerLocales } from './providers.mjs';
+import { releasedProviderParams } from './release.mjs';
 
 /**
  * Copy for one provider landing page, in one locale.
@@ -26,11 +27,10 @@ export async function getProviderContent(locale, slug) {
   }
 }
 
-/** Every locale/provider pair that has copy. Drives generateStaticParams. */
+/**
+ * Locale/provider pairs to generate. Delegates to the release gate, so a wave
+ * that has not opened yet produces no route, no sitemap entry and no link.
+ */
 export function providerParams() {
-  const out = [];
-  for (const p of PROVIDERS) {
-    for (const locale of p.locales) out.push({ locale, provider: p.slug });
-  }
-  return out;
+  return releasedProviderParams();
 }

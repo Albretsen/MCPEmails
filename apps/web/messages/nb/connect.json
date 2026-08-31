@@ -81,7 +81,7 @@
   "hub": {
     "meta": {
       "title": "Koble enhver e-postleverandør til Claude og MCP",
-      "description": "IMAP- og SMTP-innstillinger for 106 e-postleverandører, hver verifisert mot en ekte tilkobling, pluss hvordan du gir Claude, Cursor eller ChatGPT tilgang."
+      "description": "IMAP- og SMTP-innstillinger for {count} e-postleverandører, hver verifisert mot en ekte tilkobling, pluss hvordan du gir Claude, Cursor eller ChatGPT tilgang."
     },
     "breadcrumb": "E-postleverandører",
     "eyebrow": "Alle leverandører",

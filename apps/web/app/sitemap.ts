@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { localePath, languageAlternates, languageAlternatesFor } from '@/i18n/seo';
-import { PROVIDERS } from '@/lib/connect/providers.mjs';
+import { releasedProviders } from '@/lib/connect/release.mjs';
 import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
 
@@ -64,7 +64,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     cpanel: 0.7, privacy: 0.6, regional: 0.6, isp: 0.5,
     selfhost: 0.5, blocked: 0.4,
   };
-  const providerEntries: MetadataRoute.Sitemap = PROVIDERS.map((p) => {
+  const providerEntries: MetadataRoute.Sitemap = releasedProviders().map((p) => {
     const path = `/connect/${p.slug}`;
     return {
       url: localePath('en', path),

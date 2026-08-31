@@ -1,7 +1,8 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { metaAlternates, localePath, APP_URL, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
-import { PROVIDERS, PROVIDER_CATEGORIES } from '@/lib/connect/providers.mjs';
+import { PROVIDER_CATEGORIES } from '@/lib/connect/providers.mjs';
+import { releasedProviders } from '@/lib/connect/release.mjs';
 import { routing } from '@/i18n/routing';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { MIcon } from '../../../components/MarketingPrimitives';
@@ -26,8 +27,12 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'connect.hub' });
-  const title = t('meta.title');
-  const description = t('meta.description');
+  // The count is whatever is actually public today, not the size of the
+  // registry: during the staged rollout those differ, and a description
+  // promising more providers than the page lists is a snippet that lies.
+  const count = releasedProviders().filter((p) => p.locales.includes(locale)).length;
+  const title = t('meta.title', { count });
+  const description = t('meta.description', { count });
   return {
     title,
     description,
@@ -49,7 +54,10 @@ export default async function ConnectHubPage({ params }) {
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'connect.hub' });
 
-  const available = PROVIDERS.filter((p) => p.locales.includes(locale));
+  // Released pages only. The hub is the most-crawled page in the silo, so a
+  // link from here into an unopened wave would be the fastest way to teach a
+  // crawler that these URLs 404.
+  const available = releasedProviders().filter((p) => p.locales.includes(locale));
   const groups = PROVIDER_CATEGORIES.map((c) => ({
     ...c,
     providers: available.filter((p) => p.category === c.id),
@@ -101,8 +109,8 @@ export default async function ConnectHubPage({ params }) {
           <div className="container">
             <div className="eye-label">{t('eyebrow')}</div>
             <h1 className="pricing-page-h1">{t('title')}</h1>
-            <p className="pricing-page-lead">{t('lead')}</p>
-            <p className="pricing-page-answer">{t('answer')}</p>
+            <p className="pricing-page-lead">{t('lead', { count: available.length })}</p>
+            <p className="pricing-page-answer">{t('answer', { count: available.length })}</p>
             {verifiedOn && (
               <p className="connect-verified" style={{ justifyContent: 'center' }}>
                 <MIcon name="check" size={13} color="var(--mint-600)" />{' '}

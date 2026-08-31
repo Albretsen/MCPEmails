@@ -3,7 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
-import { relatedProviders } from '@/lib/connect/providers.mjs';
+import { relatedProviders } from '@/lib/connect/release.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 
 /**
