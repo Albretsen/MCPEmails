@@ -7,6 +7,7 @@ import { trackProductEvent } from '@/lib/analytics.mjs';
 import { useInboxPaywallView } from '@/lib/analytics/use-inbox-paywall.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
+import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
 import {
   IMAP_PRESETS,
   GENERIC_IMAP_DEFAULTS,
@@ -431,47 +432,10 @@ export function ConnectModal({
   const limitUpgradeUrl = serverLimit?.upgradeUrl ?? '/pricing';
 
   // Which plan this panel should sell, and therefore which copy it carries.
-  //
-  // The cheapest plan that actually clears the cap just hit. Free stops at one
-  // inbox, so Personal (three, $5) clears it, and sending someone to $29 Pro
-  // to add a second mailbox would price the upgrade far above the problem.
-  // Personal itself stops at three, so from there only Pro (unlimited) is a
-  // way forward, and offering Personal to a Personal subscriber would sell
-  // them the plan they are already on.
-  //
-  // Derived from the cap rather than from a plan id because that number is the
-  // server's own, counted at the moment of the refusal, so it stays right even
-  // when the plan changed in another tab. An unknown cap means the Free
-  // assumption, which is what the "connects one inbox" heading already says.
-  //
-  // The grandfathered cohort has no cap at all and never reaches this panel,
-  // so nobody holding unlimited inboxes can be routed at Personal from here.
-  const capTargetsPersonal = (limitMaxInboxes ?? 1) <= 1;
-  const upgradeCopy = capTargetsPersonal
-    ? {
-        plan: 'personal',
-        titleKey: 'connect.personalUpgradeTitle',
-        bodyKey: 'connect.personalUpgradeBody',
-        ctaKey: 'connect.personalUpgradeCta',
-        featureKeys: [
-          'connect.personalFeatureInboxes',
-          'connect.personalFeatureRateLimit',
-          'connect.featureTeam',
-          'connect.featureSupport',
-        ],
-      }
-    : {
-        plan: 'solo',
-        titleKey: 'connect.upgradeTitle',
-        bodyKey: 'connect.upgradeBody',
-        ctaKey: 'connect.viewUpgradeOptions',
-        featureKeys: [
-          'connect.featureInboxes',
-          'connect.featureRateLimit',
-          'connect.featureTeam',
-          'connect.featureSupport',
-        ],
-      };
+  // The rule (cheapest plan that clears the cap that was hit) lives in
+  // inboxCapOffer, shared verbatim with the cap notice on the Inboxes page, so
+  // the two surfaces can never quote different plans for the same block.
+  const upgradeCopy = inboxCapOffer(limitMaxInboxes);
 
   // ── Provider categories ─────────────────────────────────────────────────────
 

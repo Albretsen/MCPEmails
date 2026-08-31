@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "test:analytics": "node --test src/lib/analytics.test.mjs src/lib/analytics/inbox-paywall.test.mjs",
-    "test:billing": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/billing/upgrade-intent.test.mjs src/lib/analytics/billing-funnel.test.ts",
+    "test:billing": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/billing/upgrade-intent.test.mjs src/lib/billing/inbox-cap-offer.test.mjs src/lib/analytics/billing-funnel.test.ts",
     "test:plans": "node --test --experimental-strip-types src/lib/stripe/plans.test.ts",
     "test:inbox-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-inbox-limit.test.ts",
     "test:member-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-member-limit.test.ts",
