@@ -39,9 +39,11 @@ npm run render     -- --storyboard add-inbox-then-chat
 npm run verify     -- --storyboard add-inbox-then-chat
 ```
 
-Supporting commands: `npm run auth` (once, a human signs in), `npm run reset --
---yes` (empty the demo workspace), `npm run studio` (Remotion Studio),
-`npm run typecheck`. Chromium downloads itself on the first capture.
+Supporting commands: `npm run auth` (once, a human signs in), `npm run whoami`
+(read-only: prints the account, workspace id and connected inboxes as .env
+lines), `npm run reset -- --yes` (empty the demo workspace), `npm run studio`
+(Remotion Studio), `npm run typecheck`. Chromium downloads itself on the first
+capture.
 
 `demo`, `auth` and `capture` need no `.env`: the site defaults to
 https://mcpemails.com. `reset` requires the full config and refuses without it,

@@ -12,6 +12,8 @@
     "doctor": "node scripts/doctor.mjs",
     "preauth": "node scripts/lib/require-install.mjs",
     "auth": "node scripts/auth.mjs",
+    "prewhoami": "node scripts/lib/require-install.mjs",
+    "whoami": "node scripts/whoami.mjs",
     "prereset": "node scripts/lib/require-install.mjs",
     "reset": "node scripts/reset.mjs",
     "precapture": "node scripts/lib/require-install.mjs",

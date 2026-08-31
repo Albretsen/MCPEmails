@@ -93,3 +93,37 @@ export async function demoContext(browser, { record = false, requiresSession = t
   const startedAt = performance.now();
   return { context, startedAt };
 }
+
+/**
+ * Which workspace is this session actually looking at?
+ *
+ * The cookie is tried first because it is what the SERVER reads to decide, so
+ * when it exists it is definitive. But it is only written when someone switches
+ * workspace: an account with a single workspace never has it, which is the
+ * common case and was enough to make reset's first guard unsatisfiable. It
+ * aborted with "could not read the active workspace cookie" on exactly the
+ * accounts it was written for.
+ *
+ * The fallback reads the id out of the server-rendered payload on the page,
+ * which is the server's own statement of which workspace it just rendered for
+ * this session. That is authoritative enough to gate a destructive action on,
+ * and it is the same value the cookie would carry.
+ *
+ * Returns { id, source }, or { id: null } when neither is available, which must
+ * stay a refusal.
+ */
+export async function readActiveWorkspace(page, context) {
+  const cookies = await context.cookies();
+  const fromCookie = cookies.find((c) => c.name === 'mcpe_active_ws')?.value;
+  if (fromCookie) return { id: fromCookie, source: 'cookie' };
+
+  const html = await page.content();
+  // The payload is embedded inside a JS string, so its quotes are escaped.
+  // Match both forms rather than assuming one.
+  const m = html.match(
+    /\\?"workspace\\?"\s*:\s*\{\\?"id\\?"\s*:\s*\\?"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
+  );
+  if (m) return { id: m[1], source: 'page payload' };
+
+  return { id: null, source: null };
+}

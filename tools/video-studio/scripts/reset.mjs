@@ -31,7 +31,7 @@
  */
 
 import { emit, fail, heading, log, parseArgs, loadEnv } from './lib/common.mjs';
-import { launch, demoContext } from './lib/browser.mjs';
+import { launch, demoContext, readActiveWorkspace } from './lib/browser.mjs';
 
 loadEnv();
 const args = parseArgs();
@@ -79,14 +79,15 @@ if (/\/login/.test(page.url())) {
   await abort('The saved session is no longer valid: the app redirected to /login. Run: npm run auth', 0);
 }
 
-// The active workspace is authoritative in the cookie the server reads, not in
-// anything rendered, so read the cookie.
-const cookies = await context.cookies();
-const activeWorkspace = cookies.find((c) => c.name === 'mcpe_active_ws')?.value ?? null;
+// Cookie first, then the server-rendered payload. The cookie alone is not
+// enough: it is only written when someone switches workspace, so an account
+// with a single workspace never has it, and this guard used to abort on exactly
+// the accounts it was written to protect.
+const { id: activeWorkspace, source: workspaceSource } = await readActiveWorkspace(page, context);
 
 if (!activeWorkspace) {
   await abort(
-    'Could not read the active workspace cookie (mcpe_active_ws). Refusing to guess which workspace this is.',
+    'Could not determine the active workspace, from either the mcpe_active_ws cookie or the page. Refusing to guess which workspace this is.',
     1,
   );
 }
@@ -97,7 +98,7 @@ if (activeWorkspace !== expectedWorkspace) {
     1,
   );
 }
-log(`  [ok  ] guard 1: active workspace is ${activeWorkspace}`);
+log(`  [ok  ] guard 1: active workspace is ${activeWorkspace} (from the ${workspaceSource})`);
 
 // --- Guard 2: the account --------------------------------------------------
 
