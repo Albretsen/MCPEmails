@@ -15,11 +15,14 @@ for an external video tool.
    is the contract: the commands,
    every scene type with its props, and the guard rails. Read it before you plan
    anything.
-2. `npm run demo`. One command, no setup, no account. It records the public site
+2. `npm run whoami`. Read-only. Prints the demo account, its workspace id and
+   its connected inboxes as pasteable `.env` lines. You need this before
+   anything that touches the dashboard.
+3. `npm run demo`. One command, no setup, no account. It records the public site
    and cuts a throwaway 15 second video. Run it first, so you know the pipeline
    works on this machine before you design a frame. Open `out/demo.mp4` and
    `out/demo.sheet.png` and look at them.
-3. Only then start on the real cut.
+4. Only then start on the real cut.
 
 A new video costs one JSON file in `storyboards/` plus three commands. If you
 find yourself writing React, stop and check whether an existing scene type does
@@ -98,7 +101,11 @@ Connecting a mailbox must be a real capture of the real dashboard. This product
 asks strangers for mailbox credentials; a drawn or mocked connect flow is the
 one thing that would confirm every suspicion a sceptic already has.
 
-`shots/add-inbox.shot.mjs` already exists and does this. It needs:
+`shots/add-inbox.shot.mjs` already exists and does this. **Its selectors past the
+first click are UNVERIFIED against the live UI** (see the cap problem below), so
+expect to fix one or two and budget for that.
+
+It needs:
 
 - `cd tools/video-studio && npm run auth` first. Run it from the tool directory,
   never the repo root: nothing was added to the root `package.json`, so from the
@@ -115,9 +122,16 @@ one thing that would confirm every suspicion a sceptic already has.
   `claude/brave-jackson-8180c8` seeds one with 14 fixture messages, every
   address on a `.example` domain, which RFC 2606 reserves so it can never belong
   to a real person.
-- `npm run reset -- --yes` to empty the demo workspace so the list starts at
-  zero. Read its guards before you run it; it disconnects inboxes on a live
-  deployment.
+- `npm run reset -- --yes` to empty the demo workspace. This is a HARD
+  PREREQUISITE, not tidying. Verified against production on 2026-08-31: the demo
+  account is on Free, which connects one inbox, and it already has one. At the
+  cap, clicking "Connect inbox" opens the upgrade paywall ("Add another inbox.
+  Free connects 1 inbox. You have 1. Upgrade to Personal, $5/mo"), NOT the
+  provider grid. Skip the reset and you will film the paywall.
+
+  Read its guards before you run it; it disconnects inboxes on a live
+  deployment. Run `npm run whoami` first to get DEMO_WORKSPACE_ID, which the
+  guards require and which appears nowhere in the UI.
 
 **Never film a real inbox.** Not yours, not a customer's.
 
