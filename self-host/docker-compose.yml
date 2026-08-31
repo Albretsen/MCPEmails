@@ -76,6 +76,11 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
       APP_URL: ${APP_URL:-http://localhost:8787}
       DISPATCH_SECRET: ${DISPATCH_SECRET:-}
+      # Optional non-AWS egress for hosts that refuse cloud submission. Empty
+      # means every host is dialled directly, which is what a self-hosted
+      # deployment on its own address normally wants. See docs/smtp-relay.md.
+      SMTP_RELAY_URL: ${SMTP_RELAY_URL:-}
+      SMTP_RELAY_HOSTS: ${SMTP_RELAY_HOSTS:-}
     ports:
       # Keep bearer-token traffic on this machine by default. For remote access,
       # use docker-compose.tls.yml rather than publishing this port directly.
