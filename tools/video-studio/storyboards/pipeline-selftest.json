@@ -1,0 +1,39 @@
+{
+  "id": "pipeline-selftest",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "theme": "dark",
+  "captions": false,
+  "scenes": [
+    {
+      "type": "title",
+      "durationInSeconds": 2.5,
+      "headline": "Pipeline self test",
+      "sub": "Every scene type, with a real capture composited in."
+    },
+    {
+      "type": "capture",
+      "shot": "public-tour",
+      "clip": {
+        "from": 0.5,
+        "to": 10.5
+      },
+      "speed": 1.0,
+      "autoZoom": true,
+      "callouts": [
+        {
+          "at": 2.9,
+          "for": 2.2,
+          "text": "The cursor and the push-in are drawn from the recorded event log"
+        }
+      ]
+    },
+    {
+      "type": "outro",
+      "durationInSeconds": 3,
+      "cta": "mcpemails.com",
+      "sub": "One inbox free, forever."
+    }
+  ]
+}

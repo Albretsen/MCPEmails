@@ -1,0 +1,41 @@
+{
+  "id": "add-inbox-then-chat",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "theme": "dark",
+  "captions": false,
+  "scenes": [
+    {
+      "type": "title",
+      "durationInSeconds": 2.5,
+      "headline": "Connect a mailbox",
+      "sub": "IMAP and an app password. No OAuth review."
+    },
+    {
+      "type": "capture",
+      "shot": "add-inbox",
+      "speed": 1.0,
+      "autoZoom": true,
+      "callouts": [
+        {
+          "at": 11.4,
+          "for": 2.4,
+          "text": "An app password, never your login password"
+        }
+      ]
+    },
+    {
+      "type": "chat",
+      "transcript": "transcripts/add-inbox-then-chat.json",
+      "durationInSeconds": 14,
+      "title": "Your AI assistant"
+    },
+    {
+      "type": "outro",
+      "durationInSeconds": 3,
+      "cta": "mcpemails.com",
+      "sub": "One inbox free, forever."
+    }
+  ]
+}
