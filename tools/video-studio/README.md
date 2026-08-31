@@ -29,9 +29,13 @@ full scene reference, and the guard rails.
 
 ```bash
 cd tools/video-studio
-npm install
+npm install      # once. This package is separate from the repo's own.
 npm run demo
 ```
+
+`npm install` is not optional and a root `npm install` does not cover it: this
+directory is outside the repo's workspace glob on purpose. Every command checks
+and tells you if you have skipped it.
 
 That is the whole thing. It records the public marketing site, composites it
 with a title and an outro, renders, verifies, and prints where the file is.
