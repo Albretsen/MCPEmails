@@ -96,8 +96,11 @@ function checkPrimitive(where, key, value, expected) {
         throw new StoryboardError(`${where}: "clip" has unknown key "${k}". Only "from" and "to" are allowed.`);
       }
     }
-    if (typeOf(value.from) !== 'number') {
-      throw new StoryboardError(`${where}: "clip.from" must be a number, in seconds.`);
+    // "from" is optional: left out, the scene starts where the page painted,
+    // which capture measures per recording. That is more robust than any number
+    // you can write here, so prefer omitting it.
+    if (value.from !== undefined && typeOf(value.from) !== 'number') {
+      throw new StoryboardError(`${where}: "clip.from" must be a number, in seconds, or left out to start where the page painted.`);
     }
     // "to" is optional, and leaving it out is usually right. Trimming the HEAD
     // is a stable decision: a recording always opens on the browser's first
@@ -108,11 +111,11 @@ function checkPrimitive(where, key, value, expected) {
       if (typeOf(value.to) !== 'number') {
         throw new StoryboardError(`${where}: "clip.to" must be a number, in seconds, or left out to run to the end of the recording.`);
       }
-      if (value.to <= value.from) {
+      if (value.from !== undefined && value.to <= value.from) {
         throw new StoryboardError(`${where}: "clip.to" (${value.to}) must be greater than "clip.from" (${value.from}).`);
       }
     }
-    if (value.from < 0) {
+    if (value.from !== undefined && value.from < 0) {
       throw new StoryboardError(`${where}: "clip.from" must not be negative.`);
     }
     return;
@@ -257,8 +260,25 @@ export function validateStoryboard(raw, captureDurations = {}) {
     norm.type = type;
 
     if (type === 'capture') {
-      const recorded = captureDurations[norm.shot];
+      // The second argument accepts a bare duration or a richer
+      // { duration, contentStart } record, so older callers keep working.
+      const rawMeta = captureDurations[norm.shot];
+      const meta =
+        typeof rawMeta === 'number'
+          ? { duration: rawMeta, contentStart: 0 }
+          : rawMeta ?? null;
+      const recorded = meta ? meta.duration : undefined;
+      const contentStart = meta ? meta.contentStart ?? 0 : 0;
       let seconds = norm.durationInSeconds;
+
+      // No clip at all, or a clip with no "from": start where the page painted.
+      // Guessing a fixed head trim in the storyboard does not survive a slow
+      // load, which is how an unpainted frame reached a clean-room render.
+      if (!norm.clip && typeof recorded === 'number' && contentStart > 0) {
+        norm.clip = { from: contentStart, to: recorded };
+      } else if (norm.clip && norm.clip.from === undefined) {
+        norm.clip = { ...norm.clip, from: contentStart };
+      }
 
       if (norm.clip && norm.clip.to === undefined) {
         if (typeof recorded !== 'number') {
