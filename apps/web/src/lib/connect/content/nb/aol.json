@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Koble AOL Mail til Claude (og enhver AI)",
+    "description": "Koble AOL Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "AOL Mail + AI",
+    "titleLine1": "Koble AOL Mail til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte AOL Mail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "App-passord, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke AOL Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+  },
+  "method": {
+    "title": "Slik kobler AOL Mail seg til: IMAP og et app-passord",
+    "body": "AOL Mail kobles til via IMAP/SMTP med et <b>AOL app-passord</b>. Det vanlige AOL-passordet ditt godtas ikke av en e-postklient, så en avvist innlogging her skyldes nesten alltid et manglende app-passord. Slå på totrinnsbekreftelse, opprett et app-passord under Kontoinformasjon, Kontosikkerhet, og lim det inn i mcpemails sammen med hele AOL-adressen din."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Opprett et AOL app-passord",
+      "p": "I AOL Mail åpner du Kontoinformasjon, Kontosikkerhet, slår på totrinnsbekreftelse hvis den er av, og oppretter et app-passord. Kopier det med én gang, AOL viser det bare én gang."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, legg til AOL Mail-adressen din, vertene under og passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en AOL Mail-innboks",
+    "sub": "Koble til AOL Mail på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

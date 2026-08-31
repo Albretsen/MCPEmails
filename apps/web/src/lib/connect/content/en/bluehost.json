@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.bluehost.com/help/article/email-application-setup",
+    "https://www.bluehost.com/help/article/email-product-overview",
+    "https://www.bluehost.com/help/article/configure-bluehost-professional-email-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.bluehost.com/help/article/email-application-setup",
+    "usernameForm": "Your full email address, for example you@yourdomain.com. Never your Bluehost portal login.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Bluehost Email to Claude: cPanel and Titan IMAP Setup",
+    "description": "Bluehost sells three different email products. Find out which one you have, then connect it to Claude over IMAP on port 993. One inbox free, forever, no card."
+  },
+  "hero": {
+    "eyebrow": "Bluehost + AI",
+    "titleLine1": "Connect Bluehost email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Bluehost mailbox. Read, search, send, reply, schedule and organize mail over IMAP, whether the mailbox is a cPanel Email account or a Professional Email box.",
+    "answer": "Claude cannot reach a Bluehost mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The first thing to establish is which of Bluehost's three email products you have, because cPanel Email answers on a host built from your own domain while Professional Email answers on Titan's servers, and the two sets of settings are not interchangeable. Either way you authenticate with the password set on the mailbox, never your Bluehost portal password, and one inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password, not portal login",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Bluehost mail connects: first work out which product you have",
+    "body": "Bluehost sells email three ways, and the settings differ completely between them. <b>cPanel Email</b> is the mailbox included with hosting; it lives on the server your site is on, and the incoming host is built from your own domain. <b>Professional Email</b> is a paid product running on Titan, where Bluehost's own guide gives <code>imap.titan.email</code> on 993 and <code>smtp.titan.email</code> on 465. <b>Google Workspace</b> is resold Gmail, where your MX records point at Google and there is no Bluehost mail server involved. All three speak IMAP and all three can be connected, but you must take the settings from the guide for the product you actually bought. For cPanel Email, Bluehost publishes an unusual pair: the secure block uses the bare domain, <code>example.com</code>, as both incoming and outgoing server, and it is only the non-encrypted block that uses <code>mail.example.com</code>."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
+    },
+    {
+      "h": "Find out which Bluehost email product this address uses",
+      "p": "Log in to the Bluehost Portal and open <b>Hosting</b> in the left menu. If a <b>cPanel Email</b> button is present and your address is listed under it, you have a cPanel mailbox. If the address appears under <b>Professional Email</b> instead, it is a Titan mailbox on Titan's own servers. If your domain's MX records point at Google, it is Google Workspace and you should connect it as Gmail rather than as Bluehost."
+    },
+    {
+      "h": "Copy the exact settings for that product",
+      "p": "For cPanel Email: <b>Hosting</b>, then <b>cPanel Email</b>, then <b>Email Accounts</b>, then <b>Continue</b>, then <b>Connect Devices</b> next to the address. Use the Secure SSL/TLS block, IMAP on 993. For Professional Email, take the Titan hosts from Bluehost's Professional Email guide. In both cases the password is the one set on the mailbox."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Three products share one brand, and the wrong guide never authenticates",
+      "p": "This is the single most common Bluehost mail failure. Someone with a Professional Email box follows a cPanel Email walkthrough, points a client at their own domain, and gets a refusal that looks like a bad password. It is not: the mailbox is not on that server at all, it is on Titan's. The reverse happens too. Check under Hosting in the portal which product the address belongs to before you touch any setting, because nothing else you change will help until that is right."
+    },
+    {
+      "h": "Bluehost's secure cPanel setting is the bare domain, not mail.yourdomain.com",
+      "p": "Almost every third-party guide to cPanel mail tells you to use <code>mail.example.com</code>. Bluehost's own article puts <code>mail.example.com</code> only in the Standard, unencrypted block, and gives plain <code>example.com</code> for the Secure SSL/TLS block on ports 993 and 465. That is because the AutoSSL certificate covers the domain itself. Using the <code>mail.</code> prefix over TLS is what produces the certificate warning people then try to click past."
+    },
+    {
+      "h": "Which product you have depends on when you bought the plan",
+      "p": "cPanel Email is the legacy inclusion that came with older hosting plans, and Bluehost still documents and supports it. Newer purchases are steered toward Professional Email and Google Workspace at checkout, and plenty of accounts hold a mix, with one domain on cPanel mail and another on Titan. Do not assume that because one of your Bluehost addresses connects with a given host, the next one will."
+    }
+  ],
+  "limits": [
+    "A Google Workspace mailbox bought through Bluehost is a Google mailbox. Connect it as Gmail through Google OAuth, not with Bluehost credentials.",
+    "mcpemails connects mailboxes, not the hosting account. Forwarders, aliases and filters stay in the Bluehost portal."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Bluehost email?",
+      "a": "Not directly. Claude has no built-in Bluehost connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it. This works for both cPanel Email accounts and Professional Email accounts, once you use the right host for the product you have."
+    },
+    {
+      "q": "What are the Bluehost IMAP and SMTP settings?",
+      "a": "For cPanel Email, Bluehost's secure settings are your bare domain as both incoming and outgoing server, IMAP on 993 and SMTP on 465, with the full email address as the username. For Professional Email, Bluehost documents imap.titan.email on 993 and smtp.titan.email on 465. Take the values from the guide matching your product."
+    },
+    {
+      "q": "How do I tell whether I have Bluehost cPanel Email or Professional Email?",
+      "a": "Log in to the Bluehost Portal and open Hosting in the left menu. cPanel mailboxes are listed behind the cPanel Email button. Professional Email boxes are listed under Professional Email as a separate product with its own subscription. If neither lists the address, check your domain's MX records; they may point at Google Workspace."
+    },
+    {
+      "q": "Why does my Bluehost email password get rejected?",
+      "a": "Two causes dominate. Either you are using your Bluehost portal password rather than the password set on the individual mailbox, or you are pointing the client at the wrong product's server. Reset the mailbox password from Email Accounts for cPanel mail, or from the Professional Email management screen for a Titan box, and try again."
+    },
+    {
+      "q": "Is my Bluehost mail stored on your servers?",
+      "a": "No. Messages are fetched live over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Bluehost inbox",
+    "sub": "Connect a Bluehost mailbox in minutes. One inbox free forever, no card required."
+  }
+}

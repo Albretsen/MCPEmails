@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.telenor.no/kundeservice/e-post/oppsett/",
+    "https://www.telenor.no/kundeservice/e-post/",
+    "https://www.telenor.no/vilkar/telenor-online-epost/",
+    "https://www.telenor.no/epost/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-post password from Mine Sider",
+    "helpUrl": "https://www.telenor.no/kundeservice/e-post/oppsett/",
+    "usernameForm": "Not the full address. Telenor documents the username as the part before @online.no, at most 8 characters.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Online.no Email IMAP Settings and Claude MCP Access",
+    "description": "Connect a Telenor Online.no mailbox to Claude and any MCP client at imap.online.no:993. Third-party client access has to be permitted on Mine Sider first."
+  },
+  "hero": {
+    "eyebrow": "Online.no + AI",
+    "titleLine1": "Connect your Online.no mailbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real Telenor Online inbox. Read, search, send, reply, schedule and organize mail over IMAP, once third-party client access is permitted on Mine Sider.",
+    "answer": "Claude cannot reach a Telenor Online.no mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.online.no on port 993, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Two Telenor specifics decide whether it works: permission to use Online e-post in third-party mail programs is a switch on Mine Sider, and the username is not your address but the part before @online.no, at most eight characters. The password is the e-post password set on Mine Sider, not your TelenorID. One inbox on mcpemails is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Permit third-party clients on Mine Sider",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Online.no connects: a permission, a short username, and a separate password",
+    "body": "Telenor serves IMAP at <code>imap.online.no</code> on port 993 over implicit TLS and SMTP submission at <code>smtp.online.no</code> on port 465. Telenor's current setup pages name <code>mail.online.no</code> for both roles and state that the older <code>imap.online.no</code> and <code>smtp.online.no</code> names also work; both answered on a live TLS connection and the older pair is what mcpemails prefills. The rest of the configuration is where Online.no diverges from everything else. Telenor documents the username as <b>det som er før @online.no, maks 8 tegn</b>, so the local part rather than the full address. The credential is the e-post password, and Telenor's own terms say <b>om kunden bruker et e-postprogram settes passordet til e-postkontoen opp på Mine Sider</b>. And permission to use the mailbox from a third-party program is itself a setting you turn on there. Online e-post is a paid Telenor service rather than a free extra on a broadband line."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Turn on third-party program access on Mine Sider",
+      "p": "Sign in to Telenor's <b>Mine Sider</b> with your TelenorID. Telenor's help puts it plainly: <b>nå kan du skru av eller på tillatelser til å bruke Online e-post i tredjeparts e-postprogrammer som Outlook eller Apple Mail på Mine sider</b>. Switch that permission on for the account you want to connect. If your password is old, Telenor will make you change it before it lets you enable the permission at all."
+    },
+    {
+      "h": "Set the e-post account password on Mine Sider",
+      "p": "Still on Mine Sider, set the password for the mail account itself. Telenor's terms for Online e-post state that when a customer uses a mail program, the password for the e-post account is set up on Mine Sider. That is a different credential from your TelenorID sign-in, which is the most common source of a refused login."
+    },
+    {
+      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the username as the part before <code>@online.no</code> and paste the e-post password. The Telenor hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The username is the local part, not the address, and it is capped at eight characters",
+      "p": "Nearly every other provider on this site wants the complete address in the username field. Telenor does not. Its setup pages define the username as <b>det som er før @online.no, maks 8 tegn</b>. Type <code>navn@online.no</code> where <code>navn</code> was expected and the server rejects it as bad credentials, with nothing to indicate that the address itself was the problem. Whether the full form also happens to be accepted is not something Telenor documents, so use the short form it publishes."
+    },
+    {
+      "h": "The permission on Mine Sider gates the protocol, and an old password blocks the permission",
+      "p": "Telenor has made third-party mail-program access an explicit opt-in on Mine Sider rather than something every mailbox has. Two consequences catch people out. First, a mailbox that has never had the permission turned on refuses client logins with a credentials error even when the password is perfect. Second, Telenor states that <b>hvis det er lenge siden du byttet passord sist, vil du måtte bytte passord for å kunne skru på tillatelser på Mine Sider</b>: on a long-dormant password you cannot even reach the switch until you rotate the password first. Do those two things in that order and the connection comes up."
+    },
+    {
+      "h": "The server offers AUTH=LOGIN only, with no AUTH=PLAIN",
+      "p": "Online.no answers with <code>* OK [CAPABILITY IMAP4REV1 LITERAL+ UTF8=ALL STATUS=SIZE STARTTLS SASL-IR AUTH=LOGIN ID] Bigfoot</code>. That advertised list has <code>AUTH=LOGIN</code> and no <code>AUTH=PLAIN</code>, which is the reverse of nearly every other provider here. Modern client libraries frequently default to PLAIN and treat LOGIN as the legacy fallback; against Online.no, PLAIN is the one that is not there. Tooling that does not fall back gets an authentication refusal that looks like a wrong password. mcpemails negotiates from what the server actually advertises."
+    },
+    {
+      "h": "Telenor's terms restrict what you may put in the From line",
+      "p": "The Online e-post terms state that <b>bruker skal kun bruke egne online.no adresser som avsender</b>: you may only send using your own online.no addresses as the sender. So the send-as pattern, where an agent sends from a work or domain address through a convenient SMTP server, is out of bounds here as a matter of contract rather than technology. If you need your agent to send as another identity, connect the mailbox that owns that identity."
+    }
+  ],
+  "limits": [
+    "Online e-post is a paid Telenor service. Telenor lists it at 99 kroner a month for 5 GB and 109 kroner a month for 15 GB, so a dormant address you connect to an agent still costs money.",
+    "The server advertises no MOVE, no UIDPLUS and no SPECIAL-USE, so filing runs as copy plus flag plus expunge, the copy's new UID has to be found by search, and Sent, Drafts and Trash are matched by name. On a Norwegian mailbox those are usually Sendt, Utkast and Slettet.",
+    "Outgoing messages are capped at roughly 50 MB of encoded message, so a large attachment forwarded by an agent can be rejected at the SMTP step."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Online.no email?",
+      "a": "Not on its own. Claude has no built-in Telenor or Online.no connector. Pointing an MCP server such as mcpemails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Online.no IMAP and SMTP settings?",
+      "a": "IMAP is imap.online.no on port 993 with SSL and SMTP is smtp.online.no on port 465 with SSL. Telenor's current pages also name mail.online.no for both roles and say the older names still work. The username is the part before @online.no, at most eight characters, and the password is the e-post password set on Mine Sider."
+    },
+    {
+      "q": "Why is my Online.no password rejected in a mail client?",
+      "a": "Three candidates, in this order. Third-party program access has not been permitted on Mine Sider. Or you entered the full address where Telenor expects only the part before @online.no. Or you used your TelenorID sign-in rather than the e-post account password that Mine Sider sets for mail programs."
+    },
+    {
+      "q": "How do I allow Outlook or another program to use Online e-post?",
+      "a": "Sign in to Mine Sider and turn on the permission to use Online e-post in third-party e-mail programs. If your password has not been changed for a long time, Telenor requires you to change it before the permission can be enabled. Set the e-post account password on the same pages and use that value in the client."
+    },
+    {
+      "q": "Is Online.no email free?",
+      "a": "No. Telenor sells Online e-post as a paid service, listed at 99 kroner a month for 5 GB and 109 kroner a month for 15 GB, ordered from Mine Sider under Tjenester. That is worth factoring in before you set up a second Online.no address purely for an agent to use."
+    },
+    {
+      "q": "Is my Online.no mail stored on your servers?",
+      "a": "No. Messages are fetched live from Telenor over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an Online.no inbox",
+    "sub": "Permit third-party access on Mine Sider and connect in minutes. One inbox free forever, no card required."
+  }
+}

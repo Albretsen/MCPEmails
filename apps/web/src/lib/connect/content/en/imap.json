@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "https://datatracker.ietf.org/doc/html/rfc8314",
+    "https://datatracker.ietf.org/doc/html/rfc6186",
+    "https://datatracker.ietf.org/doc/html/rfc6154",
+    "https://datatracker.ietf.org/doc/html/rfc6851",
+    "https://datatracker.ietf.org/doc/html/rfc4959",
+    "https://wiki.mozilla.org/Thunderbird:Autoconfiguration"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": null,
+    "usernameForm": "Almost always your full email address. A few hosts want only the part before the @, and Apple's iCloud is documented that way.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Any IMAP Mailbox to Claude, Cursor & MCP Clients",
+    "description": "Connect any IMAP mailbox to Claude, Cursor and any MCP client. Bring your host and password: 993 or 143 for IMAP, 465 or 587 for SMTP, detected for you."
+  },
+  "hero": {
+    "eyebrow": "IMAP + AI",
+    "titleLine1": "Connect any IMAP mailbox to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent the inbox you already have, whoever hosts it. Read, search, send, reply, schedule and organize mail over plain IMAP and SMTP, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Any IMAP host, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude has no IMAP client of its own. mcpemails is a hosted MCP server that logs in to your mail server over IMAP and SMTP with the address, host and password your provider already gave you, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Any host that speaks IMAP works, and one inbox is free."
+  },
+  "method": {
+    "title": "How a generic IMAP mailbox connects",
+    "body": "You need four things: your address, your mail host, your password and, if your provider requires one, an app password. Type your address first: mcpemails recognises the common hosting providers and fills in both hosts, both ports and the security modes for you. If the transport it tries does not answer, it tries the other standard one on its own, <b>993 or 143</b> for IMAP and <b>465 or 587</b> for SMTP, so nobody has to guess at STARTTLS."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Collect your IMAP and SMTP settings",
+      "p": "Your provider publishes them, most often as imap.yourdomain.com and smtp.yourdomain.com on ports 993 and 465. If your provider requires an app password for mail clients, generate one now."
+    },
+    {
+      "h": "Paste them into mcpemails",
+      "p": "Choose IMAP / SMTP, add your address, the two hosts and the password. Ports and security modes sit under Advanced, prefilled with the standard values."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Finding your real hostname, in the order that actually works",
+      "p": "There are four places to look, cheapest first. <b>One</b>, your provider's own help page, searched for your provider's name plus the words IMAP settings; that is what the other provider pages on this site exist for. <b>Two</b>, the control panel: in cPanel it is Email Accounts, then Connect Devices, then the manual settings block; in Plesk it is Mail, then the address, then the connect-to-mailbox screen; most hosting panels have an equivalent screen and it is authoritative for your account. <b>Three</b>, DNS: a provider that follows RFC 6186 publishes an <code>_imaps._tcp.yourdomain.com</code> SRV record naming the host and port outright. <b>Four</b>, your MX record, which names the machine that receives your mail and is very often in the same family of names as the IMAP host. What does not work is guessing <code>imap.yourdomain.com</code> and hoping: plenty of hosts serve your mail on a name that has nothing to do with your domain."
+    },
+    {
+      "h": "The certificate is what breaks a vanity hostname",
+      "p": "Most hosting companies will happily let you point <code>mail.yourdomain.com</code> at their mail server, and it works in a client that does not check carefully. The server presents a certificate issued for the hosting company's own name, something like <code>server24.hostingprovider.net</code> or a wildcard on their domain, not for yours. A client that validates TLS properly refuses the connection with a <b>hostname mismatch</b>, which is a different failure from a rejected password even though most interfaces blur the two. Turning validation off is not an acceptable fix for a mailbox an AI agent can send from. The cure is to connect to the shared hostname the certificate is genuinely issued for, which is the name your provider documents, and which is the name we use."
+    },
+    {
+      "h": "993 or 143, 465 or 587, and what a provider means by \"SSL\" or \"TLS\"",
+      "p": "RFC 8314 tells providers to prefer implicit TLS, meaning the connection is encrypted from the first byte: port <code>993</code> for IMAP and <code>465</code> for submission. Older configurations use <code>143</code> and <code>587</code>, which start in the clear and upgrade with STARTTLS. Providers label these inconsistently, and the labels are the main source of confusion: \"SSL/TLS\" in a settings table almost always means implicit TLS on 993 or 465, while \"TLS\" or \"STARTTLS\" almost always means 143 or 587. You do not have to work it out. Type your address and mcpemails fills in both hosts, both ports and both security modes for the hosts it recognises, and if the transport it tries does not answer it retries the other standard one by itself."
+    },
+    {
+      "h": "Three server capabilities decide how your mailbox behaves, and no two servers agree",
+      "p": "<b>SASL-IR</b> (RFC 4959): a server that does not advertise it rejects credentials sent on the same line as the <code>AUTHENTICATE</code> command and answers with a bare <code>BAD</code> and no explanation, which reads exactly like a wrong password. mcpemails detects that and retries the two-step exchange, which is why some hosts work here and fail in other tooling. <b>MOVE</b> (RFC 6851): without it a message cannot be moved atomically, so a move becomes a copy, a flag update and an expunge, and a connection dropped in the middle can leave the message in both folders. <b>SPECIAL-USE</b> (RFC 6154): without it the server does not label Sent, Drafts, Trash and Junk by role, so folders are matched by name, and a mailbox created in German, Norwegian or Russian has system folders under names your agent will not recognise unless you name them. When a folder operation behaves strangely, one of these three is usually the reason."
+    }
+  ],
+  "limits": [
+    "The server has to be reachable from the public internet. A mailbox on a private network, behind a VPN, or on a private IP address is refused deliberately: the hostname is resolved and any address in a private range is rejected.",
+    "Only the standard mail ports are dialled: 143 and 993 for IMAP, and 25, 465 and 587 for SMTP. A server listening on a custom port cannot be connected.",
+    "A mailbox that requires OAuth and will not accept a password over IMAP cannot be connected this way. Microsoft 365 is the case people hit most often, and we do not claim to support it."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with any IMAP mailbox?",
+      "a": "Claude has no IMAP client of its own, so not directly. Point an MCP server such as mcpemails at the mailbox with your address, host and password and Claude can read, search, send, reply, schedule and organize that mail. Any server that speaks IMAP and SMTP on the standard ports works, whoever hosts it, and the same connection then works from Cursor and ChatGPT too."
+    },
+    {
+      "q": "How do I find my IMAP server settings?",
+      "a": "Start with your provider's own help page, then your hosting control panel, where cPanel and Plesk both print the exact hosts and ports for each address. If neither is available, a provider following RFC 6186 publishes an _imaps._tcp SRV record for your domain, and your MX record names the machine that accepts your mail, which is usually related to the IMAP host. Do not guess from your domain name."
+    },
+    {
+      "q": "Should I use port 993 or 143?",
+      "a": "Use 993 unless your provider says otherwise. Port 993 is implicit TLS, encrypted from the first byte, and is what current standards recommend. Port 143 starts unencrypted and upgrades with STARTTLS, which still works but is the older pattern. For sending, the same distinction is 465 for implicit TLS and 587 for STARTTLS. mcpemails tries the standard pair and falls back to the other on its own."
+    },
+    {
+      "q": "Why does my mail client connect but this login fails?",
+      "a": "Three usual causes. Your client is pointed at a vanity hostname whose certificate is issued for a different name, and it is not validating strictly. Your provider requires an app password for anything that is not its own app. Or the server rejects one-step SASL authentication and answers with a bare BAD that looks like bad credentials. Try the hostname your provider documents rather than one built from your domain."
+    },
+    {
+      "q": "Do I need an app password?",
+      "a": "It depends entirely on the provider. Apple's iCloud, Yahoo, AOL, Fastmail, Yandex and Mail.ru all refuse the account password from a mail client and require a dedicated one. Zoho requires one when two-factor authentication is on. Most independent hosting providers and cPanel servers accept the mailbox password directly. If a correct-looking password is refused, an app-password requirement is the first thing to check."
+    },
+    {
+      "q": "Is my mail stored on your servers?",
+      "a": "No. Messages are fetched live from your server over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained. Changing the mailbox password at your provider disconnects the inbox until you enter the new one, which is the fastest way to cut access off."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI the inbox you already have",
+    "sub": "Connect any IMAP mailbox in minutes. One inbox free forever, no card required."
+  },
+  "guide": {
+    "intro": "Prefer a walkthrough with screenshots?",
+    "label": "Claude IMAP Connector: Connect Any IMAP Inbox to Claude",
+    "href": "/blog/claude-imap-connector"
+  }
+}

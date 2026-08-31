@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.titan.email/hc/en-us/articles/900000215446-Configure-Titan-on-other-apps-using-IMAP-POP",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "https://support.titan.email/hc/en-us/articles/59899461438233-Application-Password-in-Titan-for-Third-Party-Clients",
+    "https://support.titan.email/hc/en-us/articles/4406867379865-Configure-Titan-on-other-apps-using-IMAP-POP-for-EU-hosted-users",
+    "https://support.titan.email/hc/en-us/articles/9820407299737-Setting-up-and-editing-Two-Factor-Authentication-settings",
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Titan mailbox password (application password if 2FA is on)",
+    "helpUrl": "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "usernameForm": "Your full Titan address on your own domain, such as jack@yourdomain.com. Titan documents entering the same address in the username field when a client asks for one separately.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Titan Email to Claude, Cursor & MCP Clients",
+    "description": "Connect Titan Email to Claude, Cursor, ChatGPT and any MCP client over IMAP at imap.titan.email:993. Enable Titan on other apps first. One inbox free, forever."
+  },
+  "hero": {
+    "eyebrow": "Titan Email + AI",
+    "titleLine1": "Connect Titan Email to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Titan inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach Titan Email on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.titan.email on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Titan turns every third-party client away until you switch on Enable Titan on Other Apps in webmail settings, and a mailbox with two-factor authentication needs a Titan application password rather than the normal one. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Third-party access must be enabled",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Titan Email connects: IMAP, once third-party access is unlocked",
+    "body": "Titan serves IMAP at <code>imap.titan.email</code> on port 993 over TLS, and SMTP at <code>smtp.titan.email</code> on port 465, also implicit TLS. Two things come first. Third-party access is <b>off</b> on a Titan mailbox until somebody turns it on, and nothing gets past the login before then. And Titan is sold under other companies' brands, so <b>where you bought the mailbox decides which hostnames you use</b>. Many people arrive here unsure the mailbox is Titan at all, because the host that sold it never said the word. Three checks settle it: Titan webmail lives at <code>app.titan.email</code>, your domain's MX records point at <code>mx1.titan.email</code> and <code>mx2.titan.email</code>, and your host sold it to you as Titan Email, as Hostinger does, or as Professional Email, which is what GoDaddy calls the same product."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. No card is required, and the free plan connects one inbox for as long as you want it."
+    },
+    {
+      "h": "Turn on Enable Titan on Other Apps",
+      "p": "Sign in to Titan webmail at app.titan.email, click the <b>Settings</b> icon in the top right, and click <b>Enable Titan on Other Apps</b>. A short feature tour opens; click the button again to confirm. If that entry is missing and you see <b>Configure 3rd party apps</b> instead, third-party access is already on for the mailbox."
+    },
+    {
+      "h": "Confirm your hostnames, then paste everything into mcpemails",
+      "p": "Most Titan mailboxes use the hosts prefilled below. If your domain is managed through GoDaddy, GoDaddy documents <code>imap.secureserver.net</code> on 993 and <code>smtpout.secureserver.net</code> on 465 instead. If you bought Titan from Blacknight, MonoVM, DomainDiscount24, Fluccs or Domain Central, Titan documents <code>imap0101.titan.email</code> and <code>smtp0101.titan.email</code>. Choose IMAP / SMTP in mcpemails, enter your full Titan address and its password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Titan refuses every mail client until you flip one switch",
+      "p": "A Titan mailbox ships with third-party access disabled, and Titan's own setup guide opens by saying so. IMAP, POP and SMTP all fail at the login step with an error that looks exactly like a wrong password, so the first instinct is to reset the password. The switch is in Titan webmail under <b>Settings</b>, then <b>Enable Titan on Other Apps</b>. Titan gives you a tell: if that menu item has already been replaced by <b>Configure 3rd party apps</b>, access is on and the problem is elsewhere."
+    },
+    {
+      "h": "Where you bought Titan changes the hostname",
+      "p": "Titan is white-labelled through hosting companies, so the brand on your invoice is not the brand on your mail server. GoDaddy resells it as Professional Email and points clients at <code>imap.secureserver.net</code> and <code>smtpout.secureserver.net</code>. Titan bought through Blacknight, MonoVM, DomainDiscount24, Fluccs or Domain Central is EU-hosted and answers on <code>imap0101.titan.email</code> and <code>smtp0101.titan.email</code>. Everyone else uses plain <code>imap.titan.email</code>. One product, three host families, and the wrong one fails at the connection rather than at the login."
+    },
+    {
+      "h": "Titan's own troubleshooting says to switch 2FA off. You do not have to",
+      "p": "The troubleshooting section of Titan's IMAP guide blames a rejected password on Two-Factor Authentication and tells you to turn it off. Titan does support application passwords, but they are buried: <b>Settings</b>, <b>Preferences</b>, <b>Account and Security</b>, <b>Security and Access</b>, then <b>Manage</b> under Two-Factor Authentication, where you re-enter your password and a six-digit code before <b>Generate App Password</b> appears at all. Generate one there and leave 2FA on. Titan shows it once and you can revoke it from the same screen."
+    },
+    {
+      "h": "Titan's IMAP server is unusually bare, and that changes behaviour",
+      "p": "Titan's capability banner advertises little beyond IMAP4rev1, AUTH=PLAIN and SASL-IR. It does not offer MOVE, so relocating a message becomes a copy, a flag and an expunge rather than one atomic command, and an interrupted move can leave the original behind. It does not offer IDLE, so no client can hold a connection open waiting for new mail; mcpemails fetches live per request, but a desktop client on the same mailbox will poll. UIDPLUS and SPECIAL-USE are missing too, which is why folders here are matched by name."
+    }
+  ],
+  "limits": [
+    "The settings table on this page is Titan's standard host pair. GoDaddy Professional Email and EU-reseller mailboxes need their own hostnames, entered by hand when you connect rather than accepting the prefilled ones.",
+    "Without SPECIAL-USE, a Titan mailbox whose folders have been renamed needs the folder named explicitly when you ask your agent to file or archive something.",
+    "Titan's SMTP server accepts messages up to 50 MB, so a forward carrying a very large attachment is refused at submission."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Titan Email?",
+      "a": "Not directly. Claude has no built-in Titan connector and cannot open an IMAP session by itself. Connecting an MCP server such as mcpemails to your Titan mailbox gives Claude read, search, send, reply, schedule and organize access, and the same connection works in Cursor and any other MCP client rather than one app only."
+    },
+    {
+      "q": "How do I know whether my mailbox is actually Titan?",
+      "a": "Check three things. Your webmail is at app.titan.email, even if your host links to it under its own name. Your domain's MX records point at mx1.titan.email and mx2.titan.email. And your provider sells it as Titan Email, as Hostinger does, or as Professional Email, GoDaddy's name for the same service."
+    },
+    {
+      "q": "What are the Titan Email IMAP and SMTP settings?",
+      "a": "IMAP is imap.titan.email on port 993 with implicit TLS. SMTP is smtp.titan.email on port 465, also implicit TLS. Log in with your full Titan address and its mailbox password. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why does Titan reject my password?",
+      "a": "Almost always because third-party access was never enabled on the mailbox, which produces an authentication error rather than a helpful one. Turn on Enable Titan on Other Apps in webmail settings first. If it is already on and the login still fails, the mailbox has two-factor authentication and needs an application password from the Security and Access screen."
+    },
+    {
+      "q": "Does this work with GoDaddy Professional Email?",
+      "a": "Yes, with different hostnames. GoDaddy Professional Email is Titan underneath, but GoDaddy documents imap.secureserver.net on port 993 and smtpout.secureserver.net on port 465, and Titan's own guide sends GoDaddy-managed domains there. Enter those hosts manually rather than the prefilled pair."
+    },
+    {
+      "q": "Is my Titan mail stored on your servers?",
+      "a": "No. Messages are fetched live from Titan over IMAP for each request and passed to your AI client. Credentials are encrypted at rest; message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Titan Email inbox",
+    "sub": "Connect Titan in minutes. One inbox free forever, no card required."
+  }
+}

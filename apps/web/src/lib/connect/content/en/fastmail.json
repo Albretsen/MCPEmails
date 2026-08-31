@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
+    "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App password",
+    "helpUrl": "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "usernameForm": "Your full Fastmail address, including the domain: name@fastmail.com, or your own domain if you use one.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Fastmail to Claude, Cursor & MCP Clients",
+    "description": "Connect Fastmail to Claude, Cursor, ChatGPT and any MCP client over IMAP at imap.fastmail.com:993 with a Fastmail app password. One inbox free, forever."
+  },
+  "hero": {
+    "eyebrow": "Fastmail + AI",
+    "titleLine1": "Connect Fastmail to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Fastmail inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "App password, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach Fastmail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.fastmail.com on port 993, authenticating with a Fastmail app password rather than your account password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Fastmail runs a first-party MCP server for Fastmail alone; the reason to use this one instead is that a single URL covers your other mailboxes too. One inbox is free, forever."
+  },
+  "method": {
+    "title": "How Fastmail connects: an app password",
+    "body": "Fastmail connects over IMAP/SMTP using a <b>Fastmail app password</b>. Generate one in Fastmail under Settings → Privacy & Security → App passwords, paste it into mcpemails, and you're connected. No OAuth dance, no browser pop-ups."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Generate a Fastmail app password",
+      "p": "In Fastmail, go to Settings → Privacy & Security → App passwords and create one for mail (IMAP/SMTP)."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Add your Fastmail address and the app password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Fastmail ships its own MCP server, and it is a good one",
+      "p": "In April 2026 Fastmail launched a first-party MCP server at <code>https://api.fastmail.com/mcp</code>, authenticated with OAuth, offering read-only, write or send access and covering mail, calendar and contacts. If Fastmail is the only mailbox you want an assistant to reach, that is the most direct route available and we will say so plainly. mcpemails answers a different question: <b>one</b> MCP URL that holds your Fastmail account and your iCloud, Zoho, Yahoo, GMX or company IMAP mailbox at the same time, with the same nine tools over all of them, so an agent can search across mailboxes and you configure one server rather than five. Being useful to you matters more here than being flattering to us."
+    },
+    {
+      "h": "Fastmail Basic accounts cannot use IMAP at all",
+      "p": "Fastmail's Basic plan does not include IMAP, POP, SMTP, CalDAV or CardDAV, and accounts on it cannot create app passwords. Webmail and Fastmail's own apps are the whole of it. So if the app-password screen offers you nothing to create, that is the plan rather than a bug, and no amount of retyping the password will help. Standard and Professional accounts have the protocols and can connect."
+    },
+    {
+      "h": "The app password's access level has to include mail",
+      "p": "App passwords are created in Settings, then Privacy & Security, then the Connected apps & API tokens section, then Manage app passwords and access, then New app password. The default access level is <b>Mail, Contacts & Calendars</b>, which is the one IMAP and SMTP need. Choose Files (WebDAV) instead and the password is created perfectly happily and then fails to log in to mail. Fastmail shows the password once, so copy it before you leave the screen, and note that your ordinary Fastmail password will never authenticate a mail client."
+    }
+  ],
+  "limits": [
+    "Fastmail Basic does not include IMAP or SMTP, so a Basic mailbox cannot be connected. Standard and Professional can.",
+    "Fastmail's submission server announces a message ceiling of roughly 71 MB. Attachment reads through mcpemails are capped at 25 MB per request, so anything larger has to be fetched in Fastmail itself."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Fastmail?",
+      "a": "Yes, by two different routes. Fastmail runs its own MCP server that Claude can be pointed at directly with OAuth. Alternatively mcpemails connects the same mailbox over IMAP with an app password and exposes it, together with any other mailboxes you add, through a single MCP URL that also works in Cursor and ChatGPT. Either way Claude can read, search, send, reply and organize the mail."
+    },
+    {
+      "q": "Should I use Fastmail's own MCP server or this one?",
+      "a": "Use Fastmail's if Fastmail is your only mailbox and your client supports it: it is first-party, uses OAuth, and lets you pick read-only, write or send access. Use mcpemails if you want more than one provider behind one URL, if you also have an iCloud, Zoho or work IMAP mailbox, or if you want the same tools to behave identically across several MCP clients."
+    },
+    {
+      "q": "What are the Fastmail IMAP and SMTP settings?",
+      "a": "IMAP is imap.fastmail.com on port 993 with implicit TLS. SMTP is smtp.fastmail.com on port 465, also implicit TLS. The username is your full Fastmail address and the password is an app password, never your account password. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why is my Fastmail password rejected?",
+      "a": "Three causes, in order of likelihood. You are using your account password rather than an app password, which Fastmail never accepts on IMAP or SMTP. The app password was created with the Files access level instead of Mail, Contacts & Calendars. Or the account is on the Basic plan, which does not include IMAP or SMTP at all."
+    },
+    {
+      "q": "Does this work with a Fastmail custom domain?",
+      "a": "Yes. An address on your own domain hosted at Fastmail uses the same imap.fastmail.com and smtp.fastmail.com hosts and the same app password as a fastmail.com address. Enter the full address on your domain as the username. There is no separate hostname to look up and nothing extra to enable."
+    },
+    {
+      "q": "Is my Fastmail mail stored on your servers?",
+      "a": "No. Messages are fetched live from Fastmail over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained. Deleting the app password in Fastmail cuts the connection off at their end immediately."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Fastmail inbox",
+    "sub": "Connect Fastmail in minutes. One inbox free forever, no card required."
+  }
+}

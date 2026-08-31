@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter Namecheap Private Email à Claude (et à toute IA)",
+    "description": "Connectez Namecheap Private Email à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Namecheap Private Email + IA",
+    "titleLine1": "Connectez Namecheap Private Email à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Namecheap Private Email en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre Namecheap Private Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment Namecheap Private Email se connecte : IMAP et le mot de passe de la boîte",
+    "body": "Namecheap Private Email se connecte via IMAP/SMTP avec le <b>mot de passe de la boîte</b>, celui défini à sa création et non celui de votre compte Namecheap. Les deux serveurs sont <code>mail.privateemail.com</code> quel que soit votre domaine. Si vous ne l'avez pas, réinitialisez-le depuis le panneau de contrôle Private Email."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Retrouvez le mot de passe de votre boîte Private Email",
+      "p": "Utilisez le mot de passe de la boîte elle-même, pas celui de votre compte Namecheap. Vous pouvez le réinitialiser à tout moment depuis le panneau de contrôle Private Email."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Namecheap Private Email, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Namecheap Private Email à votre IA",
+    "sub": "Connectez Namecheap Private Email en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

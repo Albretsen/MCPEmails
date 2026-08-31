@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "title": "Conecta Gmail a Claude (y a cualquier IA)",
+    "description": "Conecta Gmail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con un clic mediante Google OAuth. Deja que la IA lea, envíe, programe y organice tu Gmail. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "Gmail + IA",
+    "titleLine1": "Conecta Gmail a Claude",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja Gmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con el inicio de sesión de Google con un clic, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Inicio de sesión de Google con un clic (OAuth)",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Gmail: Google OAuth con un clic",
+    "body": "Gmail se conecta con <b>Google OAuth</b>: inicia sesión con Google, aprueba el acceso de lectura y envío, y quedas conectado. Sin contraseña de aplicación ni ajustes IMAP que rastrear. Revoca el acceso cuando quieras desde tu cuenta de Google o el panel de mcpemails."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+    },
+    {
+      "h": "Inicia sesión con Google",
+      "p": "Haz clic en Conectar Gmail, inicia sesión con tu cuenta de Google y aprueba el acceso de lectura y envío. Sin contraseña de aplicación ni configuración IMAP."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja Gmail",
+    "sub": "Conecta Gmail en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

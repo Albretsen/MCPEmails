@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailbox.org/en/private/e-mail/e-mail-configuration/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/access-security-for-mailbox-2fa-app-passwords-and-e-mail-passwords/",
+    "https://kb.mailbox.org/en/private/encryption/your-encrypted-mailbox/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Email app password (with 2FA) or your mailbox password",
+    "helpUrl": "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "usernameForm": "Your main mailbox.org address, in full. Not an alias, not a mail extension, not a disposable address.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect mailbox.org to Claude and Any MCP Client",
+    "description": "Connect mailbox.org to Claude, Cursor and any MCP client over IMAP at imap.mailbox.org:993. With two-factor on, a client needs an email app password."
+  },
+  "hero": {
+    "eyebrow": "mailbox.org + AI",
+    "titleLine1": "Connect mailbox.org to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real mailbox.org inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than one, with the encryption trade-off spelled out rather than glossed over.",
+    "answer": "Claude cannot reach mailbox.org on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.mailbox.org on port 993, and SMTP at smtp.mailbox.org on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. You log in with your main mailbox.org address, and with two-factor authentication switched on you must use an email app password created under All settings, Security, Email app-passwords rather than your mailbox password. If you have turned on inbox encryption, incoming mail reaches any IMAP client as PGP ciphertext and an agent will not be able to read it. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Email app password when 2FA is on",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How mailbox.org connects: IMAP, your main address, and a per-protocol app password",
+    "body": "mailbox.org serves IMAP at <code>imap.mailbox.org</code> on port 993 with SSL/TLS, POP3 at <code>pop3.mailbox.org</code> on 995, and SMTP at <code>smtp.mailbox.org</code> on 465, with 587 documented for STARTTLS. The username is your <b>main</b> address, the one the account was opened with. mailbox.org hands out aliases, mail extensions, disposable addresses and <code>@secure.mailbox.org</code> variants, and none of them authenticate. Without two-factor authentication your ordinary mailbox password works. With it on, mailbox.org stops accepting that password over IMAP and SMTP and expects an <b>email app password</b> instead, generated per client and scoped to the protocols you tick when you create it. The banner also advertises <code>AUTH=OAUTHBEARER</code> and <code>AUTH=XOAUTH2</code>, which belong to mailbox.org's own App Suite integrations and cannot be used by a third party. Password authentication is the route here."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, with no card. You get an MCP URL and a key at the end of it."
+    },
+    {
+      "h": "Generate an email app password in mailbox.org",
+      "p": "In the web interface open <b>All settings</b>, then <b>Security</b>, then <b>Email app-passwords</b>. Name it for this connection, tick <b>both</b> IMAP and SMTP in the protocol list, and click Generate password. Copy the value straight away. If two-factor authentication is off you can use your mailbox password instead, but a scoped credential you can revoke on its own is the better thing to hand a third party."
+    },
+    {
+      "h": "Add the mailbox in mcpemails",
+      "p": "Choose IMAP / SMTP and enter your <b>main</b> mailbox.org address as the username, then the app password. The hosts are prefilled at <code>imap.mailbox.org</code> and <code>smtp.mailbox.org</code> and were verified from a live TLS connection. Credentials are encrypted at rest and mail itself is fetched per request rather than copied."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "An alias in the username field fails with a password error",
+      "p": "mailbox.org encourages aliases, mail extensions and disposable addresses, and its own configuration guide is explicit that the client username is your main email address. Put an alias there and the server refuses you exactly as though the password were wrong, which sends people off resetting a password that was never the problem. If you cannot remember which address is the main one, it is the address shown as the account's primary in the web interface, not whichever alias you actually give out."
+    },
+    {
+      "h": "The app password is scoped per protocol, so half a setup is possible",
+      "p": "When you generate an email app password you tick which protocols it may use. Tick IMAP and forget SMTP and you get a mailbox that reads perfectly and cannot send a single message, with the failure appearing only at the moment your agent tries to reply. The reverse happens too. Tick both, or generate two and use them in the right fields. This is also the lever for revoking access later: deleting that one app password disconnects this client and leaves your phone and desktop untouched."
+    },
+    {
+      "h": "Inbox encryption turns new mail into ciphertext for every client, including this one",
+      "p": "Under <b>All settings</b>, <b>Read and write e-mail</b>, <b>Inbox encryption</b>, mailbox.org can PGP-encrypt every arriving message to your public key using a server-side Sieve rule, whether or not the sender encrypted it. That is a real protection and it works exactly as advertised: an IMAP client, this one included, receives an armoured block instead of a body. mcpemails does not hold your private key, so an agent can see sender, subject and date and can file or flag the message, but not read it. The asymmetry to know about is that mailbox.org does not currently store your Sent folder encrypted, so an agent can still read what you sent even when it cannot read what you received."
+    },
+    {
+      "h": "No MOVE and no SPECIAL-USE, but UIDPLUS is there",
+      "p": "The Dovecot server advertises IDLE, SASL-IR and UIDPLUS but neither MOVE nor SPECIAL-USE. Moving a message is therefore a COPY, a STORE of the \\Deleted flag and an EXPUNGE rather than one atomic command, though UIDPLUS at least means the destination UID comes back without a second search. The missing SPECIAL-USE matters more day to day: nothing on the wire says which folder is Sent or Trash, so roles are inferred from names. German-language mailboxes typically show Gesendete Objekte, Entwürfe and Papierkorb, so name the folder explicitly if an agent files something in the wrong place."
+    }
+  ],
+  "limits": [
+    "Connecting any mailbox to an AI client means that AI provider reads the message content it is asked to work with. mcpemails fetches mail live from mailbox.org for each request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you point at it. mailbox.org's German hosting and data protection posture covers mailbox.org, and does not extend to an AI vendor you connect yourself.",
+    "Anything encrypted to your OpenPGP key, whether by a sender or by mailbox.org's own inbox encryption, is unreadable to an agent over IMAP. Those threads have to be read in the web interface or in a client holding your private key.",
+    "Because the server advertises no MOVE, a move is not atomic. If the connection drops mid-operation a message can briefly exist in both folders."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with mailbox.org?",
+      "a": "Not on its own. Claude has no built-in mailbox.org connector and cannot speak IMAP. Pointing an MCP server such as mcpemails at the mailbox gives Claude read, search, send, reply, schedule and organize access over IMAP, and the same connection then works from Cursor, ChatGPT and other MCP clients without setting anything up again."
+    },
+    {
+      "q": "What are the mailbox.org IMAP and SMTP settings?",
+      "a": "IMAP is imap.mailbox.org on port 993 with SSL/TLS. SMTP is smtp.mailbox.org on port 465, with 587 documented as the STARTTLS alternative, and POP3 is pop3.mailbox.org on 995. The username is your main mailbox.org address in every case. Both hosts here were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Where do I create a mailbox.org app password?",
+      "a": "In the web interface, open All settings, then Security, then Email app-passwords. Enter a name for the client, select the protocols it may use, and generate the password. mailbox.org shows it for you to copy. Each app password can be deleted individually, which revokes that one client without disturbing your other devices or your main password."
+    },
+    {
+      "q": "Why does mailbox.org reject my password in a mail client?",
+      "a": "Two causes account for nearly all of it. Either you entered an alias rather than your main address in the username field, or two-factor authentication is enabled and your mailbox password is therefore no longer accepted over IMAP and SMTP. Create an email app password under Security and use that. Check the username first; it is the cheaper thing to rule out."
+    },
+    {
+      "q": "Can my AI read my encrypted mailbox.org mail?",
+      "a": "No. A message encrypted to your OpenPGP key arrives over IMAP as an armoured ciphertext block, and mcpemails never holds your private key. That applies both to mail a sender encrypted and to mail that mailbox.org's inbox encryption encrypted on arrival. The agent sees headers and can move or flag the message; the body stays sealed."
+    },
+    {
+      "q": "Is my mailbox.org mail stored on your servers?",
+      "a": "No. Messages are fetched live from imap.mailbox.org for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained. The AI client you connect does receive the content of whatever it reads, which is a separate decision from where the mail is stored and worth making on purpose."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a mailbox.org inbox",
+    "sub": "Connect mailbox.org in minutes. One inbox free forever, no card required."
+  }
+}

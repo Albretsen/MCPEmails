@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://disroot.org/en/services/email",
+    "https://disroot.org/en/faq",
+    "https://howto.disroot.org/en/tutorials/email/clients"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Disroot password",
+    "helpUrl": "https://disroot.org/en/services/email",
+    "usernameForm": "Your full Disroot address, name@disroot.org. Disroot's own login screens take the bare username without the domain, so try that if the full address is refused.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Disroot Email to Claude and MCP Clients",
+    "description": "Connect Disroot email to Claude, Cursor and any MCP client over IMAP at disroot.org:993. Uses your Disroot account password, no app password exists. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Disroot + AI",
+    "titleLine1": "Connect Disroot to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Disroot inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than just one, with the privacy trade-off stated plainly.",
+    "answer": "Claude cannot reach a Disroot mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at disroot.org on port 993, and SMTP on port 465, authenticating with the same Disroot password you use for webmail and the Cloud, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Disroot issues no app passwords, so understand that the credential you store is your account credential. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your Disroot account password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Disroot connects: one hostname, one password",
+    "body": "Disroot runs everything on the bare domain. IMAP is <code>disroot.org</code> on port 993 over implicit TLS, and SMTP is <code>disroot.org</code> on port 465. There is no <code>imap.</code> or <code>smtp.</code> prefix to add and no regional variant to look up. Authentication is a <b>normal password</b>: the same Disroot password that signs you into webmail, the Nextcloud instance, Akkoma and XMPP chat. Disroot does not issue app-specific or device passwords, so there is no way to hand a client a scoped credential. That is worth thinking about before you connect anything, including this."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, with no card. You get an MCP URL and a key at the end of it."
+    },
+    {
+      "h": "Confirm your Disroot login name",
+      "p": "Disroot's FAQ is explicit that the account login is your username <b>without</b> the domain. Most mail clients authenticate fine with the full <code>name@disroot.org</code> address, but if the server rejects you and the password is definitely right, retry with just the username part. That single detail accounts for most failed Disroot client logins."
+    },
+    {
+      "h": "Add the mailbox in mcpemails",
+      "p": "Choose IMAP / SMTP, enter your Disroot address and your Disroot password. The hosts are prefilled at <code>disroot.org</code> for both directions. Credentials are encrypted at rest; mail itself is fetched live per request and not kept."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "One password unlocks every Disroot service",
+      "p": "Your Disroot password is shared across email, the Nextcloud Cloud, Akkoma and chat. Disroot offers no app passwords for mail, so a mail client holds the same secret that opens your files. If you ever want to revoke that access, the only lever is changing the account password, and changing it also forces you to re-key Nextcloud's encryption from the Personal settings page or your files stop opening. Two-factor authentication at Disroot covers the Cloud, not IMAP, so turning it on will not block a mail client either way."
+    },
+    {
+      "h": "Disroot's IMAP server does not advertise MOVE or UIDPLUS",
+      "p": "The Dovecot instance at <code>disroot.org</code> offers IMAP4rev1 with IDLE and SASL-IR but no MOVE and no UIDPLUS. Moving a message is therefore a COPY, then a STORE of the \\Deleted flag, then an EXPUNGE, and without UIDPLUS the server does not report the new UID, so the moved copy has to be found again by search. It works, it is just slower and noisier than on a server that supports MOVE, and it is why a large bulk reorganize against Disroot takes noticeably longer."
+    },
+    {
+      "h": "No SPECIAL-USE, so folders are matched by name",
+      "p": "Disroot does not advertise the SPECIAL-USE extension, so nothing on the wire says which folder is Sent, Drafts, Trash or Archive. Folder roles are inferred from names instead. If you renamed your folders in webmail, or your client created a second Sent folder years ago, name the folder explicitly when you ask an agent to file something."
+    },
+    {
+      "h": "The mailbox is 1 GB by default",
+      "p": "Disroot's documented mailbox limit is 1 GB and the attachment limit is 64 MB; the SMTP server itself advertises a 70 MB message ceiling. Storage is extendable through a contribution. A full mailbox bounces incoming mail, and an agent sending large attachments will hit the size wall before it hits the quota."
+    }
+  ],
+  "limits": [
+    "Connecting any mailbox to an AI client means that AI provider reads your message content. Disroot cannot prevent that and neither can we. mcpemails fetches mail live from Disroot per request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you point at it. If a Disroot mailbox holds correspondence you do not want a large AI vendor processing, do not connect it.",
+    "Mail that arrives GPG-encrypted, which Disroot actively encourages, reaches an IMAP client as an armoured ciphertext block. mcpemails does not hold your private key, so an agent sees the envelope and the encrypted payload, not the message. Those threads have to be read in a client that has your key.",
+    "There is no scoped credential. Disroot does not offer app passwords, so mcpemails stores the same password that opens your Cloud files."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Disroot?",
+      "a": "Not directly. Claude has no built-in Disroot connector and no way to speak IMAP. Connecting an MCP server such as mcpemails to your Disroot mailbox gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor and other MCP clients without setting it up again."
+    },
+    {
+      "q": "What are the Disroot IMAP and SMTP settings?",
+      "a": "IMAP is disroot.org on port 993 with implicit TLS. SMTP is disroot.org on port 465, also implicit TLS, with STARTTLS on 587 as the documented alternative. There is no imap. or smtp. subdomain. Log in with your Disroot address and your normal Disroot password. Both hosts were verified from a live TLS connection."
+    },
+    {
+      "q": "Does Disroot have an app password for mail clients?",
+      "a": "No. Disroot issues one password per account and it is used for email, the Cloud, Akkoma and chat alike. Anything you connect gets that credential. Disroot's two-factor authentication applies to the Cloud rather than to IMAP, so it neither blocks nor protects a mail client login."
+    },
+    {
+      "q": "Why is my Disroot password rejected?",
+      "a": "Usually the username, not the password. Disroot's own FAQ says the account login is the username without the domain, and passwords are case sensitive. Try the bare username in place of the full address. If the login still fails, confirm the account was approved; Disroot reviews registrations before they become active."
+    },
+    {
+      "q": "Can my AI read my PGP-encrypted Disroot mail?",
+      "a": "No. A message encrypted to your OpenPGP key arrives over IMAP as ciphertext, and mcpemails never holds your private key. The agent can see the sender, subject and date, and can move or flag the message, but the body stays unreadable. That is working as intended, and it is the reason end-to-end encrypted threads stay private from an AI client."
+    },
+    {
+      "q": "Is my Disroot mail stored on your servers?",
+      "a": "No. Messages are fetched live from disroot.org over IMAP for each request and passed straight to your AI client. Credentials are encrypted at rest; message bodies are not retained. The AI client you connect does receive the content of anything it reads, which is a separate question and one worth deciding deliberately."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Disroot inbox",
+    "sub": "Connect Disroot in minutes. One inbox free forever, no card required."
+  }
+}

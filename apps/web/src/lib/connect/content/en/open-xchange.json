@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "https://documentation.open-xchange.com/7.10.4/middleware/mail/mail_proxy_configuration.html",
+    "https://documentation.open-xchange.com/7.8.2/middleware/components/search/crossfolder_fts_in_mail.html",
+    "https://www.oxpedia.org/wiki/index.php?title=Authentication_IMAP_Plugin_description",
+    "https://wiki.open-xchange.com/wiki/index.php?title=Install_and_configure_the_mail-account_plugin"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "usernameForm": "Whatever the IMAP server behind App Suite expects, which is usually the full address such as you@yourdomain.com but can be a separate login name. The middleware setting com.openexchange.mail.loginSource decides which of the two App Suite itself sends.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Open-Xchange and Claude: Connect the IMAP Backend",
+    "description": "Open-Xchange App Suite is a groupware front end, not an IMAP server. Connect the Dovecot backend behind it to Claude, Cursor and ChatGPT over IMAP."
+  },
+  "hero": {
+    "eyebrow": "Open-Xchange + AI",
+    "titleLine1": "Connect an Open-Xchange mailbox",
+    "titleLine2": "to Claude, Cursor and ChatGPT",
+    "lead": "App Suite is the interface, not the mail store. Once you know which IMAP server sits behind it, connecting an AI agent is ordinary work: read, search, send, reply, schedule and file, from any MCP client.",
+    "answer": "Claude cannot reach an Open-Xchange mailbox on its own, and Open-Xchange App Suite is not itself the server to point it at. App Suite is groupware middleware that talks to a separate IMAP and SMTP backend, in most deployments Dovecot. mcpemails is a hosted MCP server that connects to that backend over IMAP, normally on port 993, with the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. The host to use is the mail server your deployment or your provider publishes, not the address of the App Suite web interface. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Backend mailbox password, not the web URL",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Open-Xchange connects: through the mail server App Suite proxies to",
+    "body": "Open-Xchange App Suite stores calendars, contacts, tasks and files, but it does not store mail. For mail it is a client, opening IMAP sessions against a separate server on the user's behalf and rendering the result in the browser. Open-Xchange's own guidance is that any system providing IMAP and SMTP can serve as the backend, and that Dovecot is the recommended choice for a new deployment. Which server a given installation uses is written into <code>/opt/open-xchange/etc/mail.properties</code>, in <code>com.openexchange.mail.mailServer</code> for IMAP and <code>com.openexchange.mail.transportServer</code> for submission, with IMAP-specific behaviour such as <code>com.openexchange.imap.imapSearch</code> living next door in <code>imap.properties</code>. That backend is what mcpemails connects to. Everything on our Dovecot page about listeners, folder roles and certificates applies to it, because on most App Suite deployments it is literally Dovecot."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. One inbox is free forever and no card is required."
+    },
+    {
+      "h": "Find the IMAP host behind App Suite",
+      "p": "If you run the deployment, read <code>com.openexchange.mail.mailServer</code> out of <code>/opt/open-xchange/etc/mail.properties</code> on a middleware node. If App Suite is your provider's webmail, ignore the middleware entirely and use the IMAP hostname that provider documents for mail clients, which is the answer they already publish."
+    },
+    {
+      "h": "Confirm the login name the backend wants",
+      "p": "Sign in to a desktop mail client, or check <code>com.openexchange.mail.loginSource</code> in the middleware config, to see whether the backend expects the full email address or a separate login name. Then add the inbox in mcpemails: choose IMAP / SMTP, enter that host, the login name and the mailbox password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The App Suite web address is not a mail host, and often nothing answers there",
+      "p": "This is the mistake that sends people in circles. You read mail at something like <code>webmail.yourprovider.com</code>, so that feels like the mail server, but it is an HTTP application node. Port 993 on it is frequently closed, and when it does answer it may be a load balancer that terminates nothing useful. Worse, in a self-hosted deployment the value of <code>com.openexchange.mail.mailServer</code> is very often an internal address, sometimes <code>127.0.0.1:143</code> on the same box or an internal name that resolves only inside the cluster, because the only client that was ever meant to reach it was the middleware itself. If that is your situation you have to publish an external IMAP endpoint deliberately, with its own certificate, before any external client including this one can connect."
+    },
+    {
+      "h": "If App Suite came with your hosting, the provider's own settings are the answer",
+      "p": "Open-Xchange sells App Suite to operators rather than to end users, so most people meet it as somebody else's webmail without the product ever being named on screen. IONOS and Namecheap Private Email are two you may recognise. If that is how you got here, none of the configuration files above exist on any machine you can reach, and you do not need them: your provider publishes IMAP and SMTP hostnames for desktop clients, and those are exactly what mcpemails wants. Use the provider's documented host, the provider's port, and the mailbox password they issued, and treat App Suite as a coincidence of which webmail they happened to license."
+    },
+    {
+      "h": "loginSource decides the username, and master authentication can mean you have none",
+      "p": "App Suite does not necessarily send your email address as the IMAP username. The middleware setting <code>com.openexchange.mail.loginSource</code> chooses between the primary address, the App Suite login name and other forms, which is why the credential that signs you in to the browser interface is not always the credential the mail server sees. Deployments that use master password authentication go further: the middleware authenticates to the IMAP server as a master user and supplies the target mailbox alongside, so an individual user may have no independent IMAP password at all. In that case an ordinary client cannot log in as that user until the operator provisions one, and no amount of retrying the web password will help. Some deployments have also moved the backend to <code>XOAUTH2</code> or <code>OAUTHBEARER</code>, at which point plain password authentication is refused outright."
+    }
+  ],
+  "limits": [
+    "Only mail travels over this connection. App Suite's calendars, address book, tasks and Drive files are served by the middleware over its own HTTP API and are not part of an IMAP session, so an agent connected this way sees mail and nothing else.",
+    "A backend reachable only inside your network cannot be connected to a hosted service. mcpemails is self-hostable, which is the sensible route if the IMAP server was deliberately kept off the public internet.",
+    "In a master-authentication deployment, connecting a client at all requires the operator to provision a real per-user IMAP credential. That is a decision for whoever runs the platform, not something you can arrange from the browser."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Open-Xchange?",
+      "a": "Yes, through the mail server behind it. Claude has no Open-Xchange connector and App Suite offers no MCP endpoint, but the mailbox itself lives on an ordinary IMAP server. Connecting mcpemails to that server gives Claude read, search, send, reply, schedule and organize access to the same mail you see in App Suite, and the same inbox works in Cursor and ChatGPT."
+    },
+    {
+      "q": "What are the Open-Xchange IMAP and SMTP settings?",
+      "a": "There is no single answer, because Open-Xchange is software that operators deploy rather than a mail service with fixed hostnames. In a self-hosted installation the backend is named in mail.properties. If App Suite arrived as part of a hosting package, use the IMAP and SMTP hostnames your provider publishes for mail clients, which are typically 993 for IMAP and 465 or 587 for submission."
+    },
+    {
+      "q": "Is Open-Xchange the same thing as Dovecot?",
+      "a": "No, but they are usually deployed together. Open-Xchange is the groupware layer that renders mail, calendars and files. Dovecot is the IMAP server that actually holds the messages, and Open-Xchange recommends it as the backend for new deployments. Our Dovecot page covers the listener, certificate and folder behaviour you will meet once you connect to it."
+    },
+    {
+      "q": "Why does port 993 on my webmail address refuse to connect?",
+      "a": "Because that address belongs to the App Suite web tier, which speaks HTTP. The IMAP server is a different machine or a different name, and in many installations it is deliberately not published to the internet at all. Find the real mail hostname from your provider's client setup documentation, or from the middleware configuration if the deployment is yours."
+    },
+    {
+      "q": "Is my mail stored on your servers?",
+      "a": "No. Messages are fetched live over IMAP from whichever server holds your mailbox, for each request, and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an Open-Xchange inbox",
+    "sub": "Connect the mail server behind App Suite. One inbox free forever, no card required."
+  }
+}

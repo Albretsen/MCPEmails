@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.startmail.com/features/",
+    "https://support.startmail.com/",
+    "https://www.getmailbird.com/best-startmail-app-macos/",
+    "https://discussions.apple.com/thread/256239542"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Trusted device password",
+    "helpUrl": "https://support.startmail.com/",
+    "usernameForm": "Your full StartMail address, including a custom domain. The username is never the bare local part.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "StartMail to Claude: The Trusted Device Password",
+    "description": "Connect StartMail to Claude, Cursor or any MCP client over IMAP at imap.startmail.com:993. Your account password never works: use a trusted device password."
+  },
+  "hero": {
+    "eyebrow": "StartMail + AI",
+    "titleLine1": "Connect StartMail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real StartMail inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than one, using a device password you can revoke on its own.",
+    "answer": "Claude cannot reach StartMail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.startmail.com on port 993, and SMTP at smtp.startmail.com on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Your StartMail account password will not authenticate a mail client at all: StartMail issues a separate generated password per connected device, from the trusted devices section of your settings, and shows it once. Use your full StartMail address as the username and that generated value as the password. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Generated device password, shown once",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How StartMail connects: IMAP and a per-device generated password",
+    "body": "StartMail serves IMAP at <code>imap.startmail.com</code> on port 993 with TLS, and SMTP at <code>smtp.startmail.com</code> on port 465, and it advertises full IMAP and SMTP access as a feature rather than an afterthought. What it does not do is accept your account password over those protocols. StartMail's model is one generated credential per connected device: you add a device in the web interface, StartMail produces a random password of about sixteen characters, and that value goes into both the incoming and outgoing password fields. It is displayed once, and nothing recovers it afterwards, so if you lose it you delete that device entry and add a new one. It is a better arrangement than most privacy providers manage, because the credential you hand a third party is not the one that opens your account, and withdrawing it affects nothing else you have connected."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, with no card. You get an MCP URL and a key at the end of it."
+    },
+    {
+      "h": "Add a device in StartMail and copy the generated password",
+      "p": "Sign in to StartMail in a browser, open <b>Settings</b>, and go to the <b>trusted devices</b> section, which is where IMAP access is managed. Choose <b>Add device</b> and name it for this connection. StartMail generates a random password and shows it once, so copy it before you close the dialog. That section also controls IMAP access for the account, so if a login is refused before you have even used the password, check IMAP is switched on there."
+    },
+    {
+      "h": "Add the mailbox in mcpemails",
+      "p": "Choose IMAP / SMTP, enter your full StartMail address as the username, and paste the generated device password. Use the same value for outgoing mail: StartMail authenticates submission with the device credential, not with your account password. The hosts are prefilled at <code>imap.startmail.com</code> and <code>smtp.startmail.com</code> and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Your StartMail account password is not a mail-client password, ever",
+      "p": "This accounts for most StartMail client problems, and it is not a two-factor side effect the way it is at other providers. StartMail simply does not authenticate IMAP or SMTP with your login password under any configuration. Type the password you use on the website and the server refuses you, the client reports bad credentials, and people reset the account password and try again, which changes nothing. You need a device password from the trusted devices section, in both the incoming and the outgoing field."
+    },
+    {
+      "h": "The generated password is shown once and there is no way back to it",
+      "p": "StartMail displays the value at the moment it creates the device entry and does not keep a readable copy for you to look up later. If you close the dialog, or copy it into a client on one machine and then need it on another, add a second device rather than hunt for the first password. That is the intended shape: one credential per connection, deleted individually. Deleting the entry for this one cuts the MCP server off and leaves your phone and laptop working."
+    },
+    {
+      "h": "StartMail advertises XLIST but not SPECIAL-USE",
+      "p": "An unusual capability detail with a practical consequence. The IMAP banner offers <code>XLIST</code>, Google's pre-standard extension for identifying which folder is Sent, Drafts or Trash, but not <code>SPECIAL-USE</code>, the RFC 6154 capability that replaced it. Most modern clients dropped XLIST years ago and look only for SPECIAL-USE, so folder roles fall back to matching by name. Rename a folder in StartMail's web interface and an agent may stop recognising it as your archive, so name it explicitly when you ask for something to be filed."
+    },
+    {
+      "h": "PLAIN only on IMAP, and no MOVE or UIDPLUS",
+      "p": "The server offers <code>AUTH=PLAIN</code> with no <code>AUTH=LOGIN</code>, so tooling hard-wired to the LOGIN mechanism gets a refusal at the authentication step rather than a useful error, while the SMTP side accepts both. It also omits MOVE and UIDPLUS, so filing a message is a COPY, a STORE of the \\Deleted flag and an EXPUNGE, with the new UID found by searching the destination rather than reported back. Both are handled here, and they are why a bulk reorganize against StartMail runs slower than against a server with MOVE."
+    }
+  ],
+  "limits": [
+    "Connecting a StartMail mailbox to an AI client means that AI provider reads the content of the messages it works with. mcpemails fetches mail live from imap.startmail.com for each request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you connect. StartMail's Dutch hosting and its no-tracking position describe StartMail, and do not follow a message into an AI vendor you attach yourself. Treat this as a decision about which correspondence you are willing to expose, not an extension of the privacy you bought.",
+    "PGP-encrypted messages are unreadable to an agent. StartMail's key handling lives in your StartMail account and serves its own web interface; an IMAP client receives an armoured ciphertext block, and mcpemails holds no private key of yours. The agent can see sender, subject and date, and can file or flag those threads, but not read them.",
+    "StartMail's SMTP server advertises a message size ceiling around 37 MB, which is lower than most providers here. A large attachment an agent tries to send is refused at submission rather than bouncing later, so use a link for anything sizeable."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with StartMail?",
+      "a": "Not directly. Claude has no built-in StartMail connector and cannot speak IMAP by itself. Connecting an MCP server such as mcpemails to your StartMail mailbox gives Claude read, search, send, reply, schedule and organize access over IMAP, and the same connection then works in Cursor, ChatGPT and other MCP clients without setting it up again."
+    },
+    {
+      "q": "What are the StartMail IMAP and SMTP settings?",
+      "a": "IMAP is imap.startmail.com on port 993 with TLS and SMTP is smtp.startmail.com on port 465 with TLS. The username is your full StartMail address, and the password is a generated device password rather than your account password. Both hosts were verified from a live TLS connection, and the certificate is issued for imap.startmail.com itself."
+    },
+    {
+      "q": "Why does my StartMail password not work in a mail client?",
+      "a": "Because it is not meant to. StartMail does not accept your account password over IMAP or SMTP at all. It issues a separate generated password for each connected device, from the trusted devices section of your settings. Resetting the account password will not help. Add a device, copy the generated value, and use it in both the incoming and outgoing password fields."
+    },
+    {
+      "q": "Where do I generate a StartMail IMAP password?",
+      "a": "In StartMail's web interface, open Settings and go to the trusted devices section, which is where IMAP access is managed. Choose to add a device, give it a name, and StartMail generates a random password of about sixteen characters and displays it once. Copy it immediately; there is no way to read it again, only to delete the device and add another."
+    },
+    {
+      "q": "Can my AI read my PGP-encrypted StartMail messages?",
+      "a": "No. A message encrypted to your OpenPGP key arrives over IMAP as ciphertext, and mcpemails never receives your private key. Those messages stay readable in StartMail's own interface, where the key handling lives. Your agent can still sort, flag and file them, and can read everything that arrived unencrypted."
+    },
+    {
+      "q": "Is my StartMail mail stored on your servers?",
+      "a": "No. Messages are fetched live from imap.startmail.com for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained. The AI client you connect does receive the content of whatever it reads, which is the part to weigh before connecting a mailbox you chose StartMail for."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a StartMail inbox",
+    "sub": "Connect StartMail with a device password you can revoke on its own. One inbox free forever, no card required."
+  }
+}

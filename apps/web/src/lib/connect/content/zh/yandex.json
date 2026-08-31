@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "将 Yandex Mail 连接到 Claude（及任意 AI）",
+    "description": "用应用专用密码通过 IMAP 将 Yandex Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Yandex Mail，1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "Yandex Mail + AI",
+    "titleLine1": "将 Yandex Mail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Yandex 收件箱。用 IMAP 和一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "应用专用密码，无需 OAuth 配置",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Yandex 如何连接：IMAP 与应用专用密码",
+    "body": "Yandex Mail 通过 IMAP/SMTP 连接。在 Yandex Mail 设置中启用 IMAP 并开启应用专用密码与 OAuth 令牌，然后在 Yandex ID 的安全设置中创建一个应用专用密码，再连同你的 Yandex 地址一起粘贴到 mcpemails。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+    },
+    {
+      "h": "启用 IMAP 并创建应用专用密码",
+      "p": "在 Yandex Mail 设置中启用 IMAP 并开启应用专用密码与 OAuth 令牌。然后在 Yandex ID 的安全设置中创建一个应用专用密码。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "填入你的 Yandex 地址和应用专用密码，安全连接收件箱。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Yandex 收件箱",
+    "sub": "几分钟即可连接 Yandex 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

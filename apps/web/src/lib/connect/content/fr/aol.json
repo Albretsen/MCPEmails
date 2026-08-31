@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter AOL Mail à Claude (et à toute IA)",
+    "description": "Connectez AOL Mail à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "AOL Mail + IA",
+    "titleLine1": "Connectez AOL Mail à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte AOL Mail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un simple mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre AOL Mail tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment AOL Mail se connecte : IMAP et un mot de passe d'application",
+    "body": "AOL Mail se connecte via IMAP/SMTP avec un <b>mot de passe d'application AOL</b>. Votre mot de passe AOL habituel ne fonctionne pas depuis un client de messagerie : une connexion refusée ici vient presque toujours d'un mot de passe d'application manquant. Activez la validation en deux étapes, créez un mot de passe d'application dans Informations du compte, Sécurité du compte, puis collez-le dans mcpemails avec votre adresse AOL complète."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Créez un mot de passe d'application AOL",
+      "p": "Dans AOL Mail, ouvrez Informations du compte, Sécurité du compte, activez la validation en deux étapes si elle est inactive, puis créez un mot de passe d'application. Copiez-le tout de suite, AOL ne l'affiche qu'une fois."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse AOL Mail, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte AOL Mail à votre IA",
+    "sub": "Connectez AOL Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://bluemail.me/pt/setup/bol-com-br-email-account-settings/",
+    "https://www.getmailspring.com/setup/access-bol-com-br-via-imap-smtp",
+    "https://en.wikipedia.org/wiki/Brasil_Online"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "BOL password, on a paid BOL plan",
+    "helpUrl": null,
+    "usernameForm": "Your full address, including the domain: name@bol.com.br.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "BOL Mail to Claude: IMAP Needs BOL Completo",
+    "description": "Connect a BOL mailbox to Claude or any MCP client at imap.bol.com.br:993. Free BOL accounts are webmail only, so IMAP requires the paid BOL Completo plan."
+  },
+  "hero": {
+    "eyebrow": "BOL Mail + AI",
+    "titleLine1": "Connect BOL Mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real BOL inbox. Read, search, send, reply, schedule and organize mail over IMAP, provided the mailbox is on a paid BOL plan rather than the free webmail tier.",
+    "answer": "Claude cannot reach BOL Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.bol.com.br on port 993, authenticating with your BOL password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The catch is the plan, not the protocol: BOL removed IMAP and POP access from its free accounts, which are webmail only, so an ordinary free bol.com.br address cannot be connected by any client until it is upgraded to a paid BOL plan. One inbox on mcpemails is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Paid BOL plan, then your password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How BOL Mail connects: IMAP on the paid tier only",
+    "body": "BOL serves IMAP at <code>imap.bol.com.br</code> on port 993 over implicit TLS, and submission at <code>smtps.bol.com.br</code> on port 465, also implicit TLS. BOL is operated by UOL, and the server behind both is the same Dovecot installation UOL runs, with the same message size ceiling and the same naming. The difference that matters is commercial. BOL's free mailbox, which is the one most bol.com.br addresses are, works in the webmail and nowhere else: access over POP and IMAP was taken out of the free plan, so there is no hostname you can enter that will make a free account log in from a client. The paid tier, sold as <b>BOL Completo</b>, restores client access, and from there authentication is ordinary. There is no app password and no separate authorization code, just your BOL password and the full address as the username."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required. Before you go further, check which BOL plan the mailbox is on, because that decides whether the rest of this page applies."
+    },
+    {
+      "h": "Confirm the mailbox is on a paid BOL plan",
+      "p": "Sign in to the BOL webmail and check the plan on the account. A free BOL account has no client access to enable: POP and IMAP were removed from that tier, so the mailbox is reachable only through the web interface. Upgrading to BOL Completo is what makes an IMAP connection possible. If the account stays free, connect a different mailbox in mcpemails instead and forward BOL mail into it."
+    },
+    {
+      "h": "Enter your address and password in mcpemails",
+      "p": "Choose IMAP / SMTP and enter the complete address, such as <code>nome@bol.com.br</code>, together with your BOL password. The hosts and ports are prefilled and were confirmed from a live TLS connection. Note the outgoing port: BOL takes implicit TLS on 465, which is not the same as the setting its sibling service uses."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize the BOL mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "A free BOL account cannot be connected at all, by anything",
+      "p": "This is the answer to almost every BOL client question and it is rarely stated plainly. Free BOL mailboxes work only in the webmail. POP and IMAP access was removed from the free plan, so Thunderbird, Outlook, Apple Mail, a script and a hosted MCP server all fail identically, and they fail at the login step with a credentials error that says nothing about plans. People conclude the password is wrong, reset it, and fail again with the new one. Check the plan before you check anything else. No configuration fixes this, only an upgrade to BOL Completo."
+    },
+    {
+      "h": "UOL's settings look close enough to copy, and the SMTP port differs",
+      "p": "BOL is run by UOL on the same platform, and the two sets of settings are similar enough that people substitute one for the other. The transport is where that breaks. BOL's submission host takes <b>implicit TLS on port 465</b>. UOL's takes <b>STARTTLS on port 587</b>. Both hosts are named with the same <code>smtps</code> prefix, so the name gives you no warning. Using the wrong combination usually hangs rather than erroring, because a client expecting a TLS handshake on a plaintext port waits for a greeting that never comes."
+    },
+    {
+      "h": "No MOVE, no SPECIAL-USE, and Portuguese folder names",
+      "p": "BOL's IMAP server does not advertise the MOVE extension, so filing a message runs as a copy, a flag update and an expunge instead of one atomic command, and a connection lost midway can leave the message briefly in both folders. It also omits SPECIAL-USE, so folders are matched by name rather than by role. On a Portuguese mailbox those names are usually Enviados (Sent), Rascunhos (Drafts), Lixeira (Trash) and Spam. Name the target folder explicitly if your agent files something in the wrong place."
+    }
+  ],
+  "limits": [
+    "IMAP requires a paid BOL plan. If the mailbox is on the free tier there is nothing to connect, and mcpemails cannot work around it because the restriction is enforced at BOL's server.",
+    "There is no IDLE support, so mail is polled rather than pushed. Your agent sees a new message the next time it checks rather than the moment it arrives.",
+    "The SMTP server accepts messages up to about 33 MB. A forward carrying larger attachments is refused at send time rather than queued."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with BOL email?",
+      "a": "Only on a paid BOL plan. Claude has no built-in BOL connector and cannot open an IMAP connection by itself, so it needs an MCP server such as mcpemails in front of the mailbox. That connection is over IMAP, which free BOL accounts do not offer, so a free bol.com.br address has to be upgraded first."
+    },
+    {
+      "q": "What are the BOL IMAP and SMTP settings?",
+      "a": "IMAP is imap.bol.com.br on port 993 with implicit TLS. Outgoing mail is smtps.bol.com.br on port 465, also implicit TLS. Log in with your complete bol.com.br address and your BOL password. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why does my BOL password not work in a mail client?",
+      "a": "Most likely because the mailbox is on the free plan, where POP and IMAP access has been removed. The server still refuses the login with an ordinary credentials error, which makes it look like a password problem. Confirm the plan in the BOL webmail before resetting anything. On a paid plan, the ordinary BOL password is the correct credential."
+    },
+    {
+      "q": "Is BOL the same as UOL?",
+      "a": "BOL is operated by UOL and runs on the same mail platform, but they are separate services with separate mailboxes, separate hostnames and separate plans. The settings are not interchangeable, and in particular the outgoing port and encryption differ between the two, so copying one configuration onto the other does not work."
+    },
+    {
+      "q": "Does BOL need an app password?",
+      "a": "No. BOL has no app-specific password scheme and issues no separate authorization code. On a paid plan your ordinary BOL password authenticates both IMAP and SMTP. That also means changing your BOL password breaks any connected client until you update the stored credential."
+    },
+    {
+      "q": "Is my BOL mail stored on your servers?",
+      "a": "No. Messages are fetched live from BOL over IMAP for each request and passed to your AI client. Credentials are encrypted at rest, and message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a BOL inbox",
+    "sub": "Connect a paid BOL mailbox in minutes. One inbox free forever on mcpemails, no card required."
+  }
+}

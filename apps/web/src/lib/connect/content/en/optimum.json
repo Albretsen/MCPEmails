@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://faq.optimum.net/taxonomy/term/1250",
+    "https://faq.optimum.net/taxonomy/term/3677",
+    "https://faq.optimum.net/node/13446"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Optimum ID password",
+    "helpUrl": "https://faq.optimum.net/taxonomy/term/1250",
+    "usernameForm": "Your full address, whichever Optimum domain it uses: name@optimum.net, name@optonline.net or a Suddenlink address.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Optimum and Optonline Mail to Claude",
+    "description": "Connect an Optimum, Optonline or Suddenlink mailbox to Claude and any MCP client over IMAP at mail.optimum.net:993 with your Optimum ID password."
+  },
+  "hero": {
+    "eyebrow": "Optimum Email + AI",
+    "titleLine1": "Connect your Optimum inbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Optimum stopped handing out addresses years ago, but the mailboxes that exist still speak IMAP. mcpemails connects one so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach an Optimum mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at mail.optimum.net on port 993, signing in with your full optimum.net, optonline.net or Suddenlink address and your Optimum ID password. There is no app password to generate and no toggle to switch on, because Optimum never built either. Note that Optimum stopped letting anyone create new email accounts on 4 May 2021, so this works for an address you already have rather than a new one. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Optimum ID password, no app password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Optimum connects: IMAP with your ordinary Optimum ID",
+    "body": "Optimum runs one mail host for all its brands. <code>mail.optimum.net</code> answers IMAP on port 993 over TLS under its own certificate, and the same name carries submission on port 465. Addresses on <code>optimum.net</code>, <code>optonline.net</code> and the Suddenlink domains that Optimum absorbed all land on it. Authentication is refreshingly plain: your <b>Optimum ID</b> and its password, entered with the full email address as the username. Optimum issues no app-specific passwords and has no third party access switch to find, so a login that fails here is a real credential problem rather than a hidden setting. The one thing to know before you point an agent at the mailbox is that Optimum stopped creating email accounts on 4 May 2021 and tells anyone who wants a new address to go to Gmail, Outlook.com or Yahoo instead."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Confirm the mailbox and check its storage first",
+      "p": "Sign in at optimum.net with your Optimum ID, open Email, and look at the storage display in the bottom left of the inbox. Optimum caps a mailbox at 5 GB and sells no extra space. At 100 per cent the account stops sending and receiving, so clear the Deleted and Junk folders before you hand it to an agent."
+    },
+    {
+      "h": "Enter the address and the Optimum ID password",
+      "p": "In mcpemails choose IMAP / SMTP, put the whole address in the username field, such as <code>name@optonline.net</code>, and use the password for that Optimum ID. The host is prefilled and was verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Optimum does not advertise SASL-IR, and most clients assume it",
+      "p": "The Optimum IMAP server omits the SASL-IR capability, so it rejects the one-step authentication that sends the credentials along with the AUTHENTICATE command. A client that assumes SASL-IR gets a bare <code>BAD</code> with no explanation, which reads exactly like a wrong password and sends people off resetting an Optimum ID that was fine. mcpemails detects that reply and retries the two-step exchange, so it is handled here, but it is why other IMAP tooling fails against Optimum while working elsewhere."
+    },
+    {
+      "h": "Junk and Deleted empty themselves, and on non-Optimum domains it happens in three days",
+      "p": "Optimum permanently removes mail from Junk and Deleted on a timer you cannot change. On <code>optimum.net</code> and <code>optonline.net</code> addresses it is 30 days for both folders. On every other domain Optimum hosts it is <b>3 days</b>. Anything that ages out is gone rather than recoverable. If you let an agent file mail into Trash as a soft delete, on those other domains you have roughly a long weekend to change your mind."
+    },
+    {
+      "h": "5 GB is the ceiling and there is no upgrade to buy",
+      "p": "Optimum gives each mailbox 5 GB, counts Inbox, Sent, My folders, Deleted and Junk towards it, and states that it does not provide an option to purchase additional storage. Past the limit the account can neither send nor receive, which looks from an agent's side like a broken connection rather than a full disk. The server does advertise the IMAP QUOTA extension, so the number is readable, but the fix is always deleting mail."
+    },
+    {
+      "h": "No SPECIAL-USE, and Optimum's folder names are its own",
+      "p": "The server does not advertise SPECIAL-USE, so a client cannot ask which folder is Sent and which is Trash and has to match on names. Optimum's names are <code>Deleted</code> rather than Trash and <code>My folders</code> for the user-created tree, which is not what most tooling guesses. If an agent cannot find your archive, name the folder explicitly rather than assuming the standard label."
+    }
+  ],
+  "limits": [
+    "The mailbox is capped at 5 GB with no paid upgrade, and sending and receiving stop when it fills.",
+    "Optimum has issued no new email accounts since 4 May 2021, so only an existing address can be connected.",
+    "The Optimum submission host did not answer our probe on port 465, so we publish no verified capability list for outgoing mail on this provider."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Optimum email?",
+      "a": "Not directly. Claude has no built-in Optimum connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your optimum.net, optonline.net or Suddenlink mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Optimum IMAP settings?",
+      "a": "IMAP is mail.optimum.net on port 993 with implicit TLS, verified from a live TLS connection on the date shown on this page. Submission uses the same hostname on port 465. The username is your full email address and the password is the one for your Optimum ID."
+    },
+    {
+      "q": "Do I need an app password for Optimum email?",
+      "a": "No. Optimum issues no app-specific passwords and has no separate switch to enable outside mail clients. You use the Optimum ID password directly. If you find advice about generating an app password for optonline.net, it is describing another provider's process; no such page exists in Optimum's settings."
+    },
+    {
+      "q": "Can I create a new Optimum email address?",
+      "a": "No. Optimum's own answer is that as of 4 May 2021 it no longer offers new or existing Internet customers the ability to create new Optimum email accounts, and it points people to Gmail, Outlook.com or Yahoo Mail instead. Addresses created before that date keep working, including on the Suddenlink domains."
+    },
+    {
+      "q": "Is my Optimum mail stored on your servers?",
+      "a": "No. Messages are fetched live from Optimum over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an Optimum inbox",
+    "sub": "No app password, no toggle. One inbox free forever, no card required."
+  }
+}

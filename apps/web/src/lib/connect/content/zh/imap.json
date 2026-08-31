@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "将任意 IMAP 邮箱连接到 Claude（及任意 AI）",
+    "description": "将任意 IMAP 邮箱连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。填入你的服务器、端口和密码，让 AI 读取、发送、定时并整理邮件，1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "IMAP + AI",
+    "titleLine1": "将任意 IMAP 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "把你已有的收件箱交给 AI 代理，无论它托管在哪里。用标准的 IMAP 与 SMTP 即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "任意 IMAP 服务器，无需 OAuth 配置",
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "Claude 自身没有 IMAP 客户端。mcpemails 是一个托管 MCP 服务器，用服务商早已给你的地址、服务器和密码，通过 IMAP 与 SMTP 登录你的邮件服务器，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。任何支持 IMAP 的服务器都可以，一个收件箱永久免费。"
+  },
+  "method": {
+    "title": "通用 IMAP 邮箱如何连接",
+    "body": "你需要四样东西：邮箱地址、邮件服务器、密码，以及服务商要求时的应用专用密码。先填地址：mcpemails 会识别常见的主机服务商，并替你填好两个服务器地址、两个端口和加密方式。如果它尝试的传输方式没有响应，它会自行改用另一种标准方式，IMAP 用 <b>993 或 143</b>，SMTP 用 <b>465 或 587</b>，谁都不必再去猜 STARTTLS。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+    },
+    {
+      "h": "收集你的 IMAP 与 SMTP 设置",
+      "p": "服务商都会公布这些信息，通常形如 imap.yourdomain.com 和 smtp.yourdomain.com，端口为 993 与 465。如果服务商要求邮件客户端使用应用专用密码，现在就生成一个。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，填入你的地址、两个服务器地址和密码。端口与加密方式在高级设置中，已按标准值预填。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "ctaBand": {
+    "title": "把你已有的收件箱交给 AI",
+    "sub": "几分钟即可连接任意 IMAP 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/e-mail-instellen.html",
+    "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/mailbox-beheren-in-mijn-telenet.html",
+    "https://www2.telenet.be/nl/klantenservice/stepplan-snippets/e-mailprogramma-instellen-voor-je-telenet-e-mailadres/livemail_stap4",
+    "https://www.bipt.be/consumenten/faq/kan-je-jouw-e-mailadres-behouden"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password from MyTelenet",
+    "helpUrl": "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/mailbox-beheren-in-mijn-telenet.html",
+    "usernameForm": "Your full address, including the domain: naam@telenet.be.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Telenet Email IMAP Settings and Claude MCP Access",
+    "description": "Connect a telenet.be mailbox to Claude, Cursor and any MCP client at imap.telenet.be:993, using the mailbox password set in MyTelenet under Je mailbox."
+  },
+  "hero": {
+    "eyebrow": "Telenet + AI",
+    "titleLine1": "Connect your Telenet mailbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real Telenet inbox. Read, search, send, reply, schedule and organize mail over IMAP with the mailbox password you set in MyTelenet.",
+    "answer": "Claude cannot reach a Telenet mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.telenet.be on port 993, authenticating with your full telenet.be address and the password set on that mailbox in MyTelenet, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Telenet issues no app-specific password and has no client-access toggle: every mailbox is created, and given its password, on the Je mailbox screen in MyTelenet. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from MyTelenet",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Telenet connects: IMAP against a proxy, with a per-mailbox password",
+    "body": "Telenet serves IMAP at <code>imap.telenet.be</code> on port 993 over implicit TLS. For outgoing mail Telenet's own setup pages document <code>smtp.telenet.be</code> on port 587 with TLS and authenticated SMTP; the same host also answers on port 465 with implicit TLS, which is what mcpemails prefills. Telenet is explicit about the username form: <b>Gebruikersnaam: je volledige e-mailadres</b>. The password is the one attached to the individual mailbox rather than a separate app credential, and mailboxes are created and administered in MyTelenet: a <b>beheerder</b> on the account can create up to ten mailboxes, a plain <b>gebruiker</b> one. What answers on those hostnames is a proxy (<code>* OK IMAP4rev1 proxy server ready</code>) sitting in front of the mail store, which explains the thin capability set described below."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Open Je mailbox in MyTelenet and set the password",
+      "p": "Sign in at mijn.telenet.be and go to <b>Je mailbox</b>, the mailbox management screen. Each mailbox on the account has its own password, assigned when it was created; an unassigned mailbox has to have one set by the account administrator before anything can log in. If nobody remembers it, set a new one there."
+    },
+    {
+      "h": "Consider giving the agent its own mailbox",
+      "p": "An account administrator can create up to ten Telenet mailboxes, a regular user one. If you would rather not hand an agent the address you have used for fifteen years, create a second mailbox on the same account and connect that one instead. It is the same host, the same ports and a password you can rotate without disrupting anything else."
+    },
+    {
+      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the full address such as naam@telenet.be, and paste the mailbox password. The Telenet hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Changing your Telenet password silently breaks every connected client",
+      "p": "Telenet says it in as many words in its own setup guide: if you change the password of your Telenet username or e-mail address, <b>verander dan ook het wachtwoord in je e-mailprogramma</b>. There is no app password insulating the client from the account, so a routine password rotation in MyTelenet takes the agent offline with it. The failure surfaces as an authentication error hours later, long after anyone connects it to what they did in the portal. If you rotate the Telenet password, update mcpemails in the same sitting."
+    },
+    {
+      "h": "You are talking to a proxy, and it advertises no MOVE and no SPECIAL-USE",
+      "p": "The banner is <code>* OK IMAP4rev1 proxy server ready</code>, not a mail store identifying itself. It offers <code>SASL-IR</code>, <code>IDLE</code> and <code>UIDPLUS</code>, but not <code>MOVE</code>, so filing a message runs as a copy, a flag update and an expunge rather than one atomic command, and not <code>SPECIAL-USE</code>, so Sent, Drafts and Trash are matched by name rather than by role. A Dutch-language Telenet mailbox usually names them <b>Verzonden</b>, <b>Concepten</b> and <b>Prullenbak</b>, so name the folder explicitly if an agent cannot find it."
+    },
+    {
+      "h": "The mailbox belongs to the subscription, and Belgian rules give you 18 months",
+      "p": "A Telenet e-mail address is tied to a Telenet mailbox on a Telenet subscription. Under Belgian rules described by the telecom regulator BIPT, when you leave a provider you are entitled to keep using the address, or to have mail forwarded, for eighteen months, and you have to ask for it before the subscription ends. Beyond that window a royal decree in force since 1 January 2024 caps what an operator may charge for continuing the facility at 1.50 euro per month. Worth knowing before you build an agent workflow on an address you only hold while you are a customer."
+    },
+    {
+      "h": "Sending is capped at 20 MB, which is low for the category",
+      "p": "<code>smtp.telenet.be</code> announces a maximum message size of 20,971,520 bytes. That is the encoded size of the whole message, and base64 inflates an attachment by roughly a third, so a file over about 15 MB on disk will not go. An agent asked to forward a large PDF gets a hard SMTP rejection rather than a slow send."
+    }
+  ],
+  "limits": [
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "The 20 MB submission cap is the practical ceiling on anything your agent sends from this mailbox.",
+    "Telenet issues no app-specific password, so the credential you give mcpemails is the mailbox password itself. Rotate it in MyTelenet and update it here at the same time."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Telenet email?",
+      "a": "Not on its own. Claude has no built-in Telenet connector. Pointing an MCP server such as mcpemails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Telenet IMAP and SMTP settings?",
+      "a": "IMAP is imap.telenet.be on port 993 with SSL. For outgoing mail Telenet documents smtp.telenet.be on port 587 with TLS and authenticated SMTP; the same host also answers on 465 with implicit TLS, which is what mcpemails uses. The username is your complete telenet.be address."
+    },
+    {
+      "q": "Does Telenet need an app password?",
+      "a": "No. Telenet issues no application-specific passwords. A mail client authenticates with the password set on that individual mailbox in MyTelenet, under Je mailbox. Because there is no separate app credential, changing the account password means changing it in every connected client too."
+    },
+    {
+      "q": "Why did my Telenet mail client stop working after a password change?",
+      "a": "Because the client is using the account password directly. Telenet's own guidance is to change the password in your e-mail program whenever you change it for your Telenet username or address. Update the stored password in mcpemails to the new value and the connection resumes immediately."
+    },
+    {
+      "q": "How many Telenet mailboxes can I create?",
+      "a": "An account administrator can create up to ten mailboxes; a regular user on the account can create one. They are all managed on the Je mailbox screen in MyTelenet, which is also where each one gets its password. Creating a dedicated mailbox for an agent is usually neater than connecting your main address."
+    },
+    {
+      "q": "Is my Telenet mail stored on your servers?",
+      "a": "No. Messages are fetched live from Telenet over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Telenet inbox",
+    "sub": "Connect Telenet mail in minutes. One inbox free forever, no card required."
+  }
+}

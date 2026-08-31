@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Koble Fastmail til Claude (og enhver AI)",
+    "description": "Koble Fastmail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Fastmail-en din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Fastmail + AI",
+    "titleLine1": "Koble Fastmail til Claude",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Fastmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "App-passord, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Fastmail seg til: et app-passord",
+    "body": "Fastmail kobles til via IMAP/SMTP med et <b>Fastmail-app-passord</b>: generer ett i Fastmail under Innstillinger → Personvern og sikkerhet → App-passord, lim det inn i mcpemails, og du er tilkoblet. Ingen OAuth-dans, ingen nettleser-popuper."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Generer et Fastmail-app-passord",
+      "p": "I Fastmail går du til Innstillinger → Personvern og sikkerhet → App-passord og oppretter ett for e-post (IMAP/SMTP)."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Legg til Fastmail-adressen din og app-passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Fastmail-innboks",
+    "sub": "Koble til Fastmail på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

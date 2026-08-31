@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Connecter Yandex Mail à Claude (et à toute IA)",
+    "description": "Connectez Yandex Mail à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Yandex. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Yandex Mail + IA",
+    "titleLine1": "Connectez Yandex Mail à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Yandex en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et un mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Yandex se connecte : IMAP et un mot de passe d'application",
+    "body": "Yandex Mail se connecte via IMAP/SMTP. Dans les paramètres de Yandex Mail, activez IMAP et activez les mots de passe d'application et les jetons OAuth, puis créez un mot de passe d'application dans Yandex ID, Sécurité, et collez-le dans mcpemails avec votre adresse Yandex."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Activez IMAP et créez un mot de passe d'application",
+      "p": "Dans les paramètres de Yandex Mail, activez IMAP et activez les mots de passe d'application et les jetons OAuth. Créez ensuite un mot de passe d'application dans Yandex ID, Sécurité."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Ajoutez votre adresse Yandex et le mot de passe d'application pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Yandex à votre IA",
+    "sub": "Connectez Yandex Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

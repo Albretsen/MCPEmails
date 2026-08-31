@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://cs.kakao.com/helps_html/1073209983",
+    "https://cs.daum.net/faq/service/43/category/9234/detail/24081",
+    "https://cs.daum.net/faq/43/9234.html",
+    "https://hanmail-notice.daum.net/list/907?index=1"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Kakao app password (앱 비밀번호)",
+    "helpUrl": "https://cs.kakao.com/helps_html/1073209983",
+    "usernameForm": "Your full address, including the domain: name@daum.net, or name@hanmail.net if that is the form your mailbox uses.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Daum Mail to Claude with a Kakao App Password",
+    "description": "Connect Daum Mail (daum.net, hanmail.net) to Claude or any MCP client over IMAP at imap.daum.net:993. Since January 2025 it needs a Kakao app password."
+  },
+  "hero": {
+    "eyebrow": "Daum Mail + AI",
+    "titleLine1": "Connect Daum Mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Daum or Hanmail inbox. Read, search, send, reply, schedule and organize mail over IMAP with a Kakao app password, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach Daum Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.daum.net on port 993, authenticating with a Kakao app password (앱 비밀번호) rather than your Kakao account password. Since 2 January 2025, Daum has required two-step verification on the Kakao account behind the mailbox and an app password for every IMAP and POP3 login, so the ordinary password no longer works in any mail client. IMAP itself is a separate switch inside Daum Mail settings and has to be turned on too. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Kakao app password, not your password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Daum Mail connects: IMAP in Daum, the password in Kakao",
+    "body": "Daum serves IMAP at <code>imap.daum.net</code> on port 993 over implicit TLS, and SMTP at <code>smtp.daum.net</code> on port 465. The unusual part is that the two things you need live in two different products. The protocol switch is in Daum Mail, under <b>환경설정</b> then <b>IMAP/POP3 설정</b>. The credential is in your Kakao account, because Daum sign-in was folded into Kakao and the mailbox now sits behind a 카카오계정. From <b>2 January 2025</b>, Kakao made two-step verification compulsory for IMAP and POP3 login and required an <b>앱 비밀번호</b>, an app password, in place of the account password. Both <code>@daum.net</code> and the older <code>@hanmail.net</code> addresses are the same mailbox on the same servers, so there is only ever one connection to make."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required. The next two steps happen on two different Kakao properties, so expect to move between them."
+    },
+    {
+      "h": "Enable IMAP inside Daum Mail",
+      "p": "Open Daum Mail and go to 환경설정 (Settings), then IMAP/POP3 설정. Set IMAP to in use and save. This is per mailbox and separate from anything on your Kakao account: with it off, imap.daum.net refuses the login and the failure is indistinguishable from a wrong password."
+    },
+    {
+      "h": "Generate an app password in your Kakao account",
+      "p": "Go to accounts.kakao.com and open 계정 보안 (Account security), then 2단계 인증 (two-step verification), then 앱 비밀번호 (app password). The same screen is reachable in KakaoTalk under 설정, 카카오계정, 2단계 인증, 앱 비밀번호. Two-step verification has to be on before an app password can be created. Generate one, then in mcpemails choose IMAP / SMTP, enter your full Daum or Hanmail address, and paste the app password rather than your Kakao password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize that Daum mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The credential moved into Kakao, and Daum's own settings never mention it",
+      "p": "Daum Mail's IMAP settings page tells you the host, the port and how to switch the protocol on. It is not where the password comes from. Since Daum accounts became Kakao accounts, the app password is created at accounts.kakao.com under 계정 보안, and Kakao's help is the only place that says so. People enable IMAP in Daum, try their Kakao password, get refused, and go back to the Daum settings page looking for a mistake that is not there. If you are hunting for a Daum app password screen, you are on the wrong site."
+    },
+    {
+      "h": "Two-step verification is mandatory since 2 January 2025, not optional",
+      "p": "Kakao's own guidance is explicit: for IMAP and POP3 you must enable two-step verification and log in with a separately generated app password rather than the existing password. This was not a recommendation with a fallback. Clients that had worked for years failed at login, and because the server answers with an ordinary authentication error, the natural diagnosis is a forgotten password. Turning two-step verification back off does not restore password login, it removes your ability to create the app password."
+    },
+    {
+      "h": "hanmail.net and daum.net are one mailbox, and the address you type matters",
+      "p": "Daum kept the older <code>@hanmail.net</code> domain alive alongside <code>@daum.net</code>, and both resolve to the same mailbox at the same servers. There is nothing to connect twice. What does matter is entering the address in the form your account actually carries, because the username you send at login has to match an address the mailbox owns. If one form is refused, try the other before you touch the app password."
+    },
+    {
+      "h": "SPECIAL-USE is absent and the folder names are Korean",
+      "p": "Daum's IMAP server does not advertise the SPECIAL-USE extension, so a client cannot ask which folder holds sent mail and which is the bin. Folders are matched by name, and on a Korean mailbox those names are 받은편지함 (Inbox), 보낸편지함 (Sent), 임시보관함 (Drafts), 휴지통 (Trash) and 스팸함 (Spam). If your agent files a message somewhere unexpected, name the destination folder explicitly rather than relying on its role."
+    }
+  ],
+  "limits": [
+    "Daum does not advertise IDLE, so mail is polled rather than pushed. An agent watching the mailbox sees a new message on its next check rather than on arrival.",
+    "The app password belongs to the Kakao account rather than to the mailbox. Disabling two-step verification, or revoking the password from Kakao, cuts the connection immediately and with no notice on the Daum side.",
+    "Daum's SMTP server accepts messages up to about 70 MB. A forward carrying attachments above that is rejected at send time rather than queued."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Daum Mail?",
+      "a": "Not directly. Claude has no built-in Daum connector and cannot open an IMAP connection by itself. Connecting an MCP server such as mcpemails to your Daum mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the Daum Mail IMAP and SMTP settings?",
+      "a": "IMAP is imap.daum.net on port 993 with implicit TLS. SMTP is smtp.daum.net on port 465, also implicit TLS. Log in with your full daum.net or hanmail.net address and a Kakao app password. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why can I not log in with the right Kakao password?",
+      "a": "Because Kakao no longer accepts it for mail. Since 2 January 2025, IMAP and POP3 require two-step verification on the Kakao account and a separately generated app password. The correct account password now produces the same authentication error as a wrong one, which is why the problem is so often misdiagnosed."
+    },
+    {
+      "q": "Where do I create the Daum app password?",
+      "a": "Not in Daum. Sign in at accounts.kakao.com, open 계정 보안, then 2단계 인증, then 앱 비밀번호. In KakaoTalk the path is 설정, 카카오계정, 2단계 인증, 앱 비밀번호. Two-step verification must already be enabled or the app password option will not appear. Copy the generated password into the client's password field."
+    },
+    {
+      "q": "Do hanmail.net addresses use the same settings?",
+      "a": "Yes. Hanmail was Daum's original mail domain and both it and daum.net point at the same mailbox on the same servers, with the same IMAP switch and the same Kakao app password. Connect the mailbox once, using whichever address form your account carries, and both work for sending."
+    },
+    {
+      "q": "Is my Daum mail stored on your servers?",
+      "a": "No. Messages are fetched live from Daum over IMAP for each request and passed to your AI client. Credentials are encrypted at rest, and message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Daum Mail inbox",
+    "sub": "Connect Daum or Hanmail in minutes with a Kakao app password. One inbox free forever, no card required."
+  }
+}

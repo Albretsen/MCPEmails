@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://help.iinet.net.au/iinet-email-messaging-company"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password from your current email provider",
+    "helpUrl": "https://help.iinet.net.au/iinet-email-messaging-company",
+    "usernameForm": "Your full iinet.net.au address. Which server it belongs to now depends on whether the address was opted in to The Messaging Company.",
+    "status": "discontinued"
+  },
+  "meta": {
+    "title": "iiNet Email Left iiNet: What Connects to Claude",
+    "description": "iiNet exited email and iinet.net.au addresses moved to The Messaging Company. What still connects to Claude over IMAP, and what was deleted for good."
+  },
+  "hero": {
+    "eyebrow": "iiNet Email + AI",
+    "titleLine1": "iiNet stopped running email.",
+    "titleLine2": "Here is what still connects",
+    "lead": "iiNet handed its mailboxes to another company and stopped issuing addresses. That changes where your settings come from, not whether an AI agent can work in the mailbox.",
+    "answer": "iiNet is out of the email business. It transferred iinet.net.au addresses to another Australian provider, The Messaging Company, closed the opt-in period, deleted every address that was not opted in, and states that it is not possible to create new email addresses on the iinet.net.au domain. So the question is not whether Claude can reach iiNet, it is which server holds your mailbox today. mcpemails is a hosted MCP server that connects any IMAP mailbox, including an ex-iiNet address on its new host, so Claude, Cursor or any MCP client can read, search, send and organise that mail. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Settings come from your new provider",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How an iinet.net.au address connects now: not through iiNet",
+    "body": "iiNet's own help page is unambiguous. Addresses were transferred to <b>The Messaging Company</b>, the opt-in window has closed, anything not opted in has been deleted and cannot be recovered, and iiNet asks customers to take support questions to The Messaging Company because it can no longer assist. Addresses that were included with an iiNet service were free of charge until 15 September 2024, after which The Messaging Company set its own pricing. The <code>mail.iinet.net.au</code> hostname has not vanished: it still completes a TLS handshake on port 993 and returns a capability banner, under a certificate issued for <code>mail.tpg.com.au</code>, TPG being the group iiNet belongs to. Take that for exactly what it is. It proves the host is alive; it does not prove your mailbox is on it, and it certainly does not mean iiNet is issuing addresses again."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Find out who holds the mailbox today",
+      "p": "If you opted the address in, it is with The Messaging Company and they are the ones who can tell you the server names, ports and password for it. iiNet cannot, and says so. If you never opted in, the address was deleted and there is nothing to connect; iiNet states that deleted addresses cannot be recovered."
+    },
+    {
+      "h": "Enter the settings your current provider gives you",
+      "p": "In mcpemails choose IMAP / SMTP and fill in the host, port and password exactly as your provider documents them, with the full address as the username. We publish only settings we have opened a connection to ourselves, so we do not print The Messaging Company's hostnames here. Take them from their support material rather than from a third party blog."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "A live hostname is not a live service",
+      "p": "<code>mail.iinet.net.au</code> answers IMAP over TLS today and advertises SASL-IR, IDLE, SPECIAL-USE and COMPRESS=DEFLATE, which is a perfectly healthy server. People take that as evidence that iiNet email is fine and that the migration notices were noise. It is not evidence of that. A hostname stays resolvable and a server stays running long after the business behind it stops issuing accounts, and iiNet's own page says no new iinet.net.au addresses can be created. Keep the two claims apart when you are diagnosing a failure."
+    },
+    {
+      "h": "Addresses that were never opted in are gone, not dormant",
+      "p": "The opt-in was a positive action each customer had to take. iiNet's wording is that the opt-in period has closed and any address that was not opted in has now been deleted and cannot be recovered. So if your login stopped working and nobody can find the mailbox, the likely answer is not a forgotten password. There is no restore, no archive to request and no replacement address on the same domain."
+    },
+    {
+      "h": "The mailbox became a paid product, and iiNet is not the biller",
+      "p": "iiNet covered the address until 15 September 2024 for customers whose email came with their service, and The Messaging Company was to contact customers at least 60 days beforehand with the pricing that would apply after that. An address that lapsed for non-payment is a matter for them. iiNet directs all support for these addresses to The Messaging Company and will not act on them."
+    },
+    {
+      "h": "Support tickets go to a company most guides do not mention",
+      "p": "Search results for iiNet email settings are still full of pages describing an iiNet-run service with iiNet hostnames, written before the transfer and never updated. If you follow them you will end up on hold with the wrong company. iiNet's own page names the new operator and gives their contact details, which is the only starting point worth using."
+    }
+  ],
+  "limits": [
+    "We publish no verified settings for The Messaging Company, because we have not opened a connection to their hosts. Take those from your provider and enter them manually.",
+    "A deleted iinet.net.au address cannot be connected, recovered or recreated. No MCP server changes that."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with iiNet email?",
+      "a": "Claude has no built-in connector for it, and iiNet no longer runs the service. If your iinet.net.au address survived the transfer to The Messaging Company, connecting an MCP server such as mcpemails to it over IMAP gives Claude read, search, send, reply, schedule and organise access, using the server settings your current provider gives you."
+    },
+    {
+      "q": "What happened to iiNet email?",
+      "a": "iiNet exited email and transferred customer addresses to another Australian email provider, The Messaging Company. The opt-in period has closed, addresses that were not opted in have been deleted and cannot be recovered, and iiNet states that it is not possible to create new addresses on the iinet.net.au domain."
+    },
+    {
+      "q": "Why does mail.iinet.net.au still respond if the service moved?",
+      "a": "Because the host is still running. It completes a TLS handshake on port 993 and returns a capability banner under a certificate for mail.tpg.com.au. That tells you the server answers, and nothing more. Whether your particular mailbox is served there, and whether your credentials are still valid, are separate questions that only your current provider can answer."
+    },
+    {
+      "q": "Can I get a new iinet.net.au email address?",
+      "a": "No. iiNet's help page states directly that it is not possible to create new email addresses using the iinet.net.au domain. If you need a fresh mailbox for an assistant to work in, it has to be on a provider that still issues them, and mcpemails connects any of those over IMAP."
+    },
+    {
+      "q": "Is my mail stored on your servers?",
+      "a": "No. Messages are fetched live from your provider over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a mailbox it can reach",
+    "sub": "Wherever your old iiNet address lives now, connect it over IMAP. One inbox free forever, no card required."
+  }
+}

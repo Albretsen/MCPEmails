@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://developers.google.com/gmail/api/guides",
+    "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
+    "https://support.google.com/a/answer/7281227"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "Google sign-in",
+    "helpUrl": "https://support.google.com/a/answer/7281227",
+    "usernameForm": "There is no username to type. You choose the account on Google's own sign-in screen and approve the access.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Gmail MCP Server for Claude, Cursor and ChatGPT",
+    "description": "A hosted Gmail MCP server. Sign in with Google once, then read, search, send and schedule Gmail from Claude, Cursor or any MCP client. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Gmail + AI",
+    "titleLine1": "The Gmail MCP server",
+    "titleLine2": "for Claude, Cursor and ChatGPT",
+    "lead": "Give your AI agent a real Gmail inbox in minutes. Read, search, send, reply, schedule and organize mail with one-click Google sign-in, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "One-click Google sign-in (OAuth)",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach Gmail on its own. mcpemails is a hosted MCP server that sits between them: you sign in with Google once, paste one URL into your MCP client, and Claude, Cursor or ChatGPT can then read, search, send, reply to and schedule your Gmail. One inbox is free, forever."
+  },
+  "method": {
+    "title": "How Gmail connects: one-click Google OAuth",
+    "body": "Gmail connects with <b>Google OAuth</b>. Sign in with Google, approve read and send access, and you're connected. No app password, no IMAP settings to dig up. Revoke access anytime from your Google account or the mcpemails dashboard."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Sign in with Google",
+      "p": "Click Connect Gmail, sign in with your Google account, and approve read and send access. No app password or IMAP setup."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Google publishes its own Gmail MCP server, and for Gmail alone it is the shorter path",
+      "p": "Google announced official MCP support for its services, including a Workspace MCP server that covers Gmail alongside Drive, Calendar and Chat. We are not going to pretend otherwise. If Gmail is the only mailbox you want an assistant to touch, and your client speaks to Google's server, use it. The reason to point mcpemails at Gmail instead is that the same server also holds your iCloud, Fastmail, Zoho, Yahoo or company IMAP mailbox, exposes every one of them through <b>one</b> MCP URL, and behaves the same way in Claude, Cursor and ChatGPT. One connector per provider, each with its own auth and its own tool names, is the thing this avoids."
+    },
+    {
+      "h": "A work Gmail can be blocked by your Workspace administrator, and Google says so in the error",
+      "p": "Google Workspace administrators control third-party API access under Security, then API controls, then App access control. An admin can block all third-party apps outright, or allow an app only for named OAuth scopes. Where that is switched on, Google refuses at its own consent screen with <code>Error 400: admin_policy_enforced</code>, and the request never reaches us. Nothing on our side can override it: an administrator has to allow the app for the Gmail scopes. Personal accounts ending in <code>@gmail.com</code> have no such policy and are unaffected."
+    },
+    {
+      "h": "Gmail has labels, not folders, so a move is not a move",
+      "p": "The connection talks to the Gmail API, where every folder your AI client shows you is a Gmail label. A message can carry several labels at once, so moving it means adding one and removing another, and archiving is simply removing <code>INBOX</code>. Delete puts the message in Gmail's Trash rather than erasing it. If you ask an agent to file mail into a folder that does not exist yet, the label has to be created first, and it will then appear in Gmail on every device."
+    },
+    {
+      "h": "The IMAP switch in Gmail settings has nothing to do with this",
+      "p": "Because the connection is Google OAuth plus the Gmail API, the Forwarding and POP/IMAP tab in Gmail settings is irrelevant here, and so is an app password. There is nothing to enable in the mailbox, and a Gmail app password will not be asked for. Access is revoked from your Google Account under the third-party access list, or from the mcpemails dashboard, and takes effect immediately."
+    }
+  ],
+  "limits": [
+    "The connection requests the Gmail read, send, modify and basic settings scopes only. Drive, Calendar, Chat and Docs are not requested and cannot be reached.",
+    "A Google Workspace mailbox whose administrator blocks third-party API access cannot be connected. That decision is made in the Admin console and only an administrator can change it.",
+    "Delete moves a message into Gmail's Trash. Permanently erasing mail is done in Gmail itself."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Gmail?",
+      "a": "Yes, once something stands between them that speaks Gmail on Claude's behalf. mcpemails is one such thing: you sign in with Google, paste one MCP URL, and Claude can read, search, send, reply, forward and schedule mail. Google also publishes an official Workspace MCP server covering Gmail. The practical difference is that mcpemails is not Google-only, so the same URL serves your other mailboxes too."
+    },
+    {
+      "q": "Is there an official Gmail MCP server from Google?",
+      "a": "Yes. Google announced official MCP support for its services, with a Workspace MCP server spanning Gmail, Drive, Calendar and Chat. Use it when Gmail is the only mailbox involved and your client supports it. Choose a third-party server such as mcpemails when you want several providers behind a single MCP URL, or when you want identical behaviour across Claude, Cursor and ChatGPT."
+    },
+    {
+      "q": "Do I need an app password or IMAP settings for Gmail?",
+      "a": "No. Gmail connects with Google OAuth and the Gmail API, so there is no host to enter, no port, no app password, and nothing to switch on in the mailbox. The POP and IMAP settings in Gmail have no effect on this connection. You approve read and send access once in Google's own dialog and can withdraw it from your Google Account at any time."
+    },
+    {
+      "q": "Why does Google refuse the sign-in on my work account?",
+      "a": "Almost always an administrator policy. Google Workspace admins restrict which third-party applications may use Gmail scopes under Security, API controls, App access control. When the app is not allowed, Google stops the flow with Error 400: admin_policy_enforced before anything reaches us. Your administrator has to permit the app. A personal Gmail account will not hit this."
+    },
+    {
+      "q": "Does it work with a Google Workspace custom domain?",
+      "a": "Yes. A Workspace mailbox on your own domain signs in through the same Google consent flow as a gmail.com address and behaves identically afterwards. The one condition is the administrator policy above: third-party API access has to be permitted for the account, otherwise Google blocks the consent screen."
+    },
+    {
+      "q": "Is my Gmail stored on your servers?",
+      "a": "No. Messages are fetched live from Google for each request and handed to your AI client. OAuth tokens are encrypted at rest and message bodies are not retained. Revoking access in your Google Account or deleting the inbox in mcpemails ends the connection straight away."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Gmail inbox",
+    "sub": "Connect Gmail in minutes. One inbox free forever, no card required."
+  },
+  "guide": {
+    "intro": "Prefer a walkthrough with screenshots?",
+    "label": "How to connect Gmail to Claude",
+    "href": "/blog/connect-gmail-to-claude"
+  }
+}

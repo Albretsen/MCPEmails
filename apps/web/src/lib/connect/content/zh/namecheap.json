@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "将 Namecheap Private Email 连接到 Claude（及任意 AI）",
+    "description": "用邮箱密码通过 IMAP 将 Namecheap Private Email 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "Namecheap Private Email + AI",
+    "titleLine1": "将 Namecheap Private Email 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Namecheap Private Email 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，无需 OAuth 配置",
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "Claude 无法自行连接 Namecheap Private Email。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+  },
+  "method": {
+    "title": "Namecheap Private Email 如何连接：IMAP 与邮箱密码",
+    "body": "Namecheap Private Email 通过 IMAP/SMTP 连接，使用<b>邮箱密码</b>，也就是创建邮箱时设定的那个，而不是 Namecheap 账户密码。无论你用什么域名，两个服务器都是 <code>mail.privateemail.com</code>。如果没有密码，可在 Private Email 控制面板中重置。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+    },
+    {
+      "h": "找到你的 Private Email 邮箱密码",
+      "p": "使用邮箱本身的密码，而不是 Namecheap 账户密码。你随时可以在 Private Email 控制面板中重置它。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，填入你的 Namecheap Private Email 地址、下方的服务器地址和密码，安全连接收件箱。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Namecheap Private Email 收件箱",
+    "sub": "几分钟即可连接 Namecheap Private Email。一个收件箱永久免费，无需信用卡。"
+  }
+}

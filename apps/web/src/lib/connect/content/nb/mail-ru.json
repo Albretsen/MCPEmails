@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Koble Mail.ru til Claude (og enhver AI)",
+    "description": "Koble Mail.ru til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Mail.ru + AI",
+    "titleLine1": "Koble Mail.ru til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Mail.ru-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "App-passord, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke Mail.ru på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+  },
+  "method": {
+    "title": "Slik kobler Mail.ru seg til: IMAP og et app-passord",
+    "body": "Mail.ru kobles til via IMAP/SMTP med et <b>passord for eksterne applikasjoner</b>. Passordet du logger inn på nettsiden med, fungerer ikke fra en e-postklient. Opprett ett i Mail.ru under Sikkerhet, Passord for eksterne applikasjoner, og lim det inn i mcpemails sammen med Mail.ru-adressen din. Mail.ru krever et telefonnummer på kontoen før du får opprette ett."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Opprett et passord for eksterne applikasjoner",
+      "p": "I Mail.ru åpner du Sikkerhet og oppretter et passord for eksterne applikasjoner. Det er passordet mcpemails trenger, ikke det du bruker på nettsiden."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, legg til Mail.ru-adressen din, vertene under og passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Mail.ru-innboks",
+    "sub": "Koble til Mail.ru på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

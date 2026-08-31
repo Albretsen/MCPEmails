@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Conecta Yandex Mail a Claude (y a cualquier IA)",
+    "description": "Conecta Yandex Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Yandex Mail. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "Yandex Mail + IA",
+    "titleLine1": "Conecta Yandex Mail a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja Yandex real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y una contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de aplicación, sin configurar OAuth",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Yandex: IMAP y una contraseña de aplicación",
+    "body": "Yandex Mail se conecta por IMAP/SMTP. En la configuración de Yandex Mail, activa IMAP y habilita las contraseñas de aplicación y los tokens OAuth, luego crea una contraseña de aplicación en Yandex ID, Seguridad, y pégala en mcpemails junto con tu dirección de Yandex."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+    },
+    {
+      "h": "Activa IMAP y crea una contraseña de aplicación",
+      "p": "En la configuración de Yandex Mail, activa IMAP y habilita las contraseñas de aplicación y los tokens OAuth. Luego crea una contraseña de aplicación en Yandex ID, Seguridad."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Añade tu dirección de Yandex y la contraseña de aplicación para conectar la bandeja de forma segura."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja Yandex",
+    "sub": "Conecta Yandex Mail en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

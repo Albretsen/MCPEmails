@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://docs.cpanel.net/cpanel/email/email-accounts/",
+    "https://docs.cpanel.net/cpanel/email/set-up-mail-client/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://docs.cpanel.net/cpanel/email/set-up-mail-client/",
+    "usernameForm": "The full email address, for example you@yourdomain.com. Never your cPanel account login.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect cPanel to Claude, Cursor & MCP Clients",
+    "description": "Connect a cPanel mailbox to Claude, Cursor and any MCP client over IMAP. Read your real host from Email Accounts, Connect Devices, Mail Client Manual Settings."
+  },
+  "hero": {
+    "eyebrow": "cPanel + AI",
+    "titleLine1": "Connect cPanel to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real cPanel inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your mailbox password, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach cPanel on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+  },
+  "method": {
+    "title": "How cPanel connects: IMAP and your mailbox password",
+    "body": "A cPanel mailbox, the kind you read in Roundcube or Horde webmail, connects over IMAP/SMTP with the password set in cPanel under Email Accounts. There is no app password and no OAuth. The host is usually <code>mail.yourdomain.com</code>, and cPanel prints the exact values under Email Accounts, Connect Devices, in Mail Client Manual Settings. Use the secure SSL/TLS column, not the plain one."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Read your settings from cPanel",
+      "p": "In cPanel, open Email Accounts and click Connect Devices for the mailbox. Copy the secure IMAP and SMTP hosts and ports from Mail Client Manual Settings. If you do not know the mailbox password, set a new one on the same screen."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, add your cPanel address, the hosts below and the password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "There is no cPanel mail server, only your server, and the panel is the only authority on its name",
+      "p": "cPanel is software your hosting company runs, not a mail service, so no shared hostname exists to prefill. Every account answers on the machine it is hosted on. The one place that prints the truth for your account is <b>Email Accounts</b>, then <b>Connect Devices</b> on the row for the address, then the <b>Mail Client Manual Settings</b> block. cPanel shows two tables there: <b>Secure SSL/TLS Settings</b> with IMAP on 993, POP3 on 995 and SMTP on 465, and a non-SSL table with 143, 110 and 587 that you should ignore. Copy the incoming and outgoing host out of the secure table exactly as printed, including any host that looks nothing like your domain."
+    },
+    {
+      "h": "mail.yourdomain.com usually resolves and usually fails the certificate check",
+      "p": "The default cPanel guidance is <code>mail.example.com</code>, and that name normally points at the right machine, which is why the plain-text ports appear to work. Over TLS it often does not, because the certificate the server presents belongs to the shared server rather than to your domain. cPanel handles this by substituting: its own documentation says the system uses the server's hostname when the domain has no valid certificate, and uses the <code>mail</code> subdomain when the certificate does not match the hostname. That substitution is exactly why the value in Connect Devices is sometimes a hostname you have never seen. Use it anyway. A certificate mismatch here is a naming problem, not an attack, and clicking past it is the wrong fix."
+    },
+    {
+      "h": "A mailbox can be restricted from logging in or sending while looking perfectly healthy",
+      "p": "cPanel puts a <b>Restrictions</b> block on each mailbox, reachable from <b>Email Accounts</b>, then <b>Manage</b>. Logging In can be set to Suspend, which blocks webmail and every mail client without changing the password. Sending Outgoing Email can be set to Suspend, which rejects outgoing messages, or to <b>Hold</b>, which queues them silently for four days and then gives up. Hold is the nastiest of the three for an AI agent: the submission is accepted, the send looks successful, and nothing ever arrives. If mail seems to vanish, open Restrictions before you debug anything else."
+    },
+    {
+      "h": "Your host may publish its own variant of these settings, and the host wins",
+      "p": "This page is the generic cPanel pattern. Individual hosting companies deviate from it and document the deviation themselves. Bluehost, for example, puts <code>mail.example.com</code> only in the unencrypted block and gives the bare domain for the secure one. A2 Hosting, now hosting.com, tells you to use the full server name such as <code>mi3-ss78.a2hosting.com</code> because the shared certificate covers the server. If we have a page for your specific host, follow that one, because it carries the exact values. Where we do not, the Connect Devices panel inside your own cPanel is the final word."
+    }
+  ],
+  "limits": [
+    "We cannot prefill hosts for a cPanel mailbox, because the hostname belongs to your server rather than to a shared service. You have to paste it in from Connect Devices.",
+    "Some hosting companies firewall outbound submission or disable external IMAP on shared plans. cPanel still prints the settings when that is the case, so a refusal there is a question for your host, not a settings problem.",
+    "mcpemails connects the mailbox. Forwarders, aliases, autoresponders, filters and quotas stay in cPanel and are not visible to your AI client."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with cPanel email?",
+      "a": "Not directly. Claude has no built-in connector for cPanel mail servers. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials a desktop mail client would use, and the same connection works from Cursor and ChatGPT too."
+    },
+    {
+      "q": "What are the cPanel IMAP and SMTP settings?",
+      "a": "The ports are standard: IMAP on 993 and SMTP on 465, both with implicit TLS, with 143 and 587 as the unencrypted equivalents you should not use. The hostname is not standard and differs per hosting account. Take it from Email Accounts, Connect Devices, Mail Client Manual Settings, and use the Secure SSL/TLS table."
+    },
+    {
+      "q": "How do I find my cPanel mail server hostname?",
+      "a": "Sign in to cPanel, open Email Accounts, and click Connect Devices next to the address. Scroll to Mail Client Manual Settings and read the incoming and outgoing server out of the Secure SSL/TLS table. It may be mail.yourdomain.com, your bare domain, or a server name belonging to your host. Whichever it prints is the correct one for TLS."
+    },
+    {
+      "q": "Why do I get a certificate warning for mail.mydomain.com?",
+      "a": "Because the server presents a certificate issued for the shared machine rather than for your domain. The name you typed is not on that certificate, so a client that validates strictly refuses the connection. The fix is to connect to the hostname cPanel lists in the Secure SSL/TLS table, which is the name the certificate actually covers."
+    },
+    {
+      "q": "Why is my cPanel email password rejected?",
+      "a": "Three causes dominate. You used your cPanel account login rather than the password set on the individual email address. The mailbox has Logging In set to Suspend under Restrictions. Or you are pointing at a hostname that resolves somewhere else. Reset the mailbox password from Email Accounts, then Manage, and check Restrictions on the same screen."
+    },
+    {
+      "q": "Is my cPanel mail stored on your servers?",
+      "a": "No. Messages are fetched live from your own server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a cPanel inbox",
+    "sub": "Connect cPanel in minutes. One inbox free forever, no card required."
+  }
+}

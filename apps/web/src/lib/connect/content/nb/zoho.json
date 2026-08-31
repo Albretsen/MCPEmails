@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Koble Zoho Mail til Claude (og enhver AI)",
+    "description": "Koble Zoho Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere Zoho Mail. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Zoho Mail + AI",
+    "titleLine1": "Koble Zoho Mail til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Zoho-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og et app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "App-passord, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Zoho seg til: IMAP og et app-passord",
+    "body": "Zoho Mail kobles til via IMAP/SMTP. Aktiver IMAP-tilgang i Zoho først (det er av som standard), generer et app-spesifikt passord hvis du bruker tofaktorautentisering, og lim det så inn i mcpemails sammen med Zoho-adressen din. mcpemails støtter alle Zoho-datasenterregioner."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Aktiver IMAP og generer et app-passord",
+      "p": "I Zoho Mail slår du på IMAP-tilgang (Innstillinger, E-postkontoer, IMAP-tilgang). Hvis du bruker tofaktorautentisering, genererer du et app-spesifikt passord i Zoho-kontoen din under Sikkerhet."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Legg til Zoho-adressen din og passordet, og velg Zoho-regionen din hvis du blir spurt, for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Zoho-innboks",
+    "sub": "Koble til Zoho Mail på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

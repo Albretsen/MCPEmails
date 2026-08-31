@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://www.strato.de/faq/mail/so-lauten-die-strato-e-mail-server/",
+    "https://www.strato.de/faq/mail/e-mail-authentifizierung-nach-abschaltung-von-md5-challenge-response/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.strato.de/faq/mail/so-lauten-die-strato-e-mail-server/",
+    "usernameForm": "Your full address, including the domain: name@ihredomain.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect STRATO Email to Claude & MCP Clients",
+    "description": "Connect STRATO email to Claude, Cursor and any MCP client over IMAP at imap.strato.de:993. Use normal password authentication: STRATO removed CRAM-MD5."
+  },
+  "hero": {
+    "eyebrow": "STRATO email + AI",
+    "titleLine1": "Connect STRATO email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real STRATO inbox. Read, search, send, reply, schedule and organize mail over IMAP with the mailbox password, not your STRATO customer login.",
+    "answer": "Claude cannot reach a STRATO mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.strato.de on port 993, authenticating with your full email address and the password set on that mailbox rather than your STRATO customer login, so Claude, Cursor or any MCP client can read, search, send and organize the mail. STRATO accepts only normal password authentication over an encrypted connection, having switched off the older challenge-response method. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password, not the customer login",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How STRATO connects: IMAP, TLS only, normal password",
+    "body": "STRATO serves IMAP at <code>imap.strato.de</code> on port 993 with implicit TLS and SMTP at <code>smtp.strato.de</code> on port 465, also implicit TLS. STRATO states that all its mailboxes use exclusively encrypted connections and that unencrypted ones are not supported at all, and it restricts the connection to TLS 1.2 and 1.3. The username is your full email address and the password is the one chosen for that mailbox, which is a different credential from the customer login you use for the STRATO Kundenlogin. Authentication has to be configured as a plain or normal password over that encrypted channel: STRATO turned off the CRAM-MD5 challenge-response mechanism, so any client still set to it will fail."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Set the mailbox password in the STRATO Kundenlogin",
+      "p": "Sign in to the STRATO Kundenlogin, open your package, and go to E-Mail, then E-Mail-Adressen verwalten. Select the address and set a new password there. This password belongs to the mailbox alone and is not the one you just used to reach the Kundenlogin."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, enter the full address, and paste the mailbox password. The hosts imap.strato.de and smtp.strato.de and ports 993 and 465 are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "STRATO switched off CRAM-MD5, and old clients still ask for it",
+      "p": "STRATO no longer supports the MD5 challenge-response authentication method. The setting is often labelled <b>encrypted password</b> or <b>secure password authentication</b> in mail clients, and it sits one line below <b>normal password</b> in the same dropdown, so it was widely chosen on the reasonable assumption that more encryption is better. Any client or script left on that setting now fails at login with an error indistinguishable from wrong credentials, even though the password is correct. The right configuration is normal or plain password over the TLS connection, which is already encrypted end to end."
+    },
+    {
+      "h": "STRATO does not advertise SASL-IR",
+      "p": "The IMAP server omits the SASL-IR capability, so it refuses the one-step authentication that carries credentials on the same line as the AUTHENTICATE command. A client that assumes SASL-IR gets a bare <code>BAD</code> with no explanation, which again reads like a password problem. mcpemails detects that response and retries the two-step exchange, so the connection succeeds, but combined with the CRAM-MD5 removal it is why STRATO produces so many false wrong-password reports."
+    },
+    {
+      "h": "STRATO is the best-equipped IMAP server in its price class",
+      "p": "Unusually for shared hosting mail, STRATO advertises MOVE, UIDPLUS, SPECIAL-USE, SORT, QUOTA and LIST-EXTENDED. In practice that means moves are one atomic command rather than a copy plus expunge, the destination UID is returned so a moved message can be tracked, and Sent, Drafts, Trash and Junk are identified by role rather than guessed from German folder names such as Gesendet and Papierkorb. If you are choosing between hosts for agent-driven mail, that combination is worth more than it sounds."
+    },
+    {
+      "h": "There is a hard 100 MB limit on both sending and uploading",
+      "p": "STRATO advertises an APPENDLIMIT of 104857600 bytes on IMAP and the same figure as the maximum message size on SMTP. That governs both what an agent can send and what it can write into a folder as a draft or an appended message. A large attachment set is rejected outright rather than truncated."
+    }
+  ],
+  "limits": [
+    "Unencrypted connections are not supported at all, and only TLS 1.2 and 1.3 are accepted. Very old client libraries cannot negotiate a session.",
+    "Messages and appends are capped at 100 MB by the server."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with STRATO email?",
+      "a": "Not on its own. Claude has no built-in STRATO connector. Pointing an MCP server such as mcpemails at your STRATO mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the STRATO IMAP and SMTP settings?",
+      "a": "IMAP is imap.strato.de on port 993 with implicit TLS. SMTP is smtp.strato.de on port 465, also implicit TLS. The username is your complete email address and the password is the mailbox password. Authentication must be set to normal or plain password. Both hosts were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my STRATO password rejected?",
+      "a": "Three causes worth checking in order. The client is set to encrypted password or CRAM-MD5, which STRATO has switched off. You are using the STRATO Kundenlogin password instead of the mailbox password. Or the client is trying an unencrypted connection, which STRATO refuses entirely rather than downgrading."
+    },
+    {
+      "q": "Does STRATO need an app password?",
+      "a": "No. STRATO does not issue app-specific passwords for mail and there is no per-mailbox IMAP switch to enable. The mailbox password set in the Kundenlogin authenticates both IMAP and SMTP. If you would rather not reuse an existing password, set a fresh one for that address."
+    },
+    {
+      "q": "Is my STRATO mail stored on your servers?",
+      "a": "No. Messages are fetched live from STRATO over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a STRATO inbox",
+    "sub": "Connect STRATO email in minutes. One inbox free forever, no card required."
+  }
+}

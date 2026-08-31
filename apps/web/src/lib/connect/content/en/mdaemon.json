@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.mdaemon.com/mdaemon/en/default-domain-and-servers_ports.html",
+    "https://help.mdaemon.com/mdaemon/en/ae_mail-services.html",
+    "https://help.mdaemon.com/MDaemon/en/screening_location-screening.html",
+    "https://help.mdaemon.com/mdaemon/en/ssl_lets-encrypt.html",
+    "https://knowledge.mdaemon.com/what-ports-need-to-be-open-for-mdaemon-to-communicate-through-a-firewall"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Account password",
+    "helpUrl": "https://help.mdaemon.com/mdaemon/en/ae_mail-services.html",
+    "usernameForm": "The full mailbox address as it appears in the Account Manager, for example you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "MDaemon Email to Claude: IMAP, MCP and Screening",
+    "description": "Connect an MDaemon mailbox to Claude, Cursor and ChatGPT over IMAP on 993. Where the port fields live, and why Location Screening blocks a hosted client."
+  },
+  "hero": {
+    "eyebrow": "MDaemon + AI",
+    "titleLine1": "Connect MDaemon to Claude,",
+    "titleLine2": "Cursor, ChatGPT and any MCP client",
+    "lead": "MDaemon has run mail on your own Windows server for years without asking anyone's permission. Putting an AI agent on it does not have to change that: mcpemails connects over ordinary IMAP and fetches each message live.",
+    "answer": "Claude cannot reach an MDaemon server on its own. mcpemails is a hosted MCP server that connects to yours over IMAP at your own hostname, on the IMAP SSL port, which MDaemon sets to 993 by default, using the account password from the Account Manager. That lets Claude, Cursor or any MCP client read, search, send and organize the mail in that mailbox. MDaemon is software you run, so there is no shared host to look up: the server has to be reachable from the internet, the account has to have IMAP access enabled, and MDaemon's screening features have to allow the connection through. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Account password, IMAP access on",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How MDaemon connects: IMAP access per account, on the IMAP SSL port",
+    "body": "Two screens decide whether a mail client can reach an MDaemon mailbox. The first is the port list, which MDaemon keeps under <b>Setup, then Server Settings, then DNS and IPs</b>, an unlikely place to look for it. That screen carries separate fields for the IMAP inbound port and the IMAP SSL port, alongside the SMTP, MSA and POP equivalents, and MDaemon ships with 143 and 993. The second is per mailbox: in the Account Manager, each account has a <b>Mail Services</b> screen governing which services it may use, with an <b>Enable IMAP access</b> checkbox next to POP, MultiPOP and MDaemon Connector. Access through Webmail is controlled separately on its own screen, so an account can be perfectly usable in a browser while refusing every mail client. Credentials are the ordinary account password. MDaemon has no app-password scheme."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. One inbox is free forever and no card is required, so you can test this against a real MDaemon mailbox first."
+    },
+    {
+      "h": "Confirm the ports and the certificate",
+      "p": "In MDaemon, open Setup, Server Settings, then DNS and IPs, and read the IMAP SSL port field. If somebody moved it off 993 you need the real number. Then check Security, Security Manager, SSL and TLS to see which certificate MDaemon is serving and whether the Let's Encrypt job is still renewing it."
+    },
+    {
+      "h": "Enable IMAP access on the account",
+      "p": "Open the Account Manager, find the mailbox, and on its Mail Services screen make sure <b>Enable IMAP access</b> is ticked. Then add the inbox in mcpemails: choose IMAP / SMTP, enter your MDaemon hostname, the full address and the account password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Location Screening drops the connection because of where it came from",
+      "p": "This is the MDaemon-specific one, and it produces the least helpful symptom of any setting on this page. Location Screening blocks incoming connections by the country associated with the connecting IP address, and MDaemon applies it to IMAP as well as SMTP, POP, Webmail, ActiveSync, Remote Administration and the rest. A great many MDaemon servers are configured to allow one country and refuse the world, because that is sensible when every user is in one office. A hosted MCP server connects from a data centre, and that data centre may well geolocate somewhere else. The connection is then refused before authentication is even attempted, so nothing appears in the mail logs and the client reports a timeout or a reset. The evidence is in the Screening log. Allow the relevant addresses, or the country they resolve to, before concluding anything about credentials. The same Screening section holds Dynamic Screening, which blocks an address after repeated authentication failures, so a password typo saved a few times can leave you locked out for the configured interval afterwards."
+    },
+    {
+      "h": "The port fields do nothing until you apply them",
+      "p": "MDaemon's own documentation is explicit that altering a port value has no effect until you press the button that applies the change, and that otherwise it waits for the next server start. On a machine that has been up for months, an edit made in a hurry can sit unapplied indefinitely, so the screen and the socket disagree. The IMAP SSL port is also a field with a value in it rather than a fixed constant, and hardened installs sometimes move it off 993. Read the number from that screen rather than assuming the default, and confirm from outside the network with <code>Test-NetConnection mail.yourdomain.com -Port 993</code> before opening a support ticket."
+    },
+    {
+      "h": "Certificates come from a bundled PowerShell script, not from a running service",
+      "p": "MDaemon does not run an ACME client of its own. It ships a PowerShell script in the <code>MDaemon\\LetsEncrypt</code> folder, configured and launched from the Let's Encrypt screen under Security, and that script completes the http-01 challenge by writing files into the Webmail HTTP folder. It therefore needs port 80 free and Webmail actually serving it, plus PowerShell 5.1 and .NET Framework 4.7.2 on the box. Put IIS in front of MDaemon, move Webmail to another port, or close 80 after setup, and the scheduled renewal silently stops. The certificate on 993 works fine until the day it expires, at which point every strict client fails at once. When the script does succeed, MDaemon applies the new certificate to MDaemon, Webmail and Remote Administration together."
+    }
+  ],
+  "limits": [
+    "MDaemon servers usually sit inside a company firewall with only port 25 published, and this needs an inbound IMAP connection as well. Opening 993 to the internet is a decision for whoever owns that firewall, not a setting in MDaemon. If the answer is no, mcpemails can be self-hosted on the same internal network, where it reaches MDaemon the way a desktop client on the LAN already does.",
+    "TLS validation is strict. MDaemon's default self-signed certificate, or an expired one, will be refused with no option to continue anyway.",
+    "Sending goes out through your own MDaemon SMTP service, so deliverability depends on your SPF, DKIM and DMARC records and on the reputation of the address your server sends from."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with MDaemon?",
+      "a": "Not directly. Claude has no MDaemon connector and cannot open an IMAP socket to a server you host. Connecting an MCP server such as mcpemails to your MDaemon host gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, using the same credentials any desktop client would use."
+    },
+    {
+      "q": "What are the MDaemon IMAP and SMTP settings?",
+      "a": "The hostname is your own server. The ports come from Setup, Server Settings, DNS and IPs, where MDaemon keeps separate fields for the IMAP inbound port and the IMAP SSL port, defaulting to 143 and 993. SMTP, MSA and the SMTP SSL port are on the same screen. Log in with the full email address and the account password."
+    },
+    {
+      "q": "Why does my MDaemon account reject IMAP but work in Webmail?",
+      "a": "Because those are two different permissions. The Account Manager gives each account a Mail Services screen with an Enable IMAP access checkbox, while browser access is granted on a separate Web Services screen. An account with Webmail on and IMAP off behaves exactly as you describe, and no amount of checking hostnames will change it."
+    },
+    {
+      "q": "Does MDaemon need an app password?",
+      "a": "No. MDaemon has no app-specific password feature. Mail clients authenticate with the account's own password, which you can set in the Account Manager. If the account uses two-factor authentication for Webmail, that applies to the browser interface and not to the IMAP session."
+    },
+    {
+      "q": "My connection times out with no log entry. What is happening?",
+      "a": "Check the Screening log. MDaemon's Location Screening refuses connections from countries you have not allowed, before authentication and before the mail log records anything, and it applies to IMAP. A hosted service connects from a data centre address that may resolve to another country. Dynamic Screening can produce the same silence after repeated failed logins."
+    },
+    {
+      "q": "Is my MDaemon mail stored on your servers?",
+      "a": "No. Messages are fetched live from your MDaemon server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an MDaemon inbox",
+    "sub": "Connect a mailbox from your own MDaemon server. One inbox free forever, no card required."
+  }
+}

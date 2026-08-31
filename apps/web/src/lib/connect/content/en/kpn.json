@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.kpn.com/service/ugs/instellen-e-mail-laptop-pc",
+    "https://community.kpn.com/e-mail-en-cloud-10/kpn-e-mail-wordt-verbeterd-wat-betekent-dit-voor-jouw-e-mailadres-648121",
+    "https://community.kpn.com/e-mail-en-cloud-10/vanaf-10-juni-2026-stopt-het-aanmaken-van-een-standaard-kpn-e-mailadres-648499"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Your KPN mail password",
+    "helpUrl": "https://www.kpn.com/service/ugs/instellen-e-mail-laptop-pc",
+    "usernameForm": "Your full address, including the domain: naam@kpnmail.nl, or a legacy KPN domain such as naam@planet.nl, naam@hetnet.nl or naam@xs4all.nl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "KPN Mail IMAP Settings and Claude MCP Access",
+    "description": "Connect a KPN, Planet, Het Net or XS4ALL mailbox to Claude and any MCP client at imap.kpnmail.nl:993. All legacy KPN domains share one host and one password."
+  },
+  "hero": {
+    "eyebrow": "KPN Mail + AI",
+    "titleLine1": "Connect your KPN mailbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real KPN inbox. Read, search, send, reply, schedule and organize mail over IMAP, whatever KPN domain your address happens to end in.",
+    "answer": "Claude cannot reach a KPN mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.kpnmail.nl on port 993, authenticating with your full address and your KPN mail password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. There is no app password and no client-access toggle at KPN, and the same pair of hosts serves every KPN mail domain including the inherited planet.nl, hetnet.nl and xs4all.nl addresses. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your KPN mail password, no app password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How KPN connects: one platform behind thirty-odd domains",
+    "body": "KPN serves IMAP at <code>imap.kpnmail.nl</code> on port 993 over implicit TLS. For outgoing mail KPN's own setup page documents <code>smtp.kpnmail.nl</code> on port 587 with TLS; the same host also answers on port 465 with implicit TLS, which is what mcpemails prefills because a single implicitly encrypted connection is more predictable to hold open from a server. Authentication is your KPN mail password with the <b>full</b> address as the username, and KPN's page states it as plainly as that: <b>Gebruikersnaam: KPN e-mailadres</b>, <b>Wachtwoord: KPN wachtwoord</b>. There is no app-specific password to generate. What is worth understanding is the estate behind those two hostnames: KPN absorbed Planet Internet, Het Net, XS4ALL and a long list of other Dutch providers, and every one of those mail domains now lives on the same KPN platform with the same settings."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Confirm the mail password at email.kpn.com",
+      "p": "Sign in to the KPN webmail with the address you want to connect. If the password does not work, reset it there rather than in MijnKPN: the mailbox credential is the one the IMAP server checks. Use the address exactly as written, including whichever KPN domain it ends in."
+    },
+    {
+      "h": "Ignore the domain, use the kpnmail hosts",
+      "p": "A <b>planet.nl</b>, <b>hetnet.nl</b> or <b>xs4all.nl</b> address does not get its own server. Every KPN mail domain authenticates against <code>imap.kpnmail.nl</code> and <code>smtp.kpnmail.nl</code>. There is nothing per-domain to look up, and configuring a client with a guessed <code>imap.planet.nl</code> is the single most common way to get stuck."
+    },
+    {
+      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the full address and the mail password. The KPN hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The host is live, but KPN paused new mailboxes on 10 June 2026",
+      "p": "These are two separate facts and it matters not to confuse them. <code>imap.kpnmail.nl</code> answers today and existing mailboxes connect from mail clients as they always have; KPN's own staff answer on this is <b>je kunt e-mailclients blijven gebruiken zoals je gewend bent</b>. What stopped is issuance: from 10 June 2026 you can no longer create a standard KPN e-mail address or an extra account, while every mailbox is migrated to a new platform. KPN describes the pause as temporary (<b>deze situatie is tijdelijk</b>). So this page will connect the address you already have, and cannot help you obtain a new one right now."
+    },
+    {
+      "h": "Thirty-odd inherited domains, one hostname, and no new ones",
+      "p": "KPN still serves mail on a long list of domains it acquired, including <b>planet.nl</b>, <b>hetnet.nl</b>, <b>xs4all.nl</b>, <b>demon.nl</b>, <b>tiscali.nl</b> and <b>worldonline.nl</b>. All of them authenticate against <code>imap.kpnmail.nl</code>. But KPN is explicit that new addresses can only be created on <b>@kpnmail.nl</b>: <b>andere domeinen zijn niet mogelijk</b>. And only addresses that are actually in use are carried across to the new mail platform, so a legacy address that nobody has logged into is the one most at risk."
+    },
+    {
+      "h": "The server is unusually bare: no UIDPLUS, no MOVE, no SPECIAL-USE",
+      "p": "KPN's IMAP banner offers <code>SASL-IR</code>, <code>IDLE</code> and <code>LITERAL+</code> and stops there. Without <code>MOVE</code>, filing a message runs as a copy, a flag update and an expunge rather than one atomic command. Without <code>UIDPLUS</code>, the new UID of the copy is not reported back and has to be found by searching the destination folder, which makes bulk filing noticeably slower. Without <code>SPECIAL-USE</code>, Sent, Drafts and Trash are matched by name, and a Dutch KPN mailbox usually names them <b>Verzonden</b>, <b>Concepten</b> and <b>Prullenbak</b>."
+    },
+    {
+      "h": "SMTP offers only the LOGIN mechanism",
+      "p": "<code>smtp.kpnmail.nl</code> advertises <code>AUTH LOGIN</code> and nothing else, no PLAIN. IMAP, by contrast, offers both PLAIN and LOGIN. A client or library that is hard-wired to SASL PLAIN for submission will read your inbox happily and then fail at the first send, which reads like a permissions problem rather than a mechanism mismatch. mcpemails negotiates whatever the server actually offers on each leg."
+    }
+  ],
+  "limits": [
+    "Outgoing messages are capped at roughly 50 MB of encoded message, so a large attachment forwarded by an agent can be rejected at the SMTP step.",
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "While KPN's migration is in progress you cannot create a new KPN address to dedicate to an agent. Connect an existing one, or use a mailbox from another provider."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with KPN mail?",
+      "a": "Not on its own. Claude has no built-in KPN connector. Pointing an MCP server such as mcpemails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the KPN IMAP and SMTP settings?",
+      "a": "IMAP is imap.kpnmail.nl on port 993 with SSL. For outgoing mail KPN documents smtp.kpnmail.nl on port 587 with TLS; the same host also answers on 465 with implicit TLS, which is what mcpemails uses. The username is your full KPN e-mail address and the password is your KPN mail password."
+    },
+    {
+      "q": "Do planet.nl, hetnet.nl and xs4all.nl addresses use different servers?",
+      "a": "No. Every KPN mail domain runs on the same platform and uses imap.kpnmail.nl and smtp.kpnmail.nl. There is no imap.planet.nl or imap.xs4all.nl to find. Enter the address exactly as written, with its own domain, as the username, and use the KPN hostnames."
+    },
+    {
+      "q": "Can I still create a new KPN e-mail address?",
+      "a": "Not at the moment. KPN stopped the creation of standard KPN e-mail addresses and extra accounts on 10 June 2026 while it migrates every mailbox to a new platform, and it describes the pause as temporary. Existing mailboxes keep working from mail clients throughout. New addresses, when they resume, are @kpnmail.nl only."
+    },
+    {
+      "q": "Does KPN need an app password?",
+      "a": "No. KPN issues no application-specific passwords. Mail clients authenticate with your KPN e-mail address and your KPN mail password, the same credential the webmail at email.kpn.com accepts. If it is refused, reset it there before looking anywhere else."
+    },
+    {
+      "q": "Is my KPN mail stored on your servers?",
+      "a": "No. Messages are fetched live from KPN over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a KPN inbox",
+    "sub": "Connect KPN, Planet, Het Net or XS4ALL mail in minutes. One inbox free forever, no card required."
+  }
+}

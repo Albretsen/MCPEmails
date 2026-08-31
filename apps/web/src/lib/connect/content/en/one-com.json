@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://help.one.com/hc/en-us/articles/115005594285-How-to-set-an-email-account-in-for-example-Outlook",
+    "https://help.one.com/hc/en-us/articles/115005586289-Creating-a-new-email-account",
+    "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Email account password",
+    "helpUrl": "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password",
+    "usernameForm": "Your full address, including the domain: name@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect one.com Email to Claude & MCP Clients",
+    "description": "Connect a one.com mailbox to Claude, Cursor and any MCP client over IMAP at imap.one.com:993. Outgoing mail uses send.one.com, not smtp.one.com."
+  },
+  "hero": {
+    "eyebrow": "one.com email + AI",
+    "titleLine1": "Connect one.com email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real one.com inbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you set when you created the address.",
+    "answer": "Claude cannot reach a one.com mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.one.com on port 993 and sends through send.one.com on port 465, authenticating with your full email address and the password you set for that account in the one.com Control Panel. Claude, Cursor or any MCP client can then read, search, send and organize the mail. There is no app password to generate. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Email account password from Control Panel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How one.com connects: IMAP in, send.one.com out",
+    "body": "one.com splits its two mail hostnames in a way that catches people out. Incoming mail is <code>imap.one.com</code> on port 993 with implicit TLS. Outgoing mail is <code>send.one.com</code> on port 465, also implicit TLS, with authentication required using the same credentials. Both are shared hosts covering every one.com customer, so nothing is derived from your own domain. The credential is the password you typed when the address was created in the Control Panel, alongside the part of the address before the at sign. That password is what both webmail and any mail client use, and it is separate from the login you use for the one.com Control Panel itself."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Confirm the address exists and set its password",
+      "p": "Log in to the one.com Control Panel and open the Email tile. The address has to be created there before any client can reach it. Click the address to edit it and set a password, or change the existing one. You can also change an email password from inside one.com Webmail once you are already signed in."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, enter the full address, and paste the email account password. The hosts imap.one.com and send.one.com and ports 993 and 465 are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The outgoing server is send.one.com, and smtp.one.com does not exist",
+      "p": "Practically every other provider names its submission host <code>smtp.something</code>, so people fill that pattern in from muscle memory and get a hostname that does not resolve. one.com uses <code>send.one.com</code>. The asymmetry with <code>imap.one.com</code> makes it look like a typo in the documentation, and it is not. If reading mail works but sending times out or fails to resolve, this is the reason."
+    },
+    {
+      "h": "one.com also resells Microsoft 365, and that mailbox is not connectable",
+      "p": "The Control Panel tile is labelled Email and Microsoft 365, and one.com sells both under the same account. A one.com email account, created in that tile with its own password, is an ordinary IMAP mailbox on one.com's servers and connects fine. A Microsoft 365 seat bought through one.com is a Microsoft mailbox on Microsoft's servers, and Microsoft's default tenant policy blocks an end user from consenting to third-party mail read and write access. We do not claim to connect those. If your webmail is Outlook on the web rather than one.com's own interface, you have the Microsoft product."
+    },
+    {
+      "h": "Control Panel two-step verification does not reach your mailbox",
+      "p": "one.com offers two-step verification on the Control Panel login. It protects the panel, where your domains and billing live, and it has no bearing on IMAP or SMTP, which continue to accept the email account password on their own. Turning it on will not break mcpemails, and it will not protect the mailbox either. If you want the mailbox itself secured, the lever is a strong, unique password on that address rather than the panel's 2FA."
+    }
+  ],
+  "limits": [
+    "The server does not advertise MOVE or UIDPLUS, so a move is carried out as copy, flag and expunge, and the destination UID has to be found by searching.",
+    "SPECIAL-USE is absent, so Sent, Drafts, Trash and Junk are matched by name. Danish, Swedish and Norwegian one.com mailboxes often have localised folder names.",
+    "Microsoft 365 seats sold through one.com cannot be connected."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with one.com email?",
+      "a": "Not on its own. Claude has no built-in one.com connector. Pointing an MCP server such as mcpemails at your one.com mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the one.com IMAP and SMTP settings?",
+      "a": "IMAP is imap.one.com on port 993 with implicit TLS. Outgoing mail goes to send.one.com on port 465, also implicit TLS, with authentication required. The username is your complete email address and the password is the one set for that account in the Control Panel. Both hosts were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my one.com password rejected?",
+      "a": "Two usual causes. You are entering your one.com Control Panel login instead of the password set on the individual email account, or the address was never actually created in the Email tile of the Control Panel. Verify by signing in to one.com Webmail with the same credentials: if that fails too, the problem is the mailbox, not the client."
+    },
+    {
+      "q": "Does one.com need an app password?",
+      "a": "No. one.com does not issue app-specific passwords for mail, and there is no per-mailbox IMAP switch to turn on. The email account password authenticates both IMAP and SMTP. Two-step verification on the Control Panel does not change that."
+    },
+    {
+      "q": "Is my one.com mail stored on your servers?",
+      "a": "No. Messages are fetched live from one.com over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a one.com inbox",
+    "sub": "Connect a one.com mailbox in minutes. One inbox free forever, no card required."
+  }
+}

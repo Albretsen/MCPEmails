@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://help.mail.qq.com/detail/106/985",
+    "https://cloud.tencent.com/developer/article/2457378",
+    "https://www.laifa.xin/en/youxiang/106-tengxun-qqyouxiang-tencent-personal-email"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Authorization code (授权码)",
+    "helpUrl": "https://help.mail.qq.com/detail/106/985",
+    "usernameForm": "Your full address, including the domain: 123456789@qq.com, or name@foxmail.com if you use the alias.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect QQ Mail to Claude with an Authorization Code",
+    "description": "Connect QQ Mail and Foxmail to Claude, Cursor or any MCP client over IMAP at imap.qq.com:993. Needs a 16-character authorization code, not your QQ password."
+  },
+  "hero": {
+    "eyebrow": "QQ Mail + AI",
+    "titleLine1": "Connect QQ Mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real QQ mailbox. Read, search, send, reply, schedule and organize mail over IMAP with a Tencent authorization code, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach QQ Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.qq.com on port 993, authenticating with the 16-character authorization code (授权码) Tencent issues for third-party clients rather than your QQ password. You have to switch on the POP3/IMAP/SMTP service inside QQ Mail and generate that code before any client can log in, and the same code covers both your @qq.com address and your @foxmail.com alias. One inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "16-character authorization code, not your password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How QQ Mail connects: IMAP and a 16-character authorization code",
+    "body": "QQ Mail serves IMAP at <code>imap.qq.com</code> on port 993 over TLS, and SMTP at <code>smtp.qq.com</code> on port 465, also implicit TLS. Tencent does not let a mail client authenticate with your QQ account password. You switch on the POP3/IMAP/SMTP service inside QQ Mail, and Tencent generates a <b>授权码</b>, a 16-character authorization code that stands in as the password for every third-party client and API you connect. Foxmail is not a separate service: an <code>@foxmail.com</code> alias is the same Tencent mailbox, reached at the same two hostnames with the same code."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required. Leave the tab open; you will paste the QQ authorization code into it two steps from now."
+    },
+    {
+      "h": "Switch on the POP3/IMAP/SMTP service in QQ Mail",
+      "p": "Open QQ Mail on the web and go to 设置 (Settings), then 账号与安全 (Account and security) and 安全设置 (Security settings). Older layouts put the same control under 设置 then 账户, on the line that starts POP3/IMAP/SMTP. Turn the service on. Until it is on, imap.qq.com refuses every login attempt, whatever password you send."
+    },
+    {
+      "h": "Generate the 授权码 and paste it into mcpemails",
+      "p": "With the service on, click 生成授权码 (generate authorization code) and complete the identity check Tencent asks for, which is either your QQ password or a scan from the QQ or WeChat app. Tencent shows the 16-character code once and does not show it again. Copy it, choose IMAP / SMTP in mcpemails, enter your full QQ address, and paste the code into the password field. The hosts are prefilled."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize that QQ mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Your QQ password is rejected on purpose, and the error looks like a typo",
+      "p": "Tencent requires the authorization code for every third-party client, so sending your QQ account password produces an authentication failure that reads exactly like a wrong password. On the SMTP side it comes back as a <code>535</code> error. This is by far the most common reason a QQ Mail connection fails, and no amount of retyping the account password will fix it. Generate the 授权码 and use that instead."
+    },
+    {
+      "h": "@qq.com and @foxmail.com are one mailbox and one code",
+      "p": "Tencent hands out a Foxmail alias alongside your numeric QQ address, and people often assume Foxmail is a separate provider with its own servers. It is not. The Foxmail alias lives in the same mailbox, authenticates against <code>imap.qq.com</code> and <code>smtp.qq.com</code>, and uses the same authorization code. Connect it once; do not try to connect it twice as if it were two accounts."
+    },
+    {
+      "h": "QQ Mail does not advertise SPECIAL-USE, and its folders are named in Chinese",
+      "p": "QQ's IMAP server omits the SPECIAL-USE extension, so a client cannot ask which folder is the Sent folder and which is Trash. Folders are matched by name instead, and on a Chinese-language account those names are 已发送 (Sent), 已删除 (Deleted), 草稿箱 (Drafts) and 垃圾邮件 (Spam). If your agent files a message somewhere unexpected, name the target folder explicitly rather than relying on the role."
+    }
+  ],
+  "limits": [
+    "Tencent does not publish a per-mailbox SMTP sending limit. A handful of messages a day is unremarkable, but a bulk run from a freshly generated authorization code can trip risk controls that pause outbound mail for a while.",
+    "QQ's SMTP server advertises a maximum message size of about 70 MB, so a forward carrying attachments larger than that is refused at send time rather than queued.",
+    "imap.qq.com and smtp.qq.com are served from mainland China. Every request your agent makes crosses that link, so a search across a large mailbox from outside China is measurably slower than the same search against a European or North American host."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with QQ Mail?",
+      "a": "Not directly. Claude has no built-in QQ Mail connector and cannot open an IMAP connection by itself. Connecting an MCP server such as mcpemails to your QQ mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works in Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the QQ Mail IMAP and SMTP settings?",
+      "a": "IMAP is imap.qq.com on port 993 with implicit TLS. SMTP is smtp.qq.com on port 465, also implicit TLS. Log in with your full QQ address and the 16-character authorization code, not your QQ password. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Where do I get the QQ Mail authorization code?",
+      "a": "In QQ Mail on the web, open 设置, then 账号与安全 and 安全设置, and switch on the POP3/IMAP/SMTP service. Tencent then offers 生成授权码 and asks you to confirm your identity with your QQ password or a scan from the QQ or WeChat app. The 16-character code appears once, so copy it before closing the dialog."
+    },
+    {
+      "q": "Why does my QQ Mail password get rejected?",
+      "a": "Two reasons, in this order: the POP3/IMAP/SMTP service is still switched off in QQ Mail settings, or you are using your QQ account password instead of the authorization code. Tencent blocks the account password for third-party clients regardless of your security settings, and the resulting failure looks identical to a mistyped password."
+    },
+    {
+      "q": "Does this work with a Foxmail address?",
+      "a": "Yes. An @foxmail.com address is a Tencent alias on the same mailbox as your @qq.com address. It uses the same hosts, the same authorization code and the same setup. You can send as either address once the mailbox is connected."
+    },
+    {
+      "q": "Is my QQ mail stored on your servers?",
+      "a": "No. Messages are fetched live from QQ Mail over IMAP for each request and passed to your AI client. Credentials are encrypted at rest; message bodies are not retained after the request that asked for them."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a QQ Mail inbox",
+    "sub": "Connect QQ Mail in minutes with your authorization code. One inbox free forever, no card required."
+  }
+}

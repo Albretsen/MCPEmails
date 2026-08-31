@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Conecta OVH a Claude (y a cualquier IA)",
+    "description": "Conecta OVH a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con la contraseña del buzón. Deja que la IA lea, envíe, programe y organice tu correo. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "OVH + IA",
+    "titleLine1": "Conecta OVH a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja OVH real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña del buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "La contraseña del buzón, sin configurar OAuth",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena",
+    "answer": "Claude no puede llegar a OVH por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+  },
+  "method": {
+    "title": "Cómo se conecta OVH: IMAP y la contraseña del buzón",
+    "body": "Un buzón de OVH MX Plan se conecta por IMAP/SMTP con la contraseña del buzón que hay en el panel de control de OVH, y ambos servidores son <code>ssl0.ovh.net</code>. OVH Hosted Exchange es otro servicio: sus servidores tienen forma de <code>ex4.mail.ovh.net</code> y el correo saliente usa STARTTLS en el puerto 587, nunca el 465, por eso los valores por defecto del hosting compartido se quedan colgados contra él. mcpemails reconoce ambos y elige la combinación correcta."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+    },
+    {
+      "h": "Consigue la contraseña de tu buzón de OVH",
+      "p": "En el panel de control de OVH, abre el servicio de correo, elige la dirección y cambia su contraseña. Copia el servidor de correo que OVH indique para ese buzón si no es ssl0.ovh.net."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Elige IMAP / SMTP, añade tu dirección de OVH, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja OVH",
+    "sub": "Conecta OVH en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

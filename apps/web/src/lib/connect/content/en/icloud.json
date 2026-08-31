@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://support.apple.com/en-us/102525",
+    "https://support.apple.com/en-us/102654"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-specific password",
+    "helpUrl": "https://support.apple.com/en-us/102654",
+    "usernameForm": "Apple documents the username as the name part of your iCloud address, johnappleseed rather than johnappleseed@icloud.com. If that is refused, use the complete address.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "iCloud MCP Server: Connect iCloud Mail to Claude",
+    "description": "Yes, Claude can use iCloud Mail. Connect it with an Apple app-specific password in two minutes, then read, search, send and organize mail from any MCP client."
+  },
+  "hero": {
+    "eyebrow": "iCloud Mail + AI",
+    "titleLine1": "The iCloud MCP server",
+    "titleLine2": "for Claude, Cursor and ChatGPT",
+    "lead": "Give your AI agent a real iCloud inbox in minutes. Read, search, send, reply, schedule and organize mail with an Apple app-specific password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "App-specific password, no OAuth",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Apple does not offer OAuth for iCloud Mail, so Claude cannot connect to it directly. mcpemails connects your iCloud inbox over IMAP using an Apple app-specific password, which lets Claude, Cursor or any MCP client read, search, send and organize that mail. Setup takes about two minutes and one inbox is free."
+  },
+  "method": {
+    "title": "How iCloud connects: an app-specific password",
+    "body": "iCloud Mail connects over IMAP/SMTP using an <b>Apple app-specific password</b>. Generate one at appleid.apple.com under Sign-In & Security → App-Specific Passwords (two-factor authentication required), then paste it into mcpemails with your iCloud address."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Generate an app-specific password",
+      "p": "At appleid.apple.com, go to Sign-In & Security → App-Specific Passwords and create one (two-factor authentication must be on)."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Add your iCloud address and the app-specific password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Two-factor authentication is a prerequisite, not a preference",
+      "p": "Apple issues app-specific passwords only to an Apple Account that is protected with two-factor authentication. If App-Specific Passwords is missing from Sign-In and Security at account.apple.com, that is why, and turning 2FA on is the first step rather than an optional hardening measure. There is no other route: Apple offers no OAuth for iCloud Mail and your ordinary Apple Account password will not authenticate a mail client under any configuration."
+    },
+    {
+      "h": "The username is usually not your full email address",
+      "p": "Apple documents the incoming username as the <b>name part</b> of the iCloud address, for example <code>johnappleseed</code> rather than <code>johnappleseed@icloud.com</code>. That is the opposite of nearly every other provider on this site, and it catches people who copy their address in by habit. Older <code>@me.com</code> and <code>@mac.com</code> addresses, and iCloud+ custom domain addresses, all sign in as that same primary account name. If the short form is refused, Apple's own documentation names the full address as the fallback."
+    },
+    {
+      "h": "Outgoing mail is STARTTLS on 587, and nothing is offered until the upgrade",
+      "p": "Apple's submission server is <code>smtp.mail.me.com</code> on port 587, which begins as a plain connection and upgrades with STARTTLS. Most providers listed on this site take implicit TLS on 465 instead, so a client that assumes 465 against iCloud simply hangs. There is a second trap in the same place: when we probed the server it advertised <b>no authentication mechanisms at all</b> before STARTTLS. A client that reads the mechanism list too early concludes that authentication is unsupported and gives up, when in fact it just needed to upgrade the connection first."
+    },
+    {
+      "h": "Apple's IMAP server advertises almost nothing, and that changes how mail moves",
+      "p": "The capability list we read back from <code>imap.mail.me.com</code> is unusually spare. There is no <code>MOVE</code>, so moving a message is performed as a copy, a flag update and an expunge rather than one atomic command, and a connection that drops halfway can leave the message in both folders. There is no <code>IDLE</code>, so nothing can be pushed to you and new mail is discovered by looking. There is no <code>UIDPLUS</code>, so the identifier of a copied message is not handed back and has to be found by searching the destination. And there is no <code>SPECIAL-USE</code>, so Sent, Drafts, Trash and Junk are matched by name rather than by role: on a mailbox created in another language, name the folder explicitly and your agent will find it."
+    }
+  ],
+  "limits": [
+    "iCloud does not support IDLE, so new mail is found when your agent looks rather than pushed the moment it arrives.",
+    "Because there is no MOVE extension, a move is not atomic. A dropped connection mid-operation can briefly leave a message in two folders.",
+    "Apple offers no OAuth for iCloud Mail. An app-specific password is the only way in, and revoking it in your Apple Account disconnects the inbox immediately."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with iCloud Mail?",
+      "a": "Not on its own. Claude has no built-in iCloud connector and Apple publishes no OAuth interface for iCloud Mail. Connecting an MCP server such as mcpemails to the mailbox over IMAP, using an Apple app-specific password, gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor and ChatGPT."
+    },
+    {
+      "q": "What are the iCloud Mail IMAP and SMTP settings?",
+      "a": "IMAP is imap.mail.me.com on port 993 with implicit TLS. SMTP is smtp.mail.me.com on port 587 with STARTTLS, not implicit TLS on 465. The password is an Apple app-specific password for both. Apple documents the incoming username as the name part of your address. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why is my Apple password rejected?",
+      "a": "Because iCloud never accepts the Apple Account password from a mail client. You need an app-specific password created at account.apple.com under Sign-In and Security, and that section only appears once two-factor authentication is on. If the password is right and the login still fails, try the name part of your address as the username instead of the full address."
+    },
+    {
+      "q": "Does it work with @me.com, @mac.com or an iCloud+ custom domain?",
+      "a": "Yes. All of them are the same iCloud mailbox reached through the same hosts with the same app-specific password. An iCloud+ custom domain address is an alias on your iCloud account rather than a separate mailbox, so it authenticates as your primary account name and its mail arrives in the same folders."
+    },
+    {
+      "q": "Is my iCloud mail stored on your servers?",
+      "a": "No. Messages are fetched live from Apple over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained. Revoking the app-specific password in your Apple Account ends the connection at Apple's end straight away."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an iCloud inbox",
+    "sub": "Connect iCloud Mail in minutes. One inbox free forever, no card required."
+  },
+  "guide": {
+    "intro": "Connecting Fastmail or another IMAP host too?",
+    "label": "How to connect iCloud, Fastmail, or any IMAP inbox to Claude",
+    "href": "/blog/connect-icloud-fastmail-imap-to-claude"
+  }
+}

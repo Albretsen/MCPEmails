@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://support.loopia.com/wiki/email-servers/",
+    "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "https://support.loopia.se/wiki/skapa-en-e-postadress/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Email account password",
+    "helpUrl": "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "usernameForm": "Your full address, including the domain: namn@dittdoman.se.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Loopia Email to Claude & MCP Clients",
+    "description": "Connect Loopia email to Claude, Cursor and any MCP client over IMAP at mailcluster.loopia.se:993, one shared host for every domain. One inbox free, forever."
+  },
+  "hero": {
+    "eyebrow": "Loopia email + AI",
+    "titleLine1": "Connect Loopia email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Loopia inbox. Read, search, send, reply, schedule and organize mail over IMAP with the password set on the account in Loopia Kundzon.",
+    "answer": "Claude cannot reach a Loopia mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at mailcluster.loopia.se on port 993, authenticating with your full email address and the password set for that account in Loopia Kundzon, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Loopia uses one shared cluster hostname for every customer, so there is no per-domain server to look up and no app password to generate. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Account password set in Loopia Kundzon",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Loopia connects: one cluster host, IMAP and SMTP",
+    "body": "Loopia runs both protocols on a single hostname, <code>mailcluster.loopia.se</code>: port 993 for IMAP with implicit TLS and port 465 for SMTP, also implicit TLS. The same host serves every Loopia customer, whatever domain the address belongs to. Loopia's documentation is direct about the username: it is always your full email address, for example <code>namn@exempel.se</code>, on both the incoming and the outgoing side, and authentication is required for sending. The password is the one chosen when the address was created in Loopia Kundzon, and Loopia lets you change it either there or at <code>mailadmin.loopia.se</code>. There is no app-specific password and no per-mailbox IMAP toggle."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Set the account password in Kundzon or Mailadmin",
+      "p": "Log in to Loopia Kundzon, open the list of email addresses for your domain, click the address and choose Edit. A password field appears next to Password: enter a new one and save. The same change can be made at mailadmin.loopia.se if you administer mail without full Kundzon access."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, enter the full address, and paste the account password. The host mailcluster.loopia.se and ports 993 and 465 are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "There is no mail.yourdomain.se at Loopia",
+      "p": "Loopia terminates all customer mail on a single cluster, and the hostname is <code>mailcluster.loopia.se</code> for everyone. Guides written for cPanel-style hosts tell you to use <code>mail.</code> followed by your own domain, and at Loopia that name usually does not exist in DNS at all, or points at your web hosting rather than at mail. The failure looks like a network problem rather than a configuration mistake, which sends people to the wrong support article."
+    },
+    {
+      "h": "The mailbox password is managed in two different places",
+      "p": "Loopia exposes email administration both inside Kundzon, alongside your domains and invoices, and separately at <code>mailadmin.loopia.se</code>, which exists so that someone can run the mail without holding the account login. A password changed in one place applies to the mailbox in both. Teams that use both interfaces sometimes reset a password in Mailadmin, then wonder why the value they wrote down from Kundzon months ago no longer works."
+    },
+    {
+      "h": "No MOVE or SPECIAL-USE, and the folder names are Swedish",
+      "p": "The server does not advertise the MOVE extension, so moving a message runs as a copy, a flag update and an expunge instead of one atomic command, and UIDPLUS is missing so the new UID must be found by searching the destination. SPECIAL-USE is absent as well, meaning Sent, Drafts, Trash and Junk are identified by name. Loopia mailboxes created through the Swedish interface commonly carry Skickat, Utkast, Papperskorgen and Skräppost, so if an agent cannot find your trash folder, name it explicitly."
+    }
+  ],
+  "limits": [
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "Folder roles are inferred from names, so a mailbox whose folders were renamed needs the folder named explicitly in a request."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Loopia email?",
+      "a": "Not on its own. Claude has no built-in Loopia connector. Pointing an MCP server such as mcpemails at your Loopia mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Loopia IMAP and SMTP settings?",
+      "a": "Both use mailcluster.loopia.se. IMAP is port 993 with implicit TLS and SMTP is port 465, also implicit TLS, with authentication required for sending. The username is always your complete email address and the password is the account password from Kundzon. The host was confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my Loopia password rejected?",
+      "a": "Usually because you entered the Loopia Kundzon login rather than the password set on the individual email account, or because the password was changed at mailadmin.loopia.se by someone else. Open the address in Kundzon, choose Edit, set a fresh password and use that. Check also that the username is the full address."
+    },
+    {
+      "q": "Does Loopia need an app password?",
+      "a": "No. Loopia does not issue app-specific passwords for mail and there is nothing to enable per mailbox before a client can log in. The account password authenticates both IMAP and SMTP. If you would rather not reuse an existing password, set a new one for the address in Kundzon."
+    },
+    {
+      "q": "Is my Loopia mail stored on your servers?",
+      "a": "No. Messages are fetched live from Loopia over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Loopia inbox",
+    "sub": "Connect Loopia email in minutes. One inbox free forever, no card required."
+  }
+}

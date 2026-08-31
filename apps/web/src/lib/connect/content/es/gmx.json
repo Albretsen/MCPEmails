@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Conecta GMX a Claude (y a cualquier IA)",
+    "description": "Conecta GMX a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con la contraseña de tu cuenta. Deja que la IA lea, envíe, programe y organice tu correo. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "GMX + IA",
+    "titleLine1": "Conecta GMX a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja GMX real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña de tu cuenta, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "La contraseña de tu cuenta, sin configurar OAuth",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena",
+    "answer": "Claude no puede llegar a GMX por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu cuenta, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+  },
+  "method": {
+    "title": "Cómo se conecta GMX: IMAP y la contraseña de tu cuenta",
+    "body": "GMX se conecta por IMAP/SMTP, pero <b>el acceso POP3 e IMAP está desactivado por defecto</b>. Actívalo en GMX, en Configuración de correo, Recuperación POP3/IMAP, y luego conecta con tu dirección y contraseña de GMX. Si GMX te pide crear una contraseña específica de aplicación, usa esa. Las cuentas alemanas usan los servidores .net, <code>imap.gmx.net</code> y <code>mail.gmx.net</code>."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+    },
+    {
+      "h": "Activa el acceso IMAP en GMX",
+      "p": "En GMX, abre Configuración de correo, Recuperación POP3/IMAP, y permite el acceso POP3 e IMAP. GMX vuelve a desactivarlo si la cuenta pasa mucho tiempo sin usarse."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Elige IMAP / SMTP, añade tu dirección de GMX, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja GMX",
+    "sub": "Conecta GMX en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

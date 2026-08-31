@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Koble Hostinger til Claude (og enhver AI)",
+    "description": "Koble Hostinger til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Hostinger + AI",
+    "titleLine1": "Koble Hostinger til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Hostinger-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke Hostinger på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+  },
+  "method": {
+    "title": "Slik kobler Hostinger seg til: IMAP og postkassepassordet ditt",
+    "body": "Hostinger Email kobles til via IMAP/SMTP med postkassepassordet du setter i hPanel under Emails. Det finnes ingen app-passord og ingen OAuth-steg. Vertene er <code>imap.hostinger.com</code> og <code>smtp.hostinger.com</code> for alle domener, så det er ingenting å slå opp."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Hent Hostinger-postkassepassordet",
+      "p": "I hPanel åpner du Emails, velger adressen og setter eller nullstiller passordet. Det er passordet mcpemails autentiserer med."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, legg til Hostinger-adressen din, vertene under og passordet for å koble til innboksen trygt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Hostinger-innboks",
+    "sub": "Koble til Hostinger på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

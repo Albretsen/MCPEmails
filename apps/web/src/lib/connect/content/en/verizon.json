@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.verizon.com/support/residential/email",
+    "https://help.aol.com/articles/verizon-move-to-aol-mail-setting-up-your-new-aol-account-in-a-third-party-email-program-or-mobile-device-imap",
+    "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "AOL app password",
+    "helpUrl": "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail",
+    "usernameForm": "Your full verizon.net address, @verizon.net included. It is your AOL username now, so do not shorten it and do not swap in an aol.com address.",
+    "status": "discontinued"
+  },
+  "meta": {
+    "title": "Verizon.net Email Is AOL Now: Connect It to Claude",
+    "description": "Verizon retired its email service and verizon.net mailboxes moved to AOL. Connect one to Claude over IMAP at imap.aol.com with an AOL app password."
+  },
+  "hero": {
+    "eyebrow": "Verizon.net + AI",
+    "titleLine1": "Verizon retired its mail service.",
+    "titleLine2": "Your verizon.net inbox still connects",
+    "lead": "Verizon does not run mailboxes any more. A surviving verizon.net address is an AOL account, and mcpemails connects it over IMAP so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach a verizon.net mailbox on its own, and neither can Verizon: it retired its consumer email service and moved the mailboxes to AOL Mail and Yahoo Mail. If your address survived that migration, it is an AOL account with a verizon.net username, and mcpemails is a hosted MCP server that connects it over IMAP at imap.aol.com on port 993 using an AOL app password rather than the password you type into webmail. Once it is connected, Claude, Cursor or any other MCP client can read, search, send, reply and organise that mail. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "AOL app password, not webmail password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How verizon.net connects: it is an AOL mailbox, over IMAP",
+    "body": "Verizon's own support page is blunt about the state of things: it has retired its email service, notifications are finished, and customers no longer have the option to keep a verizon.net address. What happened in practice is a migration rather than a switch-off. Mailboxes went to <b>AOL Mail</b> at mail.aol.com and to Yahoo Mail, anything not migrated was deleted at the end of 2017, and the address that survived kept its name. So the settings that matter are AOL's. IMAP answers at <code>imap.aol.com</code> on port 993 over TLS and SMTP at <code>smtp.aol.com</code> on port 465, also implicit TLS, and you sign in with the whole address including <code>@verizon.net</code>. AOL will not accept your ordinary password from a mail client: you turn on two-step verification and generate an <b>app password</b> under Account Security, and that string goes in the password field."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Sign in to AOL with the verizon.net address",
+      "p": "Go to login.aol.com and sign in using the full <code>name@verizon.net</code> address, not an aol.com one. If that sign-in fails, the mailbox did not survive the migration and there is nothing to connect; Verizon deleted unmigrated accounts and cannot restore them."
+    },
+    {
+      "h": "Generate an AOL app password under Account Security",
+      "p": "Open Account Info, then <b>Account Security</b>. Turn on two-step verification if it is off, then generate an app password and give it a name such as <code>mcpemails</code>. AOL shows it once. Paste that into mcpemails together with the full verizon.net address; the AOL hosts below are prefilled."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "There is no Verizon mail server to point at any more",
+      "p": "Old guides list hostnames like <code>incoming.verizon.net</code> and <code>outgoing.verizon.net</code>. Verizon does not operate consumer mail, so those names describe a service that no longer exists. Every current setting for a verizon.net address is an AOL setting, which is why this page sends you to AOL's account security screen rather than to a Verizon one. Verizon support cannot reset the mailbox password either; AOL owns that account now."
+    },
+    {
+      "h": "Some verizon.net addresses went to Yahoo, not AOL",
+      "p": "Verizon's retirement page names two destinations: AOL Mail and Yahoo Mail. Most people landed on AOL, and imap.aol.com is what this page is built around, but if your sign-in only works at a Yahoo address then your mailbox is on the Yahoo side and the app password has to be generated on Yahoo's account security page instead. Try the AOL sign-in first; it is the common case."
+    },
+    {
+      "h": "The username is the verizon.net address, forever",
+      "p": "The migration kept the address as the account name, so <code>name@verizon.net</code> is what goes in the username field even though everything behind it is AOL. Entering an aol.com alias, or dropping the domain, produces an authentication failure that reads like a wrong password. This trips people who later added an aol.com address to the same account."
+    },
+    {
+      "h": "No new verizon.net addresses exist, and there is no reopening",
+      "p": "Verizon states that customers no longer have the option to keep a verizon.net address, and content that was never migrated was deleted on 15 December 2017. So this page is only useful for a mailbox that is already alive. If yours went quiet years ago, there is no recovery path and no way to create a replacement on the same domain."
+    }
+  ],
+  "limits": [
+    "AOL's SMTP host announces a maximum message size of about 39 MB, so a send with large attachments is refused before it leaves.",
+    "Only an existing, already-migrated verizon.net mailbox can be connected. Verizon issues no new ones and mcpemails cannot revive a deleted account."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Verizon email?",
+      "a": "Not directly, and not through Verizon, which no longer runs mail. If your verizon.net address is alive on AOL, connecting an MCP server such as mcpemails to it over IMAP gives Claude read, search, send, reply, schedule and organise access, and the same connection works in Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the verizon.net IMAP and SMTP settings?",
+      "a": "AOL's. IMAP is imap.aol.com on port 993 with implicit TLS and SMTP is smtp.aol.com on port 465, also implicit TLS, with authentication required. Both were verified from a live TLS connection. The username is your full verizon.net address and the password field takes an AOL app password."
+    },
+    {
+      "q": "What happened to Verizon email?",
+      "a": "Verizon left the email business and retired the service. Existing verizon.net mailboxes were migrated to AOL Mail and Yahoo Mail, and anything not migrated was deleted in December 2017. Verizon's support page says customers no longer have the option to keep a verizon.net address, so nothing new is being issued."
+    },
+    {
+      "q": "Why does my verizon.net password not work in Outlook or a mail client?",
+      "a": "Because the mailbox is an AOL account and AOL requires an app password for clients that do not use its own sign-in window. The password you use in webmail is correct and is still refused over IMAP. Turn on two-step verification, generate an app password under Account Security, and use that string instead."
+    },
+    {
+      "q": "Is my verizon.net mail stored on your servers?",
+      "a": "No. Messages are fetched live from AOL over IMAP for each request and passed to your AI client. Credentials, the app password included, are encrypted at rest, and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI your verizon.net inbox",
+    "sub": "Verizon left email. The address still works. One inbox free forever, no card required."
+  }
+}

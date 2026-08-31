@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter IONOS à Claude (et à toute IA)",
+    "description": "Connectez IONOS à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "IONOS + IA",
+    "titleLine1": "Connectez IONOS à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte IONOS en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre IONOS tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment IONOS se connecte : IMAP et le mot de passe de la boîte",
+    "body": "IONOS se connecte via IMAP/SMTP avec le <b>mot de passe e-mail</b> défini dans le panneau de configuration IONOS, section E-mail, distinct de votre identifiant IONOS. IONOS répond sur les deux transports standard, 993 en TLS et 143 en STARTTLS, et deviner entre les deux est la cause la plus fréquente d'échec d'une connexion IONOS. mcpemails renseigne une combinaison qui fonctionne et réessaie l'autre si la première ne répond pas : une connexion refusée ici vient donc bien du mot de passe."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Récupérez le mot de passe de votre boîte IONOS",
+      "p": "Dans le panneau de configuration IONOS, ouvrez E-mail, choisissez l'adresse et définissez ou réinitialisez son mot de passe. Ce n'est pas celui de votre compte IONOS."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse IONOS, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte IONOS à votre IA",
+    "sub": "Connectez IONOS en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

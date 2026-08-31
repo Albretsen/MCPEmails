@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter n'importe quelle boîte IMAP à Claude (et à toute IA)",
+    "description": "Connectez n'importe quelle boîte IMAP à Claude, Cursor, ChatGPT et tout client MCP. Apportez votre serveur, votre port et votre mot de passe, et laissez l'IA lire, envoyer, planifier et organiser le courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "IMAP + IA",
+    "titleLine1": "Connectez n'importe quelle boîte IMAP à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA la boîte que vous avez déjà, quel qu'en soit l'hébergeur. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP et SMTP classiques, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Tout serveur IMAP, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude n'a pas de client IMAP. mcpemails est un serveur MCP hébergé qui se connecte à votre serveur de messagerie en IMAP et SMTP avec l'adresse, le serveur et le mot de passe que votre fournisseur vous a déjà donnés, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Tout hébergeur qui parle IMAP convient, et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment une boîte IMAP générique se connecte",
+    "body": "Il vous faut quatre choses : votre adresse, votre serveur de messagerie, votre mot de passe et, si votre fournisseur l'exige, un mot de passe d'application. Saisissez d'abord l'adresse : mcpemails reconnaît les hébergeurs courants et remplit les deux serveurs, les deux ports et les modes de sécurité. Si le transport tenté ne répond pas, il essaie l'autre standard tout seul, <b>993 ou 143</b> pour IMAP et <b>465 ou 587</b> pour SMTP : personne n'a à deviner pour STARTTLS."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Rassemblez vos réglages IMAP et SMTP",
+      "p": "Votre fournisseur les publie, le plus souvent sous la forme imap.votredomaine.com et smtp.votredomaine.com sur les ports 993 et 465. Si votre fournisseur exige un mot de passe d'application pour les clients de messagerie, créez-le maintenant."
+    },
+    {
+      "h": "Collez-les dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse, les deux serveurs et le mot de passe. Les ports et les modes de sécurité sont sous Avancé, préremplis avec les valeurs standard."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez à votre IA la boîte que vous avez déjà",
+    "sub": "Connectez n'importe quelle boîte IMAP en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

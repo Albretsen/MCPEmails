@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://help.krystal.io/email/configure-your-email-client",
+    "https://help.krystal.io/sales-faq/onyx-managed-word-press-vs-shared-hosting",
+    "https://help.krystal.io/email/adding-a-new-c-panel-email-account"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://help.krystal.io/email/configure-your-email-client",
+    "usernameForm": "Your full email address, for example me@yourdomain.co.uk, exactly as the mailbox was created.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Krystal Email to Claude: cPanel and Onyx IMAP Setup",
+    "description": "Krystal shared hosting includes cPanel mailboxes; Onyx does not. Find which you have, then connect it to Claude over IMAP on port 993. One inbox free, forever."
+  },
+  "hero": {
+    "eyebrow": "Krystal + AI",
+    "titleLine1": "Connect Krystal email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Krystal mailbox. Read, search, send, reply, schedule and organize mail over IMAP, on cPanel shared hosting or on the Onyx mail add-on.",
+    "answer": "Claude cannot reach a Krystal mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Krystal has no shared mail hostname: you use either mail.yourdomain.co.uk or your hosting server's own name, both of which are printed on the Connect Devices screen in cPanel. Before you start, check that the plan actually includes mail, because Krystal's Onyx managed WordPress platform ships without mailboxes unless you bought the add-on. Authentication is the mailbox password, and one inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from cPanel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Krystal mail connects: two platforms, one IMAP protocol",
+    "body": "Krystal is a UK host with two quite different products. <b>Shared and reseller hosting</b> runs cPanel and includes unlimited addresses on your domain, with mailbox quotas of 5GB on the smaller plans and 50GB on the larger ones. <b>Onyx</b>, their managed WordPress platform, includes no email at all; mailboxes are a paid add-on bought at checkout or later from the Onyx portal, and they are managed there rather than in cPanel. Both speak IMAP on port 993 over TLS with SMTP on 465, or 587 with STARTTLS. Krystal's guidance for cPanel accounts is to use your hosting server's name exactly as shown on the settings screen, and it notes that <code>mail.yourdomain.co.uk</code> also works. The username is the full address."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
+    },
+    {
+      "h": "Confirm the plan has mail, then open the right screen",
+      "p": "On <b>shared hosting</b>, log in to cPanel, go to <b>Email</b>, then <b>Email Accounts</b>, and click <b>Connect Devices</b> beside the address. The server name and ports appear there. On <b>Onyx</b>, mailboxes live in the Onyx portal under its email section, not in cPanel, and only exist if the mail add-on was purchased. If neither place lists an address, there is no mailbox to connect yet."
+    },
+    {
+      "h": "Set the mailbox password",
+      "p": "Krystal mailboxes authenticate with the password set on the address itself, not your Krystal client area login. On shared hosting use <b>Manage</b> on the address row in Email Accounts to set one. Then enter it in mcpemails with the full address as the username and the hostname you copied."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Onyx ships with no email, so there may be nothing to connect",
+      "p": "Krystal's managed WordPress platform is deliberately mail-free. Customers who moved a site from Krystal shared hosting to Onyx often assume the mailboxes came along; they did not, unless the mail add-on was bought. Krystal provides a migration utility to import an existing IMAP mailbox into that add-on, which is the tell: if you were never prompted to migrate, the mailbox is probably still on the old platform or gone. Check the Onyx portal for an email section before troubleshooting credentials."
+    },
+    {
+      "h": "mail.yourdomain only works while the domain's A record points at Krystal",
+      "p": "Krystal issues the free certificate for that name automatically, but only once the domain resolves to their server. If you use external DNS, or proxy the domain through Cloudflare, or you have just moved in and the record has not propagated, the <code>mail.</code> name either does not resolve or resolves somewhere with no mail service. Neither failure looks like a mail problem. Use the server name printed on the Connect Devices screen and the dependency on DNS disappears entirely."
+    },
+    {
+      "h": "cPanel and Onyx mailboxes are configured in different places, with different guides",
+      "p": "Krystal's knowledge base carries cPanel email articles and Onyx email articles side by side, and they do not describe the same system. A cPanel walkthrough sends you to Email Accounts and Connect Devices; an Onyx mailbox has neither, and is administered from the Onyx portal. Confirm which platform your site is on before following any Krystal email instructions, because the first step of the wrong article simply does not exist in your panel."
+    }
+  ],
+  "limits": [
+    "Mailbox size is capped by plan on Krystal shared hosting, at 5GB on the smaller tiers and 50GB on the larger ones. A full mailbox rejects new mail rather than degrading quietly.",
+    "mcpemails connects the mailbox only. Domain-level settings, forwarders and spam rules stay in cPanel or the Onyx portal."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Krystal email?",
+      "a": "Not directly. Claude has no Krystal connector. Connecting an MCP server such as mcpemails to your Krystal mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, whether the mailbox is on Krystal's cPanel shared hosting or on the Onyx mail add-on."
+    },
+    {
+      "q": "What are the Krystal IMAP and SMTP settings?",
+      "a": "IMAP is port 993 with SSL/TLS and SMTP is port 465 with SSL/TLS, or 587 with STARTTLS. The hostname is your hosting server's name as shown on the Connect Devices screen in cPanel, and mail.yourdomain.co.uk also works when the domain's DNS points at Krystal. Log in with your full email address."
+    },
+    {
+      "q": "Does Krystal Onyx include email?",
+      "a": "No. Onyx, Krystal's managed WordPress platform, comes without mailboxes by default. Email is a paid add-on that can be bought at checkout or later through the Onyx portal, and it is managed there rather than in cPanel. Krystal's shared hosting plans, by contrast, include unlimited addresses on your domain."
+    },
+    {
+      "q": "Why is my Krystal email password rejected?",
+      "a": "Because the mailbox has its own password, set when the address was created, which is not your Krystal client area login. Reset it in cPanel from the Manage link beside the address under Email Accounts. Also confirm the username is the whole email address rather than just the part before the at sign."
+    },
+    {
+      "q": "Is my Krystal mail stored on your servers?",
+      "a": "No. Messages are fetched live from Krystal over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Krystal inbox",
+    "sub": "Connect a Krystal mailbox in minutes. One inbox free forever, no card required."
+  }
+}

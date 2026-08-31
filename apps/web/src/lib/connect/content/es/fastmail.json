@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Conecta Fastmail a Claude (y a cualquier IA)",
+    "description": "Conecta Fastmail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Fastmail. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "Fastmail + IA",
+    "titleLine1": "Conecta Fastmail a Claude",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja Fastmail real en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de aplicación, sin OAuth",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Fastmail: una contraseña de aplicación",
+    "body": "Fastmail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Fastmail</b>: genera una en Fastmail en Configuración → Privacidad y seguridad → Contraseñas de aplicación, pégala en mcpemails y listo. Sin trámite de OAuth ni ventanas emergentes."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+    },
+    {
+      "h": "Genera una contraseña de aplicación de Fastmail",
+      "p": "En Fastmail, ve a Configuración → Privacidad y seguridad → Contraseñas de aplicación y crea una para correo (IMAP/SMTP)."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Añade tu dirección de Fastmail y la contraseña de aplicación para conectar la bandeja de forma segura."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja Fastmail",
+    "sub": "Conecta Fastmail en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
+    "https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "OAuth 2.0 only, no app password",
+    "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "usernameForm": "No credential you can type will work. The IMAP service for personal Microsoft accounts offers only XOAUTH2, so it accepts an access token and nothing else.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Outlook.com and AI: OAuth Only, App Passwords Dead",
+    "description": "Outlook.com IMAP now advertises only AUTH=XOAUTH2, so no password or app password connects it to an MCP server. What changed, and what you can do about it."
+  },
+  "hero": {
+    "eyebrow": "Outlook.com + AI",
+    "titleLine1": "Outlook.com no longer takes",
+    "titleLine2": "a password on IMAP at all",
+    "lead": "Personal Microsoft accounts, whether the address ends in outlook.com, hotmail.com, live.com or msn.com, stopped accepting Basic authentication from non-Microsoft apps. The server is up. It simply has no password mechanism left to offer.",
+    "answer": "No. mcpemails cannot connect an Outlook.com mailbox, and the blocker is authentication rather than reachability. The IMAP service for personal Microsoft accounts answers at outlook.office365.com on port 993 and the TLS handshake succeeds, but its capability line now advertises only AUTH=XOAUTH2: there is no password mechanism on offer, so no account password and no app password can authenticate. Microsoft ended Basic authentication for personal accounts connecting from non-Microsoft applications from 16 September 2024, leaving OAuth 2.0 as the only route in. mcpemails does not offer a Microsoft OAuth connection, so an Outlook.com mailbox is not connectable here. If you want an agent working on mail today, connect a mailbox that accepts a password over IMAP, which is free for one inbox, and forward your Outlook.com mail into it if you want a mirror."
+  },
+  "method": {
+    "title": "How Outlook.com connects: XOAUTH2, and nothing else",
+    "body": "Outlook.com and business Microsoft 365 mailboxes are two different services that happen to land on the same IMAP host, and the difference shows in the first exchange. Connect to <code>outlook.office365.com</code> on 993 with a business address and the capability line still lists <code>AUTH=PLAIN</code> next to <code>AUTH=XOAUTH2</code>, a stale advertisement of a mechanism the service refuses. Connect with a personal account and <code>AUTH=PLAIN</code> is not there at all. The consumer service has stopped offering password authentication rather than merely rejecting it, which is a cleaner failure and a more confusing one, because clients that expect to send a password get a protocol-level refusal instead of a login error. SMTP for personal accounts is <code>smtp-mail.outlook.com</code> on port 587 with STARTTLS, and the same authentication story applies. The good news, such as it is, is that there is no tenant administrator in the personal-account picture: no consent policy blocks you, because there is nothing to consent to."
+  },
+  "setup": [
+    {
+      "h": "Create the free mcpemails account",
+      "p": "An email address, no card. One connected inbox is free forever. The next two steps pick which mailbox that will be, because it will not be the Outlook.com one."
+    },
+    {
+      "h": "Choose a mailbox that still accepts a password over IMAP",
+      "p": "Your own domain at Fastmail or Migadu, a personal Gmail account, a project address at any ordinary host. That account is what mcpemails connects and where your agent reads, drafts, replies, schedules and files."
+    },
+    {
+      "h": "Turn on forwarding in Outlook.com if you want a mirror",
+      "p": "In Outlook.com on the web, open Settings, go to Mail and then Forwarding, and enable forwarding to the address you just connected. Keep the option to retain a copy of forwarded messages so your Outlook.com mailbox stays complete. New mail then arrives in both places, and the agent works on the copy."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and the agent has the connected inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Outlook.com and Microsoft 365 share a host and not a capability line",
+      "p": "Both services resolve to <code>outlook.office365.com</code> for IMAP, which makes them look interchangeable in every settings table on the internet. They are not. The business side advertises <code>AUTH=PLAIN</code> and refuses it. The personal side does not advertise it at all. Neither accepts a password, but they fail differently, so a support article written for one will misdiagnose the other. The SMTP hosts differ too: personal accounts use <code>smtp-mail.outlook.com</code>."
+    },
+    {
+      "h": "An app password is a Basic authentication credential, so it has nothing to log in to",
+      "p": "Microsoft still lets you generate app passwords on a personal account for legacy scenarios such as an old Outlook desktop build or an Xbox console, which is why so many guides still tell you to create one for IMAP. It cannot help. An app password is a password, and password authentication is exactly what the IMAP service no longer offers. Generating a fresh one and watching it fail again is the most common wasted hour on this provider."
+    },
+    {
+      "h": "hotmail.com, live.com and msn.com addresses are the same service",
+      "p": "The consumer mail service behind all of those domains is one system with one set of endpoints and one authentication policy. An older hotmail.com address that has worked in a mail client for fifteen years is subject to the same change as an outlook.com address created yesterday, and the moment its client tries to reauthenticate, it stops."
+    },
+    {
+      "h": "The IMAP service does not advertise SPECIAL-USE",
+      "p": "Personal Microsoft accounts support MOVE, UIDPLUS and IDLE, but a client cannot ask the server which folder is Junk or Sent and must match by name instead. Outlook.com calls its spam folder Junk Email rather than Junk, and localised accounts use translated names, so tooling that matches literal English folder names silently finds nothing to act on."
+    }
+  ],
+  "limits": [
+    "Forwarding gives you a copy, not the mailbox. Replies your agent sends leave from the other address, and nothing it files or flags is reflected back in Outlook.com.",
+    "This page describes the consumer Microsoft account service. If your address happens to sit on a work or school tenant instead, the business consent rules apply on top of everything here, and your administrator is part of the answer."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Outlook.com?",
+      "a": "Not through mcpemails. Outlook.com accepts only OAuth 2.0 on IMAP, and we do not offer a Microsoft OAuth connection, so there is no way to connect that mailbox here. Connecting a different mailbox that accepts an ordinary IMAP login, and forwarding your Outlook.com mail into it, is the route that works today."
+    },
+    {
+      "q": "What are the Outlook.com IMAP and SMTP settings?",
+      "a": "IMAP is outlook.office365.com on port 993 with implicit TLS. SMTP is smtp-mail.outlook.com on port 587 with STARTTLS. Both were confirmed from a live TLS connection. The values are correct and no longer sufficient on their own, because the IMAP service authenticates only with an OAuth 2.0 access token."
+    },
+    {
+      "q": "Why is my Outlook.com password rejected?",
+      "a": "It is not being rejected so much as never offered. From 16 September 2024 Microsoft stopped supporting Basic authentication for personal accounts connecting from non-Microsoft applications, and the IMAP service now advertises only XOAUTH2. A client that tries to send a password has no mechanism to send it through."
+    },
+    {
+      "q": "Can I use an app password for Outlook.com IMAP?",
+      "a": "No. App passwords still exist on Microsoft personal accounts for specific legacy apps, but they are Basic authentication credentials and the mail service no longer accepts that form of authentication. Creating one will not change the outcome, no matter how many older tutorials suggest it as the fix."
+    },
+    {
+      "q": "Is this the same situation as business Microsoft 365?",
+      "a": "The end result matches, the cause does not. A personal account has no tenant administrator and no consent policy in the way; it is purely that password authentication is gone. A business mailbox has the same authentication removal plus a consent requirement, where an administrator must approve the mail permissions an application asks for."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. For the mailboxes mcpemails does connect, messages are fetched live over IMAP for each request and handed to your AI client, with credentials encrypted at rest and message bodies not retained. We hold no Outlook.com credentials at all, since no Outlook.com connection is possible."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an inbox it can sign in to",
+    "sub": "Outlook.com stays where it is. Connect one IMAP mailbox for the automated work, free forever."
+  }
+}

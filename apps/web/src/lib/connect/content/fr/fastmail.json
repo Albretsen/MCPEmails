@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Connecter Fastmail à Claude (et à toute IA)",
+    "description": "Connectez Fastmail à Claude, Cursor, ChatGPT et tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Fastmail. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Fastmail + IA",
+    "titleLine1": "Connectez Fastmail à Claude",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Fastmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application, pas d'OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Fastmail se connecte : un mot de passe d'application",
+    "body": "Fastmail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Fastmail</b> : générez-en un dans Fastmail sous Paramètres → Confidentialité et sécurité → Mots de passe d'application, collez-le dans mcpemails, et c'est connecté. Pas de parcours OAuth, pas de fenêtres pop-up."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Générez un mot de passe d'application Fastmail",
+      "p": "Dans Fastmail, allez dans Paramètres → Confidentialité et sécurité → Mots de passe d'application et créez-en un pour le courrier (IMAP/SMTP)."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Ajoutez votre adresse Fastmail et le mot de passe d'application pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Fastmail à votre IA",
+    "sub": "Connectez Fastmail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

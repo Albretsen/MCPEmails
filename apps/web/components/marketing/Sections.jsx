@@ -1059,10 +1059,14 @@ export function Footer() {
           <div>
             <p className="footer-heading">{tc('links.connectHeading')}</p>
             {/*
-              Generic IMAP leads: it is the largest and best-retaining cohort
-              of connected inboxes, and the one page a visitor cannot guess the
-              URL of from a brand name.
+              The hub leads. It is the only link on the site that reaches all
+              106 provider pages, so it is what makes them crawlable from every
+              page rather than from the sitemap alone. Generic IMAP follows: it
+              is the largest and best-retaining cohort of connected inboxes,
+              and the one page a visitor cannot guess the URL of from a brand
+              name.
             */}
+            <Link href="/connect">{tc('links.connectAll')}</Link>
             <Link href="/connect/imap">{tc('links.connectImap')}</Link>
             <Link href="/connect/gmail">{tc('links.connectGmail')}</Link>
             <Link href="/connect/fastmail">{tc('links.connectFastmail')}</Link>

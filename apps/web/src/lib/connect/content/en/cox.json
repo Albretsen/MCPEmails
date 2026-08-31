@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://help.yahoo.com/kb/mail/SLN36637.html",
+    "https://help.yahoo.com/kb/SLN15241.html",
+    "https://www.cox.com/residential/support/coxnet-email-transitioning-to-yahoo.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Yahoo app password",
+    "helpUrl": "https://help.yahoo.com/kb/mail/SLN36637.html",
+    "usernameForm": "Your full cox.net address. The mailbox is now a Yahoo account but the username is still the cox.net address you have always had.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Cox Email on Yahoo: Connect cox.net to Claude",
+    "description": "Cox handed cox.net email to Yahoo. Connect the mailbox to Claude and any MCP client over IMAP with a Yahoo app password, not your old Cox password."
+  },
+  "hero": {
+    "eyebrow": "Cox Email + AI",
+    "titleLine1": "Connect your cox.net inbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Cox is out of the email business and Yahoo now runs cox.net mailboxes. The address still works, and mcpemails connects it over IMAP so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach a cox.net mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP on port 993 at the Yahoo host in the table below, because Cox handed its email service to Yahoo and cox.net mail is now served from Yahoo's infrastructure rather than from Cox's. The credential is a Yahoo app password generated from the account security page, not your old Cox password and not the password you type into webmail. Once it is connected, Claude, Cursor or any other MCP client can read, search, send, reply and organise that mail, and one inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Yahoo app password, not the Cox one",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How cox.net connects: IMAP into Yahoo, with an app password",
+    "body": "Cox exited email and moved every cox.net mailbox onto Yahoo, in waves, so the sign-in, the webmail and the mail servers behind your address are Yahoo's now. Two practical consequences follow. First, the old Cox hostnames are dead: <code>pop.cox.net</code> and <code>smtp.cox.net</code> no longer serve the mailbox, and any client still pointed at them fails no matter what password you feed it. Second, authentication follows Yahoo's rules, which means a mail client that does not use Yahoo's own OAuth sign-in has to present an <b>app password</b>. Yahoo is explicit about it: you must use an app password and not your regular account password. The app password keeps working even when you change the main password on the account, and you delete it to revoke it."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Generate an app password on the Yahoo account security page",
+      "p": "Sign in with your <code>@cox.net</code> address at Yahoo, open the account security page, find <b>External connections</b> and choose <b>Create app password</b>. Name it something you will recognise later, such as <code>mcpemails</code>. Yahoo shows the code once, so copy it before you close the page."
+    },
+    {
+      "h": "Enter the cox.net address and the app password",
+      "p": "In mcpemails choose IMAP / SMTP, put your full cox.net address in the username field and paste the app password rather than your Cox account password. The hosts and ports below are prefilled and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yahoo can refuse to create the app password, and support cannot override it",
+      "p": "App password creation runs through an eligibility check before Yahoo will show you the code. Yahoo's own instruction is to use a browser you have signed in to Yahoo from on several consecutive days, and not to use a private or incognito window, and it states plainly that customer care cannot override the process that decides eligibility. If the <b>Create app password</b> option is missing or the attempt fails, that check is why. Sign in from your ordinary browser for a few days and try again; there is no support ticket that skips it."
+    },
+    {
+      "h": "The Cox hostnames in every old guide are gone",
+      "p": "Guides written before the Yahoo move tell you to use <code>pop.cox.net</code>, <code>imap.cox.net</code> or <code>smtp.cox.net</code>. Those are no longer the mailbox. The mail now answers on Yahoo hosts, which is why a client that worked for years suddenly stopped after your account was moved in the migration waves. Updating the password without updating the hostnames does nothing."
+    },
+    {
+      "h": "Yahoo publishes one host name for cox.net and we verified a different one",
+      "p": "Yahoo's cox.net setup article lists <code>imap.mail.yahoo.com</code>. The host recorded in the table on this page is the one we actually opened a TLS connection to for cox.net, and it is the export host Yahoo uses for partner-branded mailboxes such as cox.net and Rogers. Both are Yahoo's own infrastructure and both answered on port 993 with the same server banner. If one is refused for your account, the other is the one to try."
+    },
+    {
+      "h": "Cox stopped issuing cox.net addresses in 2019",
+      "p": "Cox's own support wording is that as of 15 August 2019 it no longer offers new or existing Cox Internet customers the ability to create new Cox Email accounts. So there is no route to a fresh cox.net address, and if the one you have is closed after you cancel service, it is not coming back. Cox gives disconnected accounts a grace period measured in weeks, not years, before the mailbox is deleted."
+    }
+  ],
+  "limits": [
+    "The Yahoo SMTP host announces a maximum message size of about 39 MB, so a send with large attachments is refused before it leaves.",
+    "Because Cox no longer issues addresses, this page only helps an existing cox.net mailbox. There is no way to create one to connect."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Cox email?",
+      "a": "Not directly. Claude has no built-in Cox connector, and Cox no longer runs the mail service itself. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your cox.net mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Cox IMAP and SMTP settings now?",
+      "a": "They are Yahoo's, not Cox's. IMAP answers on port 993 with implicit TLS and SMTP on port 465, also implicit TLS, at the hosts shown in the table on this page, which were verified from a live TLS connection. The username stays your full cox.net address. The old pop.cox.net and smtp.cox.net names no longer work."
+    },
+    {
+      "q": "Why is my Cox password rejected in a mail client?",
+      "a": "Because the mailbox is a Yahoo account now, and Yahoo requires an app password for clients that do not use its own sign-in window. Your webmail password is correct and still gets refused at the IMAP layer. Generate an app password from the Yahoo account security page under External connections and use that instead."
+    },
+    {
+      "q": "Can I still get a new cox.net email address?",
+      "a": "No. Cox stopped letting customers create Cox Email accounts on 15 August 2019, and moving the service to Yahoo did not reopen that. Only addresses created before that date exist, which is why this page is written for people who already have one."
+    },
+    {
+      "q": "Is my Cox mail stored on your servers?",
+      "a": "No. Messages are fetched live over IMAP for each request and passed to your AI client. Credentials, the app password included, are encrypted at rest, and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI your cox.net inbox",
+    "sub": "One app password, a couple of minutes. One inbox free forever, no card required."
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailfence.com/kb/how-can-use-mailfence-messages-with-thunderbird-using-smtp-and-imap-pop/",
+    "https://kb.mailfence.com/kb/setup-2fa/",
+    "https://kb.mailfence.com/kb/your-ultimate-guide-to-mailfence/",
+    "https://mailfence.com/en/faq.jsp"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mailfence password, or a service-specific password",
+    "helpUrl": "https://kb.mailfence.com/kb/how-can-use-mailfence-messages-with-thunderbird-using-smtp-and-imap-pop/",
+    "usernameForm": "Your primary Mailfence address or your Mailfence username. Alias addresses are refused.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Mailfence to Claude: IMAP Is a Paid-Plan Feature",
+    "description": "Mailfence IMAP at imap.mailfence.com:993 connects to Claude and any MCP client, but on paid plans only. Free accounts are webmail, and aliases cannot log in."
+  },
+  "hero": {
+    "eyebrow": "Mailfence + AI",
+    "titleLine1": "Connect Mailfence to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Mailfence inbox. Read, search, send, reply, schedule and organize mail over IMAP, on any MCP client, with the plan requirement and the two-factor caveat stated up front instead of discovered later.",
+    "answer": "Claude cannot reach Mailfence on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.mailfence.com on port 993, and SMTP at smtp.mailfence.com on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Two conditions decide whether it will work: IMAP, POP and SMTP are available on Mailfence's paid plans only, not on the free account, and the login must be your primary address or username rather than an alias. Authentication is your Mailfence password, or better, a service-specific password generated under Settings, Account, Security. One inbox is free at our end, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Paid Mailfence plan required for IMAP",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Mailfence connects: IMAP on a paid plan, with a service-specific password",
+    "body": "Mailfence serves IMAP at <code>imap.mailfence.com</code> on port 993 and SMTP at <code>smtp.mailfence.com</code> on port 465, both with SSL required, and POP3 on 995. Your own values are printed inside the account under <b>Settings</b>, then <b>Account</b>, then <b>My connection settings</b>. The part that decides everything else is your plan: protocol access is a feature of the paid tiers, and a free Mailfence account is webmail only, so no client, ours included, can log in to one. Authentication uses your Mailfence password by default. Mailfence also lets you generate a <b>service-specific password</b> per protocol under <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b>, and switch off the protocols you do not use. The same screen can disable IMAP entirely, which is worth knowing in both directions."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, with no card. You get an MCP URL and a key at the end of it."
+    },
+    {
+      "h": "Confirm your Mailfence plan includes protocol access",
+      "p": "Open <b>Settings</b>, then <b>Account</b>, then <b>My connection settings</b>. If your plan carries IMAP, POP and SMTP access, that page prints the servers and ports for your account. On a free account the access is simply not there, and no combination of hostname, port and password will change that. Mailfence documents protocol access as a paid-plan feature."
+    },
+    {
+      "h": "Generate a service-specific password and turn off what you do not need",
+      "p": "Under <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b>, create a password scoped to IMAP and one for SMTP rather than reusing your account password, and disable POP, xDAV and any other protocol you are not using. Mailfence's own hardening advice is to do exactly this. Then add the mailbox in mcpemails with your <b>primary</b> address or username and that password."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The free plan has no IMAP at all, and the failure looks like a bad password",
+      "p": "Mailfence gates IMAP, POP and SMTP behind its paid subscriptions. A free account is a webmail account. Because the server still answers on 993 and still refuses your credentials, the rejection is indistinguishable from a typo, and people spend an afternoon resetting passwords that were correct the whole time. Check <b>My connection settings</b> first: if it does not offer you protocol details, the plan is the reason and upgrading is the only fix."
+    },
+    {
+      "h": "Two-factor authentication does not cover IMAP, POP or SMTP",
+      "p": "Mailfence states this plainly in its own 2FA documentation: two-factor authentication does not apply to non-web connections such as SMTP, IMAP, POP, EAS, xDAV and XMPP. Turning it on protects your webmail login and changes nothing about a mail client, which keeps working with the password it already has. So your client will not break when you enable 2FA, unlike at most providers, and 2FA is not the control that limits a connected client. A service-specific password under Services access is, because it can be scoped to one protocol and revoked without touching your account password."
+    },
+    {
+      "h": "Only the primary address or username authenticates",
+      "p": "Mailfence's client documentation is explicit that only the primary email address or the username can be used for authentication. Aliases, extra addresses and mail on a second domain you have attached all deliver into the same mailbox, but none of them will get you through the login. Use the address the account was created with, or the bare Mailfence username, and put the address you actually want to send from in the identity rather than in the credential."
+    },
+    {
+      "h": "MOVE and UIDPLUS are present, SPECIAL-USE is not",
+      "p": "Unusually for this corner of the market, Mailfence's IMAP server advertises MOVE, UIDPLUS, IDLE and SASL-IR, so filing mail is a single atomic command and bulk reorganising is quick rather than a copy-flag-expunge dance. What it does not advertise is SPECIAL-USE, so nothing on the wire identifies which folder is Sent, Drafts, Trash or Junk and roles are inferred from names. It also offers only <code>AUTH=PLAIN</code> on IMAP, with no <code>AUTH=LOGIN</code>, while SMTP accepts both, so tooling hard-wired to LOGIN can read nothing and yet send fine."
+    }
+  ],
+  "limits": [
+    "Connecting a Mailfence mailbox to an AI client means that AI provider reads the message content it works with. mcpemails fetches mail live from Mailfence per request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you connect. Mailfence's Belgian jurisdiction and its no-tracking stance apply to Mailfence, and do not follow a message into an AI vendor you attach yourself.",
+    "Mailfence's OpenPGP keystore is the whole point of the product for many of its users, and a message encrypted to your key arrives over IMAP as ciphertext. mcpemails holds no private key of yours, so an agent can sort, flag and file those messages but cannot read them. They stay readable in the Mailfence web interface, where the key lives.",
+    "A free Mailfence account cannot be connected here at all. That is a Mailfence plan restriction rather than a limitation of the MCP server, and there is no workaround short of a paid plan."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Mailfence?",
+      "a": "Not directly. Claude has no built-in Mailfence connector. Connecting an MCP server such as mcpemails to a paid Mailfence account over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor and other MCP clients without repeating the setup."
+    },
+    {
+      "q": "What are the Mailfence IMAP and SMTP settings?",
+      "a": "IMAP is imap.mailfence.com on port 993 with SSL, SMTP is smtp.mailfence.com on port 465 with SSL, and POP3 is on 995. The username is your primary Mailfence address or username, never an alias. Your own account prints the same values under Settings, Account, My connection settings. Both hosts here were verified from a live TLS connection."
+    },
+    {
+      "q": "Does Mailfence IMAP work on the free plan?",
+      "a": "No. Mailfence makes IMAP, POP and SMTP access a paid-plan feature, so a free account is restricted to webmail and to Mailfence's own apps. No third-party client and no MCP server can log in to a free account. Upgrading to any of the paid tiers turns protocol access on for that mailbox."
+    },
+    {
+      "q": "Does two-factor authentication protect my Mailfence IMAP access?",
+      "a": "No, and Mailfence says so itself. Its documentation states that 2FA does not apply to non-web connections including IMAP, POP and SMTP. Enabling it secures the web login only. If you want to control what a connected client can reach, generate a service-specific password under Settings, Account, Security, Services access, and disable the protocols you do not use."
+    },
+    {
+      "q": "Can my AI read my OpenPGP-encrypted Mailfence mail?",
+      "a": "No. Mailfence's encryption relies on a key that your AI client does not have and that mcpemails never receives, so an encrypted message arrives over IMAP as an armoured ciphertext block. The agent can see the sender, subject and date and can move or flag the message, but the body is unreadable outside the Mailfence interface."
+    },
+    {
+      "q": "Is my Mailfence mail stored on your servers?",
+      "a": "No. Messages are fetched live from imap.mailfence.com for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained. The AI client itself does receive whatever it is asked to read, which is the part to weigh before connecting a mailbox you chose Mailfence for in the first place."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Mailfence inbox",
+    "sub": "Connect a paid Mailfence mailbox in minutes. One inbox free forever, no card required."
+  }
+}

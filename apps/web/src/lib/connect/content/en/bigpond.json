@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.telstra.com.au/support/email/imap-pop-smtp-mail-server-settings",
+    "https://www.telstra.com.au/support/email/faq",
+    "https://www.telstra.com.au/support/email/email-phone-tablet"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Telstra email password",
+    "helpUrl": "https://www.telstra.com.au/support/email/imap-pop-smtp-mail-server-settings",
+    "usernameForm": "Your full address ending in @bigpond.com, @bigpond.net.au or @telstra.com. Telstra notes the password is case sensitive.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Telstra BigPond Email to Claude via IMAP",
+    "description": "Connect Telstra BigPond email to Claude and any MCP client over IMAP at imap.telstra.com:993. Bigpond addresses now live on Telstra Mail hosts, not bigpond ones."
+  },
+  "hero": {
+    "eyebrow": "Telstra BigPond + AI",
+    "titleLine1": "Connect Telstra BigPond mail",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real bigpond.com inbox. Read, search, send, reply, schedule and organise mail over IMAP with your Telstra email password, in every MCP client rather than one.",
+    "answer": "Claude cannot reach a Telstra BigPond mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.telstra.com on port 993, signing in with your full bigpond.com, bigpond.net.au or telstra.com address and your Telstra email password, so Claude, Cursor or any MCP client can read, search, send and organise that mail. Bigpond mailboxes were folded into the Telstra Mail platform, so the old bigpond hostnames are not what a client should use any more. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your Telstra email password works",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How BigPond connects: Telstra Mail hosts and your email password",
+    "body": "BigPond addresses are now Telstra Mail accounts. The mailbox answers IMAP at <code>imap.telstra.com</code> on port 993 over TLS and accepts outgoing mail at <code>smtp.telstra.com</code> on port 465, also implicit TLS, with authentication switched on. There is no separate app password to generate: Telstra takes the ordinary email password you use for webmail, and the username is the whole address including the domain. What trips people up is the hostname, not the credential. A <code>@bigpond.com</code> address does not connect to a bigpond server; it connects to the Telstra one, and so does a <code>@bigpond.net.au</code> or <code>@telstra.com</code> address. All three domains share a single set of hosts and a single set of settings."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
+    },
+    {
+      "h": "Confirm the password on Telstra webmail first",
+      "p": "Sign in to Telstra Mail in a browser with the address you are about to connect. Telstra's own documentation points out that the password is case sensitive, and confirming it in webmail separates a genuine credential problem from a settings problem before you go any further."
+    },
+    {
+      "h": "Enter the full address in mcpemails",
+      "p": "Choose IMAP / SMTP and type the address in full, including <code>@bigpond.com</code>, <code>@bigpond.net.au</code> or <code>@telstra.com</code>. The Telstra hosts are prefilled. Do not substitute an older bigpond server name that you may still have saved in another mail app."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorise, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Legacy bigpond hostnames are the number one cause of a dead BigPond setup",
+      "p": "Telstra documents exactly three hostnames for mail clients, and all of them are on <code>telstra.com</code>. If a phone or desktop client was configured years ago against a bigpond server name, it is pointing at a name Telstra no longer publishes for client access. The address stays the same, the server does not."
+    },
+    {
+      "h": "This server does not implement MOVE, so organising mail takes three commands",
+      "p": "The Telstra IMAP server does not advertise the MOVE extension, so filing a message is done as COPY, then STORE the deleted flag, then EXPUNGE. mcpemails does that for you and the result is identical, but a move is not atomic here: if the connection drops mid sequence you can be left with the message in both folders, which is why a repeated organise on this provider sometimes needs a second look."
+    },
+    {
+      "h": "No UIDPLUS means the server will not tell us the new message id",
+      "p": "Telstra's server omits UIDPLUS, so it does not return the UID it assigned after a copy or an append. A client cannot confirm a filed or saved message by id and has to search the destination folder for it instead. This is why an operation that reports success on Telstra carries slightly less proof than the same operation on a provider that supports UIDPLUS."
+    },
+    {
+      "h": "Switching an account from POP to IMAP destroys the POP folders",
+      "p": "Telstra warns that all POP folders and emails are lost when an account is switched from POP to IMAP. If the mailbox you are connecting has been sitting on POP with mail filed locally, download or export it before you change the account to IMAP. mcpemails is IMAP only, so this is a decision to make once, deliberately, before connecting."
+    }
+  ],
+  "limits": [
+    "The Telstra SMTP host announces a maximum message size of about 30 MB, so a send with large attachments is refused before it leaves.",
+    "Moves fall back to COPY plus STORE plus EXPUNGE because the server does not implement MOVE."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Telstra BigPond email?",
+      "a": "Not directly. Claude has no built-in Telstra connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your BigPond mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the BigPond IMAP and SMTP settings?",
+      "a": "IMAP is imap.telstra.com on port 993 with implicit TLS. SMTP is smtp.telstra.com on port 465, also implicit TLS, with outgoing authentication enabled. The username is your full email address and the password is your Telstra email password. Both hosts were verified from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "My address ends in bigpond.com. Do I use a bigpond server?",
+      "a": "No. Telstra migrated BigPond mailboxes onto the Telstra Mail platform, and the hostnames a mail client should use are the Telstra ones. Addresses on bigpond.com, bigpond.net.au and telstra.com all connect to the same two hosts, with no per customer variation to look up."
+    },
+    {
+      "q": "Do I need an app password for BigPond?",
+      "a": "No. Telstra does not issue app specific passwords for mail clients. You sign in with the same email password you use on Telstra webmail. If it is rejected, check the case of every character and confirm the password in webmail first, because Telstra treats it as case sensitive."
+    },
+    {
+      "q": "Is my BigPond mail stored on your servers?",
+      "a": "No. Messages are fetched live from Telstra over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Telstra BigPond inbox",
+    "sub": "Connect a bigpond.com or telstra.com address in minutes. One inbox free forever, no card required."
+  }
+}

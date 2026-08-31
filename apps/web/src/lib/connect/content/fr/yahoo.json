@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Connecter Yahoo Mail à Claude (et à toute IA)",
+    "description": "Connectez Yahoo Mail à Claude, Cursor, ChatGPT et tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Yahoo. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Yahoo Mail + IA",
+    "titleLine1": "Connectez Yahoo Mail à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Yahoo en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Yahoo se connecte : un mot de passe d'application",
+    "body": "Yahoo Mail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Yahoo</b>. Activez la vérification en deux étapes, générez un mot de passe d'application dans la sécurité de votre compte Yahoo, puis collez-le dans mcpemails avec votre adresse Yahoo. Pas de parcours OAuth, pas de fenêtres pop-up dans le navigateur."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Générez un mot de passe d'application Yahoo",
+      "p": "Activez la vérification en deux étapes, puis générez un mot de passe d'application dans la sécurité de votre compte Yahoo."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Ajoutez votre adresse Yahoo et le mot de passe d'application pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Yahoo à votre IA",
+    "sub": "Connectez Yahoo Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.hostgator.com/help/article/pop3-or-imap-with-ssl",
+    "https://www.hostgator.com/help/article/email-connection-settings",
+    "https://www.hostgator.com/help/article/professional-email-product-overview"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.hostgator.com/help/article/pop3-or-imap-with-ssl",
+    "usernameForm": "Your full email address, for example sales@yourdomain.com. Not your cPanel username.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "HostGator Email in Claude: IMAP Settings That Work",
+    "description": "HostGator's wildcard certificate covers gator1234.hostgator.com, not your domain. Use the server hostname for IMAP 993 and connect the mailbox to Claude, free."
+  },
+  "hero": {
+    "eyebrow": "HostGator + AI",
+    "titleLine1": "Connect HostGator email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real HostGator mailbox. Read, search, send, reply, schedule and organize mail over IMAP, using the server hostname HostGator's certificate actually covers.",
+    "answer": "Claude cannot reach a HostGator mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. HostGator does not run one shared mail server: for a secure connection you point at your own server's hostname, which is gatorNNNN.hostgator.com on shared and cloud plans and servername.websitewelcome.com on reseller plans, because those are the names their wildcard certificate covers. Authentication is the password set on the mailbox in cPanel, and one inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from cPanel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How HostGator mail connects: the server hostname, IMAP 993",
+    "body": "HostGator runs cPanel, and mailboxes speak IMAP on port 993 with SMTP on 465 for secure connections, or 143 and 25 or 587 unencrypted. The part people get wrong is the hostname. <code>mail.yourdomain.com</code> works for an unencrypted session, but HostGator secures mail with <b>wildcard</b> certificates covering <code>.hostgator.com</code> on shared and cloud accounts and <code>.websitewelcome.com</code> on reseller accounts. Your own domain is not on either certificate. So for TLS you use the server's own hostname, in the form <code>gator1234.hostgator.com</code> or <code>servername.websitewelcome.com</code>. HostGator's own SSL article says exactly this, and recommends updating the settings rather than suppressing the warning. The username is always the full email address."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
+    },
+    {
+      "h": "Read your server hostname out of the cPanel URL",
+      "p": "From the HostGator Customer Portal, choose <b>Hosting</b>, then <b>Manage</b>, then <b>cPanel</b> under Quick Links. Once cPanel opens, look at your browser's address bar. The hostname in that URL is your server: <code>gator1234.hostgator.com</code> on shared and cloud, or a <code>websitewelcome.com</code> name on reseller. That is the value to use for both IMAP and SMTP. It is also printed under Email Accounts, then <b>Connect Devices</b>, in the <b>Mail Client Manual Settings</b> block."
+    },
+    {
+      "h": "Use the mailbox password, not the cPanel password",
+      "p": "IMAP authenticates against the password set on the individual address. In cPanel, open <b>Email Accounts</b> and click <b>Manage</b> next to the address to set one. Then paste it into mcpemails together with the full email address as the username and the server hostname you just copied."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Shared and reseller accounts live on different certificate families",
+      "p": "A shared or cloud account is covered by the wildcard on <code>.hostgator.com</code>; a reseller account is covered by the one on <code>.websitewelcome.com</code>. That means a reseller who follows a shared-hosting HostGator guide and enters a <code>gator</code> hostname does not just get a certificate warning, they connect to the wrong machine entirely. Check which product you have before copying anyone's settings, including HostGator's own articles, several of which are written for one case only."
+    },
+    {
+      "h": "Your browser's address bar is the fastest place to find the server name",
+      "p": "HostGator does not print the server hostname prominently in the portal, and the number in <code>gator1234</code> is not derivable from your domain, your account number or anything else you already know. The reliable trick is to open cPanel and read the hostname straight out of the URL. Support and the Connect Devices page will both tell you the same thing, but the address bar is one click away and cannot be misread."
+    },
+    {
+      "h": "Clicking through the certificate warning is the wrong fix, and it hides a real one",
+      "p": "Because the mismatch is so common on HostGator, the usual workaround is to accept the certificate or add an exception. A desktop client lets you. An automated IMAP connection from a server, which is what an MCP integration is, generally will not, and should not: once you habitually ignore the name mismatch you have no way to notice a genuine one. Point at the server hostname and the certificate validates properly, with no exception anywhere."
+    }
+  ],
+  "limits": [
+    "Professional Email, HostGator's paid Titan-based product, is a separate mailbox on separate servers. Its settings are not the cPanel settings on this page, and the two do not share passwords.",
+    "A domain moved to Google Workspace through HostGator no longer has mail on the HostGator server at all. Its MX records point at Google, and the mailbox must be connected as Gmail."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with HostGator email?",
+      "a": "Not directly. Claude has no HostGator connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, with the same credentials any desktop mail client would use."
+    },
+    {
+      "q": "What are the HostGator IMAP and SMTP settings?",
+      "a": "Secure IMAP is port 993 and secure SMTP is port 465, both with implicit TLS. The hostname is your server's own name: gator followed by your server number and hostgator.com on shared and cloud plans, or a websitewelcome.com name on reseller plans. Use the full email address as the username for both incoming and outgoing."
+    },
+    {
+      "q": "Why does HostGator email give an SSL certificate error?",
+      "a": "Because HostGator secures mail with wildcard certificates for hostgator.com and websitewelcome.com, and your own domain is not listed on them. Pointing a client at mail.yourdomain.com over TLS therefore fails name validation. Replace the hostname with your server's name and the error stops without any exception being added."
+    },
+    {
+      "q": "How do I find my HostGator server name?",
+      "a": "Log in to the Customer Portal, choose Hosting, then Manage, then cPanel. When cPanel opens, the hostname in your browser's address bar is your server name. The same value appears in cPanel under Email Accounts, then Connect Devices, in the Mail Client Manual Settings section."
+    },
+    {
+      "q": "Is my HostGator mail stored on your servers?",
+      "a": "No. Messages are fetched live from your HostGator server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a HostGator inbox",
+    "sub": "Connect a HostGator mailbox in minutes. One inbox free forever, no card required."
+  }
+}

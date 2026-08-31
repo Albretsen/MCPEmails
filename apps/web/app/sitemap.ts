@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
-import { localePath, languageAlternates } from '@/i18n/seo';
+import { localePath, languageAlternates, languageAlternatesFor } from '@/i18n/seo';
+import { PROVIDERS } from '@/lib/connect/providers.mjs';
 import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
 
@@ -30,28 +31,7 @@ const MARKETING_PAGES: {
   { path: '/security', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/about', lastModified: '2026-08-29', changeFrequency: 'yearly', priority: 0.5 },
   { path: '/for/founders', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.8 },
-  // Provider landing pages. Priorities follow measured acquisition, not brand
-  // size: generic IMAP is the largest and best-retaining cohort of connected
-  // inboxes and Yahoo out-converts everything except the home page, while
-  // Gmail retains worst of the real providers.
-  { path: '/connect/imap', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.9 },
-  { path: '/connect/gmail', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.8 },
-  { path: '/connect/yahoo', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.8 },
-  { path: '/connect/fastmail', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/connect/icloud', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/connect/zoho', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/connect/yandex', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/connect/gmx', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/connect/aol', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/connect/mail-ru', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.5 },
-  { path: '/connect/web-de', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.5 },
-  { path: '/connect/cpanel', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/connect/ionos', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/connect/ovh', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.5 },
-  { path: '/connect/migadu', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.5 },
-  { path: '/connect/namecheap', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.5 },
-  { path: '/connect/rackspace', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.5 },
-  { path: '/connect/hostinger', lastModified: '2026-08-31', changeFrequency: 'monthly', priority: 0.5 },
+  { path: '/connect', lastModified: '2026-08-31', changeFrequency: 'weekly', priority: 0.9 },
   { path: '/blog', lastModified: '2026-08-02', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/privacy', lastModified: '2026-08-27', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/terms', lastModified: '2026-07-28', changeFrequency: 'yearly', priority: 0.3 },
@@ -67,6 +47,33 @@ export default function sitemap(): MetadataRoute.Sitemap {
       alternates: { languages: languageAlternates(path) },
     }),
   );
+
+  // Provider landing pages, generated from the same registry that decides
+  // which locale/provider pages exist at all. They were hand-listed here while
+  // there were six of them; at 106 a hand-maintained list is a list that drifts,
+  // and a sitemap that promises a URL the router does not generate is worse
+  // than one that omits it. `languageAlternatesFor` is what keeps the hreflang
+  // honest for the long tail that ships in English only.
+  //
+  // Priority follows how much the page can be expected to earn: the generic
+  // IMAP page is the largest and best-retaining cohort of connected inboxes,
+  // and the pages for providers we cannot connect are last, because they exist
+  // to answer a question truthfully rather than to acquire anyone.
+  const PROVIDER_PRIORITY: Record<string, number> = {
+    generic: 0.9, consumer: 0.8, business: 0.8, hosting: 0.7,
+    cpanel: 0.7, privacy: 0.6, regional: 0.6, isp: 0.5,
+    selfhost: 0.5, blocked: 0.4,
+  };
+  const providerEntries: MetadataRoute.Sitemap = PROVIDERS.map((p) => {
+    const path = `/connect/${p.slug}`;
+    return {
+      url: localePath('en', path),
+      lastModified: new Date(`${p.evidence.verifiedOn}T00:00:00.000Z`),
+      changeFrequency: 'monthly' as const,
+      priority: PROVIDER_PRIORITY[p.category] ?? 0.5,
+      alternates: { languages: languageAlternatesFor(path, p.locales) },
+    };
+  });
 
   // Individual blog posts, each with their own hreflang alternates.
   // Posts flagged `noindex` (e.g. previews of not-yet-shipped features) are
@@ -90,5 +97,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       };
     });
 
-  return [...staticEntries, ...postEntries];
+  return [...staticEntries, ...providerEntries, ...postEntries];
 }

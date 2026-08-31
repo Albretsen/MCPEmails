@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "https://www.greengeeks.com/support/article/how-do-i-setup-an-e-mail-account/",
+    "https://www.greengeeks.com/support/article/getting-started-setting-up-email-applications/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "usernameForm": "Your full email address, for example hello@yourdomain.com, not the part before the at sign.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "GreenGeeks Email IMAP Settings and Claude MCP Setup",
+    "description": "GreenGeeks prints your real mail host under cPanel, Email Accounts, Connect Devices. Connect that mailbox to Claude over IMAP 993. One inbox free, forever."
+  },
+  "hero": {
+    "eyebrow": "GreenGeeks + AI",
+    "titleLine1": "Connect GreenGeeks email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real GreenGeeks mailbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you set when the address was created.",
+    "answer": "Claude cannot reach a GreenGeeks mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. GreenGeeks runs standard cPanel and does not operate a shared mail hostname: your host is built from your own domain or from the server your account sits on, and cPanel prints the exact value under Email Accounts, then Connect Devices, in the Mail Client Manual Settings block. You authenticate with the mailbox password rather than your GreenGeeks dashboard login, and one inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from cPanel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How GreenGeeks mail connects: cPanel prints the host, IMAP 993",
+    "body": "GreenGeeks is a straightforward cPanel host. Every hosting plan includes mailboxes on your own domain, and they speak IMAP on port 993 over TLS with SMTP on 465. There is no <code>imap.greengeeks.com</code> to point at, because the mailbox lives on the specific server your account was provisioned on. GreenGeeks generates the correct values per account rather than publishing them in an article, and their support documentation says so explicitly: the settings would not be correct for everyone if printed generically. The incoming host is either <code>mail.yourdomain.com</code> or the server hostname, and the username is always the whole email address. The password is the one you typed, or generated, when you created that address in cPanel."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
+    },
+    {
+      "h": "Pull the settings from Connect Devices in cPanel",
+      "p": "Log in at my.greengeeks.com, open the cPanel for the hosting account, and under <b>Email</b> click <b>Email Accounts</b>. Find the row for the address you want and click <b>Connect Devices</b>. Scroll to <b>Mail Client Manual Settings</b>. That block gives the exact secure incoming host, the IMAP port and the SMTP port for your account. Copy them rather than typing what you remember."
+    },
+    {
+      "h": "Set or confirm the mailbox password",
+      "p": "IMAP checks the password attached to the email address, which is separate from your GreenGeeks dashboard password and separate from the cPanel login. If you do not have it, use <b>Manage</b> on the address row in Email Accounts to set a new one, then paste it into mcpemails with the full address as the username."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The welcome email with your settings is delivered into the new mailbox itself",
+      "p": "When you create an address, cPanel offers to send a welcome message containing the client configuration. GreenGeeks leaves that option ticked. The message is delivered to the address you just made, so the only way to read it is webmail, using credentials you are trying to look up. It is a useful document once you get in, but do not go looking for it in your personal inbox, and do not treat its absence there as a sign that something failed."
+    },
+    {
+      "h": "The same cPanel shows the settings in two places, at two levels of detail",
+      "p": "<b>Connect Devices</b> on the address row gives the full Mail Client Manual Settings block, including both the SSL and the non-SSL variants. The three-dot menu on the same row has a shorter <b>Mail Configuration</b> view that lists username, incoming server and port, and outgoing server and port. People who land on the short view sometimes conclude their server has no secure settings. It does. Go back and use Connect Devices."
+    },
+    {
+      "h": "Repeated bad logins get the connecting address firewalled, and it looks like a timeout",
+      "p": "GreenGeeks servers run a host firewall that blocks an IP after several failed SMTP or IMAP authentications. Once blocked, the next attempt does not return an authentication error; the connection simply never completes, so the symptom changes from a clear rejection to a hang or a timeout. If a mailbox that used to work suddenly stops responding after you fixed a wrong password, the password is now correct and the block is the problem. Support clears it."
+    }
+  ],
+  "limits": [
+    "GreenGeeks applies per-hour outbound sending limits on shared plans. High-volume automated sending from an AI agent can hit them, and the failure appears as a deferred or rejected send rather than a connection error.",
+    "mcpemails connects the mailbox only. Aliases, forwarders, autoresponders and spam settings stay in cPanel."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with GreenGeeks email?",
+      "a": "Not directly. Claude ships no connector for cPanel mail hosts. Connecting an MCP server such as mcpemails to your GreenGeeks mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access, using the same credentials you would put into Thunderbird or Apple Mail."
+    },
+    {
+      "q": "What are the GreenGeeks IMAP and SMTP settings?",
+      "a": "IMAP is port 993 with implicit TLS and SMTP is port 465. The hostname is specific to your account and is not published in any article, because it depends on which server your hosting sits on. Read it from cPanel under Email Accounts, then Connect Devices, in the Mail Client Manual Settings block. The username is your full email address."
+    },
+    {
+      "q": "Where do I find my GreenGeeks mail server name?",
+      "a": "In cPanel, open Email Accounts, click Connect Devices on the row for the address, and scroll to Mail Client Manual Settings. That page shows the exact incoming and outgoing hostnames for your server, along with both the secure and insecure port pairs. The secure pair is the one to use."
+    },
+    {
+      "q": "Why is my GreenGeeks email password rejected?",
+      "a": "Usually because it is the wrong password rather than the wrong server. The mailbox has its own password, set when the address was created, and neither your my.greengeeks.com dashboard password nor your cPanel password will authenticate IMAP. Reset it from the Manage link on the address row in Email Accounts."
+    },
+    {
+      "q": "Is my GreenGeeks mail stored on your servers?",
+      "a": "No. Messages are fetched live from your GreenGeeks server over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a GreenGeeks inbox",
+    "sub": "Connect a GreenGeeks mailbox in minutes. One inbox free forever, no card required."
+  }
+}

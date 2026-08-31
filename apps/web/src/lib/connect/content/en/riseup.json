@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://riseup.net/en/email/clients",
+    "https://riseup.net/en/email/settings/mail-passwords",
+    "https://riseup.net/en/email",
+    "https://account.riseup.net/user/new",
+    "https://support.riseup.net/help/en-us/1-e-mail/7-how-do-i-create-a-new-email-account"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Riseup account password",
+    "helpUrl": "https://riseup.net/en/email/clients",
+    "usernameForm": "Your Riseup account name on its own, for example joehill, not joehill@riseup.net.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Riseup Email to Claude over IMAP",
+    "description": "Connect a Riseup mailbox to Claude, Cursor or any MCP client over IMAP at mail.riseup.net:993. Log in with your account name, not the full riseup.net address."
+  },
+  "hero": {
+    "eyebrow": "Riseup + AI",
+    "titleLine1": "Connect Riseup email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Riseup inbox. Read, search, send, reply, schedule and organize mail over IMAP, with the login quirk that breaks most setups explained and the trade-off stated rather than skipped.",
+    "answer": "Claude cannot reach a Riseup mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at mail.riseup.net on port 993, and SMTP on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The detail that decides whether the login succeeds is the username: Riseup expects your account name on its own, such as joehill, and not the full joehill@riseup.net address. Riseup issues no app passwords for mail, so the credential you store is your Riseup account password. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Account name, not the full address",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Riseup connects: one host, and a username without the domain",
+    "body": "Riseup serves both directions from one hostname. IMAP is <code>mail.riseup.net</code> on port 993 with TLS, or 143 with STARTTLS. SMTP is <code>mail.riseup.net</code> on port 465 with TLS, or 587 with STARTTLS, and Riseup notes that 587 is less often blocked than 465 if you are routing through Tor. The credential is your ordinary Riseup account password: there are no app passwords for mail, and Riseup is a collectively run, donation-funded service rather than a plan-tiered one, so there is nothing to upgrade to unlock IMAP. The username is the part that catches people. Riseup's own client documentation gives it as the account name alone, <code>joehill</code> rather than <code>joehill@riseup.net</code>, and clients that helpfully fill in your whole address get refused."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, with no card. You get an MCP URL and a key at the end of it."
+    },
+    {
+      "h": "Check your Riseup password works outside webmail",
+      "p": "Riseup's mail password page points out that a password containing special characters can work at <code>mail.riseup.net</code> in the browser and still fail in a mail client. If yours has unusual characters and the login is refused, change it at account.riseup.net to something long but plain before you assume anything else is wrong. Riseup does not currently offer two-factor authentication for its webmail, so there is no second factor to work around."
+    },
+    {
+      "h": "Add the mailbox in mcpemails with the bare account name",
+      "p": "Choose IMAP / SMTP. In the username field enter your Riseup account name <b>without</b> <code>@riseup.net</code>, and enter your account password. The host is prefilled as <code>mail.riseup.net</code> for both directions and was verified from a live TLS connection. Leave any option labelled secure authentication, encrypted password or CRAM-MD5 switched off; Riseup asks you not to use those."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The username is your account name, not your email address",
+      "p": "Riseup's client documentation gives the username as the account name on its own: <code>joehill</code>, not <code>joehill@riseup.net</code>. Nearly every other provider wants the full address, so autoconfiguration, muscle memory and third-party guides all push you toward the wrong value, and the server answers with a plain authentication failure that reads exactly like a mistyped password. If a Riseup login is refused and you are sure of the password, change this first."
+    },
+    {
+      "h": "Two password traps that both look like a wrong password",
+      "p": "First, Riseup asks you not to enable options called secure password or secure authentication, because those challenge-response mechanisms require the server to keep a cleartext copy of your password, which Riseup will not do. A client configured for CRAM-MD5 gets nowhere. Use plain password authentication inside the TLS connection, which is what the encrypted transport is for. Second, Riseup documents that if your password works at mail.riseup.net in a browser but not in a mail client, you should check whether it contains special characters. Both failures surface identically, and neither is a password you have forgotten."
+    },
+    {
+      "h": "Riseup's account policy is part of the setup, not fine print",
+      "p": "Riseup is invite-based: new accounts need an invite code from an existing user, and a freshly created account cannot issue invites itself. Storage is 1 GB, and the SMTP server accepts messages up to roughly 25 MB, the tightest ceiling in this category, so large attachments an agent tries to send are refused at submission. Riseup also states that an account may be deleted without warning if it is used to send unsolicited bulk mail, if you fail to log in for an extended period, or if it is used to contribute to harm and abuse of other people. Do not point automated bulk sending at it, and do not treat an agent polling IMAP as a substitute for using the account yourself."
+    },
+    {
+      "h": "No MOVE, no UIDPLUS, no SPECIAL-USE",
+      "p": "Riseup's IMAP server advertises IDLE and SASL-IR, enough for responsive reading, but not MOVE, UIDPLUS or SPECIAL-USE. Filing a message is a COPY, then a STORE of the \\Deleted flag, then an EXPUNGE, and with no UIDPLUS the new UID is found by search rather than reported. Folder roles are matched by name because nothing on the wire declares them, which matters if you have renamed folders or a client created a second Sent folder years ago."
+    }
+  ],
+  "limits": [
+    "Connecting any mailbox to an AI client means that AI provider reads the content of the messages it works with. mcpemails fetches mail live from mail.riseup.net for each request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you connect. Many people hold a Riseup account specifically to keep correspondence away from large commercial technology companies, and connecting it here works against that. That is a judgement about your own threat model rather than a technical limitation, and it is worth making before you connect rather than after.",
+    "There is no scoped credential for mail. Riseup lets you set separate passwords for VPN and chat at account.riseup.net, but email has no app password, so the secret stored here is the account password. Revoking this connection means changing that password and re-entering it everywhere else.",
+    "Mail that arrives OpenPGP-encrypted reaches an IMAP client as an armoured ciphertext block. mcpemails holds no private key of yours, so an agent sees headers and can file or flag those messages but cannot read them."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Riseup email?",
+      "a": "Not directly. Claude has no Riseup connector and cannot speak IMAP by itself. Connecting an MCP server such as mcpemails to your Riseup mailbox gives Claude read, search, send, reply, schedule and organize access over IMAP, and the same connection works in Cursor, ChatGPT and other MCP clients without repeating the setup."
+    },
+    {
+      "q": "What are the Riseup IMAP and SMTP settings?",
+      "a": "IMAP is mail.riseup.net on port 993 with TLS, or 143 with STARTTLS. SMTP is mail.riseup.net on port 465 with TLS, or 587 with STARTTLS, and Riseup suggests 587 for Tor users because exit nodes block it less often. The username is your account name without the domain. Both hosts were verified from a live TLS connection."
+    },
+    {
+      "q": "Why is my Riseup password rejected in a mail client?",
+      "a": "Three causes cover almost all of it. You entered your full address instead of your bare account name. Your client has secure authentication or CRAM-MD5 enabled, which Riseup deliberately does not support. Or your password contains special characters that survive a browser login but not a client one. Try the bare username first, then plain password authentication over TLS."
+    },
+    {
+      "q": "Does Riseup have app passwords or two-factor authentication?",
+      "a": "Not for email. Riseup does not issue app-specific passwords for mail, and it does not currently offer two-factor authentication on its webmail. You can set separate passwords for VPN and chat at account.riseup.net, which keeps those credentials off a device you do not fully trust, but a mail client always receives the account password itself."
+    },
+    {
+      "q": "Do I need an invite code for a Riseup account?",
+      "a": "Yes. Riseup requires an invite code from an existing user rather than a phone number or personal details, and a newly created account cannot generate invites for others. That is a Riseup account question rather than a connection one: if you already have a working Riseup mailbox, nothing extra is needed to connect it here."
+    },
+    {
+      "q": "Is my Riseup mail stored on your servers?",
+      "a": "No. Messages are fetched live from mail.riseup.net over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained. The AI client you connect does receive the content of whatever it reads, which is a separate matter from storage and the thing most worth thinking about here."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Riseup inbox",
+    "sub": "Connect Riseup in minutes, with the account name as your username. One inbox free forever, no card required."
+  }
+}

@@ -28,6 +28,44 @@ export function metaAlternates(locale: string, pathname: string) {
 }
 
 /**
+ * hreflang for a page that exists in only some locales.
+ *
+ * The provider landing pages are the first pages here that are not translated
+ * five ways: the long tail of hosting providers and regional ISPs ships in
+ * English only, because 400-odd machine-translated pages about Bahnhof's IMAP
+ * host is precisely the scaled-content pattern search engines demote. An
+ * hreflang pointing at a locale that does not exist is worse than no hreflang,
+ * so the alternates have to be built from the same list that decides which
+ * pages get generated.
+ */
+export function languageAlternatesFor(
+  pathname: string,
+  locales: readonly string[],
+): Record<string, string> {
+  const languages: Record<string, string> = {};
+  for (const l of routing.locales) {
+    if (locales.includes(l)) languages[l] = localePath(l, pathname);
+  }
+  const fallback = locales.includes(routing.defaultLocale)
+    ? routing.defaultLocale
+    : locales[0];
+  if (fallback) languages['x-default'] = localePath(fallback, pathname);
+  return languages;
+}
+
+/** `alternates` for a page present in only some locales. */
+export function metaAlternatesFor(
+  locale: string,
+  pathname: string,
+  locales: readonly string[],
+) {
+  return {
+    canonical: localePath(locale, pathname),
+    languages: languageAlternatesFor(pathname, locales),
+  };
+}
+
+/**
  * Default social-share image for marketing pages. Served by the
  * `app/opengraph-image.tsx` route handler (1200x630 brand card). Blog posts
  * override this with their own cover image.
@@ -241,57 +279,72 @@ export function connectJsonLd(
     description,
     howToName,
     steps,
+    faq = [],
+    connectLabel = 'Connect',
   }: {
     path: string;
     title: string;
     description: string;
     howToName: string;
     steps: { h: string; p: string }[];
+    faq?: { q: string; a: string }[];
+    connectLabel?: string;
   }
 ) {
   const url = localePath(locale, path);
-  return {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'HowTo',
-        name: howToName,
-        description,
-        step: steps.map((s, i) => ({
-          '@type': 'HowToStep',
-          position: i + 1,
-          name: s.h,
-          text: s.p,
-        })),
-      },
-      {
-        '@type': 'WebPage',
-        '@id': url,
-        url,
-        name: title,
-        description,
-        inLanguage: locale,
-        isPartOf: { '@id': `${APP_URL}/#website` },
-        breadcrumb: { '@id': `${url}#breadcrumb` },
-      },
-      {
-        '@type': 'BreadcrumbList',
-        '@id': `${url}#breadcrumb`,
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
-          { '@type': 'ListItem', position: 2, name: title },
-        ],
-      },
-    ],
-  };
+  const graph: Record<string, unknown>[] = [
+    {
+      '@type': 'HowTo',
+      name: howToName,
+      description,
+      step: steps.map((s, i) => ({
+        '@type': 'HowToStep',
+        position: i + 1,
+        name: s.h,
+        text: s.p,
+      })),
+    },
+    {
+      '@type': 'WebPage',
+      '@id': url,
+      url,
+      name: title,
+      description,
+      inLanguage: locale,
+      isPartOf: { '@id': `${APP_URL}/#website` },
+      breadcrumb: { '@id': `${url}#breadcrumb` },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${url}#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+        // The hub is a real, crawlable page, so it belongs in the trail. A
+        // two-item breadcrumb on a page that sits three levels down is the
+        // kind of mismatch that gets the whole block ignored.
+        { '@type': 'ListItem', position: 2, name: connectLabel, item: localePath(locale, '/connect') },
+        { '@type': 'ListItem', position: 3, name: title },
+      ],
+    },
+  ];
+  // FAQPage stopped producing rich results for non-authoritative sites in 2023,
+  // so this is not here for the stars. It is here because the question/answer
+  // pairing is what generative results quote, and marking it up is the cheapest
+  // way to make the pairing unambiguous.
+  if (faq.length > 0) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': `${url}#faq`,
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    });
+  }
+  return { '@context': 'https://schema.org', '@graph': graph };
 }
 
-/**
- * Structured-data graph for a standalone marketing page (e.g. the
- * native-connectors-vs-mcp comparison): a `WebPage` + `BreadcrumbList` tying it
- * into the site graph. Lean and literally true — no Article/author signals we
- * can't back up.
- */
 export function pageJsonLd(
   locale: string,
   { path, title, description }: { path: string; title: string; description: string }

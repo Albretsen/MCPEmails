@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-du-cloud/mail-orange/le-mail-orange-nouvelle-version/parametrer-la-boite-mail/mail-orange-comment-activer-ou-desactiver-les-acces-pop-imap-pour-les-logiciels-ou-applications-de-messagerie-tiers_427398-957069"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe dédié",
+    "helpUrl": "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "usernameForm": "Your full address, including the domain: nom@orange.fr, or nom@wanadoo.fr for a legacy Wanadoo address.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Orange Mail IMAP Settings and Claude MCP Access",
+    "description": "Connect an Orange.fr mailbox to Claude and any MCP client at imap.orange.fr:993. POP/IMAP access must be enabled first, and Orange issues a dedicated password."
+  },
+  "hero": {
+    "eyebrow": "Orange + AI",
+    "titleLine1": "Connect your Orange mailbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real Orange inbox. Read, search, send, reply, schedule and organize mail over IMAP, once you have turned on the POP/IMAP access Orange keeps switched off.",
+    "answer": "Claude cannot reach an Orange mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.orange.fr on port 993, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Two things have to be right first: Orange disables POP and IMAP access on the mailbox for security reasons, so you switch it on in the webmail under Sécurité, and Orange recommends authenticating with the mot de passe dédié from your Espace client rather than your ordinary Orange password. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Enable POP/IMAP, use the dedicated password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Orange connects: IMAP, a toggle, and a dedicated password",
+    "body": "Orange serves IMAP at <code>imap.orange.fr</code> on port 993 over implicit TLS and SMTP submission at <code>smtp.orange.fr</code> on port 465, and the server behind them identifies itself as Dovecot. Addresses on <code>orange.fr</code> and on the older <code>wanadoo.fr</code> domain live on the same pair of hostnames, so there is nothing regional or per-customer to look up. What is specific to Orange is everything either side of the connection. Orange states that for security reasons POP and IMAP access is disabled by default, so a brand new client login is refused before any password is checked. And Orange publishes a <b>mot de passe dédié</b>, described in their own words as a password specific to POP, IMAP and SMTP access, which you collect from your Espace client under <b>Connexion et sécurité</b> and use in place of your ordinary Orange password."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Turn on POP/IMAP access in the Orange webmail",
+      "p": "Open your Orange mailbox in a browser, click the cog (<b>roue crantée</b>), choose <b>tous les paramètres</b>, then <b>Sécurité</b>, then <b>Protocoles POP ou IMAP</b>. Click <b>Modifier</b>, tick <b>Activer POP/IMAP</b> and confirm with <b>Valider</b>. Do this before anything else: until it is on, every client login is refused and the error looks like a wrong password."
+    },
+    {
+      "h": "Collect the mot de passe dédié from your Espace client",
+      "p": "Sign in to your Espace client on orange.fr and open the <b>Connexion et sécurité</b> section. The dedicated password shown there is the one Orange intends you to use for POP, IMAP and SMTP. It is a separate value from the password you use to sign in to orange.fr, and Orange recommends it specifically for mail software."
+    },
+    {
+      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the full address such as nom@orange.fr, and paste the dedicated password. The Orange hosts and ports are prefilled. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "POP/IMAP is off until you turn it on, and the refusal looks like a bad password",
+      "p": "Orange's own guidance for connecting a mail application not supplied by Orange tells you to check that access is enabled in your mailbox settings, because <b>pour des raisons de sécurité, ces accès sont désactivés par défaut</b>. The rejection you get when it is off carries no explanation. People rotate the password, retype the address and reinstall the client, none of which helps, because nothing in the credential was ever wrong. Orange's help pages have not always agreed with each other about the default state, so treat the <b>Sécurité</b>, then <b>Protocoles POP ou IMAP</b> screen as the first thing to check rather than the last."
+    },
+    {
+      "h": "The mot de passe dédié is a separate credential from your orange.fr sign-in",
+      "p": "Orange describes it as a password specific to POP, IMAP and SMTP access, retrieved from the Espace client under <b>Connexion et sécurité</b>. Because it is a second value that most people never look at, it drifts: changing your main Orange password does not change it, and vice versa. Use the dedicated one on both the incoming and the outgoing side of the connection. If sending works and reading does not, or the reverse, it is usually because only one half was updated."
+    },
+    {
+      "h": "The server offers no IDLE, so mail arrives on a poll rather than a push",
+      "p": "Orange's IMAP banner advertises <code>SASL-IR</code> and <code>LOGIN-REFERRALS</code> but not <code>IDLE</code>, so there is no way for the server to announce new mail on an open connection. Every client, ours included, has to ask. That is invisible in day to day use, but it means an instruction like <b>tell me the moment a reply arrives</b> is bounded by how often the mailbox is checked, not by how fast Orange delivers."
+    },
+    {
+      "h": "No MOVE, no SPECIAL-USE, and French folder names",
+      "p": "The server does not advertise the <code>MOVE</code> extension, so filing a message runs as a copy, a flag update and an expunge instead of one atomic command. <code>SPECIAL-USE</code> is absent too, which means Sent, Drafts, Trash and Junk are matched by name rather than by role. An Orange mailbox usually names them <b>Envoyés</b>, <b>Brouillons</b>, <b>Corbeille</b> and <b>Spams</b>, so name the folder explicitly if your agent cannot find it."
+    }
+  ],
+  "limits": [
+    "Orange caps outgoing messages at roughly 46 MB of encoded message, so a large attachment forwarded by an agent can be rejected outright at the SMTP step.",
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Orange mail?",
+      "a": "Not directly. Claude ships no Orange connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor, ChatGPT and other MCP clients afterwards."
+    },
+    {
+      "q": "What are the Orange IMAP and SMTP settings?",
+      "a": "IMAP is imap.orange.fr on port 993 with implicit TLS. SMTP is smtp.orange.fr on port 465, also implicit TLS, with authentication required. Log in with your full address and Orange's dedicated password. Both hosts were confirmed from a live TLS connection and are the same for orange.fr and wanadoo.fr addresses."
+    },
+    {
+      "q": "Why does Orange reject my password in a mail client?",
+      "a": "Two reasons, in this order. POP/IMAP access is disabled on the mailbox, which you fix in the webmail under Sécurité, then Protocoles POP ou IMAP. Or you are using your orange.fr sign-in password instead of the mot de passe dédié that Orange publishes in the Espace client under Connexion et sécurité for POP, IMAP and SMTP."
+    },
+    {
+      "q": "Do wanadoo.fr addresses use different servers?",
+      "a": "No. A legacy wanadoo.fr address is an Orange mailbox and authenticates against the same imap.orange.fr and smtp.orange.fr hosts, with the same POP/IMAP toggle and the same dedicated password. Enter the address exactly as it is written, including the wanadoo.fr domain."
+    },
+    {
+      "q": "Is my Orange mail stored on your servers?",
+      "a": "No. Messages are fetched live from Orange over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an Orange inbox",
+    "sub": "Connect Orange mail in minutes. One inbox free forever, no card required."
+  }
+}

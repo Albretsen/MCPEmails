@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.siteground.com/kb/how_to_configure_my_mail_client",
+    "https://www.siteground.com/kb/get-pop-warning-using-ssltls-email-client",
+    "https://www.siteground.com/blog/cpanel-to-site-tools-status-report"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.siteground.com/kb/how_to_configure_my_mail_client",
+    "usernameForm": "Your full email address, for example username@yourdomain.com, for both incoming and outgoing.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SiteGround Email to Claude: Site Tools IMAP Settings",
+    "description": "SiteGround dropped cPanel for Site Tools. Get your real IMAP host from Mail Configuration, then connect the mailbox to Claude on port 993. One inbox free, forever."
+  },
+  "hero": {
+    "eyebrow": "SiteGround + AI",
+    "titleLine1": "Connect SiteGround email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real SiteGround mailbox. Read, search, send, reply, schedule and organize mail over IMAP, using the settings Site Tools prints for your account.",
+    "answer": "Claude cannot reach a SiteGround mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. SiteGround runs no shared mail hostname: your host is mail.yourdomain.com, or the secure server name in the form secureNNN.sgcpanel.com, and Site Tools prints the right one under Email, Accounts, Mail Configuration. Authentication is the password set on the mailbox, never your SiteGround Client Area login, and one inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from Site Tools",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How SiteGround mail connects: Site Tools, IMAP 993",
+    "body": "Every SiteGround plan includes unlimited addresses on your domain, and they speak IMAP on port 993 over TLS with SMTP on 465. The panel is the part that trips people up. SiteGround retired cPanel and replaced it with their own <b>Site Tools</b>, so nothing in a cPanel walkthrough maps to what you are looking at. The settings live at <b>Site Tools</b>, then <b>Email</b>, then <b>Accounts</b>, then the kebab menu on the account row, then <b>Mail Configuration</b>, and finally the <b>Manual Settings</b> tab. Two hostnames appear there. <code>mail.yourdomain.com</code> is the general form, and a secure server name in the shape <code>secureNNN.sgcpanel.com</code> is the one that matches SiteGround's certificate. The username is your full email address on both incoming and outgoing."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
+    },
+    {
+      "h": "Open Mail Configuration in Site Tools",
+      "p": "In the SiteGround Client Area, open the site, then <b>Site Tools</b>. Go to <b>Email</b>, then <b>Accounts</b>, find the address under Manage Email Accounts, open the kebab menu on its row and choose <b>Mail Configuration</b>. Switch to the <b>Manual Settings</b> tab. That tab, not the automatic configuration tab that opens first, is where the exact hostnames and ports are printed."
+    },
+    {
+      "h": "Take the secure server name, not just mail.yourdomain.com",
+      "p": "Note the <code>secureNNN.sgcpanel.com</code> value shown for your account and use it for both IMAP and SMTP. Set the mailbox password from the same Accounts screen if you do not have it; it is not your Client Area password. Then enter the address, the host and the password in mcpemails."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "There is no cPanel on SiteGround, so most SiteGround email guides are dead",
+      "p": "SiteGround left cPanel behind and moved every account to their own Site Tools. Search results are still full of SiteGround instructions that begin by telling you to open cPanel and click Email Accounts. Those screens do not exist on any current SiteGround plan, and there is no way to enable them. If a guide mentions cPanel, it predates the migration and every step after the first one is wrong. Site Tools is the only panel, and Mail Configuration is where the settings are."
+    },
+    {
+      "h": "The secure server number comes from the SiteGround server your site is on",
+      "p": "SiteGround's mail certificate covers <code>sgcpanel.com</code>, not customer domains, so a strict TLS client rejects <code>mail.yourdomain.com</code> on port 993. The working host is <code>secureNNN.sgcpanel.com</code>, where NNN is the number of the SiteGround server hosting the account: a site on <code>siteground164.com</code> uses <code>secure164.sgcpanel.com</code>. It is a per-account value, it changes if SiteGround moves your site, and Mail Configuration is the authoritative place to read it."
+    },
+    {
+      "h": "Mail Configuration opens on the auto-setup tab and hides the values you want",
+      "p": "The first thing SiteGround offers on that screen is a downloadable configuration file for Outlook, Apple Mail and Thunderbird. It is genuinely convenient for a desktop client, and useless for anything that needs the raw hostnames, which is what an IMAP integration needs. The plain values sit behind the <b>Manual Settings</b> tab beside it. People conclude SiteGround does not publish the settings, when they are one tab away."
+    }
+  ],
+  "limits": [
+    "SiteGround applies per-hour outbound sending limits by plan. A burst of automated sends can be throttled, which appears as a rejected or deferred message rather than a connection failure.",
+    "mcpemails connects the mailbox only. Filters, forwarders, autoresponders and spam protection stay in Site Tools."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with SiteGround email?",
+      "a": "Not directly. Claude has no SiteGround connector. Connecting an MCP server such as mcpemails to your SiteGround mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials you would give Apple Mail or Thunderbird."
+    },
+    {
+      "q": "What are the SiteGround IMAP and SMTP settings?",
+      "a": "IMAP is port 993 and SMTP is port 465, both with SSL. The hostname is either mail.yourdomain.com or, for a certificate that validates, the secure server name in the form secureNNN.sgcpanel.com for your account. Use the full email address as the username on both. POP3 on 995 exists but removes mail from the server."
+    },
+    {
+      "q": "Where are email settings in SiteGround Site Tools?",
+      "a": "Open Site Tools, then Email, then Accounts. Click the kebab menu on the row for your address and choose Mail Configuration, then switch to the Manual Settings tab. SiteGround has no cPanel, so guides that tell you to look in Email Accounts inside cPanel describe a panel your account does not have."
+    },
+    {
+      "q": "Why does SiteGround email give an SSL warning?",
+      "a": "Because SiteGround's mail certificate is issued for sgcpanel.com rather than for your domain, so mail.yourdomain.com fails name validation over TLS. Replace the hostname with the secure server name for your account, which looks like secure164.sgcpanel.com, and the warning stops without adding any exception."
+    },
+    {
+      "q": "Is my SiteGround mail stored on your servers?",
+      "a": "No. Messages are fetched live from SiteGround over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a SiteGround inbox",
+    "sub": "Connect a SiteGround mailbox in minutes. One inbox free forever, no card required."
+  }
+}

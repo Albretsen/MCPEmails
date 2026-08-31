@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://hilfe.web.de/pop-imap/einschalten.html",
+    "https://hilfe.web.de/pop-imap/index.html",
+    "https://hilfe.web.de/pop-imap/imap/index.html",
+    "https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html",
+    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "WEB.DE password, or an app password with 2FA",
+    "helpUrl": "https://hilfe.web.de/pop-imap/einschalten.html",
+    "usernameForm": "Your full WEB.DE address, including the domain: name@web.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect WEB.DE to Claude, Cursor & MCP Clients",
+    "description": "Connect WEB.DE to Claude, Cursor and any MCP client over IMAP at imap.web.de:993. POP3 and IMAP access is off by default and must be switched on first."
+  },
+  "hero": {
+    "eyebrow": "WEB.DE + AI",
+    "titleLine1": "Connect WEB.DE to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real WEB.DE inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your account password, and use the same inbox in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your account password, no OAuth setup",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Claude cannot reach WEB.DE on its own. mcpemails is a hosted MCP server that connects it over IMAP using your account password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+  },
+  "method": {
+    "title": "How WEB.DE connects: IMAP and your account password",
+    "body": "WEB.DE connects over IMAP/SMTP, but <b>POP3 and IMAP access is switched off by default</b>. Turn it on in WEB.DE under E-mail settings, POP3/IMAP retrieval, then connect with your WEB.DE address and password. WEB.DE answers on both standard outgoing transports, implicit TLS on port 465 and STARTTLS on port 587, so the port is almost never the reason a send fails. mcpemails uses the 465 pair below and falls back to the other on its own."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Turn on IMAP access in WEB.DE",
+      "p": "In WEB.DE, open E-mail settings, POP3/IMAP retrieval, and allow POP3 and IMAP access."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP, add your WEB.DE address, the hosts below and the password to connect the inbox securely."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "POP3 and IMAP retrieval is switched off until you turn it on",
+      "p": "WEB.DE ships every FreeMail mailbox with external retrieval disabled, and it is the reason most WEB.DE client setups fail on the first attempt. Sign in at web.de, click the circle with your initials in the top bar, open <b>E-Mail-Einstellungen</b>, and under <b>E-Mail empfangen</b> choose <b>POP3/IMAP</b>. Move the slider to <b>POP3- und IMAP-Zugriff erlauben</b> and solve the small puzzle WEB.DE shows, where you drag two symbols on top of each other. Until that slider is on, <code>imap.web.de</code> refuses every login with an authentication failure, which is indistinguishable from a wrong password."
+    },
+    {
+      "h": "WEB.DE switches the access back off again if nothing connects for a while",
+      "p": "This one catches people months later. WEB.DE documents that if you do not use the program or app for an extended period, retrieval over POP3 and IMAP is automatically switched off again. So a connection that worked perfectly all year can start failing after a quiet spell, with no notification and no change at your end. If an inbox that used to work suddenly stops, check the slider before you touch the password. An agent that reads the mailbox regularly keeps the access alive on its own."
+    },
+    {
+      "h": "Turning on two-factor authentication retires your password for mail clients",
+      "p": "WEB.DE two-factor authentication protects the web login, and once it is on, your ordinary WEB.DE password stops working in anything that speaks IMAP or SMTP. You then need an <b>anwendungsspezifisches Passwort</b>, generated in the mailbox under Account verwalten, then Login & Sicherheit, then Anwendungsspezifische Passwörter. Create one for mail, paste that into mcpemails instead of your normal password, and leave the normal password for the website. Without 2FA, the account password is the right credential and no app password exists to create."
+    },
+    {
+      "h": "Both SMTP transports answer, so a send failure is rarely the port",
+      "p": "Guides for WEB.DE disagree about outgoing mail: some give <code>smtp.web.de</code> on port 465 with implicit TLS, others give port 587 with STARTTLS. Both work, and our probe completed a TLS handshake on 465 with the server offering PLAIN and LOGIN. Cycling between the two ports is therefore wasted effort. If sending is refused, the cause is the retrieval slider, the missing app password, or a From address that is not one of the addresses registered on the account."
+    }
+  ],
+  "limits": [
+    "mcpemails connects the WEB.DE mailbox only. WEB.DE Online-Speicher, the address book and the calendar are separate products and are not exposed to your AI client.",
+    "The POP3/IMAP slider is WEB.DE's to control, not ours. If WEB.DE deactivates retrieval after a long idle period, the connection has to be re-enabled in WEB.DE before it works again.",
+    "WEB.DE is a consumer mailbox with its own anti-abuse sending limits. Use it for ordinary correspondence, not for bulk or campaign sending."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with WEB.DE?",
+      "a": "Not on its own. Claude has no built-in WEB.DE connector. Pointing an MCP server such as mcpemails at your WEB.DE mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients rather than only one."
+    },
+    {
+      "q": "What are the WEB.DE IMAP and SMTP settings?",
+      "a": "IMAP is imap.web.de on port 993 with implicit TLS, and SMTP is smtp.web.de on port 465, also implicit TLS. WEB.DE additionally accepts 587 with STARTTLS for outgoing mail. The username is your complete WEB.DE address including the domain. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "How do I enable IMAP in WEB.DE?",
+      "a": "Sign in at web.de, click your initials in the top bar and open E-Mail-Einstellungen. Under E-Mail empfangen choose POP3/IMAP, then move the slider to POP3- und IMAP-Zugriff erlauben and complete the drag puzzle WEB.DE shows. Retrieval is off by default on every mailbox, so this step is required before any client can log in."
+    },
+    {
+      "q": "Why is my WEB.DE password rejected?",
+      "a": "Almost always one of two things. Either POP3 and IMAP retrieval is switched off in your WEB.DE settings, which produces a plain authentication failure with no hint of the real cause, or you have two-factor authentication enabled and need an application-specific password instead of your account password. Check the slider first, because it is the more common of the two."
+    },
+    {
+      "q": "Does WEB.DE need an app password?",
+      "a": "Only if you have two-factor authentication turned on. With 2FA off, your normal WEB.DE password authenticates mail clients once retrieval is enabled. With 2FA on, generate an application-specific password under Account verwalten, Login und Sicherheit, Anwendungsspezifische Passwörter, and use that in mcpemails."
+    },
+    {
+      "q": "Is my WEB.DE mail stored on your servers?",
+      "a": "No. Messages are fetched live from WEB.DE over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a WEB.DE inbox",
+    "sub": "Connect WEB.DE in minutes. One inbox free forever, no card required."
+  }
+}

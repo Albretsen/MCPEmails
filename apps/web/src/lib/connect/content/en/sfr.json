@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://webmail.sfr.fr/",
+    "https://actuneuf.com/sfr/internet/imap",
+    "https://actuneuf.com/sfr/espace-client/changer-mot-de-passe",
+    "https://actuneuf.com/sfr/internet/creer-adresse-mail"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "SFR Mail password",
+    "helpUrl": "https://webmail.sfr.fr/",
+    "usernameForm": "Your full address, including the domain: prenom.nom@sfr.fr.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SFR Mail IMAP Settings and Claude MCP Access",
+    "description": "Connect an SFR Mail box to Claude, Cursor and any MCP client at imap.sfr.fr:993. The SFR Mail password is separate from your Espace Client password."
+  },
+  "hero": {
+    "eyebrow": "SFR Mail + AI",
+    "titleLine1": "Connect your SFR mailbox",
+    "titleLine2": "to Claude, Cursor, any MCP client",
+    "lead": "Give your AI agent a real SFR inbox. Read, search, send, reply, schedule and organize mail over IMAP with the password that belongs to the mailbox rather than to your customer account.",
+    "answer": "Claude cannot reach an SFR mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.sfr.fr on port 993, authenticating with your full sfr.fr address and your SFR Mail password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. The credential is the point of failure worth knowing in advance: SFR Mail keeps its own password, separate from your Espace Client password, and changing one does not change the other. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "SFR Mail password, not Espace Client",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How SFR connects: IMAP, and a mailbox password of its own",
+    "body": "SFR serves IMAP at <code>imap.sfr.fr</code> on port 993 over implicit TLS and SMTP submission at <code>smtp.sfr.fr</code> on port 465, with authentication required. Both hosts were confirmed from a live TLS connection and are shared across all SFR mailboxes; there is nothing regional or per-customer to look up. What is specific to SFR is the credential model. The Espace Client on sfr.fr and SFR Mail are two accounts with two passwords. You are free to set them to the same string, but they stay independent, so rotating the Espace Client password leaves the mailbox password untouched and a mail client keeps working, while rotating the mailbox password takes every client offline and leaves the Espace Client alone. The mailbox password is changed inside SFR Mail itself, under the settings section for configuring your mailboxes, not in the customer portal."
+  },
+  "setup": [
+    {
+      "h": "Create your free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
+    },
+    {
+      "h": "Confirm or reset the SFR Mail password inside the webmail",
+      "p": "Sign in at webmail.sfr.fr with the address you want to connect. Open the settings (the tools or <b>Réglages</b> control at the top right) and the section for configuring your mailboxes (<b>Configuration de mes boîtes mails</b>). The password change lives there. That is the credential the IMAP server checks, and it is not the one you type into the Espace Client on sfr.fr."
+    },
+    {
+      "h": "Consider giving the agent a secondary address",
+      "p": "SFR lets a subscriber create additional addresses and aliases from the same mailbox configuration screen, alongside the main address that came with the line. If you would rather not hand an agent the address everyone you know writes to, create a second one there and connect that. It is the same hosts and ports."
+    },
+    {
+      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the full address such as prenom.nom@sfr.fr, and paste the SFR Mail password. The SFR hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The Espace Client password and the SFR Mail password are two different things",
+      "p": "This is the SFR failure that wastes the most time, because both credentials belong to the same person, both are called <b>mot de passe SFR</b> in casual use, and either one can be typed into a mail client without an error that explains anything. They are independent accounts: changing one does not change the other, even if you deliberately set them to the same value at some point in the past and assume they are still in sync. When a client login is refused, go into SFR Mail itself and reset the mailbox password there, then use exactly that value in mcpemails."
+    },
+    {
+      "h": "No SASL-IR, so a client that assumes it gets a bare BAD",
+      "p": "SFR's IMAP banner is as short as they come (<code>* OK IMAP4 ready</code>) and it does not advertise <code>SASL-IR</code>. The server therefore rejects the one-step authentication that sends the credential along with the <code>AUTHENTICATE</code> command, replying with an unqualified <code>BAD</code> that is indistinguishable from bad credentials. Given the password confusion above, that is a particularly unhelpful combination: the two most likely causes of an SFR login failure produce the same message. mcpemails detects the <code>BAD</code> and retries the two-step exchange, so this half is already handled for you."
+    },
+    {
+      "h": "Sending is capped at 20 MB, which is low for a French ISP",
+      "p": "<code>smtp.sfr.fr</code> announces a maximum message size of 20,971,520 bytes. That is the encoded size of the whole message, and base64 inflates an attachment by roughly a third, so a file over about 15 MB on disk will not go. An agent asked to forward a large attachment gets a hard SMTP rejection at submission time rather than a slow send or a bounce later."
+    },
+    {
+      "h": "No IDLE, no MOVE and no SPECIAL-USE on a French-named mailbox",
+      "p": "The server advertises none of them. Without <code>IDLE</code>, new mail is discovered by polling rather than pushed on an open connection. Without <code>MOVE</code>, filing runs as a copy, a flag update and an expunge. Without <code>SPECIAL-USE</code>, Sent, Drafts and Trash are matched by name, and an SFR mailbox usually names them <b>Envoyés</b>, <b>Brouillons</b> and <b>Corbeille</b>. It does offer <code>UIDPLUS</code>, so at least a copied message reports its new UID back and does not have to be found by searching."
+    }
+  ],
+  "limits": [
+    "The 20 MB submission cap is the practical ceiling on anything your agent sends from this mailbox.",
+    "Without IDLE, an instruction like tell me as soon as a reply lands is bounded by how often the mailbox is polled rather than by SFR's delivery speed.",
+    "Because the server has no MOVE support, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with SFR Mail?",
+      "a": "Not on its own. Claude has no built-in SFR connector. Pointing an MCP server such as mcpemails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the SFR IMAP and SMTP settings?",
+      "a": "IMAP is imap.sfr.fr on port 993 with implicit TLS. SMTP is smtp.sfr.fr on port 465, also implicit TLS, with authentication required. The username is your complete sfr.fr address and the password is your SFR Mail password. Both hosts were confirmed from a live TLS connection and are shared across all SFR mailboxes."
+    },
+    {
+      "q": "Why is my SFR password rejected in a mail client?",
+      "a": "Almost always because it is the Espace Client password rather than the SFR Mail password. The two accounts are independent and changing one leaves the other alone. Sign in to webmail.sfr.fr, open the mailbox configuration section in the settings, reset the mail password there and use that exact value in the client."
+    },
+    {
+      "q": "Does SFR issue an app password?",
+      "a": "SFR publishes no application-specific password mechanism for mail clients. What it has instead is a mailbox password that is already separate from your customer account password, which serves a similar purpose: you can rotate it without touching your Espace Client sign-in, and rotating your Espace Client password does not disconnect your clients."
+    },
+    {
+      "q": "Can I give an agent a second SFR address?",
+      "a": "Yes. SFR subscribers can create additional addresses and aliases from the mailbox configuration screen in the SFR Mail settings. A secondary address connects over the same imap.sfr.fr and smtp.sfr.fr hosts, and keeps your agent's activity out of the address your correspondents actually use."
+    },
+    {
+      "q": "Is my SFR mail stored on your servers?",
+      "a": "No. Messages are fetched live from SFR over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI an SFR inbox",
+    "sub": "Connect SFR Mail in minutes. One inbox free forever, no card required."
+  }
+}

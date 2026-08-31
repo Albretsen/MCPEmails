@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "https://www.scalahosting.com/kb/how-to-setup-email-account-client-setup-ssl-tls-settings-pop-imap/",
+    "https://www.scalahosting.com/blog/scalahosting-introduces-spanel-powered-shared-and-email-hosting-plans/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "usernameForm": "Your full email address, for example team@yourdomain.com, as created in SPanel or cPanel.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "ScalaHosting Email to Claude: SPanel and cPanel IMAP",
+    "description": "ScalaHosting runs SPanel on some plans and cPanel on others. Find your settings under Connect device, then give Claude the mailbox over IMAP 993. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "ScalaHosting + AI",
+    "titleLine1": "Connect ScalaHosting email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real ScalaHosting mailbox. Read, search, send, reply, schedule and organize mail over IMAP, whether your account runs SPanel or cPanel.",
+    "answer": "Claude cannot reach a ScalaHosting mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. ScalaHosting operates no shared mail hostname: your mail server is your own domain or the hosting server's name, and both panels print it under Connect device on the address. Which panel you get depends on the plan, because SPanel and cPanel are both in use. Authentication is the mailbox password, and one inbox is free.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password from SPanel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How ScalaHosting mail connects: SPanel or cPanel, IMAP 993",
+    "body": "ScalaHosting is unusual in shipping its own control panel alongside the industry standard one. <b>SPanel</b> is their in-house panel, free with managed VPS plans and now behind SPanel-powered shared and email hosting too. <b>cPanel</b> is still available, as the base for older shared plans and as a paid add-on at checkout on managed VPS. Mail behaves the same either way: IMAP on port 993 with SSL and SMTP on 465, with 587 documented as the submission alternative, and the full email address as the username. The hostname is your own server's name, which is why you take it from the panel rather than from an article. In SPanel that is <b>Email Accounts</b>, the blue <b>Action</b> button, then <b>Connect device</b>. In cPanel it is <b>Email Accounts</b>, then <b>Connect Devices</b>."
+  },
+  "setup": [
+    {
+      "h": "Create a free mcpemails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
+    },
+    {
+      "h": "Open Connect device in whichever panel you have",
+      "p": "SPanel is reached at <code>yourdomain.com/spanel/login</code>, on your own server. Once in, open <b>Email Accounts</b>, find the address, click the blue <b>Action</b> button and choose <b>Connect device</b>. SPanel shows the incoming and outgoing hostnames and ports in a popup. On a cPanel account the equivalent is <b>Email Accounts</b>, then <b>Connect Devices</b>, then the Mail Client Manual Settings block."
+    },
+    {
+      "h": "Set or recover the mailbox password",
+      "p": "IMAP checks the password on the address, which is not your ScalaHosting client area login. In SPanel, create or edit the address under Email Accounts, using the Generate button if you want a strong value. Then paste it into mcpemails with the full address as the username and the hostname you copied."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "SPanel has no central login page, and people waste time looking for one",
+      "p": "There is no <code>spanel.scalahosting.com</code> to sign in to. SPanel runs on your own server and you reach it at your own domain, at <code>yourdomain.com/spanel/login</code>. That catches people who are used to logging in at their host's website first. It also means that if your domain's DNS no longer points at ScalaHosting, you cannot reach the panel by that name either, and you need the server's IP or hostname instead."
+    },
+    {
+      "h": "Which panel you have is a purchase decision, not a plan tier",
+      "p": "cPanel is a paid add-on on managed VPS while SPanel is included, and ScalaHosting's own figures put the great majority of new VPS customers on SPanel. Older shared and email hosting plans were cPanel based; newer SPanel-powered ones are not. So two ScalaHosting customers on similar money can have completely different panels, and a guide written for one has no matching screen in the other. Check what you are actually looking at before following any ScalaHosting email walkthrough."
+    },
+    {
+      "h": "Your settings were emailed at signup and are archived in the client area",
+      "p": "ScalaHosting sends the account's mail server details in the welcome email. If it is long gone, they are recoverable without contacting support: log in to the client area and open <b>My Details</b>, then <b>Email History</b>, which keeps every message they have sent you. That archive is the quickest route to the server hostname when you cannot get into the panel, and almost nobody knows it is there."
+    }
+  ],
+  "limits": [
+    "mcpemails connects mailboxes, not the server. SPanel's own tools, backups and security features stay where they are.",
+    "On a managed VPS you may have changed the mail stack after provisioning. If so, the Connect device popup still reports what SPanel configured, which may no longer be what is listening."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with ScalaHosting email?",
+      "a": "Not directly. Claude has no ScalaHosting connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it. This works identically on SPanel accounts and cPanel accounts, since both serve ordinary IMAP."
+    },
+    {
+      "q": "What are the ScalaHosting IMAP and SMTP settings?",
+      "a": "IMAP is port 993 with SSL and SMTP is port 465 with SSL, or 587 for submission. The hostname is your own hosting server's name rather than a shared ScalaHosting address, so read it from the Connect device popup in SPanel or from Connect Devices in cPanel. The username is your full email address for both."
+    },
+    {
+      "q": "Where do I find email settings in SPanel?",
+      "a": "Log in to SPanel at yourdomain.com/spanel/login, open Email Accounts, find the address in the list, click the blue Action button and choose Connect device. SPanel then shows the incoming and outgoing hostnames, ports and encryption in a popup. The same values also appear in the welcome email sent when the account was created."
+    },
+    {
+      "q": "Why is my ScalaHosting email password rejected?",
+      "a": "Because the mailbox password is separate from your ScalaHosting client area login and separate from the SPanel administrator password. Reset it by editing the address under Email Accounts in the panel. Confirm the username is the whole email address, and that you used the server hostname the panel shows rather than a guessed one."
+    },
+    {
+      "q": "Is my ScalaHosting mail stored on your servers?",
+      "a": "No. Messages are fetched live from your ScalaHosting server over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a ScalaHosting inbox",
+    "sub": "Connect a ScalaHosting mailbox in minutes. One inbox free forever, no card required."
+  }
+}

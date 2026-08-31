@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "Connecter Rackspace Email à Claude (et à toute IA)",
+    "description": "Connectez Rackspace Email à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Rackspace Email + IA",
+    "titleLine1": "Connectez Rackspace Email à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Rackspace Email en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas atteindre Rackspace Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+  },
+  "method": {
+    "title": "Comment Rackspace Email se connecte : IMAP et le mot de passe de la boîte",
+    "body": "Rackspace Email se connecte via IMAP/SMTP avec le mot de passe de votre boîte. Les deux serveurs sont <code>secure.emailsrvr.com</code> quel que soit votre propre domaine, et c'est ce que l'on oublie souvent : le serveur de messagerie ne se déduit pas de votre nom de domaine. Définissez ou réinitialisez le mot de passe de la boîte dans le panneau Rackspace Cloud Office."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Récupérez le mot de passe de votre boîte Rackspace",
+      "p": "Dans le panneau Cloud Office, ouvrez la boîte et définissez son mot de passe. Utilisez le serveur sécurisé, secure.emailsrvr.com, pas celui en clair."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Rackspace Email, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Rackspace Email à votre IA",
+    "sub": "Connectez Rackspace Email en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}
