@@ -10,7 +10,9 @@ for an external video tool.
 
 ## Start here, in this order
 
-1. `cd tools/video-studio && cat AGENTS.md`. That is the contract: the commands,
+1. `cd tools/video-studio && npm install`. This package is separate from the
+   repo's own and a root install does not cover it. Then `cat AGENTS.md`, which
+   is the contract: the commands,
    every scene type with its props, and the guard rails. Read it before you plan
    anything.
 2. `npm run demo`. One command, no setup, no account. It records the public site

@@ -10,6 +10,7 @@ in the wrong directory:
 
 ```bash
 cd tools/video-studio
+npm install        # once per clone; the repo's own install does not cover this
 ```
 
 Never a bare `npx <bin>` here either: `npx` resolves upward and will run the
