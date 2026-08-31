@@ -95,7 +95,7 @@ const CONNECTION = [
   },
   {
     // Both standard pairs, in the order transport-autodetect tries them.
-    key: 'generic', label: null, href: null,
+    key: 'generic', label: null, href: '/connect/imap',
     auth: 'mailboxPassword',
     imap: { host: null, port: '993 / 143', security: 'TLS / STARTTLS' },
     smtp: { host: null, port: '465 / 587', security: 'TLS / STARTTLS' },
@@ -395,7 +395,7 @@ export default function ProvidersClient() {
                         hub rather than another leaf.
                       */}
                       {row.href
-                        ? <Link href={row.href}>{row.label}</Link>
+                        ? <Link href={row.href}>{row.label ?? t('providers.labels.generic')}</Link>
                         : (row.label ?? t('providers.labels.generic'))}
                     </td>
                     <td className="tbl-val" style={{ fontSize: 13 }}>

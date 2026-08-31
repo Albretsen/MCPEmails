@@ -467,9 +467,967 @@
       "ctaSecondary": "Lire la documentation"
     }
   },
+  "imap": {
+    "meta": {
+      "title": "Connecter n'importe quelle boîte IMAP à Claude (et à toute IA)",
+      "description": "Connectez n'importe quelle boîte IMAP à Claude, Cursor, ChatGPT et tout client MCP. Apportez votre serveur, votre port et votre mot de passe, et laissez l'IA lire, envoyer, planifier et organiser le courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "IMAP + IA",
+      "titleLine1": "Connectez n'importe quelle boîte IMAP à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA la boîte que vous avez déjà, quel qu'en soit l'hébergeur. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP et SMTP classiques, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter votre boîte gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Tout serveur IMAP, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude n'a pas de client IMAP. mcpemails est un serveur MCP hébergé qui se connecte à votre serveur de messagerie en IMAP et SMTP avec l'adresse, le serveur et le mot de passe que votre fournisseur vous a déjà donnés, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Tout hébergeur qui parle IMAP convient, et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment une boîte IMAP générique se connecte",
+      "body": "Il vous faut quatre choses : votre adresse, votre serveur de messagerie, votre mot de passe et, si votre fournisseur l'exige, un mot de passe d'application. Saisissez d'abord l'adresse : mcpemails reconnaît les hébergeurs courants et remplit les deux serveurs, les deux ports et les modes de sécurité. Si le transport tenté ne répond pas, il essaie l'autre standard tout seul, <b>993 ou 143</b> pour IMAP et <b>465 ou 587</b> pour SMTP : personne n'a à deviner pour STARTTLS."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans votre boîte.",
+      "ctaPrimary": "Connecter votre boîte gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis votre boîte, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez n'importe quelle boîte IMAP en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Rassemblez vos réglages IMAP et SMTP",
+        "p": "Votre fournisseur les publie, le plus souvent sous la forme imap.votredomaine.com et smtp.votredomaine.com sur les ports 993 et 465. Si votre fournisseur exige un mot de passe d'application pour les clients de messagerie, créez-le maintenant."
+      },
+      {
+        "h": "Collez-les dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse, les deux serveurs et le mot de passe. Les ports et les modes de sécurité sont sous Avancé, préremplis avec les valeurs standard."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez à votre IA la boîte que vous avez déjà",
+      "sub": "Connectez n'importe quelle boîte IMAP en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter votre boîte gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "gmx": {
+    "meta": {
+      "title": "Connecter GMX à Claude (et à toute IA)",
+      "description": "Connectez GMX à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de votre compte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "GMX + IA",
+      "titleLine1": "Connectez GMX à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte GMX en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de votre compte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter GMX gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Le mot de passe de votre compte, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre GMX tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment GMX se connecte : IMAP et le mot de passe de votre compte",
+      "body": "GMX se connecte via IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans GMX, dans Paramètres e-mail, Récupération POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe GMX. Si GMX vous demande de créer un mot de passe spécifique à l'application, utilisez celui-là. Les comptes allemands utilisent les serveurs .net, <code>imap.gmx.net</code> et <code>mail.gmx.net</code>."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte GMX que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans GMX.",
+      "ctaPrimary": "Connecter GMX gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis GMX, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez GMX en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Activez l'accès IMAP dans GMX",
+        "p": "Dans GMX, ouvrez Paramètres e-mail, Récupération POP3/IMAP, et autorisez POP3 et IMAP. GMX le désactive de nouveau si le compte reste longtemps inutilisé."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse GMX, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte GMX à votre IA",
+      "sub": "Connectez GMX en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter GMX gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "aol": {
+    "meta": {
+      "title": "Connecter AOL Mail à Claude (et à toute IA)",
+      "description": "Connectez AOL Mail à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "AOL Mail + IA",
+      "titleLine1": "Connectez AOL Mail à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte AOL Mail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un simple mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter AOL gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Mot de passe d'application, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre AOL Mail tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment AOL Mail se connecte : IMAP et un mot de passe d'application",
+      "body": "AOL Mail se connecte via IMAP/SMTP avec un <b>mot de passe d'application AOL</b>. Votre mot de passe AOL habituel ne fonctionne pas depuis un client de messagerie : une connexion refusée ici vient presque toujours d'un mot de passe d'application manquant. Activez la validation en deux étapes, créez un mot de passe d'application dans Informations du compte, Sécurité du compte, puis collez-le dans mcpemails avec votre adresse AOL complète."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte AOL Mail que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans AOL Mail.",
+      "ctaPrimary": "Connecter AOL gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis AOL Mail, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez AOL en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Créez un mot de passe d'application AOL",
+        "p": "Dans AOL Mail, ouvrez Informations du compte, Sécurité du compte, activez la validation en deux étapes si elle est inactive, puis créez un mot de passe d'application. Copiez-le tout de suite, AOL ne l'affiche qu'une fois."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse AOL Mail, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte AOL Mail à votre IA",
+      "sub": "Connectez AOL Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter AOL gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "mail-ru": {
+    "meta": {
+      "title": "Connecter Mail.ru à Claude (et à toute IA)",
+      "description": "Connectez Mail.ru à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "Mail.ru + IA",
+      "titleLine1": "Connectez Mail.ru à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte Mail.ru en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un simple mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter Mail.ru gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Mot de passe d'application, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre Mail.ru tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment Mail.ru se connecte : IMAP et un mot de passe d'application",
+      "body": "Mail.ru se connecte via IMAP/SMTP avec un <b>mot de passe pour applications externes</b>. Le mot de passe du site web ne fonctionne pas depuis un client de messagerie. Créez-en un dans Mail.ru, section Sécurité, Mots de passe pour applications externes, puis collez-le dans mcpemails avec votre adresse Mail.ru. Mail.ru exige un numéro de téléphone sur le compte avant de le délivrer."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte Mail.ru que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Mail.ru.",
+      "ctaPrimary": "Connecter Mail.ru gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Mail.ru, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez Mail.ru en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Créez un mot de passe pour applications externes",
+        "p": "Dans Mail.ru, ouvrez Sécurité et créez un mot de passe pour applications externes. C'est ce mot de passe dont mcpemails a besoin, pas celui du site."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Mail.ru, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte Mail.ru à votre IA",
+      "sub": "Connectez Mail.ru en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter Mail.ru gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "web-de": {
+    "meta": {
+      "title": "Connecter WEB.DE à Claude (et à toute IA)",
+      "description": "Connectez WEB.DE à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de votre compte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "WEB.DE + IA",
+      "titleLine1": "Connectez WEB.DE à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte WEB.DE en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de votre compte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter WEB.DE gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Le mot de passe de votre compte, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre WEB.DE tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment WEB.DE se connecte : IMAP et le mot de passe de votre compte",
+      "body": "WEB.DE se connecte via IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE, dans Paramètres e-mail, Récupération POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. Le courrier sortant passe par STARTTLS sur le port 587 plutôt que par TLS implicite sur le 465, et mcpemails le sélectionne pour vous."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte WEB.DE que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans WEB.DE.",
+      "ctaPrimary": "Connecter WEB.DE gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis WEB.DE, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez WEB.DE en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Activez l'accès IMAP dans WEB.DE",
+        "p": "Dans WEB.DE, ouvrez Paramètres e-mail, Récupération POP3/IMAP, et autorisez POP3 et IMAP."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse WEB.DE, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte WEB.DE à votre IA",
+      "sub": "Connectez WEB.DE en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter WEB.DE gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "cpanel": {
+    "meta": {
+      "title": "Connecter cPanel à Claude (et à toute IA)",
+      "description": "Connectez cPanel à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "cPanel + IA",
+      "titleLine1": "Connectez cPanel à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte cPanel en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter cPanel gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre cPanel tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment cPanel se connecte : IMAP et le mot de passe de la boîte",
+      "body": "Une boîte cPanel, celle que vous consultez dans le webmail Roundcube ou Horde, se connecte via IMAP/SMTP avec le mot de passe défini dans cPanel, section Email Accounts. Pas de mot de passe d'application, pas d'OAuth. Le serveur est en général <code>mail.votredomaine.com</code>, et cPanel affiche les valeurs exactes dans Email Accounts, Connect Devices, sous Mail Client Manual Settings. Utilisez la colonne sécurisée SSL/TLS, pas celle en clair."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte cPanel que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans cPanel.",
+      "ctaPrimary": "Connecter cPanel gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis cPanel, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez cPanel en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Relevez vos réglages dans cPanel",
+        "p": "Dans cPanel, ouvrez Email Accounts puis Connect Devices pour la boîte. Copiez les serveurs et ports IMAP et SMTP sécurisés depuis Mail Client Manual Settings. Si vous ignorez le mot de passe de la boîte, définissez-en un nouveau sur le même écran."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse cPanel, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte cPanel à votre IA",
+      "sub": "Connectez cPanel en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter cPanel gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "migadu": {
+    "meta": {
+      "title": "Connecter Migadu à Claude (et à toute IA)",
+      "description": "Connectez Migadu à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "Migadu + IA",
+      "titleLine1": "Connectez Migadu à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte Migadu en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter Migadu gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre Migadu tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment Migadu se connecte : IMAP et le mot de passe de la boîte",
+      "body": "Migadu se connecte via IMAP/SMTP avec le <b>mot de passe de la boîte</b>, qui n'est pas celui de votre compte d'administration Migadu. Définissez-le ou réinitialisez-le dans l'espace d'administration Migadu, section Mailboxes, puis collez-le dans mcpemails avec votre adresse. Toutes les boîtes Migadu utilisent les deux mêmes serveurs quel que soit votre domaine : il n'y a rien à chercher."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte Migadu que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Migadu.",
+      "ctaPrimary": "Connecter Migadu gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Migadu, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez Migadu en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Définissez un mot de passe de boîte dans Migadu",
+        "p": "Dans l'espace d'administration Migadu, ouvrez Mailboxes, choisissez la boîte et définissez son mot de passe. Les clients de messagerie s'authentifient avec ce mot de passe ; votre identifiant d'administration ne fonctionne pas."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Migadu, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte Migadu à votre IA",
+      "sub": "Connectez Migadu en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter Migadu gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "namecheap": {
+    "meta": {
+      "title": "Connecter Namecheap Private Email à Claude (et à toute IA)",
+      "description": "Connectez Namecheap Private Email à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "Namecheap Private Email + IA",
+      "titleLine1": "Connectez Namecheap Private Email à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte Namecheap Private Email en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter Private Email gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre Namecheap Private Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment Namecheap Private Email se connecte : IMAP et le mot de passe de la boîte",
+      "body": "Namecheap Private Email se connecte via IMAP/SMTP avec le <b>mot de passe de la boîte</b>, celui défini à sa création et non celui de votre compte Namecheap. Les deux serveurs sont <code>mail.privateemail.com</code> quel que soit votre domaine. Si vous ne l'avez pas, réinitialisez-le depuis le panneau de contrôle Private Email."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte Namecheap Private Email que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Namecheap Private Email.",
+      "ctaPrimary": "Connecter Private Email gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Namecheap Private Email, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez Private Email en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Retrouvez le mot de passe de votre boîte Private Email",
+        "p": "Utilisez le mot de passe de la boîte elle-même, pas celui de votre compte Namecheap. Vous pouvez le réinitialiser à tout moment depuis le panneau de contrôle Private Email."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Namecheap Private Email, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte Namecheap Private Email à votre IA",
+      "sub": "Connectez Namecheap Private Email en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter Private Email gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "ionos": {
+    "meta": {
+      "title": "Connecter IONOS à Claude (et à toute IA)",
+      "description": "Connectez IONOS à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "IONOS + IA",
+      "titleLine1": "Connectez IONOS à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte IONOS en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter IONOS gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre IONOS tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment IONOS se connecte : IMAP et le mot de passe de la boîte",
+      "body": "IONOS se connecte via IMAP/SMTP avec le <b>mot de passe e-mail</b> défini dans le panneau de configuration IONOS, section E-mail, distinct de votre identifiant IONOS. IONOS répond sur les deux transports standard, 993 en TLS et 143 en STARTTLS, et deviner entre les deux est la cause la plus fréquente d'échec d'une connexion IONOS. mcpemails renseigne une combinaison qui fonctionne et réessaie l'autre si la première ne répond pas : une connexion refusée ici vient donc bien du mot de passe."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte IONOS que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans IONOS.",
+      "ctaPrimary": "Connecter IONOS gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis IONOS, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez IONOS en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Récupérez le mot de passe de votre boîte IONOS",
+        "p": "Dans le panneau de configuration IONOS, ouvrez E-mail, choisissez l'adresse et définissez ou réinitialisez son mot de passe. Ce n'est pas celui de votre compte IONOS."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse IONOS, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte IONOS à votre IA",
+      "sub": "Connectez IONOS en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter IONOS gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "ovh": {
+    "meta": {
+      "title": "Connecter OVH à Claude (et à toute IA)",
+      "description": "Connectez OVH à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "OVH + IA",
+      "titleLine1": "Connectez OVH à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte OVH en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter OVH gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre OVH tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment OVH se connecte : IMAP et le mot de passe de la boîte",
+      "body": "Une boîte OVH MX Plan se connecte via IMAP/SMTP avec le mot de passe de la boîte défini dans l'espace client OVH, et les deux serveurs sont <code>ssl0.ovh.net</code>. OVH Hosted Exchange est un service différent : ses serveurs ressemblent à <code>ex4.mail.ovh.net</code> et le courrier sortant passe par STARTTLS sur le port 587, jamais 465, ce qui explique que les valeurs par défaut de l'hébergement mutualisé restent bloquées. mcpemails reconnaît les deux et choisit la bonne combinaison."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte OVH que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans OVH.",
+      "ctaPrimary": "Connecter OVH gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis OVH, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez OVH en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Récupérez le mot de passe de votre boîte OVH",
+        "p": "Dans l'espace client OVH, ouvrez le service e-mail, choisissez l'adresse et modifiez son mot de passe. Copiez le serveur que OVH affiche pour cette boîte s'il n'est pas ssl0.ovh.net."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse OVH, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte OVH à votre IA",
+      "sub": "Connectez OVH en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter OVH gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "rackspace": {
+    "meta": {
+      "title": "Connecter Rackspace Email à Claude (et à toute IA)",
+      "description": "Connectez Rackspace Email à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "Rackspace Email + IA",
+      "titleLine1": "Connectez Rackspace Email à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte Rackspace Email en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter Rackspace gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre Rackspace Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment Rackspace Email se connecte : IMAP et le mot de passe de la boîte",
+      "body": "Rackspace Email se connecte via IMAP/SMTP avec le mot de passe de votre boîte. Les deux serveurs sont <code>secure.emailsrvr.com</code> quel que soit votre propre domaine, et c'est ce que l'on oublie souvent : le serveur de messagerie ne se déduit pas de votre nom de domaine. Définissez ou réinitialisez le mot de passe de la boîte dans le panneau Rackspace Cloud Office."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte Rackspace Email que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Rackspace Email.",
+      "ctaPrimary": "Connecter Rackspace gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Rackspace Email, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez Rackspace en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Récupérez le mot de passe de votre boîte Rackspace",
+        "p": "Dans le panneau Cloud Office, ouvrez la boîte et définissez son mot de passe. Utilisez le serveur sécurisé, secure.emailsrvr.com, pas celui en clair."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Rackspace Email, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte Rackspace Email à votre IA",
+      "sub": "Connectez Rackspace Email en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter Rackspace gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
+  "hostinger": {
+    "meta": {
+      "title": "Connecter Hostinger à Claude (et à toute IA)",
+      "description": "Connectez Hostinger à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    },
+    "hero": {
+      "eyebrow": "Hostinger + IA",
+      "titleLine1": "Connectez Hostinger à Claude,",
+      "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+      "lead": "Offrez à votre agent IA une vraie boîte Hostinger en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+      "ctaPrimary": "Connecter Hostinger gratuitement",
+      "ctaSecondary": "Lire la documentation",
+      "meta0": "1 boîte gratuite, pour toujours",
+      "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+      "meta2": "E-mails récupérés en direct, jamais stockés",
+      "answer": "Claude ne peut pas atteindre Hostinger tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    },
+    "method": {
+      "title": "Comment Hostinger se connecte : IMAP et le mot de passe de la boîte",
+      "body": "Hostinger Email se connecte via IMAP/SMTP avec le mot de passe de la boîte défini dans hPanel, section Emails. Pas de mot de passe d'application, pas d'étape OAuth. Les serveurs sont <code>imap.hostinger.com</code> et <code>smtp.hostinger.com</code> pour tous les domaines : il n'y a rien à chercher."
+    },
+    "caps": {
+      "eyebrow": "Ce que votre IA peut faire",
+      "title": "Une boîte Hostinger que votre agent peut vraiment utiliser",
+      "sub": "Neuf outils MCP basés sur des actions, pas seulement des brouillons. Votre agent termine le travail dans Hostinger.",
+      "ctaPrimary": "Connecter Hostinger gratuitement"
+    },
+    "capabilities": [
+      {
+        "tag": "Lire",
+        "h": "Lire et rechercher le courrier",
+        "p": "Listez, lisez et recherchez dans les dossiers pour trouver cette facture, résumer un fil ou récupérer le dernier message d'un expéditeur."
+      },
+      {
+        "tag": "Envoyer",
+        "h": "Envoyer, répondre et transférer",
+        "p": "Rédigez et envoyez de vrais messages, répondez dans le fil et transférez, directement depuis Hostinger, pas sous forme de brouillon à finir à la main."
+      },
+      {
+        "tag": "Planifier",
+        "h": "Planifier pour plus tard",
+        "p": "Mettez un message en file d'attente pour le bon moment : votre agent rédige maintenant et envoie selon le planning."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Déplacer, copier, marquer, archiver, supprimer",
+        "p": "Gardez la boîte rangée : classez le courrier dans des dossiers, marquez l’essentiel, archivez le reste ou supprimez à la demande."
+      }
+    ],
+    "how": {
+      "eyebrow": "Configuration",
+      "title": "Connectez Hostinger en quatre étapes",
+      "sub": "De l'inscription au premier e-mail IA en quelques minutes."
+    },
+    "steps": [
+      {
+        "h": "Créez un compte gratuit",
+        "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      },
+      {
+        "h": "Récupérez le mot de passe de votre boîte Hostinger",
+        "p": "Dans hPanel, ouvrez Emails, choisissez l'adresse et définissez ou réinitialisez son mot de passe. C'est ce mot de passe que mcpemails utilise pour s'authentifier."
+      },
+      {
+        "h": "Collez-le dans mcpemails",
+        "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Hostinger, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      },
+      {
+        "h": "Collez l'URL MCP dans votre IA",
+        "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      }
+    ],
+    "ctaBand": {
+      "title": "Offrez une boîte Hostinger à votre IA",
+      "sub": "Connectez Hostinger en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire.",
+      "ctaPrimary": "Connecter Hostinger gratuitement",
+      "ctaSecondary": "Lire la documentation"
+    }
+  },
   "matrix": {
     "intro": "Vous comparez d’abord les fournisseurs ?",
     "label": "Voir la matrice de compatibilité des fournisseurs e-mail",
     "href": "/docs/providers"
+  },
+  "settings": {
+    "colHost": "Serveur",
+    "colPort": "Port",
+    "colProtocol": "Protocole",
+    "colSecurity": "Sécurité",
+    "imap": "IMAP (entrant)",
+    "smtp": "SMTP (sortant)",
+    "sub": "Copiez-les dans le formulaire de connexion. mcpemails les préremplit quand il le peut et réessaie l'autre transport standard si le premier ne répond pas.",
+    "title": "Les réglages IMAP et SMTP exacts"
   }
 }
