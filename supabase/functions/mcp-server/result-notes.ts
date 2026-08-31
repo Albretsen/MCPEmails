@@ -34,12 +34,15 @@
 //   2. Some output schemas are `additionalProperties: false`, so an unannounced
 //      key fails a strict client's validation. Also still true, and the reason
 //      withResultNotesProperty exists. It matters for a narrower set than it
-//      first appears: the consolidated tools clients actually call (email_read,
-//      email_organize, …) publish NO outputSchema at all, so nothing validates
-//      their payloads. inbox_list, contact_search and the legacy per-operation
-//      tools do publish one, and those are the results that would have been
-//      rejected. Declaring it in the loop that attaches the schemas costs
-//      nothing and removes the question permanently.
+//      first appears. It used to matter for a narrower set still: the
+//      consolidated tools clients actually call (email_read, email_organize, …)
+//      published NO outputSchema at all, so nothing validated their payloads.
+//      They now publish one (buildConsolidatedOutputSchema in index.ts), but it
+//      is deliberately additionalProperties: true, so `notes` could not fail
+//      there in any case. The strict schemas are inbox_list, contact_search and
+//      the legacy per-operation tools, and those are the results that would
+//      have been rejected. Declaring it in the loop that attaches the schemas
+//      costs nothing and removes the question permanently.
 //
 // The `content` block is still written as well. Costing one duplicated sentence
 // to serve both kinds of client is the right trade against a disclosure that

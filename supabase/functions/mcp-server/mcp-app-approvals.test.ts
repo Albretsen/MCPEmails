@@ -1264,6 +1264,23 @@ Deno.test("the approval tools are scoped to send:email, with schedule:email acce
         ((tool.inputSchema as Record<string, any>).required as string[]).includes("approval_id"),
       `${tool.name} requires approval_id`,
     );
+
+    // The outputSchema is deliberately the mirror image of the inputSchema
+    // above: arguments are refused unless known, results are accepted whatever
+    // they carry. A declared output schema is a MUST under the spec ("servers
+    // MUST provide structured results that conform"), and each card merges a
+    // per-tool payload into the shared envelope, so a strict schema would
+    // reject real results as soon as a payload key changed. Permissive is what
+    // makes declaring it safe.
+    const out = tool.outputSchema as Record<string, unknown> | undefined;
+    assert(out, `${tool.name} must declare an outputSchema`);
+    assertEquals(out!.type, "object", `${tool.name} outputSchema is an object`);
+    assertEquals(
+      out!.additionalProperties,
+      true,
+      `${tool.name} outputSchema must stay permissive`,
+    );
+    assertEquals(out!.required, undefined, `${tool.name} outputSchema must require no key`);
   }
   assertEquals(
     APPROVAL_TOOL_DEFINITIONS.map((t) => t.name),

@@ -1314,8 +1314,48 @@ export interface BulkToolDefinition {
   requiredScope: "delete:email";
   altScopes?: string[];
   inputSchema: Record<string, unknown>;
+  /**
+   * The shape of `structuredContent`. Loose for the same reason as the
+   * approval tools: the receipt payload rides in the same object as the
+   * envelope, so `additionalProperties` must stay true.
+   */
+  outputSchema?: Record<string, unknown>;
   annotations?: Record<string, unknown>;
 }
+
+/**
+ * The receipt envelope both bulk tools return, as a schema.
+ *
+ * Mirrors mcp-app-approvals.ts#APPROVAL_CARD_OUTPUT_SCHEMA because
+ * `receiptEnvelope` in this file builds the same four top-level keys.
+ */
+const BULK_CARD_OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    schema_version: {
+      type: "integer",
+      description: "Card envelope version. A client that does not know this version should fall back to dashboard_url.",
+    },
+    card: {
+      type: "string",
+      description: "Which card this envelope renders. Always 'receipt' here.",
+    },
+    state: {
+      type: "string",
+      description: "Where the plan stands: executed, cancelled, expired or failed.",
+    },
+    dashboard_url: {
+      type: "string",
+      description: "Absolute link to the signed-in dashboard for this operation.",
+    },
+    receipt: {
+      type: "object",
+      description: "What the run actually did: headline, detail and the affected counts.",
+      additionalProperties: true,
+    },
+  },
+  additionalProperties: true,
+} as const;
 
 export const BULK_TOOL_DEFINITIONS: BulkToolDefinition[] = [
   {
@@ -1343,6 +1383,7 @@ export const BULK_TOOL_DEFINITIONS: BulkToolDefinition[] = [
       // appearing to pass message_ids, a folder, or a permanent flag.
       additionalProperties: false,
     },
+    outputSchema: BULK_CARD_OUTPUT_SCHEMA,
     annotations: {
       title: "Run a previewed bulk operation",
       readOnlyHint: false,
@@ -1376,6 +1417,7 @@ export const BULK_TOOL_DEFINITIONS: BulkToolDefinition[] = [
       required: ["plan_id"],
       additionalProperties: false,
     },
+    outputSchema: BULK_CARD_OUTPUT_SCHEMA,
     annotations: {
       title: "Cancel a previewed bulk operation",
       readOnlyHint: false,

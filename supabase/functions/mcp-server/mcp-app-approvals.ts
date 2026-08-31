@@ -1384,6 +1384,14 @@ export interface ApprovalToolDefinition {
   requiredScope: "send:email";
   altScopes?: string[];
   inputSchema: Record<string, unknown>;
+  /**
+   * The shape of `structuredContent`. Loose on purpose: these four tools all
+   * return the card envelope plus per-tool keys, and `additionalProperties`
+   * must stay true so the per-tool keys are not rejected. See the note on
+   * CONSOLIDATED_ENVELOPE_KEYS in index.ts for why every listed tool declares
+   * one and why none of them is strict.
+   */
+  outputSchema?: Record<string, unknown>;
   annotations?: {
     title?: string;
     readOnlyHint?: boolean;
@@ -1402,6 +1410,38 @@ const APPROVAL_ID_PROPERTY = {
 
 const APPROVAL_ALT_SCOPES = ["schedule:email"];
 
+/**
+ * The card envelope every approval tool returns, as a schema.
+ *
+ * Shared by all four because they genuinely share it: each result is built by
+ * an *Envelope helper in this file and carries `schema_version`, `card`,
+ * `state` and `dashboard_url` at the top level. The per-card payload
+ * (`outbound`, `receipt`, `actor`) rides in the same object and is admitted by
+ * `additionalProperties`, which is why no tool needs its own variant.
+ */
+const APPROVAL_CARD_OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    schema_version: {
+      type: "integer",
+      description: "Card envelope version. A client that does not know this version should fall back to dashboard_url.",
+    },
+    card: {
+      type: "string",
+      description: "Which card this envelope renders: 'outbound_review' or 'receipt'.",
+    },
+    state: {
+      type: "string",
+      description: "Where the request stands: pending, approved, rejected, expired or sent.",
+    },
+    dashboard_url: {
+      type: "string",
+      description: "Absolute link to the signed-in approvals page. Always present, and the one link that still works when the rest of the envelope cannot be parsed.",
+    },
+  },
+  additionalProperties: true,
+} as const;
+
 export const APPROVAL_TOOL_DEFINITIONS: ApprovalToolDefinition[] = [
   {
     name: "approval_review",
@@ -1419,6 +1459,7 @@ export const APPROVAL_TOOL_DEFINITIONS: ApprovalToolDefinition[] = [
       required: ["approval_id"],
       additionalProperties: false,
     },
+    outputSchema: APPROVAL_CARD_OUTPUT_SCHEMA,
     annotations: {
       title: "Review a pending send",
       readOnlyHint: true,
@@ -1457,6 +1498,7 @@ export const APPROVAL_TOOL_DEFINITIONS: ApprovalToolDefinition[] = [
       required: ["approval_id", "decision"],
       additionalProperties: false,
     },
+    outputSchema: APPROVAL_CARD_OUTPUT_SCHEMA,
     annotations: {
       title: "Reject a pending send",
       readOnlyHint: false,
@@ -1488,6 +1530,7 @@ export const APPROVAL_TOOL_DEFINITIONS: ApprovalToolDefinition[] = [
       required: ["approval_id"],
       additionalProperties: false,
     },
+    outputSchema: APPROVAL_CARD_OUTPUT_SCHEMA,
     annotations: {
       title: "Edit a pending send",
       readOnlyHint: false,
@@ -1518,6 +1561,7 @@ export const APPROVAL_TOOL_DEFINITIONS: ApprovalToolDefinition[] = [
       required: ["approval_id", "send_at"],
       additionalProperties: false,
     },
+    outputSchema: APPROVAL_CARD_OUTPUT_SCHEMA,
     annotations: {
       title: "Schedule a pending send",
       readOnlyHint: false,

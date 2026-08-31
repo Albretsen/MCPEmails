@@ -5636,6 +5636,32 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     required: ["cancelled", "id", "inbox_id", "send_at", "previous_status"],
     additionalProperties: false,
   },
+  // The two signature operations were the only consolidated actions with no
+  // output schema at all, which left the `signature` tool with nothing to
+  // derive its envelope from. Deliberately loose (additionalProperties: true,
+  // no `required`): these exist to name the shared keys, not to constrain a
+  // handler no test validates.
+  signature_get: {
+    type: "object",
+    properties: {
+      inbox_id: { type: "string" },
+      email_address: { type: "string" },
+      signature_enabled: { type: "boolean" },
+      signature_reply_mode: { type: "string", enum: ["always", "first_only", "never"] },
+    },
+    additionalProperties: true,
+  },
+  signature_set: {
+    type: "object",
+    properties: {
+      saved: { type: "boolean" },
+      inbox_id: { type: "string" },
+      email_address: { type: "string" },
+      signature_enabled: { type: "boolean" },
+      signature_reply_mode: { type: "string", enum: ["always", "first_only", "never"] },
+    },
+    additionalProperties: true,
+  },
 };
 
 /**
@@ -6161,6 +6187,78 @@ const CONSOLIDATED_BY_NAME = CONSOLIDATED_SPECS;
 const CONSOLIDATED_ARGUMENT_INDEX: Record<string, ActionArgumentIndex> = {};
 
 /**
+ * The cross-cutting result keys a consolidated `outputSchema` declares.
+ *
+ * WHY THESE AND NOT THE FULL UNION. A consolidated tool fans out to up to nine
+ * actions whose payloads have almost nothing in common (the property
+ * intersection is empty for `draft`, `schedule` and `automation`). The two
+ * honest options were a union and an envelope:
+ *
+ *   - `anyOf` of every action's schema: +27.9 KB on a 59.9 KB `tools/list`
+ *     (+47%), measured, after collapsing the duplicates. It also validates
+ *     almost nothing, since a payload matching any one branch passes, and it
+ *     makes the spec's "servers MUST provide structured results that conform"
+ *     a promise across 44 action paths that no test currently checks.
+ *   - this envelope: +10.0 KB (+16.7%), measured the same way, and it cannot
+ *     be violated. Most of that is the derived property DESCRIPTIONS, which
+ *     are the part worth paying for; the keys alone would be a fraction.
+ *
+ * The envelope is the second. Every key is OPTIONAL and
+ * `additionalProperties` stays true, so declaring it can never turn a working
+ * call into a rejected one; it names the keys a caller can rely on across
+ * actions (paging, the inbox acted on, the untrusted-content flag) and leaves
+ * the per-action detail to the tool description, which is where a model that
+ * has not yet chosen an action actually reads.
+ *
+ * The property schemas are DERIVED from the legacy action schemas rather than
+ * written here, so a key's description can never drift from the one the
+ * per-operation tools already publish. A key is declared only if some action
+ * of that tool really returns it.
+ */
+const CONSOLIDATED_ENVELOPE_KEYS = [
+  "operation",
+  "inbox_id",
+  "untrusted_content",
+  "has_more",
+  "next_offset",
+  "total",
+  "count",
+  "succeeded",
+  "failed",
+] as const;
+
+/**
+ * Build the loose `outputSchema` for a consolidated tool from its actions.
+ *
+ * Returns undefined only if no action has a legacy schema to derive from, in
+ * which case the caller still publishes a bare object schema: the point is
+ * that every listed tool declares the shape of `structuredContent`, which
+ * `jsonOk` sets on every single result.
+ */
+function buildConsolidatedOutputSchema(
+  spec: ConsolidatedSpec,
+): Record<string, unknown> {
+  const properties: Record<string, unknown> = {};
+  for (const action of Object.values(spec.actions)) {
+    const legacyOut = LEGACY_BY_NAME.get(action.legacy)?.outputSchema;
+    const legacyProps = legacyOut?.properties as Record<string, unknown> | undefined;
+    if (!legacyProps) continue;
+    for (const key of CONSOLIDATED_ENVELOPE_KEYS) {
+      if (key in legacyProps && !(key in properties)) properties[key] = legacyProps[key];
+    }
+  }
+  return {
+    type: "object",
+    properties,
+    // Load-bearing, not a default. Each action returns its own extra keys and
+    // the tool must tolerate all of them; false here would reject nearly every
+    // real result. Paired with the absence of `required`, this schema accepts
+    // any object, which is the property that makes it safe to declare.
+    additionalProperties: true,
+  };
+}
+
+/**
  * Build a consolidated tool's input schema by merging the input schemas of its
  * actions' legacy tools. A required `action` enum selects the operation. The
  * action-specific `allOf` rules make the selected action's required fields and
@@ -6267,6 +6365,10 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
       additionalProperties: false,
       allOf: actionRules,
     },
+    // withResultNotesProperty for the same reason the legacy attach loop uses
+    // it: `notes` is appended to results by attachResultNote, so it has to be
+    // a declared key rather than an unannounced one.
+    outputSchema: withResultNotesProperty(buildConsolidatedOutputSchema(spec)),
     annotations: {
       title: spec.title,
       readOnlyHint: spec.annotations.readOnlyHint,
