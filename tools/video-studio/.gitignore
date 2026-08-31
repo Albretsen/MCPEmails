@@ -1,0 +1,14 @@
+# Everything in here is generated, large, or a live credential.
+node_modules/
+captures/
+out/
+.auth/
+.remotion/
+assets/vo/
+.whisper/
+
+# public/ holds only symlinks into captures/ and assets/vo/, created by
+# scripts/lib/public-dir.mjs. Nothing authored lives there.
+public/
+
+.env

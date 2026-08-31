@@ -1,0 +1,34 @@
+{
+  "name": "video-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Internal tool: produce a product video from one storyboard JSON, by capturing the real product and compositing it with synthetic scenes.",
+  "scripts": {
+    "doctor": "node scripts/doctor.mjs",
+    "auth": "node scripts/auth.mjs",
+    "reset": "node scripts/reset.mjs",
+    "capture": "node scripts/capture.mjs",
+    "transcript": "node scripts/transcript.mjs",
+    "render": "node scripts/render.mjs",
+    "verify": "node scripts/verify.mjs",
+    "studio": "remotion studio src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.519",
+    "@remotion/captions": "4.0.519",
+    "@remotion/cli": "4.0.519",
+    "@remotion/install-whisper-cpp": "4.0.519",
+    "@remotion/media-utils": "4.0.519",
+    "@remotion/renderer": "4.0.519",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.519"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.0",
+    "playwright": "1.62.1",
+    "typescript": "5.9.3"
+  }
+}
