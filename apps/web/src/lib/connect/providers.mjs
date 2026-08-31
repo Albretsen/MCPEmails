@@ -37,6 +37,7 @@ export const PROVIDER_CATEGORIES = [
 export const PROVIDERS = [
   {
     slug: "imap",
+    wave: 1,
     name: "Generic IMAP",
     category: "generic",
     domain: null,
@@ -50,6 +51,7 @@ export const PROVIDERS = [
   },
   {
     slug: "aol",
+    wave: 1,
     name: "AOL Mail",
     category: "consumer",
     domain: "aol.com",
@@ -63,6 +65,7 @@ export const PROVIDERS = [
   },
   {
     slug: "gmail",
+    wave: 1,
     name: "Gmail",
     category: "consumer",
     domain: "gmail.com",
@@ -82,6 +85,7 @@ export const PROVIDERS = [
   },
   {
     slug: "gmx",
+    wave: 1,
     name: "GMX",
     category: "consumer",
     domain: "gmx.net",
@@ -95,6 +99,7 @@ export const PROVIDERS = [
   },
   {
     slug: "icloud",
+    wave: 1,
     name: "iCloud Mail",
     category: "consumer",
     domain: "icloud.com",
@@ -108,6 +113,7 @@ export const PROVIDERS = [
   },
   {
     slug: "mail-com",
+    wave: 2,
     name: "Mail.com",
     category: "consumer",
     domain: "mail.com",
@@ -121,6 +127,7 @@ export const PROVIDERS = [
   },
   {
     slug: "mail-ru",
+    wave: 2,
     name: "Mail.ru",
     category: "consumer",
     domain: "mail.ru",
@@ -134,6 +141,7 @@ export const PROVIDERS = [
   },
   {
     slug: "web-de",
+    wave: 2,
     name: "WEB.DE",
     category: "consumer",
     domain: "web.de",
@@ -147,6 +155,7 @@ export const PROVIDERS = [
   },
   {
     slug: "yahoo",
+    wave: 1,
     name: "Yahoo Mail",
     category: "consumer",
     domain: "yahoo.com",
@@ -160,6 +169,7 @@ export const PROVIDERS = [
   },
   {
     slug: "yandex",
+    wave: 1,
     name: "Yandex Mail",
     category: "consumer",
     domain: "yandex.com",
@@ -173,6 +183,7 @@ export const PROVIDERS = [
   },
   {
     slug: "disroot",
+    wave: 4,
     name: "Disroot",
     category: "privacy",
     domain: "disroot.org",
@@ -186,6 +197,7 @@ export const PROVIDERS = [
   },
   {
     slug: "hushmail",
+    wave: 4,
     name: "Hushmail",
     category: "privacy",
     domain: "hushmail.com",
@@ -199,6 +211,7 @@ export const PROVIDERS = [
   },
   {
     slug: "kolabnow",
+    wave: 4,
     name: "KolabNow",
     category: "privacy",
     domain: "kolabnow.com",
@@ -212,6 +225,7 @@ export const PROVIDERS = [
   },
   {
     slug: "mailbox-org",
+    wave: 4,
     name: "mailbox.org",
     category: "privacy",
     domain: "mailbox.org",
@@ -225,6 +239,7 @@ export const PROVIDERS = [
   },
   {
     slug: "mailfence",
+    wave: 5,
     name: "Mailfence",
     category: "privacy",
     domain: "mailfence.com",
@@ -238,6 +253,7 @@ export const PROVIDERS = [
   },
   {
     slug: "posteo",
+    wave: 5,
     name: "Posteo",
     category: "privacy",
     domain: "posteo.de",
@@ -251,6 +267,7 @@ export const PROVIDERS = [
   },
   {
     slug: "riseup",
+    wave: 5,
     name: "Riseup",
     category: "privacy",
     domain: "riseup.net",
@@ -264,6 +281,7 @@ export const PROVIDERS = [
   },
   {
     slug: "runbox",
+    wave: 5,
     name: "Runbox",
     category: "privacy",
     domain: "runbox.com",
@@ -277,6 +295,7 @@ export const PROVIDERS = [
   },
   {
     slug: "soverin",
+    wave: 5,
     name: "Soverin",
     category: "privacy",
     domain: "soverin.net",
@@ -290,6 +309,7 @@ export const PROVIDERS = [
   },
   {
     slug: "startmail",
+    wave: 10,
     name: "StartMail",
     category: "privacy",
     domain: "startmail.com",
@@ -303,6 +323,7 @@ export const PROVIDERS = [
   },
   {
     slug: "fastmail",
+    wave: 1,
     name: "Fastmail",
     category: "business",
     domain: "fastmail.com",
@@ -316,6 +337,7 @@ export const PROVIDERS = [
   },
   {
     slug: "migadu",
+    wave: 1,
     name: "Migadu",
     category: "business",
     domain: "migadu.com",
@@ -329,6 +351,7 @@ export const PROVIDERS = [
   },
   {
     slug: "purelymail",
+    wave: 2,
     name: "Purelymail",
     category: "business",
     domain: "purelymail.com",
@@ -342,6 +365,7 @@ export const PROVIDERS = [
   },
   {
     slug: "rackspace",
+    wave: 2,
     name: "Rackspace Email",
     category: "business",
     domain: "emailsrvr.com",
@@ -355,6 +379,7 @@ export const PROVIDERS = [
   },
   {
     slug: "titan",
+    wave: 2,
     name: "Titan Email",
     category: "business",
     domain: "titan.email",
@@ -368,6 +393,7 @@ export const PROVIDERS = [
   },
   {
     slug: "zoho",
+    wave: 1,
     name: "Zoho Mail",
     category: "business",
     domain: "zoho.com",
@@ -381,6 +407,7 @@ export const PROVIDERS = [
   },
   {
     slug: "domeneshop",
+    wave: 2,
     name: "Domeneshop",
     category: "hosting",
     domain: "domeneshop.no",
@@ -394,6 +421,7 @@ export const PROVIDERS = [
   },
   {
     slug: "dreamhost",
+    wave: 2,
     name: "DreamHost",
     category: "hosting",
     domain: "dreamhost.com",
@@ -407,6 +435,7 @@ export const PROVIDERS = [
   },
   {
     slug: "gandi",
+    wave: 2,
     name: "Gandi",
     category: "hosting",
     domain: "gandi.net",
@@ -420,6 +449,7 @@ export const PROVIDERS = [
   },
   {
     slug: "godaddy",
+    wave: 2,
     name: "GoDaddy",
     category: "hosting",
     domain: "secureserver.net",
@@ -433,6 +463,7 @@ export const PROVIDERS = [
   },
   {
     slug: "hetzner",
+    wave: 2,
     name: "Hetzner",
     category: "hosting",
     domain: "hetzner.com",
@@ -446,6 +477,7 @@ export const PROVIDERS = [
   },
   {
     slug: "hostinger",
+    wave: 3,
     name: "Hostinger",
     category: "hosting",
     domain: "hostinger.com",
@@ -459,6 +491,7 @@ export const PROVIDERS = [
   },
   {
     slug: "infomaniak",
+    wave: 3,
     name: "Infomaniak",
     category: "hosting",
     domain: "infomaniak.com",
@@ -472,6 +505,7 @@ export const PROVIDERS = [
   },
   {
     slug: "ionos",
+    wave: 1,
     name: "IONOS",
     category: "hosting",
     domain: "ionos.com",
@@ -485,6 +519,7 @@ export const PROVIDERS = [
   },
   {
     slug: "loopia",
+    wave: 3,
     name: "Loopia",
     category: "hosting",
     domain: "loopia.se",
@@ -498,6 +533,7 @@ export const PROVIDERS = [
   },
   {
     slug: "namecheap",
+    wave: 3,
     name: "Namecheap Private Email",
     category: "hosting",
     domain: "privateemail.com",
@@ -511,6 +547,7 @@ export const PROVIDERS = [
   },
   {
     slug: "one-com",
+    wave: 3,
     name: "One.com",
     category: "hosting",
     domain: "one.com",
@@ -524,6 +561,7 @@ export const PROVIDERS = [
   },
   {
     slug: "ovh",
+    wave: 3,
     name: "OVHcloud",
     category: "hosting",
     domain: "ovh.net",
@@ -537,6 +575,7 @@ export const PROVIDERS = [
   },
   {
     slug: "strato",
+    wave: 3,
     name: "STRATO",
     category: "hosting",
     domain: "strato.de",
@@ -550,6 +589,7 @@ export const PROVIDERS = [
   },
   {
     slug: "a2hosting",
+    wave: 3,
     name: "A2 Hosting",
     category: "cpanel",
     domain: "a2hosting.com",
@@ -563,6 +603,7 @@ export const PROVIDERS = [
   },
   {
     slug: "bluehost",
+    wave: 3,
     name: "Bluehost",
     category: "cpanel",
     domain: "bluehost.com",
@@ -576,6 +617,7 @@ export const PROVIDERS = [
   },
   {
     slug: "cpanel",
+    wave: 3,
     name: "cPanel / WHM",
     category: "cpanel",
     domain: null,
@@ -589,6 +631,7 @@ export const PROVIDERS = [
   },
   {
     slug: "greengeeks",
+    wave: 3,
     name: "GreenGeeks",
     category: "cpanel",
     domain: "greengeeks.com",
@@ -602,6 +645,7 @@ export const PROVIDERS = [
   },
   {
     slug: "hostgator",
+    wave: 4,
     name: "HostGator",
     category: "cpanel",
     domain: "hostgator.com",
@@ -615,6 +659,7 @@ export const PROVIDERS = [
   },
   {
     slug: "inmotion",
+    wave: 4,
     name: "InMotion Hosting",
     category: "cpanel",
     domain: "inmotionhosting.com",
@@ -628,6 +673,7 @@ export const PROVIDERS = [
   },
   {
     slug: "krystal",
+    wave: 4,
     name: "Krystal",
     category: "cpanel",
     domain: "krystal.uk",
@@ -641,6 +687,7 @@ export const PROVIDERS = [
   },
   {
     slug: "plesk",
+    wave: 4,
     name: "Plesk",
     category: "cpanel",
     domain: null,
@@ -654,6 +701,7 @@ export const PROVIDERS = [
   },
   {
     slug: "scalahosting",
+    wave: 4,
     name: "ScalaHosting",
     category: "cpanel",
     domain: "scalahosting.com",
@@ -667,6 +715,7 @@ export const PROVIDERS = [
   },
   {
     slug: "siteground",
+    wave: 4,
     name: "SiteGround",
     category: "cpanel",
     domain: "siteground.com",
@@ -680,6 +729,7 @@ export const PROVIDERS = [
   },
   {
     slug: "tsohost",
+    wave: 4,
     name: "Tsohost",
     category: "cpanel",
     domain: "tsohost.com",
@@ -693,6 +743,7 @@ export const PROVIDERS = [
   },
   {
     slug: "axigen",
+    wave: 8,
     name: "Axigen",
     category: "selfhost",
     domain: null,
@@ -706,6 +757,7 @@ export const PROVIDERS = [
   },
   {
     slug: "dovecot",
+    wave: 8,
     name: "Dovecot",
     category: "selfhost",
     domain: null,
@@ -719,6 +771,7 @@ export const PROVIDERS = [
   },
   {
     slug: "icewarp",
+    wave: 8,
     name: "IceWarp",
     category: "selfhost",
     domain: null,
@@ -732,6 +785,7 @@ export const PROVIDERS = [
   },
   {
     slug: "mailcow",
+    wave: 8,
     name: "mailcow",
     category: "selfhost",
     domain: null,
@@ -745,6 +799,7 @@ export const PROVIDERS = [
   },
   {
     slug: "mailinabox",
+    wave: 8,
     name: "Mail-in-a-Box",
     category: "selfhost",
     domain: null,
@@ -758,6 +813,7 @@ export const PROVIDERS = [
   },
   {
     slug: "mdaemon",
+    wave: 9,
     name: "MDaemon",
     category: "selfhost",
     domain: null,
@@ -771,6 +827,7 @@ export const PROVIDERS = [
   },
   {
     slug: "open-xchange",
+    wave: 9,
     name: "Open-Xchange",
     category: "selfhost",
     domain: null,
@@ -784,6 +841,7 @@ export const PROVIDERS = [
   },
   {
     slug: "poste-io",
+    wave: 9,
     name: "Poste.io",
     category: "selfhost",
     domain: null,
@@ -797,6 +855,7 @@ export const PROVIDERS = [
   },
   {
     slug: "smartermail",
+    wave: 9,
     name: "SmarterMail",
     category: "selfhost",
     domain: null,
@@ -810,6 +869,7 @@ export const PROVIDERS = [
   },
   {
     slug: "synology",
+    wave: 9,
     name: "Synology MailPlus",
     category: "selfhost",
     domain: null,
@@ -823,6 +883,7 @@ export const PROVIDERS = [
   },
   {
     slug: "zimbra",
+    wave: 9,
     name: "Zimbra",
     category: "selfhost",
     domain: null,
@@ -836,6 +897,7 @@ export const PROVIDERS = [
   },
   {
     slug: "att",
+    wave: 6,
     name: "AT&T Mail",
     category: "isp",
     domain: "att.net",
@@ -849,6 +911,7 @@ export const PROVIDERS = [
   },
   {
     slug: "bigpond",
+    wave: 6,
     name: "Telstra BigPond",
     category: "isp",
     domain: "bigpond.com",
@@ -862,6 +925,7 @@ export const PROVIDERS = [
   },
   {
     slug: "bluewin",
+    wave: 6,
     name: "Bluewin (Swisscom)",
     category: "isp",
     domain: "bluewin.ch",
@@ -875,6 +939,7 @@ export const PROVIDERS = [
   },
   {
     slug: "centurylink",
+    wave: 6,
     name: "CenturyLink",
     category: "isp",
     domain: "centurylink.net",
@@ -888,6 +953,7 @@ export const PROVIDERS = [
   },
   {
     slug: "comcast",
+    wave: 6,
     name: "Comcast Xfinity",
     category: "isp",
     domain: "comcast.net",
@@ -901,6 +967,7 @@ export const PROVIDERS = [
   },
   {
     slug: "cox",
+    wave: 6,
     name: "Cox",
     category: "isp",
     domain: "cox.net",
@@ -914,6 +981,7 @@ export const PROVIDERS = [
   },
   {
     slug: "earthlink",
+    wave: 6,
     name: "EarthLink",
     category: "isp",
     domain: "earthlink.net",
@@ -927,6 +995,7 @@ export const PROVIDERS = [
   },
   {
     slug: "free-fr",
+    wave: 7,
     name: "Free",
     category: "isp",
     domain: "free.fr",
@@ -940,6 +1009,7 @@ export const PROVIDERS = [
   },
   {
     slug: "freenet",
+    wave: 7,
     name: "freenet",
     category: "isp",
     domain: "freenet.de",
@@ -953,6 +1023,7 @@ export const PROVIDERS = [
   },
   {
     slug: "frontier",
+    wave: 10,
     name: "Frontier",
     category: "isp",
     domain: "frontier.com",
@@ -966,6 +1037,7 @@ export const PROVIDERS = [
   },
   {
     slug: "iinet",
+    wave: 7,
     name: "iiNet",
     category: "isp",
     domain: "iinet.net.au",
@@ -979,6 +1051,7 @@ export const PROVIDERS = [
   },
   {
     slug: "interia",
+    wave: 7,
     name: "Interia",
     category: "isp",
     domain: "interia.pl",
@@ -992,6 +1065,7 @@ export const PROVIDERS = [
   },
   {
     slug: "kpn",
+    wave: 7,
     name: "KPN",
     category: "isp",
     domain: "kpnmail.nl",
@@ -1005,6 +1079,7 @@ export const PROVIDERS = [
   },
   {
     slug: "laposte",
+    wave: 7,
     name: "La Poste",
     category: "isp",
     domain: "laposte.net",
@@ -1018,6 +1093,7 @@ export const PROVIDERS = [
   },
   {
     slug: "o2-pl",
+    wave: 7,
     name: "o2.pl",
     category: "isp",
     domain: "o2.pl",
@@ -1031,6 +1107,7 @@ export const PROVIDERS = [
   },
   {
     slug: "onet",
+    wave: 7,
     name: "Onet Poczta",
     category: "isp",
     domain: "onet.pl",
@@ -1044,6 +1121,7 @@ export const PROVIDERS = [
   },
   {
     slug: "online-no",
+    wave: 7,
     name: "Online.no",
     category: "isp",
     domain: "online.no",
@@ -1057,6 +1135,7 @@ export const PROVIDERS = [
   },
   {
     slug: "optimum",
+    wave: 10,
     name: "Optimum",
     category: "isp",
     domain: "optimum.net",
@@ -1070,6 +1149,7 @@ export const PROVIDERS = [
   },
   {
     slug: "optus",
+    wave: 7,
     name: "Optus",
     category: "isp",
     domain: "optusnet.com.au",
@@ -1083,6 +1163,7 @@ export const PROVIDERS = [
   },
   {
     slug: "orange-fr",
+    wave: 7,
     name: "Orange",
     category: "isp",
     domain: "orange.fr",
@@ -1096,6 +1177,7 @@ export const PROVIDERS = [
   },
   {
     slug: "rogers",
+    wave: 10,
     name: "Rogers",
     category: "isp",
     domain: "rogers.com",
@@ -1109,6 +1191,7 @@ export const PROVIDERS = [
   },
   {
     slug: "sapo",
+    wave: 8,
     name: "SAPO",
     category: "isp",
     domain: "sapo.pt",
@@ -1122,6 +1205,7 @@ export const PROVIDERS = [
   },
   {
     slug: "seznam",
+    wave: 8,
     name: "Seznam",
     category: "isp",
     domain: "seznam.cz",
@@ -1135,6 +1219,7 @@ export const PROVIDERS = [
   },
   {
     slug: "sfr",
+    wave: 10,
     name: "SFR",
     category: "isp",
     domain: "sfr.fr",
@@ -1148,6 +1233,7 @@ export const PROVIDERS = [
   },
   {
     slug: "t-online",
+    wave: 8,
     name: "T-Online",
     category: "isp",
     domain: "t-online.de",
@@ -1161,6 +1247,7 @@ export const PROVIDERS = [
   },
   {
     slug: "telenet",
+    wave: 8,
     name: "Telenet",
     category: "isp",
     domain: "telenet.be",
@@ -1174,6 +1261,7 @@ export const PROVIDERS = [
   },
   {
     slug: "verizon",
+    wave: 8,
     name: "Verizon",
     category: "isp",
     domain: "verizon.net",
@@ -1187,6 +1275,7 @@ export const PROVIDERS = [
   },
   {
     slug: "wp-pl",
+    wave: 10,
     name: "WP.pl",
     category: "isp",
     domain: "wp.pl",
@@ -1200,6 +1289,7 @@ export const PROVIDERS = [
   },
   {
     slug: "xtra",
+    wave: 10,
     name: "Spark Xtra",
     category: "isp",
     domain: "xtra.co.nz",
@@ -1213,6 +1303,7 @@ export const PROVIDERS = [
   },
   {
     slug: "ziggo",
+    wave: 8,
     name: "Ziggo",
     category: "isp",
     domain: "ziggo.nl",
@@ -1226,6 +1317,7 @@ export const PROVIDERS = [
   },
   {
     slug: "aliyun",
+    wave: 5,
     name: "Alibaba Mail",
     category: "regional",
     domain: "aliyun.com",
@@ -1239,6 +1331,7 @@ export const PROVIDERS = [
   },
   {
     slug: "bol",
+    wave: 5,
     name: "BOL",
     category: "regional",
     domain: "bol.com.br",
@@ -1252,6 +1345,7 @@ export const PROVIDERS = [
   },
   {
     slug: "daum",
+    wave: 5,
     name: "Daum",
     category: "regional",
     domain: "daum.net",
@@ -1265,6 +1359,7 @@ export const PROVIDERS = [
   },
   {
     slug: "naver",
+    wave: 5,
     name: "Naver",
     category: "regional",
     domain: "naver.com",
@@ -1278,6 +1373,7 @@ export const PROVIDERS = [
   },
   {
     slug: "netease-126",
+    wave: 5,
     name: "NetEase 126",
     category: "regional",
     domain: "126.com",
@@ -1291,6 +1387,7 @@ export const PROVIDERS = [
   },
   {
     slug: "netease-163",
+    wave: 5,
     name: "NetEase 163",
     category: "regional",
     domain: "163.com",
@@ -1304,6 +1401,7 @@ export const PROVIDERS = [
   },
   {
     slug: "qq",
+    wave: 6,
     name: "QQ Mail",
     category: "regional",
     domain: "qq.com",
@@ -1317,6 +1415,7 @@ export const PROVIDERS = [
   },
   {
     slug: "sina",
+    wave: 6,
     name: "Sina Mail",
     category: "regional",
     domain: "sina.com",
@@ -1330,6 +1429,7 @@ export const PROVIDERS = [
   },
   {
     slug: "terra",
+    wave: 6,
     name: "Terra",
     category: "regional",
     domain: "terra.com.br",
@@ -1343,6 +1443,7 @@ export const PROVIDERS = [
   },
   {
     slug: "uol",
+    wave: 6,
     name: "UOL",
     category: "regional",
     domain: "uol.com.br",
@@ -1356,6 +1457,7 @@ export const PROVIDERS = [
   },
   {
     slug: "hey",
+    wave: 9,
     name: "HEY",
     category: "blocked",
     domain: "hey.com",
@@ -1369,6 +1471,7 @@ export const PROVIDERS = [
   },
   {
     slug: "office365",
+    wave: 9,
     name: "Microsoft 365",
     category: "blocked",
     domain: "office365.com",
@@ -1382,6 +1485,7 @@ export const PROVIDERS = [
   },
   {
     slug: "outlook",
+    wave: 9,
     name: "Outlook.com",
     category: "blocked",
     domain: "outlook.com",
@@ -1395,6 +1499,7 @@ export const PROVIDERS = [
   },
   {
     slug: "proton",
+    wave: 9,
     name: "Proton Mail",
     category: "blocked",
     domain: "protonmail.com",
@@ -1408,6 +1513,7 @@ export const PROVIDERS = [
   },
   {
     slug: "tutanota",
+    wave: 9,
     name: "Tuta",
     category: "blocked",
     domain: "tutanota.com",
@@ -1441,27 +1547,3 @@ export function providersByCategory(category) {
   return PROVIDERS.filter((p) => p.category === category);
 }
 
-/**
- * Siblings to link from a provider page. Internal links are the whole reason
- * these pages are crawlable at all: with the site's backlink profile, a page
- * reachable only from the sitemap is a page that does not get indexed. Same
- * category first (that is the silo), then the generic IMAP page as the hub of
- * last resort, so every page is at most two hops from every other.
- */
-export function relatedProviders(slug, limit = 6) {
-  const self = getProvider(slug);
-  if (!self) return [];
-  const siblings = PROVIDERS.filter(
-    (p) => p.slug !== slug && p.category === self.category,
-  );
-  const start = Math.max(0, siblings.findIndex((p) => p.slug > slug));
-  // Rotate, so each page in a large silo links to a different slice and the
-  // link graph stays connected instead of every page pointing at the first six.
-  const rotated = [...siblings.slice(start), ...siblings.slice(0, start)];
-  const out = rotated.slice(0, limit);
-  if (out.length < limit && slug !== 'imap') {
-    const generic = getProvider('imap');
-    if (generic && !out.some((p) => p.slug === 'imap')) out.push(generic);
-  }
-  return out;
-}

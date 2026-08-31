@@ -81,7 +81,7 @@
   "hub": {
     "meta": {
       "title": "将任意邮箱服务商连接到 Claude 与 MCP 客户端",
-      "description": "106 家邮箱服务商的 IMAP 与 SMTP 设置，均经真实连接验证。附 Claude、Cursor、ChatGPT 接入方法，1 个收件箱永久免费。"
+      "description": "{count} 家邮箱服务商的 IMAP 与 SMTP 设置，均经真实连接验证。附 Claude、Cursor、ChatGPT 接入方法，1 个收件箱永久免费。"
     },
     "breadcrumb": "邮箱服务商",
     "eyebrow": "全部服务商",

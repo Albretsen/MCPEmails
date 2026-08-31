@@ -81,7 +81,7 @@
   "hub": {
     "meta": {
       "title": "Conecta cualquier proveedor de correo a Claude y MCP",
-      "description": "Ajustes de IMAP y SMTP de 106 proveedores de correo, cada uno verificado desde una conexión real, y cómo dar a Claude, Cursor o ChatGPT acceso a ese buzón."
+      "description": "Ajustes de IMAP y SMTP de {count} proveedores de correo, cada uno verificado desde una conexión real, y cómo dar a Claude, Cursor o ChatGPT acceso a ese buzón."
     },
     "breadcrumb": "Proveedores de correo",
     "eyebrow": "Todos los proveedores",
