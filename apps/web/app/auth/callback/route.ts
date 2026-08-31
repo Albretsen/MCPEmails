@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { acquisitionFromParams } from '@/lib/acquisition-context.mjs';
+import { acquisitionFromParams, isNewAccountSignup } from '@/lib/acquisition-context.mjs';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -54,7 +54,13 @@ export async function GET(request: Request) {
 
   if (searchParams.has('acq')) {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    // The login page also carries acquisition params, because a first OAuth
+    // login creates the account. That means this callback now runs for
+    // returning users too, and an account predating attribution still has a
+    // NULL source: without this check their next login would be stamped with
+    // today's landing page instead of their real first touch. Only stamp an
+    // account this exchange just created.
+    if (user && isNewAccountSignup(user.created_at)) {
       // First-touch only: never overwrite a previously attributed workspace.
       await supabase
         .from('workspaces')

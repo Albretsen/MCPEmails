@@ -134,3 +134,19 @@ export function acquisitionFromParams(searchParams) {
     Object.entries(ACQUISITION_QUERY_KEYS).map(([field, queryKey]) => [field, searchParams.get(queryKey)]),
   ));
 }
+
+// How recently the auth user must have been created for an OAuth callback to
+// count as a signup rather than a login. Both /signup and /login carry
+// acquisition params (a first OAuth login creates the account), so the callback
+// runs for returning users too, and an account predating attribution still has
+// a NULL source. Without this check their next login would overwrite a blank
+// first touch with today's landing page. The account is created during the same
+// request, so the real gap is milliseconds; the window only absorbs clock skew.
+export const NEW_ACCOUNT_WINDOW_MS = 2 * 60 * 1000;
+
+export function isNewAccountSignup(createdAt, now = Date.now()) {
+  const created = typeof createdAt === 'number' ? createdAt : Date.parse(createdAt ?? '');
+  if (!Number.isFinite(created)) return false;
+  const age = now - created;
+  return age >= -NEW_ACCOUNT_WINDOW_MS && age < NEW_ACCOUNT_WINDOW_MS;
+}
