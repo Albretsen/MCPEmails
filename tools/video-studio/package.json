@@ -5,6 +5,8 @@
   "type": "module",
   "description": "Internal tool: produce a product video from one storyboard JSON, by capturing the real product and compositing it with synthetic scenes.",
   "scripts": {
+    "demo": "node scripts/demo.mjs",
+    "start": "node scripts/demo.mjs",
     "doctor": "node scripts/doctor.mjs",
     "auth": "node scripts/auth.mjs",
     "reset": "node scripts/reset.mjs",

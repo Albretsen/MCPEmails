@@ -54,6 +54,7 @@ try {
   fail('render', e.message);
 }
 log(`  ${storyboard.scenes.length} scene(s), ${(storyboard.durationInFrames / storyboard.fps).toFixed(2)}s at ${storyboard.fps}fps, ${storyboard.width}x${storyboard.height}`);
+for (const warning of storyboard.warnings ?? []) log(`  note: ${warning}`);
 
 try {
   assertCapturesPresent(storyboard, timelines);

@@ -136,6 +136,13 @@ heading('Storyboards');
 
 const { readdirSync } = await import('node:fs');
 const { validateStoryboard } = await import('../src/storyboard-schema.mjs');
+const { captureDurations, loadTimelines } = await import('./lib/inputs.mjs');
+
+// Validate against the recordings that actually exist, the way render does.
+// Validating with no capture data reports every clip that derives its length
+// from a recording as broken, which is a false alarm and trains people to
+// ignore doctor.
+const durations = captureDurations(loadTimelines());
 const files = existsSync(paths.storyboards)
   ? readdirSync(paths.storyboards).filter((f) => f.endsWith('.json'))
   : [];
@@ -144,12 +151,12 @@ if (files.length === 0) {
 }
 for (const f of files) {
   try {
-    // Schema-only pass: capture durations are not required to type-check the
-    // shape, and doctor must work before anything has been captured.
-    validateStoryboard(JSON.parse(readFileSync(resolve(paths.storyboards, f), 'utf8')), {});
+    validateStoryboard(JSON.parse(readFileSync(resolve(paths.storyboards, f), 'utf8')), durations);
     add(`storyboards/${f} validates`, 'hard', true, '');
   } catch (e) {
-    const soft = /cannot work out how long this scene is/.test(e.message);
+    // "not captured yet" is a state, not a fault: a storyboard is allowed to
+    // reference a shot nobody has recorded on this machine.
+    const soft = /cannot work out how long this scene is|has not been captured/.test(e.message);
     add(`storyboards/${f} validates`, soft ? 'warn' : 'hard', false, soft ? 'needs a capture before it can be rendered' : e.message);
   }
 }

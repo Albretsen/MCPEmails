@@ -7,7 +7,20 @@ DEVELOPMENT-GUIDE.md, which is the build record.
 Never a bare `npx <bin>` here: `npx` resolves upward and will run the ancestor
 repo's binary instead of ours.
 
+## Just make a test video
+
+```bash
+npm run demo
+```
+
+One command, no configuration, no account. Records the public site, composites
+it with a title and an outro, renders, verifies, prints the path. Use this to
+check the pipeline works, or as a starting point to copy. `--fresh` forces a
+re-record, `--storyboard <id>` and `--url <base>` override the defaults.
+
 ## The five commands
+
+For a real cut.
 
 ```bash
 npm run doctor
@@ -19,7 +32,7 @@ npm run verify     -- --storyboard add-inbox-then-chat
 
 Supporting commands: `npm run auth` (once, a human signs in), `npm run reset --
 --yes` (empty the demo workspace), `npm run studio` (Remotion Studio),
-`npm run typecheck`, `npm run capture -- --install-browser` (once).
+`npm run typecheck`. Chromium downloads itself on the first capture.
 
 Every script prints one line of JSON to stdout beginning `VIDEO_STUDIO_RESULT`.
 Parse that. The human-readable log goes to stderr.
@@ -91,7 +104,7 @@ from `captures/<shot>.timeline.json`.
 |---|---|---|
 | `shot` | yes | must match `shots/<shot>.shot.mjs` and a completed capture |
 | `durationInSeconds` | no | derived from `clip`, else the recording's length |
-| `clip` | no | whole recording. `{from, to}` in seconds |
+| `clip` | no | whole recording. `{from}` or `{from, to}`, in seconds |
 | `speed` | no | `1.0` |
 | `autoZoom` | no | `true` |
 | `maxZoom` | no | `1.8`. Above this a 1080p source visibly softens |
@@ -100,6 +113,18 @@ from `captures/<shot>.timeline.json`.
 
 Callout `at` is measured **from the start of the clip**, not the recording.
 `anchor` (`"above"`/`"below"`/`"left"`/`"right"`) overrides automatic placement.
+
+**Almost every capture scene wants a `clip.from` of about a second.** A
+recording opens before the page has painted, on the browser's default
+background, and dropping that straight into a cut gives you a second of flat
+grey between the title and the site. `verify` fails on it and names the fix, but
+it is cheaper to write it than to re-render.
+
+Leave `clip.to` out unless you actually need to trim the tail. A recording's
+length depends on how fast the site answered that day, so a pinned `to` breaks
+on the next take. Without it the scene runs to the end of whatever was recorded.
+An overshoot under 0.5s is treated as jitter and trimmed with a note; anything
+larger is an error.
 
 ### `chat`
 
@@ -155,7 +180,7 @@ everything else is output and appears whole.
 | Shot | Captures |
 |---|---|
 | `add-inbox` | The connect flow: open the modal, choose generic IMAP, enter host and an app password, connect. Needs a session and a throwaway mailbox. |
-| `public-tour` | Public marketing pages only. Needs no session. Doubles as the pipeline self-test, with `storyboards/pipeline-selftest.json`. |
+| `public-tour` | Public marketing pages only. Needs no session, and defaults to production, which is what makes `npm run demo` work with nothing configured. |
 
 A shot exports `id`, `description`, `async run(page, t, { baseUrl })`, and
 optionally `requiresSession = false`. `t` is the timeline recorder: use
@@ -193,7 +218,8 @@ These are prohibitions, not preferences.
 
 It proves, mechanically: the streams, codec (`h264`), pixel format
 (`yuv420p`), dimensions, duration against the storyboard, no scene under 1.5s,
-no unexpected black segments, nothing frozen for 3s or more, captions present
+no unexpected black segments, no capture scene opening on an unpainted frame,
+nothing frozen for 3s or more, captions present
 and ending inside the video, every transcript fresh with no failed call, no
 credential in any text output, and whether each capture's measured appearance
 matches the storyboard's theme. It writes `out/<id>.sheet.png`, a contact sheet

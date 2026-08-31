@@ -50,8 +50,10 @@ if (!shotId) {
 const shotFile = resolve(paths.shots, `${shotId}.shot.mjs`);
 if (!existsSync(shotFile)) fail('capture', `shots/${shotId}.shot.mjs does not exist.`);
 
-const baseUrl = (process.env.DEMO_BASE_URL ?? '').replace(/\/$/, '');
-if (!baseUrl) fail('capture', 'DEMO_BASE_URL is not set. Copy .env.example to .env and fill it in.');
+// Shots that need a session need a deployment you are signed in to, so those
+// still want DEMO_BASE_URL. A public shot has a sensible default, which is what
+// lets `npm run demo` work with no configuration at all.
+const baseUrl = (process.env.DEMO_BASE_URL || 'https://mcpemails.com').replace(/\/$/, '');
 
 const shot = await import(pathToFileURL(shotFile).href);
 if (typeof shot.run !== 'function') fail('capture', `shots/${shotId}.shot.mjs does not export an async run(page, t).`);
@@ -67,6 +69,18 @@ mkdirSync(paths.capturesRaw, { recursive: true });
 // know which file this run produced.
 rmSync(paths.capturesRaw, { recursive: true, force: true });
 mkdirSync(paths.capturesRaw, { recursive: true });
+
+// Playwright's browsers are a separate download from the npm package, and the
+// error without them does not obviously say so. Fetch it rather than fail.
+const { chromium } = await import('playwright');
+if (!existsSync(chromium.executablePath())) {
+  log('  Chromium is not downloaded yet. Fetching it once, about 95 MB.');
+  const dl = spawnSync(resolve(paths.root, 'node_modules', '.bin', 'playwright'), ['install', 'chromium'], {
+    stdio: 'inherit',
+  });
+  if (dl.status !== 0) fail('capture', 'Could not download Chromium for Playwright.');
+  log('');
+}
 
 const browser = await launch({ headless: !args.headed });
 let context;

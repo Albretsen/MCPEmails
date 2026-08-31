@@ -25,12 +25,25 @@ a test artifact. The same boxes drive the auto zoom and anchor the callouts.
 **Agents: read [AGENTS.md](AGENTS.md), not this file.** It has the commands, the
 full scene reference, and the guard rails.
 
-## Setup, once
+## Make a test video
 
 ```bash
 cd tools/video-studio
 npm install
-npm run capture -- --install-browser
+npm run demo
+```
+
+That is the whole thing. It records the public marketing site, composites it
+with a title and an outro, renders, verifies, and prints where the file is.
+No `.env`, no sign in, no mailbox, no account. The first run also downloads
+Chromium, about 95 MB.
+
+Result: `out/demo.mp4`, plus a poster and a contact sheet. Re-recording is
+automatic once the capture is a day old; `npm run demo -- --fresh` forces it.
+
+## Setup for a real cut
+
+```bash
 cp .env.example .env      # then fill it in
 npm run doctor
 ```
@@ -49,14 +62,6 @@ npm run verify     -- --storyboard add-inbox-then-chat
 
 A new video is a new `storyboards/<id>.json` plus those commands. Writing React
 is reserved for genuinely new scene types.
-
-To check the pipeline works without a demo account or a mailbox:
-
-```bash
-DEMO_BASE_URL=https://mcpemails.com npm run capture -- --shot public-tour
-npm run render -- --storyboard pipeline-selftest
-npm run verify -- --storyboard pipeline-selftest
-```
 
 ## Isolation
 
