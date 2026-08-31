@@ -6,8 +6,32 @@ import ConnectProviderClient from '../../../../components/marketing/ConnectProvi
 
 // Providers with a dedicated landing page. Each maps to a sub-object in the
 // `connect` message namespace (connect.<provider>.*). Gmail connects via Google
-// OAuth; the rest via an app-specific password.
-const PROVIDERS = ['gmail', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex'];
+// OAuth; the rest over IMAP, with either an app password or the mailbox
+// password, per connect.<provider>.method.
+//
+// Every slug must match /connect/[a-z0-9-]+ or acquisition attribution silently
+// drops the landing path (safeLandingPath in src/lib/acquisition-context.mjs,
+// and the CHECK constraint on workspaces.acquisition_landing_path that mirrors
+// it). Hyphens are fine, anything else is not.
+//
+// No Outlook / Microsoft 365 entry on purpose: the backend exists but the
+// provider card is disabled, because Microsoft's default tenant policy blocks
+// end-user Mail.ReadWrite consent. A landing page would advertise a connection
+// that cannot be made. Proton is absent for the same reason: its IMAP lives
+// behind Proton Bridge on the user's own machine, which a hosted server can
+// never reach.
+const PROVIDERS = [
+  // OAuth.
+  'gmail',
+  // The generic connector, and the largest cohort of connected inboxes.
+  'imap',
+  // Branded consumer services with a preset in imap-presets.ts.
+  'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex',
+  // Consumer services reached through the generic form.
+  'gmx', 'aol', 'mail-ru', 'web-de',
+  // Business and hosting mail, mostly custom domains.
+  'cpanel', 'migadu', 'namecheap', 'ionos', 'ovh', 'rackspace', 'hostinger',
+];
 
 export function generateStaticParams() {
   return routing.locales.flatMap((locale) =>
