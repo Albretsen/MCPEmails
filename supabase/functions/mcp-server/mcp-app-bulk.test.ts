@@ -960,6 +960,28 @@ Deno.test("the tool surface is app-only, single-argument, and correctly scoped",
     );
     assertEquals(definition.requiredScope, "delete:email", `${definition.name} scope`);
     assertEquals(definition.altScopes, ["manage:folders"], `${definition.name} alt scope`);
+
+    // The outputSchema half of the same definition. Its value is that it is
+    // UNVIOLATABLE: the spec makes a declared output schema a MUST ("servers
+    // MUST provide structured results that conform"), and a receipt payload is
+    // merged into the envelope object, so a strict schema here would turn a
+    // working call into a rejected tool result the first time a receipt field
+    // moved. additionalProperties: true with no `required` is what keeps the
+    // declaration free of that risk. Pinned so nobody "tightens" it later
+    // without reading this.
+    const out = definition.outputSchema as Record<string, unknown> | undefined;
+    assert(out, `${definition.name} must declare an outputSchema`);
+    assertEquals(out!.type, "object", `${definition.name} outputSchema is an object`);
+    assertEquals(
+      out!.additionalProperties,
+      true,
+      `${definition.name} outputSchema must stay permissive`,
+    );
+    assertEquals(
+      out!.required,
+      undefined,
+      `${definition.name} outputSchema must require no key`,
+    );
   }
 
   const execute = BULK_TOOL_DEFINITIONS.find((d) => d.name === "bulk_execute")!;
