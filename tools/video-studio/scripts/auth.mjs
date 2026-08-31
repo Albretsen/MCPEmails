@@ -24,14 +24,18 @@ import { launch, VIEWPORT } from './lib/browser.mjs';
 
 loadEnv();
 
-const baseUrl = (process.env.DEMO_BASE_URL ?? '').replace(/\/$/, '');
-if (!baseUrl) {
-  fail('auth', 'DEMO_BASE_URL is not set. Copy .env.example to .env and fill it in.');
-}
+// Defaults to production, like capture does. Requiring a .env before you can
+// even sign in is friction for no safety gain: signing in to the real site as
+// the demo account IS the documented path. `reset` is the script that must stay
+// strict, because it deletes things.
+const baseUrl = (process.env.DEMO_BASE_URL || 'https://mcpemails.com').replace(/\/$/, '');
+
+// Optional. When set, the sign-in is checked against it and a mismatch throws
+// the session away. When unset, whoever signed in is reported instead, so this
+// still works for someone whose demo account is not the one in .env.example.
+// `reset` hard-requires it either way: that is where getting it wrong is
+// destructive.
 const expectedEmail = process.env.DEMO_ACCOUNT_EMAIL;
-if (!expectedEmail) {
-  fail('auth', 'DEMO_ACCOUNT_EMAIL is not set. The saved session is checked against it.');
-}
 
 const browser = await launch({ headless: false });
 const context = await browser.newContext({
@@ -44,7 +48,12 @@ const page = await context.newPage();
 
 log('');
 log('A browser window has opened.');
-log(`Sign in as ${expectedEmail}, by hand, then leave the window alone.`);
+log(
+  expectedEmail
+    ? `Sign in as ${expectedEmail}, by hand, then leave the window alone.`
+    : 'Sign in as the demo account, by hand, then leave the window alone.',
+);
+log(`Site: ${baseUrl}`);
 log('This script is watching for the dashboard to load. It will not type anything.');
 log('');
 
@@ -72,7 +81,7 @@ try {
   log('  Could not read the account email from the settings page.');
 }
 
-if (signedInAs && signedInAs.trim().toLowerCase() !== expectedEmail.trim().toLowerCase()) {
+if (expectedEmail && signedInAs && signedInAs.trim().toLowerCase() !== expectedEmail.trim().toLowerCase()) {
   await browser.close();
   fail(
     'auth',
@@ -93,7 +102,18 @@ writeFileSync(
 );
 
 log('');
-log(`Saved a session for ${signedInAs ?? expectedEmail} to .auth/demo.json`);
+log(`Saved a session for ${signedInAs ?? 'the signed-in account'} to .auth/demo.json`);
+if (!expectedEmail) {
+  log('DEMO_ACCOUNT_EMAIL was not set, so nothing checked WHICH account that is.');
+  log('Set it in .env before running reset, which refuses to touch a workspace it cannot confirm.');
+}
 log('Captures will use it automatically. Re-run this if it stops working.');
 
-emit({ ok: true, script: 'auth', account: signedInAs ?? expectedEmail, state: '.auth/demo.json' });
+emit({
+  ok: true,
+  script: 'auth',
+  account: signedInAs ?? null,
+  accountVerified: Boolean(expectedEmail && signedInAs),
+  baseUrl,
+  state: '.auth/demo.json',
+});

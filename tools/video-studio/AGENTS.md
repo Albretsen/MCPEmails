@@ -3,9 +3,17 @@
 Make a product video from one storyboard JSON. Read this file, not
 DEVELOPMENT-GUIDE.md, which is the build record.
 
-**Always run commands as `npm run <script>` from `tools/video-studio/`.**
-Never a bare `npx <bin>` here: `npx` resolves upward and will run the ancestor
-repo's binary instead of ours.
+**Every command below runs from `tools/video-studio/`, never the repo root.**
+Nothing was added to the root `package.json`, on purpose, so running these from
+the root gives you `npm error Missing script: "auth"`. If you see that, you are
+in the wrong directory:
+
+```bash
+cd tools/video-studio
+```
+
+Never a bare `npx <bin>` here either: `npx` resolves upward and will run the
+ancestor repo's binary instead of ours.
 
 ## Just make a test video
 
@@ -33,6 +41,10 @@ npm run verify     -- --storyboard add-inbox-then-chat
 Supporting commands: `npm run auth` (once, a human signs in), `npm run reset --
 --yes` (empty the demo workspace), `npm run studio` (Remotion Studio),
 `npm run typecheck`. Chromium downloads itself on the first capture.
+
+`demo`, `auth` and `capture` need no `.env`: the site defaults to
+https://mcpemails.com. `reset` requires the full config and refuses without it,
+because it is the one that deletes things.
 
 Every script prints one line of JSON to stdout beginning `VIDEO_STUDIO_RESULT`.
 Parse that. The human-readable log goes to stderr.
