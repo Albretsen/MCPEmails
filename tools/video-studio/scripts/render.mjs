@@ -22,7 +22,7 @@ import { bundle } from '@remotion/bundler';
 import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
 import { emit, fail, heading, log, parseArgs, paths, readJson, loadEnv } from './lib/common.mjs';
 import { ensurePublicDir } from './lib/public-dir.mjs';
-import { assertCapturesPresent, captureDurations, loadTimelines, loadTranscripts } from './lib/inputs.mjs';
+import { assertCapturesPresent, captureMeta, loadTimelines, loadTranscripts } from './lib/inputs.mjs';
 import { validateStoryboard } from '../src/storyboard-schema.mjs';
 import { generateCaptions } from './lib/captions.mjs';
 
@@ -49,7 +49,7 @@ heading('Validating');
 const timelines = loadTimelines();
 let storyboard;
 try {
-  storyboard = validateStoryboard(readJson(storyboardFile), captureDurations(timelines));
+  storyboard = validateStoryboard(readJson(storyboardFile), captureMeta(timelines));
 } catch (e) {
   fail('render', e.message);
 }

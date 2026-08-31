@@ -31,6 +31,26 @@ export function loadTimelines() {
   return out;
 }
 
+/**
+ * What the validator needs to know about each recording: how long it is, and
+ * when the page actually painted. A capture scene with no `clip` starts at the
+ * paint, not at frame zero, so a cut never opens on the browser's unpainted
+ * background.
+ */
+export function captureMeta(timelines) {
+  const out = {};
+  for (const [shot, tl] of Object.entries(timelines)) {
+    out[shot] = {
+      duration: tl.durationMs / 1000,
+      // Recordings captured before this was measured have no value. Zero is
+      // the old behaviour, which is correct for anything not browser-based.
+      contentStart: typeof tl.contentStartSeconds === 'number' ? tl.contentStartSeconds : 0,
+    };
+  }
+  return out;
+}
+
+/** Durations only. Kept for callers that do not care where the paint is. */
 export function captureDurations(timelines) {
   const out = {};
   for (const [shot, tl] of Object.entries(timelines)) out[shot] = tl.durationMs / 1000;

@@ -130,6 +130,12 @@ export interface CaptureTimeline {
   durationMs: number;
   viewport: { width: number; height: number };
   events: TimelineEvent[];
+  /** Measured, not guessed: when the page first painted. A capture scene with
+   *  no `clip.from` starts here. Absent on recordings made before this was
+   *  measured. */
+  contentStartSeconds?: number;
+  appearance?: 'light' | 'dark' | 'unknown';
+  meanLuma?: number | null;
 }
 
 // --- transcript, written by scripts/transcript.mjs -------------------------

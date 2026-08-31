@@ -160,9 +160,44 @@ function measureAppearance(file) {
   };
 }
 
+/**
+ * When does the page actually appear?
+ *
+ * Every recording opens on the browser's default background, before the first
+ * paint, and how long that lasts depends entirely on how fast the site answered
+ * that day. Composited straight in, a cut jumps from the title to a second of
+ * flat grey. Hard-coding `"clip": { "from": 1.0 }` in the storyboard only moves
+ * the problem: a clean-room run took longer than a second to paint and the
+ * unpainted frame came back.
+ *
+ * So measure it instead of guessing. Walk the recording at 20 samples a second
+ * and find the first one whose luma is close to the recording's own median.
+ * The storyboard can then leave `clip` out entirely and get the right trim on
+ * every take.
+ */
+function measureContentStart(file, medianLuma) {
+  if (medianLuma === null) return 0;
+  const r = spawnSync(
+    'ffmpeg',
+    ['-i', file, '-vf', 'fps=20,signalstats,metadata=print:file=-', '-f', 'null', '-'],
+    { encoding: 'utf8', maxBuffer: 1024 * 1024 * 64 },
+  );
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  const values = [...out.matchAll(/lavfi\.signalstats\.YAVG=([\d.]+)/g)].map((m) => Number(m[1]));
+  const TOLERANCE = 40;
+  for (let i = 0; i < values.length; i++) {
+    if (Math.abs(values[i] - medianLuma) <= TOLERANCE) {
+      // Back off one sample so the trim lands on the paint, not just after it.
+      return Math.max(0, (i - 1) / 20);
+    }
+  }
+  return 0;
+}
+
 const appearance = measureAppearance(webm);
 timeline.appearance = appearance.appearance;
 timeline.meanLuma = appearance.meanLuma;
+timeline.contentStartSeconds = Number(measureContentStart(webm, appearance.meanLuma).toFixed(2));
 
 const timelinePath = resolve(paths.captures, `${shotId}.timeline.json`);
 writeFileSync(timelinePath, JSON.stringify(timeline, null, 2) + '\n');
@@ -178,6 +213,7 @@ log(`  captures/${shotId}.webm            ${(statSync(webm).size / 1_000_000).to
 log(`  captures/${shotId}.timeline.json   ${timeline.events.length} events, ${withRects} with a bounding box`);
 log(`  duration                           ${(timeline.durationMs / 1000).toFixed(2)}s`);
 log(`  appearance                         ${timeline.appearance}${timeline.meanLuma === null ? '' : ` (median luma ${timeline.meanLuma} over ${appearance.samples} samples)`}`);
+log(`  page painted at                    ${timeline.contentStartSeconds}s (a clip with no "from" starts here)`);
 
 if (withRects === 0) {
   log('\n  WARNING: no event carried a bounding box, so the composite will have no');
@@ -194,6 +230,7 @@ emit({
   events: timeline.events.length,
   eventsWithRect: withRects,
   appearance: timeline.appearance,
+  contentStartSeconds: timeline.contentStartSeconds,
   error: runError ? runError.message : null,
 });
 

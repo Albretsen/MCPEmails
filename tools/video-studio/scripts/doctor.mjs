@@ -136,13 +136,13 @@ heading('Storyboards');
 
 const { readdirSync } = await import('node:fs');
 const { validateStoryboard } = await import('../src/storyboard-schema.mjs');
-const { captureDurations, loadTimelines } = await import('./lib/inputs.mjs');
+const { captureMeta, loadTimelines } = await import('./lib/inputs.mjs');
 
 // Validate against the recordings that actually exist, the way render does.
 // Validating with no capture data reports every clip that derives its length
 // from a recording as broken, which is a false alarm and trains people to
 // ignore doctor.
-const durations = captureDurations(loadTimelines());
+const durations = captureMeta(loadTimelines());
 const files = existsSync(paths.storyboards)
   ? readdirSync(paths.storyboards).filter((f) => f.endsWith('.json'))
   : [];

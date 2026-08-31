@@ -15,11 +15,10 @@
     {
       "type": "capture",
       "shot": "public-tour",
-      "clip": { "from": 1.0 },
       "autoZoom": true,
       "callouts": [
         {
-          "at": 2.8,
+          "at": 2.4,
           "for": 2.6,
           "text": "The cursor and the push-in are drawn from the recorded event log"
         }

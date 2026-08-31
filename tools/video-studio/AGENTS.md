@@ -104,7 +104,7 @@ from `captures/<shot>.timeline.json`.
 |---|---|---|
 | `shot` | yes | must match `shots/<shot>.shot.mjs` and a completed capture |
 | `durationInSeconds` | no | derived from `clip`, else the recording's length |
-| `clip` | no | whole recording. `{from}` or `{from, to}`, in seconds |
+| `clip` | no | omit it. `from` defaults to the measured first paint, `to` to the end |
 | `speed` | no | `1.0` |
 | `autoZoom` | no | `true` |
 | `maxZoom` | no | `1.8`. Above this a 1080p source visibly softens |

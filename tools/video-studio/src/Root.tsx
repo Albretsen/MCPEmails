@@ -22,7 +22,7 @@ import type { Storyboard, StoryboardProps } from './storyboard-types';
 
 const validateStoryboard = validateStoryboardUntyped as unknown as (
   raw: unknown,
-  captureDurations: Record<string, number>,
+  captureMeta: Record<string, { duration: number; contentStart: number }>,
 ) => Storyboard;
 
 // webpack API, provided by Remotion's bundler.
@@ -54,6 +54,29 @@ function discoverStoryboards(): { id: string; raw: unknown }[] {
  */
 const STUDIO_FALLBACK_SECONDS = 20;
 
+/**
+ * Capture metadata for the Studio, which has no validated storyboard to reuse.
+ * Mirrors captureMeta() in scripts/lib/inputs.mjs.
+ */
+function studioFallbackMeta(
+  timelines: NonNullable<StoryboardProps['timelines']>,
+  raw: unknown,
+): Record<string, { duration: number; contentStart: number }> {
+  const meta: Record<string, { duration: number; contentStart: number }> = {};
+  for (const [shot, tl] of Object.entries(timelines)) {
+    meta[shot] = {
+      duration: tl.durationMs / 1000,
+      contentStart: typeof tl.contentStartSeconds === 'number' ? tl.contentStartSeconds : 0,
+    };
+  }
+  for (const scene of (raw as { scenes?: { type?: string; shot?: string }[] }).scenes ?? []) {
+    if (scene.type === 'capture' && scene.shot && meta[scene.shot] === undefined) {
+      meta[scene.shot] = { duration: STUDIO_FALLBACK_SECONDS, contentStart: 0 };
+    }
+  }
+  return meta;
+}
+
 export const RemotionRoot: React.FC = () => {
   const storyboards = discoverStoryboards();
 
@@ -81,18 +104,16 @@ export const RemotionRoot: React.FC = () => {
           } as Record<string, unknown>}
           calculateMetadata={({ props }) => {
             const p = props as unknown as Partial<StoryboardProps>;
-            const timelines = p?.timelines ?? {};
-            const durations: Record<string, number> = {};
-            for (const [shot, tl] of Object.entries(timelines)) {
-              durations[shot] = tl.durationMs / 1000;
-            }
-            for (const scene of (raw as { scenes?: { type?: string; shot?: string }[] }).scenes ?? []) {
-              if (scene.type === 'capture' && scene.shot && durations[scene.shot] === undefined) {
-                durations[scene.shot] = STUDIO_FALLBACK_SECONDS;
-              }
-            }
 
-            const storyboard = validateStoryboard(raw, durations);
+            // If render.mjs already validated this storyboard, USE IT. Deriving
+            // it a second time here is how the browser and the node side got
+            // different answers: this branch only knew each recording's length,
+            // not where its page painted, so it computed a capture scene 0.85s
+            // longer than the manifest said and the composition silently won.
+            // One derivation, one source of truth.
+            const storyboard =
+              p?.storyboard ??
+              validateStoryboard(raw, studioFallbackMeta(p?.timelines ?? {}, raw));
 
             return {
               durationInFrames: storyboard.durationInFrames,
