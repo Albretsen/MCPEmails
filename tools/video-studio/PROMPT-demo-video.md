@@ -98,10 +98,17 @@ one thing that would confirm every suspicion a sceptic already has.
 
 `shots/add-inbox.shot.mjs` already exists and does this. It needs:
 
-- `npm run auth` first. This opens a headed browser and waits for a **human** to
-  sign in. It cannot and must not sign in by itself. Ask the user to do it, and
-  ask them to set the demo account's theme to match your storyboard while they
-  are there.
+- `cd tools/video-studio && npm run auth` first. Run it from the tool directory,
+  never the repo root: nothing was added to the root `package.json`, so from the
+  root you get `Missing script: "auth"`.
+
+  It opens a headed browser and waits for a **human** to sign in. It cannot and
+  must not sign in by itself. Ask the user to do it, and ask them to set the
+  demo account's theme to match your storyboard while they are there.
+
+  It wants the **mcpemails.com dashboard login**, which is a different
+  credential from the Migadu app password that `DEMO_IMAP_PASS` holds. Say which
+  one you are asking for.
 - A throwaway mailbox. `scripts/demo/demo-mailbox.js` on branch
   `claude/brave-jackson-8180c8` seeds one with 14 fixture messages, every
   address on a `.example` domain, which RFC 2606 reserves so it can never belong
