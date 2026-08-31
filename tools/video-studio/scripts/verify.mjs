@@ -114,7 +114,12 @@ heading('Black frames');
  * entire video. 0.05 sits below the background and above true black, so it
  * catches a scene that failed to mount without condemning the house style.
  */
-const blackOut = ff('ffmpeg', ['-i', mp4, '-vf', 'blackdetect=d=0.4:pic_th=0.98:pix_th=0.05', '-f', 'null', '-']);
+// d=0.2, not the 0.4 the guide suggested: a two-tenths black flash is still a
+// visible defect. Note this catches only TRUE black. A capture that opens on
+// the browser's unpainted background sits around luma 30, which is dark grey,
+// not black, and blackdetect is right to ignore it. The "opens on an unpainted
+// frame" check further down is what covers that.
+const blackOut = ff('ffmpeg', ['-i', mp4, '-vf', 'blackdetect=d=0.2:pic_th=0.98:pix_th=0.05', '-f', 'null', '-']);
 const blackHits = [...blackOut.matchAll(/black_start:([\d.]+) black_end:([\d.]+) black_duration:([\d.]+)/g)].map((m) => ({
   start: Number(m[1]),
   end: Number(m[2]),
@@ -193,6 +198,47 @@ for (const t of manifest.sources.transcripts) {
     const failedTurns = doc.turns.filter((x) => x.role === 'tool' && x.ok === false);
     check(`${t.file} has no failed tool call`, failedTurns.length === 0, failedTurns.map((x) => x.name).join(', ') || `${t.toolCalls} tool call(s), all ok`);
   }
+}
+
+/**
+ * Does a capture scene open on a frame that does not belong to the shot?
+ *
+ * Every recording begins before the page has painted, showing the browser's
+ * default background. Composited straight in, a cut jumps from the title to
+ * roughly a second of flat dark grey and then to the site. This is not caught
+ * by blackdetect, because at luma ~30 the frame is dark grey rather than black,
+ * and it is not caught by freezedetect, because a static frame is legal.
+ *
+ * So compare the scene's opening frame against the median of the scene. A large
+ * gap means the clip needs a `clip.from` to skip first paint.
+ */
+const lumaAt = (t) => {
+  const out = ff('ffmpeg', ['-ss', String(t), '-i', mp4, '-frames:v', '1', '-vf', 'signalstats,metadata=print:file=-', '-f', 'null', '-']);
+  const m = out.match(/lavfi\.signalstats\.YAVG=([\d.]+)/);
+  return m ? Number(m[1]) : null;
+};
+
+const OPENING_LUMA_GAP = 60;
+
+for (const b of manifest.boundaries.filter((x) => x.type === 'capture')) {
+  const opening = lumaAt(b.startSeconds + 0.1);
+
+  const mid = ff('ffmpeg', [
+    '-ss', String(b.startSeconds), '-t', String(b.endSeconds - b.startSeconds),
+    '-i', mp4, '-vf', 'fps=2,signalstats,metadata=print:file=-', '-f', 'null', '-',
+  ]);
+  const values = [...mid.matchAll(/lavfi\.signalstats\.YAVG=([\d.]+)/g)].map((m) => Number(m[1])).sort((x, y) => x - y);
+  const median = values.length ? values[Math.floor(values.length / 2)] : null;
+
+  if (opening === null || median === null) continue;
+  const gap = Math.abs(opening - median);
+  check(
+    `scene ${b.index} (capture) opens on the recording, not on first paint`,
+    gap <= OPENING_LUMA_GAP,
+    gap <= OPENING_LUMA_GAP
+      ? `opening luma ${opening.toFixed(0)}, scene median ${median.toFixed(0)}`
+      : `opening luma ${opening.toFixed(0)} against a scene median of ${median.toFixed(0)}. The scene probably starts before the page painted. Add "clip": { "from": 1.0 } to skip it.`,
+  );
 }
 
 // A capture recorded in the other theme, letterboxed into this cut, reads as a

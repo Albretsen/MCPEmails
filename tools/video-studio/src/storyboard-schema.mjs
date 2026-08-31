@@ -18,6 +18,13 @@
 export const SCENE_TYPES = ['title', 'capture', 'chat', 'terminal', 'outro'];
 
 /**
+ * How much a clip may overrun its recording before it is an error rather than
+ * jitter. Half a second is far longer than the run-to-run variance of a capture
+ * and far shorter than any deliberate mis-edit.
+ */
+const CLIP_OVERSHOOT_TOLERANCE = 0.5;
+
+/**
  * Per scene type: which keys are required, which are optional, and the default
  * applied when an optional key is absent. `undefined` as a default means the
  * key stays absent.
@@ -89,11 +96,21 @@ function checkPrimitive(where, key, value, expected) {
         throw new StoryboardError(`${where}: "clip" has unknown key "${k}". Only "from" and "to" are allowed.`);
       }
     }
-    if (typeOf(value.from) !== 'number' || typeOf(value.to) !== 'number') {
-      throw new StoryboardError(`${where}: "clip.from" and "clip.to" must both be numbers, in seconds.`);
+    if (typeOf(value.from) !== 'number') {
+      throw new StoryboardError(`${where}: "clip.from" must be a number, in seconds.`);
     }
-    if (value.to <= value.from) {
-      throw new StoryboardError(`${where}: "clip.to" (${value.to}) must be greater than "clip.from" (${value.from}).`);
+    // "to" is optional, and leaving it out is usually right. Trimming the HEAD
+    // is a stable decision: a recording always opens on the browser's first
+    // paint, which is a black frame. Pinning the TAIL to an exact number is
+    // what breaks on the next take, because a recording's length depends on how
+    // fast the site answered that day.
+    if (value.to !== undefined) {
+      if (typeOf(value.to) !== 'number') {
+        throw new StoryboardError(`${where}: "clip.to" must be a number, in seconds, or left out to run to the end of the recording.`);
+      }
+      if (value.to <= value.from) {
+        throw new StoryboardError(`${where}: "clip.to" (${value.to}) must be greater than "clip.from" (${value.from}).`);
+      }
     }
     if (value.from < 0) {
       throw new StoryboardError(`${where}: "clip.from" must not be negative.`);
@@ -190,6 +207,8 @@ function applySpec(where, obj, required, optional) {
  * capture files to exist yet.
  */
 export function validateStoryboard(raw, captureDurations = {}) {
+  const warnings = [];
+
   if (typeOf(raw) !== 'object') {
     throw new StoryboardError(`Storyboard must be a JSON object, got ${typeOf(raw)}.`);
   }
@@ -241,6 +260,16 @@ export function validateStoryboard(raw, captureDurations = {}) {
       const recorded = captureDurations[norm.shot];
       let seconds = norm.durationInSeconds;
 
+      if (norm.clip && norm.clip.to === undefined) {
+        if (typeof recorded !== 'number') {
+          throw new StoryboardError(
+            `${w}: "clip" has no "to", so the recording's length is needed to work out where the scene ends, ` +
+            `but shot "${norm.shot}" has not been captured. Run: npm run capture -- --shot ${norm.shot}`,
+          );
+        }
+        norm.clip = { ...norm.clip, to: recorded };
+      }
+
       if (seconds === undefined) {
         if (norm.clip) {
           seconds = (norm.clip.to - norm.clip.from) / (norm.speed || 1);
@@ -254,7 +283,25 @@ export function validateStoryboard(raw, captureDurations = {}) {
         }
       }
       if (norm.clip && typeof recorded === 'number' && norm.clip.to > recorded + 0.001) {
-        throw new StoryboardError(`${w}: "clip.to" is ${norm.clip.to}s but the recording of shot "${norm.shot}" is only ${recorded.toFixed(2)}s long.`);
+        const overshoot = norm.clip.to - recorded;
+        // A recording's length is not reproducible: it depends on how fast the
+        // site answered on the day. A clip authored against one take will
+        // overshoot the next by a few hundredths of a second, and refusing that
+        // makes every re-record an edit. Clamp small overshoots and say so;
+        // anything larger is an authoring mistake, not jitter.
+        if (overshoot <= CLIP_OVERSHOOT_TOLERANCE) {
+          warnings.push(
+            `${w}: "clip.to" was ${norm.clip.to}s but shot "${norm.shot}" recorded ${recorded.toFixed(2)}s. ` +
+            `Trimmed by ${overshoot.toFixed(3)}s, which is recording jitter.`,
+          );
+          norm.clip = { ...norm.clip, to: recorded };
+          seconds = (norm.clip.to - norm.clip.from) / (norm.speed || 1);
+        } else {
+          throw new StoryboardError(
+            `${w}: "clip.to" is ${norm.clip.to}s but the recording of shot "${norm.shot}" is only ${recorded.toFixed(2)}s long, ` +
+            `${overshoot.toFixed(2)}s short. Re-record, or lower "clip.to".`,
+          );
+        }
       }
       if (norm.speed <= 0) {
         throw new StoryboardError(`${w}: "speed" must be greater than 0.`);
@@ -311,7 +358,7 @@ export function validateStoryboard(raw, captureDurations = {}) {
     };
   });
 
-  return { ...top, scenes, durationInFrames, boundaries };
+  return { ...top, scenes, durationInFrames, boundaries, warnings };
 }
 
 export { StoryboardError };

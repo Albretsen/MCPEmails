@@ -12,6 +12,8 @@ import type { ThemeName } from './theme';
 
 export interface Clip {
   from: number;
+  /** Optional when authored; the validator fills it in from the recording's
+   *  length. Always present after validation. */
   to: number;
 }
 
@@ -96,6 +98,9 @@ export interface Storyboard {
   scenes: Scene[];
   durationInFrames: number;
   boundaries: SceneBoundary[];
+  /** Non-fatal notes from the validator, e.g. a clip trimmed to fit its
+   *  recording. render prints these; they never block a render. */
+  warnings: string[];
 }
 
 // --- capture timeline, written by scripts/capture.mjs ----------------------

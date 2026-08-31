@@ -20,7 +20,7 @@ import { validateStoryboard as validateStoryboardUntyped } from './storyboard-sc
 import { StoryboardComposition } from './Storyboard';
 import type { Storyboard, StoryboardProps } from './storyboard-types';
 
-const validateStoryboard = validateStoryboardUntyped as (
+const validateStoryboard = validateStoryboardUntyped as unknown as (
   raw: unknown,
   captureDurations: Record<string, number>,
 ) => Storyboard;
