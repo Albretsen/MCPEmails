@@ -87,6 +87,7 @@
   "links": {
     "compare": "Sammenlign",
     "connectHeading": "Koble til",
+    "connectImap": "Koble til enhver IMAP-innboks",
     "connectGmail": "Koble til Gmail",
     "connectFastmail": "Koble til Fastmail",
     "connectIcloud": "Koble til iCloud",

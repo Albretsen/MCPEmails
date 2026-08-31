@@ -467,9 +467,967 @@
       "ctaSecondary": "阅读文档"
     }
   },
+  "imap": {
+    "meta": {
+      "title": "将任意 IMAP 邮箱连接到 Claude（及任意 AI）",
+      "description": "将任意 IMAP 邮箱连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。填入你的服务器、端口和密码，让 AI 读取、发送、定时并整理邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "IMAP + AI",
+      "titleLine1": "将任意 IMAP 邮箱连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "把你已有的收件箱交给 AI 代理，无论它托管在哪里。用标准的 IMAP 与 SMTP 即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接你的收件箱",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "任意 IMAP 服务器，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 自身没有 IMAP 客户端。mcpemails 是一个托管 MCP 服务器，用服务商早已给你的地址、服务器和密码，通过 IMAP 与 SMTP 登录你的邮件服务器，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。任何支持 IMAP 的服务器都可以，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "通用 IMAP 邮箱如何连接",
+      "body": "你需要四样东西：邮箱地址、邮件服务器、密码，以及服务商要求时的应用专用密码。先填地址：mcpemails 会识别常见的主机服务商，并替你填好两个服务器地址、两个端口和加密方式。如果它尝试的传输方式没有响应，它会自行改用另一种标准方式，IMAP 用 <b>993 或 143</b>，SMTP 用 <b>465 或 587</b>，谁都不必再去猜 STARTTLS。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在你的邮箱内即可完成整件事。",
+      "ctaPrimary": "免费连接你的收件箱"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从你的邮箱完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接任意 IMAP 收件箱",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "收集你的 IMAP 与 SMTP 设置",
+        "p": "服务商都会公布这些信息，通常形如 imap.yourdomain.com 和 smtp.yourdomain.com，端口为 993 与 465。如果服务商要求邮件客户端使用应用专用密码，现在就生成一个。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的地址、两个服务器地址和密码。端口与加密方式在高级设置中，已按标准值预填。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "把你已有的收件箱交给 AI",
+      "sub": "几分钟即可连接任意 IMAP 邮箱。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接你的收件箱",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "gmx": {
+    "meta": {
+      "title": "将 GMX 连接到 Claude（及任意 AI）",
+      "description": "用账户密码通过 IMAP 将 GMX 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "GMX + AI",
+      "titleLine1": "将 GMX 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 GMX 收件箱。用 IMAP 和你的账户密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 GMX",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "你的账户密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 GMX。mcpemails 是一个托管 MCP 服务器，用账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "GMX 如何连接：IMAP 与账户密码",
+      "body": "GMX 通过 IMAP/SMTP 连接，但<b>POP3 与 IMAP 访问默认是关闭的</b>。先在 GMX 的邮件设置、POP3/IMAP 收取中开启，然后用 GMX 地址和密码连接。如果 GMX 要求创建应用专用密码，请改用该密码。德国账户使用 .net 服务器，即 <code>imap.gmx.net</code> 与 <code>mail.gmx.net</code>。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 GMX 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 GMX 内即可完成整件事。",
+      "ctaPrimary": "免费连接 GMX"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 GMX 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 GMX",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "在 GMX 中开启 IMAP 访问",
+        "p": "在 GMX 中打开邮件设置、POP3/IMAP 收取，允许 POP3 与 IMAP 访问。若账户长期不用，GMX 会再次关闭它。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 GMX 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 GMX 收件箱",
+      "sub": "几分钟即可连接 GMX。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 GMX",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "aol": {
+    "meta": {
+      "title": "将 AOL Mail 连接到 Claude（及任意 AI）",
+      "description": "用应用专用密码通过 IMAP 将 AOL Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "AOL Mail + AI",
+      "titleLine1": "将 AOL Mail 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 AOL Mail 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 AOL",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "应用专用密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 AOL Mail。mcpemails 是一个托管 MCP 服务器，用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "AOL Mail 如何连接：IMAP 与应用专用密码",
+      "body": "AOL Mail 通过 IMAP/SMTP 连接，需要一个 <b>AOL 应用专用密码</b>。普通的 AOL 登录密码无法在邮件客户端中通过验证，所以这里登录被拒绝几乎总是因为缺少应用专用密码。先开启两步验证，在账户信息、账户安全中生成一个应用专用密码，再连同完整的 AOL 地址粘贴到 mcpemails。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 AOL Mail 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 AOL Mail 内即可完成整件事。",
+      "ctaPrimary": "免费连接 AOL"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 AOL Mail 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 AOL",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "生成 AOL 应用专用密码",
+        "p": "在 AOL Mail 中打开账户信息、账户安全，若未开启则先开启两步验证，然后生成一个应用专用密码。请立即复制，AOL 只显示一次。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 AOL Mail 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 AOL Mail 收件箱",
+      "sub": "几分钟即可连接 AOL Mail。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 AOL",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "mail-ru": {
+    "meta": {
+      "title": "将 Mail.ru 连接到 Claude（及任意 AI）",
+      "description": "用应用专用密码通过 IMAP 将 Mail.ru 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "Mail.ru + AI",
+      "titleLine1": "将 Mail.ru 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Mail.ru 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 Mail.ru",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "应用专用密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 Mail.ru。mcpemails 是一个托管 MCP 服务器，用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "Mail.ru 如何连接：IMAP 与应用专用密码",
+      "body": "Mail.ru 通过 IMAP/SMTP 连接，需要一个<b>外部应用专用密码</b>。用于登录网站的密码在邮件客户端中无法使用。请在 Mail.ru 的安全设置、外部应用密码中创建一个，再连同 Mail.ru 地址粘贴到 mcpemails。创建前 Mail.ru 要求账户已绑定手机号。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 Mail.ru 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 Mail.ru 内即可完成整件事。",
+      "ctaPrimary": "免费连接 Mail.ru"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 Mail.ru 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 Mail.ru",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "创建外部应用专用密码",
+        "p": "在 Mail.ru 中打开安全设置，创建一个外部应用密码。mcpemails 需要的是它，而不是你在网站上用的密码。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 Mail.ru 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 Mail.ru 收件箱",
+      "sub": "几分钟即可连接 Mail.ru。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 Mail.ru",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "web-de": {
+    "meta": {
+      "title": "将 WEB.DE 连接到 Claude（及任意 AI）",
+      "description": "用账户密码通过 IMAP 将 WEB.DE 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "WEB.DE + AI",
+      "titleLine1": "将 WEB.DE 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 WEB.DE 收件箱。用 IMAP 和你的账户密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 WEB.DE",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "你的账户密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 WEB.DE。mcpemails 是一个托管 MCP 服务器，用账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "WEB.DE 如何连接：IMAP 与账户密码",
+      "body": "WEB.DE 通过 IMAP/SMTP 连接，但<b>POP3 与 IMAP 访问默认是关闭的</b>。先在 WEB.DE 的邮件设置、POP3/IMAP 收取中开启，然后用 WEB.DE 地址和密码连接。发件走 587 端口的 STARTTLS，而不是 465 端口的隐式 TLS，mcpemails 会自动为你选择。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 WEB.DE 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 WEB.DE 内即可完成整件事。",
+      "ctaPrimary": "免费连接 WEB.DE"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 WEB.DE 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 WEB.DE",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "在 WEB.DE 中开启 IMAP 访问",
+        "p": "在 WEB.DE 中打开邮件设置、POP3/IMAP 收取，允许 POP3 与 IMAP 访问。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 WEB.DE 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 WEB.DE 收件箱",
+      "sub": "几分钟即可连接 WEB.DE。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 WEB.DE",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "cpanel": {
+    "meta": {
+      "title": "将 cPanel 连接到 Claude（及任意 AI）",
+      "description": "用邮箱密码通过 IMAP 将 cPanel 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "cPanel + AI",
+      "titleLine1": "将 cPanel 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 cPanel 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 cPanel",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "邮箱密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 cPanel。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "cPanel 如何连接：IMAP 与邮箱密码",
+      "body": "cPanel 邮箱，也就是你在 Roundcube 或 Horde 网页邮箱里读的那个，通过 IMAP/SMTP 连接，使用在 cPanel 的 Email Accounts 中设置的密码。没有应用专用密码，也没有 OAuth。服务器通常是 <code>mail.yourdomain.com</code>，cPanel 会在 Email Accounts、Connect Devices 的 Mail Client Manual Settings 中给出准确数值。请使用加密的 SSL/TLS 那一列，不要用明文那列。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 cPanel 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 cPanel 内即可完成整件事。",
+      "ctaPrimary": "免费连接 cPanel"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 cPanel 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 cPanel",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "从 cPanel 中读取设置",
+        "p": "在 cPanel 中打开 Email Accounts，为该邮箱点击 Connect Devices。从 Mail Client Manual Settings 复制加密的 IMAP 与 SMTP 服务器和端口。如果不知道邮箱密码，可以在同一页面重新设置一个。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 cPanel 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 cPanel 收件箱",
+      "sub": "几分钟即可连接 cPanel。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 cPanel",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "migadu": {
+    "meta": {
+      "title": "将 Migadu 连接到 Claude（及任意 AI）",
+      "description": "用邮箱密码通过 IMAP 将 Migadu 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "Migadu + AI",
+      "titleLine1": "将 Migadu 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Migadu 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 Migadu",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "邮箱密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 Migadu。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "Migadu 如何连接：IMAP 与邮箱密码",
+      "body": "Migadu 通过 IMAP/SMTP 连接，使用<b>邮箱密码</b>，而不是 Migadu 管理账户的密码。在 Migadu 管理后台的 Mailboxes 中设置或重置它，再连同你的地址粘贴到 mcpemails。无论你用什么域名，所有 Migadu 邮箱都使用同样两个服务器地址，无需查找。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 Migadu 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 Migadu 内即可完成整件事。",
+      "ctaPrimary": "免费连接 Migadu"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 Migadu 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 Migadu",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "在 Migadu 中设置邮箱密码",
+        "p": "在 Migadu 管理后台打开 Mailboxes，选中邮箱并设置密码。邮件客户端用的是这个密码，管理账户的登录密码无效。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 Migadu 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 Migadu 收件箱",
+      "sub": "几分钟即可连接 Migadu。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 Migadu",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "namecheap": {
+    "meta": {
+      "title": "将 Namecheap Private Email 连接到 Claude（及任意 AI）",
+      "description": "用邮箱密码通过 IMAP 将 Namecheap Private Email 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "Namecheap Private Email + AI",
+      "titleLine1": "将 Namecheap Private Email 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Namecheap Private Email 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 Private Email",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "邮箱密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 Namecheap Private Email。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "Namecheap Private Email 如何连接：IMAP 与邮箱密码",
+      "body": "Namecheap Private Email 通过 IMAP/SMTP 连接，使用<b>邮箱密码</b>，也就是创建邮箱时设定的那个，而不是 Namecheap 账户密码。无论你用什么域名，两个服务器都是 <code>mail.privateemail.com</code>。如果没有密码，可在 Private Email 控制面板中重置。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 Namecheap Private Email 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 Namecheap Private Email 内即可完成整件事。",
+      "ctaPrimary": "免费连接 Private Email"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 Namecheap Private Email 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 Private Email",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "找到你的 Private Email 邮箱密码",
+        "p": "使用邮箱本身的密码，而不是 Namecheap 账户密码。你随时可以在 Private Email 控制面板中重置它。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 Namecheap Private Email 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 Namecheap Private Email 收件箱",
+      "sub": "几分钟即可连接 Namecheap Private Email。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 Private Email",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "ionos": {
+    "meta": {
+      "title": "将 IONOS 连接到 Claude（及任意 AI）",
+      "description": "用邮箱密码通过 IMAP 将 IONOS 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "IONOS + AI",
+      "titleLine1": "将 IONOS 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 IONOS 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 IONOS",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "邮箱密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 IONOS。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "IONOS 如何连接：IMAP 与邮箱密码",
+      "body": "IONOS 通过 IMAP/SMTP 连接，使用你在 IONOS 控制面板的邮箱设置中设定的<b>邮箱密码</b>，它与 IONOS 登录密码不同。IONOS 在两种标准传输上都有响应，993 配 TLS 与 143 配 STARTTLS，而在两者之间瞎猜正是 IONOS 连接失败最常见的原因。mcpemails 会填入一组可用参数，若第一组无响应则改用另一组重试，所以这里登录被拒绝就真的是密码问题。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 IONOS 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 IONOS 内即可完成整件事。",
+      "ctaPrimary": "免费连接 IONOS"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 IONOS 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 IONOS",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "取得 IONOS 邮箱密码",
+        "p": "在 IONOS 控制面板中打开邮箱设置，选择该地址并设置或重置密码。它不是你登录 IONOS 用的密码。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 IONOS 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 IONOS 收件箱",
+      "sub": "几分钟即可连接 IONOS。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 IONOS",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "ovh": {
+    "meta": {
+      "title": "将 OVH 连接到 Claude（及任意 AI）",
+      "description": "用邮箱密码通过 IMAP 将 OVH 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "OVH + AI",
+      "titleLine1": "将 OVH 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 OVH 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 OVH",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "邮箱密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 OVH。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "OVH 如何连接：IMAP 与邮箱密码",
+      "body": "OVH MX Plan 邮箱通过 IMAP/SMTP 连接，使用 OVH 控制面板中的邮箱密码，两个服务器都是 <code>ssl0.ovh.net</code>。OVH Hosted Exchange 是另一项服务：它的服务器形如 <code>ex4.mail.ovh.net</code>，发件走 587 端口的 STARTTLS，从不使用 465，这正是共享主机默认值对它会一直卡住的原因。mcpemails 能识别两者并选用正确的组合。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 OVH 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 OVH 内即可完成整件事。",
+      "ctaPrimary": "免费连接 OVH"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 OVH 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 OVH",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "取得 OVH 邮箱密码",
+        "p": "在 OVH 控制面板中打开邮箱服务，选择该地址并修改密码。如果 OVH 为该邮箱显示的服务器不是 ssl0.ovh.net，请把它复制下来。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 OVH 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 OVH 收件箱",
+      "sub": "几分钟即可连接 OVH。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 OVH",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "rackspace": {
+    "meta": {
+      "title": "将 Rackspace Email 连接到 Claude（及任意 AI）",
+      "description": "用邮箱密码通过 IMAP 将 Rackspace Email 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "Rackspace Email + AI",
+      "titleLine1": "将 Rackspace Email 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Rackspace Email 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 Rackspace",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "邮箱密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 Rackspace Email。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "Rackspace Email 如何连接：IMAP 与邮箱密码",
+      "body": "Rackspace Email 通过 IMAP/SMTP 连接，使用你的邮箱密码。无论你自己的域名是什么，两个服务器都是 <code>secure.emailsrvr.com</code>，而这正是最容易被忽略的一点：邮件服务器不是由你的域名推导出来的。可在 Rackspace Cloud Office 控制面板中设置或重置邮箱密码。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 Rackspace Email 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 Rackspace Email 内即可完成整件事。",
+      "ctaPrimary": "免费连接 Rackspace"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 Rackspace Email 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 Rackspace",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "取得 Rackspace 邮箱密码",
+        "p": "在 Cloud Office 控制面板中打开该邮箱并设置密码。请使用加密的服务器 secure.emailsrvr.com，不要用未加密的那个。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 Rackspace Email 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 Rackspace Email 收件箱",
+      "sub": "几分钟即可连接 Rackspace Email。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 Rackspace",
+      "ctaSecondary": "阅读文档"
+    }
+  },
+  "hostinger": {
+    "meta": {
+      "title": "将 Hostinger 连接到 Claude（及任意 AI）",
+      "description": "用邮箱密码通过 IMAP 将 Hostinger 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    },
+    "hero": {
+      "eyebrow": "Hostinger + AI",
+      "titleLine1": "将 Hostinger 连接到 Claude，",
+      "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+      "lead": "几分钟即可为你的 AI 代理接入一个真正的 Hostinger 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+      "ctaPrimary": "免费连接 Hostinger",
+      "ctaSecondary": "阅读文档",
+      "meta0": "1 个收件箱永久免费",
+      "meta1": "邮箱密码，无需 OAuth 配置",
+      "meta2": "邮件实时获取，绝不存储",
+      "answer": "Claude 无法自行连接 Hostinger。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    },
+    "method": {
+      "title": "Hostinger 如何连接：IMAP 与邮箱密码",
+      "body": "Hostinger Email 通过 IMAP/SMTP 连接，使用你在 hPanel 的 Emails 中设置的邮箱密码。没有应用专用密码，也没有 OAuth 步骤。所有域名的服务器都是 <code>imap.hostinger.com</code> 与 <code>smtp.hostinger.com</code>，无需查找。"
+    },
+    "caps": {
+      "eyebrow": "你的 AI 能做什么",
+      "title": "一个代理真正能用的 Hostinger 收件箱",
+      "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 Hostinger 内即可完成整件事。",
+      "ctaPrimary": "免费连接 Hostinger"
+    },
+    "capabilities": [
+      {
+        "tag": "读取",
+        "h": "读取与搜索邮件",
+        "p": "跨文件夹列出、读取和搜索，找到那张发票、总结一个会话，或拉取某发件人的最新邮件。"
+      },
+      {
+        "tag": "发送",
+        "h": "发送、回复与转发",
+        "p": "撰写并发送真实邮件、在会话中回复并转发，直接从 Hostinger 完成，而不是留下需要你手动发送的草稿。"
+      },
+      {
+        "tag": "定时",
+        "h": "定时稍后发送",
+        "p": "将邮件排入队列在合适时间发出，代理现在撰写、按计划发送。"
+      },
+      {
+        "tag": "整理",
+        "h": "移动、复制、标记、归档、删除",
+        "p": "保持收件箱整洁：将邮件归入文件夹、标记重点、归档其余，或按需删除。"
+      }
+    ],
+    "how": {
+      "eyebrow": "设置",
+      "title": "四步连接 Hostinger",
+      "sub": "从注册到第一封 AI 邮件，仅需几分钟。"
+    },
+    "steps": [
+      {
+        "h": "创建免费账户",
+        "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      },
+      {
+        "h": "取得 Hostinger 邮箱密码",
+        "p": "在 hPanel 中打开 Emails，选择该地址并设置或重置密码。mcpemails 就是用这个密码进行认证的。"
+      },
+      {
+        "h": "粘贴到 mcpemails",
+        "p": "选择 IMAP / SMTP，填入你的 Hostinger 地址、下方的服务器地址和密码，安全连接收件箱。"
+      },
+      {
+        "h": "将 MCP URL 粘贴到你的 AI",
+        "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      }
+    ],
+    "ctaBand": {
+      "title": "给你的 AI 一个 Hostinger 收件箱",
+      "sub": "几分钟即可连接 Hostinger。一个收件箱永久免费，无需信用卡。",
+      "ctaPrimary": "免费连接 Hostinger",
+      "ctaSecondary": "阅读文档"
+    }
+  },
   "matrix": {
     "intro": "想先比较各家服务商？",
     "label": "查看邮箱服务商兼容性对照表",
     "href": "/docs/providers"
+  },
+  "settings": {
+    "colHost": "服务器",
+    "colPort": "端口",
+    "colProtocol": "协议",
+    "colSecurity": "加密",
+    "imap": "IMAP（接收）",
+    "smtp": "SMTP（发送）",
+    "sub": "把它们复制到连接表单中。mcpemails 会尽可能自动填写，并在第一种传输方式无响应时改用另一种标准方式重试。",
+    "title": "准确的 IMAP 与 SMTP 设置"
   }
 }

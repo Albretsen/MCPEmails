@@ -479,9 +479,972 @@
       "ctaSecondary": "Read the docs"
     }
   },
+  "imap": {
+    "meta": {
+      "title": "Connect Any IMAP Mailbox to Claude, Cursor & MCP Clients",
+      "description": "Connect any IMAP mailbox to Claude, Cursor, ChatGPT and any MCP client. Bring your host, port and password, and let AI read, send, schedule and organize mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "IMAP + AI",
+      "titleLine1": "Connect any IMAP mailbox to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent the inbox you already have, whoever hosts it. Read, search, send, reply, schedule and organize mail over plain IMAP and SMTP, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect your inbox free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Any IMAP host, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude has no IMAP client of its own. mcpemails is a hosted MCP server that logs in to your mail server over IMAP and SMTP with the address, host and password your provider already gave you, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Any host that speaks IMAP works, and one inbox is free."
+    },
+    "method": {
+      "title": "How a generic IMAP mailbox connects",
+      "body": "You need four things: your address, your mail host, your password and, if your provider requires one, an app password. Type your address first: mcpemails recognises the common hosting providers and fills in both hosts, both ports and the security modes for you. If the transport it tries does not answer, it tries the other standard one on its own, <b>993 or 143</b> for IMAP and <b>465 or 587</b> for SMTP, so nobody has to guess at STARTTLS."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "An inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside your mailbox.",
+      "ctaPrimary": "Connect your inbox free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from your mailbox, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect any IMAP inbox in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Collect your IMAP and SMTP settings",
+        "p": "Your provider publishes them, most often as imap.yourdomain.com and smtp.yourdomain.com on ports 993 and 465. If your provider requires an app password for mail clients, generate one now."
+      },
+      {
+        "h": "Paste them into mcpemails",
+        "p": "Choose IMAP / SMTP, add your address, the two hosts and the password. Ports and security modes sit under Advanced, prefilled with the standard values."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI the inbox you already have",
+      "sub": "Connect any IMAP mailbox in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect your inbox free",
+      "ctaSecondary": "Read the docs"
+    },
+    "guide": {
+      "intro": "Prefer a walkthrough with screenshots?",
+      "label": "Claude IMAP Connector: Connect Any IMAP Inbox to Claude",
+      "href": "/blog/claude-imap-connector"
+    }
+  },
+  "gmx": {
+    "meta": {
+      "title": "Connect GMX to Claude, Cursor & MCP Clients",
+      "description": "Connect GMX to Claude, Cursor, ChatGPT and any MCP client over IMAP with your account password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "GMX + AI",
+      "titleLine1": "Connect GMX to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real GMX inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your account password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect GMX free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Your account password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach GMX on its own. mcpemails is a hosted MCP server that connects it over IMAP using your account password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How GMX connects: IMAP and your account password",
+      "body": "GMX connects over IMAP/SMTP, but <b>POP3 and IMAP access is switched off by default</b>. Turn it on in GMX under E-mail settings, POP3/IMAP retrieval, then connect with your GMX address and password. If GMX asks you to create an application-specific password, use that instead. German accounts use the .net hosts, <code>imap.gmx.net</code> and <code>mail.gmx.net</code>."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "A GMX inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside GMX.",
+      "ctaPrimary": "Connect GMX free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from GMX, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect GMX in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Turn on IMAP access in GMX",
+        "p": "In GMX, open E-mail settings, POP3/IMAP retrieval, and allow POP3 and IMAP access. GMX switches it off again if the account goes unused for a long time."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your GMX address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI a GMX inbox",
+      "sub": "Connect GMX in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect GMX free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "aol": {
+    "meta": {
+      "title": "Connect AOL Mail to Claude, Cursor & MCP Clients",
+      "description": "Connect AOL Mail to Claude, Cursor, ChatGPT and any MCP client over IMAP with an app password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "AOL Mail + AI",
+      "titleLine1": "Connect AOL Mail to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real AOL Mail inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect AOL free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "App password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach AOL Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP using an app password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How AOL Mail connects: IMAP and an app password",
+      "body": "AOL Mail connects over IMAP/SMTP using an <b>AOL app password</b>. Your ordinary AOL password will not authenticate a mail client, so a rejected login here is almost always a missing app password. Turn on 2-Step Verification, generate an app password under Account Info, Account Security, then paste it into mcpemails with your full AOL address."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "An AOL Mail inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside AOL Mail.",
+      "ctaPrimary": "Connect AOL free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from AOL Mail, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect AOL in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Generate an AOL app password",
+        "p": "In AOL Mail, open Account Info, Account Security, turn on 2-Step Verification if it is off, then generate an app password. Copy it straight away, AOL shows it only once."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your AOL Mail address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI an AOL Mail inbox",
+      "sub": "Connect AOL Mail in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect AOL free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "mail-ru": {
+    "meta": {
+      "title": "Connect Mail.ru to Claude, Cursor & MCP Clients",
+      "description": "Connect Mail.ru to Claude, Cursor, ChatGPT and any MCP client over IMAP with an app password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "Mail.ru + AI",
+      "titleLine1": "Connect Mail.ru to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real Mail.ru inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect Mail.ru free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "App password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach Mail.ru on its own. mcpemails is a hosted MCP server that connects it over IMAP using an app password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How Mail.ru connects: IMAP and an app password",
+      "body": "Mail.ru connects over IMAP/SMTP using a <b>password for external applications</b>. The password you sign in to the website with will not work from a mail client. Create one in Mail.ru under Security, Passwords for external applications, then paste it into mcpemails with your Mail.ru address. Mail.ru wants a phone number on the account before it will issue one."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "A Mail.ru inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Mail.ru.",
+      "ctaPrimary": "Connect Mail.ru free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Mail.ru, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect Mail.ru in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Create a password for external applications",
+        "p": "In Mail.ru, open Security and create a password for external applications. That is the password mcpemails needs, not the one you use on the website."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your Mail.ru address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI a Mail.ru inbox",
+      "sub": "Connect Mail.ru in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect Mail.ru free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "web-de": {
+    "meta": {
+      "title": "Connect WEB.DE to Claude, Cursor & MCP Clients",
+      "description": "Connect WEB.DE to Claude, Cursor, ChatGPT and any MCP client over IMAP with your account password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "WEB.DE + AI",
+      "titleLine1": "Connect WEB.DE to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real WEB.DE inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your account password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect WEB.DE free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Your account password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach WEB.DE on its own. mcpemails is a hosted MCP server that connects it over IMAP using your account password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How WEB.DE connects: IMAP and your account password",
+      "body": "WEB.DE connects over IMAP/SMTP, but <b>POP3 and IMAP access is switched off by default</b>. Turn it on in WEB.DE under E-mail settings, POP3/IMAP retrieval, then connect with your WEB.DE address and password. Outgoing mail runs over STARTTLS on port 587 rather than implicit TLS on 465, which mcpemails selects for you."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "A WEB.DE inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside WEB.DE.",
+      "ctaPrimary": "Connect WEB.DE free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from WEB.DE, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect WEB.DE in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Turn on IMAP access in WEB.DE",
+        "p": "In WEB.DE, open E-mail settings, POP3/IMAP retrieval, and allow POP3 and IMAP access."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your WEB.DE address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI a WEB.DE inbox",
+      "sub": "Connect WEB.DE in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect WEB.DE free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "cpanel": {
+    "meta": {
+      "title": "Connect cPanel to Claude, Cursor & MCP Clients",
+      "description": "Connect cPanel to Claude, Cursor, ChatGPT and any MCP client over IMAP with your mailbox password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "cPanel + AI",
+      "titleLine1": "Connect cPanel to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real cPanel inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect cPanel free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Your mailbox password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach cPanel on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How cPanel connects: IMAP and your mailbox password",
+      "body": "A cPanel mailbox, the kind you read in Roundcube or Horde webmail, connects over IMAP/SMTP with the password set in cPanel under Email Accounts. There is no app password and no OAuth. The host is usually <code>mail.yourdomain.com</code>, and cPanel prints the exact values under Email Accounts, Connect Devices, in Mail Client Manual Settings. Use the secure SSL/TLS column, not the plain one."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "A cPanel inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside cPanel.",
+      "ctaPrimary": "Connect cPanel free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from cPanel, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect cPanel in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Read your settings from cPanel",
+        "p": "In cPanel, open Email Accounts and click Connect Devices for the mailbox. Copy the secure IMAP and SMTP hosts and ports from Mail Client Manual Settings. If you do not know the mailbox password, set a new one on the same screen."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your cPanel address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI a cPanel inbox",
+      "sub": "Connect cPanel in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect cPanel free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "migadu": {
+    "meta": {
+      "title": "Connect Migadu to Claude, Cursor & MCP Clients",
+      "description": "Connect Migadu to Claude, Cursor, ChatGPT and any MCP client over IMAP with your mailbox password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "Migadu + AI",
+      "titleLine1": "Connect Migadu to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real Migadu inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect Migadu free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Your mailbox password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach Migadu on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How Migadu connects: IMAP and your mailbox password",
+      "body": "Migadu connects over IMAP/SMTP with the <b>mailbox password</b>, which is not the password for your Migadu admin account. Set or reset it in the Migadu admin area under Mailboxes, then paste it into mcpemails with your address. Every Migadu mailbox uses the same two hosts whatever your domain is, so there is nothing to look up."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "A Migadu inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Migadu.",
+      "ctaPrimary": "Connect Migadu free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Migadu, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect Migadu in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Set a mailbox password in Migadu",
+        "p": "In the Migadu admin area, open Mailboxes, pick the mailbox and set its password. Mail clients authenticate with that password; your admin login will not work."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your Migadu address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI a Migadu inbox",
+      "sub": "Connect Migadu in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect Migadu free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "namecheap": {
+    "meta": {
+      "title": "Connect Namecheap Private Email to Claude, Cursor & MCP Clients",
+      "description": "Connect Namecheap Private Email to Claude, Cursor, ChatGPT and any MCP client over IMAP with your mailbox password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "Namecheap Private Email + AI",
+      "titleLine1": "Connect Namecheap Private Email to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real Namecheap Private Email inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect Private Email free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Your mailbox password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach Namecheap Private Email on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How Namecheap Private Email connects: IMAP and your mailbox password",
+      "body": "Namecheap Private Email connects over IMAP/SMTP with the <b>mailbox password</b>, the one set when the mailbox was created rather than your Namecheap account password. Both hosts are <code>mail.privateemail.com</code> whatever your domain is. If you do not have the password, reset it from the Private Email control panel."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "A Namecheap Private Email inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Namecheap Private Email.",
+      "ctaPrimary": "Connect Private Email free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Namecheap Private Email, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect Private Email in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Find your Private Email mailbox password",
+        "p": "Use the password for the mailbox itself, not your Namecheap account password. You can reset it from the Private Email control panel at any time."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your Namecheap Private Email address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI a Namecheap Private Email inbox",
+      "sub": "Connect Namecheap Private Email in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect Private Email free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "ionos": {
+    "meta": {
+      "title": "Connect IONOS to Claude, Cursor & MCP Clients",
+      "description": "Connect IONOS to Claude, Cursor, ChatGPT and any MCP client over IMAP with your mailbox password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "IONOS + AI",
+      "titleLine1": "Connect IONOS to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real IONOS inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect IONOS free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Your mailbox password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach IONOS on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How IONOS connects: IMAP and your mailbox password",
+      "body": "IONOS connects over IMAP/SMTP with the <b>email password</b> you set in the IONOS control panel under Email, which is separate from your IONOS login. IONOS answers on both standard transports, 993 with TLS and 143 with STARTTLS, and guessing between them is the most common way an IONOS connection fails. mcpemails fills in a working pair and retries the other if the first does not answer, so a rejected login here really is the password."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "An IONOS inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside IONOS.",
+      "ctaPrimary": "Connect IONOS free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from IONOS, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect IONOS in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Get your IONOS mailbox password",
+        "p": "In the IONOS control panel, open Email, pick the address and set or reset its password. It is not the password you use to sign in to IONOS itself."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your IONOS address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI an IONOS inbox",
+      "sub": "Connect IONOS in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect IONOS free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "ovh": {
+    "meta": {
+      "title": "Connect OVH to Claude, Cursor & MCP Clients",
+      "description": "Connect OVH to Claude, Cursor, ChatGPT and any MCP client over IMAP with your mailbox password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "OVH + AI",
+      "titleLine1": "Connect OVH to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real OVH inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect OVH free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Your mailbox password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach OVH on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How OVH connects: IMAP and your mailbox password",
+      "body": "An OVH MX Plan mailbox connects over IMAP/SMTP with the mailbox password from the OVH control panel, and both hosts are <code>ssl0.ovh.net</code>. OVH Hosted Exchange is a different service: its hosts look like <code>ex4.mail.ovh.net</code> and outgoing mail runs over STARTTLS on port 587, never 465, which is why the shared-hosting defaults simply hang against it. mcpemails recognises both and picks the right pair."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "An OVH inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside OVH.",
+      "ctaPrimary": "Connect OVH free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from OVH, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect OVH in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Get your OVH mailbox password",
+        "p": "In the OVH control panel, open the email service, pick the address and change its password. Copy the mail host OVH shows for that mailbox if it is not ssl0.ovh.net."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your OVH address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI an OVH inbox",
+      "sub": "Connect OVH in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect OVH free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "rackspace": {
+    "meta": {
+      "title": "Connect Rackspace Email to Claude, Cursor & MCP Clients",
+      "description": "Connect Rackspace Email to Claude, Cursor, ChatGPT and any MCP client over IMAP with your mailbox password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "Rackspace Email + AI",
+      "titleLine1": "Connect Rackspace Email to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real Rackspace Email inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect Rackspace free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Your mailbox password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach Rackspace Email on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How Rackspace Email connects: IMAP and your mailbox password",
+      "body": "Rackspace Email connects over IMAP/SMTP with your mailbox password. Both hosts are <code>secure.emailsrvr.com</code> whatever your own domain is, and that is the part people miss: the mail host is not derived from your domain name. Set or reset the mailbox password in the Rackspace Cloud Office control panel."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "A Rackspace Email inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Rackspace Email.",
+      "ctaPrimary": "Connect Rackspace free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Rackspace Email, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect Rackspace in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Get your Rackspace mailbox password",
+        "p": "In the Cloud Office control panel, open the mailbox and set its password. Use the secure host, secure.emailsrvr.com, not the unencrypted one."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your Rackspace Email address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI a Rackspace Email inbox",
+      "sub": "Connect Rackspace Email in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect Rackspace free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
+  "hostinger": {
+    "meta": {
+      "title": "Connect Hostinger to Claude, Cursor & MCP Clients",
+      "description": "Connect Hostinger to Claude, Cursor, ChatGPT and any MCP client over IMAP with your mailbox password. Let AI read, send, schedule and organize your mail. One inbox free, forever."
+    },
+    "hero": {
+      "eyebrow": "Hostinger + AI",
+      "titleLine1": "Connect Hostinger to Claude,",
+      "titleLine2": "and Cursor, ChatGPT, any MCP client",
+      "lead": "Give your AI agent a real Hostinger inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+      "ctaPrimary": "Connect Hostinger free",
+      "ctaSecondary": "Read the docs",
+      "meta0": "1 inbox free, forever",
+      "meta1": "Your mailbox password, no OAuth setup",
+      "meta2": "Email fetched live, never stored",
+      "answer": "Claude cannot reach Hostinger on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    },
+    "method": {
+      "title": "How Hostinger connects: IMAP and your mailbox password",
+      "body": "Hostinger Email connects over IMAP/SMTP with the mailbox password you set in hPanel under Emails. There is no app password and no OAuth step. The hosts are <code>imap.hostinger.com</code> and <code>smtp.hostinger.com</code> for every domain, so there is nothing to look up."
+    },
+    "caps": {
+      "eyebrow": "What your AI can do",
+      "title": "A Hostinger inbox your agent can actually use",
+      "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside Hostinger.",
+      "ctaPrimary": "Connect Hostinger free"
+    },
+    "capabilities": [
+      {
+        "tag": "Read",
+        "h": "Read & search mail",
+        "p": "List, read and search across folders to find that invoice, summarize a thread, or pull the latest from a sender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, reply & forward",
+        "p": "Compose and send real messages, reply in-thread, and forward, directly from Hostinger, not as a draft you finish by hand."
+      },
+      {
+        "tag": "Schedule",
+        "h": "Schedule for later",
+        "p": "Queue a message to go out at the right time, so your agent can draft now and send on schedule."
+      },
+      {
+        "tag": "Organize",
+        "h": "Move, copy, flag, archive, delete",
+        "p": "Keep the inbox tidy: file mail into folders, flag what matters, archive the rest, or delete on request."
+      }
+    ],
+    "how": {
+      "eyebrow": "Setup",
+      "title": "Connect Hostinger in four steps",
+      "sub": "From sign-up to first AI email in a couple of minutes."
+    },
+    "steps": [
+      {
+        "h": "Create a free account",
+        "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      },
+      {
+        "h": "Get your Hostinger mailbox password",
+        "p": "In hPanel, open Emails, pick the address and set or reset its password. That password is what mcpemails authenticates with."
+      },
+      {
+        "h": "Paste it into mcpemails",
+        "p": "Choose IMAP / SMTP, add your Hostinger address, the hosts below and the password to connect the inbox securely."
+      },
+      {
+        "h": "Paste the MCP URL into your AI",
+        "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      }
+    ],
+    "ctaBand": {
+      "title": "Give your AI a Hostinger inbox",
+      "sub": "Connect Hostinger in minutes. One inbox free forever, no card required.",
+      "ctaPrimary": "Connect Hostinger free",
+      "ctaSecondary": "Read the docs"
+    }
+  },
   "matrix": {
     "intro": "Comparing providers first?",
     "label": "See the email provider compatibility matrix",
     "href": "/docs/providers"
+  },
+  "settings": {
+    "colHost": "Server",
+    "colPort": "Port",
+    "colProtocol": "Protocol",
+    "colSecurity": "Security",
+    "imap": "IMAP (incoming)",
+    "smtp": "SMTP (outgoing)",
+    "sub": "Copy these into the connect form. mcpemails prefills them where it can, and retries the other standard transport if the first does not answer.",
+    "title": "The exact IMAP and SMTP settings"
   }
 }
