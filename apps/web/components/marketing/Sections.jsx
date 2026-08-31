@@ -1058,6 +1058,12 @@ export function Footer() {
           </div>
           <div>
             <p className="footer-heading">{tc('links.connectHeading')}</p>
+            {/*
+              Generic IMAP leads: it is the largest and best-retaining cohort
+              of connected inboxes, and the one page a visitor cannot guess the
+              URL of from a brand name.
+            */}
+            <Link href="/connect/imap">{tc('links.connectImap')}</Link>
             <Link href="/connect/gmail">{tc('links.connectGmail')}</Link>
             <Link href="/connect/fastmail">{tc('links.connectFastmail')}</Link>
             <Link href="/connect/icloud">{tc('links.connectIcloud')}</Link>

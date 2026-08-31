@@ -467,9 +467,967 @@
       "ctaSecondary": "Les dokumentasjonen"
     }
   },
+  "imap": {
+    "meta": {
+      "title": "Koble en hvilken som helst IMAP-postkasse til Claude",
+      "description": "Koble enhver IMAP-postkasse til Claude, Cursor, ChatGPT og enhver MCP-klient. Ta med vert, port og passord, og la AI lese, sende, planlegge og organisere e-post. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "IMAP + AI",
+      "titleLine1": "Koble enhver IMAP-postkasse til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din innboksen du allerede har, uansett hvem som drifter den. Les, søk, send, svar, planlegg og organiser e-post over vanlig IMAP og SMTP, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til innboksen gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Enhver IMAP-vert, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude har ingen egen IMAP-klient. mcpemails er en hostet MCP-server som logger inn på e-postserveren din over IMAP og SMTP med adressen, verten og passordet leverandøren allerede har gitt deg, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Enhver vert som snakker IMAP fungerer, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler en generisk IMAP-postkasse seg til",
+      "body": "Du trenger fire ting: adressen din, e-postverten, passordet og, hvis leverandøren krever det, et app-passord. Skriv inn adressen først: mcpemails kjenner igjen de vanlige webhotellene og fyller inn begge vertene, begge portene og sikkerhetsmodusene for deg. Hvis transporten den prøver ikke svarer, prøver den den andre standarden på egen hånd, <b>993 eller 143</b> for IMAP og <b>465 eller 587</b> for SMTP, så ingen trenger å gjette på STARTTLS."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i postkassen din.",
+      "ctaPrimary": "Koble til innboksen gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra postkassen din, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til en IMAP-innboks i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Finn IMAP- og SMTP-innstillingene dine",
+        "p": "Leverandøren publiserer dem, som regel som imap.dittdomene.no og smtp.dittdomene.no på port 993 og 465. Krever leverandøren et app-passord for e-postklienter, oppretter du det nå."
+      },
+      {
+        "h": "Lim dem inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til adressen din, de to vertene og passordet. Porter og sikkerhetsmodus ligger under Avansert, forhåndsutfylt med standardverdiene."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din innboksen du allerede har",
+      "sub": "Koble til enhver IMAP-postkasse på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til innboksen gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "gmx": {
+    "meta": {
+      "title": "Koble GMX til Claude (og enhver AI)",
+      "description": "Koble GMX til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med kontopassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "GMX + AI",
+      "titleLine1": "Koble GMX til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte GMX-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og kontopassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til GMX gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Kontopassordet ditt, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke GMX på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler GMX seg til: IMAP og kontopassordet ditt",
+      "body": "GMX kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i GMX under E-postinnstillinger, POP3/IMAP-henting, og koble så til med GMX-adressen og passordet ditt. Hvis GMX ber deg opprette et programspesifikt passord, bruker du det i stedet. Tyske kontoer bruker .net-vertene, <code>imap.gmx.net</code> og <code>mail.gmx.net</code>."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En GMX-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i GMX.",
+      "ctaPrimary": "Koble til GMX gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra GMX, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til GMX i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Slå på IMAP-tilgang i GMX",
+        "p": "I GMX åpner du E-postinnstillinger, POP3/IMAP-henting, og tillater POP3- og IMAP-tilgang. GMX slår det av igjen hvis kontoen står ubrukt lenge."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til GMX-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en GMX-innboks",
+      "sub": "Koble til GMX på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til GMX gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "aol": {
+    "meta": {
+      "title": "Koble AOL Mail til Claude (og enhver AI)",
+      "description": "Koble AOL Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "AOL Mail + AI",
+      "titleLine1": "Koble AOL Mail til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte AOL Mail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til AOL gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "App-passord, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke AOL Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler AOL Mail seg til: IMAP og et app-passord",
+      "body": "AOL Mail kobles til via IMAP/SMTP med et <b>AOL app-passord</b>. Det vanlige AOL-passordet ditt godtas ikke av en e-postklient, så en avvist innlogging her skyldes nesten alltid et manglende app-passord. Slå på totrinnsbekreftelse, opprett et app-passord under Kontoinformasjon, Kontosikkerhet, og lim det inn i mcpemails sammen med hele AOL-adressen din."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En AOL Mail-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i AOL Mail.",
+      "ctaPrimary": "Koble til AOL gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra AOL Mail, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til AOL i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Opprett et AOL app-passord",
+        "p": "I AOL Mail åpner du Kontoinformasjon, Kontosikkerhet, slår på totrinnsbekreftelse hvis den er av, og oppretter et app-passord. Kopier det med én gang, AOL viser det bare én gang."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til AOL Mail-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en AOL Mail-innboks",
+      "sub": "Koble til AOL Mail på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til AOL gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "mail-ru": {
+    "meta": {
+      "title": "Koble Mail.ru til Claude (og enhver AI)",
+      "description": "Koble Mail.ru til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "Mail.ru + AI",
+      "titleLine1": "Koble Mail.ru til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Mail.ru-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Mail.ru gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "App-passord, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke Mail.ru på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler Mail.ru seg til: IMAP og et app-passord",
+      "body": "Mail.ru kobles til via IMAP/SMTP med et <b>passord for eksterne applikasjoner</b>. Passordet du logger inn på nettsiden med, fungerer ikke fra en e-postklient. Opprett ett i Mail.ru under Sikkerhet, Passord for eksterne applikasjoner, og lim det inn i mcpemails sammen med Mail.ru-adressen din. Mail.ru krever et telefonnummer på kontoen før du får opprette ett."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Mail.ru-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Mail.ru.",
+      "ctaPrimary": "Koble til Mail.ru gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Mail.ru, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Mail.ru i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Opprett et passord for eksterne applikasjoner",
+        "p": "I Mail.ru åpner du Sikkerhet og oppretter et passord for eksterne applikasjoner. Det er passordet mcpemails trenger, ikke det du bruker på nettsiden."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til Mail.ru-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Mail.ru-innboks",
+      "sub": "Koble til Mail.ru på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til Mail.ru gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "web-de": {
+    "meta": {
+      "title": "Koble WEB.DE til Claude (og enhver AI)",
+      "description": "Koble WEB.DE til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med kontopassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "WEB.DE + AI",
+      "titleLine1": "Koble WEB.DE til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte WEB.DE-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og kontopassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til WEB.DE gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Kontopassordet ditt, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke WEB.DE på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler WEB.DE seg til: IMAP og kontopassordet ditt",
+      "body": "WEB.DE kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i WEB.DE under E-postinnstillinger, POP3/IMAP-henting, og koble så til med WEB.DE-adressen og passordet ditt. Utgående e-post går over STARTTLS på port 587 i stedet for implisitt TLS på 465, og mcpemails velger det for deg."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En WEB.DE-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i WEB.DE.",
+      "ctaPrimary": "Koble til WEB.DE gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra WEB.DE, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til WEB.DE i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Slå på IMAP-tilgang i WEB.DE",
+        "p": "I WEB.DE åpner du E-postinnstillinger, POP3/IMAP-henting, og tillater POP3- og IMAP-tilgang."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til WEB.DE-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en WEB.DE-innboks",
+      "sub": "Koble til WEB.DE på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til WEB.DE gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "cpanel": {
+    "meta": {
+      "title": "Koble cPanel til Claude (og enhver AI)",
+      "description": "Koble cPanel til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "cPanel + AI",
+      "titleLine1": "Koble cPanel til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte cPanel-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til cPanel gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke cPanel på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler cPanel seg til: IMAP og postkassepassordet ditt",
+      "body": "En cPanel-postkasse, den du leser i Roundcube eller Horde-webmail, kobles til via IMAP/SMTP med passordet som er satt i cPanel under Email Accounts. Det finnes ingen app-passord og ingen OAuth. Verten er som regel <code>mail.dittdomene.no</code>, og cPanel viser de nøyaktige verdiene under Email Accounts, Connect Devices, i Mail Client Manual Settings. Bruk den sikre SSL/TLS-kolonnen, ikke den ukrypterte."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En cPanel-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i cPanel.",
+      "ctaPrimary": "Koble til cPanel gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra cPanel, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til cPanel i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Hent innstillingene fra cPanel",
+        "p": "I cPanel åpner du Email Accounts og klikker Connect Devices for postkassen. Kopier de sikre IMAP- og SMTP-vertene og portene fra Mail Client Manual Settings. Kjenner du ikke postkassepassordet, setter du et nytt på samme skjerm."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til cPanel-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en cPanel-innboks",
+      "sub": "Koble til cPanel på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til cPanel gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "migadu": {
+    "meta": {
+      "title": "Koble Migadu til Claude (og enhver AI)",
+      "description": "Koble Migadu til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "Migadu + AI",
+      "titleLine1": "Koble Migadu til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Migadu-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Migadu gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke Migadu på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler Migadu seg til: IMAP og postkassepassordet ditt",
+      "body": "Migadu kobles til via IMAP/SMTP med <b>postkassepassordet</b>, som ikke er passordet til Migadu-administratorkontoen din. Sett eller nullstill det i Migadu-adminområdet under Mailboxes, og lim det inn i mcpemails sammen med adressen din. Alle Migadu-postkasser bruker de samme to vertene uansett domene, så det er ingenting å slå opp."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Migadu-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Migadu.",
+      "ctaPrimary": "Koble til Migadu gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Migadu, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Migadu i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Sett et postkassepassord i Migadu",
+        "p": "I Migadu-adminområdet åpner du Mailboxes, velger postkassen og setter passordet. E-postklienter autentiserer med det passordet; admin-innloggingen din fungerer ikke."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til Migadu-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Migadu-innboks",
+      "sub": "Koble til Migadu på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til Migadu gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "namecheap": {
+    "meta": {
+      "title": "Koble Namecheap Private Email til Claude (og enhver AI)",
+      "description": "Koble Namecheap Private Email til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "Namecheap Private Email + AI",
+      "titleLine1": "Koble Namecheap Private Email til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Namecheap Private Email-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Private Email gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke Namecheap Private Email på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler Namecheap Private Email seg til: IMAP og postkassepassordet ditt",
+      "body": "Namecheap Private Email kobles til via IMAP/SMTP med <b>postkassepassordet</b>, det som ble satt da postkassen ble opprettet, ikke Namecheap-kontopassordet ditt. Begge vertene er <code>mail.privateemail.com</code> uansett domene. Har du ikke passordet, nullstiller du det i Private Email-kontrollpanelet."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Namecheap Private Email-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Namecheap Private Email.",
+      "ctaPrimary": "Koble til Private Email gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Namecheap Private Email, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Private Email i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Finn passordet til Private Email-postkassen",
+        "p": "Bruk passordet til selve postkassen, ikke Namecheap-kontopassordet. Du kan når som helst nullstille det i Private Email-kontrollpanelet."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til Namecheap Private Email-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Namecheap Private Email-innboks",
+      "sub": "Koble til Namecheap Private Email på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til Private Email gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "ionos": {
+    "meta": {
+      "title": "Koble IONOS til Claude (og enhver AI)",
+      "description": "Koble IONOS til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "IONOS + AI",
+      "titleLine1": "Koble IONOS til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte IONOS-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til IONOS gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke IONOS på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler IONOS seg til: IMAP og postkassepassordet ditt",
+      "body": "IONOS kobles til via IMAP/SMTP med <b>e-postpassordet</b> du setter i IONOS-kontrollpanelet under E-post, som er noe annet enn IONOS-innloggingen din. IONOS svarer på begge standardtransportene, 993 med TLS og 143 med STARTTLS, og å gjette mellom dem er den vanligste måten en IONOS-tilkobling feiler på. mcpemails fyller inn et par som fungerer og prøver det andre hvis det første ikke svarer, så en avvist innlogging her handler faktisk om passordet."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En IONOS-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i IONOS.",
+      "ctaPrimary": "Koble til IONOS gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra IONOS, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til IONOS i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Hent IONOS-postkassepassordet",
+        "p": "I IONOS-kontrollpanelet åpner du E-post, velger adressen og setter eller nullstiller passordet. Det er ikke passordet du logger inn på IONOS med."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til IONOS-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en IONOS-innboks",
+      "sub": "Koble til IONOS på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til IONOS gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "ovh": {
+    "meta": {
+      "title": "Koble OVH til Claude (og enhver AI)",
+      "description": "Koble OVH til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "OVH + AI",
+      "titleLine1": "Koble OVH til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte OVH-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til OVH gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke OVH på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler OVH seg til: IMAP og postkassepassordet ditt",
+      "body": "En OVH MX Plan-postkasse kobles til via IMAP/SMTP med postkassepassordet fra OVH-kontrollpanelet, og begge vertene er <code>ssl0.ovh.net</code>. OVH Hosted Exchange er en annen tjeneste: vertene ser ut som <code>ex4.mail.ovh.net</code>, og utgående e-post går over STARTTLS på port 587, aldri 465, som er grunnen til at standardverdiene for delt webhotell bare henger. mcpemails kjenner igjen begge og velger riktig par."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En OVH-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i OVH.",
+      "ctaPrimary": "Koble til OVH gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra OVH, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til OVH i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Hent OVH-postkassepassordet",
+        "p": "I OVH-kontrollpanelet åpner du e-posttjenesten, velger adressen og endrer passordet. Kopier e-postverten OVH viser for postkassen hvis den ikke er ssl0.ovh.net."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til OVH-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en OVH-innboks",
+      "sub": "Koble til OVH på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til OVH gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "rackspace": {
+    "meta": {
+      "title": "Koble Rackspace Email til Claude (og enhver AI)",
+      "description": "Koble Rackspace Email til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "Rackspace Email + AI",
+      "titleLine1": "Koble Rackspace Email til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Rackspace Email-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Rackspace gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke Rackspace Email på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler Rackspace Email seg til: IMAP og postkassepassordet ditt",
+      "body": "Rackspace Email kobles til via IMAP/SMTP med postkassepassordet ditt. Begge vertene er <code>secure.emailsrvr.com</code> uansett hvilket domene du bruker, og det er akkurat det folk overser: e-postverten utledes ikke av domenenavnet ditt. Sett eller nullstill postkassepassordet i Rackspace Cloud Office-kontrollpanelet."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Rackspace Email-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Rackspace Email.",
+      "ctaPrimary": "Koble til Rackspace gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Rackspace Email, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Rackspace i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Hent Rackspace-postkassepassordet",
+        "p": "I Cloud Office-kontrollpanelet åpner du postkassen og setter passordet. Bruk den sikre verten, secure.emailsrvr.com, ikke den ukrypterte."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til Rackspace Email-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Rackspace Email-innboks",
+      "sub": "Koble til Rackspace Email på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til Rackspace gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
+  "hostinger": {
+    "meta": {
+      "title": "Koble Hostinger til Claude (og enhver AI)",
+      "description": "Koble Hostinger til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    },
+    "hero": {
+      "eyebrow": "Hostinger + AI",
+      "titleLine1": "Koble Hostinger til Claude,",
+      "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+      "lead": "Gi AI-agenten din en ekte Hostinger-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+      "ctaPrimary": "Koble til Hostinger gratis",
+      "ctaSecondary": "Les dokumentasjonen",
+      "meta0": "1 innboks gratis, for alltid",
+      "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+      "meta2": "E-post hentes direkte, lagres aldri",
+      "answer": "Claude når ikke Hostinger på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    },
+    "method": {
+      "title": "Slik kobler Hostinger seg til: IMAP og postkassepassordet ditt",
+      "body": "Hostinger Email kobles til via IMAP/SMTP med postkassepassordet du setter i hPanel under Emails. Det finnes ingen app-passord og ingen OAuth-steg. Vertene er <code>imap.hostinger.com</code> og <code>smtp.hostinger.com</code> for alle domener, så det er ingenting å slå opp."
+    },
+    "caps": {
+      "eyebrow": "Hva AI-en din kan gjøre",
+      "title": "En Hostinger-innboks agenten faktisk kan bruke",
+      "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i Hostinger.",
+      "ctaPrimary": "Koble til Hostinger gratis"
+    },
+    "capabilities": [
+      {
+        "tag": "Les",
+        "h": "Les og søk i e-post",
+        "p": "List opp, les og søk på tvers av mapper, finn fakturaen, oppsummer en tråd, eller hent det nyeste fra en avsender."
+      },
+      {
+        "tag": "Send",
+        "h": "Send, svar og videresend",
+        "p": "Skriv og send ekte meldinger, svar i tråden og videresend, direkte fra Hostinger, ikke som et utkast du fullfører for hånd."
+      },
+      {
+        "tag": "Planlegg",
+        "h": "Planlegg til senere",
+        "p": "Sett en melding i kø til riktig tidspunkt, så agenten kan skrive nå og sende etter plan."
+      },
+      {
+        "tag": "Organiser",
+        "h": "Flytt, kopier, flagg, arkiver, slett",
+        "p": "Hold innboksen ryddig: legg e-post i mapper, flagg det viktige, arkiver resten, eller slett på forespørsel."
+      }
+    ],
+    "how": {
+      "eyebrow": "Oppsett",
+      "title": "Koble til Hostinger i fire steg",
+      "sub": "Fra registrering til første AI-e-post på et par minutter."
+    },
+    "steps": [
+      {
+        "h": "Opprett en gratis konto",
+        "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      },
+      {
+        "h": "Hent Hostinger-postkassepassordet",
+        "p": "I hPanel åpner du Emails, velger adressen og setter eller nullstiller passordet. Det er passordet mcpemails autentiserer med."
+      },
+      {
+        "h": "Lim det inn i mcpemails",
+        "p": "Velg IMAP / SMTP, legg til Hostinger-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      },
+      {
+        "h": "Lim MCP-URL-en inn i AI-en",
+        "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      }
+    ],
+    "ctaBand": {
+      "title": "Gi AI-en din en Hostinger-innboks",
+      "sub": "Koble til Hostinger på minutter. Én innboks gratis for alltid, uten kort.",
+      "ctaPrimary": "Koble til Hostinger gratis",
+      "ctaSecondary": "Les dokumentasjonen"
+    }
+  },
   "matrix": {
     "intro": "Vil du sammenligne leverandører først?",
     "label": "Se kompatibilitetsmatrisen for e-postleverandører",
     "href": "/docs/providers"
+  },
+  "settings": {
+    "colHost": "Server",
+    "colPort": "Port",
+    "colProtocol": "Protokoll",
+    "colSecurity": "Sikkerhet",
+    "imap": "IMAP (innkommende)",
+    "smtp": "SMTP (utgående)",
+    "sub": "Kopier disse inn i tilkoblingsskjemaet. mcpemails fyller dem ut der det er mulig, og prøver den andre standardtransporten hvis den første ikke svarer.",
+    "title": "Nøyaktige IMAP- og SMTP-innstillinger"
   }
 }
