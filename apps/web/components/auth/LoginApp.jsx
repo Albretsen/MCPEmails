@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
+import { readAcquisitionContext } from '../analytics/AcquisitionCapture';
+import { appendAcquisitionParams } from '@/lib/acquisition-context.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
@@ -32,6 +34,12 @@ export function LoginApp({ redirectTo = null }) {
   function buildOAuthUrl(provider) {
     const redirect = getSafeRedirect();
     const url = new URL(`/auth/${provider}`, window.location.origin);
+    // Supabase signs a brand-new user up on their first OAuth login, so an
+    // account can be created from this page and not just from /signup. Carry
+    // the acquisition context the same way SignupApp does, or those signups
+    // land unattributed. The callback only stamps genuinely new accounts, so
+    // sending it on a returning user's login is a no-op.
+    appendAcquisitionParams(url.searchParams, readAcquisitionContext());
     if (redirect && redirect.startsWith('/')) {
       url.searchParams.set('next', redirect);
     }
