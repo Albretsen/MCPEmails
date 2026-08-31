@@ -17,6 +17,14 @@
  */
 
 import { connectGuardedTcp } from "./host-guard.ts";
+import {
+  connectThroughRelay,
+  guardRelayTarget,
+  noteRelayFailure,
+  noteRelaySuccess,
+  relayFor,
+  RelayUnavailableError,
+} from "./smtp-relay.ts";
 
 export class SmtpAuthError extends Error {
   constructor(message: string) {
@@ -415,11 +423,82 @@ class SmtpSession {
  * failure still lands inside the connect timeout below, as it did when this
  * was `Deno.connectTls`.
  *
+ * A few hosts are reached through a relay instead (see smtp-relay.ts); the
+ * guard runs identically on that path, and a relay that cannot carry the
+ * connection falls back to the direct dial below rather than failing the send.
+ *
  * See host-guard.ts, a mirror of apps/web/src/lib/email/host-guard.ts. A change
  * to either must be made to the other.
  */
 async function openGuardedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn> {
+  const relayed = await openRelayedSmtpConn(cfg);
+  if (relayed) return relayed;
+
   const tcp = await connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "smtp" });
+  return await upgradeImplicitTls(tcp, cfg);
+}
+
+/**
+ * The relayed half of {@link openGuardedSmtpConn}, or null to dial directly.
+ *
+ * Null is the answer for almost every send: no relay configured, this host not
+ * on its list, the relay suspended after an earlier failure, or the relay
+ * having just failed here. That last case is the fallback the operator asked
+ * for, and it is safe for one reason worth stating plainly: everything this
+ * function does happens before SMTP DATA, so a connection that dies here has
+ * transmitted nothing and cannot be duplicated by the direct attempt that
+ * follows.
+ *
+ * The TLS handshake is deliberately inside the fallback. A tunnel that opens
+ * and then cannot complete a handshake is a broken relay like any other, and
+ * the direct path deserves its chance at it.
+ *
+ * What does NOT fall back is a refusal from the mail host itself, including the
+ * guard refusing the host: those verdicts are about the destination, and the
+ * direct dial would reach exactly the same one, slower.
+ */
+async function openRelayedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn | null> {
+  const relay = relayFor(cfg.host);
+  if (!relay) return null;
+
+  const target = { host: cfg.host, port: cfg.port };
+  await guardRelayTarget(target);
+
+  try {
+    const tunnel = await connectThroughRelay(relay, target);
+    let conn: Deno.Conn;
+    try {
+      conn = await upgradeImplicitTls(tunnel, cfg);
+    } catch (err) {
+      throw new RelayUnavailableError(`TLS handshake through relay failed: ${errorText(err)}`);
+    }
+    noteRelaySuccess();
+    console.log("[mcp-server] smtp_relay: connected", {
+      relay: `${relay.host}:${relay.port}`,
+      host: cfg.host,
+      port: cfg.port,
+    });
+    return conn;
+  } catch (err) {
+    if (!(err instanceof RelayUnavailableError)) throw err;
+    noteRelayFailure();
+    console.warn("[mcp-server] smtp_relay: falling back to direct egress", {
+      relay: `${relay.host}:${relay.port}`,
+      host: cfg.host,
+      port: cfg.port,
+      error: err.message,
+    });
+    return null;
+  }
+}
+
+/**
+ * Turn a raw TCP connection into the connection the session speaks on: an
+ * implicit-TLS port is upgraded here, a STARTTLS port later by the session.
+ * Shared by both the direct and the relayed path so the certificate is checked
+ * against the real hostname either way.
+ */
+async function upgradeImplicitTls(tcp: Deno.TcpConn, cfg: SmtpConfig): Promise<Deno.Conn> {
   if (cfg.security !== "tls") return tcp;
 
   let tls: Deno.TlsConn;
@@ -449,6 +528,12 @@ async function openGuardedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn> {
  * edge wall-clock limit. Race the connect against SMTP_TIMEOUT_MS (the same
  * guard used for reads); on timeout, close the socket if it lands late and
  * surface a clean, no-retry-safe error.
+ *
+ * A relay attempt and the direct dial that may follow it share this one budget
+ * rather than each getting their own, so adding the relay cannot push a single
+ * submission past the window the tool call was already sized for. The relay's
+ * own handshake timeout is a small fraction of it, which is what leaves the
+ * fallback something to work with.
  */
 async function connectWithTimeout(cfg: SmtpConfig): Promise<Deno.Conn> {
   const connectPromise = openGuardedSmtpConn(cfg);
