@@ -86,18 +86,42 @@ export function releasedProviderParams(now = new Date()) {
  * crawlers, and a page that links into a wave that does not exist yet is worse
  * than a page with fewer links. Same category first, rotating so that a large
  * silo does not point every page at the same six.
+ *
+ * The list is then topped up from every other released provider, because a
+ * silo can be smaller than `limit` and briefly is for most of the rollout:
+ * `generic` has exactly one member, so /connect/imap would otherwise carry no
+ * outbound links at all, and it is the highest-priority page here. Internal
+ * links are the whole reason this set is crawlable, so running out of siblings
+ * has to degrade into a wider net rather than into nothing.
  */
 export function relatedProviders(slug, limit = 6, now = new Date()) {
   const self = getProvider(slug);
   if (!self) return [];
-  const pool = releasedProviders(now);
-  const siblings = pool.filter((p) => p.slug !== slug && p.category === self.category);
-  const start = Math.max(0, siblings.findIndex((p) => p.slug > slug));
-  const rotated = [...siblings.slice(start), ...siblings.slice(0, start)];
-  const out = rotated.slice(0, limit);
-  if (out.length < limit && slug !== 'imap') {
+  const pool = releasedProviders(now).filter((p) => p.slug !== slug);
+
+  // Rotate by slug so each page in a category seeds a different slice.
+  const rotate = (list) => {
+    const start = Math.max(0, list.findIndex((p) => p.slug > slug));
+    return [...list.slice(start), ...list.slice(0, start)];
+  };
+
+  const out = rotate(pool.filter((p) => p.category === self.category)).slice(0, limit);
+  if (out.length < limit) {
+    const taken = new Set(out.map((p) => p.slug));
+    // Generic IMAP first when it is not already in: it is the page that answers
+    // "my provider is not listed", which is the likeliest next question.
     const generic = pool.find((p) => p.slug === 'imap');
-    if (generic && !out.some((p) => p.slug === 'imap')) out.push(generic);
+    if (generic && !taken.has('imap')) {
+      out.push(generic);
+      taken.add('imap');
+    }
+    for (const p of rotate(pool.filter((x) => x.category !== self.category))) {
+      if (out.length >= limit) break;
+      if (!taken.has(p.slug)) {
+        out.push(p);
+        taken.add(p.slug);
+      }
+    }
   }
   return out;
 }
