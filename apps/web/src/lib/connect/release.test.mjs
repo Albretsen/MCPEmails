@@ -42,6 +42,21 @@ test('siblings never link into an unreleased wave', () => {
   }
 });
 
+test('no released page is left without sibling links', () => {
+  // `generic` has one member, so /connect/imap used to render no links at all,
+  // on the highest-priority page in the set. A short silo has to degrade into a
+  // wider net, never into nothing.
+  for (const when of [wave1, wave3, after]) {
+    const pool = releasedProviders(when);
+    for (const p of pool) {
+      const rel = relatedProviders(p.slug, 6, when);
+      assert.equal(rel.length, Math.min(6, pool.length - 1),
+        `${p.slug} got ${rel.length} links at ${when.toISOString().slice(0, 10)}`);
+      assert.equal(new Set(rel.map((r) => r.slug)).size, rel.length, `${p.slug} has duplicates`);
+    }
+  }
+});
+
 test('a provider never links to itself', () => {
   for (const p of releasedProviders(after)) {
     assert.ok(!relatedProviders(p.slug, 6, after).some((r) => r.slug === p.slug), p.slug);
