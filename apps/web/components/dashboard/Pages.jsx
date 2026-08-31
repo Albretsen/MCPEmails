@@ -6,6 +6,7 @@ import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
 import { useAppLocale } from '../i18n/AppLocaleProvider';
 import { routing } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 import SignatureRichEditor from './SignatureRichEditor';
@@ -13,6 +14,8 @@ import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
+import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
+import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
@@ -690,12 +693,30 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
   // made its first MCP call (callsThisMonth > 0 means a client is wired up).
   const showGuide = inboxCount === 0 || callsThisMonth === 0;
 
+  // Whether "Connect inbox" can still connect an inbox. At the cap it cannot:
+  // it opens the modal on its upgrade panel instead. This page is where a user
+  // lands the moment their FIRST mailbox finishes connecting, and its header
+  // CTA was the loudest thing on it, still styled as the obvious next step
+  // while the guide below was telling them the next step was to wire up their
+  // MCP client. That is how eleven of the thirteen workspaces that hit the cap
+  // in the last 48 hours met a $5 upgrade offer a median of 24 seconds after
+  // connecting their first inbox, with no tool call made from it yet. The
+  // button stays reachable, because a genuinely blocked user clicking it is
+  // the highest-intent click in the product, but it stops presenting itself as
+  // the thing to do next when it cannot do the thing it names.
+  const atInboxLimit =
+    planLimits?.maxInboxes != null && inboxCount >= planLimits.maxInboxes;
+
   return (
     <div className="page">
       <PageHeader
         title={t('overview.title')}
         sub={t('overview.sub')}
-        action={<Btn variant="primary" icon="plus" onClick={onConnect}>{t('overview.connectInbox')}</Btn>}
+        action={
+          <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={onConnect}>
+            {t('overview.connectInbox')}
+          </Btn>
+        }
       />
 
       <div className="stat-grid">
@@ -1042,8 +1063,17 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
     }
   };
 
+  // At the cap this button does not connect anything: it opens the modal on its
+  // upgrade panel. It stays, because a blocked user asking to add a mailbox is
+  // the highest-intent click in the product and the panel converts well when
+  // the intent is real. But it stops being the page's primary action, because
+  // the cap notice above now carries the same offer with its price on it, and
+  // two competing primary buttons where one of them silently means "buy" is
+  // how a connect button becomes a bait-and-switch.
   const connectAction = (
-    <Btn variant="primary" icon="plus" onClick={onConnect}>{t('inboxes.connectInbox')}</Btn>
+    <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={onConnect}>
+      {t('inboxes.connectInbox')}
+    </Btn>
   );
 
   return (
@@ -1059,6 +1089,125 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
         }
         action={connectAction}
       />
+
+      {/* The offer, kept on the page instead of only inside the modal.
+          ─────────────────────────────────────────────────────────────────────
+          WHY THIS EXISTS. The inbox cap already had a good upgrade panel: it
+          names the price and links straight at Stripe. But it lived only
+          inside the connect modal, so it was destroyed by the Escape key and
+          could only ever be seen by someone in the act of being refused. The
+          48-hour record of the cap shows what that costs. Eleven of the
+          thirteen workspaces that hit it were shown the price a median of 24
+          seconds after connecting their FIRST mailbox, before a single tool
+          call had been made from it; five of the thirteen never made one at
+          all. Nobody buys a second mailbox before the first one has done
+          anything. The one workspace that did buy had seen the panel once at
+          that useless moment, ignored it, gone away and actually used the
+          product, and bought seven seconds into a SECOND exposure that landed
+          after the value did.
+
+          So the panel is not what is broken; its timing is, and a modal cannot
+          fix its own timing because it only ever appears when the user asks to
+          be refused. This notice is the offer with the timing taken off it: it
+          sits on the page the user comes back to after using the product, and
+          it is still there on the visit where wanting a second mailbox has
+          become a real thought rather than a reflex.
+
+          It stands where the "1 of 1 used" progress bar deliberately stops
+          rendering, which until now left the moment of being AT the cap as the
+          one moment the page said nothing about the cap at all.
+
+          NO PAYWALL BEACON HERE, ON PURPOSE. `paywall_reached` is not deduped
+          server-side; only a per-modal-open guard on the client holds it down.
+          Firing it from a passive notice would book a row on every render of
+          this page and inflate the exact denominator that made this problem
+          visible. A notice sitting on a page is also not the event that stage
+          means: nobody asked for anything and nothing was refused. What this
+          surface does is fully readable in `checkout_started` either way. */}
+      {atInboxLimit && maxInboxes !== null && (() => {
+        // Same rule as the modal's panel, from the same module, so the two
+        // surfaces can never quote different plans for the same block.
+        const offer = inboxCapOffer(maxInboxes);
+        const personal = offer.plan === 'personal';
+        return (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 12,
+            padding: '14px 16px',
+            marginBottom: 12,
+            background: 'var(--brand-soft)',
+            border: '1px solid rgba(37,71,229,0.18)',
+            borderRadius: 10,
+          }}>
+            <Icon name="zap" size={16} color="var(--brand)" />
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 13.5,
+                fontWeight: 600,
+                color: 'var(--fg-1)',
+                marginBottom: 2,
+              }}>
+                {t('inboxes.capTitle')}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 12.5,
+                color: 'var(--fg-3)',
+                lineHeight: 1.5,
+              }}>
+                {personal ? t('inboxes.capBodyPersonal') : t('inboxes.capBodyPro')}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {/* Locale-aware Link, unlike the checkout CTA below: /pricing is
+                  an ordinary page with no side effects, so prefetching it is
+                  free, and a Norwegian user belongs on /nb/pricing. */}
+              <Link
+                href="/pricing"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  height: 32,
+                  padding: '0 10px',
+                  color: 'var(--fg-2)',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 12.5,
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t('inboxes.capCompare')}
+              </Link>
+              {/* Must stay a plain <a> to an API path: a next/link prefetch
+                  would open Stripe Checkout sessions for people who never
+                  clicked. Same contract as the modal's CTA. */}
+              <a
+                href={checkoutStartHref(offer.plan, false)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  height: 32,
+                  padding: '0 14px',
+                  background: 'var(--brand)',
+                  color: '#fff',
+                  borderRadius: 8,
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {personal ? t('inboxes.capCtaPersonal') : t('inboxes.capCtaPro')}
+              </a>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Plan usage indicator: shown when not at limit but limit exists */}
       {!atInboxLimit && maxInboxes !== null && (
