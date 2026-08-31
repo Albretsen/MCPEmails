@@ -163,6 +163,13 @@ import {
   reviewExtraArguments,
   withOwningActions,
 } from "./consolidated-arguments.ts";
+import {
+  bulkFailureMessage,
+  isBadGmailMessageIdStatus,
+  MESSAGE_NOT_FOUND,
+  targetUnresolvedMessage,
+} from "./message-id-errors.ts";
+import { attachResultNote, withResultNotesProperty } from "./result-notes.ts";
 import { buildUsageLimitText, USAGE_LIMIT_SUPPORT_EMAIL } from "./usage-limit-message.ts";
 import {
   DATE_INPUT_EXAMPLES,
@@ -372,6 +379,61 @@ function notSentResult(
           `the mail host is refusing the sending connection rather than the ` +
           `message, and the user should ask their mail provider to allow ` +
           `submission from MCP Emails.`,
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: PROVIDER_NOT_SENT_ERROR_CODE,
+  };
+}
+
+/**
+ * A send that failed while READING the message it was asked to act on.
+ *
+ * Distinct from every other failure a reply can hit, because it happens before
+ * the reply is composed: no MIME was built, no send endpoint was called, and
+ * nothing can have been delivered. The generic provider_error branch below
+ * cannot tell that from a failure at the send step and so tells the caller the
+ * message "may or may not have been delivered. Do not retry automatically" —
+ * true of a send that died mid-flight, and the exact opposite of the truth here.
+ *
+ * Carried as a class rather than a string prefix for the same reason
+ * SmtpNotSentError is: the handler's decision is "which phase did this die in",
+ * and a phase is not something to re-derive by matching on provider prose that
+ * the provider is free to reword.
+ */
+class TargetUnresolvedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TargetUnresolvedError";
+  }
+}
+
+/**
+ * Standard tool result for {@link TargetUnresolvedError}. See
+ * targetUnresolvedMessage in message-id-errors.ts for what it says and why.
+ *
+ * Logged as PROVIDER_NOT_SENT_ERROR_CODE, which already means exactly this:
+ * "the provider refused before receiving any of it", with the idempotency
+ * ledger releasing the key rather than consuming it so the safe retry the text
+ * promises is actually available.
+ */
+function targetUnresolvedResult(
+  operation: string,
+  provider: string,
+  inboxId: string,
+  reason: string,
+): ToolErrorResult {
+  console.warn(`[mcp-server] ${operation}: target_unresolved`, {
+    inbox_id: inboxId,
+    provider,
+    error: reason,
+  });
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: targetUnresolvedMessage(operation, provider, reason),
       }],
       isError: true,
     },
@@ -1182,27 +1244,17 @@ function pendingApprovalIdFromToolResult(response: JsonRpcSuccessResponse | Json
 /**
  * Append a server note to a successful tool result.
  *
- * The note goes in its OWN content block rather than into the JSON payload.
- * `content[0].text` is the serialized `structuredContent`, so a trailing
- * sentence appended to it would stop the block parsing as JSON for every client
- * that reads it that way; and `structuredContent` itself is described by an
- * outputSchema, several of which are `additionalProperties: false`, so an
- * unannounced `notes` key would fail a strict client's own validation. A second
- * TextContent block is spec-legal, is what a model reads anyway, and changes
- * neither contract.
- *
- * Only successful results are annotated. A failure already carries its own
- * explanation and a note about an argument that was dropped on the way to it
- * would only compete with it.
+ * The mechanics — and the reason the note now goes into the JSON payload as a
+ * declared `notes` array rather than only into a trailing content block — live
+ * in result-notes.ts. In short: every tool here declares an outputSchema, and a
+ * client that supports structured output reads `structuredContent` and drops
+ * `content`, so the old content-block-only note was spec-legal and invisible.
  */
 function appendResultNote(
   response: JsonRpcSuccessResponse | JsonRpcErrorResponse,
   note: string,
 ): void {
-  if (!("result" in response) || !response.result || typeof response.result !== "object") return;
-  const result = response.result as { content?: unknown; isError?: unknown };
-  if (result.isError === true || !Array.isArray(result.content)) return;
-  result.content.push({ type: "text", text: note });
+  attachResultNote(response, note);
 }
 
 /**
@@ -5669,7 +5721,13 @@ const TOOL_ANNOTATIONS: Record<
 // tools (every one reaches an external email provider); title mirrors tool.title.
 for (const tool of LEGACY_TOOLS) {
   const out = TOOL_OUTPUT_SCHEMAS[tool.name];
-  if (out) tool.outputSchema = out;
+  // Every schema also declares the optional `notes` array, so no result can be
+  // handed a server note its own schema forbids. Applied here, in the loop that
+  // attaches the schemas, rather than written into each by hand: most of these
+  // are additionalProperties:false, and the disclosure bug this serves was
+  // itself a contract kept in one place and applied in another. Optional and
+  // never required, so nothing that validates today stops validating.
+  if (out) tool.outputSchema = withResultNotesProperty(out);
   const ann = TOOL_ANNOTATIONS[tool.name];
   if (ann) {
     tool.annotations = {
@@ -12246,9 +12304,18 @@ async function replyGmailMessage(
   );
   if (!origResp.ok) {
     if (origResp.status === 401) throw new Error("gmail_auth_failed");
-    if (origResp.status === 404) throw new Error("message_not_found");
+    // The same rule readGmailMessage applies, and for the same reason: Gmail
+    // answers a malformed id with 400 "Invalid id value" and a well-formed but
+    // absent one with 404, and both are permanent facts about the id. Mapping
+    // only 404 here is what made a bogus message_id report as an ambiguous send
+    // — action 'forward' resolves its original through readGmailMessage and so
+    // returned the correct not-found error for the very same id.
+    if (isBadGmailMessageIdStatus(origResp.status)) throw new Error(MESSAGE_NOT_FOUND);
     const errBody = (await origResp.json()) as { error?: { message?: string } };
-    throw new Error(
+    // Everything left is a failure to READ the original: quota, a 5xx, a scope
+    // Gmail declined. Nothing has been composed and nothing sent, so this must
+    // not reach the branch that warns against retrying a possible delivery.
+    throw new TargetUnresolvedError(
       `Gmail API error fetching original: ${errBody.error?.message ?? origResp.statusText}`,
     );
   }
@@ -12423,9 +12490,14 @@ async function replyOutlookMessage(
 
   if (!origResp.ok) {
     if (origResp.status === 401) throw new Error("outlook_auth_failed");
-    if (origResp.status === 404) throw new Error("message_not_found");
+    if (origResp.status === 404) throw new Error(MESSAGE_NOT_FOUND);
     const errBody = (await origResp.json()) as { error?: { message?: string } };
-    throw new Error(
+    // Pre-send, exactly as in the Gmail path above: this read the original and
+    // failed, so no reply exists to have been delivered. Graph's 400s are NOT
+    // folded into not-found here — unlike Gmail's, they cover a malformed
+    // $select and a bad folder id as well as a bad message id, so the honest
+    // answer is the provider's own words plus the fact that nothing was sent.
+    throw new TargetUnresolvedError(
       `Outlook Graph API error: ${errBody.error?.message ?? origResp.statusText}`,
     );
   }
@@ -13597,6 +13669,12 @@ async function executeReplyToEmail(
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
       return notSentResult("email_reply", inbox.provider, inboxId, message);
+    }
+
+    // Failed while reading the original, which is two steps before anything is
+    // sent. Same guarantee as the branch above, reached a different way.
+    if (err instanceof TargetUnresolvedError) {
+      return targetUnresolvedResult("email_reply", inbox.provider, inboxId, message);
     }
 
     // Unknown provider error — do not include raw error detail.
@@ -16584,7 +16662,13 @@ async function gmailModifyLabels(
     // "message_not_found" signal the other providers emit so handleFlagError /
     // the move/flag handlers return a clean message_not_found result instead of
     // a generic provider_error.
-    if (resp.status === 404) throw new Error("message_not_found");
+    //
+    // 400 joins it: Gmail rejects an id it cannot parse with "Invalid id value"
+    // before it looks anything up, so a malformed id arrived here as a different
+    // status describing the same permanent condition and reached the generic
+    // provider_error — which invites a retry that can never succeed. Same rule,
+    // same reason, one place: isBadGmailMessageIdStatus.
+    if (isBadGmailMessageIdStatus(resp.status)) throw new Error(MESSAGE_NOT_FOUND);
     throw new Error(await gmailErrorMessage("Gmail modify failed", resp));
   }
 }
@@ -17600,7 +17684,13 @@ async function gmailDeleteEmail(
   });
   if (!resp.ok) {
     if (resp.status === 401) throw new Error("gmail_auth_failed");
-    if (resp.status === 404) throw new Error("message_not_found");
+    // 400 "Invalid id value" belongs here with 404, per isBadGmailMessageIdStatus.
+    // Without it the raw Gmail text reached the generic provider_error result,
+    // which closes with "Please try again in a moment" — advice that cannot ever
+    // come true for a malformed id, so an agent following it retries until its
+    // quota is gone. The not-found result names the one action that can work
+    // instead: re-list or re-search for a current id.
+    if (isBadGmailMessageIdStatus(resp.status)) throw new Error(MESSAGE_NOT_FOUND);
     throw new Error(await gmailErrorMessage("Gmail delete failed", resp));
   }
 }
@@ -18007,9 +18097,20 @@ function formatBulkResult(
   logStatus: "success" | "error";
   logErrorCode: string | null;
 } {
+  // The per-id `error` a bulk helper records is a sentinel; the caller needs a
+  // sentence. Translating here, at the point the result is rendered, is what
+  // lets both be true at once: `failed` below still holds the sentinel that
+  // logErrorCode and activity_log group on, while the model reads the same
+  // wording the single-message paths have always used for a stale id. Only the
+  // not-found sentinel is rewritten — see bulkFailureMessage for why nothing
+  // else is.
   const results = [
     ...succeeded.map((id) => ({ message_id: id, success: true })),
-    ...failed.map(({ id, error }) => ({ message_id: id, success: false, error })),
+    ...failed.map(({ id, error }) => ({
+      message_id: id,
+      success: false,
+      error: bulkFailureMessage(error),
+    })),
   ];
   const isTotalFailure = succeeded.length === 0 && failed.length > 0;
   // BUGFIX (2026-07-28): a bulk op where every item failed logged
@@ -18246,11 +18347,18 @@ async function gmailBulkMove(
     if (r.ok) {
       succeeded.push(messageId);
     } else {
+      // A bad id inside a batch is the same condition as a bad id on its own,
+      // so it records the same sentinel — including Gmail's 400 "Invalid id
+      // value", which used to fall through and leak "Gmail modify failed: 400"
+      // as the per-id error. The sentinel is what activity_log groups on;
+      // formatBulkResult turns it into the caller's sentence on the way out.
+      // Every other status stays a raw line on purpose: an auth failure, a rate
+      // limit and a 5xx are different problems with different remedies.
       failed.push({
         id: messageId,
         error: r.status === 401
           ? "gmail_auth_failed"
-          : r.status === 404 ? "message_not_found" : `Gmail modify failed: ${r.status}`,
+          : isBadGmailMessageIdStatus(r.status) ? MESSAGE_NOT_FOUND : `Gmail modify failed: ${r.status}`,
       });
     }
   }
@@ -18296,7 +18404,7 @@ async function gmailBulkDelete(
           id: messageId,
           error: r.status === 401
             ? "gmail_auth_failed"
-            : r.status === 404 ? "message_not_found" : `Gmail delete failed: ${r.status}`,
+            : isBadGmailMessageIdStatus(r.status) ? MESSAGE_NOT_FOUND : `Gmail delete failed: ${r.status}`,
         });
       }
     }
@@ -18320,7 +18428,7 @@ async function gmailBulkDelete(
         id: messageId,
         error: r.status === 401
           ? "gmail_auth_failed"
-          : r.status === 404 ? "message_not_found" : `Gmail trash failed: ${r.status}`,
+          : isBadGmailMessageIdStatus(r.status) ? MESSAGE_NOT_FOUND : `Gmail trash failed: ${r.status}`,
       });
     }
   }
@@ -18372,7 +18480,7 @@ async function gmailBulkFlag(
         id: messageId,
         error: r.status === 401
           ? "gmail_auth_failed"
-          : r.status === 404 ? "message_not_found" : `Gmail modify failed: ${r.status}`,
+          : isBadGmailMessageIdStatus(r.status) ? MESSAGE_NOT_FOUND : `Gmail modify failed: ${r.status}`,
       });
     }
   }
