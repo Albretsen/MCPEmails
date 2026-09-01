@@ -268,11 +268,59 @@ export interface FolderResolutionContext {
   itemNoun?: "folder" | "label";
   /** One extra sentence appended before the "call folder action: list" nudge. */
   hint?: string | null;
+  /**
+   * The names this mailbox actually has, to be listed in a not-found message.
+   *
+   * Supplied by resolveFolderReference, which has just searched them, so the
+   * remedy arrives with the failure instead of one round trip later. Left
+   * unset by the call sites that raise a not-found without a listing in hand
+   * (an alias with no candidate mailbox), where the pointer at `folder action:
+   * list` is still the only honest thing to say.
+   */
+  available?: readonly string[];
 }
 
 /** What the provider calls its organisation primitive. */
 function folderNoun(ctx: FolderResolutionContext): "folder" | "label" {
   return ctx.itemNoun ?? (ctx.provider === "gmail" ? "label" : "folder");
+}
+
+/**
+ * How many mailbox names a not-found message will spell out.
+ *
+ * Sized to be the answer rather than a sample: the mailboxes in production sit
+ * well under this, and a caller with more than forty folders is one whose
+ * message would stop being readable long before it stopped being complete. The
+ * count of the remainder is still stated, so a truncated list never reads as
+ * the whole mailbox.
+ */
+const MAX_LISTED_FOLDERS = 40;
+
+/**
+ * The names this mailbox actually has, when the caller handed them over.
+ *
+ * This is the sentence that turns a permanent naming mismatch from a round
+ * trip into an answer. `folder_not_found` on the read paths ran 18 times in the
+ * week to 2026-09-01 across nine workspaces, every one of them a model guessing
+ * a name ("Junk", "Archive") that this inbox does not use; the listing was
+ * already in memory at the point of failure and was thrown away.
+ *
+ * Folder names are the caller's own mailbox, returned to the authenticated
+ * caller who can list them with one call anyway, so naming them here discloses
+ * nothing new. Empty when there is nothing to name, which keeps the message
+ * identical to what it was for the call sites that have no listing.
+ */
+function availableClause(ctx: FolderResolutionContext): string {
+  const available = (ctx.available ?? []).filter((name) => name.trim().length > 0);
+  if (available.length === 0) return "";
+  const noun = folderNoun(ctx);
+  const listed = available.slice(0, MAX_LISTED_FOLDERS);
+  const omitted = available.length - listed.length;
+  const names = listed.map((name) => `"${name}"`).join(", ");
+  return (
+    `This inbox has ${available.length} ${noun}${available.length === 1 ? "" : "s"}: ` +
+    `${names}${omitted > 0 ? `, and ${omitted} more` : ""}. `
+  );
 }
 
 /**
@@ -296,6 +344,7 @@ export function folderNotFoundMessage(
     `A folder argument accepts a ${noun} id, the exact ${noun} name ` +
     `(case-insensitive), or one of the aliases ${FOLDER_ALIAS_TOKENS.join(", ")}. ` +
     (ctx.hint ? `${ctx.hint} ` : "") +
+    availableClause(ctx) +
     `Call folder action: list on this inbox to see the ids and names it actually has, ` +
     `then reissue the call with one of them. This is a permanent naming mismatch, ` +
     `not a temporary fault: the same value will keep failing until it changes.`
@@ -343,6 +392,12 @@ export function resolveFolderReference(
   return {
     ok: false,
     code: "folder_not_found",
-    error: folderNotFoundMessage(trimmed, ctx),
+    // The listing that was just searched goes into the message. It is the one
+    // place in this function that knows both what was asked for and what is
+    // there, and a failure that names only the first is half an answer.
+    error: folderNotFoundMessage(trimmed, {
+      ...ctx,
+      available: folders.map((f) => f.name),
+    }),
   };
 }

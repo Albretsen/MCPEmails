@@ -57,6 +57,21 @@ import {
   type InvalidArgumentAuditDetails,
 } from "./validation-observability.ts";
 import {
+  type ActionResolution,
+  type ActionSelectorIndex,
+  actionSelectorIndex,
+  buildResolvedActionNote,
+  resolveActionSelector,
+  safeActionToken,
+} from "./action-selector.ts";
+import {
+  classifyProviderError,
+  type ProviderErrorAuditDetails,
+  providerErrorAuditDetails,
+  type ProviderErrorBoundary,
+  providerErrorLogCode,
+} from "./provider-error.ts";
+import {
   buildContactSearchEnvelope,
   buildPaginationEnvelope,
 } from "./pagination-envelope.ts";
@@ -148,7 +163,6 @@ import {
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
 import { sendViaSmtp, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
-import { MailHostBlockedError } from "./host-guard.ts";
 import { isSelfSenderIdentity, senderIdentityErrorCode } from "./sender-identity.ts";
 import {
   type ActionMisplacement,
@@ -189,6 +203,7 @@ import {
   bulkPartialFields,
   type BulkStopReason,
   createWorkBudget,
+  raceSearchWithTimeout,
   remainingIds as idsNotYetProcessed,
   type WorkBudget,
 } from "./bulk-budget.ts";
@@ -295,6 +310,14 @@ interface ToolErrorResult {
   };
   logStatus: "error";
   logErrorCode: string;
+  /**
+   * Value-free diagnostics carried up to `writeActivityLog`. Optional because
+   * most error results are this server's own refusals (a bad argument, a
+   * missing scope, a cap), which are fully described by their code; this is for
+   * the ones where something outside us failed and the code alone was not
+   * enough to say what.
+   */
+  logErrorDetails?: ProviderErrorAuditDetails;
 }
 
 /**
@@ -385,6 +408,97 @@ function notSentResult(
     },
     logStatus: "error",
     logErrorCode: PROVIDER_NOT_SENT_ERROR_CODE,
+  };
+}
+
+/**
+ * The one way this file reports a failed provider call.
+ *
+ * ── WHY IT EXISTS ───────────────────────────────────────────────────────────
+ * There were 39 catch blocks each hand-rolling the same three things: a
+ * `console.error` naming the tool, a sentence for the agent, and
+ * `logErrorCode: "provider_error"`. The console line was the only place the
+ * cause was ever written down, which is why `provider_error` was 20% of all
+ * errors on 2026-09-01 and unreadable from the database (see the header of
+ * provider-error.ts for the four unrelated causes it was hiding). Routing every
+ * one of them through here means the classification happens once, and the
+ * `error_details` payload cannot be forgotten at a site.
+ *
+ * ── THE `boundary` ARGUMENT IS A SAFETY CONTROL, NOT A STYLE CHOICE ─────────
+ * `logErrorCode === "provider_error"` is load-bearing in the outbound
+ * idempotency ledger: `completeOutboundIdempotency` and
+ * `completeApprovedOutboundIdempotency` map `provider_error` and `-32603` to
+ * ledger status "unknown" and everything else to "failed", and only "unknown"
+ * lets a retry with the same idempotency key replay. Narrowing the code on a
+ * path that settles that ledger would either strand a message or send it twice.
+ *
+ * So every handler for an operation in `IDEMPOTENT_OUTBOUND_OPERATIONS` or
+ * `IDEMPOTENT_MUTATION_OPERATIONS` passes `boundary: "ledger"` and keeps the
+ * exact code it logged before this change, gaining only the details. That is
+ * wider than "the send paths": move, copy, delete, flag, archive and their
+ * batch and search_and_* forms all accept an idempotency_key. Only paths that
+ * can never reach the ledger (search, list, read, attachment, original,
+ * extract, folder create/rename/delete, draft list, contact search) pass
+ * `boundary: "read"` and may log a narrower code. If you cannot prove a handler
+ * is one of those, it is "ledger".
+ *
+ * `text` is passed in per site rather than generated here, deliberately. The
+ * agent-facing copy in this file is not boilerplate: several sites carry a
+ * do-not-retry warning that is true there and false elsewhere, and one wording
+ * for all of them would have quietly told a caller the wrong thing about
+ * whether its mail went out.
+ */
+function providerFailure(input: {
+  /** Dispatch name for the log line and the audit payload, e.g. "email_search". */
+  tool: string;
+  provider: string;
+  inboxId: string;
+  /** The caught value. Classified, never persisted. */
+  error: unknown;
+  /** The agent-facing sentence, preserved verbatim from the original site. */
+  text: string;
+  boundary: ProviderErrorBoundary;
+  /** The code this site logs today. Kept as-is on a "ledger" boundary. */
+  fallbackCode?: string;
+  /** Extra key/values for the console line only. Never persisted. */
+  logContext?: Record<string, unknown>;
+  /**
+   * Extension fields to merge into `result` alongside content and isError.
+   *
+   * Exists for exactly one thing: the send paths set `delivery_status:
+   * "unknown"` there, an extension field per the MCP tool design doc that the
+   * declared result type does not name. Dropping it while collapsing those
+   * catch blocks would have removed the one machine-readable statement a
+   * caller has about whether its mail went out.
+   */
+  resultExtra?: Record<string, unknown>;
+}): ToolErrorResult {
+  const details = providerErrorAuditDetails(input.tool, input.provider, input.error);
+  const code = providerErrorLogCode(
+    details.reason,
+    input.boundary,
+    input.fallbackCode ?? "provider_error",
+  );
+  // The console keeps the raw message, as it always has. That is a different
+  // trust boundary from `activity_log`: edge logs expire and are read by us
+  // alone, while error_details is durable and read by operators through the
+  // dashboard, so only the classified form is persisted.
+  console.error(`[mcp-server] ${input.tool}: ${code}`, {
+    inbox_id: input.inboxId,
+    provider: input.provider,
+    reason: details.reason,
+    ...(input.logContext ?? {}),
+    error: input.error instanceof Error ? input.error.message : String(input.error),
+  });
+  return {
+    result: {
+      content: [{ type: "text", text: input.text }],
+      isError: true,
+      ...(input.resultExtra ?? {}),
+    } as ToolErrorResult["result"],
+    logStatus: "error",
+    logErrorCode: code,
+    logErrorDetails: details,
   };
 }
 
@@ -2017,8 +2131,15 @@ interface ActivityLogParams {
   /**
    * Value-free diagnostics for an error. Never pass raw arguments, error text,
    * message content, recipient addresses, or search terms here.
+   *
+   * A union of the two phases that produce one, discriminated by `phase`:
+   * `schema_validation` (validation-observability.ts) for a request this server
+   * refused, `provider_call` (provider-error.ts) for a request it accepted and
+   * the mail provider then failed. Both are built by their own module rather
+   * than assembled at the call site, which is what keeps the privacy contract
+   * in one reviewable place per phase instead of at every catch block.
    */
-  errorDetails?: InvalidArgumentAuditDetails;
+  errorDetails?: InvalidArgumentAuditDetails | ProviderErrorAuditDetails;
 }
 
 /**
@@ -6172,6 +6293,21 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
 const CONSOLIDATED_BY_NAME = CONSOLIDATED_SPECS;
 
 /**
+ * The action-selector lookup tables, one per consolidated tool.
+ *
+ * Built here, from the spec map itself, so the names a selector may resolve to
+ * are by construction the names dispatch will accept: an action added above
+ * gets its canonical and legacy spellings for free, and there is no second list
+ * to keep in step. See action-selector.ts for what the tables hold.
+ */
+const ACTION_SELECTORS_BY_TOOL: Record<string, ActionSelectorIndex> = Object
+  .fromEntries(
+    Object.entries(CONSOLIDATED_SPECS).map((
+      [name, spec],
+    ) => [name, actionSelectorIndex(spec.actions)]),
+  );
+
+/**
  * Which action of a consolidated tool owns which argument, built beside the
  * schema by buildConsolidatedTool and keyed by tool name.
  *
@@ -7300,6 +7436,7 @@ async function executeListInboxes(
   result: { content: { type: string; text: string }[] };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const args: Record<string, unknown> =
     typeof rawArgs === "object" && rawArgs !== null && !Array.isArray(rawArgs)
@@ -8600,23 +8737,31 @@ function matchImapAliasMailbox(
 async function resolveImapAliasMailbox(
   inbox: InboxRow,
   alias: CanonicalFolderAlias,
-  opts: { createIfMissing?: boolean } = {},
+  opts: {
+    createIfMissing?: boolean;
+    /**
+     * Do the LIST on the caller's connection instead of opening one.
+     *
+     * See {@link resolveFolderId}'s `session` for the measurement. Short
+     * version: this function is one LIST, and paying a TCP + TLS + AUTH
+     * handshake and a LOGOUT to issue it is most of its cost, on top of holding
+     * a second slot against the provider's per-account connection cap while the
+     * caller is already holding one.
+     */
+    session?: ImapSession<ImapClient> | null;
+  } = {},
 ): Promise<string | null> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
   }
   if (alias.aliases[0] === "inbox") return "INBOX";
 
-  const password = await decryptStoredToken(inbox.imap_password);
-  let client: ImapClient | null = null;
+  const shared = opts.session ?? null;
+  // LIST and CREATE do not change which mailbox is selected, so borrowing the
+  // caller's connection cannot disturb a SELECT it is relying on.
+  const session = shared ?? new ImapSession(imapSessionOpener(inbox));
   try {
-    client = await ImapClient.connect({
-      host: inbox.imap_host,
-      port: inbox.imap_port,
-      security: inbox.imap_security ?? "tls",
-      email: imapAuthUser(inbox),
-      password,
-    });
+    const client = await session.client();
     const mailboxes = await client.listMailboxes();
     const matched = matchImapAliasMailbox(mailboxes, alias);
     if (matched) return matched;
@@ -8628,9 +8773,13 @@ async function resolveImapAliasMailbox(
     return null;
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    // A command that failed mid-exchange may have left the socket
+    // desynchronised. On a borrowed connection that would poison whatever the
+    // caller does next, so drop it and let the next unit of work reconnect.
+    await session.invalidate();
     throw err;
   } finally {
-    if (client) await client.logout().catch(() => {});
+    if (!shared) await session.close();
   }
 }
 
@@ -9153,7 +9302,35 @@ async function searchImapMessages(
   search: NormalizedSearch,
   limit: number,
   offset: number,
-  includeFolders: string[],
+  /**
+   * Mailbox names, ALREADY RESOLVED by the caller. Empty means INBOX only.
+   *
+   * This used to take raw agent tokens and run each through `imapFolderName`
+   * itself, which made `include_folders` mean two different things depending on
+   * which tool you came in through (2026-09-01). email_search resolved every
+   * entry through `resolveFolderId(..., {strict: true})` first, so its entries
+   * arrived here already mapped and were then alias-mapped a SECOND time: a
+   * mailbox literally named "Archive" on a server that also advertises a
+   * \\Archive special-use folder could be re-pointed at the other one.
+   * search_and_move and search_and_delete passed the token through untouched,
+   * so a folder that did not exist came back as an opaque provider line
+   * ("Mailbox not found: Recietps") instead of the named, permanent
+   * `folder_not_found` the read tool gave for the same typo. Resolution now
+   * happens once, in the handler, for all three; this function takes the
+   * server's own mailbox names and uses them verbatim.
+   */
+  folders: string[],
+  /**
+   * Whether the caller will actually read `preview`.
+   *
+   * false costs a `BODY.PEEK[1]<0.2048>` per message and buys nothing on the
+   * two callers that never look at it: search_and_move and search_and_delete
+   * reduce the result to `messages.map((m) => m.id)`, and the MCP Apps plan
+   * sample reads only from, subject and date. At their default limit of 500
+   * that was roughly a megabyte of body prefixes fetched, parsed and dropped,
+   * inside the phase whose budget they were timing out against.
+   */
+  needPreview: boolean,
   /**
    * Reuse the caller's connection instead of opening one.
    *
@@ -9174,14 +9351,14 @@ async function searchImapMessages(
   try {
     const client = await session.client();
 
-    // Explicit includeFolders entries are user/agent-supplied tokens (e.g.
-    // "sent", "archive") and need imapFolderName's canonical-alias mapping.
     // Do not fan out by default: an IMAP SEARCH is serial per mailbox and a
     // broad body search across a large account readily exceeds the 30-second
     // tool budget. INBOX remains the useful and predictable default.
-    const folders = includeFolders.length > 0
-      ? includeFolders.map(imapFolderName)
-      : ["INBOX"];
+    //
+    // The entries themselves are NOT mapped here. They arrive resolved against
+    // the server's real layout; see the `folders` parameter for what mapping
+    // them a second time did.
+    const searchFolders = folders.length > 0 ? folders : ["INBOX"];
 
     // Translate the normalized search into RFC 3501 SEARCH criteria. The
     // translator quotes/escapes string operands; "ALL" is a valid match-all.
@@ -9204,9 +9381,36 @@ async function searchImapMessages(
     // prefixes for every selected folder, even for a 20-result page.
     const CANDIDATE_CAP = offset + limit;
 
+    // ── One FETCH or two? ────────────────────────────────────────────────────
+    // Ranking and previewing are two passes because a multi-folder search
+    // cannot know which candidates survive global pagination until every
+    // folder has been read, and downloading body prefixes for candidates that
+    // lose that sort is pure waste.
+    //
+    // With ONE folder there is no global sort to wait for: the candidate set is
+    // capped at `offset + limit` from that folder alone, so at the usual
+    // offset 0 the two passes ask for byte-identical sets of messages in a
+    // different order, and the second FETCH is entirely redundant. Both
+    // search_and_move and search_and_delete hardcode offset 0 and default to no
+    // include_folders, so that IS their case, every time, at a default page of
+    // 500 (2026-09-01). Bracketed by the email_list versus email_search gap on
+    // Yahoo, dropping the second pass is worth 0.9s at p50 and 3.0s at p90, and
+    // considerably more for those two, which were also downloading roughly a
+    // megabyte of previews they then discarded.
+    //
+    // The single pass is keyed on the folder count alone rather than on
+    // `offset === 0` as well. At a non-zero offset it fetches previews for the
+    // `offset + limit` candidates instead of the `limit` that survive, which
+    // for email_search's largest page is a few hundred KB more over one round
+    // trip instead of two. Keeping the rule to "one folder, one FETCH" is worth
+    // more here than shaving that: this function is what search_and_delete runs
+    // before it removes mail, and a branch nobody can hold in their head is how
+    // the wrong messages get deleted.
+    const singlePass = searchFolders.length === 1;
+
     let total = 0;
     const candidates: Array<{ folder: string; summary: ImapMessageSummary }> = [];
-    for (const folder of folders) {
+    for (const folder of searchFolders) {
       await session.select(folder);
       const allUids = await client.uidSearch(criteria);
       total += allUids.length;
@@ -9214,9 +9418,12 @@ async function searchImapMessages(
         .slice()
         .sort((a, b) => b - a)
         .slice(0, CANDIDATE_CAP);
-      // The first pass ranks candidates by envelope date only. Fetch previews
-      // after global pagination so discarded candidates never download bodies.
-      const summaries = await client.fetchSummaries(candidateUids, { includePreview: false });
+      // The first pass ranks candidates by envelope date. It carries the
+      // preview too when this is the only pass there will be, and when anyone
+      // is going to read it.
+      const summaries = await client.fetchSummaries(candidateUids, {
+        includePreview: singlePass && needPreview,
+      });
       for (const summary of summaries) candidates.push({ folder, summary });
     }
 
@@ -9232,27 +9439,40 @@ async function searchImapMessages(
     });
     const rankedPage = sorted.slice(offset, offset + limit);
 
-    // `preview` is a declared string field in the tool response, so fetch it
-    // for the final page only. A result page can span folders; group requests
-    // by selected mailbox and restore the ranked order afterwards.
-    const pageByFolder = new Map<string, number[]>();
-    for (const { folder, summary } of rankedPage) {
-      const uids = pageByFolder.get(folder) ?? [];
-      uids.push(summary.uid);
-      pageByFolder.set(folder, uids);
+    // `preview` is a declared string field in the tool response, so a
+    // multi-folder search fetches it for the final page only, once the global
+    // sort has settled which candidates that page actually contains. A page can
+    // span folders; group requests by selected mailbox and restore the ranked
+    // order afterwards.
+    //
+    // Skipped entirely for the single-folder case, where the ranking pass above
+    // already carried the preview, and for the callers that never read one.
+    // What is NOT done is narrowing this pass to the body prefix alone:
+    // fetchSummaries issues one fixed `UID FETCH (UID FLAGS ENVELOPE
+    // BODYSTRUCTURE BODY.PEEK[1]<0.2048>)`, so asking for less would mean a new
+    // command shape in imap-client.ts, and the single-folder skip already
+    // removes this pass from every call that was measurably hurting.
+    let page = rankedPage;
+    if (!singlePass && needPreview) {
+      const pageByFolder = new Map<string, number[]>();
+      for (const { folder, summary } of rankedPage) {
+        const uids = pageByFolder.get(folder) ?? [];
+        uids.push(summary.uid);
+        pageByFolder.set(folder, uids);
+      }
+      const previews = new Map<string, ImapMessageSummary>();
+      for (const [folder, uids] of pageByFolder) {
+        // Usually a no-op: the preview pass almost always re-selects the mailbox
+        // the ranking pass left selected, and the session elides that SELECT.
+        await session.select(folder);
+        const summaries = await client.fetchSummaries(uids);
+        for (const summary of summaries) previews.set(`${folder}\u0000${summary.uid}`, summary);
+      }
+      page = rankedPage.map(({ folder, summary }) => ({
+        folder,
+        summary: previews.get(`${folder}\u0000${summary.uid}`) ?? summary,
+      }));
     }
-    const previews = new Map<string, ImapMessageSummary>();
-    for (const [folder, uids] of pageByFolder) {
-      // Usually a no-op: the preview pass almost always re-selects the mailbox
-      // the ranking pass left selected, and the session elides that SELECT.
-      await session.select(folder);
-      const summaries = await client.fetchSummaries(uids);
-      for (const summary of summaries) previews.set(`${folder}\u0000${summary.uid}`, summary);
-    }
-    const page = rankedPage.map(({ folder, summary }) => ({
-      folder,
-      summary: previews.get(`${folder}\u0000${summary.uid}`) ?? summary,
-    }));
 
     const messages: SearchEmailSummary[] = page.map(({ folder, summary: s }) => ({
       id: encodeImapId(folder, s.uid),
@@ -9599,6 +9819,7 @@ async function executeListInbox(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   // ── Input validation ──────────────────────────────────────────────────────
   if (
@@ -9736,23 +9957,14 @@ async function executeListInbox(
       );
     }
 
-    console.error("[mcp-server] email_list: provider_error", {
-      inbox_id: inboxId,
+    return providerFailure({
+      tool: "email_list",
       provider: inbox.provider,
-      error: message,
+      inboxId,
+      error: err,
+      boundary: "read",
+      text: `Provider error while listing inbox: ${message}. Please try again in a moment.`,
     });
-
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Provider error while listing inbox: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
@@ -10741,6 +10953,7 @@ async function executeReadEmail(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   // ── Input validation ──────────────────────────────────────────────────────
   if (
@@ -10856,24 +11069,15 @@ async function executeReadEmail(
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
 
-    console.error("[mcp-server] email_read: provider_error", {
-      inbox_id: inboxId,
+    return providerFailure({
+      tool: "email_read",
       provider: inbox.provider,
-      message_id: messageId,
-      error: message,
+      inboxId,
+      error: err,
+      boundary: "read",
+      text: `Provider error while reading email: ${message}. Please try again in a moment.`,
+      logContext: { message_id: messageId },
     });
-
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Provider error while reading email: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
@@ -11093,6 +11297,7 @@ async function executeReadOriginal(
   result: { content: Record<string, unknown>[]; structuredContent?: Record<string, unknown>; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const toolError = (text: string, code: string) => ({
     result: { content: [{ type: "text", text }], isError: true },
@@ -11224,6 +11429,7 @@ async function executeReadAttachment(
   };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const toolError = (text: string, code: string) => ({
     result: { content: [{ type: "text", text }], isError: true },
@@ -11526,6 +11732,7 @@ async function executeExtractAttachment(
   result: { content: Record<string, unknown>[]; structuredContent?: Record<string, unknown>; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   // Reuse the selection, permission, provider, and size-limit path of the
   // downloader. The extracted response below intentionally discards `data`.
@@ -11588,6 +11795,7 @@ async function executeReadEmails(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   // ── Input validation ──────────────────────────────────────────────────────
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
@@ -13135,6 +13343,7 @@ async function executeForwardEmail(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   // ── Input validation ──────────────────────────────────────────────────────
   if (
@@ -13403,27 +13612,23 @@ async function executeForwardEmail(
     }
 
     // Unknown provider error — do not include raw error detail.
-    console.error("[mcp-server] email_forward: provider_error", {
-      inbox_id: inboxId,
+    //
+    // LEDGER BOUNDARY: the code stays `provider_error`, which is what maps this
+    // request to ledger status "unknown" and lets a retry carrying the same
+    // idempotency_key replay. The sentence below and that mapping say the same
+    // thing, and they have to keep saying it together.
+    return providerFailure({
+      tool: "email_forward",
       provider: inbox.provider,
-      error: message,
+      inboxId,
+      error: err,
+      boundary: "ledger",
+      text:
+        `An error occurred while forwarding the message via ${inbox.provider}. ` +
+        "The message may or may not have been delivered. " +
+        "Do not retry automatically to avoid duplicate delivery.",
+      resultExtra: { delivery_status: "unknown" },
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `An error occurred while forwarding the message via ${inbox.provider}. ` +
-            "The message may or may not have been delivered. " +
-            "Do not retry automatically to avoid duplicate delivery.",
-        }],
-        isError: true,
-        // @ts-ignore — delivery_status is an extension field per the MCP tool design doc.
-        delivery_status: "unknown",
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // Fwd: <the original sender's subject> — same derivation as email_reply.
@@ -13462,6 +13667,7 @@ async function executeReplyToEmail(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   // ── Input validation ──────────────────────────────────────────────────────
   if (
@@ -13792,27 +13998,19 @@ async function executeReplyToEmail(
     }
 
     // Unknown provider error — do not include raw error detail.
-    console.error("[mcp-server] email_reply: provider_error", {
-      inbox_id: inboxId,
+    // LEDGER BOUNDARY: see the matching branch in executeForwardEmail.
+    return providerFailure({
+      tool: "email_reply",
       provider: inbox.provider,
-      error: message,
+      inboxId,
+      error: err,
+      boundary: "ledger",
+      text:
+        `An error occurred while sending the reply via ${inbox.provider}. ` +
+        "The message may or may not have been delivered. " +
+        "Do not retry automatically to avoid duplicate delivery.",
+      resultExtra: { delivery_status: "unknown" },
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text:
-            `An error occurred while sending the reply via ${inbox.provider}. ` +
-            "The message may or may not have been delivered. " +
-            "Do not retry automatically to avoid duplicate delivery.",
-        }],
-        isError: true,
-        // @ts-ignore — delivery_status is an extension field per the MCP tool design doc.
-        delivery_status: "unknown",
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // Re: <the original sender's subject>, plus recipient display names lifted
@@ -14241,6 +14439,7 @@ async function executeSendEmail(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   // ── Input validation ──────────────────────────────────────────────────────
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
@@ -14584,28 +14783,20 @@ async function executeSendEmail(
 
     // Unknown provider error — log it but do NOT include raw error detail
     // in the response (may contain provider internals or account info).
-    console.error("[mcp-server] email_send: provider_error", {
-      inbox_id: inboxId,
+    // LEDGER BOUNDARY: see the matching branch in executeForwardEmail.
+    return providerFailure({
+      tool: "email_send",
       provider: inbox.provider,
-      error: message,
+      inboxId,
+      error: err,
+      boundary: "ledger",
+      // Warn caller not to retry automatically — the message may have been delivered.
+      text:
+        `Provider error while sending email: ${message}. ` +
+        "The message delivery status is unknown — do NOT retry automatically " +
+        "as this may result in duplicate sends. Check your Sent folder to " +
+        "confirm whether the message was delivered.",
     });
-
-    return {
-      result: {
-        content: [{
-          type: "text",
-          // Warn caller not to retry automatically — the message may have been delivered.
-          text:
-            `Provider error while sending email: ${message}. ` +
-            "The message delivery status is unknown — do NOT retry automatically " +
-            "as this may result in duplicate sends. Check your Sent folder to " +
-            "confirm whether the message was delivered.",
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
@@ -14662,7 +14853,8 @@ interface SearchEmailsResult {
  * Provider-native search executes server-side; only matching IDs are returned
  * in the first response, then metadata is fetched in parallel.
  *
- * Timeout is enforced by the caller (executeSearchEmails) via Promise.race.
+ * Timeout is enforced by the caller (executeSearchEmails), which runs this
+ * through `raceSearchWithTimeout`.
  */
 async function searchGmailMessages(
   inbox: InboxRow,
@@ -14989,6 +15181,14 @@ function searchMessagesForProvider(
   offset = 0,
   /** Provider-native folder ids to scope the search to. Empty means all mail. */
   includeFolders: string[] = [],
+  /**
+   * Whether the caller will read `preview`. Defaults to false because neither
+   * caller does: the triage runner deliberately drops preview on the way out
+   * (body content has no business in a rule template or a run log), and the
+   * filter-preview route returns only id, subject, from, date and unread. On
+   * IMAP that saves a 2 KB body prefix per candidate message.
+   */
+  needPreview = false,
 ): Promise<SearchEmailsResult> {
   switch (inbox.provider) {
     case "gmail":
@@ -14996,7 +15196,7 @@ function searchMessagesForProvider(
     case "outlook":
       return searchOutlookMessages(inbox, search, limit, offset, includeFolders);
     case "imap":
-      return searchImapMessages(inbox, search, limit, offset, includeFolders);
+      return searchImapMessages(inbox, search, limit, offset, includeFolders, needPreview);
     default:
       return Promise.reject(new Error("unsupported_provider"));
   }
@@ -15127,9 +15327,10 @@ function noSearchCriterionError(): {
  * JMAP `Email/query` with `text` filter), and returns up to 100 matching
  * email summaries.
  *
- * A 30-second timeout is enforced via Promise.race. If the provider does not
- * respond within the window, `search_timeout` is returned so MCP clients can
- * prompt the user to simplify their query.
+ * A 30-second timeout is enforced via `raceSearchWithTimeout`. If the provider
+ * does not respond within the window, `search_timeout` is returned so MCP
+ * clients can prompt the user to simplify their query, and, on IMAP, the
+ * connection is destroyed rather than left running a command nobody will read.
  *
  * Never throws — all errors are captured as structured ToolErrors.
  *
@@ -15147,6 +15348,7 @@ async function executeSearchEmails(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   // ── Input validation ──────────────────────────────────────────────────────
   if (
@@ -15192,66 +15394,83 @@ async function executeSearchEmails(
   if (!resolved.ok) return inboxResolutionError(resolved, "email_search");
   const inbox = resolved.inbox;
   const inboxId = inbox.id;
+  // Read once, up here, because the provider switch further down narrows
+  // `inbox.provider` to the three cases it handles for everything that follows
+  // it, and the raw-`query` branch in the error path still has to be able to
+  // ask whether this inbox is an IMAP-family one.
+  const providerName = inbox.provider;
 
-  // ── Folder addressing ─────────────────────────────────────────────────────
-  // `include_folders` takes folder NAMES and carried the same hazard as
-  // email_list's `folder`: a name Gmail does not recognise as a label id was
-  // forwarded verbatim and came back as "Invalid label". Resolve each entry
-  // through the shared seam so a name, an id and an alias all work — and so an
-  // entry that matches nothing fails as a permanent, named error.
-  const resolvedFolders: string[] = [];
-  try {
-    for (const f of includeFolders) {
-      if (!f.trim()) continue; // a blank entry scopes nothing; it is not an error
-      resolvedFolders.push(await resolveFolderId(inbox, f, { strict: true }));
-    }
-  } catch (err) {
-    if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
-    const message = err instanceof Error ? err.message : String(err);
-    if (
-      message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
-      message === "fastmail_auth_failed" || message === "imap_auth_failed"
-    ) {
-      return authFailedResult(inbox.provider, inbox.id, "access");
-    }
-    throw err;
-  }
-
-  // ── Provider dispatch with 30-second timeout ──────────────────────────────
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("search_timeout")), SEARCH_TIMEOUT_MS)
-  );
+  // ── One IMAP connection for the whole call ───────────────────────────────
+  // Opened here rather than inside searchImapMessages so that BOTH halves of
+  // the call use it: the include_folders resolution below, which costs one LIST
+  // per entry and used to open, authenticate and log out its own connection for
+  // every one of them, and the search itself. On Yahoo, which caps an account
+  // at 5 simultaneous IMAP connections, a three-folder search was opening four
+  // connections to do the work of one (2026-09-01).
+  //
+  // The second reason is cancellation. searchImapMessages owned the session
+  // when it created its own, so when the timeout below fired this handler had
+  // nothing to cancel: it returned, the search promise was orphaned, and the
+  // socket carried on with a UID SEARCH or UID FETCH whose result nobody would
+  // read until the provider's idle timeout reclaimed the slot, or until the
+  // isolate was recycled with the connection still open. Holding the session
+  // here is what makes `session.abort()` reachable from the timeout branch.
+  const session = imapSessionFor(inbox);
 
   let searchResult: SearchEmailsResult;
   try {
-    let searchPromise: Promise<SearchEmailsResult>;
+    // ── Folder addressing ───────────────────────────────────────────────────
+    // `include_folders` takes folder NAMES and carried the same hazard as
+    // email_list's `folder`: a name Gmail does not recognise as a label id was
+    // forwarded verbatim and came back as "Invalid label". Resolve each entry
+    // through the shared seam so a name, an id and an alias all work, and so an
+    // entry that matches nothing fails as a permanent, named error.
+    let resolvedFolders: string[];
+    try {
+      resolvedFolders = await resolveIncludeFolders(inbox, includeFolders, session);
+    } catch (err) {
+      if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
+      const message = err instanceof Error ? err.message : String(err);
+      if (
+        message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
+        message === "fastmail_auth_failed" || message === "imap_auth_failed"
+      ) {
+        return authFailedResult(inbox.provider, inbox.id, "access");
+      }
+      throw err;
+    }
+
+    // ── Provider dispatch with 30-second timeout ────────────────────────────
+    // The provider call is built as a thunk rather than started here, because
+    // `raceSearchWithTimeout` is what starts it and what owns the deadline: it
+    // clears the timer when the search wins, and when the timer wins it kills
+    // the IMAP socket before delivering the rejection rather than walking away
+    // from a live command. See bulk-budget.ts for the production measurements
+    // that make a plain `Promise.race` the wrong primitive here.
+    let startSearch: () => Promise<SearchEmailsResult>;
     switch (inbox.provider) {
       case "gmail":
-        searchPromise = searchGmailMessages(
-          inbox,
-          search,
-          limit,
-          offset,
-          resolvedFolders,
-        );
+        startSearch = () =>
+          searchGmailMessages(inbox, search, limit, offset, resolvedFolders);
         break;
       case "outlook":
-        searchPromise = searchOutlookMessages(
-          inbox,
-          search,
-          limit,
-          offset,
-          resolvedFolders,
-        );
+        startSearch = () =>
+          searchOutlookMessages(inbox, search, limit, offset, resolvedFolders);
         break;
       case "imap":
-        searchPromise = searchImapMessages(
-          inbox,
-          search,
-          limit,
-          offset,
-          resolvedFolders,
-        );
+        // needPreview is true here and only here: email_search DECLARES
+        // `preview` in its response schema and an agent reads it to decide what
+        // to open, so this is the one caller that must pay for the body prefix.
+        startSearch = () =>
+          searchImapMessages(
+            inbox,
+            search,
+            limit,
+            offset,
+            resolvedFolders,
+            true,
+            session ?? undefined,
+          );
         break;
       default:
         return {
@@ -15269,102 +15488,135 @@ async function executeSearchEmails(
         };
     }
 
-    searchResult = await Promise.race([searchPromise, timeoutPromise]);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    try {
+      searchResult = await raceSearchWithTimeout(
+        startSearch,
+        SEARCH_TIMEOUT_MS,
+        // Nothing to cancel on the HTTP providers: abandoning a fetch costs a
+        // socket the OS reaps, not one of the five slots the account is allowed.
+        session ? () => session.abort() : null,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
 
-    // Timeout
-    if (message === "search_timeout") {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              "Search timed out after 30 seconds. Try a simpler or more specific query.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "search_timeout",
-      };
+      // Timeout
+      if (message === "search_timeout") {
+        return {
+          result: {
+            content: [{
+              type: "text",
+              text:
+                "Search timed out after 30 seconds. Try a simpler or more specific query.",
+            }],
+            isError: true,
+          },
+          logStatus: "error",
+          logErrorCode: "search_timeout",
+        };
+      }
+
+      // MISCATEGORISATION FIX (2026-09-01). The branch above only ever matched
+      // our OWN timeout sentinel, the one `raceSearchWithTimeout` throws at
+      // SEARCH_TIMEOUT_MS. A search that instead stalled inside the IMAP client
+      // came back as "IMAP read timeout" from its per-command withTimeout at 15s,
+      // matched nothing here, and fell all the way through to the generic
+      // provider branch at the bottom, where it was logged as `provider_error`.
+      // That is how 7 timeouts in a single day (IONOS and Yahoo) ended up inside
+      // the 538-row bucket nobody could read. It is a timeout, so it logs the
+      // taxonomy's timeout code.
+      //
+      // It gets its own sentence rather than borrowing the one above, because the
+      // one above names a budget (30 seconds) that is not the budget this failure
+      // hit, and telling an agent to simplify a query it never got to run would
+      // point it at the wrong fix.
+      if (classifyProviderError(err) === "read_timeout") {
+        return providerFailure({
+          tool: "email_search",
+          provider: inbox.provider,
+          inboxId,
+          error: err,
+          boundary: "read",
+          text:
+            "The mail server stopped responding partway through the search, so no " +
+            "results were returned. Nothing is wrong with the query. Retry it, and " +
+            "if it keeps stalling narrow the folders searched with include_folders.",
+        });
+      }
+
+      // Auth failures
+      const isAuthFailure =
+        message === "gmail_auth_failed" ||
+        message === "outlook_auth_failed" ||
+        message === "fastmail_auth_failed" ||
+        message === "imap_auth_failed";
+
+      if (isAuthFailure) {
+        return authFailedResult(inbox.provider, inbox.id, "access");
+      }
+
+      // Provider-signalled invalid query (Outlook 400 responses)
+      if (message.startsWith("outlook_invalid_query:")) {
+        return {
+          result: {
+            content: [{
+              type: "text",
+              text:
+                "The search query was rejected by the provider as invalid. " +
+                "For Outlook, use KQL syntax (e.g., 'from:alice@example.com subject:report'). " +
+                `Provider detail: ${message.slice("outlook_invalid_query: ".length)}`,
+            }],
+            isError: true,
+          },
+          logStatus: "error",
+          logErrorCode: "invalid_query",
+        };
+      }
+
+      // Raw `query` escape-hatch rejected by an IMAP-family provider. The `query`
+      // field is passed through to the server's native search syntax (RFC 3501
+      // for IMAP), so a typo or Gmail-style operator surfaces an opaque line like
+      // "UID SEARCH: Unknown argument FROM:X". Translate that into actionable
+      // guidance instead of leaking the raw IMAP error.
+      if (
+        search.raw &&
+        (providerName === "imap" || providerName === "fastmail") &&
+        /UID SEARCH|Unknown argument|SEARCH:/i.test(message)
+      ) {
+        return {
+          result: {
+            content: [{
+              type: "text",
+              text:
+                "The `query` field is a raw, provider-native search expression " +
+                "(IMAP RFC 3501 SEARCH syntax for this inbox) and was rejected by " +
+                "the mail server. Prefer the structured search fields instead — " +
+                "from, to, subject, body, text, unread, since, before — which are " +
+                "translated to the correct syntax for every provider. For example, " +
+                'use { "from": "alice", "subject": "report", "unread": true } ' +
+                "rather than a raw `query` string.",
+            }],
+            isError: true,
+          },
+          logStatus: "error",
+          logErrorCode: "invalid_query",
+        };
+      }
+
+      return providerFailure({
+        tool: "email_search",
+        provider: inbox.provider,
+        inboxId,
+        error: err,
+        boundary: "read",
+        text: `Provider error while searching emails: ${message}. Please try again in a moment.`,
+      });
     }
-
-    // Auth failures
-    const isAuthFailure =
-      message === "gmail_auth_failed" ||
-      message === "outlook_auth_failed" ||
-      message === "fastmail_auth_failed" ||
-      message === "imap_auth_failed";
-
-    if (isAuthFailure) {
-      return authFailedResult(inbox.provider, inbox.id, "access");
-    }
-
-    // Provider-signalled invalid query (Outlook 400 responses)
-    if (message.startsWith("outlook_invalid_query:")) {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              "The search query was rejected by the provider as invalid. " +
-              "For Outlook, use KQL syntax (e.g., 'from:alice@example.com subject:report'). " +
-              `Provider detail: ${message.slice("outlook_invalid_query: ".length)}`,
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "invalid_query",
-      };
-    }
-
-    // Raw `query` escape-hatch rejected by an IMAP-family provider. The `query`
-    // field is passed through to the server's native search syntax (RFC 3501
-    // for IMAP), so a typo or Gmail-style operator surfaces an opaque line like
-    // "UID SEARCH: Unknown argument FROM:X". Translate that into actionable
-    // guidance instead of leaking the raw IMAP error.
-    if (
-      search.raw &&
-      (inbox.provider === "imap" || inbox.provider === "fastmail") &&
-      /UID SEARCH|Unknown argument|SEARCH:/i.test(message)
-    ) {
-      return {
-        result: {
-          content: [{
-            type: "text",
-            text:
-              "The `query` field is a raw, provider-native search expression " +
-              "(IMAP RFC 3501 SEARCH syntax for this inbox) and was rejected by " +
-              "the mail server. Prefer the structured search fields instead — " +
-              "from, to, subject, body, text, unread, since, before — which are " +
-              "translated to the correct syntax for every provider. For example, " +
-              'use { "from": "alice", "subject": "report", "unread": true } ' +
-              "rather than a raw `query` string.",
-          }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "invalid_query",
-      };
-    }
-
-    console.error("[mcp-server] email_search: provider_error", {
-      inbox_id: inboxId,
-      provider: inbox.provider,
-      error: message,
-    });
-
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Provider error while searching emails: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
+  } finally {
+    // Closed on every exit path, including every early return above. After an
+    // abort this is a no-op, because the session has already dropped the
+    // client; on the ordinary path it hands the connection back to the provider
+    // now rather than leaving it for the server's idle timeout.
+    if (session) await session.close();
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
@@ -15645,7 +15897,27 @@ function listFoldersForProvider(inbox: InboxRow): Promise<FolderEntry[]> {
 async function resolveFolderId(
   inbox: InboxRow,
   nameOrId: string,
-  opts: { strict?: boolean } = {},
+  opts: {
+    strict?: boolean;
+    /**
+     * IMAP only: resolve on the caller's connection instead of opening one.
+     *
+     * On IMAP every branch below that is not a plain "inbox" costs a LIST, and
+     * until 2026-09-01 each of them opened, authenticated and logged out its own
+     * connection to issue it. In `email_search_and_move` that ran BEFORE the
+     * shared session was even created, so the comment there claiming the double
+     * connect was gone was true of the search/act pair and false of the call as
+     * a whole: it still paid two handshakes, roughly 1.7s at p50 and 3.4s at p90
+     * on Yahoo, none of it counted by the wall-clock budget, and it held a
+     * second slot against Yahoo's 5-connection-per-account cap while doing so.
+     * `email_search` paid the same again per include_folders entry.
+     *
+     * Passing the session the caller already owns makes the resolve one LIST on
+     * a connection the search needs anyway. `ImapSession.connectCount` is the
+     * assertion that it worked.
+     */
+    session?: ImapSession<ImapClient> | null;
+  } = {},
 ): Promise<string> {
   const trimmed = nameOrId.trim();
   if (!trimmed) throw new Error("folder_required");
@@ -15679,7 +15951,7 @@ async function resolveFolderId(
         const resolvedName = await resolveImapAliasMailbox(
           inbox,
           alias,
-          { createIfMissing: isArchive && !opts.strict },
+          { createIfMissing: isArchive && !opts.strict, session: opts.session },
         );
         if (resolvedName) return resolvedName;
         if (opts.strict) {
@@ -15704,7 +15976,7 @@ async function resolveFolderId(
   // For a Fastmail (or fell-through) alias, also try matching the canonical
   // IMAP-style name (e.g. alias "trash" → mailbox named "Trash") so role-less
   // listings still resolve common folders.
-  const folders = await folderReferencesForProvider(inbox);
+  const folders = await folderReferencesForProvider(inbox, opts.session);
   const aliasNames = alias ? [alias.imap, ...alias.aliases] : [];
 
   const match = resolveFolderReference(trimmed, folders, {
@@ -15727,6 +15999,44 @@ async function resolveFolderId(
     });
   }
   return trimmed;
+}
+
+/**
+ * Resolve every `include_folders` entry to a provider-native folder id.
+ *
+ * Shared by `email_search`, `email_search_and_move` and `email_search_and_delete`
+ * from 2026-09-01, because until then `include_folders` meant two different
+ * things depending on which of them you called. email_search resolved each entry
+ * strictly, so "Recietps" came back as a named, permanent `folder_not_found`
+ * naming the typo. The two search_and_* tools passed the raw token straight to
+ * the provider, so the same typo came back as whatever that provider says when
+ * it cannot find a mailbox, wrapped in "Please try again in a moment" for a
+ * condition that will never stop failing. One argument on three tools should
+ * not have two meanings, and the read tool's version is plainly the better one.
+ *
+ * The consequence worth stating: on the two mutating tools a bad
+ * `include_folders` entry now logs `folder_not_found` instead of
+ * `provider_error`. That is a change to how the outbound idempotency ledger
+ * settles for that case, from "unknown" (a retry replays) to "failed" (it does
+ * not), and it is the correct settlement: the search never ran, no mailbox was
+ * touched, and replaying the identical call would fail identically. Nothing
+ * about the timeout or provider-failure branches changes.
+ *
+ * A blank entry scopes nothing and is skipped rather than rejected, matching
+ * what email_search has always done with one.
+ */
+async function resolveIncludeFolders(
+  inbox: InboxRow,
+  includeFolders: string[],
+  /** IMAP only: resolve on the caller's connection. See resolveFolderId. */
+  session: ImapSession<ImapClient> | null,
+): Promise<string[]> {
+  const resolved: string[] = [];
+  for (const f of includeFolders) {
+    if (!f.trim()) continue;
+    resolved.push(await resolveFolderId(inbox, f, { strict: true, session }));
+  }
+  return resolved;
 }
 
 /**
@@ -15762,7 +16072,14 @@ function gmailArchiveHint(
  * sequential STATUS per mailbox on IMAP. `folder action: list` still pays for
  * them because a human is reading that output; addressing a folder should not.
  */
-async function folderReferencesForProvider(inbox: InboxRow): Promise<FolderReference[]> {
+async function folderReferencesForProvider(
+  inbox: InboxRow,
+  /**
+   * IMAP only: do the LIST on the caller's connection instead of opening one.
+   * See {@link resolveFolderId}'s `session`.
+   */
+  sharedSession?: ImapSession<ImapClient> | null,
+): Promise<FolderReference[]> {
   switch (inbox.provider) {
     case "gmail": {
       const labels = await gmailListLabelRefs(inbox);
@@ -15787,23 +16104,20 @@ async function folderReferencesForProvider(inbox: InboxRow): Promise<FolderRefer
       if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
         throw new Error("imap_auth_failed");
       }
-      const password = await decryptStoredToken(inbox.imap_password);
-      let client: ImapClient | null = null;
+      const shared = sharedSession ?? null;
+      const session = shared ?? new ImapSession(imapSessionOpener(inbox));
       try {
-        client = await ImapClient.connect({
-          host: inbox.imap_host,
-          port: inbox.imap_port,
-          security: inbox.imap_security ?? "tls",
-          email: imapAuthUser(inbox),
-          password,
-        });
+        const client = await session.client();
         const mailboxes = await client.listMailboxes();
         return mailboxes.map((mb) => ({ id: mb.name, name: mb.name }));
       } catch (err) {
         if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+        // Do not hand a possibly-desynchronised socket back to the caller that
+        // lent it; the next unit of work opens a fresh one.
+        await session.invalidate();
         throw err;
       } finally {
-        if (client) await client.logout().catch(() => {});
+        if (!shared) await session.close();
       }
     }
   }
@@ -15858,6 +16172,7 @@ async function executeListFolders(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   // ── Validate args ──────────────────────────────────────────────────────────
   if (
@@ -15907,22 +16222,14 @@ async function executeListFolders(
     if (isAuth) {
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
-    console.error("[mcp-server] folder_list: provider_error", {
-      inbox_id: inbox.id,
+    return providerFailure({
+      tool: "folder_list",
       provider: inbox.provider,
-      error: message,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "read",
+      text: `Failed to list folders for ${inbox.provider} inbox: ${message}`,
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Failed to list folders for ${inbox.provider} inbox: ${message}`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // ── activity_log written by handleToolsCall ────────────────────────────────
@@ -16352,7 +16659,7 @@ function folderProviderError(
   provider: string,
   inboxId: string,
   err: unknown,
-): { result: { content: { type: string; text: string }[]; isError: boolean }; logStatus: "error"; logErrorCode: string } {
+): ToolErrorResult {
   // Already mapped to a structured, actionable error by the provider helper:
   // return it as-is (shaped like the permanent-delete refusal — a JSON body
   // naming the error, the provider and the remedy) rather than flattening it
@@ -16412,18 +16719,20 @@ function folderProviderError(
       logErrorCode: "folder_already_exists",
     };
   }
-  console.error(`[mcp-server] ${toolName}: provider_error`, { provider, error: message });
-  return {
-    result: {
-      content: [{
-        type: "text",
-        text: `Failed to ${toolName} for ${provider} inbox: ${message}`,
-      }],
-      isError: true,
-    },
-    logStatus: "error",
-    logErrorCode: "provider_error",
-  };
+  // folder_create / folder_rename / folder_delete. None of the three accepts an
+  // idempotency_key (neither IDEMPOTENT_OUTBOUND_OPERATIONS nor
+  // IDEMPOTENT_MUTATION_OPERATIONS lists them), so nothing they return can
+  // settle the outbound ledger and the code is free to narrow. That is worth
+  // saying out loud because these are writes, and "writes are always ledger"
+  // is a reasonable-sounding rule that would be wrong here.
+  return providerFailure({
+    tool: toolName,
+    provider,
+    inboxId,
+    error: err,
+    boundary: "read",
+    text: `Failed to ${toolName} for ${provider} inbox: ${message}`,
+  });
 }
 
 // ── folder_create handler ──────────────────────────────────────────────────
@@ -16441,6 +16750,7 @@ async function executeCreateFolder(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveFolderArgs(rawArgs, "folder_create", apiKey, false);
   if (resolved.error) return resolved.error;
@@ -16510,6 +16820,7 @@ async function executeRenameFolder(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveFolderArgs(rawArgs, "folder_rename", apiKey, true);
   if (resolved.error) return resolved.error;
@@ -16583,6 +16894,7 @@ async function executeDeleteFolder(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveFolderArgs(rawArgs, "folder_delete", apiKey, true);
   if (resolved.error) return resolved.error;
@@ -17190,11 +17502,7 @@ function handleFlagError(
   inboxId: string,
   provider: string,
   messageId: string,
-): {
-  result: { content: { type: string; text: string }[]; isError: boolean };
-  logStatus: "error";
-  logErrorCode: string;
-} {
+): ToolErrorResult {
   const message = err instanceof Error ? err.message : String(err);
 
   if (message === "message_not_found") {
@@ -17224,24 +17532,25 @@ function handleFlagError(
     return authFailedResult(provider, inboxId, "access");
   }
 
-  console.error(`[mcp-server] ${toolName}: provider_error`, {
-    inbox_id: inboxId,
+  // LEDGER BOUNDARY. Every caller of this helper (email_move, email_copy,
+  // email_delete, email_archive, email_flag) is in
+  // IDEMPOTENT_MUTATION_OPERATIONS, so its logged code decides whether a retry
+  // carrying the same idempotency_key replays or is refused. It stays
+  // `provider_error` whatever the classifier concluded; see providerFailure.
+  //
+  // The classification is still worth having here even though it changes
+  // nothing about the code: "Mailbox not found: Junk" and "IMAP read timeout"
+  // are different operator problems, and until now a move that hit either of
+  // them was a row in the same undifferentiated bucket.
+  return providerFailure({
+    tool: toolName,
     provider,
-    message_id: messageId,
-    error: message,
+    inboxId,
+    error: err,
+    boundary: "ledger",
+    text: `Provider error during ${toolName}: ${message}. Please try again in a moment.`,
+    logContext: { message_id: messageId },
   });
-
-  return {
-    result: {
-      content: [{
-        type: "text",
-        text: `Provider error during ${toolName}: ${message}. Please try again in a moment.`,
-      }],
-      isError: true,
-    },
-    logStatus: "error",
-    logErrorCode: "provider_error",
-  };
 }
 
 // ── Top-level execute functions ────────────────────────────────────────────
@@ -17254,6 +17563,7 @@ async function executeArchiveEmail(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveFlagArgs(rawArgs, "email_archive", apiKey);
   if (resolved.error) return resolved.error;
@@ -17457,6 +17767,7 @@ async function executeMoveEmail(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveFlagArgs(rawArgs, "email_move", apiKey);
   if (resolved.error) return resolved.error;
@@ -17498,22 +17809,17 @@ async function executeMoveEmail(
     // hiding the real cause and misdirecting the caller into "fixing" a param that
     // was never wrong.
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] email_move: resolve_destination_error", {
-      inbox_id: inbox.id,
+    // LEDGER BOUNDARY: email_move accepts an idempotency_key, so the code stays
+    // `provider_error` and only the details are new. See providerFailure.
+    return providerFailure({
+      tool: "email_move",
       provider: inbox.provider,
-      error: message,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
+      logContext: { phase: "resolve_destination" },
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // ── Per-provider dispatch ────────────────────────────────────────────────
@@ -17648,6 +17954,7 @@ async function executeCopyEmail(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveFlagArgs(rawArgs, "email_copy", apiKey);
   if (resolved.error) return resolved.error;
@@ -17685,22 +17992,17 @@ async function executeCopyEmail(
     // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
     // only throw here on a genuine provider/network failure, not bad input.
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] email_copy: resolve_destination_error", {
-      inbox_id: inbox.id,
+    // LEDGER BOUNDARY: email_copy accepts an idempotency_key, so the code stays
+    // `provider_error` and only the details are new. See providerFailure.
+    return providerFailure({
+      tool: "email_copy",
       provider: inbox.provider,
-      error: message,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
+      logContext: { phase: "resolve_destination" },
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // ── Per-provider dispatch ────────────────────────────────────────────────
@@ -17870,6 +18172,7 @@ async function executeDeleteEmail(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveFlagArgs(rawArgs, "email_delete", apiKey);
   if (resolved.error) return resolved.error;
@@ -18187,6 +18490,63 @@ function partialFieldsFor(
 }
 
 /**
+ * The stable, snake_case sentinels the per-provider bulk helpers really do
+ * produce. Anything else in a `failed[].error` is unclassified provider prose.
+ */
+const KNOWN_BULK_ERROR_CODES = new Set([
+  "gmail_auth_failed",
+  "outlook_auth_failed",
+  "fastmail_auth_failed",
+  "imap_auth_failed",
+  "message_not_found",
+  "invalid_message_id",
+  "invalid_action",
+  "folder_not_found",
+]);
+
+/**
+ * Turn one bulk-op per-item `error` string into an `activity_log.error_code`.
+ *
+ * ── WHY THIS IS NOT JUST A PASS-THROUGH ─────────────────────────────────────
+ * The per-item string is not always a code. The Gmail, Outlook and IMAP bulk
+ * helpers fall back to raw, unclassified text for any failure they do not
+ * recognise: "Gmail modify failed: 400", or whatever ImapClient threw, which
+ * for a UID COPY into a mailbox that is not there is "UID COPY failed:
+ * [NONEXISTENT] Mailbox does not exist". `formatBulkResult` has gated that
+ * since 2026-07-28, because error_code is what monitoring groups on and an
+ * interpolated status makes every occurrence its own ungroupable value.
+ *
+ * The automation runner had no such gate. `applyTriageAction` returned
+ * `failed[0].error` verbatim, and the runner's meter writes that straight into
+ * `activity_log.error_code`, which is how "UID COPY failed: [NONEXISTENT]
+ * Mailbox does not exist" ended up in the code column itself with 10 rows over
+ * the 28 days ending 2026-09-01. Both callers now come through here.
+ *
+ * ── WHY THE BOUNDARY ARGUMENT ───────────────────────────────────────────────
+ * Unrecognised text can be CLASSIFIED rather than flattened to
+ * `provider_error`, so that example reads `folder_not_found`, which is a code
+ * this taxonomy already had and which says what an operator needs to know. But
+ * that narrowing is only safe where the resulting code cannot settle the
+ * outbound idempotency ledger, and `formatBulkResult` is not such a place:
+ * email_move_batch, email_copy_batch, email_delete_batch, email_flag and the
+ * search_and_* pair are all in IDEMPOTENT_MUTATION_OPERATIONS, so moving one of
+ * their total failures off `provider_error` would move the ledger from
+ * "unknown" to "failed" and change whether a keyed retry replays.
+ *
+ * So `formatBulkResult` passes "ledger" and keeps exactly the codes it logged
+ * before, and only the automation runner (which never claims the ledger, see
+ * providerErrorCode) passes "read".
+ */
+function bulkFailureErrorCode(
+  error: string | undefined,
+  boundary: ProviderErrorBoundary,
+): string {
+  if (!error) return "provider_error";
+  if (KNOWN_BULK_ERROR_CODES.has(error)) return error;
+  return providerErrorLogCode(classifyProviderError(error), boundary);
+}
+
+/**
  * Builds the standard JSON-RPC result for a bulk operation.
  * logStatus is "success" when at least one message succeeded (partial success
  * is still success from the operator's perspective); "error" when all failed.
@@ -18210,6 +18570,7 @@ function formatBulkResult(
   result: { content: { type: string; text: string }[] };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 } {
   // The per-id `error` a bulk helper records is a sentinel; the caller needs a
   // sentence. Translating here, at the point the result is rendered, is what
@@ -18252,18 +18613,10 @@ function formatBulkResult(
     // anything else (including every raw-status-string case above) collapses
     // to "provider_error", matching how single-message operations already
     // classify non-401/404 provider failures.
-    const KNOWN_BULK_ERROR_CODES = new Set([
-      "gmail_auth_failed",
-      "outlook_auth_failed",
-      "fastmail_auth_failed",
-      "imap_auth_failed",
-      "message_not_found",
-      "invalid_message_id",
-      "invalid_action",
-      "folder_not_found",
-    ]);
-    logErrorCode = distinctErrors.size === 1 && KNOWN_BULK_ERROR_CODES.has(failed[0].error)
-      ? failed[0].error
+    // "ledger": every bulk tool that reaches this accepts an idempotency_key,
+    // so this must keep returning exactly what it returned before 2026-09-01.
+    logErrorCode = distinctErrors.size === 1
+      ? bulkFailureErrorCode(failed[0].error, "ledger")
       : "provider_error";
   }
   return {
@@ -19055,6 +19408,7 @@ async function executeBulkMove(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveBulkArgs(rawArgs, "email_move_batch", apiKey);
   if (resolved.error) return resolved.error;
@@ -19092,22 +19446,17 @@ async function executeBulkMove(
     // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
     // only throw here on a genuine provider/network failure, not bad input.
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] email_move_batch: resolve_destination_error", {
-      inbox_id: inbox.id,
+    // LEDGER BOUNDARY: email_move_batch accepts an idempotency_key, so the code stays
+    // `provider_error` and only the details are new. See providerFailure.
+    return providerFailure({
+      tool: "email_move_batch",
       provider: inbox.provider,
-      error: message,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
+      logContext: { phase: "resolve_destination" },
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // ── MCP Apps: plan instead of execute ────────────────────────────────────
@@ -19136,22 +19485,16 @@ async function executeBulkMove(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await failBulkRun(runId, "provider_error");
-    console.error("[mcp-server] email_move_batch: provider_error", {
-      inbox_id: inbox.id,
+    // LEDGER BOUNDARY: email_move_batch accepts an idempotency_key, so the code stays
+    // `provider_error` and only the details are new. See providerFailure.
+    return providerFailure({
+      tool: "email_move_batch",
       provider: inbox.provider,
-      error: message,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Provider error during email_move_batch: ${message}. Please try again in a moment.`,
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Provider error during email_move_batch: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   await finishBulkRun(runId, messageIds.length, bulkResult);
@@ -19187,6 +19530,7 @@ async function executeBulkCopy(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveBulkArgs(rawArgs, "email_copy_batch", apiKey);
   if (resolved.error) return resolved.error;
@@ -19224,22 +19568,17 @@ async function executeBulkCopy(
     // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
     // only throw here on a genuine provider/network failure, not bad input.
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] email_copy_batch: resolve_destination_error", {
-      inbox_id: inbox.id,
+    // LEDGER BOUNDARY: email_copy_batch accepts an idempotency_key, so the code stays
+    // `provider_error` and only the details are new. See providerFailure.
+    return providerFailure({
+      tool: "email_copy_batch",
       provider: inbox.provider,
-      error: message,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
+      logContext: { phase: "resolve_destination" },
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   // The act phase gets the whole call's wall-clock allowance: these handlers
@@ -19257,22 +19596,16 @@ async function executeBulkCopy(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] email_copy_batch: provider_error", {
-      inbox_id: inbox.id,
+    // LEDGER BOUNDARY: email_copy_batch accepts an idempotency_key, so the code stays
+    // `provider_error` and only the details are new. See providerFailure.
+    return providerFailure({
+      tool: "email_copy_batch",
       provider: inbox.provider,
-      error: message,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Provider error during email_copy_batch: ${message}. Please try again in a moment.`,
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Provider error during email_copy_batch: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   return formatBulkResult(
@@ -19301,6 +19634,7 @@ async function executeBulkDelete(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveBulkArgs(rawArgs, "email_delete_batch", apiKey);
   if (resolved.error) return resolved.error;
@@ -19341,22 +19675,16 @@ async function executeBulkDelete(
     bulkResult = await runBulkDeleteOnIds(inbox, messageIds, permanent, null, { budget });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] email_delete_batch: provider_error", {
-      inbox_id: inbox.id,
+    // LEDGER BOUNDARY: email_delete_batch accepts an idempotency_key, so the code stays
+    // `provider_error` and only the details are new. See providerFailure.
+    return providerFailure({
+      tool: "email_delete_batch",
       provider: inbox.provider,
-      error: message,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Provider error during email_delete_batch: ${message}. Please try again in a moment.`,
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Provider error during email_delete_batch: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   return formatBulkResult(
@@ -19383,6 +19711,7 @@ async function executeBulkFlag(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   const resolved = await resolveBulkArgs(rawArgs, "email_flag", apiKey);
   if (resolved.error) return resolved.error;
@@ -19418,22 +19747,16 @@ async function executeBulkFlag(
     bulkResult = await runBulkFlagOnIds(inbox, messageIds, action, runId, { budget });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] email_flag: provider_error", {
-      inbox_id: inbox.id,
+    // LEDGER BOUNDARY: email_flag accepts an idempotency_key, so the code stays
+    // `provider_error` and only the details are new. See providerFailure.
+    return providerFailure({
+      tool: "email_flag",
       provider: inbox.provider,
-      error: message,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Provider error during email_flag: ${message}. Please try again in a moment.`,
     });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Provider error during email_flag: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
   }
 
   await finishBulkRun(runId, messageIds.length, bulkResult);
@@ -19475,6 +19798,7 @@ async function executeSearchAndMove(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -19535,70 +19859,123 @@ async function executeSearchAndMove(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
 
-  // ── Resolve destination (alias / name / id) → provider-native id ──────────
-  // Done now (before the search) so an unresolvable destination fails fast.
-  let resolvedDest: string;
-  try {
-    resolvedDest = await resolveFolderId(inbox, destinationFolderId);
-  } catch (err) {
-    // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
-    // only throw here on a genuine provider/network failure, not bad input.
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[mcp-server] email_search_and_move: resolve_destination_error", {
-      inbox_id: inbox.id,
-      provider: inbox.provider,
-      error: message,
-    });
-    return {
-      result: {
-        content: [{
-          type: "text",
-          text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
-        }],
-        isError: true,
-      },
-      logStatus: "error",
-      logErrorCode: "provider_error",
-    };
-  }
-
-  // ── One wall-clock budget for the whole call ─────────────────────────────
-  // Search and act spend from the SAME pot. Before this, the search phase had
-  // its own 30s ceiling and the act phase had none at all, so one logical
-  // operation could legitimately run for minutes — past every MCP client's
-  // patience — and the client would abandon it with no idea what had happened
-  // to the mailbox. See bulk-budget.ts.
-  const budget = createWorkBudget();
-  // One authenticated IMAP connection shared by the search and the act phase.
-  // These two halves used to open (and close) one each; on providers that cap
-  // simultaneous connections per account that churn is what triggers the
-  // 5s/10s connect back-off behind the worst of the tail.
+  // ── One IMAP connection for the whole call ───────────────────────────────
+  // Created FIRST, ahead of the destination resolve, which is what changed on
+  // 2026-09-01. The comment that used to sit lower down claimed the shared
+  // session had removed the double connect. It had removed the search/act one.
+  // `resolveFolderId` still ran before the session existed, and on IMAP every
+  // branch of it that is not a plain "inbox" opens its own connection, issues a
+  // LIST, and logs out: roughly 1.7s at p50 and 3.4s at p90 on Yahoo, none of it
+  // counted by the wall-clock budget created below, and one more slot held
+  // against Yahoo's cap of 5 simultaneous connections per account at the exact
+  // moment the search is about to want one. Now the resolve, the search and the
+  // move are one connection. `ImapSession.connectCount` is the assertion.
   const session = imapSessionFor(inbox);
   try {
-    // ── Run search to collect message IDs ─────────────────────────────────────
+    // ── Resolve destination (alias / name / id) → provider-native id ────────
+    // Done now (before the search) so an unresolvable destination fails fast.
+    let resolvedDest: string;
+    try {
+      resolvedDest = await resolveFolderId(inbox, destinationFolderId, { session });
+    } catch (err) {
+      // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail. This can
+      // only throw here on a genuine provider/network failure, not bad input.
+      const message = err instanceof Error ? err.message : String(err);
+      // LEDGER BOUNDARY: email_search_and_move accepts an idempotency_key, so the code stays
+      // `provider_error` and only the details are new. See providerFailure.
+      return providerFailure({
+        tool: "email_search_and_move",
+        provider: inbox.provider,
+        inboxId: inbox.id,
+        error: err,
+        boundary: "ledger",
+        text: `Could not resolve destination folder: ${message}. Please try again in a moment.`,
+        logContext: { phase: "resolve_destination" },
+      });
+    }
+
+    // ── Resolve include_folders, the way email_search already did ───────────
+    // Until 2026-09-01 this tool passed the agent's raw token straight through
+    // to the provider while email_search resolved the identical argument
+    // strictly, so one spelling mistake produced a named `folder_not_found`
+    // there and an opaque "Mailbox not found" wrapped in "try again in a
+    // moment" here, for a condition that will never stop failing. See
+    // resolveIncludeFolders, including what this changes about the ledger.
+    let resolvedIncludeFolders: string[];
+    try {
+      resolvedIncludeFolders = await resolveIncludeFolders(inbox, includeFolders, session);
+    } catch (err) {
+      if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
+      const message = err instanceof Error ? err.message : String(err);
+      // LEDGER BOUNDARY: anything that is not a named folder failure is a
+      // provider failure, and this tool accepts an idempotency_key, so the code
+      // stays `provider_error`. Note there is deliberately no auth branch: an
+      // auth failure in the search phase of this tool already logs
+      // `provider_error`, and one folder-resolution step earlier is the same
+      // condition at the same boundary.
+      return providerFailure({
+        tool: "email_search_and_move",
+        provider: inbox.provider,
+        inboxId: inbox.id,
+        error: err,
+        boundary: "ledger",
+        text: `Could not resolve include_folders: ${message}. Please try again in a moment.`,
+        logContext: { phase: "resolve_include_folders" },
+      });
+    }
+
+    // ── One wall-clock budget for the whole call ───────────────────────────
+    // Search and act spend from the SAME pot. Before this, the search phase had
+    // its own 30s ceiling and the act phase had none at all, so one logical
+    // operation could legitimately run for minutes, past every MCP client's
+    // patience, and the client would abandon it with no idea what had happened
+    // to the mailbox. See bulk-budget.ts.
+    const budget = createWorkBudget();
+
+    // ── Run search to collect message IDs ─────────────────────────────────
     // The search may not eat the whole call. `searchPhaseMs` holds back a
-    // reserve so the act phase always gets a usable slice — a search_and_delete
+    // reserve so the act phase always gets a usable slice: a search_and_delete
     // that spends 25s searching and then reports "0 of 500 deleted" is honest
     // but useless, and worse than what this replaced.
-    const searchBudgetMs = budget.searchPhaseMs(SEARCH_TIMEOUT_MS);
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("search_timeout")), searchBudgetMs)
-    );
+    //
+    // No ceiling argument: this used to pass SEARCH_TIMEOUT_MS (30s), which
+    // never bound (the whole-call budget is always tighter) and made the line
+    // read as though the search had thirty seconds. It had seventeen; it now
+    // has twenty-one. See BULK_ACT_PHASE_RESERVE_MS for why that number moved.
+    const searchBudgetMs = budget.searchPhaseMs();
 
     let searchResult: SearchEmailsResult;
     try {
-      let searchPromise: Promise<SearchEmailsResult>;
+      // Built as a thunk so `raceSearchWithTimeout` owns the deadline, clears
+      // its timer, and, on IMAP, kills the socket at the moment the deadline
+      // passes instead of leaving an abandoned UID SEARCH running while every
+      // polite way out of the session queues behind it.
+      let startSearch: () => Promise<SearchEmailsResult>;
       switch (inbox.provider) {
         case "gmail":
-          searchPromise = searchGmailMessages(inbox, search, limit, 0, includeFolders);
+          startSearch = () =>
+            searchGmailMessages(inbox, search, limit, 0, resolvedIncludeFolders);
           break;
         case "outlook":
-          searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
+          startSearch = () =>
+            searchOutlookMessages(inbox, search, limit, 0, resolvedIncludeFolders);
           break;
         case "imap":
-          searchPromise = searchImapMessages(
-            inbox, search, limit, 0, includeFolders, session ?? undefined,
-          );
+          // needPreview: false. This handler reduces the result to
+          // `messages.map((m) => m.id)` and the plan sample reads only from,
+          // subject and date, so every byte of body prefix fetched here was
+          // fetched in order to be thrown away. At a default limit of 500 that
+          // is roughly a megabyte of it, inside the phase that was timing out.
+          startSearch = () =>
+            searchImapMessages(
+              inbox,
+              search,
+              limit,
+              0,
+              resolvedIncludeFolders,
+              false,
+              session ?? undefined,
+            );
           break;
         default:
           return {
@@ -19615,7 +19992,11 @@ async function executeSearchAndMove(
             logErrorCode: "provider_error",
           };
       }
-      searchResult = await Promise.race([searchPromise, timeoutPromise]);
+      searchResult = await raceSearchWithTimeout(
+        startSearch,
+        searchBudgetMs,
+        session ? () => session.abort() : null,
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message === "search_timeout") {
@@ -19633,19 +20014,27 @@ async function executeSearchAndMove(
           logErrorCode: "search_timeout",
         };
       }
-      console.error("[mcp-server] email_search_and_move: search_error", {
-        inbox_id: inboxId,
+      // LEDGER BOUNDARY, even though this is the SEARCH half of the call. email_search_and_move
+      // accepts an idempotency_key and the code logged here is what settles that
+      // ledger, whichever phase produced it, so it stays `provider_error`.
+      //
+      // Note what is deliberately NOT done here: the read-timeout correction
+      // applied to email_search is not applied to this branch. It would move an
+      // "IMAP read timeout" from `provider_error` to `search_timeout`, which on
+      // a mutation path means moving the ledger from "unknown" to "failed" and
+      // changing whether a retry with the same key replays. Nothing was changed
+      // in the mailbox when a search times out, but proving that is a separate
+      // change with its own blast radius; the details below make the condition
+      // visible in the meantime.
+      return providerFailure({
+        tool: "email_search_and_move",
         provider: inbox.provider,
-        error: message,
+        inboxId,
+        error: err,
+        boundary: "ledger",
+        text: `Provider error while searching: ${message}. Please try again in a moment.`,
+        logContext: { phase: "search" },
       });
-      return {
-        result: {
-          content: [{ type: "text", text: `Provider error while searching: ${message}. Please try again in a moment.` }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "provider_error",
-      };
     }
 
     const messageIds = searchResult.messages.map((m) => m.id);
@@ -19724,19 +20113,17 @@ async function executeSearchAndMove(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       await failBulkRun(runId, "provider_error");
-      console.error("[mcp-server] email_search_and_move: move_error", {
-        inbox_id: inbox.id,
+      // LEDGER BOUNDARY: email_search_and_move accepts an idempotency_key, so the code
+      // stays `provider_error` and only the details are new.
+      return providerFailure({
+        tool: "email_search_and_move",
         provider: inbox.provider,
-        error: message,
+        inboxId: inbox.id,
+        error: err,
+        boundary: "ledger",
+        text: `Provider error during move: ${message}. Please try again in a moment.`,
+        logContext: { phase: "move" },
       });
-      return {
-        result: {
-          content: [{ type: "text", text: `Provider error during move: ${message}. Please try again in a moment.` }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "provider_error",
-      };
     }
 
     await finishBulkRun(runId, messageIds.length, bulkResult);
@@ -19780,6 +20167,7 @@ async function executeSearchAndDelete(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -19828,43 +20216,100 @@ async function executeSearchAndDelete(
     return permanentDeleteUnsupportedError(inbox.provider);
   }
 
-  // ── One wall-clock budget for the whole call ─────────────────────────────
-  // Search and act spend from the SAME pot. Before this, the search phase had
-  // its own 30s ceiling and the act phase had none at all, so one logical
-  // operation could legitimately run for minutes — past every MCP client's
-  // patience — and the client would abandon it with no idea what had happened
-  // to the mailbox. See bulk-budget.ts.
-  const budget = createWorkBudget();
-  // One authenticated IMAP connection shared by the search and the act phase.
-  // These two halves used to open (and close) one each; on providers that cap
-  // simultaneous connections per account that churn is what triggers the
-  // 5s/10s connect back-off behind the worst of the tail.
+  // ── One IMAP connection for the whole call ───────────────────────────────
+  // Created before anything else that talks to the mailbox, so the
+  // include_folders resolve below, the search and the delete all run on one
+  // authenticated connection. On providers that cap simultaneous connections
+  // per account (Yahoo at 5) the churn of opening one per step is what triggers
+  // ImapClient.connect's 5s/10s back-off, which is behind the worst of the tail.
   const session = imapSessionFor(inbox);
   try {
-    // ── Run search to collect message IDs ─────────────────────────────────────
+    // ── Resolve include_folders, the way email_search already did ───────────
+    // Until 2026-09-01 this tool passed the agent's raw token straight through
+    // to the provider while email_search resolved the identical argument
+    // strictly, so one spelling mistake produced a named `folder_not_found`
+    // there and an opaque "Mailbox not found" wrapped in "try again in a
+    // moment" here, for a condition that will never stop failing. On the tool
+    // that deletes mail, being told exactly which folder name was not
+    // recognised is worth more than it is anywhere else. See
+    // resolveIncludeFolders, including what this changes about the ledger.
+    let resolvedIncludeFolders: string[];
+    try {
+      resolvedIncludeFolders = await resolveIncludeFolders(inbox, includeFolders, session);
+    } catch (err) {
+      if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
+      const message = err instanceof Error ? err.message : String(err);
+      // LEDGER BOUNDARY: anything that is not a named folder failure is a
+      // provider failure, and this tool accepts an idempotency_key, so the code
+      // stays `provider_error`. No auth branch, for the same reason as in
+      // executeSearchAndMove: an auth failure in the search phase of this tool
+      // already logs `provider_error`, and one step earlier is the same
+      // condition at the same boundary.
+      return providerFailure({
+        tool: "email_search_and_delete",
+        provider: inbox.provider,
+        inboxId: inbox.id,
+        error: err,
+        boundary: "ledger",
+        text: `Could not resolve include_folders: ${message}. Please try again in a moment.`,
+        logContext: { phase: "resolve_include_folders" },
+      });
+    }
+
+    // ── One wall-clock budget for the whole call ───────────────────────────
+    // Search and act spend from the SAME pot. Before this, the search phase had
+    // its own 30s ceiling and the act phase had none at all, so one logical
+    // operation could legitimately run for minutes, past every MCP client's
+    // patience, and the client would abandon it with no idea what had happened
+    // to the mailbox. See bulk-budget.ts.
+    const budget = createWorkBudget();
+
+    // ── Run search to collect message IDs ─────────────────────────────────
     // The search may not eat the whole call. `searchPhaseMs` holds back a
-    // reserve so the act phase always gets a usable slice — a search_and_delete
+    // reserve so the act phase always gets a usable slice: a search_and_delete
     // that spends 25s searching and then reports "0 of 500 deleted" is honest
     // but useless, and worse than what this replaced.
-    const searchBudgetMs = budget.searchPhaseMs(SEARCH_TIMEOUT_MS);
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("search_timeout")), searchBudgetMs)
-    );
+    //
+    // No ceiling argument. This used to pass SEARCH_TIMEOUT_MS (30s), which
+    // never bound, because the whole-call budget is always tighter, and made
+    // the line read as though the search had thirty seconds. It had seventeen;
+    // it now has twenty-one. This tool timed out in its search phase on 24.1%
+    // of its Yahoo calls (7 of 29) against 0.80% for plain email_search over
+    // the same accounts running the same search function, which is what that
+    // number was buying. See BULK_ACT_PHASE_RESERVE_MS.
+    const searchBudgetMs = budget.searchPhaseMs();
 
     let searchResult: SearchEmailsResult;
     try {
-      let searchPromise: Promise<SearchEmailsResult>;
+      // Built as a thunk so `raceSearchWithTimeout` owns the deadline, clears
+      // its timer, and, on IMAP, kills the socket at the moment the deadline
+      // passes instead of leaving an abandoned UID SEARCH running while every
+      // polite way out of the session queues behind it.
+      let startSearch: () => Promise<SearchEmailsResult>;
       switch (inbox.provider) {
         case "gmail":
-          searchPromise = searchGmailMessages(inbox, search, limit, 0, includeFolders);
+          startSearch = () =>
+            searchGmailMessages(inbox, search, limit, 0, resolvedIncludeFolders);
           break;
         case "outlook":
-          searchPromise = searchOutlookMessages(inbox, search, limit, 0, includeFolders);
+          startSearch = () =>
+            searchOutlookMessages(inbox, search, limit, 0, resolvedIncludeFolders);
           break;
         case "imap":
-          searchPromise = searchImapMessages(
-            inbox, search, limit, 0, includeFolders, session ?? undefined,
-          );
+          // needPreview: false. This handler reduces the result to
+          // `messages.map((m) => m.id)`, and the MCP Apps plan sample reads
+          // only from, subject and date, so every byte of body prefix fetched
+          // here was fetched in order to be thrown away.
+          startSearch = () =>
+            searchImapMessages(
+              inbox,
+              search,
+              limit,
+              0,
+              resolvedIncludeFolders,
+              false,
+              session ?? undefined,
+            );
           break;
         default:
           return {
@@ -19881,7 +20326,11 @@ async function executeSearchAndDelete(
             logErrorCode: "provider_error",
           };
       }
-      searchResult = await Promise.race([searchPromise, timeoutPromise]);
+      searchResult = await raceSearchWithTimeout(
+        startSearch,
+        searchBudgetMs,
+        session ? () => session.abort() : null,
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message === "search_timeout") {
@@ -19899,19 +20348,27 @@ async function executeSearchAndDelete(
           logErrorCode: "search_timeout",
         };
       }
-      console.error("[mcp-server] email_search_and_delete: search_error", {
-        inbox_id: inboxId,
+      // LEDGER BOUNDARY, even though this is the SEARCH half of the call. email_search_and_delete
+      // accepts an idempotency_key and the code logged here is what settles that
+      // ledger, whichever phase produced it, so it stays `provider_error`.
+      //
+      // Note what is deliberately NOT done here: the read-timeout correction
+      // applied to email_search is not applied to this branch. It would move an
+      // "IMAP read timeout" from `provider_error` to `search_timeout`, which on
+      // a mutation path means moving the ledger from "unknown" to "failed" and
+      // changing whether a retry with the same key replays. Nothing was changed
+      // in the mailbox when a search times out, but proving that is a separate
+      // change with its own blast radius; the details below make the condition
+      // visible in the meantime.
+      return providerFailure({
+        tool: "email_search_and_delete",
         provider: inbox.provider,
-        error: message,
+        inboxId,
+        error: err,
+        boundary: "ledger",
+        text: `Provider error while searching: ${message}. Please try again in a moment.`,
+        logContext: { phase: "search" },
       });
-      return {
-        result: {
-          content: [{ type: "text", text: `Provider error while searching: ${message}. Please try again in a moment.` }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "provider_error",
-      };
     }
 
     const messageIds = searchResult.messages.map((m) => m.id);
@@ -19973,19 +20430,17 @@ async function executeSearchAndDelete(
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("[mcp-server] email_search_and_delete: delete_error", {
-        inbox_id: inbox.id,
+      // LEDGER BOUNDARY: email_search_and_delete accepts an idempotency_key, so the code
+      // stays `provider_error` and only the details are new.
+      return providerFailure({
+        tool: "email_search_and_delete",
         provider: inbox.provider,
-        error: message,
+        inboxId: inbox.id,
+        error: err,
+        boundary: "ledger",
+        text: `Provider error during delete: ${message}. Please try again in a moment.`,
+        logContext: { phase: "delete" },
       });
-      return {
-        result: {
-          content: [{ type: "text", text: `Provider error during delete: ${message}. Please try again in a moment.` }],
-          isError: true,
-        },
-        logStatus: "error",
-        logErrorCode: "provider_error",
-      };
     }
 
     return formatBulkResult(
@@ -21011,6 +21466,7 @@ async function executeListDrafts(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -21045,11 +21501,14 @@ async function executeListDrafts(
     if (isAuth) {
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
-    console.error("[mcp-server] draft_list: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
-    return {
-      result: { content: [{ type: "text", text: `Failed to list drafts for ${inbox.provider} inbox: ${message}` }], isError: true },
-      logStatus: "error", logErrorCode: "provider_error",
-    };
+    return providerFailure({
+      tool: "draft_list",
+      provider: inbox.provider,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "read",
+      text: `Failed to list drafts for ${inbox.provider} inbox: ${message}`,
+    });
   }
 
   // A reply draft's subject is `Re: <the original sender's subject>` and its
@@ -21076,6 +21535,7 @@ async function executeCreateReplyDraft(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return { result: { content: [{ type: "text", text: "draft_reply: arguments must be an object with message_id and body." }], isError: true }, logStatus: "error", logErrorCode: "-32602" };
@@ -21194,8 +21654,17 @@ async function executeCreateReplyDraft(
     if (message === "gmail_auth_failed" || message === "outlook_auth_failed" || message === "imap_auth_failed") return authFailedResult(inbox.provider, inbox.id, "access");
     if (message === "message_not_found") return { result: { content: [{ type: "text", text: "draft_reply: the source message was not found in this inbox." }], isError: true }, logStatus: "error", logErrorCode: "message_not_found" };
     if (message === "reply_recipients_not_found") return { result: { content: [{ type: "text", text: replyNoRecipientsMessage("draft_reply") }], isError: true }, logStatus: "error", logErrorCode: "invalid_recipient" };
-    console.error("[mcp-server] draft_reply: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
-    return { result: { content: [{ type: "text", text: `Failed to create reply draft for ${inbox.provider} inbox: ${message}` }], isError: true }, logStatus: "error", logErrorCode: "provider_error" };
+    // Boundary "ledger" although draft_reply is not itself an idempotent
+    // operation: writing a draft is a write, and the narrowing list is limited
+    // to the read-shaped paths on purpose. Details only, code unchanged.
+    return providerFailure({
+      tool: "draft_reply",
+      provider: inbox.provider,
+      inboxId: inbox.id,
+      error,
+      boundary: "ledger",
+      text: `Failed to create reply draft for ${inbox.provider} inbox: ${message}`,
+    });
   }
 }
 
@@ -21206,6 +21675,7 @@ async function executeCreateDraft(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -21290,11 +21760,16 @@ async function executeCreateDraft(
     if (isAuth) {
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
-    console.error("[mcp-server] draft_create: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
-    return {
-      result: { content: [{ type: "text", text: `Failed to create draft for ${inbox.provider} inbox: ${message}` }], isError: true },
-      logStatus: "error", logErrorCode: "provider_error",
-    };
+    // A write, so it takes the "ledger" boundary and keeps its code. See the
+    // note in executeCreateReplyDraft.
+    return providerFailure({
+      tool: "draft_create",
+      provider: inbox.provider,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Failed to create draft for ${inbox.provider} inbox: ${message}`,
+    });
   }
 
   return {
@@ -21310,6 +21785,7 @@ async function executeUpdateDraft(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -21461,11 +21937,14 @@ async function executeUpdateDraft(
     if (isAuth) {
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
-    console.error("[mcp-server] draft_update: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
-    return {
-      result: { content: [{ type: "text", text: `Failed to update draft for ${inbox.provider} inbox: ${message}` }], isError: true },
-      logStatus: "error", logErrorCode: "provider_error",
-    };
+    return providerFailure({
+      tool: "draft_update",
+      provider: inbox.provider,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Failed to update draft for ${inbox.provider} inbox: ${message}`,
+    });
   }
 
   return {
@@ -21481,6 +21960,7 @@ async function executeSendDraft(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -21544,11 +22024,18 @@ async function executeSendDraft(
       if (message === "gmail_auth_failed" || message === "outlook_auth_failed") {
         return authFailedResult(inbox.provider, inbox.id, "access");
       }
-      console.error("[mcp-server] draft_send: preflight_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
-      return {
-        result: { content: [{ type: "text", text: `draft_send: could not read draft ${draftId} to check its recipients. Nothing was sent; retry shortly.` }], isError: true },
-        logStatus: "error", logErrorCode: "provider_error",
-      };
+      // LEDGER BOUNDARY: draft_send is in IDEMPOTENT_OUTBOUND_OPERATIONS, so
+      // this code settles the ledger even though the failure happened in the
+      // preflight read, before anything could be sent.
+      return providerFailure({
+        tool: "draft_send",
+        provider: inbox.provider,
+        inboxId: inbox.id,
+        error: err,
+        boundary: "ledger",
+        text: `draft_send: could not read draft ${draftId} to check its recipients. Nothing was sent; retry shortly.`,
+        logContext: { phase: "preflight" },
+      });
     }
     if (!stored) {
       return {
@@ -21625,14 +22112,15 @@ async function executeSendDraft(
       return notSentResult("draft_send", inbox.provider, inbox.id, message);
     }
 
-    console.error("[mcp-server] draft_send: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
-    return {
-      result: {
-        content: [{ type: "text", text: `An error occurred while sending the draft via ${inbox.provider}. The message may or may not have been delivered. Do not retry automatically to avoid duplicate delivery.` }],
-        isError: true,
-      },
-      logStatus: "error", logErrorCode: "provider_error",
-    };
+    // LEDGER BOUNDARY: see the matching branch in executeForwardEmail.
+    return providerFailure({
+      tool: "draft_send",
+      provider: inbox.provider,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `An error occurred while sending the draft via ${inbox.provider}. The message may or may not have been delivered. Do not retry automatically to avoid duplicate delivery.`,
+    });
   }
 
   return {
@@ -21648,6 +22136,7 @@ async function executeDeleteDraft(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -21698,11 +22187,14 @@ async function executeDeleteDraft(
         logStatus: "error", logErrorCode: "quota_exceeded",
       };
     }
-    console.error("[mcp-server] draft_delete: provider_error", { inbox_id: inbox.id, provider: inbox.provider, error: message });
-    return {
-      result: { content: [{ type: "text", text: `Failed to delete draft for ${inbox.provider} inbox: ${message}` }], isError: true },
-      logStatus: "error", logErrorCode: "provider_error",
-    };
+    return providerFailure({
+      tool: "draft_delete",
+      provider: inbox.provider,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      text: `Failed to delete draft for ${inbox.provider} inbox: ${message}`,
+    });
   }
 
   return {
@@ -22086,6 +22578,7 @@ async function executeSearchContacts(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -22205,6 +22698,14 @@ async function executeSearchContacts(
   // Any inbox whose window filled up, or that failed outright, means the merged
   // list is a floor rather than a count.
   let scanTruncated = inboxesTruncated;
+  // The first rejection, kept only for the total-failure branch below. This tool
+  // fans out across every accessible inbox, so until now a total failure logged
+  // a bare `provider_error` with no surviving reference to what any of the
+  // inboxes actually said. The first one is representative enough to classify:
+  // when every inbox fails at once it is almost always one cause (an expired
+  // credential, a host the guard now refuses, a server not answering).
+  let firstFailure: unknown = null;
+  let firstFailureIndex = 0;
   for (let i = 0; i < settled.length; i++) {
     const r = settled[i];
     if (r.status === "fulfilled") {
@@ -22213,6 +22714,10 @@ async function executeSearchContacts(
       if (r.value.capped) scanTruncated = true;
     } else {
       scanTruncated = true;
+      if (firstFailure === null) {
+        firstFailure = r.reason;
+        firstFailureIndex = i;
+      }
       console.error("[mcp-server] contact_search: inbox_scan_failed", {
         workspace_id: apiKey.workspace_id,
         inbox_id: targets[i].id,
@@ -22224,10 +22729,15 @@ async function executeSearchContacts(
 
   // Only fail outright when EVERY inbox errored — otherwise return partials.
   if (!anySucceeded) {
-    return {
-      result: { content: [{ type: "text", text: "contact_search: unable to scan any inbox for matching contacts. Please try again in a moment." }], isError: true },
-      logStatus: "error", logErrorCode: "provider_error",
-    };
+    return providerFailure({
+      tool: "contact_search",
+      provider: targets[firstFailureIndex]?.provider ?? "other",
+      inboxId: targets[firstFailureIndex]?.id ?? "",
+      error: firstFailure,
+      boundary: "read",
+      text: "contact_search: unable to scan any inbox for matching contacts. Please try again in a moment.",
+      logContext: { inboxes_scanned: targets.length },
+    });
   }
 
   // Merge and sort newest-first. (Each inbox aggregates its own window
@@ -22291,6 +22801,7 @@ async function executeScheduleSend(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -22540,6 +23051,7 @@ async function executeListScheduled(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -22641,6 +23153,7 @@ async function executeCancelScheduled(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -22772,6 +23285,7 @@ async function executeGetSignature(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -22816,6 +23330,7 @@ async function executeSetSignature(
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
   logErrorCode: string | null;
+  logErrorDetails?: ProviderErrorAuditDetails;
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
@@ -23588,23 +24103,59 @@ async function handleToolsCall(
   // Both are needed after validation, which is where they turn into wording.
   let selectedAction: string | null = null;
   let extraArguments: ExtraArgumentReview | null = null;
+  // Set only when the selector had to be READ as something other than what was
+  // written, so the result can say so. See action-selector.ts.
+  let actionResolution: ActionResolution | null = null;
   const consolidated = CONSOLIDATED_BY_NAME[toolName];
   if (consolidated) {
     const argsObj =
       rawArgs !== null && typeof rawArgs === "object" && !Array.isArray(rawArgs)
         ? rawArgs as Record<string, unknown>
         : {};
-    const action = typeof argsObj["action"] === "string"
-      ? argsObj["action"] as string
-      : null;
-    const actionSpec = action ? consolidated.actions[action] : undefined;
-    if (!actionSpec) {
+    const rawAction = argsObj["action"];
+    const action = typeof rawAction === "string" ? rawAction : null;
+    // The selector is resolved rather than looked up. An exact enum member
+    // still wins outright; what this adds is the same word differently cased or
+    // punctuated, the operation's own legacy name, and — on the read-only
+    // actions only — a small table of synonyms. Twelve consecutive rejections
+    // from an eleven-minute-old workspace on 2026-09-01 are what this is for;
+    // the reasoning and the limits are in action-selector.ts.
+    const resolution = resolveActionSelector(
+      toolName,
+      rawAction,
+      ACTION_SELECTORS_BY_TOOL[toolName],
+      (candidate) => allowsLenientArguments(toolName, candidate),
+    );
+    if (resolution && resolution.kind !== "exact") actionResolution = resolution;
+    // The second half of the condition is a backstop, not a duplicate of the
+    // first: the canonical and legacy tables are built from `actions` and can
+    // only name a real one, but the alias table is written by hand, and a typo
+    // there must fail the call rather than dispatch to an action that is not
+    // there.
+    if (!resolution || !consolidated.actions[resolution.action]) {
       const validActions = Object.keys(consolidated.actions);
       // Distinguish "no action" from "an action that did not land where the
       // selector is read". A caller told "none was given" when it plainly gave
       // one has no way to work out what to change, and that is 37 of the 54
       // action rejections in the last 30 days.
       const misplacement = findMisplacedAction(argsObj, validActions);
+      // WHAT was sent, in the operator log and nowhere else.
+      //
+      // Twelve rejections of one selector on 2026-09-01 are on record with no
+      // way to learn which word it was: error_details is value-free by
+      // contract (validation-observability.ts) and this branch logged nothing.
+      // So the selector goes here, in the bounded, allow-listed form
+      // safeActionToken produces — a word or a marker, never a sentence — which
+      // is strictly less than the wire already carries, since the rejection
+      // text below echoes the selector straight back to the caller. This is
+      // what the alias table in action-selector.ts should grow from.
+      if (action !== null) {
+        console.info("[mcp-server] tools/call: unresolved_action", {
+          key_id: apiKey.id,
+          tool_name: toolName,
+          selector: safeActionToken(rawAction),
+        });
+      }
       await writeActivityLog({
         workspaceId: apiKey.workspace_id,
         apiKeyId: apiKey.id,
@@ -23636,10 +24187,21 @@ async function handleToolsCall(
         { tool: toolName, action, valid_actions: validActions },
       );
     }
+    const actionSpec = consolidated.actions[resolution.action];
     dispatchName = actionSpec.legacy;
     effectiveScope = actionSpec.scope;
     effectiveAltScopes = actionSpec.altScopes;
-    selectedAction = action;
+    selectedAction = resolution.action;
+
+    // Write the resolved action back onto the arguments themselves.
+    //
+    // In place, and for the same reason normalizeDateArguments is in place: the
+    // schema validation below reads this object and would reject 'Read' against
+    // the enum a few lines after dispatch had already accepted it, and the
+    // sibling-argument review keys off the selected action too. Resolving the
+    // selector without rewriting it would leave those three readings of one
+    // call disagreeing, which is worse than not resolving it at all.
+    if (actionResolution) argsObj["action"] = resolution.action;
 
     // ── Arguments belonging to a sibling action ─────────────────────────────
     // A consolidated tool advertises every action's arguments in one flat
@@ -23872,6 +24434,10 @@ async function handleToolsCall(
   let toolResult!: JsonRpcSuccessResponse | JsonRpcErrorResponse;
   let logStatus: "success" | "error" = "error";
   let logErrorCode: string | null = String(-32601); // Method not found
+  // Value-free diagnostics for the activity log, when the handler produced any.
+  // Stays null for every failure the code alone already describes; see
+  // provider-error.ts for why a provider failure is not one of those.
+  let logErrorDetails: ProviderErrorAuditDetails | null = null;
 
   // Captures the inbox resolved during dispatch (inside resolveInboxArg) so the
   // activity log records the real inbox even for alias- or auto-resolved calls.
@@ -23971,232 +24537,282 @@ async function handleToolsCall(
     await activityInboxStore.run(logCtx, async () => {
     // ── Dispatch to the implemented tool handler ───────────────────────────
     if (dispatchName === "inbox_list") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeListInboxes(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_list") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeListInbox(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_read") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeReadEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_read_batch") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeReadEmails(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_attachment") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeReadAttachment(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_original") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeReadOriginal(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_extract") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeExtractAttachment(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_send") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeSendEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_reply") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeReplyToEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_search") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeSearchEmails(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_archive") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeArchiveEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "folder_list") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeListFolders(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "folder_create") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeCreateFolder(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "folder_rename") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeRenameFolder(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "folder_delete") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeDeleteFolder(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_move") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeMoveEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_copy") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeCopyEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_delete") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeDeleteEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_move_batch") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeBulkMove(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_copy_batch") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeBulkCopy(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_delete_batch") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeBulkDelete(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_flag") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeBulkFlag(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_search_and_move") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeSearchAndMove(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_search_and_delete") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeSearchAndDelete(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "email_forward") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeForwardEmail(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "draft_list") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeListDrafts(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "draft_create") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeCreateDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "draft_reply") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeCreateReplyDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "draft_update") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeUpdateDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "draft_send") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeSendDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "draft_delete") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeDeleteDraft(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "contact_search") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeSearchContacts(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "schedule_create") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeScheduleSend(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "schedule_list") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeListScheduled(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "schedule_cancel") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeCancelScheduled(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "signature_get") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeGetSignature(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName === "signature_set") {
-      const { result, logStatus: ls, logErrorCode: lec } =
+      const { result, logStatus: ls, logErrorCode: lec, logErrorDetails: led } =
         await executeSetSignature(rawArgs, apiKey);
       logStatus = ls;
       logErrorCode = lec;
+      logErrorDetails = led ?? null;
       toolResult = { jsonrpc: "2.0", id, result };
     } else if (dispatchName.startsWith("automation_")) {
       // All nine automation actions share one handler in triage-engine.ts. The
       // scope gate above has already checked manage:automations; everything
       // below re-checks tenancy on every query, because an automation_id
       // supplied by the caller proves nothing about who owns it.
+      //
+      // This branch and the two below it are the three dispatch sites that do
+      // NOT carry `logErrorDetails`, and the reason is scope rather than
+      // oversight. Their handlers are exported from other modules
+      // (triage-engine.ts, mcp-app-approvals.ts, mcp-app-bulk.ts), so threading
+      // the field would mean widening three signatures outside the file this
+      // 2026-09-01 change owns. The automation and approval handlers only read
+      // and write our own tables, so there is nothing for the classifier to say
+      // about them. `runBulkTool` genuinely does reach a provider, through the
+      // same injected bulk path the immediate route uses, and it is worth a
+      // follow-up: note that its code must stay `provider_error` regardless,
+      // because executing a frozen plan is a mailbox mutation and mutations
+      // settle the same idempotency ledger the send paths do.
       const { result, logStatus: ls, logErrorCode: lec } = await runAutomationTool(
         dispatchName.slice("automation_".length),
         rawArgs,
@@ -24303,6 +24919,14 @@ async function handleToolsCall(
     );
   }
 
+  // Disclose a selector that was read as an action other than the one written,
+  // on the same principle and through the same channel: the caller has to be
+  // able to see that the server answered a question it rephrased. An exact
+  // match never reaches here, so a correctly spelled call carries no note.
+  if (actionResolution) {
+    appendResultNote(toolResult, buildResolvedActionNote(toolName, actionResolution));
+  }
+
   await completeOutboundIdempotency(
     idempotencyClaim,
     dispatchName,
@@ -24334,6 +24958,10 @@ async function handleToolsCall(
     durationMs,
     ipAddress: ctx.ipAddress,
     userAgent: ctx.userAgent,
+    // Only on a failure that produced one. A successful call has nothing to
+    // diagnose, and writing an empty object would make the column's presence
+    // useless as a filter for operators asking "which errors can I read?".
+    ...(logErrorDetails ? { errorDetails: logErrorDetails } : {}),
   });
   // Phase 1 is observation-only. Successful calls write one privacy-safe
   // classification row; failed/rate-limited calls write no usage action.
@@ -24982,7 +25610,18 @@ async function applyTriageAction(input: {
       if (!input.destinationId) return { ok: false, error_code: "folder_unresolved" };
       const result = await runBulkMoveOnIds(inboxRow, [match.id], input.destinationId);
       if (result.succeeded.length === 0) {
-        return { ok: false, error_code: result.failed[0]?.error ?? "move_failed" };
+        // Classified, not passed through. The runner's meter writes this
+        // straight into activity_log.error_code, and the bulk helpers hand back
+        // raw provider text for anything they do not recognise, which is how
+        // "UID COPY failed: [NONEXISTENT] Mailbox does not exist" got into the
+        // code column itself (10 rows in the 28 days to 2026-09-01). "read"
+        // because the runner never claims the outbound idempotency ledger.
+        return {
+          ok: false,
+          error_code: result.failed.length
+            ? bulkFailureErrorCode(result.failed[0].error, "read")
+            : "move_failed",
+        };
       }
       return {
         ok: true,
@@ -25040,7 +25679,13 @@ async function applyTriageAction(input: {
     case "mark_read": {
       const result = await runBulkFlagOnIds(inboxRow, [match.id], "read");
       if (result.succeeded.length === 0) {
-        return { ok: false, error_code: result.failed[0]?.error ?? "flag_failed" };
+        // Same reasoning as the move branch above.
+        return {
+          ok: false,
+          error_code: result.failed.length
+            ? bulkFailureErrorCode(result.failed[0].error, "read")
+            : "flag_failed",
+        };
       }
       // No undo_state: the reverse is "mark unread" and needs nothing but the
       // digest, which the run item already carries. The migration documents this
@@ -25111,20 +25756,32 @@ const TRIAGE_PASSTHROUGH_ERROR_CODES = new Set([
   "imap_keywords_unsupported",
 ]);
 
-/** Reduce a thrown provider error to a short code. Never message content. */
+/**
+ * Reduce a thrown provider error to a short code. Never message content.
+ *
+ * The SSRF guard's refusal and an auth failure were special-cased here from the
+ * start, for a reason that turned out to generalise: an automation that starts
+ * failing on a blocked host is not a flaky server, it is a mail host that has
+ * moved onto a private address since it was connected, and the run history is
+ * where an operator would notice. On 2026-09-01 the rest of the classification
+ * moved into provider-error.ts and this function became its caller rather than
+ * a second, thinner taxonomy that would drift from it.
+ *
+ * The runner takes the "read" boundary. That is not an oversight about the
+ * mailbox writes an automation performs: the outbound idempotency ledger is
+ * claimed and settled in the tools/call dispatcher, and the runner does not go
+ * through it, so nothing here can change whether a keyed retry replays. The one
+ * automation action that does reach the ledger is a forward, and it reaches it
+ * later, through the approval dispatcher, running the ordinary send handlers
+ * with their own "ledger" boundary intact.
+ */
 function providerErrorCode(error: unknown): string {
-  // The SSRF guard refused the mailbox's stored host. Worth its own code rather
-  // than a generic provider_error: an automation that starts failing this way
-  // is not a flaky server, it is a mail host that has moved onto a private
-  // address since it was connected, and the run history is where an operator
-  // would notice. The interactive tool paths surface the guard's own sentence
-  // verbatim through their existing provider_error catch; see
-  // MailHostBlockedError in host-guard.ts.
-  if (error instanceof MailHostBlockedError) return "mail_host_blocked";
   const message = error instanceof Error ? error.message : String(error);
-  if (message.includes("auth_failed")) return "auth_failed";
   if (TRIAGE_PASSTHROUGH_ERROR_CODES.has(message)) return message;
-  return "provider_error";
+  // The interactive tool paths surface the guard's own sentence verbatim
+  // through their existing provider_error catch; see MailHostBlockedError in
+  // host-guard.ts. `mail_host_blocked` is what the classifier returns for it.
+  return providerErrorLogCode(classifyProviderError(error), "read");
 }
 
 /**

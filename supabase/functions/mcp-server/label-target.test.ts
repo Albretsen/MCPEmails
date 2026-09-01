@@ -198,3 +198,47 @@ Deno.test("an id match wins over a same-string name on another folder", () => {
   assertEquals(r.id, "Receipts");
   assertEquals(r.matched, "id");
 });
+
+Deno.test("a not-found message names the folders the mailbox actually has", () => {
+  // The listing was already searched at the point of failure; throwing it away
+  // cost a round trip on every guessed name. See availableClause.
+  const result = resolveFolderReference("Junk", [
+    { id: "1", name: "INBOX" },
+    { id: "2", name: "Spam" },
+    { id: "3", name: "Archive" },
+  ]);
+  assert(!result.ok);
+  assertStringIncludes(result.error, '"INBOX"');
+  assertStringIncludes(result.error, '"Spam"');
+  assertStringIncludes(result.error, '"Archive"');
+  assertStringIncludes(result.error, "3 folders");
+  // And still says the thing that stops a retry loop.
+  assertStringIncludes(result.error, "permanent");
+});
+
+Deno.test("a long listing is truncated with its remainder counted", () => {
+  const folders = Array.from({ length: 60 }, (_, i) => ({ id: `${i}`, name: `Folder${i}` }));
+  const result = resolveFolderReference("Nope", folders);
+  assert(!result.ok);
+  assertStringIncludes(result.error, "60 folders");
+  assertStringIncludes(result.error, "and 20 more");
+  // A truncated list must never read as the whole mailbox.
+  assert(!result.error.includes('"Folder59"'));
+});
+
+Deno.test("an empty listing adds no sentence about what is there", () => {
+  const result = resolveFolderReference("Junk", []);
+  assert(!result.ok);
+  assert(
+    !/This inbox has/.test(result.error),
+    "an empty mailbox listing should not announce a count",
+  );
+});
+
+Deno.test("Gmail's not-found message counts labels, not folders", () => {
+  const result = resolveFolderReference("Junk", [{ id: "1", name: "INBOX" }], {
+    provider: "gmail",
+  });
+  assert(!result.ok);
+  assertStringIncludes(result.error, "1 label");
+});

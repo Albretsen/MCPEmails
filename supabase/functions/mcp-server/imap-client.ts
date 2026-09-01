@@ -147,6 +147,33 @@ const CRLF = "\r\n";
 const COMMAND_TIMEOUT_MS = 15_000;
 
 /**
+ * The silence a UID SEARCH is allowed before its read is abandoned.
+ *
+ * COMMAND_TIMEOUT_MS is not a command budget, it is an IDLE budget: fifteen
+ * seconds with nothing arriving on the socket. That is a generous ceiling for a
+ * FETCH, a STORE or a LIST, all of which start answering immediately. It is the
+ * wrong ceiling for SEARCH, which is the one command that legitimately goes
+ * quiet: the server says nothing at all while it walks the mailbox, then sends
+ * the whole UID list at once.
+ *
+ * The consequence was that the search budget the tools advertise could not be
+ * reached. `email_search` races the provider against SEARCH_TIMEOUT_MS (30s) in
+ * index.ts, but a silent server tripped this timer at 15s first, so the outer
+ * budget was dead code on exactly the mailboxes it existed for. Four of the
+ * five search timeouts in the 17:00 hour on 2026-09-01 came back at 15.7s
+ * against one OVH host, against one at 31.5s; over thirty days the same shape
+ * accounts for eight of the eighty-nine, with Yahoo behind six of the eight
+ * worst inboxes.
+ *
+ * Twenty-five seconds, not thirty: it has to stay UNDER the outer race so a
+ * genuinely dead socket is still closed by the timer that knows to destroy the
+ * connection, rather than by a deadline that just stops waiting. The bulk tools
+ * bound their search phase well below this anyway (see bulk-budget.ts), so this
+ * changes nothing for them.
+ */
+const SEARCH_IDLE_TIMEOUT_MS = 25_000;
+
+/**
  * Default ceiling on a single IMAP literal (one FETCH body, one long header).
  *
  * Sized off what the product actually supports rather than off a round number:
@@ -245,6 +272,14 @@ interface ReadTaggedOptions {
    * re-tokenize pass, each of which was a full-size copy of the message.
    */
   captureLiterals?: boolean;
+  /**
+   * How long the server may stay SILENT during this one command before the
+   * read is abandoned. Defaults to {@link COMMAND_TIMEOUT_MS}.
+   *
+   * Raised only by UID SEARCH; see {@link SEARCH_IDLE_TIMEOUT_MS} for why that
+   * one command needs its own budget and why nothing else gets one.
+   */
+  idleTimeoutMs?: number;
 }
 
 /** A live, authenticated IMAP session over implicit TLS. */
@@ -255,11 +290,35 @@ export class ImapClient {
   private bufEnd = 0;
   private tagCounter = 0;
   /**
+   * The idle budget in force for the command currently being read.
+   *
+   * An instance field rather than a parameter threaded through readLine,
+   * readExact and discardExact, all of which sit between readTagged and the
+   * socket and none of which have any business knowing about timeouts. Safe
+   * because `runExclusive` serialises commands on this connection: exactly one
+   * readTagged is ever in flight, and it restores the default in a `finally`.
+   */
+  private readIdleTimeoutMs = COMMAND_TIMEOUT_MS;
+  /**
    * Set once the peer has closed the socket. `readLine` answers EOF with an
    * empty string, which used to leave `readTagged` spinning forever waiting for
    * a tagged completion that can never arrive; the flag lets it give up instead.
    */
   private eofReached = false;
+  /**
+   * Set by {@link destroy}. Distinct from `eofReached` (which means the peer
+   * hung up) because the two want different words in the error a caller sees,
+   * and because it is also the flag that turns the BadResource a mid-flight
+   * close raises into the ordinary end-of-connection path.
+   */
+  private destroyed = false;
+  /**
+   * Commands queued or running on this socket. Counted rather than a boolean:
+   * a queued-but-not-yet-started command owes the socket just as much work as
+   * the running one, and a graceful LOGOUT would wait behind both. Read through
+   * {@link busy}.
+   */
+  private pending = 0;
   private readonly decoder = new TextDecoder("latin1");
   private readonly encoder = new TextEncoder();
 
@@ -296,10 +355,29 @@ export class ImapClient {
    * propagate to *this* caller but never break the chain for the next one.
    */
   private runExclusive<T>(fn: () => Promise<T>): Promise<T> {
+    this.pending++;
     const run = this.commandChain.then(fn, fn);
     // Keep the chain alive regardless of this command's outcome.
     this.commandChain = run.then(() => {}, () => {});
+    // Settle-only bookkeeping. Both handlers are supplied so this never becomes
+    // an unhandled rejection of its own; the caller still gets `run` untouched.
+    const done = () => {
+      this.pending--;
+    };
+    run.then(done, done);
     return run;
+  }
+
+  /**
+   * True while any command is queued or running on this socket.
+   *
+   * The one caller that needs this is a session deciding between a graceful
+   * LOGOUT and {@link destroy}: LOGOUT is itself a command, so on a busy socket
+   * it waits for work whose result nobody is going to read, which is how a
+   * handler with a 17-second budget was measured returning at 25 to 36 seconds.
+   */
+  get busy(): boolean {
+    return this.pending > 0;
   }
 
   /**
@@ -506,25 +584,208 @@ export class ImapClient {
     return this.lastPermanentFlags;
   }
 
-  /** UID SEARCH; returns matching UIDs (ascending). criteria e.g. "ALL", "UNSEEN". */
+  /**
+   * UID SEARCH; returns matching UIDs (ascending). criteria e.g. "ALL", "UNSEEN".
+   *
+   * BUGFIX (2026-09-01): the criteria string used to be interpolated straight
+   * into the command line and encoded as UTF-8 by `write`, which meant a search
+   * term containing any character above U+007F (Norwegian ae/o/aa, French
+   * accents, CJK, emoji) put raw multi-byte octets into an IMAP command line
+   * that had declared no charset. RFC 3501 6.4.4 says a SEARCH whose operands
+   * are not US-ASCII must name the encoding ("SEARCH CHARSET UTF-8 <key>
+   * {n}CRLF<octets>"), and strict servers enforce it: Yahoo answered
+   * "[BADCHARSET] UID SEARCH Unsupported text encoding" (production, Yahoo
+   * IMAP, 2026-09-01T06:36:39Z) and ex4.mail.ovh.net answers "Command Error.
+   * 11". Our user base is heavily Norwegian and European, so an accented search
+   * term is an ordinary request, not an edge case.
+   *
+   * The pure-ASCII case is deliberately untouched, byte for byte and round trip
+   * for round trip: it is essentially all live traffic, and this method is on
+   * the path of every list, search, contact scan and draft lookup in the
+   * product. Non-ASCII is detected first and is the ONLY thing that takes the
+   * new, chattier path.
+   *
+   * DESIGN NOTE, why the split happens here and not in `toImapSearch`: a
+   * criteria string reaches this method from several places, and only one of
+   * them comes out of `toImapSearch`. index.ts also hand-builds
+   * `HEADER Message-ID "<...>"` and the contact scanner's
+   * `OR OR FROM "Q" TO "Q" CC "Q"`, where Q is a user-supplied name that is
+   * every bit as likely to be "Bjorn" spelled properly. Returning a structured
+   * operand list from `toImapSearch` would have fixed exactly one of those call
+   * sites and left the others encoding raw octets. Parsing the assembled
+   * criteria here fixes all of them at once, keeps `toImapSearch` a pure string
+   * translator with its existing tests intact, and confines the change to this
+   * file. See {@link splitSearchLiterals} for the tokenizer.
+   */
   uidSearch(criteria: string): Promise<number[]> {
     return this.runExclusive(async () => {
-      const tag = this.nextTag();
-      await this.write(`${tag} UID SEARCH ${criteria}${CRLF}`);
-      const resp = await this.readTagged(tag);
-      if (resp.status !== "OK") {
+      // The 99% path. No tokenizing, no CHARSET, no continuation round trip:
+      // exactly the single write and single read this command has always done.
+      if (!hasNonAscii(criteria)) {
+        return await this.uidSearchAsciiUnlocked(criteria);
+      }
+
+      const segments = splitSearchLiterals(criteria);
+      const resp = await this.uidSearchUtf8Unlocked(segments);
+      if (resp.status === "OK") return resp.uids;
+
+      // A server that refuses the charset says so with [BADCHARSET] (RFC 3501
+      // response code) or by rejecting the command form outright with a tagged
+      // BAD. A plain NO with no BADCHARSET marker is an ordinary search failure
+      // (mailbox state, syntax in the caller's `raw` escape hatch) and must not
+      // be papered over by retrying a different query.
+      if (!isCharsetRejection(resp.status, resp.text)) {
         throw new Error(`UID SEARCH failed: ${resp.text}`);
       }
-      const line = resp.untagged.find((l) => /^\* SEARCH\b/.test(l));
-      if (!line) return [];
-      return line
-        .replace(/^\* SEARCH/, "")
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean)
-        .map(Number)
-        .filter((n) => Number.isFinite(n));
+
+      // One retry, with the non-ASCII operands folded to their nearest ASCII
+      // spelling. This is an approximation and we only make it when it is still
+      // recognisably the user's term: an operand that folds away completely
+      // (CJK, emoji, Greek) would turn the search into a question nobody asked,
+      // and silently returning the results of a different query is worse than
+      // an honest failure. See foldSearchCriteriaToAscii.
+      const folded = foldSearchCriteriaToAscii(criteria);
+      // The second condition is a backstop, not a duplicate of the first. The
+      // tokenizer only promotes operands it can identify, and one shape defeats
+      // it: an unterminated quoted string arriving through the `raw` escape
+      // hatch is copied through verbatim on purpose (rewriting malformed input
+      // only makes the server's complaint harder to read), so a non-ASCII
+      // character inside one is still there after folding. Retrying with it
+      // would put exactly the raw octets this whole change exists to remove
+      // back on the wire, so refuse instead.
+      if (folded.lost.length > 0 || hasNonAscii(folded.criteria)) {
+        const why = folded.lost.length > 0
+          ? `the search term ${folded.lost.map((t) => `"${t}"`).join(", ")} ` +
+            `has no ASCII equivalent to fall back to`
+          : "part of the criteria is not a string operand this client can fold to ASCII";
+        throw new Error(
+          `UID SEARCH failed: this server rejected CHARSET UTF-8 (${resp.text.trim()}) and ` +
+            `${why}, so the search was not run rather than run for something else`,
+        );
+      }
+      return await this.uidSearchAsciiUnlocked(folded.criteria);
     });
+  }
+
+  /**
+   * The original single-round-trip UID SEARCH, for criteria that are already
+   * pure ASCII. Split out of {@link uidSearch} so the fast path and the folded
+   * retry share one implementation and cannot drift apart. Unlocked: both
+   * callers are already inside `runExclusive`.
+   */
+  private async uidSearchAsciiUnlocked(criteria: string): Promise<number[]> {
+    const tag = this.nextTag();
+    await this.write(`${tag} UID SEARCH ${criteria}${CRLF}`);
+    const resp = await this.readTagged(tag, { idleTimeoutMs: SEARCH_IDLE_TIMEOUT_MS });
+    if (resp.status !== "OK") {
+      throw new Error(`UID SEARCH failed: ${resp.text}`);
+    }
+    return parseSearchUids(resp.untagged);
+  }
+
+  /**
+   * UID SEARCH CHARSET UTF-8, with every non-ASCII operand sent as a
+   * synchronizing literal (RFC 3501 4.3): write up to and including "{n}CRLF",
+   * wait for the server's "+" continuation, write exactly n octets, carry on
+   * with the rest of the line.
+   *
+   * `n` is the UTF-8 BYTE count, which is the whole point of the exercise and
+   * the classic way to get this wrong: "Bjorn" spelled with the Norwegian o is
+   * 5 characters but 6 octets, and a literal that promises 5 leaves the sixth
+   * octet sitting in the server's parser as the start of the next command. The
+   * count therefore comes from the encoder, never from `String.length`.
+   *
+   * Returns the tagged outcome rather than throwing so the caller can tell a
+   * charset refusal (retryable, folded) from a genuine failure. Unlocked: the
+   * caller holds the command lock for the whole multi-step exchange, which is
+   * what keeps another command from landing between our "{n}" and our octets.
+   */
+  private async uidSearchUtf8Unlocked(
+    segments: ImapSearchSegment[],
+  ): Promise<{ status: "OK" | "NO" | "BAD"; text: string; uids: number[] }> {
+    const tag = this.nextTag();
+    let pending = `${tag} UID SEARCH CHARSET UTF-8 `;
+
+    for (const segment of segments) {
+      if (segment.kind === "verbatim") {
+        pending += segment.text;
+        continue;
+      }
+      const bytes = this.encoder.encode(segment.value);
+      await this.write(`${pending}{${bytes.length}}${CRLF}`);
+      pending = "";
+
+      const cont = await this.readLiteralContinuation(tag);
+      if (cont !== null) {
+        // The server refused the command at the continuation point. RFC 3501
+        // says it does not read the literal in that case, so we must not send
+        // the octets: the socket is already back at a command boundary and the
+        // next command (our folded retry) can go out on a fresh tag.
+        return { ...cont, uids: [] };
+      }
+      await this.writeAll(bytes);
+    }
+
+    await this.write(`${pending}${CRLF}`);
+    const resp = await this.readTagged(tag, { idleTimeoutMs: SEARCH_IDLE_TIMEOUT_MS });
+    return {
+      status: resp.status,
+      text: resp.text,
+      uids: resp.status === "OK" ? parseSearchUids(resp.untagged) : [],
+    };
+  }
+
+  /**
+   * Wait for the "+" that authorises us to send a literal's octets.
+   *
+   * Returns null when the continuation arrived, or the tagged outcome when the
+   * server rejected the command instead. Unsolicited untagged data (EXISTS,
+   * EXPUNGE, RECENT) is legal at any point in a session and is skipped rather
+   * than mistaken for a refusal; APPEND does not do this and has been fine, but
+   * APPEND runs right after a SELECT while a search can be issued at any depth
+   * of a long-lived session. The 100-line ceiling is only there so a
+   * misbehaving server cannot spin this loop.
+   */
+  private async readLiteralContinuation(
+    tag: string,
+  ): Promise<{ status: "OK" | "NO" | "BAD"; text: string } | null> {
+    for (let i = 0; i < 100; i++) {
+      const line = await this.readLine();
+      if (line.startsWith("+")) return null;
+      if (line.startsWith(`${tag} `)) {
+        const m = /^\S+\s+(OK|NO|BAD)\s*(.*)$/.exec(line);
+        return { status: (m?.[1] as "OK" | "NO" | "BAD") ?? "BAD", text: m?.[2] ?? line };
+      }
+      if (this.eofReached) {
+        if (this.destroyed) throw destroyedError();
+        throw new Error("IMAP connection closed before the literal continuation");
+      }
+      if (line.startsWith("* ")) continue;
+      // Anything else is a protocol response we cannot act on. Treat it as a
+      // refusal of this command rather than sending octets into a parser that
+      // is plainly not waiting for them.
+      return { status: "BAD", text: line };
+    }
+    throw new Error("IMAP server never sent a literal continuation");
+  }
+
+  /**
+   * Write every byte of `bytes`, looping until the socket has taken them all.
+   *
+   * `Deno.Conn.write` is allowed to accept only part of the buffer. Nothing
+   * else in this file loops (a short write on a small command line has never
+   * been observed), but a literal is the one place where a partial write is not
+   * merely a truncated command: the server is counting octets, so the missing
+   * tail would be read as the beginning of the next command and desynchronise
+   * the connection for the rest of its life.
+   */
+  private async writeAll(bytes: Uint8Array): Promise<void> {
+    let offset = 0;
+    while (offset < bytes.length) {
+      const written = await this.writeSocket(bytes.subarray(offset));
+      if (written <= 0) throw new Error("IMAP socket accepted no bytes of a literal");
+      offset += written;
+    }
   }
 
   /**
@@ -902,6 +1163,12 @@ export class ImapClient {
    */
   logout(): Promise<void> {
     return this.runExclusive(async () => {
+      // Nothing to say goodbye to, and nothing to close: destroy() already did
+      // both. Returning quietly rather than failing matters because the callers
+      // that reach for destroy are the ones on their way out under a deadline,
+      // and a shutdown path that throws on an already-shut-down connection is
+      // one more error for them to remember to swallow.
+      if (this.destroyed) return;
       try {
         const tag = this.nextTag();
         await this.write(`${tag} LOGOUT${CRLF}`);
@@ -910,6 +1177,38 @@ export class ImapClient {
         this.close();
       }
     });
+  }
+
+  /**
+   * Close the socket at once, WITHOUT taking the command lock.
+   *
+   * Bypassing `runExclusive` is the entire point of this method, so it is worth
+   * being explicit about why. Callers bound a slow provider search with
+   * `Promise.race` against a timer, and `Promise.race` abandons the loser
+   * without cancelling it: the socket keeps working on a UID SEARCH or UID
+   * FETCH whose result nobody will ever read. `logout()` is an ordinary
+   * command and therefore queues behind that abandoned one, which is how
+   * handlers with a 17-second budget were measured returning at 25 to 36
+   * seconds. A destroy that queued the same way would inherit the same wait and
+   * would not be a cancellation at all.
+   *
+   * The leak matters as much as the latency. When a caller simply returns and
+   * orphans the promise, nothing runs `close()` until the abandoned command
+   * eventually settles, and the isolate may be recycled first. Yahoo caps an
+   * account at 5 simultaneous IMAP connections, so every orphan burns one of
+   * five slots until the server's own idle timeout reclaims it.
+   *
+   * Safe while a command is in flight (its parked read unwinds through the
+   * ordinary EOF path and the command rejects saying so), safe to call twice,
+   * and safe on a socket that is already closed.
+   */
+  destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
+    // Any command that has not reached its read yet must not start one, and
+    // any loop already waiting for a tagged completion has to stop waiting.
+    this.eofReached = true;
+    this.close();
   }
 
   private close(): void {
@@ -928,7 +1227,46 @@ export class ImapClient {
   }
 
   private async write(data: string): Promise<void> {
-    await this.conn.write(this.encoder.encode(data));
+    await this.writeSocket(this.encoder.encode(data));
+  }
+
+  /**
+   * One socket write, with {@link destroy} folded into a clean failure.
+   *
+   * A destroy landing while a command is mid-write closes the socket underneath
+   * this call and Deno raises BadResource. That is the intended outcome of
+   * cancelling, not a fault, and it should read as one: the abandoned command
+   * fails with a sentence that says the connection was destroyed rather than
+   * with a resource error that looks like a bug in this file.
+   */
+  private async writeSocket(bytes: Uint8Array): Promise<number> {
+    if (this.destroyed) throw destroyedError();
+    try {
+      return await this.conn.write(bytes);
+    } catch (err) {
+      if (this.destroyed) throw destroyedError();
+      throw err;
+    }
+  }
+
+  /**
+   * One socket read, with the same destroy handling as {@link writeSocket} and
+   * the shared command timeout.
+   *
+   * A read parked on the socket is the whole reason destroy exists, so the
+   * parked call has to unwind rather than sit there: null is reported, which is
+   * exactly what the peer hanging up looks like, and the caller's existing EOF
+   * path carries the command out. `readTagged` then names destroy specifically
+   * so the failure is not mistaken for a server that dropped the connection.
+   */
+  private async readSocket(view: Uint8Array): Promise<number | null> {
+    if (this.destroyed) return null;
+    try {
+      return await withTimeout(this.conn.read(view), this.readIdleTimeoutMs);
+    } catch (err) {
+      if (this.destroyed) return null;
+      throw err;
+    }
   }
 
   /** Refill the internal buffer from the socket. Returns false on EOF. */
@@ -963,10 +1301,7 @@ export class ImapClient {
       grown.set(this.buffer);
       this.buffer = grown;
     }
-    const n = await withTimeout(
-      this.conn.read(this.buffer.subarray(this.bufEnd)),
-      COMMAND_TIMEOUT_MS,
-    );
+    const n = await this.readSocket(this.buffer.subarray(this.bufEnd));
     if (n === null) return false;
     this.bufEnd += n;
     return true;
@@ -1052,10 +1387,7 @@ export class ImapClient {
     }
     let filled = buffered;
     while (filled < n) {
-      const read = await withTimeout(
-        this.conn.read(out.subarray(filled)),
-        COMMAND_TIMEOUT_MS,
-      );
+      const read = await this.readSocket(out.subarray(filled));
       if (read === null) {
         this.eofReached = true;
         break;
@@ -1085,7 +1417,7 @@ export class ImapClient {
     const scratch = new Uint8Array(DISCARD_CHUNK_BYTES);
     while (remaining > 0) {
       const chunk = scratch.subarray(0, Math.min(scratch.length, remaining));
-      const read = await withTimeout(this.conn.read(chunk), COMMAND_TIMEOUT_MS);
+      const read = await this.readSocket(chunk);
       if (read === null) {
         this.eofReached = true;
         return;
@@ -1115,6 +1447,7 @@ export class ImapClient {
     options: ReadTaggedOptions = {},
   ): Promise<ImapTaggedResponse> {
     const maxLiteralBytes = options.maxLiteralBytes ?? DEFAULT_MAX_LITERAL_BYTES;
+    this.readIdleTimeoutMs = options.idleTimeoutMs ?? COMMAND_TIMEOUT_MS;
     const untagged: string[] = [];
     const literals: string[] = [];
     // Size of the first literal that blew the budget; non-null means "finish
@@ -1162,8 +1495,10 @@ export class ImapClient {
           return { status, text: m?.[3] ?? line, untagged, literals };
         }
         if (this.eofReached) {
-          // The peer hung up before completing the response. Without this the
-          // loop would spin on empty lines forever, burning the isolate.
+          // The peer hung up before completing the response, or destroy() did
+          // it for us. Without this the loop would spin on empty lines forever,
+          // burning the isolate.
+          if (this.destroyed) throw destroyedError();
           throw new Error("IMAP connection closed before tagged response");
         }
         // Nothing downstream will look at this response once it is doomed, so
@@ -1171,6 +1506,10 @@ export class ImapClient {
         if (oversized === null) untagged.push(line);
       }
     } finally {
+      // Back to the default before the next command, whatever happened to this
+      // one. A raised budget that leaked would apply a search's patience to
+      // every FETCH that followed on the same connection.
+      this.readIdleTimeoutMs = COMMAND_TIMEOUT_MS;
       this.shrinkBuffer();
     }
   }
@@ -1216,6 +1555,270 @@ export function parsePermanentFlags(untagged: string[]): string[] | null {
   return null;
 }
 
+// -- UID SEARCH criteria: charset handling -------------------------------------
+//
+// Everything below exists to make a non-ASCII UID SEARCH legal on the wire.
+// It is deliberately parked with the other wire-format helpers rather than in
+// search-translate.ts: search-translate.ts is the pure "NormalizedSearch to a
+// provider dialect" translator, it has no idea about literals, continuations or
+// sockets, and only one of this client's several UID SEARCH call sites goes
+// through it at all. See the design note on ImapClient.uidSearch.
+
+/** One piece of a UID SEARCH command line, as it should be put on the wire. */
+export type ImapSearchSegment =
+  /** ASCII text to write exactly as given (keywords, dates, UID sets, quoting). */
+  | { kind: "verbatim"; text: string }
+  /**
+   * A string operand that contains non-ASCII and therefore has to travel as an
+   * IMAP literal. `value` is the DECODED operand: quoted-string escaping has
+   * already been undone, because a literal carries raw octets and must not
+   * re-apply it. `quoted` records whether the operand arrived inside a quoted
+   * string, which is only needed by the ASCII-folding fallback so it can put
+   * the operand back in the shape the caller wrote it.
+   */
+  | { kind: "literal"; value: string; quoted: boolean };
+
+/** True when the string contains any character outside US-ASCII. */
+export function hasNonAscii(value: string): boolean {
+  for (let i = 0; i < value.length; i++) {
+    if (value.charCodeAt(i) > 0x7f) return true;
+  }
+  return false;
+}
+
+/**
+ * Split an assembled RFC 3501 SEARCH criteria string into the pieces that can
+ * go out verbatim and the operands that have to go out as literals.
+ *
+ * The grammar we have to survive here is narrow but not trivial: the criteria
+ * string is whatever `toImapSearch` produced (keywords plus quoted astrings
+ * plus dd-Mon-yyyy dates), or one of index.ts's hand-built expressions, or a
+ * caller's `raw` escape hatch spliced in unquoted when its first token is a
+ * recognised SEARCH key. Non-ASCII can therefore turn up inside a quoted string
+ * (SUBJECT "Bjorn") or as a bare atom (a raw query such as `SUBJECT Bjorn`),
+ * and both have to become literals: RFC 3501 allows a literal anywhere an
+ * astring is allowed, so promoting either one is legal.
+ *
+ * Anything ASCII is copied through untouched, including the caller's original
+ * quoting and escaping. Nothing is re-quoted or re-escaped on this path, so
+ * there is no opportunity to change the meaning of a search that was already
+ * fine. An unterminated quoted string is also copied through untouched: it is
+ * malformed input the server will reject, and rewriting it would only turn a
+ * clear error into a confusing one.
+ */
+export function splitSearchLiterals(criteria: string): ImapSearchSegment[] {
+  const segments: ImapSearchSegment[] = [];
+  let verbatim = "";
+  const flush = () => {
+    if (verbatim !== "") {
+      segments.push({ kind: "verbatim", text: verbatim });
+      verbatim = "";
+    }
+  };
+
+  let i = 0;
+  while (i < criteria.length) {
+    const ch = criteria[i];
+
+    if (ch === '"') {
+      let j = i + 1;
+      let value = "";
+      let closed = false;
+      while (j < criteria.length) {
+        const c = criteria[j];
+        if (c === "\\" && j + 1 < criteria.length) {
+          value += criteria[j + 1];
+          j += 2;
+          continue;
+        }
+        if (c === '"') {
+          closed = true;
+          j++;
+          break;
+        }
+        value += c;
+        j++;
+      }
+      if (!closed || !hasNonAscii(value)) {
+        verbatim += criteria.slice(i, j);
+      } else {
+        flush();
+        segments.push({ kind: "literal", value, quoted: true });
+      }
+      i = j;
+      continue;
+    }
+
+    if (ch === " " || ch === "\t") {
+      verbatim += ch;
+      i++;
+      continue;
+    }
+
+    // A bare atom: everything up to the next space or quote. Parentheses and
+    // the like ride along inside the atom, which is correct as long as the atom
+    // is ASCII (it is copied verbatim) and harmless when it is not (an atom
+    // carrying a non-ASCII character was never a SEARCH keyword).
+    let j = i;
+    while (
+      j < criteria.length && criteria[j] !== " " && criteria[j] !== "\t" &&
+      criteria[j] !== '"'
+    ) {
+      j++;
+    }
+    const atom = criteria.slice(i, j);
+    if (hasNonAscii(atom)) {
+      flush();
+      segments.push({ kind: "literal", value: atom, quoted: false });
+    } else {
+      verbatim += atom;
+    }
+    i = j;
+  }
+
+  flush();
+  return segments;
+}
+
+/**
+ * Characters that have no canonical decomposition, so NFD leaves them intact
+ * and the "drop anything still non-ASCII" pass would delete them outright.
+ *
+ * This matters far more than it looks. The Norwegian o-slash and ae-ligature
+ * are exactly this class, and dropping them turns "Bjorn" into "Bjrn" and
+ * "Maelstrom" into "Mlstrom", which is not an approximation of the user's term,
+ * it is a different word. Handling them explicitly is what makes the fallback
+ * worth having for the user base that hit this bug in the first place. Kept
+ * small and Latin-only on purpose: a general transliteration table is a
+ * library, and a script we cannot approximate honestly (Greek, Cyrillic, CJK)
+ * is supposed to fail loudly rather than be guessed at.
+ */
+const ASCII_FOLD_MAP: Record<string, string> = {
+  "Æ": "AE",
+  "æ": "ae",
+  "Ø": "O",
+  "ø": "o",
+  "Đ": "D",
+  "đ": "d",
+  "Ð": "D",
+  "ð": "d",
+  "Þ": "TH",
+  "þ": "th",
+  "ß": "ss",
+  "Ł": "L",
+  "ł": "l",
+  "Œ": "OE",
+  "œ": "oe",
+};
+
+/**
+ * Fold a single operand to a searchable ASCII approximation: expand the
+ * characters NFD cannot help with, decompose the rest so accents become
+ * combining marks, drop the combining marks, then drop whatever is still
+ * non-ASCII. An accented "cafe" comes back as "cafe"; a purely CJK or emoji
+ * term comes back empty, which is the caller's signal to refuse.
+ */
+function foldOperandToAscii(value: string): string {
+  let mapped = "";
+  for (const ch of value) mapped += ASCII_FOLD_MAP[ch] ?? ch;
+  return mapped
+    .normalize("NFD")
+    // Combining Diacritical Marks.
+    .replace(/[\u0300-\u036f]/g, "")
+    // deno-lint-ignore no-control-regex
+    .replace(/[^\x00-\x7F]/g, "");
+}
+
+/**
+ * Rewrite a criteria string so every operand is ASCII, for the one retry we
+ * allow after a server has refused CHARSET UTF-8.
+ *
+ * `lost` names every operand that folded away to nothing. It is not a warning:
+ * the caller is expected to abandon the search entirely when it is non-empty,
+ * because a search for the surviving half of the user's criteria is a different
+ * search wearing the same result shape, and returning it silently is how a user
+ * ends up trusting an answer nobody asked for.
+ */
+export function foldSearchCriteriaToAscii(
+  criteria: string,
+): { criteria: string; lost: string[] } {
+  const lost: string[] = [];
+  let out = "";
+  for (const segment of splitSearchLiterals(criteria)) {
+    if (segment.kind === "verbatim") {
+      out += segment.text;
+      continue;
+    }
+    const folded = foldOperandToAscii(segment.value);
+    if (folded.trim() === "") {
+      lost.push(segment.value);
+      // Never actually shipped (the caller throws on a non-empty `lost`), but
+      // the string stays syntactically valid so a future caller that decides to
+      // report-and-continue cannot emit a broken command line.
+      out += segment.quoted ? '""' : "";
+      continue;
+    }
+    out += segment.quoted ? `"${escapeQuoted(folded)}"` : folded;
+  }
+  return { criteria: out, lost };
+}
+
+/**
+ * Does this tagged failure mean "I do not do that charset"?
+ *
+ * [BADCHARSET] is the RFC 3501 response code for it and is what Yahoo sends. A
+ * bare BAD is the other shape it takes: a server that does not implement the
+ * optional CHARSET clause rejects the command form rather than the charset, the
+ * way ex4.mail.ovh.net answers "Command Error. 11". A NO without the marker is
+ * an ordinary search failure and deliberately does not match, because folding
+ * and retrying on one of those would change what the user searched for in
+ * response to something that had nothing to do with encoding.
+ */
+export function isCharsetRejection(status: "OK" | "NO" | "BAD", text: string): boolean {
+  if (status === "OK") return false;
+  if (/badcharset/i.test(text)) return true;
+  return status === "BAD";
+}
+
+/**
+ * Pull the UID list out of a SEARCH response's untagged lines.
+ *
+ * BUGFIX (2026-09-01): this used to take the FIRST `* SEARCH` line and ignore
+ * the rest. Nothing in RFC 3501 promises a server puts its whole answer on one
+ * line, and servers do split large result sets across several untagged SEARCH
+ * lines. Every continuation line was being dropped, and dropping them does not
+ * raise anything: the caller gets a short UID list, an under-reported match
+ * total, and a candidate pool that was quietly truncated. That failure gets
+ * worse exactly as the mailbox gets bigger, which is the worst possible place
+ * to lose results without saying so. Accumulate across every line instead.
+ *
+ * ESEARCH (RFC 4731) is deliberately NOT parsed here. A server may only answer
+ * with the untagged `* ESEARCH` form when the client asked for it, and there
+ * are exactly two ways to ask: issue `SEARCH RETURN (...)`, or negotiate
+ * IMAP4rev2 with `ENABLE IMAP4rev2` (RFC 9051 replaces the `* SEARCH` response
+ * outright). This client does neither. It never sends a RETURN clause, it never
+ * sends ENABLE at all, and every criteria string reaching uidSearch is plain
+ * RFC 3501 search-key syntax. Speculative ESEARCH parsing would therefore be
+ * dead code that no test could exercise honestly. If a RETURN clause or an
+ * ENABLE is ever added, this function is the thing that has to change with it.
+ *
+ * Order is left exactly as the server sent it (servers answer ascending, and
+ * callers that care about ordering sort for themselves), so this stays a
+ * transcription of the response rather than an interpretation of it.
+ */
+function parseSearchUids(untagged: string[]): number[] {
+  const uids: number[] = [];
+  for (const line of untagged) {
+    if (!/^\* SEARCH\b/.test(line)) continue;
+    for (const token of line.replace(/^\* SEARCH/, "").trim().split(/\s+/)) {
+      if (token === "") continue;
+      const uid = Number(token);
+      if (Number.isFinite(uid)) uids.push(uid);
+    }
+  }
+  return uids;
+}
+
 function quoteImap(s: string): string {
   // SECURITY: reject CR/LF and other control chars before quoting. These flow
   // into raw IMAP command lines (SELECT/CREATE/RENAME/DELETE/COPY/MOVE/APPEND/
@@ -1230,6 +1833,16 @@ function quoteImap(s: string): string {
 
 function escapeQuoted(s: string): string {
   return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+/**
+ * The single sentence a caller sees when its command lost a race and something
+ * called {@link ImapClient.destroy} underneath it. One factory so the abandoned
+ * command reads the same whether it died at a write, at a read, or waiting for
+ * a literal continuation, and so a caller can match on it if it ever needs to.
+ */
+function destroyedError(): Error {
+  return new Error("IMAP connection was destroyed while a command was in flight");
 }
 
 async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {

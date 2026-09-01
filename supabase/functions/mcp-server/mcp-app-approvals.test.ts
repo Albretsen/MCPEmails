@@ -1273,7 +1273,7 @@ Deno.test("the approval tools are scoped to send:email, with schedule:email acce
     // reject real results as soon as a payload key changed. Permissive is what
     // makes declaring it safe.
     const out = tool.outputSchema as Record<string, unknown> | undefined;
-    assert(out, `${tool.name} must declare an outputSchema`);
+    assert(out !== undefined, `${tool.name} must declare an outputSchema`);
     assertEquals(out!.type, "object", `${tool.name} outputSchema is an object`);
     assertEquals(
       out!.additionalProperties,

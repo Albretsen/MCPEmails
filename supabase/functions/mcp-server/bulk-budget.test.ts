@@ -12,7 +12,12 @@
 // Run: deno test supabase/functions/mcp-server/
 // ---------------------------------------------------------------------------
 
-import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
+import {
+  assert,
+  assertEquals,
+  assertRejects,
+  assertStringIncludes,
+} from "jsr:@std/assert@1";
 import {
   BULK_ACT_PHASE_RESERVE_MS,
   BULK_WALL_CLOCK_BUDGET_MS,
@@ -20,6 +25,7 @@ import {
   bulkPartialNotice,
   continuationFor,
   createWorkBudget,
+  raceSearchWithTimeout,
   remainingIds,
 } from "./bulk-budget.ts";
 
@@ -214,4 +220,152 @@ Deno.test("the failed count is surfaced separately from the untouched count", ()
   });
   assertEquals(fields.remaining, 4);
   assertStringIncludes(fields.partial_notice, "A further 2 could not be");
+});
+
+// ---------------------------------------------------------------------------
+// The arithmetic, stated as a number.
+//
+// The test above this one asserts `searchPhaseMs(30_000)` equals
+// `25_000 - BULK_ACT_PHASE_RESERVE_MS`, which is true of any reserve and was
+// therefore true, and green, for the whole time the search phase was silently
+// running on 17 seconds while plain email_search got 30. The absence of a test
+// that said a NUMBER is what let that ship. So: a number.
+// ---------------------------------------------------------------------------
+
+Deno.test("the search phase of a search_and_* call gets exactly 21 seconds", () => {
+  const clock = fakeClock();
+  const budget = createWorkBudget(BULK_WALL_CLOCK_BUDGET_MS, clock.now);
+
+  assertEquals(BULK_WALL_CLOCK_BUDGET_MS, 25_000, "the client-facing budget must not move");
+  assertEquals(BULK_ACT_PHASE_RESERVE_MS, 4_000, "the act phase no longer connects");
+  assertEquals(budget.searchPhaseMs(30_000), 21_000);
+  assertEquals(budget.searchPhaseMs(), 21_000, "an omitted ceiling changes nothing");
+});
+
+Deno.test("the 30-second per-search ceiling never binds on a bulk call", () => {
+  // Which is why the two handlers stopped passing it. Reading
+  // `budget.searchPhaseMs(SEARCH_TIMEOUT_MS)` told you the search had thirty
+  // seconds; it had the budget's slice, every time, from the first millisecond
+  // of the call to the last.
+  const clock = fakeClock();
+  const budget = createWorkBudget(BULK_WALL_CLOCK_BUDGET_MS, clock.now);
+  let spent = 0;
+  for (const step of [0, 1_000, 9_000, 10_000, 4_999]) {
+    clock.advance(step);
+    spent += step;
+    assertEquals(
+      budget.searchPhaseMs(30_000),
+      budget.searchPhaseMs(),
+      `the 30s ceiling bound at ${spent}ms spent`,
+    );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// raceSearchWithTimeout.
+//
+// The two defects it exists to fix are both invisible in a passing search: a
+// timer that is never cleared, and a loser that is abandoned rather than
+// cancelled. Both are asserted here, the first by Deno's own op sanitizer
+// (a test that leaves a timer armed fails), the second by watching the order of
+// the cancel and the rejection.
+// ---------------------------------------------------------------------------
+
+Deno.test("a search that finishes inside its deadline is returned untouched", async () => {
+  let cancels = 0;
+  const value = await raceSearchWithTimeout(
+    () => Promise.resolve("results"),
+    10_000,
+    () => cancels++,
+  );
+  assertEquals(value, "results");
+  assertEquals(cancels, 0, "nothing to cancel when the search won");
+  // The op sanitizer is the real assertion here: a 10-second timer left armed
+  // after this returns fails the test. Before this helper existed, every single
+  // successful search left one.
+});
+
+Deno.test("an overrunning search is cancelled BEFORE the caller is told it timed out", async () => {
+  // The order is the whole point. Cancelling after the handler has returned is
+  // what the code did before, and by then the handler's `finally` has already
+  // asked the session to close, which on a busy socket means LOGOUT queuing
+  // behind the very command that needed killing.
+  const order: string[] = [];
+  await assertRejects(
+    () =>
+      raceSearchWithTimeout(
+        () => new Promise<never>(() => {}),
+        20,
+        () => order.push("cancelled"),
+      ),
+    Error,
+    "search_timeout",
+  );
+  order.push("rejected");
+  assertEquals(order, ["cancelled", "rejected"]);
+});
+
+Deno.test("the deadline is wall-clock real: a search that never answers does not hold the caller", async () => {
+  const startedAt = Date.now();
+  await assertRejects(
+    () => raceSearchWithTimeout(() => new Promise<never>(() => {}), 50, null),
+    Error,
+    "search_timeout",
+  );
+  const elapsed = Date.now() - startedAt;
+  assert(elapsed >= 50, `returned before its own deadline, in ${elapsed}ms`);
+  assert(elapsed < 550, `returned ${elapsed}ms after a 50ms deadline`);
+});
+
+Deno.test("a cancel that throws does not replace the timeout the caller has to see", async () => {
+  // A destroy on an already-dead socket is the ordinary case of this. If it
+  // surfaced instead of the timeout, the handler would log a provider error for
+  // a call that plainly timed out, and on a mutating tool that is a different
+  // ledger outcome.
+  await assertRejects(
+    () =>
+      raceSearchWithTimeout(
+        () => new Promise<never>(() => {}),
+        10,
+        () => {
+          throw new Error("BadResource: socket already closed");
+        },
+      ),
+    Error,
+    "search_timeout",
+  );
+});
+
+Deno.test("the abandoned search's own failure never surfaces as an unhandled rejection", async () => {
+  // Cancelling makes the abandoned command fail, a moment after nobody is left
+  // waiting for it. Deno fails a test run on an unhandled rejection, so this
+  // test IS the assertion.
+  let failTheSearch: (err: Error) => void = () => {};
+  await assertRejects(
+    () =>
+      raceSearchWithTimeout(
+        () => new Promise<never>((_, reject) => (failTheSearch = reject)),
+        10,
+        null,
+      ),
+    Error,
+    "search_timeout",
+  );
+  failTheSearch(new Error("IMAP connection destroyed"));
+  await new Promise((resolve) => setTimeout(resolve, 20));
+});
+
+Deno.test("a search that throws synchronously propagates as itself, with no timer armed", async () => {
+  await assertRejects(
+    () =>
+      raceSearchWithTimeout(
+        () => {
+          throw new Error("bad arguments");
+        },
+        10_000,
+        null,
+      ),
+    Error,
+    "bad arguments",
+  );
 });

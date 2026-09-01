@@ -54,6 +54,11 @@ import { isIsoDateOrDateTime, type NormalizedSearch } from "./search-translate.t
 // and which of those names are legal. See the note on `applyAction` above about
 // why the runner owns no provider code of its own.
 import { labelTargetFor } from "./label-target.ts";
+// Pure classification, no provider code either: turns a thrown provider error
+// into one of a finite set of reasons. Imported for the same reason
+// labelTargetFor is, so the runner and the interactive tools cannot drift into
+// two different accounts of what went wrong.
+import { classifyProviderError, providerErrorLogCode } from "./provider-error.ts";
 
 // ---------------------------------------------------------------------------
 // Budgets and constants
@@ -1138,7 +1143,23 @@ export async function runTriageRule(
           : null,
       });
     } catch (error) {
-      outcome = { ok: false, error_code: redactErrorDetail(error).slice(0, 120) || "provider_error" };
+      // CLASSIFIED, NOT REDACTED (2026-09-01). This used to be
+      // `redactErrorDetail(error).slice(0, 120)`, and `error_code` is where it
+      // landed: on `activity_log` through `deps.meter` below, and on the run
+      // item's `detail`. redactErrorDetail neutralises control characters and
+      // truncates, which is the right treatment for a free-text detail field
+      // and the wrong one for a code. It left up to 120 characters of provider
+      // prose in a column monitoring groups on, and provider prose is where a
+      // folder name ("Mailbox not found: Junk") or an echoed search command
+      // lives. A finite reason cannot carry either.
+      //
+      // "read" is the correct boundary: the runner never claims the outbound
+      // idempotency ledger, so nothing here decides whether a keyed retry
+      // replays. See providerErrorCode in index.ts.
+      outcome = {
+        ok: false,
+        error_code: providerErrorLogCode(classifyProviderError(error), "read"),
+      };
     }
 
     // METERING AND AUDIT, per action. The /dispatch path historically wrote no
