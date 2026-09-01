@@ -271,6 +271,14 @@ export function KioskHealthTile({
         suffix={window}
         caption={<>{captionFor(health)}</>}
       />
+      {/*
+        The fact row stays raw on purpose, including on a window where one
+        workspace owned the failures. Twenty calls did fail, and a board that
+        quietly nets somebody out of its own counts is a board whose numbers
+        cannot be checked against the database by the person standing in front
+        of it. The attribution belongs in the caption, in words, where it can
+        say WHOSE failures they were instead of hiding them.
+      */}
       <FactRow
         facts={[
           { label: 'Calls 60m', value: formatCount(health.live.calls) },
@@ -312,6 +320,31 @@ function asideFor(health: SystemHealth): string {
 }
 
 /**
+ * The line under the number: what the monitor thinks, and when the number
+ * needs defending.
+ *
+ * The second sentence appears only on a window the classifier held back
+ * because one workspace owned the failures, and it is not decoration. Without
+ * it the tile shows something like 91.6% in calm green over "Failed 60m 20",
+ * and the two do not add up in the head of anyone who stops to look. Left
+ * unexplained that reads as a broken tile, which costs the board its
+ * credibility just as surely as a false amber would. So the tile says whose
+ * failures they were, in the same breath as the number.
+ *
+ * The judgement is not made here. `health.concentration` is set by the
+ * classifier or it is not, and this only puts words to it.
+ */
+function captionFor(health: SystemHealth) {
+  const held = health.concentration;
+  return (
+    <>
+      {monitorCaption(health)}
+      {held ? ` ${held.worstWorkspaceErrors} of ${health.live.errors} failures are one workspace, not the product.` : null}
+    </>
+  );
+}
+
+/**
  * One line saying what the monitor thinks, and how long ago it thought it.
  *
  * The age matters as much as the verdict. "Checks green" is worth nothing
@@ -319,7 +352,7 @@ function asideFor(health: SystemHealth): string {
  * to have is not an outage, it is a monitor that quietly stopped running and
  * left a stale green on the wall.
  */
-function captionFor(health: SystemHealth) {
+function monitorCaption(health: SystemHealth) {
   const { monitor } = health;
   if (!monitor.lastRunAt) return 'The synthetic monitor has never reported.';
 

@@ -28,6 +28,17 @@
  * because "1 of 2 calls failed" is a coin toss and painting a wall display red
  * for it is how a board gets ignored.
  *
+ * WHY THE ERROR RATE IS ALSO ASKED WHOSE ERRORS THEY WERE. A rate over the
+ * whole estate answers "what fraction of calls failed", which is only the same
+ * question as "is the product broken" when the failures are spread. They are
+ * often not: one customer's mail host refusing that customer's connections
+ * produces a burst that is entirely real, entirely theirs, and large enough at
+ * our volume to move the headline several points (2026-09-01, see
+ * CONCENTRATION_SHARE). So the live window carries who failed as well as how
+ * many, and the amber branch refuses to fire when one workspace owns the
+ * failures and everyone else is demonstrably fine. It can only ever hold back
+ * an amber, never a red.
+ *
  * WHY THE MONITOR'S OWN URGENCY RULE IS COPIED HERE. The pager escalates on
  * the first failure for `authentication`, `mcp_protocol` and `internal`, and
  * waits for two consecutive failures for everything else, because those three
@@ -71,6 +82,71 @@ export const DEGRADED_SUCCESS_RATE = 0.9;
  */
 export const MONITOR_STALE_MINUTES = 12;
 
+/**
+ * How much of a window's failure volume one workspace has to own before the
+ * board stops reading it as a product problem.
+ *
+ * MEASURED, like every other number in this file. On 2026-09-01 at 16:26 UTC
+ * the live window held 237 calls and 20 failures, which is 91.6% and a hair
+ * above the amber line. Eight of those twenty were one inbox on one workspace
+ * inside a single eight minute burst, every one of them the same repeated
+ * `provider_error` against that customer's own mail host at OVH. Excluding
+ * that workspace the window was 94.9%, which is an ordinary hour. So the
+ * headline the room would have read was, to within a rounding error, one
+ * stranger's broken mail server. On a quieter hour the same burst crosses the
+ * line and turns the wall amber, and a wall that goes amber for somebody
+ * else's DNS is a wall the room learns to walk past. That is the one failure
+ * mode a display like this cannot survive, and it is worse than missing an
+ * incident, because it also loses every future incident.
+ *
+ * A third, not half. Half would need one workspace to out-fail everyone else
+ * combined before we discount it, which the 8-of-20 burst does not do and
+ * which would leave the defect unfixed. A third is the point where the errors
+ * stop being spread: three or more workspaces failing at roughly equal weight
+ * is a fact about us, one workspace owning a third or more of every failure in
+ * the hour is a fact about that workspace. It is only ever half of the test.
+ * The other half, and the load-bearing one, is that everyone else has to be
+ * demonstrably fine (see `concentratedInOneWorkspace`).
+ */
+export const CONCENTRATION_SHARE = 1 / 3;
+
+/**
+ * Where a window's failures actually came from.
+ *
+ * Null on a `CallWindow` means NOT MEASURED, which is never the same as "not
+ * concentrated": the guard below refuses to fire on a null, so a read that
+ * failed or a window nobody bothered to profile escalates exactly as it did
+ * before this existed. Blindness must never buy silence.
+ */
+export type ErrorConcentration = {
+  /** Distinct workspaces with at least one failed call in the window. */
+  workspaces: number;
+  /** Failed calls belonging to the single worst of those workspaces. */
+  worstWorkspaceErrors: number;
+  /**
+   * The same window with that one workspace's traffic removed entirely,
+   * counted in Postgres rather than subtracted here.
+   *
+   * Subtraction cannot do this job. We know that workspace's failures but not
+   * its successes, so anything derived from the totals alone silently assumes
+   * the answer: forgive its failures and a heavy, half-broken workspace makes
+   * the remainder look healthier than it is, which is the exact direction that
+   * hides an outage. Counted separately it is the truth, and the classifier
+   * can run its ordinary rate test on it with no special arithmetic.
+   *
+   * Null when the fetch did not measure it (nobody dominated the window, so
+   * the counterfactual was not worth three more queries) or could not.
+   */
+  rest: RestWindow | null;
+};
+
+/** A window with one workspace taken out, counted the same way as the whole. */
+export type RestWindow = {
+  calls: number;
+  successes: number;
+  errors: number;
+};
+
 /** Call outcomes over a window, straight out of `activity_log`. */
 export type CallWindow = {
   /** How many minutes the window covers, for the label. */
@@ -79,6 +155,8 @@ export type CallWindow = {
   successes: number;
   errors: number;
   rateLimited: number;
+  /** Where the failures came from, or null when nothing measured it. */
+  concentration: ErrorConcentration | null;
 };
 
 /** What the synthetic monitor knows about itself. */
@@ -105,6 +183,16 @@ export type HealthFacts = {
   lastCallAt: string | null;
 };
 
+/** Why a would-be amber was held back, and the numbers behind it. */
+export type ConcentrationHold = {
+  /** Failed calls owned by the single worst workspace. */
+  worstWorkspaceErrors: number;
+  /** Distinct workspaces that failed at all in the window. */
+  workspaces: number;
+  /** Success rate of every other workspace put together, as a fraction. */
+  restRate: number;
+};
+
 /** The classifier's verdict, plus the words the board puts on the wall. */
 export type HealthVerdict = {
   level: HealthLevel;
@@ -114,6 +202,18 @@ export type HealthVerdict = {
   reason: string;
   /** When the trouble started, ISO, for "since 11:20". Null when nothing is wrong. */
   since: string | null;
+  /**
+   * Set ONLY when the error-rate witness would have escalated and was held
+   * back because one workspace owned the failures.
+   *
+   * It exists because the alarm banner does not render on a green verdict, so
+   * on this path the reason string never reaches the wall. The tile carries it
+   * instead, which is also where it belongs: the tile is what shows 91.6% in
+   * calm green, and a percentage that looks wrong needs its explanation
+   * beside it rather than in a JSON payload nobody is reading. The tile takes
+   * the numbers and not the judgement, so the decision stays in one place.
+   */
+  concentration?: ConcentrationHold;
 };
 
 /** The whole payload the API hands the board. */
@@ -126,6 +226,66 @@ export type SystemHealth = HealthFacts & HealthVerdict & {
 export function successRate(window: CallWindow): number | null {
   if (window.calls < MIN_LIVE_CALLS) return null;
   return window.successes / window.calls;
+}
+
+/**
+ * Is this window's failure volume one workspace's problem rather than ours?
+ *
+ * Two tests, and both have to pass, because either one alone gets it wrong.
+ *
+ * CONCENTRATION alone would suppress the wrong thing. A window at 89.6% with
+ * twenty-six failures spread thin still has SOME worst workspace, and letting
+ * "worst" mean "to blame" would hand every broad, shallow degradation an
+ * excuse. Hence the share test: one workspace has to own at least a third of
+ * the failures before it is even a candidate.
+ *
+ * THE COUNTERFACTUAL alone would suppress too eagerly in the other direction.
+ * Remove any single workspace from a genuinely sick hour and the remainder is
+ * usually still sick, so this is the test that does the real work: it asks
+ * whether the product, with that account taken out, is a product anyone would
+ * walk over for. It is answered from separately counted traffic, not from
+ * subtraction, for the reason on `ErrorConcentration.rest`.
+ *
+ * WHAT IT REFUSES TO DO. It returns null for every case it cannot settle,
+ * including a window it could not profile and a remainder too small to have a
+ * rate at all (fewer than MIN_LIVE_CALLS calls once the workspace is out, so
+ * one customer WAS most of the hour and the honest answer is that we cannot
+ * tell). Null means the classifier escalates exactly as it did before this
+ * function existed. "We cannot tell" must never render as "we are fine", which
+ * is the same rule the whole health read is built on.
+ *
+ * IT IS NEVER CONSULTED ON THE WAY TO `down`, on purpose. See classifyHealth.
+ */
+export function concentratedInOneWorkspace(live: CallWindow): ConcentrationHold | null {
+  const concentration = live.concentration;
+  if (!concentration || !concentration.rest) return null;
+  if (live.errors <= 0) return null;
+
+  // Share test. One workspace has to own a third or more of the hour's
+  // failures before its bad afternoon is allowed to explain the headline.
+  if (concentration.worstWorkspaceErrors < live.errors * CONCENTRATION_SHARE) return null;
+
+  // The counterfactual, run through the same rate test the board uses on
+  // everything else so the two can never disagree about what healthy means.
+  const rest: CallWindow = {
+    minutes: live.minutes,
+    calls: concentration.rest.calls,
+    successes: concentration.rest.successes,
+    errors: concentration.rest.errors,
+    // Not measured for the remainder, and not needed: nothing below reads it.
+    // Rate limited calls have never been recorded in production anyway.
+    rateLimited: 0,
+    concentration: null,
+  };
+  const restRate = successRate(rest);
+  if (restRate === null) return null;
+  if (restRate < DEGRADED_SUCCESS_RATE) return null;
+
+  return {
+    worstWorkspaceErrors: concentration.worstWorkspaceErrors,
+    workspaces: concentration.workspaces,
+    restRate,
+  };
 }
 
 /** Whole minutes between an ISO timestamp and now. Null for a missing or unparseable one. */
@@ -144,6 +304,29 @@ export function minutesSince(iso: string | null, now: number): number | null {
  * second most urgent fact is worse than one that reports nothing. The reason
  * string always names the witness, so whoever walks over knows which system to
  * open first.
+ *
+ * WHY CONCENTRATION CANNOT SUPPRESS `down`, AND ONLY EVER AMBER. Both DOWN
+ * branches sit above the guard and never read it. That is a deliberate
+ * asymmetry rather than an oversight, for three reasons.
+ *
+ * The costs are not symmetric. A guard that can turn amber into green costs at
+ * worst a slower walk to the wall, and the monitor is still watching from the
+ * other side. A guard that can turn red into green costs an outage that nobody
+ * looked at, which is the failure this whole module exists to prevent. When
+ * one direction of a mistake is recoverable and the other is not, the
+ * machinery only gets to operate in the recoverable direction.
+ *
+ * The arithmetic says the same thing. `down` needs more than half of every
+ * call in the hour to fail. For one workspace to produce that it has to be
+ * making more than half of the product's live traffic, and at that point its
+ * experience IS the product's reliability, whoever is behind it. A window
+ * where one account is the majority of usage and the majority of failures is
+ * not a window this board should be quietly reassuring about.
+ *
+ * And the guard leans on data that DOWN is least able to trust. The
+ * concentration read is a second query with its own ways of being wrong or
+ * missing. Amber can afford to be decided by that. Red is the state a wall
+ * display exists to reach, and it answers to the two witnesses alone.
  */
 export function classifyHealth(facts: HealthFacts, now: number = Date.now()): HealthVerdict {
   const { monitor, live } = facts;
@@ -153,6 +336,13 @@ export function classifyHealth(facts: HealthFacts, now: number = Date.now()): He
     (IMMEDIATE_FAILURE_CLASSES as readonly string[]).includes(monitor.failureClass);
   const rate = successRate(live);
   const staleMinutes = minutesSince(monitor.lastRunAt, now);
+
+  // Computed once, consulted twice: by the error-rate amber branch that it
+  // holds back, and by the green verdict that then has to explain itself. It
+  // is only computed for a window that would otherwise escalate, so a healthy
+  // hour never carries a concentration note it does not need.
+  const hold =
+    rate !== null && rate < DEGRADED_SUCCESS_RATE ? concentratedInOneWorkspace(live) : null;
 
   // Nothing to judge on. Only reachable before the monitor's first ever run or
   // when the query that feeds it failed, and it must not be painted green: an
@@ -213,7 +403,13 @@ export function classifyHealth(facts: HealthFacts, now: number = Date.now()): He
   // DEGRADED: error rate several times its baseline, monitor still passing.
   // This is the case the monitor structurally cannot see, since its four steps
   // exercise four code paths and customers exercise all of them.
-  if (rate !== null && rate < DEGRADED_SUCCESS_RATE) {
+  //
+  // Unless one workspace owns the failures and everyone else is fine, in which
+  // case the number is real and the conclusion would not have been. The board
+  // escalates on what is wrong with the PRODUCT; a customer's own mail host
+  // refusing that customer's connections is a support ticket, and it is not
+  // improved by being on a wall in a different building.
+  if (rate !== null && rate < DEGRADED_SUCCESS_RATE && !hold) {
     return {
       level: 'degraded',
       headline: 'ERRORS UP',
@@ -234,6 +430,19 @@ export function classifyHealth(facts: HealthFacts, now: number = Date.now()): He
     };
   }
 
+  // GREEN, but with a percentage on the tile that does not look green. Said in
+  // full, and said as something to act on: whoever reads it should come away
+  // knowing which account to open, not merely that they were told to relax.
+  if (hold) {
+    return {
+      level: 'ok',
+      headline: 'ALL GREEN',
+      reason: `One workspace produced ${hold.worstWorkspaceErrors} of the ${live.errors} failed calls in the last ${live.minutes} minutes. Every other workspace together is at ${percent(hold.restRate)}, so this is that one account's mail provider and not the product. The synthetic checks pass.`,
+      since: null,
+      concentration: hold,
+    };
+  }
+
   return {
     level: 'ok',
     headline: 'ALL GREEN',
@@ -242,6 +451,11 @@ export function classifyHealth(facts: HealthFacts, now: number = Date.now()): He
       : `Every synthetic check is passing and ${live.successes} of ${live.calls} customer calls succeeded.`,
     since: null,
   };
+}
+
+/** A fraction as a one decimal percentage, for a sentence rather than a tile. */
+function percent(fraction: number): string {
+  return `${(fraction * 100).toFixed(1)}%`;
 }
 
 /** The failing step and class, said the way a person would say it. */
