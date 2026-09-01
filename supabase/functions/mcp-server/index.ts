@@ -149,6 +149,7 @@ import {
 } from "./triage-engine.ts";
 import { sendViaSmtp, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
 import { MailHostBlockedError } from "./host-guard.ts";
+import { isSelfSenderIdentity, senderIdentityErrorCode } from "./sender-identity.ts";
 import {
   type ActionMisplacement,
   buildInvalidArgumentsText,
@@ -7900,6 +7901,17 @@ async function resolveSenderIdentity(
   if (typeof rawFrom !== "string" || !isValidEmailAddress(rawFrom)) {
     throw new Error("invalid_sender_identity");
   }
+  // Naming the inbox's OWN address is not a Send As request, it is the default
+  // spelled out, so it must succeed on every provider. The provider check used
+  // to come first and refused it on anything but Gmail, telling an agent that
+  // had supplied the correct address that Send As is Gmail-only: it reads as
+  // "this inbox cannot send", and retrying with the same argument fails the
+  // same way. 23 of these are in activity_log across four workspaces. Sending
+  // as the connected address is exactly what omitting `from` does, so this
+  // grants nothing that was not already available.
+  if (isSelfSenderIdentity(inbox.email_address, rawFrom)) {
+    return { inbox, defaultReplyTo: undefined };
+  }
   if (inbox.provider !== "gmail") {
     throw new Error("sender_identity_unsupported_provider");
   }
@@ -13278,7 +13290,7 @@ async function executeForwardEmail(
           : message === "sender_identity_not_authorized"
             ? "email_forward: the requested From address is not a verified Send As identity for this inbox."
             : "email_forward: unable to verify the requested sender identity.";
-    return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: "sender_identity_denied" };
+    return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: senderIdentityErrorCode(message) };
   }
 
   // Approval is deliberately enforced after all caller-controlled input and
@@ -13644,7 +13656,7 @@ async function executeReplyToEmail(
           : message === "sender_identity_not_authorized"
             ? "email_reply: the requested From address is not a verified Send As identity for this inbox."
             : "email_reply: unable to verify the requested sender identity.";
-    return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: "sender_identity_denied" };
+    return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: senderIdentityErrorCode(message) };
   }
 
   // Do not contact the provider until an authorized dashboard user approves
@@ -14469,7 +14481,7 @@ async function executeSendEmail(
           : message === "sender_identity_not_authorized"
             ? "email_send: the requested From address is not a verified Send As identity for this inbox. Call inbox_list and use one of its sender_identities."
             : "email_send: unable to verify the requested sender identity. Try again later or use the connected inbox address.";
-    return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: "sender_identity_denied" };
+    return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: senderIdentityErrorCode(message) };
   }
 
   // ── Provider dispatch ─────────────────────────────────────────────────────
