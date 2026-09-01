@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans",
-    "description": "Free connects one inbox. Personal connects three for $5 a month. Pro connects every inbox you own for $29. Team adds members, roles and SSO."
+    "description": "Free connects one inbox. Personal connects three for $5 a month. Pro connects every inbox you own for $15. Team adds members, roles and SSO."
   },
   "hero": {
     "eyebrow": "Pricing",
@@ -166,7 +166,7 @@
       },
       {
         "q": "What if I need a fourth inbox?",
-        "a": "Personal covers three connected inboxes. A fourth means moving to Pro at $29 a month, and that is a real step up. It is worth it once you genuinely run four or more mailboxes through one agent, because Pro has no inbox limit at all. If you are sitting just over three and that jump does not work for you, tell us at hello@mcpemails.com."
+        "a": "Personal covers three connected inboxes. A fourth moves you to Pro at $15 a month, and that lifts the limit entirely: every mailbox you own, however many, on one agent. If you are sitting just over three and that does not work for you, tell us at hello@mcpemails.com."
       },
       {
         "q": "Can I change or cancel my plan?",
@@ -174,7 +174,7 @@
       },
       {
         "q": "How does the annual discount work?",
-        "a": "Paying annually saves about 20% versus monthly: Personal is $48 a year ($4 a month), Pro is $276 a year ($23 a month) and Team is $756 a year ($63 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
+        "a": "Paying annually saves about 20% versus monthly: Personal is $48 a year ($4 a month), Pro is $144 a year ($12 a month) and Team is $756 a year ($63 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
       },
       {
         "q": "What email providers are supported?",
@@ -192,7 +192,7 @@
   },
   "ctaBand": {
     "title": "Ready to give your agent an inbox?",
-    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $5 a month, and Pro covers every mailbox you own for $29.",
+    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $5 a month, and Pro covers every mailbox you own for $15.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs"
   }

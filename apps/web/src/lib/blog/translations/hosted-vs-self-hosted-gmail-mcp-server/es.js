@@ -23,7 +23,7 @@ El código se ejecuta en tu propio hardware. Ningún tercero se interpone jamás
 
 ### Es gratis en dólares
 
-Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con 5 $/mes (o 29 $/mes cuando necesites bandejas ilimitadas), las cuentas favorecen montártelo tú mismo.
+Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con 5 $/mes (o 15 $/mes cuando necesites bandejas ilimitadas), las cuentas favorecen montártelo tú mismo.
 
 ### Puedes adaptarlo a cualquier cosa
 
@@ -81,7 +81,7 @@ Este es el verdadero compromiso, y no voy a maquillarlo. Con un servidor alojado
 
 ## Cuánto cuesta en dólares
 
-MCP Emails es gratis para empezar: una bandeja conectada, API keys ilimitadas y sin tarjeta de crédito. El plan Gratis funciona a 60 peticiones por minuto con analíticas de 7 días y soporte de la comunidad. [Personal cuesta 5 $/mes](/pricing) (hasta tres bandejas conectadas, 120 req/min, analíticas de 30 días, soporte por correo), Pro cuesta 29 $/mes (bandejas conectadas ilimitadas, 300 req/min, analíticas de 90 días) y Team cuesta 79 $/mes (miembros con roles, un espacio de trabajo separado por cliente, SSO y registros de auditoría). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
+MCP Emails es gratis para empezar: una bandeja conectada, API keys ilimitadas y sin tarjeta de crédito. El plan Gratis funciona a 60 peticiones por minuto con analíticas de 7 días y soporte de la comunidad. [Personal cuesta 5 $/mes](/pricing) (hasta tres bandejas conectadas, 120 req/min, analíticas de 30 días, soporte por correo), Pro cuesta 15 $/mes (bandejas conectadas ilimitadas, 300 req/min, analíticas de 90 días) y Team cuesta 79 $/mes (miembros con roles, un espacio de trabajo separado por cliente, SSO y registros de auditoría). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
 
 ## ¿Cuál deberías elegir?
 

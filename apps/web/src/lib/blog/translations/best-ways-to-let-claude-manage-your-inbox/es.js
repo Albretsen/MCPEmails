@@ -29,7 +29,7 @@ La configuración es realmente rápida. En claude.ai vas a **Customize → Conne
 
 **Las concesiones honestas:** es un servicio de terceros dentro de tu ruta de autenticación (puedes revocar desde el panel con un clic, pero confías en el modelo de seguridad del proveedor). Y no hay webhooks. Para reaccionar al correo nuevo, Claude tiene que sondear — llamar a \`email_read\` con \`action: list\` y \`unread_only: true\` de forma programada. Las notificaciones push no existen en MCP. Cualquier herramienta que afirme reaccionar al correo en tiempo real o está sondeando por debajo o está almacenando tu correo.
 
-El plan gratuito es de 0 $ para siempre, con una bandeja conectada y un tope de 60 peticiones por minuto. Personal (5 $/mes) conecta hasta tres bandejas y sube el límite de ráfaga; Pro (29 $/mes) conecta todos los buzones que tengas; Team añade miembros y roles. Aquí el coste rara vez es el factor decisivo.
+El plan gratuito es de 0 $ para siempre, con una bandeja conectada y un tope de 60 peticiones por minuto. Personal (5 $/mes) conecta hasta tres bandejas y sube el límite de ráfaga; Pro (15 $/mes) conecta todos los buzones que tengas; Team añade miembros y roles. Aquí el coste rara vez es el factor decisivo.
 
 ## Opción 2: un servidor MCP propio / autoalojado
 

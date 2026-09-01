@@ -73,7 +73,7 @@ Esto cose las demás: \`email_read\` (acción search y luego list) para reunir l
 
 ## Cuánto cuesta esto y dónde están los límites
 
-Los siete funcionan en el [plan Gratis](/pricing), que cuesta 0 $ y conecta una bandeja a 60 peticiones por minuto. Personal (5 $/mes) conecta hasta tres bandejas y sube el límite de ráfaga a 120 peticiones por minuto; Pro (29 $/mes) conecta todos los buzones que tengas y lo sube a 300; Team (79 $/mes) añade miembros con roles, un espacio de trabajo separado por cliente, SSO y 1.000 peticiones por minuto. Una bandeja sobra para un resumen semanal; en cuanto quieras el trabajo y lo personal en el mismo agente, eso es Personal por 5 $/mes, y Pro solo cuando pases de tres bandejas.
+Los siete funcionan en el [plan Gratis](/pricing), que cuesta 0 $ y conecta una bandeja a 60 peticiones por minuto. Personal (5 $/mes) conecta hasta tres bandejas y sube el límite de ráfaga a 120 peticiones por minuto; Pro (15 $/mes) conecta todos los buzones que tengas y lo sube a 300; Team (79 $/mes) añade miembros con roles, un espacio de trabajo separado por cliente, SSO y 1.000 peticiones por minuto. Una bandeja sobra para un resumen semanal; en cuanto quieras el trabajo y lo personal en el mismo agente, eso es Personal por 5 $/mes, y Pro solo cuando pases de tres bandejas.
 
 Cuando llegues a un límite, el servidor devuelve un error reintentable con \`data.retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío de \`email_compose\`, porque un reintento tras un timeout puede significar que dos copias del mismo mensaje aterricen en la bandeja de alguien.
 

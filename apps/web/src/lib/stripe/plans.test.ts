@@ -25,8 +25,8 @@ test('the value metric is inboxes, and the tiers are named the way they are sold
 });
 
 test('prices match the published repricing', () => {
-  assert.equal(PLANS.solo.monthlyPriceCents, 2900);
-  assert.equal(PLANS.solo.yearlyPriceCents, 27600);
+  assert.equal(PLANS.solo.monthlyPriceCents, 1500);
+  assert.equal(PLANS.solo.yearlyPriceCents, 14400);
   assert.equal(PLANS.pro.monthlyPriceCents, 7900);
   assert.equal(PLANS.pro.yearlyPriceCents, 75600);
   assert.equal(PLANS.free.monthlyPriceCents, 0);
@@ -131,6 +131,8 @@ test('a subscription on a retired price still resolves to its plan', () => {
     ['price_1TcQBGARrgumc6cqmy0LeLSL', 'pro', 'year'],   // Scale yearly, $490
     ['price_1Tb0HfARrgumc6cqMeQSsMNr', 'pro', 'month'],  // Team monthly, $19
     ['price_1Tb0HfARrgumc6cqQR33xYAN', 'pro', 'year'],   // Team yearly, $152
+    ['price_1U69IuARrgumc6cqLGFI2FLR', 'solo', 'month'], // Pro monthly, $29
+    ['price_1U69J5ARrgumc6cqmIIP8DAw', 'solo', 'year'],  // Pro yearly, $276
   ];
   for (const [priceId, planId, interval] of cases) {
     const resolved = getPlanByStripePriceId(priceId);
@@ -196,8 +198,8 @@ test('Personal ships at the numbers it was signed off at', () => {
 
   // Nothing else moved. Inserting a tier must not reprice the ones already sold.
   assert.equal(PLANS.free.limits.maxInboxes, 1);
-  assert.equal(PLANS.solo.monthlyPriceCents, 2900);
-  assert.equal(PLANS.solo.yearlyPriceCents, 27600);
+  assert.equal(PLANS.solo.monthlyPriceCents, 1500);
+  assert.equal(PLANS.solo.yearlyPriceCents, 14400);
   assert.equal(PLANS.pro.monthlyPriceCents, 7900);
   assert.equal(PLANS.pro.yearlyPriceCents, 75600);
 });
@@ -205,11 +207,11 @@ test('Personal ships at the numbers it was signed off at', () => {
 test('the ladder is ordered Free, Personal, Pro, Team', () => {
   // The pricing page renders columns in Object.values(PLANS) order, so the
   // position of the key in the object literal IS the marketing layout. Moving
-  // it produces a page that reads $0, $29, $5, $79 and nothing errors.
+  // it produces a page that reads $0, $15, $5, $79 and nothing errors.
   assert.deepEqual(Object.keys(PLANS), ['free', 'personal', 'solo', 'pro']);
 
   const monthly = Object.values(PLANS).map((plan) => plan.monthlyPriceCents);
-  assert.deepEqual(monthly, [0, 500, 2900, 7900]);
+  assert.deepEqual(monthly, [0, 500, 1500, 7900]);
   for (let i = 1; i < monthly.length; i += 1) {
     assert.ok(monthly[i] > monthly[i - 1], 'the ladder must ascend in price');
   }

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Priser for AI-e-post-MCP-server, Gratis, Personal, Pro og Team",
-    "description": "Gratis kobler til én innboks. Personal kobler til tre for $5. Pro kobler til alle innboksene dine for $29. Team legger til medlemmer, roller og SSO."
+    "description": "Gratis kobler til én innboks. Personal kobler til tre for $5. Pro kobler til alle innboksene dine for $15. Team legger til medlemmer, roller og SSO."
   },
   "hero": {
     "eyebrow": "Priser",
@@ -166,7 +166,7 @@
       },
       {
         "q": "Hva om jeg trenger en fjerde innboks?",
-        "a": "Personal dekker tre tilkoblede innbokser. En fjerde betyr at du må over på Pro til $29 i måneden, og det er et reelt hopp. Det er verdt det når du faktisk kjører fire eller flere postkasser gjennom én agent, for Pro har ingen innboksgrense i det hele tatt. Ligger du så vidt over tre, og det hoppet ikke fungerer for deg, si fra til oss på hello@mcpemails.com."
+        "a": "Personal dekker tre tilkoblede innbokser. En fjerde tar deg over på Pro til $15 i måneden, og det fjerner grensen helt: alle postkassene du eier, uansett hvor mange, på én agent. Ligger du så vidt over tre, og det ikke fungerer for deg, si fra til oss på hello@mcpemails.com."
       },
       {
         "q": "Kan jeg endre eller si opp planen min?",
@@ -174,7 +174,7 @@
       },
       {
         "q": "Hvordan fungerer årsrabatten?",
-        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Personal koster $48 i året ($4 i måneden), Pro koster $276 i året ($23 i måneden) og Team koster $756 i året ($63 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
+        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Personal koster $48 i året ($4 i måneden), Pro koster $144 i året ($12 i måneden) og Team koster $756 i året ($63 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
@@ -192,7 +192,7 @@
   },
   "ctaBand": {
     "title": "Klar til å gi agenten din en innboks?",
-    "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $5 i måneden med Personal, og alle postkassene du eier koster $29 med Pro.",
+    "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $5 i måneden med Personal, og alle postkassene du eier koster $15 med Pro.",
     "ctaPrimary": "Kom i gang gratis",
     "ctaSecondary": "Les dokumentasjonen"
   }

@@ -109,7 +109,7 @@ Les forfaits sont facturés au nombre de boîtes connectées. Les clés API sont
 
 - **Gratuit, 0 $ pour toujours.** Sans carte. Une boîte connectée, 60 req/min, analyses sur 7 jours, support communautaire.
 - **Personal, 5 $/mois** (ou 48 $/an, soit 4 $/mois). Jusqu'à trois boîtes connectées, 120 req/min, analyses sur 30 jours, support par e-mail.
-- **Pro, 29 $/mois** (ou 276 $/an, soit 23 $/mois). Boîtes connectées illimitées, 300 req/min, analyses sur 90 jours, support par e-mail.
+- **Pro, 15 $/mois** (ou 144 $/an, soit 12 $/mois). Boîtes connectées illimitées, 300 req/min, analyses sur 90 jours, support par e-mail.
 - **Team, 79 $/mois** (ou 756 $/an, soit 63 $/mois). Tout ce que contient Pro, plus des membres avec rôles, un espace de travail distinct par client ou activité, SSO avec SAML/OIDC plus journal d'audit, 1 000 req/min, analyses sur 1 an, support prioritaire.
 
 Détail complet sur la [page des tarifs](/pricing).

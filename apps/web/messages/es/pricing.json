@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Precios del servidor MCP de correo con IA: planes Gratis, Personal, Pro y Team",
-    "description": "Gratis conecta una bandeja. Personal, tres por $5 al mes. Pro, todas tus bandejas por $29. Team añade miembros, roles, SSO y un espacio por cliente."
+    "description": "Gratis conecta una bandeja. Personal, tres por $5 al mes. Pro, todas tus bandejas por $15. Team añade miembros, roles, SSO y un espacio por cliente."
   },
   "hero": {
     "eyebrow": "Precios",
@@ -166,7 +166,7 @@
       },
       {
         "q": "¿Y si necesito una cuarta bandeja?",
-        "a": "Personal cubre tres bandejas conectadas. Una cuarta significa pasar a Pro, por $29 al mes, y ese es un salto real. Vale la pena cuando de verdad manejas cuatro o más buzones desde un solo agente, porque Pro no tiene ningún límite de bandejas. Si te quedas justo por encima de tres y ese salto no te encaja, escríbenos a hello@mcpemails.com."
+        "a": "Personal cubre tres bandejas conectadas. Una cuarta te lleva a Pro, por $15 al mes, y eso elimina el límite por completo: todos los buzones que tengas, sean los que sean, en un solo agente. Si te quedas justo por encima de tres y eso no te encaja, escríbenos a hello@mcpemails.com."
       },
       {
         "q": "¿Puedo cambiar o cancelar mi plan?",
@@ -174,7 +174,7 @@
       },
       {
         "q": "¿Cómo funciona el descuento anual?",
-        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Personal cuesta $48 al año ($4 al mes), Pro cuesta $276 al año ($23 al mes) y Team cuesta $756 al año ($63 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
+        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Personal cuesta $48 al año ($4 al mes), Pro cuesta $144 al año ($12 al mes) y Team cuesta $756 al año ($63 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
@@ -192,7 +192,7 @@
   },
   "ctaBand": {
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
-    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $5 al mes con Personal, y todos los buzones que tengas cuestan $29 con Pro.",
+    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $5 al mes con Personal, y todos los buzones que tengas cuestan $15 con Pro.",
     "ctaPrimary": "Empieza gratis",
     "ctaSecondary": "Lee la documentación"
   }
