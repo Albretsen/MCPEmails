@@ -109,7 +109,7 @@ Los planes se cobran por bandejas conectadas. Las claves de API son ilimitadas e
 
 - **Gratis, 0 $ para siempre.** Sin tarjeta. Una bandeja conectada, 60 req/min, analíticas de 7 días, soporte de la comunidad.
 - **Personal, 5 $/mes** (o 48 $/año, 4 $/mes). Hasta tres bandejas conectadas, 120 req/min, analíticas de 30 días, soporte por correo.
-- **Pro, 29 $/mes** (o 276 $/año, 23 $/mes). Bandejas conectadas ilimitadas, 300 req/min, analíticas de 90 días, soporte por correo.
+- **Pro, 15 $/mes** (o 144 $/año, 12 $/mes). Bandejas conectadas ilimitadas, 300 req/min, analíticas de 90 días, soporte por correo.
 - **Team, 79 $/mes** (o 756 $/año, 63 $/mes). Todo lo de Pro, además de miembros con roles, un espacio de trabajo separado por cliente o negocio, SSO con SAML/OIDC más registro de auditoría, 1.000 req/min, analíticas de 1 año, soporte prioritario.
 
 Desglose completo en la [página de precios](/pricing).

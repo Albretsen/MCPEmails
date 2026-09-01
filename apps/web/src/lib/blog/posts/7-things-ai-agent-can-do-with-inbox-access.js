@@ -80,7 +80,7 @@ This stitches the others together: \`email_read\` (action search, then list) to 
 
 ## What this costs and where the limits sit
 
-All seven work on the [Free plan](/pricing), which is $0 and connects one inbox at 60 requests per minute. Personal ($5/month) connects up to three inboxes and raises the burst limit to 120 requests per minute; Pro ($29/month) connects every mailbox you own and raises it to 300; Team ($79/month) adds members with roles, a separate workspace per client, SSO, and 1,000 requests per minute. One inbox is plenty for a weekly digest; the moment you want work and personal mail on the same agent, that is Personal at $5/month, and Pro only once you pass three inboxes.
+All seven work on the [Free plan](/pricing), which is $0 and connects one inbox at 60 requests per minute. Personal ($5/month) connects up to three inboxes and raises the burst limit to 120 requests per minute; Pro ($15/month) connects every mailbox you own and raises it to 300; Team ($79/month) adds members with roles, a separate workspace per client, SSO, and 1,000 requests per minute. One inbox is plenty for a weekly digest; the moment you want work and personal mail on the same agent, that is Personal at $5/month, and Pro only once you pass three inboxes.
 
 When you do hit a limit, the server returns a retryable error with \`data.retry_after\` in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send, because a retry on a timeout can mean two copies of the same message land in someone's inbox.
 

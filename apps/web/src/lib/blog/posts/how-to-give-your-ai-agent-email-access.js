@@ -116,7 +116,7 @@ Plans are priced by connected inboxes. API keys are unlimited on every tier, and
 
 - **Free, $0 forever.** No card. One connected inbox, 60 req/min, 7-day analytics, community support.
 - **Personal, $5/month** (or $48/year, $4/month). Up to three connected inboxes, 120 req/min, 30-day analytics, email support.
-- **Pro, $29/month** (or $276/year, $23/month). Unlimited connected inboxes, 300 req/min, 90-day analytics, email support.
+- **Pro, $15/month** (or $144/year, $12/month). Unlimited connected inboxes, 300 req/min, 90-day analytics, email support.
 - **Team, $79/month** (or $756/year, $63/month). Everything in Pro, plus members with roles, a separate workspace per client or business, SSO with SAML/OIDC and an audit log, 1,000 req/min, 1-year analytics, priority support.
 
 Full breakdown on the [pricing page](/pricing).

@@ -73,7 +73,7 @@ Cela combine les autres : \`email_read\` (action search, puis list) pour rassemb
 
 ## Ce que ça coûte et où se situent les limites
 
-Les sept fonctionnent sur le [plan Gratuit](/pricing), à 0 $, qui connecte une boîte à 60 requêtes par minute. Personal (5 $/mois) connecte jusqu'à trois boîtes et porte la limite de pointe à 120 requêtes par minute ; Pro (29 $/mois) connecte toutes les boîtes que vous possédez et la porte à 300 ; Team (79 $/mois) ajoute des membres avec rôles, un espace de travail distinct par client, le SSO et 1 000 requêtes par minute. Une seule boîte suffit largement pour un récapitulatif hebdomadaire ; dès que vous voulez le pro et le perso dans le même agent, c’est Personal à 5 $/mois, et Pro seulement au-delà de trois boîtes.
+Les sept fonctionnent sur le [plan Gratuit](/pricing), à 0 $, qui connecte une boîte à 60 requêtes par minute. Personal (5 $/mois) connecte jusqu'à trois boîtes et porte la limite de pointe à 120 requêtes par minute ; Pro (15 $/mois) connecte toutes les boîtes que vous possédez et la porte à 300 ; Team (79 $/mois) ajoute des membres avec rôles, un espace de travail distinct par client, le SSO et 1 000 requêtes par minute. Une seule boîte suffit largement pour un récapitulatif hebdomadaire ; dès que vous voulez le pro et le perso dans le même agent, c’est Personal à 5 $/mois, et Pro seulement au-delà de trois boîtes.
 
 Quand vous atteignez bel et bien une limite, le serveur renvoie une erreur réessayable avec \`data.retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi \`email_compose\`, car réessayer après un délai d’attente peut faire atterrir deux copies du même message dans la boîte de quelqu’un.
 

@@ -32,6 +32,25 @@
  *   STRIPE_PRICE_PRO_MONTHLY=price_...        (Team monthly)
  *   STRIPE_PRICE_PRO_YEARLY=price_...         (Team yearly)
  *
+ * PRO REPRICED 2026-09-01: $29 -> $15/mo, $276 -> $144/yr.
+ *
+ * Pro at $29 had generated exactly ONE Stripe checkout session in its entire
+ * life (created 2026-08-27, expired unpaid); that same workspace bought
+ * Personal yearly 47 hours later. So $29 was never refused at volume, it was
+ * never offered: `inboxCapOffer` routes every Free workspace hitting the
+ * one-inbox cap to Personal, and all 36 `paywall_reached` events to date were
+ * that cap. The price was still wrong on two counts. The ladder stepped $5 ->
+ * $29, a 5.8x jump, to go from three mailboxes to the observed real need of
+ * five; and the market rate for five mailboxes is about $5 to $11 (anymailmcp
+ * sells five for EUR 4.99, MailMCP charges EUR 1.99 per mailbox), which made a
+ * one-person plan cost the same as a competitor's unlimited-seat team plan.
+ *
+ * $15 is where three independent methods converge: 3x Personal as a ladder
+ * step, five inboxes at a modest premium over Personal's per-inbox rate, and a
+ * defensible premium over the mailbox-count competitors that still sits under
+ * the adjacent AI-email tools (Inbox Zero $18, Drag $12-24). $144/yr keeps the
+ * "save ~20%" annual discount exact. Personal deliberately stays at $5.
+ *
  * GRANDFATHERING. Every user who existed before the repricing keeps unlimited
  * inboxes at no cost, permanently. That protection is user-level and lives in
  * `user_usage_entitlements.unlimited_inboxes`, so it follows an owner into any
@@ -221,13 +240,15 @@ export const PLANS: Record<PlanId, Plan> = {
       auditLogEnabled: false,
       supportTier: 'email',
     },
-    monthlyPriceCents: 2900,
-    yearlyPriceCents: 27600,
+    monthlyPriceCents: 1500,
+    yearlyPriceCents: 14400,
     stripePriceIdMonthly: process.env.STRIPE_PRICE_SOLO_MONTHLY ?? null,
     stripePriceIdYearly: process.env.STRIPE_PRICE_SOLO_YEARLY ?? null,
     legacyStripePriceIds: [
       'price_1TcQBDARrgumc6cqy1Z9AAEw', // Agent monthly, $12
       'price_1TcQBEARrgumc6cq6MGFktzy', // Agent yearly, $120
+      'price_1U69IuARrgumc6cqLGFI2FLR', // Pro monthly, $29 (retired 2026-09-01)
+      'price_1U69J5ARrgumc6cqmIIP8DAw', // Pro yearly, $276 (retired 2026-09-01)
     ],
     features: [
       'Unlimited connected inboxes',
