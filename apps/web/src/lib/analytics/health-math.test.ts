@@ -20,6 +20,7 @@ import {
   minutesSince,
   successRate,
   type CallWindow,
+  type ErrorConcentration,
   type HealthFacts,
   type MonitorFacts,
 } from './health-math.ts';
@@ -43,7 +44,18 @@ function monitor(overrides: Partial<MonitorFacts> = {}): MonitorFacts {
 
 /** A healthy hour at the production rate measured on 2026-08-30. */
 function window(overrides: Partial<CallWindow> = {}): CallWindow {
-  return { minutes: 60, calls: 250, successes: 247, errors: 3, rateLimited: 0, ...overrides };
+  return { minutes: 60, calls: 250, successes: 247, errors: 3, rateLimited: 0, concentration: null, ...overrides };
+}
+
+/**
+ * An error profile for a window.
+ *
+ * `concentration: null` on a window means NOT MEASURED, and several tests
+ * below turn on the difference between that and a measured "nobody dominated",
+ * so it is spelled out here rather than defaulted into existence.
+ */
+function concentration(overrides: Partial<ErrorConcentration> = {}): ErrorConcentration {
+  return { workspaces: 5, worstWorkspaceErrors: 8, rest: null, ...overrides };
 }
 
 function facts(overrides: Partial<HealthFacts> = {}): HealthFacts {
@@ -138,6 +150,222 @@ test('an error rate several times baseline is amber', () => {
   assert.equal(verdict.headline, 'ERRORS UP');
 });
 
+/* ------------------------------------------------ one workspace, not the product */
+
+/**
+ * The window that started this, exactly as production held it.
+ *
+ * 2026-09-01 16:26 UTC: 237 calls, 20 failures, 91.6%, a hair the right side
+ * of the amber line. Eight of the twenty were one inbox on one workspace in a
+ * single eight minute burst, all of them the same repeated `provider_error`
+ * against that customer's own mail host. Nothing was wrong with the product.
+ *
+ * This case never needed the guard: the arithmetic was already green. It is
+ * pinned because it is the shape the guard was calibrated against, and because
+ * the guard must not have made it LOUDER. The one that matters is the test
+ * below it, which is the same burst on an hour with a quarter of the traffic.
+ */
+test('the 2026-09-01 16:26 window is green and needs no help to be', () => {
+  const verdict = classifyHealth(
+    facts({
+      live: window({
+        calls: 237,
+        successes: 217,
+        errors: 20,
+        concentration: concentration({
+          workspaces: 5,
+          worstWorkspaceErrors: 8,
+          rest: { calls: 229, successes: 217, errors: 12 },
+        }),
+      }),
+    }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'ok');
+  // No note on the tile, because the number does not need defending: it is
+  // above the line on its own and the caption would be noise.
+  assert.equal(verdict.concentration, undefined);
+});
+
+test('one workspace hammering its own mail host does not paint the board amber', () => {
+  // The same eight failure burst on a 03:00 hour: 60 calls, 83.3%, deep into
+  // amber, and eight of the ten failures are one account. Everyone else is at
+  // 96.2%, which is an ordinary night. This is the case the board got wrong
+  // and the reason the guard exists: escalating here teaches the room that the
+  // wall goes amber for other people's DNS, and a room that has learned that
+  // will walk past the real one.
+  const verdict = classifyHealth(
+    facts({
+      live: window({
+        calls: 60,
+        successes: 50,
+        errors: 10,
+        concentration: concentration({
+          workspaces: 3,
+          worstWorkspaceErrors: 8,
+          rest: { calls: 52, successes: 50, errors: 2 },
+        }),
+      }),
+    }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'ok');
+  // And it says so in words a person can act on, naming the account rather
+  // than reassuring them in the abstract.
+  assert.match(verdict.reason, /One workspace produced 8 of the 10 failed calls/);
+  assert.match(verdict.reason, /96\.2%/);
+  assert.equal(verdict.concentration?.worstWorkspaceErrors, 8);
+});
+
+test('the same failures spread across the estate are still amber', () => {
+  // Identical hour, identical failure count, nobody dominating. This is the
+  // half of the defect that must not have moved: ten failures out of sixty
+  // calls, spread over nine workspaces, is the product.
+  const verdict = classifyHealth(
+    facts({
+      live: window({
+        calls: 60,
+        successes: 50,
+        errors: 10,
+        concentration: concentration({ workspaces: 9, worstWorkspaceErrors: 2, rest: null }),
+      }),
+    }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'degraded');
+  assert.equal(verdict.headline, 'ERRORS UP');
+});
+
+test('a dominant workspace cannot excuse an estate that is also failing', () => {
+  // One workspace owns 15 of 39 failures, so it passes the share test. The
+  // other 24 failures leave everyone else at 89.8%, which is amber on its own
+  // merits. The counterfactual is the load-bearing half of the guard: without
+  // it, any hour with a loud workspace in it would be excused.
+  const verdict = classifyHealth(
+    facts({
+      live: window({
+        calls: 250,
+        successes: 211,
+        errors: 39,
+        concentration: concentration({
+          workspaces: 11,
+          worstWorkspaceErrors: 15,
+          rest: { calls: 235, successes: 211, errors: 24 },
+        }),
+      }),
+    }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'degraded');
+  assert.equal(verdict.headline, 'ERRORS UP');
+});
+
+test('concentration can never suppress an outage', () => {
+  // Built so that every condition of the guard is satisfied: one workspace
+  // owns 100 of the 105 failures and everyone else is at 94.4%. The window is
+  // still 47.5%, which is DOWN, and DOWN is decided above the guard and never
+  // consults it. A workspace big enough to fail half the product's traffic IS
+  // the product's reliability that hour, and the direction of a mistake here
+  // is not recoverable: an amber wrongly held costs a slower walk to the wall,
+  // a red wrongly held costs the outage nobody looked at.
+  const verdict = classifyHealth(
+    facts({
+      live: window({
+        calls: 200,
+        successes: 95,
+        errors: 105,
+        concentration: concentration({
+          workspaces: 4,
+          worstWorkspaceErrors: 100,
+          rest: { calls: 90, successes: 85, errors: 5 },
+        }),
+      }),
+    }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'down');
+  assert.equal(verdict.headline, 'CALLS FAILING');
+});
+
+test('a broad outage reaches down with the concentration read in hand', () => {
+  // The thing a concentration guard is most at risk of masking, which is why
+  // it is asserted rather than assumed: a real outage fails everyone at once,
+  // so the errors are spread over the whole estate and no workspace is
+  // anywhere near a third of them.
+  const verdict = classifyHealth(
+    facts({
+      live: window({
+        calls: 200,
+        successes: 60,
+        errors: 140,
+        concentration: concentration({ workspaces: 31, worstWorkspaceErrors: 12, rest: null }),
+      }),
+    }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'down');
+});
+
+test('an unmeasured window escalates exactly as it did before', () => {
+  // `concentration: null` is "nobody looked", never "nobody dominated": the
+  // profiling query failed, or the window held more failures than we will pull
+  // back. Blindness must not buy silence, which is the same rule the rest of
+  // this board runs on.
+  const verdict = classifyHealth(
+    facts({ live: window({ calls: 60, successes: 50, errors: 10, concentration: null }) }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'degraded');
+  assert.equal(verdict.headline, 'ERRORS UP');
+});
+
+test('a remainder too small to judge is not evidence of health', () => {
+  // One workspace WAS the hour: 25 of the 40 calls. Fifteen calls left over
+  // cannot carry a rate (the same MIN_LIVE_CALLS floor the headline obeys),
+  // so there is no counterfactual and nothing to hold the amber back with.
+  const verdict = classifyHealth(
+    facts({
+      live: window({
+        calls: 40,
+        successes: 28,
+        errors: 12,
+        concentration: concentration({
+          workspaces: 2,
+          worstWorkspaceErrors: 11,
+          rest: { calls: 15, successes: 14, errors: 1 },
+        }),
+      }),
+    }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'degraded');
+  assert.equal(verdict.headline, 'ERRORS UP');
+});
+
+test('a held amber still loses to a louder true thing', () => {
+  // The guard removes one reason to escalate, not the ordering. An open
+  // monitor incident is a different witness saying something else, and it
+  // still gets the banner.
+  const verdict = classifyHealth(
+    facts({
+      monitor: monitor({ openIncidents: 1 }),
+      live: window({
+        calls: 60,
+        successes: 50,
+        errors: 10,
+        concentration: concentration({
+          workspaces: 3,
+          worstWorkspaceErrors: 8,
+          rest: { calls: 52, successes: 50, errors: 2 },
+        }),
+      }),
+    }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'degraded');
+  assert.equal(verdict.headline, 'INCIDENT OPEN');
+});
+
 test('a handful of calls can never move the verdict', () => {
   // Two of three failing is a coin toss, not an outage. Painting a wall red
   // for it is how a board gets ignored, so no rate is computed at all below
@@ -147,7 +375,10 @@ test('a handful of calls can never move the verdict', () => {
     NOW,
   );
   assert.equal(verdict.level, 'ok');
-  assert.equal(successRate({ minutes: 60, calls: 3, successes: 1, errors: 2, rateLimited: 0 }), null);
+  assert.equal(
+    successRate({ minutes: 60, calls: 3, successes: 1, errors: 2, rateLimited: 0, concentration: null }),
+    null,
+  );
 });
 
 test('a silent monitor is reported as blindness, not as an outage', () => {

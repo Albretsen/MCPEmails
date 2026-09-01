@@ -6,8 +6,10 @@
  * accuracy; an outage moves in seconds, and a board that showed a ten minute
  * old "all green" through an incident would be worse than a board with no
  * health panel at all, because the room would believe it. Everything here is
- * read fresh on every request, which is affordable precisely because it is
- * nine indexed counts rather than an aggregate over the estate.
+ * read fresh on every request, which is affordable precisely because it is ten
+ * small indexed reads rather than an aggregate over the estate. Three further
+ * counts are added only on an hour where one workspace owns a third of the
+ * failures, which on a healthy hour never happens.
  *
  * TWO WITNESSES, one verdict. `synthetic_monitor_runs` says whether the public
  * MCP endpoint answers; `activity_log` over the last hour says whether real
@@ -28,9 +30,12 @@
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import {
   classifyHealth,
+  CONCENTRATION_SHARE,
   type CallWindow,
+  type ErrorConcentration,
   type HealthFacts,
   type MonitorFacts,
+  type RestWindow,
   type SystemHealth,
 } from '@/lib/analytics/health-math';
 
@@ -77,7 +82,10 @@ export async function fetchSystemHealth(now: number = Date.now()): Promise<Syste
   try {
     const [monitor, live, day, lastCallAt] = await Promise.all([
       fetchMonitorFacts(),
-      fetchCallWindow(LIVE_WINDOW_MINUTES, now),
+      // Only the live window is profiled for concentration. It is the only one
+      // the classifier escalates on, and the day window would cost a much
+      // larger error page to answer a question nobody asks of it.
+      fetchCallWindow(LIVE_WINDOW_MINUTES, now, true),
       fetchCallWindow(DAY_WINDOW_MINUTES, now),
       fetchLastCallAt(),
     ]);
@@ -182,8 +190,19 @@ function emptyMonitor(): MonitorFacts {
 /* ------------------------------------------------------- customer traffic */
 
 /**
- * Call outcomes over a window, as three counted queries rather than one page
- * of rows.
+ * Failed rows we are willing to pull back to see whose failures they are.
+ *
+ * The live window normally holds under thirty errors and held twenty in the
+ * 2026-09-01 16:26 burst, so four hundred is more than ten times the worst
+ * hour on record and still one small indexed page, comfortably under the
+ * PostgREST cap. It is a budget rather than a limit: the tally below only
+ * trusts itself when the page came back SHORT of it, which is what makes
+ * "we got everything" provable rather than assumed.
+ */
+const CONCENTRATION_ROW_BUDGET = 400;
+
+/**
+ * Call outcomes over a window, as counted queries rather than one page of rows.
  *
  * PostgREST caps a response at 1000 rows and truncates silently past it (see
  * project_postgrest_1000_row_cap), and a day of traffic is already six times
@@ -191,21 +210,36 @@ function emptyMonitor(): MonitorFacts {
  * denominator on exactly the busiest days. `head: true` with an exact count
  * asks Postgres to do the counting, which is both correct and cheaper.
  *
- * Rate limited calls are derived rather than counted, so this stays at three
- * queries. They have never once been recorded in production; the field exists
- * so that if that changes the board does not silently fold throttling into the
- * failure rate, which would paint an abuse guard doing its job as an outage.
+ * Rate limited calls are derived rather than counted, so the base stays at
+ * three queries. They have never once been recorded in production; the field
+ * exists so that if that changes the board does not silently fold throttling
+ * into the failure rate, which would paint an abuse guard doing its job as an
+ * outage.
+ *
+ * `withConcentration` adds the only read here that is not a count, and the
+ * comment on `fetchConcentration` covers why that is safe and why it could not
+ * be done any other way on this project.
  */
-async function fetchCallWindow(minutes: number, now: number): Promise<CallWindow> {
+async function fetchCallWindow(minutes: number, now: number, withConcentration = false): Promise<CallWindow> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const service = createServiceRoleClient() as any;
   const since = new Date(now - minutes * 60_000).toISOString();
   const scoped = () => service.from('activity_log').select('id', { count: 'exact', head: true }).gte('created_at', since);
 
-  const [all, ok, bad] = await Promise.all([
+  const [all, ok, bad, errorRows] = await Promise.all([
     scoped(),
     scoped().eq('status', 'success'),
     scoped().eq('status', 'error'),
+    withConcentration
+      ? service
+          .from('activity_log')
+          .select('workspace_id')
+          .gte('created_at', since)
+          .eq('status', 'error')
+          // One over the budget on purpose: a full page is how we detect that
+          // there were more failures than we can honestly account for.
+          .limit(CONCENTRATION_ROW_BUDGET + 1)
+      : null,
   ]);
 
   if (all.error || ok.error || bad.error) {
@@ -217,11 +251,129 @@ async function fetchCallWindow(minutes: number, now: number): Promise<CallWindow
   const calls = all.count ?? 0;
   const successes = ok.count ?? 0;
   const errors = bad.count ?? 0;
-  return { minutes, calls, successes, errors, rateLimited: Math.max(0, calls - successes - errors) };
+  const concentration = errorRows ? await fetchConcentration(service, since, errors, errorRows) : null;
+  return {
+    minutes,
+    calls,
+    successes,
+    errors,
+    rateLimited: Math.max(0, calls - successes - errors),
+    concentration,
+  };
+}
+
+/**
+ * Whose failures they were.
+ *
+ * WHY THIS IS A PAGE OF ROWS AND NOT AN AGGREGATE. It should have been
+ * `select=workspace_id,id.count()`, which is one grouped query and no rows in
+ * Node at all. Tried against production on 2026-09-01: PostgREST answers 400
+ * PGRST123, "Use of aggregate functions is not allowed". Aggregates are off on
+ * this project, and turning them on is a database-wide switch that widens the
+ * anon surface for one wall display. A view or an RPC would also do it, and is
+ * the right answer the day this needs a second consumer, but it puts a
+ * migration between a measurement fix and a board that is currently lying.
+ *
+ * WHY THE 1000 ROW CAP CANNOT BITE. The cap is dangerous because it truncates
+ * in silence, so this never asks a question whose answer might be truncated.
+ * It requests one row more than the budget and refuses to tally at all if the
+ * page comes back that full: fewer rows than the limit is a proof that we hold
+ * every failure in the window, not a hope. Above the budget the tally is
+ * abandoned and concentration reads null, which escalates the window normally.
+ * That is the correct direction anyway, since four hundred failures in an hour
+ * is not one customer's mail host, it is us.
+ *
+ * The counterfactual window is three more counts and is only paid for when
+ * somebody actually dominates, which on a healthy hour is never. It uses
+ * exactly the share the classifier uses, imported rather than repeated, so the
+ * fetch can never gate on a threshold the judgement disagrees with.
+ */
+async function fetchConcentration(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  service: any,
+  since: string,
+  errors: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  errorRows: { data: any[] | null; error: { message: string } | null },
+): Promise<ErrorConcentration | null> {
+  if (errorRows.error) {
+    console.error('[kiosk-health]', 'error attribution unreadable', errorRows.error.message);
+    return null;
+  }
+  const rows = (errorRows.data ?? []) as { workspace_id: string | null }[];
+  if (rows.length === 0) return null;
+  if (rows.length > CONCENTRATION_ROW_BUDGET) {
+    console.error('[kiosk-health]', 'error attribution skipped, window over budget', rows.length);
+    return null;
+  }
+
+  const perWorkspace = new Map<string, number>();
+  for (const row of rows) {
+    if (!row.workspace_id) continue;
+    perWorkspace.set(row.workspace_id, (perWorkspace.get(row.workspace_id) ?? 0) + 1);
+  }
+
+  let worstWorkspace: string | null = null;
+  let worstWorkspaceErrors = 0;
+  for (const [workspace, count] of perWorkspace) {
+    if (count > worstWorkspaceErrors) {
+      worstWorkspace = workspace;
+      worstWorkspaceErrors = count;
+    }
+  }
+  if (!worstWorkspace) return null;
+
+  // The exact count is the denominator the classifier will use, so the gate
+  // uses it too. It can differ from the page by a row that landed between the
+  // two queries; either way an off-by-one here only ever costs us the
+  // counterfactual, which fails towards escalating rather than towards quiet.
+  const dominant = worstWorkspaceErrors >= errors * CONCENTRATION_SHARE;
+
+  return {
+    workspaces: perWorkspace.size,
+    worstWorkspaceErrors,
+    rest: dominant ? await fetchRestWindow(service, since, worstWorkspace) : null,
+  };
+}
+
+/**
+ * The same window with one workspace's traffic taken out, counted in Postgres.
+ *
+ * Three counts with a `neq`, which is the same shape as the window itself and
+ * for the same reason: the classifier needs a real success rate for everyone
+ * else, and a rate derived by subtracting known failures from unknown totals
+ * would quietly flatter a heavy workspace that fails half its calls.
+ */
+async function fetchRestWindow(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  service: any,
+  since: string,
+  workspaceId: string,
+): Promise<RestWindow | null> {
+  const scoped = () =>
+    service
+      .from('activity_log')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', since)
+      .neq('workspace_id', workspaceId);
+
+  const [all, ok, bad] = await Promise.all([
+    scoped(),
+    scoped().eq('status', 'success'),
+    scoped().eq('status', 'error'),
+  ]);
+
+  if (all.error || ok.error || bad.error) {
+    const message = (all.error ?? ok.error ?? bad.error).message;
+    console.error('[kiosk-health]', 'rest-of-estate counts unreadable', message);
+    return null;
+  }
+
+  return { calls: all.count ?? 0, successes: ok.count ?? 0, errors: bad.count ?? 0 };
 }
 
 function emptyWindow(minutes: number): CallWindow {
-  return { minutes, calls: 0, successes: 0, errors: 0, rateLimited: 0 };
+  return { minutes, calls: 0, successes: 0, errors: 0, rateLimited: 0, concentration: null };
 }
 
 /**
