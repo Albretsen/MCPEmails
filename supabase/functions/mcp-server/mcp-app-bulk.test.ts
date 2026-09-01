@@ -970,7 +970,7 @@ Deno.test("the tool surface is app-only, single-argument, and correctly scoped",
     // declaration free of that risk. Pinned so nobody "tightens" it later
     // without reading this.
     const out = definition.outputSchema as Record<string, unknown> | undefined;
-    assert(out, `${definition.name} must declare an outputSchema`);
+    assert(out !== undefined, `${definition.name} must declare an outputSchema`);
     assertEquals(out!.type, "object", `${definition.name} outputSchema is an object`);
     assertEquals(
       out!.additionalProperties,

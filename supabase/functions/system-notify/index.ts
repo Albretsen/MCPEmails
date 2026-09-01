@@ -3,8 +3,10 @@ import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https://mcpemails.com/api/mcp";
 // The connected/authenticated inbox we send FROM (must be a real inbox_list entry with credentials).
-// Gmail-connected (sends via the Gmail API, not Migadu's flaky raw SMTP client) --
-// self-send, so this matches NOTIFY_TO_EMAIL below.
+// Self-send, so this matches NOTIFY_TO_EMAIL below. It was an OAuth Gmail API
+// connection until 2026-09-01 and is now Gmail over IMAP with an app password;
+// the send path is whatever that inbox is connected as on the day, which is
+// exactly the assumption resolveThreadAnchor exists to stop this file making.
 const SEND_FROM_INBOX_EMAIL = "bjellanda@gmail.com";
 // Where the notification is delivered TO.
 const NOTIFY_TO_EMAIL = "bjellanda@gmail.com";
@@ -18,6 +20,7 @@ type McpResponse = {
     structuredContent?: {
       inboxes?: Array<{ inbox_id?: unknown; email_address?: unknown }>;
       message_id?: unknown;
+      messages?: Array<{ id?: unknown }>;
     };
     // The MCP server reports a monthly action-cap rejection as an isError tool
     // result carrying this namespaced block, not as a JSON-RPC error. Named
@@ -319,6 +322,64 @@ function extractMessageId(response: McpResponse): string | null {
   return typeof messageId === "string" && messageId.length > 0 ? messageId : null;
 }
 
+/**
+ * Turn a stored thread anchor into an id `email_compose` action 'reply' can
+ * actually address.
+ *
+ * The two providers this notifier has run on hand back different things from a
+ * send. The Gmail API returns its own message id, which every other tool
+ * accepts, so threading worked for as long as the notify inbox was an OAuth
+ * Gmail connection. An IMAP inbox returns the RFC 5322 Message-ID it minted for
+ * the outgoing MIME header ("<uuid@mcpemails.com>"), but every IMAP tool
+ * addresses a message as "<folder>:<uid>". Replying with the header value makes
+ * the uid parse as NaN, so the reply fails message_not_found before it opens a
+ * socket, sendSystemEmail falls back to a fresh send, and the fallback then
+ * stores another unaddressable id -- which is why the signup mails stopped
+ * threading the moment bjellanda@gmail.com was reconnected over IMAP with an
+ * app password on 2026-09-01, and why they could never recover on their own.
+ *
+ * An anchor in angle brackets is a Message-ID header, never a provider id, so
+ * that shape alone decides whether a lookup is needed. A Gmail API id is
+ * returned untouched and costs nothing. Everything else is resolved with one
+ * HEADER search, which IMAP SEARCH supports natively and email_search passes
+ * through verbatim via its raw `query` escape hatch.
+ *
+ * The lookup deliberately happens HERE, when the NEXT notification is being
+ * sent, rather than straight after the send that produced the id: by then the
+ * message has long since been delivered, so there is no race with the provider
+ * still filing it. Search with no include_folders covers INBOX, which is where
+ * this notification lands because it is addressed to the inbox that sends it.
+ *
+ * Returns null when the anchor cannot be resolved, which the caller already
+ * treats as "start a fresh thread".
+ */
+async function resolveThreadAnchor(
+  apiKey: string,
+  inboxId: string,
+  anchor: string,
+): Promise<string | null> {
+  if (!(anchor.startsWith("<") && anchor.endsWith(">"))) return anchor;
+  try {
+    const found = await callMcp(apiKey, 4, "tools/call", {
+      name: "email_read",
+      arguments: {
+        action: "search",
+        inbox_id: inboxId,
+        query: `HEADER Message-ID "${anchor}"`,
+        limit: 1,
+      },
+    });
+    const id = found.result?.structuredContent?.messages?.[0]?.id;
+    return typeof id === "string" && id.length > 0 ? id : null;
+  } catch (error) {
+    console.warn(
+      "resolveThreadAnchor: could not resolve the stored anchor to a provider id",
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
+}
+
 // Replies into the thread anchored by `replyToMessageId` when one is given
 // (subject/threading headers are derived server-side from that message), and
 // falls back to a brand-new "send" -- with the caller-supplied subject -- if
@@ -341,14 +402,18 @@ async function sendSystemEmail(
   const inboxId = sendFromInboxId(inboxes);
   if (!inboxId) throw new Error("notify_inbox_not_found");
 
-  if (replyToMessageId) {
+  const replyAnchor = replyToMessageId
+    ? await resolveThreadAnchor(apiKey, inboxId, replyToMessageId)
+    : null;
+
+  if (replyAnchor) {
     try {
       const replyResponse = await callMcp(apiKey, 2, "tools/call", {
         name: "email_compose",
         arguments: {
           action: "reply",
           inbox_id: inboxId,
-          message_id: replyToMessageId,
+          message_id: replyAnchor,
           body,
           idempotency_key: `${idempotencyKey}-reply`,
         },

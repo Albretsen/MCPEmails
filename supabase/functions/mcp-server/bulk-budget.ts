@@ -50,12 +50,40 @@ export const BULK_WALL_CLOCK_BUDGET_MS = 25_000;
  * always gets a usable slice.
  *
  * Without this, a slow search could eat the whole budget and the operation
- * would report "0 of 500 done" — technically honest, practically useless, and a
- * regression against today's behaviour where the act phase at least ran. Eight
- * seconds is enough for the first folder group's connect plus a bulk UID MOVE,
- * so a budget-stopped call always makes real progress.
+ * would report "0 of 500 done": technically honest, practically useless, and a
+ * regression against the behaviour where the act phase at least ran.
+ *
+ * CUT FROM 8s TO 4s on 2026-09-01. The 8s figure was sized for work that no
+ * longer happens. It was written when the act phase opened its OWN IMAP
+ * connection, so the reserve had to cover a full TCP + TLS + AUTH handshake
+ * (1.7s at p50 and 3.4s at p90 on Yahoo, and far worse when the provider's
+ * 5-connection cap forces ImapClient.connect's 5s then 10s back-off) before a
+ * single message could move. The shared ImapSession removed that connect:
+ * search and act now run on one authenticated connection with the source
+ * mailbox already SELECTed, so what this reserve actually has to cover is one
+ * bulk `UID MOVE` (or `UID STORE` + `EXPUNGE`) over the page the search just
+ * produced. Measured over thirty days of production that page is 32 UIDs at
+ * p50 and 60 at p90, with 172 the largest ever observed, and one UID MOVE of
+ * that size is a sub-second command on an already-selected mailbox.
+ *
+ * The 4s handed back to the search is the point of the change, not a side
+ * effect of it. `searchPhaseMs` is the only thing that actually bounds the
+ * search on these two tools, so the search phase had been running on 17s while
+ * plain email_search over the same Yahoo accounts got 30s. That gap, and not
+ * the mailboxes, is why email_search_and_move timed out on 13.4% of its Yahoo
+ * calls (31 of 232) and email_search_and_delete on 24.1% (7 of 29), against
+ * 0.80% (11 of 1380) for email_search running the same search function. This
+ * makes the search phase 21s.
+ *
+ * Note what is deliberately NOT done to buy the same room: raising
+ * BULK_WALL_CLOCK_BUDGET_MS. That 25s is measured against the client's
+ * patience rather than the server's, and the margin it leaves is what carries
+ * the activity-log write and the usage accounting that run after the provider
+ * work finishes. Spending it would move the failure from "the search gave up
+ * early" to "the client gave up on a call that had already succeeded", which is
+ * the worse of the two on a mailbox-mutating tool.
  */
-export const BULK_ACT_PHASE_RESERVE_MS = 8_000;
+export const BULK_ACT_PHASE_RESERVE_MS = 4_000;
 
 /**
  * Why a bulk run stopped short of its input.
@@ -86,8 +114,18 @@ export interface WorkBudget {
   /**
    * The slice the search phase may use: whatever is left minus the act-phase
    * reserve, and never more than the caller's own per-search ceiling.
+   *
+   * The ceiling is OPTIONAL, and omitting it is the honest call on the two
+   * sites that matter. Both search_and_move and search_and_delete used to pass
+   * `SEARCH_TIMEOUT_MS` (30s) here, and it never once bound: with a 25s
+   * whole-call budget the expression is `min(30_000, 25_000 - reserve)`, so the
+   * budget always wins and the argument was dead code that made the line read
+   * as though the search got thirty seconds. It did not; it got seventeen.
+   * Passing nothing says what is true, which is that the whole-call budget is
+   * the only bound. A caller with a genuinely tighter ceiling of its own still
+   * passes it and still keeps it.
    */
-  searchPhaseMs(searchCeilingMs: number): number;
+  searchPhaseMs(searchCeilingMs?: number): number;
   /** Total allowance, for reporting. */
   totalMs: number;
   /** Milliseconds spent so far, for reporting. */
@@ -109,9 +147,91 @@ export function createWorkBudget(
     // the search before it was even issued, turning a tight-but-survivable
     // budget into a hard search_timeout error. Better to let one search run and
     // have the act phase report an honest zero.
-    searchPhaseMs: (searchCeilingMs: number) =>
+    searchPhaseMs: (searchCeilingMs: number = Number.POSITIVE_INFINITY) =>
       Math.max(1, Math.min(searchCeilingMs, remainingMs() - BULK_ACT_PHASE_RESERVE_MS)),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Bounding one provider search.
+//
+// ── Why this is not two lines at each call site ─────────────────────────────
+// It was, and all three copies had the same two defects.
+//
+// `Promise.race([search, timer])` abandons the loser without cancelling it. On
+// IMAP that means the socket carries on with a `UID SEARCH` or `UID FETCH`
+// whose result nobody will ever read, and every polite way out of the session
+// (`logout`, and therefore `ImapSession.close` and `invalidate`) is itself an
+// IMAP command that queues behind the abandoned one. Production shows exactly
+// that shape: plain email_search timeouts cluster at 30137 to 30166 ms, tight
+// against their 30s timer, while search_and_move against a 17000 ms budget
+// spread out to 36175 ms. The extra 19 seconds is a handler waiting for a
+// LOGOUT to get a turn. Cancelling has to bypass the command lock, which is
+// what `ImapSession.abort` (and `ImapClient.destroy` under it) is for, and it
+// has to happen at the moment the timer fires rather than after the handler has
+// returned.
+//
+// The second defect is quieter and outlives the request. `setTimeout` was never
+// cleared, so a search that finished in 300 ms still left a 17-second timer
+// pinned in the isolate, and a handler that simply returned on timeout orphaned
+// the search promise entirely: nothing closed that connection until the
+// abandoned command settled, and the isolate could be recycled first. Yahoo
+// caps an account at 5 simultaneous IMAP connections, so each orphan burns one
+// of five slots until the server's own idle timeout reclaims it, and the next
+// call for that account pays ImapClient.connect's 5s/10s back-off for it.
+//
+// Living in this module rather than in a handler is deliberate: the search
+// phase is the half of a bulk call that spends the budget above, and the two
+// mailbox-mutating handlers plus email_search should not each carry their own
+// slightly different version of this.
+// ---------------------------------------------------------------------------
+
+/**
+ * Run one provider search under a hard deadline, cancelling it when the
+ * deadline passes.
+ *
+ * `startSearch` is invoked immediately: the deadline covers the search as the
+ * caller wrote it, connect included, not just the part after some setup.
+ *
+ * `cancel` is called BEFORE the rejection is delivered, so the socket is
+ * already being torn down by the time the handler's own `finally` runs and asks
+ * the session to close. It is best-effort by contract: it must not throw, and
+ * a throw is swallowed here rather than replacing the timeout the caller needs
+ * to see. Pass null when there is nothing to cancel (an HTTP provider, where
+ * abandoning the fetch costs a socket the OS will reap and not a slot against a
+ * five-connection cap).
+ *
+ * Rejects with `Error("search_timeout")`, the sentinel every call site already
+ * matches on. The abandoned search keeps a rejection handler attached (the
+ * `then` below registers one), so its eventual failure, which after a cancel is
+ * near-certain, can never surface as an unhandled rejection.
+ */
+export async function raceSearchWithTimeout<T>(
+  startSearch: () => Promise<T>,
+  timeoutMs: number,
+  cancel: (() => void) | null,
+): Promise<T> {
+  // Outside the try: a synchronous throw from `startSearch` is the caller's own
+  // bug and should propagate untouched, with no timer to clean up.
+  const search = startSearch();
+  let timer: number | undefined;
+  try {
+    return await new Promise<T>((resolve, reject) => {
+      timer = setTimeout(() => {
+        try {
+          cancel?.();
+        } catch {
+          // A failed cancel is a leaked connection, which the provider's idle
+          // timeout eventually reclaims. Reporting it instead of the timeout
+          // would tell the caller the wrong thing about what went wrong.
+        }
+        reject(new Error("search_timeout"));
+      }, timeoutMs);
+      search.then(resolve, reject);
+    });
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
 }
 
 /**

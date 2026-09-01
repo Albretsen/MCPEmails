@@ -40,6 +40,19 @@
 export interface SessionCapableImapClient {
   selectMailbox(mailbox: string): Promise<void>;
   logout(): Promise<void>;
+  /**
+   * Close the socket without waiting for the command lock. Optional so an
+   * existing fake, or any future minimal client, still satisfies this interface
+   * without being forced to implement cancellation it has no socket to cancel.
+   * See ImapClient.destroy for what it is for.
+   */
+  destroy?(): void;
+  /**
+   * True while a command is queued or running. Optional for the same reason as
+   * `destroy`; a client that does not report it is treated as idle, which is
+   * the behaviour this session had before cancellation existed.
+   */
+  readonly busy?: boolean;
 }
 
 /**
@@ -136,13 +149,50 @@ export class ImapSession<C extends SessionCapableImapClient> {
     if (client) await client.logout().catch(() => {});
   }
 
+  /**
+   * Abandon the connection immediately: kill the socket and forget the client.
+   *
+   * This is the counterpart to `invalidate()` for the case where the caller has
+   * stopped waiting rather than hit an error. Handlers bound a slow provider
+   * search with `Promise.race` against a timer, and the loser of a race is
+   * abandoned, not cancelled: the socket carries on with a UID SEARCH or UID
+   * FETCH whose result nobody will read. `invalidate()` and `close()` both go
+   * through `logout()`, which is an ordinary command and therefore queues
+   * behind that work, so the polite path is exactly the one that cannot get out
+   * quickly. `destroy()` bypasses the command lock, which is why it is the one
+   * used here.
+   *
+   * Synchronous on purpose: there is nothing to wait for, and an `await` here
+   * would be another place for a caller to give up before the socket is gone.
+   * Non-terminal, like `invalidate()`: the cached client is dropped so the
+   * session can never hand out a dead one, and a later unit of work opens a
+   * fresh connection.
+   */
+  abort(): void {
+    const client = this.#client;
+    this.#client = null;
+    this.#selected = null;
+    client?.destroy?.();
+  }
+
   /** Close the connection for good. Safe to call more than once. */
   async close(): Promise<void> {
     this.#closed = true;
     const client = this.#client;
     this.#client = null;
     this.#selected = null;
-    if (client) await client.logout().catch(() => {});
+    if (!client) return;
+    // A graceful LOGOUT on a BUSY socket is the thing that was costing 8 to 19
+    // seconds: it queues behind a command the caller has already walked away
+    // from, and it is being issued precisely because the caller is trying to
+    // leave. When the connection still owes work to nobody, close it the polite
+    // way, which returns the connection slot to the provider immediately
+    // instead of leaving it for the server's idle timeout.
+    if (client.busy === true && typeof client.destroy === "function") {
+      client.destroy();
+      return;
+    }
+    await client.logout().catch(() => {});
   }
 }
 
