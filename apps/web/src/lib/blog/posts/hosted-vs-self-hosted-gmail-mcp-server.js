@@ -88,7 +88,7 @@ This is the real trade-off, and I won't dress it up. With a hosted server, your 
 
 ## What it costs in dollars
 
-MCP Emails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 7-day analytics and community support. [Personal is $5/month](/pricing) (up to three connected inboxes, 120 req/min, 30-day analytics, email support), Pro is $15/month (unlimited connected inboxes, 300 req/min, 90-day analytics), and Team is $79/month (members with roles, a separate workspace per client, SSO, and audit logs). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
+MCP Emails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 30-day analytics and community support. [Personal is $5/month](/pricing) (up to three connected inboxes, 120 req/min, 30-day analytics, email support), Pro is $15/month (unlimited connected inboxes, 300 req/min, 90-day analytics), and Team is $79/month (members with roles, a separate workspace per client, SSO, and audit logs). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
 
 ## So which should you pick?
 

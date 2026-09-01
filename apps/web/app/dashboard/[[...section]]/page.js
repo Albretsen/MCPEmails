@@ -7,7 +7,7 @@ import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
 import { resolvePlanLimits } from '../../../src/lib/stripe/plans';
-import { retentionDays, retentionCutoffISO } from '../../../src/lib/analytics/retention';
+import { retentionDays } from '../../../src/lib/analytics/retention';
 import { resolveUsageBillingWindow } from '../../../src/lib/usage/billing-window';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import '../../../styles/dashboard.css';
@@ -457,27 +457,33 @@ async function fetchUsageData(supabase, workspaceId, billingWindow, historyDays 
  *   pageSize: number,
  * }>}
  */
-async function fetchAuditLog(supabase, workspaceId, historyDays = USAGE_WINDOW_DAYS) {
+async function fetchAuditLog(supabase, workspaceId) {
   const pageSize = 25;
-  // The audit log used to page back through EVERY row a workspace had ever
-  // written, on every plan, while the copy sold a one-year log as a Team
-  // feature. Bound it by the same window as the rest of the analytics so the
-  // claim is true. Rows are not deleted; this only limits what is shown.
-  const since = retentionCutoffISO(historyDays);
+  // DELIBERATELY UNBOUNDED, unlike the usage analytics above.
+  //
+  // The analytics retention window was briefly applied here too and then taken
+  // back out. An audit log is a SECURITY artifact, not a usage metric: cutting
+  // it by price tier means the customers least equipped to detect a compromise
+  // keep the least evidence of one, and this product holds mailbox
+  // credentials. The industry does not do this either. Where an audit log is
+  // offered at all it is gated as a whole feature and then kept generously
+  // (Linear 90 days, Vercel 90, 1Password 365, GitHub retains indefinitely and
+  // merely defaults the VIEW to three months); the one vendor that scales it
+  // down hard by tier, Auth0 at 1-30 days, is publicly complained about for it.
+  // Nobody ships a 7-day audit log. Do not re-add a window here without a
+  // reason that is about storage, not packaging.
 
   const [countResult, rowsResult] = await Promise.all([
     supabase
       .from('activity_log')
       .select('id', { count: 'exact', head: true })
-      .eq('workspace_id', workspaceId)
-      .gte('created_at', since),
+      .eq('workspace_id', workspaceId),
     supabase
       .from('activity_log')
       .select(
         'id, tool_name, status, error_code, duration_ms, created_at, inboxes(email_address, display_name), api_keys(name, key_prefix)',
       )
       .eq('workspace_id', workspaceId)
-      .gte('created_at', since)
       .order('created_at', { ascending: false })
       .range(0, pageSize - 1),
   ]);
@@ -703,7 +709,7 @@ export default async function DashboardPage({ params }) {
         fetchInboxes(supabase, workspace.id, historyDays),
         fetchApiKeys(supabase, workspace.id),
         fetchUsageData(supabase, workspace.id, billingWindow, historyDays),
-        fetchAuditLog(supabase, workspace.id, historyDays),
+        fetchAuditLog(supabase, workspace.id),
         fetchMembers(supabase, workspace.id),
         fetchPendingInvites(supabase, workspace.id),
       ])
