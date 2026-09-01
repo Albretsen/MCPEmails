@@ -243,6 +243,34 @@ export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
     appPasswordHelpUrl: 'https://app.fastmail.com/settings/security/apppw',
   },
   {
+    /**
+     * Gmail. The only entry here that was not drawn from the failure log,
+     * because until now a Google mailbox could not be connected any way but
+     * OAuth, so there were no generic-form attempts to record. It is in the
+     * table for the same reason every other branded service is: an address or
+     * a host is what identifies the mailbox, and someone who types
+     * me@gmail.com into the generic form has to get the same "your account
+     * password will never work here" answer as someone who clicked the Gmail
+     * card. Without the entry they would get the default advice to re-check a
+     * password that cannot authenticate.
+     *
+     * Google Workspace custom domains are found through the host suffixes:
+     * their address says nothing, but their mail server is imap.gmail.com.
+     */
+    id: 'gmail',
+    label: 'Gmail',
+    domains: ['gmail.com', 'googlemail.com'],
+    hostSuffixes: ['.gmail.com', '.googlemail.com'],
+    imapHost: 'imap.gmail.com',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.gmail.com',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+    requiresAppPassword: true,
+    appPasswordHelpUrl: 'https://myaccount.google.com/apppasswords',
+  },
+  {
     id: 'icloud',
     label: 'iCloud Mail',
     domains: ['icloud.com', 'me.com', 'mac.com'],

@@ -4,6 +4,12 @@ import { assertSafeAnalyticsEvent } from './analytics.mjs';
 
 test('accepts documented low-cardinality event properties', () => {
   assert.doesNotThrow(() => assertSafeAnalyticsEvent('inbox_connected', { provider: 'gmail', connection_method: 'oauth' }));
+  // Regression: the value 'app_password' contains "password" and was rejected
+  // by a sensitive-value regex, so this event threw for EVERY app-password
+  // provider. The old test only ever exercised 'oauth', which is why it stood.
+  for (const provider of ['gmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'fastmail', 'imap']) {
+    assert.doesNotThrow(() => assertSafeAnalyticsEvent('inbox_connected', { provider, connection_method: 'app_password' }));
+  }
 });
 
 test('rejects undeclared events and sensitive properties', () => {

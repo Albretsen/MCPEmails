@@ -39,8 +39,8 @@ export const maxDuration = 60;
 /**
  * POST /api/inboxes/app-password
  *
- * Connects a branded IMAP provider (iCloud, Yahoo, Zoho, Yandex) using an
- * app-specific password. Host/port settings come from the preset registry
+ * Connects a branded IMAP provider (Gmail, iCloud, Yahoo, Zoho, Yandex) using
+ * an app-specific password. Host/port settings come from the preset registry
  * (lib/email-providers/imap-presets.ts); the credential is validated against
  * the provider's IMAP server before anything is persisted.
  *
@@ -411,6 +411,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ success: true });
 }
 
-function funnelProvider(service: string): 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'unknown' {
-  return service === 'icloud' || service === 'yahoo' || service === 'zoho' || service === 'yandex' ? service : 'unknown';
+/**
+ * The funnel category for a branded service.
+ *
+ * Gmail maps to the same 'gmail' category the OAuth route records, so the two
+ * ways of connecting a Google mailbox are counted together. That is a real
+ * limitation while the app-password path is being introduced as the default:
+ * the funnel cannot say which of the two a connection used. The category
+ * vocabulary is a database CHECK constraint, so separating them is a migration
+ * and a decision about the existing rows, not a one-line change here.
+ */
+function funnelProvider(service: string): 'gmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'unknown' {
+  return service === 'gmail' || service === 'icloud' || service === 'yahoo' || service === 'zoho' || service === 'yandex' ? service : 'unknown';
 }
