@@ -75,8 +75,8 @@
     "label": "Se kompatibilitetsmatrisen for e-postleverandører"
   },
   "verificationNote": {
-    "title": "Google-verifisering pågår",
-    "body": "Google går fortsatt gjennom Gmail-tilgangen vår. Frem til det er ferdig får du et skjermbilde om en <b>ikke-verifisert app</b> under innlogging, og Google lar tilkoblingen utløpe omtrent hver sjuende dag, så du må koble til på nytt. Ingenting annet påvirkes."
+    "title": "Google viser et skjermbilde om en ikke-verifisert app",
+    "body": "Google går gjennom apper som ber om Gmail-tilgang, og mcpemails.com har ikke vært gjennom den gjennomgangen. Du får et skjermbilde om en <b>ikke-verifisert app</b> under innlogging, med stegene for å fortsette. Selve tilkoblingen har ingen utløpstid: når den først er koblet til, står postkassen tilkoblet til du trekker tilbake tilgangen."
   },
   "hub": {
     "meta": {

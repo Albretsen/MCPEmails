@@ -75,8 +75,8 @@
     "label": "See the email provider compatibility matrix"
   },
   "verificationNote": {
-    "title": "Google verification in progress",
-    "body": "Google is still reviewing our Gmail access. Until that finishes you will see an <b>unverified app</b> screen during sign-in, and Google expires the connection about every 7 days, so you will need to reconnect. Nothing else is affected."
+    "title": "Google shows an unverified app screen",
+    "body": "Google reviews apps that request Gmail access, and mcpemails.com has not been through that review. You will see an <b>unverified app</b> screen during sign-in, with the steps to continue. The connection itself is not time-limited: once connected, an inbox stays connected until you revoke it."
   },
   "hub": {
     "meta": {

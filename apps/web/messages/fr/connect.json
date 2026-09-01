@@ -75,8 +75,8 @@
     "label": "Voir la matrice de compatibilité des fournisseurs e-mail"
   },
   "verificationNote": {
-    "title": "Vérification Google en cours",
-    "body": "Google examine encore notre accès à Gmail. Tant que cet examen dure, un écran <b>application non vérifiée</b> s'affiche à la connexion, et Google fait expirer la connexion tous les 7 jours environ : il faudra donc la rétablir. Rien d'autre n'est affecté."
+    "title": "Google affiche un écran d'application non vérifiée",
+    "body": "Google examine les applications qui demandent l'accès à Gmail, et mcpemails.com n'a pas suivi cet examen. Un écran <b>application non vérifiée</b> s'affiche à la connexion, avec les étapes pour continuer. La connexion elle-même n'expire pas : une fois établie, la boîte reste connectée jusqu'à ce que vous révoquiez l'accès."
   },
   "hub": {
     "meta": {

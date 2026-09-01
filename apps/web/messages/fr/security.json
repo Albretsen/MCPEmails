@@ -94,7 +94,7 @@
   },
   "google": {
     "title": "6. Vérification Google et fournisseurs",
-    "p1": "L'accès à Gmail utilise les portées restreintes de Google, le niveau que Google examine le plus minutieusement. Nous achevons la vérification OAuth à portées restreintes de Google ainsi que son évaluation de sécurité annuelle CASA, réalisée par un évaluateur indépendant agréé par Google. Une fois celle-ci terminée, vous ne verrez plus l'avertissement « application non vérifiée » de Google lorsque vous vous connectez.",
+    "p1": "L'accès à Gmail utilise les portées restreintes de Google, le niveau que Google examine le plus minutieusement.",
     "p2": "L'utilisation et le transfert par MCPEmails des informations reçues des API de Google vers toute autre application respectent la <link>Google API Services User Data Policy</link>, y compris les exigences Limited Use.",
     "p3": "Pour Fastmail, iCloud, Yahoo, Zoho, Yandex et les autres fournisseurs IMAP, vous vous connectez avec un mot de passe d'application délivré par le fournisseur, que vous pouvez révoquer à tout moment, sans aucune portée OAuth large que nous pourrions demander à l'excès."
   },

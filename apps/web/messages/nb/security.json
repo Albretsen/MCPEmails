@@ -94,7 +94,7 @@
   },
   "google": {
     "title": "6. Google- og leverandørverifisering",
-    "p1": "Tilgang til Gmail bruker Googles begrensede omfang (restricted scopes), nivået Google gransker tettest. Vi fullfører Googles OAuth-verifisering for begrenset omfang og den årlige CASA-sikkerhetsvurderingen, utført av en uavhengig, Google-godkjent vurderer. Når den er ferdig, vil du ikke lenger se Googles \"uverifisert app\"-advarsel når du kobler til.",
+    "p1": "Tilgang til Gmail bruker Googles begrensede omfang (restricted scopes), nivået Google gransker tettest.",
     "p2": "MCPEmails' bruk og overføring av informasjon mottatt fra Google APIs til enhver annen app følger <link>Google API Services User Data Policy</link>, inkludert kravene om Limited Use.",
     "p3": "For Fastmail, iCloud, Yahoo, Zoho, Yandex og andre IMAP-leverandører kobler du til med et app-passord utstedt av leverandøren som du kan tilbakekalle når som helst, uten brede OAuth-omfang for oss å be om for mye av."
   },
