@@ -337,13 +337,17 @@ export async function PATCH(
         { status: 400 }
       );
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (update as any).send_review_mode = mode;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (update as any).send_approval_required = mode !== 'off';
   } else if ('send_approval_required' in input) {
     if (typeof input.send_approval_required !== 'boolean') {
       return NextResponse.json({ error: 'send_approval_required must be a boolean.' }, { status: 400 });
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (update as any).send_approval_required = input.send_approval_required;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (update as any).send_review_mode = input.send_approval_required ? 'dashboard' : 'off';
   }
 
@@ -420,15 +424,18 @@ export async function PATCH(
   // `send_review_mode` is added by a migration that may land after this code,
   // so both the write and the read-back degrade to the pre-migration shape
   // rather than failing every signature save. See lib/approvals/columns.ts.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: saved, error: updateError } = await runTolerantly<any>(
     update,
     PENDING_INBOX_COLUMNS,
     (patch) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       selectTolerantly<any>(
         ['signature_text', 'signature_html', 'signature_enabled', 'signature_reply_mode',
           'signature_source', 'signature_updated_at', 'send_approval_required', 'send_review_mode'],
         PENDING_INBOX_COLUMNS,
         (columns) =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (service as any)
             .from('inboxes')
             .update(patch)
@@ -444,11 +451,13 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to save signature.' }, { status: 500 });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sendApprovalRequired = (saved as any).send_approval_required ?? false;
   return NextResponse.json({
     success: true,
     signature: saved,
     sendApprovalRequired,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sendReviewMode: (saved as any).send_review_mode ?? (sendApprovalRequired ? 'dashboard' : 'off'),
   });
 }

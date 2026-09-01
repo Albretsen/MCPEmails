@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Cómo llegar al inbox zero con IA (usando Claude y tu bandeja de entrada real)',
   description:
     'Llega al inbox zero con IA: deja que Claude clasifique, archive, etiquete y redacte respuestas en tu bandeja real de Gmail o IMAP a través de MCP. Una rutina repetible, los prompts exactos y por qué no se almacena nada.',
@@ -67,3 +67,5 @@ No necesitas una nueva aplicación de correo ni un sistema de productividad — 
 
 [Conecta tu bandeja gratis](/signup) y pídele a Claude que clasifique tu correo sin leer. Inbox zero, supervisado en lugar de sufrido.`,
 };
+
+export default translation;

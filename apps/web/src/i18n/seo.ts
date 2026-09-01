@@ -131,7 +131,7 @@ function planOffers(url: string) {
  */
 export function homeJsonLd(
   locale: string,
-  { name, description }: { name: string; description: string }
+  { description }: { name: string; description: string }
 ) {
   const home = localePath(locale, '');
   const orgId = `${APP_URL}/#organization`;

@@ -216,6 +216,9 @@ function TweaksPanel({ title = 'Tweaks', children }) {
     <>
       <style>{__TWEAKS_STYLE}</style>
       <div ref={dragRef} className="twk-panel" data-omelette-chrome=""
+           // The drag offset is deliberately a ref, so dragging repositions the panel without a
+           // re-render per mousemove.
+           // eslint-disable-next-line react-hooks/refs
            style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
         <div className="twk-hd" onMouseDown={onDragStart}>
           <b>{title}</b>
@@ -282,6 +285,9 @@ function TweakRadio({ label, value, options, onChange }) {
   // The active value is read by pointer-move handlers attached for the lifetime
   // of a drag, so ref it so a stale closure doesn't fire onChange for every move.
   const valueRef = React.useRef(value);
+  // Mirrors the latest value into a ref so handlers bound for the gesture do not fire on a
+  // stale closure, per the comment above.
+  // eslint-disable-next-line react-hooks/refs
   valueRef.current = value;
 
   // Segments wrap mid-word once per-segment width runs out. The track is

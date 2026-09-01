@@ -14,6 +14,9 @@ function ThemeBtn() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
+    // Reads the theme the pre-paint script already applied to <html>. It cannot be a useState
+    // initialiser: there is no document during the server render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDark(
       typeof document !== 'undefined' &&
       document.documentElement.getAttribute('data-theme') === 'dark'
@@ -23,7 +26,7 @@ function ThemeBtn() {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-    try { localStorage.setItem('mcpe-theme', dark ? 'dark' : 'light'); } catch (_) {}
+    try { localStorage.setItem('mcpe-theme', dark ? 'dark' : 'light'); } catch {}
   }, [dark]);
 
   return (

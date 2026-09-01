@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '如何将 Gmail 连接到 Claude（2 分钟搞定，无需写代码）',
   description:
     '通过 MCP 大约两分钟即可将 Gmail 连接到 Claude：一次 Google 登录、一个端点 URL，无需 API 密钥，无需写代码。Claude 实时读取、搜索并发送你的邮件——而你的邮件从不被存储。',
@@ -102,3 +102,5 @@ https://mcpemails.com/api/mcp
 
 准备好了吗？[免费连接你的 Gmail](/signup)，把端点粘贴进 Claude，让它帮你总结未读邮件。`,
 };
+
+export default translation;

@@ -66,7 +66,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     scopes,
     inbox_ids,
     all_inboxes,
-    key_name,
   } = body as Record<string, unknown>;
 
   // ── CSRF token validation ─────────────────────────────────────────────────
@@ -93,9 +92,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const oauthState  = typeof state    === 'string' ? state    : '';
-  const keyLabel    = typeof key_name === 'string' && key_name.trim()
-    ? key_name.trim().slice(0, 255)
-    : `OAuth: ${client_id}`;
 
   // ── State nonce validation ────────────────────────────────────────────────
   // Only validate if the client sent a state param (some clients omit it).

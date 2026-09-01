@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet agent',
   description: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet AI-agent: poll etter ulest e-post, lag utkast og svar trygt med scopes, ratebegrensninger og sikringer.',
   coverAlt: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet agent — MCPEmails',
@@ -152,3 +152,5 @@ Det er et system du faktisk kan stole på, og det lar seg generalisere. Den samm
 
 Klar til å bygge det? Opprett en avgrenset API-nøkkel og les verktøyreferansen i [dokumentasjonen](/docs), eller [start gratis](/signup): Gratis kobler til én innboks, Personal ($5 per måned) til opptil tre, og Pro til alle du eier; legg til sikringene før du automatiserer.`,
 };
+
+export default translation;

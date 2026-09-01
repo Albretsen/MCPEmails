@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP',
   description: 'Créez un répondeur automatique d’e-mails avec un agent IA connecté en MCP : interroger les non lus, rédiger et répondre en toute sécurité avec scopes, limites de débit et garde-fous.',
   coverAlt: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP — MCPEmails',
@@ -152,3 +152,5 @@ C’est un système auquel vous pouvez réellement faire confiance, et il se gé
 
 Prêt à le construire ? Créez une clé API à scope restreint et lisez la référence des outils dans [la documentation](/docs), ou [commencez gratuitement](/signup) : Gratuit connecte une boîte, Personal (5 $/mois) jusqu'à trois, et Pro toutes celles que vous possédez ; ajoutez d’abord les garde-fous avant d’automatiser.`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Donnez une boîte mail à votre agent IA : guide pratique de l’email via MCP',
   description:
     'Pourquoi connecter l’email à votre agent IA est plus difficile qu’il n’y paraît, et comment le Model Context Protocol fait de Gmail, Outlook et IMAP un point d’accès unique et sécurisé que votre agent peut vraiment utiliser.',
@@ -73,3 +73,5 @@ Connecter une boîte mail devrait prendre quelques minutes, pas un après-midi �
 
 Donnez des verbes à votre agent, pas des mots de passe — et laissez-le se mettre au travail.`,
 };
+
+export default translation;

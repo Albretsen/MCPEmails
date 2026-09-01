@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026',
   description: 'Un repaso sin rodeos a las mejores formas de dejar que Claude gestione tu bandeja en 2026: integraciones nativas, servidores MCP propios, copiar y pegar, extensiones de navegador y MCP gestionado.',
   coverAlt: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026 — MCPEmails',
@@ -81,3 +81,5 @@ Una cosa más que separa las opciones serias de los juguetes: el envío. Con MCP
 
 Si la vía gestionada te encaja, puedes [conectar una bandeja y Claude en menos de dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes) o leer [la documentación](/docs) para la referencia completa de herramientas. El plan gratuito basta para probar todo el flujo — [empieza gratis](/signup) y deja que Claude haga algo de verdad con tu bandeja de entrada.`,
 };
+
+export default translation;

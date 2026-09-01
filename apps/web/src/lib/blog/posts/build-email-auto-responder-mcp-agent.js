@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'build-email-auto-responder-mcp-agent',
   title: 'Building an Email Auto-Responder With an MCP-Connected Agent',
   description: 'Build an email auto-responder with an MCP-connected AI agent: poll for unread mail, draft, and reply safely with scopes, rate limits, and guardrails.',
@@ -159,3 +159,5 @@ That's a system you can actually trust, and it generalizes. The same loop with a
 
 Ready to build it? Create a scoped API key and read the tool reference in [the docs](/docs), or [start free](/signup): Free connects one inbox, Personal ($5/month) connects up to three, and Pro connects every mailbox you own.`,
 };
+
+export default post;

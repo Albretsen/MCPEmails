@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'connect-outlook-microsoft-365-ai-agent-mcp',
   title: 'Connecting Outlook and Microsoft 365 to Your AI Agent via MCP',
   description:
@@ -104,3 +104,5 @@ The self-hosted Outlook MCP servers floating around GitHub all hit the same wall
 
 Connecting Outlook costs nothing to try — the [Free plan](/pricing) connects one inbox at 60 requests per minute, with no card required. Add your Microsoft 365 mailbox, point Claude at the endpoint, and give it something to read.`,
 };
+
+export default post;

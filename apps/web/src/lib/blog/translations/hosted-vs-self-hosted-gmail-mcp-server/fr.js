@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Serveur MCP Gmail hébergé ou auto-hébergé : avantages, inconvénients et coûts',
   description:
     'Serveur MCP Gmail hébergé ou auto-hébergé, comparés en toute franchise : les dépôts DIY gratuits offrent un contrôle total mais vous gérez OAuth, chiffrement et disponibilité. Un serveur hébergé prend quelques minutes.',
@@ -91,3 +91,5 @@ Choisissez **l'hébergé** si vous voulez un point de terminaison fonctionnel d�
 
 Si vous hésitez encore sur la manière dont un agent devrait atteindre votre boîte mail, [les meilleures façons de laisser Claude gérer votre boîte de réception](/blog/best-ways-to-let-claude-manage-your-inbox) compare les options plus larges. Quand vous êtes prêt, [commencez gratuitement](/signup) ou parcourez [la documentation](/docs) — connecter une boîte Gmail prend vraiment environ une minute.`,
 };
+
+export default translation;

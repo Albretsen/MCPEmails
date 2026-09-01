@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Cómo conectar Gmail con Claude (en 2 minutos, sin código)',
   description:
     'Conecta Gmail con Claude a través de MCP en unos dos minutos: un inicio de sesión de Google, una URL de endpoint, sin API key, sin código. Claude lee, busca y envía tu correo en directo, y tu correo nunca se almacena.',
@@ -102,3 +102,5 @@ Eso es todo: un inicio de sesión de Google, una URL de endpoint, y Claude puede
 
 ¿Listo? [Conecta tu Gmail gratis](/signup), pega el endpoint en Claude y pídele que te resuma el correo no leído.`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'connect-icloud-fastmail-imap-to-claude',
   title: 'How to Connect iCloud, Fastmail, or Any IMAP Inbox to Claude',
   description:
@@ -103,3 +103,5 @@ If you're still deciding whether to wire email into an agent at all, start with 
 
 iCloud, Fastmail, and IMAP aren't second-class here. Generate an app password, paste it into **Inboxes → Connect Inbox**, point Claude at the [endpoint](/docs), and you've got an agent with full read/send access plus permanent delete the OAuth providers can't offer. It's [free to start](/signup), no card, one inbox forever.`,
 };
+
+export default post;

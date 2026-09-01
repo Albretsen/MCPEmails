@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '用 MCP 连接的智能体搭建邮件自动回复器',
   description: '用 MCP 连接的 AI 智能体搭建邮件自动回复器：轮询未读邮件、起草并安全回复，配合权限、速率限制与护栏。',
   coverAlt: '用 MCP 连接的智能体搭建邮件自动回复器 — MCPEmails',
@@ -152,3 +152,5 @@ def send_with_backoff(**kwargs):
 
 准备好动手了吗？创建一把带权限范围的 API 密钥，并在[文档](/docs)里阅读工具参考，或者[免费开始](/signup)：免费版可连接一个收件箱，Personal（每月 5 美元）最多可连接三个，Pro 可连接你拥有的每一个邮箱；在自动化前先把护栏加好。`,
 };
+
+export default translation;

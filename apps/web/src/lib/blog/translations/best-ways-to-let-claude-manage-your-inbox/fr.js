@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Les meilleures façons de laisser Claude gérer votre boîte mail en 2026',
   description: 'Un tour d’horizon franc des meilleures façons de laisser Claude gérer votre boîte mail en 2026 : intégrations natives, serveurs MCP maison, copier-coller, extensions de navigateur et MCP hébergé.',
   coverAlt: 'Les meilleures façons de laisser Claude gérer votre boîte mail en 2026 — MCPEmails',
@@ -81,3 +81,5 @@ Une dernière chose qui sépare les options sérieuses des gadgets : l’envoi. 
 
 Si la voie hébergée vous semble la bonne, vous pouvez [connecter une boîte mail et Claude en moins de deux minutes](/blog/connect-email-to-ai-agent-under-2-minutes) ou lire [la documentation](/docs) pour la référence complète des outils. Le forfait gratuit suffit à essayer tout le flux — [commencez gratuitement](/signup) et laissez Claude faire enfin quelque chose de votre boîte mail.`,
 };
+
+export default translation;

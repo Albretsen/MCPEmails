@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Hvorfor «e-post lagres aldri» er avgjørende når du kobler AI til innboksen',
   description:
     'E-post lagres aldri betyr at MCP Emails henter posten din live og kaster den, og beholder kun et kryptert token. Se hvorfor det slår verktøy som kopierer hele innboksen.',
@@ -81,3 +81,5 @@ Aldri-lagret-modellen er én brikke i en større beslutning: hvordan du kobler e
 
 Du trenger ikke å velge mellom å gi agenten din nyttig innbokstilgang og å holde posten din ute av en tredjeparts database. Med live-henting får du begge deler. [Koble til en innboks](/signup), så kan du trekke tilbake tilgangen med ett klikk — og det er ingenting igjen når du gjør det.`,
 };
+
+export default translation;

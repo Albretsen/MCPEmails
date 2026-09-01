@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: "Pourquoi le « courriel jamais stocké » compte quand vous connectez l’IA à votre boîte mail",
   description:
     'Jamais stocké : MCP Emails récupère vos messages en direct puis les jette, ne gardant qu’un jeton chiffré. Voyez pourquoi c’est mieux qu’un outil qui copie toute votre boîte.',
@@ -81,3 +81,5 @@ Le modèle « jamais stocké » est une pièce d’une décision plus large : co
 
 Vous n’avez pas à choisir entre donner à votre agent un accès utile à la boîte mail et garder vos courriels hors de la base de données d’un tiers. Avec la récupération en direct, vous obtenez les deux. [Connectez une boîte mail](/signup) et vous pourrez la révoquer en un clic — et il ne reste rien derrière quand vous le faites.`,
 };
+
+export default translation;

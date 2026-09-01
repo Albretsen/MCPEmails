@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Signatures e-mail : Claude signe chaque envoi automatiquement',
   description:
     'Définissez votre signature une fois par boîte et Claude l\'ajoute automatiquement à chaque e-mail envoyé, sur Gmail, Outlook, Fastmail, iCloud et tout compte IMAP.',
@@ -74,3 +74,5 @@ Définissez votre signature une fois, par boîte, et chaque e-mail que Claude en
 
 [Ouvrez votre tableau de bord](/dashboard) pour définir une signature, ou dites simplement à Claude ce que devrait être la vôtre. Pas encore connecté ? [Commencez gratuitement](/signup) et connectez une boîte en environ deux minutes.`,
 };
+
+export default translation;

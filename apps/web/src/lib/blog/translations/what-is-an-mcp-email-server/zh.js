@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '什么是 MCP 邮件服务器？一篇大白话讲解',
   description:
     'MCP 邮件服务器让 AI 代理通过简洁的动作来读写邮件，而不用直接面对 IMAP 和密码。本文用大白话讲清它到底是什么。',
@@ -78,3 +78,5 @@ MCP 邮件服务器把你的收件箱变成一组安全的、具名的动作，�
 
 想试试吗？[免费开始](/signup)——无需信用卡，可连接一个收件箱——或者阅读[文档](/docs)，查看工具参考和端点 URL。`,
 };
+
+export default translation;

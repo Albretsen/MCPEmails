@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Servidor MCP de Gmail alojado vs. autoalojado: ventajas, inconvenientes y costes',
   description:
     'Servidor MCP de Gmail alojado vs. autoalojado, comparado con honestidad: los repos DIY gratis te dan control total, pero asumes OAuth, cifrado y disponibilidad. Uno alojado cuesta minutos.',
@@ -91,3 +91,5 @@ Elige **alojado** si quieres un endpoint funcionando hoy, prefieres no estar de 
 
 Si aún estás decidiendo cómo debería un agente llegar a tu buzón siquiera, [las mejores formas de dejar que Claude gestione tu bandeja de entrada](/blog/best-ways-to-let-claude-manage-your-inbox) compara las opciones más amplias. Cuando estés listo, [empieza gratis](/signup) o echa un vistazo a [la documentación](/docs): conectar un buzón de Gmail de verdad lleva como un minuto.`,
 };
+
+export default translation;

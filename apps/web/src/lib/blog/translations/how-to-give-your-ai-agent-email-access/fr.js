@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Comment donner à votre agent IA un accès à la messagerie (le guide complet 2026)',
   description:
     'Donnez à votre agent IA un accès en lecture et en envoi à une vraie boîte mail via MCP — Gmail, Outlook, iCloud, Fastmail ou IMAP. Fonctionnement, outils, sécurité et configuration.',
@@ -118,3 +118,5 @@ Détail complet sur la [page des tarifs](/pricing).
 
 Connectez une boîte mail, collez le point de terminaison dans votre agent et appelez \`inbox_list\`. C'est tout l'onboarding. [Commencez gratuitement](/signup) ou parcourez le [guide de démarrage rapide](/docs#quickstart) — votre agent lira de vrais e-mails en quelques minutes.`,
 };
+
+export default translation;

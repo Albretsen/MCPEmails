@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Cómo dar acceso al correo a tu agente de IA (la guía completa de 2026)',
   description:
     'Da a tu agente de IA acceso de lectura y envío a una bandeja real por MCP: Gmail, Outlook, iCloud, Fastmail o IMAP. Cómo funciona, las herramientas, la seguridad y la configuración.',
@@ -118,3 +118,5 @@ Desglose completo en la [página de precios](/pricing).
 
 Conecta una bandeja, pega el endpoint en tu agente y llama a \`inbox_list\`. Ese es todo el onboarding. [Empieza gratis](/signup) u ojea el [inicio rápido](/docs#quickstart): tendrás un agente leyendo correo real en un par de minutos.`,
 };
+
+export default translation;

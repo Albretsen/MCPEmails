@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '给你的 AI 智能体一个收件箱：通过 MCP 收发邮件的实用指南',
   description:
     '把邮件接入 AI 智能体，比看上去要难得多——而 Model Context Protocol 如何把 Gmail、Outlook 和 IMAP 变成一个安全、可被智能体真正调用的统一端点。',
@@ -73,3 +73,5 @@ MCP 是一种把**工具（tools）**和**资源（resources）**暴露给语言
 
 给你的智能体动词，而不是密码——然后让它开始干活。`,
 };
+
+export default translation;

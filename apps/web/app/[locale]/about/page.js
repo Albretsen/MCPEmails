@@ -126,9 +126,13 @@ export default async function AboutPage({ params }) {
   const description = t.has('meta.description') ? t('meta.description') : '';
   const jsonLd = aboutJsonLd(locale, { title, description });
 
-  const extLink = (href) => (chunks) => (
-    <a href={href} target="_blank" rel="noopener noreferrer">{chunks}</a>
-  );
+  // Named so react/display-name is satisfied; these are next-intl rich-text
+  // tag callbacks, invoked directly with the chunks, not rendered as elements.
+  const extLink = (href) => function ExternalLink(chunks) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer">{chunks}</a>
+    );
+  };
   const richTags = {
     b: (c) => <strong>{c}</strong>,
     c: (c) => <code>{c}</code>,

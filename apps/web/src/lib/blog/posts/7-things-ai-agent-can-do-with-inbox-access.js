@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: '7-things-ai-agent-can-do-with-inbox-access',
   title: '7 Things Your AI Agent Can Do Once It Has Inbox Access',
   description:
@@ -88,3 +88,5 @@ When you do hit a limit, the server returns a retryable error with \`data.retry_
 
 Don't try to build all seven on day one. Pick the triage pass or the weekly digest, get it boring and reliable, then add the next. [Connect an inbox](/signup) and have your agent run \`inbox_list\` as its first move. The [tool reference in the docs](/docs) has the exact parameters for every call above.`,
 };
+
+export default post;

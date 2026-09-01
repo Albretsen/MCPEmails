@@ -256,7 +256,7 @@ class LineReader {
     }
     for (const resolve of this.lineResolvers.splice(0)) {
       // Signal error via a sentinel; callers check socketError
-      void resolve; // eslint-disable-line @typescript-eslint/no-unused-vars
+      void resolve;
     }
   }
 

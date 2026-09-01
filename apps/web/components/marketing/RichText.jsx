@@ -1,8 +1,5 @@
 import React from 'react';
 
-// Matches the only two tags provider copy is allowed to use.
-const TAG = /<(code|b)>([\s\S]*?)<\/\1>/g;
-
 /**
  * Renders the tiny inline subset (<code>, <b>) that provider copy uses.
  *
@@ -12,11 +9,14 @@ const TAG = /<(code|b)>([\s\S]*?)<\/\1>/g;
  * trusted today's version of it is.
  */
 export default function RichText({ children }) {
+  // Matches the only two tags provider copy is allowed to use. Built per call
+  // rather than shared at module scope: a /g regex carries `lastIndex`, and a
+  // single mutable one is not safe to reuse across interleaved renders.
+  const TAG = /<(code|b)>([\s\S]*?)<\/\1>/g;
   const text = typeof children === 'string' ? children : '';
   const out = [];
   let last = 0;
   let m;
-  TAG.lastIndex = 0;
   while ((m = TAG.exec(text)) !== null) {
     if (m.index > last) out.push(text.slice(last, m.index));
     out.push(

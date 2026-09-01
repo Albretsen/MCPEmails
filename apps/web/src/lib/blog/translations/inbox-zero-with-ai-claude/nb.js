@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Slik når du Inbox Zero med AI (med Claude og din ekte innboks)',
   description:
     'Nå inbox zero med AI: la Claude sortere, arkivere, merke og skrive svarutkast på tvers av din ekte Gmail- eller IMAP-innboks over MCP. En rutine du kan gjenta, de eksakte promptene, og hvorfor ingenting lagres.',
@@ -67,3 +67,5 @@ Du trenger ikke en ny e-postapp eller et produktivitetssystem — bare den eksis
 
 [Koble til innboksen din gratis](/signup) og be Claude sortere den uleste e-posten din. Inbox zero, med tilsyn i stedet for lidelse.`,
 };
+
+export default translation;

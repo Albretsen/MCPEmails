@@ -41,6 +41,8 @@ export function CreateWorkspaceModal({ onClose, planLabel = 'Team' }) {
         return;
       }
       // The new workspace is now active (cookie set by the route). Reload into it.
+      // Full reload on purpose: the route set the active-workspace cookie, and only a fresh document request picks it up.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign('/dashboard');
     } catch {
       setError(tr('workspace.errorNetwork'));

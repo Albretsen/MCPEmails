@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Slik kobler du Gmail til Claude (på 2 minutter, uten kode)',
   description:
     'Koble Gmail til Claude over MCP på cirka to minutter: én Google-innlogging, én endepunkt-URL, ingen API-nøkkel, ingen kode. Claude leser, søker og sender e-posten din live — og e-posten din lagres aldri.',
@@ -102,3 +102,5 @@ Det er hele greia: én Google-innlogging, én endepunkt-URL, og Claude kan lese,
 
 Klar? [Koble til Gmailen din gratis](/signup), lim inn endepunktet i Claude, og be den oppsummere den uleste posten din.`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '如何在 2 分钟内把邮箱连接到 AI 智能体（Gmail、Outlook、iCloud、Fastmail 与 IMAP）',
   description: '在 2 分钟内把邮箱连接到 AI 智能体。手把手教你通过 MCP 接入 Gmail、Outlook、iCloud、Fastmail 以及任意 IMAP 邮箱，且邮件从不存储。',
   coverAlt: '在 2 分钟内把邮箱连接到 AI 智能体——通过 MCP 接入 Gmail、Outlook、iCloud、Fastmail 与 IMAP',
@@ -112,3 +112,5 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 
 整件事就这么简单：一次邮箱连接、一个 endpoint、寥寥数个工具。免费套餐可连接一个邮箱，分文不取、无需绑卡；Personal 每月 5 美元，最多可连接三个邮箱；Pro 可连接你拥有的每一个邮箱。去看看[价格](/pricing)。准备好试一试了吗？[免费开始](/signup)，连接你的邮箱，把 endpoint 粘贴进你的智能体。`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '如何让 AI 智能体分拣并总结你的收件箱',
   description:
     '一份关于 AI 智能体收件箱分拣的实操指南：可直接复制粘贴的提示词，列出未读邮件、阅读要紧的内容、总结并排定优先级，还能按计划定时轮询。',
@@ -102,3 +102,5 @@ calendar, LinkedIn, 6 marketing blasts.
 
 连接一个收件箱，粘上提示词 1，看着你的智能体在一分钟内把 40 封积压的邮件清薄。它[免费起步](/signup)，无需信用卡，而且你可以在仪表盘里一键撤销访问权限。如果你想把这个循环接进脚本而不是聊天里，[文档里的工具参考](/docs) 列出了每一个参数。`,
 };
+
+export default translation;

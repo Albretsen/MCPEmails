@@ -33,7 +33,6 @@ export async function generateMetadata({ params }) {
 /* ─── Constants ──────────────────────────────────────────────── */
 
 const SECURITY_EMAIL = 'security@mcpemails.com';
-const PRIVACY_EMAIL = 'privacy@mcpemails.com';
 const REPO_URL = 'https://github.com/Albretsen/MCPEmails';
 const SELFHOST_URL = 'https://github.com/Albretsen/MCPEmails/tree/main/self-host';
 const LICENSE_URL = 'https://github.com/Albretsen/MCPEmails/blob/main/LICENSE';

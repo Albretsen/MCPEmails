@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '¿Qué es un servidor de correo MCP? Una explicación en lenguaje claro',
   description:
     'Un servidor de correo MCP es una herramienta que permite a un agente de IA leer y enviar correo mediante verbos limpios en vez de IMAP y contraseñas. Esto es lo que significa.',
@@ -78,3 +78,5 @@ Un servidor de correo MCP convierte tu bandeja de entrada en un conjunto de acci
 
 ¿Quieres probarlo? [Empieza gratis](/signup) —sin tarjeta, con una bandeja conectada— o lee [la documentación](/docs) para la referencia de herramientas y la URL del endpoint.`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'email-for-ai-agents-cursor-cline-vscode',
   title: 'Setting Up Email for AI Agents in Cursor, Cline, and VS Code',
   description: 'Give your coding agent email access in Cursor, Cline, and VS Code. Cursor uses OAuth; Cline and custom clients use a scoped API key over MCP. Full setup.',
@@ -121,3 +121,5 @@ Cursor gets you connected with a URL and a sign-in. Everything else takes a scop
 
 [Start free](/signup) and connect your first inbox, or read the [docs](/docs) for the full tool reference.`,
 };
+
+export default post;

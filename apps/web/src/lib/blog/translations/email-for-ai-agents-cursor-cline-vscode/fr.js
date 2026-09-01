@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Configurer l’e-mail pour les agents IA dans Cursor, Cline et VS Code',
   description: 'Donnez à votre agent de code l’accès à l’e-mail dans Cursor, Cline et VS Code. Cursor utilise OAuth ; Cline et les clients personnalisés utilisent une clé API limitée via MCP. Configuration complète.',
   coverAlt: 'Configuration de l’accès e-mail pour les agents de code IA dans Cursor, Cline et VS Code via MCP',
@@ -114,3 +114,5 @@ Cursor vous connecte avec une URL et une connexion. Tout le reste demande une cl
 
 [Commencez gratuitement](/signup) et connectez votre première boîte de réception, ou lisez la [documentation](/docs) pour la référence complète des outils.`,
 };
+
+export default translation;

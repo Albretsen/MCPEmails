@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '2026 年让 Claude 管理收件箱的最佳方式',
   description: '坦诚盘点 2026 年让 Claude 管理收件箱的几种最佳方式：原生集成、自建 MCP 服务器、复制粘贴、浏览器扩展，以及托管 MCP。',
   coverAlt: '2026 年让 Claude 管理收件箱的最佳方式 — MCPEmails',
@@ -81,3 +81,5 @@ MCP Emails 是我自己做的产品，所以这条推荐请你带着这一点来
 
 如果托管这条路听起来合适，你可以[在两分钟内连接一个收件箱和 Claude](/blog/connect-email-to-ai-agent-under-2-minutes)，或者读[文档](/docs)来获取完整的工具参考。免费方案足够你把整个流程试一遍——[免费开始](/signup)，让 Claude 真正为你的收件箱做点事。`,
 };
+
+export default translation;

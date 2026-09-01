@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Est-il prudent de donner à un agent IA l’accès à vos e-mails ? Ce qu’il faut savoir',
   description: 'Donner l’accès à vos e-mails à un agent IA est-il prudent ? La vraie réponse : ça dépend de l’architecture. Voici les risques réels et la checklist qui sécurise tout.',
   coverAlt: 'Est-il prudent de donner à un agent IA l’accès aux e-mails — risques et protections expliqués — MCP Emails',
@@ -63,3 +63,5 @@ Oui, avec l’architecture décrite ci-dessus et une configuration qui respecte 
 
 Si vous voulez voir le modèle de près, la [documentation](/docs) détaille la conception de la sécurité et les permissions exactes, et vous pouvez [commencer gratuitement](/signup) en accordant la lecture seule à une seule boîte mail pour tâter le terrain avant de vous engager davantage.`,
 };
+
+export default translation;

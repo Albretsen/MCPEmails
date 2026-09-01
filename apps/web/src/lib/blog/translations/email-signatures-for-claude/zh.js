@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Claude 邮件签名：自动签署，每次发送都生效',
   description:
     '为每个收件箱设置一次签名，Claude 就会自动为它发送的每封邮件签名，支持 Gmail、Outlook、Fastmail、iCloud 及任意 IMAP 账户。',
@@ -74,3 +74,5 @@ Claude 会为该收件箱写好签名，从那以后每次发送都带签名。�
 
 [打开你的仪表盘](/dashboard)来设置签名，或者直接告诉 Claude 你的签名该是什么。还没连接？[免费开始](/signup)，大约两分钟即可连接一个收件箱。`,
 };
+
+export default translation;

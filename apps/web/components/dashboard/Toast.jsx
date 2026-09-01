@@ -145,6 +145,9 @@ function ToastItem({ t, dismiss, timers }) {
   const handleMouseEnter = () => {
     if (timers.current[id]) {
       clearTimeout(timers.current[id]);
+      // `timers` is a ref owned by the provider and passed down; mutating .current is how a ref
+      // is meant to be used.
+      // eslint-disable-next-line react-hooks/immutability
       delete timers.current[id];
     }
   };
@@ -156,6 +159,9 @@ function ToastItem({ t, dismiss, timers }) {
    */
   const handleMouseLeave = () => {
     if (ms > 0 && !timers.current[id]) {
+      // `timers` is a ref owned by the provider and passed down; mutating .current is how a ref
+      // is meant to be used.
+      // eslint-disable-next-line react-hooks/immutability
       timers.current[id] = setTimeout(() => dismiss(id), ms);
     }
   };

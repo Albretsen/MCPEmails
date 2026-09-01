@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'inbox-zero-with-ai-claude',
   title: 'How to Reach Inbox Zero with AI (Using Claude and Your Real Inbox)',
   description:
@@ -75,3 +75,5 @@ You don't need a new email app or a productivity system — just your existing i
 
 [Connect your inbox free](/signup) and ask Claude to triage your unread mail. Inbox zero, supervised instead of suffered.`,
 };
+
+export default post;

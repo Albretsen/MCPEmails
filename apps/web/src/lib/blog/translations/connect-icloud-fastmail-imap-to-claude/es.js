@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Cómo conectar iCloud, Fastmail o cualquier buzón IMAP a Claude',
   description:
     'Conecta iCloud, Fastmail o cualquier buzón IMAP a Claude con una contraseña específica de aplicación. Configuración paso a paso, el endpoint MCP y lo que IMAP hace y Gmail no.',
@@ -96,3 +96,5 @@ Si todavía estás decidiendo si conectar el correo a un agente, empieza por el 
 
 iCloud, Fastmail e IMAP no son ciudadanos de segunda aquí. Genera una contraseña de aplicación, pégala en **Inboxes → Connect Inbox**, apunta Claude al [endpoint](/docs) y tendrás un agente con acceso completo de lectura y envío, más el borrado permanente que los proveedores con OAuth no pueden ofrecer. Es [gratis para empezar](/signup), sin tarjeta y con un buzón para siempre.`,
 };
+
+export default translation;

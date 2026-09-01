@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'E-postsignaturer for Claude: signert automatisk, hver gang',
   description:
     'Sett signaturen din én gang per innboks, så signerer Claude automatisk hver e-post den sender, i Gmail, Outlook, Fastmail, iCloud og alle IMAP-kontoer.',
@@ -74,3 +74,5 @@ Sett signaturen din én gang, per innboks, så går hver e-post Claude sender fr
 
 [Åpne dashbordet ditt](/dashboard) for å sette en signatur, eller bare fortell Claude hva din skal være. Ikke tilkoblet ennå? [Kom i gang gratis](/signup) og koble til en innboks på rundt to minutter.`,
 };
+
+export default translation;

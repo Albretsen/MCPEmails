@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'OAuth vs. API-nøkler for AI-e-posttilgang: Hva bør du bruke?',
   description: 'OAuth vs. API-nøkler for AI-e-posttilgang: bruk OAuth for claude.ai, Claude Desktop og Cursor; bruk en scopet API-nøkkel for Cline, JetBrains og skript.',
   coverAlt: 'OAuth versus API-nøkler for å koble AI-agenter til e-post — MCPEmails',
@@ -84,3 +84,5 @@ OAuth og API-nøkler er ikke en sikkerhetsrangering. De er et samsvar med klient
 
 Klar til å koble en opp? Å koble til en innboks og en klient tar omtrent [to minutter fra ende til ende](/blog/connect-email-to-ai-agent-under-2-minutes), eller du kan lese hele [dokumentasjonen](/docs) og [komme i gang gratis](/signup).`,
 };
+
+export default translation;

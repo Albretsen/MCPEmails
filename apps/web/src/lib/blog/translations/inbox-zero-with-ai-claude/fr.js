@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Comment atteindre l\'inbox zero avec l\'IA (avec Claude et votre vraie boîte mail)',
   description:
     'Atteignez l\'inbox zero avec l\'IA : laissez Claude trier, archiver, étiqueter et rédiger des réponses dans votre vraie boîte Gmail ou IMAP via MCP. Une routine reproductible, les prompts exacts et pourquoi rien n\'est stocké.',
@@ -67,3 +67,5 @@ Vous n'avez besoin ni d'une nouvelle application de messagerie ni d'un système 
 
 [Connectez votre boîte mail gratuitement](/signup) et demandez à Claude de trier votre courrier non lu. L'inbox zero, supervisé au lieu d'être subi.`,
 };
+
+export default translation;

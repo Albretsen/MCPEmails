@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '¿Es seguro dar acceso a tu correo a un agente de IA? Lo que debes saber',
   description: '¿Es seguro dar acceso al correo a un agente de IA? La respuesta honesta: depende de la arquitectura. Estos son los riesgos reales y la checklist que lo hace seguro.',
   coverAlt: '¿Es seguro dar acceso al correo a un agente de IA? — riesgos y salvaguardas explicados — MCP Emails',
@@ -63,3 +63,5 @@ Sí, con la arquitectura descrita arriba y una configuración que respete tu rad
 
 Si quieres ver el modelo de cerca, los [docs](/docs) detallan el diseño de seguridad y los permisos exactos, y puedes [empezar gratis](/signup) y conceder solo lectura a una única bandeja de entrada para tantear el terreno antes de comprometerte a nada más.`,
 };
+
+export default translation;

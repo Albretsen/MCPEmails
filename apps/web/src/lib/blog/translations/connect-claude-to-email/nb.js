@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Koble Claude til e-posten din med MCP (Gmail, iCloud og IMAP)',
   description:
     'En praktisk guide til å koble Claude til Gmail, iCloud, Fastmail, Yahoo, Zoho og enhver IMAP-innboks over MCP — uten kode og uten lagring av e-post.',
@@ -121,3 +121,5 @@ Nei. Meldinger leses live fra leverandøren din og forkastes. MCP Emails lagrer 
 
 [Start gratis](/signup), koble til innboksen, legg \`https://mcpemails.com/api/mcp\` til i Claude, og be den oppsummere ulest e-post. Se [dokumentasjonen](/docs) for full referanse over MCP-verktøyene og leverandørfunksjonene.`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'AI 邮箱访问该用 OAuth 还是 API 密钥？该怎么选',
   description: 'AI 邮箱访问选 OAuth 还是 API 密钥：claude.ai、Claude Desktop、Cursor 用 OAuth；Cline、JetBrains 和脚本用受限 API 密钥。',
   coverAlt: '连接 AI 智能体到邮箱时的 OAuth 与 API 密钥对比 — MCPEmails',
@@ -84,3 +84,5 @@ OAuth 和 API 密钥并不是一个安全性的高下排名。它们是与你的
 
 准备好接上一个了吗？连接一个收件箱和一个客户端大约[两分钟就能从头到尾搞定](/blog/connect-email-to-ai-agent-under-2-minutes)，或者你也可以阅读完整的[文档](/docs)并[免费开始](/signup)。`,
 };
+
+export default translation;

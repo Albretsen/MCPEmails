@@ -1336,7 +1336,6 @@ export function ConnectModal({
                             border: '1px solid var(--border-1)',
                             borderRadius: 6,
                           }}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src="/google-consent-logo.png"
                               alt=""

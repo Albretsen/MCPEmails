@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Comment faire trier et résumer votre boîte de réception par votre agent IA',
   description:
     'Un guide pratique pour le tri de la boîte de réception par un agent IA : des prompts prêts à copier-coller pour lister le courrier non lu, lire l’essentiel, résumer, prioriser et interroger à intervalle régulier.',
@@ -102,3 +102,5 @@ Si le tri est le premier workflow que vous essayez, c’est un bon point de dép
 
 Connectez une boîte, collez le Prompt 1, et regardez votre agent dégrossir un arriéré de 40 messages en moins d’une minute. C’est [gratuit pour commencer](/signup), sans carte requise, et vous pouvez révoquer l’accès depuis le tableau de bord en un clic. La [référence des outils dans la documentation](/docs) contient chaque paramètre si vous préférez câbler la boucle dans un script plutôt que dans une conversation.`,
 };
+
+export default translation;

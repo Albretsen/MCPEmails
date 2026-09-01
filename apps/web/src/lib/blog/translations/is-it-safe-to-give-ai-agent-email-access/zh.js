@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '把邮箱访问权限交给 AI 智能体安全吗？你需要知道的事',
   description: '把邮箱访问权交给 AI 智能体安全吗？答案取决于架构。这里讲清真正的风险，以及让它变安全的检查清单。',
   coverAlt: '把邮箱访问权交给 AI 智能体安全吗——风险与防护措施详解——MCP Emails',
@@ -63,3 +63,5 @@ export default {
 
 如果你想近距离看看这套模型，[文档](/docs) 中详细说明了安全设计和确切的权限范围；你也可以 [免费开始](/signup)，先给单个邮箱授予只读权限来试试水，再决定要不要做更多承诺。`,
 };
+
+export default translation;

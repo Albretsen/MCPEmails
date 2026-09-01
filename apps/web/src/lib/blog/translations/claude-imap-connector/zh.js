@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Claude IMAP 连接器：将任意 IMAP 邮箱连接到 Claude',
   description:
     '使用 IMAP/SMTP 设置、应用专用密码和 TLS 端口，为任意邮箱配置 Claude IMAP 连接器，并了解安全建议、限制与故障排查方法。',
@@ -120,3 +120,5 @@ Claude IMAP 连接器就是以 MCP 工具形式呈现给 Claude 的 IMAP/SMTP �
 
 准备好试用了吗？[连接 IMAP 邮箱](/signup)，或者使用[服务商专用设置指南](/blog/connect-icloud-fastmail-imap-to-claude)查看 iCloud 和 Fastmail 的详细设置。`,
 };
+
+export default translation;

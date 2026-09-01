@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'how-to-give-your-ai-agent-email-access',
   title: 'How to Give Your AI Agent Access to Email (The Complete 2026 Guide)',
   description:
@@ -125,3 +125,5 @@ Full breakdown on the [pricing page](/pricing).
 
 Connect an inbox, paste the endpoint into your agent, and call \`inbox_list\`. That's the whole onboarding. [Start free](/signup) or skim the [quick-start](/docs#quickstart) — you'll have an agent reading real mail in a couple of minutes.`,
 };
+
+export default post;

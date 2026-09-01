@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'hosted-vs-self-hosted-gmail-mcp-server',
   title: 'Hosted vs. Self-Hosted Gmail MCP Server: Pros, Cons, and Costs',
   description:
@@ -98,3 +98,5 @@ Pick **hosted** if you want a working endpoint today, you'd rather not be on cal
 
 If you're still deciding how an agent should reach your inbox at all, [the best ways to let Claude manage your inbox](/blog/best-ways-to-let-claude-manage-your-inbox) compares the broader options. When you're ready, [start free](/signup) or skim [the docs](/docs) — connecting a Gmail inbox really does take about a minute.`,
 };
+
+export default post;

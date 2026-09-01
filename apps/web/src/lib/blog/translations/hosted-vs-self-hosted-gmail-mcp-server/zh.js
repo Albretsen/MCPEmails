@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '托管 vs. 自托管 Gmail MCP 服务器：优势、劣势与成本',
   description:
     '托管 vs. 自托管 Gmail MCP 服务器的诚实对比：免费 DIY 仓库给你完全掌控，但 OAuth、加密与正常运行都得你自己扛。托管服务器只需几分钟。',
@@ -91,3 +91,5 @@ MCP Emails 起步免费：一个已连接收件箱，API 密钥不限数量，�
 
 如果你还在拿不准代理究竟该怎样触及你的收件箱，[让 Claude 管理收件箱的最佳方式](/blog/best-ways-to-let-claude-manage-your-inbox)对比了更宽泛的几种选项。准备好了就[免费开始](/signup)，或者快速浏览[文档](/docs)——连接一个 Gmail 收件箱真的只要大约一分钟。`,
 };
+
+export default translation;

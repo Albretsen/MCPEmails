@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Slik får du AI-agenten din til å sortere og oppsummere innboksen',
   description:
     'En praktisk veiledning for innbokssortering med AI-agent: ferdige prompter som lister ulest e-post, leser det som betyr noe, oppsummerer og prioriterer, og poller på fast plan.',
@@ -102,3 +102,5 @@ Hvis sortering er den første arbeidsflyten du prøver, er det en god en å star
 
 Koble til en innboks, lim inn Prompt 1, og se agenten din tynne ut et etterslep på 40 meldinger på under et minutt. Det er [gratis å komme i gang](/signup), uten kort, og du kan trekke tilbake tilgang fra dashbordet med ett klikk. [Verktøyreferansen i dokumentasjonen](/docs) har hver parameter hvis du vil koble løkka inn i et skript i stedet for en chat.`,
 };
+
+export default translation;

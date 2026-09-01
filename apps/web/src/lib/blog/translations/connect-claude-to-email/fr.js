@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Connecter Claude à vos e-mails avec MCP (Gmail, iCloud et IMAP)',
   description:
     'Guide pratique pour connecter Claude à Gmail, iCloud, Fastmail, Yahoo, Zoho et toute boîte IMAP avec MCP — sans code et sans stockage des e-mails.',
@@ -121,3 +121,5 @@ Non. Les messages sont lus en direct chez votre fournisseur puis supprimés. MCP
 
 [Commencez gratuitement](/signup), connectez votre boîte, ajoutez \`https://mcpemails.com/api/mcp\` à Claude et demandez-lui de résumer vos e-mails non lus. Consultez la [documentation](/docs) pour la référence complète des outils MCP et des capacités par fournisseur.`,
 };
+
+export default translation;

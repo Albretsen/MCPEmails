@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '通过 MCP 将 Claude 连接到你的邮箱（Gmail、Outlook、iCloud 和 IMAP）',
   description:
     '实用指南：通过 MCP 将 Claude 连接到 Gmail、Outlook、iCloud、Fastmail、Yahoo、Zoho 和任何 IMAP 收件箱——无需编写代码，也不存储邮件。',
@@ -97,3 +97,5 @@ Claude 的 OAuth 连接器流程不需要。粘贴端点 URL 并登录即可。A
 
 [免费开始](/signup)，连接收件箱，将 \`https://mcpemails.com/api/mcp\` 添加到 Claude，然后让它总结未读邮件。完整的 MCP 工具参考和服务商能力请见[文档](/docs)。`,
 };
+
+export default translation;

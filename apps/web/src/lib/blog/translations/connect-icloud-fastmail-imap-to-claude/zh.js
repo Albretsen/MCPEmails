@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '如何将 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude',
   description:
     '用应用专用密码把 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude。分步配置、MCP 端点，以及 IMAP 能做而 Gmail 做不到的事。',
@@ -96,3 +96,5 @@ IMAP 不一样。Fastmail、iCloud、Yahoo、Zoho、Yandex 以及通用 IMAP 都
 
 iCloud、Fastmail 和 IMAP 在这里绝非二等公民。生成一个应用密码，把它粘贴进 **Inboxes → Connect Inbox**，把 Claude 指向[端点](/docs)，你就拥有了一个具备完整读取/发送权限的代理，外加 OAuth 服务商给不了的永久删除。它[免费起步](/signup)，无需信用卡，可永久连接一个邮箱。`,
 };
+
+export default translation;

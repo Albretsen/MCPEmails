@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Sette opp e-post for AI-agenter i Cursor, Cline og VS Code',
   description: 'Gi kodeagenten din e-posttilgang i Cursor, Cline og VS Code. Cursor bruker OAuth; Cline og egendefinerte klienter bruker en avgrenset API-nøkkel over MCP. Komplett oppsett.',
   coverAlt: 'Sette opp e-posttilgang for AI-kodeagenter i Cursor, Cline og VS Code over MCP',
@@ -114,3 +114,5 @@ Cursor kobler deg opp med en URL og en innlogging. Alt annet krever en avgrenset
 
 [Kom i gang gratis](/signup) og koble til din første innboks, eller les [dokumentasjonen](/docs) for den fullstendige verktøyreferansen.`,
 };
+
+export default translation;

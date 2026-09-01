@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { MBtn, MIcon } from '../MarketingPrimitives';
@@ -255,7 +255,7 @@ export function HeroPipeDiagram() {
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.7, color: "var(--fg-2)" }}>
           <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>inbox_list</span>()</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logReturns')}</div>
-          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>email_read</span>(action=<span style={{ color: "var(--amber-700)" }}>"list"</span> · inbox_id=<span style={{ color: "var(--amber-700)" }}>"3f7a…"</span>)</div>
+          <div><span style={{ color: "var(--cobalt-700)" }}>→</span> {t('hero.pipe.logCalls')} <span style={{ color: "var(--mint-700)" }}>email_read</span>(action=<span style={{ color: "var(--amber-700)" }}>&quot;list&quot;</span> · inbox_id=<span style={{ color: "var(--amber-700)" }}>&quot;3f7a…&quot;</span>)</div>
           <div><span style={{ color: "var(--fg-3)" }}>·</span> {t('hero.pipe.logFetches')}</div>
           <div><span style={{ color: "var(--mint-700)" }}>←</span> {t('hero.pipe.logResult')} · <span style={{ color: "var(--fg-3)" }}>{t('hero.pipe.logNothing')}</span></div>
         </div>

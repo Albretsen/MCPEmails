@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'email-signatures-for-claude',
   title: 'Email Signatures for Claude: Auto-Signed, Every Time',
   description:
@@ -81,3 +81,5 @@ Set your signature once, per inbox, and every email Claude sends from that mailb
 
 [Open your dashboard](/dashboard) to set a signature, or just tell Claude what yours should be. Not connected yet? [Start free](/signup) and connect an inbox in about two minutes.`,
 };
+
+export default post;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import {
   Nav, Hero, Trusted, Features, DashboardPreview, HowItWorks, Examples, Quote, Pricing, Faq, Footer
@@ -22,7 +22,7 @@ export default function HomeClient({ stripePrices }) {
     document.documentElement.setAttribute('data-theme', t.dark ? 'dark' : 'light');
     try {
       localStorage.setItem('mcpe-theme', t.dark ? 'dark' : 'light');
-    } catch (e) {}
+    } catch {}
   }, [t.dark]);
 
   // Read initial dark state from localStorage on first mount
@@ -31,7 +31,10 @@ export default function HomeClient({ stripePrices }) {
       const saved = localStorage.getItem('mcpe-theme');
       if (saved === 'dark' && !t.dark) setTweak('dark', true);
       if (saved === 'light' && t.dark) setTweak('dark', false);
-    } catch (e) {}
+    } catch {}
+  // Mount-only: it seeds the theme from localStorage. Listing t.dark/setTweak would make it
+  // fight the effect above.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSignIn = () => {};
