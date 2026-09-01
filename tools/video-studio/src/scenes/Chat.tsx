@@ -5,6 +5,21 @@ import { getTheme, type ThemeName } from '../theme';
 import type { ChatScene, Transcript, TranscriptTurn } from '../storyboard-types';
 
 /**
+ * How fast the assistant's answer streams in, in words per second.
+ *
+ * The answer does NOT stream across its whole slot. Pacing it to fill the turn
+ * made the payoff line the slowest thing in the video, which is backwards: it
+ * is the one thing a viewer most wants to read at their own speed, and reading
+ * time is not the same as arrival time. So it arrives quickly and then SITS
+ * there for the rest of the turn. The waiting is the point.
+ *
+ * The tool rows above it still pace against their spans: those are dense, read
+ * once, and benefit from arriving at the speed they can be taken in. Only the
+ * prose gets the fast treatment.
+ */
+const ASSISTANT_WORDS_PER_SECOND = 7;
+
+/**
  * A NEUTRAL assistant surface. Read the two rules before editing this file.
  *
  * Rule one, whose UI this is. MCP Emails has no first-party chat surface: it is
@@ -64,7 +79,12 @@ export const Chat: React.FC<{
   // scene always fits exactly the duration the storyboard asked for.
   const weights = turns.map((t) => {
     if (t.role === 'user') return Math.max(2.2, (t.text?.length ?? 0) / 22);
-    if (t.role === 'tool') return 1.0;
+    // A tool row is the densest thing in the scene: a name, real arguments and
+    // a real result, all read at once. At weight 1.0 it held the floor for
+    // barely two seconds while the assistant bubble, which streams and can be
+    // read as it arrives, took nearly half the scene. The evidence needs
+    // longer to land than the prose does.
+    if (t.role === 'tool') return 1.4;
     return Math.max(4.0, (t.text?.length ?? 0) / 26);
   });
   const total = weights.reduce((a, b) => a + b, 0);
@@ -75,6 +95,13 @@ export const Chat: React.FC<{
     starts.push(Math.round((acc / total) * usable));
     acc += w;
   }
+
+  // How long each turn has the floor to itself. Reveals are paced against THIS
+  // rather than against a fixed characters-per-second, because a fixed rate is
+  // what made a longer scene worse instead of calmer: the text still appeared
+  // at the same speed and the extra seconds all became dead air at the end of
+  // the turn. Stretching the scene then bought unreadability AND a freeze.
+  const spans = starts.map((st, i) => (i + 1 < starts.length ? starts[i + 1] : usable) - st);
 
   return (
     <AbsoluteFill style={{ background: theme.bgPage, padding: '70px 200px' }}>
@@ -133,6 +160,7 @@ export const Chat: React.FC<{
               key={i}
               turn={turn}
               startFrame={starts[i]}
+              spanFrames={spans[i]}
               frame={frame}
               fps={fps}
               theme={theme}
@@ -147,12 +175,20 @@ export const Chat: React.FC<{
 const Turn: React.FC<{
   turn: TranscriptTurn;
   startFrame: number;
+  spanFrames: number;
   frame: number;
   fps: number;
   theme: ReturnType<typeof getTheme>;
-}> = ({ turn, startFrame, frame, fps, theme }) => {
+}> = ({ turn, startFrame, spanFrames, frame, fps, theme }) => {
   const local = frame - startFrame;
   if (local < 0) return null;
+
+  // Text finishes arriving this far into the turn's own span, leaving the rest
+  // to read it in. Well under 1, or the next turn lands on top of a line the
+  // viewer has not finished; well above 0, or the turn is a still frame for
+  // most of its span, which is both hard to follow and what the frozen-segment
+  // check in `verify` fails on.
+  const revealFrames = Math.max(1, spanFrames * 0.7);
 
   const enter = spring({
     frame: local,
@@ -164,7 +200,8 @@ const Turn: React.FC<{
 
   if (turn.role === 'user') {
     const text = turn.text ?? '';
-    const count = revealCount(local, fps, text.length, 30);
+    const cps = (text.length / revealFrames) * fps;
+    const count = revealCount(local, fps, text.length, cps);
     return (
       <div style={{ ...lift, display: 'flex', justifyContent: 'flex-end' }}>
         <div
@@ -227,7 +264,12 @@ const Turn: React.FC<{
   // as a screenshot, and the streaming is what makes it read as a live answer.
   const text = turn.text ?? '';
   const words = text.split(' ');
-  const perWord = Math.max(1, Math.round(fps / 9));
+  // Fast, but never longer than the span allows: the min keeps a very short
+  // turn from overflowing into the next one.
+  const perWord = Math.max(
+    1,
+    Math.min(fps / ASSISTANT_WORDS_PER_SECOND, revealFrames / Math.max(1, words.length)),
+  );
   return (
     <div style={{ ...lift, display: 'flex', justifyContent: 'flex-start' }}>
       <div

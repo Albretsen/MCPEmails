@@ -1,0 +1,31 @@
+{
+  "id": "connect-and-triage",
+  "verifiedAt": "2026-09-01T09:21:42.258Z",
+  "endpoint": "https://mcpemails.com/api/mcp",
+  "turns": [
+    {
+      "role": "user",
+      "text": "Triage this inbox. What actually needs me today?"
+    },
+    {
+      "role": "tool",
+      "name": "inbox_list",
+      "args": {},
+      "ok": true,
+      "summary": "1 inbox: demo@mcpemails.com"
+    },
+    {
+      "role": "tool",
+      "name": "email_read",
+      "args": {
+        "action": "list"
+      },
+      "ok": true,
+      "summary": "13 messages in INBOX"
+    },
+    {
+      "role": "assistant",
+      "text": "13 messages. One of them is \"Invoice 2026-0841 is overdue\". Start there, the rest can wait."
+    }
+  ]
+}

@@ -42,8 +42,15 @@ npm run verify     -- --storyboard add-inbox-then-chat
 Supporting commands: `npm run auth` (once, a human signs in), `npm run whoami`
 (read-only: prints the account, workspace id and connected inboxes as .env
 lines), `npm run reset -- --yes` (empty the demo workspace), `npm run studio`
-(Remotion Studio), `npm run typecheck`. Chromium downloads itself on the first
-capture.
+(Remotion Studio, which hot-reloads storyboard JSON and scene code in ~150ms
+and is the fastest way to iterate), `npm run typecheck`,
+`node scripts/review-kit.mjs <id>` (camera facts for a frame-by-frame review).
+Chromium downloads itself on the first capture.
+
+`storyboards/*.json` is mapped to `storyboard.schema.json` by `.vscode/settings.json`,
+so an editor gives completion, enum dropdowns and inline errors. The schema is
+deliberately NOT referenced with a `$schema` key inside the storyboard files:
+the validator treats an unknown top-level key as a hard error.
 
 `demo`, `auth` and `capture` need no `.env`: the site defaults to
 https://mcpemails.com. `reset` requires the full config and refuses without it,
@@ -197,11 +204,118 @@ everything else is output and appears whole.
 | `add-inbox` | The connect flow: open the modal, choose generic IMAP, enter host and an app password, connect. Needs a session and a throwaway mailbox. |
 | `public-tour` | Public marketing pages only. Needs no session, and defaults to production, which is what makes `npm run demo` work with nothing configured. |
 
+### The demo environment, as it actually is
+
+Facts about the live account that are not derivable from this repo. Re-check
+them with `npm run whoami` before trusting them.
+
+- **The demo workspace is on the Team plan** (`workspaces.plan = 'pro'`, set
+  2026-09-01 so the capture would not show the Free tier's "You're at your inbox
+  limit / Upgrade to Personal" banner at the moment of connection). It has no
+  Stripe subscription behind it; it is a plan flag. Set it back to `'free'` if
+  the demo should show what a new user sees.
+- **`demo@mcpemails.com` is on Migadu, which has no `requiresAppPassword`
+  preset**, so the credential field renders "Password", not "App password". Do
+  not write a callout claiming otherwise; the frame contradicts it.
+- **The provider grid shows an Outlook tile, greyed, "Coming soon"**, for about
+  two seconds of the `add-inbox` shot. Marketing says not to show Outlook at
+  all. No clip, zoom or framing removes it without faking the UI or cutting the
+  provider-choice beat, so it is an open decision, not an oversight.
+- **`DEMO_SAFE_INBOX_DOMAINS` must include `mcpemails.com`**, or `reset` refuses
+  to touch the only mailbox there. `.env.example` suggests `demo.mcpemails.com`,
+  which no mailbox uses. A mailbox cannot live on a `.example` domain at all;
+  only the fixture SENDERS are `.example`.
+
 A shot exports `id`, `description`, `async run(page, t, { baseUrl })`, and
 optionally `requiresSession = false`. `t` is the timeline recorder: use
 `t.click`, `t.type`, `t.waitFor`, `t.dwell`, `t.settle`, `t.goto`. Never call
 `page.fill` or `page.click` directly, or the action leaves no timeline event and
 the composite gets no cursor, no zoom and no callout anchor.
+
+## Things that have already gone wrong
+
+Each of these cost hours once. None is guessable from the code.
+
+**The camera aims with `lookAt`, and `transformOrigin` is NOT a look-at point.**
+A CSS transform-origin is the point that stays FIXED while an element scales. An
+earlier version stored the anchor's own position there, so the frame magnified
+ABOUT each control and left it exactly where it already sat: a button 78% down
+the page stayed 78% down the frame at any zoom. That one mistake put the modal's
+footer off the bottom edge, walked the pointer out of the crop reaching for it,
+and left the payoff row in the top quarter with white space beneath. `lookAt()`
+solves `o + (c - o) * S = 0.5` for the origin that centres the subject. Never
+feed a raw anchor position to `transformOrigin`.
+
+**The camera and the pointer must share one schedule.** They were computed
+independently: the pointer set off `HOVER_BEFORE_CLICK + CURSOR_TRAVEL` before an
+event, the camera panned only AT the event. The pointer therefore walked toward
+a control the camera had not started moving to, and left the frame. Both now pan
+on the pointer's window. If you change one, change the other.
+
+**One scale per RUN, never per anchor.** Anchor rects vary wildly (a 143px
+button wants 1.8x, the 418px field beside it wants 1.53x), so a per-anchor scale
+pumps in and out on every click. Anchors also OVERLAP, because a click holds for
+`HOLD_AFTER_CLICK` and a form is filled faster than that, so "the last anchor
+whose window contains t" hands the frame to the next anchor at near-zero
+progress and the zoom collapses to 1.0 and climbs again.
+
+**`HOLD_AFTER_CLICK`, `CONTINUOUS_GAP` and `RUN_SPLIT_DISTANCE` interact.**
+Lengthening the hold lengthens every window, which shrinks the gaps between
+runs, which changes whether the frame travels or goes home. Never tune one
+alone. `node scripts/review-kit.mjs <id>` prints the runs, the gap between each
+pair and the largest jump inside each run: read it after every change.
+
+**The click ring belongs to the rect that was clicked, not to the pointer.** As
+a child of the moving pointer its tail got dragged onto whatever came next, and
+the first anchor's rect is measured on the PRE-click page, where the modal that
+opens 80ms later can put something else entirely (it landed a full ring on a
+competitor's tile). It is a sibling pinned to `centre(prev.rect)` and capped at
+`RIPPLE`, which must stay well under `HOVER_BEFORE_CLICK`.
+
+**The dashboard paints ~2s after `goto` returns.** Without `t.settle()` the
+"empty inbox list" dwell is spent on a blank page and the shot reaches the modal
+0.07s after the list appears. Also: `contentStartSeconds` in the timeline is a
+luma heuristic and has been wrong by 2s or more. Verify `clip.from` by extracting
+actual frames before trusting it.
+
+**Pacing between clicks belongs in the SHOT, not in `speed`.** `dwell:` on
+`t.click` slows only the beat you mean; `speed` also stretches the typing, which
+already reads at the right rate.
+
+**The account's stored theme beats the requested `colorScheme`.** Pass
+`--theme light` (or whatever the account is set to) or the recording opens on a
+dark flash before the app resolves its own theme, and `verify` fails the cut for
+a theme mismatch.
+
+**A capture scene cannot be previewed in Studio without inputProps.** `prestudio`
+writes `out/studio.props.json` and `studio` passes it with `--props`. Without it
+Remotion's CLI supplies nothing, `Root.tsx` falls back to a nominal 20s scene and
+you get the "No recording for shot" card.
+
+**whisper fragments this product's vocabulary.** `MCP` arrives as "M" "CP",
+`IMAP` as "IM" "AP", `mcpemails.com` as six tokens split across two cues. The
+`SPELLINGS` table in `scripts/lib/captions.mjs` fixes them, and is DUPLICATED in
+`src/components/Captions.tsx`; the two must stay identical. It holds two classes:
+re-joins, where the fragments already spell the term and nothing can change
+meaning, and homophones (only `Claude`, pronounced "clawed"), which really do
+substitute one word for another and are VOICE-DEPENDENT: recheck them whenever
+the voiceover is re-recorded. A genuine mis-hearing is fixed by rewording the
+script, never by adding a homophone entry.
+
+**`freezedetect` sees the whole frame, captions included.** A long deliberate
+hold (the assistant's answer sitting still to be read) does not trip the 3s
+frozen-segment check as long as caption cues keep changing. That is what lets
+the chat answer arrive fast and then wait.
+
+**`verify` can pass against a STALE mp4.** If `render` fails, the previous
+`out/<id>.mp4` is still on disk and `verify` will happily check it. Always
+confirm `render` printed its result line before trusting a green verify.
+
+**A capture scene's `clip.from` is subtracted exactly ONCE.** Cut time is
+`sceneStart + (recorded - clip.from) / speed`. Subtracting it again while
+building an anchor list produced a fact sheet 1.6s wrong on every row, which
+sent a reviewer to the wrong beats. `scripts/review-kit.mjs` owns this
+conversion now; use it rather than rewriting the arithmetic.
 
 ## Guard rails
 

@@ -24,8 +24,8 @@
     "render": "node scripts/render.mjs",
     "preverify": "node scripts/lib/require-install.mjs",
     "verify": "node scripts/verify.mjs",
-    "prestudio": "node scripts/lib/require-install.mjs",
-    "studio": "remotion studio src/index.ts",
+    "prestudio": "node scripts/lib/require-install.mjs && node scripts/studio-props.mjs",
+    "studio": "remotion studio src/index.ts --props=out/studio.props.json",
     "pretypecheck": "node scripts/lib/require-install.mjs",
     "typecheck": "tsc --noEmit"
   },

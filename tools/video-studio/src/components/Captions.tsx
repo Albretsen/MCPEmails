@@ -25,6 +25,95 @@ const MAX_CHARS = 42;
 const MAX_GAP_MS = 500;
 
 /**
+ * Canonical spellings for terms whisper fragments or homophones. Must match
+ * SPELLINGS / applySpellings() in scripts/lib/captions.mjs exactly, for the
+ * same reason joinWords() is duplicated: the burned-in captions and the
+ * sidecar .vtt have to say the same thing, and a shared import would cross the
+ * node/bundle boundary.
+ *
+ * RE-JOINS: `heard` is exactly what the fragments already spell, so re-joining
+ * cannot change what was said. HOMOPHONES (currently only Claude, which is
+ * pronounced "clawed"): `heard` differs from the text, so this substitutes one
+ * word for another. See the mjs file for why that is scoped this tightly.
+ */
+const SPELLINGS: { heard: string; text: string }[] = [
+  { heard: 'mcpemails.com', text: 'mcpemails.com' },
+  { heard: 'mcpemails', text: 'MCP Emails' },
+  { heard: 'encrypted', text: 'encrypted' },
+  { heard: 'fastmail', text: 'Fastmail' },
+  { heard: 'codebase', text: 'codebase' },
+  { heard: 'chatgpt', text: 'ChatGPT' },
+  { heard: 'oauth', text: 'OAuth' },
+  // "Claude" is pronounced "clawed", and which ordinary word whisper picks
+  // for it is not stable: the same script transcribed "Cl awed" on one render
+  // and "Cl od" on the next. Both spellings are listed rather than one,
+  // and this entry MUST be rechecked when the scratch voiceover is replaced
+  // by a real one, because a different voice will produce a different guess.
+  { heard: 'clawed', text: 'Claude' },
+  { heard: 'clod', text: 'Claude' },
+  { heard: 'jmap', text: 'JMAP' },
+  { heard: 'imap', text: 'IMAP' },
+  { heard: 'smtp', text: 'SMTP' },
+  { heard: 'mcp', text: 'MCP' },
+];
+
+const termKey = (s: string): string => s.toLowerCase().replace(/[^a-z0-9.]/g, '');
+
+function applySpellings(words: Word[]): Word[] {
+  const out: Word[] = [];
+  let i = 0;
+
+  while (i < words.length) {
+    let hit: { text: string; end: number; tail: string } | null = null;
+
+    for (const entry of SPELLINGS) {
+      const target = entry.heard;
+      let acc = '';
+
+      for (let j = i; j < words.length && j < i + 6; j += 1) {
+        const k = termKey(words[j].text);
+
+        // See scripts/lib/captions.mjs: a punctuation-only token has an empty
+        // key, which matches every prefix and lets a match begin on the comma
+        // before a term, swallowing it and shifting the window.
+        if (k === '') break;
+
+        acc += k;
+
+        if (acc === target) {
+          hit = { text: entry.text, end: j, tail: '' };
+          break;
+        }
+
+        if (acc.startsWith(target)) {
+          const rest = words[j].text.slice(-(acc.length - target.length));
+          if (/^[.,!?;:]+$/.test(rest)) hit = { text: entry.text, end: j, tail: rest };
+          break;
+        }
+
+        if (!target.startsWith(acc)) break;
+      }
+
+      if (hit) break;
+    }
+
+    if (hit) {
+      out.push({
+        text: hit.text + hit.tail,
+        startMs: words[i].startMs,
+        endMs: words[hit.end].endMs,
+      });
+      i = hit.end + 1;
+    } else {
+      out.push(words[i]);
+      i += 1;
+    }
+  }
+
+  return out;
+}
+
+/**
  * Join word tokens into readable text. Must match joinWords() in
  * scripts/lib/captions.mjs exactly: the burned-in captions and the sidecar
  * .vtt have to say the same thing.
@@ -37,12 +126,19 @@ function joinWords(words: Word[]): string {
     .map((w) => w.text)
     .join(' ')
     .replace(/\s+([,.!?;:%\)\]])/g, '$1')
+    // whisper emits a contraction suffix as its own token, so a plain join
+    // gives "It 's read" and "We 're going". Only closed before a letter, so a
+    // genuine opening quote is left alone.
+    .replace(/\s+'(?=[A-Za-z])/g, "'")
     .replace(/([(\[])\s+/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-function groupIntoPhrases(words: Word[]): { text: string; startMs: number; endMs: number }[] {
+function groupIntoPhrases(rawWords: Word[]): { text: string; startMs: number; endMs: number }[] {
+  // Before grouping, not inside joinWords: "mcpemails.com" arrives as six
+  // fragments and would otherwise be split across two cues.
+  const words = applySpellings(rawWords);
   const out: { text: string; startMs: number; endMs: number }[] = [];
   let current: Word[] = [];
 
