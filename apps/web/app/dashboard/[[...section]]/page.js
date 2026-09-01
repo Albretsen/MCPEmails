@@ -7,12 +7,21 @@ import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
 import { resolvePlanLimits } from '../../../src/lib/stripe/plans';
+import { retentionDays, retentionCutoffISO } from '../../../src/lib/analytics/retention';
 import { resolveUsageBillingWindow } from '../../../src/lib/usage/billing-window';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
-/** The rolling activity window the Usage page charts, in UTC days. */
+/**
+ * Fallback activity window, in UTC days, for a caller that passes none.
+ *
+ * The real window is the workspace's `analyticsRetentionDays` (Free 7,
+ * Personal 30, Pro 90, Team 365), resolved once in the page component and
+ * threaded into every history fetcher below. This constant only keeps those
+ * fetchers callable on their own; it is not the product's answer to "how much
+ * history do I get". See src/lib/analytics/retention.ts.
+ */
 const USAGE_WINDOW_DAYS = 30;
 
 /**
@@ -116,7 +125,7 @@ async function fetchActivityFeed(supabase, workspaceId) {
  * @param {string} workspaceId
  * @returns {Promise<Array<{ id: string, label: string, address: string, provider: string, status: string, lastError: string|null, hasImap: boolean, calls: number, createdAt: string, lastCallAt: string|null }>>}
  */
-async function fetchInboxes(supabase, workspaceId) {
+async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DAYS) {
   const [{ data: rows, error }, { data: logRows }] = await Promise.all([
     // `send_review_mode` is added by a migration that may land after this
     // code; selectTolerantly re-runs without it rather than blanking the whole
@@ -144,7 +153,7 @@ async function fetchInboxes(supabase, workspaceId) {
     // heavily used inbox as having had no successful call in 30 days.
     supabase.rpc('workspace_inbox_activity', {
       p_workspace_id: workspaceId,
-      p_days: USAGE_WINDOW_DAYS,
+      p_days: historyDays,
     }),
   ]);
 
@@ -154,8 +163,8 @@ async function fetchInboxes(supabase, workspaceId) {
   }
 
   // Build a call-count map and a last-successful-call map keyed by inbox_id.
-  // lastCallByInbox is scoped to the 30-day analytics window, matching the
-  // call count; older successes read as "no successful calls in 30 days".
+  // lastCallByInbox is scoped to the plan's analytics window, matching the
+  // call count; older successes read as "no successful calls" for that window.
   const callsByInbox = {};
   const lastCallByInbox = {};
   for (const row of logRows ?? []) {
@@ -339,7 +348,7 @@ async function fetchOverviewStats(supabase, workspaceId) {
  *   byInbox: Array<{ inboxId: string, label: string, address: string, archived: boolean, count: number, pct: number }>,
  * }>}
  */
-async function fetchUsageData(supabase, workspaceId, billingWindow) {
+async function fetchUsageData(supabase, workspaceId, billingWindow, historyDays = USAGE_WINDOW_DAYS) {
   const [summaryResult, inboxesResult] = await Promise.all([
     // Every number on the Usage page, aggregated in Postgres and returned as
     // one jsonb row.
@@ -354,7 +363,7 @@ async function fetchUsageData(supabase, workspaceId, billingWindow) {
       p_workspace_id: workspaceId,
       p_period_start: billingWindow.start,
       p_period_end: billingWindow.end,
-      p_days: USAGE_WINDOW_DAYS,
+      p_days: historyDays,
       p_meter_version: ACTION_METER_VERSION,
     }),
     // Include soft-deleted inboxes here (no deleted_at filter): a call can be
@@ -448,20 +457,27 @@ async function fetchUsageData(supabase, workspaceId, billingWindow) {
  *   pageSize: number,
  * }>}
  */
-async function fetchAuditLog(supabase, workspaceId) {
+async function fetchAuditLog(supabase, workspaceId, historyDays = USAGE_WINDOW_DAYS) {
   const pageSize = 25;
+  // The audit log used to page back through EVERY row a workspace had ever
+  // written, on every plan, while the copy sold a one-year log as a Team
+  // feature. Bound it by the same window as the rest of the analytics so the
+  // claim is true. Rows are not deleted; this only limits what is shown.
+  const since = retentionCutoffISO(historyDays);
 
   const [countResult, rowsResult] = await Promise.all([
     supabase
       .from('activity_log')
       .select('id', { count: 'exact', head: true })
-      .eq('workspace_id', workspaceId),
+      .eq('workspace_id', workspaceId)
+      .gte('created_at', since),
     supabase
       .from('activity_log')
       .select(
         'id, tool_name, status, error_code, duration_ms, created_at, inboxes(email_address, display_name), api_keys(name, key_prefix)',
       )
       .eq('workspace_id', workspaceId)
+      .gte('created_at', since)
       .order('created_at', { ascending: false })
       .range(0, pageSize - 1),
   ]);
@@ -668,15 +684,26 @@ export default async function DashboardPage({ params }) {
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
   const billingWindow = resolveUsageBillingWindow(plan, storedBillingPeriod);
 
+  // Resolve plan limits BEFORE the data fetch, because how much analytics
+  // history this workspace may see is one of them. Both protections are
+  // user-level and must be passed together: `compedScale` grants Team
+  // features, `unlimitedInboxes` is the repricing grandfather.
+  const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes });
+  // The window the Usage page, the per-inbox activity counts and the audit log
+  // are all bounded by. Free buys 7 days, Personal 30, Pro 90, Team a year;
+  // those numbers are published copy, so they are read from the plan rather
+  // than hardcoded here. See src/lib/analytics/retention.ts.
+  const historyDays = retentionDays(rawLimits);
+
   // Fetch all page data in parallel; skip if no workspace row exists yet.
   const [overviewStats, activityFeed, inboxes, apiKeys, usageData, auditLog, members, pendingInvites] = workspace
     ? await Promise.all([
         fetchOverviewStats(supabase, workspace.id),
         fetchActivityFeed(supabase, workspace.id),
-        fetchInboxes(supabase, workspace.id),
+        fetchInboxes(supabase, workspace.id, historyDays),
         fetchApiKeys(supabase, workspace.id),
-        fetchUsageData(supabase, workspace.id, billingWindow),
-        fetchAuditLog(supabase, workspace.id),
+        fetchUsageData(supabase, workspace.id, billingWindow, historyDays),
+        fetchAuditLog(supabase, workspace.id, historyDays),
         fetchMembers(supabase, workspace.id),
         fetchPendingInvites(supabase, workspace.id),
       ])
@@ -691,11 +718,6 @@ export default async function DashboardPage({ params }) {
         [],
       ];
 
-  // Resolve plan limits so the dashboard can show the inbox allowance and stop a
-  // doomed connect attempt before the OAuth round trip. Both protections are
-  // user-level and must be passed together: `compedScale` grants Team features,
-  // `unlimitedInboxes` is the repricing grandfather.
-  const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes });
   // The monthly action ceiling is deliberately NOT passed to the client. It is
   // an abuse guard, not a plan feature, and every customer-facing meter built
   // on it was removed in the 2026-08-19 repricing.
@@ -709,6 +731,10 @@ export default async function DashboardPage({ params }) {
     // capabilities: Free and Pro are single-seat. The Members UI uses
     // maxMembers for the seat count and this flag to gate role selection.
     teamRolesEnabled: rawLimits.teamRolesEnabled,
+    // How many days of history this plan buys. The Usage and Inboxes pages
+    // label their figures with it, so the number on screen always matches the
+    // window the queries above actually used.
+    historyDays,
   };
 
   // True only when the unlimited inboxes come from the grandfather rather than
