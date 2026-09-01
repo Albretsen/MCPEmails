@@ -3,20 +3,26 @@
  *
  * WHY THIS MODULE EXISTS. `PlanLimits.analyticsRetentionDays` was dead config
  * for months: it was declared, given a value on all four tiers, and read by
- * nothing. Meanwhile the dashboard charted a hardcoded 30-day window for every
- * plan and `/api/security/audit-log` paged back through the ENTIRE activity
- * history with no lower bound at all. The published copy nonetheless promised
- * "7-day analytics" on Free, "30-day" on Personal, "90-day" on Pro and a
- * one-year audit log on Team, so every one of those numbers was a claim the
- * product did not implement: Free saw four times what it was sold, Pro and Team
- * saw a third and a twelfth of it, and the audit log was unbounded on the free
- * tier. This module is the single place that turns the plan into a window, so
- * the promise and the query can no longer drift apart.
+ * nothing, while the dashboard charted a hardcoded 30-day window for every
+ * plan. The published copy meanwhile sold "30-day analytics" on Personal and
+ * "90-day" on Pro, so the paid tiers were being under-served against their own
+ * marketing. This module is the single place that turns a plan into a window,
+ * so the promise and the query cannot drift apart again.
  *
- * The retention window is deliberately NOT a hard delete. Rows stay in
- * `activity_log`; what the plan buys is how much of that history the dashboard
- * will show. Nothing here should ever be used to justify destroying data, and
- * the audit trail a security incident needs is still on disk.
+ * TWO THINGS THIS IS NOT.
+ *
+ * It is not a hard delete. Rows stay in `activity_log`; what the plan buys is
+ * how much of that history the Usage page will show.
+ *
+ * It is not applied to `/api/security/audit-log`. It was, briefly, and that was
+ * wrong: an audit log is a security artifact rather than a usage metric, and
+ * scaling one by price tier leaves the customers least equipped to detect a
+ * compromise holding the least evidence of it. See the note on that route.
+ *
+ * NO TIER WAS EVER CUT to make a sentence true. Free showed 30 days before any
+ * of this was enforced and still does; the copy that said 7 was corrected
+ * instead. Pro and Team gained history. That is the only acceptable direction
+ * for a change like this on a live product.
  */
 
 import type { PlanLimits } from '@/lib/stripe/plans';
@@ -24,13 +30,19 @@ import type { PlanLimits } from '@/lib/stripe/plans';
 /**
  * The retention window for a set of resolved plan limits, in whole UTC days.
  *
- * Falls back to the most restrictive real window (7 days, the Free tier) rather
- * than to unlimited, so a limits object that somehow arrives without the field
- * under-serves rather than silently handing out history nobody paid for.
+ * Falls back to the smallest window any tier buys (30 days, the Free and
+ * Personal floor) rather than to unlimited, so a limits object that somehow
+ * arrives without the field under-serves rather than silently handing out
+ * history nobody paid for. It must never fall back BELOW that floor either:
+ * 30 days is what every account already had before this was enforced.
  */
+export const MIN_RETENTION_DAYS = 30;
+
 export function retentionDays(limits: Pick<PlanLimits, 'analyticsRetentionDays'>): number {
   const days = limits?.analyticsRetentionDays;
-  return Number.isFinite(days) && (days as number) > 0 ? (days as number) : 7;
+  return Number.isFinite(days) && (days as number) > 0
+    ? Math.max(days as number, MIN_RETENTION_DAYS)
+    : MIN_RETENTION_DAYS;
 }
 
 /**
@@ -44,7 +56,7 @@ export function retentionDays(limits: Pick<PlanLimits, 'analyticsRetentionDays'>
  * series the Usage page renders is bucketed by.
  */
 export function retentionCutoffISO(days: number, now: Date = new Date()): string {
-  const whole = Number.isFinite(days) && days > 0 ? Math.floor(days) : 7;
+  const whole = Number.isFinite(days) && days > 0 ? Math.floor(days) : MIN_RETENTION_DAYS;
   return new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (whole - 1)),
   ).toISOString();

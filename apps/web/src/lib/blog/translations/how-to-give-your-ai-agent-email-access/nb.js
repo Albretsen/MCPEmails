@@ -107,7 +107,7 @@ Når det gjelder rate-grenser, er hver API-nøkkel begrenset til 100 forespørsl
 
 Planene prises etter antall tilkoblede innbokser. API-nøkler er ubegrenset på alle nivåer, og nivåene skiller seg ellers på burst-grense, analyselagring, teamfunksjoner og støtte.
 
-- **Gratis, $0 for alltid.** Ingen kort. Én tilkoblet innboks, 60 req/min, 7-dagers analyser, fellesskapsstøtte.
+- **Gratis, $0 for alltid.** Ingen kort. Én tilkoblet innboks, 60 req/min, 30-dagers analyser, fellesskapsstøtte.
 - **Personal, $5 per måned** (eller $48 per år, $4 per måned). Opptil tre tilkoblede innbokser, 120 req/min, 30-dagers analyser, e-poststøtte.
 - **Pro, $15 per måned** (eller $144 per år, $12 per måned). Ubegrenset antall tilkoblede innbokser, 300 req/min, 90-dagers analyser, e-poststøtte.
 - **Team, $79 per måned** (eller $756 per år, $63 per måned). Alt i Pro, pluss medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO med SAML/OIDC pluss revisjonslogg, 1 000 req/min, 1-års analyser, prioritert støtte.

@@ -81,7 +81,7 @@ C'est le vrai compromis, et je ne vais pas l'enjoliver. Avec un serveur héberg�
 
 ## Ce que ça coûte en dollars
 
-MCP Emails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit tourne à 60 requêtes/minute avec 7 jours d'analytics et un support communautaire. [Personal est à 5 $/mois](/pricing) (jusqu'à trois boîtes connectées, 120 req/min, 30 jours d'analytics, support par e-mail), Pro est à 15 $/mois (boîtes connectées illimitées, 300 req/min, 90 jours d'analytics), et Team est à 79 $/mois (membres avec rôles, un espace de travail distinct par client, SSO et journaux d'audit). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Soyez honnête sur les heures.
+MCP Emails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit tourne à 60 requêtes/minute avec 30 jours d'analytics et un support communautaire. [Personal est à 5 $/mois](/pricing) (jusqu'à trois boîtes connectées, 120 req/min, 30 jours d'analytics, support par e-mail), Pro est à 15 $/mois (boîtes connectées illimitées, 300 req/min, 90 jours d'analytics), et Team est à 79 $/mois (membres avec rôles, un espace de travail distinct par client, SSO et journaux d'audit). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Soyez honnête sur les heures.
 
 ## Alors, lequel choisir ?
 

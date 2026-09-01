@@ -163,7 +163,12 @@ export const PLANS: Record<PlanId, Plan> = {
       billingPortalEnabled: false,
       analyticsEnabled: true,
       maxRequestsPerMinute: 60,
-      analyticsRetentionDays: 7,
+      // 30, not 7. Free already showed 30 days before the window was enforced,
+      // and cutting a live tier down to make a blog sentence true would be
+      // taking something away from users to win an argument about copy. The
+      // sentence was changed instead. 30 is the floor every tier starts from;
+      // Pro and Team buy MORE history, they do not buy back the default.
+      analyticsRetentionDays: 30,
       teamRolesEnabled: false,
       ssoEnabled: false,
       auditLogEnabled: false,

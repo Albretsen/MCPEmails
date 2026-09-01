@@ -81,7 +81,7 @@ Dette er den reelle byttehandelen, og jeg skal ikke pynte på den. Med en hostet
 
 ## Hva det koster i kroner
 
-MCP Emails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kjører på 60 forespørsler per minutt med 7-dagers analyse og fellesskapsstøtte. [Personal koster $5 per måned](/pricing) (opptil tre tilkoblede innbokser, 120 req/min, 30-dagers analyse, e-poststøtte), Pro koster $15 per måned (ubegrenset antall tilkoblede innbokser, 300 req/min, 90-dagers analyse), og Team koster $79 per måned (medlemmer med roller, et eget arbeidsområde per kunde, SSO og revisjonslogger). Selvhosting er $0 i abonnement pluss hva enn VPS-en din og timene dine koster. Vær ærlig om timene.
+MCP Emails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kjører på 60 forespørsler per minutt med 30-dagers analyse og fellesskapsstøtte. [Personal koster $5 per måned](/pricing) (opptil tre tilkoblede innbokser, 120 req/min, 30-dagers analyse, e-poststøtte), Pro koster $15 per måned (ubegrenset antall tilkoblede innbokser, 300 req/min, 90-dagers analyse), og Team koster $79 per måned (medlemmer med roller, et eget arbeidsområde per kunde, SSO og revisjonslogger). Selvhosting er $0 i abonnement pluss hva enn VPS-en din og timene dine koster. Vær ærlig om timene.
 
 ## Så hva bør du velge?
 

@@ -2,17 +2,28 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
-import { retentionCutoffISO, retentionDays } from './retention.ts';
+import { MIN_RETENTION_DAYS, retentionCutoffISO, retentionDays } from './retention.ts';
 
 test('every tier resolves the retention window it is sold with', () => {
-  // These four numbers are published copy. The blog posts and the plan
-  // descriptions quote them as "7-day / 30-day / 90-day analytics" and a
-  // one-year audit log, so changing one here without changing the copy makes
-  // the product lie again, which is exactly the state this module fixed.
-  assert.equal(retentionDays(resolvePlanLimits('free')), 7);
+  // These numbers are published copy: the blog posts quote "30-day analytics"
+  // on Free and Personal and "90-day" on Pro, so changing one here without
+  // changing the copy makes the product lie again, which is the exact state
+  // this module was written to fix.
+  assert.equal(retentionDays(resolvePlanLimits('free')), 30);
   assert.equal(retentionDays(resolvePlanLimits('personal')), 30);
   assert.equal(retentionDays(resolvePlanLimits('solo')), 90);
   assert.equal(retentionDays(resolvePlanLimits('pro')), 365);
+});
+
+test('no tier resolves below the 30-day floor every account already had', () => {
+  // The whole point of the floor: enforcing a window must never TAKE history
+  // away from a live account. Free showed 30 days before any of this existed.
+  for (const id of ['free', 'personal', 'solo', 'pro', 'nonsense']) {
+    assert.ok(
+      retentionDays(resolvePlanLimits(id)) >= MIN_RETENTION_DAYS,
+      `plan ${id} must not resolve below the ${MIN_RETENTION_DAYS}-day floor`,
+    );
+  }
 });
 
 test('the window ascends with the ladder and never reaches unlimited', () => {
@@ -20,8 +31,12 @@ test('the window ascends with the ladder and never reaches unlimited', () => {
     retentionDays(resolvePlanLimits(id)),
   );
   for (let i = 1; i < ladder.length; i += 1) {
-    assert.ok(ladder[i] > ladder[i - 1], 'each tier must buy strictly more history');
+    assert.ok(ladder[i] >= ladder[i - 1], 'the ladder must never buy LESS history');
   }
+  assert.ok(
+    ladder[ladder.length - 1] > ladder[0],
+    'the top tier must still buy more history than the bottom',
+  );
   for (const plan of Object.values(PLANS)) {
     assert.ok(
       Number.isFinite(plan.limits.analyticsRetentionDays),
@@ -36,24 +51,27 @@ test('a comped workspace gets the Team window, a grandfathered one does not', ()
 
   // The 2026-08-19 grandfather lifts the INBOX cap and nothing else. It must
   // not quietly hand a free account a year of history.
-  assert.equal(retentionDays(resolvePlanLimits('free', { unlimitedInboxes: true })), 7);
+  assert.equal(retentionDays(resolvePlanLimits('free', { unlimitedInboxes: true })), 30);
 });
 
-test('an unknown plan under-serves rather than leaking history', () => {
-  // A limits object that arrives malformed must fall back to the most
-  // restrictive real window, never to "show everything".
-  assert.equal(retentionDays(resolvePlanLimits('nonsense')), 7);
-  assert.equal(retentionDays({ analyticsRetentionDays: 0 }), 7);
-  assert.equal(retentionDays({ analyticsRetentionDays: -5 }), 7);
-  assert.equal(retentionDays({ analyticsRetentionDays: Infinity }), 7);
+test('an unknown plan falls back to the floor, never to unlimited', () => {
+  // A limits object that arrives malformed must land on the floor: enough that
+  // nobody loses what they already had, never "show everything".
+  assert.equal(retentionDays(resolvePlanLimits('nonsense')), 30);
+  assert.equal(retentionDays({ analyticsRetentionDays: 0 }), 30);
+  assert.equal(retentionDays({ analyticsRetentionDays: -5 }), 30);
+  assert.equal(retentionDays({ analyticsRetentionDays: Infinity }), 30);
+  assert.equal(retentionDays({ analyticsRetentionDays: 3 }), 30);
   // @ts-expect-error deliberately malformed input
-  assert.equal(retentionDays(undefined), 7);
+  assert.equal(retentionDays(undefined), 30);
 });
 
 test('the cutoff is anchored to UTC midnight so the window is whole days', () => {
   // Mid-afternoon on the 20th. A 7-day window must start at 00:00 on the 14th:
   // the 14th through the 20th inclusive is exactly seven whole UTC days.
   const now = new Date('2026-09-20T15:42:09.123Z');
+  // retentionCutoffISO is the raw date helper: it honours whatever it is
+  // handed, and the floor is applied by retentionDays above.
   assert.equal(retentionCutoffISO(7, now), '2026-09-14T00:00:00.000Z');
   assert.equal(retentionCutoffISO(1, now), '2026-09-20T00:00:00.000Z');
   assert.equal(retentionCutoffISO(30, now), '2026-08-22T00:00:00.000Z');
@@ -76,6 +94,6 @@ test('the cutoff never runs forward when handed nonsense', () => {
   for (const bad of [0, -1, NaN, Infinity]) {
     const cutoff = new Date(retentionCutoffISO(bad as number, now));
     assert.ok(cutoff <= now, `a ${bad}-day window must not produce a future cutoff`);
-    assert.equal(retentionCutoffISO(bad as number, now), '2026-09-14T00:00:00.000Z');
+    assert.equal(retentionCutoffISO(bad as number, now), '2026-08-22T00:00:00.000Z');
   }
 });

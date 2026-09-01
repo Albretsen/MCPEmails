@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createServiceRoleClient } from '@/lib/supabase/service';
-import { resolvePlanLimits } from '@/lib/stripe/plans';
-import { retentionCutoffISO, retentionDays } from '@/lib/analytics/retention';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /** Shape of a single activity_log row returned by the Supabase select. */
@@ -43,12 +40,16 @@ interface ActivityLogRow {
  *   - RLS on activity_log enforces workspace isolation; this route also
  *     explicitly resolves the workspace from workspace_members for defence-in-depth.
  *   - Never returns encrypted credential columns from inboxes or api_keys.
- *   - Bounded by the workspace's analytics retention window (Free 7 days,
- *     Personal 30, Pro 90, Team 365). This route serves page 2 onwards for the
- *     Security page, so it MUST apply the same bound the server-rendered first
- *     page applies: without it a caller simply pages past the cutoff and reads
- *     the entire history the plan does not include. Rows are never deleted;
- *     the window only limits what is returned.
+ *
+ * DELIBERATELY NOT bounded by the analytics retention window that
+ * src/lib/analytics/retention.ts applies to the Usage page. An audit log is a
+ * security artifact, not a usage metric, and truncating it by price tier
+ * leaves the customers least equipped to detect a compromise with the least
+ * evidence of one. The industry agrees: where an audit log is offered it is
+ * gated as a whole feature and then kept generously (Linear 90 days, Vercel
+ * 90, 1Password 365, GitHub indefinitely with the VIEW defaulted to three
+ * months). If a window is ever added here it should be flat and generous, and
+ * for a storage reason rather than a packaging one.
  */
 
 const MAX_PAGE_SIZE = 100;
@@ -76,37 +77,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
 
-  // 3. Resolve the plan, and from it how far back this workspace may read.
-  //    Mirrors /api/usage: the workspace row carries the projected plan and the
-  //    owner's entitlements carry the two user-level grants on top of it.
-  const { data: workspace } = await supabase
-    .from('workspaces')
-    .select('plan, owner_id')
-    .eq('id', workspaceId)
-    .maybeSingle();
-
-  if (!workspace) {
-    return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
-  }
-
-  const service = createServiceRoleClient();
-  const { data: entitlement } = await service
-    .from('user_usage_entitlements')
-    .select('kind, expires_at, unlimited_inboxes')
-    .eq('user_id', workspace.owner_id)
-    .maybeSingle();
-
-  const compedScale =
-    entitlement?.kind === 'comped_scale' &&
-    (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date());
-
-  const limits = resolvePlanLimits(compedScale ? 'pro' : ((workspace.plan as string) ?? 'free'), {
-    compedScale,
-    unlimitedInboxes: entitlement?.unlimited_inboxes ?? false,
-  });
-  const since = retentionCutoffISO(retentionDays(limits));
-
-  // 4. Parse and validate query params.
+  // 3. Parse and validate query params.
   const url = new URL(request.url);
   const rawPage = parseInt(url.searchParams.get('page') ?? '0', 10);
   const rawPageSize = parseInt(
@@ -123,26 +94,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
-  // 5. Fetch total count (no data, just the count header).
+  // 4. Fetch total count (no data, just the count header).
   const { count: totalCount, error: countError } = await supabase
     .from('activity_log')
     .select('id', { count: 'exact', head: true })
-    .eq('workspace_id', workspaceId)
-    .gte('created_at', since);
+    .eq('workspace_id', workspaceId);
 
   if (countError) {
     console.error('[audit-log] count query failed:', countError.message);
     return NextResponse.json({ error: 'Failed to fetch audit log.' }, { status: 500 });
   }
 
-  // 6. Fetch the requested page of rows with joined display fields.
+  // 5. Fetch the requested page of rows with joined display fields.
   const { data: rows, error: rowsError } = await supabase
     .from('activity_log')
     .select(
       'id, tool_name, status, error_code, duration_ms, created_at, inboxes(email_address, display_name), api_keys(name, key_prefix)',
     )
     .eq('workspace_id', workspaceId)
-    .gte('created_at', since)
     .order('created_at', { ascending: false })
     .range(from, to);
 
@@ -151,7 +120,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to fetch audit log.' }, { status: 500 });
   }
 
-  // 7. Shape the response: no secrets, no raw credentials.
+  // 6. Shape the response: no secrets, no raw credentials.
   const entries = ((rows ?? []) as ActivityLogRow[]).map((row) => {
     const inboxRel = row.inboxes;
     const keyRel = row.api_keys;
