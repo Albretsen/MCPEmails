@@ -15,7 +15,6 @@ export const EVENT_SCHEMA = Object.freeze({
 });
 
 const SENSITIVE_KEY = /(^|_)(id|email|address|token|secret|key|password|prompt|message|subject|body|attachment|url|uri|argument|payload)(_|$)/i;
-const SENSITIVE_VALUE = /(mcpe_|bearer\s|@|https?:\/\/|token|password|api[_ -]?key)/i;
 
 export function assertSafeAnalyticsEvent(name, properties = {}) {
   const schema = EVENT_SCHEMA[name];
@@ -25,7 +24,16 @@ export function assertSafeAnalyticsEvent(name, properties = {}) {
     throw new Error(`Analytics properties do not match schema for: ${name}`);
   }
   for (const [key, value] of Object.entries(properties)) {
-    if (SENSITIVE_KEY.test(key) || typeof value !== 'string' || SENSITIVE_VALUE.test(value) || !schema[key].includes(value)) {
+    // There is deliberately no regex screen on the VALUE. Every value must
+    // already be a member of the frozen, hand-written enum above, so it cannot
+    // carry user data no matter what it spells, and the enum check below is
+    // what enforces that. The screen that used to be here matched /password/i
+    // and so rejected the legitimate literal 'app_password', throwing on every
+    // app-password connection: swallowed in production, and surfaced as a bogus
+    // "network error" in dev, where trackProductEvent rethrows. It was
+    // screening a set that cannot contain user input. The KEY is still
+    // screened, because a key names something the enum cannot vouch for.
+    if (SENSITIVE_KEY.test(key) || typeof value !== 'string' || !schema[key].includes(value)) {
       throw new Error(`Unsafe analytics property: ${key}`);
     }
   }
