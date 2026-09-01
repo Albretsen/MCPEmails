@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  IMAP_PRESETS,
+  isBrandedImapService,
   portForSecurity,
   securityForPort,
   normalizeAppPassword,
@@ -47,4 +49,31 @@ test('hyphens are preserved because Apple app-specific passwords contain them', 
 test('normalization leaves an already-clean credential untouched', () => {
   assert.equal(normalizeAppPassword('xkcd1234correct'), 'xkcd1234correct');
   assert.equal(normalizeAppPassword(''), '');
+});
+
+test('Gmail is a branded IMAP service on its documented transports', () => {
+  // The whole point of the app-password path is that it never touches OAuth,
+  // so it has to be reachable as a branded service: `isBrandedImapService` is
+  // the connect route's gate, and a false here answers 422 "Unsupported
+  // provider" for every Gmail connection.
+  assert.equal(isBrandedImapService('gmail'), true);
+
+  const gmail = IMAP_PRESETS.gmail;
+  assert.equal(gmail.imapHost, 'imap.gmail.com');
+  assert.equal(gmail.imapPort, 993);
+  assert.equal(gmail.smtpHost, 'smtp.gmail.com');
+  assert.equal(gmail.smtpPort, 465);
+  assert.equal(gmail.smtpSecurity, 'tls');
+  // 587/STARTTLS is Google's other documented submission transport. It is not
+  // configured here on purpose: transport-autodetect retries it on its own
+  // when 465 never yields a session, and pinning it would give up implicit
+  // TLS for every account to serve the networks that block 465.
+  assert.equal(portForSecurity('smtp', 'starttls'), 587);
+});
+
+test('every branded preset pairs its port with its security mode', () => {
+  for (const preset of Object.values(IMAP_PRESETS)) {
+    assert.equal(preset.imapPort, portForSecurity('imap', 'tls'), preset.service);
+    assert.equal(preset.smtpPort, portForSecurity('smtp', preset.smtpSecurity), preset.service);
+  }
 });

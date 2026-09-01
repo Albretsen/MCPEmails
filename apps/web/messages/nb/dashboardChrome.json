@@ -103,7 +103,6 @@
     "mcpCopyTitle": "Kopier din MCP-endepunkt-URL"
   },
   "connect": {
-    "subGmail": "OAuth 2.0",
     "subOutlook": "OAuth 2.0 · Microsoft 365",
     "comingSoon": "Kommer snart",
     "subFastmail": "App-passord",
@@ -147,6 +146,7 @@
     "appPasswordStepsZoho": "Zoho kaller det et applikasjonsspesifikt passord, i Zoho-kontoen under Sikkerhet. IMAP-tilgang må også være slått på i innstillingene til Zoho Mail; den er av som standard.",
     "appPasswordStepsYandex": "Yandex kaller det et app-passord. Slå først på IMAP og app-passord i innstillingene til Yandex Mail, og lag så et app-passord for Mail i Yandex ID under Sikkerhet. Det er 16 små bokstaver.",
     "appPasswordStepsFastmail": "Fastmail kaller det et app-passord. Åpne Settings, så Privacy and Security, så App Passwords, og lag ett med tilgang til e-post. Det er 16 tegn med små bokstaver.",
+    "appPasswordStepsGmail": "Google kaller det et app-passord. Slå på totrinnsbekreftelse først, åpne så myaccount.google.com/apppasswords og opprett ett. Det er 16 små bokstaver, vist i fire grupper. På en Google Workspace-konto kan en administrator slå av app-passord for hele domenet, og da er den siden utilgjengelig.",
     "titleLimitReached": "Legg til enda en innboks",
     "titleConnectProvider": "Koble til {provider}",
     "titleReconnectProvider": "Koble til {provider} på nytt",
@@ -213,7 +213,10 @@
     "googleStep3": "Velg «Gå til mcpemails.com (usikker)», og deretter Fortsett.",
     "googleStepsWhy": "«Usikker» er Googles standardformulering for en utvikler de ikke har gjennomgått. Det er ikke en konklusjon om denne appen. Googles gjennomgang krever en betalt sikkerhetsvurdering fra tredjepart som vi har valgt å ikke kjøpe.",
     "googleStepsDuration": "Når postkassen først er koblet til, forblir den tilkoblet. Tilgangen fornyes automatisk i bakgrunnen og opphører bare hvis du trekker den tilbake fra Google-kontoen din.",
+    "gmailOauthToggle": "Vil du heller logge inn med Google?",
+    "gmailOauthBody": "Google-pålogging virker fortsatt, og ingenting ved den er endret. Den sender deg til Googles samtykkeskjerm, og siden denne appen ikke er verifisert av Google, har den skjermen en advarsel du må klikke deg forbi. Et app-passord holder deg i dette vinduet.",
     "hintGeneric": "Virker med alle postkasser som støtter IMAP og SMTP.",
+    "hintGmail": "Gmail krever at totrinnsbekreftelse er slått på og at du genererer et app-passord. Det vanlige Google-passordet ditt blir avvist.",
     "hintIcloud": "iCloud krever tofaktorautentisering og et apspesifikt passord. Passordet til Apple-kontoen din blir avvist.",
     "hintYahoo": "Yahoo krever et generert apppassord. Det vanlige Yahoo-passordet ditt blir avvist. Slå på totrinnsbekreftelse først, og lag så apppassordet.",
     "hintZoho": "Slå på IMAP-tilgang i Zoho først: Innstillinger → E-postkontoer → IMAP-tilgang er av som standard. Med tofaktor på må du også lage et appspesifikt passord.",

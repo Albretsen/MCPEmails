@@ -7,13 +7,13 @@
  * are persisted onto the inbox row at connect-time so the edge function never
  * needs to know the brand.
  *
- * Settings verified against vendor documentation (2026). All four providers
- * require the user to enable 2FA and generate an app-specific password; their
+ * Settings verified against vendor documentation (2026). Every provider here
+ * requires the user to enable 2FA and generate an app-specific password; their
  * main account password will not authenticate from a third-party client.
  */
 
 /** Branded IMAP services with fixed host presets, plus the user-supplied catch-all. */
-export type ImapService = 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic';
+export type ImapService = 'gmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic';
 
 /** Branded services that have a fixed host preset (excludes the generic catch-all). */
 export type BrandedImapService = Exclude<ImapService, 'generic'>;
@@ -45,6 +45,35 @@ export interface ImapPreset {
 }
 
 export const IMAP_PRESETS: Record<BrandedImapService, ImapPreset> = {
+  gmail: {
+    /**
+     * Gmail leads the branded presets because an app password is now the
+     * DEFAULT way to connect a Google mailbox here, and OAuth the secondary
+     * one. That is not a preference, it is arithmetic: an unverified Google
+     * app has a 100-user LIFETIME cap on consent grants that cannot be reset,
+     * 71 of those grants are already spent, and lifting the cap means Google's
+     * restricted-scope review, which requires a paid annual CASA assessment.
+     * An app password is not OAuth at all: no scopes, no consent screen, no
+     * review, no cap.
+     *
+     * The 56 inboxes already connected over OAuth are untouched. They keep
+     * provider = 'gmail' and their tokens; only new connections land here, as
+     * provider = 'imap' with service = 'gmail'.
+     */
+    service: 'gmail',
+    label: 'Gmail',
+    logoKind: 'gmail',
+    imapHost: 'imap.gmail.com',
+    imapPort: 993,
+    smtpHost: 'smtp.gmail.com',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+    appPasswordHelpUrl: 'https://myaccount.google.com/apppasswords',
+    hint:
+      'Requires 2-Step Verification on the Google account: the app password ' +
+      'option does not exist until it is on. Google Workspace administrators ' +
+      'can switch app passwords off for a whole domain.',
+  },
   icloud: {
     service: 'icloud',
     label: 'iCloud Mail',
@@ -201,7 +230,13 @@ export function zohoHosts(
 
 /** Type guard: is the given string a branded service with a fixed preset? */
 export function isBrandedImapService(value: string): value is BrandedImapService {
-  return value === 'icloud' || value === 'yahoo' || value === 'zoho' || value === 'yandex';
+  return (
+    value === 'gmail' ||
+    value === 'icloud' ||
+    value === 'yahoo' ||
+    value === 'zoho' ||
+    value === 'yandex'
+  );
 }
 
 /* ────────────────────────────────────────────────────────────────────────────

@@ -103,7 +103,6 @@
     "mcpCopyTitle": "Copy your MCP endpoint URL"
   },
   "connect": {
-    "subGmail": "OAuth 2.0",
     "subOutlook": "OAuth 2.0 · Microsoft 365",
     "comingSoon": "Coming soon",
     "subFastmail": "App password",
@@ -147,6 +146,7 @@
     "appPasswordStepsZoho": "Zoho calls it an application-specific password, in Zoho Account under Security. IMAP access also has to be on in Zoho Mail settings; it is off by default.",
     "appPasswordStepsYandex": "Yandex calls it an app password. Enable IMAP and app passwords in Yandex Mail settings first, then create a Mail app password in Yandex ID under Security. It is 16 lowercase letters.",
     "appPasswordStepsFastmail": "Fastmail calls it an app password. Open Settings, then Privacy and Security, then App Passwords, and create one with mail access. It is 16 lowercase characters.",
+    "appPasswordStepsGmail": "Google calls it an app password. Turn on 2-Step Verification first, then open myaccount.google.com/apppasswords and create one. It is 16 lowercase letters, shown in four groups. On a Google Workspace account an administrator can switch app passwords off for the whole domain, in which case that page is unavailable.",
     "titleLimitReached": "Add another inbox",
     "titleConnectProvider": "Connect {provider}",
     "titleReconnectProvider": "Reconnect {provider}",
@@ -213,7 +213,10 @@
     "googleStep3": "Choose “Go to mcpemails.com (unsafe)”, then Continue.",
     "googleStepsWhy": "“Unsafe” is Google’s standard wording for a developer it has not reviewed. It is not a finding about this app. Google’s review requires a paid third-party security assessment we have chosen not to buy.",
     "googleStepsDuration": "Once connected, the inbox stays connected. Access renews automatically in the background and stops only if you revoke it from your Google account.",
+    "gmailOauthToggle": "Prefer to sign in with Google?",
+    "gmailOauthBody": "Google sign-in still works and nothing about it has changed. It sends you to Google's consent screen, and because this app is not verified by Google, that screen carries a warning you have to click past. An app password stays inside this window.",
     "hintGeneric": "Works with any mailbox that speaks IMAP and SMTP.",
+    "hintGmail": "Gmail needs 2-Step Verification switched on and a generated app password. Your normal Google password will be rejected.",
     "hintIcloud": "iCloud needs two-factor authentication and an app-specific password. Your Apple Account password will be rejected.",
     "hintYahoo": "Yahoo needs a generated app password. Your normal Yahoo password will be rejected. Turn on two-step verification first, then create the app password.",
     "hintZoho": "Turn on IMAP access in Zoho first: Settings → Mail Accounts → IMAP Access is off by default. With two-factor on, also generate an application-specific password.",

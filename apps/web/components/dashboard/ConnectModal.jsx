@@ -39,6 +39,7 @@ const ZOHO_ACCOUNT_TYPES = [
 /** Per-provider guidance key in dashboardChrome. */
 const HINT_KEYS = {
   generic: 'connect.hintGeneric',
+  gmail: 'connect.hintGmail',
   icloud: 'connect.hintIcloud',
   yahoo: 'connect.hintYahoo',
   zoho: 'connect.hintZoho',
@@ -62,6 +63,7 @@ const HINT_KEYS = {
 
 /** Per-provider "what it is called and where it lives" copy, in dashboardChrome. */
 const APP_PASSWORD_STEP_KEYS = {
+  gmail: 'connect.appPasswordStepsGmail',
   icloud: 'connect.appPasswordStepsIcloud',
   yahoo: 'connect.appPasswordStepsYahoo',
   zoho: 'connect.appPasswordStepsZoho',
@@ -207,11 +209,12 @@ export function splitHostPort(raw) {
  * ConnectModal.jsx: inbox connection modal.
  *
  * Step 1: Provider selection.
- *   - Gmail / Outlook → clicking "Connect" navigates to the server-side OAuth
+ *   - Gmail / iCloud / Yahoo / Zoho / Yandex → app password (in-modal step 2),
+ *     using the host presets from lib/email-providers/imap-presets. Gmail also
+ *     offers Google sign-in as a secondary route to the OAuth initiation route.
+ *   - Outlook → clicking "Connect" navigates to the server-side OAuth
  *     initiation route, which redirects to the provider's consent screen.
  *   - Fastmail → OAuth (route) or app password (in-modal step 2).
- *   - iCloud / Yahoo / Zoho / Yandex → app password (in-modal step 2), using
- *     the host presets from lib/email-providers/imap-presets.
  *   - IMAP / SMTP (generic) → in-modal step 2 with host/port fields.
  *
  * Step 2: Credentials form.
@@ -228,6 +231,11 @@ const PROVIDERS = [
   // the user out to a third-party consent screen to complete.
   { k: 'generic', label: 'IMAP / SMTP', subKey: 'connect.subGeneric', logoKind: 'imap' },
   // Branded IMAP presets (app password) — IMAP underneath, host/port prefilled.
+  // Gmail is one of these now and is first among them: an app password is the
+  // default way to connect a Google mailbox here, and Google sign-in is the
+  // secondary option offered underneath the grid. There is deliberately ONE
+  // Gmail card rather than two, because "Gmail" and "Gmail (OAuth)" side by
+  // side is a question about our infrastructure that the user cannot answer.
   ...Object.values(IMAP_PRESETS).map(p => ({
     k: p.service,
     label: p.label,
@@ -235,7 +243,6 @@ const PROVIDERS = [
     logoKind: p.logoKind,
   })),
   { k: 'fastmail', label: 'Fastmail', subKey: 'connect.subFastmail',    logoKind: 'imap' },
-  { k: 'gmail',    label: 'Gmail',    subKey: 'connect.subGmail',       logoKind: 'gmail' },
   // Outlook is temporarily unavailable (Microsoft connector not live yet) —
   // shown LAST, greyed out / non-selectable with a "coming soon" flag until it ships.
   { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook', disabled: true },
@@ -289,10 +296,10 @@ export function ConnectModal({
   // Reconnect mode: re-open the form this inbox was created with, identity
   // pre-filled and locked, so only the password is re-entered. Map the stored
   // service back to a modal provider: 'generic' (or a missing service) → the
-  // generic IMAP form; a branded service (fastmail/icloud/yahoo/zoho/yandex) →
-  // that provider. This is what stops a generic IMAP inbox from being sent to
-  // the Fastmail form, and stops the browser autofilling another saved login
-  // into a blank field.
+  // generic IMAP form; a branded service (gmail/fastmail/icloud/yahoo/zoho/
+  // yandex) → that provider. This is what stops a generic IMAP inbox from
+  // being sent to the Fastmail form, and stops the browser autofilling another
+  // saved login into a blank field.
   const isReconnect = reconnect != null;
   const reconnectProvider = isReconnect
     ? (reconnect.service && reconnect.service !== 'generic' ? reconnect.service : 'generic')
@@ -356,6 +363,11 @@ export function ConnectModal({
   // the next keystroke, which is unrecoverable when the field is dots.
   const selectPasswordOnFocus = useRef(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  // Whether the secondary Gmail route (Google sign-in) is expanded. Closed by
+  // default: it is the option the app-password default exists to move traffic
+  // away from, and the walkthrough of Google's unverified-app screens inside
+  // it is three paragraphs that nobody taking the default has to read.
+  const [gmailOauthOpen, setGmailOauthOpen] = useState(false);
   // Set when the address the user typed identified a known mail provider and we
   // filled the server fields in for them. Shape:
   // { label, requiresAppPassword, appPasswordHelpUrl }.
@@ -629,26 +641,51 @@ export function ConnectModal({
 
   // ── Step 1: provider selected ──────────────────────────────────────────────
 
-  const handleConnect = async () => {
-    trackProductEvent('inbox_connect_started', { provider: provider === 'generic' ? 'imap' : provider });
+  /**
+   * Record that a provider was chosen, before anything navigates away.
+   *
+   * Both ways out of step 1 go through here. Gmail now has two of them, and
+   * the secondary one leaves no other trace: counting only the app-password
+   * clicks would make the new default look better than it is precisely
+   * because the people who rejected it are the ones who went missing.
+   */
+  const recordProviderSelected = async (chosen) => {
+    trackProductEvent('inbox_connect_started', { provider: chosen === 'generic' ? 'imap' : chosen });
     try {
       await fetch('/api/onboarding', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'provider_selected', provider: provider === 'generic' ? 'generic_imap' : provider }),
+        body: JSON.stringify({ action: 'provider_selected', provider: chosen === 'generic' ? 'generic_imap' : chosen }),
         keepalive: true,
       });
     } catch { /* the connection remains available if analytics is unavailable */ }
+  };
+
+  const handleConnect = async () => {
+    await recordProviderSelected(provider);
     if (usesAppPassword) {
       setStep(2);
       return;
     }
-    // OAuth paths (Gmail, Outlook, Fastmail OAuth) navigate to the server-side
+    // OAuth paths (Outlook, Fastmail OAuth) navigate to the server-side
     // initiation route. The page reloads after the provider redirects back.
     window.location.href = OAUTH_ROUTES[provider];
   };
 
+  /** The secondary Gmail route: Google sign-in, unchanged, one click down. */
+  const handleGmailOauth = async () => {
+    await recordProviderSelected('gmail');
+    // A whole-document navigation, not a router push: /auth/gmail is a server
+    // route handler that answers with a redirect to Google's consent screen,
+    // not a page this app renders.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = OAUTH_ROUTES.gmail;
+  };
+
+  // Gmail is absent on purpose: its primary button now opens the credentials
+  // step like every other app-password provider. "Connect with Google" moved
+  // to the secondary OAuth block, which is the only thing that still leaves
+  // the app for a consent screen.
   const connectLabel = () => {
-    if (provider === 'gmail') return tr('connect.connectWithGoogle');
     if (provider === 'outlook') return tr('connect.connectWithMicrosoft');
     return tr('connect.enterCredentials');
   };
@@ -909,9 +946,9 @@ export function ConnectModal({
       // Success: notify the parent so it can update its optimistic inbox list.
       // Match the shape a page refresh renders from the DB, otherwise the row
       // visibly changes on reload. The list surfaces the brand for branded IMAP
-      // (icloud/yahoo/zoho/yandex) and Fastmail, and 'imap' for the generic
-      // connector; the label falls back to the address local-part when there's
-      // no display name.
+      // (gmail/icloud/yahoo/zoho/yandex) and Fastmail, and 'imap' for the
+      // generic connector; the label falls back to the address local-part when
+      // there's no display name.
       const optimisticProvider = provider === 'generic' ? 'imap' : provider;
       const optimisticLabel = email.split('@')[0] || email;
       onConnect({ provider: optimisticProvider, address: email, label: optimisticLabel });
@@ -1207,101 +1244,156 @@ export function ConnectModal({
                 ))}
               </div>
 
-              {/* Gmail: a plain account of what Google's screens look like.
-                  This used to be an amber alert box with a warning triangle,
-                  which is the wrong instrument: the screen it describes is a
-                  permanent condition of shipping an unverified Google app, not
-                  an incident, and dressing it as a hazard talked users out of a
-                  flow they had already chosen. 39.5% of Gmail connects were
-                  abandoned with no failure ever recorded on our side, i.e. on
-                  Google's screen. So: show the screen, name the exact buttons,
-                  and say why the wording is what it is. */}
-              {OAUTH_VERIFICATION_PENDING && provider === 'gmail' && (
-                <div
-                  role="note"
-                  style={{
-                    marginTop: 16,
-                    padding: 14,
-                    background: 'var(--bg-sunken)',
-                    border: '1px solid var(--border-1)',
-                    borderRadius: 8,
-                    fontFamily: 'var(--font-sans)',
-                  }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', marginBottom: 4 }}>
-                    {tr('connect.googleStepsTitle')}
-                  </div>
-                  <p style={{ margin: '0 0 12px', fontSize: 12.5, lineHeight: 1.55, color: 'var(--fg-2)' }}>
-                    {tr('connect.googleStepsIntro')}
-                  </p>
+              {/* Gmail: Google sign-in, kept and demoted.
 
-                  {/* This asset is the icon registered on our Google OAuth
-                      consent screen, so it is the mark the user is about to see
-                      on Google's own page. Shown at badge size next to a line
-                      saying exactly that: it helps the user confirm they are in
-                      the right flow. It is deliberately NOT presented as a
-                      screenshot of Google's screen, which is not what it is. */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    marginBottom: 12,
-                    padding: '8px 10px',
-                    background: 'var(--bg-surface)',
-                    border: '1px solid var(--border-1)',
-                    borderRadius: 6,
-                  }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/google-consent-logo.png"
-                      alt=""
-                      width={28}
-                      height={28}
-                      style={{ flexShrink: 0, borderRadius: 4 }}
-                    />
-                    <span style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--fg-2)' }}>
-                      {tr('connect.googleConsentAlt')}
+                  The app password above is the default because OAuth here has
+                  a hard ceiling: an unverified Google app may only ever be
+                  granted consent by 100 accounts in its lifetime, the counter
+                  cannot be reset, and 71 of those are already spent. Removing
+                  OAuth would strand the people who prefer it and the 56
+                  inboxes already connected that way, so it stays, one click
+                  down, with the walkthrough of Google's screens intact. */}
+              {provider === 'gmail' && (
+                <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border-1)' }}>
+                  <button
+                    type="button"
+                    onClick={() => setGmailOauthOpen(open => !open)}
+                    aria-expanded={gmailOauthOpen}
+                    // No aria-controls, for the same reason the Advanced
+                    // toggle has none: the panel is only in the DOM while it
+                    // is open, so the id would be absent exactly when the
+                    // attribute mattered.
+                    className="plain-focus"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'transparent',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: 'var(--fg-2)',
+                      width: 'fit-content',
+                    }}
+                  >
+                    <span style={{
+                      display: 'inline-flex',
+                      transform: gmailOauthOpen ? 'rotate(90deg)' : 'none',
+                      transition: 'transform 120ms ease',
+                    }}>
+                      <Icon name="chevron" size={13} />
                     </span>
-                  </div>
+                    {tr('connect.gmailOauthToggle')}
+                  </button>
 
-                  <ol style={{
-                    margin: 0,
-                    paddingLeft: 18,
-                    fontSize: 12.5,
-                    lineHeight: 1.55,
-                    color: 'var(--fg-2)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
-                  }}>
-                    <li>{tr('connect.googleStep1')}</li>
-                    <li>{tr('connect.googleStep2')}</li>
-                    <li>{tr('connect.googleStep3')}</li>
-                  </ol>
+                  {gmailOauthOpen && (
+                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <p style={{
+                        margin: 0,
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 12.5,
+                        lineHeight: 1.55,
+                        color: 'var(--fg-2)',
+                      }}>
+                        {tr('connect.gmailOauthBody')}
+                      </p>
 
-                  <p style={{
-                    margin: '12px 0 0',
-                    paddingTop: 12,
-                    borderTop: '1px solid var(--border-1)',
-                    fontSize: 12,
-                    lineHeight: 1.55,
-                    color: 'var(--fg-3)',
-                  }}>
-                    {tr('connect.googleStepsWhy')}
-                  </p>
-                  {/* The old copy claimed access expired "roughly every 7 days".
-                      It does not. Access tokens last an hour and are renewed by
-                      a background job the user never sees; the refresh token
-                      behind them is only invalidated if the user revokes it.
-                      Production bears this out: the oldest Gmail inbox has been
-                      connected and healthy for 82 days, and of 41 Gmail inboxes
-                      the only 3 in an error state were explicit revocations.
-                      The 7-day figure applies to Google projects left in
-                      "Testing" publishing status, which is a different thing
-                      from being unverified. */}
-                  <p style={{ margin: '8px 0 0', fontSize: 12, lineHeight: 1.55, color: 'var(--fg-3)' }}>
-                    {tr('connect.googleStepsDuration')}
-                  </p>
+                      {OAUTH_VERIFICATION_PENDING && (
+                        <div
+                          role="note"
+                          style={{
+                            padding: 14,
+                            background: 'var(--bg-sunken)',
+                            border: '1px solid var(--border-1)',
+                            borderRadius: 8,
+                            fontFamily: 'var(--font-sans)',
+                          }}
+                        >
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', marginBottom: 4 }}>
+                            {tr('connect.googleStepsTitle')}
+                          </div>
+                          <p style={{ margin: '0 0 12px', fontSize: 12.5, lineHeight: 1.55, color: 'var(--fg-2)' }}>
+                            {tr('connect.googleStepsIntro')}
+                          </p>
+
+                          {/* This asset is the icon registered on our Google OAuth
+                              consent screen, so it is the mark the user is about to see
+                              on Google's own page. Shown at badge size next to a line
+                              saying exactly that: it helps the user confirm they are in
+                              the right flow. It is deliberately NOT presented as a
+                              screenshot of Google's screen, which is not what it is. */}
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            marginBottom: 12,
+                            padding: '8px 10px',
+                            background: 'var(--bg-surface)',
+                            border: '1px solid var(--border-1)',
+                            borderRadius: 6,
+                          }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src="/google-consent-logo.png"
+                              alt=""
+                              width={28}
+                              height={28}
+                              style={{ flexShrink: 0, borderRadius: 4 }}
+                            />
+                            <span style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--fg-2)' }}>
+                              {tr('connect.googleConsentAlt')}
+                            </span>
+                          </div>
+
+                          <ol style={{
+                            margin: 0,
+                            paddingLeft: 18,
+                            fontSize: 12.5,
+                            lineHeight: 1.55,
+                            color: 'var(--fg-2)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 6,
+                          }}>
+                            <li>{tr('connect.googleStep1')}</li>
+                            <li>{tr('connect.googleStep2')}</li>
+                            <li>{tr('connect.googleStep3')}</li>
+                          </ol>
+
+                          <p style={{
+                            margin: '12px 0 0',
+                            paddingTop: 12,
+                            borderTop: '1px solid var(--border-1)',
+                            fontSize: 12,
+                            lineHeight: 1.55,
+                            color: 'var(--fg-3)',
+                          }}>
+                            {tr('connect.googleStepsWhy')}
+                          </p>
+                          {/* The old copy claimed access expired "roughly every 7 days".
+                              It does not. Access tokens last an hour and are renewed by
+                              a background job the user never sees; the refresh token
+                              behind them is only invalidated if the user revokes it.
+                              Production bears this out: the oldest Gmail inbox has been
+                              connected and healthy for 82 days, and of 41 Gmail inboxes
+                              the only 3 in an error state were explicit revocations.
+                              The 7-day figure applies to Google projects left in
+                              "Testing" publishing status, which is a different thing
+                              from being unverified. */}
+                          <p style={{ margin: '8px 0 0', fontSize: 12, lineHeight: 1.55, color: 'var(--fg-3)' }}>
+                            {tr('connect.googleStepsDuration')}
+                          </p>
+                        </div>
+                      )}
+
+                      <Btn variant="secondary" onClick={handleGmailOauth}>
+                        {tr('connect.connectWithGoogle')}
+                      </Btn>
+                    </div>
+                  )}
                 </div>
               )}
 
