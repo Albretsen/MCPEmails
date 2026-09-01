@@ -85,6 +85,14 @@
   display: flex;
   align-items: baseline;
   gap: 0.55em;
+  /* The wordmark is the header's only compressible element, and it compresses
+     by ELLIPSIS rather than by wrapping. A flex item's default `min-width:auto`
+     lets it shrink to min-content, which for "MCP Emails" is two lines, and a
+     two-line header steals height from a board whose rows are fractions of
+     whatever the header leaves. Below about 800 logical pixels — an operator's
+     narrow window, never the panel — the view name gives way instead. */
+  min-width: 0;
+  white-space: nowrap;
 }
 .kiosk-wordmark em {
   font-style: normal;
@@ -93,6 +101,9 @@
   color: var(--fg-3);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .kiosk-head-right {
   display: flex;
@@ -103,6 +114,66 @@
   white-space: nowrap;
 }
 .kiosk-clock { font-variant-numeric: tabular-nums; color: var(--fg-1); font-weight: 600; }
+
+/* ---------- The view switch ---------- */
+
+/* The board's one control, and the only interactive element above the fold.
+
+   IT IS SIZED FOR A FINGER AND FOR A GLANCE, which pull in opposite directions
+   on a 960 logical pixel viewport: the strip has to be big enough to hit on a
+   touchscreen without a stylus and small enough that five labels plus a
+   wordmark plus a clock fit on one header line. The compromise is a tall,
+   narrow pill: generous vertical padding (the axis that costs nothing here,
+   because the header row is `auto` and grows into a board that is measured in
+   fractions of the remainder) and tight horizontal padding.
+
+   THE ACTIVE ONE IS FILLED, NOT UNDERLINED. From four metres an underline is a
+   single pixel row and simply is not there. A filled pill is legible as a shape
+   before any of the five words are readable, which is what makes it possible to
+   tell across the room that somebody left the board on Money.
+
+   IT DOES NOT SHRINK. `flex: 0 0 auto` with the wordmark taking the slack, so a
+   long view name pushes the wordmark's subtitle to ellipsis rather than
+   squeezing the tap targets below a finger's width. */
+.kiosk-views {
+  display: flex;
+  align-items: center;
+  gap: clamp(2px, 0.3vw, 5px);
+  flex: 0 0 auto;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-1);
+}
+.kiosk-view {
+  display: inline-block;
+  padding: clamp(3px, 0.7dvh, 8px) clamp(7px, 0.9vw, 15px);
+  border-radius: 999px;
+  font-size: clamp(9px, 1.4dvh, 14px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fg-3);
+  text-decoration: none;
+  white-space: nowrap;
+  /* A wall panel has no pointer, so there is no hover state to design. The
+     transition is for the tap itself, which does have a before and an after. */
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.kiosk-view.is-active {
+  background: color-mix(in srgb, var(--kiosk-accent) 82%, transparent);
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-view { transition: none; }
+}
+
+/* Under an outage the accent-blue active pill is the second most saturated
+   thing on a red screen and reads as a second alarm. Neutralised so the banner
+   keeps the room's attention to itself. */
+.kiosk.is-health-down .kiosk-view.is-active {
+  background: color-mix(in srgb, var(--fg-4) 45%, transparent);
+  color: var(--fg-1);
+}
 
 /* The live dot. Its animation is the only thing on an otherwise static board
    that proves the browser has not silently frozen, which on an unattended
@@ -534,3 +605,79 @@
    it is a tinted frame and nothing else: a shimmer animation on a wall display
    is movement that means nothing. */
 .kiosk-skeleton { background: color-mix(in srgb, var(--bg-surface) 70%, transparent); }
+
+
+/* ---------- Event list (Uptime view) ---------- */
+
+/* The board's only non-numeric panel. Below the fold the same material is a
+   `.kiosk-table` at a fixed 13px, which is right at arm's length and unreadable
+   from the doorway; this is the version sized in `dvh` like everything else
+   above the fold.
+
+   The three columns are name, cause, when. The cause is the one that gives way
+   when the tile is narrow, because an incident's step and its date are what
+   make the row worth reading at all. */
+.kiosk-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.45dvh, 6px);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.kiosk-events li {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: clamp(5px, 0.6vw, 12px);
+  flex: 1;
+  min-height: 0;
+  padding: 0 clamp(6px, 0.7vw, 12px);
+  border-radius: calc(var(--kiosk-radius) * 0.6);
+  background: var(--bg-sunken);
+}
+.kiosk-event-title {
+  font-size: clamp(9px, 1.5dvh, 14px);
+  font-weight: 600;
+  color: var(--fg-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kiosk-event-note {
+  font-size: clamp(8px, 1.2dvh, 11px);
+  color: var(--fg-3);
+  min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kiosk-event-when {
+  font-size: clamp(9px, 1.4dvh, 13px);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+/* An open incident is the one row on this panel that is not history, and it
+   must not be readable as history just because four resolved rows sit above it. */
+.kiosk-events li.is-bad {
+  background: color-mix(in srgb, var(--kiosk-bad) 18%, transparent);
+}
+.kiosk-events li.is-bad .kiosk-event-when { color: var(--kiosk-bad); }
+.kiosk-events li.is-warn {
+  background: color-mix(in srgb, var(--kiosk-warn) 15%, transparent);
+}
+
+/* ---------- The week still being lived ---------- */
+
+/* The current calendar week is always a short bar and always looks like a
+   collapse. The bars themselves are drawn hollow with a dashed cap (see
+   GroupedColumns); this is the label half, which says so in words, because
+   colour and texture alone are exactly the kind of encoding that stops working
+   at four metres. */
+.kiosk-col.is-partial .kiosk-col-label { color: var(--fg-3); }
+.kiosk-col.is-partial .kiosk-col-label i {
+  font-style: normal;
+  opacity: 0.7;
+}
+.kiosk-col.is-partial .kiosk-col-bar b { color: var(--fg-4); }

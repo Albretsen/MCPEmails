@@ -51,6 +51,8 @@ import type {
   GrowthUpgradePressureRow,
   GrowthInboxBandRow,
   GrowthChannelRow,
+  GrowthPeopleCountsRow,
+  GrowthUserSignupDayRow,
 } from '@/lib/analytics/growth-types';
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
 import { internalAccountMatchers } from '@/lib/analytics/internal-accounts';
@@ -417,3 +419,47 @@ export async function fetchAcquisitionChannels(days: number): Promise<GrowthResu
     p_days: clampDays(days),
   });
 }
+
+/**
+ * Signed-up, active and activated USER counts, with the previous period beside
+ * each so a trend needs no second call.
+ *
+ * WINDOW CEILING. `prev_active_users` reads `activity_log` across the window
+ * BEFORE last, so a 28 day window reaches back 56. A pg_cron job deletes
+ * activity_log past 90 days, so the window is clamped at 45 here rather than at
+ * the shared 400: past that the previous-period figure would be computed
+ * against a purged stretch and every trend on the board would read as a
+ * miracle. The clamp is silent because no caller has a reason to ask for more;
+ * if one ever does, it should ask for a different metric.
+ *
+ * The internal list crosses into SQL for the same reason it does in the
+ * retention curve: the RPC returns aggregates, so there is nothing left to
+ * filter on the way back.
+ */
+export async function fetchPeopleCounts(days: number): Promise<GrowthResult<GrowthPeopleCountsRow>> {
+  const internal = internalAccountMatchers();
+  return rpcSingleRow<GrowthPeopleCountsRow>('growth_people_counts', GROWTH_TAGS.daily, {
+    p_days: clampInt(days, 1, PEOPLE_MAX_DAYS),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+/**
+ * Daily external signups, first activations and the all-time running total.
+ *
+ * Not subject to the 90 day `activity_log` purge (both columns come from
+ * `users.created_at` and the durable `onboarding_value_activated_at`), so this
+ * one is allowed the full `MAX_DAYS`.
+ */
+export async function fetchUserSignupDays(days: number): Promise<GrowthResult<GrowthUserSignupDayRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthUserSignupDayRow>('growth_user_signup_days', GROWTH_TAGS.daily, {
+    p_days: clampDays(days),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+/** See fetchPeopleCounts: half the 90 day purge horizon, because it looks back twice. */
+const PEOPLE_MAX_DAYS = 45;

@@ -345,3 +345,53 @@ export type GrowthChannelRow = {
   returned: number;
   paying: number;
 };
+
+/**
+ * PEOPLE, not workspaces. `growth_people_counts(p_days, internal…)`.
+ *
+ * Every other row shape in this file counts workspaces, which was right while
+ * the two were interchangeable and is still very nearly true (324 users own
+ * 325 workspaces). These count humans, because the kiosk headline asks the
+ * human question and a workspace count would start answering it wrongly, with
+ * no visible change, the day somebody creates a second workspace.
+ *
+ * Internal accounts are EXCLUDED here, unlike in `GrowthDailyRow`. There, our
+ * own traffic is real load and belongs in a reliability denominator; here it
+ * is simply not a customer. The dropped count comes back as `internal_users`
+ * rather than vanishing.
+ *
+ * "Active" is a successful call by a workspace the user OWNS: `activity_log`
+ * records a workspace, not the human who made the call, so the owner is the
+ * finest grain honestly available.
+ */
+export type GrowthPeopleCountsRow = {
+  /** External users who have ever signed up. Cumulative, all time. */
+  total_users: number;
+  /** External users who already existed `p_days` ago: the trend denominator. */
+  total_users_prior: number;
+  new_users: number;
+  prev_new_users: number;
+  active_users: number;
+  prev_active_users: number;
+  active_users_7d: number;
+  /** Users who have ever reached a mailbox on any workspace they own. */
+  activated_users: number;
+  internal_users: number;
+};
+
+/**
+ * Daily external signups and activations. `growth_user_signup_days(p_days, …)`.
+ *
+ * Gapless, so a quiet week is a run of zeroes rather than a hole. Unlike every
+ * `activity_log`-derived series, this one is not subject to the 90 day purge:
+ * both columns come from `users.created_at` and the durable
+ * `workspaces.onboarding_value_activated_at`.
+ */
+export type GrowthUserSignupDayRow = {
+  day: string;
+  new_users: number;
+  /** Users whose FIRST mailbox operation, on any workspace, was that day. */
+  activated_users: number;
+  /** Every external user created up to AND INCLUDING that day, not just in the window. */
+  cumulative_users: number;
+};

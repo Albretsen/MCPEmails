@@ -246,9 +246,17 @@ export function KioskHealthTile({
   /** Successes over calls across the board's own 28 day window, as a fraction. */
   baselineRate,
   baselineDays,
+  // Placement is a prop rather than a constant since 2026-09-01, because the
+  // Uptime view leads with this tile in the headline row while every other
+  // view keeps it in the supporting strip. The defaults are the strip, so a
+  // caller that says nothing gets the behaviour that existed before.
+  span = 3,
+  className = 'kiosk-strip',
 }: {
   baselineRate: number | null;
   baselineDays: number;
+  span?: number;
+  className?: string;
 }) {
   const health = useHealth();
   if (!health) return null;
@@ -262,8 +270,8 @@ export function KioskHealthTile({
     <Tile
       label="Live reliability"
       aside={asideFor(health)}
-      span={3}
-      className="kiosk-strip"
+      span={span}
+      className={className}
       tone={toneFor(health.level)}
     >
       <BigNumber

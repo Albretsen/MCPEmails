@@ -251,3 +251,60 @@ function groupByPlan(rows: { sub: SubscriptionFacts; monthly: number }[]) {
 function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
 }
+
+/* --------------------------------------------------------------- valuation */
+
+/**
+ * The default ARR multiple behind the board's valuation figure.
+ *
+ * Four, chosen 2026-09-01 and deliberately a round number rather than a
+ * modelled one. Small bootstrapped B2B SaaS changes hands on the acquisition
+ * marketplaces at roughly three to five times ARR, and at this size the honest
+ * precision of the estimate is "one significant figure": a 4.2x would imply a
+ * confidence that four paying customers cannot support.
+ *
+ * Overridable with `COMPANY_VALUATION_ARR_MULTIPLE` so the number can be moved
+ * without a deploy. See `valuationMultiple()` in kiosk-revenue.ts for the
+ * parsing, which is kept out of this module because reading an environment
+ * variable is the one thing that would stop it being unit testable without a
+ * process.
+ */
+export const DEFAULT_VALUATION_ARR_MULTIPLE = 4;
+
+export type Valuation = {
+  /** ARR times the multiple, minor units. */
+  valuationMinor: number;
+  /** The multiple actually applied, after clamping. */
+  multiple: number;
+  /** The ARR it was derived from, so the tile can show its own working. */
+  arrMinor: number;
+};
+
+/**
+ * ARR times a multiple, and nothing more.
+ *
+ * WHAT THIS IS NOT: a valuation. It is one arithmetic convention applied to one
+ * month of recurring revenue, and the board says so in words beside it, because
+ * a large currency figure on a wall is the single easiest number in this
+ * building to mistake for a fact. It moves the instant MRR moves and it carries
+ * every one of MRR's caveats: comps contribute nothing, yearly plans are shown
+ * at a twelfth per month, and a failing card is still counted until dunning
+ * gives up.
+ *
+ * ZERO ARR GIVES ZERO, not a floor. A business with no recurring revenue is
+ * worth nothing on this convention, and inventing a floor for it would be the
+ * one edit here that turns an arithmetic aid into a flattering lie.
+ *
+ * The multiple is clamped to a sane band so a fat-fingered environment
+ * variable produces an obviously wrong small number rather than a nine figure
+ * headline nobody questions on a Monday morning.
+ */
+export function valuationFromArr(arrMinor: number, multiple: number): Valuation {
+  const safeMultiple = Number.isFinite(multiple) ? Math.min(20, Math.max(0, multiple)) : DEFAULT_VALUATION_ARR_MULTIPLE;
+  const safeArr = Number.isFinite(arrMinor) && arrMinor > 0 ? arrMinor : 0;
+  return {
+    valuationMinor: Math.round(safeArr * safeMultiple),
+    multiple: safeMultiple,
+    arrMinor: safeArr,
+  };
+}

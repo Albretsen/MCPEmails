@@ -3,7 +3,7 @@
 /**
  * The only JavaScript on the kiosk board.
  *
- * It does three things, all of them consequences of the screen being
+ * It does five things, all of them consequences of the screen being
  * unattended for weeks at a time.
  *
  * 1. IT PINS THE THEME. The root layout restores `mcpe-theme` from
@@ -29,7 +29,16 @@
  *    looking at it, and being a day stale while looking perfectly healthy is
  *    the worst failure this screen has.
  *
- * 4. IT RELOADS THE PAGE ONCE A DAY REGARDLESS. A Chromium tab left running
+ * 4. IT WALKS THE BOARD HOME. Since 2026-09-01 the panel has a five-way view
+ *    switch, and a view is a URL. Somebody who walks over, taps Money, reads
+ *    it and walks away has left the wall answering a question nobody in the
+ *    room is asking any more, and there is no one to put it back. Ten minutes
+ *    without a touch and the board returns to the default view on its own.
+ *    Only ever a NAVIGATION HOME, never away from home: on the default view
+ *    this timer does nothing at all, so the resting behaviour of an unattended
+ *    board is exactly what it was before the switch existed.
+ *
+ * 5. IT RELOADS THE PAGE ONCE A DAY REGARDLESS. A Chromium tab left running
  *    for a month accumulates enough to be worth resetting, and it is the
  *    backstop for the deploy check above ever failing quietly. Doing it at a
  *    fixed interval from load, rather than at a wall-clock hour, avoids every
@@ -48,13 +57,36 @@ import { useRouter } from 'next/navigation';
 const REFRESH_MS = 5 * 60 * 1000;
 const HARD_RELOAD_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * How long a non-default view stays up without being touched.
+ *
+ * Ten minutes: long enough to read a board, walk away to check something and
+ * come back, and short enough that the wall is never showing yesterday's
+ * question by the time the next person walks past.
+ */
+const IDLE_HOME_MS = 10 * 60 * 1000;
+
 export function KioskLive({
   generatedAt,
   deployment,
+  view,
+  token,
 }: {
   generatedAt: string;
   /** The build this page was rendered by. See app/api/kiosk/version. */
   deployment: string;
+  /** Which board is on screen. Only used to decide whether to walk home. */
+  view?: string;
+  /**
+   * The `?k=` bootstrap token, when this request carried one.
+   *
+   * Carried into the walk-home URL for the same reason KioskViewSwitch carries
+   * it into the view links: the proxy strips `?k=` the moment the browser
+   * proves it kept the kiosk cookie, so a page that still has the token is by
+   * construction a browser whose cookie is not working, and navigating it to a
+   * bare URL would strand the panel on a 404 nobody is present to dismiss.
+   */
+  token?: string;
 }) {
   const router = useRouter();
   const [now, setNow] = useState<Date | null>(null);
@@ -118,6 +150,41 @@ export function KioskLive({
       clearTimeout(hard);
     };
   }, [router, deployment]);
+
+  // Walks the board home. Deliberately not wired to `router.refresh()`'s tick:
+  // a refresh is not evidence anybody is present, and folding the two together
+  // would either reset the idle clock every five minutes (so the board never
+  // goes home) or make the timing depend on where in the refresh cycle the tap
+  // landed.
+  useEffect(() => {
+    if (!view || view === 'pulse') return;
+
+    let timer: ReturnType<typeof setTimeout>;
+    const home = token
+      ? `/admin/growth/kiosk?k=${encodeURIComponent(token)}`
+      : '/admin/growth/kiosk';
+    const goHome = () => router.push(home);
+    const restart = () => {
+      clearTimeout(timer);
+      timer = setTimeout(goHome, IDLE_HOME_MS);
+    };
+
+    restart();
+    // Pointer events rather than click: on the touchscreen a scroll down to the
+    // supporting detail is somebody reading, and it must count as presence even
+    // though it never becomes a click. Passive, so none of this can delay a
+    // scroll on a Pi 4.
+    const options = { passive: true } as const;
+    window.addEventListener('pointerdown', restart, options);
+    window.addEventListener('touchstart', restart, options);
+    window.addEventListener('scroll', restart, options);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('pointerdown', restart);
+      window.removeEventListener('touchstart', restart);
+      window.removeEventListener('scroll', restart);
+    };
+  }, [router, view, token]);
 
   return (
     <div className="kiosk-head-right">

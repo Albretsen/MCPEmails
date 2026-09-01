@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  DEFAULT_VALUATION_ARR_MULTIPLE,
   monthlyFromInterval,
   netMonthlyMinor,
   summarizeSubscriptions,
+  valuationFromArr,
   NO_DISCOUNT,
   type SubscriptionFacts,
 } from './revenue-math.ts';
@@ -149,4 +151,47 @@ test('plans are ranked by the money in them', () => {
     { label: 'Team monthly', customers: 2, mrrMinor: 15_800 },
     { label: 'Personal yearly', customers: 1, mrrMinor: 359 },
   ]);
+});
+
+
+/* ------------------------------------------------------------- valuation */
+
+test('valuation is ARR times the multiple, and says which multiple it used', () => {
+  // $48 ARR at the default 4x, which is the figure on the wall board today.
+  assert.deepEqual(valuationFromArr(4800, 4), {
+    valuationMinor: 19_200,
+    multiple: 4,
+    arrMinor: 4800,
+  });
+});
+
+test('no recurring revenue is worth nothing, with no floor invented for it', () => {
+  // The one edit that would turn this from an arithmetic aid into a flattering
+  // lie is a minimum. A business with no recurring revenue is worth zero on
+  // this convention and the board must be willing to print that.
+  assert.equal(valuationFromArr(0, 4).valuationMinor, 0);
+  assert.equal(valuationFromArr(-100, 4).valuationMinor, 0);
+});
+
+test('a fat-fingered multiple is clamped rather than believed', () => {
+  // The whole point of the clamp: an environment variable typo must produce an
+  // obviously wrong small number, not a nine-figure headline nobody questions.
+  assert.equal(valuationFromArr(4800, 400).multiple, 20);
+  assert.equal(valuationFromArr(4800, -3).multiple, 0);
+  assert.equal(valuationFromArr(4800, -3).valuationMinor, 0);
+});
+
+test('an unparseable multiple falls back to the default rather than to zero', () => {
+  const result = valuationFromArr(4800, Number.NaN);
+  assert.equal(result.multiple, DEFAULT_VALUATION_ARR_MULTIPLE);
+  assert.equal(result.valuationMinor, 4800 * DEFAULT_VALUATION_ARR_MULTIPLE);
+});
+
+test('a fractional multiple lands on a whole number of minor units', () => {
+  // Minor units are integers everywhere else in this module; a valuation of
+  // 1234.5 cents would format as a rounded figure anyway and then disagree with
+  // itself the moment anything added two of them together.
+  const result = valuationFromArr(4801, 3.5);
+  assert.equal(result.valuationMinor, Math.round(4801 * 3.5));
+  assert.ok(Number.isInteger(result.valuationMinor));
 });
