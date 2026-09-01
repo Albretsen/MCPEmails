@@ -226,7 +226,19 @@ function decodeCharset(bytes: Uint8Array, charset: string): string {
  *   =?UTF-8?B?...?=  or  =?ISO-8859-1?Q?...?=
  */
 export function decodeEncodedWords(input: string): string {
-  return input.replace(
+  // RFC 2047 section 6.2: whitespace SEPARATING two adjacent encoded-words is
+  // not part of the text and must be dropped. Senders rely on this, because an
+  // encoded-word may not exceed 75 octets, so any long non-ASCII subject is
+  // split into several and folded onto continuation lines. Facebook sends
+  //   =?UTF-8?B?Q2hlY2sgb3V0IHRoZSBw?=      "Check out the p"
+  //   =?UTF-8?B?b3N0IFRvcnN0ZWluIFZh?=      "ost Torstein Va"
+  // and joining those with the folding space produced "Check out the p ost
+  // Torstein Va tna ... s hared" on every read. The lookahead (rather than
+  // consuming the opening "=?") is what lets three or more in a row collapse
+  // in a single pass. Whitespace NOT between two encoded-words is real text
+  // and is left alone.
+  const joined = input.replace(/\?=[ \t]*(?:\r?\n)?[ \t]+(?==\?)/g, "?=");
+  return joined.replace(
     /=\?([^?]+)\?([BbQq])\?([^?]*)\?=/g,
     (_, charset: string, enc: string, data: string) => {
       try {
