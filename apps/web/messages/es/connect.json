@@ -75,8 +75,8 @@
     "label": "Consulta la matriz de compatibilidad de proveedores de correo"
   },
   "verificationNote": {
-    "title": "Verificación de Google en curso",
-    "body": "Google todavía está revisando nuestro acceso a Gmail. Hasta que termine, al iniciar sesión verás una pantalla de <b>aplicación no verificada</b>, y Google caduca la conexión cada 7 días aproximadamente, así que tendrás que volver a conectarla. Nada más se ve afectado."
+    "title": "Google muestra una pantalla de aplicación no verificada",
+    "body": "Google revisa las aplicaciones que solicitan acceso a Gmail, y mcpemails.com no ha pasado por esa revisión. Al iniciar sesión verás una pantalla de <b>aplicación no verificada</b>, con los pasos para continuar. La conexión en sí no caduca: una vez conectada, la bandeja sigue conectada hasta que revoques el acceso."
   },
   "hub": {
     "meta": {

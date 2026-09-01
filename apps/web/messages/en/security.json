@@ -94,7 +94,7 @@
   },
   "google": {
     "title": "6. Google and provider verification",
-    "p1": "Gmail access uses Google's restricted scopes, the tier Google scrutinises most closely. We are completing Google's restricted-scope OAuth verification and its annual CASA security assessment, carried out by an independent, Google-approved assessor. Once it is complete, you will no longer see Google's \"unverified app\" warning when you connect.",
+    "p1": "Gmail access uses Google's restricted scopes, the tier Google scrutinises most closely.",
     "p2": "MCPEmails' use and transfer of information received from Google APIs to any other app adheres to the <link>Google API Services User Data Policy</link>, including the Limited Use requirements.",
     "p3": "For Fastmail, iCloud, Yahoo, Zoho, Yandex, and other IMAP providers, you connect with a provider-issued app password that you can revoke at any time, with no broad OAuth scopes for us to over-request."
   },

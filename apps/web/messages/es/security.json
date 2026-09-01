@@ -94,7 +94,7 @@
   },
   "google": {
     "title": "6. Verificación de Google y de proveedores",
-    "p1": "El acceso a Gmail usa los scopes restringidos de Google, el nivel que Google examina con mayor rigor. Estamos completando la verificación de OAuth de scope restringido de Google y su evaluación anual de seguridad CASA, realizada por un evaluador independiente aprobado por Google. Una vez completada, ya no verás la advertencia de \"aplicación no verificada\" de Google al conectarte.",
+    "p1": "El acceso a Gmail usa los scopes restringidos de Google, el nivel que Google examina con mayor rigor.",
     "p2": "El uso y la transferencia por parte de MCPEmails de la información recibida de las API de Google a cualquier otra aplicación se ajustan a la <link>Google API Services User Data Policy</link>, incluidos los requisitos de Limited Use.",
     "p3": "Para Fastmail, iCloud, Yahoo, Zoho, Yandex y otros proveedores de IMAP, te conectas con una contraseña de aplicación emitida por el proveedor que puedes revocar en cualquier momento, sin amplios scopes de OAuth que nosotros podamos sobrepedir."
   },

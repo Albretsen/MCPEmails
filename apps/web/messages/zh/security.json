@@ -94,7 +94,7 @@
   },
   "google": {
     "title": "6. Google 与服务商验证",
-    "p1": "Gmail 访问使用 Google 的受限权限范围，这是 Google 审查最为严格的一级。我们正在完成 Google 的受限范围 OAuth 验证及其年度 CASA 安全评估，该评估由一家独立的、经 Google 批准的评估机构执行。完成之后，你在连接时将不再看到 Google 的“未经验证的应用”警告。",
+    "p1": "Gmail 访问使用 Google 的受限权限范围，这是 Google 审查最为严格的一级。",
     "p2": "MCPEmails 对从 Google APIs 获取的信息的使用和传输给任何其他应用，均遵守 <link>Google API Services User Data Policy</link>，包括其中的 Limited Use 要求。",
     "p3": "对于 Fastmail、iCloud、Yahoo、Zoho、Yandex 及其他 IMAP 服务商，你使用服务商签发的应用密码进行连接，可随时撤销，我们也无需过度请求宽泛的 OAuth 权限范围。"
   },
