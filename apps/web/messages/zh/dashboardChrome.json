@@ -103,7 +103,6 @@
     "mcpCopyTitle": "复制你的 MCP 端点 URL"
   },
   "connect": {
-    "subGmail": "OAuth 2.0",
     "subOutlook": "OAuth 2.0 · Microsoft 365",
     "comingSoon": "即将推出",
     "subFastmail": "应用专用密码",
@@ -147,6 +146,7 @@
     "appPasswordStepsZoho": "Zoho 称之为应用专用密码，位于 Zoho 账户的“安全”中。还需要在 Zoho Mail 设置中开启 IMAP 访问；它默认是关闭的。",
     "appPasswordStepsYandex": "Yandex 称之为应用密码。请先在 Yandex Mail 设置中开启 IMAP 和应用密码，然后在 Yandex ID 的“安全”中为 Mail 创建一个应用密码。它是 16 个小写字母。",
     "appPasswordStepsFastmail": "Fastmail 称之为应用密码。打开 Settings，再打开 Privacy and Security，然后是 App Passwords，创建一个带有邮件访问权限的密码。它是 16 个小写字符。",
+    "appPasswordStepsGmail": "Google 称之为应用专用密码。先开启两步验证，然后打开 myaccount.google.com/apppasswords 创建一个。它是 16 个小写字母，分四组显示。在 Google Workspace 账户上，管理员可以为整个域关闭应用专用密码，此时该页面不可用。",
     "titleLimitReached": "再添加一个收件箱",
     "titleConnectProvider": "连接 {provider}",
     "titleReconnectProvider": "重新连接 {provider}",
@@ -213,7 +213,10 @@
     "googleStep3": "选择“转至 mcpemails.com（不安全）”，然后选择“继续”。",
     "googleStepsWhy": "“不安全”是 Google 对未经其审核的开发者的标准措辞，并非针对本应用的结论。通过 Google 审核需要一份收费的第三方安全评估，我们选择不购买。",
     "googleStepsDuration": "连接完成后，邮箱会保持连接。访问权限会在后台自动续期，只有当你在 Google 账号中撤销授权时才会中断。",
+    "gmailOauthToggle": "更想用 Google 登录？",
+    "gmailOauthBody": "Google 登录仍然可用，也没有任何改动。它会把你带到 Google 的授权页面；由于本应用未通过 Google 验证，该页面会显示一条你必须点击跳过的警告。应用专用密码则全程留在这个窗口里。",
     "hintGeneric": "适用于任何支持 IMAP 和 SMTP 的邮箱。",
+    "hintGmail": "Gmail 需要开启两步验证并生成应用专用密码。你平时的 Google 密码会被拒绝。",
     "hintIcloud": "iCloud 需要开启双重认证并生成 App 专用密码。你的 Apple 账户密码会被拒绝。",
     "hintYahoo": "Yahoo 需要生成的应用密码。你平常的 Yahoo 密码会被拒绝。请先开启两步验证，然后创建应用密码。",
     "hintZoho": "请先在 Zoho 中开启 IMAP 访问：设置 → 邮件账户 → IMAP 访问默认为关闭。若已开启双重认证，还需生成应用专用密码。",

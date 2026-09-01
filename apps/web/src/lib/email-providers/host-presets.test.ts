@@ -95,6 +95,10 @@ test('app-password providers are flagged with somewhere to go', () => {
   }
   assert.equal(prefillFromEmail('someone@yahoo.com')?.requiresAppPassword, true);
   assert.equal(prefillFromEmail('someone@gmx.net')?.requiresAppPassword, false);
+  // Gmail: the generic form has to say the same thing the Gmail card says,
+  // because a Google account password cannot authenticate a mail client no
+  // matter which door the user came through.
+  assert.equal(prefillFromEmail('someone@gmail.com')?.requiresAppPassword, true);
 });
 
 test('every entry is internally consistent', () => {
@@ -112,4 +116,19 @@ test('every entry is internally consistent', () => {
     if (preset.smtpPort === 465) assert.equal(preset.smtpSecurity, 'tls', preset.id);
     if (preset.smtpPort === 587 || preset.smtpPort === 25) assert.equal(preset.smtpSecurity, 'starttls', preset.id);
   }
+});
+
+test('a Google mailbox is recognised from the address or from the host', () => {
+  assert.equal(findMailHostPreset({ email: 'me@gmail.com' })?.id, 'gmail');
+  assert.equal(findMailHostPreset({ email: 'me@googlemail.com' })?.id, 'gmail');
+  // A Google Workspace custom domain says nothing in its address; the mail
+  // host is the only thing that identifies it, and that is the half of the
+  // lookup that exists for exactly this case.
+  assert.equal(findMailHostPreset({ email: 'me@example.com', host: 'imap.gmail.com' })?.id, 'gmail');
+
+  const prefill = prefillFromEmail('me@gmail.com');
+  assert.equal(prefill?.imapHost, 'imap.gmail.com');
+  assert.equal(prefill?.imapPort, 993);
+  assert.equal(prefill?.smtpHost, 'smtp.gmail.com');
+  assert.equal(prefill?.smtpPort, 465);
 });

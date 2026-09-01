@@ -47,7 +47,7 @@ test('an unknown mailbox yields no policy rather than a guess', () => {
 });
 
 test('every app-password policy carries the generator link it promises', () => {
-  for (const provider of ['icloud', 'yahoo', 'yandex', 'zoho', 'fastmail']) {
+  for (const provider of ['gmail', 'icloud', 'yahoo', 'yandex', 'zoho', 'fastmail']) {
     const policy = appPasswordPolicyFor(provider);
     assert.ok(policy, provider);
     assert.match(policy.helpUrl, /^https:\/\//, provider);
@@ -64,6 +64,13 @@ test('a genuine app password passes, in the shape each provider displays it', ()
   // A copy-paste that dragged in a newline and a non-breaking space is still
   // the same credential, and must not be rejected before it is even tried.
   assert.deepEqual(checkAppPasswordShape(icloud, ' abcd efgh ijkl mnop\n'), { ok: true });
+
+  // Google shows four space-separated blocks, and a user who retypes what
+  // they see may put anything between them.
+  const gmail = appPasswordPolicyFor('gmail');
+  assert.deepEqual(checkAppPasswordShape(gmail, 'abcd efgh ijkl mnop'), { ok: true });
+  assert.deepEqual(checkAppPasswordShape(gmail, 'abcdefghijklmnop'), { ok: true });
+  assert.deepEqual(checkAppPasswordShape(gmail, 'abcd-efgh-ijkl-mnop'), { ok: true });
 
   assert.deepEqual(checkAppPasswordShape(appPasswordPolicyFor('yahoo'), 'qwertyuiopasdfgh'), { ok: true });
   assert.deepEqual(checkAppPasswordShape(appPasswordPolicyFor('yandex'), 'qwertyuiopasdfgh'), { ok: true });
