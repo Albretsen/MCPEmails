@@ -63,6 +63,9 @@ export function KioskLive({
   // Rendering a real time on the server would hydrate against a different
   // string a second later and throw a mismatch on every single load.
   useEffect(() => {
+    // Mount-only by design: `now` stays null through SSR and the first client render so the two
+    // agree, per the comment above.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(new Date());
     const tick = setInterval(() => setNow(new Date()), 15_000);
     return () => clearInterval(tick);

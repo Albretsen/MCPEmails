@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'AI 智能体拿到收件箱访问权限后能做的 7 件事',
   description:
     '收件箱接入后，AI 智能体能做的七件实事：整理未读邮件、总结长邮件串、起草回复、翻找附件、追踪跟进，以及分流邮件。',
@@ -81,3 +81,5 @@ export default {
 
 别想着第一天就把七件全搭起来。挑整理那一遍或者每周摘要，把它做到无聊又可靠，再加下一件。[连接一个收件箱](/signup)，让你的智能体把 \`inbox_list\` 当成它的第一步。[文档里的工具参考](/docs)给出了上面每一个调用的确切参数。`,
 };
+
+export default translation;

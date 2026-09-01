@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Gi AI-agenten din en innboks: en praktisk guide til e-post over MCP',
   description:
     'Hvorfor det er vanskeligere enn det ser ut til å koble e-post til AI-agenten din – og hvordan Model Context Protocol gjør Gmail, Outlook og IMAP til ett sikkert endepunkt agenten faktisk kan bruke.',
@@ -73,3 +73,5 @@ Hvis du husker én ting fra dette innlegget, la det være dette: *modellen skal 
 
 Gi agenten din verb, ikke passord — og la den komme i gang.`,
 };
+
+export default translation;

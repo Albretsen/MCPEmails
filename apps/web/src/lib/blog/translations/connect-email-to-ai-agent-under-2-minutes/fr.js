@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Comment connecter votre e-mail à un agent IA en moins de 2 minutes (Gmail, Outlook, iCloud, Fastmail et IMAP)',
   description: 'Connectez votre e-mail à un agent IA en moins de 2 minutes. Configuration pas à pas pour Gmail, Outlook, iCloud, Fastmail et n’importe quelle boîte IMAP via MCP — aucun e-mail n’est jamais stocké.',
   coverAlt: 'Connectez votre e-mail à un agent IA en moins de 2 minutes — Gmail, Outlook, iCloud, Fastmail et IMAP via MCP',
@@ -112,3 +112,5 @@ Ici, la rapidité ne vient pas de raccourcis sur la sécurité. L’e-mail est r
 
 C’est tout : une connexion de boîte de réception, un endpoint, une poignée d’outils. Le forfait Gratuit connecte une boîte, ne coûte rien et ne demande pas de carte ; Personal est à 5 $/mois pour trois boîtes, et Pro connecte toutes celles que vous possédez : consultez les [tarifs](/pricing). Prêt à l’essayer ? [Commencez gratuitement](/signup), connectez votre boîte de réception et collez l’endpoint dans votre agent.`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'best-ways-to-let-claude-manage-your-inbox',
   title: 'The Best Ways to Let Claude Manage Your Inbox in 2026',
   description: 'A frank roundup of the best ways to let Claude manage your inbox in 2026: native integrations, DIY MCP servers, copy-paste, browser extensions, and hosted MCP.',
@@ -88,3 +88,5 @@ One more thing that separates the serious options from the toys: sending. With M
 
 If the hosted route sounds right, you can [connect an inbox and Claude in under two minutes](/blog/connect-email-to-ai-agent-under-2-minutes) or read [the docs](/docs) for the full tool reference. The free plan is enough to try the whole flow — [start free](/signup) and let Claude actually do something with your inbox.`,
 };
+
+export default post;

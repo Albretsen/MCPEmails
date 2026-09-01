@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '7 ting AI-agenten din kan gjøre når den har tilgang til innboksen',
   description:
     'Sju konkrete ting en AI-agent kan gjøre med innbokstilgang: sortere ulest post, oppsummere tråder, skrive utkast til svar, finne vedlegg, følge opp og rute e-post.',
@@ -81,3 +81,5 @@ Når du først treffer en grense, returnerer serveren en feil du kan prøve på 
 
 Ikke prøv å bygge alle sju på dag én. Velg triageringen eller det ukentlige sammendraget, få det kjedelig og pålitelig, og legg så til det neste. [Koble til en innboks](/signup) og la agenten din kjøre \`inbox_list\` som sitt første grep. [Verktøyreferansen i dokumentasjonen](/docs) har de nøyaktige parameterne for hvert kall over.`,
 };
+
+export default translation;

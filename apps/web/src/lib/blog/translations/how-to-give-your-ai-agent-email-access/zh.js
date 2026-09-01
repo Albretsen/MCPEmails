@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '如何让 AI 智能体访问邮箱（2026 完整指南）',
   description:
     '通过 MCP 让你的 AI 智能体读取并发送真实邮箱的邮件——支持 Gmail、Outlook、iCloud、Fastmail 或 IMAP。原理、工具、安全机制与配置一文讲清。',
@@ -118,3 +118,5 @@ Cline、JetBrains、自定义脚本以及裸 cURL 使用带 scope 的 API key。
 
 连接一个邮箱，把端点粘贴进你的智能体，然后调用 \`inbox_list\`。整个上手过程就这么多。[免费开始](/signup) 或浏览一下 [快速上手](/docs#quickstart)——几分钟内你就能让一个智能体读取真实的邮件了。`,
 };
+
+export default translation;

@@ -31,6 +31,8 @@ export function SignupApp({ redirectTo = null }) {
   useEffect(() => {
     if (step !== 'submitting') {
       clearTimeout(loadingTimerRef.current);
+      // Resets the cycling loading message once the form leaves 'submitting'.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingMsg(SIGNUP_LOADING_MESSAGES[0]);
       return;
     }
@@ -45,6 +47,9 @@ export function SignupApp({ redirectTo = null }) {
     }
     cycle();
     return () => clearTimeout(loadingTimerRef.current);
+  // SIGNUP_LOADING_MESSAGES is rebuilt from translations every render, so listing it would
+  // restart the cycle continuously.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   // Preserve a `?redirect=/path` query param (e.g. when arriving from an invite

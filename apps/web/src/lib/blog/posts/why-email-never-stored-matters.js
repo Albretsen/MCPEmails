@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'why-email-never-stored-matters',
   title: "Why 'Email Never Stored' Matters When Connecting AI to Your Inbox",
   description:
@@ -88,3 +88,5 @@ The never-stored model is one piece of a larger decision: how to wire an agent t
 
 You don't have to choose between giving your agent useful inbox access and keeping your mail out of a third party's database. With live-fetch you get both. [Connect an inbox](/signup) and you can revoke it in one click — and there's nothing left behind when you do.`,
 };
+
+export default post;

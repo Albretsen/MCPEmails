@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Slik gir du AI-agenten din tilgang til e-post (den komplette 2026-guiden)',
   description:
     'Gi AI-agenten din lese- og sendetilgang til en ekte innboks over MCP — Gmail, Outlook, iCloud, Fastmail eller IMAP. Slik fungerer det: verktøyene, sikkerheten og oppsettet.',
@@ -118,3 +118,5 @@ Full oversikt på [prissiden](/pricing).
 
 Koble til en innboks, lim endepunktet inn i agenten din, og kall \`inbox_list\`. Det er hele onboardingen. [Start gratis](/signup) eller skum gjennom [hurtigstarten](/docs#quickstart) — du vil ha en agent som leser ekte e-post på et par minutter.`,
 };
+
+export default translation;

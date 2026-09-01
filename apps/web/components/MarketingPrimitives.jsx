@@ -59,7 +59,7 @@ export function ThemeToggle() {
   });
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    try { localStorage.setItem("mcpe-theme", theme); } catch(e) {}
+    try { localStorage.setItem("mcpe-theme", theme); } catch {}
   }, [theme]);
   return (
     <button className="theme-toggle" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} title="Toggle theme">
@@ -74,6 +74,6 @@ if (typeof window !== 'undefined') {
     try {
       const t = localStorage.getItem("mcpe-theme");
       if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
-    } catch(e) {}
+    } catch {}
   })();
 }

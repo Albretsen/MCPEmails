@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '为什么把 AI 接入收件箱时，“邮件从不存储”很重要',
   description:
     '“邮件从不存储”意味着 MCP Emails 实时拉取你的邮件后立即丢弃，只保留一个加密令牌。看看它为何胜过那些复制你整个收件箱的工具。',
@@ -81,3 +81,5 @@ agent  ←  parsed result  ←  Edge Function
 
 你不必在“给智能体有用的收件箱访问权限”和“把邮件挡在第三方数据库之外”之间二选一。有了实时获取，两者兼得。[连接一个收件箱](/signup)，你可以一键撤销它——而且撤销之后，什么都不会留下。`,
 };
+
+export default translation;

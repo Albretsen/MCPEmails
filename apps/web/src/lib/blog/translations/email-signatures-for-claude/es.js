@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Firmas de correo para Claude: se añaden solas, siempre',
   description:
     'Configura tu firma una vez por bandeja y Claude la añade sola a cada correo que envía, en Gmail, Outlook, Fastmail, iCloud y cualquier cuenta IMAP.',
@@ -74,3 +74,5 @@ Configura tu firma una vez, por bandeja, y cada correo que Claude envíe desde e
 
 [Abre tu panel](/dashboard) para configurar una firma, o simplemente dile a Claude cuál debería ser la tuya. ¿Aún no te has conectado? [Empieza gratis](/signup) y conecta una bandeja en unos dos minutos.`,
 };
+
+export default translation;

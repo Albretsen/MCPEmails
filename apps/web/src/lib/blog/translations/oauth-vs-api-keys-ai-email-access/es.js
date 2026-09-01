@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'OAuth o claves de API para el acceso de la IA al email: ¿cuál usar?',
   description: 'OAuth o claves de API para el acceso de la IA al email: usa OAuth en claude.ai, Claude Desktop y Cursor; usa una clave de API con alcance en Cline, JetBrains y scripts.',
   coverAlt: 'OAuth frente a claves de API para conectar agentes de IA al email — MCPEmails',
@@ -84,3 +84,5 @@ OAuth y las claves de API no son un ranking de seguridad. Son una cuestión de e
 
 ¿Listo para conectar una? Enlazar una bandeja y un cliente lleva unos [dos minutos de principio a fin](/blog/connect-email-to-ai-agent-under-2-minutes), o puedes leer la [documentación](/docs) completa y [empezar gratis](/signup).`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'connect-claude-to-email',
   title: 'Connect Claude to Your Email with MCP (Gmail, iCloud & IMAP)',
   description:
@@ -128,3 +128,5 @@ No. Messages are read live from your provider and discarded. MCP Emails stores o
 
 [Start free](/signup), connect your inbox, add \`https://mcpemails.com/api/mcp\` to Claude, and ask it to summarize your unread email. For the complete MCP tool reference and provider capabilities, visit the [documentation](/docs).`,
 };
+
+export default post;

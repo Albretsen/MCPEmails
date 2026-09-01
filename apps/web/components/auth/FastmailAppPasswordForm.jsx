@@ -49,6 +49,8 @@ export function FastmailAppPasswordForm() {
       setStatus('success');
       // Small delay so the success state is briefly visible before redirect.
       setTimeout(() => {
+        // Full reload on purpose: the inbox was created server-side, so the dashboard must re-fetch rather than reuse the current client state.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = '/dashboard?connected=fastmail';
       }, 800);
     } catch {

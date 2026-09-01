@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Er det trygt å gi en AI-agent tilgang til e-posten din? Dette bør du vite',
   description: 'Er det trygt å gi en AI-agent e-posttilgang? Det ærlige svaret: det kommer an på arkitekturen. Her er de reelle risikoene og sjekklisten som gjør det trygt.',
   coverAlt: 'Er det trygt å gi en AI-agent e-posttilgang — risikoer og sikkerhetstiltak forklart — MCP Emails',
@@ -63,3 +63,5 @@ Ja, med arkitekturen beskrevet ovenfor og et oppsett som respekterer nedslagsfel
 
 Vil du se modellen på nært hold, legger [dokumentasjonen](/docs) frem sikkerhetsdesignet og de eksakte tilgangene, og du kan [komme i gang gratis](/signup) og gi kun lesetilgang til én enkelt innboks for å teste vannet før du forplikter deg til noe mer.`,
 };
+
+export default translation;

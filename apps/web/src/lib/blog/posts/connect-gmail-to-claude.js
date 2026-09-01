@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'connect-gmail-to-claude',
   title: 'How to Connect Gmail to Claude (in 2 Minutes, No Code)',
   description:
@@ -110,3 +110,5 @@ That's the whole thing: one Google sign-in, one endpoint URL, and Claude can rea
 
 Ready? [Connect your Gmail free](/signup), paste the endpoint into Claude, and ask it to summarize your unread mail.`,
 };
+
+export default post;

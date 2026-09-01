@@ -57,7 +57,6 @@ import {
   useState,
 } from 'react';
 import { useTranslations } from 'next-intl';
-import { Btn } from '../Primitives';
 import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
 
 const IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp';

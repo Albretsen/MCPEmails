@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'is-it-safe-to-give-ai-agent-email-access',
   title: 'Is It Safe to Give an AI Agent Access to Your Email? What to Know',
   description: 'Is it safe to give an AI agent email access? The honest answer: it depends on the architecture. Here are the real risks and the checklist that makes it safe.',
@@ -70,3 +70,5 @@ Yes, with the architecture described above and a setup that respects your blast 
 
 If you want to see the model up close, the [docs](/docs) lay out the security design and the exact scopes, and you can [start free](/signup) and grant read-only to a single inbox to test the waters before you commit anything more.`,
 };
+
+export default post;

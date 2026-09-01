@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP',
   description: 'Crea un autorrespondedor de correo con un agente de IA conectado por MCP: sondea el correo sin leer, redacta y responde con seguridad usando scopes, límites y guardarraíles.',
   coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP — MCPEmails',
@@ -152,3 +152,5 @@ Ese es un sistema en el que de verdad puedes confiar, y se generaliza. El mismo 
 
 ¿Listo para construirlo? Crea una API key acotada y lee la referencia de herramientas en [la documentación](/docs), o [empieza gratis](/signup): Gratis conecta una bandeja, Personal (5 $/mes) conecta hasta tres y Pro conecta todas las que tengas, así que configura primero los guardarraíles antes de automatizar.`,
 };
+
+export default translation;

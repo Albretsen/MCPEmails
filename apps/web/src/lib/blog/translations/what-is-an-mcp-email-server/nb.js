@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Hva er en MCP-e-postserver? En forklaring i klartekst',
   description:
     'En MCP-e-postserver lar en AI-agent lese og sende e-post via rene verb i stedet for rå IMAP og passord. Her er hva det egentlig betyr.',
@@ -78,3 +78,5 @@ En MCP-e-postserver gjør innboksen din om til et sett med trygge, navngitte han
 
 Vil du prøve det? [Start gratis](/signup) — alle planer er ubegrensede, ingen kort kreves — eller les [dokumentasjonen](/docs) for verktøyreferansen og endepunkt-URL-en.`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Slik kobler du e-posten til en AI-agent på under 2 minutter (Gmail, Outlook, iCloud, Fastmail og IMAP)',
   description: 'Koble e-posten til en AI-agent på under 2 minutter. Steg-for-steg-oppsett for Gmail, Outlook, iCloud, Fastmail og hvilken som helst IMAP-innboks over MCP — uten at e-post lagres.',
   coverAlt: 'Koble e-posten til en AI-agent på under 2 minutter — Gmail, Outlook, iCloud, Fastmail og IMAP over MCP',
@@ -112,3 +112,5 @@ Farten her kommer ikke av å ta snarveier på sikkerhet. E-post hentes live ved 
 
 Det er hele greia: én innbokskobling, ett endepunkt, en håndfull verktøy. Gratisnivået kobler til én innboks, koster ingenting og krever ikke kort; Personal koster $5 per måned for opptil tre innbokser, og Pro kobler til alle postkassene du eier. Se [priser](/pricing). Klar til å prøve? [Start gratis](/signup), koble til innboksen din, og lim endepunktet inn i agenten din.`,
 };
+
+export default translation;

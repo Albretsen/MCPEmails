@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Connecter Outlook et Microsoft 365 à votre agent IA via MCP',
   description:
     'Connectez Outlook ou Microsoft 365 à votre agent IA via MCP en quelques minutes. OAuth de connexion Microsoft, Graph en coulisses, lire/chercher/envoyer/répondre — sans serveur sur mesure.',
@@ -91,3 +91,5 @@ Les serveurs MCP Outlook auto-hébergés qui circulent sur GitHub se heurtent to
 
 Connecter Outlook ne coûte rien à essayer — le [plan Gratuit](/pricing) connecte une boîte avec 60 requêtes par minute, sans carte requise. Ajoutez votre boîte Microsoft 365, pointez Claude vers l'endpoint, et donnez-lui quelque chose à lire.`,
 };
+
+export default translation;

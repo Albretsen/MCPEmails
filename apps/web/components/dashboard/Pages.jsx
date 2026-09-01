@@ -1748,6 +1748,8 @@ function SignatureEditor({ inbox, onSave, t }) {
   // before the first edit — TipTap's onChange only fires on subsequent updates,
   // not the initial content load.
   useEffect(() => {
+    // Re-seeds the signature controls when a different inbox is opened.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnabled(inbox.signatureEnabled ?? true);
     setReplyMode(inbox.signatureReplyMode ?? 'first_only');
     setReviewMode(resolveReviewMode(inbox));
@@ -1886,6 +1888,15 @@ function SignatureEditor({ inbox, onSave, t }) {
   );
 }
 
+/* A label/value line in the inbox detail modal. Declared at module scope, not
+   inside InboxDetailModal, so it keeps its identity between renders. */
+const InboxDetailRow = ({ label, children }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, padding: '10px 0', borderBottom: '1px solid var(--border-1)' }}>
+    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', flexShrink: 0 }}>{label}</span>
+    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, color: 'var(--fg-1)', textAlign: 'right' }}>{children}</span>
+  </div>
+);
+
 function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
@@ -1908,13 +1919,6 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
     inbox.status === 'error'   ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
     inbox.status === 'revoked' ? <Badge tone="amber"   dot="amber">{statusLabel}</Badge> :
     <Badge tone="neutral">{statusLabel}</Badge>;
-
-  const Row = ({ label, children }) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, padding: '10px 0', borderBottom: '1px solid var(--border-1)' }}>
-      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', flexShrink: 0 }}>{label}</span>
-      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13.5, color: 'var(--fg-1)', textAlign: 'right' }}>{children}</span>
-    </div>
-  );
 
   return (
     <div className="scrim" onClick={onClose}>
@@ -1947,15 +1951,15 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
 
         <div className="modal-body inbox-detail-body">
           <div className="inbox-detail-summary">
-            <Row label={t('inboxes.detail.connectionStatus')}>{statusBadge}</Row>
-            <Row label={t('inboxes.colProvider')}>{PROVIDER_LABELS[inbox.provider] ?? inbox.provider}</Row>
-            <Row label={t('inboxes.detail.authMethod')}>
+            <InboxDetailRow label={t('inboxes.detail.connectionStatus')}>{statusBadge}</InboxDetailRow>
+            <InboxDetailRow label={t('inboxes.colProvider')}>{PROVIDER_LABELS[inbox.provider] ?? inbox.provider}</InboxDetailRow>
+            <InboxDetailRow label={t('inboxes.detail.authMethod')}>
               {usesOauth ? t('inboxes.detail.authOauth') : t('inboxes.detail.authAppPassword')}
-            </Row>
-            <Row label={t('inboxes.detail.connectedOn')}>{formatDate(inbox.createdAt)}</Row>
-            <Row label={t('inboxes.detail.lastCall')}>
+            </InboxDetailRow>
+            <InboxDetailRow label={t('inboxes.detail.connectedOn')}>{formatDate(inbox.createdAt)}</InboxDetailRow>
+            <InboxDetailRow label={t('inboxes.detail.lastCall')}>
               {inbox.lastCallAt ? formatLastUsed(inbox.lastCallAt, t) : t('inboxes.detail.lastCallNone', { days: historyDays })}
-            </Row>
+            </InboxDetailRow>
           </div>
 
           {/* Surface the most recent error prominently so a broken connection
@@ -3179,6 +3183,8 @@ function BulkRunsPanel() {
   };
 
   useEffect(() => {
+    // Initial load plus a 5s poll; the fetch it runs necessarily sets state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     const id = window.setInterval(load, 5000);
     return () => window.clearInterval(id);
@@ -3924,6 +3930,8 @@ function DeleteAccountSection({ email }) {
         return;
       }
       // Server signed us out. Redirect to homepage.
+      // Full reload on purpose: the server destroyed the session, so the client must drop all cached auth state.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = '/';
     } catch {
       setError(t('settings.deleteAccount.networkError'));
@@ -4071,7 +4079,6 @@ function DeleteAccountSection({ email }) {
                   placeholder={email}
                   style={{ width: '100%', boxSizing: 'border-box' }}
                   disabled={deleting}
-                  // eslint-disable-next-line jsx-a11y/no-autofocus
                   autoFocus
                 />
               </div>
@@ -4486,6 +4493,8 @@ function BillingSection({
     // from a Personal customer's inbox-cap prompt is the intended path, and it
     // used to be discarded in silence onto a page with no cards at all.
     if (!upgradablePlans.some(plan => plan.id === upgradeIntent.planId)) return;
+    // Applies the already-validated upgrade intent once, as described above.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInterval(upgradeIntent.interval);
     handleUpgrade(upgradeIntent.planId, upgradeIntent.interval);
   // Intent is parsed and validated by DashboardApp. This effect must run once.
@@ -5233,6 +5242,8 @@ function WorkspaceSection({ workspace, onWorkspaceUpdate }) {
   // Re-sync when the active workspace changes (workspace switch or external update).
   useEffect(() => {
     const n = currentName();
+    // Re-syncs the form when the active workspace changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setName(n);
     setSavedName(n);
   }, [workspace?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -5394,6 +5405,8 @@ function DeleteWorkspaceSection({ workspace, isOwner, isOnlyWorkspace }) {
         return;
       }
       // Workspace gone. Reload the dashboard; the server picks a new active ws.
+      // Full reload on purpose: the workspace was deleted, so the server has to choose a new active one.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign('/dashboard');
     } catch {
       setError(t('settings.deleteWorkspace.networkError'));
@@ -5538,7 +5551,6 @@ function DeleteWorkspaceSection({ workspace, isOwner, isOnlyWorkspace }) {
                   placeholder={wsName}
                   style={{ width: '100%', boxSizing: 'border-box' }}
                   disabled={deleting}
-                  // eslint-disable-next-line jsx-a11y/no-autofocus
                   autoFocus
                 />
               </div>
@@ -5738,6 +5750,8 @@ function ActiveSessionsSection() {
   };
 
   // Load on mount
+  // Loads the session list on mount; the fetch sets state.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadSessions(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const otherSessionCount = sessions
@@ -6002,6 +6016,9 @@ function AuditTable({ entries }) {
   // Render timestamps client-only: a stable placeholder during SSR/first paint,
   // then the real local-time value after mount.
   const [mounted, setMounted] = useState(false);
+  // The mounted flag is what keeps local-time timestamps out of the server render, per the
+  // comment above.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
   if (entries.length === 0) {
     return (

@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'ai-agent-triage-summarize-inbox',
   title: 'How to Get Your AI Agent to Triage and Summarize Your Inbox',
   description:
@@ -109,3 +109,5 @@ If triage is the first workflow you're trying, it's a good one to start with —
 
 Connect an inbox, paste Prompt 1, and watch your agent thin out a 40-message backlog in under a minute. It's [free to start](/signup), no card required, and you can revoke access from the dashboard in one click. The [tool reference in the docs](/docs) has every parameter if you want to wire the loop into a script instead of a chat.`,
 };
+
+export default post;

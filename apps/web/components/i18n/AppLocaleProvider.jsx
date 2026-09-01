@@ -93,6 +93,9 @@ export default function AppLocaleProvider({ children }) {
   const [locale, setLocaleState] = useState(routing.defaultLocale);
 
   useEffect(() => {
+    // Resolves the real locale after the first paint, which had to match the server's default
+    // locale.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocaleState(readStored() ?? detectBrowserLocale());
   }, []);
 

@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '在 Cursor、Cline 和 VS Code 中为 AI 智能体配置邮箱访问',
   description: '让 Cursor、Cline 和 VS Code 里的编码智能体访问邮箱。Cursor 用 OAuth；Cline 和自定义客户端通过 MCP 用带权限范围的 API 密钥。完整设置教程。',
   coverAlt: '通过 MCP 为 Cursor、Cline 和 VS Code 中的 AI 编码智能体配置邮箱访问',
@@ -114,3 +114,5 @@ Cursor 让你用一个 URL 和一次登录就连上。其余一切都需要一�
 
 [免费开始](/signup)并连接你的第一个收件箱，或者阅读[文档](/docs)获取完整的工具参考。`,
 };
+
+export default translation;

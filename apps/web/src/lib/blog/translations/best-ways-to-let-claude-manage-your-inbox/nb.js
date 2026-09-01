@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'De beste måtene å la Claude styre innboksen din på i 2026',
   description: 'En ærlig gjennomgang av de beste måtene å la Claude styre innboksen din på i 2026: native integrasjoner, egne MCP-servere, kopier-og-lim-inn, nettleserutvidelser og hostet MCP.',
   coverAlt: 'De beste måtene å la Claude styre innboksen din på i 2026 — MCPEmails',
@@ -81,3 +81,5 @@ En siste ting som skiller de seriøse alternativene fra lekene: sending. Med MCP
 
 Hvis den hostede ruten høres riktig ut, kan du [koble til en innboks og Claude på under to minutter](/blog/connect-email-to-ai-agent-under-2-minutes) eller lese [dokumentasjonen](/docs) for den fulle verktøyreferansen. Gratisplanen er nok til å prøve hele flyten — [start gratis](/signup) og la Claude faktisk gjøre noe med innboksen din.`,
 };
+
+export default translation;

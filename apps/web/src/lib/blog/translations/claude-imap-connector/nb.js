@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Claude IMAP-kobling: Koble en hvilken som helst IMAP-innboks til Claude',
   description:
     'Sett opp en Claude IMAP-kobling med IMAP/SMTP, app-passord og TLS. Få sikkerhetsråd, forstå begrensninger og løs vanlige tilkoblingsfeil.',
@@ -120,3 +120,5 @@ En Claude IMAP-kobling er en IMAP-/SMTP-postkassetilkobling som presenteres for 
 
 Klar til å prøve? [Koble til en IMAP-innboks](/signup), eller bruk den [leverandørspesifikke oppsettsveiledningen](/blog/connect-icloud-fastmail-imap-to-claude) for detaljer om iCloud og Fastmail.`,
 };
+
+export default translation;

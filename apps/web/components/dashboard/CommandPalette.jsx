@@ -90,6 +90,8 @@ export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [
   // Reset query + selection and focus the input each time the palette opens.
   useEffect(() => {
     if (open) {
+      // Resets the palette each time it opens.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery('');
       setActive(0);
       const id = requestAnimationFrame(() => inputRef.current?.focus());
@@ -99,6 +101,8 @@ export function CommandPalette({ open, onClose, setRoute, onConnect, inboxes = [
 
   // Clamp the active index whenever the result set shrinks.
   useEffect(() => {
+    // Clamps the highlighted row when the result set shrinks.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActive(a => (flat.length === 0 ? 0 : Math.min(a, flat.length - 1)));
   }, [flat.length]);
 

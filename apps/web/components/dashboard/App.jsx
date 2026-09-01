@@ -265,6 +265,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       });
       const label = connectedParam.charAt(0).toUpperCase() + connectedParam.slice(1);
       toast({ message: tr('app.connectedSuccess', { provider: label }), variant: 'success' });
+      // Routes once off the ?connected= param the OAuth callback redirects back with.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRouteState(returnedOnboardingClient ? 'overview' : 'inboxes');
     } else if (errorParam === 'inbox_limit_reached') {
       // The provider OAuth callbacks redirect here carrying the error code and
@@ -768,6 +770,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     const res = await fetch(`/api/workspaces/${workspace.id}/leave`, { method: 'POST' });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error ?? tr('app.workspaceLeaveFailed'));
+    // Full reload on purpose: we just left the workspace, so every server component must re-render against the new active workspace.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = '/dashboard';
   };
 

@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Dale una bandeja de entrada a tu agente de IA: guía práctica del correo sobre MCP',
   description:
     'Por qué conectar el correo a tu agente de IA es más difícil de lo que parece, y cómo el Model Context Protocol convierte Gmail, Outlook e IMAP en un único endpoint seguro que tu agente puede usar de verdad.',
@@ -73,3 +73,5 @@ Conectar una bandeja de entrada debería llevar minutos, no una tarde depurando 
 
 Dale a tu agente verbos, no contraseñas, y deja que se ponga a trabajar.`,
 };
+
+export default translation;

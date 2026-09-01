@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Por qué importa que «el correo nunca se almacene» al conectar la IA a tu bandeja',
   description:
     'Que el correo nunca se almacene significa que MCP Emails obtiene tu correo en vivo y lo descarta, guardando solo un token cifrado. Mira por qué supera a las herramientas que copian toda tu bandeja.',
@@ -81,3 +81,5 @@ El modelo de nunca almacenar es una pieza de una decisión más grande: cómo co
 
 No tienes que elegir entre darle a tu agente un acceso útil a la bandeja y mantener tu correo fuera de la base de datos de un tercero. Con la obtención en vivo consigues ambas cosas. [Conecta una bandeja](/signup) y podrás revocarla con un solo clic, y no queda nada atrás cuando lo haces.`,
 };
+
+export default translation;

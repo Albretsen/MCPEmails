@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Connecteur IMAP Claude : connectez n’importe quelle boîte IMAP à Claude',
   description:
     'Configurez un connecteur IMAP Claude avec les réglages IMAP/SMTP, un mot de passe d’application et TLS, plus sécurité, limites et dépannage.',
@@ -120,3 +120,5 @@ Un connecteur IMAP Claude est une connexion à une boîte IMAP/SMTP présentée 
 
 Prêt à essayer ? [Connectez une boîte IMAP](/signup), ou utilisez le [guide de configuration propre au fournisseur](/blog/connect-icloud-fastmail-imap-to-claude) pour les détails concernant iCloud et Fastmail.`,
 };
+
+export default translation;

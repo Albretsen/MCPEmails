@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Koble Outlook og Microsoft 365 til AI-agenten din via MCP',
   description:
     'Koble Outlook eller Microsoft 365 til AI-agenten din over MCP på minutter. Microsoft-pålogging med OAuth, Graph under panseret, les/søk/send/svar — uten egen server.',
@@ -91,3 +91,5 @@ De selvhostede Outlook MCP-serverne som svever rundt på GitHub treffer alle den
 
 Å koble til Outlook koster ingenting å prøve — [gratisplanen](/pricing) kobler til én innboks med 60 forespørsler per minutt, uten kort. Legg til Microsoft 365-postkassen din, pek Claude mot endepunktet, og gi den noe å lese.`,
 };
+
+export default translation;

@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '7 cosas que tu agente de IA puede hacer en cuanto tiene acceso a la bandeja de entrada',
   description:
     'Siete cosas concretas que un agente de IA puede hacer con acceso a tu bandeja: clasificar correo sin leer, resumir hilos, redactar respuestas, encontrar adjuntos y hacer seguimientos.',
@@ -81,3 +81,5 @@ Cuando llegues a un límite, el servidor devuelve un error reintentable con \`da
 
 No intentes construir las siete el primer día. Elige la pasada de clasificación o el resumen semanal, déjalo aburrido y fiable, y luego añade el siguiente. [Conecta una bandeja](/signup) y haz que tu agente ejecute \`inbox_list\` como primer movimiento. La [referencia de herramientas en la documentación](/docs) tiene los parámetros exactos para cada llamada de arriba.`,
 };
+
+export default translation;

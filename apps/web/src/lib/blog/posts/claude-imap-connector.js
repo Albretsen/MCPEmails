@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'claude-imap-connector',
   title: 'Claude IMAP Connector: Connect Any IMAP Inbox to Claude',
   description:
@@ -127,3 +127,5 @@ A Claude IMAP connector is an IMAP/SMTP mailbox connection presented to Claude a
 
 Ready to try it? [Connect an IMAP inbox](/signup), or use the [provider-specific setup guide](/blog/connect-icloud-fastmail-imap-to-claude) for iCloud and Fastmail details.`,
 };
+
+export default post;

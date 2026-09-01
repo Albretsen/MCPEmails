@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '通过 MCP 将 Outlook 和 Microsoft 365 连接到你的 AI 智能体',
   description:
     '几分钟内通过 MCP 将 Outlook 或 Microsoft 365 连接到你的 AI 智能体。Microsoft 登录 OAuth，底层用 Graph，读取／搜索／发送／回复——无需自建服务器。',
@@ -91,3 +91,5 @@ GitHub 上流传的那些自托管 Outlook MCP 服务器全都撞上同一堵墙
 
 连接 Outlook 试用起来不花一分钱——[免费方案](/pricing)可连接一个邮箱，限速为每分钟 60 个请求，无需绑卡。添加你的 Microsoft 365 邮箱，把 Claude 指向那个端点，然后给它点东西去读吧。`,
 };
+
+export default translation;

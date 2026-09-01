@@ -8,7 +8,7 @@ import '../../../styles/theme.css';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }) {
-  const { token } = await params;
+  await params;
   // Don't expose workspace name in the title before the user has been verified.
   return {
     title: 'Accept invite · MCP Emails',

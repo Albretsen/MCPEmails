@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'oauth-vs-api-keys-ai-email-access',
   title: 'OAuth vs. API Keys for AI Email Access: Which Should You Use?',
   description: 'OAuth vs. API keys for AI email access: use OAuth for claude.ai, Claude Desktop, and Cursor; use a scoped API key for Cline, JetBrains, and scripts.',
@@ -91,3 +91,5 @@ OAuth and API keys aren't a security ranking. They're a match to your client. OA
 
 Ready to wire one up? Connecting an inbox and a client takes about [two minutes end to end](/blog/connect-email-to-ai-agent-under-2-minutes), or you can read the full [docs](/docs) and [start free](/signup).`,
 };
+
+export default post;

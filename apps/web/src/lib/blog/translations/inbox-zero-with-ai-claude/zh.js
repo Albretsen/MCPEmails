@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: '如何用 AI 实现收件箱清零（用 Claude 处理你真实的收件箱）',
   description:
     '用 AI 实现收件箱清零：让 Claude 通过 MCP 在你真实的 Gmail 或 IMAP 收件箱上完成分类、归档、贴标签和撰写回复草稿。一套可重复的流程、具体的提示词，以及为什么不会存储任何内容。',
@@ -67,3 +67,5 @@ Claude 会列出并读取你的未读邮件，给你一份分好类的概览，�
 
 [免费连接你的收件箱](/signup)，然后让 Claude 分类你的未读邮件。收件箱清零，靠监督，而不是靠硬扛。`,
 };
+
+export default translation;

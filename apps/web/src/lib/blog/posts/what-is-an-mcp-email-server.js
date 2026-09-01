@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'what-is-an-mcp-email-server',
   title: 'What Is an MCP Email Server? A Plain-English Explanation',
   description:
@@ -85,3 +85,5 @@ An MCP email server turns your inbox into a set of safe, named actions an AI age
 
 Want to try it? [Start free](/signup) — no card required, one connected inbox — or read [the docs](/docs) for the tool reference and endpoint URL.`,
 };
+
+export default post;

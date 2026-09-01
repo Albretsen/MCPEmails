@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Conecta Claude a tu correo con MCP (Gmail, iCloud e IMAP)',
   description:
     'Una guía práctica para conectar Claude a Gmail, iCloud, Fastmail, Yahoo, Zoho y cualquier buzón IMAP mediante MCP, sin código y sin almacenar correo.',
@@ -121,3 +121,5 @@ No. Los mensajes se leen en tiempo real de tu proveedor y se descartan. MCP Emai
 
 [Empieza gratis](/signup), conecta el buzón, añade \`https://mcpemails.com/api/mcp\` a Claude y pídele que resuma tu correo no leído. Consulta la [documentación](/docs) para ver la referencia completa de herramientas MCP y capacidades por proveedor.`,
 };
+
+export default translation;

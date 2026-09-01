@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Hostet vs. selvhostet Gmail MCP-server: fordeler, ulemper og kostnader',
   description:
     'Hostet vs. selvhostet Gmail MCP-server, ærlig sammenlignet: gratis gjør-det-selv-repoer gir full kontroll, men du eier OAuth, kryptering og oppetid. En hostet server tar minutter.',
@@ -91,3 +91,5 @@ Velg **hostet** hvis du vil ha et fungerende endepunkt i dag, du heller ikke vil
 
 Hvis du fremdeles vurderer hvordan en agent i det hele tatt bør nå innboksen din, sammenligner [de beste måtene å la Claude håndtere innboksen din på](/blog/best-ways-to-let-claude-manage-your-inbox) de bredere alternativene. Når du er klar, [start gratis](/signup) eller skum [dokumentasjonen](/docs) — å koble til en Gmail-innboks tar faktisk omtrent ett minutt.`,
 };
+
+export default translation;

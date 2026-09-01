@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Cómo conectar Outlook y Microsoft 365 a tu agente de IA con MCP',
   description:
     'Conecta Outlook o Microsoft 365 a tu agente de IA por MCP en minutos. OAuth de Microsoft, Graph por debajo, leer/buscar/enviar/responder — sin servidor propio.',
@@ -91,3 +91,5 @@ Los servidores MCP de Outlook autoalojados que circulan por GitHub chocan todos 
 
 Conectar Outlook no cuesta nada probarlo: el [plan Gratis](/pricing) conecta una bandeja con 60 solicitudes por minuto, sin tarjeta. Añade tu buzón de Microsoft 365, apunta Claude al endpoint y dale algo que leer.`,
 };
+
+export default translation;

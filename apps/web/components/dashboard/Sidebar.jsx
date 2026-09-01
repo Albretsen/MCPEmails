@@ -66,6 +66,8 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ workspaceId: id }),
       });
+      // Full reload on purpose: the active-workspace cookie changed, and server components only see it on a new document request.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign('/dashboard');
     } catch {
       setSwitching(false);

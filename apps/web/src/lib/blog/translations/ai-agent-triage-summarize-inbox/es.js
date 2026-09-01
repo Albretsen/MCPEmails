@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Cómo hacer que tu agente de IA clasifique y resuma tu bandeja de entrada',
   description:
     'Guía práctica para clasificar la bandeja de entrada con un agente de IA: prompts listos para copiar que listan el correo no leído, leen lo importante, resumen y priorizan, y consultan según un horario.',
@@ -102,3 +102,5 @@ Si la clasificación es el primer flujo de trabajo que vas a probar, es un buen 
 
 Conecta una bandeja, pega el Prompt 1 y mira cómo tu agente adelgaza un atasco de 40 mensajes en menos de un minuto. Es [gratis para empezar](/signup), sin tarjeta, y puedes revocar el acceso desde el panel con un solo clic. La [referencia de herramientas en la documentación](/docs) tiene todos los parámetros por si quieres cablear el bucle en un script en lugar de un chat.`,
 };
+
+export default translation;

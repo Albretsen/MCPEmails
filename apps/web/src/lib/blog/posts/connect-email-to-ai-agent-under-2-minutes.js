@@ -1,4 +1,4 @@
-export default {
+const post = {
   slug: 'connect-email-to-ai-agent-under-2-minutes',
   title: {
     en: 'How to Connect Your Email to an AI Agent in Under 2 Minutes (Gmail, Outlook, iCloud, Fastmail & IMAP)',
@@ -239,3 +239,5 @@ La rapidez aquí no viene de recortar en seguridad. El correo se obtiene en tiem
 Eso es todo: una conexión de buzón, un endpoint, un puñado de herramientas. El plan Gratis conecta un buzón, no cuesta nada ni pide tarjeta; Personal cuesta 5 USD al mes y conecta hasta tres buzones; Pro conecta todos los que tengas; consulta los [precios](/pricing). ¿Listo para probarlo? [Empieza gratis](/signup), conecta tu buzón y pega el endpoint en tu agente.`,
   },
 };
+
+export default post;

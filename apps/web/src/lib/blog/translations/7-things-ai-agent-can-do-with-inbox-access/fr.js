@@ -1,4 +1,4 @@
-export default {
+const translation = {
   title: 'Sept choses que votre agent IA peut faire dès qu’il a accès à votre boîte mail',
   description:
     'Sept actions concrètes pour un agent IA avec accès à la boîte mail : trier les non-lus, résumer un fil, rédiger des réponses, retrouver des pièces jointes et relancer.',
@@ -81,3 +81,5 @@ Quand vous atteignez bel et bien une limite, le serveur renvoie une erreur rées
 
 N’essayez pas de construire les sept dès le premier jour. Choisissez la passe de tri ou le récapitulatif hebdomadaire, rendez-la banale et fiable, puis ajoutez la suivante. [Connectez une boîte mail](/signup) et faites de \`inbox_list\` le premier geste de votre agent. La [référence des outils dans la documentation](/docs) donne les paramètres exacts de chacun des appels ci-dessus.`,
 };
+
+export default translation;
