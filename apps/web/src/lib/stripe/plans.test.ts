@@ -51,15 +51,21 @@ test('the action ceiling is an abuse backstop, not a tier feature', () => {
 });
 
 test('no feature list promises an analytics retention window', () => {
-  // `analyticsRetentionDays` has ZERO readers anywhere in apps/ or
-  // supabase/functions/: nothing truncates the analytics dashboard by plan, so
-  // "30-day history" / "90-day history" / "1-year history" were claims the
-  // product does not implement. They were removed from the pricing copy in all
-  // five locales but survived here, and `plan.features` is what builds the
-  // purchase confirmation email (src/lib/email/purchase-confirmation.ts) — so
-  // every paying customer was emailed the claim after the page stopped making
-  // it. These lists and the `pricing.plans.*.features` message arrays are two
-  // renderings of one promise and must not diverge again.
+  // `analyticsRetentionDays` IS enforced now (2026-09-01): src/lib/analytics/
+  // retention.ts turns it into the window the Usage page, the per-inbox call
+  // counts and the audit log are all bounded by, and the dashboard labels
+  // quote the same number. Before that it was dead config, so "30-day history"
+  // / "90-day history" / "1-year history" were claims the product did not
+  // implement.
+  //
+  // This assertion stays anyway, for a different reason: `plan.features` is
+  // what builds the purchase confirmation email
+  // (src/lib/email/purchase-confirmation.ts), and a retention promise made in
+  // a feature list is a promise made in an email that nothing re-checks when
+  // the window changes. Quote the window in the UI, where it is computed from
+  // the plan, not in a hardcoded marketing string. These lists and the
+  // `pricing.plans.*.features` message arrays are two renderings of one
+  // promise and must not diverge again.
   for (const plan of Object.values(PLANS)) {
     for (const feature of plan.features) {
       assert.ok(

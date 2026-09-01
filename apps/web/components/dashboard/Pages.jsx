@@ -667,11 +667,14 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected }) {
+export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected }) {
   const t = useTranslations('dashboard');
   const inboxCount = stats?.inboxCount ?? 0;
-  // Last 14 days of real per-day call counts, sliced from the 30-day series.
-  const last14 = (usageData?.dailyCounts ?? []).slice(-14);
+  // The overview strip shows at most a fortnight, but it cannot show more days
+  // than the plan's analytics window actually contains: on Free that window is
+  // 7 days, so slicing a flat 14 would label a 7-bar chart "last 14 days".
+  const overviewDays = Math.min(14, planLimits?.historyDays ?? 30);
+  const last14 = (usageData?.dailyCounts ?? []).slice(-overviewDays);
   const apiKeysCount = stats?.apiKeysCount ?? 0;
   const callsToday = stats?.callsToday ?? 0;
   const callsThisMonth = stats?.callsThisMonth ?? 0;
@@ -807,7 +810,7 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
             <div className="card-h">
               <div>
                 <div className="title">{t('overview.callsPerDayTitle')}</div>
-                <div className="sub">{t('overview.callsPerDaySub')}</div>
+                <div className="sub">{t('overview.callsPerDaySub', { days: overviewDays })}</div>
               </div>
               <div className="grow"></div>
               <Badge tone="brand">{t('overview.pro')}</Badge>
@@ -1008,6 +1011,10 @@ export function WorkflowsPage({ mcpUrl }) {
 }
 
 export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onGoToKeys }) {
+  // The analytics window this plan buys. Every per-inbox call count on this
+  // page is scoped to it server-side, so the label has to quote the same
+  // number or the column silently means something different per plan.
+  const historyDays = planLimits?.historyDays ?? 30;
   const t = useTranslations('dashboard');
   // Count errored inboxes to conditionally show a page-level warning banner.
   const erroredCount = inboxes.filter(ib => ib.status === "error").length;
@@ -1274,7 +1281,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                 <th>{t('inboxes.colAddress')}</th>
                 <th>{t('inboxes.colProvider')}</th>
                 <th>{t('inboxes.colStatus')}</th>
-                <th>{t('inboxes.colCalls')}</th>
+                <th>{t('inboxes.colCalls', { days: historyDays })}</th>
                 <th className="right">{""}</th>
               </tr>
             </thead>
@@ -1459,6 +1466,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
           onCheck={(ib) => handleCheck(ib)}
           onDisconnect={(ib) => { setDetailInbox(null); handleDisconnectRequest(ib); }}
           onSaveSignature={onSaveSignature}
+          historyDays={historyDays}
         />
       )}
 
@@ -1878,7 +1886,7 @@ function SignatureEditor({ inbox, onSave, t }) {
   );
 }
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -1946,7 +1954,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
             </Row>
             <Row label={t('inboxes.detail.connectedOn')}>{formatDate(inbox.createdAt)}</Row>
             <Row label={t('inboxes.detail.lastCall')}>
-              {inbox.lastCallAt ? formatLastUsed(inbox.lastCallAt, t) : t('inboxes.detail.lastCallNone')}
+              {inbox.lastCallAt ? formatLastUsed(inbox.lastCallAt, t) : t('inboxes.detail.lastCallNone', { days: historyDays })}
             </Row>
           </div>
 
@@ -3219,7 +3227,7 @@ function BulkRunsPanel() {
  *   byTool       Array<{ tool: string, count: number, pct: number }>, sorted desc
  *   byInbox      Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
  */
-export function UsagePage({ usageData, onConnect, onGoToKeys }) {
+export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
   const t = useTranslations('dashboard');
   const {
     dailyCounts = [],
@@ -3228,8 +3236,13 @@ export function UsagePage({ usageData, onConnect, onGoToKeys }) {
     byInbox = [],
   } = usageData ?? {};
 
+  // The analytics window this plan buys (Free 7, Personal 30, Pro 90, Team
+  // 365). Every figure on this page comes from a query scoped to it, so the
+  // average has to divide by the same number and the copy has to quote it.
+  const historyDays = planLimits?.historyDays ?? 30;
+
   // Derived stats
-  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / 30) : 0;
+  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / historyDays) : 0;
   const busiestDay = dailyCounts.reduce(
     (best, d) => (d.count > best.count ? d : best),
     { date: '', count: 0 },
@@ -3242,7 +3255,7 @@ export function UsagePage({ usageData, onConnect, onGoToKeys }) {
     <div className="page">
       <PageHeader
         title={t('usage.title')}
-        sub={t('usage.sub')}
+        sub={t('usage.sub', { days: historyDays })}
       />
 
       {isEmpty ? (
@@ -3291,7 +3304,7 @@ export function UsagePage({ usageData, onConnect, onGoToKeys }) {
           {/* Summary stats */}
           <div className="stat-grid usage-stat-grid">
             <div className="stat">
-              <div className="label">{t('usage.totalCalls')}</div>
+              <div className="label">{t('usage.totalCalls', { days: historyDays })}</div>
               <div className="value">{totalCalls.toLocaleString()}</div>
               <div className="delta">{t('usage.totalCallsDelta')}</div>
             </div>
@@ -3314,7 +3327,7 @@ export function UsagePage({ usageData, onConnect, onGoToKeys }) {
             <div className="card-h">
               <div>
                 <div className="title">{t('usage.callsPerDayTitle')}</div>
-                <div className="sub">{t('usage.callsPerDaySub')}</div>
+                <div className="sub">{t('usage.callsPerDaySub', { days: historyDays })}</div>
               </div>
             </div>
             <div className="card-body">
@@ -3331,7 +3344,7 @@ export function UsagePage({ usageData, onConnect, onGoToKeys }) {
               <div className="empty" style={{ padding: '28px 20px' }}>
                 <div className="ico"><Icon name="zap" size={18} /></div>
                 <h3 style={{ fontSize: 14 }}>{t('usage.noToolCallsTitle')}</h3>
-                <p style={{ fontSize: 12.5 }}>{t('usage.noToolCallsDesc')}</p>
+                <p style={{ fontSize: 12.5 }}>{t('usage.noToolCallsDesc', { days: historyDays })}</p>
               </div>
             ) : (
               <div className="tbl-wrap">

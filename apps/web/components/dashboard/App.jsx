@@ -227,7 +227,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // Apply theme
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", t.dark ? "dark" : "light");
-    try { localStorage.setItem("mcpe-theme", t.dark ? "dark" : "light"); } catch(e) {}
+    try { localStorage.setItem("mcpe-theme", t.dark ? "dark" : "light"); } catch {}
   }, [t.dark]);
 
   // Read saved theme on first mount
@@ -236,7 +236,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       const saved = localStorage.getItem("mcpe-theme");
       if (saved === "dark" && !t.dark) setTweak("dark", true);
       if (saved === "light" && t.dark) setTweak("dark", false);
-    } catch(e) {}
+    } catch {}
     // eslint-disable-next-line
   }, []);
 
@@ -796,7 +796,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
-        {route === "usage"    && <UsagePage usageData={usageData} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
+        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
