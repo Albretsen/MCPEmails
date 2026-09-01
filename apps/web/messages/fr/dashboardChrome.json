@@ -103,7 +103,6 @@
     "mcpCopyTitle": "Copiez l’URL de votre point de terminaison MCP"
   },
   "connect": {
-    "subGmail": "OAuth 2.0",
     "subOutlook": "OAuth 2.0 · Microsoft 365",
     "comingSoon": "Bientôt disponible",
     "subFastmail": "Mot de passe d'application",
@@ -147,6 +146,7 @@
     "appPasswordStepsZoho": "Zoho l’appelle mot de passe spécifique à une application, dans Compte Zoho, sous Sécurité. L’accès IMAP doit aussi être activé dans les réglages de Zoho Mail ; il est désactivé par défaut.",
     "appPasswordStepsYandex": "Yandex l’appelle mot de passe d’application. Activez d’abord IMAP et les mots de passe d’application dans les réglages de Yandex Mail, puis créez un mot de passe d’application Mail dans Yandex ID, sous Sécurité. Il fait 16 lettres minuscules.",
     "appPasswordStepsFastmail": "Fastmail l’appelle mot de passe d’application. Ouvrez Réglages, puis Confidentialité et sécurité, puis Mots de passe d’application, et créez-en un avec accès au courrier. Il fait 16 caractères minuscules.",
+    "appPasswordStepsGmail": "Google l'appelle mot de passe d'application. Activez d'abord la validation en deux étapes, puis ouvrez myaccount.google.com/apppasswords et créez-en un. Il fait 16 lettres minuscules, affichées en quatre groupes. Sur un compte Google Workspace, un administrateur peut désactiver les mots de passe d'application pour tout le domaine, et cette page devient alors indisponible.",
     "titleLimitReached": "Ajouter une autre boîte",
     "titleConnectProvider": "Connecter {provider}",
     "titleReconnectProvider": "Reconnecter {provider}",
@@ -213,7 +213,10 @@
     "googleStep3": "Choisissez « Accéder à mcpemails.com (non sécurisé) », puis Continuer.",
     "googleStepsWhy": "« Non sécurisé » est la formulation habituelle de Google pour un développeur qu’il n’a pas examiné. Ce n’est pas un constat sur cette application. La validation de Google exige une évaluation de sécurité externe payante que nous avons choisi de ne pas acheter.",
     "googleStepsDuration": "Une fois connectée, la boîte reste connectée. L’accès se renouvelle automatiquement en arrière-plan et ne s’interrompt que si vous le révoquez depuis votre compte Google.",
+    "gmailOauthToggle": "Vous préférez vous connecter avec Google ?",
+    "gmailOauthBody": "La connexion Google fonctionne toujours et rien n'y a changé. Elle vous envoie sur l'écran de consentement de Google et, cette application n'étant pas vérifiée par Google, cet écran affiche un avertissement qu'il faut franchir. Un mot de passe d'application reste dans cette fenêtre.",
     "hintGeneric": "Fonctionne avec toute boîte mail prenant en charge IMAP et SMTP.",
+    "hintGmail": "Gmail exige la validation en deux étapes et un mot de passe d'application généré. Le mot de passe habituel de votre compte Google sera refusé.",
     "hintIcloud": "iCloud exige la double authentification et un mot de passe pour application. Le mot de passe de votre compte Apple sera refusé.",
     "hintYahoo": "Yahoo exige un mot de passe d’application généré. Votre mot de passe Yahoo habituel sera refusé. Activez d’abord la validation en deux étapes, puis créez le mot de passe d’application.",
     "hintZoho": "Activez d’abord l’accès IMAP dans Zoho : Paramètres → Comptes de messagerie → l’accès IMAP est désactivé par défaut. Avec la double authentification, générez aussi un mot de passe spécifique à l’application.",

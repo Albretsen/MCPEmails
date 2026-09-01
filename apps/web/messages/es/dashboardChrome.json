@@ -103,7 +103,6 @@
     "mcpCopyTitle": "Copia la URL de tu endpoint MCP"
   },
   "connect": {
-    "subGmail": "OAuth 2.0",
     "subOutlook": "OAuth 2.0 · Microsoft 365",
     "comingSoon": "Próximamente",
     "subFastmail": "Contraseña de aplicación",
@@ -147,6 +146,7 @@
     "appPasswordStepsZoho": "Zoho la llama contraseña específica de aplicación, en Cuenta de Zoho, dentro de Seguridad. El acceso IMAP también tiene que estar activado en los ajustes de Zoho Mail; viene desactivado.",
     "appPasswordStepsYandex": "Yandex la llama contraseña de aplicación. Activa primero IMAP y las contraseñas de aplicación en los ajustes de Yandex Mail, y luego crea una contraseña de aplicación para Mail en Yandex ID, dentro de Seguridad. Son 16 letras minúsculas.",
     "appPasswordStepsFastmail": "Fastmail la llama contraseña de aplicación. Abre Ajustes, luego Privacidad y seguridad, luego Contraseñas de aplicación, y crea una con acceso al correo. Son 16 caracteres en minúscula.",
+    "appPasswordStepsGmail": "Google la llama contraseña de aplicación. Activa primero la verificación en dos pasos, luego abre myaccount.google.com/apppasswords y crea una. Son 16 letras minúsculas, mostradas en cuatro grupos. En una cuenta de Google Workspace, un administrador puede desactivar las contraseñas de aplicación para todo el dominio, y entonces esa página no está disponible.",
     "titleLimitReached": "Añade otra bandeja",
     "titleConnectProvider": "Conectar {provider}",
     "titleReconnectProvider": "Reconectar {provider}",
@@ -213,7 +213,10 @@
     "googleStep3": "Elige «Ir a mcpemails.com (no seguro)» y luego Continuar.",
     "googleStepsWhy": "«No seguro» es la redacción habitual de Google para un desarrollador que no ha revisado. No es una conclusión sobre esta aplicación. La revisión de Google exige una evaluación de seguridad externa de pago que hemos decidido no contratar.",
     "googleStepsDuration": "Una vez conectado, el buzón sigue conectado. El acceso se renueva automáticamente en segundo plano y solo se interrumpe si lo revocas desde tu cuenta de Google.",
+    "gmailOauthToggle": "¿Prefieres iniciar sesión con Google?",
+    "gmailOauthBody": "El inicio de sesión con Google sigue funcionando y no ha cambiado nada. Te lleva a la pantalla de consentimiento de Google y, como esta aplicación no está verificada por Google, esa pantalla muestra un aviso que tendrás que saltar. Una contraseña de aplicación se queda en esta ventana.",
     "hintGeneric": "Funciona con cualquier buzón compatible con IMAP y SMTP.",
+    "hintGmail": "Gmail necesita la verificación en dos pasos activada y una contraseña de aplicación generada. Tu contraseña normal de Google será rechazada.",
     "hintIcloud": "iCloud requiere verificación en dos pasos y una contraseña específica de aplicación. Tu contraseña de la cuenta de Apple será rechazada.",
     "hintYahoo": "Yahoo requiere una contraseña de aplicación generada. Tu contraseña habitual de Yahoo será rechazada. Activa primero la verificación en dos pasos y luego crea la contraseña de aplicación.",
     "hintZoho": "Activa primero el acceso IMAP en Zoho: Configuración → Cuentas de correo → Acceso IMAP está desactivado por defecto. Con la verificación en dos pasos activada, genera además una contraseña específica de aplicación.",

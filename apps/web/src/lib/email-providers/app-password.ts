@@ -22,7 +22,7 @@ import { normalizeAppPassword } from '@/lib/email-providers/imap-presets';
  */
 
 /** Providers whose app password we can recognise by sight. */
-export type AppPasswordProviderId = 'icloud' | 'yahoo' | 'yandex' | 'zoho' | 'fastmail';
+export type AppPasswordProviderId = 'gmail' | 'icloud' | 'yahoo' | 'yandex' | 'zoho' | 'fastmail';
 
 export interface AppPasswordShape {
   /** Characters a generated token is built from. */
@@ -59,7 +59,7 @@ export interface AppPasswordPolicy {
 
 /**
  * Shapes as the providers generate them (verified against their own generator
- * screens, 2026). All four are sixteen characters; only the alphabet and the
+ * screens, 2026). All of them are sixteen characters; only the alphabet and the
  * display grouping differ.
  *
  * Fastmail is the one entry that allows digits. Its tokens are letters in
@@ -69,6 +69,11 @@ export interface AppPasswordPolicy {
  * module exists to prevent.
  */
 const SHAPES: Record<AppPasswordProviderId, AppPasswordShape | null> = {
+  // Google shows its sixteen letters as four space-separated blocks. The
+  // spaces are already stripped by normalizeAppPassword, but `grouped` is set
+  // because people retype what they see and a separator they added themselves
+  // must not be read as evidence that they submitted an account password.
+  gmail: { alphabet: 'lower-letters', length: 16, grouped: true },
   icloud: { alphabet: 'lower-letters', length: 16, grouped: true },
   yahoo: { alphabet: 'lower-letters', length: 16, grouped: false },
   yandex: { alphabet: 'lower-letters', length: 16, grouped: false },
@@ -79,6 +84,7 @@ const SHAPES: Record<AppPasswordProviderId, AppPasswordShape | null> = {
 /** Type guard for the ids this module knows a policy for. */
 export function isAppPasswordProvider(value: unknown): value is AppPasswordProviderId {
   return (
+    value === 'gmail' ||
     value === 'icloud' ||
     value === 'yahoo' ||
     value === 'yandex' ||
