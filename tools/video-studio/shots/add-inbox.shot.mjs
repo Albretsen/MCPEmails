@@ -29,22 +29,62 @@ export const description =
 export async function run(page, t, { baseUrl }) {
   await t.goto(`${baseUrl}/dashboard/inboxes`);
 
+  // Wait for the list to actually paint before holding on it. Measured twice
+  // on 2026-09-01: this dashboard first paints 3.9s after the navigation, and
+  // `goto` returns well before that, so without this the 1.4s dwell below was
+  // spent on a blank page and the capture reached the modal 0.07s after the
+  // empty list appeared. The beat this shot exists for was being recorded and
+  // then thrown away.
+  //
+  // `settle` and not `waitFor`: settle pushes no timeline event, so it adds no
+  // cursor and no zoom anchor. A `waitFor` here would anchor a push-in on the
+  // Connect button a beat before the click that already anchors one.
+  await t.settle();
+
   // Hold on the empty list for a moment. The shot only reads as "adding an
   // inbox" if the viewer sees there was not one a second ago.
   await t.dwell(1.4, 'Empty inbox list');
 
-  await t.click(page.getByRole('button', { name: /connect inbox/i }).first(), {
+  // Longer dwells than the 0.55s default through the opening beats. At the
+  // default these three clicks land 0.6s apart, which is faster than a viewer
+  // can follow a modal opening, a grid appearing, and a tile being selected.
+  // The recording is the pacing: slowing the whole scene down afterwards
+  // stretches the typing too, which already reads at the right speed.
+  //
+  // The CENTRE button, not the one in the header. This page has two "Connect
+  // inbox" buttons: one top-right and one in the empty-state card. `.first()`
+  // took the header one, which sits in the top-right corner, so the auto zoom
+  // framed that corner and the modal then opened centre-screen and was cut off
+  // by the edge of the frame. Anchoring on the empty state's button puts the
+  // push-in where the modal is about to appear, and the shot stays framed
+  // through the transition. Scoped to `.empty` rather than `.nth(1)` so it
+  // cannot silently pick the wrong one if the header changes.
+  const connect = page.locator('.empty').getByRole('button', { name: /connect inbox/i }).first();
+
+  // A real hover, held, before the click. The drawn cursor rests on a control
+  // before pressing it (HOVER_BEFORE_CLICK in Capture.tsx), and without this
+  // the button underneath it would be sitting in its resting state the whole
+  // time, so the pause read as the video stalling rather than as pointing at
+  // something. `page.hover` and not `t.hover`: a hover is not an action that
+  // needs a timeline anchor, and the click on the next line supplies one.
+  await connect.hover();
+  await t.dwell(1.0, 'Hover the connect button');
+
+  await t.click(connect, {
     note: 'Open the connect modal',
+    dwell: 1.5,
   });
 
   // Step 1: the provider grid.
   const providers = page.getByRole('radiogroup');
   await t.click(providers.getByRole('radio', { name: /IMAP \/ SMTP/i }).first(), {
     note: 'Choose generic IMAP, which works with any mailbox',
+    dwell: 1.6,
   });
 
   await t.click(page.getByRole('button', { name: /enter credentials/i }).first(), {
     note: 'Continue to credentials',
+    dwell: 1.1,
   });
 
   // Step 2: the credential form.

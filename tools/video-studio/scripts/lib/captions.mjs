@@ -55,17 +55,143 @@ async function toWav(mp3, wav) {
  * on purpose: the two must produce identical strings, and a shared import would
  * have to cross the node/bundle boundary for four lines.
  */
+/**
+ * Canonical spellings for terms whisper fragments or homophones.
+ *
+ * Two mechanisms live here, with DIFFERENT safety properties. Keep them
+ * straight before adding an entry.
+ *
+ * RE-JOINS (the overwhelming majority). whisper splits a term into fragments:
+ * "MCP" arrives as "M" "CP", "IMAP" as "IM" "AP", "encrypted" as "Enc"
+ * "rypted", and "mcpemails.com" as "mc" "p" "em" "ails" "." "com", which the
+ * phrase grouper then splits across two cues. For these, `heard` is exactly
+ * what the fragments already spell, so re-joining them cannot change what was
+ * said. Nothing is inserted, replaced or dropped. This is a spelling fix.
+ *
+ * HOMOPHONES (kept to a minimum, currently one). whisper hears the word
+ * perfectly and writes the ordinary English word it sounds like: "Claude" is
+ * pronounced "clawed", so that is what it writes, and a human read will do the
+ * same. Here `heard` differs from the canonical text, so this DOES substitute
+ * one word for another, and the honest cost is that a script legitimately
+ * using the word "clawed" would be rewritten. That is acceptable for a product
+ * noun this product's videos say out loud and unacceptable as a general habit,
+ * so do not use this class to paper over a mis-hearing that rewording the
+ * script would fix. "cut" heard as "caught" was fixed in the script, not here.
+ *
+ * Longest `heard` first, so "mcpemails.com" is tried before "mcpemails".
+ */
+const SPELLINGS = [
+  { heard: 'mcpemails.com', text: 'mcpemails.com' },
+  { heard: 'mcpemails', text: 'MCP Emails' },
+  { heard: 'encrypted', text: 'encrypted' },
+  { heard: 'fastmail', text: 'Fastmail' },
+  { heard: 'codebase', text: 'codebase' },
+  { heard: 'chatgpt', text: 'ChatGPT' },
+  { heard: 'oauth', text: 'OAuth' },
+  // "Claude" is pronounced "clawed", and which ordinary word whisper picks
+  // for it is not stable: the same script transcribed "Cl awed" on one render
+  // and "Cl od" on the next. Both spellings are listed rather than one,
+  // and this entry MUST be rechecked when the scratch voiceover is replaced
+  // by a real one, because a different voice will produce a different guess.
+  { heard: 'clawed', text: 'Claude' },
+  { heard: 'clod', text: 'Claude' },
+  { heard: 'jmap', text: 'JMAP' },
+  { heard: 'imap', text: 'IMAP' },
+  { heard: 'smtp', text: 'SMTP' },
+  { heard: 'mcp', text: 'MCP' },
+];
+
+/** Letters, digits and dots only, lowercased. Punctuation and spacing vary. */
+const termKey = (s) => s.toLowerCase().replace(/[^a-z0-9.]/g, '');
+
+/**
+ * Apply SPELLINGS to a word-token stream. Timing is preserved: a rewritten
+ * token starts when the first fragment started and ends when the last ended,
+ * so captions stay in sync with the audio.
+ */
+export function applySpellings(words) {
+  const textOf = (w) => (typeof w === 'string' ? w : w.text);
+  const out = [];
+  let i = 0;
+
+  while (i < words.length) {
+    let hit = null;
+
+    for (const entry of SPELLINGS) {
+      const target = entry.heard;
+      let acc = '';
+
+      // A term never spans more than a handful of fragments.
+      for (let j = i; j < words.length && j < i + 6; j += 1) {
+        const k = termKey(textOf(words[j]));
+
+        // A punctuation-only token contributes nothing to `acc`, so without
+        // this guard an empty key matched every prefix: a match could BEGIN on
+        // the comma before "mcpemails.com", swallow it, and shift the window
+        // by one so the closing "com" fell outside the six-token limit. The
+        // comma then vanished from the caption and the domain came out as
+        // "MCP Emails." plus a stranded "com.".
+        if (k === '') break;
+
+        acc += k;
+
+        if (acc === target) {
+          hit = { text: entry.text, end: j, tail: '' };
+          break;
+        }
+
+        // "com." carries the sentence's full stop into the last fragment.
+        // Keep it rather than swallowing punctuation the speaker did say.
+        if (acc.startsWith(target)) {
+          const rest = textOf(words[j]).slice(-(acc.length - target.length));
+          if (/^[.,!?;:]+$/.test(rest)) hit = { text: entry.text, end: j, tail: rest };
+          break;
+        }
+
+        if (!target.startsWith(acc)) break;
+      }
+
+      if (hit) break;
+    }
+
+    if (hit) {
+      const first = words[i];
+      const last = words[hit.end];
+      out.push({
+        ...(typeof first === 'string' ? {} : first),
+        text: hit.text + hit.tail,
+        startMs: typeof first === 'string' ? undefined : first.startMs,
+        endMs: typeof last === 'string' ? undefined : last.endMs,
+      });
+      i = hit.end + 1;
+    } else {
+      out.push(words[i]);
+      i += 1;
+    }
+  }
+
+  return out;
+}
+
 export function joinWords(words) {
   return words
     .map((w) => (typeof w === 'string' ? w : w.text))
     .join(' ')
     .replace(/\s+([,.!?;:%\)\]])/g, '$1')
+    // whisper emits a contraction suffix as its own token, so a plain join
+    // gives "It 's read" and "We 're going". Only closed before a letter, so a
+    // genuine opening quote is left alone.
+    .replace(/\s+'(?=[A-Za-z])/g, "'")
     .replace(/([(\[])\s+/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-function toVtt(words) {
+function toVtt(rawWords) {
+  // Before grouping, not inside joinWords: "mcpemails.com" arrives as six
+  // fragments and the grouper would otherwise split it across two cues, which
+  // is where it was actually breaking.
+  const words = applySpellings(rawWords);
   const stamp = (ms) => {
     const total = Math.max(0, ms) / 1000;
     const h = String(Math.floor(total / 3600)).padStart(2, '0');

@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Video Studio storyboard",
+  "description": "One video. Mirrors src/storyboard-schema.mjs, which is the real validator: this file only drives editor autocomplete and inline errors. If the two ever disagree, the .mjs wins and `npm run render` is the arbiter.",
+  "type": "object",
+  "required": ["id", "scenes"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Lower-case kebab-case. Becomes the output filename: out/<id>.mp4."
+    },
+    "width": { "type": "integer", "default": 1920, "description": "Must be even (H.264 yuv420p)." },
+    "height": { "type": "integer", "default": 1080, "description": "Must be even (H.264 yuv420p)." },
+    "fps": { "type": "integer", "minimum": 1, "default": 30 },
+    "theme": {
+      "type": "string",
+      "enum": ["dark", "light"],
+      "default": "dark",
+      "description": "Drawn scenes use this. verify FAILS if a capture's measured appearance does not match it."
+    },
+    "voiceover": {
+      "type": "string",
+      "description": "Path from tools/video-studio, e.g. assets/vo/my-video.mp3. Regenerate the mp3 after editing the .txt."
+    },
+    "captions": {
+      "type": "boolean",
+      "default": false,
+      "description": "Burn in captions and write a .vtt. Requires voiceover. Word timings come from whisper."
+    },
+    "posterFrame": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Frame index for the .jpg poster. Defaults to 1s into scene 2."
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Played in order. No scene may be shorter than 1.5s.",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": { "type": "string", "enum": ["title", "capture", "chat", "terminal", "outro"] }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "type": { "const": "title" } }, "required": ["type"] },
+            "then": {
+              "required": ["type", "durationInSeconds", "headline"],
+              "additionalProperties": false,
+              "properties": {
+                "type": { "const": "title" },
+                "durationInSeconds": { "type": "number", "minimum": 1.5 },
+                "headline": { "type": "string", "description": "No em dashes. The validator rejects them." },
+                "sub": { "type": "string", "description": "No em dashes." },
+                "align": { "type": "string", "enum": ["center", "left"], "default": "center" }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "capture" } }, "required": ["type"] },
+            "then": {
+              "required": ["type", "shot"],
+              "additionalProperties": false,
+              "properties": {
+                "type": { "const": "capture" },
+                "shot": {
+                  "type": "string",
+                  "description": "Must match shots/<shot>.shot.mjs AND a completed capture in captures/."
+                },
+                "durationInSeconds": {
+                  "type": "number",
+                  "minimum": 1.5,
+                  "description": "Normally omit: derived from the clip and speed."
+                },
+                "clip": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "description": "Trim the recording. Almost every capture wants a `from` of about a second, or the cut opens on the browser's unpainted background.",
+                  "properties": {
+                    "from": { "type": "number", "minimum": 0, "description": "Defaults to the measured first paint." },
+                    "to": { "type": "number", "minimum": 0, "description": "Leave out unless you must trim the tail: a pinned `to` breaks on the next take." }
+                  }
+                },
+                "speed": { "type": "number", "exclusiveMinimum": 0, "default": 1, "description": "1.0 is real time. Below 1 slows playback, which stretches typing too." },
+                "autoZoom": { "type": "boolean", "default": true, "description": "false gives a flat full frame, no camera and no cursor push-in." },
+                "maxZoom": { "type": "number", "default": 1.8, "description": "Ceiling. Above ~1.8 a 1080p source visibly softens." },
+                "frame": { "type": "string", "enum": ["browser", "laptop", "none"], "default": "browser" },
+                "callouts": {
+                  "type": "array",
+                  "description": "At most two in a whole cut, and only where a viewer would otherwise miss something.",
+                  "items": {
+                    "type": "object",
+                    "required": ["at", "for", "text"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": { "type": "number", "minimum": 0, "description": "Seconds from the START OF THE CLIP, not the recording." },
+                      "for": { "type": "number", "exclusiveMinimum": 0 },
+                      "text": { "type": "string", "description": "No em dashes." },
+                      "anchor": { "type": "string", "enum": ["above", "below", "left", "right"], "description": "Overrides automatic placement." }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "chat" } }, "required": ["type"] },
+            "then": {
+              "required": ["type", "transcript", "durationInSeconds"],
+              "additionalProperties": false,
+              "properties": {
+                "type": { "const": "chat" },
+                "transcript": {
+                  "type": "string",
+                  "description": "Path from tools/video-studio, e.g. transcripts/my-video.json. Generated by `npm run transcript`. render refuses a failed or 14-day-old transcript."
+                },
+                "durationInSeconds": { "type": "number", "minimum": 1.5 },
+                "title": { "type": "string", "default": "Your AI assistant", "description": "Keep it generic. Never another vendor's product name." }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "terminal" } }, "required": ["type"] },
+            "then": {
+              "required": ["type", "durationInSeconds", "lines"],
+              "additionalProperties": false,
+              "properties": {
+                "type": { "const": "terminal" },
+                "durationInSeconds": { "type": "number", "minimum": 1.5 },
+                "lines": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string" },
+                  "description": "Lines starting \"$ \" type character by character; everything else appears whole."
+                },
+                "title": { "type": "string", "default": "Terminal" },
+                "cps": { "type": "number", "exclusiveMinimum": 0, "default": 28, "description": "Characters per second." }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "outro" } }, "required": ["type"] },
+            "then": {
+              "required": ["type", "durationInSeconds", "cta"],
+              "additionalProperties": false,
+              "properties": {
+                "type": { "const": "outro" },
+                "durationInSeconds": { "type": "number", "minimum": 1.5 },
+                "cta": { "type": "string", "description": "One CTA. No em dashes." },
+                "sub": { "type": "string", "description": "No em dashes." }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
