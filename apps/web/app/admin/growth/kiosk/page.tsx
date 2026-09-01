@@ -4,8 +4,20 @@
  * It is a different product from /admin/growth, not a stylesheet on top of it.
  * That page is a reporting tool: eleven sections, drill-downs, info dots,
  * exact-number tables, a window switcher. This one is read at a glance by
- * someone walking past a 10 inch panel, so it shows twelve numbers, fills the
- * screen exactly once, and has no controls at all.
+ * someone walking past a 10 inch panel, so it shows ten numbers, fills the
+ * screen exactly once, and has exactly one control.
+ *
+ * THAT ONE CONTROL, added 2026-09-01, needs defending, because this file used
+ * to say "no controls at all" and meant it. The argument for zero still holds
+ * for the panel's resting state: nobody presses anything, and a board that must
+ * be configured before it says something true is a board that eventually says
+ * something stale. What changed is that the single screen was being asked five
+ * different questions and the tile that gave way was always whichever answered
+ * the one nobody had asked that morning. So the default view still shows the
+ * whole business and is what the panel returns to on its own after ten idle
+ * minutes (see KioskLive); the other four exist for the two minutes somebody is
+ * standing in front of it. Nothing about the unattended behaviour changed: left
+ * alone, this is still a board with no controls.
  *
  * Four constraints shape it.
  *
@@ -41,10 +53,12 @@ import { Suspense } from 'react';
 import { currentDeployment } from '@/lib/admin/deployment';
 import { requireKioskAccess } from '@/lib/admin/require-kiosk';
 import { fetchSystemHealth } from '@/lib/analytics/kiosk-health';
-import { KioskBoard, KIOSK_WINDOW_DAYS } from '../../../../components/admin/kiosk/board';
+import { KioskBoard } from '../../../../components/admin/kiosk/board';
 import { KioskDetail } from '../../../../components/admin/kiosk/detail';
 import { KioskLive } from '../../../../components/admin/kiosk/KioskLive';
+import { KioskViewSwitch } from '../../../../components/admin/kiosk/KioskViewSwitch';
 import { KioskAlarm, KioskHealthProvider } from '../../../../components/admin/kiosk/KioskHealth';
+import { KIOSK_VIEWS, KIOSK_WINDOW_DAYS, resolveKioskView } from '../../../../components/admin/kiosk/shared';
 import '../../../../styles/admin-kiosk.css';
 
 export const metadata = {
@@ -77,10 +91,17 @@ export const dynamic = 'force-dynamic';
 export default async function GrowthKioskPage({
   searchParams,
 }: {
-  searchParams: Promise<{ k?: string }>;
+  searchParams: Promise<{ k?: string; view?: string }>;
 }) {
   const params = await searchParams;
   await requireKioskAccess(params.k);
+
+  // An unknown or missing `?view=` resolves to the default rather than 404ing.
+  // The panel's URL is typed by hand once, into a Chromium autostart line on a
+  // Pi with no keyboard, and a typo there must leave a working board on the
+  // wall rather than an error page nobody is present to dismiss.
+  const view = resolveKioskView(params.view);
+  const meta = KIOSK_VIEWS.find((entry) => entry.id === view) ?? KIOSK_VIEWS[0];
 
   const generatedAt = new Date().toISOString();
 
@@ -99,9 +120,19 @@ export default async function GrowthKioskPage({
         <header className="kiosk-head">
           <div className="kiosk-head-top">
             <h1 className="kiosk-wordmark">
-              MCP Emails <em>Growth · last {KIOSK_WINDOW_DAYS} days</em>
+              MCP Emails <em>{meta.question} · last {KIOSK_WINDOW_DAYS} days</em>
             </h1>
-            <KioskLive generatedAt={generatedAt} deployment={currentDeployment()} />
+            {/* The switch sits between the wordmark and the clock so the two
+                things that never move on this board stay at the two edges,
+                which is what makes a changed view legible from a distance:
+                the strip is the only part of the header that lights up. */}
+            <KioskViewSwitch current={view} token={params.k} />
+            <KioskLive
+              generatedAt={generatedAt}
+              deployment={currentDeployment()}
+              view={view}
+              token={params.k}
+            />
           </div>
           {/* Inside the header, not in a grid row of its own. The header row is
               `auto` and everything below it is a fraction of the remainder, so
@@ -114,8 +145,11 @@ export default async function GrowthKioskPage({
             that reassembles itself panel by panel every five minutes is
             visibly busy doing nothing; this way the old frame simply stays up
             until the new one is ready. */}
-        <Suspense fallback={<BoardSkeleton />}>
-          <KioskBoard />
+        {/* Keyed on the view so switching swaps the whole board in one paint
+            rather than reconciling ten tiles into ten different ones, which on
+            a wall reads as the numbers scrambling in place. */}
+        <Suspense key={view} fallback={<BoardSkeleton />}>
+          <KioskBoard view={view} />
         </Suspense>
 
         <p className="kiosk-scroll-hint" aria-hidden="true">Swipe up for detail</p>

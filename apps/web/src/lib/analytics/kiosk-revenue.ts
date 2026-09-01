@@ -27,12 +27,18 @@ import { getPlanByStripePriceId, planDisplayName } from '@/lib/stripe/plans';
 import { isInternalAccount } from '@/lib/analytics/internal-accounts';
 import { GROWTH_TAGS, cachedSection, type GrowthResult } from '@/lib/analytics/growth-queries';
 import {
+  DEFAULT_VALUATION_ARR_MULTIPLE,
   monthlyFromInterval,
   summarizeSubscriptions,
   type DiscountFacts,
   type RevenueSummary,
   type SubscriptionFacts,
 } from '@/lib/analytics/revenue-math';
+// Cash arithmetic is shared with /admin/growth's money panel rather than
+// reimplemented, for the same reason summarizeSubscriptions is: two surfaces
+// that compute the same figure independently eventually disagree about it in
+// public.
+import { rollUpCash, stripeMode, type CashMonth } from '@/lib/analytics/cash-math';
 
 /**
  * Hard ceiling on subscriptions pulled from Stripe.
@@ -288,4 +294,116 @@ export function summarizeCheckoutFunnel(rows: BillingEventRow[]): CheckoutFunnel
     internalExcluded: internal.size,
     lastCompletedAt,
   };
+}
+
+/* -------------------------------------------------------------------- cash */
+
+/**
+ * How much money has actually arrived.
+ *
+ * A DIFFERENT QUESTION FROM MRR, AND THE TWO ARE MEANT TO DISAGREE. The first
+ * sale was a year up front: $48 landed in a single August afternoon and the MRR
+ * it created is $4. A board showing only MRR hides every dollar that has ever
+ * reached the bank, and a board showing only cash would claim the business
+ * earns twelve times what it recurringly does and then appear to lose all of it
+ * the following month. Both are on the tile, labelled, and a reader who notices
+ * they differ has understood the business rather than found a bug.
+ *
+ * CHARGES, NOT INVOICES, for the reason cash-math.ts gives: an invoice can be
+ * settled from a credit balance that moved no money. Refunds are netted off the
+ * month the charge landed in, not the month the refund happened.
+ *
+ * OUR OWN PURCHASES ARE NOT INCOME. The live 100%-off test purchases would
+ * otherwise appear here as cash that never arrived, which is the same class of
+ * error that once had the kiosk reporting our own test account as a customer.
+ * Same `isInternalAccount` rule as everywhere else, including the plus-tag
+ * aliasing.
+ *
+ * "ALL TIME" IS HONEST BUT BOUNDED. It reaches back `CASH_HISTORY_DAYS` and
+ * pages to a ceiling, and reports both, so the day this outgrows the ceiling
+ * the tile can say "at least" rather than quietly understating. Stripe holds
+ * nothing older than the account, so today the two are the same thing.
+ */
+export type CashCollected = {
+  currency: string;
+  /** Net of refunds, across the whole history read. */
+  allTimeMinor: number;
+  last30Minor: number;
+  /** Net cash by UTC month, oldest first. Feeds the money view's chart. */
+  months: CashMonth[];
+  /** Charges counted. Zero is a real answer, not a failure. */
+  charges: number;
+  /** ISO date of the oldest charge read, or null when there are none. */
+  since: string | null;
+  /** Stripe had more than the ceiling: every figure above is a floor. */
+  truncated: boolean;
+  /** `test` means these are not real dollars. The tile must say so. */
+  mode: 'live' | 'test' | 'unknown';
+};
+
+/** Two years covers the account's entire life and costs one paged request. */
+const CASH_HISTORY_DAYS = 730;
+/** Same posture as MAX_SUBSCRIPTIONS: fail as a visibly capped number. */
+const MAX_CHARGES = 1000;
+
+export async function fetchCashCollected(): Promise<GrowthResult<CashCollected>> {
+  return cachedSection<CashCollected>(['cash_collected'], GROWTH_TAGS.revenue, async () => {
+    // Imported inside the cached read for the same reason fetchRecurringRevenue
+    // does it: an unset STRIPE_SECRET_KEY throws at import time, and at module
+    // scope that throw takes the whole board down rather than one tile.
+    const { stripe } = await import('@/lib/stripe/client');
+    const since = Math.floor(Date.now() / 1000) - CASH_HISTORY_DAYS * 86_400;
+    const charges = await stripe.charges
+      .list({ limit: 100, created: { gte: since }, expand: ['data.customer'] })
+      .autoPagingToArray({ limit: MAX_CHARGES });
+
+    const counted = charges
+      .filter((charge) => charge.status === 'succeeded')
+      .filter((charge) => !isInternalAccount(chargeEmail(charge)))
+      .map((charge) => ({
+        grossMinor: charge.amount,
+        refundedMinor: charge.amount_refunded ?? 0,
+        at: new Date(charge.created * 1000).toISOString(),
+      }));
+
+    const months = rollUpCash(counted);
+    const thirtyDaysAgo = Date.now() - 30 * 86_400_000;
+
+    return {
+      // Whichever currency the money actually arrived in, not the
+      // subscriptions' reporting currency: cash is cash.
+      currency: charges.find((charge) => charge.status === 'succeeded')?.currency ?? 'usd',
+      allTimeMinor: months.reduce((total, month) => total + month.netMinor, 0),
+      last30Minor: counted
+        .filter((charge) => Date.parse(charge.at) >= thirtyDaysAgo)
+        .reduce((total, charge) => total + charge.grossMinor - charge.refundedMinor, 0),
+      months,
+      charges: counted.length,
+      since: counted[counted.length - 1]?.at ?? counted[0]?.at ?? null,
+      truncated: charges.length >= MAX_CHARGES,
+      mode: stripeMode(process.env.STRIPE_SECRET_KEY),
+    };
+  });
+}
+
+/**
+ * The multiple behind the board's valuation figure.
+ *
+ * Read here rather than in revenue-math.ts so that module stays unit testable
+ * without a process environment. An unparseable value falls back to the default
+ * rather than to zero: a misconfigured variable should not silently value the
+ * company at nothing, which is a number somebody would believe.
+ */
+export function valuationMultiple(): number {
+  const raw = Number.parseFloat(process.env.COMPANY_VALUATION_ARR_MULTIPLE ?? '');
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_VALUATION_ARR_MULTIPLE;
+}
+
+/** Stripe puts the payer's address on the expanded customer, not on the charge. */
+function chargeEmail(charge: Stripe.Charge): string | null {
+  const customer = charge.customer;
+  if (customer && typeof customer !== 'string' && !customer.deleted && customer.email) {
+    return customer.email;
+  }
+  return charge.billing_details?.email ?? charge.receipt_email ?? null;
 }

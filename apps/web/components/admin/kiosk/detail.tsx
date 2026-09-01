@@ -26,7 +26,7 @@ import { fetchRecentIncidents } from '@/lib/analytics/kiosk-health';
 import type { MonitorIncident } from '@/lib/analytics/kiosk-health';
 import { NO_DATA, formatCount, formatMoney, ratio } from '../charts';
 import { BarList, FactRow, Tile, TileError } from './primitives';
-import { KIOSK_WINDOW_DAYS } from './board';
+import { KIOSK_WINDOW_DAYS } from './shared';
 
 /** Weeks of the retention curve to show. Twelve is one quarter. */
 const RETENTION_WEEKS = 12;

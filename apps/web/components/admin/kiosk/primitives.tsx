@@ -344,12 +344,20 @@ export { NO_DATA };
  * week with one signup is distinguishable from a week with two. Zero stays
  * genuinely empty: at this volume the difference between one and none is the
  * single most important thing the chart says.
+ *
+ * A bucket marked `partial` is a stretch of time still being lived: the
+ * current calendar week, which is always short and always looks like a
+ * collapse. It is drawn hollow and labelled "so far" rather than smoothed,
+ * annualised or hidden, because every one of those is a way of showing a
+ * number that is not the number. The scale deliberately still includes it: a
+ * partial week that has ALREADY beaten a full one is the most encouraging
+ * thing this chart can say, and clipping it would hide exactly that.
  */
 export function GroupedColumns({
   buckets,
   series,
 }: {
-  buckets: { label: string; values: number[] }[];
+  buckets: { label: string; values: number[]; partial?: boolean }[];
   series: { name: string; color: string }[];
 }) {
   const max = Math.max(1, ...buckets.flatMap((bucket) => bucket.values));
@@ -361,7 +369,7 @@ export function GroupedColumns({
     <div className="kiosk-chart">
       <div className="kiosk-cols" role="img" aria-label={`${series.map((entry) => entry.name).join(' and ')} by week`}>
         {buckets.map((bucket) => (
-          <div className="kiosk-col" key={bucket.label}>
+          <div className={`kiosk-col${bucket.partial ? ' is-partial' : ''}`} key={bucket.label}>
             <div className="kiosk-col-bars">
               {bucket.values.map((value, index) => (
                 <span
@@ -369,14 +377,25 @@ export function GroupedColumns({
                   className="kiosk-col-bar"
                   style={{
                     height: value === 0 ? '0' : `${Math.max(4, (value / max) * CEILING)}%`,
-                    background: series[index]?.color ?? 'var(--kiosk-accent)',
+                    // A partial bucket is outlined in its series colour rather
+                    // than filled with it, so it reads as "not finished" from
+                    // across the room without needing the label.
+                    background: bucket.partial
+                      ? `color-mix(in srgb, ${series[index]?.color ?? 'var(--kiosk-accent)'} 26%, transparent)`
+                      : series[index]?.color ?? 'var(--kiosk-accent)',
+                    borderTop: bucket.partial
+                      ? `2px dashed ${series[index]?.color ?? 'var(--kiosk-accent)'}`
+                      : undefined,
                   }}
                 >
                   {value > 0 && <b>{formatCount(value)}</b>}
                 </span>
               ))}
             </div>
-            <span className="kiosk-col-label">{bucket.label}</span>
+            <span className="kiosk-col-label">
+              {bucket.label}
+              {bucket.partial && <i> so far</i>}
+            </span>
           </div>
         ))}
       </div>
@@ -389,5 +408,38 @@ export function GroupedColumns({
         ))}
       </div>
     </div>
+  );
+}
+
+/**
+ * A short list of things that happened, newest first.
+ *
+ * The board's only non-numeric panel. Below the fold the same material is a
+ * `.kiosk-table` at a fixed 13px, which is right at arm's length and unreadable
+ * from the doorway; this is the version sized in `dvh` like everything else
+ * above the fold, and it drops the columns that only make sense up close.
+ *
+ * `tone` is per row rather than per list because the one thing this panel must
+ * never do is let an OPEN incident look like a closed one just because four
+ * resolved rows sit above it.
+ */
+export function EventList({
+  rows,
+  emptyLabel = 'Nothing recorded yet',
+}: {
+  rows: { key: string; title: string; note?: string; when: string; tone?: 'bad' | 'warn' | 'default' }[];
+  emptyLabel?: string;
+}) {
+  if (rows.length === 0) return <p className="kiosk-empty">{emptyLabel}</p>;
+  return (
+    <ul className="kiosk-events">
+      {rows.map((row) => (
+        <li key={row.key} className={`is-${row.tone ?? 'default'}`}>
+          <span className="kiosk-event-title">{row.title}</span>
+          {row.note && <span className="kiosk-event-note">{row.note}</span>}
+          <span className="kiosk-event-when">{row.when}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
