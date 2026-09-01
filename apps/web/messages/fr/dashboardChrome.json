@@ -146,7 +146,7 @@
     "appPasswordStepsZoho": "Zoho l’appelle mot de passe spécifique à une application, dans Compte Zoho, sous Sécurité. L’accès IMAP doit aussi être activé dans les réglages de Zoho Mail ; il est désactivé par défaut.",
     "appPasswordStepsYandex": "Yandex l’appelle mot de passe d’application. Activez d’abord IMAP et les mots de passe d’application dans les réglages de Yandex Mail, puis créez un mot de passe d’application Mail dans Yandex ID, sous Sécurité. Il fait 16 lettres minuscules.",
     "appPasswordStepsFastmail": "Fastmail l’appelle mot de passe d’application. Ouvrez Réglages, puis Confidentialité et sécurité, puis Mots de passe d’application, et créez-en un avec accès au courrier. Il fait 16 caractères minuscules.",
-    "appPasswordStepsGmail": "Google l'appelle mot de passe d'application. Activez d'abord la validation en deux étapes, puis ouvrez myaccount.google.com/apppasswords et créez-en un. Il fait 16 lettres minuscules, affichées en quatre groupes. Sur un compte Google Workspace, un administrateur peut désactiver les mots de passe d'application pour tout le domaine, et cette page devient alors indisponible.",
+    "appPasswordStepsGmail": "Activez la validation en deux étapes, puis créez-en un sur myaccount.google.com/apppasswords. Il compte 16 lettres minuscules en quatre groupes. Sur un compte Google Workspace, un administrateur peut désactiver les mots de passe d'application pour tout le domaine : cette page est alors indisponible.",
     "titleLimitReached": "Ajouter une autre boîte",
     "titleConnectProvider": "Connecter {provider}",
     "titleReconnectProvider": "Reconnecter {provider}",
@@ -216,7 +216,7 @@
     "gmailOauthToggle": "Vous préférez vous connecter avec Google ?",
     "gmailOauthBody": "La connexion Google fonctionne toujours et rien n'y a changé. Elle vous envoie sur l'écran de consentement de Google et, cette application n'étant pas vérifiée par Google, cet écran affiche un avertissement qu'il faut franchir. Un mot de passe d'application reste dans cette fenêtre.",
     "hintGeneric": "Fonctionne avec toute boîte mail prenant en charge IMAP et SMTP.",
-    "hintGmail": "Gmail exige la validation en deux étapes et un mot de passe d'application généré. Le mot de passe habituel de votre compte Google sera refusé.",
+    "hintGmail": "Nécessite la validation en deux étapes. Votre mot de passe Google habituel ne fonctionnera pas.",
     "hintIcloud": "iCloud exige la double authentification et un mot de passe pour application. Le mot de passe de votre compte Apple sera refusé.",
     "hintYahoo": "Yahoo exige un mot de passe d’application généré. Votre mot de passe Yahoo habituel sera refusé. Activez d’abord la validation en deux étapes, puis créez le mot de passe d’application.",
     "hintZoho": "Activez d’abord l’accès IMAP dans Zoho : Paramètres → Comptes de messagerie → l’accès IMAP est désactivé par défaut. Avec la double authentification, générez aussi un mot de passe spécifique à l’application.",
@@ -238,8 +238,9 @@
     "securityTls": "TLS implicite",
     "securityStarttls": "STARTTLS",
     "securityPortNote": "Ce choix ajuste le port standard correspondant.",
-    "appPasswordHint": "Un mot de passe d’application généré par {provider}, et non votre mot de passe habituel. Il est chiffré avant stockage.",
-    "openAppPasswordPage": "Générer un mot de passe d’application {provider}"
+    "appPasswordHint": "Pas votre mot de passe {provider} habituel. Chiffré avant stockage.",
+    "openAppPasswordPage": "Obtenir un mot de passe d'application",
+    "appPasswordHelpToggle": "Où le trouver ?"
   },
   "commandPalette": {
     "pageOverview": "Aperçu",

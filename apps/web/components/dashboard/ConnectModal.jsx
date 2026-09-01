@@ -368,6 +368,7 @@ export function ConnectModal({
   // away from, and the walkthrough of Google's unverified-app screens inside
   // it is three paragraphs that nobody taking the default has to read.
   const [gmailOauthOpen, setGmailOauthOpen] = useState(false);
+  const [appPwHelpOpen, setAppPwHelpOpen] = useState(false);
   // Set when the address the user typed identified a known mail provider and we
   // filled the server fields in for them. Shape:
   // { label, requiresAppPassword, appPasswordHelpUrl }.
@@ -1703,30 +1704,19 @@ export function ConnectModal({
                     <Icon name={passwordVisible ? 'eyeoff' : 'eye'} size={15} />
                   </button>
                 </div>
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                  {needsAppPassword
-                    ? tr('connect.appPasswordHint', { provider: appPasswordProvider })
-                    : tr('connect.passwordHint')}
-                </span>
-                {/* What this provider calls the credential, where it lives,
-                    and what one looks like, said BEFORE the password is typed.
-                    This is the half the generic form never had: the branded
-                    cards got it because a logo was clicked, while someone
-                    typing me@yahoo.com into the generic form got nothing, and
-                    the generic form is where 156 of the rejected logins are. */}
-                {appPasswordStepsKey && needsAppPassword && (
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5 }}>
-                    {tr(appPasswordStepsKey)}
-                  </span>
-                )}
-                {/* The link to generate the credential only ever existed on the
-                    provider-selection step, so by the time the user was actually
-                    looking at the password box it was gone. Every app-password
-                    provider's dominant failure is a bare
-                    `NO [AUTHENTICATIONFAILED]`, the account password submitted
-                    in place of an app password, so the link belongs here, next
-                    to the field it is about. */}
-                {appPasswordUrl && (
+                {/* ── Getting the credential ────────────────────────────
+                    Task order, not document order. Fetching the app password
+                    is step one and happens on the PROVIDER'S site, so it is a
+                    button with real weight rather than the 12px text link it
+                    used to be, sitting under three paragraphs nobody read.
+                    Buttons initiate actions; links navigate. This initiates
+                    the action the whole form is blocked on.
+
+                    Everything explanatory moved behind the disclosure below.
+                    The old layout printed ~90 words between the password box
+                    and the submit button, which is what made this modal read
+                    as a wall of text. */}
+                {appPasswordUrl && needsAppPassword && (
                   <a
                     href={appPasswordUrl}
                     target="_blank"
@@ -1734,17 +1724,80 @@ export function ConnectModal({
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 5,
+                      justifyContent: 'center',
+                      gap: 7,
                       marginTop: 2,
+                      padding: '9px 14px',
+                      borderRadius: 8,
+                      border: '1px solid var(--border-2)',
+                      background: 'var(--bg-surface)',
                       fontFamily: 'var(--font-sans)',
-                      fontSize: 12,
-                      color: 'var(--brand)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: 'var(--fg-1)',
+                      textDecoration: 'none',
                       width: 'fit-content',
                     }}
                   >
-                    <Icon name="key" size={12} />
+                    <Icon name="key" size={14} />
                     {tr('connect.openAppPasswordPage', { provider: appPasswordProvider })}
+                    <Icon name="external" size={13} />
                   </a>
+                )}
+
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                  {needsAppPassword
+                    ? tr('connect.appPasswordHint', { provider: appPasswordProvider })
+                    : tr('connect.passwordHint')}
+                </span>
+
+                {/* The per-provider detail (what it is called, where it lives,
+                    what one looks like, the Workspace-admin caveat) is still
+                    here for the person who needs it, one click away instead of
+                    in front of the 95% who do not. */}
+                {appPasswordStepsKey && needsAppPassword && (
+                  <div>
+                    <button
+                      type="button"
+                      className="plain-focus"
+                      onClick={() => setAppPwHelpOpen(v => !v)}
+                      aria-expanded={appPwHelpOpen}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        background: 'transparent',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 12.5,
+                        fontWeight: 500,
+                        color: 'var(--fg-2)',
+                        width: 'fit-content',
+                      }}
+                    >
+                      <span style={{
+                        display: 'inline-flex',
+                        transform: appPwHelpOpen ? 'rotate(90deg)' : 'none',
+                        transition: 'transform 120ms ease',
+                      }}>
+                        <Icon name="chevron" size={12} />
+                      </span>
+                      {tr('connect.appPasswordHelpToggle')}
+                    </button>
+                    {appPwHelpOpen && (
+                      <p style={{
+                        margin: '8px 0 0',
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 12,
+                        lineHeight: 1.55,
+                        color: 'var(--fg-3)',
+                      }}>
+                        {tr(appPasswordStepsKey)}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 

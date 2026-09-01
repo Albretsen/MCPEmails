@@ -146,7 +146,7 @@
     "appPasswordStepsZoho": "Zoho 称之为应用专用密码，位于 Zoho 账户的“安全”中。还需要在 Zoho Mail 设置中开启 IMAP 访问；它默认是关闭的。",
     "appPasswordStepsYandex": "Yandex 称之为应用密码。请先在 Yandex Mail 设置中开启 IMAP 和应用密码，然后在 Yandex ID 的“安全”中为 Mail 创建一个应用密码。它是 16 个小写字母。",
     "appPasswordStepsFastmail": "Fastmail 称之为应用密码。打开 Settings，再打开 Privacy and Security，然后是 App Passwords，创建一个带有邮件访问权限的密码。它是 16 个小写字符。",
-    "appPasswordStepsGmail": "Google 称之为应用专用密码。先开启两步验证，然后打开 myaccount.google.com/apppasswords 创建一个。它是 16 个小写字母，分四组显示。在 Google Workspace 账户上，管理员可以为整个域关闭应用专用密码，此时该页面不可用。",
+    "appPasswordStepsGmail": "先开启两步验证，然后在 myaccount.google.com/apppasswords 创建一个。它由 16 个小写字母组成，分为四组。在 Google Workspace 账号中，管理员可以为整个域关闭应用专用密码，届时该页面将不可用。",
     "titleLimitReached": "再添加一个收件箱",
     "titleConnectProvider": "连接 {provider}",
     "titleReconnectProvider": "重新连接 {provider}",
@@ -216,7 +216,7 @@
     "gmailOauthToggle": "更想用 Google 登录？",
     "gmailOauthBody": "Google 登录仍然可用，也没有任何改动。它会把你带到 Google 的授权页面；由于本应用未通过 Google 验证，该页面会显示一条你必须点击跳过的警告。应用专用密码则全程留在这个窗口里。",
     "hintGeneric": "适用于任何支持 IMAP 和 SMTP 的邮箱。",
-    "hintGmail": "Gmail 需要开启两步验证并生成应用专用密码。你平时的 Google 密码会被拒绝。",
+    "hintGmail": "需要开启两步验证。你的常用 Google 密码将无法使用。",
     "hintIcloud": "iCloud 需要开启双重认证并生成 App 专用密码。你的 Apple 账户密码会被拒绝。",
     "hintYahoo": "Yahoo 需要生成的应用密码。你平常的 Yahoo 密码会被拒绝。请先开启两步验证，然后创建应用密码。",
     "hintZoho": "请先在 Zoho 中开启 IMAP 访问：设置 → 邮件账户 → IMAP 访问默认为关闭。若已开启双重认证，还需生成应用专用密码。",
@@ -238,8 +238,9 @@
     "securityTls": "隐式 TLS",
     "securityStarttls": "STARTTLS",
     "securityPortNote": "更改此项会同时设置对应的标准端口。",
-    "appPasswordHint": "由 {provider} 生成的应用密码，而非你平常的账户密码。存储前会先加密。",
-    "openAppPasswordPage": "生成 {provider} 应用密码"
+    "appPasswordHint": "不是你常用的 {provider} 密码。存储前会加密。",
+    "openAppPasswordPage": "获取应用专用密码",
+    "appPasswordHelpToggle": "在哪里找到它？"
   },
   "commandPalette": {
     "pageOverview": "概览",
