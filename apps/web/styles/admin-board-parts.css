@@ -1,0 +1,145 @@
+/* admin-board-parts.css: styling for the board parts in
+   components/admin/growth (KpiTile, MixBars, Donut, CalendarHeat,
+   ProgressRing, BadgeGrid).
+
+   Every class here is prefixed bd-. The card shell, the numbers table, the
+   legend swatch and the empty state all come from admin-charts.css via
+   ChartFrame, so nothing in this file redefines .ac-card or invents a second
+   card style. Colour is always a token from colors_and_type.css, or a
+   color-mix of one into `transparent`, so html[data-theme="dark"] flips the
+   whole file with no per-theme override. There is not a single hex literal
+   below, on purpose.
+
+   The three semantic accents (--mint-500, --amber-500, --red-500) sit at
+   roughly 2:1 on the light page. They appear here only as FILLS and as low
+   percentage tints. Where an accent has to carry text, it is mixed toward
+   --fg-1 the same way .ac-pill does it in admin-charts.css. */
+
+/* ── KPI tile ──────────────────────────────────────────────────────────── */
+/* The tone stripe is an INSET SHADOW rather than a border-left, so switching
+   tone cannot shift the tile's content by two pixels relative to its
+   neighbours in the same row. */
+.bd-kpi { display: flex; flex-direction: column; gap: 6px; }
+.bd-kpi-default { box-shadow: none; }
+.bd-kpi-good { box-shadow: inset 3px 0 0 0 var(--mint-500); }
+.bd-kpi-warn { box-shadow: inset 3px 0 0 0 var(--amber-500); }
+.bd-kpi-bad { box-shadow: inset 3px 0 0 0 var(--red-500); }
+
+.bd-kpi-label { margin: 0; color: var(--fg-3); font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.bd-kpi-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 0; }
+.bd-kpi-value { font-size: 30px; font-weight: 650; letter-spacing: -.03em; line-height: 1.05; color: var(--fg-1); font-variant-numeric: tabular-nums; }
+.bd-kpi-unit { color: var(--fg-3); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+.bd-kpi-delta { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Grey is the default and the most common state. See the note in KpiTile.tsx:
+   at six paying customers, a one person change is a double digit percentage,
+   so colour is spent only on movement a single person could not have made. */
+.bd-kpi-delta-flat { background: var(--bg-sunken); color: var(--fg-3); }
+.bd-kpi-delta-good { background: var(--mint-50); color: color-mix(in oklab, var(--mint-500) 55%, var(--fg-1)); }
+.bd-kpi-delta-bad { background: var(--red-100); color: color-mix(in oklab, var(--red-500) 55%, var(--fg-1)); }
+
+.bd-kpi-caption { color: var(--fg-3); font-size: 11.5px; line-height: 1.45; margin: 0; }
+.bd-kpi-caption strong { color: var(--fg-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.bd-kpi-spark { margin-top: 2px; }
+
+/* ── Mix bars ──────────────────────────────────────────────────────────── */
+/* minmax(0, 1fr) on the name column is load-bearing: a grid track's default
+   `auto` minimum is its widest content, so a long provider name would push the
+   counts off the card instead of ellipsing. */
+.bd-mix { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.bd-mix-row { display: grid; grid-template-columns: minmax(0, 1fr) 32% 54px 66px; align-items: center; column-gap: 10px; }
+.bd-mix-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; color: var(--fg-1); }
+.bd-mix-note { color: var(--fg-3); font-size: 11px; margin-left: 6px; }
+.bd-mix-track { position: relative; display: block; height: 9px; border-radius: 999px; background: var(--bg-sunken); overflow: hidden; }
+.bd-mix-fill { display: block; height: 100%; border-radius: 999px; min-width: 2px; }
+.bd-mix-count { text-align: right; font-size: 12.5px; font-weight: 600; color: var(--fg-1); font-variant-numeric: tabular-nums; }
+.bd-mix-share { text-align: right; font-size: 11.5px; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.bd-mix-more > .bd-mix { margin-top: 10px; }
+
+/* ── Donut ─────────────────────────────────────────────────────────────── */
+.bd-donut { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.bd-donut-figure { position: relative; flex: none; width: 148px; height: 148px; }
+/* No preserveAspectRatio override here. This SVG must stay square or the ring
+   becomes an ellipse and equal slices stop looking equal. */
+.bd-donut-svg { display: block; width: 100%; height: 100%; }
+.bd-donut-track { stroke: var(--bg-sunken); }
+/* Butt caps, explicitly: a round cap on an arc overhangs its own slice by half
+   the stroke width, which at 16px is enough to swallow a small neighbour. */
+.bd-donut-arc { stroke-linecap: butt; }
+.bd-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; pointer-events: none; text-align: center; }
+.bd-donut-center-value { font-size: 22px; font-weight: 650; letter-spacing: -.025em; line-height: 1; color: var(--fg-1); font-variant-numeric: tabular-nums; }
+.bd-donut-center-label { font-size: 10.5px; color: var(--fg-3); letter-spacing: .03em; text-transform: uppercase; }
+
+.bd-donut-legend { flex: 1 1 190px; min-width: 0; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.bd-donut-item { display: grid; grid-template-columns: 11px minmax(0, 1fr) 54px 62px; align-items: center; column-gap: 8px; font-size: 12px; }
+.bd-donut-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg-2); }
+.bd-donut-count { text-align: right; color: var(--fg-1); font-weight: 600; font-variant-numeric: tabular-nums; }
+.bd-donut-share { text-align: right; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+
+/* ── Calendar heat ─────────────────────────────────────────────────────── */
+/* Capped at its natural width so the squares only ever shrink. A grid that
+   scaled up would enlarge its own axis text along with it. */
+.bd-heat { padding-bottom: 2px; }
+.bd-heat-svg { display: block; width: 100%; height: auto; }
+.bd-heat-axis { fill: var(--fg-3); font-size: 9px; font-variant-numeric: tabular-nums; }
+.bd-heat-axis-end { text-anchor: end; }
+.bd-heat-cell { stroke: none; }
+.bd-heat-cell:hover { stroke: var(--border-2); stroke-width: 1; }
+
+.bd-heat-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; color: var(--fg-3); font-size: 11px; }
+.bd-heat-legend-label { color: var(--fg-3); }
+.bd-heat-keys { display: inline-flex; gap: 3px; }
+.bd-heat-key { display: block; width: 11px; height: 11px; border-radius: 2.5px; }
+.bd-heat-legend-note { flex: 1 1 100%; color: var(--fg-4); line-height: 1.45; }
+
+/* ── Progress ring ─────────────────────────────────────────────────────── */
+.bd-ring { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; }
+.bd-ring-svg { display: block; }
+.bd-ring-track { stroke: var(--bg-sunken); }
+.bd-ring-arc { stroke-linecap: butt; }
+.bd-ring-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 650; color: var(--fg-1); letter-spacing: -.015em; font-variant-numeric: tabular-nums; }
+
+/* ── Badge grid ────────────────────────────────────────────────────────── */
+.bd-badges { display: flex; flex-direction: column; gap: 16px; }
+.bd-badges-label { margin: 0 0 9px; color: var(--fg-3); font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+
+.bd-badges-next { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.bd-badges-next-item { display: flex; align-items: flex-start; gap: 12px; min-width: 0; border: 1px solid var(--border-1); border-radius: 10px; padding: 12px; background: color-mix(in srgb, var(--bg-sunken) 45%, transparent); }
+.bd-badges-next-body { min-width: 0; }
+.bd-badges-next-title { margin: 0; font-size: 13.5px; font-weight: 650; color: var(--fg-1); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.bd-badges-next-detail { margin: 3px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--fg-3); }
+.bd-badges-next-remaining { margin: 6px 0 0; font-size: 11.5px; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+
+/* Reached milestones. Dense on purpose: the whole point of the strip is that
+   you can see twenty of them at once and read the dates as a rate. */
+.bd-badges-pills { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.bd-badge-pill { display: inline-flex; align-items: baseline; gap: 6px; border: 1px solid transparent; border-radius: 999px; padding: 4px 11px; font-size: 11.5px; max-width: 100%; }
+.bd-badge-pill-title { color: var(--fg-1); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bd-badge-pill-date { color: var(--fg-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Tone tints the fill only. The label stays on --fg-1 so it keeps its
+   contrast in both themes. */
+.bd-tone-money { background: color-mix(in srgb, var(--mint-500) 15%, transparent); border-color: color-mix(in srgb, var(--mint-500) 38%, transparent); }
+.bd-tone-people { background: color-mix(in srgb, var(--brand) 13%, transparent); border-color: color-mix(in srgb, var(--brand) 34%, transparent); }
+.bd-tone-usage { background: color-mix(in srgb, var(--amber-500) 17%, transparent); border-color: color-mix(in srgb, var(--amber-500) 40%, transparent); }
+.bd-tone-reliability { background: color-mix(in srgb, var(--cobalt-300) 18%, transparent); border-color: color-mix(in srgb, var(--cobalt-300) 42%, transparent); }
+
+/* Not yet reached and not featured: same shape, no fill, muted label. Shape
+   carries "milestone", fill carries "done". */
+.bd-badge-pill-locked { background: transparent; border-color: var(--border-1); }
+.bd-badge-pill-locked .bd-badge-pill-title { color: var(--fg-3); font-weight: 500; }
+
+/* Narrow cards cannot hold the four column mix row. The bar drops to its own
+   line rather than squeezing the name to nothing, because the name is the
+   only part of the row that cannot be recovered from the numbers table. */
+@media (max-width: 560px) {
+  .bd-kpi-value { font-size: 26px; }
+  .bd-mix-row { grid-template-columns: minmax(0, 1fr) 50px 64px; grid-template-areas: "name count share" "track track track"; row-gap: 5px; }
+  .bd-mix-name { grid-area: name; }
+  .bd-mix-track { grid-area: track; }
+  .bd-mix-count { grid-area: count; }
+  .bd-mix-share { grid-area: share; }
+  .bd-donut { gap: 14px; }
+  .bd-donut-figure { width: 124px; height: 124px; }
+  .bd-donut-center-value { font-size: 19px; }
+}
