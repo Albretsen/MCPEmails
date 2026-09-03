@@ -43,7 +43,7 @@
     "@vercel/analytics": "^2.0.1",
     "dompurify": "^3.4.14",
     "he": "^1.2.0",
-    "isomorphic-dompurify": "^2.15.0",
+    "isomorphic-dompurify": "^3.23.0",
     "jsdom": "^26.0.0",
     "mailparser": "^3.9.17",
     "mime-types": "^2.1.35",
