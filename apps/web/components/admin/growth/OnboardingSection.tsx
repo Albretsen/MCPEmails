@@ -75,6 +75,7 @@ export async function OnboardingSection({ days }: { days: number }) {
 
   return (
     <Section
+      id="onboarding"
       title="Onboarding"
       explain={
         <>

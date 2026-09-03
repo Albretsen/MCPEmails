@@ -68,6 +68,7 @@ export async function AcquisitionSection({ days }: { days: number }) {
 
   return (
     <Section
+      id="acquisition"
       title="Acquisition"
       explain={
         <>

@@ -52,6 +52,7 @@ export async function ActiveUsersSection({ days }: { days: number }) {
 
   return (
     <Section
+      id="accounts"
       title="Active accounts"
       explain={
         <>

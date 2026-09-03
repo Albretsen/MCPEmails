@@ -86,6 +86,7 @@ export async function HealthSection({ days }: { days: number }) {
 
   return (
     <Section
+      id="health"
       title="Health and ceilings"
       explain={
         <>

@@ -1,21 +1,49 @@
 /**
  * /admin/growth: the internal product and growth reporting view.
  *
- * This file is deliberately thin. It resolves the window, renders the header,
- * and mounts one independently-streamed section per question. Every section is
- * its own async server component behind its own Suspense boundary, so the page
- * paints immediately and each panel arrives when its query does.
+ * This file is deliberately thin. It resolves the window, renders the header
+ * and the section nav, and mounts one independently-streamed section per
+ * question. Every section is its own async server component behind its own
+ * Suspense boundary, so the page paints immediately and each panel arrives when
+ * its query does.
  *
- * ORDER IS THE DESIGN. Sections run in the order the questions get asked on a
- * weekly review, and the order changed in this revision because the product
- * did. Until 2026-08-29 it had no paying customer, so the page opened with
- * usage and put anything to do with money near the bottom; the operator's own
- * verdict was that it was not worth opening most weeks. It now opens with a
- * six-number pulse and then revenue, and the sections descend through the
- * causes: what we earn, who could pay next, who is arriving, how far they get,
- * whether they stay, who they are, and what is broken.
+ * ORDER IS THE DESIGN, and this revision changed the top of it.
+ *
+ * The page used to open with a strip of six equal cards and then descend
+ * through revenue, the paywall, acquisition, onboarding, retention, accounts
+ * and health. The descent was right and is unchanged. The opening was not: six
+ * cards of identical weight is a list, not a hierarchy, and it mixed LEVELS
+ * (MRR, which is what the business is) with MOVEMENTS (new workspaces this
+ * week, which is what changed) at the same size, so neither could be read in
+ * the five seconds a person actually gives an overview. It also put a driver,
+ * the count of workspaces standing at the inbox ceiling, in the headline row,
+ * where it competed with revenue for attention it does not deserve; that number
+ * now lives only in "The path to paid", beside the rest of the paywall
+ * population it belongs with.
+ *
+ * So the page now opens as an inverted pyramid, which is the layout every
+ * source on dashboard design converges on and which this page previously did
+ * not use:
+ *
+ *   1. SCOREBOARD. Four large cards carrying the levels: MRR, cash collected,
+ *      paying customers, people. Beneath them one strip of six small cards
+ *      carrying the movements, with MRR broken into new, churned and at risk
+ *      rather than netted into one figure that hides whether a flat month was
+ *      quiet or was one sale cancelling one churn.
+ *   2. RECORDS. The series read for its shape rather than its level: longest
+ *      run, highest day, distance to the next round number. It is the
+ *      enjoyable section and it is made entirely of counted facts.
+ *   3. Everything else, in the order the questions get asked: what we earn, who
+ *      could pay next, who is arriving, how far they get, whether they stay,
+ *      who they are, and what is broken.
+ *
+ * The nav under the header exists because the page is long by design. The
+ * alternative to a long page is a page that hides the causes behind the
+ * headline, and the reason this one was worth rewriting is that the headline
+ * without the causes is exactly what was not worth opening.
  *
  * WHAT WAS REMOVED, so it is not quietly re-added later:
+ *   - The six-card pulse strip, replaced by the scoreboard as described above.
  *   - Four separate panels measuring the ACTION cap. The 2026-08-19 repricing
  *     made connected inboxes the value metric and left the action cap as an
  *     abuse ceiling, so all four now report a structural zero. Replaced by one
@@ -27,12 +55,12 @@
  *   - A second "Paying customers" card that disagreed in wording with the first.
  *   - Fourteen of the twenty error rows, now behind a disclosure.
  *
- * Privacy contract, unchanged in substance and widened by one section: this
- * page shows aggregates except for two tables that name accounts, the active
- * roster and the Stripe subscription list. Both are behind the ADMIN_EMAILS
- * session. No credential, message content, subject, recipient or IP address
- * appears anywhere on it. The kiosk board at /admin/growth/kiosk carries
- * neither table, deliberately, because it hangs on a wall behind a shared token.
+ * Privacy contract, unchanged: this page shows aggregates except for two tables
+ * that name accounts, the active roster and the Stripe subscription list. Both
+ * are behind the ADMIN_EMAILS session. No credential, message content, subject,
+ * recipient or IP address appears anywhere on it. The kiosk board at
+ * /admin/growth/kiosk carries neither table, deliberately, because it hangs on
+ * a wall behind a shared token.
  */
 
 import { Suspense } from 'react';
@@ -43,7 +71,8 @@ import {
   SkeletonStatRow,
   SkeletonTable,
 } from '../../../components/admin/GrowthSkeletons';
-import { PulseSection } from '../../../components/admin/growth/PulseSection';
+import { ScoreboardSection } from '../../../components/admin/growth/ScoreboardSection';
+import { RecordsSection } from '../../../components/admin/growth/RecordsSection';
 import { RevenueSection } from '../../../components/admin/growth/RevenueSection';
 import { PathToPaidSection } from '../../../components/admin/growth/PathToPaidSection';
 import { AcquisitionSection } from '../../../components/admin/growth/AcquisitionSection';
@@ -72,6 +101,25 @@ const WINDOW_LABELS: Record<WindowKey, string> = {
   '28d': 'Last 28 days',
   '90d': 'Last 90 days',
 };
+
+/**
+ * The nav, and therefore the page's table of contents.
+ *
+ * Every id here must match the `id` passed to the corresponding `Section`. A
+ * jump link to an anchor that does not exist silently does nothing, which is
+ * the one failure mode a nav must not have, so the two lists are kept adjacent
+ * in review: the ids live in the section components, one line under the title.
+ */
+const SECTIONS: { id: string; label: string }[] = [
+  { id: 'records', label: 'Records' },
+  { id: 'revenue', label: 'Revenue' },
+  { id: 'path-to-paid', label: 'Path to paid' },
+  { id: 'acquisition', label: 'Acquisition' },
+  { id: 'onboarding', label: 'Onboarding' },
+  { id: 'retention', label: 'Retention' },
+  { id: 'accounts', label: 'Accounts' },
+  { id: 'health', label: 'Health' },
+];
 
 export default async function GrowthAnalyticsPage({
   searchParams,
@@ -104,21 +152,28 @@ export default async function GrowthAnalyticsPage({
               </a>
             ))}
           </nav>
+          <a className="growth-refresh" href="/admin/growth/kiosk">Kiosk</a>
           <form action="/admin/growth/refresh" method="POST">
             <button type="submit" className="growth-refresh">Refresh</button>
           </form>
         </div>
       </header>
 
-      <p className="growth-definition">
-        <strong>Active workspace:</strong> at least one successful MCP tool call in the rolling window.
-        Two sections name accounts: <strong>Revenue</strong> and <strong>Accounts</strong>. Everything
-        else is aggregate. Cached for up to 10 minutes; cohort and funnel stages read durable timestamps
-        and are all-time.
-      </p>
+      {/* Above the scoreboard, not below it: the levels are the first thing on
+          the page and this is one line of chrome, not an introduction to be
+          read. It sticks so the page stays navigable at any scroll depth. */}
+      <nav className="growth-nav" aria-label="Sections">
+        {SECTIONS.map((section) => (
+          <a key={section.id} href={`#${section.id}`}>{section.label}</a>
+        ))}
+      </nav>
 
-      <Suspense fallback={<SkeletonStatRow count={6} label="This week" />}>
-        <PulseSection days={days} />
+      <Suspense fallback={<SkeletonStatRow count={4} label="The business, right now" />}>
+        <ScoreboardSection days={days} />
+      </Suspense>
+
+      <Suspense fallback={<SkeletonStatRow count={6} label="Records" />}>
+        <RecordsSection />
       </Suspense>
 
       <Suspense fallback={<SkeletonSplitChart label="Revenue" height={220} />}>
@@ -148,6 +203,13 @@ export default async function GrowthAnalyticsPage({
       <Suspense fallback={<SkeletonSplitChart label="Health and ceilings" height={220} />}>
         <HealthSection days={days} />
       </Suspense>
+
+      <p className="growth-definition growth-footnote">
+        <strong>Active workspace:</strong> at least one successful MCP tool call in the rolling window.
+        Two sections name accounts: <strong>Revenue</strong> and <strong>Accounts</strong>. Everything
+        else is aggregate. Cached for up to 10 minutes; cohort, funnel and record figures read durable
+        timestamps and are all-time.
+      </p>
     </main>
   );
 }

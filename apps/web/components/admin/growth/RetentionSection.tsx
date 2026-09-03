@@ -73,6 +73,7 @@ export async function RetentionSection() {
 
   return (
     <Section
+      id="retention"
       title="Retention"
       explain={
         <>
