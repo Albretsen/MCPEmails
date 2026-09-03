@@ -1,6 +1,6 @@
 # Experiments system: handoff (2026-09-03)
 
-Status: built, verified locally, applied to the database, NOT committed, NOT deployed. The homepage demo video experiment exists in `draft` with weights control 100 / video 0.
+Status: shipped to production in commit 6e1c870 on 2026-09-03 (git push triggered the Vercel production build; verified live on mcpemails.com). The homepage demo video experiment exists in `draft` with weights control 100 / video 0, so the public homepage is unchanged until it is started from the admin panel.
 
 ## What was built
 
