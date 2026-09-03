@@ -83,6 +83,11 @@
 .growth-movement .growth-stat-value { font-size: 22px; }
 .growth-movement .growth-stat-label { font-size: 11px; }
 
+/* Two cards where the grid assumes four: the money section's "what the headline
+   leaves out" row. Left-aligned at a readable card width rather than stretched
+   across the full page, which is what `repeat(4, 1fr)` on two children does. */
+.growth-stat-grid.growth-revenue-aside { grid-template-columns: repeat(2, minmax(0, 240px)); }
+
 /* ---------- Records ----------
    Four lines rather than the three a stat card carries: label, figure, what it
    is, and the context that makes it a record. The meter is optional and only

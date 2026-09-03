@@ -85,40 +85,33 @@ export async function RevenueSection({ days }: { days: number }) {
         </span>
       ) : undefined}
     >
-      <section className="growth-stat-grid is-five" aria-label="Revenue summary" style={{ marginBottom: 18 }}>
+      {/* TWO CARDS, NOT FIVE. This row used to restate MRR, ARR, paying
+          customers, ARPA and cash collected, every one of which the scoreboard
+          at the top of the page now carries as a headline with its own full
+          definition behind the question mark. Repeating them here made the
+          money section open with five numbers the reader had already read
+          thirty seconds earlier, and pushed the subscription table (the thing
+          that is only here) below the fold.
+
+          What is left is what the scoreboard deliberately does NOT count.
+          Comps are real people paying nothing and are never folded into a
+          revenue figure; ARPA is the one derived number with no room in a
+          headline card. Everything else about the money is now the table and
+          the chart below, which is what this section is for. */}
+      <section className="growth-stat-grid growth-revenue-aside" aria-label="What the headline leaves out" style={{ marginBottom: 18 }}>
         <StatCard
-          label="MRR"
-          value={formatMoney(money.mrrMinor, money.currency)}
-          detail={money.netNewMrrMinor === 0
-            ? `No change in the last ${days} days`
-            : `${money.netNewMrrMinor > 0 ? '+' : ''}${formatMoney(money.netNewMrrMinor, money.currency)} in the last ${days} days`}
-          explain={
-            <>
-              Net monthly recurring revenue across external, non-comped subscriptions. Net new is new
-              minus churned over the window; expansion and contraction are deliberately not modelled,
-              because doing that properly needs a stored MRR history to diff against and at single-digit
-              customer counts an upgrade is visible in the table below anyway.
-            </>
-          }
-        />
-        <StatCard
-          label="ARR"
-          value={formatMoney(money.arrMinor, money.currency)}
-          detail="MRR times twelve"
-          explain="Not a forecast and not a booking. It is the same number as MRR said annually, which is the convention every SaaS benchmark is quoted in."
-        />
-        <StatCard
-          label="Paying customers"
-          value={money.payingCustomers}
+          label="Comped and internal"
+          value={money.compedCustomers + money.internalCustomers}
           detail={[
             money.compedCustomers > 0 ? `${money.compedCustomers} comped` : null,
-            money.internalCustomers > 0 ? `${money.internalCustomers} internal` : null,
-          ].filter(Boolean).join(', ') || 'Live subscriptions paying something'}
+            money.internalCustomers > 0 ? `${money.internalCustomers} ours` : null,
+          ].filter(Boolean).join(', ') || 'None, so the headline is the whole story'}
           explain={
             <>
-              Live subscriptions actually paying an amount above zero, excluding our own accounts.
-              Comped means a real person on a subscription discounted to nothing: they are counted
-              beside the paying figure, never inside it.
+              Live subscriptions that are real people and no money: a comp is a subscription discounted
+              to nothing, internal is one of our own accounts. Both are excluded from every figure on
+              the scoreboard and are reported here so the exclusion is visible rather than assumed. The
+              page has twice reported comps as revenue, which is why they are counted out loud.
             </>
           }
         />
@@ -129,21 +122,6 @@ export async function RevenueSection({ days }: { days: number }) {
             ? `Across ${money.payingCustomers} paying customer${money.payingCustomers === 1 ? '' : 's'}`
             : 'No paying customers yet'}
           explain="MRR divided by paying customers. At one customer this is that customer's price and nothing more; it starts carrying information somewhere past ten."
-        />
-        <StatCard
-          label="Cash collected"
-          value={detail ? formatMoney(detail.cashAllTimeMinor, detail.currency) : NO_DATA}
-          detail={detail
-            ? `${formatMoney(detail.cashLast30Minor, detail.currency)} in the last 30 days`
-            : 'Charge history unavailable'}
-          explain={
-            <>
-              Money that actually arrived, all time, net of refunds, excluding charges on our own
-              accounts. Read from charges rather than invoices because an invoice can be settled from a
-              credit balance that moved no money at all. This is <strong>not</strong> MRR: a year paid up
-              front lands here once and in MRR twelve times.
-            </>
-          }
         />
       </section>
 
