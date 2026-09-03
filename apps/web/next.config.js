@@ -208,6 +208,21 @@ const nextConfig = {
           { key: 'X-Permitted-Cross-Domain-Policies',  value: 'none' },
         ],
       },
+      {
+        // Demo video, poster and caption track. These are large, finished
+        // build outputs rather than page content, so they get the same
+        // year-long immutable cache as any hashed asset. Nothing else under
+        // public/ has one; only /_next/static did.
+        //
+        // Consequence worth knowing before a re-cut: `immutable` means a new
+        // cut MUST ship under a new filename. Overwriting connect-and-triage.mp4
+        // in place leaves every previous visitor on the old file for up to a
+        // year. The assets are content addressed by name in practice.
+        source: '/demo/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
     ];
   },
 

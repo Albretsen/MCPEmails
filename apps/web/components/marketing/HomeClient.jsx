@@ -5,6 +5,7 @@ import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '.
 import {
   Nav, Hero, Trusted, Features, DashboardPreview, HowItWorks, Examples, Quote, Pricing, Faq, Footer
 } from './Sections';
+import { DemoVideo } from './DemoVideo';
 
 const TWEAK_DEFAULTS = {
   heroVariant: 'pipe',
@@ -12,9 +13,17 @@ const TWEAK_DEFAULTS = {
 };
 
 /**
- * @param {{ stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
+ * `showDemoVideo` is the treatment flag for the homepage A/B test. It is
+ * assigned server-side and passed down; when it is false this component renders
+ * exactly what it rendered before the test existed, so the control arm is the
+ * unchanged home page.
+ *
+ * @param {{
+ *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
+ *   showDemoVideo?: boolean,
+ * }} props
  */
-export default function HomeClient({ stripePrices }) {
+export default function HomeClient({ stripePrices, showDemoVideo = false }) {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
 
   // Apply dark mode (also persisted so other pages match)
@@ -45,6 +54,7 @@ export default function HomeClient({ stripePrices }) {
       <Nav onSignIn={onSignIn} onGetStarted={onGetStarted} />
       <main>
         <Hero variant={t.heroVariant} onGetStarted={onGetStarted} />
+        {showDemoVideo && <DemoVideo />}
         <Trusted />
         <Features />
         <DashboardPreview />

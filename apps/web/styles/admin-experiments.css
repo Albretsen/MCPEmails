@@ -1,0 +1,195 @@
+/* admin-experiments.css: the forms and the results table on
+   /admin/growth/experiments.
+
+   WHAT THIS FILE IS. A handful of form and table rules for one internal page.
+   It is not a card style: the cards are `.ac-card` from admin-charts.css, and
+   the page frame is `.board` / `.bd-head` from admin-board.css, exactly as the
+   growth board uses them. Only the parts that do not exist anywhere else live
+   here: the status pill, the weight column, the control rows, and the create
+   form.
+
+   THERE IS NO CLIENT JAVASCRIPT ON THIS PAGE, and these rules assume it. Every
+   control is a real <input> or <select> inside a real <form method="post">, so
+   there are no sliders reading out a live value, no toggles that need a
+   handler, and no disabled-until-valid states. A weight sum is computed on the
+   server from the stored weights and printed as text.
+
+   Every colour is a token from colors_and_type.css / theme.css, so
+   html[data-theme="dark"] flips the page with no rules of its own here. */
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+
+/* One column. An experiment is read top to bottom, decided on, and acted on;
+   tiling two of them side by side would put two sets of destructive buttons
+   within a thumb's width of each other. */
+.xp-list { display: flex; flex-direction: column; gap: 14px; }
+.xp-card { display: flex; flex-direction: column; gap: 14px; }
+
+.xp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.xp-head h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.xp-key {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--bg-sunken);
+  color: var(--fg-3);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  font-weight: 400;
+}
+.xp-desc { margin: 0; font-size: 12px; line-height: 1.5; color: var(--fg-3); max-width: 78ch; }
+.xp-dates { display: flex; flex-wrap: wrap; gap: 3px 16px; margin: 0; font-size: 11px; color: var(--fg-4); }
+.xp-dates b { color: var(--fg-3); font-weight: 500; }
+
+/* ── Status pill ────────────────────────────────────────────────────────── */
+
+/* Border and text only. A filled chip in a semantic hue reads as an alert, and
+   "running" is not an alert, it is the normal state of a live experiment. */
+.xp-pill {
+  flex: none;
+  padding: 2px 9px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.xp-pill-draft { color: var(--fg-3); }
+.xp-pill-running { color: var(--mint-500); }
+.xp-pill-concluded { color: var(--amber-500); }
+
+/* ── The "you are seeing" line ──────────────────────────────────────────── */
+
+.xp-seeing {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 8px 11px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: var(--bg-sunken);
+  font-size: 12px;
+  color: var(--fg-2);
+}
+.xp-seeing b { color: var(--fg-1); font-weight: 600; }
+.xp-seeing span { color: var(--fg-4); }
+.xp-seeing a { color: var(--fg-3); margin-left: auto; }
+
+/* ── Results table ──────────────────────────────────────────────────────── */
+
+/* Reuses .ac-table from admin-charts.css for the numbers. Only the weight
+   input column and the totals row are new. */
+.xp-weight {
+  width: 62px;
+  padding: 3px 6px;
+  border: 1px solid var(--border-1);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--fg-1);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.xp-weight:focus-visible { outline: 2px solid var(--fg-3); outline-offset: 1px; }
+.xp-table td.xp-cell-weight, .xp-table th.xp-col-weight { text-align: right; }
+/* The control is variants[0], and while an experiment is a draft it is what
+   every visitor gets. Marking it costs one word and saves a wrong reading. */
+.xp-control-tag { color: var(--fg-4); font-size: 10.5px; margin-left: 6px; text-transform: uppercase; letter-spacing: .04em; }
+.xp-sum { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 9px 0 0; font-size: 11.5px; color: var(--fg-3); }
+.xp-sum b { color: var(--fg-1); font-weight: 600; font-variant-numeric: tabular-nums; }
+.xp-sum-bad { color: var(--amber-500); }
+.xp-note { margin: 9px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--fg-3); max-width: 82ch; }
+
+/* ── Controls ───────────────────────────────────────────────────────────── */
+
+.xp-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.xp-controls form { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 0; }
+.xp-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin: 0; }
+
+.xp-field { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--fg-3); }
+.xp-field span { letter-spacing: .02em; }
+.xp-field input, .xp-field select, .xp-field textarea {
+  padding: 4px 8px;
+  border: 1px solid var(--border-1);
+  border-radius: 7px;
+  background: var(--bg-surface);
+  color: var(--fg-1);
+  font: inherit;
+  font-size: 12px;
+}
+.xp-field textarea { min-height: 52px; resize: vertical; }
+.xp-field input:focus-visible, .xp-field select:focus-visible, .xp-field textarea:focus-visible {
+  outline: 2px solid var(--fg-3);
+  outline-offset: 1px;
+}
+.xp-field-wide { flex: 1 1 260px; }
+.xp-field-wide input, .xp-field-wide textarea { width: 100%; box-sizing: border-box; }
+
+.xp-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border-1);
+  border-radius: 7px;
+  background: var(--bg-surface);
+  color: var(--fg-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.xp-btn:hover { color: var(--fg-1); border-color: var(--border-2); }
+.xp-btn-primary { color: var(--fg-1); border-color: var(--border-2); }
+.xp-hint { font-size: 11px; line-height: 1.5; color: var(--fg-4); margin: 0; max-width: 74ch; }
+
+.xp-block { border-top: 1px solid var(--border-1); padding-top: 13px; display: flex; flex-direction: column; gap: 9px; }
+.xp-block h3 {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--fg-4);
+}
+
+/* ── Banners ────────────────────────────────────────────────────────────── */
+
+.xp-banner {
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.xp-banner-error { border-color: var(--red-500); color: var(--fg-1); }
+.xp-banner-ok { border-color: var(--mint-500); color: var(--fg-2); }
+
+/* ── Create form ────────────────────────────────────────────────────────── */
+
+.xp-create-grid { display: flex; flex-direction: column; gap: 10px; }
+.xp-variant-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.xp-variant-row .xp-field input { width: 100%; box-sizing: border-box; }
+.xp-variant-id { flex: 0 1 170px; }
+.xp-variant-label { flex: 1 1 240px; }
+.xp-variant-weight { flex: 0 0 92px; }
+
+.xp-empty { margin: 0; padding: 18px 0; text-align: center; font-size: 13px; color: var(--fg-3); }
+
+@media (max-width: 720px) {
+  .xp-seeing a { margin-left: 0; }
+  .xp-field-wide { flex-basis: 100%; }
+}
+
+/* The create form is one flat column rather than a stack of bordered blocks,
+   so its one internal heading needs the block heading style without the rule
+   above it. */
+.xp-block-title {
+  margin: 4px 0 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--fg-4);
+}

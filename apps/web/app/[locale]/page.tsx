@@ -4,6 +4,8 @@ import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { routing } from '@/i18n/routing';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
+import { HOMEPAGE_DEMO_VIDEO } from '@/lib/experiments/constants';
+import { getExperimentDecisionForRequest } from '@/lib/experiments/request';
 
 export async function generateMetadata({
   params,
@@ -49,6 +51,13 @@ export default async function HomePage({
   setRequestLocale(locale);
   const stripePrices = await fetchStripePrices();
 
+  // The first real user of the experiments system. The decision is made once
+  // per request from the anonymous subject id the proxy attached; the page
+  // itself knows nothing about cookies or bucketing. While the experiment is
+  // a draft this is always the control, so the homepage is unchanged.
+  const demoVideo = await getExperimentDecisionForRequest(HOMEPAGE_DEMO_VIDEO.key);
+  const showDemoVideo = demoVideo.variantId === HOMEPAGE_DEMO_VIDEO.variants.video;
+
   const t = await getTranslations({ locale, namespace: 'home.meta' });
   const jsonLd = homeJsonLd(locale, {
     name: t('title'),
@@ -61,7 +70,7 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HomeClient stripePrices={stripePrices} />
+      <HomeClient stripePrices={stripePrices} showDemoVideo={showDemoVideo} />
     </>
   );
 }

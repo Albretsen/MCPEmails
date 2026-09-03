@@ -1,0 +1,41 @@
+{
+  "id": "connect-and-triage-clean",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "theme": "light",
+  "voiceover": "assets/vo/connect-and-triage.mp3",
+  "captions": false,
+  "scenes": [
+    {
+      "type": "title",
+      "durationInSeconds": 7,
+      "headline": "Give your AI agent access to your inbox.",
+      "sub": "Works with Gmail, iCloud, Fastmail, or the IMAP mailbox you already have.",
+      "align": "left"
+    },
+    {
+      "type": "capture",
+      "shot": "add-inbox",
+      "clip": {
+        "from": 1.6
+      },
+      "speed": 1.0,
+      "autoZoom": true,
+      "maxZoom": 1.8,
+      "frame": "browser"
+    },
+    {
+      "type": "chat",
+      "transcript": "transcripts/connect-and-triage.json",
+      "durationInSeconds": 20.72,
+      "title": "Your agent"
+    },
+    {
+      "type": "outro",
+      "durationInSeconds": 4,
+      "cta": "mcpemails.com",
+      "sub": "Give your AI agent an inbox."
+    }
+  ]
+}

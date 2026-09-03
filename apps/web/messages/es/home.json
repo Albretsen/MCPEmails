@@ -261,5 +261,15 @@
     "eyebrow": "Vista del producto",
     "title": "Ve toda tu operación MCP de un vistazo.",
     "sub": "Un panel en tiempo real para cada bandeja conectada, clave de API y llamada a herramientas, para que siempre sepas qué hacen tus agentes."
+  },
+  "demo": {
+    "eyebrow": "Míralo funcionar",
+    "title": "Conecta una bandeja y pregunta qué necesita tu atención.",
+    "sub": "Menos de un minuto, grabado con el producto real: una conexión IMAP de verdad y una llamada a herramientas real que encuentra el único correo que importa.",
+    "caption": "Grabado con un buzón de demostración lleno de correo ficticio. En este vídeo no aparece ninguna correspondencia real.",
+    "player": {
+      "label": "Vídeo de demostración: conectar una bandeja y clasificarla con un agente de IA",
+      "fallback": "Tu navegador no puede reproducir este vídeo. La guía rápida de la documentación cubre los mismos pasos."
+    }
   }
 }

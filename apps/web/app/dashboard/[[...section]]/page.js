@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
+import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
@@ -621,6 +622,18 @@ export default async function DashboardPage({ params }) {
   // otherwise the earliest-created workspace.
   const workspace =
     allWorkspaces.find((w) => w.id === preferredWorkspaceId) ?? allWorkspaces[0] ?? null;
+
+  // Join the anonymous visitor id to the account, once, on the first
+  // authenticated render after signup. Both signup paths (password, and OAuth
+  // via /auth/callback) land here first. The call gates itself on
+  // isNewAccountSignup, so a returning customer's dashboard load does nothing,
+  // and it swallows its own errors: an analytics write must never be the thing
+  // that breaks the dashboard.
+  await linkExperimentSubjectForRequest({
+    workspaceId: workspace?.id ?? null,
+    userId: user.id,
+    userCreatedAt: user.created_at,
+  });
 
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).
   let userRole = 'member';

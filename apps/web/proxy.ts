@@ -2,6 +2,8 @@ import createMiddleware from 'next-intl/middleware';
 import { updateSession } from '@/lib/supabase/middleware';
 import { isKioskPath, kioskUrlRedirect, refreshKioskCookie } from '@/lib/admin/kiosk-cookie';
 import { buildContentSecurityPolicy, generateNonce } from '@/lib/csp';
+import { SUBJECT_COOKIE, SUBJECT_HEADER, SUBJECT_ID_PATTERN } from '@/lib/experiments/constants';
+import { generateSubjectId, serializeSubjectCookie } from '@/lib/experiments/cookies';
 import { routing } from '@/i18n/routing';
 import type { NextRequest } from 'next/server';
 
@@ -130,12 +132,49 @@ export default async function proxy(request: NextRequest) {
   // reading headers() opts that route into dynamic rendering permanently.
   request.headers.set('x-nonce', nonce);
 
+  // The experiments subject id, on the same mechanism and for the same reason
+  // as the nonce above: a Server Component has to be able to read it during
+  // the render that is happening right now, and the browser will not echo the
+  // cookie back until the request after this one. Without the header, the
+  // first page view of every new visitor, which is exactly the homepage view
+  // an experiment exists to measure, would have no subject and never be
+  // bucketed.
+  //
+  // This is the app's first persistent anonymous visitor id. It is 32 random
+  // hex characters from the platform CSPRNG, derived from nothing about the
+  // visitor and containing no personal data. It is HttpOnly (no client script
+  // reads it), first-party, SameSite=Lax, and is never sent to any third
+  // party. All it can ever answer is "was this the same browser as before".
+  const existingSubject = request.cookies.get(SUBJECT_COOKIE)?.value;
+  const hasSubject = !!existingSubject && SUBJECT_ID_PATTERN.test(existingSubject);
+  const subjectId = hasSubject ? (existingSubject as string) : generateSubjectId();
+  request.headers.set(SUBJECT_HEADER, subjectId);
+
   const response = await routeRequest(request);
 
   // The policy the browser enforces. It has to carry the same nonce as the
   // markup that was just rendered, which is why this header cannot live in
   // next.config.js or vercel.json any more: a static header cannot know it.
   response.headers.set('Content-Security-Policy', csp);
+
+  // Persist a NEWLY minted id, and only a newly minted id. Every request that
+  // already carried a valid subject cookie leaves here with no Set-Cookie at
+  // all, so marketing HTML does not grow a per-request cookie header.
+  //
+  // This runs after routeRequest deliberately. The marketing branch in there
+  // deletes the whole set-cookie header (see the comment on that line); this
+  // is the one carve-out from that strip, appended afterwards so the strip
+  // stays exactly as broad as it was.
+  //
+  // Appended as a raw header on purpose. `response.cookies.set` would re-emit
+  // every cookie the response was constructed with, including the NEXT_LOCALE
+  // one the strip just removed (verified locally: the first visit leaked it).
+  if (!hasSubject) {
+    response.headers.append(
+      'set-cookie',
+      serializeSubjectCookie(subjectId, request.nextUrl.protocol === 'https:'),
+    );
+  }
   return response;
 }
 
@@ -157,6 +196,11 @@ async function routeRequest(request: NextRequest) {
     // unused cookie to every anonymous visitor is still worth not doing.
     // Marketing routes never run Supabase updateSession, so no auth/session
     // cookie is at stake.)
+    //
+    // The strip stays this broad on purpose. The one cookie these responses
+    // are allowed to carry, the experiments subject id, is appended by the
+    // caller AFTER this function returns, so nothing that gets set in here can
+    // survive by accident.
     response.headers.delete('set-cookie');
     return response;
   }
@@ -198,7 +242,10 @@ export const config = {
      *  - _next/image   (image optimisation endpoint)
      *  - favicon.ico
      *  - common image/font extensions
+     *  - video and caption files (the demo cut lives at /demo/*.mp4 and is
+     *    fetched with Range requests; running the auth round trip on each of
+     *    those byte-range requests is pure latency for no decision)
      */
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf|mp4|webm|mov|vtt)$).*)',
   ],
 };
