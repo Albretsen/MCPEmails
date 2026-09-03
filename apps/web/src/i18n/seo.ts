@@ -193,6 +193,17 @@ export function homeJsonLd(
  * readable, and until now that was a lone free Offer on the home page. Emitting
  * the real four-tier catalogue here is the difference between being described
  * accurately and being described as free-and-unlimited.
+ *
+ * `Product` also puts this node in front of Google's Merchant listings
+ * validator, which is written for physical goods. Two of its complaints are
+ * worth answering: `image`, and a `brand` it can actually read. The rest
+ * (`shippingDetails`, `hasMerchantReturnPolicy`) describe shipping a box and
+ * stay absent on purpose for a monthly subscription.
+ *
+ * The brand is defined inline rather than referenced by `@id`, because this
+ * page's graph is WebPage + BreadcrumbList + Product: the Organization node
+ * only exists on the home page, so a bare `{ '@id': ... }` here was a dangling
+ * pointer with no name behind it.
  */
 export function pricingJsonLd(
   locale: string,
@@ -210,7 +221,13 @@ export function pricingJsonLd(
         name: 'mcpemails',
         description,
         url,
-        brand: { '@id': `${APP_URL}/#organization` },
+        image: [OG_IMAGE.url],
+        brand: {
+          '@type': 'Organization',
+          '@id': `${APP_URL}/#organization`,
+          name: 'mcpemails',
+          url: APP_URL,
+        },
         offers: planOffers(url),
       },
     ],
