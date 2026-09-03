@@ -18,7 +18,7 @@
     "connect:release-status": "node scripts/connect-release-status.mjs",
     "test:connections": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/connection-config.test.ts src/lib/email/transport-autodetect.test.ts src/lib/email/auth-failure.test.ts src/lib/email-providers/imap-presets.test.ts src/lib/email-providers/host-presets.test.ts src/lib/email-providers/app-password.test.ts src/lib/email-providers/outlook-oauth.test.ts",
     "test:host-guard": "node --test --experimental-strip-types src/lib/email/host-guard.test.ts",
-    "test:growth": "node --test --experimental-strip-types src/lib/analytics/growth-metrics.test.mjs src/lib/analytics/growth-records.test.ts",
+    "test:growth": "node --test --experimental-strip-types src/lib/analytics/growth-metrics.test.mjs src/lib/analytics/growth-records.test.ts src/lib/analytics/growth-attention.test.ts",
     "test:health": "node --test --experimental-strip-types src/lib/analytics/health-math.test.ts",
     "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs",
     "test:api-404": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/api/unmatched-api-route.test.ts",

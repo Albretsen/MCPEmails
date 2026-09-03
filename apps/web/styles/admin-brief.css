@@ -1,0 +1,375 @@
+/* admin-brief.css: the whole of /admin/growth.
+
+   THE PAGE IS A SHEET, NOT A DASHBOARD, and this file is where that is
+   enforced. There is no card class. Two previous designs of this page were
+   built out of bordered, rounded, elevated boxes (a strip of six at the top,
+   then eight more down the page) and both were called messy; a box is a line
+   drawn between two numbers, and on a page arguing that the numbers explain
+   each other, forty of those lines are the mess. So: regions divided by one
+   hairline and a lot of vertical space, columns divided by one hairline and
+   nothing else, and no border at all below that except inside a table.
+
+   COLOUR IS A FILL, NEVER A TEXT COLOUR. --mint-500 and --amber-500 are
+   roughly 2:1 against the light page background, which is fine for a 8px bar
+   and unreadable as a 12px number. Every semantic colour here is therefore a
+   swatch, a dot, a bar or a border, and the word beside it carries the same
+   meaning on its own. Tints are `color-mix` against the token rather than a
+   second hard-coded pair, so light and dark both come out of the same line.
+
+   Every colour is a token from colors_and_type.css / theme.css, so
+   html[data-theme="dark"] flips the sheet with no overrides in this file.
+   Numbers are tabular throughout: a column of figures that shifts by a pixel
+   per digit is the single cheapest way to make a dense page look untidy. */
+
+.brief {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 22px 32px 120px;
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.br-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--border-2);
+}
+.br-head h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+.br-tools { display: flex; align-items: center; gap: 14px; font-size: 12px; }
+.br-tools nav { display: flex; gap: 2px; }
+.br-tools a,
+.br-tools button {
+  color: var(--fg-3);
+  text-decoration: none;
+  font: inherit;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.br-tools a:hover, .br-tools button:hover { color: var(--fg-1); background: var(--bg-sunken); }
+.br-tools a[aria-current="true"] { color: var(--fg-1); background: var(--bg-sunken); }
+.br-tools form { margin: 0; }
+
+/* ── Regions ────────────────────────────────────────────────────────────── */
+
+.br-region { margin-top: 42px; padding-top: 22px; border-top: 1px solid var(--border-1); }
+.br-region-first { margin-top: 26px; padding-top: 0; border-top: 0; }
+.br-region-head { margin-bottom: 18px; }
+.br-region-head h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.012em; }
+.br-region-head p { margin: 4px 0 0; color: var(--fg-3); font-size: 12px; max-width: 84ch; }
+
+/* A label that follows content is starting a new block inside a column, so it
+   needs the space a region divider would otherwise give it. */
+.br-label:not(:first-child) { margin-top: 22px; }
+.br-label {
+  margin: 0 0 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.br-note { margin: 10px 0 0; color: var(--fg-3); font-size: 11.5px; line-height: 1.55; max-width: 64ch; }
+.br-empty { margin: 8px 0; color: var(--fg-4); font-size: 11.5px; }
+.br-foot {
+  margin-top: 44px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-1);
+  font-size: 11px;
+  color: var(--fg-4);
+  max-width: 96ch;
+}
+
+/* The one display-size number on the page. If a second one ever appears here,
+   the hierarchy this file exists to create has been lost. */
+.br-display { margin: 0; font-size: 58px; line-height: 1; font-weight: 600; letter-spacing: -.032em; }
+.br-display-unit { margin-left: 7px; font-size: 17px; font-weight: 500; letter-spacing: 0; color: var(--fg-3); }
+.br-lead { margin: 0; font-size: 26px; line-height: 1.12; font-weight: 600; letter-spacing: -.022em; }
+.br-lead-unit { margin-left: 8px; font-size: 11.5px; font-weight: 500; letter-spacing: 0; color: var(--fg-3); }
+
+/* ── Region 1: the standing ─────────────────────────────────────────────── */
+
+.br-standing { display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr) minmax(0, .96fr); }
+.br-standing-col { min-width: 0; padding: 0 28px; }
+.br-standing-col:first-child { padding-left: 0; }
+.br-standing-col:last-child { padding-right: 0; }
+.br-standing-col + .br-standing-col { border-left: 1px solid var(--border-1); }
+
+.br-counts { display: flex; gap: 16px; margin: 13px 0 0; padding: 0; list-style: none; font-size: 11.5px; color: var(--fg-3); }
+.br-counts b { margin-right: 4px; font-size: 14px; font-weight: 600; color: var(--fg-1); }
+
+.br-ledger { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.br-ledger th[scope="row"] { padding: 5px 0; text-align: left; font-weight: 500; color: var(--fg-2); }
+.br-ledger td { padding: 5px 0 5px 12px; text-align: right; white-space: nowrap; width: 1%; }
+.br-ledger-amount { font-weight: 600; }
+.br-ledger-count { font-size: 11px; color: var(--fg-3); }
+/* The swatch, not the figure, carries the colour: see the note at the top. */
+.br-ledger th[scope="row"]::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 2px;
+  background: var(--fg-4);
+  vertical-align: 1px;
+}
+.br-ledger .is-mint th::before { background: var(--mint-500); }
+.br-ledger .is-red th::before { background: var(--red-500); }
+.br-ledger .is-amber th::before { background: var(--amber-500); }
+/* A zero row is greyed, never dropped: "nothing churned" and "we do not
+   measure churn" must not look the same. */
+.br-ledger .is-quiet th, .br-ledger .is-quiet td { color: var(--fg-4); }
+.br-ledger .is-quiet th::before { background: var(--border-2); }
+.br-ledger-ahead tr:first-child th,
+.br-ledger-ahead tr:first-child td { padding-top: 10px; border-top: 1px solid var(--border-1); }
+
+.br-byplan { display: flex; flex-wrap: wrap; gap: 3px 14px; margin: 11px 0 0; font-size: 11px; color: var(--fg-3); }
+.br-byplan b { color: var(--fg-2); font-weight: 600; }
+
+.br-flag {
+  margin: 12px 0 0;
+  padding: 7px 10px;
+  border-left: 2px solid var(--amber-500);
+  border-radius: 0 4px 4px 0;
+  background: color-mix(in srgb, var(--amber-500) 12%, transparent);
+  font-size: 11.5px;
+  color: var(--fg-1);
+}
+
+.br-months { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; height: 62px; margin: 16px 0 0; padding: 12px 0 0; list-style: none; }
+.br-months li { display: grid; grid-template-rows: minmax(0, 1fr) 13px; min-width: 0; }
+.br-month-bar {
+  position: relative;
+  align-self: end;
+  justify-self: center;
+  width: 100%;
+  max-width: 56px;
+  border-radius: 2px 2px 0 0;
+  background: color-mix(in srgb, var(--brand) 62%, transparent);
+}
+.br-month-bar b { position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 500; color: var(--fg-3); white-space: nowrap; }
+.br-month-label { font-size: 9.5px; color: var(--fg-4); text-align: center; }
+
+.br-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 20px; margin: 14px 0 0; }
+.br-facts div { min-width: 0; }
+.br-facts dt { font-size: 11px; color: var(--fg-3); }
+.br-facts dd { margin: 1px 0 0; font-size: 16px; font-weight: 600; letter-spacing: -.015em; }
+.br-facts p { margin: 1px 0 0; font-size: 10.5px; color: var(--fg-4); line-height: 1.4; }
+
+/* ── Region 2: what needs attention ─────────────────────────────────────── */
+
+.br-todo { margin: 0; padding: 0; list-style: none; }
+.br-todo li {
+  display: grid;
+  grid-template-columns: 7px 46px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-1);
+}
+.br-todo li:last-child { border-bottom: 0; }
+.br-todo-mark { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--fg-4); }
+.br-todo .is-act .br-todo-mark { background: var(--red-500); }
+.br-todo .is-watch .br-todo-mark { background: var(--amber-500); }
+.br-todo-kind { margin-top: 3px; font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--fg-3); }
+.br-todo-title { display: block; font-size: 13.5px; color: var(--fg-1); }
+.br-todo-pop { display: block; margin-top: 2px; font-size: 11.5px; color: var(--fg-3); max-width: 104ch; }
+.br-todo-clear { margin: 0; font-size: 13.5px; color: var(--fg-2); }
+.br-todo-foot { margin: 12px 0 0; font-size: 11px; color: var(--fg-4); }
+
+/* ── Region 3: the chain ────────────────────────────────────────────────── */
+
+.br-arrivals { margin-bottom: 30px; }
+.br-arrivals-head { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; }
+.br-legend { display: flex; gap: 16px; margin: 0; font-size: 11px; color: var(--fg-3); }
+.br-legend i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 2px; vertical-align: 0; }
+.br-legend i.is-brand { background: var(--brand); }
+.br-legend i.is-mint { background: var(--mint-500); }
+
+.br-weeks { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; height: 116px; margin: 10px 0 0; padding: 0; list-style: none; }
+.br-weeks li { display: grid; grid-template-rows: minmax(0, 1fr) 15px; min-width: 0; }
+.br-week-bars { display: flex; align-items: flex-end; justify-content: center; gap: 3px; height: 100%; padding-top: 14px; }
+.br-week-bar { position: relative; width: 13px; border-radius: 2px 2px 0 0; }
+.br-week-bar.is-brand { background: var(--brand); }
+.br-week-bar.is-mint { background: var(--mint-500); }
+.br-week-bar b { position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 500; color: var(--fg-3); }
+/* The current week is still being lived. It is drawn hollow and labelled "so
+   far" rather than smoothed or hidden, and it stays inside the scale: a
+   partial week that has already beaten a finished one is the most encouraging
+   thing this strip can say, and clipping it would hide exactly that. */
+.br-weeks .is-partial .br-week-bar.is-brand { background: color-mix(in srgb, var(--brand) 24%, transparent); border-top: 2px dashed var(--brand); }
+.br-weeks .is-partial .br-week-bar.is-mint { background: color-mix(in srgb, var(--mint-500) 24%, transparent); border-top: 2px dashed var(--mint-500); }
+.br-week-label { overflow: hidden; font-size: 9.5px; color: var(--fg-4); text-align: center; white-space: nowrap; text-overflow: ellipsis; }
+.br-week-label i { font-style: normal; color: var(--fg-4); }
+
+.br-chain-wrap { display: grid; grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr); align-items: start; }
+.br-chain-col { min-width: 0; padding-right: 32px; }
+/* The left column is three blocks now (ladder, pools, coming back) and they
+   are separate answers, so they get the space that says so. */
+.br-chain-col > * + * { margin-top: 30px; }
+.br-chain-gutter { min-width: 0; padding-left: 32px; border-left: 1px solid var(--border-1); }
+.br-chain-gutter > * + * { margin-top: 28px; }
+
+.br-chain { margin: 0; padding: 0; list-style: none; }
+.br-rung { display: grid; grid-template-columns: 156px minmax(0, 1fr) 52px 50px 46px; align-items: center; gap: 10px; padding: 3px 0; }
+.br-rung-label { overflow: hidden; font-size: 12px; color: var(--fg-2); white-space: nowrap; text-overflow: ellipsis; }
+.br-rung-track { height: 20px; border-radius: 3px; background: var(--bg-sunken); }
+.br-rung-fill { display: block; height: 100%; border-radius: 3px; }
+.br-rung-fill.is-brand { background: var(--brand); }
+.br-rung-fill.is-mint { background: var(--mint-500); }
+.br-rung-value { text-align: right; font-size: 12.5px; font-weight: 600; }
+.br-rung-kept { text-align: right; font-size: 11.5px; color: var(--fg-2); }
+.br-rung-overall { text-align: right; font-size: 11px; color: var(--fg-4); }
+.br-rung-head { padding-bottom: 4px; }
+.br-rung-head span { font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-4); }
+
+/* The measurement changes here, and the change is drawn rather than hidden. */
+.br-chain-seam { margin: 14px 0; padding: 2px 0 2px 12px; border-left: 2px solid var(--border-2); }
+.br-chain-seam p { margin: 0; font-size: 11px; color: var(--fg-3); max-width: 66ch; }
+.br-chain-dead { padding: 10px 0; }
+
+.br-gutter-block > * + * { margin-top: 11px; }
+
+/* ── Region 4: ceilings and faults ──────────────────────────────────────── */
+
+.br-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+.br-split-col { min-width: 0; padding: 0 32px; }
+.br-split-col:first-child { padding-left: 0; }
+.br-split-col:last-child { padding-right: 0; }
+.br-split-col + .br-split-col { border-left: 1px solid var(--border-1); }
+
+.br-meter { height: 10px; margin: 12px 0 0; border-radius: 5px; background: var(--bg-sunken); overflow: hidden; }
+.br-meter-fill { display: block; height: 100%; border-radius: 5px; }
+.br-meter.is-ok .br-meter-fill { background: var(--mint-500); }
+.br-meter.is-warn .br-meter-fill { background: var(--amber-500); }
+.br-meter.is-danger .br-meter-fill { background: var(--red-500); }
+
+.br-verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 18px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: var(--bg-sunken);
+}
+.br-verdict.is-ok { background: color-mix(in srgb, var(--mint-500) 10%, transparent); }
+.br-verdict.is-degraded { background: color-mix(in srgb, var(--amber-500) 14%, transparent); }
+.br-verdict.is-down { background: color-mix(in srgb, var(--red-500) 14%, transparent); }
+.br-verdict b { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.br-verdict span { font-size: 11.5px; color: var(--fg-2); }
+.br-verdict em { font-size: 10.5px; font-style: normal; color: var(--fg-4); }
+
+.br-incidents { margin: 8px 0 0; padding: 0; list-style: none; font-size: 11.5px; }
+.br-incidents li { display: flex; justify-content: space-between; gap: 14px; padding: 5px 0; border-bottom: 1px solid var(--border-1); }
+.br-incidents li:last-child { border-bottom: 0; }
+.br-incidents .is-open { padding-left: 9px; border-left: 2px solid var(--red-500); }
+.br-incident-what { color: var(--fg-2); }
+.br-incidents .is-open .br-incident-what { color: var(--fg-1); font-weight: 600; }
+.br-incident-when { color: var(--fg-4); white-space: nowrap; }
+
+/* ── Region 5: records ──────────────────────────────────────────────────── */
+
+.br-records { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 28px; margin: 0; }
+.br-records div { min-width: 0; }
+.br-records dt { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-3); }
+.br-records dd { margin: 4px 0 0; font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
+.br-records p { margin: 3px 0 0; font-size: 11px; color: var(--fg-4); line-height: 1.45; }
+
+/* ── Tables, bars and drawers ───────────────────────────────────────────── */
+
+.br-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.br-table th, .br-table td { padding: 4px 9px 4px 0; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border-1); }
+.br-table thead th { font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--fg-3); }
+.br-table th[scope="row"] { text-align: left; font-weight: 500; color: var(--fg-2); }
+.br-table tbody tr:last-child th, .br-table tbody tr:last-child td { border-bottom: 0; }
+.br-table .is-quiet th, .br-table .is-quiet td { color: var(--fg-4); }
+.br-cell-text { font-variant-numeric: normal; }
+.br-table-wide { font-size: 11px; }
+.br-scroll { max-width: 100%; min-width: 0; overflow-x: auto; }
+.br-per { font-size: 10px; color: var(--fg-4); }
+
+.br-bars { margin: 0; padding: 0; list-style: none; }
+.br-bar { display: grid; grid-template-columns: 92px minmax(0, 1fr) 46px 52px; align-items: center; gap: 9px; padding: 2.5px 0; font-size: 11.5px; }
+.br-bar-name { overflow: hidden; color: var(--fg-2); white-space: nowrap; text-overflow: ellipsis; }
+.br-bar-track { height: 8px; border-radius: 4px; background: var(--bg-sunken); overflow: hidden; }
+.br-bar-fill { display: block; height: 100%; border-radius: 4px; background: var(--brand); }
+.br-bar-fill.is-mint { background: var(--mint-500); }
+.br-bar-fill.is-amber { background: var(--amber-500); }
+.br-bar-fill.is-red { background: var(--red-500); }
+.br-bar-fill.is-muted { background: var(--fg-4); }
+.br-bar-value { text-align: right; font-weight: 600; }
+.br-bar-right { text-align: right; color: var(--fg-3); }
+
+.br-reference { display: flex; flex-direction: column; gap: 4px; }
+.br-drawer, .br-details { padding-top: 9px; border-top: 1px solid var(--border-1); }
+.br-drawer > summary, .br-details > summary {
+  font-size: 12.5px;
+  color: var(--fg-2);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.br-drawer > summary::-webkit-details-marker, .br-details > summary::-webkit-details-marker { display: none; }
+.br-drawer > summary::before, .br-details > summary::before { content: "\25B8 "; color: var(--fg-4); }
+.br-drawer[open] > summary::before, .br-details[open] > summary::before { content: "\25BE "; }
+.br-drawer > summary:hover, .br-details > summary:hover { color: var(--fg-1); }
+.br-drawer > summary span { color: var(--fg-4); }
+.br-drawer > *:not(summary), .br-details > *:not(summary) { margin-top: 11px; }
+.br-details { margin-top: 12px; font-size: 11px; }
+.br-details > summary { font-size: 11.5px; color: var(--fg-3); }
+
+/* A failed read is a visibly dead panel, never a missing one: a gap reads as a
+   zero, and a zero beside revenue sends somebody off to investigate a query
+   timeout as a collapse in demand. The raw message is printed because this
+   page is operator-only and a vague apology just costs a debugging session. */
+.br-dead {
+  padding: 8px 0 8px 11px;
+  border-left: 2px solid var(--red-500);
+  border-radius: 0 4px 4px 0;
+  background: color-mix(in srgb, var(--red-500) 8%, transparent);
+}
+.br-dead-head { margin: 0; font-size: 12px; font-weight: 600; }
+.br-dead-why { margin: 3px 0 0; font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); word-break: break-word; }
+
+.br-skeleton { border-radius: 6px; background: var(--bg-sunken); opacity: .55; }
+
+/* ── Narrower than a comfortable laptop ─────────────────────────────────── */
+
+/* The columns collapse rather than compress. A three-column standing at 900px
+   puts the display figure and the ledger on top of each other, and the gutter
+   annotations stop sitting beside the rung they explain, so below this width
+   they stack and the hairline moves from the left edge to the top. */
+@media (max-width: 1120px) {
+  .brief { padding: 20px 20px 100px; }
+  .br-standing, .br-chain-wrap, .br-split { grid-template-columns: minmax(0, 1fr); }
+  .br-standing-col, .br-chain-col, .br-chain-gutter, .br-split-col { padding: 0; }
+  .br-standing-col + .br-standing-col,
+  .br-split-col + .br-split-col,
+  .br-chain-gutter { margin-top: 26px; padding-top: 22px; border-left: 0; border-top: 1px solid var(--border-1); }
+  .br-records { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .br-rung { grid-template-columns: 132px minmax(0, 1fr) 48px 46px 44px; }
+  /* Stacked, these two would stretch to the full page width and read as very
+     wide, very empty rows. They keep the proportions they had in a column. */
+  .br-ledger, .br-months { max-width: 520px; }
+}
+
+@media (max-width: 700px) {
+  .br-head { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .br-display { font-size: 46px; }
+  .br-records { grid-template-columns: minmax(0, 1fr); }
+  .br-rung { grid-template-columns: 108px minmax(0, 1fr) 44px 42px; }
+  .br-rung-overall { display: none; }
+  .br-weeks { height: 96px; }
+}
