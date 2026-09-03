@@ -128,18 +128,28 @@ export function MixBars({
  * that has to stay visible, such as an active warning.
  */
 export function Section({
+  id,
   title,
   explain,
   aside,
   children,
 }: {
+  /**
+   * Anchor for the page's section nav. Optional so a section that is not in
+   * the nav does not have to invent one, but every section the nav lists must
+   * pass the id the nav links to: a jump link to a missing anchor silently
+   * does nothing, which is the worst failure a nav can have.
+   */
+  id?: string;
   title: string;
   explain: ReactNode;
   aside?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <section className="growth-section">
+    // `scroll-margin-top` (see admin-growth.css) keeps the sticky nav from
+    // covering the heading it just jumped to.
+    <section className="growth-section" id={id}>
       <SectionHeading title={title} aside={aside}>{explain}</SectionHeading>
       {children}
     </section>

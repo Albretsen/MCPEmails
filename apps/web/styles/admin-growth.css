@@ -27,6 +27,92 @@
 .growth-refresh:hover { color: var(--fg-1); border-color: var(--border-2); }
 
 /* ---------- Stat cards ---------- */
+/* ---------- Section nav ----------
+   The page is long on purpose: the headline without the causes underneath it is
+   exactly what was not worth opening. A sticky one-line table of contents is
+   the cheapest way to make length navigable, and it is chrome rather than
+   content, so it never grows a second row. */
+.growth-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  gap: 2px;
+  /* Bleeds to the page's own gutters rather than stopping short of them: the
+     bar is opaque and content scrolls under it, and a 28px strip of unpainted
+     gutter at each edge shows the tops of cards sliding past beside it. */
+  margin: 0 -32px 24px;
+  padding: 8px 32px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--bg-page, var(--bg-surface));
+  border-bottom: 1px solid var(--border-1);
+}
+.growth-nav::-webkit-scrollbar { display: none; }
+.growth-nav a {
+  flex: none;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--fg-3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.growth-nav a:hover { color: var(--fg-1); background: var(--ink-50); }
+.growth-nav a:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+/* Keeps a jumped-to heading clear of the sticky bar that sent you there. */
+.growth-section[id] { scroll-margin-top: 58px; }
+
+/* ---------- The scoreboard ----------
+   Four cards carrying LEVELS, at roughly twice the type size of the movement
+   strip below them. The size difference is the hierarchy: it is what lets the
+   four numbers that are the business be read before anything else on the page,
+   and it is the single change that this rewrite turns on. Do not equalise
+   these with .growth-stat-grid for tidiness. */
+.growth-hero-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+.growth-hero-grid .growth-stat { padding: 20px 22px; }
+.growth-hero-grid .growth-stat-value { font-size: 44px; margin: 10px 0 4px; }
+.growth-hero-grid .growth-stat-label { font-size: 12.5px; }
+.growth-hero-grid .growth-stat-detail { font-size: 13px; }
+.growth-hero-grid .growth-delta { font-size: 15px; }
+
+/* The movement strip. Small on purpose: these are what CHANGED, and a change
+   is only readable against a level that has already been read. */
+.growth-movement { margin-bottom: 34px; }
+.growth-movement .growth-stat { padding: 13px 15px; }
+.growth-movement .growth-stat-value { font-size: 22px; }
+.growth-movement .growth-stat-label { font-size: 11px; }
+
+/* ---------- Records ----------
+   Four lines rather than the three a stat card carries: label, figure, what it
+   is, and the context that makes it a record. The meter is optional and only
+   the milestone tiles use it. */
+.growth-record-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.growth-record {
+  border: 1px solid var(--border-1);
+  background: var(--bg-surface);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* A live streak that equals the all-time best. The only celebratory pixel on
+   the page, and it is still driven by a comparison of two counted numbers. */
+.growth-record.is-good { border-color: var(--mint-600); }
+.growth-record-label { color: var(--fg-3); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .045em; }
+.growth-record-value { font-size: 28px; font-weight: 650; letter-spacing: -.025em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.growth-record.is-good .growth-record-value { color: var(--mint-600); }
+.growth-record-detail { color: var(--fg-2); font-size: 13px; line-height: 1.45; }
+.growth-record-meter { height: 6px; border-radius: 999px; background: var(--bg-sunken); overflow: hidden; margin: 6px 0 2px; }
+.growth-record-meter > span { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
+.growth-record-foot { color: var(--fg-4); font-size: 11.5px; line-height: 1.45; margin-top: auto; padding-top: 4px; }
+
+/* The definitions paragraph moved below the sections in this revision: it is a
+   footnote about how to read the page, and a footnote at the top is one more
+   thing between the reader and the numbers. */
+.growth-footnote { margin: 40px 0 0; padding-top: 18px; border-top: 1px solid var(--border-1); }
+
 .growth-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 30px; }
 .growth-stat-grid.is-five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .growth-stat-grid.is-six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -334,6 +420,22 @@
   .growth-info-end .growth-info-panel,
   .growth-stat .growth-info-panel { left: 12px; right: 12px; }
 
+  .growth-hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+  .growth-hero-grid .growth-stat { padding: 13px 14px; }
+  .growth-hero-grid .growth-stat-value { font-size: 27px; margin: 6px 0 2px; }
+  .growth-hero-grid .growth-stat-detail { font-size: 11px; }
+  .growth-hero-grid .growth-delta { font-size: 12px; }
+  .growth-movement .growth-stat-value { font-size: 19px; }
+  .growth-record-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .growth-record { padding: 12px 13px; border-radius: 10px; }
+  .growth-record-label { font-size: 10.5px; letter-spacing: .04em; }
+  .growth-record-value { font-size: 21px; }
+  .growth-record-detail { font-size: 11.5px; }
+  .growth-record-foot { font-size: 10.5px; }
+  .growth-nav { margin: 0 -14px 18px; padding: 6px 14px; }
+  .growth-nav a { font-size: 12px; padding: 5px 9px; }
+  .growth-section[id] { scroll-margin-top: 48px; }
+
   .growth-toolbar { gap: 8px; }
   .growth-windows { flex: 1; }
   .growth-windows a { flex: 1; text-align: center; padding: 8px 8px; }
@@ -354,4 +456,14 @@
   .growth-table-wrap.is-paged { min-height: 0; }
   .growth-controls-count { margin-left: 0; width: 100%; }
   .growth-search { max-width: none; }
+}
+
+/* Between the phone rules above and the full four-across layout: two big cards
+   read fine at this width, four do not. Kept out of the 620px block because
+   the movement strip and the record grid need different counts here. */
+@media (min-width: 621px) and (max-width: 1080px) {
+  .growth-hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .growth-hero-grid .growth-stat-value { font-size: 34px; }
+  .growth-stat-grid.is-six { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .growth-record-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

@@ -61,6 +61,7 @@ export async function PathToPaidSection() {
 
   return (
     <Section
+      id="path-to-paid"
       title="The path to paid"
       explain={
         <>
