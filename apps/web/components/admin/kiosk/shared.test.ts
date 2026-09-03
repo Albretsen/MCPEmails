@@ -3,11 +3,11 @@
  *
  * WHY THIS FILE EXISTS AND THE REST OF THE BOARD HAS NO TESTS. Nearly
  * everything on the kiosk is a number fetched from SQL and printed; a test of
- * that is a test of a mock. This one function is real arithmetic with two
+ * that is a test of a mock. The functions here are real arithmetic with
  * classic ways to be silently wrong, and it is arithmetic a wall display shows
- * as a chart somebody will make a decision from.
+ * as a chart or a headline somebody will make a decision from.
  *
- * The two ways:
+ * Three ways, so far:
  *
  *   1. `getUTCDay()` is 0 for SUNDAY. Every implementation of "the Monday of
  *      this week" that subtracts `getUTCDay() - 1` is correct for six days a
@@ -21,12 +21,18 @@
  *      moves by an hour is a signup that hops between two bars depending on
  *      where the page rendered.
  *
+ *   3. `attemptRate` dividing by the wrong denominator. `calls` includes
+ *      requests that were rate-limited or plan-capped and never reached a
+ *      tool; dividing successes by raw `calls` anyway is what made the live
+ *      reliability tile read 56.7% on 2026-09-03 while every attempted call
+ *      succeeded. See health-math.ts's successRate, which this mirrors.
+ *
  * Run with: npm run --prefix apps/web test:kiosk
  */
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { calendarWeekBuckets, mondayOf } from './shared.ts';
+import { attemptRate, calendarWeekBuckets, mondayOf } from './shared.ts';
 
 test('mondayOf returns the Monday on or before a day, Sunday included', () => {
   // 2026-08-31 is a Monday. Walk the whole week and assert every day maps back
@@ -117,6 +123,23 @@ test('an ISO timestamp is accepted where a day key is expected', () => {
 
 test('no rows produces no buckets rather than eight empty ones', () => {
   assert.deepEqual(calendarWeekBuckets([] as { day: string }[], 8, () => [0]), []);
+});
+
+/* ---------------------------------------------------------- attemptRate */
+
+test('attemptRate excludes rate-limited calls from the denominator', () => {
+  // The 2026-09-03 production window: 654 calls, 371 successes, 23 errors,
+  // 260 rate-limited. Dividing by raw calls reads 56.7%; dividing by attempted
+  // calls (654 - 260 = 394) reads the true 94.2%.
+  assert.equal(attemptRate(371, 654, 260), 371 / 394);
+});
+
+test('attemptRate is null with no attempted calls, even if raw calls is nonzero', () => {
+  assert.equal(attemptRate(0, 100, 100), null);
+});
+
+test('attemptRate with no rate limiting matches a plain success rate', () => {
+  assert.equal(attemptRate(97, 100, 0), 0.97);
 });
 
 /** Inclusive UTC day keys from one date to another. */

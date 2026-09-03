@@ -211,9 +211,13 @@ const CONCENTRATION_ROW_BUDGET = 400;
  * asks Postgres to do the counting, which is both correct and cheaper.
  *
  * Rate limited calls are derived rather than counted, so the base stays at
- * three queries. They have never once been recorded in production; the field
- * exists so that if that changes the board does not silently fold throttling
- * into the failure rate, which would paint an abuse guard doing its job as an
+ * three queries: `calls - successes - errors`, which is exact because
+ * `activity_log.status` has exactly those three values. They used to be rare
+ * to nonexistent; since the cap-rejection logging change (2026-09, see
+ * `actionLimitResponse` in mcp-server/index.ts) a workspace stuck retrying
+ * against its own plan cap can put a large share of an hour's calls here, and
+ * `successRate` in health-math.ts excludes this count from its denominator for
+ * exactly that reason: an abuse guard doing its job must not read as an
  * outage.
  *
  * `withConcentration` adds the only read here that is not a count, and the
@@ -369,7 +373,14 @@ async function fetchRestWindow(
     return null;
   }
 
-  return { calls: all.count ?? 0, successes: ok.count ?? 0, errors: bad.count ?? 0 };
+  const calls = all.count ?? 0;
+  const successes = ok.count ?? 0;
+  const errors = bad.count ?? 0;
+  // Derived the same way fetchCallWindow derives it, and for the same reason:
+  // the rest of the estate can have its own capped or throttled workspaces,
+  // and counting them as attempts would flatter this window's rate exactly
+  // the way it used to flatter the whole one.
+  return { calls, successes, errors, rateLimited: Math.max(0, calls - successes - errors) };
 }
 
 function emptyWindow(minutes: number): CallWindow {

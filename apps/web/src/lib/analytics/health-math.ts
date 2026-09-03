@@ -59,9 +59,10 @@ export type HealthLevel = 'ok' | 'degraded' | 'down' | 'unknown';
 export const IMMEDIATE_FAILURE_CLASSES = ['authentication', 'mcp_protocol', 'internal'] as const;
 
 /**
- * Below this many calls in the live window no percentage is computed at all.
- * Twenty is roughly five minutes of normal traffic, and the point where one
- * unlucky mailbox stops being able to move the headline by ten points.
+ * Below this many ATTEMPTED calls (calls minus rate-limited/capped ones) in
+ * the live window no percentage is computed at all. Twenty is roughly five
+ * minutes of normal traffic, and the point where one unlucky mailbox stops
+ * being able to move the headline by ten points.
  */
 export const MIN_LIVE_CALLS = 20;
 
@@ -145,6 +146,8 @@ export type RestWindow = {
   calls: number;
   successes: number;
   errors: number;
+  /** Same meaning as `CallWindow.rateLimited`: throttled or capped, not failed. */
+  rateLimited: number;
 };
 
 /** Call outcomes over a window, straight out of `activity_log`. */
@@ -222,10 +225,22 @@ export type SystemHealth = HealthFacts & HealthVerdict & {
   checkedAt: string;
 };
 
-/** Success rate over a window, or null when there is not enough to divide. */
+/**
+ * Success rate over a window, or null when there is not enough to divide.
+ *
+ * Measured against ATTEMPTED calls, `calls - rateLimited`, not raw `calls`. A
+ * rate-limited or plan-capped call never reached a tool: the client was told
+ * no and nothing was tried, which is an abuse guard doing its job, not the
+ * product failing. Counting it as an attempt anyway made the headline sink
+ * every time a client hammered a cap it had already hit — see
+ * project_kiosk_reliability_rate_limited_denominator, 2026-09-03: a single
+ * looping workspace put 40% of an hour's calls in this bucket and the tile
+ * read 56.7% while every real call was succeeding.
+ */
 export function successRate(window: CallWindow): number | null {
-  if (window.calls < MIN_LIVE_CALLS) return null;
-  return window.successes / window.calls;
+  const attempted = window.calls - window.rateLimited;
+  if (attempted < MIN_LIVE_CALLS) return null;
+  return window.successes / attempted;
 }
 
 /**
@@ -272,9 +287,7 @@ export function concentratedInOneWorkspace(live: CallWindow): ConcentrationHold 
     calls: concentration.rest.calls,
     successes: concentration.rest.successes,
     errors: concentration.rest.errors,
-    // Not measured for the remainder, and not needed: nothing below reads it.
-    // Rate limited calls have never been recorded in production anyway.
-    rateLimited: 0,
+    rateLimited: concentration.rest.rateLimited,
     concentration: null,
   };
   const restRate = successRate(rest);
