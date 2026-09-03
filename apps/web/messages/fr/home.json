@@ -261,5 +261,15 @@
     "eyebrow": "Aperçu du produit",
     "title": "Visualisez toute votre opération MCP en un coup d'œil.",
     "sub": "Un tableau de bord en temps réel pour chaque boîte connectée, clé d'API et appel d'outil, pour toujours savoir ce que font vos agents."
+  },
+  "demo": {
+    "eyebrow": "Voir le produit à l'œuvre",
+    "title": "Connectez une boîte mail, puis demandez ce qui compte.",
+    "sub": "Moins d'une minute, enregistré sur le produit réel : une vraie connexion IMAP, puis un vrai appel d'outil qui trouve le seul e-mail qui compte.",
+    "caption": "Enregistré avec une boîte de démonstration remplie de courrier fictif. Aucune correspondance réelle n'apparaît dans cette vidéo.",
+    "player": {
+      "label": "Vidéo de démonstration : connecter une boîte mail et la trier avec un agent IA",
+      "fallback": "Votre navigateur ne peut pas lire cette vidéo. Le guide de démarrage rapide de la documentation couvre les mêmes étapes."
+    }
   }
 }

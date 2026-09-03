@@ -261,5 +261,15 @@
     "eyebrow": "Produktforhåndsvisning",
     "title": "Se hele MCP-driften din med ett blikk.",
     "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør."
+  },
+  "demo": {
+    "eyebrow": "Se det i bruk",
+    "title": "Koble til en innboks, og spør hva som haster.",
+    "sub": "Under ett minutt, tatt opp mot det ekte produktet: en virkelig IMAP-tilkobling, og så et virkelig verktøykall som finner den ene e-posten som betyr noe.",
+    "caption": "Tatt opp mot en demo-innboks fylt med oppdiktet e-post. Ingen ekte korrespondanse vises i videoen.",
+    "player": {
+      "label": "Demovideo: koble til en innboks og la en AI-agent sortere den",
+      "fallback": "Nettleseren din kan ikke spille av denne videoen. Hurtigstarten i dokumentasjonen dekker de samme trinnene."
+    }
   }
 }

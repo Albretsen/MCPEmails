@@ -114,6 +114,7 @@ export default async function GrowthBoardPage({
             ))}
           </nav>
           <a href="/admin/growth/kiosk">Kiosk</a>
+          <a href="/admin/growth/experiments">Experiments</a>
           {/* A route handler rather than a Server Action: the action-ID lookup
               failed on every submission in production (verified live
               2026-08-30), and a URL is not a build-generated hash. */}

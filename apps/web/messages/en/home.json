@@ -261,5 +261,15 @@
     "eyebrow": "Product preview",
     "title": "See your whole MCP operation at a glance.",
     "sub": "A real-time dashboard for every connected inbox, API key, and tool call, so you always know what your agents are doing."
+  },
+  "demo": {
+    "eyebrow": "See it work",
+    "title": "Connect an inbox, then ask what needs you.",
+    "sub": "Under a minute, recorded against the live product: a real IMAP connection, then a real tool call that finds the one email that matters.",
+    "caption": "Recorded against a demo mailbox seeded with fictional mail. No real correspondence appears in this video.",
+    "player": {
+      "label": "Demo video: connecting an inbox and triaging it with an AI agent",
+      "fallback": "Your browser cannot play this video. The quickstart in the docs covers the same steps."
+    }
   }
 }
