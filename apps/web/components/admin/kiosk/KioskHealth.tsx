@@ -261,8 +261,8 @@ export function KioskHealthTile({
   const health = useHealth();
   if (!health) return null;
 
-  const live = rateOf(health.live.successes, health.live.calls);
-  const day = rateOf(health.day.successes, health.day.calls);
+  const live = rateOf(health.live.successes, health.live.calls, health.live.rateLimited);
+  const day = rateOf(health.day.successes, health.day.calls, health.day.rateLimited);
   const headline = live ?? day;
   const window = live !== null ? '/60m' : day !== null ? '/24h' : undefined;
 
@@ -286,11 +286,19 @@ export function KioskHealthTile({
         cannot be checked against the database by the person standing in front
         of it. The attribution belongs in the caption, in words, where it can
         say WHOSE failures they were instead of hiding them.
+
+        Limited 60m is here for the same reason: the headline percentage no
+        longer counts these against the rate (see successRate in
+        health-math.ts), and a number that moved without a visible cause is
+        exactly the kind of thing this board exists to make legible. Calls 60m
+        still includes them, so Calls - Failed - Limited is the attempted
+        count the percentage is actually computed over.
       */}
       <FactRow
         facts={[
           { label: 'Calls 60m', value: formatCount(health.live.calls) },
           { label: 'Failed 60m', value: formatCount(health.live.errors) },
+          { label: 'Limited 60m', value: formatCount(health.live.rateLimited) },
           {
             label: `${baselineDays}d`,
             value: baselineRate === null ? NO_DATA : formatPercent(baselineRate, 1),
@@ -301,9 +309,18 @@ export function KioskHealthTile({
   );
 }
 
-/** Rate, or null when there is nothing to divide. */
-function rateOf(successes: number, calls: number): number | null {
-  return calls > 0 ? successes / calls : null;
+/**
+ * Rate over ATTEMPTED calls, or null when there is nothing to divide.
+ *
+ * `calls` includes rate-limited/capped requests, which never reached a tool.
+ * Dividing by it anyway is what used to make this tile read 56.7% on an hour
+ * where every real call succeeded and a looping workspace was hammering its
+ * own usage cap. See successRate in health-math.ts, which this mirrors so the
+ * number on the tile and the level that colours it never disagree.
+ */
+function rateOf(successes: number, calls: number, rateLimited: number): number | null {
+  const attempted = calls - rateLimited;
+  return attempted > 0 ? successes / attempted : null;
 }
 
 function toneFor(level: HealthLevel): 'good' | 'warn' | 'bad' {

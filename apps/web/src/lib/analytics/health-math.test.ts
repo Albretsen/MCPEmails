@@ -175,7 +175,7 @@ test('the 2026-09-01 16:26 window is green and needs no help to be', () => {
         concentration: concentration({
           workspaces: 5,
           worstWorkspaceErrors: 8,
-          rest: { calls: 229, successes: 217, errors: 12 },
+          rest: { calls: 229, successes: 217, errors: 12, rateLimited: 0 },
         }),
       }),
     }),
@@ -203,7 +203,7 @@ test('one workspace hammering its own mail host does not paint the board amber',
         concentration: concentration({
           workspaces: 3,
           worstWorkspaceErrors: 8,
-          rest: { calls: 52, successes: 50, errors: 2 },
+          rest: { calls: 52, successes: 50, errors: 2, rateLimited: 0 },
         }),
       }),
     }),
@@ -250,7 +250,7 @@ test('a dominant workspace cannot excuse an estate that is also failing', () => 
         concentration: concentration({
           workspaces: 11,
           worstWorkspaceErrors: 15,
-          rest: { calls: 235, successes: 211, errors: 24 },
+          rest: { calls: 235, successes: 211, errors: 24, rateLimited: 0 },
         }),
       }),
     }),
@@ -277,7 +277,7 @@ test('concentration can never suppress an outage', () => {
         concentration: concentration({
           workspaces: 4,
           worstWorkspaceErrors: 100,
-          rest: { calls: 90, successes: 85, errors: 5 },
+          rest: { calls: 90, successes: 85, errors: 5, rateLimited: 0 },
         }),
       }),
     }),
@@ -332,7 +332,7 @@ test('a remainder too small to judge is not evidence of health', () => {
         concentration: concentration({
           workspaces: 2,
           worstWorkspaceErrors: 11,
-          rest: { calls: 15, successes: 14, errors: 1 },
+          rest: { calls: 15, successes: 14, errors: 1, rateLimited: 0 },
         }),
       }),
     }),
@@ -356,7 +356,7 @@ test('a held amber still loses to a louder true thing', () => {
         concentration: concentration({
           workspaces: 3,
           worstWorkspaceErrors: 8,
-          rest: { calls: 52, successes: 50, errors: 2 },
+          rest: { calls: 52, successes: 50, errors: 2, rateLimited: 0 },
         }),
       }),
     }),
@@ -439,6 +439,47 @@ test('an outage outranks every softer signal at once', () => {
   );
   assert.equal(verdict.level, 'down');
   assert.equal(verdict.headline, 'SYSTEM DOWN');
+});
+
+/* ------------------------------------------------- rate-limited is not failure */
+
+/**
+ * The 2026-09-03 kiosk bug: a workspace stuck retrying against its own usage
+ * cap put 40% of an hour's calls in `rate_limited`, and the headline divided
+ * by raw `calls` anyway, reading 56.7% while every call that was actually
+ * attempted succeeded. Numbers are the production window from the report.
+ */
+test('rate-limited calls do not drag down the success rate', () => {
+  assert.equal(
+    successRate({ minutes: 60, calls: 654, successes: 371, errors: 23, rateLimited: 260, concentration: null }),
+    371 / 394,
+  );
+  assert.ok(
+    (successRate({ minutes: 60, calls: 654, successes: 371, errors: 23, rateLimited: 260, concentration: null }) ?? 0)
+      > 0.9,
+    'excluding the capped calls should read as a healthy hour, not a degraded one',
+  );
+});
+
+test('a window that is almost entirely rate-limited still needs enough real attempts', () => {
+  // 30 calls, but 25 of them never reached a tool. Fifteen real attempts is
+  // below MIN_LIVE_CALLS, so this must read null exactly like too few raw
+  // calls does, not fall back to a rate computed on five successes and zero
+  // errors.
+  assert.equal(
+    successRate({ minutes: 60, calls: 30, successes: 5, errors: 0, rateLimited: 25, concentration: null }),
+    null,
+  );
+});
+
+test('a workspace looping on its own cap does not paint the board amber', () => {
+  const verdict = classifyHealth(
+    facts({
+      live: window({ calls: 654, successes: 371, errors: 23, rateLimited: 260 }),
+    }),
+    NOW,
+  );
+  assert.equal(verdict.level, 'ok');
 });
 
 test('minutesSince tolerates a missing or unparseable timestamp', () => {

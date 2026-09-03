@@ -80,6 +80,7 @@ import {
 } from './primitives';
 import { KioskHealthTile } from './KioskHealth';
 import {
+  attemptRate,
   CHART_WEEKS,
   DAILY_DAYS,
   FUNNEL_DAYS,
@@ -162,6 +163,7 @@ async function PulseBoard() {
   // Feeds the long-run baseline in the live health tile, and nothing else.
   const calls = sum(rows, 'calls');
   const successes = sum(rows, 'successes');
+  const throttled = sum(rows, 'rate_limited');
 
   return (
     <>
@@ -209,7 +211,7 @@ async function PulseBoard() {
           still worth having and is now a fact under the headline; the headline
           is the last hour, refreshed on its own 45 second clock rather than the
           board's five minute one. */}
-      <KioskHealthTile baselineRate={calls > 0 ? successes / calls : null} baselineDays={days} />
+      <KioskHealthTile baselineRate={attemptRate(successes, calls, throttled)} baselineDays={days} />
 
       <WorkDoneTile volume={volume} ok={usage.ok} days={days} />
 
@@ -707,27 +709,33 @@ async function UptimeBoard() {
   return (
     <>
       <KioskHealthTile
-        baselineRate={calls > 0 ? successes / calls : null}
+        baselineRate={attemptRate(successes, calls, throttled)}
         baselineDays={days}
         span={3}
         className=""
       />
 
-      {daily.ok ? (
-        <Tile
-          label="Success rate"
-          aside={`${days}d`}
-          span={3}
-          tone={calls === 0 ? 'default' : successes / calls >= 0.99 ? 'good' : successes / calls >= 0.95 ? 'warn' : 'bad'}
-        >
-          <BigNumber
-            value={calls > 0 ? formatPercent(successes / calls, 2) : NO_DATA}
-            caption={<><strong>{formatCount(failures)}</strong> failures in <strong>{formatCount(calls)}</strong> calls</>}
-            spark={rows.slice(-30).map((row) => (row.calls > 0 ? (row.successes / row.calls) * 100 : 100))}
-            sparkColor="var(--kiosk-good)"
-          />
-        </Tile>
-      ) : (
+      {daily.ok ? (() => {
+        const rate = attemptRate(successes, calls, throttled);
+        return (
+          <Tile
+            label="Success rate"
+            aside={`${days}d`}
+            span={3}
+            tone={rate === null ? 'default' : rate >= 0.99 ? 'good' : rate >= 0.95 ? 'warn' : 'bad'}
+          >
+            <BigNumber
+              value={rate === null ? NO_DATA : formatPercent(rate, 2)}
+              caption={<><strong>{formatCount(failures)}</strong> failures in <strong>{formatCount(calls - throttled)}</strong> attempted calls</>}
+              spark={rows.slice(-30).map((row) => {
+                const dayRate = attemptRate(row.successes, row.calls, row.rate_limited);
+                return dayRate === null ? 100 : dayRate * 100;
+              })}
+              sparkColor="var(--kiosk-good)"
+            />
+          </Tile>
+        );
+      })() : (
         <TileError label="Success rate" message={daily.error} span={3} />
       )}
 
@@ -749,9 +757,11 @@ async function UptimeBoard() {
         <TileError label="Calls" message={daily.error} span={3} />
       )}
 
-      {/* Throttling is not failure and must not be folded into the rate. It has
-          never once been recorded in production; the tile exists so that if
-          that changes, an abuse guard doing its job is not read as an outage. */}
+      {/* Throttling is not failure and must not be folded into the rate. It used
+          to be rare to nonexistent; since the plan-cap rejection logging change
+          (2026-09) it can be a large share of a day's calls, and Success rate
+          above now excludes it from the denominator for exactly this reason: an
+          abuse guard doing its job must not be read as an outage. */}
       {daily.ok ? (
         <Tile label="Failures" aside={`${days}d`} span={3} tone={failures > 0 ? 'warn' : 'good'}>
           <BigNumber

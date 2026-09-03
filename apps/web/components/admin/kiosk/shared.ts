@@ -123,6 +123,21 @@ export function sumBy<T>(rows: T[], pick: (row: T) => number): number {
   return rows.reduce((total, row) => total + pick(row), 0);
 }
 
+/**
+ * Success rate over ATTEMPTED calls, or null when there is nothing to divide.
+ *
+ * `calls` includes rate-limited/capped requests, which never reached a tool:
+ * the client was told no and nothing was tried. Dividing by raw `calls`
+ * anyway is what made a board tile read 56.7% on an hour where every real
+ * call succeeded and one workspace was looping against its own usage cap
+ * (2026-09-03). Mirrors `successRate` in health-math.ts so every tile on the
+ * board that shows a reliability percentage agrees on what it means.
+ */
+export function attemptRate(successes: number, calls: number, throttled: number): number | null {
+  const attempted = calls - throttled;
+  return attempted > 0 ? successes / attempted : null;
+}
+
 /* ------------------------------------------------------------ calendar weeks */
 
 export type WeekBucket = {
