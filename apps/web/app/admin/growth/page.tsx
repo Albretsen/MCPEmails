@@ -1,98 +1,78 @@
 /**
- * /admin/growth: the weekly brief on how the business is doing and what to do
- * about it.
+ * /admin/growth: the internal growth board.
  *
- * ONE READER, ONCE A WEEK, ON A LAPTOP. Two previous designs of this page were
- * judged not worth opening. The first put everything that decides whether this
- * becomes a business below eleven sections of product usage. The second fixed
- * the ordering and was still called messy, and the reason it was still messy is
- * that it kept the first one's vocabulary: a strip of equal stat cards, then a
- * vertical list of titled sections each holding a chart and a table. It
- * rearranged the parts instead of changing what the parts were.
+ * ONE READER, ONCE A WEEK, ON A LAPTOP, asking how the business is doing and
+ * what to do about it. Three designs have been judged and two rejected, and
+ * the verdicts are worth keeping here because they are the whole specification.
  *
- * SO THIS IS A SHEET, NOT A DASHBOARD. There are no cards. Regions are divided
- * by a hairline and a lot of space, columns by a hairline and nothing else,
- * and the only borders below that are inside tables. A card is a container
- * that says "this number is separate from that one", and on a page whose whole
- * argument is that the numbers explain each other, drawing forty of those
- * boundaries is the mess.
+ *   The first was eleven sections of product usage, with everything that
+ *   decides whether this becomes a business below the fold.
  *
- * FIVE REGIONS, EACH A QUESTION, IN THE ORDER THEY GET ASKED:
+ *   The second fixed the ordering and was still "badly laid out, and not very
+ *   interesting". The charts and the cards in it were fine; the vertical list
+ *   of eight equally weighted full-width sections was not.
  *
- *   1. How much are we paid, and what changed. One display-size number (MRR,
- *      the only one on the page), a signed ledger of movements that are never
- *      netted, and cash as a third thing at a third weight. Levels, movements
- *      and a different question, rendered at three different sizes rather than
- *      as three identical cards.
- *   2. What needs attention. Computed from thresholds in growth-attention.ts,
- *      every item carrying the number that tripped it and the population it
- *      applies to. Full width and second, because "what should I do" is half
- *      of the question this page exists to answer and neither previous version
- *      answered it at all.
- *   3. Where does everyone stop. ONE ladder from stranger to dollar, which
- *      absorbs what used to be four separate sections (acquisition,
- *      onboarding, retention, path to paid). Those are consecutive stages of
- *      one journey, and cutting the journey into four titled boxes is exactly
- *      the fragmentation that made the page a pile of tools rather than a
- *      story. The things that were section headings are now annotations in a
- *      gutter, hanging off the rung they explain.
- *   4. What is running out, or broken. Google's 100 user OAuth cap, which is
- *      the only hard calendar deadline in the business, beside reliability.
- *   5. Has anything ever been better. Records, streaks and distances to the
- *      next round number: one dense row of small type, last, because it is the
- *      least decision-bearing thing here and must not be sized like the money.
+ *   The third threw the cards away for a hairline-ruled sheet of prose and
+ *   figures, and was "a wall of text, horrible to look at, and super boring".
+ *   That was the wrong lesson drawn from the second verdict: the boxes and the
+ *   graphs were never the problem.
  *
- * Then a drawer holding the two tables that name accounts, collapsed.
+ * So this one keeps the graphs and the boxes, both of them literally: every
+ * chart is a component from components/admin/charts, each of which draws its
+ * own bordered card. What changes is the LAYOUT and the AMOUNT OF PROSE. It is
+ * a twelve column bento: cards span three to twelve columns by how much they
+ * matter, tiling into rows of two, three and four, so the eye gets a shape
+ * rather than a column. Nothing on the page is a paragraph. A card gets a
+ * title, one line of subtitle, and a footnote only where a number would
+ * otherwise mislead.
+ *
+ * THE MILESTONE BOARD IS HERE BECAUSE IT WAS ASKED FOR. Achievements and the
+ * distance to the next one are the part of the previous design the operator
+ * liked, and they are a real statistics feature: every rung is a counted fact,
+ * dated wherever a series can prove the day it was crossed. It is deliberately
+ * not gamified: no points, no trophies, no confetti, no emoji.
  *
  * WHAT IS DELIBERATELY ABSENT, so it is not helpfully re-added:
- *   - A jump nav. The previous page needed one because it was long and uniform;
- *     this one is neither, and a nav over five regions is a patch on a problem
- *     that should not exist.
- *   - Any measure of the ACTION cap. Connected inboxes have been the value
- *     metric since the August 2026 repricing and the action cap survives only
- *     as a silent abuse ceiling, so all four of the old panels measuring it
- *     reported a structural zero.
- *   - A cumulative-signups curve under a signups bar chart, which restated the
- *     chart above it.
+ *   - A jump nav. It was a patch on a page that was too long and too uniform.
+ *   - Any measure of the ACTION cap: connected inboxes have been the value
+ *     metric since the August 2026 repricing, and four panels once reported a
+ *     structural zero.
+ *   - A cumulative-signups curve under a signups bar chart, which restated it.
  *   - The MCP client mix, which reads "unknown, 100%" on every render.
- *   - A cohort heatmap: sixty-four cells whose denominators are almost all
- *     under ten, which is the size at which `ratio()` refuses to print a
- *     percentage at all. The pooled retention curve is in the gutter instead.
- *   - Any figure stated twice. MRR appears once, the inbox ceiling once, cash
- *     once.
+ *   - Any figure stated twice.
  *
- * PRIVACY. Everything is an aggregate except the two tables in the drawer (the
- * Stripe subscriptions and the active roster), which name accounts and sit
- * behind the ADMIN_EMAILS session. No credential, message content, subject,
- * recipient or IP address appears here. The kiosk board carries neither table
- * and must not gain one: it hangs on a wall behind a shared token.
+ * PRIVACY. Everything is an aggregate except the two tables in the last card,
+ * which name accounts and sit behind the ADMIN_EMAILS session. No credential,
+ * message content, subject, recipient or IP address appears here. The kiosk
+ * board carries neither table and must not gain one: it hangs on a wall behind
+ * a shared token.
  */
 
 import { Suspense } from 'react';
 import { requireAdmin } from '@/lib/admin/require-admin';
 import {
-  AttentionSection,
-  CeilingsSection,
-  ChainSection,
-  RecordsSection,
-  ReferenceSection,
-  StandingSection,
+  GrowthSection,
+  HealthSection,
+  MilestoneSection,
+  MoneySection,
+  PulseSection,
+  TablesSection,
 } from '../../../components/admin/growth/sections';
-import '../../../styles/admin-brief.css';
+import '../../../styles/admin-board.css';
 
 export const metadata = { title: 'Growth analytics · MCP Emails', robots: { index: false, follow: false } };
 
 /**
- * Selectable windows for the figures that are genuinely windowed: MRR
- * movements, acquisition channels, connection attempts and the error
- * breakdown. Capped at 90 because `activity_log` is purged there, so a wider
- * window would divide real counts into a denominator that is quietly decaying
- * as history ages out.
+ * Windows for the figures that are genuinely windowed: MRR movements,
+ * acquisition channels, connection attempts, call volume and the error
+ * breakdown. Capped at 90 because activity_log is purged there, so a wider
+ * window would divide real counts into a denominator that decays as history
+ * ages out.
  *
- * The ladder, the records and the retention curve ignore this control entirely
- * and say so in their own text: they read durable timestamp columns and are
- * all-time whatever is selected here. A window switch that appeared to apply
- * to numbers it does not touch would be worse than no switch.
+ * The funnels, the milestones and the retention curve ignore this control and
+ * say so in their own subtitles: they read durable timestamp columns and are
+ * all-time whatever is selected. A switch that appeared to apply to numbers it
+ * does not touch would be worse than no switch.
  */
 const WINDOWS = { '7d': 7, '28d': 28, '90d': 90 } as const;
 type WindowKey = keyof typeof WINDOWS;
@@ -101,7 +81,12 @@ function resolveWindow(raw: string | undefined): WindowKey {
   return raw === '7d' || raw === '90d' ? raw : '28d';
 }
 
-export default async function GrowthBriefPage({
+/** Holds a cell open while its band loads, so the grid never jumps. */
+function Cell({ span, height }: { span: number; height: number }) {
+  return <div className={`bd-w${span} bd-skeleton`} style={{ minHeight: height }} aria-hidden="true" />;
+}
+
+export default async function GrowthBoardPage({
   searchParams,
 }: {
   searchParams: Promise<{ window?: string }>;
@@ -112,14 +97,19 @@ export default async function GrowthBriefPage({
   const days = WINDOWS[windowKey];
 
   return (
-    <main className="brief">
-      <header className="br-head">
-        <h1>Growth</h1>
-        <div className="br-tools">
+    <main className="board">
+      <header className="bd-head">
+        <div>
+          <h1>Growth</h1>
+          <p className="bd-head-sub">
+            Money from Stripe, everything else from the product database. UTC. Cached ten minutes.
+          </p>
+        </div>
+        <div className="bd-tools">
           <nav aria-label="Reporting window">
             {(Object.keys(WINDOWS) as WindowKey[]).map((key) => (
               <a key={key} href={`/admin/growth?window=${key}`} aria-current={key === windowKey ? 'true' : undefined}>
-                {WINDOWS[key]} days
+                {WINDOWS[key]}d
               </a>
             ))}
           </nav>
@@ -133,76 +123,81 @@ export default async function GrowthBriefPage({
         </div>
       </header>
 
-      <section className="br-region br-region-first">
-        <header className="br-region-head">
-          <h2>How much are we paid, and what changed?</h2>
-          <p>Every figure priced from Stripe, never from the plan column. Last {days} days for the movements.</p>
-        </header>
-        <Suspense fallback={<div className="br-skeleton" style={{ height: 210 }} />}>
-          <StandingSection days={days} />
+      <div className="bd-grid">
+        <Suspense
+          fallback={
+            <>
+              <Cell span={5} height={300} />
+              <Cell span={7} height={300} />
+            </>
+          }
+        >
+          <MoneySection days={days} />
         </Suspense>
-      </section>
 
-      <section className="br-region">
-        <header className="br-region-head">
-          <h2>What needs attention?</h2>
-          <p>Computed from thresholds in code. Each line states the number that tripped it.</p>
-        </header>
-        <Suspense fallback={<div className="br-skeleton" style={{ height: 120 }} />}>
-          <AttentionSection days={days} />
+        <Suspense
+          fallback={
+            <>
+              <Cell span={3} height={150} />
+              <Cell span={3} height={150} />
+              <Cell span={3} height={150} />
+              <Cell span={3} height={150} />
+            </>
+          }
+        >
+          <PulseSection days={days} />
         </Suspense>
-      </section>
 
-      <section className="br-region">
-        <header className="br-region-head">
-          <h2>Where does everyone stop?</h2>
-          <p>
-            One ladder from stranger to dollar. Workspaces above the seam, external workspaces below it.
-            The gutter explains the rung beside it.
-          </p>
-        </header>
-        <Suspense fallback={<div className="br-skeleton" style={{ height: 620 }} />}>
-          <ChainSection days={days} />
+        <p className="bd-band">Milestones</p>
+        <Suspense fallback={<Cell span={12} height={220} />}>
+          <MilestoneSection />
         </Suspense>
-      </section>
 
-      <section className="br-region">
-        <header className="br-region-head">
-          <h2>What is running out, or broken?</h2>
-          <p>The only deadline somebody else set, beside the only numbers that include our own traffic.</p>
-        </header>
-        <Suspense fallback={<div className="br-skeleton" style={{ height: 340 }} />}>
-          <CeilingsSection days={days} />
+        <p className="bd-band">Who arrives, and where they stop</p>
+        <Suspense
+          fallback={
+            <>
+              <Cell span={7} height={300} />
+              <Cell span={5} height={300} />
+              <Cell span={5} height={240} />
+              <Cell span={3} height={240} />
+              <Cell span={4} height={240} />
+              <Cell span={4} height={260} />
+              <Cell span={4} height={260} />
+              <Cell span={4} height={260} />
+              <Cell span={6} height={260} />
+              <Cell span={6} height={260} />
+            </>
+          }
+        >
+          <GrowthSection days={days} />
         </Suspense>
-      </section>
 
-      <section className="br-region">
-        <header className="br-region-head">
-          <h2>Has anything ever been better?</h2>
-          <p>Counted facts, each with the window it was counted over. Nothing here is scored.</p>
-        </header>
-        <Suspense fallback={<div className="br-skeleton" style={{ height: 120 }} />}>
-          <RecordsSection />
+        <p className="bd-band">Reliability and ceilings</p>
+        <Suspense
+          fallback={
+            <>
+              <Cell span={4} height={230} />
+              <Cell span={4} height={230} />
+              <Cell span={4} height={230} />
+              <Cell span={4} height={270} />
+              <Cell span={8} height={270} />
+            </>
+          }
+        >
+          <HealthSection days={days} />
         </Suspense>
-      </section>
 
-      <section className="br-region">
-        <header className="br-region-head">
-          <h2>Who, exactly?</h2>
-          <p>
-            The only two tables on this page that name accounts. Collapsed by default, and absent from the
-            kiosk entirely.
-          </p>
-        </header>
-        <Suspense fallback={<div className="br-skeleton" style={{ height: 80 }} />}>
-          <ReferenceSection days={days} />
+        <p className="bd-band">Accounts</p>
+        <Suspense fallback={<Cell span={12} height={110} />}>
+          <TablesSection days={days} />
         </Suspense>
-      </section>
+      </div>
 
-      <p className="br-foot">
-        Dates are UTC. Reads are cached for ten minutes; Refresh drops the lot. Money comes from Stripe
-        because Postgres stores no amount, interval or coupon. Anything derived from `activity_log` is
-        bounded at 90 days, because that is when it is purged.
+      <p className="bd-foot">
+        Money is priced from Stripe because Postgres stores no amount, interval or coupon. Anything
+        derived from activity_log is bounded at 90 days, because that is when it is purged. Comped and
+        internal accounts are excluded from customer counts and reported separately.
       </p>
     </main>
   );

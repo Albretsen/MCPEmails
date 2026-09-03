@@ -1,0 +1,245 @@
+/* admin-board.css: the layout of /admin/growth.
+
+   WHAT THIS FILE IS AND IS NOT. It is a grid and a page header. It is NOT a
+   card style: the cards are `.ac-card` from admin-charts.css, the same frame
+   every chart in components/admin/charts already draws itself in. That is
+   deliberate. The version of this page before it threw the cards away in
+   favour of hairline rules and was rejected on sight; the boxes and the graphs
+   were the part that worked, and the layout was the part that did not. So this
+   file changes the layout and touches the card not at all.
+
+   THE LAYOUT IS A BENTO, NOT A STACK OF SECTIONS. Twelve columns, cards
+   spanning three to twelve of them, sized by how much a reader should care
+   rather than by what fits. The two designs before this one were a vertical
+   list of full-width titled sections, which gives every panel the same weight
+   and makes the page a scroll rather than a view. Here the money is a wide
+   card at the top left, the things that need doing sit beside it, and the
+   supporting charts tile underneath in rows of three or four.
+
+   Everything is a token from colors_and_type.css / theme.css, so
+   html[data-theme="dark"] flips the page with no rules of its own here. */
+
+.board {
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 20px 24px 90px;
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Page header ────────────────────────────────────────────────────────── */
+
+.bd-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+.bd-head h1 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
+.bd-head-sub { margin: 2px 0 0; font-size: 11.5px; color: var(--fg-4); }
+.bd-tools { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.bd-tools nav { display: flex; gap: 2px; padding: 2px; border-radius: 7px; background: var(--bg-sunken); }
+.bd-tools nav a {
+  padding: 3px 9px;
+  border-radius: 5px;
+  color: var(--fg-3);
+  text-decoration: none;
+}
+.bd-tools nav a[aria-current="true"] { background: var(--bg-surface); color: var(--fg-1); box-shadow: var(--shadow-1); }
+.bd-tools > a, .bd-tools button {
+  padding: 4px 11px;
+  border: 1px solid var(--border-1);
+  border-radius: 7px;
+  background: var(--bg-surface);
+  color: var(--fg-2);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.bd-tools > a:hover, .bd-tools button:hover { color: var(--fg-1); border-color: var(--border-2); }
+.bd-tools form { margin: 0; }
+
+/* ── The grid ───────────────────────────────────────────────────────────── */
+
+.bd-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+/* Grid items stretch, so cards in one row share a height and the row reads as
+   a row. Every child also needs min-width: 0 or a nowrap table inside a card
+   widens its whole column. */
+.bd-grid > * { min-width: 0; }
+/* Charts render their own <figure class="ac-card">, so a grid cell is usually
+   a thin wrapper around one. The card has to fill that cell or a row of three
+   cards with different amounts of content ends up ragged along the bottom. */
+.bd-grid > .ac-card, .bd-grid > * > .ac-card { height: 100%; box-sizing: border-box; }
+.bd-w3 { grid-column: span 3; }
+.bd-w4 { grid-column: span 4; }
+.bd-w5 { grid-column: span 5; }
+.bd-w6 { grid-column: span 6; }
+.bd-w7 { grid-column: span 7; }
+.bd-w8 { grid-column: span 8; }
+.bd-w9 { grid-column: span 9; }
+.bd-w12 { grid-column: span 12; }
+
+/* A thin label that gives the tiling a rhythm without becoming a section
+   heading with a paragraph under it. It is a rule with a word on it. */
+.bd-band {
+  grid-column: span 12;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 -2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--fg-4);
+}
+.bd-band::after { content: ""; flex: 1; height: 1px; background: var(--border-1); }
+.bd-band:first-child { margin-top: 0; }
+
+/* ── The attention card ─────────────────────────────────────────────────── */
+
+/* One line per item. The previous version of this page gave each one a
+   sentence and a second sentence naming its population, and the whole page was
+   called a wall of text. The population still has to be stated, because a
+   number without its denominator is how this dashboard has misled before, so
+   it is here as a muted suffix on the same line rather than as a paragraph. */
+.bd-todo { margin: 0; padding: 0; list-style: none; }
+.bd-todo li {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 9px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-1);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.bd-todo li:last-child { border-bottom: 0; }
+.bd-todo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-4); transform: translateY(-1px); }
+.bd-todo .is-act .bd-todo-dot { background: var(--red-500); }
+.bd-todo .is-watch .bd-todo-dot { background: var(--amber-500); }
+.bd-todo-title { color: var(--fg-1); }
+.bd-todo-pop { color: var(--fg-4); }
+.bd-todo-clear { margin: 6px 0; font-size: 12.5px; color: var(--fg-2); }
+.bd-todo-foot { margin: 9px 0 0; font-size: 10.5px; color: var(--fg-4); }
+
+/* ── The money card ─────────────────────────────────────────────────────── */
+
+.bd-money-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.bd-money-mrr { display: flex; align-items: baseline; gap: 8px; }
+.bd-money-value { font-size: 42px; font-weight: 600; line-height: 1; letter-spacing: -.03em; }
+.bd-money-unit { font-size: 14px; color: var(--fg-3); }
+.bd-money-cash { text-align: right; }
+.bd-money-cash b { display: block; font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+.bd-money-cash span { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-3); }
+
+/* Movements as chips rather than a table: four small facts, one row, each one
+   coloured by what it is. Never netted into a single figure, because a net of
+   zero cannot tell a quiet month from one sale cancelling one churn. */
+.bd-moves { display: flex; flex-wrap: wrap; gap: 7px; margin: 14px 0 0; padding: 0; list-style: none; }
+.bd-moves li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid var(--border-1);
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+.bd-moves li b { color: var(--fg-1); font-weight: 600; }
+.bd-moves li i { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-4); }
+.bd-moves .is-new i { background: var(--mint-500); }
+.bd-moves .is-churn i { background: var(--red-500); }
+.bd-moves .is-risk i, .bd-moves .is-leaving i { background: var(--amber-500); }
+.bd-moves .is-zero { opacity: .55; }
+.bd-money-plans { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 12px 0 0; font-size: 11px; color: var(--fg-3); }
+.bd-money-plans b { color: var(--fg-2); }
+.bd-flag {
+  margin: 12px 0 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--amber-500) 14%, transparent);
+  font-size: 11.5px;
+  color: var(--fg-1);
+}
+
+/* ── Shared small parts ─────────────────────────────────────────────────── */
+
+.bd-note { margin: 10px 0 0; font-size: 11px; line-height: 1.5; color: var(--fg-4); }
+.bd-empty { margin: 14px 0; font-size: 11.5px; color: var(--fg-4); text-align: center; }
+
+.bd-dead {
+  padding: 9px 11px;
+  border-left: 2px solid var(--red-500);
+  border-radius: 0 6px 6px 0;
+  background: color-mix(in srgb, var(--red-500) 8%, transparent);
+}
+.bd-dead b { display: block; font-size: 12px; }
+.bd-dead span { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); word-break: break-word; }
+
+.bd-verdict { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; padding: 8px 11px; border-radius: 8px; background: var(--bg-sunken); }
+.bd-verdict i { width: 9px; height: 9px; border-radius: 50%; background: var(--fg-4); flex: none; }
+.bd-verdict.is-ok { background: color-mix(in srgb, var(--mint-500) 12%, transparent); }
+.bd-verdict.is-ok i { background: var(--mint-500); }
+.bd-verdict.is-degraded { background: color-mix(in srgb, var(--amber-500) 15%, transparent); }
+.bd-verdict.is-degraded i { background: var(--amber-500); }
+.bd-verdict.is-down { background: color-mix(in srgb, var(--red-500) 15%, transparent); }
+.bd-verdict.is-down i { background: var(--red-500); }
+.bd-verdict b { font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; }
+.bd-verdict span { font-size: 11.5px; color: var(--fg-2); }
+
+.bd-incidents { margin: 12px 0 0; padding: 0; list-style: none; font-size: 11.5px; }
+.bd-incidents li { padding: 6px 0; border-bottom: 1px solid var(--border-1); }
+.bd-incidents li:last-child { border-bottom: 0; }
+.bd-incidents .is-open { padding-left: 9px; border-left: 2px solid var(--red-500); }
+.bd-incident-what { display: block; color: var(--fg-2); }
+.bd-incidents .is-open .bd-incident-what { color: var(--fg-1); font-weight: 600; }
+.bd-incident-when { display: block; margin-top: 1px; color: var(--fg-4); }
+
+.bd-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.bd-table th, .bd-table td { padding: 4px 9px 4px 0; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border-1); }
+.bd-table thead th { font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--fg-3); }
+.bd-table th[scope="row"] { text-align: left; font-weight: 500; color: var(--fg-2); }
+.bd-table tbody tr:last-child th, .bd-table tbody tr:last-child td { border-bottom: 0; }
+.bd-table .is-quiet th, .bd-table .is-quiet td { color: var(--fg-4); }
+.bd-cell-text { font-variant-numeric: normal; }
+.bd-scroll { max-width: 100%; min-width: 0; overflow-x: auto; }
+
+.bd-drawer > summary {
+  font-size: 12px;
+  color: var(--fg-2);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.bd-drawer > summary::-webkit-details-marker { display: none; }
+.bd-drawer > summary::before { content: "\25B8 "; color: var(--fg-4); }
+.bd-drawer[open] > summary::before { content: "\25BE "; }
+.bd-drawer > summary span { color: var(--fg-4); }
+.bd-drawer > *:not(summary) { margin-top: 11px; }
+
+.bd-skeleton { border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border-1); min-height: 120px; }
+
+.bd-foot { margin: 26px 0 0; font-size: 10.5px; color: var(--fg-4); }
+
+/* ── Narrower viewports ─────────────────────────────────────────────────── */
+
+/* Below a wide laptop the board becomes two columns and one, never three.
+   The intermediate step (four KPI tiles at span 4) put three on one row and
+   stranded the fourth beside a third of a row of nothing, which is the exact
+   raggedness a bento is supposed to avoid. Every span here maps to a half or
+   a whole, and the card order in sections.tsx is arranged so that each pair
+   lands together at both widths. */
+@media (max-width: 1280px) {
+  .bd-w3, .bd-w4, .bd-w5, .bd-w7 { grid-column: span 6; }
+  .bd-w8, .bd-w9 { grid-column: span 12; }
+}
+@media (max-width: 1000px) {
+  .board { padding: 18px 16px 80px; }
+  .bd-w3, .bd-w4, .bd-w5, .bd-w6, .bd-w7, .bd-w8 { grid-column: span 12; }
+  .bd-money-value { font-size: 34px; }
+}
