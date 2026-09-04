@@ -366,7 +366,16 @@
 
 /* ---------- Headline numbers ---------- */
 
-.kiosk-big { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* No `min-height: 0` here on purpose. A flex item's automatic minimum is its
+   content size, and that is exactly the floor this needs: the number and
+   caption must never be squeezed smaller than the text they hold. Overriding
+   it to 0 (as the sibling fact row and the tile body still do) let a two-line
+   caption -- the "N of M failures are one workspace" sentence -- get
+   compressed below its own height and bleed its second line down over the
+   fact row instead of reserving room for it. The spark chart inside this box
+   still shrinks fine on its own `min-height: 0`, so it remains the tile's
+   only give. */
+.kiosk-big { flex: 1; display: flex; flex-direction: column; }
 .kiosk-big-row { display: flex; align-items: baseline; gap: 0.4em; flex-wrap: nowrap; }
 .kiosk-big-value {
   font-size: clamp(26px, 5.6dvh, 62px);
