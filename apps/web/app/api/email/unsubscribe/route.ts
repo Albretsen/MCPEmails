@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isLifecycleCategory, type LifecycleCategory } from '@/lib/email/lifecycle';
+import { POSTAL_ADDRESS_LINE } from '@/lib/email/legal';
 
 /**
  * One-click unsubscribe for lifecycle email.
@@ -134,8 +135,8 @@ export async function GET(request: Request): Promise<NextResponse> {
   <div style="max-width:520px;margin:80px auto;padding:0 24px;">
     <p style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 12px;">MCP Emails</p>
     <p style="font-size:16px;color:#334155;line-height:1.6;margin:0 0 24px;">${message}</p>
-    <p style="font-size:14px;color:#64748b;line-height:1.6;margin:0;">
-      Asgeir Albretsen, Albretsen Consulting ENK, Bergen, Norway.
+    <p style="font-size:13px;color:#94a3b8;line-height:1.6;margin:0;">
+      ${POSTAL_ADDRESS_LINE}
     </p>
   </div>
 </body>
